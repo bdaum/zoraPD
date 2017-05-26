@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+
+
+
+
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Import Preferences</title>
+
+
+
+
+
+
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head>
+<body>
+<h2>Import Preferences</h2><h4>General</h4><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Import makernotes</span>.
+If you are interested in the manufacturer specific maker notes embedded
+in the EXIF data of your images, mark this option. Otherwise, leave
+this entry unmarked. If you should later change your opinion, you can
+mark it then and refresh the EXIF-data of your images.<br>
+<span style="font-weight: bold;"></span></li>
+  <li><span style="font-weight: bold;">Relationships</span><span style="font-weight: bold;"></span></li>
+<ul style="font-weight: normal;"><li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">Automatically detect derived images by EXIF data.&nbsp;</span>This
+option allows detecting relationships between images even if the images
+are not in the RAW or DNG format. The
+creation date of the photo and other vital image data are used for detecting
+a relationship.</font></li><li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">Apply original XMP data to derivates, too</span>.
+This option allows applying the XMP data of the original image to the
+derivate image if the derivate image does not have an own XMP file.</font></li></ul>
+  <li><span style="font-weight: bold;">Show imported image after import.</span> Check the option to automatically show the imported images in the current gallery when an import is finished.<span style="font-weight: bold;"></span></li><li><span style="font-weight: bold;">Max. length of import list.</span> Entries that exceed the maximum length will be deleted (when empty system collections are removed).<br>
+<font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;"></span></font></li>
+  <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">Automatically invoke Import when a device is inserted.</span> When this option is set, the <span style="font-style: italic;">Import from Device</span> function is called when you connect a camera or a similar device.<br>
+    </font></li>
+
+</ul><h4><a name="raw"></a>RAW conversion</h4><span style="font-weight: bold;"></span><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Raw converter.</span> Here you have the option to select between dcraw and RawTherapee.</li></ul><h4>dcraw</h4>The following options are availabe for <span style="font-style: italic;">dcraw</span>:<ul style="font-weight: normal;"><li><span style="font-weight: bold;">Converter</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">External DCRAW module</span>.
+Here you can specify a path to an <a href="dcraw.html">external DCRAW module</a>, i.e. an DCRAW
+converter located outside of the installation folder.<br><span style="font-weight: bold;">Tip: </span>If you use an Raw converter based on DCRAW, e.g. <span style="font-style: italic;">LightZone</span>, it makes sense to point to the DCRAW module of that converter. By doings so you can make sure that both the raw converter and <span style="font-style: italic;">ZoRa PhotoDirector</span> use the same version of DCRAW.</li></ul><li style="font-weight: bold;">Options<br><span style="font-weight: normal;">These options only apply when loading high-resolution images, not for generating thumbnails.</span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">White balance.</span> Selects different white balance methods:</li>
+    <ul>
+      <li><span style="font-style: italic;">D65</span> A gray card illumated with a D65 light source appears gray.<br>
+</li>
+      <li><span style="font-style: italic;">Camera</span>. The white balance determined by the camera is used</li>
+      <li><span style="font-style: italic;">dcraw</span>. The white balance determined by the DCRAW converter is used.<br>
+      </li>
+    </ul>
+    <li><span style="font-weight: bold;">Interpolation</span>. Selects the DCRAW interpolation algorithm. Available are:</li>
+<ul style="font-weight: normal;"><li><span style="font-style: italic;">bilinear</span> (fast)</li><li><span style="font-style: italic;">Variable Number of Gradients</span> (VNG)</li><li><span style="font-style: italic;">Patterned Pixel Grouping</span> (PPG)&nbsp;</li><li><span style="font-style: italic;">Adaptive Homogeneity-Directed</span> (AHD)&nbsp;</li></ul><li><span style="font-weight: bold;">Iterations</span>. Number of iterations for applying a 3x3 median filter. Reduces artifacts but slows down conversion.</li><li><span style="font-weight: bold;">Highlight recovery</span>. Blown-out Highlights are recovered (slower). <br>
+</li></ul>
+  <li><span style="font-weight: bold;">Active Recipe Detectors.</span>
+Check
+all RAW converters that you are using for developing RAW files. Uncheck
+all
+others for not slowing down import and display functions. If you use
+several RAW converters and there are multiple recipes for an
+image, the most recent recipe will be used. In the <span style="font-weight: bold;">Configuration</span> column you can specify how to resolve conflicts between competing recipes.<br>
+  </li>
+  <li><span style="font-weight: bold;">Process recipes when importing RAW images</span>.
+Uncheck this option if you do not want to apply the changes made in RAW
+converters. This will speed up operation - and you will be looking onto
+the original RAW files.</li>
+  
+  <li><span style="font-weight: bold;">Archive recipes of derived images</span>.
+Check this option to store the complete raw recipe used for creating a
+derived image into the catalog. This allows to later restore the recipe
+in case it was modified after the creation of the derived image. <br>
+</li>
+  <li><span style="font-weight: bold;">Update all affected catalog entries now?</span>
+This option is available after adding a new recipe detector. Check this
+option to apply already existing recipes of this recipe detector to the
+existing catalog entries.</li>
+
+
+
+</ul><br><h4>RawTherapee</h4>The following options are availabe for <span style="font-style: italic;">RawTherapee</span><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Converter</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">RawTherapee module</span>.
+Here you must specify a path to the <span style="font-style: italic;">RawTherapee</span> executable installed elsewhere on you system.</li></ul><li style="font-weight: bold;">Options<br><span style="font-weight: normal;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Consider .pp3 sidecar recipes.&nbsp;</span>Check this option if you want to apply existing conversion recipes created with <span style="font-style: italic;">RawTherapee</span> when importing, displaying, or exporting images.<span style="font-style: italic;">&nbsp;</span>The results will be 100% identical to conversion results created with <span style="font-style: italic;">RawTherapee</span> alone.</li></ul></ul>
+<h4><span style="font-weight: bold;">DNG conversion</span><small>&nbsp; (Only under Window and MacOS)</small></h4><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Basics</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">On Import of raw files</span>. Specify how RAW files are imported:&nbsp;</li></ul><ul style="font-weight: normal;"><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Convert
+to DNG and import both RAW and DNG files</span>. This is the safest import
+mode because images are kept in both original format and in the
+camera-neutral DNG format.</li><li><span style="font-weight: bold;">Import RAW files only</span>. No conversion to DNG is performed.</li><li><span style="font-weight: bold;">Convert to DNG and import DNG files only</span>.&nbsp;</li><li><span style="font-weight: bold;">Convert
+to DNG with embedded RAW file and import DNG</span>. With this option it is
+possible to retrieve the original RAW file from the DNG file with the
+help of the <span style="font-style: italic;">Adobe DNG converter</span>.</li></ul></ul><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Location of Adobe DNG converter</span>.
+If you want to convert RAW files to the DNG format during import you
+must specify the location of the DNG converter here.&nbsp;You can download a copy of the free <span style="font-style: italic;">Adobe DNG Converter</span> from&nbsp;<a target="_blank" href="http://www.adobe.com/products/dng/">www.adobe.com/products/dng/</a>.</li></ul><li><span style="font-weight: bold;">Options</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Create uncompressed DNG files.</span> Advanced setting. Please consult the documentation of the <span style="font-style: italic;">Adobe DNG converter.</span>&nbsp;
+</li><li><span style="font-weight: bold;">Convert original RAW file into linear image.</span> Advanced setting. Please consult the documentation of the <span style="font-style: italic;">Adobe DNG converter</span>.</li><li><span style="font-weight: bold;">DNG subfolder</span>.
+Converted DNG files are placed into a sub folder of the folder
+containing the RAW image. You may specify a sub folder name
+here or leave the entry empty for placing the DNG files side-by-side with the RAW files.<br>
+</li></ul><li><span style="font-weight: bold;">Relationships</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Automatically derive relationships between raw and developed image</span>.
+When importing both RAW and converted DNG files, it is possible to
+connect both with a relationship (Original &lt;-&gt; Derivative) which can be
+viewed in the <a href="hierarchy.html"><span style="font-style: italic;">Hierarchy view</span></a>.<font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"> Both the original and the derivate must have the same file name (without extension).<span style="font-weight: bold;"> </span>You can restrict this detection to images contained in the same folder or allow detection across folder boundaries.</font></li></ul></ul><h4>Auto-creation of collections</h4>
+<p> By adding rules to this page you can automatically create
+collections to the catalog when importing images. For each image the
+metadata is analyzed. When a rule matches, a collection that will
+contain that image (and others with corresponding metadata) will be
+created, provided such a collection does not exist already.</p><p>This
+page shows an overview of all rules defined. You can edit or remove
+rules, or add new rules. For details on rule definition see <a href="autoRule.html">here</a>.</p><p></p><p></p>
+</body></html>

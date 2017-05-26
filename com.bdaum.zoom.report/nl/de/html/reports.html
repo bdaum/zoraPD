@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+  
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Berichte</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../../com.bdaum.zoom.rcp/book.css">
+
+  
+  <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
+<h2>Berichte</h2>
+
+Das Erstellen eines Berichts in <span style="font-style: italic;">ZoRa
+PhotoDirector </span>ist einfach. Rufen Sie einfach die Menüfunktion <acronym>Katalog&gt;Berichte...</acronym> auf. Ein Assistent führt Sie durch die
+fünf Schritte der Berichtserstellung:<br>
+
+<br>
+
+<ol>
+
+  <li><span style="font-weight: bold;">Quellenauswahl.</span> Sie
+können entweder einen neuen Bericht erstellen oder einen vorhandenen
+Bericht auswählen. Um einen bestehenden Bericht auszuwählen, klicken
+Sie einfach auf die Schaltfläche <abbr>Durchsuchen...</abbr>, um alle
+im aktuellen Katalog gespeicherten Berichte anzuzeigen. Wählen Sie
+einen aus der Liste aus.<br>
+Geben Sie andernfalls einen Namen und eine Beschreibung für den neuen
+Bericht an. Name und Beschreibung werden später als Titel und
+Untertitel im generierten Bericht angezeigt.<br>
+Geben Sie die Datenquelle für den Bericht an. Dies können alle Bilder
+im Katalog oder Bilder aus einer bestimmten Sammlung sein.<br>
+    <br>
+  </li>
+  <li><span style="font-weight: bold;">Modusauswahl. </span>Geben Sie
+zunächst einen oder mehrere Werte für die y-Achse des Diagramms an. Sie
+können aus Bildanzahl, Anzahl der Verkäufe und Einkünfte auswählen.<br>
+Geben Sie dann eine Wertkategorie für die x-Achse an. Möglich sind:</li>
+  <ul>
+    <li><span style="font-weight: bold;">Die Tagezeit.</span> Dies wird
+aus dem IPTC-Erstellungsdatum und dem EXIF-Erstellungsdatum mit Vorrang
+des IPTC-Datums über das EXIF-Datum abgeleitet. Der Wert reicht von
+0:00 Uhr bis 23:59 Uhr.</li>
+    <li><span style="font-weight: bold;">Das kombinierte
+Erstellungsdatum. </span>Dies wird aus dem IPTC-Erzeugungsdatum, dem
+EXIF-Erstellungsdatum und dem letzten Dateimodifikationsdatum mit
+Vorrang des IPTC-Datums über das EXIF-Datum und des EXIF-Datum über das
+Dateimodifikationsdatum erstellt.</li>
+    <li><span style="font-weight: bold;">Numerische Werte.</span> Wenn
+Sie diese Option auswählen, können Sie im nächsten Schritt ein
+numerisches Feld als x-Achsen-Wertquelle auswählen. Ein typisches
+Beispiel wäre das Feld "Modellalter".</li>
+    <li><span style="font-weight: bold;">Diskrete Werte.</span> Wenn
+Sie diese Option auswählen, können Sie im nächsten Schritt ein
+nicht-numerisches Feld als x-Achsen-Wertquelle auswählen. Dabei kann es
+sich um ein Feld mit einem festen Wert (Enumeration) wie dem Feld
+"Lichtquelle" oder einem Feld mit einem unbegrenzten Wertebereich wie
+z.B. "Künstler" handeln.<br>
+    </li>
+  </ul>
+Schließlich können Sie für diskrete Werte festlegen, wie die Elemente
+auf der x-Achse sortiert werden sollen: entweder die natürliche
+Reihenfolge (keine Sortierung) oder die Sortierung nach Namen (Wert),
+nach Bildanzahl, nach Verkauf oder Durch Erträge. <br>
+<br>
+  <li><span style="font-weight: bold;">Wertauswahl.</span> Hier legen
+Sie eine Wertequelle für die x-Achse fest (nur numerische und diskrete
+Werte), einen Wertebereich und ein Intervall zur Bestimmung der Anzahl
+der Werte im generierten Diagramm (z. B. Anzahl der Balken). Bilder
+außerhalb des Wertebereichs erscheinen nicht im Bericht. Für diskrete
+Werte mit einem festen Wertesatz haben Sie die Möglichkeit, bestimmte
+Werte aus dem Bericht auszuschließen. Sie können auch einen
+Schwellenwert angeben. Elemente mit einem y-Achsen-Wert unterhalb des
+angegebenen Schwellwerts werden nicht im Diagramm angezeigt, sondern in
+einen separaten Elementnamen "Andere" gefaltet.<br>
+    <br>
+</li>
+  <li><span style="font-weight: bold;">Diagrammtypauswahl.</span> Je
+nach dem angegebenen Berichtsmodus können Sie zwischen einem
+Kreisdiagramm, einem Balkendiagramm, einem Liniendiagramm, einem
+Stufendiagramm und einem Bereichsdiagramm wählen. Je nach Auswahl
+können Sie zusätzliche Optionen wie 3D, zylindrisch (für
+Balkendiagramme) und kumuliert (für Datums- und Zeitberichte)
+auswählen. Der Vorschaubereich zeigt Ihnen die Auswirkungen dieser
+Auswahlmöglichkeiten. Um die Antworten schnell zu halten, ist die
+Vorschau auf Daten von maximal 50 Bildern beschränkt.<br>
+    <br>
+</li>
+  <li><span style="font-weight: bold;">Fertig. </span>Der Bericht wird
+generiert. Durch Rechtsklick auf die fertige Grafik erhalten Sie ein
+Menü mit zusätzlichen Optionen. Sie können das Diagramm als
+PNG-Bilddatei speichern oder ausdrucken. Wenn Sie <span style="font-style: italic;">Eigenschaften</span> auswählen, können Sie
+Ihrem Diagramm weitere Anpassungen hinzufügen. Sie können Titel,
+Bezeichner, Farben, Schriftarten und andere Eigenschaften ändern.<br>
+Schließlich haben Sie die Wahl, entweder Ihre Definitionen unter dem in
+Schritt 1 angegebenen Namen zu speichern, indem Sie auf <abbr>Fertig</abbr>
+klicken oder die Änderungen zu verwerfen, indem Sie auf <abbr>Abbrechen</abbr>
+klicken.<br>
+  </li>
+</ol>
+
+</body></html>

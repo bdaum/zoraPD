@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.core.recipeDetector">
+      <detector
+            class="com.bdaum.zoom.recipes.acr.internal.AcrDetector"
+            description="%detector.description"
+            id="com.bdaum.zoom.recipes.acr"
+            name="%detector.name">
+         <parameter
+               default="1"
+               id="com.bdaum.zoom.recipe.xmpEmbedded"
+               name="%parameter.name">
+            <parameterValue
+                  id="1">
+            </parameterValue>
+            <parameterValue
+                  id="2">
+            </parameterValue>
+            <parameterValue
+                  id="3">
+            </parameterValue>
+            <parameterValue
+                  id="4">
+            </parameterValue>
+            <parameterValue
+                  id="5">
+            </parameterValue>
+         </parameter>
+      </detector>
+   </extension>
+   <extension
+         point="org.eclipse.help.toc">
+      <toc
+            file="toc.xml">
+      </toc>
+   </extension>
+   <extension
+         point="org.eclipse.help.index">
+      <index
+            file="index.xml">
+      </index>
+   </extension>
+
+</plugin>

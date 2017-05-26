@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+
+
+  
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Unterstützung für Adobe Camera Raw und Lightroom</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../../com.bdaum.zoom.rcp/book.css"></head><body style="color: rgb(0, 0, 0);" alink="#ee0000" link="#0000ee" vlink="#551a8b">
+<h2>Unterstützung für Adobe Camera Raw und Lightroom<br>
+</h2>
+
+<p><span style="font-style: italic;">ZoRa Photo Director</span> ist in der Lage, die mit <span style="font-style: italic;">Adobe Camera Raw</span> oder <span style="font-style: italic;">Adobe Lightroom</span> produzierten Entwicklungseinstellungen (Rezepte) auf RAW- und DNG-Dateien anzuwenden.<br>
+</p>
+<p>Diese Einstellungen stehen entweder in einer externen XMP-Datei im
+Ordner der Bilddatei (<span style="font-style: italic;">sidecar</span>) oder werden in die Bilddatei eingebettet
+(wie z.B. bei nicht-schreibgeschützten DNG-Dateien). ZoRa Photo Director kann diese
+Rezepte lesen und auf RAW- und DNG-Dateien anwenden, wenn diese
+importiert, aktualisiert, betrachtet, oder exportiert werden. <br>
+</p>
+<p>Um diese Unterstützung zu aktivieren, gehen Sie zu <a href="PLUGINS_ROOT/com.bdaum.zoom.doc/html/reference/importPrefs.html"><acronym>Fenster&gt;Benutzervorgaben&gt;Import&gt;RAW-Konvertierung<sup>*</sup></acronym></a> und markieren Sie den Rezept-Detektor <var><span style="font-weight: bold;">Adobe Camera Raw / Lightroom</span></var>. Stellen Sie außerdem sicher, dass die Option <var>Entwicklungsrezepte beim Import von RAW-Bilder berücksichtigen</var> aktiviert ist. <br>
+</p>
+<p>Da XMP-Sidecars auch von einigen anderen RAW-Konvertern benutzt werden,
+können Sie eine XMP-Priorität angeben, um Konflikte zwischen
+konkurrierenden Rezepten aufzulösen. Je kleiner die Zahl, desto höher
+ist die Priorität.
+</p>
+
+<div style="background-color: rgb(255, 204, 204);">Falls Sie <span style="font-style: italic;">Adobe Lightroom </span>für die Entwicklung von RAW- oder DNG-Bildern verwenden, stellen Sie ebenfalls sicher, dass in den <span style="font-style: italic;">Katalogeinstellungen</span> von <span style="font-style: italic;">Lightroom</span> die Option <var>Änderungen automatisch in XMP speichern</var> eingeschaltet ist. Anderfalls würde <span style="font-style: italic;">Lightroom</span> die Entwicklungsrezepte nicht veröffentlichen.<br>
+</div>
+
+<p><span style="font-style: italic;">Adobe Camera Raw</span> und <span style="font-style: italic;">Lightroom</span> speichern normalerweise diese Informationen, wenn Sie in <span style="font-style: italic;">Camera Ra</span>w oder <span style="font-style: italic;">Lightroom</span> ein neues Bild öffnen oder die Anwendung schließen. Sollte das bearbeitete Bild in einem überwachten Ordner (siehe <a href="PLUGINS_ROOT/com.bdaum.zoom.doc/html/reference/catProperties.html">Katalogeigenschaften</a>)
+liegen, so wird ZoRa Photo Director das eigene Vorschaubild im Katalog automatisch
+mit den geänderten Entwicklungseinstellungen aktualisieren.</p>
+<p><br>
+
+
+
+
+</p>
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> Auf dem Mac: <acronym>ZoRa Photo Director&gt;Einstellungen&gt;...</acronym>
+<p>
+</p>
+
+
+<br>
+
+</body></html>

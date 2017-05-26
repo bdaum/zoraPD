@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.image.imageIOplugins">
+      <!--<provider
+            class="com.twelvemonkeys.imageio.plugins.bmp.BMPImageReaderSpi"
+            name="BMP image reader">
+      </provider>-->
+      <provider
+            class="com.twelvemonkeys.imageio.plugins.dcx.DCXImageReaderSpi"
+            name="DCX image reader">
+      </provider>
+      <provider
+            class="com.twelvemonkeys.imageio.plugins.hdr.HDRImageReaderSpi"
+            name="HDR image reader">
+      </provider>
+      <provider
+            class="com.twelvemonkeys.imageio.plugins.tiff.TIFFImageReaderSpi"
+            name="TIFF image reader">
+      </provider>
+      <provider
+            class="com.twelvemonkeys.imageio.plugins.tga.TGAImageReaderSpi"
+            name="TGA image reader">
+      </provider>
+      <provider
+            class="com.twelvemonkeys.imageio.plugins.sgi.SGIImageReaderSpi"
+            name="SGI image reader">
+      </provider>
+      <provider
+            class="com.twelvemonkeys.imageio.plugins.psd.PSDImageReaderSpi"
+            name="PSD image reader">
+      </provider>
+      <provider
+            class="com.twelvemonkeys.imageio.plugins.pnm.PNMImageReaderSpi"
+            name="PNM image reader">
+      </provider>
+      <provider
+            class="com.twelvemonkeys.imageio.plugins.pict.PICTImageReaderSpi"
+            name="PICT image reader">
+      </provider>
+      <provider
+            class="com.twelvemonkeys.imageio.plugins.pcx.PCXImageReaderSpi"
+            name="PCX image reader">
+      </provider>
+      <provider
+            class="com.twelvemonkeys.imageio.plugins.jpeg.JPEGImageReaderSpi"
+            name="JPEG image reader">
+      </provider>
+      <provider
+            class="com.twelvemonkeys.imageio.plugins.iff.IFFImageReaderSpi"
+            name="IFF image reader">
+      </provider>
+   </extension>
+
+</plugin>

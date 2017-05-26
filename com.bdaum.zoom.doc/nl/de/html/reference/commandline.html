@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Kommandozeilenparameter</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head>
+<body>
+<h2>Kommandozeilenparameter </h2>
+<p>Kommandozeilen-Parameter können verwendet werden, um das
+Verhalten des <span style="font-style: italic;">ZoRa Photo Director&nbsp;</span>zu ändern und auf an spezifischen Bedürfnisse anzupassen.</p>
+
+<table style="text-align: left; width: 555px; height: 648px;" border="1" cellpadding="8" cellspacing="1">
+<tbody>
+<tr>
+<td style="font-weight: bold;">Parameter</td>
+<td style="font-weight: bold; width: 1084px;">Beschreibung</td>
+<td style="width: 268px;"><span style="font-weight: bold;">Beispiele</span></td>
+</tr>
+<tr>
+<td><code>-data</code></td>
+<td style="width: 1084px;">Bestimmt die Lage der Speicherbereichs, in dem die Benutzer-Einstellungen
+gespeichert sind. Standardmäßig werden diese Werte&nbsp;in Unterordner&nbsp;<code>workspace/</code> im Installationsordner abgelegt. Durch die Angabe
+eines anderen Weg hinter&nbsp;<code>-data</code> kann dieser Bereich&nbsp;an eine
+beliebige Stelle gelegt werden. Es gibt zwei vordefinierte Pfad-Abkürzungen:<br><br>
+<ul style="font-weight: normal;"><li><code>@user.home</code> steht für den Benutzerbereich des Betriebssystems wie <code>C:\Dokumente und Einstellungen\<span style="font-style: italic;">benutzername</span></code>.&nbsp;</li><li>
+<code>@user.dir</code> steht für den Installationsordner wie <code>C:\Programme\ZoRaPD</code>.&nbsp;</li></ul>
+</td>
+<td style="width: 268px;"><code>-data
+@user.home/ZoRaPD</code></td>
+</tr>
+<tr>
+<td><code>-nl</code></td>
+<td style="width: 1084px;">Bestimmt die Sprache der Benutzeroberfläche. Geben Sie ein&nbsp;ISO-Sprachcode nach dem Parameter an. <br> Wenn nicht angegeben, wird die Sprache&nbsp;auf&nbsp;Grundlage der Spracheinstellung der Plattform gewählt. <br> (Derzeit&nbsp;werden nur Englisch und Deutsch unterstützt.)</td>
+<td style="width: 268px;"><code>-nl en<br>
+-nl de</code></td>
+</tr>
+<tr>
+<td><code>-noSplash</code></td>
+<td style="width: 1084px;">ZoRa Photo Director wird ohne Anzeige des Splash-Schirms gestartet.</td>
+<td style="width: 268px;"><code>-noSplash</code></td>
+</tr><tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">-noBirdie</span></td>
+      <td style="vertical-align: top;">Verhindert das gelegentlich erscheinende Vögelchen im Splash-Schirm<br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">-noBirdie</span></td>
+    </tr>
+<tr><td><code>-vm</code></td><td style="width: 1084px;">Pfad zur <span style="font-style: italic;">Java Virtual Machine</span> (JVM). Dieser Parameter benutzt, wenn das Programm mit einer anderen als der Standard-JVM der Plattform verwendet werden soll.</td><td style="width: 268px;"><code>-vm C:\<span style="font-style: italic;"><span style="font-family: monospace;">jre_</span></span></code><code><span style="font-style: italic;">p<span style="font-family: monospace;">fad</span></span></code><code><span style="font-style: italic;"><span style="font-family: monospace;"></span></span>\bin\java.exe</code></td></tr>
+</tbody>
+</table>
+<p> </p>
+</body></html>

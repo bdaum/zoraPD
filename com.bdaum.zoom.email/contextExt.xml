@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="export" title="Exporting images">
+      <topic href="html/email.html" label="Create an image e-mail"/>
+      <topic href="html/emailpdf.html" label="Create a PDF e-mail"/>
+      <topic href="html/pdf.html" label="Create a PDF file"/>
+      <topic href="html/html.html" label="Create a HTML file"/>
+   </context>
+</contexts>

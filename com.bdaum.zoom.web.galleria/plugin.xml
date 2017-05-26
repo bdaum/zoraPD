@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.ui.galleryGenerator">
+      <generator
+            class="com.bdaum.zoom.web.galleria.GalleriaGenerator"
+            description="html/preview.html"
+            id="com.bdaum.zoom.web.galleria.generator"
+            name="Galleria"
+            sections="true"
+            slideshows="true"
+            unsupported="opacity sectionfont captionfont navfont thumbnailsize margins">
+         <parameter
+               default="com.bdaum.zoom.web.galleria.theme.classic"
+               description="%theme.parameter.description"
+               encodeForHtml="true"
+               id="theme"
+               label="%theme.parameter.label"
+               required="false"
+               type="string">
+            <enumeration
+                  id="com.bdaum.zoom.web.galleria.theme.classic"
+                  label="Classic">
+            </enumeration>
+            <enumeration
+                  id="com.bdaum.zoom.web.galleria.theme.miniml"
+                  label="Miniml">
+            </enumeration>
+            <enumeration
+                  id="com.bdaum.zoom.web.galleria.theme.twelve"
+                  label="Twelve">
+            </enumeration>
+            <enumeration
+                  id="com.bdaum.zoom.web.galleria.theme.fullscreen"
+                  label="Fullscreen">
+            </enumeration>
+            <enumeration
+                  id="com.bdaum.zoom.web.galleria.theme.folio"
+                  label="Folio">
+            </enumeration>
+         </parameter>
+         <parameter
+               description="%options.parameter.description"
+               encodeForHtml="false"
+               id="themeOptions"
+               label="%options.parameter.label"
+               linkTo="theme"
+               required="false"
+               type="text">
+         </parameter>
+         <parameter
+               default="0"
+               description="%autoplay.parameter.description"
+               encodeForHtml="false"
+               id="autoplay"
+               label="%autoplay.parameter.label"
+               max="60000"
+               min="0"
+               required="false"
+               type="int">
+         </parameter>
+      </generator>
+   </extension>
+
+</plugin>

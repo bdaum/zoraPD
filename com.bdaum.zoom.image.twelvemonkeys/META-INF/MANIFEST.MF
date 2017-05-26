@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %Bundle-Name
+Bundle-SymbolicName: com.bdaum.zoom.image.twelvemonkeys;singleton:=true
+Bundle-Version: 3.0.2
+Bundle-Vendor: %Bundle-Vendor
+Require-Bundle: com.bdaum.zoom.image;bundle-version="3.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .
+Export-Package: com.twelvemonkeys.imageio,
+ com.twelvemonkeys.imageio.plugins.jpeg,
+ com.twelvemonkeys.imageio.plugins.pict,
+ com.twelvemonkeys.imageio.plugins.psd,
+ com.twelvemonkeys.imageio.plugins.tiff

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Arbeitsschritte"> 
+   <topic href="html/tasks/install.html" label="Installation">
+   </topic> 
+	<topic label="Bilder importieren"  href="html/tasks/import.html">
+    <anchor id="import"/> 
+    <topic href="html/tasks/scanners.html" label="Mit Scannern arbeiten">
+    </topic> 
+	</topic>
+  <topic label="Metadaten bearbeiten">
+    <topic href="html/tasks/metadata.html" label="Metadaten-Sichtfenster">
+    </topic>
+    <topic href="html/tasks/dataentry.html" label="Dateneingabe-Sichtfenster">
+    </topic>
+ </topic>
+	<topic label="Editoren und Bildbetrachter aufrufen">
+    <topic href="html/reference/internalViewer.html" label="Interner Bildbetrachter">
+    </topic>
+    <topic href="html/tasks/externalEditors.html" label="Externe Editoren und Bildbetrachter">
+    </topic>
+    <anchor id="viewers"/>
+	</topic>
+ <topic href="html/tasks/imageRetrieval.html" label="Bilder suchen">
+    <topic href="html/tasks/keywords.html" label="Verschlagwortung">
+    </topic>
+    <anchor id="search"/>
+ </topic>
+ <topic label="Bilder und Daten exportieren">
+    <anchor id="export"/>
+    <anchor id="internet"/>
+    <topic href="html/tasks/webgalleries.html" label="Web-Galerien">
+    </topic>
+    <topic label="Andere">
+       <topic href="html/reference/exportFolder.html" label="Lokale Ordner und  FTP">
+       </topic>
+       <anchor id="exportOthers"/>
+    </topic>
+ </topic>
+ <anchor id="tasks"/>
+  <topic href="html/tasks/tuning.html" label="Tuning">
+ </topic>
+  <topic href="html/tasks/maintenance.html" label="Katalogwartung">
+  </topic>
+  <topic href="html/tasks/tricks.html" label="Tipps und Tricks">
+ </topic>
+ 
+ <topic label="Problembehandlung">
+    <topic href="html/tasks/reportingError.html" label="Fehler berichten">
+    </topic>
+    <topic href="html/tasks/firstAid.html" label="Erste Hilfe">
+    </topic>
+ </topic>
+ <topic href="html/tasks/roadmap.html" label="Arbeitsplan">
+ </topic> 
+</toc>

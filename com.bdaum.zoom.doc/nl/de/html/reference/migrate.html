@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="de"><head>
+
+
+
+  
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Katalogmigrierung</title>
+  
+
+  
+  
+  <meta name="date" content="2015-11-19">
+
+  
+  <meta name="keywords" content="CASE_INSENSITIVE">
+
+  
+  <meta name="keywords" content="LITERAL">
+
+  
+  <meta name="keywords" content="DOTALL">
+
+  <link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h1 class="Head">Katalogmigrierung</h1>
+<span id="result_box" class="" lang="de"><span class="">Die 
+Katalogmigration ist erforderlich, wenn Sie Kataloge und Bilder auf eine
+ andere Plattform verschieben möchten - sagen wir von Windows zu Linux.</span> <span>Da
+ die Syntax der Dateipfade auf beiden Plattformen unterschiedlich ist (siehe auch <a href="../concepts/filesAndVolumes.html">Dateien und Datenträger</a>), und sich auch die Zielordnerstruktur signifikant von der 
+Quellordnerstruktur unterscheiden kann, ist eine mehr oder weniger umfangreiche 
+Transformation der Dateipfade erforderlich.</span><br><br><span>Dies wirkt sich auf folgende Einträge in einem Katalog aus:</span></span><br>
+
+<br>
+
+<ul>
+
+  <li style="font-weight: bold;"><span id="result_box" class="" lang="de"><span>Katalogeigenschaften</span></span></li>
+  <ul>
+    <li>Ort der Sicherungsdateien<br>
+    </li>
+  </ul>
+  <li style="font-weight: bold;"><span id="result_box" class="" lang="de"><span>Überwachte Ordner</span></span></li>
+  <ul>
+    <li>Ort des überwachten Ordners<br>
+</li>
+    <li>Zielordner (bei Transfer-Ordnern)</li>
+    <li>Filterausdrücke<br>
+    </li>
+  </ul>
+  <li style="font-weight: bold;">Bilder</li>
+  <ul>
+    <li>Datei-URI und Datenträger<br>
+</li>
+    <li>URI und Datenträger der Sprachnotizen
+    </li>
+  </ul>
+  <li style="font-weight: bold;">Kollektionen</li>
+  <ul>
+    <li>Suchwerte bei der Suche nach URI<br>
+    </li>
+  </ul>
+  <li style="font-weight: bold;">Ausstellungen</li>
+  <ul>
+    <li>Zielordner<br>
+    </li>
+  </ul>
+  <li style="font-weight: bold;">Webgalerien</li>
+  <ul>
+    <li>Zielordner</li>
+  </ul>
+</ul>
+
+<br>
+<span id="result_box" class="" lang="de"><span class=""></span><span></span><span><br>
+</span></span><span id="result_box" class="" lang="de"><span class="">Die Transformation wird durch eine Liste von Regeln definiert.</span> <span class="">Jeder zu transformierende Dateipfad wird mit dem <a href="regex.html">Quellmuster</a> jeder Regel verglichen, von oben nach unten.</span> <span class="">Die erste Regel, die übereinstimmt, führt die Transformation durch.</span> <a href="regex.html#cg">Erfassungsg</a><span><a href="regex.html#cg">ruppen</a>
+ in den Quell- und den Zielmustern werden verwendet, um Inhalte aus dem 
+ursprünglichen Dateipfad in den transformierten Dateipfad zu 
+transportieren.</span><br><span class="">Ein leeres Zielmuster zeigt an,
+ dass der übereinstimmende Dateipfad einer Datei oder einem Ordner 
+entspricht, die/der nicht auf die Zielplattform portiert wird.<br>
+<br>
+</span></span><em style="color: red;"><span id="result_box" class="" lang="de"><span class="">Windows-Benutzer
+ beachten bitte, dass vor der Anwendung der Transformationsregeln der 
+<span style="font-weight: bold;">Laufwerksbuchstabe</span> im Dateipfad durch den <span style="font-weight: bold;">Datenträgernamen</span> ersetzt wird,
+ falls vorhanden.</span></span></em><br>
+<span id="result_box" class="" lang="de"><span class="">
+<br>
+</span></span><span style="font-weight: bold;">
+Beispiel:</span><br>
+
+
+<br>
+
+
+<table style="text-align: left; width: 552px; height: 100px; margin-left: 40px;" border="1" cellpadding="2" cellspacing="2">
+
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><code>Windows:\\Users\\berth\\Pictures\\raw\\temp\\.*</code></td>
+      <td style="vertical-align: top;"><code><br>
+      </code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code>Windows</code><code>:\\Users\\berth\\Pictures\\raw\\(.*)\.dng</code></td>
+      <td style="vertical-align: top;"><code>/home/images/dng/$1.dng<br>
+      </code>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code>Windows</code><code>:\\Users\\berth\\Pictures\\raw\\(.*)</code></td>
+      <td style="vertical-align: top;"><code>/home/images/$1</code></td>
+      
+    </tr>
+  </tbody>
+</table>
+
+
+<br>
+
+
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp; <br>
+<span id="result_box" class="" tabindex="-1" lang="de"><span class="">Hier
+ wurde der Inhalt des Ordners </span></span><code>C:\Users\berth\Pictures\raw\</code><span id="result_box" class="" tabindex="-1" lang="de"><span class=""> in 
+den Linux-Ordner </span></span><code>/home/images/</code><span id="result_box" class="" tabindex="-1" lang="de"><span class=""> mit Ausnahme des Unterordners </span></span><code>temp\</code><span id="result_box" class="" tabindex="-1" lang="de"><span class=""> 
+portiert, der nicht portiert wird.</span> <span class="">Zusätzlich werden alle DNG-Dateien in den separaten Unterordner </span></span><code>dng/</code><span id="result_box" class="" tabindex="-1" lang="de"><span class=""> abgelegt.</span></span><br>
+<span id="result_box" class="" lang="de"><span class=""></span><br><span class="">Folgende Funktionen stehen zur Verfügung, um die Liste der Muster zu definieren:</span></span><br>
+<ul>
+  <li><span id="result_box" class="" tabindex="-1" lang="de"><span style="font-weight: bold;" class="">Muster hinzufügen.</span> <span>Sowohl Quell- als auch Zielmuster können frei definiert werden.</span> <span class="">Die neue Regel wird am Ende der Liste hinzugefügt.</span></span></li>
+  <li><span id="result_box" class="" tabindex="-1" lang="de"><span style="font-weight: bold;" class="">Ordner hinzufügen.</span> <span class="">Wählen Sie zunächst einen Ordner aus dem Dateisystem aus.</span> <span class="">Dann kann das Zielmuster definiert werden - das Quellmuster wird aus dem Ordnerpfad abgeleitet.</span> <span class="">Die neue Regel wird am Ende der Liste hinzugefügt.</span></span></li>
+  <li><span id="result_box" class="" tabindex="-1" lang="de"><span style="font-weight: bold;">Regel bearbeiten.</span> <span>Die ausgewählte Regel kann bearbeitet werden.<br>
+</span></span></li>
+  <li><span id="result_box" class="" tabindex="-1" lang="de"><span style="font-weight: bold;">Regel entfernen.</span> <span>Entfernt die ausgewählte Regel aus der Liste.</span></span></li>
+  <li><span id="result_box" class="" tabindex="-1" lang="de"><span style="font-weight: bold;">Nach oben.</span> <span class="">Verschiebt die ausgewählte Regel um einen Schritt nach oben.</span></span></li>
+  <li><span id="result_box" class="" tabindex="-1" lang="de"><span><span style="font-weight: bold;">Nach unten</span>.</span> <span class="">Verschiebt die ausgewählte Regel um einen Schritt nach unten.</span></span></li>
+</ul>
+
+<br>
+<span id="result_box" class="" tabindex="-1" lang="de"><span>Zusätzlich 
+zu diesen Transformationsregeln können Sie eine Richtlinie für die 
+Umwandlung von Dateitrennzeichen (/ und \) auswählen.</span> <span>Zum Beispiel, wenn Sie von Windows zu Linux migrieren möchten, können Sie das Zeichen \ in das Zeichen / umwandeln.</span><br><span>Regeln und die Richtlinie für Datei-Trennzeichen konstituieren eine Migrierungsrichtlinie.</span> <span class="">Sie
+ können </span></span><span id="result_box" class="" tabindex="-1" lang="de"><span>Migrierungsrichtlinien</span></span><span id="result_box" class="" tabindex="-1" lang="de"><span class=""> unter indiviuellen Namen im Katalog zur 
+späteren Verwendung speichern oder eine </span></span><span id="result_box" class="" tabindex="-1" lang="de"><span>Migrierungsrichtlinie</span></span><span id="result_box" class="" tabindex="-1" lang="de"><span class=""> aus der 
+Liste der gespeicherten Richtlinien laden.</span></span><br>
+
+<br>
+
+</body></html>

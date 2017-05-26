@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="intro" title="Import fremder Kataloge">
+      <description>Import fremder Kataloge</description>
+      <topic href="html/concepts/foreignCat.html" label="Import fremder Kataloge"/>
+   </context>
+</contexts>

@@ -1,0 +1,10 @@
+<index>
+	<entry keyword="YouTube">
+		<topic href="html/yt.html" />
+	</entry>
+	<entry keyword="Export">
+		<entry keyword="YouTube">
+			<topic href="html/yt.html" />
+		</entry>
+	</entry>
+</index>

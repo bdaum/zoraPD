@@ -1,0 +1,10 @@
+<index>
+	<entry keyword="Locr">
+		<topic href="html/locr.html" />
+	</entry>
+	<entry keyword="Export">
+		<entry keyword="Locr">
+			<topic href="html/locr.html" />
+		</entry>
+	</entry>
+</index>

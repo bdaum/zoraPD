@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head><title>Merge Catalogs</title>
+
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Merge Catalogs </h2>
+<br>
+This function can import the images of another catalog into the current
+catalog.<br>
+<br>
+You must specify the catalog file to be imported and a policy for
+handling duplicates:<br>
+<ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Skip</span>.
+An already existing catalog entry remains as is - the new entry is
+ignored.</li>
+<li><span style="font-weight: bold;">Replace</span>.
+The already existing catalog entry is deleted, then the new entry is
+imported.</li>
+<li><span style="font-weight: bold;">Merge</span>.
+The new entry is merged into the already existing entry. How this merge
+will be performed can be specified in detail on the next wizard page:</li>
+<ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Overwrite</span>.
+All selected meta data entries are overwritten.</li>
+<li><span style="font-weight: bold;">Fill-in
+blanks</span>. Selected meta data entries are only overwritten
+when they currently do not contain any value.</li>
+<li><span style="font-weight: bold;">Combine</span>.
+Similar to <span style="font-style: italic;">Fill-in
+blanks</span> but the values of multi-dimensional entries (such
+as the <span style="font-style: italic;">Keywords</span> entry) are combined.</li>
+</ul>
+</ul>
+</body></html>

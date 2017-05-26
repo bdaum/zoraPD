@@ -1,0 +1,432 @@
+<contexts>
+	<context id="archive_dialog_context" title="Archiving">
+		<description>Archiving images and catalog</description>
+		<topic href="html/reference/archive.html" label="Archiving"/>
+	</context>
+	<context id="catProperties_dialog_context" title="Catalog properties">
+		<description>Configure Catalog</description>
+		<topic href="html/reference/catProperties.html" label="Catalog properties"/>
+	</context>
+	<context id="newcatProperties_dialog_context" title="Creating a new Catalog">
+		<description>Creating a new Catalog</description>
+		<topic href="html/gettingstarted/newcat.html" label="Creating a new Catalog"/>
+		<topic href="html/reference/catProperties.html" label="Catalog properties"/>
+	</context>
+ <context id="collectionEdit_dialog_context" title="Collection query dialog">
+    <description>Edit a collection query</description>
+    <topic href="html/reference/collectionEdit.html" label="Collection query dialog"/>
+ </context>
+ <context id="autoRule_dialog_context" title="Rule for automatic collection creation dialog">
+    <description>Edit a rule for automatic collection creation dialog</description>
+    <topic href="html/reference/autoRule.html" label="Edit a rule for automatic collection creation dialog"/>
+ </context>
+ <context id="category_dialog_context" title="Category dialog">
+    <description>Assign image(s) to categories by checking the category entries. Press Add... to add a new category, Refine... to create a new subcategory.</description>
+ </context>
+ <context id="keyword_dialog_context" title="Keyword dialog">
+    <description>Simply check the keywords for the selected image(s) or enter new keywords in the lower part of the dialog, each on a separate line.</description>
+    <topic href="html/reference/keyworddef.html" label="Keyword definition"/>
+ </context>
+  <context id="catFilter_dialog_context" title="Catalog filter">
+    <description>Catalog filter for hiding unused or unwanted catalog entries</description>
+    <topic href="html/reference/catFilter.html" label="Catalog filter"/>
+ </context>
+ <context id="description_dialog_context" title="Relationship description dialog">
+    <description>Describe a relationship between images</description>
+    <topic href="html/reference/descriptionEdit.html" label="Relationship description dialog"/>
+ </context>
+ <context id="catalog_view_context" title="Catalog View">
+    <description>Catalog View</description>
+    <topic href="html/reference/catalog.html" label="Catalog View"/>
+ </context>
+ <context id="history_view_context" title="History View">
+    <description>History View</description>
+    <topic href="html/reference/history.html" label="History View"/>
+ </context>
+ <context id="lightbox_view_context" title="Lightbox View">
+    <description>Lightbox View</description>
+    <topic href="html/reference/lightbox.html" label="Lightbox View"/>
+ </context>
+ <context id="perspectives_page_context" title="Perspectives preferences">
+    <description>Manage perspectives</description>
+    <topic href="html/reference/perspectivePrefs.html" label="Perspectives preferences"/>
+ </context>
+ <context id="Spell_Context" title="Spell checking">
+    <description>Installation of dictionaries and configuring spell checking</description>
+    <topic href="html/reference/spell.html" label="Spell checking"/>
+ </context>
+ <context id="import_page_context" title="Import preferences">
+    <description>Configure the import of images</description>
+    <topic href="html/reference/importPrefs.html" label="Import preferences"/>
+ </context>
+ <context id="catalog_page_context" title="Catalog preferences">
+    <description>Managing catalog properties</description>
+    <topic href="html/reference/catPrefs.html" label="Managing catalog properties"/>
+ </context>
+ <context id="importDeviceFileSelection_wizard_context">
+    <description>Import images from device - image selection</description>
+    <topic href="html/reference/importFromDevice.html#1" label="Import from device - image selection"/>
+ </context>
+ <context id="importDeviceTargetSelection_wizard_context">
+    <description>Import images from device - output folder</description>
+    <topic href="html/reference/importFromDevice.html#2" label="Import from device - output folder"/>
+ </context>
+ <context id="importDeviceRenaming_wizard_context">
+    <description>Import images from device - Renaming</description>
+    <topic href="html/reference/importFromDevice.html#3" label="Import from device - Renaming"/>
+ </context>
+ <context id="importDeviceMetadata_wizard_context">
+    <description>Import images from device - Metadata</description>
+    <topic href="html/reference/importFromDevice.html#4" label="Import from device - Metadata"/>
+ </context>
+ <context id="importNewStructureFileSelection_wizard_context" title="Import into new folder structure">
+    <description>Import images into new folder structure - file selection</description>
+    <topic href="html/reference/importNewStructure.html#1" label="Import into new folder structure - file selection"/>
+ </context>
+ <context id="importNewStructureTargetSelection_wizard_context" title="Import into new folder structure - output folder">
+    <description>Import images into new folder structure - output folder</description>
+    <topic href="html/reference/importNewStructure.html#2" label="Import into new folder structure - output folder"/>
+ </context>
+ <context id="importNewStructureRenaming_wizard_context" title="Import into new folder structure - Renaming files">
+    <description>Import images into new folder structure - Renaming files</description>
+    <topic href="html/reference/importNewStructure.html#3" label="Import into new folder structure - Renaming files"/>
+ </context>
+ <context id="appearance_page_context" title="Appearance Preferences">
+    <description>Appearance Preferences</description>
+    <topic href="html/reference/appearancePrefs.html" label="Appearance Preferences"/>
+ </context>
+ <context id="fileAssociations_page_context" title="External programs">
+    <description>External programs and file associations</description>
+    <topic href="html/reference/fileAssociations.html" label="External programs"/>
+ </context>
+ <context id="audio_page_context" title="Audio preferences">
+    <description>Configure sounds and audio</description>
+    <topic href="html/reference/audioPrefs.html" label="Audio preferences"/>
+ </context>
+ <context id="general_page_context" title="General Preferences">
+    <description>General Preferences</description>
+    <topic href="html/reference/generalPrefs.html" label="General Preferences"/>
+ </context>
+ <context id="keys_page_context" title="Key Preferences">
+    <description>Key Preferences</description>
+    <topic href="html/reference/keyPrefs.html" label="Key Preferences"/>
+ </context>
+ <context id="keyword_page_context" title="Keyword preferences">
+    <description>Keyword preferences</description>
+    <topic href="html/reference/keywordPrefs.html" label="Keyword preferences"/>
+ </context>
+ <context id="metadata_page_context" title="Metadata Preferences">
+    <description>Metadata Preferences</description>
+    <topic href="html/reference/metadataPrefs.html" label="Metadata Preferences"/>
+ </context>
+ <context id="watchedFolders_page_context" title="Watched folders preferences">
+    <description>Manage watched folders</description>
+    <topic href="html/reference/watchedFolders.html" label="Watched folders preferences"/>
+ </context>
+ <context id="sleeves_view_context" title="Sleeves View">
+    <description>Sleeves View</description>
+    <topic href="html/reference/sleeves.htm" label="Sleeves View"/>
+ </context>
+ <context id="hstrip_view_context" title="Horizontol Strip View">
+    <description>Horizontol Strip View</description>
+    <topic href="html/reference/hstrip.html" label="Horizontol Strip View"/>
+ </context>
+ <context id="vstrip_view_context" title="Vertical Strip View">
+    <description>Vertical Strip View</description>
+    <topic href="html/reference/vstrip.html" label="Vertical Strip View"/>
+ </context>
+ <context id="preview_view_context" title="Preview view">
+    <description>Preview view</description>
+    <topic href="html/reference/preview.html" label="Preview view"/>
+ </context>
+ <context id="catalog_page_context" title="Catalog view">
+    <description>Catalog view</description>
+    <topic href="html/reference/catalog.html" label="Catalog view"/>
+ </context>
+ <context id="collectionEdit_dialog_context" title="Collection dialog">
+    <description>Configure a collection</description>
+    <topic href="html/reference/collectionEdit.html" label="Collection dialog"/>
+    <topic href="html/tasks/imageRetrieval.html" label="Image retrieval"/>
+ </context>
+ <context id="hierarchy_view_context" title="Hierarchy view">
+    <description>Hierarchy view</description>
+    <topic href="html/reference/hierarchy.html" label="Hierarchy view"/>
+ </context>
+ <context id="bookmark_view_context" title="Bookmarks view">
+    <description>Bookmarks view</description>
+    <topic href="html/reference/bookmarks.html" label="Bookmarks view"/>
+ </context>
+ <context id="metadata_view_context" title="Metadata views">
+    <description>Metadata views</description>
+    <topic href="html/reference/metadata.html" label="Metadata views"/>
+ </context>
+ <context id="slideshow_view_context" title="Slideshow designer view">
+    <description>Create and design a slideshow</description>
+    <topic href="html/reference/slideshow.html" label="Slideshow editor view"/>
+ </context>
+ <context id="exhibition_view_context" title="Exhibition designer view">
+    <description>Design a photo exhibition</description>
+    <topic href="html/reference/exhibition.html" label="Exhibition designer view"/>
+ </context>
+ <context id="editWall_dialog_context" title="Exhibition wall properties">
+    <description>Configure an exhibition wall</description>
+    <topic href="html/reference/exhibition.html" label="Exhibition view"/>
+    <topic href="html/reference/htmlEditing.html" label="Editing HTML"/>
+ </context>
+ <context id="exhibition_dialog_context" title="Exhibition properties">
+    <description>Configure a photo exhibition</description>
+    <topic href="html/reference/exhibition.html" label="Exhibition view"/>
+    <topic href="html/reference/htmlEditing.html" label="Editing HTML"/>
+ </context>
+ <context id="slideshow_dialog_context" title="Slideshow properties">
+    <description>Configure a slideshow</description>
+    <topic href="html/reference/slideshow.html#properties" label="Slideshow properties"/>
+ </context>
+ <context id="slide_dialog_context" title="Slide Properties">
+    <description>Edit a slide</description>
+    <topic href="html/reference/slide.html" label="Slide Properties"/>
+ </context>
+ <context id="sectionbreak_dialog_context" title="Section break properties">
+    <description>Edit a section break between slides</description>
+    <topic href="html/reference/sectionbreak.html" label="Section break properties"/>
+    <topic href="html/reference/htmlEditing.html" label="Editing HTML"/>
+ </context>
+ <context id="refresh_dialog_context" title="Refresh dialog">
+    <description>Update a catalog entry</description>
+    <topic href="html/reference/refresh.htm" label="Refresh dialog"/>
+ </context>
+ <context id="conflict_dialog_context" title="Import Conflict Resolution dialog">
+    <description>Resolving an import conflict</description>
+    <topic href="html/reference/conflict.htm" label="Import Conflict Resolution dialog"/>
+ </context>
+ <context id="printLayout_dialog_context" title="Print layout dialog">
+    <description>Configure a print layout</description>
+    <topic href="html/reference/printLayout.htm" label="Print layout dialog"/>
+ </context>
+ <context id="histogram_view_context" title="Histogram View">
+    <description>Histogram View</description>
+    <topic href="html/reference/histogram.html" label="Histogram View"/>
+ </context>
+ <context id="pasteMetadata_dialog_context" title="Paste Metadata">
+    <topic href="html/reference/pasteMetadata.html" label="Paste Metadata"/>
+ </context>
+ <context id="exportFolder_wizard_context" title="Export to folder">
+    <description>Export images to a folder</description>
+    <topic href="html/reference/exportFolder.html" label="Export to folder"/>
+ </context>
+ <context id="analogImport_dialog_context" title="Import analog images">
+    <description>Import analog images</description>
+    <topic href="html/reference/analogImport.html" label="Import analog images"/>
+ </context>
+ <context id="webGallery_view_context" title="Web Gallery Designer View">
+    <description>Create and design a web gallery</description>
+    <topic href="html/reference/webGallery.html" label="Web Gallery Designer View"/>
+ </context>
+ <context id="editWebGallery_dialog_context" title="WebGallery Properties">
+    <description>Configure a web gallery</description>
+    <topic href="html/reference/webGallery.html" label="Web Gallery Properties"/>
+    <topic href="html/reference/htmlEditing.html" label="Editing HTML"/>
+ </context>
+ <context id="storyboard_dialog_context" title="Storyboard Properties">
+    <description>Configure a storyboard</description>
+    <topic href="html/reference/webGallery.html#storyboard" label="Storyboard Properties"/>
+    <topic href="html/reference/htmlEditing.html" label="Editing HTML"/>
+ </context>
+ <context id="webExhibit_dialog_context" title="Web Exhibit Properties">
+    <description>Edit a web exhibit</description>
+    <topic href="html/reference/webGallery.html#exhibit" label="Web Exhibit Properties"/>
+    <topic href="html/reference/htmlEditing.html" label="Editing HTML"/>
+ </context>
+ <context id="ftpAccount_dialog_context" title="FTP Account Configuration">
+    <description>Configure an FTP account</description>
+    <topic href="html/reference/ftpAccount.html" label="FTP Account Configuration"/>
+ </context>
+ <context id="keywordSearch_dialog_context" title="Keyword Search">
+    <description>Keyword Search Syntax</description>
+    <topic href="html/reference/keywordSearch.html" label="Keyword Search"/>
+ </context>
+ <context id="timeSearch_dialog_context" title="Time Search">
+    <description>Search within a time interval</description>
+    <topic href="html/reference/timeSearch.html" label="Time Search"/>
+ </context>
+   <context id="duplicatesSearch_dialog_context" title="Duplicates Search">
+    <description>Search for duplicates</description>
+    <topic href="html/reference/duplicatesSearch.html" label="Duplicates Search"/>
+ </context>
+ <context id="seriesSearch_dialog_context" title="Series Search">
+    <description>Search for series</description>
+    <topic href="html/reference/seriesSearch.html" label="Series Search"/>
+ </context>
+   <context id="table_view_context" title="Table View">
+      <description>Table View</description>
+      <topic href="html/reference/tableView.htm" label="Table View"/>
+   </context>
+   <context id="splitCat_dialog_context" title="Split Catalog">
+      <description>Split the catalog into two</description>
+      <topic href="html/reference/splitCat.html" label="Split Catalog"/>
+   </context>
+   <context id="mergeCat_wizard_context" title="Merge Catalogs">
+      <description>Merge two catalogs</description>
+      <topic href="html/reference/mergeCat.html" label="Merge Catalogs"/>
+   </context>
+   <context id="configureColumns_dialog_context" title="Configure columns">
+      <description>Configure table view columns</description>
+      <topic href="html/reference/configureColumns.html" label="Configure columns"/>
+      <topic href="html/reference/tableView.htm" label="Table view"/>
+   </context>
+   <context id="timeShift_dialog_context" title="File filter">
+      <description>Apply a time shift</description>
+      <topic href="html/reference/timeShift.htm" label="Apply time shift"/>
+   </context>
+   <context id="mouse_page_context" title="Mouse preferences">
+      <description>Configure mouse usage</description>
+      <topic href="html/reference/mousePrefs.html" label="Mouse preferences"/>
+   </context>
+   <context id="face_page_context" title="Configure face detection">
+      <description>Configure face detection</description>
+      <topic href="html/reference/facePrefs.html" label="Configure face detection"/>
+   </context>
+   <context id="dataEntry_view_context" title="Data entry">
+      <description>Data entry view</description>
+      <topic href="html/reference/dataEntry.html" label="Data entry view"/>
+   </context>
+      <context id="rename_dialog_context" title="Bulk renaming">
+      <description>Bulk renaming</description>
+      <topic href="html/reference/bulkRename.html" label="Bulk renaming"/>
+   </context>
+   <context id="template_dialog_context" title="Template definition">
+      <description>Template definition</description>
+      <topic href="html/reference/templateDef.html" label="Template definition"/>
+   </context>
+   <context id="welcome" title="Getting started">
+      <description>First steps</description>
+      <topic href="html/gettingstarted/index.html" label="Getting started"/>
+   </context>
+   <context id="collections" title="Collections">
+      <description>Collections specify the selection and ordering of images through search and sort expressions</description>
+      <topic href="html/tasks/imageRetrieval.html" label="Image retrieval"/>
+      <topic href="html/reference/collectionEdit.html" label="Editing collections"/>
+   </context>
+   <context id="searchOptions" title="Search Options">
+      <description>Various search methods for retrieving images are available</description>
+      <topic href="html/tasks/imageRetrieval.html" label="Image retrieval"/>
+      <topic href="html/reference/duplicatesSearch.html" label="Duplicate search"/>
+      <topic href="html/reference/keywordSearch.html" label="Keyword search"/>
+      <topic href="html/reference/seriesSearch.html" label="Series search"/>
+      <topic href="html/reference/textSearch.html" label="Free text search"/>
+      <topic href="html/reference/timeSearch.html" label="Time search"/>
+      <topic href="html/reference/SearchSimilarDialog.html" label="Similarity search"/>
+   </context>
+   <context id="trackingRelationships" title="Relationships between images">
+      <description>Relationsships between images (derived images, composite images) can be created manually or automatically</description>
+      <topic href="html/reference/hierarchy.html" label="Hierarchy view"/>
+      <topic href="html/tasks/import.html" label="Importing images"/>
+   </context>
+   <context id="rawSupport" title="Raw image support">
+      <description>Raw images can be imported directly. During import they can be converted into the DNG format. Reciped from some raw converters can be applied.ö</description>
+      <topic href="html/concepts/raw.html" label="Working with RAW images"/>
+      <topic href="html/tasks/import.html" label="Importing images"/>
+      <topic href="html/reference/importPrefs.html" label="Import preferences"/>
+   </context>
+   <context id="albumsBookmarks" title="Albums and Bookmarks">
+      <description>Albums are arbitrary user defined image sets. Bookmarks can point to specific images.</description>
+      <topic href="html/reference/albums.html" label="Albums"/>
+      <topic href="html/reference/bookmarks.html" label="Bookmarks"/>
+   </context>
+   <context id="viewing" title="Image viewer and slide show">
+      <description>An internal image viewer and the slide show facility allow for easy viewing of single images and image sets</description>
+      <topic href="html/reference/imageViewer.html" label="Image Viewer"/>
+      <topic href="html/reference/slideshow.html" label="Creating a slide show"/>
+      <topic href="html/reference/slideshowPlayer.html" label="Viewing a slide show"/>
+   </context>
+   <context id="spellChecking" title="Spell checking">
+      <description>Spell checking can be enabled for most text inputs. In particular this can be useful for avoiding typing errors in keywords.</description>
+      <topic href="html/reference/spell.html" label="Spell checking facility"/>
+   </context>
+   <context id="externalPrograms" title="External programs">
+      <description>External image viewers and external image editors can easily be invoked.</description>
+      <topic href="html/reference/fileAssociations.html" label="File associations"/>
+   </context>
+   <context id="presentations" title="Exhibitions, Slide Show, and Web galleries">
+      <description>Presentations such as exhibitions, slide shows and web galleries can be created interactively. Web galleries can be uploaded to the Web.</description>
+      <topic href="html/reference/exhibition.html" label="Exhibitions"/>
+      <topic href="html/reference/slideshow.html" label="Creating slide shows"/>
+      <topic href="html/tasks/webgalleries.html" label="Web galleries"/>
+      <topic href="html/reference/webGallery.html" label="Designing Webgalleries"/>
+   </context>
+   <context id="export" title="Exporting images">
+      <description>Images can be exported to many targets such as FTP, Email, PDF, and web communities such as Flickr, Locr, Zooomr, and Smugmug.</description>
+      <topic href="html/reference/exportFolder.html" label="Export into local or remote (FTP) folder"/>
+      <topic href="html/reference/community.html" label="Web communities"/>
+   </context>
+   <context id="exif" title="EXIF and IPTC data">
+      <description>Exif and IPTC data can be viewed and edited through the metadata, EXIF, and IPTC views.</description>
+      <topic href="html/reference/metadata.html" label="Metadata views"/>
+      <topic href="html/tasks/dataentry.html" label="Data entry"/>
+   </context>
+   <context id="timeline" title="Time line">
+      <description>Time lines for images are automatically created during import.</description>
+      <topic href="html/reference/importPrefs.html" label="Configuring the time line creation"/>
+      <topic href="html/reference/catalog.html" label="The catalog view"/>
+   </context>
+   <context id="catalog" title="Catalog">
+      <description>The catalog contains thumbnails and metadata of all imported images, and also aggregated information such as keywords, locations, contacts, etc.</description>
+      <topic href="html/reference/catalog.html" label="Catalog view"/>
+      <topic href="html/reference/catProperties.html" label="Configuring the catalog"/>
+   </context>
+   <context id="voiceNotes" title="Voice notes">
+      <description>Various views allow adding voice notes to images</description>
+      <topic href="html/reference/galleries.html#voicenote" label="Galleries"/>
+      <topic href="html/reference/preview.html#voicenote" label="Preview"/>
+      <topic href="html/reference/hierarchy.html#voicenote" label="Hierarchy"/>
+   </context>
+   <context id="face" title="Face detection">
+      <description>Face detection and recognition</description>
+      <topic href="html/concepts/face.html" label="Face detection"/>
+   </context>
+   <context id="retarget_dialog_context" title="Retargeting">
+      <description>Retargeting orphaned catalog entries</description>
+      <topic href="html/reference/retarget.html" label="Retargeting"/>
+   </context>
+   <context id="collapsePattern_dialog_context" title="Collapse Pattern definition">
+      <description>Collapse Pattern definition</description>
+      <topic href="html/reference/collapsePattern.html" label="Collapse Pattern definition"/>
+   </context>
+   <context id="readme" title="Readme">
+      <description>Readme file</description>
+      <topic href="html/gettingstarted/readme.html" label="Readme file"/>
+   </context>
+   <context id="exhibitLayout_dialog_context" title="Exhibit Layout">
+      <description>Exhibit Layout</description>
+      <topic href="html/reference/exhibitLayout.html" label="Exhibit Layout"/>
+   </context>
+   <context id="tagCloud_view_context" title="Tag Cloud">
+      <description>Tag Cloud</description>
+      <topic href="html/reference/tagcloud.html" label="Tag Cloud"/>
+   </context>
+ <context id="watchedFolderFileSelection_wizard_context" title="Watched folder selection">
+    <description>Watched folder selection</description>
+    <topic href="html/reference/watchedFolderSelection.html" label="Watched folder selection"/>
+ </context>
+ <context id="watchedFolderMetadata_wizard_context" title="Parameters for transfer folders">
+    <description>Parameters for transfer folders</description>
+    <topic href="html/reference/watchedFolderMetadata.html" label="Parameters for transfer folders"/>
+ </context>
+ <context id="watchedFolderFilter_wizard_context" title="Filters for watched folders">
+    <description>Filters for watched folders</description>
+    <topic href="html/reference/watchedFolderFilters.html" label="Filters for watched folders"/>
+ </context>
+ <context id="regex_dialog_context" title="Regular expressions">
+    <description>Regular expression syntax</description>
+    <topic href="html/reference/regex.html" label="Regular expressions in source and target patterns"/>
+ </context>
+ <context id="migrate_dialog_context" title="Migration policy">
+    <description>Migration policy definition</description>
+    <topic href="html/reference/migrate.html" label="Catalog migration path transformation rules"/>
+ </context>
+ <context id="categorize_dialog_context" title="Categorize images">
+    <description>Categorizing multiple images in one go</description>
+    <topic href="html/reference/categorize.html" label="Categorize images"/>
+ </context>
+
+</contexts>

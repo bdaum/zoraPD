@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" activate="activate" immediate="true" name="com.bdaum.zoom.db.DbFactory">
+   <implementation class="com.bdaum.zoom.db.internal.DbFactory"/>
+   <service>
+      <provide interface="com.bdaum.zoom.core.db.IDbFactory"/>
+   </service>
+   <property name="factory" type="String" value="db"/>
+</scr:component>

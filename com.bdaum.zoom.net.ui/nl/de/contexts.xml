@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="internet_page_context" title="Internet-Benutzervorgaben">
+      <description>Einstellung für den Zugriff auf das Internet</description>
+      <topic href="html/internetPrefs.html" label="Internet-Benutzervorgaben"/>
+   </context>
+</contexts>

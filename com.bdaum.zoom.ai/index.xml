@@ -1,0 +1,16 @@
+<index>
+	<entry keyword="AI">
+			<topic href="html/ai.html" />
+	</entry>
+	<entry keyword="Artificial intelligence">
+			<topic href="html/ai.html" />
+	</entry>
+	<entry keyword="Translator">
+			<topic href="html/ai.html" />
+	</entry>
+	<entry keyword="Microsoft">
+		<entry keyword="Translator">
+				<topic href="html/ai.html" />
+		</entry>
+	</entry>
+</index>

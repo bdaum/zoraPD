@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="com.bdaum.zoom.net.InternetServicesComponent">
+    <implementation class="com.bdaum.zoom.net.ui.internal.NetActivator"/>
+	<service>
+        <provide interface="com.bdaum.zoom.core.IFTPService"/>
+    </service>
+</component>

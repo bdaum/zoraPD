@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+
+
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Image Processing</title>
+
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Image Processing </h2>SInce Version 3, <span style="font-style: italic;">ZoRa PhotoDirector</span> makes use of the excellent <span style="font-style: italic;">twelvemonkeys</span>
+image library. This library covers practically all of the popular image
+formats and many more. For some additional file formats we use the
+services of <span style="font-style: italic;">JAI</span> (Java advanced imaging), <span style="font-style: italic;">Jimi</span> (Java Image Management Interface), and <span style="font-style: italic;">ImageJ</span>. For information about RAW processing look <a href="raw.html">here</a>.<br>
+<h4>Image size</h4>
+There is no limit on the image size. However, since <span style="font-style: italic;">ZoRa PhotoDirector</span>
+keeps images completely in memory, large image are subsampled. When
+this happens depends on the main memory available. In consequence you
+cannot enlarge this images to pixel level when using the internal image
+viewer. If you require this feature, please embed an external image
+viewer (<a href="../reference/fileAssociations.html"><acronym>Windows&gt;Preferences&gt;External Programs</acronym><sup>*)</sup></a>).<br>
+<h4>JPEG 2000</h4>
+Unfortunately, the JPEG 2000 license is not compatible with the GNU public license under which<span style="font-style: italic;"> ZoRa PhotoDirector</span> is distributed. Therefore, by default,  <span style="font-style: italic;">ZoRa PhotoDirector</span> comes without JPEG 2000 support. However, if you require JPEG 2000 support, you can download <code>com.bdaum.zoom.image.jpeg2000_1.2.0.jar</code> from <a target="_blank" href="http://www.photozora.de/pd/downloads/jpeg2000.jar">here</a>, and place it into the folder <code>ZoRa/plugins/</code> within your installation folder. Then restart the application.<br>
+Note, that you must repeat this process after re-installing the application.<br>
+<h4>WebP</h4>
+WebP is a relatively new, Google-developed, open-source-based and free
+format for image files. At the same quality, it compresses images much
+better than JPeG. WebP is currently used mainly in the Goggle world
+(Chrome, Android), but also by some other providers (Facebook, NetFlix,
+Opera). <span style="font-style: italic;">ZoRa PhotoDirector</span> can import and export WebP files (export to folder or HTML).<br>
+<br>
+
+
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa Photo Director&gt;Preferences&gt;...</acronym>
+</body></html>

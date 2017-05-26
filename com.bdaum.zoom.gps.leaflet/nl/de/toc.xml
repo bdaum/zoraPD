@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Leaflet" link_to="../com.bdaum.zoom.gps/toc.xml#mappingSystems">
+	<topic label="Open Street Map"  href="html/osm.html"> 
+	</topic>
+ <topic href="html/openTopo.html" label="Open Topo Map">
+ </topic>
+ <topic href="html/hikeBike.html" label="HikeBike">
+ </topic>
+ <topic href="html/esriPhysical.html" label="esri World Physical">
+ </topic>
+ <topic href="html/esriOcean.html" label="esri Ocean Base Map">
+ </topic>
+</toc>

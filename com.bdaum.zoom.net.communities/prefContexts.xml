@@ -1,0 +1,6 @@
+<contexts>
+ <context id="internet_page_context" title="Community preference page">
+    <description>Preferences for accessing web communities</description>
+    <topic href="html/communityPrefs.html" label="Community preference page"/>
+ </context>
+</contexts>

@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+<meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Networking Preferences</title>
+
+<link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css"></head>
+<body>
+<h2>Networking Preferences </h2>
+The networking preferences are invoked via <acronym><a href="networkPrefs.html">Window&gt;Preferences&gt;Network</a><sup>*</sup></acronym>.<br><span style="font-weight: bold;"><br></span><h3><span style="font-weight: bold;">Own address</span></h3><ul><li>
+Here you find your own network address. </li><ul><li><span style="font-weight: bold;">Computer
+name (IP address)</span>. For information only. This field cannot
+be modified.</li><li><span style="font-weight: bold;">Port</span>.
+The communication port used. Normally you should use the provided
+default value. However, in some cases the port may already be in use,
+for example if another peer is running on the same computer. In this
+case choose a different value. You must restart the application after a port change.</li></ul></ul>
+<h3><a name="cat"></a>Shared catalogs</h3>
+Here you
+list all catalogs that can by accessed by other peers but also by
+yourself when performing a network search across multiple peers and/or
+multiple catalogs.<br>
+<br>
+<ul>
+<li>Use the <abbr>Add</abbr> button to add a new
+catalog to the list. That can be the currently opened catalog but also
+any other <code>.zdb</code> catalog on your computer. By
+clicking the new entry in the <span style="font-weight: bold;">Privacy</span>
+column you can adjust the privacy setting for the catalog:</li>
+<ul>
+<li><span style="font-weight: bold;">All</span>.
+All images in the catalog can be accessed by remote peers.</li>
+<li><span style="font-weight: bold;">Medium</span>.
+Only images classified as public or medium can be accessed by remote
+peers.</li>
+<li><span style="font-weight: bold;">Only public
+elements</span>. No restricted images can be accessed by remote
+peers.</li>
+<li><span style="font-weight: bold;">Local</span>.
+The catalog is not accessible by remote peers. This is the typical
+setting for performing local searches across multiple catalogs without
+opening to catalog to remote peers.</li>
+</ul>
+<li>Use the <abbr>Access Rights</abbr>
+button to reduce or extend the access rights of specific remote peers
+to the selected catalog. (You cannot add restrictions to catalogs with
+the <span style="font-style: italic;">Privacy</span>
+setting "Local").<br>
+By default each peer can search a catalog and
+view the results in full resolution.</li>
+<ul>
+<li>Mark <span style="font-weight: bold;">Search</span>
+to allow the peer search the catalog.</li>
+<li>Mark <span style="font-weight: bold;">View</span>
+to allow the peer to view items in full resolution</li>
+<li>Mark <span style="font-weight: bold;">Voice
+note</span> to allow the peer to replay voice notes</li>
+<li>Mark <span style="font-weight: bold;">Copy</span>
+to allow the peer to copy an item to his own node. (If <span style="font-weight: bold;">Voice note</span> is not
+marked, attached voice notes are not copied.)</li>
+</ul>
+Removing all
+marks will close the catalog for the specific peer.<br>
+<span style="font-weight: bold;">Note:</span>
+Access
+rights definitions will always affect the complete peer computer but
+not a single port!<br>
+</ul>
+<ul>
+<li>Use the <abbr>Remove</abbr> button to remove
+the selected access rights or the selected catalog from the list.</li>
+</ul>
+<h3><a name="peer"></a>Peer nodes</h3>
+<ul><li><span style="font-weight: bold;">Peers
+included in network search operations</span><br>
+Here you set up a list of all peers that you want to include into a
+network search:</li>
+<ul>
+<li>Use the <abbr>Add</abbr>
+button to add a new peer to the list. Specify the peer's computer name
+and communication port. If you want to use an IP address instead of the
+computer name make sure that the peer uses a fix IP address. Some
+operation systems allocate a different IP address after each new start.</li>
+<li>Use the <abbr>Remove</abbr> button to remove
+the selected peer definition from the list.</li>
+</ul>
+</ul>
+<br>
+<h3><a name="incoming"></a>Incoming calls</h3>
+Here
+you can monitor which other peers have accessed your catalogs. If you
+do not want a certain peer to access your catalogs, simply select him
+in the list and click the <abbr>Toggle blacklist</abbr>
+button. Another click re-establishes the access rights of that peer.<br>
+<br>
+<span style="font-weight: bold;">Note:</span>
+Blacklisting will always affect the complete peer computer but not a
+single port!<br>
+<br>
+By clicking the <abbr>Clear</abbr> button you can remove
+all entries from the list - except the blacklisted entries.&nbsp;<br>
+<br>
+<hr style="width: 100%; height: 2px;"><sup>*)</sup>
+On Mac use <acronym>ZoRa Photo
+Director&gt;Preferences&gt;...</acronym><br>
+</body></html>

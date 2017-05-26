@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>ZoRa exhibition</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=9">
+	<link href="../styles/style.css" rel="stylesheet" type="text/css">
+	<link href="../styles/m3d.css" rel="stylesheet" type="text/css">
+	<script src="../scripts/head.load.min.js" type="text/javascript"></script>
+	<script src="../res/config.js" type="text/javascript"></script>
+	<script src="../scripts/starter.js" type="text/javascript"></script>
+	<link rel="shortcut icon" href="./icon.ico">
+	<meta name="msapplication-task" content="name=ZoRa Virtual Exhibition;action-uri=./room.htm;icon-uri=/icon.ico">
+ </head>
+<body>
+	<div id="canvasLayout">
+		<div id="screen" style="cursor: default; ">
+			<canvas id="canvas" width="1258" height="793">Sorry, this demo requires a web browser which supports HTML5 canvas!</canvas>
+			<!--<div id="infopanel">
+				<div class="content">
+					<div id="fps">38</div>
+					<div>FPS</div>
+					<div id="lin"> / </div>
+					<div id="npoly">3122</div>
+					<div>POLYGONS</div>
+			</div>-->
+		</div>
+		<div class="contentView" style="display: none; "></div><div class="click" style="display: none; "></div></div>
+		<div id="logo">
+			<a id="logoDiv" href="http://www.photozora.org"><img src="../images/logo.png" alt=""/></a>
+		</div>
+		<div id="help">
+			<a href="#" id="aHowToUse">How to use</a> <a href="#" id="aSoundSwitch">Sound off</a><br/><a href="#" id="aVertRotSwitch">Vertical navigation off</a><br/><a href="#" id="aInertiaMinus">Inertia - </a><a href="#" id="aInertiaPlus">Inertia + </a>
+		</div>
+		<div id="rooms">
+			<!--<a href="#" id="aToOtherRoom"><img src="../images/other_room.png"></a>-->
+		</div>
+		<div id="keyArrows">
+			<a href="javascript:m3D.keyEvent(38);" class="keyArrowUp"></a>
+			<a href="javascript:m3D.keyEvent(40);" class="keyArrowDown"></a>
+			<a href="javascript:m3D.keyEvent(37);" class="keyArrowLeft"></a>
+			<a href="javascript:m3D.keyEvent(39);" class="keyArrowRight"></a>
+		</div>
+		<div id="mapInfo" style="bottom: 150px; width: 120px; ">Floorplan</div>
+		<div id="map" style="height: 120px; width: 120px; padding-top: 10px; padding-right: 10px; padding-bottom: 10px; padding-left: 10px; ">
+			<canvas id="mapCanvas" style="position: absolute;" width="120" height="120">Your browser does not support the HTML5 canvas element</canvas>
+		</div>
+	</div>
+	<div style="opacity: 0.9; ">
+        <div id="spec"/>
+	</div>
+	<!--How to Use-->
+	<div id="howToUse" class="dialog">
+		<a href="#" class="close closeDialogAction"></a>
+		<div class="buttons">
+			<a href="#" class="howToUseOK"></a>
+		</div>
+	</div>
+	<!--To other Room-->
+	<div id="toOtherRoom" class="dialog">
+		<div class="gallery">
+			<div id="galleryContent" class="content"/>
+		</div>
+		<a href="#" class="scrollLeft"></a><a href="#" class="scrollRight"></a><a href="#" class="close"></a>
+	</div>
+
+    <div id="toMessage" class="dialog">
+        <a href="#"></a>
+    </div>
+	<div id="audio">
+		<!--<audio preload="auto" loop="" src="../res/audio/1.mp3"></audio>-->
+	</div>
+	</body>
+	<!--<style type="text/css">embed[type*="application/x-shockwave-flash"],embed[src*=".swf"],object[type*="application/x-shockwave-flash"],object[codetype*="application/x-shockwave-flash"],object[src*=".swf"],object[codebase*="swflash.cab"],object[classid*="D27CDB6E-AE6D-11cf-96B8-444553540000"],object[classid*="d27cdb6e-ae6d-11cf-96b8-444553540000"],object[classid*="D27CDB6E-AE6D-11cf-96B8-444553540000"]{	display: none !important;}</style>-->
+</html>

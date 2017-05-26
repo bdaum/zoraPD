@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.core.recipeDetector">
+      <detector
+            class="com.bdaum.zoom.recipes.rt3.internal.RT3Detector"
+            description="%detector.description"
+            id="com.bdaum.zoom.recipes.rt3"
+            name="%detector.name">
+         <parameter
+               default="com.bdaum.zoom.recipes.rt3.inputFile"
+               id="com.bdaum.recipe.rt.metadatapriority"
+               name="%parameter.name">
+            <parameterValue
+                  id="com.bdaum.zoom.recipes.rt3.cache"
+                  label="%parameterValue.label.cache">
+            </parameterValue>
+            <parameterValue
+                  id="com.bdaum.zoom.recipes.rt3.inputFile"
+                  label="%parameterValue.label.sidecar">
+            </parameterValue>
+         </parameter>
+      </detector>
+   </extension>
+   <extension
+         point="org.eclipse.help.toc">
+      <toc
+            file="toc.xml"
+            primary="false">
+      </toc>
+   </extension>
+   <extension
+         point="org.eclipse.help.index">
+      <index
+            file="index.xml">
+      </index>
+   </extension>
+
+</plugin>

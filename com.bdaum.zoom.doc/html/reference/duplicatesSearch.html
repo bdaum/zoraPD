@@ -1,0 +1,21 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head><title>Duplicates Search</title>
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head>
+<body>
+<h2>Duplicates Search</h2>There are several methods to search for duplicates. None is perfect:<br><br><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Search by image name:</span>
+A simple search by comparing the names of images.</li><li><span style="font-weight: bold;">Search by file name:</span>
+A simple search by comparing the names of image files (last segment of the URI with or without the file name extension).</li><li><span style="font-weight: bold;">Search by exposure data:</span>
+Vital exposure data such as the creation date, camera type, exposure
+time, aperture, and focal length are used to compare images. This may
+fail for image series that are shot within the very same second and are
+exposed identically. It, of course, does not work for images without
+EXIF data such as images from analog media or screen shots.</li><li><span style="font-weight: bold;">Search by similarity:</span> The fastest search. It uses visual criteria to match images. These criteria are the same as in function <a href="SearchSimilarDialog.html">Content based search</a>.&nbsp;</li><li><span style="font-weight: bold;">Combined search</span>:
+Uses a similarity match followed by excluding images not matching by
+exposure data. This is the most precise matching algorithm, but also
+the slowest one.</li></ul><br>Optionally, you can exclude derived
+images from the search. For example, a DNG or TIFF image derived from a
+RAW image would - without this option set - show up as a duplicate.
+ <ul style="font-weight: normal;"></ul>
+<br>
+</body></html>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cheatsheet
+      title="Creating a user defined collection.">
+   <item
+         title="Find the group for user defined collections.">
+      <description>
+         In the Catalog view look for a group name &quot;user defined&quot;. Select this group. If you like you can edit the groups label with a double click.
+      </description>
+   </item>
+   <item
+         title="Creating a new collection.">
+      <description>
+         Perform a right click on the group and select &quot;Create new collection&quot;.
+   </description>
+   </item>
+   <item
+         title="Naming the new collection.">
+      <description>
+         Type &quot;Panorama&quot; into the <b>Name</b> field of the dialog.
+Into the <b>Description</b> field type &quot;Panorama are images with an Aspect Ratio of at least 2.0&quot;. You may notice that the description is automatically spell-checked if a dictionary was installed.
+      </description>
+   </item>
+   <item
+         title="Specifying the search criteria.">
+      <description>
+         In the dialog field <b>Group</b> select &quot;Properties&quot;. This is not essential but it makes it easier to find the required entry in the next dialog field.
+In the dialog field <b>Field</b> select now &quot;Aspect Ratio&quot;. This meta-data element contains the width of an image divided by its height.
+In the field <b>Relation</b> select &quot;&gt;=&quot; to find all images with a greater or equal value than the value entered in the next field.
+Finally enter &quot;2&quot; into the field <b>Value</b>.
+      </description>
+   </item>
+   <item
+         title="Sorting the results.">
+      <description>
+         The next line of fields in the Collection Edit Dialog is preset to sort the images found by creation date. You can accept this or enter a new sort criterion.
+For example, if you want to sort images by Aspect Ratio (widest images first),
+select &quot;Aspect Ratio&quot; in field <b>Sort Field</b> and &quot;descending&quot; in field <b>Sort Direction</b>.
+      </description>
+   </item>
+  <item
+        title="Finishing up.">
+     <description>
+        Now, press <b>OK</b> to save your new collection. After a short while the current gallery will show all panorama. 
+Later, you can just return and select the collection to show the panorama again. Note, that all collections are &amp;quot;life&amp;quot;. When new images are added, they will be shown in the collection if they meet the criteria defined in the collection.
+     </description>
+  </item>
+   <intro>
+      <description>
+ 		<b>Creating a user defined collection</b>
+In this tutorial you&apos;re going to create a user defined collection. In particular, we want to find all panorama in the catalog. A panorama can be defined by an aspect ratio of at least 2.0.
+      </description>
+   </intro>
+ </cheatsheet>

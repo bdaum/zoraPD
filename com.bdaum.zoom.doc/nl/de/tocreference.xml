@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Referenz"> 
+	<topic label="Benutzeroberfläche"> 
+		<topic href="html/reference/perspective.html" label="Perspektiven">
+     <topic label="Lichtkasten">
+     </topic>
+     <topic label="Hüllen">
+     </topic>
+     <topic label="Dateneingabe">
+     </topic>
+     <topic label="Diashow">
+     </topic>
+     <topic label="Ausstellung">
+     </topic>
+     <topic label="Webgalerie">
+     </topic>
+     <topic label="Geo">
+     </topic>
+  </topic>
+  <topic href="html/reference/views.html" label="Sichtfenster">
+     <topic href="html/reference/galleries.html" label="Galerien">
+        <topic href="html/reference/lightbox.html" label="Lichtkasten">
+        </topic>
+        <topic href="html/reference/sleeves.htm" label="Hüllen">
+        </topic>
+        <topic href="html/reference/tableView.htm" label="Tabelle">
+        </topic>
+        <topic href="html/reference/hstrip.html" label="Horizontaler Streifen">
+        </topic>
+        <topic href="html/reference/vstrip.html" label="Vertikaler Streifen">
+        </topic>
+        <topic href="html/reference/duplicates.html" label="Duplikate">
+        </topic>
+        <topic href="html/reference/series.html" label="Serien">
+        </topic>
+     </topic>
+     <topic href="html/reference/catalog.html" label="Katalog">
+     </topic>
+     <topic href="html/reference/history.html" label="Verlauf">
+     </topic>
+     <topic href="html/reference/preview.html" label="Vorschau">
+     </topic>
+     <topic href="html/reference/histogram.html" label="Histogramm">
+     </topic>
+     <topic href="html/reference/hierarchy.html" label="Hierarchie">
+     </topic>
+     <topic href="html/reference/metadata.html" label="Metadaten">
+     </topic>
+     <topic href="html/reference/dataEntry.html" label="Dateneingabe">
+     </topic>
+     <topic href="html/reference/tagcloud.html" label="Tag-Wolke">
+     </topic>
+     <topic href="html/reference/slideshow.html" label="Diashow-Designer">
+     </topic>
+     <topic href="html/reference/exhibition.html" label="Ausstellungs-Designer">
+     </topic>
+          <topic href="html/reference/webGallery.html" label="Webgalerie-Designer">
+     </topic>
+     <topic label="Web-Engines">
+        <anchor id="webEngines"/>
+     </topic>
+     <topic href="html/reference/trashcan.html" label="Mülleimer">
+     </topic>
+     <topic href="html/reference/logView.html" label="Protokoll">
+     </topic>
+     <topic href="html/reference/progress.html" label="Fortschritt">
+     </topic>
+     <topic href="html/reference/bookmarks.html" label="Lesezeichen">
+     </topic>
+     <anchor id="views"/>
+  </topic>
+  <topic href="html/reference/albums.html" label="Albums">
+  </topic>
+  <topic href="nl/de/html/reference/spell.html" label="Rechtschreibung">
+  </topic>
+  <topic href="html/reference/slideshowPlayer.html" label="Diashow-Abspieleinheit">
+  </topic>
+  <topic href="html/reference/internalViewer.html" label="Interner Bildbetrachter">
+  </topic>
+  <anchor id="viewers"/>
+	</topic>
+	<topic label="Benutzereinstellungen">
+		<topic label="Allgemein" href="html/reference/generalPrefs.html" />
+  <topic href="html/reference/applicationPrefs.html" label="Anwendung">
+  </topic>
+  <topic href="html/reference/appearancePrefs.html" label="Darstellung">
+  </topic>
+  <topic href="html/reference/audioPrefs.html" label="Audio">
+  </topic>
+  <topic href="html/reference/fileAssociations.html" label="Externe Programme">
+  </topic>
+  <topic href="html/reference/importPrefs.html" label="Import">
+  </topic>
+  <topic href="html/reference/catPrefs.html" label="Katalog">
+  </topic>
+  <topic href="html/reference/mousePrefs.html" label="Maus">
+  </topic>
+  <topic href="html/reference/metadataPrefs.html" label="Metadaten">
+  </topic>
+  <topic href="html/reference/keywordPrefs.html" label="Schlagworte">
+  </topic>
+  <topic href="html/reference/perspectivePrefs.html" label="Perspektiven">
+  </topic>
+  <topic href="html/reference/keyPrefs.html" label="Tastenkürzel">
+  </topic>
+  <anchor id="preferences"/>
+ </topic>
+    <topic label="Export">
+    <anchor id="export"/>
+    <anchor id="internet"/>
+    <topic label="Andere">
+       <topic href="html/reference/exportFolder.html" label="Lokale Ordner und  FTP">
+       </topic>
+       <anchor id="exportOthers"/>
+    </topic>
+ </topic>
+    <topic label="Import">
+       <anchor id="import"/>
+    </topic>
+ <anchor id="reference"/>
+ <topic href="html/reference/css.html" label="CSS-Stylesheets">
+ </topic>
+ <topic href="html/reference/commandline.html" label="Kommandozeilenparameter">
+ </topic>
+ <topic label="Copyright">
+ </topic>
+  <topic label="Erweiterungen">
+    <anchor id="extensions"/>
+ </topic>
+ <topic href="html/reference/developers.html" label="Entwickler">
+    <topic href="html/reference/extensionPoints.html" label="Erweiterungspunkte">
+       <topic href="html/reference/importFilter.html" label="com.bdaum.zoom.image.importFilter">
+       </topic>
+       <topic href="html/reference/community.html" label="com.bdaum.zoom.net.communities.community">
+       </topic>
+       <topic href="html/reference/webGalleryGenerator.html" label="com.bdaum.zoom.ui.galleryGenerator">
+       </topic>
+       <topic href="html/reference/gpsParser.html" label="com.bdaum.zoom.ui.gpsParser">
+       </topic>
+       <topic href="html/reference/imageViewer.html" label="com.bdaum.zoom.ui.imageViewer">
+       </topic>
+       <topic href="html/reference/mappingSystem.html" label="com.bdaum.zoom.gps.mappingSystem">
+       </topic>
+        <topic href="html/reference/recipeDetector.html" label="com.bdaum.zoom.core.recipeDetector">
+       </topic>
+     </topic>
+   <topic href="html/reference/menuToolbars.html" label="Menüs und Werkzeugleisten">
+    </topic>
+       <topic label="Benutzerhilfe">
+       <topic href="html/reference/helppages.html" label="Hilfeseiten beisteuern">
+       </topic>
+       <topic href="html/reference/shortcuts.html" label="Tastenkürzel beisteuern">
+       </topic>
+    </topic>
+       <topic href="html/reference/api.html" label="API">
+       </topic>
+ </topic>
+
+</toc>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="recipeDetector" name="Raw Developer Recipe Detector" schema="schema/recipeDetector.exsd"/>
+   <extension-point id="catalogContributor" name="Catalog Contributor" schema="schema/catalogContributor.exsd"/>
+   <extension-point id="resumeHandler" name="Resume Handler" schema="schema/resumeHandler.exsd"/>
+   <extension-point id="mediaSupport" name="Media Support" schema="schema/mediaSupport.exsd"/>
+   <extension-point id="configuratorExtension" name="Database Configurator Extension" schema="schema/configuratorExtension.exsd"/>
+   <extension-point id="catalogTheme" name="Catalog theme" schema="schema/catalogTheme.exsd"/>
+   <extension
+         point="com.bdaum.zoom.core.catalogTheme">
+      <theme
+            categories="categories.ini"
+            default="true"
+            id="com.bdaum.zoom.core.theme.general"
+            keywords="keywords.ini"
+            name="%theme.name.general">
+      </theme>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.core.catalogTheme">
+      <theme
+            categories="categories_food.ini"
+            id="com.bdaum.zoom.core.theme.food"
+            keywords="keywords_food.ini"
+            name="%theme.name.food">
+      </theme>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.core.catalogTheme">
+      <theme
+            categories="categories_travel.ini"
+            id="com.bdaum.zoom.core.theme.travel"
+            keywords="keywords_travel.ini"
+            name="%theme.name.travel">
+      </theme>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.core.catalogTheme">
+      <theme
+            categories="categories_wedding.ini"
+            id="com.bdaum.zoom.core.theme.wedding"
+            keywords="keywords_wedding.ini"
+            name="%theme.name.wedding">
+      </theme>
+   </extension>
+</plugin>

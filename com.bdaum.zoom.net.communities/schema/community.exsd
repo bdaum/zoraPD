@@ -1,0 +1,386 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="com.bdaum.zoom.net.communities" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appinfo>
+         <meta.schema plugin="com.bdaum.zoom.net.communities" id="community" name="Community"/>
+      </appinfo>
+      <documentation>
+         Extension point for adding new web photo community uploaders
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element />
+         </appinfo>
+         <documentation>
+            Extension point for supporting additional web communities
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="community"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="account">
+      <annotation>
+         <documentation>
+            Community account
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="accountType" minOccurs="0" maxOccurs="unbounded"/>
+            <element ref="accessType" minOccurs="0" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="authentification" use="required">
+            <annotation>
+               <documentation>
+                  Authorization type (password, authorization token)
+               </documentation>
+            </annotation>
+            <simpleType>
+               <restriction base="string">
+                  <enumeration value="password">
+                  </enumeration>
+                  <enumeration value="authorization">
+                  </enumeration>
+               </restriction>
+            </simpleType>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="community">
+      <annotation>
+         <documentation>
+            Web photo community
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="account"/>
+         </sequence>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Translatable name of community
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="home" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Home URL
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="icon" type="string">
+            <annotation>
+               <documentation>
+                  Community logo
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="resource"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Unique community ID
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="identifier"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="api" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Class implementing the image uploader. Must extend org.scohen.juploadr.uploadapi.ImageUploadApi
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn="org.scohen.juploadr.uploadapi.ImageUploadApi:"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="bannerImage" type="string">
+            <annotation>
+               <documentation>
+                  Larger community logo for use in wizard banner, approx. 64x64 pixels
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="resource"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="supportsGeocoding" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Specifies if community supports geocoding
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="supportsPhotosets" use="default" value="false">
+            <annotation>
+               <documentation>
+                  false: No photosets at all
+true: nor or multiple photosets per image
+single: exactly one photoset per image
+               </documentation>
+            </annotation>
+            <simpleType>
+               <restriction base="string">
+                  <enumeration value="false">
+                  </enumeration>
+                  <enumeration value="true">
+                  </enumeration>
+                  <enumeration value="single">
+                  </enumeration>
+               </restriction>
+            </simpleType>
+         </attribute>
+         <attribute name="supportsTagging" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Specifies if community supports tagging (keywords)
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="supportsCategories" use="default" value="false">
+            <annotation>
+               <documentation>
+                  false: no categories at all
+true: images may declare a category
+set: only photosets may declare a category
+               </documentation>
+            </annotation>
+            <simpleType>
+               <restriction base="string">
+                  <enumeration value="true">
+                  </enumeration>
+                  <enumeration value="false">
+                  </enumeration>
+                  <enumeration value="set">
+                  </enumeration>
+               </restriction>
+            </simpleType>
+         </attribute>
+         <attribute name="supportsSubCategories" use="default" value="false">
+            <annotation>
+               <documentation>
+                  false: no subcategories at all
+true: images may declare a subcategory
+set: only photosets may declare a subcategory
+               </documentation>
+            </annotation>
+            <simpleType>
+               <restriction base="string">
+                  <enumeration value="true">
+                  </enumeration>
+                  <enumeration value="false">
+                  </enumeration>
+                  <enumeration value="set">
+                  </enumeration>
+               </restriction>
+            </simpleType>
+         </attribute>
+         <attribute name="sessions" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Specifies if community needs session logic
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="errorHandler" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":org.scohen.juploadr.uploadapi.IErrorHandler"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="accessType">
+      <annotation>
+         <documentation>
+            access type such as private or public
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="accessTypeDetail" minOccurs="0" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="key" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Unique key
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="label" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Translatable label
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="isDefault" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  true, if this is the default access type
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="accountType">
+      <annotation>
+         <documentation>
+            A possible account type such as free or pro.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="key" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Unique key
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="label" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Translatable label
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="accessTypeDetail">
+      <annotation>
+         <documentation>
+            Access type detail information
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="key" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Unique key
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="label" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Translatable label
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="initValue" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Initial value
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="since"/>
+      </appinfo>
+      <documentation>
+         0.9.0
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="examples"/>
+      </appinfo>
+      <documentation>
+         com.bdaum.zoom.net.communities.flickr/plugin.xml
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="apiinfo"/>
+      </appinfo>
+      <documentation>
+         see  org.scohen.juploadr.uploadapi.ImageUploadApi
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="implementation"/>
+      </appinfo>
+      <documentation>
+         com.bdaum.zoom.net.communities.flickr
+com.bdaum.zoom.net.communities.locr
+com.bdaum.zoom.net.communities.smugmug
+com.bdaum.zoom.net.communities.zoomr
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="copyright"/>
+      </appinfo>
+      <documentation>
+         2010 Berthold Daum
+      </documentation>
+   </annotation>
+
+</schema>

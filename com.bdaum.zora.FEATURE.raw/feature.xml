@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.bdaum.zora.FEATURE.raw"
+      label="Foreign"
+      version="3.0.0"
+      provider-name="bdaum industrial communications">
+
+   <description url="http://www.example.com/description">
+      Advanced raw support: import of foreign catalogs, raw recipe reflection
+   </description>
+
+   <copyright url="http://www.example.com/copyright">
+      (c) 2017 Berthold Daum
+   </copyright>
+
+   <license url="http://www.example.com/license">
+      This program is provided to you under the terms and conditions
+of the GNU General Public License (GPL) as published by the Free
+Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+   </license>
+
+   <plugin
+         id="com.bdaum.zoom.cat.foreign"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.cat.foreign.win32.x64"
+         os="win32"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.cat.foreign.linux.x64"
+         os="linux"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.cat.foreign.linux.x86"
+         os="linux"
+         arch="x86"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.cat.foreign.macosx.x64"
+         os="macosx"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.cat.foreign.win32.x86"
+         os="win32"
+         arch="x86"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.cat.foreign.bibble"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.cat.foreign.c1"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.cat.foreign.lr"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.recipes.acr"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.recipes.bibble"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.recipes.c1"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.recipes.lightZone"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.recipes.rt"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.recipes.rt3"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

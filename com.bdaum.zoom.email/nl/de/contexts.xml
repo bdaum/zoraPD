@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="email_wizard_context" title="E-Mail-Assistent">
+      <description>E-Mails aus ausgewählten Bilder erzeugen</description>
+      <topic href="html/email.html" label="E-Mail-Assistent"/>
+   </context>
+   <context id="pdf_wizard_context" title="PDF-Assistent">
+      <description>PDF aus ausgewählten Bildern erzeugen</description>
+      <topic href="html/pdf.html" label="PDF-Assistent"/>
+   </context>
+   <context id="html_wizard_context" title="HTML-Assistent">
+      <description>Eine HTML-Seite aus ausgewählten Bilder erzeugen</description>
+      <topic href="html/html.html" label="HTML-Assistent"/>
+   </context>
+
+</contexts>

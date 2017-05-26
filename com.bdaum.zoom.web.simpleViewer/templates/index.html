@@ -1,0 +1,25 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<meta name="description" content="${description}">
+	<meta name="keywords" content="${keywords}">
+	<meta name="date" content="${date}">
+	<title>${name}</title>
+${headhtml}
+</head>
+<body bgcolor="${shadecolor}" ${bgimage}>${tophtml}
+${nameplatediv}
+	<!--START SIMPLEVIEWER EMBED.-->
+	<script type="text/javascript" src="${simpleviewer}"></script>
+	<script type="text/javascript">
+	simpleviewer.ready(function () {
+		simpleviewer.load('sv-container', '100%', '${viewerHeight}%', '${backgroundcolor}', true);
+	});
+	</script>
+	<div style="margin:${topmargin}px ${rightmargin}px ${bottommargin}px ${leftmargin}px;" id="sv-container"></div>
+	<!-- END SIMPLEVIEWER EMBED -->
+<div id="footer" align="center">${footer}</div>
+${footerhtml}
+</body>
+</html>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toc label="Netzwerk einrichten" link_to="../com.bdaum.zoom.doc/toctasks.xml#tasks">
+  <topic label="Netzwerk">
+    <topic href="html/geography.html" label="Die Netzwerk-Geographie definieren">
+   </topic>
+   <topic href="html/sharedCatalogs.html" label="Kataloge freigeben">
+   </topic>
+   <topic href="html/troubleshooting.html" label="Fehler beheben">
+   </topic>
+    </topic>
+</toc>

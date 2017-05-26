@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+<!--
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            description="%fullScreenActionSetDesc"
+            id="org.ugosan.eclipse.fullscreen.actionSet"
+            label="%fullScreenActionSet"
+            visible="true">
+         <action
+               class="org.ugosan.eclipse.fullscreen.FullScreenActionDelegate"
+               definitionId="org.ugosan.eclipse.fullscreen.fullscreenCommand"
+               id="org.ugosan.eclipse.fullscreen.fullscreenAction"
+               label="%fullScreen"
+               menubarPath="window/windowStart"
+               state="false"
+               style="toggle">
+         </action>
+      </actionSet>
+   </extension>
+-->
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            categoryId="org.eclipse.ui.category.window"
+            defaultHandler="org.ugosan.eclipse.fullscreen.FullScreenCommand"
+            description="%fullScreenCommandDesc"
+            id="org.ugosan.eclipse.fullscreen.fullscreenCommand"
+            name="%fullScreenCommand">
+         <state
+               class="org.eclipse.ui.handlers.RegistryToggleState:false"
+               id="org.eclipse.ui.commands.toggleState">
+         </state>
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.ugosan.eclipse.fullscreen.fullscreenCommand"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
+            sequence="F11">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+         <menuContribution
+               allPopups="false"
+               locationURI="menu:window?after=windowStart">
+            <command
+                  commandId="org.ugosan.eclipse.fullscreen.fullscreenCommand"
+                  label="%command.label"
+                  mnemonic="%command.mnemonic"
+                  style="toggle"
+                  tooltip="%command.tooltip">
+           </command>
+         </menuContribution>
+         
+   </extension>
+
+</plugin>

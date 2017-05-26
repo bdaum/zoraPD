@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+
+
+
+
+  
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>LightZone Support</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css"></head>
+<body style="color: rgb(0, 0, 0);" alink="#ee0000" link="#0000ee" vlink="#551a8b">
+<h2>LightZone Support<br>
+</h2>
+
+<p>The free image editor and raw converter <a href="http://lightzoneproject.org/" target="_blank">LightZone</a>
+works a bit different from other raw converters. Recipes are stored in
+JPeG files, the filename suffixed with "<code>_lzn</code>". This JPeG image is just
+a thumbnail of the orignal image with the recipe applied. It also
+contains a pointer to the original image.</p><p>This has advantages and disadvantages:</p><ul><li>The
+thumbnail saves us from reapplying the processing described by the
+recipe. By importing both the original and the <code>_lzn.jpg</code> file into <span style="font-style: italic;">ZoRa Photo Director</span> you can see both the original state and the processed state of an image.</li><li>However,
+the LZN files don't like the original to be moved or renamed. The
+pointer in the LZN file becomes invalid and the LZN can no longer be
+edited with LightZone. In&nbsp; <span style="font-style: italic;">ZoRa Photo Director</span> this would affect the operation <span style="font-weight: bold;">Move</span>, <span style="font-weight: bold;">Rename</span> and<span style="font-weight: bold;"> Import folder into new Structure</span>.&nbsp; <span style="font-style: italic;">ZoRa Photo Director</span>
+solves this problem. solves this problem by automatically updating the
+pointers in the LZN files when an original is moved or renamed.&nbsp;<br><span style="font-weight: bold;">Hint:</span> When importing both original and LZN-files into a new folder structure make sure this happens within the same session.</li></ul><p> <span style="font-style: italic;">ZoRa Photo Director&nbsp;</span>is
+able to detect the relationships between original files and derived LZN
+files and to display those relationships in the <a href="../../com.bdaum.zoom.doc/html/reference/hierarchy.html"><span style="font-style: italic;">Hierarchy view</span></a>. To do
+so mark the respective option in&nbsp;<a href="PLUGINS_ROOT/com.bdaum.zoom.doc/html/reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;General</acronym></a><a href="PLUGINS_ROOT/com.bdaum.zoom.doc/html/reference/importPrefs.html"><acronym><sup>*</sup></acronym></a><a href="PLUGINS_ROOT/com.bdaum.zoom.doc/html/reference/importPrefs.html">.</a></p><span style="color: red;"></span><br>
+
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa Photo Director&gt;Preferences&gt;...</acronym><acronym></acronym><br>
+
+<br>
+</body></html>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cheatsheet
+      title="Eine benutzerdefinierte Kollektion anlegen">
+   <item
+         title="Die Gruppe für  benutzerdefinierte Kollektionen aufsuchen.">
+      <description>
+         Suchen Sie im Katalog-Sichtfenster die Gruppe &quot;benutzerdefiniert&quot;. Selektieren Sie diese Gruppe. Wenn Sie wollen, können Sie die Gruppe doppelklicken, um den Namen der Gruppe zu ändern.
+      </description>
+   </item>
+   <item
+         title="Eine neue Kollektion anlegen.">
+      <description>
+         Klicken Sie die Gruppe mit der rechten Maustaste und wählen Sie &quot;Neue Kollektion anlegen&quot; aus.
+   </description>
+   </item>
+   <item
+         title="Die neue Kollektion benennen.">
+      <description>
+         Tippen Sie &quot;Panoramen&quot; in das Dialogfeld <b>Name</b>.
+In das Feld <b>Beschreibung</b> tippen Sie: &quot;Panoramen sind Bilder mit einem Seitenverhältnis von mindestens 2,0&quot;. Sie werden bemerken, dass die Beschreibung auf Rechtschreibung überprüft wird (sofern ein Wörterbuch installiert wurde.
+      </description>
+   </item>
+   <item
+         title="Die Suchkriterien spezifizieren.">
+      <description>
+         Im Dialogfeld <b>Gruppe</b> selektieren Sie &quot;Eigenschaften&quot;. Das ist nicht unbedingt notwendig, erleichtert aber das Auffinden des gewünschten Eintrags im nächsten Dialogfeld.
+Im Dialogfeld<b>Feld</b> selektieren Sie nun &quot;Seitenverhältnis&quot;. Diese Metadatenelement enthält die Breite des Bildes dividiert durch die Länge.
+Im Feld <b>Relation</b> selektieren Sie &quot;&gt;=&quot;, um alle Bilder mit einem größeren oder gleichen Wert wie im nächsten Feld angegeben zu finden.
+Schließlich geben Sie &quot;2&quot; in das Feld <b>Wert</b> ein.
+      </description>
+   </item>
+   <item
+         title="Die Ergebnisse sortieren.">
+      <description>
+         Die nächste Feldzeile des Dialogs enthält bereits Standardeinträge für das Sortieren - und zwar nach Bilderstellungsdatum. Sie können das akzeptieren oder ein anderes Sortierkriterium eingeben.
+Zum Beispiel möchten Sie die breitesten Panoramen am Anfang zeigen. Dazu selektieren Sie 
+ &quot;Seitenverhältnis&quot; im Feld <b>Sortierfeld</b> und &quot;absteigend&quot; im Geld <b>Sortierrichtungn</b>.
+      </description>
+   </item>
+  <item
+        title="Finishing up.">
+     <description>
+        Klicken Sie nun <b>OK</b>, um die neue Kollektion zu sichern. Nach ein paar Sekunden wird die aktuelle Galerie alle Panoramen anzeigen. 
+Später können Sie jederzeit die neuen Kollektion erneut selektieren, um die Panoramen erneut anzuschauen. Übrigens sind alle Kollektionen "life": Neue Panoramen werden automatisch den gefundenen Panoramen hinzugefügt.
+     </description>
+  </item>
+   <intro>
+      <description>
+ 		<b>Eine benutzerdefinierte Kollektion anlegen</b>
+In diesem Tutorial werden Sie eine eigene benutzerdefinierte Kollektion anlegen, und zwar eine Kollektion, die alle im Katalog vorhandenen Panoramen enthält. Dabei klassifizieren wir alle Bilder mit einem Seitenverhältnis von 2,0 oder mehr als Panorama.
+      </description>
+   </intro>
+ </cheatsheet>

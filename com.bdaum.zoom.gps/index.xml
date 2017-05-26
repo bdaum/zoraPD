@@ -1,0 +1,67 @@
+<index>
+	<entry keyword="Geo-tagging">
+		<topic href="html/geoTagging.html" />
+		<entry keyword="importing tracker file">
+			<topic href="html/importing.html" />
+		</entry>
+		<entry keyword="manual ~">
+			<topic href="html/manual.html" />
+		</entry>
+	</entry>
+	<entry keyword="GPX">
+			<topic href="html/importing.html" />
+	</entry>
+	<entry keyword="NMEA">
+			<topic href="html/importing.html" />
+	</entry>
+	<entry keyword="Geo-naming">
+		<topic href="html/geonaming.html" />
+		<topic href="html/geoTagging.html" />
+	</entry>
+	<entry keyword="GPS">
+		<topic href="html/gps.html" />
+	</entry>
+	<entry keyword="trackpoint">
+		<topic href="html/trackpoint.html" />
+	</entry>
+	<entry keyword="subtrack">
+		<topic href="html/trackpoint.html" />
+	</entry>
+	<entry keyword="Google">
+		<entry keyword="Places">
+			<topic href="html/geoTagging.html" />
+		</entry>
+	</entry>
+	<entry keyword="Location">
+		<topic href="html/locations.html" />
+	</entry>
+	<entry keyword="Map view">
+		<topic href="html/maps.html" />
+	</entry>
+	<entry keyword="Geographical Search">
+		<topic href="html/searching.html" />
+	</entry>
+	<entry keyword="View">
+		<entry keyword="Map">
+			<topic href="html/maps.html" />
+		</entry>
+	</entry>
+		<entry keyword="Search">
+		<entry keyword="geographical">
+			<topic href="html/searching.html" />
+		</entry>
+	</entry>
+	<entry keyword="Mouse gestures">
+		<topic href="html/maps.html" />
+	</entry>
+	<entry keyword="Reverse Geo-coding">
+		<topic href="html/gps.html" />
+		<topic href="html/geoTagging.html" />
+	</entry>
+	<entry keyword="Web browser">
+		<entry keyword="Show map in external ~">
+			<topic href="html/maps.html" />
+		</entry>
+	</entry>
+
+</index>

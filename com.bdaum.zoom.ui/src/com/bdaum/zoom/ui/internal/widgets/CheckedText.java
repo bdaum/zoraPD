@@ -1,0 +1,416 @@
+/*
+ * This file is part of the ZoRa project: http://www.photozora.org.
+ *
+ * ZoRa is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ZoRa is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ZoRa; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ */
+
+package com.bdaum.zoom.ui.internal.widgets;
+
+import java.util.List;
+
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.FocusListener;
+import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.MenuDetectEvent;
+import org.eclipse.swt.events.MenuDetectListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.TraverseListener;
+import org.eclipse.swt.events.VerifyListener;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+
+import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.ISpellCheckingService;
+import com.bdaum.zoom.core.ISpellCheckingService.ISpellIncident;
+import com.bdaum.zoom.ui.internal.job.SpellCheckingJob;
+
+public class CheckedText extends Composite implements ISpellCheckingTarget,
+		PaintListener {
+	private static final int[] NOREDSEA = new int[0];
+	private StyledText control;
+	private int maxSuggestions = 10;
+	private int spellingOptions = ISpellCheckingService.KEYWORDOPTIONS;
+	private ISpellIncident[] incidents;
+
+	public CheckedText(Composite parent, int style) {
+		this(parent, style, ISpellCheckingService.DESCRIPTIONOPTIONS);
+	}
+
+	public CheckedText(Composite parent, int style, int spellingOptions) {
+		super(parent, SWT.NONE);
+		this.spellingOptions = spellingOptions;
+		control = new StyledText(this, style);
+		setLayout(new FillLayout());
+		if (spellingOptions != ISpellCheckingService.NOSPELLING)
+			control.addModifyListener(new ModifyListener() {
+
+				public void modifyText(ModifyEvent e) {
+					if (control.getText().length() > 0)
+						checkSpelling();
+				}
+			});
+		control.addPaintListener(this);
+		control.addMenuDetectListener(new MenuDetectListener() {
+
+			@SuppressWarnings("unused")
+			public void menuDetected(MenuDetectEvent e) {
+				Menu oldMenu = control.getMenu();
+				if (oldMenu != null)
+					oldMenu.dispose();
+				if (incidents != null) {
+					Point loc = control.toControl(e.x, e.y);
+					int offset;
+					try {
+						offset = control.getOffsetAtLocation(loc);
+						for (ISpellIncident inc : incidents) {
+							final ISpellIncident incident = inc;
+							if (incident.happensAt(offset)) {
+								Menu menu = new Menu(control.getShell(),
+										SWT.POP_UP);
+								String[] suggestions = incident
+										.getSuggestions();
+								if (suggestions != null
+										&& suggestions.length > 0) {
+									for (String proposal : suggestions) {
+										final String newWord = proposal;
+										MenuItem item = new MenuItem(menu,
+												SWT.PUSH);
+										item.setText(proposal);
+										item.addSelectionListener(new SelectionAdapter() {
+											@Override
+											public void widgetSelected(
+													SelectionEvent e1) {
+												String oldText = control
+														.getText();
+												int woff = incident.getOffset();
+												int wlen = incident
+														.getWrongWord()
+														.length();
+												String newText = oldText
+														.substring(0, woff)
+														+ newWord
+														+ oldText
+																.substring(woff
+																		+ wlen);
+												control.setText(newText);
+											}
+										});
+									}
+									new MenuItem(menu, SWT.SEPARATOR);
+								}
+								MenuItem item = new MenuItem(menu, SWT.PUSH);
+								item.setText(Messages.CheckedText_add_to_dict);
+
+								item.addSelectionListener(new SelectionAdapter() {
+									@Override
+									public void widgetSelected(SelectionEvent e1) {
+										incident.addWord();
+										checkSpelling();
+									}
+								});
+								control.setMenu(menu);
+								break;
+							}
+						}
+					} catch (IllegalArgumentException e1) {
+						// nothing found
+					}
+
+				}
+			}
+		});
+	}
+
+	void checkSpelling() {
+		Job.getJobManager().cancel(Constants.SPELLING);
+		new SpellCheckingJob(this, getText(), spellingOptions, maxSuggestions)
+				.schedule(10);
+	}
+
+	/**
+	 * @return the control
+	 */
+	public StyledText getControl() {
+		return control;
+	}
+
+	public String getText() {
+		return control.getText();
+	}
+
+	public void setText(String text) {
+		control.setText(text == null ? "" : text); //$NON-NLS-1$
+	}
+
+	public void addVerifyListener(VerifyListener listener) {
+		control.addVerifyListener(listener);
+	}
+
+	public void removeVerifyListener(VerifyListener listener) {
+		control.removeVerifyListener(listener);
+	}
+
+
+
+	@Override
+	public boolean setFocus() {
+		return control.setFocus();
+	}
+
+	public void setSelection(Point point) {
+		control.setSelection(point);
+	}
+
+	@Override
+	public void setEnabled(boolean enabled) {
+		control.setEnabled(enabled);
+	}
+
+	/**
+	 * @param listener
+	 * @see org.eclipse.swt.widgets.Control#addMouseListener(org.eclipse.swt.events.MouseListener)
+	 */
+	@Override
+	public void addMouseListener(MouseListener listener) {
+		control.addMouseListener(listener);
+	}
+
+	/**
+	 * @param listener
+	 * @see org.eclipse.swt.widgets.Control#removeMouseListener(org.eclipse.swt.events.MouseListener)
+	 */
+	@Override
+	public void removeMouseListener(MouseListener listener) {
+		control.removeMouseListener(listener);
+	}
+
+	public void setSpellingOptions(int maxSuggestions, int spellingOptions) {
+		this.maxSuggestions = maxSuggestions;
+		if (this.spellingOptions != spellingOptions) {
+			if (spellingOptions == ISpellCheckingService.NOSPELLING)
+				control.removePaintListener(this);
+			else if (this.spellingOptions == ISpellCheckingService.NOSPELLING)
+				control.addPaintListener(this);
+		}
+	}
+
+	public void setSpellIncidents(List<ISpellIncident> incidents) {
+		if (!control.isDisposed()) {
+			this.incidents = incidents.toArray(new ISpellIncident[incidents
+					.size()]);
+			control.getDisplay().asyncExec(new Runnable() {
+				public void run() {
+					if (!control.isDisposed())
+						control.redraw();
+				}
+			});
+		}
+	}
+
+	public void paintControl(PaintEvent e) {
+		if (control.isDisposed())
+			return;
+		if (incidents != null && incidents.length > 0) {
+			e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_RED));
+			int charHeight = e.gc.getFontMetrics().getHeight();
+			for (ISpellIncident incident : incidents) {
+				int offset = incident.getOffset();
+				// Convert to coordinates
+				try {
+					int charCount = control.getCharCount();
+					if (offset >= 0 && offset < charCount) {
+						Point off1 = control.getLocationAtOffset(offset);
+						if (off1 != null) {
+							Point off2 = control.getLocationAtOffset(offset
+									+ incident.getWrongWord().length());
+							if (off2 != null)
+								e.gc.drawPolyline(computePolyline(off1, off2,
+										charHeight));
+						}
+					}
+				} catch (Exception ex) {
+					// do nothing
+				}
+			}
+		}
+	}
+
+	public static int[] computePolyline(Point left, Point right, int height) {
+
+		final int WIDTH = 3;
+		final int HEIGHT = 2;
+
+		int w2 = 2 * WIDTH;
+		int peeks = (right.x - left.x) / w2;
+
+		int leftX = left.x;
+
+		// compute (number of points) * 2
+		int length = 4 * peeks + 2;
+		if (length <= 0)
+			return NOREDSEA;
+
+		int[] coordinates = new int[length];
+
+		// compute top and bottom of peeks
+		int bottom = left.y + height;
+		int top = bottom - HEIGHT;
+
+		// populate array with peek coordinates
+		int index = 0;
+		for (int i = 0; i < peeks; i++) {
+			coordinates[index++] = leftX + (w2 * i);
+			coordinates[index++] = bottom;
+			coordinates[index++] = coordinates[index - 3] + WIDTH;
+			coordinates[index++] = top;
+		}
+		// add the last down flank
+		coordinates[length - 2] = left.x + (w2 * peeks - WIDTH / 2);
+		coordinates[length - 1] = (top + bottom + 1) / 2;
+		return coordinates;
+	}
+
+	/**
+	 * @param listener
+	 * @see org.eclipse.swt.widgets.Control#addFocusListener(org.eclipse.swt.events.FocusListener)
+	 */
+	@Override
+	public void addFocusListener(FocusListener listener) {
+		control.addFocusListener(listener);
+	}
+
+	/**
+	 * @param listener
+	 * @see org.eclipse.swt.widgets.Control#addKeyListener(org.eclipse.swt.events.KeyListener)
+	 */
+	@Override
+	public void addKeyListener(KeyListener listener) {
+		control.addKeyListener(listener);
+	}
+
+	/**
+	 * @param listener
+	 * @see org.eclipse.swt.widgets.Control#removeFocusListener(org.eclipse.swt.events.FocusListener)
+	 */
+	@Override
+	public void removeFocusListener(FocusListener listener) {
+		control.removeFocusListener(listener);
+	}
+
+	/**
+	 * @param listener
+	 * @see org.eclipse.swt.widgets.Control#removeKeyListener(org.eclipse.swt.events.KeyListener)
+	 */
+	@Override
+	public void removeKeyListener(KeyListener listener) {
+		control.removeKeyListener(listener);
+	}
+
+	// public void dispose() {
+	// control.dispose();
+	// }
+
+	@Override
+	public void setFont(Font font) {
+		control.setFont(font);
+	}
+
+	/**
+	 *
+	 * @see org.eclipse.swt.custom.StyledText#selectAll()
+	 */
+	public void selectAll() {
+		control.selectAll();
+	}
+
+	/**
+	 * @return
+	 * @see org.eclipse.swt.widgets.Control#getBorderWidth()
+	 */
+	@Override
+	public int getBorderWidth() {
+		return control != null ? control.getBorderWidth() : super
+				.getBorderWidth();
+	}
+
+	/**
+	 * @param color
+	 * @see org.eclipse.swt.custom.StyledText#setBackground(org.eclipse.swt.graphics.Color)
+	 */
+	@Override
+	public void setBackground(Color color) {
+		control.setBackground(color);
+	}
+
+	/**
+	 * @param color
+	 * @see org.eclipse.swt.custom.StyledText#setForeground(org.eclipse.swt.graphics.Color)
+	 */
+	@Override
+	public void setForeground(Color color) {
+		control.setForeground(color);
+	}
+
+	@Override
+	public Color getForeground() {
+		return control.getForeground();
+	}
+
+	public Point getSelection() {
+		return control.getSelection();
+	}
+
+	public void addModifyListener(ModifyListener listener) {
+		control.addModifyListener(listener);
+	}
+
+	public void removeModifyListener(ModifyListener listener) {
+		control.removeModifyListener(listener);
+	}
+
+	/**
+	 * @param listener
+	 * @see org.eclipse.swt.widgets.Control#addTraverseListener(org.eclipse.swt.events.TraverseListener)
+	 */
+	@Override
+	public void addTraverseListener(TraverseListener listener) {
+		control.addTraverseListener(listener);
+	}
+
+	/**
+	 * @param listener
+	 * @see org.eclipse.swt.widgets.Control#removeTraverseListener(org.eclipse.swt.events.TraverseListener)
+	 */
+	@Override
+	public void removeTraverseListener(TraverseListener listener) {
+		control.removeTraverseListener(listener);
+	}
+
+}

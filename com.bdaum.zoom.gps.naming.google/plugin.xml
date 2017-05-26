@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.gps.geonamingService">
+      <geonamingService
+            class="com.bdaum.zoom.gps.naming.google.internal.GoogleGeonamingService"
+            default="true"
+            description="%geonamingService.description"
+            id="Google"
+            name="%geonamingService.name">
+      </geonamingService>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.gps.premiumService">
+      <premiumService
+            description="%premiumService.description"
+            id="com.bdaum.zoom.gps.naming.google.premiumService"
+            name="%premiumService.name">
+         <key
+               id="com.bdaum.zoom.gps.googleClientId"
+               name="%key.name.id">
+         </key>
+         <key
+               id="com.bdaum.zoom.gps.googlePrivateKey"
+               name="%key.name.privateKey">
+         </key>
+      </premiumService>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml"
+            plugin="com.bdaum.zoom.gps">
+      </contexts>
+   </extension>
+
+</plugin>

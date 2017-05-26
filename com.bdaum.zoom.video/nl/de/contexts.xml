@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="import_page_context" title="Video Benutzervorgaben">
+      <description>Video Benutzervorgaben</description>
+      <topic href="html/videoPrefs.html" label="Video Benutzervorgaben"/>
+   </context>
+</contexts>

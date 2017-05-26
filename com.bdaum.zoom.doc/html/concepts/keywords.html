@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Keywords, Vocabularies, and Categories</title>
+
+
+
+
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Keywords, Vocabularies, and Categories<br>
+ </h2>
+Keywords and Categories are essential for classifying images. Both are
+supported by IPTC metadata. Now, what is the difference between
+keywords and categories?<br>
+<ul style="font-weight: normal;">
+  <li>Classification by categories is more general while the
+classification by keywords is more specific. For example, the category
+"Nature" or the subcategory "Mushrooms" covers a rather large field
+while the keyword "Boletus aestivalis" pinpoints to a precise species.</li>
+  <li>Categories are organized in hierarchies, for example<br>
+    <code>&nbsp;&nbsp;&nbsp; Nature<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Mushrooms<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Plants<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Trees<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Animals</code><br>
+In <span style="font-style: italic;">ZoRa Photo Director </span>all categories will show up as collections in the <span style="font-style: italic;">Catalog view</span>. Because of the hierarchical structure the collection "Plants" would also contain images from the collection "Trees".<br>
+For keywords no such hierarchy exists. By default, no collections are
+generated for the many keywords that may exist but you may define your
+own collections for selected keywords.</li>
+  <li>Typically an image can belong to exactly one main category. The IPTC standard allows in addition S<span style="font-style: italic;">upplemental Categories</span>. <br>
+At the other hand, each image can be attributed with an unlimited number of keywords.<br>
+  </li>
+  
+  <li>When a new catalog is created, a hierarchy of categories is automatically set up, depending on the catalog theme (see <a href="../reference/catProperties.html">Catalog Properties</a>) and based on the definitions in internal <code>categories*.ini</code> files. You may, however, overwrite these definitions by placing such files into the directory <code>dropins</code>
+within the installation folder:<br>
+    <code>&nbsp;&nbsp;&nbsp; categories.ini<br>
+    </code><code>&nbsp;&nbsp;&nbsp; categories_food.ini<br>
+    </code><code>&nbsp;&nbsp;&nbsp; categories_travel.ini<br>
+    </code><code>&nbsp;&nbsp;&nbsp; categories_wedding.ini</code><code></code><br>
+You may also later modify the category hierarchy interactively in the <a href="../reference/catProperties.html#categories">Catalog Properties</a>.<br>
+A convenient way to create such files is to save the current category setup into a text file (<a href="../reference/catProperties.html#categories">Catalog Properties</a>) and then modify it with a text editor.<br>
+<br>
+In addition, files <code>keywords*.ini</code> may be added to folder <code>dropins </code>for populating a new catalog with keywords. For the file format, see below.</li>
+
+</ul>A big problem with keywords is to avoid keyword cluttering because
+this makes it difficult to retrieve images by keywords. One remedy is
+to spell check all keywords which is done automatically in <span style="font-style: italic;">ZoRa Photo Director </span>if a dictionary is defined&nbsp; (see <a href="../reference/catProperties.html">Catalog Properties</a>).<br>
+Another remedy is to use <span style="font-style: italic;">Controlled Vocabularies</span>. These can be defined in the <a href="../reference/catProperties.html#keywords">Catalog Properties</a>. If controlled vocabularies are defined, <span style="font-style: italic;">ZoRa Photo Director </span>will
+flag all keywords that are not contained in a controlled vocabulary. On
+the Internet there a many predefined controlled vocabularies, for
+example here<br>
+&nbsp;&nbsp;&nbsp; <a href="http://lightroom-keyword-list-project.blogspot.de/p/get-list.html">http://lightroom-keyword-list-project.blogspot.de/p/get-list.html</a><br>
+or here<br>
+&nbsp;&nbsp;&nbsp; <a href="http://www.photo-keywords.com/specialist-list-download.php">http://www.photo-keywords.com/specialist-list-download.php</a><br>
+You may of course roll your own, too.<br>
+The file format for categories, keywords, and vocabularies is almost
+identical and compatible with other application such as Adobe Lightroom.<br>
+<br>
+<ul>
+  <li>Each category or keyword is contained in a separate line. </li>
+  <li>Hierarchies are defined by indenting a subitem with a TAB character. </li>
+  <li>Synonyms (used only for categories and vocabularies) are declared by enclosing an item with curly brackets. </li>
+  <li>Groups (used only in vocabularies) are declared by enclosing an item with brackets. </li>
+</ul>
+<div style="margin-left: 40px;"><br>
+</div>
+Just have a look on one of the vocabularies found on the above mentioned web sites.<br>
+</body></html>

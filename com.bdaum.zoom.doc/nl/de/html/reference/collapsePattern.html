@@ -1,0 +1,14 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Zusammenfassmuster definieren</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head>
+<body><h2>Zusammenfassmuster definieren </h2>Der <span style="font-style: italic;">Zusammenfassmuster</span>-Dialog wird aufgerufen, indem man <abbr>STRG</abbr> drückt und auf die Werkzeugtaste <span style="font-style: italic;">Zusammenfassen</span> im Lichtkasten-Sichtfenster klickt.<br><br>Hier wird definiert, wie Bilder mit ähnlichem Namen zu einem
+Vorschaubild zusammengefasst werden. Das erfolgt über die Definition
+von typischen Dateinamensmustern mit Platzhaltersymbolen wie <code>*&nbsp;</code>und <code>?</code>.<br>Einem oder mehreren Platzhaltersymbolen können Schrägstriche (<code>/</code>)
+vorangestellt werden, um relevante Abschnitte des Dateinamens zu
+markieren. Aufeinanderfolgende Bildder werden gruppiert, indem diese
+relevanten Abschnitte miteinander verglichen werden.<br>Das Semikolon (<code>;</code>) kann verwendet werden, um alternative Muster miteinander zu verketten. <br><br>Typische Beispiele: <br><br><table style="text-align: left; width: 100%;" border="1" cellpadding="6" cellspacing="2"><tbody><tr><td><code><span style="font-weight: bold;">/*.*</span></code></td><td>Bilder werden anhand ihres einfachen Dateinamens (ohne Dateinamenerweiterung)&nbsp;zusammengefasst, z.B.&nbsp;<code>img0001.jpg</code> mit <code>img0001.tif</code>.<br></td></tr><tr><td><code><span style="font-weight: bold;">/*_v*.*</span></code></td><td>Bilder
+werden anhand ihres echten Dateinamens (ohne Versionsnummer und ohne
+Dateinamenerweiterung)&nbsp;zusammengefasst, z.B.&nbsp;&nbsp;<code>img0001_v01.jpg</code> mit <code>img0001_v02.tif</code>.</td></tr><tr><td><code><span style="font-weight: bold;">/*_v*./*</span></code></td><td>Bilder
+werden anhand ihres echten Dateinamens und
+der&nbsp;Dateinamenerweiterung (ohne Versionsnummer)&nbsp;zusammengefasst,
+z.B.&nbsp;&nbsp;<code></code><br><code>img0001_v01.jpg</code> mit <code>img0001_v02.jpg</code> aber nicht mit &nbsp;<code>img0001_v01.tif.</code></td></tr><tr><td><code><span style="font-weight: bold;">/*_v*.*;</span></code><code><span style="font-weight: bold;">/*.*</span></code></td><td>Eine Kombination von Beispiel 1 mit Beispiel 2:&nbsp;<code>img0001_v01.jpg</code> wird mit&nbsp;<code>img0001.tif</code> und <code>img0001_v02.jpg </code>zusammengefasst. <code></code></td></tr></tbody></table><br>Zusätzlich können <a href="galleries.html#stack">als Stack umbenannte Bilder</a> kollabiert werden. Die Option <span style="font-weight: bold;">Auch benannte Stacks zusammenfassen </span>ist äquivalent mit dem Muster <code>STACK#/*!*</code><br></body></html>

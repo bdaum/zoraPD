@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head><title>General preferences</title>
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head>
+<body>
+<h2>General preferences </h2>
+<ul style="font-weight: normal;"><li><span style="font-weight: bold;">Display</span></li>
+  <ul style="font-weight: normal;">
+    <li><span style="font-weight: bold;">Output ICC-profile.</span>
+With standard monitors you should leave this setting at <samp>sRGB</samp>. If you
+use a Wide Gamut Monitor, switch to <samp>Adobe RGB</samp>. Otherwise colors could
+look exaggerated. If correct colors are not an issue, switch to <samp>Disable CMS</samp> which will speed up the display of images. See also <a href="../concepts/CMS.html">Color Management</a>.<br>
+    </li>
+  </ul>
+  <ul style="font-weight: normal;">
+    <li><span style="font-weight: bold;">Use quality interpolation</span>.
+Check this option to utilize quality interpolation when viewing
+high-res images. Otherwise, the faster nearest-neighbour algorithm will
+be used, resulting in slight pixelation. Depending on the graphics
+memory available, very large images might not display at all when
+quality interpolation is used. In such a case switch back to normal
+interpolation.</li><li><span style="font-weight: bold;">Slideshow inactivity timeout.</span> Specify a maximum interval for pausing the slide show. If this interval is exceeded, the slide show is aborted.</li></ul><li><span style="font-weight: bold;">Internal viewers</span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Precede high-res image with preview image in internal viewer where possible.</span>
+If this option is switched on, you will see an image of good quality
+(the preview image) earlier, but the final high-res image will be shown
+later due to the extra processing. Also, the preview image may differ
+in color and brightness from the high-res image.</li><li><span style="font-weight: bold;">Hide thumbnail JPeG artifacts in internal image viewer</span>.
+When this option is checked, noise is added to the enlarged thumbnail
+in the internal image viewer in order to hide the ugly JPeG artifacts.</li><li><span style="font-weight: bold;">Enlarge small images to full screen.</span>
+Mark this option if you want to small images in
+a larger size than the original. The quality, however, may be bad.</li>
+
+  </ul>
+  <li style="font-weight: bold;">Backup and Program Update</li>
+  <ul>
+    <li><span style="font-weight: bold;">Backup interval.</span>
+Specify the number of days between each backup. The backup will be
+performed silently. The backup location can be specified for each catalog
+separately in the <a style="font-style: italic;" href="catProperties.html">Catalog Properties</a>.</li>
+    <li><span style="font-weight: bold;">Maximum backup generations</span>. Please specify how many generations of backups you want to keep. Older backups will be deleted after a new backup was written.<br>
+    </li>
+
+    <li><span style="font-weight: bold;">Check for updates.</span> Determines when to check for new program versions. This can be done manually (<acronym>Help&gt;Check for Updates</acronym>) or automatically with each regular back-up (recommended) or on each program start.</li>
+  </ul>
+  <li style="font-weight: bold;">Miscellaneous</li>
+  <ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Undo levels</span>. Determines how many steps can be undone. A high value will need more memory. The default value is 9.</li>
+    <li><span style="font-weight: bold;">Supress progress indicator for background activities</span>. Mark this option to make background activities invisible.<br>
+    </li>
+
+  </ul>
+</ul>
+</body></html>

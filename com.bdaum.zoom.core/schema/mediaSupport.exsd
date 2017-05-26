@@ -1,0 +1,160 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="com.bdaum.zoom.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appinfo>
+         <meta.schema plugin="com.bdaum.zoom.core" id="mediaSupport" name="Media Support"/>
+      </appinfo>
+      <documentation>
+         Support for media other than images
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element />
+         </appinfo>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="mediaSupport" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="mediaSupport">
+      <annotation>
+         <documentation>
+            Media support extension can add extra functionality for additional media types such as video or audio.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Name of media support (e.g. Video)
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Unique ID of media support extension
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="identifier"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="formats" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Supported file formats in uppercase. Separated by blanks.
+These are the file types as provided by EXIFTOOL. The file extensions should be given, too, without the period.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="mimetypes" type="string" use="required">
+            <annotation>
+               <documentation>
+                  A list of mime types corresponding to the list of file formats
+Separated by blanks.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  IMediaSupport implementation
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":com.bdaum.zoom.core.internal.IMediaSupport"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="plural" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Name of media support in plural (e.g. Videos)
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="collectionID" type="string">
+            <annotation>
+               <documentation>
+                  ID for collections collecting media of this type
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="since"/>
+      </appinfo>
+      <documentation>
+         2.0.0
+      </documentation>
+   </annotation>
+
+
+   <annotation>
+      <appinfo>
+         <meta.section type="apiinfo"/>
+      </appinfo>
+      <documentation>
+         IMediaSupport
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="implementation"/>
+      </appinfo>
+      <documentation>
+         com.bdaum.zoom.video.internal.VideoSupport
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="copyright"/>
+      </appinfo>
+      <documentation>
+         2012 Berthold Daum
+      </documentation>
+   </annotation>
+
+</schema>

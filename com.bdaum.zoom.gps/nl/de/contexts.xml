@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="pref_page_context" title="GPS-Einstellungen">
+      <description>Einstellungen für das Geo-Tagging und Geo-Naming</description>
+      <topic href="html/geoTagging.html" label="GPS-Einstellungen"/>
+   </context>
+   <context id="map_dialog_context" title="Kartendialog">
+      <description>Kartendialog</description>
+      <topic href="html/locations.html" label="Kartendialog"/>
+   </context>
+   <context id="map_view_context" title="Kartensichtfenster">
+      <description>Kartensichtfenster</description>
+      <topic href="html/maps.html" label="Kartensichtfenster"/>
+      <topic href="html/manual.html" label="Manuelles Geotagging"/>
+   </context>
+   <context id="geoTagging" title="Geo-tagging and geo-naming">
+      <description>Geographische Information können Bildern hinzugefügt und visualisiert werden</description>
+      <topic href="html/gps.html" label="Mit GPS-Daten arbeiten"/>
+      <topic href="html/importing.html" label="Trackerdaten importieren"/>
+      <topic href="html/geoTagging.html" label="Geo-tagging konfigurieren"/>
+      <topic href="html/geonaming.html" label="Geo-naming"/>
+      <topic href="html/maps.html" label="Das Karten-Sichtfenster"/>
+      <topic href="html/searching.html" label="Geographische Suchoptionen"/>
+   </context>
+   <context id="trackpoint_dialog_context" title="Trackpunkte">
+      <description>Trackpunkte bearbeiten</description>
+      <topic href="html/trackpoint.html" label="Trackpunkte bearbeiten"/>
+   </context>
+   
+</contexts>

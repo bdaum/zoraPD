@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+
+
+
+
+
+  
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Bibble (AfterShot) Support</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css"></head>
+<body style="color: rgb(0, 0, 0);" alink="#ee0000" link="#0000ee" vlink="#551a8b">
+<h2>Bibble (AfterShot) Support<br>
+</h2>
+
+<p><span style="font-style: italic;">ZoRa Photo Director</span> is able
+to reflect most of the development settings for RAW and DNG files made
+with the Bibble 5/AfterShot RAW converter<span style="font-style: italic;"></span>. (Development settings of&nbsp;Bibble 5/AfterShot 5 plug-ins are not supported.)<br>
+</p>
+
+<p>These settings (recipes) are stored in an external XMP file
+located in the same folder as the original image (sidecar). <span style="font-style: italic;">ZoRa Photo Director</span>
+is able to
+read these development recipes and to apply them when importing RAW
+files, refreshing or viewing them, or when deriving images from
+them during export operations.</p>
+
+<p>To enable this support go the <a href="../../com.bdaum.zoom.recipes.c1/html/PLUGINS_ROOT/com.bdaum.zoom.doc/html/reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;Raw
+Conversion<sup>*</sup></acronym></a> and check the <var><span style="font-weight: bold;">Bibble/AfterShot</span></var>
+recipe detector. Make also sure that recipe detection is enabled (<span style="font-style: italic;">Process recipes when importing RAW images</span>).</p>Because XMP sidecars are used by some other RAW converters, too, you
+may specify an XMP priority to resolve conflicts between competing
+recipes. The smaller the number, the higher is the priority.
+<br><br>
+
+<div style="background-color: rgb(255, 204, 204);">You must configure Bibble/AfterShot to store its development data in XMP meta files. To do so set in Bibble/AfterShot the option <span class="Apple-style-span" style="border-collapse: separate; color: rgb(0, 0, 0); font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: 2; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; font-size: medium;"><span class="Apple-style-span" style="font-family: Verdana,Arial,Helvetica,sans-serif; font-size: 12px; line-height: 18px;">"Allow Bibble</span></span>/AfterShot<span class="Apple-style-span" style="border-collapse: separate; color: rgb(0, 0, 0); font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: 2; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; font-size: medium;"><span class="Apple-style-span" style="font-family: Verdana,Arial,Helvetica,sans-serif; font-size: 12px; line-height: 18px;"> .xmp creation..."<span class="Apple-converted-space"> .</span></span></span></div>
+
+<br>
+<span style="font-style: italic;">Bibble/AfterShot</span> saves this
+information incrementally in the moment a change is applied. When the image happens to be located in a watched
+folder (see <a href="../../com.bdaum.zoom.recipes.c1/html/PLUGINS_ROOT/com.bdaum.zoom.doc/html/reference/catProperties.html"><span style="font-style: italic;">Catalog Properties</span></a>), <span style="font-style: italic;">ZoRa Photo Director</span> will apply these changes either as soon as <span style="font-style: italic;">Bibble</span> applies changes to another image (indicating the end of the editing session for the current image) or when control returns to <span style="font-style: italic;">ZoRa PD</span>.<br>
+<br>
+
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa Photo Director&gt;Preferences&gt;...</acronym><br>
+ <p>
+</p>
+
+<br>
+
+<br>
+</body></html>

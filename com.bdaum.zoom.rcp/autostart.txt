@@ -1,0 +1,42 @@
+Application moves script into autostart folder:
+
+	Windows: Autostart
+
+	Linux Gnome: {home}/.config/autostart/xxxx.desktop
+	
+	Linux KDE: {home}/.kde/Autostart/xxxx.desktop
+	
+	Mac: via Launch Services
+
+Script needs the following parameters:
+
+	1. installation folder location
+	
+	2. instance area location
+	
+	3. Classpath
+
+Script starts ZoRaPDStarter. Passes the following parameters:
+
+	1. installation folder location
+	
+	2. instance area location
+
+ZoRaPDStarter checks if
+
+	- a lock file is contained in the install folder. If yes, exit.
+	
+	- a new device was mounted. If yes launch ZoRaPD,  pass the following parameters
+	
+      -data, -deviceMounted
+      
+      and exit.
+      
+      
+Application must handle -deviceMounted
+
+Application must launch ZoRaPDStarter in shutdownHook. Again the following parameters must be passed
+
+	1. installation folder location
+	
+	2. instance area location

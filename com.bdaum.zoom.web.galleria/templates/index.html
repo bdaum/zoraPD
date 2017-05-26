@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-us"><head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+<meta name="description" content="${description}">
+<meta name="keywords" content="${keywords}">
+<meta name="date" content="${date}">
+<title>${name}</title>
+<link rel="stylesheet" href="${galleriaThemeCSS}" type="text/css">
+<link rel="stylesheet" href="gallery.css" type="text/css">
+${headhtml}
+<script type="text/javascript" src="${jquery}"></script>
+<script type="text/javascript" src="${galleria}"></script>
+<script type="text/javascript" src="${galleriaTheme}"></script>
+</head>
+<body>${tophtml}
+<div id="page">
+${nameplatediv}
+<div id="container">
+<h1>${name}</h1>
+${descriptiondiv}
+<!-- Start Advanced Gallery Html Containers -->
+<div id="galleria" class="content">
+</div>
+</div>
+</div>
+<div id="footer">${footer}</div>
+<script>
+var data = [
+${images}
+];
+
+$('#galleria').galleria({
+    data_source: data,
+    ${options}
+    imageMargin: ${padding},
+    autoplay: ${autoplay}
+});
+</script>
+${footerhtml}</body></html>

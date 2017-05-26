@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+
+
+
+
+
+
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Categorize</title>
+
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Categorize<br>
+</h2><br>Categorizing images is regulated by the ITPC standard. This
+standard allows at most one primary category per image but
+additionally an arbitrary number of supplemental categories.<br>
+<br>
+Categories are defined in <span style="font-style: italic;">ZoRa PhotoDirector </span>through the <a href="catProperties.html#categories">Catalog properties</a>.
+These definitions result in <span style="font-weight: bold;">Category</span> collections in the Catalog view.
+Each of these collections contains images with matching primary
+categories.<br>
+<br>
+The <span style="font-style: italic;">Categorize</span> command allows
+for quick categorization of a large number of images. To invoke it,
+first select some images, then call the context function <acronym>Categorize ... .</acronym>
+In the following dialog you see the current image on the left side and
+the category tree in the middle. You can now assign main and
+supplemental categories by clicking the tree nodes. Tree nodes can have five states:<br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="4" cellspacing="1">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Not set</span><br>
+      </td>
+      <td style="vertical-align: top;">Node has background color<br>
+      </td>
+      <td style="vertical-align: top;">Click to change the state to <span style="font-weight: bold;">Supplemental</span><br>
+      <abbr>Alt</abbr>-click to change the state to <span style="font-weight: bold;">Primary</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Supplemental</span><br>
+      </td>
+      <td style="vertical-align: top;">Node is filled yellow<br>
+      </td>
+      <td style="vertical-align: top;">Click to change the state to <span style="font-weight: bold;">Primary</span><br>
+      <abbr>Alt</abbr>-clickto change the state to <span style="font-weight: bold;">Not set</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Primary</span><br>
+      </td>
+      <td style="vertical-align: top;">Node is filled red<br>
+      </td>
+      <td style="vertical-align: top;">Click to change the state to <span style="font-weight: bold;">Not set</span><br>
+      <abbr>Alt</abbr>-click to change the state to <span style="font-weight: bold;">Supplemental</span></td>
+    </tr><tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Proposal</span><br>
+      </td>
+      <td style="vertical-align: top;">Node has yellow frame<br>
+      </td>
+      <td style="vertical-align: top;">Click to change the state to <span style="font-weight: bold;">Supplemental</span><br>
+
+      <abbr>Alt</abbr>-click to change the state to <span style="font-weight: bold;">Not set</span><span style="font-weight: bold;"></span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Supplemental<br>
+Proposal<br>
+      </span></td>
+      <td style="vertical-align: top;">Node has red frame<br>
+      </td>
+      <td style="vertical-align: top;">Click to change the state to <span style="font-weight: bold;">Primary</span><span style="font-weight: bold;"></span><br>
+
+
+      <abbr>Alt</abbr>-click to change the state to <span style="font-weight: bold;">Not set</span></td>
+    </tr>
+
+  </tbody>
+</table><br>
+At the right hand side you see a list of automatically derived category
+proposals with their confidence scores. Matching categories are already
+marked as proposals in the category tree in the middle.You may either drag non-matching
+proposals onto a category for adding it as a synonym to
+this category, or <abbr>Ctrl</abbr>+drag the proposal to add it as a category or subcategory to the catalog.<br>
+Alternatively, you may mark a proposal in the proposal list to add it to the current image as a keyword.<br>
+Note, that this area is only visible if the AI component is installed.<br>
+<br>
+Below the category tree you find a <acronym>Configure...</acronym> link.  This invokes the <a href="catProperties.html#categories">Catalog properties</a>
+for configuring the categories. On the right hand side a Accept link is
+shown when categories are marked as proposals. Clicking this link will
+convert all proposals into primary or supplemental categories.<br>
+Another <acronym>Configure...</acronym> link is below the proposal list. This invokes the <span style="font-style: italic;">User preferences</span> for configuring the AI services.<br>
+<br>
+In addition to defining categories and keywords it is also possible to
+enter image descriptions and to set the images privacy level.<br>
+
+
+
+ <ul style="font-weight: normal;"></ul>
+The buttons in the button bar allow navigating between images:<br>
+<br>
+<ul>
+  
+  <li><span style="font-weight: bold;">Back</span>. Go back to previous image. Alternatively you can use the <abbr>CURSOR-LEFT</abbr> key.<br>
+  </li>
+
+  <li><span style="font-weight: bold;">Next</span>. Go forward to next image. Alternatively you can use the <abbr>CURSOR-RIGHT</abbr> key.</li>
+  <li><span style="font-weight: bold;">Clone</span>. Press this button
+for quickly assigning the same categories to a series of images. It
+will copy the category definitions from the previous image, apply it to
+the current image and the go forward to the next image.  Alternatively you can use the <abbr>CTRL+CURSOR-RIGHT</abbr> key combination. <span style="font-weight: bold;"></span><br>
+</li>
+  <li><span style="font-weight: bold;">Done</span>. Commit all changes and close the dialog. (You may still <span style="font-style: italic;">Undo</span> the changes later on).</li>
+  <li><span style="font-weight: bold;">Cancel</span>. Discard all changes and close the dialog.<br>
+  </li>
+</ul>
+
+</body></html>

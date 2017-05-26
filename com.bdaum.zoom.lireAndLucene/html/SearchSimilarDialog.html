@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+  <title>Search Similar Dialog</title>
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css">
+
+</head><body>
+<h2>Search Similar Dialog</h2>
+
+This dialog is used to specify example picture and search options for
+the similarity search. <br>
+
+Content
+based image retrieval (CBIR) is a long established research area. There
+are many&nbsp;known search&nbsp;methods (<span style="font-weight: bold;">algorithms</span>). We have selected some
+modern search algorithms that seem to be suitable for photographic
+images. <br>
+
+None of these algorithms are actually able to retrieve the&nbsp;meaning
+of an image. For example, the algorithm does not see the
+trees within a forest picture, but evaluates low level features such as
+overall color, spatial distribution of color, color histograms,
+textures, and so on. So, you should not expect too much from this
+function - it can certainly not replace a keyword search. However,
+in many situations it can be very useful, especially if you combine it
+with a keyword search.<br>
+
+<br>
+
+Similarity
+searches can be performed locally or across a network of peers. They
+can also be restricted to the current collection, so that can in fact
+combine similarity searches with other metadata searches (collections).
+After executing a similarity search, you can also save it as a live
+collection (use <acronym>Save as collection</acronym> in the gallery
+view drop down menu).<br>
+
+<br>
+
+<span style="font-weight: bold;">Note: </span>When
+working in a networked group and performing queries across the network,
+the various catalogs should all support the same similarity algorithms.<br>
+
+<br>
+
+<span style="font-weight: bold;">Note:</span> For a quick search just
+drag an image to the search field in the menu bar.<br>
+
+<h4>Reference image</h4>
+
+The search is
+based on an <span style="font-weight: bold;">reference image</span>
+which is presented in the dialog. If no image
+was selected, a white background is presented. You may use the drawing
+tools (pencil, airbrush, pipette) to create a new drawing or to modify
+the reference image. <br>
+
+<br>
+
+<h4>Search algorithm</h4>
+
+Which search algorithm is
+the best, depends very much on the character of your images. For
+example, in a catalog containing mostly texture images, you may want to
+use the <span style="font-style: italic;">Tamura texture</span>
+filters. With the average photographic content
+we found the methods <span style="font-style: italic;">CEDD</span>
+and <span style="font-style: italic;">FCTH&nbsp;(</span>or their
+combination <span style="font-style: italic;">JCD</span>)
+quite efficient. The<span style="font-style: italic;"> Auto Color
+Correlogram</span> is a modern search algorithm also providing very
+good results.<br>
+
+<br>
+
+Please note, that you can only use algorithms in a query that are
+supported by your catalog. Which algorithms are supported can be
+configured in the <a href="catProperties.html#indexing">catalog
+properties</a>.
+Choosing many algorithms will give you much choice during image
+retrieval but will slow down indexing and use more disc space. <br>
+
+<span style="font-weight: bold;"></span><br>
+
+Each query
+returns with each image a score between 0 and 100 percent. You may
+limit the
+amount of returned images either by <span style="font-weight: bold;">number</span>
+or by specifying a minimum
+<span style="font-weight: bold;">score</span> that must be satisfied by
+each matching image.<br>
+
+<br>
+
+<h4>Additional keywords</h4>
+
+By
+specifying keywords an a keyword weight of more than 0, you can combine
+the similarity search with a keyword search. The keywords are taken
+from the currently selected image or are typed in. The more keywords
+match an image, the higher the score. To search only for visual
+similarity specify a keyword weight of 0, to search only for keywords
+specify a weight of 100.<br>
+
+<br>
+
+<br>
+
+<br>
+
+<ul style="font-weight: normal;">
+
+</ul>
+
+</body></html>

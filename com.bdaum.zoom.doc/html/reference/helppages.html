@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+
+
+
+
+
+
+
+
+  
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Contributing help pages</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2> Contributing help pages </h2>
+
+<p>Help pages can be embedded into the system in three ways:</p>
+<ol>
+  <li>Specifying a table of contents as an XML file and registering it at extension point <code>org.eclipse.help.toc</code>. You may create an own <span style="font-style: italic;">primary</span> help book that shows up as a root element in the help tree or you can embed your table of contents into an existing tree. <span style="font-style: italic;">ZoRa Photo Director</span> defines the following anchor points for embedding sub-trees:<br>
+    <br>
+    <br>
+    <table style="text-align: left; width: 640px; height: 310px; background-color: rgb(255, 255, 240);" border="1" cellpadding="5" cellspacing="2">
+      <tbody>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/tocconcepts.xml#concepts</pre>
+          </td>
+          <td style="vertical-align: top;">Additional sections in help book <span style="font-weight: bold;">Concepts</span><br>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/tocgettingstarted.xml#gettingstarted</pre>
+          </td>
+          <td style="vertical-align: top;">Additional sections in help book <span style="font-weight: bold;">Getting started<br>
+          </span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/tocreference.xml#reference</pre>
+          </td>
+          <td style="vertical-align: top;">Additional sections in help book <span style="font-weight: bold;">Reference</span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/tocreference.xml#views</pre>
+
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Views</span> in help book <span style="font-weight: bold;">Reference</span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/tocreference.xml#webEngines</pre>
+
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Views/Webengines</span> in help book <span style="font-weight: bold;">Reference</span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/tocreference.xml#preferences</pre>
+
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Preferences</span> in help book <span style="font-weight: bold;">Reference</span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/tocreference.xml#export<br>          </pre>
+
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Export</span> in help book <span style="font-weight: bold;">Reference</span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/tocreference.xml#exportOthers<br>          </pre>
+
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Export/Others</span> in help book <span style="font-weight: bold;">Reference</span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/tocreference.xml#extensions</pre>
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Extensions</span> in help book <span style="font-weight: bold;">Reference</span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/tocreference.xml#import</pre>
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Import</span> in help book <span style="font-weight: bold;">Reference</span></td>
+        </tr>
+<tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/tocreference.xml#internet<br>          </pre>
+
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Internet</span> in help book <span style="font-weight: bold;">Reference</span><span style="font-weight: bold;"></span></td>
+        </tr>
+        
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/tocreference.xml#viewers</pre>
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">User interface</span> in help book <span style="font-weight: bold;">Reference</span></td>
+        </tr>
+<tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/toctasks.xml#tasks</pre>
+          </td>
+          <td style="vertical-align: top;">Additional sections in help book <span style="font-weight: bold;">Tasks</span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/toctasks.xml#export<br>          </pre>
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Export</span> in help book <span style="font-weight: bold;">Tasks</span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/toctasks.xml#import</pre>
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Importing images</span> in help book <span style="font-weight: bold;">Tasks</span></td>
+        </tr>
+<tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/toctasks.xml#exportOthers</pre>
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Export/Others</span> in help book <span style="font-weight: bold;">Tasks</span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/toctasks.xml#internet<br>          </pre>
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Internet</span> in help book <span style="font-weight: bold;">Tasks</span></td>
+        </tr><tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.doc/toctasks.xml#viewers</pre>
+          </td>
+          <td style="vertical-align: top;">Additional sections in chapter <span style="font-weight: bold;">Invoking editors and viewers</span> in help book <span style="font-weight: bold;">Tasks</span></td>
+        </tr>
+<tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.gps/toc.xml#mappingSystems</pre>
+          </td>
+          <td style="vertical-align: top;">General information about add-on mapping systems</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+          <pre>com.bdaum.zoom.gps/tocprefs.xml#mappingSystemPrefs</pre>
+
+          </td>
+          <td style="vertical-align: top;">Information about preference settings introduced by add-on  mapping systems</td>
+        </tr>
+
+      </tbody>
+    </table>
+    <br>
+Please see the Eclipse documentation for the extension point <code>org.eclipse.help.toc</code> for further details.<br>
+    <br>
+  </li>
+  <li>You can associated help pages with widgets as context help, so that the help page is called when <abbr>F1</abbr> is pressed while the widget has the focus. For doing so, you must register a context description at extension point <code>org.eclipse.help.contexts</code>. Please see the <span style="font-style: italic;">Eclipse</span> documentation for the extension point <code>org.eclipse.help.</code><code>contexts</code> for further details.<br>
+    <br>
+</li>
+  <li>Contribute to the help index. Index entries are added by registering an index description file at extension point <code>org.eclipse.help.index</code>. Please refer to the <span style="font-style: italic;">Eclipse</span> documentation for the extension point <code>org.eclipse.help.</code><code>index</code>. for further details.</li>
+
+</ol>
+<p>When authoring help pages for <span style="font-style: italic;">ZoRa Photo Director</span> plug-ins, please use the <span style="font-style: italic;">ZoRa Photo Director</span>
+style sheet. This is stored in the plug-in
+<code>com.bdaum.zoom.rcp</code>. From your own help pages you can, for example,
+refer to it like this (assuming that your help page is stored in a
+direct child folder of the plug-in folder).<br>
+</p>
+
+<pre>  &lt;link rel="stylesheet" type="text/css" <br>        href="../../com.bdaum.zoom.rcp/book.css"&gt; <br><br></pre>and/or<br>
+<br>
+<pre>  &lt;link rel="stylesheet" type="text/css" <br>        href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"&gt; <br><br><br></pre>
+</body></html>

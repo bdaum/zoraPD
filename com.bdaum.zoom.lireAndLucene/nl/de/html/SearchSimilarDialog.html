@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+  
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type">
+  <title>Dialog Ähnlichkeitsrecherche</title>
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../../com.bdaum.zoom.rcp/book.css">
+
+  
+  <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css">
+
+</head><body>
+<h2>Dialog Ähnlichkeitsrecherche</h2>
+
+Dieser Dialog wird verwendet, um ein Beispielbild und
+Suchoptionen für die Ähnlichkeitssuche zu spezifizieren.<br>
+
+<span style="font-style: italic;">Content Based Image Retrieval </span>(CBIR)
+ist ein seit langem etabliertes
+Forschungsgebiet. Es gibt inzwischen viele bekannte Suchmethoden
+(Algorithmen).
+Wir haben einige moderne Suchalgorithmen integriert, die besonders für
+fotografische Bilder geeignet sind. Sie können&nbsp; eine geeignete
+Suchmethode in den <a href="SearchSimilarPref.html">Benutzereinstellungen</a>
+auswählen.<br>
+
+Keiner dieser Algorithmen&nbsp;ist tatsächlich in der Lage,
+den&nbsp;Sinn eines
+Bildes zu erfassen. Zum Beispiel erkennt der <span style="font-weight: bold;">Algorithmus</span> nicht die
+Bäume in einem Waldbild, sondern wertet visuelle Eigenschaften wie
+Grundfarbe, räumliche
+Verteilung der Farbe, Farb-Histogramme, Texturen usw. aus. Sie sollten
+also von dieser Funktion keine Wunder erwarten&nbsp; - sie ist kein
+Ersatz für die Schlagwortsuche. Aber in vielen
+Situationen ist sie dennoch nützlich, besonders, wenn sie mit der
+Schlagwortsuche kombiniert wird.<br>
+
+<br>
+
+Ähnlichkeitsrecherchen
+können lokal oder über ein Netzwerk ausgeführt werden. Sie können auch
+auf die aktuelle Kollektion eingeschränkt werden, so dass sie auf diese
+Weise die&nbsp;Ähnlichkeitsrecherche mit einer Metadatensuche
+(Kollektion) kombinieren können. Nach der Ausführung einer
+Ähnlichkeitsrecherche können Sie diese als Live-Kollektion abspeichern.
+Dazu rufen Sie im Galeriesichtfenster die lokale Menüfunktion <acronym>Abfrage
+als Kollektion speichern</acronym> auf.<br>
+
+<br>
+
+<span style="font-weight: bold;">Hinweis:</span>
+Bei einer vernetzten Gruppe, in der Suchanfragen über das Netzwerk
+gestellt werden, sollten alle Katalog die selben Suchalgorithmen
+unterstützen.<br>
+
+<br>
+
+<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="You may limit the amount of returned images either by number or be specifying a minimum score that must be satisfied by each image."><span style="font-weight: bold;">Hinweis:</span> Ein vereinfachte
+Suchmethode besteht darin, ein Bild auf das Suchfeld in der Menüleiste
+zu ziehen.<br>
+</span></span><br>
+
+<h4>Referenzbild</h4>
+
+Die Suche basiert auf einem <span style="font-weight: bold;">Referenzbild</span>,
+das im Dialog präsentiert
+wird. Wenn kein
+Bild ausgewählt wurde, wird ein weißer Hintergrund gezeigt. Sie können
+mit Hilfe der Malwerkzeuge (<span style="font-style: italic;">Bleistift</span>,
+<span style="font-style: italic;">Airbrush</span>, <span style="font-style: italic;">Pipette</span>) eine
+Zeichnung erstellen oder aber das Beispielbild abändern.<br>
+
+<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="When you select an algorithm, a short description is displayed below the selection field."></span></span><br>
+
+<h4>Suchalgorithmus</h4>
+
+<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Which search method is the best, depends very much on the character of your images.">Welcher
+Algorithmus der beste ist, hängt sehr stark vom&nbsp;Charakter Ihrer
+Bilder ab. </span><span style="background-color: rgb(255, 255, 255);" title="For example, in a catalog containing mostly texture images, you may want to use the Tamura texture filters."></span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="For example, in a catalog containing mostly texture images, you may want to use the Tamura texture filters.">In
+einem Katalog der überwiegend Texturen enthält, z</span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="For example, in a catalog containing mostly texture images, you may want to use the Tamura texture filters.">um
+Beispiel, sollten Sie das <span style="font-style: italic;">Tamura-</span></span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="For example, in a catalog containing mostly texture images, you may want to use the Tamura texture filters."><span style="font-style: italic;">Textur</span>-</span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="For example, in a catalog containing mostly texture images, you may want to use the Tamura texture filters.">Filter
+verwenden. </span><span style="background-color: rgb(255, 255, 255);" title="With the average photographic content we found the methods CEDD and FCTH quite efficient.">Bei
+durchschnittlichen fotografischen Inhalten sind die Methoden <span style="font-style: italic;">CEDD</span> und <span style="font-style: italic;">FCTH</span> (oder auch deren Kombination <span style="font-style: italic;">JCD</span>) recht effizient. Das <span style="font-style: italic;">Auto-Farbkorrelogram</span>m ist ein
+moderner Algorithmus, der ebenfalls sehr gute Ergebnisse bringt.<br>
+</span></span>Beachten
+Sie, dass nur Algorithmen für die Suche verwendet werden können, die
+von Ihrem Katalog unterstützt werden. Welche das sind, können Sie in
+den <a href="catProperties.html#indexing">Katalogeigenschaften</a>
+konfigurieren. Wenn Sie hier viele Algorithmen auswählen, haben Sie
+zwar bei der Bildsuche viele Wahlmöglichkeiten, verlangsamen aber die
+Indizierung und belegen mehr Platz auf der Harddisk.<br>
+
+<br>
+
+<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Each query returns with each image a score between 0 and 1.">Jede
+Abfrage liefert zu jedem Bild eine Punktzahl zwischen 0 und 100
+Prozent. </span><span style="background-color: rgb(255, 255, 255);" title="You may limit the amount of returned images either by number or be specifying a minimum score that must be satisfied by each image.">Sie
+können die Menge der zurückgegebenen Bilder entweder nach der
+<span style="font-weight: bold;">Anzahl</span>&nbsp;begrenzen oder
+durch die Angabe einer <span style="font-weight: bold;">Mindestpunktzahl</span>,
+die
+von jedem Bild
+erfüllt sein muss.</span></span><br>
+
+<h4>Zusätzliche Schlagworte</h4>
+
+Wenn
+Sie eine Schlagwortgewichtung von mehr als 0 spezifizieren, können Sie
+die visuelle Ähnlichkeitssuche mit einer Schlagwortsuche kombinieren.
+Dabei werden die Schlagworte dem aktuell ausgewählten Bild entnommen,
+oder können von Hand eingegeben werden. Je mehr Schlagworte eines
+Bildes mit den vorgegebenen Schlagworten übereinstimmen, umso höher ist
+die zurückgegebene Punktzahl. Um nur eine visuelle Suche durchzuführen,
+spezifizieren Sie eine Schlagwortgewichtung von 0. Um nur nach
+Schlagworten zu suchen, spezifizieren Sie eine Schlagwortgewichtung
+von 100.<br>
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;
+<ul style="font-weight: normal;">
+
+</ul>
+
+</body></html>

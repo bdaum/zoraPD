@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+  <mime-type type="application/x-zdb">
+    <comment>ZoRa Photo Director Catalog</comment>
+    <magic priority="80">
+      <match type="string" offset="0" value="db4o"/>
+    </magic>
+    <glob pattern="*.zdb"/>
+  </mime-type>
+</mime-info>

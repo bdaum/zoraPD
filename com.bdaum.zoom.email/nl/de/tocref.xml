@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toc label="Book" link_to="../com.bdaum.zoom.doc/tocreference.xml#export">
+   <topic label="E-Mail">
+      <topic href="html/emailpdf.html" label="PDF">
+      </topic>
+      <topic href="html/email.html" label="Bilder">
+      </topic>
+   </topic>
+</toc>

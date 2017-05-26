@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simpleviewergallery
+	
+	galleryStyle="${theme}"
+	title="${name}"
+	textColor="${textColor}"
+	frameColor="${bordercolor}"
+	frameWidth="${frameWidth}"
+	thumbPosition="${thumbPosition}"
+	thumbColumns="${thumbColumns}"
+	thumbRows="${thumbRows}"
+	showOpenButton="false"
+	showFullscreenButton="TRUE"	
+	maxImageWidth="${maxImageSize}"
+	maxImageHeight="${maxImageSize}"
+	useFlickr="false"
+	flickrUserName=""
+	flickrTags=""
+	languageCode="AUTO"
+	languageList=""		
+	imagePath="images/"
+	thumbPath="thumbnails/"
+	
+>
+
+${images}
+</simpleviewergallery>

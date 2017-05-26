@@ -1,0 +1,268 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="com.bdaum.zoom.batch" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appinfo>
+         <meta.schema plugin="com.bdaum.zoom.batch" id="rawConverter" name="Raw Converter"/>
+      </appinfo>
+      <documentation>
+         Allows the definition of arbitrary raw converters
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element />
+         </appinfo>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="converter" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="converter">
+      <annotation>
+         <documentation>
+            Raw converter entry
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="property" minOccurs="0" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Java class proxy for raw converter
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":com.bdaum.zoom.program.IRawConverter"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="executable" use="required">
+            <annotation>
+               <documentation>
+                  Indicates if user can or must specify an executable implementing the raw converter
+               </documentation>
+            </annotation>
+            <simpleType>
+               <restriction base="string">
+                  <enumeration value="none">
+                  </enumeration>
+                  <enumeration value="optional">
+                  </enumeration>
+                  <enumeration value="required">
+                  </enumeration>
+               </restriction>
+            </simpleType>
+         </attribute>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Name of converter
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="identifier"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="detectors" type="boolean" use="required">
+            <annotation>
+               <documentation>
+                  Indicates if recipe detectors are used with this converter
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="isDefault" type="boolean" use="required">
+            <annotation>
+               <documentation>
+                  true for the default raw converter
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="path" type="string" use="required">
+            <annotation>
+               <documentation>
+                  preference key of executable path. Must be unique in application.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="property">
+      <complexType>
+         <sequence>
+            <element ref="enum" minOccurs="0" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  property id  - use preference key. Must be unique in application.
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="identifier"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="type" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+            <simpleType>
+               <restriction base="string">
+                  <enumeration value="boolean">
+                  </enumeration>
+                  <enumeration value="string">
+                  </enumeration>
+                  <enumeration value="int">
+                  </enumeration>
+               </restriction>
+            </simpleType>
+         </attribute>
+         <attribute name="default" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="min" type="string">
+            <annotation>
+               <documentation>
+                  Minimum value (integer)
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="max" type="string">
+            <annotation>
+               <documentation>
+                  Maximum value (integer)
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="enum">
+      <annotation>
+         <documentation>
+            enumeration values for string types and int types
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="value" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Value for display
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Value for computation
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="identifier"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="recipe" type="boolean">
+            <annotation>
+               <documentation>
+                  Set true if value determines recipe usage. To inhibit recipe processing set to true and set the id to the empty string (=no)
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="since"/>
+      </appinfo>
+      <documentation>
+         2.2.2
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="examples"/>
+      </appinfo>
+      <documentation>
+         com.bdaum.zoom.dcraw
+      </documentation>
+   </annotation>
+
+
+   <annotation>
+      <appinfo>
+         <meta.section type="implementation"/>
+      </appinfo>
+      <documentation>
+         com.bdaum.zoom.dcraw
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="copyright"/>
+      </appinfo>
+      <documentation>
+         2015 Berthold Daum
+      </documentation>
+   </annotation>
+
+</schema>

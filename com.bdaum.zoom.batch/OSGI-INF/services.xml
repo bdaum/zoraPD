@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="DngConverterComponent">
+    <implementation class="com.bdaum.zoom.batch.internal.program.DngConverter"/>
+    <property name="converter">
+		dng
+	</property>
+	<service>
+        <provide interface="com.bdaum.zoom.program.IConverter"/>
+    </service>
+</component>

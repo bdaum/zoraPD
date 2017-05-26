@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Erste Schritte" topic="html/gettingstarted/index.html">
+ <topic href="nl/de/html/gettingstarted/license.htm" label="Lizenz">
+ </topic>
+ <topic href="html/gettingstarted/liesmich.html" label="Liesmich">
+ </topic> 
+	<topic label="Einen neuen Katalog anlegen"  href="html/gettingstarted/newcat.html"> 
+	</topic>
+	<topic href="html/gettingstarted/environment.html" label="Die Arbeitsumgebung einrichten">
+	</topic>
+ <anchor id="gettingstarted"/>
+ <topic href="html/gettingstarted/tips.html" label="Tipps und Tricks">
+ </topic>
+ <topic href="html/gettingstarted/faq.html" label="Häufig gestellte Fragen">
+ </topic>
+ <topic href="html/gettingstarted/acknowledgements.html" label="Danksagungen">
+ </topic>
+ <topic href="html/gettingstarted/ads.html" label="Werbung">
+ </topic>
+</toc>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Getting Started" topic="html/gettingstarted/index.html">
+ <topic href="html/gettingstarted/license.htm" label="License">
+ </topic>
+ <topic href="html/gettingstarted/readme.html" label="Readme">
+ </topic> 
+	<topic label="Creating a new catalog"  href="html/gettingstarted/newcat.html"> 
+	</topic>
+	<topic href="html/gettingstarted/environment.html" label="Setting up your environment">
+	</topic>
+ <anchor id="gettingstarted"/>
+ <topic href="html/gettingstarted/tips.html" label="Tips &amp; tricks">
+ </topic>
+ <topic href="html/gettingstarted/faq.html" label="Frequently asked questions (FAQ)">
+ </topic>
+ <topic href="html/gettingstarted/acknowledgements.html" label="Acknowledgements">
+ </topic>
+</toc>

@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head><title>Import into new folder structure dialog</title>
+
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head>
+<body>
+<h2>Import into new folder structure dialog</h2>
+<br>Usually, when importing files and folders, all image files stay in their original
+locations. However, by using the menu function <acronym>File&gt;Import...&gt;folder</acronym> and selecting "into new folder structure" files can be renamed and moved into a
+new folder structure.<br>
+<br>
+
+The import options are specified with the help of a wizard:<br>
+
+<h4><a name="1"></a>Step 1, File selection</h4>
+
+The top section of this wizard page contains a tree&nbsp;organizing the files based on their <span style="font-weight: bold;">modification date</span>. This allows selecting images by their creation date. Only supported file types are considered, however.<br>
+
+<ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Don't import duplicates</span>.
+Check this option if you want to avoid that duplicates are imported into the catalog.
+Detection is performed by comparing the original filename and the
+modification date of the file. A warning is written into the <a href="logView.html"><span style="font-style: italic;">Log file</span></a> if a duplicate was detected.</li>
+</ul>
+
+<h4><a name="2"></a>Step 2, Output target selection</h4>
+
+<ul style="font-weight: normal;">
+<li>In the <span style="font-weight: bold;">Transfer to</span> entry
+specify the target folder where you want the images to be stored. The
+images selected in step 1 will be copied to the target folder during
+the import process.&nbsp;</li><li>In the <span style="font-weight: bold;">Create subfolder</span> entry you may opt to have sub folders created, either <samp>by year</samp>, by <samp>year and month</samp>, <span style="color: black; font-weight: normal;">by</span><samp> year, month and day</samp>, or not at all.</li>
+</ul>
+
+<h4><a name="3"></a>Step 3, File renaming</h4>
+
+<span style="font-weight: bold;"></span>Imported files can and should be renamed during the import. The renaming process is controlled by a <a href="templates.html">template</a>. There are several predefined templates but you can also add (<abbr>Add...</abbr>) your own and edit (<abbr>Edit...</abbr>) templates. In the <var>Cue</var> field you may want to supply a short string that will replace <code>{cue}</code> variables within templates.<br><br><h4><a name="4"></a>Step 4, Metadata options</h4>
+In the last step, the metadata of the imported images may be completed
+by adding additional entries. Advanced options allow restoring the
+metadata of RAW images.<br>
+<ul style="font-weight: normal;"><li style="font-weight: bold;">Add metadata</li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Artist</span>. Photographer or artist who created the imported pictures.</li><li><span style="font-weight: bold;">Event</span>. The event documented by the imported images.</li><li><span style="font-weight: bold;">Keywords</span>. Keywords to be added to the imported photos.</li></ul></ul>
+</body></html>

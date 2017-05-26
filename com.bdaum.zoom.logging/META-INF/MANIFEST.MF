@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %Bundle-Name
+Bundle-SymbolicName: com.bdaum.zoom.logging;singleton:=true
+Bundle-Version: 3.0.0
+Bundle-Activator: com.bdaum.zoom.logging.LoggingActivator
+Bundle-Vendor: %Bundle-Vendor
+Require-Bundle: org.eclipse.core.runtime
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: slf4j-api-1.7.5.jar,
+ .
+Export-Package: com.bdaum.zoom.logging,
+ org.apache.log4j,
+ org.slf4j,
+ org.slf4j.impl

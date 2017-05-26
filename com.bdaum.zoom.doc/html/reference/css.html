@@ -1,0 +1,199 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head><title>CSS style sheets</title>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>CSS style sheets </h2>
+<p>The color scheme of the graphical user interface is controlled
+by CSS style sheets. There are five predefined style sheet names:</p>
+<table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="font-weight: bold;">p</td>
+<td>Native Platform color scheme</td>
+</tr>
+<tr>
+<td style="font-weight: bold;">b</td>
+<td>Black</td>
+</tr>
+<tr>
+<td style="font-weight: bold;">d</td>
+<td>Dark gray</td>
+</tr>
+<tr>
+<td style="font-weight: bold;">g</td>
+<td>Gray</td>
+</tr>
+<tr>
+<td style="font-weight: bold;">w</td>
+<td>White</td>
+</tr>
+</tbody>
+</table>
+<br>
+Additional color schemes can be added by placing additional CSS style
+sheets into the <code>dropins/</code> subfolder within the
+installation folder. It is also possible to override the built-in style
+sheets by placing style sheets <code>b.css</code>,<code>
+d.css</code>, <code>g.css</code> or <code>w.css</code>
+into the subfolder <code>dropins/</code> of the installation folder.<br>
+<br>
+Here is an example for the <code>d.css</code> style sheet
+for Linux platforms. The different GUI widgets are simply addressed
+with their class names (SWT and Piccolo-SWT GUI elements are used). "*"
+denotes all classes. Special widgets are addressed by adding a lattice
+followed by the ID of the widget. In some cases, different settings are
+defined depending on the style and state information associated with a
+widget. This is defined in brackets, e.g.<span style="font-family: monospace;">[enabled=false].</span>
+<br>
+<br>
+<div class="listing"><span style="font-family: monospace;">/* Dark gray */<br>
+JFace <br>
+&nbsp; {HYPERLINK_COLOR:red;ACTIVE_HYPERLINK_COLOR:rgb(255,128,128);}<br>
+Label#clink <br>
+&nbsp; {color:rgb(180,240,255);background-color:transparent;}<br>
+CLink <br>
+&nbsp; {color:rgb(192,255,192);background-color:transparent;}<br>
+Label#errors <br>
+&nbsp; {color:red;background-color:transparent;}<br>
+Label <br>
+&nbsp; {color:rgb(240,240,240);background-color:transparent;}<br>
+Button[style='SWT.CHECK']&nbsp;&nbsp; <br>
+&nbsp; {color:black;background-color:rgb(60,60,60);} <br>
+Button[style='SWT.RADIO'] <br>
+&nbsp; {color:black;background-color:rgb(60,60,60);}<br>
+Button <br>
+&nbsp; {color:black;background-color:rgb(200,200,200);}<br>
+Spinner <br>
+&nbsp; {color:black;background-color:rgb(240,240,240);}<br>
+Text#errors <br>
+&nbsp; {color:red;background-color:rgb(240,240,240);}<br>
+Text[editable=false] <br>
+&nbsp; {color:rgb(240,240,240);background-color:rgb(60,60,60);}<br>
+Text[style='SWT.READ_ONLY'] <br>
+&nbsp; {color:rgb(240,240,240);background-color:rgb(60,60,60);}<br>
+Text[enabled=false] <br>
+&nbsp; {color:rgb(212,212,212);background-color:rgb(64,64,64);}<br>
+Text <br>
+&nbsp; {color:black;background-color:rgb(240,240,240);}<br>
+StyledText[editable=false] <br>
+&nbsp; {color:rgb(240,240,240);background-color:rgb(60,60,60);}<br>
+StyledText[style='SWT.READ_ONLY'] <br>
+&nbsp; {color:rgb(240,240,240);background-color:rgb(60,60,60);}<br>
+StyledText[enabled=false] <br>
+&nbsp; {color:rgb(212,212,212);background-color:rgb(64,64,64);}<br>
+StyledText <br>
+&nbsp; {color:black;background-color:rgb(240,240,240);}<br>
+Combo[enabled=false] <br>
+&nbsp; {color:rgb(212,212,212);background-color:rgb(64,64,64);}<br>
+Combo <br>
+&nbsp; {color:black;background-color:rgb(240,240,240);}<br>
+CCombo[enabled=false] <br>
+&nbsp; {color:rgb(212,212,212);background-color:rgb(64,64,64);}<br>
+CCombo <br>
+&nbsp; {color:black;background-color:rgb(240,240,240);}<br>
+Tree <br>
+&nbsp; {color:rgb(224,224,224);background-color:rgb(60,60,60);}<br>
+TreeItem <br>
+&nbsp; {color:rgb(224,224,224);background-color:rgb(60,60,60);<br>
+&nbsp; selected-background-color:rgb(96,96,96);<br>
+&nbsp; selected-color:rgb(255,255,255);<br>
+&nbsp; tooltip-background-color:rgb(255,255,240);<br>
+&nbsp; tooltip-color:rgb(96,96,96);}<br>
+Table <br>
+&nbsp; {color:rgb(224,224,224);background-color:rgb(60,60,60);<br>
+&nbsp; offline-color:rgb(128, 160, 0);remote-color:rgb(128, 128, 240);}<br>
+TableItem <br>
+&nbsp; {color:rgb(224,224,224);background-color:rgb(60,60,60);<br>
+&nbsp; selected-background-color:rgb(96,96,96);<br>
+&nbsp; selected-color:rgb(255,255,255);<br>
+&nbsp; tooltip-background-color:rgb(255,255,240);<br>
+&nbsp; tooltip-color:rgb(96,96,96);}<br>
+Gallery <br>
+&nbsp; {color:rgb(224,224,224);background-color:rgb(60,60,60);<br>
+&nbsp; selected-background-color:rgb(224,224,224);<br>
+&nbsp; selected-color:rgb(60,60,60);<br>
+&nbsp; offline-color:rgb(128, 160, 0);<br>
+&nbsp; remote-color:rgb(128, 128, 240);<br>
+&nbsp; selected-offline-color:red;<br>
+&nbsp; selected-remote-color:rgb(64, 64, 128);}<br>
+CGroup <br>
+&nbsp; {color:rgb(240,240,240);background-color:transparent;}<br>
+Composite <br>
+&nbsp; {background-color:rgb(60,60,60);}<br>
+Shell#slideshow <br>
+&nbsp; {color:rgb(224,224,224);background-color:black;}<br>
+Shell <br>
+&nbsp; {color:rgb(224,224,224);background-color:rgb(60,60,60);}<br>
+CBanner <br>
+&nbsp; {background-color:rgb(60,60,60);}<br>
+Coolbar <br>
+&nbsp; {background-color:rgb(60,60,60);}<br>
+Toolbar <br>
+&nbsp; {background-color:rgb(60,60,60);}<br>
+ToolItem <br>
+&nbsp; {background-color:rgb(60,60,60);}<br>
+Scale <br>
+&nbsp; {background-color:rgb(60,60,60);}<br>
+Statusline <br>
+&nbsp; {background-color:rgb(60,60,60);}<br>
+CLabel <br>
+&nbsp; {color:rgb(240,240,240);background-color:rgb(60,60,60);}<br>
+TrimCommonUIHandle <br>
+&nbsp; {background-color:rgb(60,60,60);}<br>
+ZPSWTCanvas#slideshow <br>
+&nbsp; {color:rgb(144,144,144);<br>
+&nbsp; foreground-color:rgb(144,144,144);<br>
+&nbsp; title-color:rgb(164,164,164);<br>
+&nbsp; background-color:rgb(60,60,60);<br>
+&nbsp; selected-background-color:rgb(114,114,114);<br>
+&nbsp; offline-color:rgb(128, 160, 0);<br>
+&nbsp; remote-color:rgb(128, 128, 240);<br>
+&nbsp; selected-offline-color:red;<br>
+&nbsp; selected-remote-color:rgb(64, 64, 128);}<br>
+ZPSWTCanvas#exhibition <br>
+&nbsp; {color:rgb(144,144,144);<br>
+&nbsp; title-color:rgb(164,164,164);<br>
+&nbsp; background-color:rgb(60,60,60);<br>
+&nbsp; selected-background-color:rgb(224,224,124);<br>
+&nbsp; offline-color:rgb(128, 160, 0);<br>
+&nbsp; remote-color:rgb(128, 128, 240);<br>
+&nbsp; selected-offline-color:red;<br>
+&nbsp; selected-remote-color:rgb(64, 64, 128);}<br>
+ZPSWTCanvas#webgallery <br>
+&nbsp; {color:rgb(255, 255, 250);<br>
+&nbsp; foreground-color:rgb(144,144,144);<br>
+&nbsp; title-color:rgb(114,114,114);<br>
+&nbsp; background-color:rgb(60,60,60);<br>
+&nbsp; selected-background-color:rgb(114,114,114);<br>
+&nbsp; offline-color:rgb(128, 160, 0);<br>
+&nbsp; remote-color:rgb(128, 128, 240);<br>
+&nbsp; selected-offline-color:red;<br>
+&nbsp; selected-remote-color:rgb(64, 64, 128);}<br>
+ZPSWTCanvas <br>
+&nbsp; {color:rgb(224,224,224);<br>
+&nbsp; background-color:rgb(60,60,60);<br>
+&nbsp; offline-color:rgb(128, 160, 0);<br>
+&nbsp; remote-color:rgb(128, 128, 240);<br>
+&nbsp; selected-offline-color:red;<br>
+&nbsp; selected-remote-color:rgb(64, 64, 128);}<br>
+* {color:rgb(240,240,240);background-color:rgb(60,60,60);}<br>
+<br>
+</span></div>
+<br>
+<span style="font-family: monospace;"></span>
+<p> </p>
+</body></html>

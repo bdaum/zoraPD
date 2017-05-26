@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="csv_wizard_context" title="CSV-Assistent">
+      <description>Kommagetrennte Werte (CSV) aus ausgewählten Bildern erzeugen</description>
+      <topic href="html/cs.html" label="Create CSV wizard"/>
+   </context>
+</contexts>

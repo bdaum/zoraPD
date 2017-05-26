@@ -1,0 +1,11 @@
+<index>
+	<entry keyword="Microsoft">
+		<entry keyword="Vision">
+			<topic href="html/msVision.html" />
+		</entry>
+	</entry>
+	<entry keyword="Gesichtserkennung">
+		<topic href="html/msVision.html" label="Gesichtserkennung mit dem MS-Vision-Webservice"/>
+	</entry>
+	
+</index>

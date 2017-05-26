@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head><title>GPS Parser</title>
+
+
+
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css">
+
+  
+  <link rel="stylesheet" type="text/css" href="../schema.css"></head><body>
+<h1 style="text-align: center;">GPS Parser</h1>
+
+<h6 class="CaptionFigColumn SchemaHeader">Identifier: </h6>
+
+com.bdaum.zoom.ui.gpsParser<br>
+
+<br>
+
+<h6 class="CaptionFigColumn SchemaHeader">Since: </h6>
+
+0.9.0<br>
+<h6 class="CaptionFigColumn SchemaHeader"><br>
+</h6>
+
+<h6 class="CaptionFigColumn SchemaHeader">Description: </h6>
+
+Extension point for registering different parsers for GPS tracker file
+formats<br>
+<h6 class="CaptionFigColumn SchemaHeader"><br>
+</h6>
+
+<h6 class="CaptionFigColumn SchemaHeader">Configuration Markup:<br>
+<br>
+</h6>
+
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.extension">extension</a>
+(<a href="#e.parser">parser</a>*)&gt;</p>
+
+<p class="code SchemaDtd">&lt;!ATTLIST extension</p>
+
+<p class="code SchemaDtdAttlist">point&nbsp;CDATA #REQUIRED</p>
+
+<p class="code SchemaDtdAttlist">id&nbsp;&nbsp;&nbsp;&nbsp;CDATA
+#IMPLIED</p>
+
+<p class="code SchemaDtdAttlist">name&nbsp;&nbsp;CDATA #IMPLIED</p>
+
+&gt;
+<p class="ConfigMarkupElementDesc">Extension for registering parsers
+for geo data file formats</p>
+
+<br>
+
+<br>
+
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.parser">parser</a>
+EMPTY&gt;</p>
+
+<p class="code SchemaDtd">&lt;!ATTLIST parser</p>
+
+<p class="code SchemaDtdAttlist">name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA
+#REQUIRED</p>
+
+<p class="code SchemaDtdAttlist">extensions&nbsp;CDATA #REQUIRED</p>
+
+<p style="outline-color: navy ! important; outline-style: dashed ! important; outline-width: 2px ! important;" class="code SchemaDtdAttlist">class&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA
+#REQUIRED</p>
+<p class="code SchemaDtdAttlist">waypoints&nbsp;&nbsp;CDATA #IMPLIED</p>
+
+
+&gt;<br>
+
+<br>
+
+<p style="font-weight: bold;" class="ConfigMarkupElementDesc">Parser</p>
+
+<br>
+
+<ul class="ConfigMarkupAttlistDesc">
+
+  <li><b>name</b> - Name of the Parser </li>
+  <li><b>extensions</b> - File name extensions separated by white space
+  </li>
+  <li><b>class</b> - Parser implementation. Must implement com.bdaum.zoom.ui.gps.IGpsParser.</li>
+  <li><b>waypoints</b> - Optional implementation for a waypoint collector. Must 
+implement com.bdaum.zoom.ui.gps.IWaypointCollector. </li>
+</ul><br>
+<ul class="ConfigMarkupAttlistDesc">
+
+</ul>
+
+
+<br>
+
+<h6 class="CaptionFigColumn SchemaHeader">Examples: </h6>see com.bdaum.zoom.gps/plugin.xml <br>
+&nbsp;
+
+<h6 class="CaptionFigColumn SchemaHeader"><br>
+</h6>
+
+<h6 class="CaptionFigColumn SchemaHeader">API Information: </h6>
+
+see com.bdaum.zoom.ui/com.bdaum.zoom.ui.gps.IGpsParser and com.bdaum.zoom.ui/com.bdaum.zoom.ui.gps.IWaypointCollector<br>
+
+
+<h6 class="CaptionFigColumn SchemaHeader"><br>
+</h6>
+
+<h6 class="CaptionFigColumn SchemaHeader">Supplied Implementation: </h6>
+
+GPX parser <br>
+
+<br>
+
+<p class="note SchemaCopyright">2010-2011 Berthold Daum </p>
+
+</body></html>

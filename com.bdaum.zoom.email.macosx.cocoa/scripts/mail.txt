@@ -1,0 +1,31 @@
+(* Setting parameters. Do not change this section *)
+set toList to {$to$}
+set ccList to {$cc$}
+set bccList to {$bcc$}
+set aSubject to "$subj$"
+set aBody to "$body$"
+set fileList to {$attach$}
+(* The following section may be modified to match specific requirements *)
+tell application "Mail"
+	set theMessage to make new outgoing message with properties {visible:true, subject:aSubject, content:aBody}
+	tell content of theMessage
+		repeat with aFile in fileList
+			make new attachment with properties {file name:aFile} at after last paragraph
+		end repeat
+	end tell
+	tell theMessage
+		repeat with aTo in toList
+			make new to recipient at end of to recipients with properties {address:aTo}
+		end repeat
+	end tell
+	tell theMessage
+		repeat with aCc in ccList
+			make new cc recipient at end of cc recipients with properties {address:aCc}
+		end repeat
+	end tell
+	tell theMessage
+		repeat with aBcc in bccList
+			make new bcc recipient at end of bcc recipients with properties {address:aBcc}
+		end repeat
+	end tell
+end tell

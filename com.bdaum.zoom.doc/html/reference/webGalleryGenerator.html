@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
+
+
+
+
+  
+
+  
+  
+  <title>Web Gallery Generator</title><link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css">
+
+  
+  <link rel="stylesheet" type="text/css" href="../schema.css"></head>
+<body>
+<h1 style="text-align: center;">Web Gallery Generator</h1><p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Identifier: 
+</h6>com.bdaum.zoom.ui.galleryGenerator
+<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Since: </h6>0.5.4 
+<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Description: </h6>Extension point to 
+add different web gallery generators.
+<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Configuration Markup:</h6>
+<p></p>
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.extension">extension</a> (<a href="#e.generator">generator</a>)&gt;</p>
+<p class="code SchemaDtd">&lt;!ATTLIST extension</p>
+<p class="code SchemaDtdAttlist">point CDATA #REQUIRED</p>
+<p class="code SchemaDtdAttlist">id    CDATA #IMPLIED</p>
+<p class="code SchemaDtdAttlist">name  CDATA #IMPLIED</p>&gt;
+<p></p>
+<p></p>
+<p class="ConfigMarkupElementDesc">Extension for adding generators for web 
+galleries. At maximum one generator per plug-in.</p><br>
+<br>
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.generator">generator</a> (<a href="#e.parameter">parameter</a>*)&gt;</p>
+<p class="code SchemaDtd">&lt;!ATTLIST generator</p>
+<p class="code SchemaDtdAttlist">id          IDREF #REQUIRED</p>
+<p class="code SchemaDtdAttlist">name        CDATA #REQUIRED</p>
+<p class="code SchemaDtdAttlist">description CDATA #IMPLIED</p>
+<p class="code SchemaDtdAttlist">class       CDATA #REQUIRED</p>
+<p class="code SchemaDtdAttlist">slideshows  (true | false) </p>
+<p class="code SchemaDtdAttlist">sections    (true | false) </p>
+<p class="code SchemaDtdAttlist">unsupported CDATA #IMPLIED</p>
+<p class="code SchemaDtdAttlist">maxImages   CDATA #IMPLIED</p>&gt;
+<p></p>
+<p></p>
+<p class="ConfigMarkupElementDesc">The generator responsible for generating a web 
+gallery</p><br>
+<ul class="ConfigMarkupAttlistDesc"><li><b>id</b> - globally unique generator id 
+</li><li><b>name</b> - display label of the generator 
+</li><li><b>description</b> - A textual (HTML) description of the generator. The 
+available area is 300 x 500 pixels. 
+</li><li><b>class</b> - The class implementing the generator. Must extend 
+com.bdaum.zoom.operations.internal.gen.AbstractGalleryGenerator 
+</li><li><b>slideshows</b> - Specifies if the generated gallery will be able to run 
+slideshows 
+</li><li><b>sections</b> - Specifies if the generated gallery can be organized into 
+sections (storyboards) 
+</li><li><b>unsupported</b> - A list of unsupported features separated by blanks. The 
+following feature names can be listed: download showmetadata thumbnailsize 
+opacity padding sectionfont captionfont navfont 
+</li><li><b>maxImages</b> - The maximum number (integer value) of images within a 
+gallery. If this parameter is omitted, the maximum number is unlimited 
+</li></ul><br>
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.parameter">parameter</a> (<a href="#e.enumeration">enumeration</a>*)&gt;</p>
+<p class="code SchemaDtd">&lt;!ATTLIST parameter</p>
+<p class="code SchemaDtdAttlist">label         CDATA #REQUIRED</p>
+<p class="code SchemaDtdAttlist">type          (int|double|boolean|string|text|color) 
+</p>
+<p class="code SchemaDtdAttlist">id            IDREF #REQUIRED</p>
+<p class="code SchemaDtdAttlist">required      (true | false) "false"</p>
+<p class="code SchemaDtdAttlist">description   CDATA #IMPLIED</p>
+<p class="code SchemaDtdAttlist">default       CDATA #IMPLIED</p>
+<p class="code SchemaDtdAttlist">max           CDATA #IMPLIED</p>
+<p class="code SchemaDtdAttlist">min           CDATA #IMPLIED</p>
+<p class="code SchemaDtdAttlist">encodeForHtml (true | false) "false"</p>
+<p class="code SchemaDtdAttlist">linkTo        CDATA #IMPLIED</p>&gt;
+<p></p>
+<p></p>
+<p class="ConfigMarkupElementDesc">Additional parameters that influence the 
+appearance of the gallery but are not covered by the common parameters defined 
+in the gallery datamodel</p><br>
+<ul class="ConfigMarkupAttlistDesc"><li><b>label</b> - The display label of the parameter 
+</li><li><b>type</b> - The datatype of the parameter 
+</li><li><b>id</b> - ID of the parameter (unique in scope of plug-in) 
+</li><li><b>required</b> - Specify true if a string value must not be empty 
+</li><li><b>description</b> - A textual description of the parameter 
+</li><li><b>default</b> - Default value for optional parameters 
+</li><li><b>max</b> - Only used for numeriic values. Specifies a maximum value. 
+</li><li><b>min</b> - Only used for numeriic values. Specifies a minimum value. 
+</li><li><b>encodeForHtml</b> - Set to true to encode the label for HTML. Not all web 
+engines - in particular the Flash based engines - support HTML markup in texts. 
+</li><li><b>linkTo</b> - Links the values of this parameter to specific values of the 
+target parameter. The target parameter must be a string enumeration. 
+</li></ul><br>
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.enumeration">enumeration</a> 
+EMPTY&gt;</p>
+<p class="code SchemaDtd">&lt;!ATTLIST enumeration</p>
+<p class="code SchemaDtdAttlist">id    IDREF #REQUIRED</p>
+<p class="code SchemaDtdAttlist">label CDATA #REQUIRED</p>&gt;
+<p></p>
+<p></p>
+<p class="ConfigMarkupElementDesc">Enumeration value for string parameters</p><br>
+<ul class="ConfigMarkupAttlistDesc"><li><b>id</b> - ID of enumeration value (unique in scope of parameter) 
+</li><li><b>label</b> - Translatable label of enumeration value </li></ul><br>
+<h6 class="CaptionFigColumn SchemaHeader">Examples: </h6>see 
+com.bdaum.zoom.web.galleriffic/plugin.xml 
+<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">API Information: </h6>see 
+com.bdaum.zoom.core/com.bdaum.zoom.core.IGalleryGenerator 
+<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Supplied Implementation: 
+</h6>com.bdaum.zoom.web.galleriffic 
+<p></p><br>
+<p class="note SchemaCopyright">2009-2012 Berthold Daum </p></body></html>

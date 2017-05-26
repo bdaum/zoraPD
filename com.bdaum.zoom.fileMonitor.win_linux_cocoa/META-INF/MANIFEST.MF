@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %Bundle-Name
+Bundle-SymbolicName: com.bdaum.zoom.fileMonitor.win_linux_cocoa
+Bundle-Version: 3.0.0
+Bundle-Vendor: %Bundle-Vendor
+Fragment-Host: com.bdaum.zoom.fileMonitor;bundle-version="0.9.4"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Eclipse-PlatformFilter: (&(|(osgi.os=win32)(osgi.os=linux)(&(osgi.os=macosx)(osgi.ws=cocoa)))(|(osgi.arch=x86)(osgi.arch=x86_64)))

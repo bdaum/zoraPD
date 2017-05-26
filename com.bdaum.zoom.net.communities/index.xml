@@ -1,0 +1,18 @@
+<index>
+	<entry keyword="Communities">
+		<topic href="html/communities.html" />
+	</entry>
+	<entry keyword="Web Communities">
+		<topic href="html/communities.html" />
+	</entry>
+	<entry keyword="Export">
+		<entry keyword="Communities">
+			<topic href="html/communities.html" />
+		</entry>
+	</entry>
+	<entry keyword="Metadata">
+		<entry keyword="in community export">
+			<topic href="html/communities.html" />
+		</entry>
+	</entry>
+</index>

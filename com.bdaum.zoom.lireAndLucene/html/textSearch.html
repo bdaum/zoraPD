@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head><title>Text Retrieval</title>
+
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Text Retrieval</h2>
+
+Text retrieval (<acronym>Image&gt;Text search</acronym>) is quite
+similar to a Google search and allows searching for text phrases in
+images regardless
+if the phrase occurs in the keywords, in a title, a description, a
+slide, exhibit, or web exhibit using that image, etc. Text retrieval
+allows for very quick text searches but does not have the precision of
+a specific query such as a keyword query. For example, if you search
+for "Peter" you will find all images with a keyword "Peter" but also
+all images where "Peter" is found in the author, owner, or copyright
+field - or any other field, that is.<br>
+
+However, by combining multiple sub queries into one query expression
+you can narrow down your search results:<br>
+
+<ul style="font-weight: normal;">
+
+  <li>Search for <span style="font-weight: bold;">phrases</span> by
+including them into double quotes, e.g.<code> "uncle tom"</code>.</li>
+  <li>Use <span style="font-weight: bold;">wildcard</span> operators
+such as&nbsp;* and&nbsp;? (not within
+phrases).&nbsp;* stands for any string,&nbsp;? for a single arbitrary
+character. <br>
+    <span style="font-weight: bold;">Note:</span> You cannot use a * or
+? symbol as the first character
+of a search.<br>
+Examples: <code>ani*</code> would find all words starting with
+'ani'.&nbsp;</li>
+  <li>Postfix
+a word with ~ to perform a <span style="font-weight: bold;">similarity</span>
+search. This can be useful to get
+search results even in the case of spelling errors.</li>
+  <li>Use the <span style="font-weight: bold;">AND</span> operator for
+returning images containing both words or phrases, for example: <code>people
+AND animals</code>.</li>
+  <li>Use the <span style="font-weight: bold;">OR</span> operator for
+returning images containing either the left or the right word or phrase
+but not both: <code>people OR animals</code></li>
+  <li>Use the <span style="font-weight: bold;">NOT</span> operator for
+excluding images containing a word or a phrase. For example <code>people
+NOT animals </code>would return images tagged with 'people' but not
+tagged with 'animals'. Alternatively, you can write <code>people
+-animals</code>.</li>
+  <li>Use parentheses for <span style="font-weight: bold;">complex
+search expressions</span>, for example: <code>(people AND animals) OR
+(cars AND animals)</code></li>
+  <li>Some characters contained in a search word or phrase must be <span style="font-weight: bold;">escaped</span>: <code>+ - &amp;&amp; || !
+( ) { } [ ] ^ " ~ * ? : \</code><br>
+Prefix such characters with \, for example: <code>wow\!</code></li>
+</ul>
+
+<br>
+
+<br>
+</body></html>

@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html lang="en-us"><head>
+
+
+
+
+
+  
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Geotagging</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h1>Geo-tagging</h1>
+
+Geo-tagging is performed either through the menu function <acronym>Metadata&gt;Geotagging</acronym>
+or simply by dropping a supported geo-tracking file onto a collection or into a gallery
+area. Supported are GPX files (<code>.gpx</code>) and NMEA files (<code>.nmea</code> or <code>.log</code>).<br>
+Alternatively, you may geo-tag manually by setting geo-markers in
+the<span style="font-style: italic;"> </span><a href="maps.html">Map
+view</a>.<br>
+
+<br>
+
+Before doing so, you should configure the Geo-tagging facility by
+setting options through <acronym>Window&gt;Preferences&gt;GPS</acronym>:<br>
+
+<dl>
+
+  <dt style="font-weight: bold;">General</dt><dd><span style="font-weight: bold;">Timing</span></dd></dl><dl style="margin-left: 80px;"><dt style="font-weight: bold;">Timeshift</dt><dd>You
+may specify a time shift value if the clocks of camera and tracker were
+not set to the same time. The time shift value will be added to the
+camera time before matching the image to the tracker recording. The
+best practice is setting the timezones of the camera to the timezone of
+your home computer. The clock of the tracker
+is set by the satellite signal (UTC = Universal Time Coordinated). So, if your
+camera is set up correctly, timeshift should reflect the difference
+between UTC and current local time. Press the "Restore to defaults"
+button to find out the current value (value may change due to daylight savings time).<br>
+  </dd><dt style="font-weight: bold;">Tolerance <span style="font-weight: normal;">and</span> Interval</dt><dd>A
+tolerance value is useful to match images to tracker entries that do
+not match exactly, for example, if you switched the tracker on after
+taking pictures. The position of an image will be interpolated between
+the trackpoints whose timestamps are closest to the timestamp of the
+image.</dd></dl><dl>
+  
+</dl>
+
+<dl>
+
+  
+  
+  </dl><dl style="margin-left: 40px;"><dt><span style="font-weight: bold;">Mode</span><br>
+  </dt></dl><dl>
+  </dl><dl style="margin-left: 80px;"><dt style="font-weight: bold;">Overwrite existing geotags</dt><dd>Check this option if you want to refresh the geo-tags of
+images that have already been geo-tagged.<br>
+    <br>
+</dd><dt style="font-weight: bold;">Use Waypoint information</dt><dd>Check this option if you want to utilize GPX waypoint information.
+Trackpoints close to a waypoint will be resolved using the waypoint
+information instead of using web services when geo-naming.</dd></dl><dl>
+  
+
+
+  </dl><dl style="text-align: justify; margin-left: 80px;"><dt style="font-weight: bold;">Update altitude through
+webservice</dt><dd>This will usually result in more precise altitude readings
+but will slow down the process of geo-tagging.</dd><dt><br>
+</dt><dt style="font-weight: bold;">Edit trackpoints</dt><dd>Mark this option if you want to edit the <a href="trackpoint.html">trackpoints</a> contained in imported trackfiles before applying these trackpoints to your images.&nbsp;</dd></dl><dl>
+  </dl><dl style="margin-left: 40px;"><dt style="font-weight: bold;">Keywords</dt></dl><dl style="margin-left: 80px;"><dt style="font-weight: bold;">Include coordinates into
+keywords</dt><dd>Check
+this option if you want to include the GPS coordinates into the image
+IPTC keywords. This can be useful if you want to allow keyword search
+on
+coordinates (especially with third party applications). Without this
+option the GPS coordinates are only stored
+into the EXIF meta data of the image. By default, this option is
+switched off in order not to overcrowd the keywords entry.</dd><dt><br>
+  </dt><dt style="font-weight: bold;">Include place names into
+keywords</dt><dd>Check this option if you want to include the geonames into
+the
+image keywords. This can be useful if you want to allow keyword search
+on place names.&nbsp;By default, this option is switched on.</dd></dl><dl>
+  
+  
+  
+  
+  <dt><span style="font-weight: bold;">Webservices</span><br>
+  </dt></dl>Here you can configure the webservices used for geonaming and other purposes<br>
+
+<span style="font-weight: bold;"><br>
+</span>
+<dl style="margin-left: 40px;"><dt style="font-weight: bold;">Used Geonaming Webservice</dt><dd>Select&nbsp;a geonaming webservice from the displayed list. Geonaming determines place names from location coordinates.</dd><dt><br>
+</dt><dt style="font-weight: bold;">Max. request per hour</dt><dd>The
+webservices used for geonaming and elevation (<span style="font-weight: bold;">Update altitude through
+webservice</span>) are all limited in
+capacity depending on the provider and on your agreement with the
+provider. By limiting the request per hour you can make sure not to run
+out of capacity during a geotagging and geonaming task. The operation is simply slowed down for not exceeding the hourly limit.<br>Please be aware
+that elevation request are always handled through geonames.org
+independent of you setting in <span style="font-weight: bold;">Used Geonaming Webservice</span>.</dd></dl>
+
+<dl style="margin-left: 40px;"><dt style="font-weight: bold;">Premium Services</dt><dd>Here you may specify keys for premium services you have bought.</dd></dl><br>
+<br>
+
+</body></html>

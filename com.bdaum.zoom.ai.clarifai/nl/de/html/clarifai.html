@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head><title>Clarifai</title>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+  
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  
+  <link rel="stylesheet" type="text/css" href="../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
+<h2>Clarifai </h2>
+
+
+<p><span style="font-style: italic;">Clarifai</span> ist einer der führenden Dienstleister für die Analyse von Bildinhalten. <span style="font-style: italic;">Clarifai</span>
+bietet mehrere Preispläne, beginnend mit einem freien Plan. Zum
+Zeitpunkt des Schreibens sind beim freien Plan 5000 Anfragen pro Monat
+erlaubt.<br>
+Bevor Sie den Service nutzen können, müssen Sie ein Konto bei <span style="font-style: italic;">Clarifai</span> eröffnen. Um dies zu tun, besuchen Sie die <span style="font-style: italic;">Clarifai</span>-Website unter <a href="https://www.clarifai.com">https://www.clarifai.com</a> oder klicken Sie auf den Link in den <span style="font-style: italic;">Clarifai</span>-Benutzereinstellungen. Sie müssen dann Ihre Anmeldeinformationen (<span style="font-weight: bold;">Client-ID </span>und <span style="font-weight: bold;">Client-Secret</span>) in die <span style="font-style: italic;">Clarifai</span>-Präferenzseite eingeben.<br>
+<br>
+<span style="font-style: italic;">Clarifai</span> unterstützt mehrere "Modelle" wie <span style="font-weight: bold;">Allgemein</span>, <span style="font-weight: bold;">Food</span>, <span style="font-weight: bold;">Wedding</span> und <span style="font-weight: bold;">Travel</span>. Das Modell, das in <span style="font-style: italic;">ZoRa PhotoDirector</span> verwendet wird, wird aus dem Thema des aktuellen Katalogs abgeleitet (<acronym><a href="../../com.bdaum.zoom.doc/html/reference/catProperties.html">Katalog&gt;Eigenschaften ...</a></acronym>).<br>
+<span style="font-style: italic;"></span><br>
+</p>
+<h4>Optionen</h4>
+<ul>
+  <li><span style="font-weight: bold;">Modell</span>. Das
+verwendete Clarifai-Wissensmodell wird normalerweise aus dem
+Katalogthema (siehe oben) abgeleitet. Es besteht allerdings die
+Möglichkeit, diese Einstellung temporär zu überschreiben, z.B. wenn
+eine Reise-Album innerhalb eines Katalogs mit allgemeinem Theme
+kategorisiert werden soll.</li>
+  <li><span style="font-weight: bold;">Sprache</span>. Wählen Sie eine Ausgabesprache. Zur Zeit unterstützt nur das <span style="font-weight: bold;">allgemeine</span> Modell andere Sprachen als Englisch. Für andere Modelle können Sie den Übersetzungsdienst verwenden.</li>
+
+  <li><span style="font-weight: bold;">Maximale Anzahl von Konzepten.</span> Für jedes Bild schlägt <span style="font-style: italic;">Clarifai</span>
+etwa zwanzig verschiedene Kategorien vor (auch Konzepte genannt). Sie
+können diese Anzahl durch eine entsprechende Angabe einschränken.</li>
+
+  <li><span style="font-weight: bold;">Minimales Konfidenzniveau. </span>Alle
+Vorschläge werden mit einem Vertrauensniveau angegeben. Sie können
+einen Wert zwischen 0 und 100 (in Prozent) eingeben, um alle Vorschläge
+mit einem niedrigeren Konfidenzniveau zu unterdrücken.</li>
+  <li><span style="font-weight: bold;">Schlagworte vormarkieren bei Vertrauensnievau über</span>.
+Geben Sie ein Konfidenzniveau an, für das das System automatisch
+Vorschläge als Schlagworte markieren soll. Geben Sie einen Wert von 100
+an, wenn Sie keine automatische Markierung wünschen.</li>
+  <li><span style="font-weight: bold;">Nur bekannte Schlagworte vormarkieren.</span> Diese Option beschränkt die automatische Kennzeichnung auf Schlüsselwörter, die bereits im Katalog definiert sind.<br>
+  </li>
+
+  <li><span style="font-weight: bold;">Auf sichere Inhalte überprüfen.</span>
+Markieren Sie diese Option, um eine Prüfung auf&nbsp; sexuelle oder
+rassistische BildInhalte zu veranlassen. Die Ergebnisse werden verwendet, um die
+Datenschutzeinstellungen des Bildes zu setzen. Wenn diese Option
+gesetzt ist, wird für jedes Bild eine zusätzliche <span style="font-style: italic;">Clarifai</span>-Anfragen erzeugt.</li>
+  <li><span style="font-weight: bold;">Gesichter erkennen.</span>
+Markieren Sie diese Option, um eine Gesichtserkennung durchzuführen.
+Werden Gesichter erkannt, werden diese durch grüne Rahmen im Bild
+gekennzeichnet. Sie haben dann die Möglichkeit, diese Gesichtsregionen
+zu akzeptieren oder zu verwerfen. Wenn diese Option
+gesetzt ist, wird für jedes Bild eine zusätzliche <span style="font-style: italic;">Clarifai</span>-Anfragen erzeugt.</li>
+
+  <li><span style="font-weight: bold;">Übersetzen.</span> Markieren Sie
+diese Option, wenn Sie Englisch als Standard-Clarifai-Sprache
+verwenden, aber die Ausgabe in einer anderen Sprache wünschen. Der <a href="../../com.bdaum.zoom.ai/html/ai.html"><span style="font-style: italic;">Microsoft-Translator-Dienst</span></a> wird verwendet, um die übermittelten Texte zu übersetzen.</li>
+</ul>
+<p><br>
+</p>
+<acronym></acronym>
+<p> </p>
+
+
+</body></html>

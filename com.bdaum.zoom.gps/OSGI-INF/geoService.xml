@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name="com.bdaum.zoom.gps.GeoServiceComponent">
+   <implementation class="com.bdaum.zoom.gps.internal.GeoService"/>
+   <service>
+      <provide interface="com.bdaum.zoom.core.internal.IGeoService"/>
+   </service>
+</scr:component>

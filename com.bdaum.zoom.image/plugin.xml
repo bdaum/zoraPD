@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="importFilter" name="%extension-point.name.import_filter" schema="schema/importFilter.exsd"/>
+   <extension-point id="imageIOplugins" name="ImageIO Plugins" schema="schema/imageIOplugins.exsd"/>
+</plugin>

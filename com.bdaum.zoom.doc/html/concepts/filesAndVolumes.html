@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+<meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Files and Volumes</title>
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Files and Volumes<br>
+</h2>
+<span style="font-style: italic;"></span><span id="result_box" class="" lang="en"><span title="Bilder und Videos werden anhand ihrer Dateipfade identifiziert.">Images and videos are identified by their file path. </span><span title="Da dieser nicht auf allen Plattformen eindeutig ist, wird zusätzlich noch der Name des Datenträgers hinzu gezogen.">Since this is not unique on all platforms, the volume name is also used.<br><br></span><span title="So bestehen z.B.">For example, </span><span title="auf Windows Dateipfade aus dem Laufwerksbuchstaben, gefolgt von einer Folge von Ordnern und Unterordnern.">on Windows the file path consists from the drive letter, followed by a series of folders and subfolders. </span><span title="Das Problem hierbei sind externe Datenträger, denen in der Regel von Windows der selbe Laufwerksbuchstabe zugewiesen wird.">The problem here is external disks, which usually are assigned the same drive letter by Windows. </span><span title="Da ZoRa PhotoDirector auch Bilder von externen Datenträgern katalogisieren kann, wird zur Identifizierung von Bildern zusätzlich der Name des Datenträgers (CD, DVD, USB-Stick, SD-Card) heran gezogen.">Since
+ZoRa PhotoDirector can also catalog images from external data media,
+the name of the volume (CD, DVD, USB stick, SD card) is also used to
+identify images.<br></span><span title="Es ist deshalb wichtig, solche Datenträger beim Formatieren immer mit einem eindeutigen Namen zu versehen!">It is therefore important to always provide such data carriers with a unique name during formatting!<br><br></span><span title="Auf Linux und Mac gibt es andere Probleme.">On Linux and Mac, there are other problems. </span><span title="Hier ist der Datenträgername Teil des Dateipfades, jedoch weicht die Syntax des Dateipfades von Plattform zu Plattform voneinander ab.">Here, the volume name is part of the file path, but the syntax of the file path is different from platform to platform. </span><span title="So haben Dateipfade von externen Medien auf Ubuntu die Form">Thus, file formats of external media on Ubuntu have the form<br><br></span><span title="/media/{datenträgername}/..."></span></span><code>/media/{volume}/...<br>
+<br>
+</code><span id="result_box" class="" lang="en"><span title="/media/{datenträgername}/..."></span><span title="auf Suse-System dagegen">On the Suse system<br><br></span><span title="/run/media/{benutzer}/{datenträgername}/..."></span></span><code>/run/media/{user}/{</code><code>volume</code><code>}/...</code><br>
+<span id="result_box" class="" lang="en"><span title="/run/media/{benutzer}/{datenträgername}/..."><br></span><span title="auf MacOS wiederum">On MacOS<br><br></span><span title="/Volumes/{datenträgername}/..."></span></span><code>/Volumes</code><code>/{</code><code>volume</code><code>}/...</code><br>
+<span id="result_box" class="" lang="en"><span title="/Volumes/{datenträgername}/..."><br><br></span><span title="Die entsprechenden Pfadmuster sind in der Datei volumePatterns.ini in Plugin com.bdaum.zoom.image eingetragen und können bei Bedarf verändert werden.">The
+ corresponding path patterns are defined in the file <code>volumePatterns.ini</code> 
+in the plugin <code>com.bdaum.zoom.image</code> and can be changed as required. </span><span title="Verwendet werden dabei reguläre Ausdrücke."><a href="../reference/regex.html">Regular expressions</a> are used to define these patterns.<br><br></span><span title="Die Standarddefinition dieser Datei ist:">The default definition of this file is:<br><br></span><span title="# MAC"></span></span><code># MAC<br>
+/Volumes/(.*?)(?:/.*)?<br>
+# UBUNTU<br>
+
+/media/(.*?)(?:/.*)?<br>
+
+# SUSE<br>
+
+/run/media/.*?/(.*?)(?:/.*)?</code><span id="result_box" class="" lang="en"><span title="# MAC"></span><span title="/run/media/.*?/(.*?)(?:/.*)?"><br><br></span><span title="Es ist noch anzumerken, dass diese Muster auch verwendet werden, wenn Dateien auf Linux- oder Mac-Systeme migriert werden sollen (Katalog&gt;Wartung&gt;Katalog migrieren...).">It
+ should also be noted that these patterns are also used when migrating 
+files to Linux or Mac systems (<acronym>Catalog&gt;Maintenance&gt;Migrate catalog ...</acronym>).</span></span><acronym></acronym><br>
+<br>
+<ul style="font-weight: normal;">
+</ul>
+</body></html>

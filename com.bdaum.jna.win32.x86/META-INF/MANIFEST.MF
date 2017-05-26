@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Windows X86 JNA natives
+Bundle-SymbolicName: com.bdaum.jna.win32.x86;singleton:=true
+Bundle-Version: 3.3.0
+Bundle-Vendor: bdaum industrial communications
+Fragment-Host: com.bdaum.jna;bundle-version="3.3.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Eclipse-PlatformFilter: (& (osgi.os=win32) (osgi.arch=x86))
+Bundle-ClassPath: .
+Export-Package: com.bdaum.jna.ext,
+ com.sun.jna,
+ com.sun.jna.platform,
+ com.sun.jna.ptr

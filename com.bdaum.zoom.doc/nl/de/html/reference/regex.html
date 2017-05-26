@@ -1,0 +1,525 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="de"><head>
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
+<title>Reguläre Ausdrücke</title>
+
+
+  
+
+  
+  
+  <meta name="date" content="2015-11-19">
+
+  
+  <meta name="keywords" content="CASE_INSENSITIVE">
+
+  
+  <meta name="keywords" content="LITERAL">
+
+  
+  <meta name="keywords" content="DOTALL">
+
+  
+  <link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"></head><body style="background-color: white;">
+<hr>
+<h1 class="Head">Reguläre Ausdrücke<br>
+ </h1>
+
+<h4><a name="sum"></a></h4>
+
+<h4><a name="sum">Reguläre Ausdrücke in Quellmustern<br>
+</a></h4>
+
+<a name="sum"> </a>
+<table summary="Regular expression constructs, and what they match" border="0" cellpadding="1" cellspacing="0">
+
+  <tbody>
+    <tr align="left">
+      <th id="construct" align="left" bgcolor="#ccccff">Konstrukt</th>
+      <th id="matches" align="left" bgcolor="#ccccff">Stimmt überein mit<br>
+</th>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="characters">Zeichen</th>
+    </tr>
+    <tr>
+      <td headers="construct characters" valign="top"><i>x</i></td>
+      <td headers="matches">Das Zeichen <i>x</i></td>
+    </tr>
+    <tr>
+      <td headers="construct characters" valign="top"><tt>\\</tt></td>
+      <td headers="matches">Der umgekehrte Schrägstrich<br>
+</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="classes">Zeichenklassen</th>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[abc]</tt></td>
+      <td headers="matches"><tt>a</tt>, <tt>b</tt>, oder <tt>c</tt>
+(einfache Klasse)</td>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[^abc]</tt></td>
+      <td headers="matches">Alle Zeichen außer <tt>a</tt>, <tt>b</tt>,
+oder <tt>c</tt> (Verneinung)</td>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[a-zA-Z]</tt></td>
+      <td headers="matches"><tt>a</tt> bis <tt>z</tt> oder <tt>A</tt> bis <tt>Z</tt>, inklusive (Bereich)</td>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[a-d[m-p]]</tt></td>
+      <td headers="matches"><tt>a</tt> bis <tt>d</tt> oder <tt>m</tt> bis <tt>p</tt>: <tt>[a-dm-p]</tt> (Vereinigung)</td>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[a-z&amp;&amp;[def]]</tt></td>
+      <td headers="matches"><tt>d</tt>, <tt>e</tt> oder <tt>f</tt>
+(Durchschnitt)</td>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[a-z&amp;&amp;[^bc]]</tt></td>
+      <td headers="matches"><tt>a</tt> bis <tt>z</tt>, außer <tt>b</tt> und <tt>c</tt>: <tt>[ad-z]</tt> (Subtraktion)</td>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[a-z&amp;&amp;[^m-p]]</tt></td>
+      <td headers="matches"><tt>a</tt> bis <tt>z</tt> und nicht <tt>m</tt> bis <tt>p</tt>: <tt>[a-lq-z]</tt>(Subtraktion)</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="predef">Vordefinierte Zeichenklassen</th>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>.</tt></td>
+      <td headers="matches">Beliebiges Zeichen<br>
+</td>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>\d</tt></td>
+      <td headers="matches">Eine Ziffer: <tt>[0-9]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>\D</tt></td>
+      <td headers="matches">Eine Nicht-Ziffer <tt>[^0-9]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>\s</tt></td>
+      <td headers="matches">Ein Zwischenraumzeichen: <tt>[ \t\n\x0B\f\r]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>\S</tt></td>
+      <td headers="matches">Ein Nicht-Zwischenraumzeichen: <tt>[^\s]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>\w</tt></td>
+      <td headers="matches">Ein Wortzeichen: <tt>[a-zA-Z_0-9]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>\W</tt></td>
+      <td headers="matches">Ein Nicht-Wortzeichen: <tt>[^\w]</tt></td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="posix">POSIX Zeichenklassen (nur US-ASCII)</th>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Lower}</tt></td>
+      <td headers="matches">Ein Kleinbuchstabe: <tt>[a-z]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Upper}</tt></td>
+      <td headers="matches">Ein Großbuchstabe:<tt>[A-Z]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{ASCII}</tt></td>
+      <td headers="matches">Alle ASCII-Zeichen:<tt>[\x00-\x7F]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Alpha}</tt></td>
+      <td headers="matches">Ein Buchstabe:<tt>[\p{Lower}\p{Upper}]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Digit}</tt></td>
+      <td headers="matches">Eine Ziffer: <tt>[0-9]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Alnum}</tt></td>
+      <td headers="matches">Ein alphanumerisches Zeichen:<tt>[\p{Alpha}\p{Digit}]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Punct}</tt></td>
+      <td headers="matches">Interpunktion: Ein Zeichen aus <tt>!"#$%&amp;'()*+,-./:;&lt;=&gt;?@[\]^_`{|}~</tt></td>
+    </tr>
+<!-- <tt>[\!"#\$%&'\(\)\*\+,\-\./:;\<=\>\?@\[\\\]\^_`\{\|\}~]</tt>
+          <tt>[\X21-\X2F\X31-\X40\X5B-\X60\X7B-\X7E]</tt> -->
+    
+    
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Blank}</tt></td>
+      <td headers="matches">Leerzeichen<tt></tt></td>
+    </tr>
+    
+    
+    
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    
+    
+    
+    
+    
+    
+    
+    <tr align="left">
+      <th colspan="2" id="bounds">Grenzbestimmung</th>
+    </tr>
+    
+    
+    <tr>
+      <td headers="construct bounds" valign="top"><tt>\b</tt></td>
+      <td headers="matches">Wortgrenze</td>
+    </tr>
+    <tr>
+      <td headers="construct bounds" valign="top"><tt>\B</tt></td>
+      <td headers="matches">Nicht-Wortgrenze</td>
+    </tr>
+    <tr>
+      <td headers="construct bounds" valign="top"><tt>\A</tt></td>
+      <td headers="matches">Anfang der Eingabe<br>
+</td>
+    </tr>
+    <tr>
+      <td headers="construct bounds" valign="top"><tt>\G</tt></td>
+      <td headers="matches">Ende des vorigen Treffers<br>
+</td>
+    </tr>
+    
+    <tr>
+      <td headers="construct bounds" valign="top"><tt>\z</tt></td>
+      <td headers="matches">Ende der Eingabe<br>
+</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="greedy">Gierige Quantoren<br>
+</th>
+    </tr>
+    <tr>
+      <td headers="construct greedy" valign="top"><i>X</i><tt>?</tt></td>
+      <td headers="matches"><i>X</i>, einmal oder überhaupt nicht<br>
+</td>
+    </tr>
+    <tr>
+      <td headers="construct greedy" valign="top"><i>X</i><tt>*</tt></td>
+      <td headers="matches"><i>X</i>, beliebige Anzahl (einschließlich Null)<br>
+</td>
+    </tr>
+    <tr>
+      <td headers="construct greedy" valign="top"><i>X</i><tt>+</tt></td>
+      <td headers="matches"><i>X</i>, mindestens einmal<br>
+</td>
+    </tr>
+    <tr>
+      <td headers="construct greedy" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>}</tt></td>
+      <td headers="matches"><i>X</i>, genau <i>n</i>-mal</td>
+    </tr>
+    <tr>
+      <td headers="construct greedy" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>,}</tt></td>
+      <td headers="matches"><i>X</i>, wenigstens <i>n</i>-mal</td>
+    </tr>
+    <tr>
+      <td headers="construct greedy" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>,</tt><i>m</i><tt>}</tt></td>
+      <td headers="matches"><i>X</i>, wenigstens <i>n</i>-<i></i> aber nicht mehr als <i>m</i>-mal</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="reluc">Zurückhaltende Quantoren</th>
+    </tr>
+    <tr>
+      <td headers="construct reluc" valign="top"><i>X</i><tt>??</tt></td>
+      <td headers="matches"><i>X</i>, einmal oder überhaupt nicht<br>
+      </td>
+
+    </tr>
+    <tr>
+      <td headers="construct reluc" valign="top"><i>X</i><tt>*?</tt></td><td style="vertical-align: top;"><i>X</i>, beliebige Anzahl (einschließlich Null)</td>
+      <td style="vertical-align: top;"><br>
+      </td>
+
+      
+    </tr>
+    <tr>
+      <td headers="construct reluc" valign="top"><i>X</i><tt>+?</tt></td><td style="vertical-align: top;"><i>X</i>, mindestens einmal</td>
+
+      
+    </tr>
+    <tr>
+      <td headers="construct reluc" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>}?</tt></td><td style="vertical-align: top;"><i>X</i>, genau <i>n</i>-mal</td>
+
+      
+    </tr>
+    <tr>
+      <td headers="construct reluc" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>,}?</tt></td><td style="vertical-align: top;"><i>X</i>, wenigstens <i>n</i>-mal</td>
+
+      
+    </tr>
+    <tr>
+      <td headers="construct reluc" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>,</tt><i>m</i><tt>}?</tt></td><td style="vertical-align: top;"><i>X</i>, wenigstens <i>n</i>- aber nicht mehr als <i>m</i>-mal</td>
+
+      
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="poss">Besitzergreifende Quantoren<br>
+</th>
+    </tr>
+    <tr>
+      <td headers="construct poss" valign="top"><i>X</i><tt>?+</tt></td>
+      <td headers="matches"><i>X</i>, einmal oder überhaupt nicht</td>
+    </tr>
+    <tr>
+      <td headers="construct poss" valign="top"><i>X</i><tt>*+</tt></td>
+      <td headers="matches"><i>X</i>, beliebige Anzahl (einschließlich Null)</td>
+    </tr>
+    <tr>
+      <td headers="construct poss" valign="top"><i>X</i><tt>++</tt></td>
+      <td headers="matches"><i>X</i>, mindestens einmal</td>
+    </tr>
+    <tr>
+      <td headers="construct poss" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>}+</tt></td>
+      <td headers="matches"><i>X</i>, genau <i>n</i>-mal</td>
+    </tr>
+    <tr>
+      <td headers="construct poss" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>,}+</tt></td>
+      <td headers="matches"><i>X</i>, wenigstens <i>n</i>-mal</td>
+    </tr>
+    <tr>
+      <td headers="construct poss" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>,</tt><i>m</i><tt>}+</tt></td>
+      <td headers="matches"><i>X</i>, wenigstens <i>n</i>- aber nicht mehr als <i>m</i>-mal</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="logical">Logische Operatoren<br>
+</th>
+    </tr>
+    <tr>
+      <td headers="construct logical" valign="top"><i>XY</i></td>
+      <td headers="matches"><i>X</i> gefolgt von <i>Y</i></td>
+    </tr>
+    <tr>
+      <td headers="construct logical" valign="top"><i>X</i><tt>|</tt><i>Y</i></td>
+      <td headers="matches">Entweder <i>X</i> oder <i>Y</i></td>
+    </tr>
+    <tr>
+      <td headers="construct logical" valign="top"><tt>(</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches">X als <a href="#cg">Erfassungsgruppe</a><a href="#cg"></a></td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="backref">Rückverweise</th>
+    </tr>
+    <tr>
+      <td headers="construct backref" valign="bottom"><tt>\</tt><i>n</i></td>
+      <td headers="matches" valign="bottom">Was die n-te <a href="#cg">Erfassungsgruppe</a> fing</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="quot">Quotierung</th>
+    </tr>
+    <tr>
+      <td headers="construct quot" valign="top"><tt>\</tt></td>
+      <td headers="matches">Nichts, quotiert das folgende Zeichen</td>
+    </tr>
+    <tr>
+      <td headers="construct quot" valign="top"><tt>\Q</tt></td>
+      <td headers="matches">Nichts, aber quotiert alle Zeichen bis <tt>\E</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct quot" valign="top"><tt>\E</tt></td>
+      <td headers="matches">Nichts, aber beendet die Quotierung durch <tt>\Q</tt></td>
+    </tr>
+<!-- Metachars: !$()*+.<>?[\]^{|} --> <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="special">Spezielle Konstrukte (nicht erfassend)</th>
+    </tr>
+    <tr>
+      <td headers="construct special" valign="top"><tt>(?:</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches"><i>X</i> als nicht erfassende Gruppe<br>
+</td>
+    </tr>
+    
+    
+    <tr>
+      <td headers="construct special" valign="top"><tt>(?=</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches"><i>X</i> mittels positiver Vorausschau mit Breite Null</td>
+    </tr>
+    <tr>
+      <td headers="construct special" valign="top"><tt>(?!</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches"><i>X</i> mittels negativer Vorausschau mit Breite Null</td>
+    </tr>
+    <tr>
+      <td headers="construct special" valign="top"><tt>(?&lt;=</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches"><i>X </i>mittels positiver Rückschau mit Breite Null</td>
+    </tr>
+    <tr>
+      <td headers="construct special" valign="top"><tt>(?&lt;!</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches"><i>X </i>mittels negativer Rückschau mit Breite Null</td>
+    </tr>
+    <tr>
+      <td headers="construct special" valign="top"><tt>(?&gt;</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches"><i>X</i> als eine unabhängige nicht-fangende Gruppe</td>
+    </tr>
+  </tbody>
+</table>
+
+<a name="sum"> </a>
+<hr><a name="sum"> </a><a name="bs"> </a>
+<h4><a name="bs">Umgekehrter Schrägstrich, Escapes und Quotieren<br>
+ </a></h4><a name="bs"></a><span class="">Der
+ umgekehrte Schrägstrich ( '\') dient zur Einführung von 
+Escaped-Konstrukten, wie sie in der obigen Tabelle definiert sind, sowie
+ für Zeichen, die ansonsten als syntaktische Konstrukte interpretiert
+ würden.</span> <span class="">Somit entspricht der Ausdruck \\ einem einzelnen Backslash und \{ entspricht einer linken Klammer.</span><br>
+<p><a name="bs"><span id="result_box" class="" lang="de"><br><span>Es ist ein Fehler, einen Backslash vor einem alphabetischen Zeichen zu verwenden, das kein Escaped-Konstrukt angibt;</span> <span>diese sind für zukünftige Erweiterungen der regulären Ausdruckssprache reserviert.</span> <span>Ein
+ Backslash kann vor einem nicht-alphabetischen Zeichen verwendet werden,
+ unabhängig davon, ob dieses Zeichen Teil eines syntaktischen 
+Konstrukts ist.</span></span> </a></p>
+
+
+<h4><a name="cc">Zeichenklassen </a></h4><a name="cc"></a><span class="">Zeichenklassen 
+können in anderen Zeichenklassen auftreten und können mit dem Vereinigungsoperator
+ (implizit) und dem Durchschnittsoperator (&amp;&amp;) zusammengesetzt 
+werden.</span> <span class="">Der Vereinigungsoperator bezeichnet eine Klasse,
+ die jedes Zeichen enthält, das sich in mindestens einer seiner 
+Operandenklassen befindet.</span> <span class="">Der
+Durchschnittsoperator bezeichnet eine Klasse, die jedes Zeichen
+enthält, das sich in seinen beiden Operandenklassen befindet.</span><br>
+<p><a name="cc"><span id="result_box" class="" lang="de"><br><span class="">Die Priorität der Operatoren der Charakterklassen ist wie folgt, vom der höchsten zur niedrigsten:</span></span> </a></p>
+
+
+<blockquote>
+  <table summary="Precedence of character class operators." border="0" cellpadding="1" cellspacing="0">
+    <tbody>
+      <tr>
+        <th>1&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td>Fluchtsymbol &nbsp;&nbsp;&nbsp;</td>
+        <td><tt>\x</tt></td>
+      </tr>
+      <tr>
+        <th>2&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td>Gruppierung</td>
+        <td><tt>[...]</tt></td>
+      </tr>
+      <tr>
+        <th>3&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td>Bereich</td>
+        <td><tt>a-z</tt></td>
+      </tr>
+      <tr>
+        <th>4&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td>Vereinigung</td>
+        <td><tt>[a-e][i-u]</tt></td>
+      </tr>
+      <tr>
+        <th>5&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td>Durchschnitt</td>
+        <td><tt>[a-z&amp;&amp;[aeiou]]</tt></td>
+      </tr>
+    </tbody>
+  </table>
+</blockquote>
+
+<a name="cc"> </a>
+<span id="result_box" class="" lang="de"><span class="">Beachten Sie, dass ein anderer Satz von Metazeichen in einer Zeichenklasse als außerhalb einer Zeichenklasse vorhanden ist.</span> <span>Zum Beispiel verliert der reguläre Ausdruck<span style="font-weight: bold;"> .</span></span><span class=""><span style="font-weight: bold;"> </span>seine spezielle Bedeutung innerhalb einer Zeichenklasse, während der Ausdruck - zu einem Bereich bildenden Metazeichen mutiert.<br>
+</span></span>
+
+<h4><a name="cg">Gruppen und Erfassungsgruppen<br>
+ </a></h4><a name="cg"></a><span id="result_box" class="" lang="de"><span class="">Erfassungsgruppen werden durch Zählen ihrer Öffnungsklammern von links nach rechts nummeriert.</span> <span class="">Im Ausdruck ((A) (B (C))) gibt es beispielsweise vier solche Gruppen:</span></span><a name="cg"></a>
+
+<a name="cg"> </a>
+<blockquote>
+  <table summary="Capturing group numberings" cellpadding="1" cellspacing="0">
+    <tbody>
+      <tr>
+        <th>1&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td><tt>((A)(B(C)))</tt></td>
+      </tr>
+      <tr>
+        <th>2&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td><tt>(A)</tt></td>
+      </tr>
+      <tr>
+        <th>3&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td><tt>(B(C))</tt></td>
+      </tr>
+      <tr>
+        <th>4&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td><tt>(C)</tt></td>
+      </tr>
+    </tbody>
+  </table>
+</blockquote><a name="cg"></a><span id="result_box" class="" lang="de"><span class="">Gruppe Null steht immer für den gesamten Ausdruck.</span><br><br><span class="">Erfassungsgruppen
+ werden so benannt, da während einer Übereinstimmung jede Teilsequenz 
+der Eingabesequenz, die einer solchen Gruppe entspricht, gespeichert 
+wird.</span> <span class="">Die
+erfasste Teilsequenz kann später in dem Ausdruck über eine Rückreferenz
+verwendet werden und kann auch von noch abgerufen werden, wenn die
+Abgleichoperation abgeschlossen ist.</span><br><br><span>Die erfasste Eingabe, die einer Gruppe zugeordnet ist, ist immer die Untersequenz, mit der die Gruppe zuletzt korrespondierte.</span> <span>Wenn
+ eine Gruppe aufgrund der Quantifizierung ein zweites Mal ausgewertet 
+wird, wird ihr zuvor erfaßter Wert, falls vorhanden, beibehalten, falls 
+die zweite Bewertung fehlschlägt.</span> <span>Die Übereinstimmung der 
+Zeichenfolge "aba" gegen den Ausdruck (a(b)?)+ lässt 
+beispielsweise die Gruppe 2 auf "b".</span> <span></span><br><br><span class="">Gruppen,
+die mit (? beginnen, sind reine, nicht erfassende Gruppen, die Text
+nicht erfassen und nicht als Erfassungsgruppe zählen.</span></span>
+
+<h4><a name="sum">Reguläre Ausdrücke in Zielmustern<br>
+</a></h4>
+
+<br>
+
+<table summary="supported constructs in the replace field" border="1" cellpadding="5">
+
+  <tbody>
+    <tr>
+      <td colspan="1" rowspan="1"> $i </td>
+      <td colspan="1" rowspan="1"> fügt <a href="#cg" shape="rect">Erfassungsgruppe</a> i ein<br>
+ </td>
+    </tr>
+    <tr>
+      <td colspan="1" rowspan="1"> \i </td>
+      <td colspan="1" rowspan="1"> fügt <a href="regex.html#cg" shape="rect">Erfassungsgruppe</a> i ein (wie $i). </td>
+    </tr>
+    <tr>
+      <td colspan="1" rowspan="1"> \C </td>
+      <td colspan="1" rowspan="1"> erhält die Groß- und Kleinschreibung in einer Übereinstimmung </td>
+    </tr>
+  </tbody>
+</table>
+
+</body></html>

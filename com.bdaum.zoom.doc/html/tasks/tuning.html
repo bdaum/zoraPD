@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+
+
+
+
+
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Tuning</title>
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Tuning</h2><br>There are several places where you can tweak the system for higher speed:<br>
+<br>
+<h3>Display</h3>
+<a href="../reference/facePrefs.html"><acronym>Window&gt;Preferences&gt;General*</acronym></a><span style="font-style: italic;"></span> 
+<ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Display</span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Output ICC-profile.</span> Switch to <samp>Disable CMS</samp> to speed up the display of images and thumbnails<br>
+    </li></ul><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Use quality interpolation</span>.
+Switch this option off for faster display of images and thumbnails. Slight pixelation of images may occur. <br>
+</li><li><span style="font-weight: bold;">Precede high-res image with preview image in internal viewer where possible.</span> Switch this option off for faster full screen image viewing.</li><li><span style="font-weight: bold;">Hide thumbnail JPeG artifacts in internal image viewer</span>. Switch this option off for faster full screen image viewing.</li></ul>
+</ul>
+<br>
+<a href="../reference/facePrefs.html"><acronym>Window&gt;Preferences&gt;Appearance*</acronym></a><span style="font-style: italic;"></span>
+<ul style="font-weight: normal;">
+  <li><span style="font-weight: bold;">Color scheme</span>.Choose <samp>platform</samp> for fastest rendering of views and dialogs. <span style="font-weight: bold;"></span></li>
+</ul>
+<br>
+<h3>Import</h3>
+
+<acronym>Catalog&gt;Properties...</acronym> <br>
+
+<br>
+<ul style="font-weight: bold;">
+<li><span style="font-weight: bold;">General.</span>&nbsp;</li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Automatically create timeline.</span> If you are
+not interested in a timeline, switch these
+options off<span style="font-weight: normal;"> to speed up the import process.</span></li><li><span style="font-weight: bold;">Automatically create location collections.</span> If you are
+not interested in location collections, switch these
+options off<span style="font-weight: normal;"> to speed up the import process.</span></li></ul><li>Thumbnails</li><ul style="font-weight: normal;"><li><span style="font-weight: normal;"><span style="font-weight: bold;">Resolution.</span> Keep the thumbnail size small or medium to speed up the import process. </span><span style="font-weight: normal;"></span></li><li><span style="font-weight: normal;"><span style="font-weight: bold;">Derive thumbnails from preview images.</span> Checking
+this option will speed up the import of most RAW images considerably.
+The thumbnail may, however, differ somewhat from the high-res image.<br>
+</span></li><li><span style="font-weight: normal;"><span style="font-weight: bold;">Sharpen during import.</span> For maximum import speed disable thumbnail sharpening.<br>
+</span></li></ul>
+</ul>
+<br>
+<br>
+<a href="../reference/facePrefs.html"><acronym>Window&gt;Preferences&gt;Import*</acronym></a><span style="font-style: italic;">.</span>
+<h4 style="margin-left: 40px;">General</h4>
+<ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Relationships</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">Automatically detect derived images by EXIF data. </span>Switch this option off if you are not interested in relationships between images.<br>
+</font></li></ul>
+</ul>
+
+<h4 style="margin-left: 40px;">RAW conversion</h4>
+<div style="margin-left: 40px;">Raw conversion is performed by the DCRAW module. You can speed this process up by choosing the appropriate DCRAW parameters (<span style="font-style: italic;">see below</span>)
+but also by replacing the built-in DCRAW module with an optimized
+version. For example, on Windows the built-in DCRAW module handles all
+Windows versions from XP onwards. The version optimized for Vista will
+run somewhat faster. Just search the Internet for such a special built,
+install it on your harddisk, and specify its path under <a href="../reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion</acronym></a><sup>*)</sup>.</div><ul style="font-weight: normal;">
+<li style="font-weight: bold;">Options<span style="font-weight: normal;"><br>
+</span></li><ul style="font-weight: normal;">
+    <li><span style="font-weight: bold;">Interpolation</span>. Choose <span style="font-style: italic;">bilinear </span>interpolation<span style="font-style: italic;"> </span>for speeding up RAW conversion.</li>
+<li><span style="font-weight: bold;">Iterations</span>. Set the number if iterations to 0 for speeding up RAW conversion.</li><li><span style="font-weight: bold;">Highlight recovery</span>. Switch this option off for speeding up RAW conversion.</li></ul>
+  <li><span style="font-weight: bold;">Recipe Detectors.</span>
+Select only the RAW converters that you are actually using.</li></ul>
+<div style="margin-left: 160px;"><span style="font-style: italic;">Raw Therapee 2.4.x</span> may cause substantial performance degradation because it will rewrite all recipes in the image folder causing <span style="font-style: italic;">ZoRa Photo Director</span>
+to re-import all associated images. Raw Therapee 3.0.x that does not
+expose this behavior. We therefore strongly recommend usingRaw Therapee 3.0.x. <br>
+</div>
+<ul style="font-weight: normal;">
+
+  <ul>
+    <li><span style="font-weight: bold;">Process recipes when importing RAW images</span>.
+Unchecking this option will speed up operation especially when editing
+images - provided the image folder belongs to the watched folders.<br>
+    </li>
+  </ul>
+
+</ul>
+
+<h4 style="margin-left: 40px;"><span style="font-weight: bold;">DNG conversion</span></h4>
+
+<ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Relationships</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Automatically derive relationships between raw and developed image</span>. <font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21">Switch this option off if you are not interested in relationships between images.</font><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"></font></li></ul>
+</ul>
+<h3>Indexing</h3>Indexing is alway performed as a background process.
+It provides the data for similarity search and text search. Speeding up
+this process will improve general performance.<br>
+<br>
+<br>
+
+
+<a href="../reference/facePrefs.html"><acronym>Catalog&gt;Properties&gt;Indexing</acronym></a><span style="font-style: italic;">.<br>
+<br>
+</span> Reduce the number of selected
+similarity algorithms to a minimum because each algorithm requires extra steps
+when constructing the index. On low level platforms you may want to switch indexing off, altogether.<br>
+<span style="font-style: italic;"><br>
+</span>
+<h3>General operation</h3>
+<a href="../reference/facePrefs.html"><acronym></acronym></a><acronym>Catalog&gt;Properties...</acronym> <br>
+<br><ul>
+  <li><span style="font-weight: bold;">Watched folders. </span>Keep the number of watched folders to a minimum. This will reduce background activity and improve overall performance.<br>
+    <br>
+</li>
+  <li><span style="font-weight: bold;">Defragmentation</span>. Defragmenting the catalog now and then can improve the query performance. Go to <span style="font-weight: bold;">Statistics</span> tab page and click the <acronym>Defragment now</acronym> link. This can take some minutes.<br>
+  </li>
+
+</ul>
+<br>
+
+<span style="font-weight: bold;"></span>
+<br>
+
+
+
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa Photo Director&gt;Preferences&gt;...</acronym><br><br>
+</body></html>

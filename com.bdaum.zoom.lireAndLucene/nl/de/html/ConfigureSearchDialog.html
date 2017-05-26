@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+  
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type">
+  <title>Konfiguration des globalen Suchfelds</title>
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../../com.bdaum.zoom.rcp/book.css">
+
+  
+  <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css">
+
+</head><body>
+<h2>Konfiguration des globalen Suchfelds</h2>
+
+Dieser Dialog wird
+verwendet, um die Suchoptionen für das globale Suchfeld in der
+Hauptmenüleiste zu konfigurieren. Die Optionen betreffen sowohl die
+Ähnlichkeitsrecherche als auch die Freitextsuche. Die Einstellungen
+ähneln denen im <a href="SearchSimilarDialog.html">Dialog der
+Ähnlichkeitsrecherche</a>,
+allerdings ohne die Möglichkeit, das Referenzbild oder die Schlagworte
+zu bearbeiten. Statt dessen werden Referenzbild und Schlagworte dem
+jeweils in das Suchfeld gezogenen Bild entnommen.<br>
+
+<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="You may limit the amount of returned images either by number or be specifying a minimum score that must be satisfied by each image."></span></span><br>
+
+<h4>Suchalgorithmus</h4>
+
+<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Which search method is the best, depends very much on the character of your images.">Welcher
+Algorithmus der beste ist, hängt sehr stark vom&nbsp;Charakter Ihrer
+Bilder ab. </span><span style="background-color: rgb(255, 255, 255);" title="For example, in a catalog containing mostly texture images, you may want to use the Tamura texture filters."></span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="For example, in a catalog containing mostly texture images, you may want to use the Tamura texture filters.">In
+einem Katalog der überwiegend Texturen enthält, z</span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="For example, in a catalog containing mostly texture images, you may want to use the Tamura texture filters.">um
+Beispiel, sollten Sie das <span style="font-style: italic;">Tamura-</span></span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="For example, in a catalog containing mostly texture images, you may want to use the Tamura texture filters."><span style="font-style: italic;">Textur</span>-</span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="For example, in a catalog containing mostly texture images, you may want to use the Tamura texture filters.">Filter
+verwenden. </span><span style="background-color: rgb(255, 255, 255);" title="With the average photographic content we found the methods CEDD and FCTH quite efficient.">Bei
+durchschnittlichen fotografischen Inhalten sind die Methoden <span style="font-style: italic;">CEDD</span> und <span style="font-style: italic;">FCTH</span> (oder auch deren Kombination <span style="font-style: italic;">JCD</span>) recht effizient. Das <span style="font-style: italic;">Auto-Farbkorrelogram</span>m ist ein
+moderner Algorithmus, der ebenfalls sehr gute Ergebnisse bringt.<br>
+</span></span>Beachten
+Sie, dass nur Algorithmen für die Suche verwendet werden können, die
+von Ihrem Katalog unterstützt werden. Welche das sind, können Sie in
+den <a href="catProperties.html#indexing">Katalogeigenschaften</a>
+konfigurieren. <br>
+
+<br>
+
+<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Each query returns with each image a score between 0 and 1.">Jede
+Abfrage liefert zu jedem Bild eine Punktzahl zwischen 0 und 100
+Prozent. </span><span style="background-color: rgb(255, 255, 255);" title="You may limit the amount of returned images either by number or be specifying a minimum score that must be satisfied by each image.">Sie
+können die Menge der zurückgegebenen Bilder entweder nach der
+<span style="font-weight: bold;">Anzahl</span>&nbsp;begrenzen oder
+durch die Angabe einer <span style="font-weight: bold;">Mindestpunktzahl</span>,
+die
+von jedem Bild
+erfüllt sein muss.</span></span><br>
+
+<h4>Suche nach</h4>
+
+Um
+nur nach visueller Ähnlichkeit zu suchen, spezifizieren Sie eine
+Schlagwortgewichtung von&nbsp;0 spezifizieren. Um nur nach Schlagworten
+zu suchen, spezifizieren Sie eine Schlagwortgewichtung von 100. Alle
+Werte zwischen 1 und 99 ergeben eine kombinierte Suche.<br>
+
+<br>
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;
+<ul style="font-weight: normal;">
+
+</ul>
+
+</body></html>

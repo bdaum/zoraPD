@@ -1,0 +1,17 @@
+<contexts>
+ 
+ 
+ <context id="searchSimilar_dialog_context" title="Ähnlichkeitssuche">
+    <description>Nach visuell ähnlichen Bildern suchen</description>
+    <topic href="html/reference/SearchSimilarDialog.html" label="Ähnlichkeitssuche"/>
+ </context>
+ <context id="configureSearch_dialog_context" title="Suche konfigurieren">
+    <description>Das globale Suchfeld konfigurieren</description>
+    <topic href="html/reference/ConfigureSearchDialog.html" label="Das globale Suchfeld konfigurieren"/>
+ </context>
+  <context id="textSearch_dialog_context" title="Textsuche">
+    <description>Textsuche - Syntax</description>
+    <topic href="html/reference/textSearch.html" label="Textsuche"/>
+ </context>
+
+</contexts>

@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+  
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
+  <title>Configure Search Dialog</title>
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css">
+
+</head><body>
+<h2>Configure Search Dialog</h2>
+
+This dialog is used to specify the
+search options for the global search field in the main menu bar. This
+affects both
+similarity search and text retrieval. The settings are similar to the <a href="SearchSimilarDialog.html"><span style="font-style: italic;">Similarity
+Search Dialog</span></a>
+without the possiblity to edit the reference image and the keywords.
+Instead, these items are taken from the image dropped into the global
+search field.<br>
+
+&nbsp;<br>
+
+<h4>Search algorithm</h4>
+
+Which search algorithm is
+the best, depends very much on the character of your images. For
+example, in a catalog containing mostly texture images, you may want to
+use the <span style="font-style: italic;">Tamura texture</span>
+filters. With the average photographic content
+we found the methods <span style="font-style: italic;">CEDD</span>
+and <span style="font-style: italic;">FCTH&nbsp;(</span>or their
+combination <span style="font-style: italic;">JCD</span>)
+quite efficient. The<span style="font-style: italic;"> Auto Color
+Correlogram</span> is a modern search algorithm also providing very
+good results.<br>
+
+<br>
+
+Please note, that you can only use algorithms in a query that are
+supported by your catalog. Which algorithms are supported can be
+configured in the <a href="catProperties.html#indexing">catalog
+properties</a>.
+<br>
+
+<span style="font-weight: bold;"></span><br>
+
+Each query
+returns with each image a score between 0 and 100 percent. You may
+limit the
+amount of returned images either by <span style="font-weight: bold;">number</span>
+or by specifying a minimum
+<span style="font-weight: bold;">score</span> that must be satisfied by
+each matching image.<br>
+
+<br>
+
+<h4>Search for</h4>
+
+To search only for visual
+similarity specify a keyword weight of 0, to search only for keywords
+specify a weight of 100. For a combined search specify any value
+between 1 and 99.<br>
+
+<br>
+
+<br>
+
+<br>
+
+<ul style="font-weight: normal;">
+
+</ul>
+
+</body></html>

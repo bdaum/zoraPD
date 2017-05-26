@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %Bundle-Name
+Bundle-SymbolicName: com.bdaum.zoom.recipes.rt3;singleton:=true
+Bundle-Version: 3.0.0
+Bundle-Activator: com.bdaum.zoom.recipes.rt3.internal.Rt3Activator
+Bundle-Vendor: %Bundle-Vendor
+Require-Bundle: com.bdaum.zoom.core;bundle-version="3.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy

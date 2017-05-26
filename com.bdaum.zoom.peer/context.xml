@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="peerDefinitions_page_context" title="Network user preferences">
+      <description>Network user preferences</description>
+      <topic href="html/networkPrefs.html" label="Network user preferences"/>
+   </context>
+   <context id="peerDefinitions_dialog_context" title="Define peer address">
+      <description>Define peer address</description>
+      <topic href="html/peerDef.html" label="Define peer address"/>
+   </context>
+   <context id="restrictions_dialog_context" title="Define access restrictions">
+      <topic href="html/restrictionDef.html" label="Define access restrictions"/>
+      <description>Define access restrictions</description>
+   </context>
+   <context id="intro" title="Peer-to-Peer support">
+      <description>Peer-to-Peer support</description>
+      <topic href="html/networkConcepts.html" label="Peer-to-Peer support"/>
+   </context>
+</contexts>

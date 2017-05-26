@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html lang="de"><head>
+
+
+
+
+
+
+
+
+  
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>Geo-tagging</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
+<h2>Geo-tagging </h2>
+
+Geotagging wird entweder über den Menüpunkt <acronym>Metadaten&gt;Geotagging</acronym>
+oder
+einfach, indem Sie eine unterstützte Tracker-Datei auf
+eine Kollektion
+oder in einen Galeriebereich ziehen. Unterstützt werden GPX-Dateien (<code>.gpx</code>) und NMEA-Dateien (<code>.nmea</code> or <code>.log</code>).<br>
+Alternativ können Sie auch manuell
+geotaggen, indem Sie Geo-Marker in der <a href="maps.html">Karte</a>
+setzen. <br>
+
+<br>
+
+Bevor Sie dies tun, sollten Sie jedoch die die Einstellungen für das
+Geotagging überprüfen (<acronym>Fenster&gt;Einstellungen&gt;GPS</acronym>):
+<dl>
+
+  <dt style="font-weight: bold;">Allgemein</dt></dl><dl style="margin-left: 40px;"><dt style="font-weight: bold;">Timing<span style="font-weight: bold;"></span></dt></dl><dl style="margin-left: 80px;"><dt style="font-weight: bold;"><span style="font-weight: bold;">Zeitversatz</span>&nbsp;</dt><dd>Sie
+können einen Zeitversatz eintragen, um die Kamerauhr mit der
+Trackerzeit in Deckung zu bringen. Der Zeitversatz wird zur
+Kamerazeit addiert, bevor versucht wird, einen Tracker-Eintrag für ein
+Bild zu finden. Die beste Praxis ist, die Zeitzone der Kamera auf die
+Zeitzone Ihres Computers einzustellen und außerdem
+die Uhr der Kamera mit der Uhr des Computers in Übereinstimmung zu
+bringen. Die Uhr des Trackers wird durch das Satellitensignal gestellt
+(UTC = Koordinierte Weltzeit). Wenn Ihre Kamera korrekt eingestellt
+ist,
+reflektiert das Zeitversatz-Feld die Zeitdifferenz zwischen UTC-Zeit
+und aktueller lokaler Zeit. Durch Drücken der Taste "Standardwerte
+wiederherstellen" können Sie diesen Wert in das Feld eintragen lassen.
+Der Wert hängt auch von der Sommer-/Winterzeit ab. Für die
+zentraleuropäische Zeitzone gilt: -120 im Sommer, -60 im Winter.<br><br>
+</dd><dt style="font-weight: bold;">Toleranz</dt><dd>Ein Toleranz-Wert
+ist nützlich, um Bilder Tracker-Einträgen
+zuzuordnen, die nicht genau mit der Aufnahmezeit übereinstimmen, zum
+Beispiel, wenn Sie den Tracker erst nach der Aufnahme von Bildern
+eingeschaltet hatten. Die Position eines Bildes wird zwischen den
+beiden Trackpoints interpoliert, die der Aufnahmezeit zeitlich am
+nächsten liegen.</dd></dl><dl style="margin-left: 40px;">
+  
+</dl>
+
+<dl style="margin-left: 40px;">
+
+  
+  
+  <dt><span style="font-weight: bold;">Modus</span><br>
+  </dt>
+  </dl><dl style="margin-left: 80px;"><dt style="font-weight: bold;"> Vorhandene Geotags überschreiben </dt><dd>Aktivieren Sie diese Option, wenn die Geotags von bereits
+getaggten Bildern erneuern möchten.<br></dd><dt style="font-weight: bold;">Wegmarken-Informationen verwenden</dt><dd>Markieren
+Sie diese Option, wenn Sie die in GPX-Wegmarken gespeicherten
+Informationen verwenden wollen. Orte, die nach an solchen Wegmarken
+liegen, werden beim Geonaming mit Hilfe dieser Informationen benannt,
+anstatt Webdienste zu verwenden.<br></dd><dt style="font-weight: bold;">Höhe durch Webservice aktualisieren</dt><dd>Diese Option ergibt in der Regel genauere Höhenangaben,
+verlangsamt aber auch den Prozess des Geotagging.</dd></dl><dl style="text-align: justify; margin-left: 80px;"><dt style="font-weight: bold;">Trackpunkte bearbeiten</dt><dd>Markieren Sie diese Option, wenn Sie die in importierten &nbsp;Track-Dateien enthaltenen <a href="trackpoint.html">Trackpunkte</a> vor der Anwendung auf Ihre Bilder bearbeiten wollen&nbsp;</dd></dl><dl style="margin-left: 40px;">
+  </dl>
+<dl style="margin-left: 40px;">
+
+</dl>
+<dl style="margin-left: 40px;">
+
+  
+  <dt style="font-weight: bold;">Schlagworte</dt></dl><dl style="margin-left: 80px;"><dt style="font-weight: bold;">Koordinaten zu Schlagworten hinzufügen</dt><dd>Aktivieren Sie diese Option, wenn Sie wollen, dass die
+GPS-Koordinaten zu den IPTC-Schlagworten des Bildes hinzugefügt werden.
+Dies
+kann nützlich sein, um Koordinaten über die Schlagwortsuche zu
+finden (vor allem bei
+Anwendungen von Fremdanbietern). Ohne diese Option werden die
+GPS-Koordinaten nur in die EXIF-Metatdaten des
+Bildes gespeichert. Standardmäßig ist diese Option ausgeschaltet, um
+nicht die Schlagwörter zu überfrachten.</dd><dt><br>
+
+  </dt><dt style="font-weight: bold;">Ortsnamen zu Schlagworten hinzufügen</dt><dd>Aktivieren Sie diese Option, wenn Sie wollen,&nbsp;dass Ortsnamen
+zu den
+Schlagworten des Bildes hinzugefügt werden.. Dies kann nützlich sein, um
+Ortsnamen über die Schlagwortsuche zu finden. Standardmäßig ist diese
+Option
+eingeschaltet.</dd></dl><dl>
+  
+  
+  
+  
+  <dt style="font-weight: bold;">Webservices</dt><dd>Hier
+können die Geonaming- und andere Webdienste konfiguriert werden. Dabei
+haben Sie die Wahl zwischen verschiedenen&nbsp;Webdiensten<span style="font-style: italic;"></span>.<br>
+
+<span style="font-weight: bold;"><br>
+</span>
+</dd></dl><dl style="margin-left: 40px;"><dt style="font-weight: bold;">Benutzter Geonaming-Webdienst</dt><dd>Wählen Sie<span style="font-style: italic;">&nbsp;</span>für das Geonaming (also der Bestimmung von Ortsnamen aus Koordinaten) einen Webdienst aus der angezeigten Liste.</dd><dt><br>
+</dt><dt style="font-weight: bold;">Max. Anfragen pro Stunde</dt><dd>Die für Geonaming und Höhenrecherchen (<span style="font-weight: bold;">Höhe durch Webservice aktualisieren</span>)
+verwendeten Webservice begrenzen die Anzahl der möglichen Anfragen pro
+Zeiteinheit. Wo diese Grenze liegt, hängt vom Anbieter und von Ihrem
+Vertrag mit dem Anbieter ab. Durch die Angabe einer stündlichen
+Höchstgrenze vermeiden Sie den Abbruch einer Geotagging- oder
+Geonaming-Operation auf Grund von Kapazitätsüberschreitungen, denn die
+Geschwindigkeit wird so angepasst, dass die stündliche Grenze nicht
+überschritten wird.<br>Bitte berücksichtigen Sie, dass Höhenrecherchen immer über geonames.org abgewickelt werden, unabhängig davon was Sie unter <span style="font-weight: bold;">Benutzter Geonaming-Webdienst</span> angegeben haben.</dd></dl>
+<dl style="margin-left: 40px;"><dt style="font-weight: bold;">Premium-Dienste</dt><dd>Hier können käuflich erworbene Schlüssel für Premium-Dienste angegeben werden.</dd></dl><dl></dl>
+
+
+<dl></dl>
+
+</body></html>

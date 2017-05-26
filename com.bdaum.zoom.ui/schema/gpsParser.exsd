@@ -1,0 +1,169 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="com.bdaum.zoom.ui" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="com.bdaum.zoom.ui" id="gpsParser" name="GPS Parser"/>
+      </appInfo>
+      <documentation>
+         Extension point for registering different parsers for GPS tracker file formats
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+         <documentation>
+            Extension for registering parsers for geo data file formats
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="parser" minOccurs="0" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="parser">
+      <annotation>
+         <documentation>
+            Parser
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="type" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Name of the Parser
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="extensions" type="string" use="required">
+            <annotation>
+               <documentation>
+                  File name extensions separated by white space and semicolons (within groups)
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Parser implementation. Must implement com.bdaum.zoom.ui.gps.IGpsParser.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":com.bdaum.zoom.ui.gps.IGpsParser"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="waypoints" type="string">
+            <annotation>
+               <documentation>
+                  Optional implementation for a waypoint collector. Must implement com.bdaum.zoom.ui.gps.IWaypointCollector.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":com.bdaum.zoom.ui.gps.IWaypointCollector"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="type">
+      <annotation>
+         <documentation>
+            File type description - one for each extension group
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  File type name of an extension
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         0.9.0
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         see com.bdaum.zoom.gps/plugin.xml
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiinfo"/>
+      </appInfo>
+      <documentation>
+         see  com.bdaum.zoom.ui/com.bdaum.zoom.ui.gps.IGpsParser
+     and com.bdaum.zoom.ui/com.bdaum.zoom.ui.gps.IWaypointCollector
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         GPX parser
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         2010-2011 Berthold Daum
+      </documentation>
+   </annotation>
+
+</schema>

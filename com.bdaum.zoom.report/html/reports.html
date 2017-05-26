@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+  
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Reports</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Reports </h2>
+
+<span style="font-style: italic;"></span>Creating a report in ZoRa
+PhotoDirector is easy. Just call menu function <acronym>Catalog&gt;Reports...</acronym> .<br>
+A wizard guides you through the five steps of
+report creation:<br>
+
+<br>
+
+<ol>
+
+  <li><span style="font-weight: bold;">Source selection.</span> You may
+either start by creating a new report or by selecting an existing
+report. To select an existing report simply click the <abbr>Browse...</abbr>
+button to display all reports stored in the current catalog. Select one
+from the list.<br>
+Otherwise, specify a name and a description for the new report. Name
+and description will later show up as title and subtitle in the
+generated report.<br>
+The specify the data source for the report. This may be all images in
+the catalog or images from a specified collection.<br>
+    <br>
+</li>
+  <li><span style="font-weight: bold;">Mode selection.</span> First
+specify one or several values fror the charts y-Axis.&nbsp; You may
+select from image count, number of sales and earnings. <br>
+Then specify a value category for the x-Axis. This may be</li>
+  <ul>
+    <li><span style="font-weight: bold;">The time of day</span>. This
+is derived from the IPTC creation data and the EXIF creation date with
+precendence of the IPTC date over the EXIF date. The value ranges from
+0:00 am to 11:59 pm.</li>
+    <li><span style="font-weight: bold;">The combined creation date.</span>
+This is derived from the IPTC creation data. the EXIF creation date,
+and the last file modification date with precendence of the IPTC date
+over the EXIF date, and the EXIF date over the file modification date.</li>
+    <li><span style="font-weight: bold;">Numeric values.</span> When
+selecting this option you will be able to select a numeric field as an
+x-Axis value source in the next step. A typical example would be the
+field "Model age".</li>
+    <li><span style="font-weight: bold;">Discrete values.</span> When
+selecting this option you will be able to select a non-numeric field as
+an x-Axis value source in the next step. This can be a field with a
+fixed value set (enumeration) such as the field "Light source" or a
+field with an unlimited value range such as "Artist".<br>
+    </li>
+  </ul>Finally,
+for discrete values you have the possibilty to specify how to sort the
+items on the x-Axis: either use the natural order (no sort), or sort by
+name (value), by image count, by sales, or by earnings.<br>
+  <br>
+ <li><span style="font-weight: bold;">Value selection.</span> Here
+you
+specify a value source for the x-Axis (Numeric and Discrete values
+only), a value range, and an interval to determine the number values in
+the generated chart (e.g. number of bars). Images outside the value
+range will not appear int the report. For discrete values with a fixed
+value set you have the possibility to exclude certain values from the
+report. You may also specify a threshold. Items with a y-Axis value
+below the specified threshold will not appear in the chart but will be
+folded into a separate item name "Others".<br>
+    <br>
+</li>
+  <li><span style="font-weight: bold;">Chart type selection.</span>
+Depending on the specified report mode you can select between a Pie
+chart, a Bar chart, a Line chart, a Step chart, and an Area chart.
+Depending on that choice you may select additional options such as 3D,
+cylindrical (for Bar charts), and cumulated (for date and time
+reports). The preview area shows you the effect of these choices. To
+keep the responses fast, the preview is limited to data from 50 images.<br>
+<br>
+  </li>
+  <li><span style="font-weight: bold;">Finished.</span> The report is
+generated. By right clicking the finished chart you obtain a menu with
+additional options. You may save the chart as a PNG image file or print
+it. By selecting Properties you can add further customization to your
+chart. You may change&nbsp; titles, labels, colors, fonts and other
+properties.<br>
+Finally, you have the choice to either store your definitions under the name specified in Step 1 by clicking <abbr>Finish</abbr> or to discard them by clicking <abbr>Cancel</abbr>.<br>
+    <br>
+  </li>
+
+</ol>
+
+<br>
+
+<br>
+</body></html>

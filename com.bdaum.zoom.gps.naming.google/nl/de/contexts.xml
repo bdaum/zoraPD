@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="advancedPref_page_context" title="Bing preferences">
+      <description>Google-Geonaming-Premium-Webdienst</description>
+      <topic href="html/GooglePreferences.html" label="Google-Geonaming-Premium-Webdienst"/>
+   </context>
+</contexts>

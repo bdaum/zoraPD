@@ -1,0 +1,1 @@
+Benutzen Sie diesen Ordner für ein dediziertes Java Runtime Environment (JRE) 

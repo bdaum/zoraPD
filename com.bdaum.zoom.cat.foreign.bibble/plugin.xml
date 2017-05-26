@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:catalog?after=catExt1">
+         <menu
+               id="importForeignCat"
+               label="%menu.label.import"
+               mnemonic="%menu.mnemonic.import">
+            <command
+                  commandId="com.bdaum.zoom.cat.foreign.bibble"
+                  icon="icons/bibble.png"
+                  label="%command.label.bibble"
+                  mnemonic="%command.mnemonic.bibble"
+                  style="push"
+                  tooltip="%command.tooltip.bibble">
+               <visibleWhen
+                     checkEnabled="false">
+                  <systemTest
+                        property="com.bdaum.zoom.cat.access"
+                        value="write">
+                  </systemTest>
+               </visibleWhen>
+            </command>
+         </menu>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            categoryId="com.bdaum.zoom.ui.CatalogCommands"
+            defaultHandler="com.bdaum.zoom.cat.foreign.bibble.internal.BibbleImportHandler"
+            description="%command.description.bibble"
+            id="com.bdaum.zoom.cat.foreign.bibble"
+            name="%command.name.bibble">
+      </command>
+   </extension>
+
+</plugin>

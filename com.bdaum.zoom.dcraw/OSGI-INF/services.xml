@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="com.bdaum.zoom.dcraw.DcrawConverterComponent">
+    <implementation class="com.bdaum.zoom.dcraw.internal.RawConverter"/>
+    <property name="converter" value="com.bdaum.zoom.dcraw.converter">
+		
+	</property>
+	<service>
+        <provide interface="com.bdaum.zoom.program.IConverter"/>
+    </service>
+</component>

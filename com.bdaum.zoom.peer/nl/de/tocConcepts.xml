@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toc label="Netzwerkkonzepte" link_to="../com.bdaum.zoom.doc/tocconcepts.xml#concepts">
+   <topic label="Netzwerk">
+   <topic href="html/networkConcepts.html" label="Netzwerksuche">
+   </topic>
+   <topic href="html/access.html" label="Zugriff auf Ressourcen">
+   </topic>
+   </topic>
+</toc>

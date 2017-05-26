@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %Bundle-Name
+Bundle-SymbolicName: com.bdaum.zoom.operations;singleton:=true
+Bundle-Version: 3.0.0
+Bundle-Vendor: %Bundle-Vendor
+Require-Bundle: com.bdaum.zoom.core;bundle-version="3.0.0";visibility:=reexport
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Export-Package: com.bdaum.zoom.operations.internal;x-internal:=true,
+ com.bdaum.zoom.operations.internal.dup;x-internal:=true,
+ com.bdaum.zoom.operations.internal.gen;x-internal:=true,
+ com.bdaum.zoom.operations.internal.job;x-internal:=true,
+ com.bdaum.zoom.operations.jobs

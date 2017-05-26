@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.core.recipeDetector">
+      <detector
+            class="com.bdaum.zoom.recipes.c1.internal.C1Detector"
+            description="%detector.description"
+            id="com.bdaum.zoom.recipes.c1"
+            name="%detector.name">
+      </detector>
+   </extension>
+   <extension
+         point="org.eclipse.help.toc">
+      <toc
+            file="toc.xml"
+            primary="false">
+      </toc>
+   </extension>
+   <extension
+         point="org.eclipse.help.index">
+      <index
+            file="index.xml">
+      </index>
+   </extension>
+
+</plugin>

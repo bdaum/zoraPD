@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en"><head>
+
+
+
+  
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Catalog migration</title>
+  
+
+  
+  
+  <meta name="date" content="2015-11-19">
+
+  
+  <meta name="keywords" content="CASE_INSENSITIVE">
+
+  
+  <meta name="keywords" content="LITERAL">
+
+  
+  <meta name="keywords" content="DOTALL">
+
+  
+  <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h1 class="Head">Catalog migration</h1>
+
+Catalog migration is required when you want to move catalog and images
+to another platform - let's say from Windows to Linux. Because the
+syntax of file paths on both platforms is different (see also <a href="../concepts/filesAndVolumes.html">Files and Volumes</a>), and also the
+target
+folder structure may be significantly different from the source folder
+structure, more or less extensive transformation of file paths will be
+necessary.<br>
+
+<br>
+
+This affects the following entries in a catalog:<br>
+
+<br>
+
+<ul>
+
+  <li style="font-weight: bold;">Catalog properties</li>
+  <ul>
+    <li>Backup location<br>
+    </li>
+  </ul>
+  <li style="font-weight: bold;">Watched folders</li>
+  <ul>
+    <li>Watched folder location</li>
+    <li>Destination folder location (in the case of transfer folders)</li>
+    <li>Filter expressions<br>
+    </li>
+  </ul>
+  <li style="font-weight: bold;">Images</li>
+  <ul>
+    <li>File URI and volume</li>
+    <li>Voice note URI and volume<br>
+    </li>
+  </ul>
+  <li style="font-weight: bold;">Collections</li>
+  <ul>
+    <li>Search values when searching for file URI<br>
+    </li>
+  </ul>
+  <li style="font-weight: bold;">Exhibitions</li>
+  <ul>
+    <li>Destination folder<br>
+    </li>
+  </ul>
+  <li style="font-weight: bold;">Web galleries</li>
+  <ul>
+    <li>Destination folder</li>
+  </ul>
+</ul>
+
+<br>
+
+The transformation are defined by a list of rules. Each file part to be
+transformed is compared with the source <a href="regex.html">pattern</a>
+of each rule, top down. The first rule that matches performs the
+transformation. <a href="regex.html#cg">Capture groups</a> in the
+source and the target patterns are used to transport contents from the
+original file path to the transformed file path.<br>
+
+An empty target pattern indicates that the matching file path
+corresponds to a file or folder not ported to the target platform.<br>
+<br>
+<em style="color: red;">Windows users please note, that before applying the transformation rules the <span style="font-weight: bold;">drive letter</span> in the file path is replaced by the <span style="font-weight: bold;">volume name</span>, if any.<br>
+</em>
+
+<br>
+<span style="font-weight: bold;">
+Example:</span><br>
+
+<br>
+
+<table style="text-align: left; width: 552px; height: 100px; margin-left: 40px;" border="1" cellpadding="2" cellspacing="2">
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><code>Windows:\\Users\\berth\\Pictures\\raw\\temp\\.*</code></td>
+      <td style="vertical-align: top;"><code><br>
+      </code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code>Windows</code><code>:\\Users\\berth\\Pictures\\raw\\(.*)\.dng</code></td>
+      <td style="vertical-align: top;"><code>/home/images/dng/$1.dng<br>
+      </code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code>Windows</code><code>:\\Users\\berth\\Pictures\\raw\\(.*)</code></td>
+      <td style="vertical-align: top;"><code>/home/images/$1</code></td>
+      
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp; <br>
+Here, the content of folder <code>C:\Users\berth\Pictures\raw\</code> is ported to Linux folder <code>/home/images/</code> with the exception of subfolder <code>temp\</code> which is not ported. In addition all DNG-files are placed in a separate subfolder <code>dng/</code>.<br>
+
+<br>
+
+The following functions are available to define the list of patterns:<br>
+
+<ul>
+
+  <li><span style="font-weight: bold;">Add pattern.</span> Both source
+and target patterns can be defined freely. The new rule is added to the
+end of the list.<br>
+  </li>
+  <li><span style="font-weight: bold;">Add folder.</span> First select
+a folder from the file system. Then the target pattern can be defined -
+the source pattern is derived from the folder path. The new rule is
+added to the end of the list.</li>
+  <li><span style="font-weight: bold;">Edit rule</span>. Edit the
+selected rule.<br>
+  </li>
+  <li><span style="font-weight: bold;">Remove rule</span>. Removes the
+selected rule from the list.</li>
+  <li><span style="font-weight: bold;">Up.</span> Moves the selected
+rule one step up.</li>
+  <li><span style="font-weight: bold;">Down.</span> Moves the selected
+rule one step down.<br>
+  </li>
+</ul>
+
+In addition to these transformation rules you can select a policy how
+to transform file separation characters (/ and \). For example, when
+migrating from Windows to Linux you may want to convert the character \
+into the character /.<br>
+
+Rules and the policy for file separation characters constitute a
+migration policy. You can store migration policies under indiviual
+names in the catalog for later use, or load a migration policy from the
+list of stored policies.<br>
+
+<br>
+
+</body></html>

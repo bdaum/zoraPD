@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.bdaum.zora.FEATURE.ai"
+      label="AI Feature"
+      version="3.0.0"
+      provider-name="bdaum industrial communciations">
+
+   <description>
+      AI cloud services for image classification and similar purposes
+   </description>
+
+   <copyright url="http://www.example.com/copyright">
+      (c) 2016 Berthold Daum
+   </copyright>
+
+   <license url="http://www.example.com/license">
+      [Enter License Description here.]
+   </license>
+
+   <plugin
+         id="com.bdaum.zoom.ai"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.ai.clarifai"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.ai.msVision"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

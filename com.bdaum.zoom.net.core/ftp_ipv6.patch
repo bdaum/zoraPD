@@ -1,0 +1,268 @@
+Index: src/java/org/apache/commons/net/ftp/FTPReply.java
+===================================================================
+--- src/java/org/apache/commons/net/ftp/FTPReply.java	(revision 799895)
++++ src/java/org/apache/commons/net/ftp/FTPReply.java	(working copy)
+@@ -47,6 +47,7 @@
+     public static final int CODE_225 = 225;
+     public static final int CODE_226 = 226;
+     public static final int CODE_227 = 227;
++    public static final int CODE_229 = 229;
+     public static final int CODE_230 = 230;
+     public static final int CODE_250 = 250;
+     public static final int CODE_257 = 257;
+@@ -65,6 +66,7 @@
+     public static final int CODE_503 = 503;
+     public static final int CODE_504 = 504;
+     public static final int CODE_521 = 521;
++    public static final int CODE_522 = 522;
+     public static final int CODE_530 = 530;
+     public static final int CODE_532 = 532;
+     public static final int CODE_550 = 550;
+@@ -88,6 +90,7 @@
+     public static final int DATA_CONNECTION_OPEN = CODE_225;
+     public static final int CLOSING_DATA_CONNECTION = CODE_226;
+     public static final int ENTERING_PASSIVE_MODE = CODE_227;
++    public static final int ENTERING_EPSV_MODE = CODE_229;
+     public static final int USER_LOGGED_IN = CODE_230;
+     public static final int FILE_ACTION_OK = CODE_250;
+     public static final int PATHNAME_CREATED = CODE_257;
+@@ -105,6 +108,7 @@
+     public static final int COMMAND_NOT_IMPLEMENTED = CODE_502;
+     public static final int BAD_COMMAND_SEQUENCE = CODE_503;
+     public static final int COMMAND_NOT_IMPLEMENTED_FOR_PARAMETER = CODE_504;
++    public static final int EXTENDED_PORT_FAILURE = CODE_522;
+     public static final int NOT_LOGGED_IN = CODE_530;
+     public static final int NEED_ACCOUNT_FOR_STORING_FILES = CODE_532;
+     public static final int FILE_UNAVAILABLE = CODE_550;
+Index: src/java/org/apache/commons/net/ftp/FTPCommand.java
+===================================================================
+--- src/java/org/apache/commons/net/ftp/FTPCommand.java	(revision 799895)
++++ src/java/org/apache/commons/net/ftp/FTPCommand.java	(working copy)
+@@ -65,6 +65,8 @@
+     public static final int STAT = 30;
+     public static final int HELP = 31;
+     public static final int NOOP = 32;
++    public static final int EPSV = 33;
++    public static final int EPRT = 34;
+ 
+     public static final int USERNAME = USER;
+     public static final int PASSWORD = PASS;
+@@ -108,7 +110,7 @@
+                                           "USER", "PASS", "ACCT", "CWD", "CDUP", "SMNT", "REIN", "QUIT", "PORT",
+                                           "PASV", "TYPE", "STRU", "MODE", "RETR", "STOR", "STOU", "APPE", "ALLO",
+                                           "REST", "RNFR", "RNTO", "ABOR", "DELE", "RMD", "MKD", "PWD", "LIST",
+-                                          "NLST", "SITE", "SYST", "STAT", "HELP", "NOOP"
++                                          "NLST", "SITE", "SYST", "STAT", "HELP", "NOOP", "EPSV", "EPRT",
+                                       };
+ 
+     /**
+Index: src/java/org/apache/commons/net/ftp/FTPClient.java
+===================================================================
+--- src/java/org/apache/commons/net/ftp/FTPClient.java	(revision 799895)
++++ src/java/org/apache/commons/net/ftp/FTPClient.java	(working copy)
+@@ -22,6 +22,7 @@
+ import java.io.InputStream;
+ import java.io.InputStreamReader;
+ import java.io.OutputStream;
++import java.net.Inet6Address;
+ import java.net.InetAddress;
+ import java.net.ServerSocket;
+ import java.net.Socket;
+@@ -119,11 +120,11 @@
+  * transfer modes, and file structures.
+  * <p>
+  * Because the handling of sockets on different platforms can differ
+- * significantly, the FTPClient automatically issues a new PORT command
++ * significantly, the FTPClient automatically issues a new PORT (or EPRT) command
+  * prior to every transfer requiring that the server connect to the client's
+  * data port.  This ensures identical problem-free behavior on Windows, Unix,
+  * and Macintosh platforms.  Additionally, it relieves programmers from
+- * having to issue the PORT command themselves and dealing with platform
++ * having to issue the PORT (or EPRT) command themselves and dealing with platform
+  * dependent issues.
+  * <p>
+  * Additionally, for security purposes, all data connections to the
+@@ -380,6 +381,40 @@
+         __passivePort = index;
+     }
+ 
++    private void __parseExtendedPassiveModeReply(String reply)
++    throws MalformedServerReplyException
++    {
++        int port;
++ 
++        reply = reply.substring(reply.indexOf('(') + 1,
++                                reply.indexOf(')')).trim();
++
++        char delim1, delim2, delim3, delim4;
++        delim1 = reply.charAt(0);
++        delim2 = reply.charAt(1);
++        delim3 = reply.charAt(2);
++        delim4 = reply.charAt(reply.length()-1);
++
++        if (!(delim1 == delim2) || !(delim2 == delim3)
++                || !(delim3 == delim4))
++            throw new MalformedServerReplyException(
++                    "Could not parse extended passive host information.\nServer Reply: " + reply);
++        try
++        {
++            port = Integer.parseInt(reply.substring(3, reply.length()-1));
++        }
++        catch (NumberFormatException e)
++        {
++            throw new MalformedServerReplyException(
++                "Could not parse passive host information.\nServer Reply: " + reply);
++        }
++
++
++        // in EPSV mode, the passive host address is implicit
++        __passiveHost = getRemoteAddress().getHostAddress();
++        __passivePort = port;
++    }
++
+     private boolean __storeFile(int command, String remote, InputStream local)
+     throws IOException
+     {
+@@ -475,13 +510,26 @@
+             ServerSocket server;
+             server = _socketFactory_.createServerSocket(0, 1, getLocalAddress());
+ 
+-            if (!FTPReply.isPositiveCompletion(port(getLocalAddress(),
++            // try EPRT first. If that fails, and the connection is over IPv4
++            // fallback to PORT
++
++            if (!FTPReply.isPositiveCompletion(eprt(getLocalAddress(),
+                                                     server.getLocalPort())))
+             {
+-                server.close();
+-                return null;
++                if (getRemoteAddress() instanceof Inet6Address)
++                {
++                    server.close();
++                    return null;
++                }
++
++                if (!FTPReply.isPositiveCompletion(port(getLocalAddress(),
++                                                       server.getLocalPort())))
++                {
++                    server.close();
++                    return null;
++                }
+             }
+-
++            
+             if ((__restartOffset > 0) && !restart(__restartOffset))
+             {
+                 server.close();
+@@ -509,10 +557,20 @@
+         else
+         { // We must be in PASSIVE_LOCAL_DATA_CONNECTION_MODE
+ 
+-            if (pasv() != FTPReply.ENTERING_PASSIVE_MODE)
+-                return null;
++            // try EPSV first. If unable to enter EPSV mode, and connecting over
++            // IPv4, fallback to PASV mode.
++            if (epsv() == FTPReply.ENTERING_EPSV_MODE) {
++                __parseExtendedPassiveModeReply((String)_replyLines.elementAt(0));
++            }
++            else {
++                // EPSV mode is required for IPv6 connection
++                if (getRemoteAddress() instanceof Inet6Address)
++                    return null;
+ 
+-            __parsePassiveModeReply((String)_replyLines.elementAt(0));
++                if (pasv() != FTPReply.ENTERING_PASSIVE_MODE)
++                    return null;
++                __parsePassiveModeReply((String)_replyLines.elementAt(0));
++            }
+ 
+             socket = _socketFactory_.createSocket(__passiveHost, __passivePort);
+             if ((__restartOffset > 0) && !restart(__restartOffset))
+Index: src/java/org/apache/commons/net/ftp/FTP.java
+===================================================================
+--- src/java/org/apache/commons/net/ftp/FTP.java	(revision 799895)
++++ src/java/org/apache/commons/net/ftp/FTP.java	(working copy)
+@@ -22,6 +22,8 @@
+ import java.io.OutputStreamWriter;
+ import java.lang.reflect.InvocationTargetException;
+ import java.lang.reflect.Method;
++import java.net.Inet4Address;
++import java.net.Inet6Address;
+ import java.net.InetAddress;
+ import java.net.Socket;
+ import java.net.SocketException;
+@@ -871,6 +873,47 @@
+     }
+ 
+     /***
++     * A convenience method to send the FTP EPRT command to the server,
++     * receive the reply, and return the reply code.
++     * <p>
++     * @param host  The host owning the port.
++     * @param port  The new port.
++     * @return The reply code received from the server.
++     * @exception FTPConnectionClosedException
++     *      If the FTP server prematurely closes the connection as a result
++     *      of the client being idle or some other reason causing the server
++     *      to send FTP reply code 421.  This exception may be caught either
++     *      as an IOException or independently as itself.
++     * @exception IOException  If an I/O error occurs while either sending the
++     *      command or receiving the server reply.
++     ***/
++    public int eprt(InetAddress host, int port) throws IOException
++    {
++        int num;
++        StringBuffer info = new StringBuffer();
++        String h;
++
++        // If IPv6, trim the zone index
++        h = host.getHostAddress();
++        num = h.indexOf("%");
++        if (num > 0)
++            h = h.substring(0, num);
++
++        info.append("|");
++        if (host instanceof Inet4Address)
++            info.append("1");
++        else if (host instanceof Inet6Address)
++            info.append("2");
++        info.append("|");
++        info.append(h);
++        info.append("|");
++        info.append(port);
++        info.append("|");
++
++        return sendCommand(FTPCommand.EPRT, info.toString());
++    }
++
++    /***
+      * A convenience method to send the FTP PASV command to the server,
+      * receive the reply, and return the reply code.  Remember, it's up
+      * to you to interpret the reply string containing the host/port
+@@ -890,6 +933,26 @@
+         return sendCommand(FTPCommand.PASV);
+     }
+ 
++     /***
++     * A convenience method to send the FTP EPSV command to the server,
++     * receive the reply, and return the reply code.  Remember, it's up
++     * to you to interpret the reply string containing the host/port
++     * information.
++     * <p>
++     * @return The reply code received from the server.
++     * @exception FTPConnectionClosedException
++     *      If the FTP server prematurely closes the connection as a result
++     *      of the client being idle or some other reason causing the server
++     *      to send FTP reply code 421.  This exception may be caught either
++     *      as an IOException or independently as itself.
++     * @exception IOException  If an I/O error occurs while either sending the
++     *      command or receiving the server reply.
++     ***/
++    public int epsv() throws IOException
++    {
++        return sendCommand(FTPCommand.EPSV);
++    }
++
+     /**
+      * A convenience method to send the FTP TYPE command for text files
+      * to the server, receive the reply, and return the reply code.

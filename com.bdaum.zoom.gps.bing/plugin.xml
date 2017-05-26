@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.gps.mappingSystem">
+      <mappingSystem
+            id="com.bdaum.zoom.gps.mappingSystem.bing"
+            mapComponent="com.bdaum.zoom.gps.bing.internal.views.MapComponent"
+            name="%mappingSystem.name"
+            query="https://www.bing.com/maps/?q={0},{1}&amp;obox=1">
+      </mappingSystem>
+   </extension>
+   <extension
+         point="org.eclipse.ui.keywords">
+      <keyword
+            id="com.bdaum.zoom.gps.bing.key"
+            label="%keyword.label.key">
+      </keyword>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml"
+            plugin="com.bdaum.zoom.gps">
+      </contexts>
+   </extension>
+   <extension
+         point="org.eclipse.help.toc">
+      <toc
+            file="tocprefs.xml">
+      </toc>
+      <toc
+            file="toc.xml"
+            primary="false">
+      </toc>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.gps.premiumService">
+      <premiumService
+            description="%premiumService.description"
+            id="com.bdaum.zoom.gps.bing.premiumService"
+            name="%premiumService.name">
+         <key
+               id="com.bdaum.zoom.gps.bing.key"
+               name="%key.name">
+         </key>
+      </premiumService>
+   </extension>
+
+</plugin>

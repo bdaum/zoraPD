@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="intro" title="Video">
+      <topic href="html/video.html" label="Video"/>
+   </context>
+   
+</contexts>

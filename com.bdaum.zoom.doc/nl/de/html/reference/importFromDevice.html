@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+
+
+
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Import-von-Gerät-Dialog</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head>
+<body>
+<h2>Import-vom-Gerät-Dialog</h2>
+<br>
+Importieren von einem Gerät erfordert, dass ein Gerät am
+Computer angeschlossen
+ist und dass es als ein austauschbares Laufwerk
+bereitgestellt
+ist. Das Laufwerk
+muss den&nbsp;Unterordner <code>DCIM/</code>
+enthalten. Geeignete
+Geräte sind beispielsweise  über
+einen USB-Anschluss verbundene
+Digitalkameras oder Speicherkarten, die
+in ein Kartenlesegerät eingelegt wurden.<br>
+Die Optionen des Import-Prozesses werden mit Hilfe eines Wizards spezifiziert:<br>
+<br>
+<h4><a name="1"></a>Schritt 1, Auswahl der Bilder</h4>
+Der
+obere Abschnitt dieser Wizardseite<span style="font-style: italic;"> </span> enthält einen Baum,&nbsp;der
+die&nbsp;Dateien basierend auf ihrem jeweiligen <span style="font-weight: bold;"> Änderungsdatum </span>organisiert.
+Auf
+diese Weise können Bilder anhand des Erstellungsdatums
+auswählt werden. Nur
+unterstützte Dateitypen können importiert werden.<br>
+<ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Keine Duplikate importieren</span>. Markieren
+Sie diese Option, um zu vermeiden, dass Duplikate in den Katalog importiert
+werden.
+Die
+Erkennung
+erfolgt durch den Vergleich des ursprüngliche Dateinamens und des
+Dateiänderungsdatum. Eine
+Warnung wird in das <a href="logView.html"><span style="font-style: italic;">Protokoll </span>
+</a> geschrieben, wenn ein Duplikat erkannt wurde.</li><li><span style="font-weight: bold;">JPEG bei existierender RAW-Datei übergehen</span>.
+Einige Kameras können sowohl RAW als auch JPEG-Dateien für die gleiche
+Aufnahme erzeugen. Sie möchten möglicherweise die JPEG-Dateien nicht
+importieren, wenn RAW-Dateien der gleichen Aufnahme existieren.</li><li><span style="font-weight: bold;">Medien nach Import abmelden</span>.
+Aktivieren
+Sie diese Option, wenn das austauschbare Laufwerk freigegeben werden
+soll, nachdem der Import abgeschlossen ist. Die
+Kamera oder Speicherkarte kann danach sicher vom Computer getrennt
+werden.</li>
+</ul>
+<h4><a name="2"></a>Schritt 2, Bestimmung des Ausgabeordners</h4>
+<ul style="font-weight: normal;">
+<li>Geben
+Sie im&nbsp;Eintrag <span style="font-weight: bold;">
+Transfer zum</span>&nbsp;den
+Zielordner an, in dem Sie die in Schritt 1 ausgewählten Bilder abspeichern möchten. Während
+des Imports werden die ausgewählten Bilder in den Zielordner
+kopiert.&nbsp;</li><li>Im
+Eintrag <span style="font-weight: bold;">Unterordner
+erstellen </span>entscheiden Sie, ob Unterordner
+    <abbr>nach Jahr</abbr>, <abbr>Jahr und Monat</abbr>, <abbr>Jahr, Monat und Tag</abbr> oder
+gar nicht erstellt werden.</li>
+</ul>
+<br>
+<h4><a name="3"></a>Schritt 3, Neubenennung von Bildern</h4>
+Importierte
+Dateien können und sollten während des Imports umbenannt
+werden. Der
+Umbenennungsprozess wird durch eine <a href="templates.html">
+Vorlage</a> gesteuert. Es
+gibt mehrere vordefinierte Vorlagen, aber Sie können auch eigene
+Vorlagen hinzufügen (<abbr>Hinzufügen...</abbr>) oder Vorlagen bearbeiten (<abbr>Bearbeiten...</abbr>). Im Feld <var>Wink</var> können Sie eine kurze Zeichenkette angeben, welche dann die Variable <code>{cue}</code> in der Vorlage ersetzt.<br>
+<br>
+<h4><a name="4"></a>Schritt 4, Metadaten</h4>
+Im letzten Schritt können Sie die Metadaten der importierten Bilder
+vervollständigen, oder auch die Metadaten bestimmter RAW-Dateien wieder
+herstellen.<br>
+<br>
+<ul style="font-weight: normal;"><li style="font-weight: bold;">Metadaten hinzufügen<br>
+</li>
+  <ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Künstler.</span> Fotograf oder Künstler, der die Bilder geschaffen hat.</li><li><span style="font-weight: bold;">Ereignis</span>. Das durch die Bildserie dokumentierte Ereignis.</li><li><span style="font-weight: bold;">Schlagwörter</span>. Schlagwörter, die allen Fotos der Serie hinzugefügt werden sollen.</li>
+  </ul>
+<li><span style="font-weight: bold;">Fortgeschrittene Optionen</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Präfix für EXIF-Transfer. </span>Wird
+ein Präfix spezifiziert, so erfolgt ein Transfer der EXIF-Daten von
+JPEG-Dateien zu korrespondierenden RAW-Dateien, wenn beide Dateinamen
+mit diesem Präfix beginnen und sich nur in der Dateinamenerweiterung
+unterscheiden. Normalerweise wird <code>IMG_</code> als Präfix verwendet. Verwendet
+wird diese Option, wenn die Kamera RAW-Dateien liefert, die keine
+EXIF-Daten enthalten. Das ist z.B. bei den mit dem CHDK ausgerüsteten
+Kameras der Fall.Markieren Sie in Schritt 1 die Option <span style="font-weight: bold;">JPEG bei existierender RAW-Datei übergehen</span>, wenn Sie auf den Import der JPEG-Dateien keinen Wert legen.<br>
+</li></ul>
+</ul>
+</body></html>

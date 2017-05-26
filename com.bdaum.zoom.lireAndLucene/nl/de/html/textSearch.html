@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+  
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type">
+  <title>Textrecherche</title>
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../../com.bdaum.zoom.rcp/book.css">
+
+  
+  <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css">
+
+</head><body>
+<h2>Textrecherche</h2>
+
+Die Textrecherche (<acronym>Bild&gt;Textsuche</acronym>) ähnelt
+einer Google-Suche und erlaubt die Suche nach
+Textphrasen unabhängig davon, wo der Text in einem Bild vorkommt - sei
+es in den Schlagworten, im Titel, der Beschreibung, einem das Bild
+verwendenden Dia, Exhibit oder Web-Exhibit. Die Textrecherche gestattet
+eine sehr schnelle Suche, hat jedoch nicht die gleiche Präzision wie
+eine spezifische Suche (z.B. die Schlagwortsuche). Wenn Sie z.B. nach
+"Peter" suchen, finden Sie nicht nur alle Bilder, die "Peter" als
+Schlagwort eingetragen haben, sondern auch alle Bilder, bei denen
+"Peter" als Künstler, Eigentümer oder im Copyright-Feld vorkommt - oder
+irgend einem anderen Feld.<br>
+
+Trotzdem kann durch die Kombination verschiedener Suchausdrücke auch
+bei der Textrecherche die Suche präziser gemacht werden:<br>
+
+<br>
+
+<ul style="font-weight: normal;">
+
+  <li>Phrasen werden in Anführungszeichen eingeschlossen, z.B. <code>"Onkel
+Paul"</code>.</li>
+  <li>Platzhaltersymbole wie * und ? können verwendet werden (<span id="result_box" class="long_text"><span title="(not within phrases).">nicht
+innerhalb von Phrasen</span></span>).&nbsp;<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="* stand for any string, ?">* steht für eine beliebige
+Zeichenfolge,? </span><span title="for a single arbitrary character.">für
+ein einzelnes
+beliebiges Zeichen. </span><span title="Note: You cannot use a * or ?"><br>
+    <span style="font-weight: bold;">Hinweis:</span> Sie
+können&nbsp;* oder ? </span><span style="background-color: rgb(255, 255, 255);" title="symbol as the first character of a search.">nicht als
+erstes Zeichen einer Suche verwenden.</span></span><br>
+    <span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="symbol as the first character of a search."></span><span style="background-color: rgb(255, 255, 255);" title="Examples: ani* would find all words starting with 'ani'.">Beispiele</span></span>:
+    <code>ani*</code> findet alle Wörter, die mit 'ani'
+beginnen.</li>
+  <li>Für eine Ähnlichkeitssuche kann einem Wort der Operator ~
+angefügt werden.&nbsp;<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="This can be useful to get search results even in case of spelling errors.">Dies
+kann nützlich sein, um </span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="This can be useful to get search results even in case of spelling errors.">auch
+im Falle von Rechtschreibfehlern </span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="This can be useful to get search results even in case of spelling errors.">Suchergebnisse
+zu erhalten.</span></span></li>
+  <li><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="* Use the AND operator for returning images containing both words or phrases, for example: people AND animals.">Verwenden
+Sie den Operator <code>AND</code>, um Bilder zu erhalten,
+die beide Wörter oder Phrasen enthalten, zum Beispiel: <span style="font-family: monospace;">Tiere</span></span></span><code>
+AND Menschen</code></li>
+  <li><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="* Use the AND operator for returning images containing both words or phrases, for example: people AND animals.">Verwenden
+Sie den Operator <code>OR</code>, um Bilder zu erhalten,
+die entweder das eine oder das andere Wort (oder Phrase) enthalten, zum
+Beispiel: <span style="font-family: monospace;">Tiere</span></span></span><code>
+OR Menschen</code></li>
+  <li><span id="result_box" class="long_text"><span title="* Use the NOT operator for excluding images containing a word aa phrase.">Verwenden
+Sie den Operator <code>NOT</code> für den Ausschluss von
+Bildern mit einem Wort oder einer Phrase</span></span>.
+Z.B. würde&nbsp;<code>Menschen</code><code>
+NOT&nbsp;</code><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="* Use the AND operator for returning images containing both words or phrases, for example: people AND animals."><span style="font-family: monospace;">Tiere</span></span></span><code>&nbsp;</code><code></code>nur
+Bilder, die mit 'Menschen' aber nicht mit 'Tiere' verschlagwortet sind,
+zurückgeben. Alternativ können Sie auch&nbsp;<code>Menschen</code><code>
+    </code><code> -</code><code></code><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="* Use the AND operator for returning images containing both words or phrases, for example: people AND animals."><span style="font-family: monospace;">Tiere</span></span></span><code>&nbsp;</code>schreiben.</li>
+  <li><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="* Use parantheses for complex search expressions, for example: (people AND animals) OR (cars AND animals)">Verwenden
+Sie Klammern für komplexe Sucheausdrücke, zum Beispiel:</span></span>&nbsp;<code>(</code><code>Menschen</code><code>
+    </code><code> AND&nbsp;</code><code></code><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="* Use the AND operator for returning images containing both words or phrases, for example: people AND animals."><span style="font-family: monospace;">Tiere</span></span></span><code></code><code>)
+OR (Autos AND&nbsp;</code><code></code><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="* Use the AND operator for returning images containing both words or phrases, for example: people AND animals."><span style="font-family: monospace;">Tiere</span></span></span><code></code><code>)</code></li>
+  <li><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="* Some characters contained in a search word or phrase must be escaped: + - &amp;&amp; || !">Einige
+Zeichen, die in einem Suchwort oder einer Phrase&nbsp;enthalten
+sein können, müssen&nbsp;maskiert werden:</span></span>&nbsp;<code>+
+- &amp;&amp; || ! ( ) { } [ ] ^ " ~ * ? : \</code><br>
+    <span id="result_box" class="long_text"><span title="( ) { } [ ] ^ &quot; ~ * ? : \">Stellen Sie</span><span title="Prefix such characters with \, for example: wow\!">
+diesen Zeichen das Zeichen \ voran zum Beispiel:</span></span>
+    <code>Wow\!</code></li>
+</ul>
+
+<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Text Retrieval"></span></span><br>
+
+<br>
+</body></html>

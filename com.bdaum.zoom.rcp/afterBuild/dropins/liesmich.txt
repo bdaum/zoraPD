@@ -1,0 +1,3 @@
+Benutzen Sie diesen Ordner für
+ - zusätzliche CSS-Stylesheets, um die Darstellung der Applikation zu ändern
+ - neue DCRAW Module

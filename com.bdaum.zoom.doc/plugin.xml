@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+<!--
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="%actionSet.label.tutorials"
+            visible="true"
+            id="org.eclipse.ui.cheatsheets.actionSet">
+         <action
+               label="%action.label.tutorials"
+               class="org.eclipse.ui.cheatsheets.CheatSheetExtensionFactory:helpMenuAction"
+               menubarPath="help/helpStart"
+               id="org.eclipse.ui.cheatsheets.actions.CheatSheetHelpMenuAction">
+         </action>
+      </actionSet>
+   </extension>
+-->
+   <extension
+         point="org.eclipse.help.toc">
+      <toc
+            file="tocconcepts.xml"
+            primary="true">
+      </toc>
+      <toc
+            file="tocgettingstarted.xml"
+            primary="true">
+      </toc>
+      <toc
+            file="tocreference.xml"
+            primary="true">
+      </toc>
+      <toc
+            file="toctasks.xml"
+            primary="true">
+      </toc>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml">
+      </contexts>
+   </extension>
+   <extension
+         point="org.eclipse.help.index">
+      <index
+            file="index.xml">
+      </index>
+   </extension>
+   <extension
+         point="org.eclipse.ui.cheatsheets.cheatSheetContent">
+      <category
+            id="com.bdaum.zoom.doc.category.collections"
+            name="Collections">
+      </category>
+      <cheatsheet
+            category="com.bdaum.zoom.doc.category.collections"
+            composite="false"
+            contentFile="$nl$/tutorials/userDefinedCollection.xml"
+            id="com.bdaum.zoom.doc.cheatsheet.simpleCollection"
+            name="Creating a user defined collection">
+         <description>
+            Creating a simple user defined collection
+         </description>
+      </cheatsheet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:help?after=helpStart">
+         <command
+               commandId="com.bdaum.zoom.doc.command.help.tutorials"
+               label="%command.label"
+               mnemonic="%command.mnemonic"
+               style="push"
+               tooltip="%command.tooltip">
+         </command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            categoryId="com.bdaum.zoom.ui.HelpCommands"
+            defaultHandler="org.eclipse.ui.cheatsheets.commands.CheatSheetHelpMenuCommand"
+            description="%command.description"
+            id="com.bdaum.zoom.doc.command.help.tutorials"
+            name="%command.name">
+      </command>
+   </extension>
+
+</plugin>

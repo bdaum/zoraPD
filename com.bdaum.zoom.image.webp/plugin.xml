@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.image.imageIOplugins">
+      <provider
+            class="com.luciad.imageio.webp.WebPImageReaderSpi"
+            name="WebP image reader">
+      </provider>
+      <provider
+            class="com.luciad.imageio.webp.WebPImageWriterSpi"
+            name="WebP image writer">
+      </provider>
+   </extension>
+
+</plugin>

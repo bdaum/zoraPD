@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="pref_page_context" title="AI preferences">
+      <description>Preferences for artificial intelligence web services</description>
+      <topic href="html/ai.html" label="AI preferences"/>
+   </context>
+</contexts>

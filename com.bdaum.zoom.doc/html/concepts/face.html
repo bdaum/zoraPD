@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+<meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Face detection and recognition</title>
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Face detection and recognition<br>
+</h2>
+<span style="font-style: italic;">ZoRa Photo Director</span>
+does not provide facilities of its own for face detection and
+recognition <span style="font-style: italic;"></span>but
+relies on face data obtained from other sources such as&nbsp;<span style="font-style: italic;">Google's Picasa,&nbsp;</span><span style="font-style: italic;">Windows Live
+Photo Gallery, Adobe Lightroom</span> or the camera.<br><br><span style="font-style: italic;">ZoRa Photo Director </span>is able to handle face data from mixed sources. Face areas from different sources will be united to one area if appropriate.<br>
+<br>Each person will be displayed as a separate album within the <span style="font-style: italic;">Persons</span> group.
+Images where the face of a specific person was detected are added
+automatically to the corresponding album. <br>
+<br>It is possible to add and remove images to and from person albums in <span style="font-style: italic;">ZoRa Photo Director</span>
+freely. To add an image to a person album drag the image to the album
+in the Catalog view. If you grab the image inside a region, the region
+will be renamed to the name of the album. Otherwise, the unnamed region
+closest to the mouse pointer will be renamed.<br>
+Alternatively, you can click a region to add the image to a person album.<br>
+<br>
+Please be aware that the deleted entries can reappear in an album
+as soon as the album is re-synchronized after a
+corresponding Picasa album was modified.<br>
+<h4>Metadata<br>
+</h4>
+When exporting metadata (XMP file) face related data is exported, too.
+The formats used are the <span style="font-style: italic;">Microsoft
+Photo Region Schema</span> as used by <span style="font-style: italic;">Windows Live Photo Gallery</span>, and the EXIF MWG format as used by <span style="font-style: italic;">Adobe Lightroom 6</span>.&nbsp;<br>
+<h4>Queries<br>
+</h4>
+Because images are automatically added to person albums, it is not
+necessary to define queries regarding persons. However, it is possible
+to add person names to the IPTC keywords of an image via <acronym>Catalog&gt;Properties&gt;Keywords</acronym>,
+so <a href="../reference/facePrefs.html"><acronym></acronym></a>
+that images containing certain persons can be found easily via the <a href="../reference/keywordSearch.html">keyword search</a>.
+In addition, images containing persons can also be found by using the <a href="../reference/textSearch.html">text search</a> facility (<acronym>Catalog&gt;Properties&gt;Indexing</acronym>).<br>
+Another option is querying for images containing a given number of
+faces (Group <span style="font-weight: bold;">Properties</span>,
+Subgroup <span style="font-weight: bold;">Image,</span>
+Field <span style="font-weight: bold;">No of detected
+persons</span>). <br>
+&nbsp;<span style="font-weight: bold;"></span>
+<ul>
+</ul>
+<br>
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> Note for Linux users: On Linux systems Picasa runs under <span style="font-style: italic;">Wine</span>.
+Depending on your system and the installation method Picasa file
+locations vary. If you have trouble accessing Picasa data, please
+configure the file <code>picasaContacts.ini</code> in plug-in <code>com.bdaum.jna.linux.x64</code> or <code>com.bdaum.jna.linux.x86</code>.<acronym></acronym><br>
+<br>
+<ul style="font-weight: normal;">
+</ul>
+</body></html>

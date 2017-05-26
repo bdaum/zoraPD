@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Dateifilter</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head>
+<body>
+<h2>Dateifilter
+</h2>Die Liste der Filter-Ausdrücke in diesem Dialog legt fest, welche
+Dateien akzeptiert werden und welche nicht. Wenn eine Datei mit dem
+Filter getestet wird, werden die Filter-Muster mit den Dateinamen einer
+nach anderem vom der Liste an verglichen. Wenn ein Dateiname mit dem
+Muster übereinstimmt, wird die Datei entweder abgelehnt oder
+angenommen, je nach Filter-<span style="font-style: italic;">Aktion</span>.
+Wenn der Filter-Ausdruck nicht übereinstimmt, wird die Datei mit dem
+nächsten Filter-Muster in der Liste verglichen und so weiter. Wenn
+keines der Filter-Muster übereinstimmt wird die Datei akzeptiert.
+FIlter-Muster können auf einzelne Dateien oder ganze Ordner angwendet
+werden. Dies erlaubt die Annahme oder Ablehnung ganzer Unterordner
+innerhalb einer Verzeichnis-Struktur.<br>
+<br>
+Filterausdrücke
+können Platzhaltersymboler (<span style="font-style: italic;">wildcards</span>)
+enthalten:<br>
+<ul style="font-weight: normal;">
+<li>' *
+'&nbsp;entspricht einer Zeichenfolge beliebiger Länge&nbsp;</li>
+<li>'?
+'&nbsp;entspricht genau einem Zeichen <br>
+</li>
+</ul>Das Filter arbeitet unabhängig von Groß- und Kleinschreibung.<br><br>Normalerweise wird das Filter auf den Datei- oder Ordner<span style="font-weight: bold;">namen</span> angewandt. Sie können allerdings auch Pfadmuster spezifizieren, z.B. <code>*/prod/*/final/*.* </code>Benutzen Sie dabei immer den <span style="font-weight: bold;">Schrägstrich</span> und nicht den umgekehrten Schrägstrich als Pfadtrennzeichen. Wurde ein solches Pfadmuster angegeben, so wird es auf den <span style="font-weight: bold;">relativen</span> Pfad einer Datei oder eines Ordners angewandt, d.h. relativ zu einem Basisordner wie z.B. einem überwachten Ordner.<br><span style="font-weight: bold;"></span><br>
+
+</body></html>

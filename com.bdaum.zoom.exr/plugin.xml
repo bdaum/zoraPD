@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.image.importFilter">
+      <importFilter
+            class="com.bdaum.zoom.exr.internal.ExrImportFilter"
+            extensions="exr"
+            mimetype="image/x-exr"
+            name="OpenEXR">
+      </importFilter>
+   </extension>
+
+</plugin>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.bdaum.zora.FEATURE.win32_x64"
+      label="Win32_x86_64 Feature"
+      version="3.0.0"
+      provider-name="bdaum industrial communications"
+      os="win32"
+      ws="win32"
+      arch="x86_64">
+
+   <description>
+      Windows (64 bit) specific resources
+   </description>
+
+   <copyright>
+      (c) Berthold Daum and contributors 2009-2010.  All rights reserved.
+   </copyright>
+
+   <license url="http://www.gnu.org/licenses/gpl-2.0.html">
+      This program is provided to you under the terms and conditions
+of the GNU General Public License (GPL) as published by the Free
+Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+   </license>
+
+   <plugin
+         id="org.eclipse.core.net.win32.x86_64"
+         os="win32"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.equinox.launcher.win32.win32.x86_64"
+         os="win32"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="org.eclipse.swt.win32.win32.x86_64"
+         os="win32"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.jna.win32.x64"
+         os="win32"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="com.bdaum.zoom.batch.win32"
+         os="win32"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="com.bdaum.zoom.dcraw.win32.x64"
+         os="win32"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="com.bdaum.zoom.batch.win32.x64"
+         os="win32"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="com.bdaum.zoom.email.win32.x64"
+         os="win32"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.image.webp.win32.x64"
+         os="win32"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+</feature>

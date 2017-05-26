@@ -1,0 +1,15 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head><meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Collapse pattern dialog</title>
+
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head>
+<body>
+<h2>Collapse pattern dialog </h2>
+The<span style="font-style: italic;"> Collapse Pattern dialog </span>is invoked by pressing <abbr>CTRL</abbr> and clicking on the <span style="font-style: italic;">Collapse</span> toolbar button in the Lightbox view.<br><br>The<span style="font-style: italic;"> Collapse Pattern dialog </span>defines
+how images with similar file names are collapsed to a single thumbnail.
+This is done by defining a typical file name pattern using wildcards
+such as <code>* </code>and <code>?</code>.<br>One or several wildcards can be prefixed with a slash (<code>/</code>)
+for identifying relevant file name sections. Images are grouped
+together by comparing these relevant parts of a sequence of
+images. <br>It is possible to specify alternative patterns by concatenating them with a semicolon (<code>;</code>).<br><br>Typical examples: <br><br><table style="text-align: left; width: 100%;" border="1" cellpadding="6" cellspacing="2"><tbody><tr><td><code><span style="font-weight: bold;">/*.*</span></code></td><td>Images are grouped by their plain file name (without file name extension)<br>e.g. &nbsp;<code>img0001.jpg</code> is grouped together with <code>img0001.tif</code>.<br></td></tr><tr><td><code><span style="font-weight: bold;">/*_v*.*</span></code></td><td>Images are grouped by their&nbsp;name (without version number and without file name extension)<br>e.g. &nbsp;<code>img0001_v01.jpg</code> is grouped together with <code>img0001_v02.tif</code>.</td></tr><tr><td><code><span style="font-weight: bold;">/*_v*./*</span></code></td><td>Images are grouped by their&nbsp;name and name extension (without version number)<br>e.g. &nbsp;<code>img0001_v01.jpg</code> is grouped together with <code>img0001_v02.jpg</code> but not with &nbsp;<code>img0001_v01.tif.</code></td></tr><tr><td><code><span style="font-weight: bold;">/*_v*.*;</span></code><code><span style="font-weight: bold;">/*.*</span></code></td><td>A combination of the first two examples. <code>img0001_v01.jpg</code> is grouped together with&nbsp;<code>img0001.tif and&nbsp; </code><code>img0001_v02.jpg.</code></td></tr></tbody></table><br>In addition images<a href="galleries.html#stack"> belonging to a named stack</a> can be collapsed. The option <span style="font-weight: bold;">Collapse named stacks, too</span> is equivalent to the pattern <code>STACK#/*!*</code><br></body></html>

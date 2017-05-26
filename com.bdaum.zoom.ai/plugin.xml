@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="com.bdaum.zoom.ai.serviceProvider" name="%extension-point.name" schema="schema/com.bdaum.zoom.ai.serviceProvider.exsd"/>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="com.bdaum.zoom.ai.internal.preference.AiPreferencePage"
+            id="com.bdaum.zoom.ai.aiPrefPage"
+            name="%page.name">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.help.toc">
+      <toc
+            file="tocprefs.xml"
+            primary="false">
+      </toc>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml">
+      </contexts>
+      <contexts
+            file="introContexts.xml">
+      </contexts>
+   </extension>
+   <extension
+         point="org.eclipse.help.index">
+      <index
+            file="index.xml">
+      </index>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.bdaum.zoom.ai.internal.preference.PreferenceInitializer">
+      </initializer>
+   </extension>
+
+</plugin>

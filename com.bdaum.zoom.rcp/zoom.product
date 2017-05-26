@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.5"?>
+
+<product name="%appName" uid="com.bdaum.zoom.rcp.product" id="com.bdaum.zoom.rcp.product" application="com.bdaum.zoom.rcp.application" version="3.0.0" useFeatures="true" includeLaunchers="true">
+
+   <aboutInfo>
+      <image path="/com.bdaum.zoom.rcp/about.gif"/>
+      <text>
+         %about
+      </text>
+   </aboutInfo>
+
+   <configIni use="default">
+      <linux>/com.bdaum.zoom.rcp/config.ini</linux>
+      <macosx>/com.bdaum.zoom.rcp/config.ini</macosx>
+      <win32>/com.bdaum.zoom.rcp/config.ini</win32>
+   </configIni>
+
+   <launcherArgs>
+      <vmArgsMac>-XstartOnFirstThread
+-Djava.awt.headless=true
+-Dorg.eclipse.swt.internal.carbon.smallFonts
+      </vmArgsMac>
+   </launcherArgs>
+
+   <windowImages i16="/com.bdaum.zoom.rcp/zora16.png" i32="/com.bdaum.zoom.rcp/zora32.png" i48="/com.bdaum.zoom.rcp/zora48.png" i64="/com.bdaum.zoom.rcp/zora64.png" i128="/com.bdaum.zoom.rcp/zora128.png" i256="/com.bdaum.zoom.rcp/zora256.png"/>
+
+   <splash
+      startupProgressRect="1,314,448,4" />
+   <launcher name="ZoRaPD">
+      <linux icon="/com.bdaum.zoom.rcp/zora.xpm"/>
+      <macosx icon="/com.bdaum.zoom.rcp/zora.icns"/>
+      <solaris/>
+      <win useIco="false">
+         <ico path="/com.bdaum.zoom.rcp/zora.ico"/>
+         <bmp
+            winSmallHigh="/com.bdaum.zoom.rcp/startIcon/ZoRa_0003.bmp"
+            winSmallLow="/com.bdaum.zoom.rcp/startIcon/ZoRa_0006.bmp"
+            winMediumHigh="/com.bdaum.zoom.rcp/startIcon/ZoRa_0002.bmp"
+            winMediumLow="/com.bdaum.zoom.rcp/startIcon/ZoRa_0005.bmp"
+            winLargeHigh="/com.bdaum.zoom.rcp/startIcon/ZoRa_0001.bmp"
+            winLargeLow="/com.bdaum.zoom.rcp/startIcon/ZoRa_0004.bmp"
+            winExtraLargeHigh="/com.bdaum.zoom.rcp/startIcon/ZoRa_0000.bmp"/>
+      </win>
+   </launcher>
+
+   <vm>
+   </vm>
+
+   <license>
+        <url>http://www.gnu.org/licenses/gpl-2.0.html</url>
+        <text>
+   This program is provided under the terms and conditions of the GNU General Public License (GPL) as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+         </text>
+   </license>
+
+   <plugins>
+      <plugin id="com.bdaum.aoModeling.runtime"/>
+      <plugin id="com.bdaum.iText"/>
+      <plugin id="com.bdaum.zoom.batch"/>
+      <plugin id="com.bdaum.zoom.core"/>
+      <plugin id="com.bdaum.zoom.css"/>
+      <plugin id="com.bdaum.zoom.dcraw"/>
+      <plugin id="com.bdaum.zoom.doc"/>
+      <plugin id="com.bdaum.zoom.email"/>
+      <plugin id="com.bdaum.zoom.exr"/>
+      <plugin id="com.bdaum.zoom.gps"/>
+      <plugin id="com.bdaum.zoom.hdr"/>
+      <plugin id="com.bdaum.zoom.image"/>
+      <plugin id="com.bdaum.zoom.model"/>
+      <plugin id="com.bdaum.zoom.net"/>
+      <plugin id="com.bdaum.zoom.rcp"/>
+      <plugin id="com.bdaum.zoom.ui"/>
+      <plugin id="com.ibm.icu"/>
+      <plugin id="ij"/>
+      <plugin id="ij.jai"/>
+      <plugin id="jai"/>
+      <plugin id="javax.servlet"/>
+      <plugin id="javax.servlet.jsp"/>
+      <plugin id="lire"/>
+      <plugin id="mediautil"/>
+      <plugin id="org.apache.ant"/>
+      <plugin id="org.apache.commons.el"/>
+      <plugin id="org.apache.commons.logging"/>
+      <plugin id="org.apache.jasper"/>
+      <plugin id="org.apache.lucene"/>
+      <plugin id="org.apache.lucene.analysis"/>
+      <plugin id="org.eclipse.core.commands"/>
+      <plugin id="org.eclipse.core.commands.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.contenttype"/>
+      <plugin id="org.eclipse.core.contenttype.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding"/>
+      <plugin id="org.eclipse.core.databinding.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.observable"/>
+      <plugin id="org.eclipse.core.databinding.observable.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.property"/>
+      <plugin id="org.eclipse.core.databinding.property.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.expressions"/>
+      <plugin id="org.eclipse.core.expressions.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.jobs"/>
+      <plugin id="org.eclipse.core.jobs.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.net"/>
+      <plugin id="org.eclipse.core.net.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.net.win32.x86" fragment="true"/>
+      <plugin id="org.eclipse.core.runtime"/>
+      <plugin id="org.eclipse.core.runtime.compatibility.auth"/>
+      <plugin id="org.eclipse.core.runtime.compatibility.auth.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.runtime.compatibility.registry" fragment="true"/>
+      <plugin id="org.eclipse.core.runtime.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.app"/>
+      <plugin id="org.eclipse.equinox.app.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.common"/>
+      <plugin id="org.eclipse.equinox.common.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.http.jetty"/>
+      <plugin id="org.eclipse.equinox.http.registry"/>
+      <plugin id="org.eclipse.equinox.http.registry.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.http.servlet"/>
+      <plugin id="org.eclipse.equinox.http.servlet.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.jsp.jasper"/>
+      <plugin id="org.eclipse.equinox.jsp.jasper.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.jsp.jasper.registry"/>
+      <plugin id="org.eclipse.equinox.jsp.jasper.registry.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.preferences"/>
+      <plugin id="org.eclipse.equinox.preferences.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.registry"/>
+      <plugin id="org.eclipse.equinox.registry.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.security"/>
+      <plugin id="org.eclipse.equinox.security.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.equinox.security.win32.x86" fragment="true"/>
+      <plugin id="org.eclipse.help"/>
+      <plugin id="org.eclipse.help.appserver"/>
+      <plugin id="org.eclipse.help.appserver.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.help.base"/>
+      <plugin id="org.eclipse.help.base.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.help.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.help.ui"/>
+      <plugin id="org.eclipse.help.ui.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.help.webapp"/>
+      <plugin id="org.eclipse.help.webapp.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.jface"/>
+      <plugin id="org.eclipse.jface.databinding"/>
+      <plugin id="org.eclipse.jface.databinding.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.jface.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.nebula.widgets.gallery"/>
+      <plugin id="org.eclipse.osgi"/>
+      <plugin id="org.eclipse.osgi.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.osgi.services"/>
+      <plugin id="org.eclipse.osgi.services.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.swt"/>
+      <plugin id="org.eclipse.swt.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.swt.win32.win32.x86" fragment="true"/>
+      <plugin id="org.eclipse.ui"/>
+      <plugin id="org.eclipse.ui.forms"/>
+      <plugin id="org.eclipse.ui.forms.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.ui.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.ui.views.log"/>
+      <plugin id="org.eclipse.ui.views.log.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.ui.workbench"/>
+      <plugin id="org.eclipse.ui.workbench.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.update.configurator"/>
+      <plugin id="org.eclipse.update.configurator.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.update.core"/>
+      <plugin id="org.eclipse.update.core.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.update.core.win32" fragment="true"/>
+      <plugin id="org.mortbay.jetty.server"/>
+      <plugin id="org.mortbay.jetty.util"/>
+      <plugin id="piccolo"/>
+      <plugin id="xmp"/>
+   </plugins>
+
+   <features>
+      <feature id="com.bdaum.zora.FEATURE" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.linux_gtk_x86" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.linux_gtk_x64" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.macosx_cocoa_x64" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.win32_x86" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.win32_x64" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.advancedSearch" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.geo" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.peer" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.spell" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.ai" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.raw" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.report" version="3.0.0"/>
+      <feature id="com.bdaum.zora.FEATURE.video" version="3.0.0"/>
+   </features>
+
+   <configurations>
+      <plugin id="org.eclipse.core.net" autoStart="true" startLevel="5" />
+      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.equinox.ds" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.update.configurator" autoStart="false" startLevel="3" />
+   </configurations>
+
+   <preferencesInfo>
+      <targetfile overwrite="false"/>
+   </preferencesInfo>
+
+   <cssInfo>
+   </cssInfo>
+
+</product>

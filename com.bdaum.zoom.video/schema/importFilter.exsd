@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="com.bdaum.zoom.video" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appinfo>
+         <meta.schema plugin="com.bdaum.zoom.video" id="importFilter" name="Import Filter"/>
+      </appinfo>
+      <documentation>
+         Import filters for supporting additional video file formats.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element />
+         </appinfo>
+         <documentation>
+            Extension point for adding additional image import filters
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="importFilter" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="importFilter">
+      <annotation>
+         <documentation>
+            An import filter for a specific image content type. The import filter associates one or multiple file extensions with a import filter factory.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="extensions" type="string" use="required">
+            <annotation>
+               <documentation>
+                  A list of file name extensions separated by blanks
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The import filter factory. Must implement com.bdaum.zoom.image.IImportFilter.
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":com.bdaum.zoom.image.IImportFilterFactory"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The name of the filter
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="since"/>
+      </appinfo>
+      <documentation>
+         2.0
+      </documentation>
+   </annotation>
+
+
+   <annotation>
+      <appinfo>
+         <meta.section type="apiinfo"/>
+      </appinfo>
+      <documentation>
+         Import filter factories must implement the interface com.bdaum.zoom.image.IImportFilterFactory.
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="implementation"/>
+      </appinfo>
+      <documentation>
+         com.bdaum.zomm.exr and com.bdaum.zoom.hdr.
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="copyright"/>
+      </appinfo>
+      <documentation>
+         (c) 2012 Berthold Daum
+      </documentation>
+   </annotation>
+
+</schema>

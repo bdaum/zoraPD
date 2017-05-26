@@ -1,0 +1,5 @@
+<tiltviewergallery>
+	<photos>
+		${images}
+	</photos>
+</tiltviewergallery>

@@ -1,0 +1,10 @@
+<index>
+	<entry keyword="Flickr">
+		<topic href="html/flickr.html" />
+	</entry>
+	<entry keyword="Export">
+		<entry keyword="Flickr">
+			<topic href="html/flickr.html" />
+		</entry>
+	</entry>
+</index>

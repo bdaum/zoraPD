@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+  
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Internal image viewer</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Internal image viewer<br>
+</h2>
+
+<p>The internal image viewer can be invoked by pressing a modifier key
+and double-clicking an image (or via the context menu). The following
+modifier keys are possible:<br>
+</p>
+
+<br>
+
+<table border="1" cellpadding="2" cellspacing="2" width="100%">
+
+  <tbody>
+    <tr>
+      <td><span style="font-weight: bold;"></span><span style="font-style: italic;"> </span><abbr><span style="font-weight: bold;"><a name="keys"></a>Shift</span></abbr><span style="font-weight: bold;"></span><span style="font-weight: bold;"></span></td>
+      <td> Forces the internal viewer.</td>
+    </tr>
+    <tr>
+      <td><span style="font-weight: bold;"></span><span style="font-style: italic;"> </span><abbr><span style="font-weight: bold;">Alt</span></abbr><span style="font-weight: bold;"></span><span style="font-weight: bold;"></span></td>
+      <td> Forces the internal viewer being invoked in <span style="font-style: italic;">black&amp;white mode<sup>*</sup></span>.
+      </td>
+    </tr>
+    <tr>
+      <td><span style="font-weight: bold;"></span> <span style="font-style: italic;"></span><abbr><span style="font-weight: bold;">Ctrl</span></abbr><span style="font-style: italic;"></span> <br>
+      </td>
+      <td>Forces the internal viewer in <span style="font-style: italic;">crop mode</span>. The cropped area of a
+RAW image is shown without its surroundings.<br>
+      </td>
+    </tr>
+    <tr>
+      <td><span style="font-weight: bold;"></span> <span style="font-style: italic;"></span><abbr><span style="font-weight: bold;">Ctrl</span></abbr><span style="font-style: italic;"></span><span style="font-weight: bold;"> </span>+
+      <abbr>Alt</abbr><span style="font-weight: bold;"></span></td>
+      <td> Forces the internal viewer in <span style="font-style: italic;">crop mode</span> and in <span style="font-style: italic;">black&amp;white</span> <span style="font-style: italic;">mode</span><span style="font-style: italic;"><sup>*</sup></span>.</td>
+    </tr>
+    <tr>
+      <td><span style="font-weight: bold;"></span> <span style="font-style: italic;"></span><abbr><span style="font-weight: bold;">Ctrl</span></abbr><span style="font-style: italic;"></span><span style="font-weight: bold;"> </span>+
+      <span style="font-style: italic;"></span><abbr><span style="font-weight: bold;">Shift</span></abbr><span style="font-weight: bold;"></span><span style="font-weight: bold;"></span></td>
+      <td> Forces the internal viewer in <span style="font-style: italic;">raw original mode</span>. Development
+recipes of RAW images are not applied.<span style="font-style: italic;"><br>
+      </span></td>
+    </tr>
+    <tr>
+      <td><span style="font-weight: bold;"></span> <abbr><span style="font-weight: bold;">Ctrl</span></abbr><span style="font-style: italic;"></span><span style="font-weight: bold;"> </span><span style="font-weight: bold;"></span>+ <span style="font-style: italic;"></span><abbr><span style="font-weight: bold;">Shift</span></abbr><span style="font-weight: bold;"></span><span style="font-weight: bold;"></span>+
+      <abbr>Alt</abbr><span style="font-weight: bold;"></span></td>
+      <td> Forces the internal viewer in <span style="font-style: italic;">raw original</span> and <span style="font-style: italic;">black&amp;white mode</span><span style="font-style: italic;"><sup>*</sup></span><span style="font-style: italic;">.</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="margin-left: 40px;"><sup>*)</sup> If the image viewer is called while black&amp;white mode is already active, it switches to color mode, instead.<br>
+</p>
+<p>On invocation
+the image viewer will immediately show an enlarged thumbnail while
+loading the original image in full resolution. For RAW images the
+loading process can take a few seconds because the RAW file needs to be
+developed first.</p>
+
+
+<p>If you are impatient, you can force the image viewer to show the
+embedded preview image while loading and developing the raw data -
+provided such a preview image is available. You can set this option
+under <a href="generalPrefs.html"><acronym>Window&gt;Preferences&gt;External programs<sup>*</sup></acronym></a>.<br>
+</p>
+
+<p>The following mouse and key actions are available:<br>
+</p>
+
+<ul style="font-weight: normal;">
+
+  <li>Depending on the settings made under <a href="mousePrefs.html"><acronym>Window&gt;Preferences&gt;Mouse<sup>*</sup></acronym></a>
+you
+can adjust the magnification by pressing the <abbr>ALT</abbr> or <abbr>Shift</abbr>
+key or using the right mouse button and
+dragging left or right.&nbsp;<br>
+Alternatively you can zoom
+in and out with the <span style="font-weight: bold;">mouse wheel</span>
+or by using the <abbr>+</abbr> and <abbr>-</abbr> keys.</li>
+  <li>You can pan by by dragging the mouse using the left mouse
+button.&nbsp;<abbr>Ctrl</abbr> accelerates the panning
+operation.Alternatively you may use the <span style="font-weight: bold;">arrow keys</span> for panning.</li>
+  <li>A double click toogles between the initial image scale and the 1:1 image scale.
+Alternatively, you can use the <abbr>*</abbr> key or the <abbr>Spacebar</abbr>.</li><li>A numeric key <abbr>1</abbr>, <abbr>2</abbr>, ... <abbr>9</abbr> adjust the image scale to 1:1, 1:2, .... 1:9, depending on the key.</li><li><abbr>Shift</abbr> plus a numeric key <abbr>1</abbr>, <abbr>2</abbr>, ... <abbr>4</abbr> adjust the image scale to 1:1, 2:1, ..., 4:1.</li>
+  <li><abbr>F1</abbr> displays help information.</li>
+  <li><abbr>F2</abbr> displays metadata of the current image.<br>
+  </li>
+
+  <li>Press <abbr>ESC</abbr>
+to leave the image viewer. Alternatively, you can move the mouse to the
+top right or left screen corners. A red <span style="font-weight: bold;">close button</span> will appear. Click this
+button to leave the image viewer.<br>
+  </li>
+</ul>
+
+<br>
+
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa
+Photo Director&gt;Preferences&gt;...</acronym>
+</body></html>

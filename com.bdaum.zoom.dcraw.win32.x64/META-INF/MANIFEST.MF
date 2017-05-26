@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: 64 bit Windows DCRAW Plugin
+Bundle-SymbolicName: com.bdaum.zoom.dcraw.win32.x64;singleton:=true
+Bundle-Version: 9.27
+Bundle-Vendor: bdaum industrial communications
+Fragment-Host: com.bdaum.zoom.dcraw;bundle-version="9.1.1"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Eclipse-PlatformFilter: (&(osgi.os=win32) (osgi.arch=x86_64))

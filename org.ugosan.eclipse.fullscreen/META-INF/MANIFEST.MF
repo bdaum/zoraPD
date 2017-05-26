@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Fullscreen Plug-in
+Bundle-SymbolicName: org.ugosan.eclipse.fullscreen;singleton:=true
+Bundle-Version: 1.0.8
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-Vendor: Ugo Sangiorgi and Daoen Pan
+Require-Bundle: com.bdaum.zoom.ui;bundle-version="2.4.0"
+Bundle-Localization: plugin
+Bundle-Activator: org.ugosan.eclipse.fullscreen.FullScreenActivator
+Bundle-ActivationPolicy: lazy

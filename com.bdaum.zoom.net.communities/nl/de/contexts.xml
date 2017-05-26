@@ -1,0 +1,10 @@
+<contexts>
+ <context id="exportCommunity_wizard_context" title="Wizard für den Export in eine Internet-Foto-Community">
+    <description>In eine Internet-Foto-Community exportieren</description>
+    <topic href="html/communities.html" label="Wizard für den Export in eine Internet-Foto-Community"/>
+ </context>
+ <context id="communityAccount_dialog_context" title="Community-Konto-Details">
+    <description>Community-Konto konfigurieren</description>
+    <topic href="html/communities.html" label="Community-Konto-Details"/>
+ </context>
+</contexts>

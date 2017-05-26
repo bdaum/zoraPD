@@ -1,0 +1,219 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="com.bdaum.zoom.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appinfo>
+         <meta.schema plugin="com.bdaum.zoom.core" id="recipeDetector" name="Raw Developer Recipe Detector"/>
+      </appinfo>
+      <documentation>
+         Allows the definition of detectors for raw development recipes. Because such recipes are highly proprietary, each raw processor must be covered by a dedicated recipeDetector extension
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element />
+         </appinfo>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="detector" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="detector">
+      <annotation>
+         <documentation>
+            A recipe detector detects proprietary development recipes produced by RAW converters and translates them into a common Recipe object.
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="parameter" minOccurs="0" maxOccurs="1"/>
+         </sequence>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  A unique ID
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="identifier"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Name of detector
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The detector implementation. It is more convenient to extend AbstractRecipeDetector instead of implementing IRecipeDetector from scratch.
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":com.bdaum.zoom.core.IRecipeDetector"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="description" type="string">
+            <annotation>
+               <documentation>
+                  describes to which types of recipes the detector applies
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="parameter">
+      <annotation>
+         <documentation>
+            Parameters are used to control the execution of recipe detectors. For example, you might want to assign a priority to a specific type of recipe detectors if that type competes with other recipe detectors for the same recipe files. Or, you might want the user to specify if recipes in a cache take priority above sidecar recipes, or vice versa.
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="parameterValue" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Display name of parameter
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Unique parameter ID.
+
+Predefined IDs:
+
+com.bdaum.zoom.recipe.xmpEmbedded
+is used for recipes stored in XMP sidecars and specifies the priority of the detector in case of conflicts as an integer
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="default" type="string">
+            <annotation>
+               <documentation>
+                  Default value of parameter: specify id of parameter value
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="parameterValue">
+      <annotation>
+         <documentation>
+            Description of a parameter value
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="label" type="string">
+            <annotation>
+               <documentation>
+                  Display label.
+
+If omitted, the label defaults to the id value
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Unique ID for value
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="since"/>
+      </appinfo>
+      <documentation>
+         0.9.6
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="examples"/>
+      </appinfo>
+      <documentation>
+         see com.bdaum.zoom.recipes.acr, com.bdaum.zoom.recipes.bibble, com.bdaum.zoom.recipes.c1, com.bdaum.zoom.recipes.rt. 
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="apiinfo"/>
+      </appinfo>
+      <documentation>
+         IRecipeDetector
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="implementation"/>
+      </appinfo>
+      <documentation>
+         com.bdaum.zoom.core.AbstractRecipeDetector
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="copyright"/>
+      </appinfo>
+      <documentation>
+         (c) 2010-2011 Berthold Daum
+      </documentation>
+   </annotation>
+
+</schema>

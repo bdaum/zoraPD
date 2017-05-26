@@ -1,0 +1,75 @@
+<index>
+	<entry keyword="Network">
+		<topic href="html/networkConcepts.html" />
+		<entry keyword="Setting up">
+			<topic href="html/geographyhtml" />
+		</entry>
+		<entry keyword="Peers">
+			<topic href="html/geography.html" />
+			<topic href="html/peerDef.html" />
+		</entry>
+		<entry keyword="Access Rights">
+			<topic href="html/access.html" />
+			<topic href="html/restrictionDef.html" />
+		</entry>
+		<entry keyword="Troubleshooting">
+			<topic href="html/troubleShooting.html" />
+		</entry>
+		<entry keyword="Preferences">
+			<topic href="html/networkPrefs.html" />
+		</entry>
+		<entry keyword="Shared Catalogs">
+			<topic href="html/sharedCatalogs.html" />
+		</entry>
+		<entry keyword="IP address">
+			<topic href="html/peerDef.html" />
+		</entry>
+		<entry keyword="Computer name">
+			<topic href="html/peerDef.html" />
+		</entry>
+		<entry keyword="Port">
+			<topic href="html/peerDef.html" />
+		</entry>
+	</entry>
+	<entry keyword="Peer">
+		<topic href="html/geography.html" />
+		<topic href="html/peerDef.html" />
+		<topic href="html/networkPrefs.html#peer" label="Network preferences - Peers"/>
+	</entry>
+	<entry keyword="Access Rights">
+		<topic href="html/access.html" />
+		<topic href="html/restrictionDef.html" />
+	</entry>
+	<entry keyword="Troubleshooting">
+		<entry keyword="Network">
+			<topic href="html/troubleShooting.html" />
+		</entry>
+	</entry>
+	<entry keyword="Preferences">
+		<entry keyword="Network">
+			<topic href="html/networkPrefs.html" />
+		</entry>
+	</entry>
+	<entry keyword="Shared Catalogs">
+		<topic href="html/sharedCatalogs.html" />
+		<topic href="html/networkPrefs.html#cat" label="Network preferences - Shared Catalogs"/>
+	</entry>
+	<entry keyword="Incoming Calls">
+		<topic href="html/networkPrefs.html#incoming" label="Network preferences - Incoming Calls"/>
+	</entry>
+	<entry keyword="Privacy">
+		<entry keyword="Network">
+			<topic href="html/sharedCatalogs.html" />
+		</entry>
+	</entry>
+	<entry keyword="IP address">
+		<topic href="html/peerDef.html" />
+	</entry>
+	<entry keyword="Computer name">
+		<topic href="html/peerDef.html" />
+	</entry>
+	<entry keyword="Port">
+		<topic href="html/peerDef.html" />
+	</entry>
+	
+</index>

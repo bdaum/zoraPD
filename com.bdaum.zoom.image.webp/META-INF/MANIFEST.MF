@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: WebP Plugin
+Bundle-SymbolicName: com.bdaum.zoom.image.webp;singleton:=true
+Bundle-Version: 0.4.2
+Bundle-Vendor: bdaum industrial communications
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ClassPath: webp-imageio.jar,
+ .
+Export-Package: com.luciad.imageio.webp
+Require-Bundle: com.bdaum.zoom.image;bundle-version="3.0.0"

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Working with GPS data" link_to="../com.bdaum.zoom.doc/toctasks.xml#tasks" topic="html/gps.html">
+  <topic label="Working with GPS data">
+     <topic href="html/geoTagging.html" label="Geotagging images">
+        <topic href="html/trackpoint.html" label="Trackpoints">
+        </topic>
+        <topic href="html/geonaming.html" label="Geonaming">
+        </topic>
+     </topic>
+     <topic href="html/importing.html" label="Importing geodata">
+     </topic>
+     <topic href="html/manual.html" label="Manual geotagging">
+     </topic>
+     <topic href="html/locations.html" label="Locations">
+     </topic>
+     <topic href="html/maps.html" label="Map view">
+        <anchor id="mappingSystems"/>
+     </topic>
+     <topic href="html/searching.html" label="Searching">
+     </topic>
+  </topic>
+</toc>

@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: DCRAW OSX Fragment
+Bundle-SymbolicName: com.bdaum.zoom.dcraw.macosx;singleton:=true
+Bundle-Version: 9.16
+Bundle-Vendor: %Bundle-Vendor
+Fragment-Host: com.bdaum.zoom.dcraw;bundle-version="8.9.9"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Eclipse-PlatformFilter: (osgi.os=macosx)

@@ -1,0 +1,27 @@
+<index>
+	<entry keyword="Suche">
+		<entry keyword="nach Ähnlichkeit">
+			<topic href="html/reference/SearchSimilarDialog.html" />
+		</entry>
+		<entry keyword="inhaltsbasiert">
+			<topic href="html/reference/SearchSimilarDialog.html" />
+		</entry>
+		<entry keyword="Text">
+			<topic href="html/reference/textSearch.html" />
+		</entry>
+	</entry>
+	<entry keyword="Ähnlichkeitssuche">
+		<topic href="html/reference/SearchSimilarDialog.html" />
+	</entry>
+	<entry keyword="inhaltsbasierte Suche">
+		<topic href="html/reference/SearchSimilarDialog.html" />
+	</entry>
+	<entry keyword="Textsuche">
+		<topic href="html/reference/textSearch.html" />
+	</entry>
+	<entry keyword="Platzhalter">
+		<entry keyword="~ bei der Textsuche">
+    		<topic href="html/reference/textSearch.html"/>
+    	</entry>
+	</entry>
+</index>

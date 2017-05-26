@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: ICU Base Plugin
+Bundle-SymbolicName: com.ibm.icu.base
+Bundle-Version: 56.1.0.v201601250100
+Bundle-ClassPath: .
+Bundle-Vendor: IBM
+Export-Package: com.ibm.icu.impl;version="56.1.0",
+ com.ibm.icu.impl.locale;version="56.1.0",
+ com.ibm.icu.math;version="56.1.0",
+ com.ibm.icu.text;version="56.1.0",
+ com.ibm.icu.util;version="56.1.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8

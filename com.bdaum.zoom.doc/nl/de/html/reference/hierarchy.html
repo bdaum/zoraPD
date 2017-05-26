@@ -1,0 +1,245 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+
+
+
+
+
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Hierarchie-Sichtfenster</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head>
+<body>
+<h2>Hierarchie-Sichtfenster
+</h2>
+<p>Das
+Hierarchie-Sichtfenster wird in vier verschiedenen Spielarten verwendet (<span style="font-style: italic;">Originale</span>-Sichtfenster, <span style="font-style: italic;">Derivate</span>-Sichtfenster, <span style="font-style: italic;">Composites</span>-Sichtfenster und
+<span style="font-style: italic;">Komponenten</span>-Sichtfenster) und zeigt die Beziehung zwischen Bildern. Folgende
+Beziehungen können dargestellt werden:</p>
+
+<ul style="font-weight: normal;">
+<li>Das <span style="font-style: italic;">Derivate</span>-Sichtfenster zeigt Bilder, die aus einem anderen Bild abgeleitet wurden. Beispielsweise
+kann ein TIFF-Bild von
+einem RAW-Bild abgeleitet
+werden, oder ein zugeschnittenes Bild wird von einem Bild
+voller Größe abgeleitet. Aus
+Galerien wird diese Funktion mit Kontext-Funktion <acronym>Derivate zeigen</acronym><span style="font-style: italic;">&nbsp;</span>aufgerufen.</li>
+<li>Das <span style="font-style: italic;">Originale</span>-Sichtfenster zeigt Originale,&nbsp;von
+denen ein bestimmtes Bild abgeleitet wurde. Aus
+Galerien wird diese Funktion mit der Kontext-Funktion&nbsp;<acronym>Originale&nbsp;zeigen</acronym>&nbsp;aufgerufen.</li>
+<li>Das <span style="font-style: italic;">Composites</span>-Sichtfenster zeigt Composites,
+für die bestimmte Bilder als Komponente verwendet wurden, z.
+B. Panoramen, HDR-Bilder, Focus-Stacking, Fotomontagen, etc. Aus
+Galerien wird diese Funktion mit Kontext-Funktion <acronym>Composites zeigen</acronym>&nbsp;aufgerufen.</li>
+<li>Das <span style="font-style: italic;">Komponenten</span>-Sichtfenster Komponenten,
+die&nbsp;zu einem bestimmten Composite gehören. Aus
+Galerien wird diese Funktion mit der Kontext-Funktion <acronym>Komponenten
+zeigen<span style="font-weight: bold;"></span></acronym><span style="font-style: italic; font-weight: bold;">&nbsp;</span>aufgerufen.</li>
+</ul>
+<p>Die
+folgenden Funktionen stehen in diesen Sichtfenstern zur Verfügung:</p>
+<ul style="font-weight: normal;">
+<li style="font-weight: bold;">Drag
+&amp; Drop</li>
+<ul style="font-weight: normal;">
+<li>Das <span style="font-weight: bold;">Ziehen
+einer
+Miniaturansicht</span> aus einer Galerie auf eine
+Miniaturansicht in Hierarchie-Sichtfenster fügt dieses Bild in die
+aktuellen
+Hierarchie ein - das Bild ist mit dem Zielbild nun "verbunden".</li>
+</ul><li style="font-weight: bold;">Kontext-Funktionen</li>
+<ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">
+Beschreibung bearbeiten</span>.
+Hier
+können Sie <a href="descriptionEdit.html">Details zu der
+Beziehung</a> zwischen zwei Bildern
+eingeben,
+beispielsweise&nbsp;mit welchen Transformationen ein Bild von einem
+anderen&nbsp;abgeleitet wurde.</li>
+<li><span style="font-weight: bold;">Aufheben
+der Verknüpfung</span>.
+Das
+ausgewählte Bild wird aus der Hierarchie entfernt.</li>
+<li><span style="font-weight: bold;">Kandidaten
+für Originale/Derivate anzeigen</span>.
+Zeigt eine Kollektion von Bildern mit dem gleichen Originaldateinamen
+und einem Modifikationsdatum, dass älter / jünger als das des aktuell
+ausgewählten Bildes ist.&nbsp;</li>
+    <li> <span style="font-weight: bold;"> Vollbild anzeigen</span>. Damit
+wird ein <a href="fileAssociations.html#viewer">externer Bildbetrachter</a> aufgerufen. Ist kein&nbsp;externer
+Bildbetrachter
+definiert, wird der interne&nbsp;Bildbetrachter
+aufgerufen. Durch das gleichzeitige Drücken der&nbsp; 
+      <abbr>Umschalt</abbr>- oder einer anderen <a href="internalViewer.html#keys">Steuertaste</a> kann der interne Bildbetrachter erzwungen werden. Je nach Steuertaste sind dabei verschiedene <a href="internalViewer.html#keys">Modi</a> wählbar.&nbsp;</li>
+    <li><span style="font-weight: bold;">Bearbeiten. </span>Der
+Standard-Editor der Bilddatei wird aufrufen.
+Wenn
+mehrere Bilder ausgewählt sind, wird der Editor nur aufgerufen, wenn er
+alle beteiligten Dateitypen unterstützt.</li>
+    <li><span style="font-weight: bold;"> Bearbeiten mit</span>. Damit
+können Sie unter allen Editoren, die dem Bilddateityp zugeordnet
+sind,&nbsp;auswählen. Sind
+mehrere Bilder ausgewählt, werden nur Editoren, die&nbsp;alle
+beteiligten Dateitypen unterstützen,&nbsp;angezeigt.</li>
+    <li><span style="font-weight: bold;">Zeit-Suche</span>.
+Sucht nach Bildern, die sich im gleichen Zeitfenster wie das
+ausgewählte Bild befinden. Die Größe des Zeitfensters kann angegeben
+werden.</li>
+    <li><span style="font-weight: bold;">Ähnlichkeitsrecherche</span>. Sucht inhaltsbasiert nach Bildern, die dem ausgewählten Bild (oder einer Zeichnung) <a href="SearchSimilarDialog.html">visuell ähnlich</a> sind.&nbsp;</li>
+    <li><span style="font-weight: bold;">Umkreissuche.</span> Sucht nach weiteren Bildern, die im Umkreis der selektierten Bilder liegen. Eine maximale Entfernung kann angegeben werden.</li>
+    <li><span style="font-weight: bold;"><a name="voicenote"></a>Sprachnotizen&gt;</span></li>
+    <ul>
+      <li><span style="font-weight: bold;"></span><span style="font-weight: bold;">Sprachnotiz hinzufügen</span> Damit
+wird&nbsp;ein Dialogfeld angezeigt, das es Ihnen ermöglicht, sofort
+eine Sprachnotiz
+aufzeichnen oder eine vorhandene Audiodatei als Sprachnotiz anzufügen.</li>
+    </ul>
+
+    
+    <ul>
+      <li><span style="font-weight: bold;"></span><span style="font-weight: bold;">Sprachnotizen entfernen</span>. 
+Dadurch werden früher hinzugefügte Sprachnotizen entfernt. Wenn
+die Sprachnotiz beim Anlegen aufgenommen worden war, wird auch die Audio-Datei
+gelöscht.</li>
+    </ul>
+
+    
+    <ul>
+      <li><span style="font-weight: bold;"></span><span style="font-weight: bold;">Sprachnotiz abspielen</span>. Damit
+wird die Sprachnotiz des selektierten Bildes abgespielt.</li>
+    </ul>
+
+    <li><span style="font-weight: bold;">Metadaten&gt;</span></li>
+    <ul>
+      <li><span style="font-weight: bold;">Metadaten kopieren</span>. Kopiert die Metadaten des ausgewählten Bildes in die Zwischenablage.</li>
+    </ul>
+
+    
+    <ul>
+      <li><span style="font-weight: bold;">Metadaten hinzufügen</span>.
+Kopiert die Metadaten von der Zwischenablage in die selektierten
+Bilder. Ein Dialog ermöglicht die Auswahl spezifischer Metadaten.</li>
+    </ul>
+
+
+<li> <span style="font-weight: bold;">Farbcode</span>.
+Ändert
+die Farbkodierung der ausgewählten Bilder.</li>
+<li> <span style="font-weight: bold;">Bewertung</span>.
+Ändert
+die Bewertung der
+ausgewählten Bilder.</li>
+<li><span style="font-weight: bold;">Drehen im
+und gegen den Uhrzeigersinn</span>.
+Dreht
+die
+Miniaturansicht von 90 nach rechts oder links..</li>
+<li><span style="font-weight: bold;"> Ordner anzeigen</span>. Öffnet
+den externen Ordner, in dem sich das Bild befindet, und wählt diesen
+Ordner auch im 
+      <a href="catalog.html">Katalog-Sichtfenster</a> aus.</li>
+    <li><span style="font-weight: bold;">Aktualisieren.</span> Aktualisiert Kataloginformationen der selektierten Bilder oder einer selektierten Kollektion.</li>
+
+<li> <span style="font-weight: bold;">Löschen</span>.  Löscht
+die ausgewählten Bilder aus dem Katalog. Optional
+kann die Bilddatei auch vom Datenträger gelöscht werden.</li>
+</ul>
+  <li style="font-weight: bold;">Menüfunktionen
+des Sichtfensters</li>
+  <ul style="font-weight: normal;">
+    <li> <span style="font-weight: bold;"> Vollbild anzeigen</span>. Damit
+wird ein <a href="fileAssociations.html#viewer">externer Bildbetrachter</a> aufgerufen. Ist kein&nbsp;externer
+Bildbetrachter
+definiert, wird der interne&nbsp;Bildbetrachter
+aufgerufen. Durch das gleichzeitige Drücken der&nbsp; 
+      <abbr>Umschalt</abbr>- oder einer anderen <a href="internalViewer.html#keys">Steuertaste</a> kann der interne Bildbetrachter erzwungen werden. Je nach Steuertaste sind dabei verschiedene <a href="internalViewer.html#keys">Modi</a> wählbar.&nbsp;</li>
+    <li><span style="font-weight: bold;">Bearbeiten. </span>Der
+Standard-Editor der Bilddatei wird aufrufen.
+Wenn
+mehrere Bilder ausgewählt sind, wird der Editor nur aufgerufen, wenn er
+alle beteiligten Dateitypen unterstützt.</li>
+    <li><span style="font-weight: bold;"> Bearbeiten mit</span>. Damit
+können Sie unter allen Editoren, die dem Bilddateityp zugeordnet
+sind,&nbsp;auswählen. Sind
+mehrere Bilder ausgewählt, werden nur Editoren, die&nbsp;alle
+beteiligten Dateitypen unterstützen,&nbsp;angezeigt.</li>
+<li><span style="font-weight: bold;">Originale/Derivative/Komponenten/Composites zeigen..</span><span style="font-weight: bold;">. </span>Diese
+Funktion schaltet zwischen dem <span style="font-style: italic;">Originale</span>-Sichtfenster und dem
+    <span style="font-style: italic;">Derivate</span>-Sichtfenster, oder zwischen dem <span style="font-style: italic;">Composites</span>-Sichtfenster und
+dem <span style="font-style: italic;">Komponenten</span>-Sichtfenster. Dabei wird das gerade selektierte Bild an
+die Spitze der betreffenden Hierarchie gestellt.</li><li><span style="font-weight: bold;">Zeige Hierarchie für selektiertes Bild.</span>
+Zeigt die aktuelle Hierarchie (Originale, Derivative, Composites
+oder Komponenten) für das aktuell in einer Galerie ausgewählte Bild.</li>
+  </ul>
+<li style="font-weight: bold;">Werkzeugtasten des Sichtfensters</li>
+  <ul style="font-weight: normal;">
+    <li> <span style="font-weight: bold;"> Vollbild anzeigen</span> (<img style="width: 16px; height: 16px;" alt="Vollbild" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/shape_square.png">). Damit
+wird ein <a href="fileAssociations.html#viewer">externer Bildbetrachter</a> aufgerufen. Ist kein&nbsp;externer
+Bildbetrachter
+definiert, wird der interne&nbsp;Bildbetrachter
+aufgerufen. Durch das gleichzeitige Drücken der&nbsp; 
+      <abbr>Umschalt</abbr>- oder einer anderen <a href="internalViewer.html#keys">Steuertaste</a> kann der interne Bildbetrachter erzwungen werden. Je nach Steuertaste sind dabei verschiedene <a href="internalViewer.html#keys">Modi</a> wählbar.&nbsp;</li>
+    <li><span style="font-weight: bold;"> Bearbeiten </span>(<img style="width: 16px; height: 16px;" alt="bearbeiten" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/image_edit.png">)<span style="font-style: italic;"></span><span style="font-style: italic;"></span><span style="font-style: italic;"></span>. Der
+<a href="fileAssociations.html">Standard-Editor</a> der Bilddatei wird aufrufen.
+Wenn
+mehrere Bilder ausgewählt sind, wird der Editor nur aufgerufen, wenn er
+alle beteiligten Bildtypen unterstützt.</li>
+    <li><span style="font-weight: bold;"> Bearbeiten mit </span>(<img style="width: 16px; height: 16px;" alt="bearbeiten mit" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/image_edit_with.png">)..&nbsp;Damit
+können Sie unter allen Editoren, die mit dem Bilddateityp <a href="fileAssociations.html">zugeordnet</a>
+sind,&nbsp;auswählen. Sind
+mehrere Bilder ausgewählt, werden nur Editoren, die&nbsp;alle
+beteiligten Bildtypen unterstützen,&nbsp;angezeigt.</li>
+    <li><span style="font-weight: bold;">Originale </span><span style="font-weight: bold;">(<img style="width: 16px; height: 16px;" alt="Originale" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/original.gif">) </span><span style="font-weight: bold;">/ Derivative</span><span style="font-weight: bold;"> </span><span style="font-weight: bold;">(<img style="width: 16px; height: 16px;" alt="Derivative" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/derivative.gif">) </span><span style="font-weight: bold;">/ Komponenten</span><span style="font-weight: bold;"></span><span style="font-weight: bold;"> (<img style="width: 16px; height: 16px;" alt="Komponenten" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/components.gif">) </span><span style="font-weight: bold;">/ Composites</span><span style="font-weight: bold;"> (<img style="width: 16px; height: 16px;" alt="composites" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/composites.gif">)</span><span style="font-weight: bold;"> zeigen..</span><span style="font-weight: bold;">. </span>Diese
+Funktion schaltet zwischen dem <span style="font-style: italic;">Originale</span>-Sichtfenster und dem
+    <span style="font-style: italic;">Derivate</span>-Sichtfenster, oder zwischen dem <span style="font-style: italic;">Composites</span>-Sichtfenster und
+dem <span style="font-style: italic;">Komponenten</span>-Sichtfenster. Dabei wird das gerade selektierte Bild an
+die Spitze der betreffenden Hierarchie gestellt.</li>
+    <li><span style="font-weight: bold;">
+Beschreibung bearbeiten </span><span style="font-weight: bold;">(<img style="width: 16px; height: 16px;" alt="Beschreibung bearbeiten" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/page_white_edit.png">)</span>.
+Hier
+können Sie <a href="descriptionEdit.html">Details zu der
+Beziehung</a> zwischen zwei Bildern
+eingeben,
+beispielsweise&nbsp;mit welchen Transformationen ein Bild von einem
+anderen&nbsp;abgeleitet wurde. Außerdem können Rezeptdateien aus dem Archiv wieder hergestellt werden.<br>
+</li>
+    <li><span style="font-weight: bold;">Aufheben
+der Verknüpfung </span><span style="font-weight: bold;">(<img style="width: 16px; height: 16px;" alt="Verknüpfung aufheben" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/unlink.gif">)</span>.
+Das
+ausgewählte Bild wird aus der Hierarchie entfernt.</li>
+  </ul>
+  <li style="font-weight: bold;">Mausgesten</li>
+
+<ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Doppelklick</span>.
+Die
+Funktion <span style="font-weight: bold;">Beschreibung
+bearbeiten</span>
+wird aufgerufen. </li>
+</ul>
+<li style="font-weight: bold;">Tastatur-Aktionen</li>
+<ul style="font-weight: normal;">
+    <li><abbr>Eingabe</abbr>. Identisch
+ist mit Kontext-Funktion 
+  <span style="font-weight: bold;">Bearbeiten</span>.</li>
+    <li> <abbr>Umschalt</abbr> + <abbr>Eingabe</abbr>. Identisch
+ist mit Kontext-Funktion <span style="font-weight: bold;">Bearbeiten
+mit</span></li>
+    <li><span style="font-weight: bold;"> </span><abbr>Tab</abbr>. Damit wird ein
+externen Bildbetrachter aufgerufen (siehe <a href="generalPrefs.html">
+Allgemeine Einstellungen</a>). Ist kein&nbsp;externer
+Bildbetrachter
+definiert, wird der interne&nbsp;Bildbetrachter
+aufgerufen.</li>
+<li> <span style="font-weight: bold;"></span><abbr>Tab</abbr> + <abbr>Umschalt</abbr>. Erzwingt den
+internen&nbsp;Bildbetrachter.</li>
+    <li><abbr>Entf</abbr>. Löscht
+die ausgewählten Bilder</li>
+
+<li><span style="font-weight: bold;"><abbr>0</abbr>,<abbr>1</abbr>,<abbr>2</abbr>,<abbr>3</abbr>,<abbr>4</abbr>,<abbr>5</abbr></span>..
+Bewertet&nbsp;die
+ausgewählten Bilder mit 0,1,2,3,4,5
+Sternen.</li>
+</ul>
+</ul>
+</body></html>

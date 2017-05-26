@@ -1,0 +1,25 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Externes DCRAW-Modul einbinden</title>
+
+<link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"></head>
+<body>
+<h2>Externes DCRAW-Modul einbinden </h2>
+<span style="font-weight: bold;">DCRAW</span> ist die&nbsp;in <span style="font-style: italic;">ZoRa PhotoDirector</span>
+verwendete Raw-Engine.
+DCRAW wird kostenlos von Dave Coffin als Quelltext zur Verfügung
+gestellt. Mehrere Websites stellen binäre Module zur Verfügung. Da
+immer neue Digitalkameras immer neue RAW-Formate in die Welt setzen,
+erscheinen auch immer wieder neue Versionen von DCRAW.<br><br><h4>Windows</h4>Die Windows-Version von <span style="font-style: italic;">ZoRa PhotoDirector</span>&nbsp;enthält eingebaute DCRAW-Module sowohl für 32- als auch für 64-Bit Plattformen. Mit jeder neuen Version von <span style="font-style: italic;">ZoRa PhotoDirector</span> werden auch diese DCRAW-Module aktualisiert.<span style="font-style: italic;"><br></span><br>Neuere DCRAW-Module können von folgenden Web-Adressen heruntergeladen werden:<br><ul><li><a href="http://www.fastpictureviewer.com/downloads/#links">www.fastpictureviewer.com/downloads/#links</a><br></li></ul><br>Um ein eigenes DCRAW-Modul in <span style="font-style: italic;">ZoRa Photo Director</span> zu installieren, bringen Sie es einfach in den Unterordner <code>dropins/ </code>im <span style="font-style: italic;">ZoRa Photo Director</span>-Installationsordner. Eine andere Möglichkeit ist, den Speicherort des DCRAW-Moduls unter <acronym><a href="importPrefs.html#raw">Fenster&gt;Benutzervorgaben&gt;Import&gt;RAW-Konvertierung</a></acronym> anzugeben.<sup><acronym></acronym></sup><span style="font-style: italic;"></span><h4>Linux</h4>Unter Linux verwendet <span style="font-style: italic;">ZoRa PhotoDirector</span>
+das im Linux-System installierte&nbsp;DCRAW-Modul. Wenn Sie Ihre
+Plattform immer up-to-date halten, sollten Sie auch immer über eine
+aktuelle Version von DCRAW verfügen.<h4>Mac OSX</h4>Die Mac-OSX-Version von <span style="font-style: italic;">ZoRa PhotoDirector</span>
+enthält ein eingebautes DCRAW-Modul. Dies ist allerdings nicht mehr
+aktuell (Version 9.16). Neuere Version von DCRAW-Binaries für Mac OSX
+findet man auf dem Web. Jedoch laufen diese Versionen in der Regel
+nicht unter allen OSX-Versionen. Da die OSX-Bibliothekskonventionen
+geändert wurden, können Module, die auf einem neuen System kompiliert
+wurden, auf älteren Systemen oft nicht ausgeführt werden. Man muss also
+probieren, was passt.<br><br>Die beste Wahl ist wahrscheinlich, von&nbsp;<a href="http://www.cybercom.net/%7Edcoffin/dcraw/">Dave Coffin's Website</a> den aktuellen Quelltext von DCRAW herunterzuladen und selbst zu kompilieren. Dazu sind die folgenden Schritte notwendig:<br><br><ul><li>Das XCode IDE von Apple herunterladen und installieren (kostenlos)</li><li>Die <span style="font-style: italic;">Command line tools</span> von innerhalb des XCode IDE installieren.</li><li>Das folgende Kommand ausführen: &nbsp;<blockquote type="cite"><span style="color: rgb(51, 51, 51); font-family: georgia,arial,sans-serif; font-size: 13px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: 21.248px; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; word-spacing: 0px; background-color: rgb(255, 255, 255); display: inline ! important; float: none;">gcc -o dcraw -O4 dcraw.c -lm -DNODEPS</span></blockquote></li></ul><br>Neue DCRAW-Module können einfach in den Unterordner <code>dropins/ </code>im&nbsp;<span style="font-style: italic;">ZoRa Photo Director-</span> Installationsordner gebracht werden. Alternativ kann auch der Speicherort des Moduls unter <a href="importPrefs.html#raw"><acronym>ZoRa Photo Director&gt;Einstellungen&gt;Import&gt;RAW-Konvertierung</acronym></a> angegeben werden.<br><br><br style="font-weight: bold;">
+<span style="font-weight: bold;"></span><acronym></acronym><acronym></acronym>
+</body></html>

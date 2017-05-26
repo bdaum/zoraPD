@@ -1,0 +1,3 @@
+<gallery title="${name}" thumbDir="./${thumbnailfolder}/" imageDir="./${imagefolder}/" random="${random}">
+${images}
+</gallery>

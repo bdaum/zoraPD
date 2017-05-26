@@ -1,0 +1,15 @@
+<index>
+	<entry keyword="Internet">
+		<entry keyword="Benutzervorgaben">
+			<topic href="html/internetPrefs.html" />
+		</entry>
+	</entry>
+	<entry keyword="Benutzervorgaben">
+		<entry keyword="Internet">
+			<topic href="html/internetPrefs.html" />
+		</entry>
+	</entry>
+	<entry keyword="Proxy">
+		<topic href="html/internetPrefs.html" />
+	</entry>
+</index>

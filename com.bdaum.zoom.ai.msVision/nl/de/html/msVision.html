@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head><title>Microsoft Computer Vision</title>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+  
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  
+  <link rel="stylesheet" type="text/css" href="../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
+<h2>Microsoft Computer Vision</h2>
+<h2> </h2>Zum Zeitpunkt des Schreibens war <span style="font-style: italic;">Microsoft Computer Vision</span>
+noch in einem frühen Zustand. Trotzdem war es nützlich. Über die
+Bereitstellung von Kategorien und Keywords hinaus, kann es Bilder auch
+auf sichere Inhalte prüfen, Gesichter erkennen und liefert
+Bildbeschreibungs-Einzeiler.<br>
+Microsoft bietet mehrere Preispläne an, beginnend mit einem freien
+Plan. Zum Zeitpunkt des Schreibens erlaubte der freie Plan 5000
+Bildanfragen pro Monat. Microsoft begrenzt außerdem die Zahl der
+Anfragen auf 20 pro Minute. Deshalb wartet ZoRa PhotoDirector drei
+Sekunden, bevor es die nächste Anfrage sendet.<br>
+Bevor Sie den Dienst verwenden können, müssen Sie ein Konto mit <span style="font-style: italic;">Microsoft Cognitive Services</span> eröffnen Um dies zu tun, besuchen Sie die Website unter <a href="https://www.microsoft.com/cognitive-services">https://www.microsoft.com/cognitive-services</a>
+oder klicken Sie auf den Link in der Microsoft-Vision-Seite der
+Benutzereinstellungen. Sie müssen dann Ihre Anmeldeinformationen (<span style="font-weight: bold;">Key1</span> oder <span style="font-weight: bold;">Key2</span>) in die Microsoft-Vision-Seite der Benutzereinstellungen eingeben.<br>
+<br>
+Microsoft Vision unterstützt zum Zeitpunkt des Schreibens nur Englisch
+und Chinesisch als Ausgabesprachen. Wir empfehlen, Englisch zu benutzen
+und die Übersetzungsoptionen unten anzuwenden, wenn Sie eine andere
+Ausgabesprache wünschen.<br>
+<h4>Optionen</h4>
+<br>
+<ul>
+  <li><span style="font-weight: bold;">Maximale Anzahl von Vorschlägen.</span> Für jedes Bild schlägt <span style="font-style: italic;">Microsoft Computer Vision</span>
+eine kleine Anzahl von Kategorien und eine größere Anzahl von
+Schlagworten vor. Sie können beides beschränken, indem Sie eine
+maximale Anzahl von Vorschlägen festlegen.</li>
+  <li><span style="font-weight: bold;">Min. Konfidenzniveau. </span>Alle
+Vorschläge werden mit einem Vertrauensniveau angegeben. Sie können
+einen Wert zwischen 0 und 100 (in Prozent) eingeben, um alle Vorschläge
+mit einem niedrigeren Konfidenzniveau zu unterdrücken. Beachten Sie,
+dass diese Einstellung nur für Schlagworte gilt, aber nicht für
+Kategorien.</li>
+  <li><span style="font-weight: bold;">Schlagworte vormarkieren bei Vertrauensnievau über</span>.
+Geben Sie ein Konfidenzniveau an, für das das System automatisch
+Vorschläge als Schlagworte markieren soll. Geben Sie einen Wert von 100
+an, wenn Sie keine automatische Markierung wünschen.</li>
+  <li><span style="font-weight: bold;">Nur bekannte Schlagworte vormarkieren.</span> Diese Option beschränkt die automatische Kennzeichnung auf Schlüsselwörter, die bereits im Katalog definiert sind.<br>
+  </li>
+
+  
+  <li><span style="font-weight: bold;">Auf sichere Inhalte überprüfen.</span>
+Markieren Sie diese Option, um eine Prüfung auf&nbsp; sexuelle oder
+rassistische BildInhalte zu veranlassen. Die Ergebnisse werden verwendet, um die
+Datenschutzeinstellungen des Bildes zu setzen.</li>
+  <li><span style="font-weight: bold;">Gesichter erkennen.</span>
+Markieren Sie diese Option, um eine Gesichtserkennung durchzuführen.
+Werden Gesichter erkannt, werden diese durch grüne Rahmen im Bild
+gekennzeichnet. Sie haben dann die Möglichkeit, diese Gesichtsregionen
+zu akzeptieren oder zu verwerfen.</li>
+
+  <li><span style="font-weight: bold;">Promis entdecken.</span>
+Markieren Sie diese Option, wenn Sie den Dienst zur Erkennung von
+Prominenten im Bild verwenden möchten. Zum Zeitpunkt des Schreibens
+erscheinen die Namen der Prominenten nur inder generierten
+Bildbeschreibung (siehe unten).</li>
+  <li><span style="font-weight: bold;">Beschreibung generieren.</span>
+Ein Bildbeschreibungs-Einzeiler wird erzeugt. Bitte beachten Sie, dass
+die Erzeugung der Bildbeschreibung übersprungen wird, wenn ein Bild
+bereits eine Beschreibung hat.</li>
+  <li><span style="font-weight: bold;">Kategorien übersetzen. </span>Markieren Sie diese Option, wenn die ausgegebenen Kategorien in einer anderen Sprache als Englisch angezeigt werden sollen. Der <a href="../../com.bdaum.zoom.ai/html/ai.html"><span style="font-style: italic;">Microsoft Translator Service</span></a> wird verwendet, um die zurückgegebenen Texte zu übersetzen.</li>
+  <li><span style="font-weight: bold;">Schlagworte übersetzen.</span> Markieren Sie diese Option, wenn die ausgegebenen Schlagworte in einer anderen Sprache als Englisch angezeigt werden sollen.</li>
+  <li><span style="font-weight: bold;">Beschreibung übersetzen.</span> Markieren Sie diese Option, wenn die ausgegebene Beschreibung in einer anderen Sprache als Englisch angezeigt werden soll.</li>
+</ul>
+<p><br>
+</p>
+<acronym></acronym>
+<p> </p>
+
+
+</body></html>

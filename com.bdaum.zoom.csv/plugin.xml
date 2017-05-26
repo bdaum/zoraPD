@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.exportWizards">
+      <wizard
+            category="com.bdaum.zoom.csv.category.report"
+            class="com.bdaum.zoom.csv.internal.wizards.CsvExportWizard"
+            icon="icons/csv.png"
+            id="com.bdaum.zoom.csv.wizard.csv"
+            name="%wizard.name.csv">
+      </wizard>
+      <category
+            id="com.bdaum.zoom.csv.category.report"
+            name="%category.name.reports">
+      </category>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml">
+      </contexts>
+   </extension>
+   <extension
+         point="org.eclipse.help.toc">
+      <toc
+            file="tocrefOthers.xml"
+            primary="false">
+      </toc>
+      <toc
+            file="tocOthers.xml"
+            primary="false">
+      </toc>
+   </extension>
+   <extension
+         point="org.eclipse.help.index">
+      <index
+            file="index.xml">
+      </index>
+   </extension>
+   
+
+</plugin>

@@ -1,0 +1,3 @@
+Modified constructor of net.semanticmetadata.lire.impl.SimpleImageSearchHits (bd)
+net.semanticmetadata.lire.impl.ChainedDocumentBuilder: changed document identifier to StringField (bd)
+added a second parameter "String identifier" to the createDescriptors() method of all Builder classes (bd)

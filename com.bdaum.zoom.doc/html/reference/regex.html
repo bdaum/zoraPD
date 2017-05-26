@@ -1,0 +1,549 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en"><head>
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
+<title>Regular Expressions</title>
+
+
+  
+
+  
+  
+  <meta name="date" content="2015-11-19">
+
+  
+  <meta name="keywords" content="CASE_INSENSITIVE">
+
+  
+  <meta name="keywords" content="LITERAL">
+
+  
+  <meta name="keywords" content="DOTALL">
+
+  
+  <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body style="background-color: white;">
+<hr>
+<h1 class="Head">Regular Expressions </h1>
+
+<h4><a name="sum"></a></h4>
+
+<h4><a name="sum">Regular-expression constructs in source patterns<br>
+</a></h4>
+
+<a name="sum"> </a>
+<table summary="Regular expression constructs, and what they match" border="0" cellpadding="1" cellspacing="0">
+
+  <tbody>
+    <tr align="left">
+      <th id="construct" align="left" bgcolor="#ccccff">Construct</th>
+      <th id="matches" align="left" bgcolor="#ccccff">Matches</th>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="characters">Characters</th>
+    </tr>
+    <tr>
+      <td headers="construct characters" valign="top"><i>x</i></td>
+      <td headers="matches">The character <i>x</i></td>
+    </tr>
+    <tr>
+      <td headers="construct characters" valign="top"><tt>\\</tt></td>
+      <td headers="matches">The backslash character</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="classes">Character classes</th>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[abc]</tt></td>
+      <td headers="matches"><tt>a</tt>, <tt>b</tt>, or <tt>c</tt>
+(simple class)</td>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[^abc]</tt></td>
+      <td headers="matches">Any character except <tt>a</tt>, <tt>b</tt>,
+or <tt>c</tt> (negation)</td>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[a-zA-Z]</tt></td>
+      <td headers="matches"><tt>a</tt> through <tt>z</tt> or <tt>A</tt>
+through <tt>Z</tt>, inclusive (range)</td>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[a-d[m-p]]</tt></td>
+      <td headers="matches"><tt>a</tt> through <tt>d</tt>, or <tt>m</tt>
+through <tt>p</tt>: <tt>[a-dm-p]</tt> (union)</td>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[a-z&amp;&amp;[def]]</tt></td>
+      <td headers="matches"><tt>d</tt>, <tt>e</tt>, or <tt>f</tt>
+(intersection)</td>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[a-z&amp;&amp;[^bc]]</tt></td>
+      <td headers="matches"><tt>a</tt> through <tt>z</tt>, except for <tt>b</tt>
+and <tt>c</tt>: <tt>[ad-z]</tt> (subtraction)</td>
+    </tr>
+    <tr>
+      <td headers="construct classes" valign="top"><tt>[a-z&amp;&amp;[^m-p]]</tt></td>
+      <td headers="matches"><tt>a</tt> through <tt>z</tt>, and not <tt>m</tt>
+through <tt>p</tt>: <tt>[a-lq-z]</tt>(subtraction)</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="predef">Predefined character classes</th>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>.</tt></td>
+      <td headers="matches">Any character</td>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>\d</tt></td>
+      <td headers="matches">A digit: <tt>[0-9]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>\D</tt></td>
+      <td headers="matches">A non-digit: <tt>[^0-9]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>\s</tt></td>
+      <td headers="matches">A whitespace character: <tt>[ \t\n\x0B\f\r]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>\S</tt></td>
+      <td headers="matches">A non-whitespace character: <tt>[^\s]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>\w</tt></td>
+      <td headers="matches">A word character: <tt>[a-zA-Z_0-9]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct predef" valign="top"><tt>\W</tt></td>
+      <td headers="matches">A non-word character: <tt>[^\w]</tt></td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="posix">POSIX character classes (US-ASCII only)</th>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Lower}</tt></td>
+      <td headers="matches">A lower-case alphabetic character: <tt>[a-z]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Upper}</tt></td>
+      <td headers="matches">An upper-case alphabetic character:<tt>[A-Z]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{ASCII}</tt></td>
+      <td headers="matches">All ASCII:<tt>[\x00-\x7F]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Alpha}</tt></td>
+      <td headers="matches">An alphabetic character:<tt>[\p{Lower}\p{Upper}]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Digit}</tt></td>
+      <td headers="matches">A decimal digit: <tt>[0-9]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Alnum}</tt></td>
+      <td headers="matches">An alphanumeric character:<tt>[\p{Alpha}\p{Digit}]</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Punct}</tt></td>
+      <td headers="matches">Punctuation: One of <tt>!"#$%&amp;'()*+,-./:;&lt;=&gt;?@[\]^_`{|}~</tt></td>
+    </tr>
+<!-- <tt>[\!"#\$%&'\(\)\*\+,\-\./:;\<=\>\?@\[\\\]\^_`\{\|\}~]</tt>
+          <tt>[\X21-\X2F\X31-\X40\X5B-\X60\X7B-\X7E]</tt> -->
+    
+    
+    <tr>
+      <td headers="construct posix" valign="top"><tt>\p{Blank}</tt></td>
+      <td headers="matches">A space or a tab: <tt>[ \t]</tt></td>
+    </tr>
+    
+    
+    
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <tr align="left">
+      <th colspan="2" id="bounds">Boundary matchers</th>
+    </tr>
+    
+    
+    <tr>
+      <td headers="construct bounds" valign="top"><tt>\b</tt></td>
+      <td headers="matches">A word boundary</td>
+    </tr>
+    <tr>
+      <td headers="construct bounds" valign="top"><tt>\B</tt></td>
+      <td headers="matches">A non-word boundary</td>
+    </tr>
+    <tr>
+      <td headers="construct bounds" valign="top"><tt>\A</tt></td>
+      <td headers="matches">The beginning of the input</td>
+    </tr>
+    <tr>
+      <td headers="construct bounds" valign="top"><tt>\G</tt></td>
+      <td headers="matches">The end of the previous match</td>
+    </tr>
+    
+    <tr>
+      <td headers="construct bounds" valign="top"><tt>\z</tt></td>
+      <td headers="matches">The end of the input</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="greedy">Greedy quantifiers</th>
+    </tr>
+    <tr>
+      <td headers="construct greedy" valign="top"><i>X</i><tt>?</tt></td>
+      <td headers="matches"><i>X</i>, once or not at all</td>
+    </tr>
+    <tr>
+      <td headers="construct greedy" valign="top"><i>X</i><tt>*</tt></td>
+      <td headers="matches"><i>X</i>, zero or more times</td>
+    </tr>
+    <tr>
+      <td headers="construct greedy" valign="top"><i>X</i><tt>+</tt></td>
+      <td headers="matches"><i>X</i>, one or more times</td>
+    </tr>
+    <tr>
+      <td headers="construct greedy" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>}</tt></td>
+      <td headers="matches"><i>X</i>, exactly <i>n</i> times</td>
+    </tr>
+    <tr>
+      <td headers="construct greedy" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>,}</tt></td>
+      <td headers="matches"><i>X</i>, at least <i>n</i> times</td>
+    </tr>
+    <tr>
+      <td headers="construct greedy" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>,</tt><i>m</i><tt>}</tt></td>
+      <td headers="matches"><i>X</i>, at least <i>n</i> but not more
+than <i>m</i> times</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="reluc">Reluctant quantifiers</th>
+    </tr>
+    <tr>
+      <td headers="construct reluc" valign="top"><i>X</i><tt>??</tt></td>
+      <td headers="matches"><i>X</i>, once or not at all</td>
+    </tr>
+    <tr>
+      <td headers="construct reluc" valign="top"><i>X</i><tt>*?</tt></td>
+      <td headers="matches"><i>X</i>, zero or more times</td>
+    </tr>
+    <tr>
+      <td headers="construct reluc" valign="top"><i>X</i><tt>+?</tt></td>
+      <td headers="matches"><i>X</i>, one or more times</td>
+    </tr>
+    <tr>
+      <td headers="construct reluc" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>}?</tt></td>
+      <td headers="matches"><i>X</i>, exactly <i>n</i> times</td>
+    </tr>
+    <tr>
+      <td headers="construct reluc" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>,}?</tt></td>
+      <td headers="matches"><i>X</i>, at least <i>n</i> times</td>
+    </tr>
+    <tr>
+      <td headers="construct reluc" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>,</tt><i>m</i><tt>}?</tt></td>
+      <td headers="matches"><i>X</i>, at least <i>n</i> but not more
+than <i>m</i> times</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="poss">Possessive quantifiers</th>
+    </tr>
+    <tr>
+      <td headers="construct poss" valign="top"><i>X</i><tt>?+</tt></td>
+      <td headers="matches"><i>X</i>, once or not at all</td>
+    </tr>
+    <tr>
+      <td headers="construct poss" valign="top"><i>X</i><tt>*+</tt></td>
+      <td headers="matches"><i>X</i>, zero or more times</td>
+    </tr>
+    <tr>
+      <td headers="construct poss" valign="top"><i>X</i><tt>++</tt></td>
+      <td headers="matches"><i>X</i>, one or more times</td>
+    </tr>
+    <tr>
+      <td headers="construct poss" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>}+</tt></td>
+      <td headers="matches"><i>X</i>, exactly <i>n</i> times</td>
+    </tr>
+    <tr>
+      <td headers="construct poss" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>,}+</tt></td>
+      <td headers="matches"><i>X</i>, at least <i>n</i> times</td>
+    </tr>
+    <tr>
+      <td headers="construct poss" valign="top"><i>X</i><tt>{</tt><i>n</i><tt>,</tt><i>m</i><tt>}+</tt></td>
+      <td headers="matches"><i>X</i>, at least <i>n</i> but not more
+than <i>m</i> times</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="logical">Logical operators</th>
+    </tr>
+    <tr>
+      <td headers="construct logical" valign="top"><i>XY</i></td>
+      <td headers="matches"><i>X</i> followed by <i>Y</i></td>
+    </tr>
+    <tr>
+      <td headers="construct logical" valign="top"><i>X</i><tt>|</tt><i>Y</i></td>
+      <td headers="matches">Either <i>X</i> or <i>Y</i></td>
+    </tr>
+    <tr>
+      <td headers="construct logical" valign="top"><tt>(</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches">X, as a <a href="#cg">capturing group</a></td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="backref">Back references</th>
+    </tr>
+    <tr>
+      <td headers="construct backref" valign="bottom"><tt>\</tt><i>n</i></td>
+      <td headers="matches" valign="bottom">Whatever the <i>n</i><sup>th</sup>
+      <a href="#cg">capturing group</a> matched</td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="quot">Quotation</th>
+    </tr>
+    <tr>
+      <td headers="construct quot" valign="top"><tt>\</tt></td>
+      <td headers="matches">Nothing, but quotes the following character</td>
+    </tr>
+    <tr>
+      <td headers="construct quot" valign="top"><tt>\Q</tt></td>
+      <td headers="matches">Nothing, but quotes all characters until <tt>\E</tt></td>
+    </tr>
+    <tr>
+      <td headers="construct quot" valign="top"><tt>\E</tt></td>
+      <td headers="matches">Nothing, but ends quoting started by <tt>\Q</tt></td>
+    </tr>
+<!-- Metachars: !$()*+.<>?[\]^{|} --> <tr>
+      <th>&nbsp;</th>
+    </tr>
+    <tr align="left">
+      <th colspan="2" id="special">Special constructs (non-capturing)</th>
+    </tr>
+    <tr>
+      <td headers="construct special" valign="top"><tt>(?:</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches"><i>X</i>, as a non-capturing group</td>
+    </tr>
+    
+    
+    <tr>
+      <td headers="construct special" valign="top"><tt>(?=</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches"><i>X</i>, via zero-width positive lookahead</td>
+    </tr>
+    <tr>
+      <td headers="construct special" valign="top"><tt>(?!</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches"><i>X</i>, via zero-width negative lookahead</td>
+    </tr>
+    <tr>
+      <td headers="construct special" valign="top"><tt>(?&lt;=</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches"><i>X</i>, via zero-width positive lookbehind</td>
+    </tr>
+    <tr>
+      <td headers="construct special" valign="top"><tt>(?&lt;!</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches"><i>X</i>, via zero-width negative lookbehind</td>
+    </tr>
+    <tr>
+      <td headers="construct special" valign="top"><tt>(?&gt;</tt><i>X</i><tt>)</tt></td>
+      <td headers="matches"><i>X</i>, as an independent, non-capturing
+group</td>
+    </tr>
+  </tbody>
+</table>
+
+<a name="sum"> </a>
+<hr><a name="sum"> </a><a name="bs"> </a>
+<h4><a name="bs"> Backslashes, escapes, and quoting </a></h4>
+
+<a name="bs"> </a>
+<p><a name="bs"> The backslash character (<tt>'\'</tt>) serves to
+introduce escaped constructs, as defined in the table above, as well as
+to quote characters that otherwise would be interpreted as unescaped
+constructs. Thus the expression <tt>\\</tt> matches a single backslash
+and <tt>\{</tt> matches a left brace. </a></p>
+
+<p><a name="bs"> It is an error to use a backslash prior to any
+alphabetic character that does not denote an escaped construct; these
+are reserved for future extensions to the regular-expression language.
+A backslash may be used prior to a non-alphabetic character regardless
+of whether that character is part of an unescaped construct. </a></p>
+
+<h4><a name="cc"> Character Classes </a></h4>
+
+<a name="cc"> </a>
+<p><a name="cc"> Character classes may appear within other character
+classes, and may be composed by the union operator (implicit) and the
+intersection operator (<tt>&amp;&amp;</tt>). The union operator denotes
+a class that contains every character that is in at least one of its
+operand classes. The intersection operator denotes a class that
+contains every character that is in both of its operand classes. </a></p>
+
+<p><a name="cc"> The precedence of character-class operators is as
+follows, from highest to lowest: </a></p>
+
+<blockquote>
+  <table summary="Precedence of character class operators." border="0" cellpadding="1" cellspacing="0">
+    <tbody>
+      <tr>
+        <th>1&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td>Literal escape&nbsp;&nbsp;&nbsp;&nbsp;</td>
+        <td><tt>\x</tt></td>
+      </tr>
+      <tr>
+        <th>2&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td>Grouping</td>
+        <td><tt>[...]</tt></td>
+      </tr>
+      <tr>
+        <th>3&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td>Range</td>
+        <td><tt>a-z</tt></td>
+      </tr>
+      <tr>
+        <th>4&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td>Union</td>
+        <td><tt>[a-e][i-u]</tt></td>
+      </tr>
+      <tr>
+        <th>5&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td>Intersection</td>
+        <td><tt>[a-z&amp;&amp;[aeiou]]</tt></td>
+      </tr>
+    </tbody>
+  </table>
+</blockquote>
+
+<a name="cc"> </a>
+<p><a name="cc"> Note that a different set of metacharacters are in
+effect inside a character class than outside a character class. For
+instance, the regular expression <tt>.</tt> loses its special meaning
+inside a character class, while the expression <tt>-</tt> becomes a
+range forming metacharact</a><a name="lt"></a><a name="lt"></a></p>
+
+<h4><a name="cg"> Groups and capturing </a></h4>
+
+<a name="cg"> </a>
+<p><a name="cg"> Capturing groups are numbered by counting their
+opening parentheses from left to right. In the expression <tt>((A)(B(C)))</tt>,
+for example, there are four such groups: </a></p>
+
+<a name="cg"> </a>
+<blockquote>
+  <table summary="Capturing group numberings" cellpadding="1" cellspacing="0">
+    <tbody>
+      <tr>
+        <th>1&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td><tt>((A)(B(C)))</tt></td>
+      </tr>
+      <tr>
+        <th>2&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td><tt>(A)</tt></td>
+      </tr>
+      <tr>
+        <th>3&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td><tt>(B(C))</tt></td>
+      </tr>
+      <tr>
+        <th>4&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td><tt>(C)</tt></td>
+      </tr>
+    </tbody>
+  </table>
+</blockquote>
+
+<a name="cg"> </a>
+<p><a name="cg"> Group zero always stands for the entire expression. </a></p>
+
+<p><a name="cg"> Capturing groups are so named because, during a match,
+each subsequence of the input sequence that matches such a group is
+saved. The captured subsequence may be used later in the expression,
+via a back reference, and may also be retrieved from the matcher once
+the match operation is complete. </a></p>
+
+<p><a name="cg"> The captured input associated with a group is always
+the subsequence that the group most recently matched. If a group is
+evaluated a second time because of quantification then its
+previously-captured value, if any, will be retained if the second
+evaluation fails. Matching the string <tt>"aba"</tt> against the
+expression <tt>(a(b)?)+</tt>, for example, leaves group two set to <tt>"b"</tt>. <br>
+  </a></p>
+
+<p><a name="cg"> Groups beginning with <tt>(?</tt> are pure, <i>non-capturing</i>
+groups that do not capture text and do not count towards the group
+total. </a></p>
+
+
+
+<br>
+<h4><a name="sum">Regular-expression constructs in target patterns<br>
+</a></h4>
+<br>
+<table summary="supported constructs in the replace field" border="1" cellpadding="5">
+
+  <tbody>
+    <tr>
+      <td colspan="1" rowspan="1"> $i </td>
+      <td colspan="1" rowspan="1"> inserts <a href="#cg" shape="rect"> capturing group</a> i. </td>
+    </tr>
+    <tr>
+      <td colspan="1" rowspan="1"> \i </td>
+      <td colspan="1" rowspan="1"> inserts <a href="#cg" shape="rect"> capturing group</a> i (same as $i). </td>
+    </tr>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <tr>
+      <td colspan="1" rowspan="1"> \C </td>
+      <td colspan="1" rowspan="1"> retains the casing of the match (all
+lower case, all upper case, capitalized) </td>
+    </tr>
+  </tbody>
+</table>
+
+</body></html>

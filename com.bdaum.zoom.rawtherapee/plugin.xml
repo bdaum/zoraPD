@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.batch.rawConverter">
+      <converter
+            class="com.bdaum.zoom.rawtherapee.internal.RTRawConverter"
+            detectors="false"
+            executable="required"
+            id="com.bdaum.zoom.rawtherapee.converter"
+            isDefault="false"
+            name="RawTherapee"
+            path="com.bdaum.zoom.rtrawpath">
+         <property
+               default="true"
+               id="com.bdaum.zoom.rawtherapee.property.recipes"
+               name="%property.name.recipe"
+               type="boolean">
+         </property>
+      </converter>
+   </extension>
+
+</plugin>

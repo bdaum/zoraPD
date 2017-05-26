@@ -1,0 +1,10 @@
+<index>
+	<entry keyword="SmugMug">
+		<topic href="html/smugmug.html" />
+	</entry>
+	<entry keyword="Export">
+		<entry keyword="SmugMug">
+			<topic href="html/smugmug.html" />
+		</entry>
+	</entry>
+</index>

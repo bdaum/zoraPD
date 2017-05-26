@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Importing images</title>
+
+
+
+
+
+
+
+
+
+      <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head>
+<body>
+      <h2>Importing images
+      </h2>
+      <p>To add images to the catalog you have to import them. You can</p><ul style="font-weight: normal;"><li>import <span style="font-weight: bold;">single images</span>. Invoke (<acronym>File&gt;Import...&gt;File ...</acronym>) and select one or several files. The files will stay at their original location. Alternatively you may <span style="font-weight: bold;">drag</span> image files into an image area such as the <span style="font-style: italic;">Lightbox</span> view or the <span style="font-style: italic;">Sleeves</span> view.</li><li>import <span style="font-weight: bold;">whole folders</span>.&nbsp;Invoke (<acronym>File&gt;Import...&gt;Folder ...</acronym>)
+and select a folder. Alternatively you may <span style="font-weight: bold;">drag</span> a folder into an image area
+such as the <span style="font-style: italic;">Lightbox</span> view or the <span style="font-style: italic;">Sleeves</span>
+view. Then you can choose between leaving the images at their original
+position or importing them into a new folder structure. In the later
+case
+the images are copied from the source folder to the target folder. It
+is possible to <span style="font-weight: bold;">rename</span> the imported
+images during that process.</li><li>import from a <span style="font-weight: bold;">device</span> (<acronym>File&gt;Import...&gt;From Device ...</acronym>) such as a Memory Card or a connected Digital Camera.&nbsp;Invoke (<span style="font-style: italic;">File&gt;Import from Device ...</span>).
+After <a href="../reference/importFromDevice.html">selecting the images to import</a> and specifying a target folder,
+the images are copied from the device to the target folder and are
+imported into the catalog. It is possible to<span style="font-weight: bold;"> rename</span> the imported images during that process.</li><li>import <span style="font-weight: bold;">analog images</span>  (<acronym>File&gt;Import...&gt;Analog images ...</acronym>).
+This function allows you importing images that have been scanned in.
+Typically, these images do not contain metadata such as EXIF and IPTC
+data. Therefore, you are prompted with a dialog allowing you to enter
+vital metadata to be added to the imported images.</li></ul><h3>Keeping the catalogue up-to-date</h3>To keep your catalog up to date, you have the option (<acronym>Catalog&gt;Properties...&gt;Watched Folders</acronym>)
+to add folders to a list a watched folders. Whenever a new image is
+added to a watched folder, it is automatically imported into the
+catalog. Modifications of images are detected, too: a modified image
+will be re-imported into the catalog. Alternatively, you have the
+option to synchronize selected images manually (<acronym>File&gt;Refresh...</acronym>).<br><br><h3>Imported data</h3>During
+the import of images, a thumbnail and the meta data (EXIF and IPTC) are
+extracted and added to the catalog. The original images are not
+required to view the catalog, so you can work with removable media.
+However, some highres-operations such as Editing, Viewing, Slide show,
+or Exporting
+require that images are on-line.<br><br><h3>Remote images</h3>Images
+that have been uploaded to FTP accounts or to web-sites can be added to
+the catalog, too, to keep track of them. (This is not possible for
+images uploaded to photo communities such as flickr because photo
+communities usually deny direct access to uploaded images.) When
+required, remote images are downloaded automatically.<br><br><h3><a name="raw"></a>Raw images</h3>By default,
+thumbnail images are derived directly from the high-res original
+image.&nbsp;RAW- und DNG-images need a conversion which is performed on
+the fly. Because this may take quite some time, you may opt to derive
+thumbnails from the preview images contained in the RAW- or DNG-files.
+This will speed up the import process considerably, but the results are
+quite different. You may want to try both options for your images
+before deciding for a specific variant (<a href="../reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import<sup>*</sup></acronym></a>).<br><br>RAW-conversion is performed with the help of the program DCRAW:<br><ul style="font-weight: normal;"><li>Windows
+and MacOS distributions of ZoRa Photo Director come with a built-in version of dcraw.
+Newer&nbsp;DCRAW versions can simply be dropped into the subfolder <code>dropins/</code> of the installation folder. You can find&nbsp;DCRAW binaries for Windows and Mac on&nbsp;<a href="http://www.insflug.org/raw/">www.insflug.org/raw/</a>, multi-threaded binaries for Windows also on&nbsp;<a href="http://www.heliconsoft.com/dcraw.html">http://www.heliconsoft.com/dcraw.html</a>.<br></li><li>On Linux platforms you should install&nbsp;DCRAW into <code>/usr/bin</code>. You can also install into the sub folder&nbsp;<code>dropins/</code> or specify a location under <a href="../reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion<sup>*</sup></acronym></a><span style="font-style: italic;">.</span> You can find a&nbsp;DCRAW  version for your Linux system via&nbsp; <a href="http://linuxappfinder.com/package/dcraw">http://linuxappfinder.com/package/dcraw</a>.&nbsp;</li></ul><br>Alternatively, you can use <span style="font-style: italic;">RawTherapee</span> for raw conversion. This must be installed separately. You must specify the location of the RawTherapee executable under <a href="../reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion<sup>*</sup></acronym></a><span style="font-style: italic;">.</span><h4>DNG</h4>DNG
+files can automatically be&nbsp;derived when importing RAW images to allow for an integrated RAW work flow.<br>Before doing so, please set the location of your DNG converter (<a href="../reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;DNG Conversion<sup>*</sup></acronym></a>). You can download a copy of the free <span style="font-style: italic;">Adobe DNG Converter</span> from&nbsp;<a href="http://www.adobe.com/products/dng/">www.adobe.com/products/dng/</a>.
+<br>When deriving DNG files you have the option, to embed the original RAW
+file into the DNG file (The <span style="font-style: italic;">Adobe DNG Converter</span> can extract the
+original RAW file from such a DNG file), to import both RAW- and
+DNG-file side by side (default), or to import only the DNG version. <br><br><span style="font-weight: bold;">Note:</span> This
+functionality is not available under Linux, because there is no
+Linux-version of the Adobe DNG converter.<br>
+<br>
+<h4>Raw Recipe Reflection (3R)<br>
+</h4>
+Raw and DNG images are typically processed with a RAW converter such as
+<span style="font-style: italic;">Adobe Camera Raw</span>, <span style="font-style: italic;">Adobe Lightroom</span>, <span style="font-style: italic;">Apple Aperture</span>, <span style="font-style: italic;">Capture One</span>, <span style="font-style: italic;">DxO</span>,
+<span style="font-style: italic;">Helicon Filter</span>, <span style="font-style: italic;">RawTherapee</span>, and others. The corrections that you make
+in those converters are, however, not applied to the raw image file,
+but are stored in a separate and fairly small metafiles (<span style="font-style: italic;">recipe</span>). As a matter of
+fact sports each raw converter its own recipe format and its own
+way of storing this file.<br>
+<br>
+The <span style="font-style: italic;">ZoRa Photo Director </span>is
+able to detect the recipes of some raw converters (the list will grow
+over time) and to re-apply the development parameters to raw images as
+they are imported or displayed. You should, however, not expect a
+perfect match with the image developed with the original raw converter.
+The aim is to provide an approximate visual impression how the raw
+image will look. In particular, <span style="font-style: italic;">ZoRa Photo Director</span> does currently not re-apply partial corrections or the correction of distortions.<br>
+<br>
+This recipe detection and processing can be configured under <acronym><a href="../reference/importPrefs.html">Window&gt;Preferences&gt;Import&gt;RAW Conversion<sup>*</sup></a></acronym><span style="font-style: italic;">.</span><br>
+<br>
+<br>
+If a recipe is found for an image, this is reflected in the status of the image:<br>
+
+<br>
+
+RAW image without recipe: <span style="font-weight: bold;">RAW</span><br>
+
+DNG image without recipe: <span style="font-weight: bold;">Konvertiert</span><br>
+
+RAW or DNG image with recipe: <span style="font-weight: bold;">Korrigiert<br>
+<br>
+</span>Because one can build <a href="imageRetrieval.html">search queries</a> on the status of image, you can easily separate between non-corrected and corrected RAW images.<br>
+<br>
+<br>
+
+
+
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa Photo Director&gt;Preferences&gt;...</acronym><br>
+<span style="font-weight: bold;">
+</span>
+<br>
+ </body></html>

@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Jna-Plugin
+Bundle-SymbolicName: com.bdaum.jna;singleton:=true
+Eclipse-ExtensibleAPI: true
+Bundle-Version: 3.3.0
+Bundle-Vendor: bdaum industrial communications
+Bundle-ClassPath: .,
+ jna.jar,
+ platform.jar
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Export-Package: com.sun.jna,
+ com.sun.jna.platform,
+ com.sun.jna.platform.mac,
+ com.sun.jna.platform.unix,
+ com.sun.jna.platform.win32,
+ com.sun.jna.ptr,
+ com.sun.jna.win32
+Bundle-Activator: com.bdaum.jna.internal.JnaActivator
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.7.0"

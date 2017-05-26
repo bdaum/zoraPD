@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.bdaum.zora.FEATURE.peer"
+      label="Peer2Peer Feature"
+      version="3.0.0"
+      provider-name="bdaum industrial communications">
+
+   <description>
+      Peer to Peer communication for distributed search and image retrieval
+   </description>
+
+   <copyright>
+      (c) 2012-2013 Berthold Daum
+   </copyright>
+
+   <license url="http://www.gnu.org/licenses/gpl-2.0.html">
+      This program is provided to you under the terms and conditions
+of the GNU General Public License (GPL) as published by the Free
+Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+   </license>
+
+   <url>
+      <update label="ZoRa Photo Director" url="http://www.photozora.org/downloads/zpd"/>
+      <discovery label="ZoRa web site" url="http://www.photozora.org"/>
+   </url>
+
+   <plugin
+         id="com.bdaum.zoom.peer"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.ecf"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.ecf.remoteservice"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.ecf.provider.r_osgi"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.ecf.identity"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.equinox.concurrent"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.ecf.sharedobject"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="ch.ethz.iks.r_osgi.remote"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.ecf.provider"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.apache.log4j"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.objectweb.asm"
+         download-size="0"
+         install-size="0"
+         version="3.3.1.v201105211655"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.ecf.remoteservice.asyncproxy"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toc label="Network preferences" link_to="../com.bdaum.zoom.doc/tocreference.xml#preferences">
+   <topic href="html/networkPrefs.html" label="Network">
+      <topic href="html/peerDef.html" label="Peer definition">
+      </topic>
+      <topic href="html/restrictionDef.html" label="Restrictions">
+      </topic>
+   </topic>
+</toc>

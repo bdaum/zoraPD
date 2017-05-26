@@ -1,0 +1,227 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+
+
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Vorlagen für das Umbenennen von Dateien</title>
+
+<link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head>
+<body>
+<h2>Vorlagen
+für das&nbsp;Umbenennen von&nbsp;Dateien</h2>
+Diese
+Vorlagen kontrollieren das
+Umbenennen von Dateien, wenn Bilder von einem Gerät oder in eine neue
+Ordnerstruktur importiert werden oder explizit umbenannt werden. Es
+gibt mehrere vordefinierte
+Vorlagen, aber es können auch eigene Vorlagen&nbsp;durch den
+Benutzer&nbsp;erstellt werden.<br>
+<br>
+Jede
+Vorlage besteht aus konstanten Zeichen (mit Ausnahme von '{' und '}')
+und aus
+Variablen, die in {} eingeschlossen werden. Vorlagen
+mit ausschließlich konstanten Zeichen werden zurückgewiesen, da sonst jedes Bild den gleichen Namen erhalten würde.<br>
+<h4>Vordefinierte
+Vorlagen</h4>
+<br>
+<table style="text-align: left;" border="1" cellpadding="6" cellspacing="1">
+<tbody>
+<tr>
+<td style="font-weight: bold;">Beschreibung</td>
+<td style="font-weight: bold;">Definition</td>
+<td style="font-weight: bold;">Beispiel</td>
+</tr>
+<tr>
+<td>Datum
+und ursprünglicher Dateiname</td>
+<td><code>_{yyyy}{mm}{dd}-{filename}</code></td>
+<td>_20090520-_1072417</td>
+</tr>
+<tr>
+<td>Benutzer,
+Jahr und Reihenfolge</td>
+<td><code>{user}{yyyy}-{sequenceNo5}</code></td>
+<td>bdaum2009-00001</td>
+</tr>
+<tr>
+<td>Wink, Jahr
+und die Sequenz</td>
+<td><code>{cue}_{yyyy}-{sequenceNo5}</code></td>
+<td>bsp_2009-00001</td>
+</tr>
+<tr>
+<td>Ursprünglicher
+Dateiname sowie die&nbsp;Jährliche
+Sequenznummer</td>
+<td><code>{filename}-{sequenceNo5}</code></td>
+<td>_1072417-00001</td>
+</tr>
+<tr>
+<td>Ursprünglicher
+Dateiname</td>
+<td><code>{filename}</code></td>
+<td>_1072417</td>
+</tr>
+</tbody>
+</table>
+<br>
+<br>
+<h4>Variablen
+für selbstdefinierte Vorlagen</h4>
+<table style="text-align: left;" border="1" cellpadding="4" cellspacing="1">
+<tbody>
+<tr>
+<td style="font-weight: bold;">Variable</td>
+<td style="font-weight: bold;">Beschreibung</td>
+</tr>
+<tr>
+<td><code>{ss}</code></td>
+<td>Sekunden
+(2 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{ii}</code></td>
+<td>Minuten
+(2 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{hh}</code></td>
+<td>Stunden
+(2 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{jjj}</code></td>
+<td>Julianisches
+Datum (Tag im Jahr) (3 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{dd}</code></td>
+<td>Tag
+im Monat (2 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{</code><code>month</code><code>}</code></td>
+<td>Name
+des Monats</td>
+</tr>
+<tr>
+<td><code>{ww}</code></td>
+<td>Woche
+im Jahr (2 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{mm}</code></td>
+<td>Monat
+(2 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{</code><code>yyyy</code><code>}</code></td>
+<td>Jahr
+(4-stellig)</td>
+</tr>
+<tr>
+<td><code>{yy}</code></td>
+<td>Jahr
+(2 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{sequenceNo5}</code></td>
+<td>Jährliche
+Sequenznummer (mindestens 5 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{sequenceNo4}</code></td>
+<td>Jährliche
+Sequenznummer (mindestens 4 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{sequenceNo2}</code></td>
+<td>Jährliche
+Sequenznummer (mindestens 3 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{sequenceNo2}</code></td>
+<td>Jährliche
+Sequenznummer (mindestens 2 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{sequenceNo1}</code></td>
+<td>Jährliche
+Sequenznummer (mindestens 1 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{imageNo5}</code></td>
+<td>Katalog-Bildnummer
+(mindestens 5 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{imageNo4}</code></td>
+<td>Katalog-Bildnummer
+(mindestens 4 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{imageNo3}</code></td>
+<td>Katalog-Bildnummer
+(mindestens 3 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{imageNo2}</code></td>
+<td>Katalog-Bildnummer
+(mindestens 2 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{imageNo1}</code></td>
+<td>Katalog-Bildnummer
+(mindestens 1 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{importNo5}</code></td>
+<td>Importnummer
+(mindestens 5 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{importNo4}</code></td>
+<td>Importnummer&nbsp;(mindestens
+4 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{importNo3}</code></td>
+<td>Importnummer&nbsp;(mindestens
+3 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{importNo2}</code></td>
+<td>Importnummer&nbsp;(mindestens
+2 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{importNo1}</code></td>
+<td>Importnummer&nbsp;(mindestens
+1 Ziffern)</td>
+</tr>
+<tr>
+<td><code>{</code><code>extension</code><code>}</code></td>
+<td>Dateinamensuffix</td>
+</tr>
+<tr>
+<td><code>{</code><code>filename</code><code>}</code></td>
+<td>Dateiname</td>
+</tr>
+<tr>
+<td><code>{user}</code></td>
+<td>Aktueller
+Computerbenutzer</td>
+</tr>
+<tr>
+<td><code>{owner}</code></td>
+<td>Katalogbesitzer</td>
+</tr><tr>
+      <td style="vertical-align: top;"><code>{cue}</code></td>
+      <td style="vertical-align: top;">Wird durch den im Import-Dialog spezifizierten Wink ersetzt<br>
+      </td>
+    </tr>
+
+</tbody>
+</table><br>
+</body></html>

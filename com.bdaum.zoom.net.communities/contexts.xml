@@ -1,0 +1,10 @@
+<contexts>
+ <context id="exportCommunity_wizard_context" title="Export to Photo Community Wizard">
+    <description>Export to a web based Photo Community</description>
+    <topic href="html/communities.html" label="Export to Photo Community Wizard"/>
+ </context>
+ <context id="communityAccount_dialog_context" title="Community account dialog">
+    <description>Comfiguring a community account</description>
+    <topic href="html/communities.html" label="Community account dialog"/>
+ </context>
+</contexts>

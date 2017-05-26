@@ -1,0 +1,518 @@
+/*
+ * This file is part of the ZoRa project: http://www.photozora.org.
+ *
+ * ZoRa is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ZoRa is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ZoRa; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ */
+
+package com.bdaum.zoom.ui.internal.preferences;
+
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
+import org.eclipse.jface.viewers.CheckboxTreeViewer;
+import org.eclipse.jface.viewers.EditingSupport;
+import org.eclipse.jface.viewers.ICellEditorValidator;
+import org.eclipse.jface.viewers.ICheckStateListener;
+import org.eclipse.jface.viewers.TextCellEditor;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.TreeViewerColumn;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.BusyIndicator;
+import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.ui.IWorkbench;
+
+import com.bdaum.zoom.core.QueryField;
+import com.bdaum.zoom.css.ZColumnLabelProvider;
+import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.dialogs.AllNoneGroup;
+import com.bdaum.zoom.ui.internal.dialogs.MetadataContentProvider;
+import com.bdaum.zoom.ui.internal.dialogs.MetadataLabelProvider;
+import com.bdaum.zoom.ui.internal.views.AbstractPropertiesView.ViewComparator;
+import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
+import com.bdaum.zoom.ui.internal.widgets.JpegMetaGroup;
+import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
+import com.bdaum.zoom.ui.preferences.PreferenceConstants;
+
+public class MetadataPreferencePage extends AbstractPreferencePage {
+
+	private static final Object[] EMPTY = new Object[0];
+	private final static NumberFormat af = (NumberFormat.getNumberInstance());
+	private static final String SEC = Messages
+			.getString("MetadataPreferencePage.sec"); //$NON-NLS-1$
+
+	public class ToleranceLabelProvider extends ZColumnLabelProvider {
+
+		@Override
+		public String getText(Object element) {
+			if (element instanceof QueryField) {
+				QueryField qfield = (QueryField) element;
+				Float tolerance = toleranceMap.get(qfield.getKey());
+				if (tolerance != null) {
+					if (tolerance > 0)
+						return (int) tolerance.floatValue() + " %"; //$NON-NLS-1$
+					if (tolerance < 0) {
+						tolerance = -tolerance;
+						switch (qfield.getType()) {
+						case QueryField.T_INTEGER:
+						case QueryField.T_POSITIVEINTEGER:
+						case QueryField.T_POSITIVELONG:
+						case QueryField.T_LONG:
+							return String.valueOf((int) tolerance.floatValue());
+						case QueryField.T_FLOAT:
+						case QueryField.T_FLOATB:
+						case QueryField.T_CURRENCY:
+						case QueryField.T_POSITIVEFLOAT:
+							af.setMaximumFractionDigits(qfield.getMaxlength());
+							return af.format(tolerance);
+						case QueryField.T_DATE:
+							return String
+									.valueOf((int) tolerance.floatValue() / 1000)
+									+ SEC;
+						}
+					}
+				}
+			}
+			return null;
+		}
+	}
+
+	static final Object[] EMPTYOBJECTS = new Object[0];
+	public static final String ID = "com.bdaum.zoom.ui.MetadataPreferencePage"; //$NON-NLS-1$
+
+	private CheckboxTreeViewer essentialsViewer;
+	private CheckboxTreeViewer hoverViewer;
+	private TreeViewer tolerancesViewer;
+	private Map<String, Float> toleranceMap = new HashMap<String, Float>(50);
+	private TreeViewer exportViewer;
+	private JpegMetaGroup jpegGroup;
+
+	public MetadataPreferencePage() {
+	}
+
+	public MetadataPreferencePage(String title) {
+		super(title);
+	}
+
+	public MetadataPreferencePage(String title, ImageDescriptor image) {
+		super(title, image);
+	}
+
+	@SuppressWarnings("unused")
+	@Override
+	protected void createPageContents(Composite comp) {
+		setHelp(HelpContextIds.METADATA_PREFERENCE_PAGE);
+		new Label(comp, SWT.WRAP).setText(Messages
+				.getString("MetadataPreferencePage.what_to_do")); //$NON-NLS-1$
+		new Label(comp, SWT.NONE);
+		createTabFolder(comp, "Meta"); //$NON-NLS-1$
+
+		final CTabItem tabItem = createTabItem(tabFolder,
+				Messages.getString("MetadataPreferencePage.essential_metadata")); //$NON-NLS-1$
+		final Composite composite = new Composite(tabFolder, SWT.NONE);
+		tabItem.setControl(composite);
+		composite.setLayout(new GridLayout(2, false));
+		essentialsViewer = createViewerGroup(composite);
+		final CTabItem tabItem_1 = createTabItem(tabFolder,
+				Messages.getString("MetadataPreferencePage.hover_metadata")); //$NON-NLS-1$
+		final Composite composite_1 = new Composite(tabFolder, SWT.NONE);
+		composite_1.setLayout(new GridLayout(2, false));
+		tabItem_1.setControl(composite_1);
+		hoverViewer = createViewerGroup(composite_1);
+
+		final CTabItem tolerancesTabItem = createTabItem(tabFolder,
+				Messages.getString("MetadataPreferencePage.tolerances")); //$NON-NLS-1$
+
+		final Composite composite_2 = new Composite(tabFolder, SWT.NONE);
+		composite_2.setLayout(new GridLayout());
+		tolerancesTabItem.setControl(composite_2);
+		tolerancesViewer = createTolerancesViewer(composite_2);
+		final CTabItem exportTabItem = createTabItem(tabFolder,
+				Messages.getString("MetadataPreferencePage.export")); //$NON-NLS-1$
+		final Composite composite_3 = new Composite(tabFolder, SWT.NONE);
+		composite_3.setLayout(new GridLayout());
+		exportTabItem.setControl(composite_3);
+		Composite viewerGroup = new Composite(composite_3, SWT.NONE);
+		viewerGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		viewerGroup.setLayout(new GridLayout(2, false));
+		exportViewer = createViewerGroup(viewerGroup);
+		jpegGroup = new JpegMetaGroup(composite_3, SWT.NONE);
+		fillViewer(
+				essentialsViewer,
+				getPreferenceStore().getString(
+						PreferenceConstants.ESSENTIALMETADATA), 2, true);
+		jpegGroup.setSelection(getPreferenceStore().getBoolean(
+				PreferenceConstants.JPEGMETADATA));
+		initTabFolder(0);
+		tabFolder.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				switch (tabFolder.getSelectionIndex()) {
+				case 1:
+					fillViewer(
+							hoverViewer,
+							getPreferenceStore().getString(
+									PreferenceConstants.HOVERMETADATA), 2,
+							false);
+					break;
+				case 2:
+					fillViewer(tolerancesViewer, getPreferenceStore()
+							.getString(PreferenceConstants.METADATATOLERANCES),
+							2, false);
+					break;
+				case 3:
+					fillViewer(
+							exportViewer,
+							getPreferenceStore().getString(
+									PreferenceConstants.EXPORTMETADATA), 1,
+							false);
+					break;
+				}
+			}
+		});
+	}
+
+	private TreeViewer createTolerancesViewer(Composite comp) {
+		ExpandCollapseGroup toleranceExpandCollapseGroup = new ExpandCollapseGroup(
+				comp, SWT.NONE);
+		final TreeViewer viewer = new TreeViewer(comp, SWT.SINGLE
+				| SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER | SWT.FULL_SELECTION);
+		viewer.getControl().setLayoutData(
+				new GridData(SWT.FILL, SWT.FILL, true, true));
+		toleranceExpandCollapseGroup.setViewer(viewer);
+		viewer.getTree().setLinesVisible(true);
+		TreeViewerColumn col1 = new TreeViewerColumn(viewer, SWT.NONE);
+		col1.getColumn().setWidth(250);
+		col1.setLabelProvider(new MetadataLabelProvider());
+		TreeViewerColumn col2 = new TreeViewerColumn(viewer, SWT.NONE);
+		col2.getColumn().setWidth(80);
+		final ToleranceLabelProvider labelProvider = new ToleranceLabelProvider();
+		col2.setLabelProvider(labelProvider);
+		col2.setEditingSupport(new EditingSupport(viewer) {
+
+			@Override
+			protected void setValue(Object element, Object value) {
+				if (element instanceof QueryField) {
+					QueryField qfield = (QueryField) element;
+					String key = qfield.getKey();
+					String s = String.valueOf(value);
+					float v;
+					if (s.endsWith("%")) //$NON-NLS-1$
+						v = Integer.parseInt(s.substring(0, s.length() - 1)
+								.trim());
+					else
+						try {
+							af.setMaximumFractionDigits(8);
+							v = -af.parse(s.trim()).floatValue();
+							if (qfield.getType() == QueryField.T_DATE)
+								v = 1000 * v;
+						} catch (ParseException e) {
+							v = 0f;
+						}
+					toleranceMap.put(key, v);
+					viewer.update(element, null);
+				}
+			}
+
+			@Override
+			protected Object getValue(Object element) {
+				String text = labelProvider.getText(element);
+				if (text.endsWith(SEC))
+					return text.substring(0, text.length() - SEC.length());
+				return text;
+			}
+
+			@Override
+			protected CellEditor getCellEditor(Object element) {
+				if (element instanceof QueryField) {
+					final int type = ((QueryField) element).getType();
+					TextCellEditor editor = new TextCellEditor(viewer.getTree());
+					editor.setValidator(new ICellEditorValidator() {
+
+						public String isValid(Object value) {
+							String s = String.valueOf(value);
+							if (s.endsWith("%")) { //$NON-NLS-1$
+								try {
+									if (Integer.parseInt(s.substring(0,
+											s.length() - 1).trim()) < 0)
+										return Messages
+												.getString("MetadataPreferencePage.must_not_be_negative"); //$NON-NLS-1$
+									if (type == QueryField.T_DATE)
+										return Messages
+												.getString("MetadataPreferencePage.percent_not_allowed_for_date"); //$NON-NLS-1$
+									return null;
+								} catch (NumberFormatException e) {
+									return Messages
+											.getString("MetadataPreferencePage.bad_integer"); //$NON-NLS-1$
+								}
+							}
+							if (type == QueryField.T_POSITIVEINTEGER
+									|| type == QueryField.T_INTEGER) {
+								try {
+									if (Integer.parseInt(s.substring(0,
+											s.length() - 1).trim()) < 0)
+										return Messages
+												.getString("MetadataPreferencePage.must_not_be_negative"); //$NON-NLS-1$
+									return null;
+								} catch (NumberFormatException e) {
+									return Messages
+											.getString("MetadataPreferencePage.bad_integer"); //$NON-NLS-1$
+								}
+							} else if (type == QueryField.T_POSITIVELONG
+									|| type == QueryField.T_LONG) {
+								try {
+									if (Long.parseLong(s.substring(0,
+											s.length() - 1).trim()) < 0)
+										return Messages
+												.getString("MetadataPreferencePage.must_not_be_negative"); //$NON-NLS-1$
+									return null;
+								} catch (NumberFormatException e) {
+									return Messages
+											.getString("MetadataPreferencePage.bad_integer"); //$NON-NLS-1$
+								}
+							}
+							try {
+								af.setMaximumFractionDigits(8);
+								if (af.parse(s.trim()).floatValue() < 0)
+									return Messages
+											.getString("MetadataPreferencePage.must_not_be_negative"); //$NON-NLS-1$
+								return null;
+							} catch (ParseException e) {
+								return Messages
+										.getString("MetadataPreferencePage.bad_floating_point"); //$NON-NLS-1$
+							}
+						}
+					});
+					return editor;
+				}
+				return null;
+			}
+
+			@Override
+			protected boolean canEdit(Object element) {
+				if (element instanceof QueryField)
+					return ((QueryField) element).getTolerance() != 0f;
+				return false;
+			}
+		});
+		viewer.setContentProvider(new MetadataContentProvider());
+		viewer.setComparator(new ViewComparator());
+		viewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
+
+			@Override
+			public boolean select(Viewer aViewer, Object parentElement,
+					Object element) {
+				if (element instanceof QueryField) {
+					QueryField qfield = (QueryField) element;
+					return (qfield.hasChildren() || qfield.isUiField())
+							&& hostsToleranceValue((QueryField) element);
+				}
+				return false;
+			}
+
+			private boolean hostsToleranceValue(QueryField qfield) {
+				if (qfield.getTolerance() != 0f)
+					return true;
+				for (QueryField child : qfield.getChildren())
+					if (hostsToleranceValue(child))
+						return true;
+				return false;
+			}
+		} });
+		return viewer;
+	}
+
+	@SuppressWarnings("unused")
+	private static CheckboxTreeViewer createViewerGroup(Composite comp) {
+		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(comp,
+				SWT.NONE);
+		new Label(comp, SWT.NONE);
+		final CheckboxTreeViewer viewer = new CheckboxTreeViewer(comp,
+				SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
+		viewer.getControl().setLayoutData(
+				new GridData(SWT.FILL, SWT.FILL, true, true));
+		expandCollapseGroup.setViewer(viewer);
+		viewer.setLabelProvider(new MetadataLabelProvider());
+		viewer.setContentProvider(new MetadataContentProvider());
+		viewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
+			@Override
+			public boolean select(Viewer aViewer, Object parentElement,
+					Object element) {
+				if (element instanceof QueryField) {
+					QueryField qfield = (QueryField) element;
+					return qfield.hasChildren() || qfield.isUiField();
+				}
+				return false;
+			}
+		} });
+		viewer.setComparator(new ViewComparator());
+		viewer.addCheckStateListener(new ICheckStateListener() {
+			public void checkStateChanged(CheckStateChangedEvent event) {
+				UiUtilities.checkHierarchy(viewer, event.getElement(),
+						event.getChecked(), true, true);
+			}
+		});
+		new AllNoneGroup(comp, new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (e.widget.getData() == AllNoneGroup.ALL) {
+					viewer.setGrayedElements(EMPTY);
+					viewer.setCheckedElements(QueryField.getQueryFields()
+							.toArray());
+				} else
+					viewer.setCheckedElements(EMPTY);
+			}
+		});
+		return viewer;
+	}
+
+	private void fillViewer(final TreeViewer viewer, final String ess,
+			final int level, boolean force) {
+		if (viewer.getInput() == null || force)
+			BusyIndicator.showWhile(viewer.getControl().getDisplay(),
+					new Runnable() {
+						public void run() {
+							if (viewer.getInput() == null) {
+								viewer.setInput(QueryField.ALL);
+								if (level >= 0)
+									viewer.expandToLevel(level);
+							}
+							StringTokenizer st = new StringTokenizer(ess, "\n"); //$NON-NLS-1$
+							if (viewer instanceof CheckboxTreeViewer) {
+								List<QueryField> fields = new ArrayList<QueryField>();
+								while (st.hasMoreTokens()) {
+									QueryField qfield = QueryField
+											.findQueryField(st.nextToken());
+									if (qfield != null)
+										fields.add(qfield);
+								}
+								UiUtilities.checkInitialHierarchy(
+										(CheckboxTreeViewer) viewer, fields);
+							} else {
+								while (st.hasMoreTokens()) {
+									String id = st.nextToken();
+									int p = id.lastIndexOf("="); //$NON-NLS-1$
+									if (p > 0) {
+										try {
+											toleranceMap.put(
+													id.substring(0, p),
+													Float.parseFloat(id
+															.substring(p + 1)));
+										} catch (NumberFormatException e) {
+											// ignore
+										}
+									}
+								}
+							}
+						}
+					});
+	}
+
+	@Override
+	public void init(IWorkbench wb) {
+		super.init(wb);
+		setTitle(Messages
+				.getString("MetadataPreferencePage.metadata_configuration")); //$NON-NLS-1$
+		setMessage(Messages
+				.getString("MetadataPreferencePage.select_essential_and_hover")); //$NON-NLS-1$
+	}
+
+	@Override
+	protected IPreferenceStore doGetPreferenceStore() {
+		return UiActivator.getDefault().getPreferenceStore();
+	}
+
+	@Override
+	protected void doPerformDefaults() {
+		setDefaults(essentialsViewer, PreferenceConstants.ESSENTIALMETADATA);
+		setDefaults(hoverViewer, PreferenceConstants.HOVERMETADATA);
+		setDefaults(tolerancesViewer, PreferenceConstants.METADATATOLERANCES);
+		setDefaults(exportViewer, PreferenceConstants.EXPORTMETADATA);
+		tolerancesViewer.setInput(QueryField.ALL);
+		IPreferenceStore preferenceStore = getPreferenceStore();
+		preferenceStore.setValue(PreferenceConstants.JPEGMETADATA,
+				preferenceStore
+						.getDefaultBoolean(PreferenceConstants.JPEGMETADATA));
+		jpegGroup.setSelection(getPreferenceStore().getBoolean(
+				PreferenceConstants.JPEGMETADATA));
+	}
+
+	private void setDefaults(TreeViewer viewer, String key) {
+		if (viewer instanceof CheckboxTreeViewer)
+			((CheckboxTreeViewer) viewer).setCheckedElements(EMPTYOBJECTS);
+		IPreferenceStore preferenceStore = getPreferenceStore();
+		String ess = preferenceStore.getDefaultString(key);
+		preferenceStore.setValue(key, ess);
+		fillViewer(viewer, ess, -1, true);
+	}
+
+	@Override
+	protected void doPerformOk() {
+		saveValues(essentialsViewer, PreferenceConstants.ESSENTIALMETADATA);
+		saveValues(hoverViewer, PreferenceConstants.HOVERMETADATA);
+		saveValues(exportViewer, PreferenceConstants.EXPORTMETADATA);
+		saveValues(tolerancesViewer, PreferenceConstants.METADATATOLERANCES);
+		getPreferenceStore().setValue(PreferenceConstants.JPEGMETADATA,
+				jpegGroup.getSelection());
+	}
+
+	private void saveValues(TreeViewer viewer, String pkey) {
+		if (viewer.getInput() != null) {
+			StringBuilder sb = new StringBuilder();
+			if (viewer instanceof CheckboxTreeViewer) {
+				Object[] checkedElements = ((CheckboxTreeViewer) viewer)
+						.getCheckedElements();
+				for (Object object : checkedElements) {
+					if (object instanceof QueryField) {
+						QueryField queryField = (QueryField) object;
+						String id = queryField.getId();
+						if (id != null && queryField.getChildren().length == 0) {
+							if (sb.length() > 0)
+								sb.append('\n');
+							sb.append(id);
+						}
+					}
+				}
+			} else
+				for (String key : toleranceMap.keySet()) {
+					if (sb.length() > 0)
+						sb.append('\n');
+					sb.append(key).append("=").append(toleranceMap.get(key)); //$NON-NLS-1$
+				}
+			getPreferenceStore().setValue(pkey, sb.toString());
+		}
+	}
+
+}

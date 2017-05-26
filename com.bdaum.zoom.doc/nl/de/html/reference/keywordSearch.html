@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Schlagwortsuche</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
+<h2>Schlagwortsuche </h2>
+Anders als die Textsuche, die in allen Texteinträgen eines Bildes
+sucht, sucht die Schlagwortsuche nur in den definierten Schlagwörtern
+eines Bildes. Dabei ist es möglich mit Boole'schen Operation wie <span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Use the AND operator for AND conditions: Only image containing both keywords will be returned."><code>UND</code></span></span>, <code>ODER</code> und <code>OHNE</code> auch nach Schlagwortkombinationen zu suchen:<br>
+<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Press the right arrow key or ENTER to accept a proposal."></span></span><ul style="font-weight: normal;"><li><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Use the AND operator for AND conditions: Only image containing both keywords will be returned.">Verwenden
+Sie den Operator <span style="font-family: monospace;">U</span><code>ND</code> für UND-Verknüpfungen: Nur&nbsp;Bilder, die
+beide Schlagworte enthalten, werden&nbsp;zurückgegeben.&nbsp;</span></span><span id="result_box" class="long_text"><span title="Alternatively you can prefix a word with '-'."></span></span></li>
+  <li><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Use the AND operator for AND conditions: Only image containing both keywords will be returned.">Verwenden
+Sie den Operator</span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Use the AND operator for AND conditions: Only image containing both keywords will be returned."> <code>ODER</code></span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Use the AND operator for AND conditions: Only image containing both keywords will be returned.">, </span></span><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Use the AND operator for AND conditions: Only image containing both keywords will be returned.">um alle Bilder zu finden, die nur
+eines, mehrere oder alle der mit ODER verknüpften Schlagwörter enthalten.<br>
+    </span></span></li>
+
+<li><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Use the NOT operator to find images not containing a keyword.">Verwenden
+Sie den Operator <code>OHNE</code> um Bilder zu finden, die ein bestimmtes Schlagwort
+nicht enthalten.&nbsp;</span><span title="Alternatively you can prefix a word with '-'."></span></span></li>
+</ul>
+<span style="font-weight: bold;" id="result_box" class="long_text"><span title="Examples:"><br>
+<br>
+Beispiele</span></span><span style="font-weight: bold;">: <br>
+<br>
+</span>
+<table style="text-align: left; width: 100%;" border="0" cellpadding="8" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+      <pre><code><span id="result_box" class="long_text"><span title="dogs cats birds : will find all images tagged with dogs, cats, or birds.">Katzen ODER Vögel</span></span></code></pre>
+      </td>
+      <td style="vertical-align: middle;"><span id="result_box" class="long_text"><span title="dogs cats birds : will find all images tagged with dogs, cats, or birds.">Findet
+alle Bilder mit den Schlagworten 'Katzen' oder 'Vögel'</span></span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">
+      <pre><code><span id="result_box" class="long_text"><span title="dogs cats birds : will find all images tagged with dogs, cats, or birds.">Hunde</span></span></code><code style="font-weight: bold;"> UND </code><code><span id="result_box" class="long_text"><span title="dogs cats birds : will find all images tagged with dogs, cats, or birds.">Katzen</span></span></code><code><span id="result_box" class="long_text"><span title="dogs cats birds : will find all images tagged with dogs, cats, or birds."><br></span></span></code><code><span id="result_box" class="long_text"><span title="dogs cats birds : will find all images tagged with dogs, cats, or birds."></span></span></code></pre>
+      </td>
+      <td>Findet alle Bilder, die sowohl
+mit 'Hunde' als auch mit 'Katzen' verschlagwortet sind</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">
+      <pre><span style="font-family: monospace;"><span style="font-weight: bold;">Tiere</span></span><code style="font-weight: bold;"> OHNE </code><code><span id="result_box" class="long_text"><span title="dogs cats birds : will find all images tagged with dogs, cats, or birds.">Katzen</span></span></code><span style="font-family: monospace;"><span style="font-weight: bold;"></span></span><code><span id="result_box" class="long_text"><span title="dogs cats birds : will find all images tagged with dogs, cats, or birds."></span></span></code><span id="result_box" class="long_text"><span title="dogs cats birds : will find all images tagged with dogs, cats, or birds."></span></span></pre>
+      </td>
+      <td>Findet alle Bilder,
+die&nbsp;mit 'Tiere' jedoch nicht mit 'Katzen' verschlagwortet sind. <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-weight: bold;"></span><span id="result_box" class="long_text"><span title="dogs cats birds : will find all images tagged with dogs, cats, or birds."><br>
+<br>
+Beim Tippen macht Ihnen der Inhaltsassistent der Schlagwortsuche
+Vorschläge. Diese basieren auf der zentralen Schlagwortliste des
+Katalogs. Da diese Schlagwortliste sämtliche vorhandenen Schlagworte umfasst, sind andere Eingaben nicht sinnvoll.</span></span><code><span id="result_box" class="long_text"><span title="dogs cats birds : will find all images tagged with dogs, cats, or birds."><br>
+</span></span></code>
+<ul style="font-weight: normal;">
+<li><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Press the right arrow key or ENTER to accept a proposal.">Drücken
+Sie die</span></span> <span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Press the right arrow key or ENTER to accept a proposal."><abbr>Pfeiltaste nach unten</abbr></span></span> , die <abbr>Pfeiltaste nach oben</abbr>, <abbr>Bild nach oben</abbr>, oder <abbr>Bild nach unten</abbr> um durch alle möglichen Schlagworte zu navigieren.<br>
+<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Press the right arrow key or ENTER to accept a proposal."></span></span></li>
+  <li><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Press the right arrow key or ENTER to accept a proposal.">Drücken
+Sie die <abbr>rechte Pfeiltaste</abbr> oder <abbr>Ende </abbr>um einen einzelnen Vorschlag zu
+akzeptieren und weiterzutippen. Mit <abbr>Eingabe</abbr> starten Sie die Suche.</span></span></li>
+<li><span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Type on to reject a proposal">Tippen Sie einfach
+weiter, um einen Vorschlag abzulehnen.</span></span></li>
+</ul>
+<br>
+
+<br>
+<span id="result_box" class="long_text"><span style="background-color: rgb(255, 255, 255);" title="Keyword Search"></span><span style="background-color: rgb(255, 255, 255);" title="Can also be written as animals -cats."></span></span><br>
+</body></html>

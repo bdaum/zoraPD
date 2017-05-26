@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="csv_wizard_context" title="CSV wizard">
+      <description>Create Comma Separated Values (CSV) from selected images</description>
+      <topic href="html/cs.html" label="Create CSV wizard"/>
+   </context>
+</contexts>

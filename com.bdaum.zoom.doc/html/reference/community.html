@@ -1,0 +1,236 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Community</title>
+
+
+
+
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css">
+
+  
+  <link rel="stylesheet" type="text/css" href="../schema.css"></head><body>
+<h1 style="text-align: center;">Community</h1>
+
+
+<h6 class="CaptionFigColumn SchemaHeader">Identifier: 
+</h6>
+com.bdaum.zoom.net.communities.community
+
+<h6 class="CaptionFigColumn SchemaHeader"><br>
+</h6>
+<h6 class="CaptionFigColumn SchemaHeader"><br>
+</h6>
+<h6 class="CaptionFigColumn SchemaHeader">Since: </h6>
+0.9.0<br>
+<br>
+
+<h6 class="CaptionFigColumn SchemaHeader">Description: </h6>
+Extension point for 
+adding new web photo community uploaders
+
+<h6 class="CaptionFigColumn SchemaHeader"><br>
+</h6>
+<h6 class="CaptionFigColumn SchemaHeader"><br>
+</h6>
+<h6 class="CaptionFigColumn SchemaHeader">Configuration Markup:</h6>
+<br>
+<br>
+
+
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.extension">extension</a> (<a href="#e.community">community</a>)&gt;</p>
+
+<p class="code SchemaDtd">&lt;!ATTLIST extension</p>
+
+<p class="code SchemaDtdAttlist">point&nbsp;CDATA #REQUIRED</p>
+
+<p class="code SchemaDtdAttlist">id&nbsp;&nbsp;&nbsp;&nbsp;CDATA #IMPLIED</p>
+
+<p class="code SchemaDtdAttlist">name&nbsp;&nbsp;CDATA #IMPLIED</p>
+&gt;
+
+
+<p class="ConfigMarkupElementDesc">Extension point for supporting additional web 
+communities</p>
+<br>
+
+<br>
+
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.account">account</a> (<a href="#e.accountType">accountType</a>* , <a href="#e.accessType">accessType</a>*)&gt;</p>
+
+<p class="code SchemaDtd">&lt;!ATTLIST account</p>
+
+<p class="code SchemaDtdAttlist">authentification&nbsp;(password|authorization) 
+</p>
+&gt;
+
+
+<p class="ConfigMarkupElementDesc">Community account</p>
+<br>
+
+<ul class="ConfigMarkupAttlistDesc">
+<li><b>authentification</b> - Authorization type (password, authorization token) 
+</li>
+</ul>
+<br>
+
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.community">community</a> (<a href="#e.account">account</a>)&gt;</p>
+
+<p class="code SchemaDtd">&lt;!ATTLIST community</p>
+
+<p class="code SchemaDtdAttlist">name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA #REQUIRED</p>
+
+<p class="code SchemaDtdAttlist">home&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA #REQUIRED</p>
+
+<p class="code SchemaDtdAttlist">icon&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA #IMPLIED</p>
+
+<p class="code SchemaDtdAttlist">id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IDREF
+#REQUIRED</p>
+
+<p class="code SchemaDtdAttlist">api&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA
+#REQUIRED</p>
+
+<p class="code SchemaDtdAttlist">bannerImage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA #IMPLIED</p>
+
+<p class="code SchemaDtdAttlist">supportsGeocoding&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(true | false) 
+"false"</p>
+
+<p class="code SchemaDtdAttlist">supportsPhotosets&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(false|true|single) 
+"false"</p>
+
+<p class="code SchemaDtdAttlist">supportsTagging&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(true | false) 
+"false"</p>
+
+<p class="code SchemaDtdAttlist">supportsCategories&nbsp;&nbsp;&nbsp;&nbsp;(true|false|set) 
+"false"</p>
+
+<p class="code SchemaDtdAttlist">supportsSubCategories&nbsp;(true|false|set) 
+"false"</p>
+
+<p class="code SchemaDtdAttlist">sessions&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(true | false) 
+"false"</p>
+&gt;
+
+
+<p class="ConfigMarkupElementDesc">Web photo community</p>
+<br>
+
+<ul class="ConfigMarkupAttlistDesc">
+<li><b>name</b> - Translatable name of community 
+</li><li><b>home</b> - Home URL 
+</li><li><b>icon</b> - Community logo 
+</li><li><b>id</b> - Unique community ID 
+</li><li><b>api</b> - Class implementing the image uploader. Must extend 
+org.scohen.juploadr.uploadapi.ImageUploadApi 
+</li><li><b>bannerImage</b> - Larger community logo for use in wizard banner, approx. 
+64x64 pixels 
+</li><li><b>supportsGeocoding</b> - Specifies if community supports geocoding 
+</li><li><b>supportsPhotosets</b> - false: No photosets at all true: nor or multiple 
+photosets per image single: exactly one photoset per image 
+</li><li><b>supportsTagging</b> - Specifies if community supports tagging (keywords) 
+</li><li><b>supportsCategories</b> - false: no categories at all true: images may 
+declare a category set: only photosets may declare a category 
+</li><li><b>supportsSubCategories</b> - false: no subcategories at all true: images 
+may declare a subcategory set: only photosets may declare a subcategory 
+</li><li><b>sessions</b> - Specifies if community needs session logic </li>
+</ul>
+<br>
+
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.accessType">accessType</a> (<a href="#e.accessTypeDetail">accessTypeDetail</a>*)&gt;</p>
+
+<p class="code SchemaDtd">&lt;!ATTLIST accessType</p>
+
+<p class="code SchemaDtdAttlist">key&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA #REQUIRED</p>
+
+<p class="code SchemaDtdAttlist">label&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA #REQUIRED</p>
+
+<p class="code SchemaDtdAttlist">isDefault&nbsp;(true | false) "false"</p>
+&gt;
+
+
+<p class="ConfigMarkupElementDesc">access type such as private or public</p>
+<br>
+
+<ul class="ConfigMarkupAttlistDesc">
+<li><b>key</b> - Unique key 
+</li><li><b>label</b> - Translatable label 
+</li><li><b>isDefault</b> - true, if this is the default access type </li>
+</ul>
+<br>
+
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.accountType">accountType</a> 
+EMPTY&gt;</p>
+
+<p class="code SchemaDtd">&lt;!ATTLIST accountType</p>
+
+<p class="code SchemaDtdAttlist">key&nbsp;&nbsp;&nbsp;CDATA #REQUIRED</p>
+
+<p class="code SchemaDtdAttlist">label&nbsp;CDATA #REQUIRED</p>
+&gt;
+
+
+<p class="ConfigMarkupElementDesc">A possible account type such as free or 
+pro.</p>
+<br>
+
+<ul class="ConfigMarkupAttlistDesc">
+<li><b>key</b> - Unique key 
+</li><li><b>label</b> - Translatable label </li>
+</ul>
+<br>
+
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.accessTypeDetail">accessTypeDetail</a> EMPTY&gt;</p>
+
+<p class="code SchemaDtd">&lt;!ATTLIST accessTypeDetail</p>
+
+<p class="code SchemaDtdAttlist">key&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA #REQUIRED</p>
+
+<p class="code SchemaDtdAttlist">label&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA #REQUIRED</p>
+
+<p class="code SchemaDtdAttlist">initValue&nbsp;(true | false) "false"</p>
+&gt;
+
+
+<p class="ConfigMarkupElementDesc">Access type detail information</p>
+<br>
+
+<ul class="ConfigMarkupAttlistDesc">
+<li><b>key</b> - Unique key 
+</li><li><b>label</b> - Translatable label 
+</li><li><b>initValue</b> - Initial value </li>
+</ul>
+<br>
+
+<h6 class="CaptionFigColumn SchemaHeader">Examples: 
+</h6>
+com.bdaum.zoom.net.communities.flickr/plugin.xml 
+
+<h6 class="CaptionFigColumn SchemaHeader"><br>
+</h6>
+<h6 class="CaptionFigColumn SchemaHeader"><br>
+</h6>
+<h6 class="CaptionFigColumn SchemaHeader">API Information: </h6>
+see 
+org.scohen.juploadr.uploadapi.ImageUploadApi 
+
+<h6 class="CaptionFigColumn SchemaHeader"><br>
+</h6>
+<h6 class="CaptionFigColumn SchemaHeader"><br>
+</h6>
+<h6 class="CaptionFigColumn SchemaHeader">Supplied Implementation: 
+</h6>
+<br>
+com.bdaum.zoom.net.communities.flickr <br>
+com.bdaum.zoom.net.communities.locr 
+<br>
+com.bdaum.zoom.net.communities.smugmug <br>
+com.bdaum.zoom.net.communities.zoomr 
+<br>
+<br>
+
+<p class="note SchemaCopyright">2010 Berthold Daum </p>
+</body></html>

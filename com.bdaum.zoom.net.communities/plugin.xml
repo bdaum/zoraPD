@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="community" name="%extension-point.name" schema="schema/community.exsd"/>
+   <extension
+         point="org.eclipse.ui.exportWizards">
+      <category
+            id="com.bdaum.zoom.net.communities.category"
+            name="%category.name">
+      </category>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.bdaum.zoom.net.communities.CommunitiesPreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.help.toc">
+      <toc
+            file="toc.xml"
+            primary="false">
+      </toc>
+      <toc
+            file="tocwizard.xml"
+            primary="false">
+      </toc>
+      <toc
+            file="toctaskwizard.xml"
+            primary="false">
+      </toc>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml">
+      </contexts>
+      <contexts
+            file="prefContexts.xml"
+            plugin="com.bdaum.zoom.net.ui">
+      </contexts>
+   </extension>
+   <extension
+         point="org.eclipse.help.index">
+      <index
+            file="index.xml">
+      </index>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.ui.preferencePageExtension">
+      <preferencePageExtension
+            class="com.bdaum.zoom.net.communities.CommunitiesPreferencePage"
+            pageId="com.bdaum.zoom.net.preferences.InternetPreferencePage">
+      </preferencePageExtension>
+   </extension>
+
+</plugin>

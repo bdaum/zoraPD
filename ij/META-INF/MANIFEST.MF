@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Ij Plug-in
+Bundle-SymbolicName: ij
+Bundle-Version: 1.4.3
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-ClassPath: tools.jar,
+ .
+Export-Package: ij,
+ ij.io,
+ ij.measure,
+ ij.plugin,
+ ij.plugin.filter,
+ ij.plugin.frame,
+ ij.process,
+ ij.text,
+ ij.util
+Bundle-Vendor: %Bundle-Vendor.bdaum
+Bundle-Localization: plugin

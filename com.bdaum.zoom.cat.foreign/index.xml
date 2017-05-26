@@ -1,0 +1,15 @@
+<index>
+	<entry keyword="Catalog">
+		<entry keyword="Foreign ~">
+			<topic href="html/concepts/foreignCat.html" />
+		</entry>
+	</entry>
+	<entry keyword="Foreign Catalog">
+		<topic href="html/concepts/foreignCat.html" />
+	</entry>
+	<entry keyword="Import">
+		<entry keyword="~ Foreign Catalog">
+			<topic href="html/concepts/foreignCat.html" />
+		</entry>
+	</entry>
+</index>

@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+
+
+
+
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Schlagwörter, Vokabeln und Kategorien</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
+<h2>Schlagwörter, Vokabeln und Kategorien</h2>Schlagwörter und
+Kategorien sind für die Klassifizierung von Bildern unerlässlich. Beide
+werden von IPTC-Metadaten unterstützt. Was ist nun der Unterschied
+zwischen Schlagwörtern und Kategorien?<br>
+<br>
+<ul>
+  <li>Die Klassifizierung nach Kategorien ist allgemeiner, während die
+Klassifizierung nach Schlüsselwörtern spezifischer ist. Zum Beispiel
+deckt die Kategorie "Natur" oder die Unterkategorie "Pilze" ein
+ziemlich großes Feld ab, während das Stichwort "Boletus aestivalis" auf
+eine genaue Art zielt.</li>
+  <li>Kategorien sind in Hierarchien organisiert, z.B.<br>
+    <code>&nbsp;&nbsp;&nbsp; Natur<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pilze<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pflanzen<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Bäume<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tiere</code><br>
+In <span style="font-style: italic;">ZoRa PhotoDirector </span>werden
+alle Kategorien als Kollektionen im Katalog-Sichtfenster angezeigt.
+Wegen der hierarchischen Struktur würde die&nbsp; Kollektion "Pflanzen"
+auch Bilder aus der&nbsp; Kollektion "Bäume" enthalten.<br>
+Für Schlagwörter existiert keine solche Hierarchie. Standardmäßig
+werden keine Sammlungen für die vielen Schlagwörter generiert, die
+möglicherweise vorhanden sind, aber Sie können eigene Kollektionen für
+ausgewählte Schlagwörter definieren.</li>
+  <li>Normalerweise kann ein Bild genau einer Hauptkategorie angehören. Der IPTC-Standard erlaubt zusätzlich Ergänzende Kategorien (<span style="font-style: italic;">Supplemental Categories</span>).<br>
+Auf der anderen Seite kann jedes Bild mit einer unbegrenzten Anzahl von Schlagwörtern versehen werden.#</li>
+  
+  <li>Wenn ein neuer Katalog angelegt wird, wird je nach Katalogthema automatisch eine Hierarchie von Kategorien eingerichtet (siehe <a href="../reference/catProperties.html">Katalogeigenschaften</a>) basierend auf der Definition in einer internen <code>categories*.ini</code>-Datei. Bei Bedarf können Sie diese Definition überschreiben, indem Sie eine solche Datei in das Verzeichnis <code>dropins&nbsp; </code>im Installationordner platzieren:<br>
+    <code>&nbsp;&nbsp;&nbsp; categories.ini<br>
+    </code><code>&nbsp;&nbsp;&nbsp; categories_food.ini<br>
+    </code><code>&nbsp;&nbsp;&nbsp; categories_travel.ini<br>
+    </code><code>&nbsp;&nbsp;&nbsp; categories_wedding.ini</code><br>
+Sie können auch später die Kategorienhierarchie interaktiv
+in den <a href="../reference/catProperties.html#categories">Katalogeigenschaften</a> ändern,<br>
+Ein bequemer Weg, die <code>categories*.ini</code>-Dateien zu erzeugen, ist, die aktuelle Kategorienhierarchie in eine Textdatei zu speichern (<a href="../reference/catProperties.html#categories">Katalogeigenschaften</a>) und diese Textdatei dann mit einem Texteditor zu bearbeiten.<br>
+Darüber hinaus können Dateien <code>keywords*.ini</code> zu Verzeichnis <code>dropins </code>hinzugefügt werden, um einen neuen Katalog mit Schlagwörtern zu füllen. Für das Dateiformat siehe unten.</li>
+
+</ul>
+<br>
+Ein großes Problem mit Schlagwörtern ist, Schlagwörter-Unordnung zu
+vermeiden, weil dieses es schwierig macht, Bilder durch Schlagwörtern
+abzurufen. Ein Abhilfe ist es, alle Schlagwörter zu einer
+Rechtschreibeprüfung zu unterziehen, die in <span style="font-style: italic;">ZoRa PhotoDirector</span> automatisch durchgeführt wird, wenn ein Wörterbuch definiert ist (siehe <a href="../reference/catProperties.html">Katalogeigenschaften</a>).<br>
+Ein weiteres Mittel ist die Verwendung von<span style="font-style: italic;"> kontrollierten Vokabularen</span>. Diese können in den <a href="../reference/catProperties.html#keywords">Katalogeigenschaften</a> definiert werden. Wenn kontrollierte Vokabulare definiert sind, wird <span style="font-style: italic;">ZoRa PhotoDirector</span>
+alle Schlagwörter markieren, die nicht in einem kontrollierten
+Vokabular enthalten sind. Im Internet gibt es hier viele vordefinierte
+kontrollierte Vokabulare, zum Beispiel hier<br>
+&nbsp;&nbsp;&nbsp; <a href="http://lightroom-keyword-list-project.blogspot.de/p/get-list.html">http://lightroom-keyword-list-project.blogspot.de/p/get-list.html</a><br>
+oder hier<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="Http://www.photo-keywords.com/specialist-list-download.php">Http://www.photo-keywords.com/specialist-list-download.php</a><br>
+Sie können selbstverständlich auch Ihre eigenen Vokabulare erstellen.<br>
+Das Dateiformat für Kategorien, Schlagwörter und Vokabulare ist fast identisch und kompatibel mit anderen Anwendungen wie <span style="font-style: italic;">Adobe Lightroom</span>.<br>
+<br>
+<ul>
+  <li>Jede Kategorie oder jedes Schlagwort ist in einer separaten Zeile enthalten.</li>
+  <li>Hierarchien werden durch Einrücken mittels eines TAB-Zeichen definiert.</li>
+  <li>Synonyme (nur für Kategorien und Vokabeln verwendet) werden durch Einklammern mit geschweiften Klammern deklariert. </li>
+  <li>Gruppen (nur in Vokabeln verwendet) werden durch Einklammern mit eckigen Klammern deklariert. </li>
+</ul>
+Schauen Sie sich einfach eines der Vokabulare von den oben genannten Webseiten an.<br>
+<br>
+
+
+
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> Auf dem Mac: <acronym>ZoRa Photo Director&gt;Einstellungen&gt;...</acronym><br>
+
+
+</body></html>

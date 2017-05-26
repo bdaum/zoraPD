@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Reference"> 
+	<topic label="User interface"> 
+		<topic href="html/reference/perspective.html" label="Perspectives">
+     <topic label="Lightbox">
+     </topic>
+     <topic label="Sleeves">
+     </topic>
+     <topic label="Data Entry">
+     </topic>
+     <topic label="Slides">
+     </topic>
+     <topic label="Exhibition">
+     </topic>
+     <topic label="WebGallery">
+     </topic>
+     <topic label="Geo">
+     </topic>
+  </topic>
+  <topic href="html/reference/views.html" label="Views">
+     <topic href="html/reference/galleries.html" label="Galleries">
+        <topic href="html/reference/lightbox.html" label="Lightbox">
+        </topic>
+        <topic href="html/reference/sleeves.htm" label="Sleeves">
+        </topic>
+        <topic href="html/reference/tableView.htm" label="Table">
+        </topic>
+        <topic href="html/reference/hstrip.html" label="Horizontal Strip">
+        </topic>
+        <topic href="html/reference/vstrip.html" label="Vertical Strip">
+        </topic>
+        <topic href="html/reference/duplicates.html" label="Duplicates">
+        </topic>
+        <topic href="html/reference/series.html" label="Series">
+        </topic>
+     </topic>
+     <topic href="html/reference/catalog.html" label="Catalog">
+     </topic>
+     <topic href="html/reference/history.html" label="History">
+     </topic>
+     <topic href="html/reference/preview.html" label="Preview">
+     </topic>
+     <topic href="html/reference/histogram.html" label="Histogram">
+     </topic>
+     <topic href="html/reference/hierarchy.html" label="Hierarchy">
+     </topic>
+     <topic href="html/reference/metadata.html" label="Metadata">
+     </topic>
+     <topic href="html/reference/dataEntry.html" label="Data Entry">
+     </topic>
+     <topic href="html/reference/tagcloud.html" label="Tag Cloud">
+     </topic>
+     <topic href="html/reference/slideshow.html" label="Slideshow editor">
+     </topic>
+     <topic href="html/reference/exhibition.html" label="Exhibition editor">
+     </topic>
+     <topic href="html/reference/webGallery.html" label="Web Gallery editor">
+     </topic>
+     <topic label="Web Engines">
+        <anchor id="webEngines"/>
+     </topic>
+     <topic href="html/reference/trashcan.html" label="Trashcan">
+     </topic>
+     <topic href="html/reference/logView.html" label="Log">
+     </topic>
+     <topic href="html/reference/progress.html" label="Progress">
+     </topic>
+     <topic href="html/reference/bookmarks.html" label="Bookmarks">
+     </topic>
+     <anchor id="views"/>
+  </topic>
+  <topic href="html/reference/albums.html" label="Albums">
+  </topic>
+  <topic href="html/reference/spell.html" label="Spell checking">
+  </topic>
+  <topic href="html/reference/slideshowPlayer.html" label="Slideshow player">
+  </topic>
+  <topic href="html/reference/internalViewer.html" label="Internal image viewer">
+  </topic>
+  <anchor id="viewers"/>
+	</topic>
+	<topic label="Preferences">
+  <topic href="html/reference/appearancePrefs.html" label="Appearance">
+  </topic>
+  <topic href="html/reference/applicationPrefs.html" label="Application">
+  </topic>
+  <topic href="html/reference/audioPrefs.html" label="Audio">
+  </topic>
+  <topic href="html/reference/fileAssociations.html" label="External programs">
+  </topic>
+		<topic label="General" href="html/reference/generalPrefs.html" />
+  <topic href="html/reference/importPrefs.html" label="Import">
+  </topic>
+  <topic href="html/reference/catPrefs.html" label="Catalog">
+  </topic>
+  <topic href="html/reference/keyPrefs.html" label="Key shortcuts">
+  </topic>
+  <topic href="html/reference/keywordPrefs.html" label="Keywords">
+  </topic>
+  <topic href="html/reference/mousePrefs.html" label="Mouse">
+  </topic>
+  <topic href="html/reference/metadataPrefs.html" label="Metadata">
+  </topic>
+  <topic href="html/reference/perspectivePrefs.html" label="Perspectives">
+  </topic>
+  <anchor id="preferences"/> 
+	</topic>
+ <topic label="Export">
+    <anchor id="export"/>
+    <anchor id="internet"/>
+    <topic label="Others">
+       <topic href="html/reference/exportFolder.html" label="Local Folders and FTP">
+       </topic>
+       <anchor id="exportOthers"/>
+    </topic>
+ </topic>
+ <topic label="Import">
+    <anchor id="import"/>
+ </topic>
+ <anchor id="reference"/>
+ <topic href="html/reference/css.html" label="CSS style sheets">
+ </topic>
+ <topic href="html/reference/commandline.html" label="Command line parameters">
+ </topic>
+ <topic label="Copyright">
+ </topic>
+ <topic label="Extensions">
+    <anchor id="extensions"/>
+ </topic>
+ <topic href="html/reference/developers.html" label="Developers">
+    <topic href="html/reference/extensionPoints.html" label="Extension points">
+       <topic href="html/reference/importFilter.html" label="com.bdaum.zoom.image.importFilter">
+       </topic>
+       <topic href="html/reference/community.html" label="com.bdaum.zoom.net.communities.community">
+       </topic>
+       <topic href="html/reference/webGalleryGenerator.html" label="com.bdaum.zoom.ui.galleryGenerator">
+       </topic>
+       <topic href="html/reference/gpsParser.html" label="com.bdaum.zoom.ui.gpsParser">
+       </topic>
+       <topic href="html/reference/imageViewer.html" label="com.bdaum.zoom.ui.imageViewer">
+       </topic>
+       <topic href="html/reference/mappingSystem.html" label="com.bdaum.zoom.gps.mappingSystem">
+       </topic>
+       <topic href="html/reference/recipeDetector.html" label="com.bdaum.zoom.core.recipeDetector">
+       </topic>
+    </topic>
+    <topic href="html/reference/menuToolbars.html" label="Menus and Toolbars">
+    </topic>
+    <topic label="User assistance">
+       <topic href="html/reference/helppages.html" label="Contributing help pages">
+       </topic>
+       <topic href="html/reference/shortcuts.html" label="Contributing keyboard shortcuts">
+       </topic>
+    </topic>
+    <topic href="html/reference/api.html" label="API">
+    </topic>
+ </topic>
+</toc>

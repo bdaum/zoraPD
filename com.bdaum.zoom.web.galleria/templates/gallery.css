@@ -1,0 +1,46 @@
+/*
+ * Gallery Styling
+ */
+ 
+html,body{
+	${bgcolor}
+    ${bgimage}
+    margin:0;
+}
+body{
+	text-align: center;
+	${bordercolor}
+    ${bodyfont}
+	border-style: none solid solid;
+	border-width: medium 1px 1px;
+}
+.content{
+	${bodyfont}
+    width:${galleriaWidth}px;margin:20px auto;
+}
+h1{
+	margin-bottom: 10px;
+	padding: 0;
+	${titlefont}
+	letter-spacing:-1px;
+}
+p{
+	margin:0 0 20px
+}
+a{
+	${linkcolor}
+	text-decoration:none;
+}
+div#ads {
+	clear: both;
+	padding: 12px 0 12px 66px;
+}
+div#footer {
+	clear: both;
+	${footerfont}
+	margin: 0 auto;
+	padding: 20px 0 40px;
+	text-align: center;
+}
+/* This rule is read by Galleria to define the gallery height: */
+#galleria{height:${galleriaHeight}px;}

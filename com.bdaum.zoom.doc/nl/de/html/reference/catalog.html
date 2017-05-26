@@ -1,0 +1,271 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+
+
+  
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Katalog-Sichtfenster</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css">
+
+  
+  <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head>
+<body>
+<h2>Das Katalog-Sichtfenster</h2>
+
+<p>Das <span style="font-style: italic;">Katalog-Sichtfenster </span>
+zeigt die im
+Katalog gespeicherten bildbezogenen
+Informationen. Diese
+Informationen sind in verschiedene Kategorien unterteilt:</p>
+
+<ul style="font-weight: normal;">
+
+  <li><span style="font-weight: bold;"> Kollektionen. </span>Kollektionen
+werden von einer <a href="collectionEdit.html">
+    <span style="font-style: italic;"> Abfrage </span>
+    </a> definiert, welche bestimmte Bilder aus dem Katalog
+auswählt. Diese
+Abfragen können vom Benutzer definiert
+werden,&nbsp;andere
+sind durch das System bereits vordefiniert. Während benutzerdefinierte
+Kollektion frei <a href="collectionEdit.html">editiert</a> werden
+dürfen, erlauben systemdefinierte Kollektionen nur das Ändern ihrer
+Sortierkriterien.<span style="font-weight: bold;"></span><br>
+Kollektionen
+können geschachtelt werden: Sie können Unterselektionen&nbsp;(<img style="width: 16px; height: 16px;" alt="Ordner Unterselektion" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/folder_and.png">) 
+zu&nbsp;jeder
+gegebenen&nbsp;Kollektion
+hinzufügen, um
+die Abfrage weiter zu verfeinern. Zum
+Beispiel: Durch Hinzufügen der Unterabfrage&nbsp;<span style="font-weight: bold;">EXIF Blendenzahl &gt; 5.6 </span>zu
+einer&nbsp;<span style="font-weight: bold;">5-Sterne</span>-<span style="font-weight: bold;"></span>Kollektion,
+erstellen Sie eine&nbsp;Kollektion,
+welche alle 5-Sterne-Bilder mit einer Blendenzahl
+größer als 5.6 enthält <br>
+Unterabfragen
+können sowohl zu benutzerdefinierten als auch zu systemdefinierten
+Kollektionen hinzugefügt werden. Wir unterscheiden zwischen den
+folgenden Arten von Kollektionen:</li>
+  <ul style="font-weight: normal;">
+    <li><span style="font-weight: bold;"> Importe</span><span style="font-weight: bold;"></span> (<img style="width: 16px; height: 16px;" alt="Ordner Importe" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/folder_key.png">).<span style="font-weight: bold;">&nbsp;</span><span style="font-weight: bold;"></span>Kollektionen&nbsp;dieser
+Art werden automatisch beim Import von Bildern erstellt. Sie
+zeigen die
+Bilder von früheren <span style="font-style: italic;">Import</span>-Operationen.&nbsp;Kollektionen
+dieser Art dürfen
+aus dem Katalog entfernt werden, außer der Kollektion <span style="font-weight: bold;">Letzer Import</span>  (<img style="width: 16px; height: 16px;" alt="Ordner Letzter Import" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/lastimport.png">),
+die auch besonders dargestellt wird.</li>
+    <li><span style="font-weight: bold;"></span><span style="font-weight: bold;">Kategorien</span> (<img style="width: 16px; height: 16px;" alt="category folder" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/folder_page.png">).
+Kollektionen&nbsp;dieser
+Art werden automatisch erstellt
+      -
+eine für jede
+definierte Kategorie. Kategorien können hinzugefügt und gelöscht
+werden, allerdings muss das in der Kategorienverwaltung der
+Katalogeigenschaften geschehen (<acronym>Katalog&gt;Eigenschaften...&gt;Kategorien</acronym>).</li>
+    <li><span style="font-weight: bold;"></span><span style="font-weight: bold;">Bewertungen</span> (<img style="width: 16px; height: 16px;" alt="ratings folder" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/folder_star.png">).
+Kollektionen&nbsp;dieser
+Art werden beim Neuanlegen eines Katalogs automatisch erstellt: eine
+      Kollektion Kollektion für
+nicht bewertete Bilder.&nbsp;Kollektionen dieser Art
+können nicht vom&nbsp;Benutzer entfernt werden.</li>
+    <li><span style="font-weight: bold;"></span><span style="font-weight: bold;">Zeitlinie</span> (<img style="width: 16px; height: 16px;" alt="timeline folder" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/folder_clock.png">).Kollektionen<span style="font-weight: bold;"></span>
+dieses Typs werden automatisch beim Import von
+Bildern&nbsp;erstellt und gruppieren die Bilder nach
+Erstellungsdatum. Die
+Zeitlinie kann in den Katalog-Eigenschaften konfiguriert werden (<acronym><span style="font-style: italic;">Katalog&gt;Eigenschaften&gt;Allgemeines</span></acronym>).&nbsp;Kollektionen
+dieser Art können nicht vom&nbsp;Benutzer entfernt werden, sondern
+werden automatisch gelöscht, wenn sie leer werden.</li><li><span style="font-weight: bold;">Orte </span>(<img style="width: 16px; height: 16px;" alt="timeline folder" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/folder_world.png">).Kollektionen<span style="font-weight: bold;"></span>
+dieses Typs können automatisch beim Import von
+Bildern&nbsp;erstellt werden und gruppieren die Bilder nach
+Erstellungsdatum. Die Ortskollektionen können in den Katalog-Eigenschaften konfiguriert werden (<acronym><span style="font-style: italic;">Katalog&gt;Eigenschaften&gt;Allgemeines</span></acronym>).&nbsp;Kollektionen
+dieser Art können nicht vom&nbsp;Benutzer entfernt werden, sondern
+werden automatisch gelöscht, wenn sie leer werden.</li>
+    <li><span style="font-weight: bold;"></span><span style="font-weight: bold;">Verzeichnisse</span> (<img style="width: 16px; height: 16px;" alt="directories folder" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/folder_page_white.png">). Kollektionen<span style="font-weight: bold;"></span>
+dieses Typs werden automatisch&nbsp;beim Import von Bildern
+erstellt und reflektieren den
+tatsächlichen Speicherort
+der Bilder im Dateisystem. Beachten
+Sie, dass&nbsp;der Inhalt von
+Wechselmedien selbst dann angezeigt wird,&nbsp;wenn diese nicht
+online sind. Um BIlder eindeutig identifizieren zu können
+wird deshalb der Laufwerksbuchstabe&nbsp;durch die
+Datenträgerbezeichnung ersetzt.Kollektionen
+dieser Art können nicht vom&nbsp;Benutzer entfernt werden, sondern
+werden automatisch gelöscht, wenn sie leer werden.</li>
+    <li><span style="font-weight: bold;">Benutzerdefinikerte Kollektionen</span><span style="font-weight: bold;"></span> (<img style="width: 16px; height: 16px;" alt="Ordner Benutzerdefinierte Kollektion" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/folder_add.png">).<span style="font-weight: bold;"></span>Kollektionen
+dieser Art werden ausschließlich durch den Benutzer definiert -
+entweder direkt im Katalog-Sichtfenster mit der Kontextfunktion <acronym>Neue
+Kollektion erstellen</acronym> oder aber mit Hilfe der <a href="galleries.html">Galerie</a>-Menüfunktion <acronym>Abfrage als
+Kollektion speichern.</acronym>
+Die meisten Metadatenfelder können zur Formulierung beliebig komplexer
+Abfragen verwendet werden. Kollektionen dieser Art dürfen jederzeit vom
+Benutzer gelöscht werden.</li>
+  </ul>
+  <li><span style="font-weight: bold;">Alben</span><span style="font-weight: bold;"></span> (<img style="width: 16px; height: 16px;" alt="Ordner Album" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/folder_heart.png">)<span style="font-weight: bold;">.</span>
+    <a href="albums.html">Alben</a> ähneln den Kollektionen, werden jedoch nicht durch Abfragen
+definiert. Stattdessen ziehen Sie einfach Bilder aus einer <a href="galleries.html">Galerie</a>
+auf das Icon eines
+Albums, um es diesem hinzuzufügen. Neue Alben werden im <span style="font-style: italic;">Katalog</span>-Sichtfenster
+mit der Kontextfunkton <acronym>Neues Album anlegen</acronym> angelegt. Um ein Unteralbum einem bestehenden Album hinzu zu fügen, verwenden Sie die Kontextfunktion <acronym>Unteralbum hinzufügen</acronym>.<br>
+    <br>
+  </li>
+  <li><span style="font-weight: bold;">Präsentationen</span><span style="font-weight: bold;"></span></li>
+  <ul style="font-weight: normal;">
+    <li><span style="font-weight: bold;">Ausstellungen</span>
+(<img style="width: 16px; height: 16px;" alt="Ordner Ausstellung" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/exhibition.png">)<span style="font-weight: bold;">. </span>
+Ausstellungen enthalten die Bilder von&nbsp;
+Real-World-Ausstellungen. Sie erleichtern die Planung und das Layout
+solcher
+Ausstellungen.</li>
+  </ul>
+  <ul style="font-weight: normal;">
+    <li><span style="font-weight: bold;"> Diashows</span> (<img style="width: 16px; height: 16px;" alt="Ordner Diashow" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/slideshow.gif">)<span style="font-weight: bold;"></span><span style="font-weight: bold;">. </span>Diashows
+enthalten Bilderserien, die als Vollbild-Diashow angezeigt werden
+sollen.
+      Insbesondere
+erlauben Diashows das Festlegen der Reihenfolge der Bilder und die
+Definition von Zeitintervallen und Überblendeffekten.</li>
+    <li><span style="font-weight: bold;">Web-Galerien</span>
+(<img style="width: 16px; height: 16px;" alt="Ordner Web-Galerie" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/webGallery.gif">)<span style="font-weight: bold;"></span><span style="font-weight: bold;">.</span>
+Web-Galerien unterstützen die Zusammenstellung und Konfiguration von
+Galerien, die auf dem Web präsentiert werden sollen. Anschließend
+können daraus fertige Web-Sites generiert werden, die mit Hilfe
+verschiedener <span style="font-style: italic;">Engines</span> wie <span style="font-style: italic;">Galleriffic</span>, <span style="font-style: italic;">Image Gallery</span> oder <span style="font-style: italic;">Pirobox</span> gezeigt werden können.</li>
+  </ul>
+</ul>
+
+<br>
+Alle
+Elemente solcher Kategorien (Kollektionen, Alben und Präsentationen)
+&nbsp;müssen aus Übersichtlichkeitsgründen jeweils zu einer benannten <span style="font-style: italic;">Gruppe</span> (<img style="width: 16px; height: 16px;" alt="Ordner Gruppe" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/group.gif">)<span style="font-style: italic;"></span> gehören. Solche Gruppen könnnen
+mit der <span style="font-style: italic;">Katalog</span>-Menüfunktion <acronym>Neue
+Gruppe erstellen</acronym> erzeugt werden. Jede Gruppe darf nur
+Elemente der gleichen Kategorie enthalten.<br>
+
+<h3>Menüs und Aktionen</h3>
+
+<br>
+
+Die
+folgenden Funktionen stehen im <span style="font-style: italic;">Katalog</span>-Sichtfenster
+zur Verfügung::
+<ul style="font-weight: normal;">
+
+  <li style="font-weight: bold;">Katalog-Kontext-Funktionen</li>
+  <ul style="font-weight: normal;">
+    <li><acronym>Untergruppe hinzufügen</acronym><span style="font-weight: bold;">. </span>
+Fügt eine geschachtelte Untergruppe einer existierenden Gruppe hinzu.
+Dies ist nur innerhalb von benutzerdefinierten Gruppen
+möglich..</li><li><acronym>Kollektion erstellen</acronym><span style="font-weight: bold;">. </span>
+Erstellt eine neue benutzerdefinierte&nbsp;<span style="font-weight: bold;"></span>Kollektion in
+der ausgewählten
+Gruppe.</li>
+    <li><acronym>Unterselektion hinzufügen</acronym><span style="font-weight: bold;">. </span>
+Fügt eine Unterabfrage der ausgewählten&nbsp;Kollektion
+      
+hinzu.</li>
+    <li><acronym>Neues Album
+anlegen</acronym><span style="font-weight: bold;">.</span>&nbsp;
+Damit wird ein neues Album in der&nbsp;ausgewählten
+Gruppe erstellt.</li><li><acronym>Unteralbum hinzufügen</acronym><span style="font-weight: bold;">. </span>
+Fügt eine Unteralbum dem ausgewählten Album
+      
+hinzu.</li>
+    <li><acronym>Neue Präsentation erstellen&gt;</acronym></li>
+    <ul>
+      <li><acronym></acronym><acronym>Ausstellung.</acronym><span style="font-weight: bold;"> </span>
+Damit wird eine neue Ausstellung in der&nbsp;ausgewählten
+Gruppe erstellt.</li>
+    </ul>
+    <ul>
+      <li><acronym>Diashow</acronym><span style="font-weight: bold;">.&nbsp;</span>Damit
+wird eine neue Diashow in der&nbsp;ausgewählten
+      Gruppe
+erstellt.</li>
+    </ul>
+
+    
+    <ul>
+      <li><acronym></acronym><acronym>Web-Galerie</acronym>.<span style="font-weight: bold;">&nbsp;</span>Damit
+wird eine neue Web-Galerie in der&nbsp;ausgewählten
+      Gruppe
+erstellt.</li>
+    </ul>
+
+    <li><acronym> Diashow wiedergeben</acronym>.
+      Startet
+die Wiedergabe einer Diashow-Präsentation. Die&nbsp;<a href="slideshowPlayer.html">Abspieleinheit </a> ist
+interaktiv und erlaubt die Änderung von Bildeigenschaften
+während der Wiedergabe.</li><li><acronym> Alle Bilder auswählen</acronym>. Wählt in den aktuell geöffneten Galerien alle Bilder aus.</li>
+    <li><span style="font-weight: bold;"> </span><acronym>Bearbeiten</acronym><span style="font-weight: bold;">&nbsp;</span>
+      Ermöglicht,
+das ausgewählte Element zu bearbeiten.</li>
+    <li><span style="font-weight: bold;"> <acronym>Ausschneiden.</acronym></span>
+      Entfernt
+das ausgewählte Element und speichert es in der
+Zwischenablage.&nbsp;Bilder werden dabei nicht aus dem Katalog
+entfernt.</li>
+    <li><span style="font-weight: bold;"> <acronym>Kopieren.</acronym></span>
+      Das
+ausgewählte Element wird in die Zwischenablage kopiert.</li>
+    <li><span style="font-weight: bold;"> </span><acronym>Einfügen</acronym><span style="font-style: italic;">.</span> Fügt ein Element
+aus der&nbsp;Zwischenablage
+in das aktuell ausgewählte Element ein, wenn möglich.</li>
+    <li><span style="font-weight: bold;"> </span><acronym>Löschen</acronym><span style="font-weight: bold;">. </span> Entfernt
+das ausgewählte Element.&nbsp;Bilder
+werden dabei nicht aus dem Katalog entfernt.</li>
+    <li><acronym> Gehe zu</acronym>. Reduziert
+das <span style="font-style: italic;">
+Katalog-Sichtfenster </span>
+auf den Inhalt des derzeit ausgewählten Elements.</li>
+    <li><span style="font-weight: bold;"> </span><acronym>Zurück</acronym>.
+      Kehrt
+zum zuvor dargestellten Inhalt zurück.</li>
+    <li><acronym>Grundzustand</acronym>.
+      Zeigt
+den vollständigen Katalog.</li>
+  </ul>
+  <li style="font-weight: bold;">Katalog-Menüfunktionen</li>
+  <ul style="font-weight: normal;">
+    <li><acronym>Neue Gruppe erstellen</acronym> (<img style="width: 16px; height: 16px;" alt="neue gruppe" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/newgroup.gif">).&nbsp;Definiert
+eine neue Gruppe für&nbsp;<span style="font-weight: bold;"></span>Kollektionen,
+Albums oder Präsentationen. Das
+erste&nbsp;<span style="font-weight: bold;"></span>Element,
+das der Gruppe zugefügt wird,
+entscheidet
+über die Art der Gruppe.<span style="font-weight: bold;"></span></li>
+    <li><span style="font-weight: bold;"> </span><acronym>Bearbeiten</acronym>
+(<img style="width: 16px; height: 16px;" alt="Bearbeiten" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/folder_edit.png">)<span style="font-style: italic;">. </span>Ermöglicht, das
+ausgewählte Element zu bearbeiten.</li>
+    <li><span style="font-weight: bold;"> </span><acronym>Löschen</acronym>
+(<img style="width: 16px; height: 16px;" alt="Löschen" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/folder_delete.png">)<span style="font-weight: bold;">. </span> Entfernt
+das ausgewählte Element.&nbsp;Bilder
+werden dabei nicht aus dem Katalog entfernt.</li>
+    <li><span style="font-weight: bold;"> </span><acronym>Eigenschaften</acronym>
+(<img style="width: 16px; height: 16px;" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/props_orange.png" alt="Katalogeigenschaften" align="top">). Zeigt
+die <a style="font-style: italic;" href="catProperties.html">Katalog-</a><a style="font-style: italic;" href="catProperties.html">Eigenschaften</a>.</li>
+    <li><acronym>filtern...</acronym> (<img style="width: 16px; height: 16px;" alt="Katalogfilter" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/catfilter.gif">). Ruft den <a href="catFilter.html">Filter-Dialog</a>
+auf, mit dem unbenutzte oder unerwünschte Katalogeinträge unterdrückt
+werden können und/oder nur Elemente mit dem ausgewählten Farbcode
+angezeigt werden können.</li>
+
+    <li><acronym>Alle kollabieren</acronym> (<img style="width: 16px; height: 16px;" alt="Alle kollabieren" src="PLUGINS_ROOT/com.bdaum.zoom.doc/html/images/collapseall.gif">).
+Kollabiert alle Einträge im <span style="font-style: italic;">Katalog</span>-Sichtfenster,
+so dass nur noch die Gruppen sichtbar sind.<br>
+      </li>
+  </ul>
+  <li style="font-weight: bold;">Mausgesten</li>
+  <ul style="font-weight: normal;">
+    <li><span style="font-weight: bold;"> Einfachklick</span>. Wählt
+ein Element aus und zeigt seine Bilder in einer Galerie bzw. einem
+Präsentationseditor.</li>
+    <li><span style="font-weight: bold;">Doppelklick</span>. Ruft
+die Bearbeitungsfunktion für das angeklickte Element auf.</li><li><span style="font-weight: bold;">Ziehen</span>. Elemente können von einer benutzerdefinierten Gruppe in eine andere benutzerdefinierte Gruppe gezogen werden.</li>
+  </ul>
+</ul>
+
+</body></html>

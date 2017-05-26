@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+<meta name="description" content="${description}">
+<meta name="keywords" content="${keywords}">
+<meta name="date" content="${date}">
+${headhtml}
+<title>${name}</title>
+</head>
+<!--////// page css  \\\\\\\-->
+<link href="css_page.css" media="screen" rel="stylesheet" type="text/css" />
+<!--////// style specific css  \\\\\\\-->
+<link href="resources/style.css" media="screen" title="${design}" rel="stylesheet" type="text/css" />
+<!--////// END  \\\\\\\-->
+<script type="text/javascript" src="${jquery}"></script>
+<script type="text/javascript" src="${pirobox}"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	$().piroBox({
+			my_speed: ${speed},
+			bg_alpha: ${opacity},
+			radius: 4, 
+			scrollImage : ${scrollImage},
+			pirobox_next : '${next}',
+			pirobox_prev : '${prev}',
+			close_all : '${close}',
+			slideShow : '${sshow}',
+			slideSpeed : ${slideSpeed}
+	});
+});
+
+</script>
+<body>${tophtml}
+<div id="page">
+${nameplatediv}
+<div class="main_content_demo" id="container">
+<h2>${name}</h2>
+<!-- Start Advanced Gallery Html Containers -->
+${descriptiondiv}
+<div id="thumbs" class="navigation">
+${images}
+</div>
+<!-- End Advanced Gallery Html Containers -->
+</div>
+</div>
+<div id="footer">${footer}</div>
+${footerhtml}</body>
+</html>

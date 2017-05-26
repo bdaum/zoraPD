@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Image Viewer</title><title>GPS Parser</title>
+
+ <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css">
+<link rel="stylesheet" type="text/css" href="../schema.css">
+</head>
+<body>
+<h1 style="text-align: center;">Image Viewer</h1>
+<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Identifier: </h6>
+com.bdaum.zoom.ui.imageViewer
+<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Since: </h6>
+0.9.4
+Updated with 2.0.0
+<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Description: </h6>
+Viewers for specific media types
+<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Configuration
+Markup:</h6>
+<p></p>
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.extension">extension</a> (<a href="#e.imageViewer">imageViewer</a>+)&gt;</p>
+<p class="code SchemaDtd">&lt;!ATTLIST extension</p>
+<p class="code SchemaDtdAttlist">point&nbsp;CDATA
+#REQUIRED</p>
+<p class="code SchemaDtdAttlist">id&nbsp;&nbsp;&nbsp;&nbsp;CDATA
+#IMPLIED</p>
+<p class="code SchemaDtdAttlist">name&nbsp;&nbsp;CDATA
+#IMPLIED</p>
+&gt;
+<p></p>
+<p></p>
+<ul class="ConfigMarkupAttlistDesc">
+</ul>
+<br>
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.imageViewer">imageViewer</a> EMPTY&gt;</p>
+<p class="code SchemaDtd">&lt;!ATTLIST imageViewer</p>
+<p class="code SchemaDtdAttlist">formats&nbsp;CDATA
+#REQUIRED</p>
+<p class="code SchemaDtdAttlist">class&nbsp;&nbsp;&nbsp;CDATA
+#REQUIRED</p>
+<p class="code SchemaDtdAttlist">name&nbsp;&nbsp;&nbsp;&nbsp;CDATA
+#REQUIRED</p>
+<p class="code SchemaDtdAttlist">id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IDREF
+#REQUIRED</p>
+&gt;
+<p></p>
+<p></p>
+<p class="ConfigMarkupElementDesc">
+Image viewer extension. Image viewer extension can integrate internal
+and external viewers for additional media types such as video or audio.</p>
+<br>
+<ul class="ConfigMarkupAttlistDesc">
+<li><b>formats</b> - Supported file formats in
+uppercase. Separated by blanks.
+These are the file types as provided by EXIFTOOL. The file extensions
+should be given, too, without the period.</li>
+<li><b>class</b> - IImageViewer implementation</li>
+<li><b>name</b> - Name if viewer (e.g. Video viewer)</li>
+<li><b>id</b> - Unique ID of image viewer extension</li>
+</ul>
+<br>
+<h6 class="CaptionFigColumn SchemaHeader">Examples: </h6>
+VideoViewer
+<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">API Information:
+</h6>
+IImageViewer
+<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Supplied
+Implementation: </h6>
+none
+<p></p>
+<br>
+<p class="note SchemaCopyright">
+2010-2012 Berthold Daum
+</p>
+</body></html>

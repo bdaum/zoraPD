@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.gps.mappingSystem">
+      <mappingSystem
+            clientClustering="true"
+            default="true"
+            id="com.bdaum.zoom.gps.mappingSystem.googleMaps3"
+            mapComponent="com.bdaum.zoom.gps.gmap3.internal.views.MapComponent"
+            name="%mappingSystem.name"
+            query="https://www.google.com/maps/place/{0},{1}">
+      </mappingSystem>
+   </extension>
+   <extension
+         point="org.eclipse.help.toc">
+      <toc
+            file="toc.xml"
+            primary="false">
+      </toc>
+   </extension>
+
+</plugin>

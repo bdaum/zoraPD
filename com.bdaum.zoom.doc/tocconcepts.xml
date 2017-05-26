@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Concepts">
+	<topic href="html/concepts/basic.html" label="Basic Concepts">
+	</topic>
+ <topic href="html/concepts/filesAndVolumes.html" label="Files and Volumes">
+ </topic> 
+<topic href="html/concepts/keywords.html" label="Keywords, Categories, and Vocabularies">
+ 
+ </topic> 
+	<topic label="Color Management"  href="html/concepts/CMS.html"> 
+ </topic>
+ <topic href="html/concepts/images.html" label="Image processing">
+ </topic>
+ <topic href="html/concepts/raw.html" label="Working with raw images">
+    <anchor id="rawConcepts"/>
+ </topic>
+ <topic href="html/concepts/face.html" label="Face detection">
+ </topic>
+ <anchor id="concepts"/> 
+</toc>

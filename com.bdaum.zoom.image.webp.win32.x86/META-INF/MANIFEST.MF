@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: WebP Windows 86 Fragment
+Bundle-SymbolicName: com.bdaum.zoom.image.webp.win32.x86
+Bundle-Version: 0.4.2
+Bundle-Vendor: bdaum industrial communications
+Fragment-Host: com.bdaum.zoom.image.webp;bundle-version="0.4.2"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Eclipse-PlatformFilter: (&(osgi.os=win32)(osgi.arch=x86))

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="internet_page_context" title="Internet preferences">
+      <description>Preferences for accessing the Internet</description>
+      <topic href="html/internetPrefs.html" label="Internet preferences"/>
+   </context>
+</contexts>

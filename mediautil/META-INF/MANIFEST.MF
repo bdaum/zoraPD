@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Mediautil Plug-in
+Bundle-SymbolicName: mediautil
+Bundle-Version: 3.0.0
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Export-Package: mediautil.gen,
+ mediautil.image,
+ mediautil.image.jpeg
+Bundle-Vendor: %Bundle-Vendor.0
+Bundle-Localization: plugin

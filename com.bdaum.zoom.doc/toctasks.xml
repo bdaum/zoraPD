@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Tasks">
+   <topic href="html/tasks/install.html" label="Installation">
+   </topic> 
+	<topic label="Importing images"  href="html/tasks/import.html">
+    <anchor id="import"/>
+    <topic href="html/tasks/scanners.html" label="Working with Scanners">
+    </topic> 
+	</topic>
+ <topic label="Editing Metadata">
+    <topic href="html/tasks/metadata.html" label="Metadata views">
+    </topic>
+    <topic href="html/tasks/dataentry.html" label="Data entry view">
+    </topic>
+ </topic>
+	<topic label="Invoking editors and viewers">
+    <topic href="html/reference/internalViewer.html" label="Internal image viewer">
+    </topic>
+    <topic href="html/tasks/externalEditors.html" label="External editors and viewers">
+    </topic>
+    <anchor id="viewers"/>
+	</topic>
+ <topic href="html/tasks/imageRetrieval.html" label="Searching and Finding Images">
+    <topic href="html/tasks/keywords.html" label="Working with keywords">
+    </topic>
+    <anchor id="search"/>
+ </topic>
+ <topic label="Exporting images and data">
+    <anchor id="export"/>
+    <anchor id="internet"/>
+    <topic href="html/tasks/webgalleries.html" label="Web Galleries">
+    </topic>
+    <topic label="Others">
+       <topic href="html/reference/exportFolder.html" label="Local folders and FTP">
+       </topic>
+       <anchor id="exportOthers"/>
+    </topic>
+ </topic>
+ <anchor id="tasks"/>
+ <topic href="html/tasks/tuning.html" label="Tuning">
+ </topic>
+ <topic href="html/tasks/maintenance.html" label="Catalog maintance">
+ </topic>
+ <topic href="html/tasks/tricks.html" label="Tips and Tricks">
+ </topic>
+ <topic label="Troubleshooting">
+    <topic href="html/tasks/reportingError.html" label="Reporting errors">
+    </topic>
+    <topic href="html/tasks/firstAid.html" label="First aid">
+    </topic>
+ </topic>
+ <topic href="html/tasks/roadmap.html" label="Roadmap">
+ </topic> 
+</toc>

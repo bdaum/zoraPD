@@ -1,0 +1,45 @@
+<index>
+	<entry keyword="E-mail">
+		<topic href="html/email.html" />
+		<entry keyword="PDF">
+			<topic href="html/emailpdf.html" />
+		</entry>
+	</entry>
+	<entry keyword="PDF">
+		<topic href="html/pdf.html" />
+		<entry keyword="as E-mail">
+			<topic href="html/emailpdf.html" />
+		</entry>
+	</entry>
+	<entry keyword="HTML">
+		<topic href="html/html.html" />
+	</entry>
+	<entry keyword="Export">
+		<entry keyword="E-mail">
+			<topic href="html/email.html" />
+		</entry>
+		<entry keyword="PDF">
+			<topic href="html/pdf.html" />
+		</entry>
+		<entry keyword="HTML">
+			<topic href="html/html.html" />
+		</entry>
+		<entry keyword="PDF as E-mail">
+			<topic href="html/emailpdf.html" />
+		</entry>
+	</entry>
+		<entry keyword="JPEG quality">
+		<entry keyword="E-Mail">
+			<topic href="html/email.html" />
+		</entry>
+		<entry keyword="PDF">
+			<topic href="html/pdf.html" />
+		</entry>
+		<entry keyword="HTML">
+			<topic href="html/html.html" />
+		</entry>
+		<entry keyword="PDF as E-Mail">
+			<topic href="html/emailpdf.html" />
+		</entry>
+	</entry>
+</index>

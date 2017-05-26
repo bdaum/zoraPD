@@ -1,0 +1,14 @@
+<index>
+	<entry keyword="Video">
+		<topic href="html/video.html" />
+		<topic href="html/working.html" />
+		<entry keyword="viewer">
+			<topic href="html/viewer.html" />
+		</entry>
+	</entry>
+	<entry keyword="Viewer">
+		<entry keyword="Video">
+			<topic href="html/viewer.html" />
+		</entry>
+	</entry>
+</index>

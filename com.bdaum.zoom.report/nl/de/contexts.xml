@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="report_wizard_context" title="Berichte erstellen">
+      <description>Berichte erstellen</description>
+      <topic href="html/reports.html" label="Berichte erstellen"/>
+   </context>
+</contexts>

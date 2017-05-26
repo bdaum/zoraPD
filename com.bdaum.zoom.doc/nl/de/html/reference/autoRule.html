@@ -1,0 +1,29 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+
+
+
+
+
+
+
+
+
+
+
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Regeln für die automatische Erstellung von Kollektionen</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head>
+<body><h2>Regeln für die automatische Erstellung von Kollektionen</h2><h4>Gruppe</h4>Dieses
+Attribut dient nur für die Begrenzung der angezeigten Felder, um die
+Auswahl zu erleichtern. Wenn Sie im Zweifel sind, wählen Sie <span style="font-weight: bold;">Alle</span>.<br><h4>Feld</h4>Jede
+Regel muss auf genau ein Metadatenfeld wie das EXIF-Feld für
+Belichtungszeit oder das IPTC-Feld für das Modellalter verweisen. Nicht
+für alle vorhandenen Metadaten werden hier Felder angeboten,
+insbesondere nicht für Felder, für die es bereits Systemkollektionen
+gibt (z. B. das IPTC-Erstellungsdatum, welches sich in den Kollektionen
+der Zeitachse niederschlägt).<br><h4>Typ </h4>Der Typ einer Regel leitet sich aus dem&nbsp;ausgewählten Metadatenfeld ab: <br><ul><li><span style="font-weight: bold;">diskret</span>. Das Feld hat nur wenige mögliche Werte wie das EXIF-Feld <span style="font-style: italic;">blitz_ausgelöst</span>.</li><li><span style="font-weight: bold;">linear</span>. Die Feldwerte sind in einer linearen Weise verteilt. Hier ist es sinnvoll, Sammlungen mit gleich großen Wertebereichen zu erstellen. Auch negative Werte sind zulässig. Ein typisches Beispiel ist das Feld EXIF-Feld für <span style="font-style: italic;">Lichtwert</span>.</li><li><span style="font-weight: bold;">exponentiell</span>.
+Feldwerte sind exponentiell verteilt. Hier ist es sinnvoll, die
+Wertebereiche der Kollektionen stetig immer größer werden zu lassen, so
+dass sowohl sehr kleine als auch sehr große Werte abgedeckt werden
+können. Negative Werte sind hier nicht zulässig. Ein typisches Beispiel
+ist das EXIF-Feld für die Belichtungszeit.<br></li></ul><br><h4>Parameter</h4><ul><li>Regeln mit <span style="font-weight: bold;">diskretem</span>&nbsp;Typ haben keine Parameter.</li><li>Für die Regeln mit <span style="font-weight: bold;">linearen</span> Typ&nbsp;können&nbsp;Sie eine feste Intervallgröße angeben, die für all Kollektionoen gleich ist. Wenn Sie beispielsweise&nbsp;eine Intervall-Größe 2 für das EXIF-Feld <span style="font-style: italic;">Lichtwert</span> angeben, werden die Lichtwerte 0 und 1 in Kollektion,&nbsp;die Werte 2 und 3 in eine andere&nbsp;Kollektion gruppiert und so weiter.<br>Alternativ können Sie die Intervalle ausdrücklich als eine durch Semikolons getrennte Liste angeben. z.B. 0; 2; 5; 8; 16</li><li>Für Regeln mit <span style="font-weight: bold;">exponentiellen</span> Typ können Sie den Basiswert einer exponentiellen Reihe angeben. Geben Sie beispielsweise 2 als Basiswert an, würde dies zu&nbsp;einer Intervall-Serie wie ...; 0,25; 0,5; 1; 2; 4; 8; ....&nbsp;führen. Dementsprechend würde&nbsp;Kollektionen mit Wertbereichen von 0,25 - 0,5; 0,5 - 1; 1 - 2; 2-4; 4-8 usw. erstellt werden.<br>Alternativ können Sie die Intervalle ausdrücklich als eine durch Semikolons getrennte Liste angeben z. B. 0; 2; 5; 8; 16.</li></ul></body></html>

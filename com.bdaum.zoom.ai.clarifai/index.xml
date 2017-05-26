@@ -1,0 +1,8 @@
+<index>
+	<entry keyword="Clarifai">
+		<topic href="html/clarifai.html" />
+	</entry>
+	<entry keyword="Face detection">
+		<topic href="html/clarifai.html" label="Face detection with the Clarifai web service"/>
+	</entry>
+</index>

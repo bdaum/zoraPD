@@ -1,0 +1,121 @@
+﻿*					{ font-family: Segoe UI, Verdana, Arial, Sans-Serif; font-size: 11px; margin: 0px; padding: 0px; hide-focus: expression(this.hideFocus=true); outline: none; }
+body				{ background-color: #999; color: white; }
+
+body,html			{ width: 100%; height: 100%; overflow: hidden; }
+
+html				{ display: table; }
+body				{ display: table-cell; text-align: center; vertical-align: middle; }
+
+a					{ color: white; text-decoration: none;}
+a:hover				{ color: white; text-decoration: underline; }
+a img				{ border: none; }
+
+
+
+/******************************************************************************************************************/
+
+#debug				{ position: absolute; background-color: #990000; color: White; min-width: 5px; min-height: 5px; display: none; }
+#debug .title		{ cursor: pointer; font-weight: bold; background-color: #660000; }
+#debug .list			{ width: 500px; overflow: auto; max-height: 500px; }
+#debug .list	p		{ margin: 10px; }
+
+.ctrl,.ctrlPopup	{ min-width: 100px; min-height: 100px; }
+.ctrl				{ background-color: Red; }
+.ctrlPopup			{ background-color: Blue; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; }
+
+/******************************************************************************************************************/
+
+#canvasLayout,
+#uiLayout			{ position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; }
+
+#logo				{ margin-right: 200px; position: absolute; left: 0px; top: 0px; padding: 10px;z-index:10000 }
+#help				{ width: 200px; text-align: left; position: absolute; right: 0px; top: 0px; padding: 10px;}
+#help:hover			{ background-color: #990000; opacity: 0.8;}
+help a				{ margin-left: 10px; }
+#rooms				{ position: absolute; bottom: 0px; left: 0px; text-align: center; width: 100%; padding: 10px 0px 10px 0px; }
+
+
+#map				{ position: absolute; right: 10px; bottom: 10px; width: 140px; height: 140px; text-align: left; }
+
+.overlay			{ width: 100%; height: 100%; display: none; background-color: black; position: absolute; left: 0px; top: 0px; }
+.dialog				{ margin: auto; display: none; position: relative; }
+.dialog a.close		{ position: absolute; right: 0px; top: 0px; width: 20px; height: 20px; display: block; background-image: url("../images/x.png"); margin-right: 20px; margin-top: 20px; opacity: 0.5;}
+.dialog a.close:hover	{ opacity: 0.8; }
+.dialog .buttons		{ position: absolute; bottom: 40px; width: 100%; text-align: center; }
+.dialog .howToUseOK	{ width : 103px; height: 27px; background-image: url("../images/ok.png"); display: block; margin: auto; }
+
+#howToUse			{ width: 580px; height: 476px; min-height: 20px; min-width: 20px; background-image: url("../images/howtouse.png"); }
+#toOtherRoom		{ width: 100%; height: 240px; }
+
+
+.scrollLeft,
+.scrollRight		{ display: block; width: 23px; height: 37px; margin-top: -18px; position: absolute; top: 50%; background-repeat: no-repeat; background-position: left top; }
+.scrollLeft:hover,
+.scrollRight:hover	{ background-position: left -37px; }
+.scrollLeft:active,
+.scrollRight:active	{ background-position: left top; }
+.scrollLeft			{ left: 20px; /*margin-left: -240px;*/ background-image: url("../images/scroll_left.png"); }
+.scrollRight		{ right: 20px; /*margin-left: 220px;*/ background-image: url("../images/scroll_right.png"); }
+
+#aHowToUse,
+#aInertiaMinus,
+#aInertiaPlus,
+#aSoundSwitch		{ background-position: left center; background-repeat: no-repeat; padding-left: 20px; }
+#aVertRotSwitch		{ background-position: left center; background-repeat: no-repeat; padding-left: 20px; }
+#aHowToUse			{ background-image: url("../images/icon_help.png"); }
+#aInertiaMinus		{ background-image: url("../images/icon_inertia.png"); }
+#aInertiaPlus		{ background-image: url("../images/icon_inertia.png"); }
+#aSoundSwitch		{ background-image: url("../images/icon_snd_on.png"); }
+#aVertRotSwitch		{ background-image: url("../images/icon_vertrot.png"); }
+
+#aToOtherRoom		{ background-position: left center; background-repeat: no-repeat;  color: #645A47; }
+
+#keyArrows			{ position: absolute; width: 51px; height: 52px; left: 50%; bottom: 30px; margin-left: -25px; text-align: left; }
+#keyArrows a			{ color: White; }
+.keyArrowUp,
+.keyArrowDown,
+.keyArrowLeft,
+.keyArrowRight		{ position: absolute; text-align: center; }
+
+.keyArrowUp			{ width: 51px; height: 17px; background-image: url("../images/arw_up.png"); }
+.keyArrowDown		{ width: 51px; height: 18px; top: 34px; background-image: url("../images/arw_dn.png"); }
+.keyArrowLeft		{ width: 26px; height: 17px; top: 17px; background-image: url("../images/arw_lt.png"); }
+.keyArrowRight		{ width: 25px; height: 17px; top: 17px; left: 26px; background-image: url("../images/arw_rt.png"); }
+
+.keyArrowUp:hover,
+.keyArrowLeft:hover	,
+.keyArrowRight:hover	{ background-position: left -17px; }
+.keyArrowDown:hover	{ background-position: left -18px; }
+
+.keyArrowUp.highlight,
+.keyArrowLeft.highlight,
+.keyArrowRight.highlight { background-position: left -17px; }
+.keyArrowDown.highlight	{ background-position: left -18px; }
+
+.keyArrowUp:active,
+.keyArrowLeft:active,
+.keyArrowRight:active	{ background-position: left top; }
+.keyArrowDown:active	{ background-position: left top; }
+
+#galleryContent		{ height: 240px; }
+.gallery .content	{ position: absolute; }
+.gallery .item		{ width: 240px; height: 240px; position: absolute; text-align: left; cursor: pointer; border: solid 1px #3B372D; }
+.gallery .item img	{ position: absolute; width: 100%; height: 100%; border: none; background-color: #0066FF; }
+.gallery .item div	{ position: absolute; bottom: 0px; width: 100%; color: White; background-image: url("../images/b.png");  }
+.gallery .item div p	{ padding: 10px 20px 20px 20px; font-size: 16px;font-weight:bold }
+.gallery .item div p .info		{ display: block; height: 0px; overflow: hidden; font-weight: normal; }
+.gallery .item div p .infotext      { font-size: 10px; }
+.gallery .item div p i		{ font-style: normal; display: block; padding-top: 5px; font-size: 12px; }
+.gallery .item div p b	{ text-align: center; display: block; padding-top: 5px; }
+.gallery .item div .stay,
+.gallery .item div .more	{ width: 124px; height: 33px; padding-right: 20px; display: inline-block; background-position: left -33px; background-repeat: no-repeat; line-height: 30px; font-weight: normal; margin-top: 2px; margin-left: 5px; margin-right: 5px; }
+.gallery .item div .stay:hover,
+.gallery .item div .more:hover	{ background-position: left top; text-decoration: none; }
+.gallery .item div .stay			{ background-image: url("../images/btn_bg.png");}
+.gallery .item div .more			{ background-image: url("../images/btn_bg.png");}
+
+#mapInfo			{ position: absolute; width: 120px; height: 20px; right: 20px; bottom: 150px; }
+
+
+#spec                          { position: absolute; color: LightGray; right: 130px; bottom: 9px; font-size: 10px; text-align: right; }
+#spec a                       { font-size: 10px; }

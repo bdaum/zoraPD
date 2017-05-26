@@ -1,0 +1,196 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Tuning</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
+<h2>Tuning</h2>
+<br>
+Es gibt mehrere Stellen, an denen man das System für eine höhere Geschwindigkeit optimieren kann:<br>
+
+<br>
+
+<h3>Anzeige</h3>
+
+<a href="../../../../html/reference/facePrefs.html"><acronym>Fenster&gt;Einstellungen&gt;Allgemeines*</acronym></a><span style="font-style: italic;"></span> 
+<ul style="font-weight: normal;">
+  <li><span style="font-weight: bold;">Anzeige</span></li>
+  <ul style="font-weight: normal;">
+    <li><span style="font-weight: bold;">Ausgabe-ICC-Profil. </span>Auf <samp>CMS deaktivieren</samp> schalten, um die Darstellung von Bildern und Miniaturansichten zu beschleunigen.<br>
+    </li>
+    <li><span style="font-weight: bold;">Hochwertige Interpolation
+verwenden</span>.
+Schalten Sie diese Option aus, um die Darstellung von Bildern und
+Miniaturansichten zu beschleunigen. Es kann allerdings zu einer
+leichten Pixelierung der Bilder kommen.</li>
+    <li><span style="font-weight: bold;">Im
+internen Betrachter wenn möglich vor jedem hochauflösenden Bild ein
+      Vorschaubild zeigen.</span>&nbsp; Schalten Sie diese Option aus, um Bilder schneller im Vollbildmodus anzuzeigen.<br>
+    </li>
+    <li><span style="font-weight: bold;">JPeG-Artefakte der Miniaturansichten im internen Bildbetrachter kaschieren</span>. Schalten Sie diese Option aus, um Bilder schneller im Vollbildmodus anzuzeigen.
+    </li>
+  </ul>
+</ul>
+
+<br>
+
+<a href="../../../../html/reference/facePrefs.html"><acronym>Fenster&gt;Einstellungen&gt;Darstellung*</acronym></a><span style="font-style: italic;"></span>
+
+<br>
+
+<ul>
+  <li><span style="font-weight: bold;">Farbschema. </span>Wählen Sie <samp>Plattform</samp>, um Sichtfenster und Dialoge schneller aufzubauen.<br>
+  </li>
+</ul>
+
+<h3>Import</h3>
+
+
+<acronym>Katalog&gt;Eigenschaften...</acronym> <br>
+
+
+<br>
+
+<ul style="font-weight: bold;">
+  <li>Allgemeines</li><ul><li><span style="font-weight: bold;">Zeitlinie automatisch erstellen</span>. &nbsp;<span style="font-weight: normal;">Wenn Sie nicht an einer Zeitlinie interessiert sind, schalten Sie diese Option aus, um den Importprozess zu beschleunigen</span><span style="font-weight: normal;">.</span></li><li><span style="font-weight: bold;">Ortskollektionen automatisch erstellen.</span> &nbsp;<span style="font-weight: normal;">Wenn Sie nicht an Ortskollektionen interessiert sind, schalten Sie diese Option aus, um den Importprozess zu beschleunigen</span><span style="font-weight: normal;">.</span></li></ul><li>Miniaturansichten</li>
+  <ul style="font-weight: normal;">
+<li><span style="font-weight: normal;"><span style="font-weight: bold;">Auflösung. </span>
+Wählen Sie kleine oder mittelgroße Miniaturansichten, um den Importprozess zu beschleunigen</span><span style="font-weight: normal;">.&nbsp;</span><span style="font-weight: normal;"></span></li><li><span style="font-weight: normal;"><span style="font-weight: bold;">Miniaturansichten vom
+Vorschau-Bild erstellen. </span>Wählen
+Sie diese Option, um den Import von RAW-Dateien wesentlich zu
+beschleunigen. Allerdings kommt es dabei zu visuellen Abweichungen
+zwischen M</span><span style="font-weight: normal;">iniaturansicht und hochauflösendem Bild.</span></li><li><span style="font-weight: normal;"><span style="font-weight: bold;">Während des Importvorgangs scharfzeichnen.</span> Für maximale Importgeschwindigkeit schalten Sie die Scharfzeichnung ab.<br>
+</span></li>
+  </ul>
+</ul>
+
+<br>
+
+<br>
+
+<a href="../../../../html/reference/facePrefs.html"><acronym>Fenster&gt;Einstellungen&gt;Import*</acronym></a><span style="font-style: italic;">.</span>
+<h4 style="margin-left: 40px;">Allgemein</h4>
+
+<ul style="font-weight: normal;">
+  <li><span style="font-weight: bold;">Beziehungen</span></li>
+  <ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Abgeleitete Bilder automatisch
+aus EXIF-Daten erkennen.</span> Schalten Sie diese Option ab, wenn Sie nicht an den Beziehungen zwischen Bildern interessiert sind.</li>
+  </ul>
+</ul>
+<span style="font-weight: bold;"></span>
+
+<h4 style="margin-left: 40px;">RAW-Konvertierung</h4>
+
+
+  <div style="margin-left: 40px;">Die
+Konvertierung von RAW-Bildern erfolgt mit dem Modul&nbsp;DCRAW. Sie
+können diesen Prozess mit Hilfe der unten angegeben Parameter
+beschleunigen. Außerdem können Sie eine optimierte Version von DCRAW
+einsetzen. Auf Windows z.B. unterstützt das eingebaute DCRAW-Modul alle
+Betriebssystemversion vom Windows XP an. Eine für Vista optimierte
+Version wird etwas schneller laufen. &nbsp;Lokalisieren Sie eine solche
+für Ihr System optimierte Version auf dem Internet, laden sie herunter,
+installieren sie auf der Harddisk, und spezifizieren den Pfad unter<a href="../reference/importPrefs.html">&nbsp;<acronym>Fenster&gt;Einstellungen&gt;Import&gt;RAW-Konvertierung</acronym></a><sup>*)</sup>.</div><span style="font-weight: bold;"></span><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Optionen</span><span style="font-weight: normal;"><br><br>
+</span></li>
+  <ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Interpolation</span>. Wählen Sie die bilineare Interpolation, um den RAW-Import zu beschleunigen.</li><li><span style="font-weight: bold;">Iterationen</span>. Setzen Sie die Zahl der Iterationen auf 0, um den RAW-Import zu beschleunigen.</li><li><span style="font-weight: bold;">Spitzlichter wiederherstellen. </span>Schalten Sie diese Option aus, um den RAW-Import zu beschleunigen.</li>
+  </ul>
+  <li><span style="font-weight: bold;">Rezept-Detektoren.</span> Selektieren Sie nur die RAW-Konverter, die Sie auch tatsächlich verwenden.</li></ul>
+<div style="margin-left: 120px;">
+<div style="margin-left: 40px;"><span style="font-style: italic;">Raw Therapee 2.4.x</span> kann beträchtliche Performanzprobleme verursachen, da es sämtliche Rezeptdateien im Bildordner neu schreibt und so <span style="font-style: italic;">ZoRa Photo Director</span> dazu veranlasst, die zugehörigen Bilder neu zu importieren. <span style="font-style: italic;">Raw Therapee 3.0.x</span> verhält sich hier wesentlich besser. Wir empfehlen deshalb, <span style="font-style: italic;">Raw Therapee 3.0.x</span> zu benutzen.<br>
+ </div>
+</div>
+<ul style="font-weight: normal;">
+
+  <ul>
+    <li><span style="font-weight: bold;">Entwicklungsrezepte beim Import von RAW-Bildern berücksichtigen</span>.
+Entfernen Sie die Markierung, um die Performanz zu verbessern -
+insbesondere beim Bearbeiten von Bildern, wenn die Bilder in
+überwachten Ordnern enthalten sind.</li>
+  </ul>
+
+</ul>
+
+
+<h4 style="margin-left: 40px;"><span style="font-weight: bold;">DNG-Konvertierung</span></h4>
+
+
+<ul style="font-weight: normal;">
+  <li><span style="font-weight: bold;">Beziehungen</span><span style="font-weight: bold;"></span></li>
+</ul>
+<ul>
+  <ul>
+    <li><span style="font-weight: bold;">Verknüpfungen zwischen RAW- und
+DNG-Dateien automatisch erstellen</span>. Schalten Sie diese Option ab, wenn Sie nicht an den Beziehungen zwischen Bildern interessiert sind.</li>
+  </ul>
+</ul>
+
+<h3>Indizierung</h3>
+
+
+Die Indizierung läuft generell als Hintergrundprozess und stellt die
+Daten für die Ähnlichkeitssuche und die Freitextsuche zusammen. Die
+Beschleunigung dieses Prozesses wird die generelle Performanz
+verbessern. <br>
+<br>
+<br>
+<a href="../../../../html/reference/facePrefs.html"><acronym>Katalog&gt;Eigenschaften&gt;Indizierung</acronym></a><span style="font-style: italic;">.</span><br>
+<br> Vermindern Sie die Zahl
+der ausgewählten Ähnlichkeitsalgorithmen auf ein Minimum, da jeder
+Algorithmus
+zusätzliche Schritte bei der Konstruktion des Indexes benötigt. Auf
+leistungsschwachen Plattformen können Sie die Indizierung auch komplett
+ausschalten.<br>
+
+<span style="font-style: italic;"><br>
+</span>
+<h3>Generelle Performanz<br>
+</h3>
+
+<a href="../../../../html/reference/facePrefs.html"><acronym></acronym></a>
+
+
+<acronym>Katalog&gt;Eigenschaften...</acronym> <br>
+
+<br>
+<ul>
+  <li><span style="font-weight: bold;"> Überwachte Ordner.</span>
+Halten Sie die Zahl der überwachten Ordner auf einem Minimum. So
+reduzieren Sie die Hintergrundaktivitäten und verbessern die
+Gesamtperformanz.<br>
+    <br>
+</li>
+  <li><span style="font-weight: bold;">Defragmentierung</span>. Das gelegentlich Defragmentiieren des Katalogs kann die Abfragegeschwindigkeit erhöhen. Gehen Sie zur <span style="font-weight: bold;">Statistik</span>-Seite und klicken Sie auf den Verweis <acronym>Jetzt defragmentieren</acronym>. Die Defragmentierung kann einige Minuten daueren.</li>
+
+</ul>
+
+<br>
+
+
+<span style="font-weight: bold;"></span>
+<br>
+
+
+
+
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> Auf dem Mac: <acronym>ZoRa Photo Director&gt;Einstellungen&gt;...</acronym><acronym>.</acronym><acronym><br>
+</acronym><br>
+<acronym></acronym>
+</body></html>

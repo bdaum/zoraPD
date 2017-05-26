@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.bdaum.zora.FEATURE.macosx_cocoa_x64"
+      label="Macosx_cocoa_x86_64 Feature"
+      version="3.0.0"
+      provider-name="bdaum industrial communications"
+      os="macosx"
+      ws="cocoa"
+      arch="x86_64">
+
+   <description>
+      Mac OSX Cocoa (64 bit) specific resources
+   </description>
+
+   <copyright>
+      (c) Berthold Daum and contributors 2009-2010.  All rights reserved.
+   </copyright>
+
+   <license url="http://www.gnu.org/licenses/gpl-2.0.html">
+      This program is provided to you under the terms and conditions
+of the GNU General Public License (GPL) as published by the Free
+Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+   </license>
+
+   <plugin
+         id="com.bdaum.zoom.batch.unix"
+         os="macosx"
+         ws="cocoa"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="org.eclipse.equinox.launcher.cocoa.macosx.x86_64"
+         os="macosx"
+         ws="cocoa"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="org.eclipse.equinox.security.macosx"
+         os="macosx"
+         ws="cocoa"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.swt.cocoa.macosx.x86_64"
+         os="macosx"
+         ws="cocoa"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.ui.cocoa"
+         os="macosx"
+         ws="cocoa"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.dcraw.macosx"
+         os="macosx"
+         ws="cocoa"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="com.bdaum.jna.macosx.x64"
+         os="macosx"
+         ws="cocoa"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="com.bdaum.zoom.email.macosx.cocoa"
+         os="macosx"
+         ws="cocoa"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="com.bdaum.zoom.image.webp.macosx.x64"
+         os="macosx"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+</feature>

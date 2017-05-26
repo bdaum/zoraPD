@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.exportWizards">
+      <wizard
+            category="com.bdaum.zoom.video.exportCategory"
+            class="com.bdaum.zoom.video.youtube.internal.wizard.YouTubeExportWizard"
+            icon="icons/yt.png"
+            id="com.bdaum.zoom.video.youtube.exportWizard"
+            name="%wizard.name">
+      </wizard>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.net.communities.community">
+      <community
+            api="com.bdaum.zoom.video.youtube.internal.YouTubeUploadClient"
+            bannerImage="icons/banner/youTube.jpg"
+            home="http://www.youtube.com/"
+            icon="icons/yt.png"
+            id="youtube.com"
+            name="%community.name"
+            sessions="false"
+            supportsCategories="false"
+            supportsGeocoding="false"
+            supportsPhotosets="false"
+            supportsSubCategories="false"
+            supportsTagging="false">
+         <account
+               authentification="password">
+         </account>
+      </community>
+   </extension>
+   <extension
+         point="org.eclipse.help.toc">
+      <toc
+            file="tocwizard.xml"
+            primary="false">
+      </toc>
+      <toc
+            file="toctaskwizard.xml"
+            primary="false">
+      </toc>
+   </extension>
+   <extension
+         point="org.eclipse.help.index">
+      <index
+            file="index.xml">
+      </index>
+   </extension>
+
+</plugin>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="pref_page_context">
+      <description>Preferences for geo-tagging and geo-naming</description>
+      <topic href="html/geoTagging.html" label="GPS preferences"/>
+   </context>
+   <context id="map_dialog_context">
+      <description>Map dialog</description>
+      <topic href="html/locations.html" label="Map dialog"/>
+   </context>
+   <context id="map_view_context">
+      <description>Map view</description>
+      <topic href="html/maps.html" label="Map view"/>
+      <topic href="html/manual.html" label="Manual geotagging"/>
+   </context>
+   <context id="geoTagging" title="Geo-tagging and geo-naming">
+      <description>Geographical information can be added to images and visualized</description>
+      <topic href="html/gps.html" label="Working with GPS data"/>
+      <topic href="html/importing.html" label="Importing tracker data"/>
+      <topic href="html/geoTagging.html" label="Configuring Geo-tagging"/>
+      <topic href="html/geonaming.html" label="Geo-naming"/>
+      <topic href="html/maps.html" label="The Map view"/>
+      <topic href="html/searching.html" label="Geographical search options"/>
+   </context>
+   <context id="trackpoint_dialog_context" title="Trackpoints">
+      <description>Editing trackpoints</description>
+      <topic href="html/trackpoint.html" label="Editing trackpoints"/>
+   </context>
+</contexts>

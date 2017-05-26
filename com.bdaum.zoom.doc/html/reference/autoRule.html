@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+
+
+
+
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Rules for automatic creation of collections</title>
+
+
+
+
+
+
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head>
+<body>
+<h2>Rules for automatic creation of collections</h2><h4>Group</h4>This attribute is for convenience only for restricting the number of displayed fields. If in doubt select <span style="font-weight: bold;">All</span>.<h4>Field</h4>Each rule must refer to exactly one metadata field such as the EXIF field for <span style="font-style: italic;">exposure time</span> or the IPTC field for <span style="font-style: italic;">model age</span>.
+Not all existing metadata fields are offered here, in particular fields
+that are already used for system collections (such as the IPTC creation
+date that is reflected in the timeline collections) are not available
+for the definition of rules.<h4>Type</h4>The type of a rule is derived from the metadata field selected:<br><ul><li><span style="font-weight: bold;">Discrete</span>. The field only has a few possible values such as the EXIF field<span style="font-style: italic;"> flash_fired</span>.</li><li><span style="font-weight: bold;">Linear</span>.
+Field values are distributed in a linear fashion. It makes sense to
+create collections with&nbsp;value ranges equal in size. This type can
+also cover negative values. A typical example is the field EXIF field
+for<span style="font-style: italic;"> light_value</span>.</li><li><span style="font-weight: bold;">Exponential</span>.
+Field values are distributed exponentially. It makes sense to create
+collections with value ranges steadily growing in size, so that
+collections can cover both very small values and very large values. A
+typical example is the EXIF field for <span style="font-style: italic;">exposure time</span>. This type cannot cover negative values.</li></ul>
+<h4><span style="font-weight: bold;">Parameter</span><small></small></h4><ul style="font-weight: normal;"><li>Rules with <span style="font-weight: bold;">discrete typ</span>e do not have parameters.</li><li>For rules with<span style="font-weight: bold;"> linear type</span>
+you can specify the with of the equidistant value ranges. For example,
+if you specify an interval size of 2 for the EXIF field light_value,
+the light values 0 and 1 will be grouped into one collection, the
+values 2 and 3 into another collection, and so on. <br>Alternatively, you may specify intervals explicitely as a semicolon separated list such as <span style="font-style: italic;">0; 2; 5; 8; 16</span></li><li>For rules with<span style="font-weight: bold;"> exponential type</span>
+you
+can specify the base value of an exponential series. For example, if
+you specify 2 as base value, this would result in an interval series
+such as ...; 0.25; 0.5; 1; 2; 4; 8; .... &nbsp;Accordingly collections
+would be created with value ranges of 0.25 - 0.5; 0.5 - 1; 1 - 2; 2-4;
+4-8 and so on.<br>Alternatively, you may specify intervals explicitely as a semicolon separated list such as <span style="font-style: italic;">0; 2; 5; 8; 16.</span></li></ul><p></p><p></p>
+</body></html>

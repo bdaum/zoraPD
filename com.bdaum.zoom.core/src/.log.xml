@@ -1,0 +1,2337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<log arch="x86" eclipseproduct="Eclipse SDK&#xa;&#xa;Version: 3.4.2&#xa;Build id: {0}&#xa;&#xa;(c) Copyright Eclipse contributors and others 2000, 2009.  All rights reserved.&#xa;Visit http://www.eclipse.org/platform&#xa;&#xa;This product includes software developed by the&#xa;Apache Software Foundation http://www.apache.org/" finishedAt="Fri Jun 12 00:04:13 CEST 2009" modelName="fotonLib" os="win32" sourceFile="zoomCat2.aom" startedAt="Fri Jun 12 00:04:08 CEST 2009" ws="win32" xmlns="http://www.aomodeling.org/KLEEN/log/generators">
+    <generator errors="0" name="AOM to Java Generator" version="1.3" warnings="0" xmlns="http://www.aomodeling.org/KLEEN/JavaGenerator">
+        <info>Feature Java is set</info>
+        <info>Feature XML marshalling is NOT set</info>
+        <info>Feature JPA (beta) is NOT set</info>
+        <info>Feature Custom Metadata is NOT set</info>
+        <info>Feature Generated Aspects is NOT set</info>
+        <info>Feature Security Aspect is NOT set</info>
+        <info>Feature Logging Aspect is NOT set</info>
+        <info>Feature Operation Aspect is NOT set</info>
+        <info>Feature Constraint Aspect is NOT set</info>
+        <info>Feature Gui Aspect is NOT set</info>
+        <info>Feature Test Case Aspect is NOT set</info>
+        <unit errors="0" name="com.bdaum.zoom.cat.model" warnings="0">
+            <info>Generate folder structure for type library</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com created</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum created</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom created</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat created</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model created</info>
+            <info>Generate asset type asset</info>
+            <info>Generate properties</info>
+            <info>Generate typed property name</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property uri</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property volume</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property fileSize</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type long</info>
+            <info>Generate typed property album</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property comments</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property format</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property mimeType</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property height</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property width</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property ori</info>
+            <info>Generate type definitions</info>
+            <info>Generate typed property previewSize</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property isProgressive</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property colorType</info>
+            <info>Generate type definitions</info>
+            <info>Generate typed property xmpModifiedAt</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property voiceFileURI</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property voiceVolume</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property lastModification</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property rotation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property importDate</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property importedBy</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property status</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property rating</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property ratedBy</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property colorCode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property userfield1</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property userfield2</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property jpegThumbnail</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type byte</info>
+            <info>Generate typed property bitsPerSample</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property imageLength</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property imageWidth</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property compression</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property photometricInterpretation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property orientation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property samplesPerPixel</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property XResolution</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property YResolution</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property dateTime</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property imageDescription</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property make</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property model</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property software</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property originalFileName</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property artist</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property copyright</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property colorSpace</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property profileDescription</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property dateTimeOriginal</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property exposureTime</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property fNumber</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property exposureProgram</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property spectralSensitivity</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property isoSpeedRatings</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property scalarSpeedRatings</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property shutterSpeed</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property aperture</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property brightnessValue</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property exposureBias</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property maxLensAperture</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property subjectDistance</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property meteringMode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property lightSource</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property flashFired</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property returnLightDetected</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property flashAuto</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property flashFunction</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property redEyeReduction</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property flashExposureComp</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property focalLength</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property subjectArea</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property flashEnergy</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property focalPlaneXResolution</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property focalPlaneYResolution</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property subjectLocation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property exposureIndex</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property sensingMethod</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property fileSource</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property exposureMode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property whiteBalance</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property digitalZoomRatio</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property focalLengthIn35mmFilm</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property focalLengthFactor</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property circleOfConfusion</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property hyperfocalDistance</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property dof</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property lv</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property fov</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property sceneCaptureType</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property gainControl</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property contrast</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property saturation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property sharpness</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property vibrance</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property subjectDistanceRange</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property lens</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property lensSerial</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property serial</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property GPSLatitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSLongitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSAltitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSTime</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property GPSDOP</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSSpeed</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSTrackRef</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property GPSTrack</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSImgDirectionRef</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property GPSImgDirection</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSMapDatum</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property GPSDestLatitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSDestLongitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSDestBearingRef</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property GPSDestBearing</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSDestDistance</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSAreaInformation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property GPSDateStamp</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property GPSDifferential</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property writerEditor</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property headline</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property intellectualGenre</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property title</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property specialInstructions</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property jobId</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property keyword</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property category</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property supplementalCats</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property urgency</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property authorsPosition</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property credit</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property usageTerms</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property owner</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property source</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property dateCreated</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property sceneCode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property subjectCode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property jobId</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property modelInformation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property modelAge</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property codeOfOrg</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property nameOfOrg</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property personShown</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property event</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property lastEdited</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property maxAvailHeight</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property maxAvailWidth</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type asset</info>
+            <info>Generate properties</info>
+            <info>Generate typed property name</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property uri</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property volume</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property fileSize</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type long</info>
+            <info>Generate typed property album</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property comments</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property format</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property mimeType</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property height</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property width</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property ori</info>
+            <info>Generate type definitions</info>
+            <info>Generate typed property previewSize</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property isProgressive</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property colorType</info>
+            <info>Generate type definitions</info>
+            <info>Generate typed property xmpModifiedAt</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property voiceFileURI</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property voiceVolume</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property lastModification</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property rotation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property importDate</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property importedBy</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property status</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property rating</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property ratedBy</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property colorCode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property userfield1</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property userfield2</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property jpegThumbnail</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type byte</info>
+            <info>Generate typed property bitsPerSample</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property imageLength</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property imageWidth</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property compression</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property photometricInterpretation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property orientation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property samplesPerPixel</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property XResolution</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property YResolution</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property dateTime</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property imageDescription</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property make</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property model</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property software</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property originalFileName</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property artist</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property copyright</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property colorSpace</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property profileDescription</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property dateTimeOriginal</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property exposureTime</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property fNumber</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property exposureProgram</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property spectralSensitivity</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property isoSpeedRatings</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property scalarSpeedRatings</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property shutterSpeed</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property aperture</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property brightnessValue</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property exposureBias</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property maxLensAperture</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property subjectDistance</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property meteringMode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property lightSource</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property flashFired</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property returnLightDetected</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property flashAuto</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property flashFunction</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property redEyeReduction</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property flashExposureComp</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property focalLength</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property subjectArea</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property flashEnergy</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property focalPlaneXResolution</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property focalPlaneYResolution</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property subjectLocation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property exposureIndex</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property sensingMethod</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property fileSource</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property exposureMode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property whiteBalance</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property digitalZoomRatio</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property focalLengthIn35mmFilm</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property focalLengthFactor</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property circleOfConfusion</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property hyperfocalDistance</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property dof</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property lv</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property fov</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property sceneCaptureType</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property gainControl</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property contrast</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property saturation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property sharpness</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property vibrance</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property subjectDistanceRange</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property lens</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property lensSerial</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property serial</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property GPSLatitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSLongitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSAltitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSTime</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property GPSDOP</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSSpeed</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSTrackRef</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property GPSTrack</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSImgDirectionRef</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property GPSImgDirection</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSMapDatum</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property GPSDestLatitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSDestLongitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSDestBearingRef</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property GPSDestBearing</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSDestDistance</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property GPSAreaInformation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property GPSDateStamp</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property GPSDifferential</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property writerEditor</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property headline</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property intellectualGenre</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property title</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property specialInstructions</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property jobId</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property keyword</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property category</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property supplementalCats</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property urgency</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property authorsPosition</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property credit</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property usageTerms</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property owner</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property source</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property dateCreated</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property sceneCode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property subjectCode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property jobId</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property modelInformation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property modelAge</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property codeOfOrg</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property nameOfOrg</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property personShown</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property event</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property lastEdited</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property maxAvailHeight</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property maxAvailWidth</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type smartCollection</info>
+            <info>Generate properties</info>
+            <info>Generate typed property name</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property system</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property album</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property count</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type smartCollection</info>
+            <info>Generate properties</info>
+            <info>Generate typed property name</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property system</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property album</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property count</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type criterion</info>
+            <info>Generate properties</info>
+            <info>Generate typed property field</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property value</info>
+            <info>Generate typed property regEx</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property relation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property and</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Properties generated</info>
+            <info>Generate asset type criterion</info>
+            <info>Generate properties</info>
+            <info>Generate typed property field</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property value</info>
+            <info>Generate typed property regEx</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property relation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property and</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Properties generated</info>
+            <info>Generate asset type sortCriterion</info>
+            <info>Generate properties</info>
+            <info>Generate typed property field</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property descending</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Properties generated</info>
+            <info>Generate asset type sortCriterion</info>
+            <info>Generate properties</info>
+            <info>Generate typed property field</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property descending</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Properties generated</info>
+            <info>Generate asset type group</info>
+            <info>Generate properties</info>
+            <info>Generate typed property name</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property system</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Properties generated</info>
+            <info>Generate asset type group</info>
+            <info>Generate properties</info>
+            <info>Generate typed property name</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property system</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Properties generated</info>
+            <info>Generate asset type slideShow</info>
+            <info>Generate properties</info>
+            <info>Generate typed property name</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property description</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property fromPreview</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property duration</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property fading</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property titleDisplay</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type slideShow</info>
+            <info>Generate properties</info>
+            <info>Generate typed property name</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property description</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property fromPreview</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property duration</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property fading</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property titleDisplay</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type slide</info>
+            <info>Generate properties</info>
+            <info>Generate typed property caption</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property sequenceNo</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property delay</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property fadeIn</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property duration</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property fadeOut</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property effect</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type slide</info>
+            <info>Generate properties</info>
+            <info>Generate typed property caption</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property sequenceNo</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property delay</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property fadeIn</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property duration</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property fadeOut</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property effect</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type exhibition</info>
+            <info>Generate properties</info>
+            <info>Generate typed property name</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property description</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property defaultViewingHeight</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property gridSize</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property showGrid</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property snapToGrid</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property labelFontFamily</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property labelFontSize</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type exhibition</info>
+            <info>Generate properties</info>
+            <info>Generate typed property name</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property description</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property defaultViewingHeight</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property gridSize</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property showGrid</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property snapToGrid</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property labelFontFamily</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property labelFontSize</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type wall</info>
+            <info>Generate properties</info>
+            <info>Generate typed property location</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property x</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property y</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property width</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property height</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property bgColor</info>
+            <info>Generate properties</info>
+            <info>Generate model group (Seq)</info>
+            <info>Generate properties</info>
+            <info>Generate typed property r</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property g</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property b</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Properties generated</info>
+            <info>Properties generated</info>
+            <info>Generate asset type wall</info>
+            <info>Generate properties</info>
+            <info>Generate typed property location</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property x</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property y</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property width</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property height</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property bgColor</info>
+            <info>Generate properties</info>
+            <info>Generate model group (Seq)</info>
+            <info>Generate properties</info>
+            <info>Generate typed property r</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property g</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property b</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Properties generated</info>
+            <info>Properties generated</info>
+            <info>Generate asset type exhibit</info>
+            <info>Generate properties</info>
+            <info>Generate typed property title</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property sequenceNo</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property description</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property credits</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property date</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property x</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property y</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property width</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property height</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type exhibit</info>
+            <info>Generate properties</info>
+            <info>Generate typed property title</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property sequenceNo</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property description</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property credits</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property date</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property x</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property y</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property width</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property height</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type meta</info>
+            <info>Generate properties</info>
+            <info>Generate typed property creationDate</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property owner</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property description</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property userFieldLabel1</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property userFieldLabel2</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property colorLabels</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property keywords</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property timeline</info>
+            <info>Generate type definitions</info>
+            <info>Generate typed property lastImport</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property lastSequenceNo</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property lastYearSequenceNo</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property lastBackup</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property backupLocation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property thumbnailResolution</info>
+            <info>Generate type definitions</info>
+            <info>Generate typed property thumbnailFromPreview</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Properties generated</info>
+            <info>Generate asset type meta</info>
+            <info>Generate properties</info>
+            <info>Generate typed property creationDate</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property owner</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property description</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property userFieldLabel1</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property userFieldLabel2</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property colorLabels</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property keywords</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property timeline</info>
+            <info>Generate type definitions</info>
+            <info>Generate typed property lastImport</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property lastSequenceNo</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property lastYearSequenceNo</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property lastBackup</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property backupLocation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property thumbnailResolution</info>
+            <info>Generate type definitions</info>
+            <info>Generate typed property thumbnailFromPreview</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Properties generated</info>
+            <info>Generate asset type category</info>
+            <info>Generate properties</info>
+            <info>Generate typed property label</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Properties generated</info>
+            <info>Generate asset type category</info>
+            <info>Generate properties</info>
+            <info>Generate typed property label</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Properties generated</info>
+            <info>Generate asset type derivedBy</info>
+            <info>Generate properties</info>
+            <info>Generate typed property recipe</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property tool</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property date</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Properties generated</info>
+            <info>Generate asset type derivedBy</info>
+            <info>Generate properties</info>
+            <info>Generate typed property recipe</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property tool</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property date</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Properties generated</info>
+            <info>Generate asset type composedTo</info>
+            <info>Generate properties</info>
+            <info>Generate typed property type</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property recipe</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property tool</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property date</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Properties generated</info>
+            <info>Generate asset type composedTo</info>
+            <info>Generate properties</info>
+            <info>Generate typed property type</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property recipe</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property tool</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property date</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Properties generated</info>
+            <info>Generate asset type artworkOrObjectShown</info>
+            <info>Generate properties</info>
+            <info>Properties generated</info>
+            <info>Generate asset type artworkOrObjectShown</info>
+            <info>Generate properties</info>
+            <info>Properties generated</info>
+            <info>Generate asset type artworkOrObject</info>
+            <info>Generate properties</info>
+            <info>Generate typed property copyrightNotice</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property creator</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property dateCreated</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property source</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property sourceInventoryNumber</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property title</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Properties generated</info>
+            <info>Generate asset type artworkOrObject</info>
+            <info>Generate properties</info>
+            <info>Generate typed property copyrightNotice</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property creator</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property dateCreated</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type Date</info>
+            <info>Generate typed property source</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property sourceInventoryNumber</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property title</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Properties generated</info>
+            <info>Generate asset type creatorsContact</info>
+            <info>Generate properties</info>
+            <info>Properties generated</info>
+            <info>Generate asset type creatorsContact</info>
+            <info>Generate properties</info>
+            <info>Properties generated</info>
+            <info>Generate asset type Contact</info>
+            <info>Generate properties</info>
+            <info>Generate typed property address</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property city</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property country</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property email</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property phone</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property postalCode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property state</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property webUrl</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Properties generated</info>
+            <info>Generate asset type Contact</info>
+            <info>Generate properties</info>
+            <info>Generate typed property address</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property city</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property country</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property email</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property phone</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property postalCode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property state</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property webUrl</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Properties generated</info>
+            <info>Generate asset type locationCreated</info>
+            <info>Generate properties</info>
+            <info>Properties generated</info>
+            <info>Generate asset type locationCreated</info>
+            <info>Generate properties</info>
+            <info>Properties generated</info>
+            <info>Generate asset type locationShown</info>
+            <info>Generate properties</info>
+            <info>Properties generated</info>
+            <info>Generate asset type locationShown</info>
+            <info>Generate properties</info>
+            <info>Properties generated</info>
+            <info>Generate asset type location</info>
+            <info>Generate properties</info>
+            <info>Generate typed property city</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property details</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property provinceOrState</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property countryName</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property countryISOCode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property sublocation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property worldRegion</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property longitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property latitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property altitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Properties generated</info>
+            <info>Generate asset type location</info>
+            <info>Generate properties</info>
+            <info>Generate typed property city</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property details</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property provinceOrState</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property countryName</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property countryISOCode</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property sublocation</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property worldRegion</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property longitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property latitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Generate typed property altitude</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type double</info>
+            <info>Properties generated</info>
+            <info>Generate asset type PageLayout</info>
+            <info>Generate properties</info>
+            <info>Generate typed property title</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property subtitle</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property footer</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property columns</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property leftMargin</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property rightMargin</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property horizontalGap</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property topMargin</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property bottomMargin</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property verticalGap</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property caption1</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property caption2</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property keyLine</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property landscape</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property facingPages</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property format</info>
+            <info>Generate type definitions</info>
+            <info>Properties generated</info>
+            <info>Generate asset type PageLayout</info>
+            <info>Generate properties</info>
+            <info>Generate typed property title</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property subtitle</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property footer</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property columns</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property leftMargin</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property rightMargin</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property horizontalGap</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property topMargin</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property bottomMargin</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property verticalGap</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property caption1</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property caption2</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate typed property keyLine</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property landscape</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property facingPages</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type boolean</info>
+            <info>Generate typed property format</info>
+            <info>Generate type definitions</info>
+            <info>Properties generated</info>
+            <info>Generate asset type SimilarityOptions</info>
+            <info>Generate properties</info>
+            <info>Generate typed property method</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property maxResults</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property minScore</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type float</info>
+            <info>Generate typed property lastTool</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property pencilRadius</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property airbrushRadius</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property airbrushIntensity</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generate asset type SimilarityOptions</info>
+            <info>Generate properties</info>
+            <info>Generate typed property method</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property maxResults</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property minScore</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type float</info>
+            <info>Generate typed property lastTool</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property pencilRadius</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property airbrushRadius</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Generate typed property airbrushIntensity</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type int</info>
+            <info>Properties generated</info>
+            <info>Generating a package for the default namespace</info>
+        </unit>
+        <unit errors="0" name="zoomCat2.aom" warnings="0">
+            <info>Generate package zoomCat2.aom</info>
+            <info>Level2 Structures detected - generating separate packages for each top level L2S</info>
+        </unit>
+        <unit errors="0" name="content" warnings="0">
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/asset created</info>
+            <info>Generate package content</info>
+            <info>Generate assets for package content</info>
+            <info>Generate type asset_type as superclass</info>
+            <info>Generate code for primary keys of asset asset</info>
+            <info>Generate code for arcs leading into asset asset</info>
+            <info>Generate code for asset slide</info>
+            <info>Generate code for asset exhibit</info>
+            <info>Generate code for asset derivedBy</info>
+            <info>Generate code for asset derivedBy</info>
+            <info>Generate code for asset composedTo</info>
+            <info>Generate code for asset composedTo</info>
+            <info>Generate code for asset artworkOrObjectShown</info>
+            <info>Generate code for asset creatorsContact</info>
+            <info>Generate code for asset locationCreated</info>
+            <info>Generate code for asset locationShown</info>
+            <info>Generate code for arcs of asset asset</info>
+            <info>Generate type asset_type as superclass</info>
+            <info>Generate code for primary keys of asset asset</info>
+            <info>Generate code for arcs leading into asset asset</info>
+            <info>Generate code for asset slide</info>
+            <info>Generate code for asset exhibit</info>
+            <info>Generate code for asset derivedBy</info>
+            <info>Generate code for asset derivedBy</info>
+            <info>Generate code for asset composedTo</info>
+            <info>Generate code for asset composedTo</info>
+            <info>Generate code for asset artworkOrObjectShown</info>
+            <info>Generate code for asset creatorsContact</info>
+            <info>Generate code for asset locationCreated</info>
+            <info>Generate code for asset locationShown</info>
+            <info>Generate code for arcs of asset asset</info>
+        </unit>
+        <unit errors="0" name="structure" warnings="0">
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/group created</info>
+            <info>Generate package structure</info>
+            <info>Generate assets for package structure</info>
+            <info>Generate type smartCollection_type as superclass</info>
+            <info>Generate code for primary keys of asset smartCollection</info>
+            <info>Generate code for arcs leading into asset smartCollection</info>
+            <info>Generate code for asset smartCollection</info>
+            <info>Generate code for asset group</info>
+            <info>Generate code for arcs of asset smartCollection</info>
+            <info>Generate code for asset smartCollection</info>
+            <info>Role name subSelection specified - using role name as field name</info>
+            <info>Generate code for asset criterion</info>
+            <info>Generate code for asset sortCriterion</info>
+            <info>Generate type smartCollection_type as superclass</info>
+            <info>Generate code for primary keys of asset smartCollection</info>
+            <info>Generate code for arcs leading into asset smartCollection</info>
+            <info>Generate code for asset smartCollection</info>
+            <info>Generate code for asset group</info>
+            <info>Generate code for arcs of asset smartCollection</info>
+            <info>Generate code for asset smartCollection</info>
+            <info>Role name subSelection specified - using role name as field name</info>
+            <info>Generate code for asset criterion</info>
+            <info>Generate code for asset sortCriterion</info>
+            <info>Generate type criterion_type as superclass</info>
+            <info>Generate code for primary keys of asset criterion</info>
+            <info>Generate code for arcs leading into asset criterion</info>
+            <info>Generate code for asset smartCollection</info>
+            <info>Generate code for arcs of asset criterion</info>
+            <info>Generate type criterion_type as superclass</info>
+            <info>Generate code for primary keys of asset criterion</info>
+            <info>Generate code for arcs leading into asset criterion</info>
+            <info>Generate code for asset smartCollection</info>
+            <info>Generate code for arcs of asset criterion</info>
+            <info>Generate type sortCriterion_type as superclass</info>
+            <info>Generate code for primary keys of asset sortCriterion</info>
+            <info>Generate code for arcs leading into asset sortCriterion</info>
+            <info>Generate code for asset smartCollection</info>
+            <info>Generate code for arcs of asset sortCriterion</info>
+            <info>Generate type sortCriterion_type as superclass</info>
+            <info>Generate code for primary keys of asset sortCriterion</info>
+            <info>Generate code for arcs leading into asset sortCriterion</info>
+            <info>Generate code for asset smartCollection</info>
+            <info>Generate code for arcs of asset sortCriterion</info>
+            <info>Generate type group_type as superclass</info>
+            <info>Generate code for primary keys of asset group</info>
+            <info>Generate code for arcs leading into asset group</info>
+            <info>Generate code for arcs of asset group</info>
+            <info>Generate code for asset smartCollection</info>
+            <info>Role name rootCollection specified - using role name as field name</info>
+            <info>Generate code for asset slideShow</info>
+            <info>Role name slideshow specified - using role name as field name</info>
+            <info>Generate code for asset exhibition</info>
+            <info>Role name exhibition specified - using role name as field name</info>
+            <info>Generate type group_type as superclass</info>
+            <info>Generate code for primary keys of asset group</info>
+            <info>Generate code for arcs leading into asset group</info>
+            <info>Generate code for arcs of asset group</info>
+            <info>Generate code for asset smartCollection</info>
+            <info>Role name rootCollection specified - using role name as field name</info>
+            <info>Generate code for asset slideShow</info>
+            <info>Role name slideshow specified - using role name as field name</info>
+            <info>Generate code for asset exhibition</info>
+            <info>Role name exhibition specified - using role name as field name</info>
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/group exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/group/slideShow created</info>
+            <info>Generate package slideShow</info>
+            <info>Generate assets for package slideShow</info>
+            <info>Generate type slideShow_type as superclass</info>
+            <info>Generate code for primary keys of asset slideShow</info>
+            <info>Generate code for arcs leading into asset slideShow</info>
+            <info>Generate code for asset group</info>
+            <info>Generate code for arcs of asset slideShow</info>
+            <info>Generate code for asset slide</info>
+            <info>Role name entry specified - using role name as field name</info>
+            <info>Generate type slideShow_type as superclass</info>
+            <info>Generate code for primary keys of asset slideShow</info>
+            <info>Generate code for arcs leading into asset slideShow</info>
+            <info>Generate code for asset group</info>
+            <info>Generate code for arcs of asset slideShow</info>
+            <info>Generate code for asset slide</info>
+            <info>Role name entry specified - using role name as field name</info>
+            <info>Generate type slide_type as superclass</info>
+            <info>Generate code for primary keys of asset slide</info>
+            <info>Generate code for arcs leading into asset slide</info>
+            <info>Generate code for asset slideShow</info>
+            <info>Generate code for arcs of asset slide</info>
+            <info>Generate code for asset asset</info>
+            <info>Role name asset specified - using role name as field name</info>
+            <info>Generate type slide_type as superclass</info>
+            <info>Generate code for primary keys of asset slide</info>
+            <info>Generate code for arcs leading into asset slide</info>
+            <info>Generate code for asset slideShow</info>
+            <info>Generate code for arcs of asset slide</info>
+            <info>Generate code for asset asset</info>
+            <info>Role name asset specified - using role name as field name</info>
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/group exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/group/exhibition created</info>
+            <info>Generate package exhibition</info>
+            <info>Generate assets for package exhibition</info>
+            <info>Generate type exhibition_type as superclass</info>
+            <info>Generate code for primary keys of asset exhibition</info>
+            <info>Generate code for arcs leading into asset exhibition</info>
+            <info>Generate code for asset group</info>
+            <info>Generate code for arcs of asset exhibition</info>
+            <info>Generate code for asset wall</info>
+            <info>Role name wall specified - using role name as field name</info>
+            <info>Generate type exhibition_type as superclass</info>
+            <info>Generate code for primary keys of asset exhibition</info>
+            <info>Generate code for arcs leading into asset exhibition</info>
+            <info>Generate code for asset group</info>
+            <info>Generate code for arcs of asset exhibition</info>
+            <info>Generate code for asset wall</info>
+            <info>Role name wall specified - using role name as field name</info>
+            <info>Generate type wall_type as superclass</info>
+            <info>Generate code for primary keys of asset wall</info>
+            <info>Generate code for arcs leading into asset wall</info>
+            <info>Generate code for asset exhibition</info>
+            <info>Generate code for arcs of asset wall</info>
+            <info>Generate code for asset exhibit</info>
+            <info>Role name exhibit specified - using role name as field name</info>
+            <info>Generate type wall_type as superclass</info>
+            <info>Generate code for primary keys of asset wall</info>
+            <info>Generate code for arcs leading into asset wall</info>
+            <info>Generate code for asset exhibition</info>
+            <info>Generate code for arcs of asset wall</info>
+            <info>Generate code for asset exhibit</info>
+            <info>Role name exhibit specified - using role name as field name</info>
+            <info>Generate type exhibit_type as superclass</info>
+            <info>Generate code for primary keys of asset exhibit</info>
+            <info>Generate code for arcs leading into asset exhibit</info>
+            <info>Generate code for asset wall</info>
+            <info>Generate code for arcs of asset exhibit</info>
+            <info>Generate code for asset asset</info>
+            <info>Role name asset specified - using role name as field name</info>
+            <info>Generate type exhibit_type as superclass</info>
+            <info>Generate code for primary keys of asset exhibit</info>
+            <info>Generate code for arcs leading into asset exhibit</info>
+            <info>Generate code for asset wall</info>
+            <info>Generate code for arcs of asset exhibit</info>
+            <info>Generate code for asset asset</info>
+            <info>Role name asset specified - using role name as field name</info>
+        </unit>
+        <unit errors="0" name="meta" warnings="0">
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/meta created</info>
+            <info>Generate package meta</info>
+            <info>Generate assets for package meta</info>
+            <info>Generate type meta_type as superclass</info>
+            <info>Generate code for primary keys of asset meta</info>
+            <info>Generate code for arcs leading into asset meta</info>
+            <info>Generate code for arcs of asset meta</info>
+            <info>Generate code for asset category</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate type meta_type as superclass</info>
+            <info>Generate code for primary keys of asset meta</info>
+            <info>Generate code for arcs leading into asset meta</info>
+            <info>Generate code for arcs of asset meta</info>
+            <info>Generate code for asset category</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate type category_type as superclass</info>
+            <info>Generate code for primary keys of asset category</info>
+            <info>Generate code for arcs leading into asset category</info>
+            <info>Generate code for asset meta</info>
+            <info>Generate code for asset category</info>
+            <info>Generate code for arcs of asset category</info>
+            <info>Generate code for asset category</info>
+            <info>Role name subCategory specified - using role name as field name</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+            <info>Generate type category_type as superclass</info>
+            <info>Generate code for primary keys of asset category</info>
+            <info>Generate code for arcs leading into asset category</info>
+            <info>Generate code for asset meta</info>
+            <info>Generate code for asset category</info>
+            <info>Generate code for arcs of asset category</info>
+            <info>Generate code for asset category</info>
+            <info>Role name subCategory specified - using role name as field name</info>
+            <info>Generate type definitions</info>
+            <info>Generate simple type String</info>
+        </unit>
+        <unit errors="0" name="derivatives" warnings="0">
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/derivedBy created</info>
+            <info>Generate package derivatives</info>
+            <info>Generate assets for package derivatives</info>
+            <info>Generate type derivedBy_type as superclass</info>
+            <info>Generate code for primary keys of asset derivedBy</info>
+            <info>Generate code for arcs leading into asset derivedBy</info>
+            <info>Generate code for arcs of asset derivedBy</info>
+            <info>Generate code for asset asset</info>
+            <info>Role name derivative specified - using role name as field name</info>
+            <info>Generate code for asset asset</info>
+            <info>Role name original specified - using role name as field name</info>
+            <info>Generate type derivedBy_type as superclass</info>
+            <info>Generate code for primary keys of asset derivedBy</info>
+            <info>Generate code for arcs leading into asset derivedBy</info>
+            <info>Generate code for arcs of asset derivedBy</info>
+            <info>Generate code for asset asset</info>
+            <info>Role name derivative specified - using role name as field name</info>
+            <info>Generate code for asset asset</info>
+            <info>Role name original specified - using role name as field name</info>
+        </unit>
+        <unit errors="0" name="composition" warnings="0">
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/composedTo created</info>
+            <info>Generate package composition</info>
+            <info>Generate assets for package composition</info>
+            <info>Generate type composedTo_type as superclass</info>
+            <info>Generate code for primary keys of asset composedTo</info>
+            <info>Generate code for arcs leading into asset composedTo</info>
+            <info>Generate code for arcs of asset composedTo</info>
+            <info>Generate code for asset asset</info>
+            <info>Role name component specified - using role name as field name</info>
+            <info>Generate code for asset asset</info>
+            <info>Role name composite specified - using role name as field name</info>
+            <info>Generate type composedTo_type as superclass</info>
+            <info>Generate code for primary keys of asset composedTo</info>
+            <info>Generate code for arcs leading into asset composedTo</info>
+            <info>Generate code for arcs of asset composedTo</info>
+            <info>Generate code for asset asset</info>
+            <info>Role name component specified - using role name as field name</info>
+            <info>Generate code for asset asset</info>
+            <info>Role name composite specified - using role name as field name</info>
+        </unit>
+        <unit errors="0" name="artwork" warnings="0">
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/artworkOrObjectShown created</info>
+            <info>Generate package artwork</info>
+            <info>Generate assets for package artwork</info>
+            <info>Generate type artworkOrObjectShown_type as superclass</info>
+            <info>Generate code for primary keys of asset artworkOrObjectShown</info>
+            <info>Generate code for arcs leading into asset artworkOrObjectShown</info>
+            <info>Generate code for arcs of asset artworkOrObjectShown</info>
+            <info>Generate code for asset artworkOrObject</info>
+            <info>Generate code for asset asset</info>
+            <info>Generate type artworkOrObjectShown_type as superclass</info>
+            <info>Generate code for primary keys of asset artworkOrObjectShown</info>
+            <info>Generate code for arcs leading into asset artworkOrObjectShown</info>
+            <info>Generate code for arcs of asset artworkOrObjectShown</info>
+            <info>Generate code for asset artworkOrObject</info>
+            <info>Generate code for asset asset</info>
+            <info>Generate type artworkOrObject_type as superclass</info>
+            <info>Generate code for primary keys of asset artworkOrObject</info>
+            <info>Generate code for arcs leading into asset artworkOrObject</info>
+            <info>Generate code for asset artworkOrObjectShown</info>
+            <info>Generate code for arcs of asset artworkOrObject</info>
+            <info>Generate type artworkOrObject_type as superclass</info>
+            <info>Generate code for primary keys of asset artworkOrObject</info>
+            <info>Generate code for arcs leading into asset artworkOrObject</info>
+            <info>Generate code for asset artworkOrObjectShown</info>
+            <info>Generate code for arcs of asset artworkOrObject</info>
+        </unit>
+        <unit errors="0" name="creatorsContact" warnings="0">
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/creatorsContact created</info>
+            <info>Generate package creatorsContact</info>
+            <info>Generate assets for package creatorsContact</info>
+            <info>Generate type creatorsContact_type as superclass</info>
+            <info>Generate code for primary keys of asset creatorsContact</info>
+            <info>Generate code for arcs leading into asset creatorsContact</info>
+            <info>Generate code for arcs of asset creatorsContact</info>
+            <info>Generate code for asset Contact</info>
+            <info>Generate code for asset asset</info>
+            <info>Generate type creatorsContact_type as superclass</info>
+            <info>Generate code for primary keys of asset creatorsContact</info>
+            <info>Generate code for arcs leading into asset creatorsContact</info>
+            <info>Generate code for arcs of asset creatorsContact</info>
+            <info>Generate code for asset Contact</info>
+            <info>Generate code for asset asset</info>
+            <info>Generate type Contact_type as superclass</info>
+            <info>Generate code for primary keys of asset Contact</info>
+            <info>Generate code for arcs leading into asset Contact</info>
+            <info>Generate code for asset creatorsContact</info>
+            <info>Generate code for arcs of asset Contact</info>
+            <info>Generate type Contact_type as superclass</info>
+            <info>Generate code for primary keys of asset Contact</info>
+            <info>Generate code for arcs leading into asset Contact</info>
+            <info>Generate code for asset creatorsContact</info>
+            <info>Generate code for arcs of asset Contact</info>
+        </unit>
+        <unit errors="0" name="locationCreated" warnings="0">
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/locationCreated created</info>
+            <info>Generate package locationCreated</info>
+            <info>Generate assets for package locationCreated</info>
+            <info>Generate type locationCreated_type as superclass</info>
+            <info>Generate code for primary keys of asset locationCreated</info>
+            <info>Generate code for arcs leading into asset locationCreated</info>
+            <info>Generate code for arcs of asset locationCreated</info>
+            <info>Generate code for asset location</info>
+            <info>Generate code for asset asset</info>
+            <info>Generate type locationCreated_type as superclass</info>
+            <info>Generate code for primary keys of asset locationCreated</info>
+            <info>Generate code for arcs leading into asset locationCreated</info>
+            <info>Generate code for arcs of asset locationCreated</info>
+            <info>Generate code for asset location</info>
+            <info>Generate code for asset asset</info>
+        </unit>
+        <unit errors="0" name="locationShown" warnings="0">
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/locationShown created</info>
+            <info>Generate package locationShown</info>
+            <info>Generate assets for package locationShown</info>
+            <info>Generate type locationShown_type as superclass</info>
+            <info>Generate code for primary keys of asset locationShown</info>
+            <info>Generate code for arcs leading into asset locationShown</info>
+            <info>Generate code for arcs of asset locationShown</info>
+            <info>Generate code for asset location</info>
+            <info>Generate code for asset asset</info>
+            <info>Generate type locationShown_type as superclass</info>
+            <info>Generate code for primary keys of asset locationShown</info>
+            <info>Generate code for arcs leading into asset locationShown</info>
+            <info>Generate code for arcs of asset locationShown</info>
+            <info>Generate code for asset location</info>
+            <info>Generate code for asset asset</info>
+        </unit>
+        <unit errors="0" name="location" warnings="0">
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/location created</info>
+            <info>Generate package location</info>
+            <info>Generate assets for package location</info>
+            <info>Generate type location_type as superclass</info>
+            <info>Generate code for primary keys of asset location</info>
+            <info>Generate code for arcs leading into asset location</info>
+            <info>Generate code for asset locationCreated</info>
+            <info>Generate code for asset locationShown</info>
+            <info>Generate code for arcs of asset location</info>
+            <info>Generate type location_type as superclass</info>
+            <info>Generate code for primary keys of asset location</info>
+            <info>Generate code for arcs leading into asset location</info>
+            <info>Generate code for asset locationCreated</info>
+            <info>Generate code for asset locationShown</info>
+            <info>Generate code for arcs of asset location</info>
+        </unit>
+        <unit errors="0" name="PageLayout" warnings="0">
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/pageLayout created</info>
+            <info>Generate package PageLayout</info>
+            <info>Generate assets for package PageLayout</info>
+            <info>Generate type PageLayout_type as superclass</info>
+            <info>Generate code for primary keys of asset PageLayout</info>
+            <info>Generate code for arcs leading into asset PageLayout</info>
+            <info>Generate code for arcs of asset PageLayout</info>
+            <info>Generate type PageLayout_type as superclass</info>
+            <info>Generate code for primary keys of asset PageLayout</info>
+            <info>Generate code for arcs leading into asset PageLayout</info>
+            <info>Generate code for arcs of asset PageLayout</info>
+        </unit>
+        <unit errors="0" name="SimilarityOptions" warnings="0">
+            <info>Prepare package for namespace http://com.bdaum.zoom/cat/model</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model/similarityOptions created</info>
+            <info>Generate package SimilarityOptions</info>
+            <info>Generate assets for package SimilarityOptions</info>
+            <info>Generate type SimilarityOptions_type as superclass</info>
+            <info>Generate code for primary keys of asset SimilarityOptions</info>
+            <info>Generate code for arcs leading into asset SimilarityOptions</info>
+            <info>Generate code for arcs of asset SimilarityOptions</info>
+            <info>Generate type SimilarityOptions_type as superclass</info>
+            <info>Generate code for primary keys of asset SimilarityOptions</info>
+            <info>Generate code for arcs leading into asset SimilarityOptions</info>
+            <info>Generate code for arcs of asset SimilarityOptions</info>
+            <info>Generating Main class</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat exists, will be overwritten</info>
+            <info>Folder /com.bdaum.zoom.core/temp.folder/com/bdaum/zoom/cat/model exists, will be overwritten</info>
+            <info>Output to file Exhibit.java</info>
+            <info>Output to file Wall.java</info>
+            <info>Output to file ExhibitImpl.java</info>
+            <info>Output to file WallImpl.java</info>
+            <info>Output to file Exhibition.java</info>
+            <info>Output to file ExhibitionImpl.java</info>
+            <info>Output to file PackageInterface.java</info>
+            <info>Output to file SlideImpl.java</info>
+            <info>Output to file Slide.java</info>
+            <info>Output to file SlideShow.java</info>
+            <info>Output to file SlideShowImpl.java</info>
+            <info>Output to file PackageInterface.java</info>
+            <info>Output to file AssetImpl.java</info>
+            <info>Output to file Asset.java</info>
+            <info>Output to file PackageInterface.java</info>
+            <info>Output to file CreatorsContact.java</info>
+            <info>Output to file ContactImpl.java</info>
+            <info>Output to file Contact.java</info>
+            <info>Output to file CreatorsContactImpl.java</info>
+            <info>Output to file PackageInterface.java</info>
+            <info>Output to file PageLayout.java</info>
+            <info>Output to file PageLayoutImpl.java</info>
+            <info>Output to file ComposedTo.java</info>
+            <info>Output to file ComposedToImpl.java</info>
+            <info>Output to file PackageInterface.java</info>
+            <info>Output to file SimilarityOptions.java</info>
+            <info>Output to file SimilarityOptionsImpl.java</info>
+            <info>Output to file DerivedBy.java</info>
+            <info>Output to file DerivedByImpl.java</info>
+            <info>Output to file LocationCreatedImpl.java</info>
+            <info>Output to file LocationCreated.java</info>
+            <info>Output to file PackageInterface.java</info>
+            <info>Output to file ArtworkOrObjectImpl.java</info>
+            <info>Output to file ArtworkOrObjectShown.java</info>
+            <info>Output to file ArtworkOrObjectShownImpl.java</info>
+            <info>Output to file ArtworkOrObject.java</info>
+            <info>Output to file PackageInterface.java</info>
+            <info>Output to file SimilarityOptions_type.java</info>
+            <info>Output to file PageLayout_type.java</info>
+            <info>Output to file Slide_typeImpl.java</info>
+            <info>Output to file Criterion_type.java</info>
+            <info>Output to file SmartCollection_typeImpl.java</info>
+            <info>Output to file DerivedBy_typeImpl.java</info>
+            <info>Output to file CreatorsContact_type.java</info>
+            <info>Output to file ArtworkOrObject_typeImpl.java</info>
+            <info>Output to file Category_type.java</info>
+            <info>Output to file SortCriterion_typeImpl.java</info>
+            <info>Output to file Main.java</info>
+            <info>Output to file Contact_typeImpl.java</info>
+            <info>Output to file DerivedBy_type.java</info>
+            <info>Output to file SmartCollection_type.java</info>
+            <info>Output to file SimilarityOptions_typeImpl.java</info>
+            <info>Output to file PageLayout_typeImpl.java</info>
+            <info>Output to file Location_typeImpl.java</info>
+            <info>Output to file ArtworkOrObjectShown_typeImpl.java</info>
+            <info>Output to file Asset_type.java</info>
+            <info>Output to file Exhibit_type.java</info>
+            <info>Output to file Exhibition_type.java</info>
+            <info>Output to file Meta_typeImpl.java</info>
+            <info>Output to file LocationCreated_typeImpl.java</info>
+            <info>Output to file ComposedTo_type.java</info>
+            <info>Output to file SlideShow_typeImpl.java</info>
+            <info>Output to file Criterion_typeImpl.java</info>
+            <info>Output to file ArtworkOrObjectShown_type.java</info>
+            <info>Output to file Group_typeImpl.java</info>
+            <info>Output to file Asset_typeImpl.java</info>
+            <info>Output to file Location_type.java</info>
+            <info>Output to file ArtworkOrObject_type.java</info>
+            <info>Output to file LocationShown_type.java</info>
+            <info>Output to file CreatorsContact_typeImpl.java</info>
+            <info>Output to file Wall_typeImpl.java</info>
+            <info>Output to file LocationCreated_type.java</info>
+            <info>Output to file SlideShow_type.java</info>
+            <info>Output to file Meta_type.java</info>
+            <info>Output to file ComposedTo_typeImpl.java</info>
+            <info>Output to file Group_type.java</info>
+            <info>Output to file Exhibit_typeImpl.java</info>
+            <info>Output to file Exhibition_typeImpl.java</info>
+            <info>Output to file Wall_type.java</info>
+            <info>Output to file Contact_type.java</info>
+            <info>Output to file Slide_type.java</info>
+            <info>Output to file Category_typeImpl.java</info>
+            <info>Output to file SortCriterion_type.java</info>
+            <info>Output to file LocationShown_typeImpl.java</info>
+            <info>Output to file PackageInterface.java</info>
+            <info>Output to file Criterion.java</info>
+            <info>Output to file CriterionImpl.java</info>
+            <info>Output to file SortCriterion.java</info>
+            <info>Output to file SmartCollection.java</info>
+            <info>Output to file GroupImpl.java</info>
+            <info>Output to file SortCriterionImpl.java</info>
+            <info>Output to file SmartCollectionImpl.java</info>
+            <info>Output to file Group.java</info>
+            <info>Output to file PackageInterface.java</info>
+            <info>Output to file LocationShownImpl.java</info>
+            <info>Output to file LocationShown.java</info>
+            <info>Output to file Category.java</info>
+            <info>Output to file MetaImpl.java</info>
+            <info>Output to file CategoryImpl.java</info>
+            <info>Output to file Meta.java</info>
+            <info>Output to file PackageInterface.java</info>
+            <info>Output to file Location.java</info>
+            <info>Output to file LocationImpl.java</info>
+            <info>Output to file PackageInterface.java</info>
+        </unit>
+    </generator>
+</log>

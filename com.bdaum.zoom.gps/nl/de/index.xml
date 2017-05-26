@@ -1,0 +1,70 @@
+<index>
+	<entry keyword="Geo-Tagging">
+		<topic href="html/geoTagging.html" />
+		<entry keyword="Tracker-Datei importieren">
+			<topic href="html/importing.html" />
+		</entry>
+		<entry keyword="manuelles ~">
+			<topic href="html/manual.html" />
+		</entry>
+	</entry>
+	<entry keyword="GPX">
+			<topic href="html/importing.html" />
+	</entry>
+	<entry keyword="NMEA">
+			<topic href="html/importing.html" />
+	</entry>
+	<entry keyword="Geo-Namen">
+		<topic href="html/geonaming.html" />
+		<topic href="html/geoTagging.html" />
+	</entry>
+	<entry keyword="GPS">
+		<topic href="html/gps.html" />
+	</entry>
+	<entry keyword="Trackpunkt">
+		<topic href="html/trackpoint.html" />
+	</entry>
+	<entry keyword="Subtrack">
+		<topic href="html/trackpoint.html" />
+	</entry>
+	
+	<entry keyword="Google">
+		<entry keyword="Places">
+			<topic href="html/geoTagging.html" />
+		</entry>
+	</entry>
+	<entry keyword="Standorte">
+		<topic href="html/locations.html" />
+	</entry>
+	<entry keyword="Ortsangaben">
+		<topic href="html/locations.html" />
+	</entry>
+	<entry keyword="Karten-Sichtfenster">
+		<topic href="html/maps.html" />
+	</entry>
+	<entry keyword="Geografische Suche">
+		<topic href="html/searching.html" />
+	</entry>
+	<entry keyword="Sichtfenster">
+		<entry keyword="Karte">
+			<topic href="html/maps.html" />
+		</entry>
+	</entry>
+		<entry keyword="Suche">
+		<entry keyword="geografische ~">
+			<topic href="html/searching.html" />
+		</entry>
+	</entry>
+	<entry keyword="Mausgesten">
+		<topic href="html/maps.html" />
+	</entry>
+	<entry keyword="Reverse Geo-coding">
+		<topic href="html/gps.html" />
+		<topic href="html/geoTagging.html" />
+	</entry>
+	<entry keyword="Webbrowser">
+		<entry keyword="Karte in externem ~ anzeigen">
+			<topic href="html/maps.html" />
+		</entry>
+	</entry>
+</index>

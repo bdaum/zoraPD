@@ -1,0 +1,434 @@
+<contexts>
+	<context id="archive_dialog_context" title="Archivierung">
+		<description>Bilder und Katalog archivieren</description>
+		<topic href="html/reference/archive.html" label="Archivierung"/>
+	</context>
+	<context id="catProperties_dialog_context" title="Katalogeigenschaften">
+		<description>Katalogeigenschaften</description>
+		<topic href="html/reference/catProperties.html" label="Katalogeigenschaften"/>
+	</context>
+	<context id="newcatProperties_dialog_context" title="Creating a new Catalog">
+		<description>Einen neuen Katalog anlegen</description>
+		<topic href="html/gettingstarted/newcat.html" label="Einen neuen Katalog anlegen"/>
+		<topic href="html/reference/catProperties.html" label="Katalogeigenschaften"/>
+	</context>
+ <context id="collectionEdit_dialog_context" title="Dialog für Kollektionssuchkriterien">
+    <description>Suchkriterien einer Kollektion bearbeiten</description>
+    <topic href="html/reference/collectionEdit.html" label="Dialog für Kollektionssuchkriterien"/>
+    <topic href="html/tasks/imageRetrieval.html" label="Suchen und Finden von Bildern"/>
+ </context>
+ <context id="autoRule_dialog_context" title="Regel für die automatische Erstellung von Kollektionen">
+    <description>Regel für die automatische Erstellung von Kollektionen bearbeiten</description>
+    <topic href="html/reference/autoRule.html" label="Regel für die automatische Erstellung von Kollektionen bearbeiten"/>
+ </context>
+ <context id="category_dialog_context" title="Kategoriedialog">
+    <description>Bilder werden an  Kategorie-Einträge zugewiesen, indem Sie die Kategorien markieren. Drücken Sie Hinzufügen... um eine neue Kategorie zu definieren.</description>
+ </context>
+ <context id="keyword_dialog_context" title="Schlagwortdialog">
+    <description>Markieren Sie verhandene Schlagworte, um Sie den selektierten Bildern zuzuweisen, oder definieren Sie neue Schlagworte im unteren Teil des Dialogs - jedes Schlagwort auf einer neuen Zeile.</description>
+    <topic href="html/reference/keyworddef.html" label="Schlagwortdefinition"/>
+ </context>
+ <context id="description_dialog_context" title="Dialog für Verknüpfungsbeschreibungen">
+    <description>Verknüpfungsbeschreibungen bearbeiten</description>
+    <topic href="html/reference/descriptionEdit.html" label="Dialog für Verknüpfungsbeschreibungen"/>
+ </context>
+  <context id="catalog_view_context" title="Katalog-Sichtfenster">
+    <description>Katalog-Sichtfenster</description>
+    <topic href="html/reference/catalog.html" label="Katalog-Sichtfensterw"/>
+ </context>
+ <context id="history_view_context" title="Verlauf-Sichtfenster">
+    <description>Verlauf-Sichtfenster</description>
+    <topic href="html/reference/history.html" label="Verlauf-Sichtfenster"/>
+ </context>
+ 
+ <context id="lightbox_view_context" title="Lichtkasten-Sichtfenster">
+    <description>Lichtkasten-Sichtfenster</description>
+    <topic href="html/reference/lightbox.html" label="Lichtkasten-Sichtfenster"/>
+ </context>
+ <context id="perspectives_page_context" title="Perspektiven-Einstellungen">
+    <description>Perspektiven verwalten</description>
+    <topic href="html/reference/perspectivePrefs.html" label="Perspektiven-Einstellungen"/>
+ </context>
+ <context id="catFilter_dialog_context" title="Katalogfilter">
+    <description>Katalogfilter zum Unterdrücken unbenutzer oder unerwünschter Katalogeinträge</description>
+    <topic href="html/reference/catFilter.html" label="Katalogfilter"/>
+ </context>
+  <context id="Spell_Context" title="Rechtschreibeprüfung">
+    <description>Installation von Wörterbüchern und Konfiguration der Rechtschreibeprüfung</description>
+    <topic href="html/reference/spell.html" label="Rechtschreibeprüfung"/>
+ </context>
+ <context id="import_page_context" title="Import-Einstellungen">
+    <description>Einstellungen für den Import von Bildern</description>
+    <topic href="html/reference/importPrefs.html" label="Import-Einstellungen"/>
+ </context>
+ <context id="catalog_page_context" title="Katalogeinstellungen">
+    <description>Katalogeigenschaften verwalten</description>
+    <topic href="html/reference/catPrefs.html" label="Katalogeigenschaften verwalten"/>
+ </context>
+ <context id="importDeviceFileSelection_wizard_context">
+    <description>Bilder von Gerät importieren - Bildauswahl</description>
+    <topic href="html/reference/importFromDevice.html#1" label="von Gerät importieren - Bildauswahl"/>
+ </context>
+ <context id="importDeviceTargetSelection_wizard_context">
+    <description>Bilder von Gerät importieren - Ausgabeordner</description>
+    <topic href="html/reference/importFromDevice.html#2" label="von Gerät importieren - Ausgabeordner"/>
+ </context>
+ <context id="importDeviceRenaming_wizard_context">
+    <description>Bilder von Gerät importieren - Neubenennung</description>
+    <topic href="html/reference/importFromDevice.html#3" label="von Gerät importieren - Neubenennung"/>
+ </context>
+ <context id="importDeviceMetadata_wizard_context">
+    <description>Bilder von Gerät importieren - Metadaten</description>
+    <topic href="html/reference/importFromDevice.html#4" label="von Gerät importieren - Metadaten"/>
+ </context>
+ <context id="importNewStructureFileSelection_wizard_context" title="In neue Ordnerstruktur importieren">
+    <description>Bilder in neue Ordnerstruktur importieren - Bildauswahl</description>
+    <topic href="html/reference/importNewStructure.html#1" label="In neue Ordnerstruktur importieren - Bildauswahl"/>
+ </context>
+ <context id="importNewStructureTargetSelection_wizard_context" title="In neue Ordnerstruktur importieren - Ausgabeordner">
+    <description>Bilder in neue Ordnerstruktur importieren - Ausgabeordner</description>
+    <topic href="html/reference/importNewStructure.html#2" label="In neue Ordnerstruktur importieren - Ausgabeordner"/>
+ </context>
+ <context id="importNewStructureRenaming_wizard_context" title="In neue Ordnerstruktur importieren - Dateien umbenennen">
+    <description>Bilder in neue Ordnerstruktur importieren - Metadaten</description>
+    <topic href="html/reference/importNewStructure.html#3" label="in neue Ordnerstruktur importieren - Dateien umbenennen"/>
+ </context>
+ <context id="appearance_page_context" title="Darstellungseinstellungen">
+    <description>Darstellungseinstellungen</description>
+    <topic href="html/reference/appearancePrefs.html" label="Darstellungseinstellungen"/>
+ </context>
+ <context id="fileAssociations_page_context" title="Externe Programme">
+    <description>Externe Programme und Dateizuordnungen</description>
+    <topic href="html/reference/fileAssociations.html" label="Externe Programme"/>
+ </context>
+ <context id="audio_page_context" title="Audio-Einstellungen">
+    <description>Audio-Einstellungen</description>
+    <topic href="html/reference/audioPrefs.html" label="Audio-Einstellungen"/>
+ </context>
+ <context id="general_page_context" title="Allgemeine Einstellungen">
+    <description>Allgemeine Einstellungen</description>
+    <topic href="html/reference/generalPrefs.html" label="Allgemeine Einstellungen"/>
+ </context>
+ <context id="keys_page_context" title="Tastenkürzel-Einstellungen">
+    <description>Tastenkürzel-Einstellungen</description>
+    <topic href="html/reference/keyPrefs.html" label="Tastenkürzel-Einstellungen"/>
+ </context>
+ <context id="keyword_page_context" title="Schlagwort-Einstellungen">
+    <description>Schlagwort-Einstellungen</description>
+    <topic href="html/reference/keywordPrefs.html" label="Schlagwort-Einstellungen"/>
+ </context>
+ <context id="metadata_page_context" title="Metadaten-Einstellungen">
+    <description>Metadaten-Einstellungen</description>
+    <topic href="html/reference/metadataPrefs.html" label="Metadaten-Einstellungen"/>
+ </context>
+ <context id="watchedFolders_page_context" title="Überwachte Ordner">
+    <description>Verwaltung der überwachten Ordner</description>
+    <topic href="html/reference/watchedFolders.html" label="Überwachte Ordner"/>
+ </context>
+ 
+ <context id="sleeves_view_context" title="Hüllen-Sichtfenster">
+    <description>Hüllen-Sichtfenster</description>
+    <topic href="html/reference/sleeves.htm" label="Hüllen-Sichtfenster"/>
+ </context>
+ <context id="hstrip_view_context" title="Horizontales Streifen-Sichtfenster">
+    <description>Horizontales Streifen-Sichtfenster</description>
+    <topic href="html/reference/hstrip.html" label="Horizontales Streifen-Sichtfenster"/>
+ </context>
+ <context id="vstrip_view_context" title="Vertikales Streifen-Sichtfenster">
+    <description>Vertikales Streifen-Sichtfenster</description>
+    <topic href="html/reference/vstrip.html" label="Vertikales Streifen-Sichtfenster"/>
+ </context>
+ <context id="preview_view_context" title="Vorschau">
+    <description>Vorschau-Sichtfenster</description>
+    <topic href="html/reference/preview.html" label="Vorschau"/>
+ </context>
+ <context id="catalog_page_context" title="Katalog-Sichtfenster">
+    <description>Katalog-Sichtfenster</description>
+    <topic href="html/reference/catalog.html" label="Katalog-Sichtfenster"/>
+ </context>
+ <context id="collectionEdit_dialog_context" title="Kollektionendialog">
+    <description>Kollektionen bearbeiten</description>
+    <topic href="html/reference/collectionEdit.html" label="Kollektionendialog"/>
+ </context>
+ <context id="hierarchy_view_context" title="Hierarchie-Sichtfenster">
+    <description>Hierarchie-Sichtfenster</description>
+    <topic href="html/reference/hierarchy.html" label="Hierarchie-Sichtfenster"/>
+ </context>
+ <context id="bookmark_view_context" title="Lesezeichen-Sichtfenster">
+    <description>Lesezeichen-Sichtfenster</description>
+    <topic href="html/reference/bookmarks.html" label="Lesezeichen-Sichtfenster"/>
+ </context>
+ <context id="metadata_view_context" title="Metadaten-Sichtfenster">
+    <description>Metadaten-Sichtfenster</description>
+    <topic href="html/reference/metadata.html" label="Metadaten-Sichtfenster"/>
+ </context>
+ <context id="slideshow_view_context" title="Diashow-Designer">
+    <description>Diashows entwerfen und bearbeiten</description>
+    <topic href="html/reference/slideshow.html" label="Diashow-Designer"/>
+ </context>
+ <context id="exhibition_view_context" title="Ausstellungs-Designer">
+    <description>Fotoausstellungen entwerfen</description>
+    <topic href="html/reference/exhibition.html" label="Ausstellungs-Designer"/>
+ </context>
+ <context id="editWall_dialog_context" title="Ausstellungswand-Eigenschaften">
+    <description>Ausstellungswand konfigurieren</description>
+    <topic href="html/reference/exhibition.html" label="Ausstellungswand-Eigenschaften"/>
+    <topic href="html/reference/htmlEditing.html" label="HTML bearbeiten"/>
+ </context>
+ <context id="exhibition_dialog_context" title="Ausstellungs-Dialog">
+    <description>Ausstellung konfigurieren</description>
+    <topic href="html/reference/exhibition.html" label="Ausstellungs-Designer"/>
+    <topic href="html/reference/htmlEditing.html" label="HTML bearbeiten"/>
+ </context>
+ <context id="slideshow_dialog_context" title="Diashow-Eigenschaften">
+    <description>Diashow konfigurieren</description>
+    <topic href="html/reference/slideshow.html#properties" label="Diashow-Eigenschaften"/>
+ </context>
+ <context id="slide_dialog_context" title="Dia-Eigenschaften">
+    <description>Dia-Eigenschaften</description>
+    <topic href="html/reference/slide.html" label="Dia-Eigenschaften"/>
+ </context>
+ <context id="refresh_dialog_context" title="Aktualisieren-Dialog">
+    <description>Katalogeintrag auf den neuesten Stand bringen</description>
+    <topic href="html/reference/refresh.htm" label="Aktualisieren-Dialog"/>
+ </context>
+  <context id="conflict_dialog_context" title="Importkonflikt-Dialog">
+    <description>Importkonflikt auflösen</description>
+    <topic href="html/reference/conflict.htm" label="Importkonflikt-Dialog"/>
+ </context>
+ <context id="printLayout_dialog_context" title="Drucklayout-Dialog">
+    <description>Drucklayout bearbeiten</description>
+    <topic href="html/reference/printLayout.htm" label="Drucklayout-Dialog"/>
+ </context>
+ <context id="histogram_view_context" title="Histogramm-Sichtfenster">
+    <description>Histogramm-Sichtfenster</description>
+    <topic href="html/reference/histogram.html" label="Histogramm-Sichtfenster"/>
+ </context>
+ <context id="pasteMetadata_dialog_context" title="Metadaten einfügen">
+    <topic href="html/reference/pasteMetadata.html" label="Metadaten einfügen"/>
+ </context>
+ <context id="exportFolder_wizard_context" title="In Ordner exportieren">
+    <description>In Ordner exportieren</description>
+    <topic href="html/reference/exportFolder.html" label="Ordner-Export"/>
+ </context>
+ <context id="analogImport_dialog_context" title="Analoge Bilder importieren">
+    <description>Analoge Bilder importieren</description>
+    <topic href="html/reference/analogImport.html" label="Analoge Bilder importieren"/>
+ </context>
+ <context id="webGallery_view_context" title="Webgalerie-Designer-Sichtfenster">
+    <description>Webgalerie erstellen und bearbeiten</description>
+    <topic href="html/reference/webGallery.html" label="Webgalerie-Designer-Sichtfenster"/>
+ </context>
+ <context id="sectionbreak_dialog_context" title="Abschnittstiteldia">
+    <description>Titeldia für neuen Abschnitt einer Diashow bearbeiten</description>
+    <topic href="html/reference/sectionbreak.html" label="Abschnittstiteldia"/>
+    <topic href="html/reference/htmlEditing.html" label="HTML bearbeiten"/>
+ </context>
+ <context id="editWebGallery_dialog_context" title="Webgalerie-Eigenschaften">
+    <description>Webgalerie konfigurieren</description>
+    <topic href="html/reference/webGallery.html" label="Webgalerie-Eigenschaften"/>
+    <topic href="html/reference/htmlEditing.html" label="HTML bearbeiten"/>
+ </context>
+ <context id="storyboard_dialog_context" title="Storyboard-Eigenschaften">
+    <description>Storyboard konfigurieren</description>
+    <topic href="html/reference/webGallery.html#storyboard" label="Storyboard-Eigenschaften"/>
+    <topic href="html/reference/htmlEditing.html" label="HTML bearbeiten"/>
+ </context>
+ <context id="webExhibit_dialog_context" title="Web-Einzelbild-Eigenschaften">
+    <description>Web-Einzelbild bearbeiten</description>
+    <topic href="html/reference/webGallery.html#exhibit" label="Web-Einzelbild-Eigenschaften"/>
+    <topic href="html/reference/htmlEditing.html" label="HTML bearbeiten"/>
+ </context>
+ <context id="ftpAccount_dialog_context" title="Konfiguration eines FTP-Kontos">
+    <description>FTP-Konto konfigurieren</description>
+    <topic href="html/reference/ftpAccount.html" label="Konfiguration eines FTP-Kontos"/>
+ </context>
+  <context id="keywordSearch_dialog_context" title="Schlagwortsuche">
+    <description>Schlagwortsuche - Syntax</description>
+    <topic href="html/reference/keywordSearch.html" label="Schlagwortsuche"/>
+ </context>
+ <context id="timeSearch_dialog_context" title="Zeitsuche">
+    <description>In einem Zeitintervall suchen</description>
+    <topic href="html/reference/timeSearch.html" label="Zeitsuche"/>
+ </context>
+   <context id="duplicatesSearch_dialog_context" title="Duplikate suchen">
+    <description>Nach Duplikaten suchen</description>
+    <topic href="html/reference/duplicatesSearch.html" label="Duplikate suchen"/>
+ </context>
+ <context id="seriesSearch_dialog_context" title="Serien suchen">
+    <description>Nach Serien suchen</description>
+    <topic href="html/reference/seriesSearch.html" label="Serien suchen"/>
+ </context>
+    <context id="table_view_context" title="Tabellenansicht">
+      <description>Tabellen-Sichtfenster</description>
+      <topic href="html/reference/tableView.htm" label="Tabellen-Sichtfenster"/>
+   </context>
+   <context id="splitCat_dialog_context" title="Katalog aufspalten">
+      <description>Den Katalog aufspalten</description>
+      <topic href="html/reference/splitCat.html" label="Katalog aufspalten"/>
+   </context>
+   <context id="mergeCat_wizard_context" title="Kataloge zusammenführen">
+      <description>Zwei Kataloge zusammenführen</description>
+      <topic href="html/reference/mergeCat.html" label="Kataloge zusammenführen"/>
+   </context>
+      <context id="configureColumns_dialog_context" title="Spalten konfigurieren">
+      <description>Spalten der Tabllenansicht  konfigurieren</description>
+      <topic href="html/reference/configureColumns.html" label="Spalten konfigurieren"/>
+      <topic href="html/reference/tableView.htm" label="Tabellen-Sichtfenster"/>
+   </context>
+     <context id="timeShift_dialog_context" title="Zeitstempelkorrektur">
+      <description>Zeitstempel korrigieren</description>
+      <topic href="html/reference/timeShift.htm" label="Zeitstempelkorrektur"/>
+   </context>
+     <context id="mouse_page_context" title="Mauseinstellungen">
+      <description>Mausbenutzung konfigurieren</description>
+      <topic href="html/reference/mousePrefs.html" label="Mauseinstellungen"/>
+   </context>
+   <context id="face_page_context" title="Gesichtserkennung konfigurieren">
+      <description>Gesichtserkennung konfigurieren</description>
+      <topic href="html/reference/facePrefs.html" label="Gesichtserkennung konfigurieren"/>
+   </context>
+   <context id="dataEntry_view_context" title="Dateneingabe">
+      <description>Dateneingabe-Sichtfenster</description>
+      <topic href="html/reference/dataEntry.html" label="Dateneingabe-Sichtfenster"/>
+   </context>
+   <context id="welcome" title="Erste Schritte">
+      <description>Die ersten Schritte mit dem ZoRa Photo Director</description>
+      <topic href="html/gettingstarted/index.html" label="Erste Schritte"/>
+   </context>
+    <context id="collections" title="Collections">
+      <description>Kollektionen definieren die Auswahl und Reihenfolge von Bildern mit Hilfe von Such- und Sortierausdrücken</description>
+      <topic href="html/tasks/imageRetrieval.html" label="Suchen und Finden von Bildern"/>
+      <topic href="html/reference/collectionEdit.html" label="Kollektionen bearbeiten"/>
+   </context>
+     <context id="searchOptions" title="Suchoptionen">
+      <description>Verschiedene Methoden stehen für die Bildsuche zur Verfügung</description>
+      <topic href="html/tasks/imageRetrieval.html" label="Suchen und Finden von Bildern"/>
+      <topic href="html/reference/duplicatesSearch.html" label="Dublettensuche"/>
+      <topic href="html/reference/keywordSearch.html" label="Schlagwortsuche"/>
+      <topic href="html/reference/seriesSearch.html" label="Bildserien suchen"/>
+      <topic href="html/reference/textSearch.html" label="Volltextsuche"/>
+      <topic href="html/reference/timeSearch.html" label="Zeitsuche"/>
+      <topic href="html/reference/SearchSimilarDialog.html" label="Ähnlichkeitssuche"/>
+   </context>
+   <context id="trackingRelationships" title="Beziehungen zwischen Bildern herstellen und verfolgen">
+      <description>Beziehungen zwischen Bildern (abgeleitetes Bild, zusammengesetztes Bild) können manuell oder automatisch angelegt werden.</description>
+      <topic href="html/reference/hierarchy.html" label="Hierarchie-Sichtfenster"/>
+      <topic href="html/tasks/import.html" label="Bilder importieren"/>
+   </context>
+   <context id="rawSupport" title="Unterstützung für RAW-Dateien">
+      <description>RAW-Bilder können direkt importiert werden. Während des Imports können Sie automatisch in das DNG-Format konvertiert werden. Entwicklungsrezepte von RAW-Konvertern können berücksichtigt werden.</description>
+      <topic href="html/concepts/raw.html" label="Mit RAW-Bildern arbeiten"/>
+      <topic href="html/tasks/import.html" label="Bilder importieren"/>
+      <topic href="html/reference/importPrefs.html" label="Import-Einstellungen"/>
+   </context>
+   <context id="albumsBookmarks">
+      <description>Alben sind wahlfrei definierte Bildmengen. Lesezeichen können zu speziellen Bildern zeigen.</description>
+      <topic href="html/reference/albums.html" label="Albums"/>
+      <topic href="html/reference/bookmarks.html" label="Bookmarks"/>
+   </context>
+   <context id="viewing" title="Bildbetrachter und Dia-show">
+      <description>Ein interner Bildbetrachter und ein interner Diabetrachter erlauben das komfortable Betrachten von Einzelbildern und Bildserien.</description>
+      <topic href="html/reference/imageViewer.html" label="Bildbetrachter"/>
+      <topic href="html/reference/slideshow.html" label="Eine Dia-show anlegen"/>
+      <topic href="html/reference/slideshowPlayer.html" label="Eine Dia-show abspielen"/>
+   </context>
+   <context id="spellChecking" title="Rechtschreibeprüfung">
+      <description>Die Rechtschreibeprüfung kann für die meisten Texteingaben eingeschaltet werden. Das ist insbesondere beim Eingeben von Schlagworten hilfreich.</description>
+      <topic href="html/reference/spell.html" label="Die Rechtschreibeprüfung"/>
+   </context>
+   <context id="externalPrograms" title="Externe Programme">
+      <description>Externe Bildbetrachter und spezifische Bildbearbeitungsprogramme können leicht aufgerufen werden.</description>
+      <topic href="html/reference/fileAssociations.html" label="Dateiassoziationen"/>
+   </context>
+   <context id="presentations" title="Ausstellungen, Dia-shows und Webgalerien">
+      <description>Präsentationen wie Ausstellungen, Dia-shows und Webgalerien können interaktiv angelegt werden. Webgalerien können mittels FTP zum Web hochgeladen werden.uploaded to the Web.</description>
+      <topic href="html/reference/exhibition.html" label="Ausstellungen"/>
+      <topic href="html/reference/slideshow.html" label="Dia-shows anlegen"/>
+      <topic href="html/tasks/webgalleries.html" label="Webgalerien"/>
+      <topic href="html/reference/webGallery.html" label="Webgalerien anlegen"/>
+   </context>
+   <context id="export" title="Bilder exportieren">
+      <description>Bilder können auf verschieden Weise exportiert werden: per FTP, per E-mail, als PDF oder zu Web-Communities wie Flickr, Locr, Zooomr und Smugmug.</description>
+      <topic href="html/reference/exportFolder.html" label="In lokalen oder entfernten (FTP) Ordner exportieren"/>
+      <topic href="html/reference/community.html" label="Web-Communities"/>
+   </context>
+   <context id="exif" title="EXIF- und IPTC-Daten">
+      <description>EXIF- und IPTC-Daten können mit Hilfe der Metadaten-, EXIF- und IPTC-Sichtfenster betrachtet und bearbeitet werden.</description>
+      <topic href="html/reference/metadata.html" label="Metadaten-Sichtfenster"/>
+      <topic href="html/tasks/dataentry.html" label="Dateneingabe"/>
+   </context>
+   <context id="timeline" title="Zeitlinie">
+      <description>Die Zeitlinie wird automatisch beim Import von Bilder erzeugt.</description>
+      <topic href="html/reference/importPrefs.html" label="Die Erstellung der Zeitlinie konfigurieren"/>
+      <topic href="html/reference/catalog.html" label="Das Katalog-Sichtfenster"/>
+   </context>
+   <context id="catalog" title="Katalog">
+      <description>Der Katalog enthält Vorschaubildchen und Metadaten aller importierten Bilder und außerdem aggregierte Informationen wie Schlagworte, Kontake und Orte.</description>
+      <topic href="html/reference/catalog.html" label="Das Katalog-Sichtfenster"/>
+      <topic href="html/reference/catProperties.html" label="Den Katalog konfigurieren"/>
+   </context>
+   <context id="voiceNotes" title="Sprachnotizen">
+      <description>Verschiedene Sichtfenster erlauben das Hinzufügen von Sprachnotizen zu Bildern.</description>
+      <topic href="html/reference/galleries.html#voicenote" label="Galerien"/>
+      <topic href="html/reference/preview.html#voicenote" label="Vorschau-Sichtfenster"/>
+      <topic href="html/reference/hierarchy.html#voicenote" label="Hierarchie-Sichtfenster"/>
+   </context>
+   <context id="face" title="Gesichtserkennung">
+      <description>Gesichtserkennung</description>
+      <topic href="html/concepts/face.html" label="Gesichtserkennung"/>
+   </context>
+   <context id="retarget_dialog_context" title="Neuzordnung">
+      <description>Verwaiste Katalogeinträge neu zuordnen</description>
+      <topic href="html/reference/retarget.html" label="Neuzordnung"/>
+   </context>
+   <context id="collapsePattern_dialog_context" title="Muster zum Zusammenfassen definieren">
+      <description>Muster zum Zusammenfassen definieren</description>
+      <topic href="html/reference/collapsePattern.html" label="Muster zum Zusammenfassen definieren"/>
+   </context>
+   <context id="rename_dialog_context" title="Massenweise Umbenennung">
+      <description>Massenweise Umbenennung</description>
+      <topic href="html/reference/bulkRename.html" label="Massenweise Umbenennung"/>
+   </context>
+   <context id="template_dialog_context" title="Vorlagendefinition">
+      <description>Vorlagendefinition</description>
+      <topic href="html/reference/templateDef.html" label="Vorlagendefinition"/>
+   </context>
+   <context id="readme" title="Liesmich">
+      <description>Liesmich-Datei</description>
+      <topic href="html/gettingstarted/liesmich.html" label="Liesmich-Datei"/>
+   </context>
+   <context id="exhibitLayout_dialog_context" title="Layout eines Exponats">
+      <description>Layout eines Exponats</description>
+      <topic href="html/reference/exhibitLayout.html" label="Layout eines Exponats"/>
+   </context>
+   <context id="tagCloud_view_context" title="Tag-Wolke">
+      <description>Tag-Wolke</description>
+      <topic href="html/reference/tagcloud.html" label="Tag-Wolke"/>
+   </context>
+ <context id="watchedFolderFileSelection_wizard_context" title="Auswahl des überwachten Ordners">
+    <description>Auswahl des überwachten Ordners</description>
+    <topic href="html/reference/watchedFolderSelection.html" label="Auswahl des überwachten Ordners"/>
+ </context>
+ <context id="watchedFolderMetadata_wizard_context" title="Parameter für Transferordner">
+    <description>Parameter für Transferordner</description>
+    <topic href="html/reference/watchedFolderMetadata.html" label="Parameter für Transferordner"/>
+ </context>
+ <context id="watchedFolderFilter_wizard_context" title="Filter für überwachte Ordner">
+    <description>Filter für überwachte Ordner</description>
+    <topic href="html/reference/watchedFolderFilters.html" label="Filter für überwachte Ordner"/>
+ </context>
+ <context id="regex_dialog_context" title="Regulären Ausdrücke">
+    <description>Syntax von regulären Ausdrücken</description>
+    <topic href="html/reference/regex.html" label="Reguläre Ausdrücke in Quell- und Zielmustern"/>
+ </context>
+ <context id="migrate_dialog_context" title="Migrierungsrichtlinien">
+    <description>Definition von Migrierungsrichtlinien</description>
+    <topic href="html/reference/migrate.html" label="Transformationsregeln für Pfade während einer Katalogmigrierung"/>
+ </context>
+ <context id="categorize_dialog_context" title="Bilder kategorisieren">
+    <description>Mehrere Bilder in einem Rutsch kategorisieren</description>
+    <topic href="html/reference/categorize.html" label="Bilder kategorisieren"/>
+ </context>
+
+</contexts>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="email_wizard_context" title="Email wizard">
+      <description>Create e-mail from selected images</description>
+      <topic href="html/email.html" label="Email wizard"/>
+   </context>
+   <context id="pdf_wizard_context" title="PDF wizard">
+      <description>Create PDF from selected images</description>
+      <topic href="html/pdf.html" label="Create PDF wizard"/>
+   </context>
+   <context id="html_wizard_context" title="HTML wizard">
+      <description>Create a HTML page from selected images</description>
+      <topic href="html/html.html" label="Create HTML wizard"/>
+   </context>
+</contexts>

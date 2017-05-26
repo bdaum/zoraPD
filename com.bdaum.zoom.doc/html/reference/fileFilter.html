@@ -1,0 +1,24 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>File filter</title>
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head>
+<body>
+<h2>File filter<br>
+ </h2>The list of filter expressions in this dialog determines which
+files (or subfolders) are accepted and which are not. When a file is tested with the
+filter, the filter patterns are compared to the file name one by one
+beginning at the top of the list. When a file name
+matches with the pattern, the file is either rejected or accepted,
+depending on the filter <span style="font-style: italic;">action</span>.
+If the filter
+expression does not match, the file will be compared with the next
+filter pattern in the list, and so on. If none of the filter patterns
+match, the file is accepted. FIlter patterns can be targeted on
+individual files or on whole folders. This allows to accept or reject
+subfolders within a directory structure.<br>
+Filter expressions may contain wildcards:<br><ul style="font-weight: normal;"><li>'*' matches with any string of arbitrary length<br>
+</li><li>'?' matches with one and only one character</li></ul>The filter works case-independent.<br><br>Normally, the filter works only on the file or folder name. You may, however, also specify path patterns, such as <code>*/prod/*/final/*.* </code>Always use the <span style="font-weight: bold;">slash</span> as a path separator not the backslash. <br><span style="font-weight: bold;">Note:</span> The path pattern match is applied&nbsp;to the <span style="font-weight: bold;">relative</span> path of a file or folder, i.e. relative to some base folder such as a watched folder.<br>
+</body></html>

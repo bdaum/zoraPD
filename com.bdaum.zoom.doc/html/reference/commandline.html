@@ -1,0 +1,14 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head><title>Command line parameters</title>
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Command line parameters </h2>
+<p>Command line parameters can be used to modify the behavior of the <span style="font-style: italic;">ZoRa Photo Director </span>and to adapt it to specific needs.</p><p></p><table style="text-align: left; width: 553px; height: 616px;" border="1" cellpadding="8" cellspacing="1"><tbody><tr><td style="font-weight: bold;">Parameter</td><td style="font-weight: bold; width: 1083px;">Description</td><td style="width: 269px;"><span style="font-weight: bold;">Examples</span></td></tr><tr><td><code>-data</code></td><td style="width: 1083px;">Determines the location of the area where user preferences are stored. By default, these values are stored in the <code>workspace/ </code>subfolder of the installation folder. By specifying a different path after <code>-data</code>, this area can be placed anywhere. There are a couple of predefined path abbreviations:<br><ul style="font-weight: normal;"><li><code>@user.home</code> stands for the user area of the operating system such as <code>C:\Documents\username</code>.&nbsp;</li></ul><ul style="font-weight: normal;"><li><code>@user.dir</code> stands for the installation folder such as <code>C:\Program files\ZoRaPD</code>.&nbsp;</li></ul></td><td style="width: 269px;"><code>-data @user.home/ZoRaPD</code></td></tr><tr><td><code>-nl</code></td><td style="width: 1083px;">Determines the language of the user interface. Specify an ISO language code after the parameter.<br>If omitted, the language will be determined based on the platform language.<br>(Currently, only English and German are supported).</td><td style="width: 269px;"><code>-nl en<br>-nl de</code></td></tr><tr><td><code>-noSplash</code></td><td style="width: 1083px;">ZoRa Photo Director will start without displaying the splash screen.</td><td style="width: 269px;"><code>-noSplash</code></td></tr><tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">-noBirdie</span><br>
+      </td>
+      <td style="vertical-align: top;">Inhibts the occasionally birdie in the splash screen.<br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">-noBirdie</span></td>
+    </tr>
+<tr><td><code>-vm</code></td><td style="width: 1083px;">Path to the&nbsp;<span style="font-style: italic;">Java Virtual Machine</span> (JVM). Used when you want to run the program with a different JVM than the standard JVM installed on the platform.</td><td style="width: 269px;"><code>-vm C:\<span style="font-style: italic;">jre</span>_path\bin\java.exe</code></td></tr></tbody></table><p> </p>
+</body></html>

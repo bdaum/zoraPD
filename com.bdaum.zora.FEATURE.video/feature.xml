@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.bdaum.zora.FEATURE.video"
+      label="Video feature"
+      version="3.0.0"
+      provider-name="bdaum industrial communications">
+
+   <description>
+      Feature for separate installation of video support including
+YouTube export
+   </description>
+
+   <copyright>
+      2012-2013 Berthold Daum
+   </copyright>
+
+   <license url="http://www.gnu.org/licenses/gpl-2.0.html">
+      This program is provided to you under the terms and conditions
+of the GNU General Public License (GPL) as published by the Free
+Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+   </license>
+
+   <url>
+      <update label="ZoRa Photo Director" url="http://www.photozora.org/downloads/zpd"/>
+      <discovery label="ZoRa web site" url="http://www.photozora.org"/>
+   </url>
+
+   <plugin
+         id="com.bdaum.zoom.video"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.video.youtube"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

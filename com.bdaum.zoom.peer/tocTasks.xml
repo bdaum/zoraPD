@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toc label="Setting up a network" link_to="../com.bdaum.zoom.doc/toctasks.xml#tasks">
+  <topic label="Network">
+    <topic href="html/geography.html" label="Defining the network geography">
+   </topic>
+   <topic href="html/sharedCatalogs.html" label="Sharing catalogs">
+   </topic>
+   <topic href="html/troubleshooting.html" label="Troubleshooting">
+   </topic>
+    </topic>
+</toc>

@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+
+
+
+
+  
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Capture One Support</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css"></head>
+<body style="color: rgb(0, 0, 0);" alink="#ee0000" link="#0000ee" vlink="#551a8b">
+<h2>Capture One Support<br>
+</h2>
+
+<p><span style="font-style: italic;">ZoRa Photo Director</span> is able
+to reflect most of the development settings for RAW and DNG files made
+with <span style="font-style: italic;">Capture One</span><span style="font-style: italic;"></span>. <br>
+</p>
+
+<p>These settings (recipes) are stored either in the <code>CaptureOne/</code> subfolder of the image folder in form of <code>.cos</code> files or - in case of the<code> .eip</code> file format - are embedded in the image file. <span style="font-style: italic;">ZoRa Photo Director</span> is able to interpret these development recipes and to apply them when importing RAW or
+DNG files, refreshing or viewing them, or when deriving images from
+them during export operations.  <br>
+</p>
+
+
+<p>To enable this support go the <a href="PLUGINS_ROOT/com.bdaum.zoom.doc/html/reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;Raw
+Conversion<sup>*</sup></acronym></a> and check the <var><span style="font-weight: bold;">Capture One</span></var>
+recipe detector. Make also sure that recipe detection is enabled (<span style="font-style: italic;">Process recipes when importing RAW images</span>).</p>
+<p><span style="font-style: italic;">Capture One</span> saves this
+information incrementally in the moment a change is applied. When the image happens to be located in a watched
+folder (see <a href="PLUGINS_ROOT/com.bdaum.zoom.doc/html/reference/catProperties.html"><span style="font-style: italic;">Catalog Properties</span></a>), <span style="font-style: italic;">ZoRa Photo Director</span> will apply these changes either as soon as <span style="font-style: italic;">Capture One</span> applies changes to another image (indicating the end of the editing session for the current image) or when control returns to <span style="font-style: italic;">ZoRa Photo Director</span>. <br>
+</p>
+
+
+<span style="color: red;">Unfortunately, </span><span style="font-style: italic; color: red;">Capture One</span><span style="color: red;"> support ceases with </span><span style="font-weight: bold; color: red;">Capture One 7</span><span style="color: red;">. Capture One 7 is not able to open single images, thus cannot be invoked as an image editor form </span><span style="font-style: italic; color: red;">ZoRa Photo Director</span><span style="color: red;">.</span><br>
+
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa Photo Director&gt;Preferences&gt;...</acronym><acronym></acronym><br>
+
+<br>
+</body></html>

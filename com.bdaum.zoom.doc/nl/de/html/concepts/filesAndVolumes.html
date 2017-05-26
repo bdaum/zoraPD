@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+
+
+
+
+
+
+  
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Dateien und Datenträger</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css">
+
+  <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
+<h2>Dateien und Datenträger<br>
+</h2>Bilder und Videos werden anhand ihrer Dateipfade identifiziert. Da
+dieser nicht auf allen Plattformen eindeutig ist, wird zusätzlich noch
+der Name des Datenträgers hinzu gezogen.<br>
+<br>
+So bestehen z.B. auf Windows Dateipfade aus dem Laufwerksbuchstaben,
+gefolgt von einer Folge von Ordnern und Unterordnern. Das Problem
+hierbei sind externe Datenträger, denen in der Regel von Windows der
+selbe Laufwerksbuchstabe zugewiesen wird. Da <span style="font-style: italic;">ZoRa PhotoDirector</span>
+auch Bilder von externen Datenträgern katalogisieren kann, wird zur
+Identifizierung von Bildern zusätzlich der Name des Datenträgers (CD,
+DVD, USB-Stick, SD-Card) heran gezogen.<br>
+Es ist deshalb wichtig, solche Datenträger beim Formatieren immer mit einem eindeutigen Namen zu versehen!<br>
+<br>
+Auf Linux und Mac gibt es andere Probleme. Hier ist der Datenträgername
+Teil des Dateipfades, jedoch weicht die Syntax des Dateipfades von
+Plattform zu Plattform voneinander ab. So haben Dateipfade von externen
+Medien auf Ubuntu die Form<br>
+<br>
+<code>/media/{datenträger}/...</code><br>
+<br>
+auf Suse-System dagegen<br>
+<br>
+<code>/run/media/{benutzer}/{</code><code>datenträger</code><code>}/...<br>
+<br>
+</code>auf MacOS wiederum<br>
+<code><br>
+/Volumes</code><code>/{</code><code>datenträger</code><code>}/...</code><br>
+
+<br>
+
+<br>
+Die entsprechenden Pfadmuster sind in der Datei <code>volumePatterns.ini</code> in Plugin <span id="result_box" class="" lang="en"><span title="Die entsprechenden Pfadmuster sind in der Datei volumePatterns.ini in Plugin com.bdaum.zoom.image eingetragen und können bei Bedarf verändert werden."><code>com.bdaum.zoom.image</code></span></span> eingetragen und können bei Bedarf verändert werden. Verwendet werden dabei <a href="../reference/regex.html">reguläre Ausdrücke</a>.<br><br>
+
+Die Standarddefinition dieser Datei ist:<br>
+<br><code># MAC<br>
+/Volumes/(.*?)(?:/.*)?<br>
+# UBUNTU<br>
+
+/media/(.*?)(?:/.*)?<br>
+
+# SUSE<br>
+
+/run/media/.*?/(.*?)(?:/.*)?<br>
+<br>
+</code>Es ist noch anzumerken, dass diese Muster auch verwendet werden,
+wenn Dateien auf Linux- oder Mac-Systeme migriert werden sollen (<acronym>Katalog&gt;Wartung&gt;Katalog migrieren...</acronym>).<code><br>
+</code>
+
+<ul style="font-weight: normal;">
+
+</ul>
+
+</body></html>

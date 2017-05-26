@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.ui.galleryGenerator">
+      <generator
+            class="com.bdaum.zoom.web.imagegallery.ImageGalleryGenerator"
+            description="html/preview.html"
+            id="com.bdaum.zoom.web.imageGallery.generator"
+            name="Image Gallery"
+            sections="true"
+            slideshows="true"
+            unsupported="download showmetadata thumbnailsize opacity padding sectionfont captionfont navfont margins">
+         <parameter
+               default="true"
+               description="%random_image_description"
+               id="random"
+               label="%random_image"
+               required="false"
+               type="boolean">
+         </parameter>
+      </generator>
+   </extension>
+
+</plugin>

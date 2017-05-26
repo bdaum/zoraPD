@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head><title>Refresh dialog</title>
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Refresh dialog </h2>
+<p>The menu function <acronym>File&gt;Refresh...</acronym>
+re-imports selected files. In the <span style="font-style: italic;">Refresh
+dialog</span>, you can specify what to refresh:</p><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Re-import&nbsp;existing images.</span>
+This will allow you to update images that are already in the catalog.
+This is typically used after an image had been modified by another
+program. Another option is to use <a style="font-style: italic;" href="metadata.html">Watched Folders</a> to detect changes automatically.</li><li><span style="font-weight: bold;">Include up-to-date images.</span>
+This option is normally not used. It should only be used after a new
+program version has introduced new attributes or corrected attributes, or when thumbnail size or sharpening was changed in the <a style="font-style: italic;" href="catProperties.html">Catalog Properties</a>.
+Using this option, all catalog entries can be updated with new or
+corrected attributes.</li><li><span style="font-weight: bold;">Remove missing images from catalog.</span> This is used to remove catalog entries for which no image file exists (<span style="font-style: italic;">orphans</span>).</li><li><span style="font-weight: bold;">Include remote images</span>.
+Check this option to images that are stored remotely on
+some server on the Internet, too. This option can slow down the <span style="font-style: italic;">Refresh</span>
+operation considerably because images must be downloaded to the local
+computer.</li></ul><p>You can determine, too, which information groups should be refreshed. You may
+not want to refresh groups where you already have edited image meta data manually.</p>
+<ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Refresh Thumbnail.</span> This
+option will update the catalog thumbnail and is typically used after
+images have been updated with an image editor or after the thumbnail
+size or sharpening had been changed. However, refreshing will
+be much faster if this option is switched off.  <span style="font-weight: bold;"></span></li><li><span style="font-weight: bold;">Refresh image
+status</span>.
+    <span style="font-style: italic;">De-select</span> this group if you have manually modified status, color code,
+rating, content type, privacy settings, or user fields and don't want to reset that information.</li><li><span style="font-weight: bold;">Refresh EXIF data.</span> <span style="font-style: italic;">De-select</span> this group if the EXIF data have not changed. For example, you may only want to refresh the GPS data.</li>
+<li><span style="font-weight: bold;">Refresh GPS
+data</span>. <span style="font-style: italic;">De-select</span> this group if you have geo-tagged the image
+and you do not want to reset that information.</li>
+<li><span style="font-weight: bold;">Refresh IPTC
+data</span>.
+    <span style="font-style: italic;">De-select</span> this group if you have manually entered keywords, categories
+and other IPTC data and you do not want to reset that information.</li>
+</ul>
+</body></html>
