@@ -2,6 +2,7 @@
 ZoRa PhotoDirector 3
 
 Description
+
 ZoRa Photo Director is a photo managerment program. It is targeted at serious amateur photographers and professional photographers.
 
 Features
