@@ -231,7 +231,7 @@ public abstract class AbstractExportJob extends CustomJob {
 				try (FileOutputStream out = new FileOutputStream(outfile)) {
 					if (xmpFilter != null && !xmpFilter.isEmpty() && mode == Constants.FORMAT_JPEG) {
 						ByteArrayOutputStream bout = new ByteArrayOutputStream();
-						zimage.saveToStream(null, true, cropMode, SWT.DEFAULT, SWT.DEFAULT, out, SWT.IMAGE_JPEG,
+						zimage.saveToStream(null, true, cropMode, SWT.DEFAULT, SWT.DEFAULT, bout, SWT.IMAGE_JPEG,
 								jpegQuality);
 						byte[] bytes = bout.toByteArray();
 						try {

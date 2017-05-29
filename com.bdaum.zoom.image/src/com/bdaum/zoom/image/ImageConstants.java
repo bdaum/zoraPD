@@ -105,7 +105,7 @@ public class ImageConstants {
 			"Sun Raster (*.sun, *.ras, *.rast, *.rs, *.sr, *.scr, *.im1, *.im8, *.im24, *.im32)", //$NON-NLS-1$
 			"Truevision Targa Graphic (*.tga)", //$NON-NLS-1$
 			"Tagged Image File Format (*.tif,*.tiff)", //$NON-NLS-1$
-			"Google WebP (*.webp)"}; //$NON-NLS-1$
+			"Google WebP (*.webp)" }; //$NON-NLS-1$
 
 	private static Map<String, String> fileNameMap = new HashMap<String, String>(
 			PredefinedImageFileExtensions.length * 3 / 2);
@@ -148,7 +148,7 @@ public class ImageConstants {
 				while (st.hasMoreTokens())
 					MIMEMAP.put(st.nextToken().substring(2), mime);
 			}
-			for (String ext : RAWFORMATS.keySet())
+			for (String ext : getRawFormatMap().keySet())
 				MIMEMAP.put(ext, IMAGE_X_RAW);
 			MIMEMAP.putAll(ImageActivator.getDefault().getImportedExtensions());
 		}
@@ -190,7 +190,7 @@ public class ImageConstants {
 	}
 
 	private static String listRawExtensions(String sep) {
-		Set<String> rawFormats = getRawFormats();
+		Set<String> rawFormats = getRawFormatMap().keySet();
 		String[] extensions = rawFormats.toArray(new String[rawFormats.size()]);
 		Arrays.sort(extensions);
 		StringBuilder sb = new StringBuilder();
@@ -202,15 +202,11 @@ public class ImageConstants {
 		return sb.toString();
 	}
 
-	public static Set<String> getRawFormats() {
+	public static Map<String, String> getRawFormatMap() {
 		if (RAWFORMATS.isEmpty())
-			initRawMap();
-		return ImageConstants.RAWFORMATS.keySet();
-	}
-
-	private static void initRawMap() {
-		for (String s : RAWNAMES)
-			RAWFORMATS.put(s.substring(0, s.indexOf(' ')).toLowerCase(Locale.ENGLISH), s);
+			for (String s : RAWNAMES)
+				RAWFORMATS.put(s.substring(0, s.indexOf(' ')).toLowerCase(Locale.ENGLISH), s);
+		return RAWFORMATS;
 	}
 
 	/**
@@ -240,7 +236,7 @@ public class ImageConstants {
 		int p = nameOrURI.lastIndexOf('.');
 		String extension = (p >= nameOrURI.lastIndexOf('/')) ? nameOrURI.substring(p + 1).toLowerCase(Locale.ENGLISH)
 				: ""; //$NON-NLS-1$
-		return ImageConstants.RAWFORMATS.containsKey(extension) || (includeDng && "dng".equals(extension));//$NON-NLS-1$
+		return getRawFormatMap().containsKey(extension) || (includeDng && "dng".equals(extension));//$NON-NLS-1$
 	}
 
 	/**
@@ -264,7 +260,7 @@ public class ImageConstants {
 	 * @return - raw format description
 	 */
 	public static String getRawFormatDescription(String ext) {
-		return RAWFORMATS.get(ext);
+		return getRawFormatMap().get(ext);
 	}
 
 	/**

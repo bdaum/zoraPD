@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name.0
 Bundle-SymbolicName: com.bdaum.zoom.ui; singleton:=true
-Bundle-Version: 3.0.0
+Bundle-Version: 3.0.1
 Bundle-Activator: com.bdaum.zoom.ui.internal.UiActivator
 Bundle-Vendor: %Bundle-Vendor.bdaum
 Require-Bundle: org.eclipse.nebula.widgets.gallery;bundle-version="0.5.2";visibility:=reexport,

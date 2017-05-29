@@ -336,6 +336,9 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 							}
 						});
 						ibounds = image.getBounds();
+						status = new Fader().fadein(status, monitor, image, topShell, topCanvas,
+								(previewShown) ? previewShell : bottomShell);
+						highResVisible = true;
 					}
 				} catch (UnsupportedOperationException e) {
 					loadFailed = e.getMessage();
@@ -348,9 +351,9 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 						}
 					});
 				}
-				status = new Fader().fadein(status, monitor, image, topShell, topCanvas,
-						(previewShown) ? previewShell : bottomShell);
-				highResVisible = true;
+//				status = new Fader().fadein(status, monitor, image, topShell, topCanvas,
+//						(previewShown) ? previewShell : bottomShell);
+//				highResVisible = true;
 				return status;
 			} finally {
 				fileWatcher.stopIgnoring(opId);

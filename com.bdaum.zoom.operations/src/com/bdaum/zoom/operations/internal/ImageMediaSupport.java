@@ -665,7 +665,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 
 	private static File findRawSibling(String originalUri) throws URISyntaxException {
 		String rawUri = Core.removeExtensionFromUri(originalUri);
-		for (String ext : ImageConstants.getRawFormats()) {
+		for (String ext : ImageConstants.getRawFormatMap().keySet()) {
 			File rawFile = new File(new URI(rawUri + '.' + ext));
 			if (rawFile.exists())
 				return rawFile;

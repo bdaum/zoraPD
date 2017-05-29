@@ -73,8 +73,8 @@ public abstract class AbstractMailer implements IMailer {
 						String filename = originalNames != null && originalNames.size() > i ? originalNames.get(i)
 								: file.getName();
 						writer.write("\n--" + boundary + "\n"); //$NON-NLS-1$ //$NON-NLS-2$
-						writer.write(NLS.bind("Content-Type: image/jpeg; name=\"{0}\"\n", //$NON-NLS-1$
-								filename));
+						writer.write(NLS.bind("Content-Type: {1}; name=\"{0}\"\n", //$NON-NLS-1$
+								filename, filename.endsWith(".pdf") ? "application/pdf" : "image/jpeg"));  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 						writer.write(NLS.bind("Content-Disposition: attachment; filename=\"{0}\"\n", //$NON-NLS-1$
 								filename));
 						writer.write("Content-Transfer-Encoding: base64\n"); //$NON-NLS-1$

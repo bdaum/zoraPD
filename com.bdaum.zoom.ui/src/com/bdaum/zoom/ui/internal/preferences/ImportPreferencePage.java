@@ -285,7 +285,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 					String editorName = c.getName();
 					if (editorName != null) {
 						FileEditorMapping editorMapping = null;
-						for (String rf : ImageConstants.getRawFormats()) {
+						for (String rf : ImageConstants.getRawFormatMap().keySet()) {
 							editorMapping = UiActivator.getDefault()
 									.getFileEditorMapping(rf);
 							if (editorMapping != null)

@@ -115,7 +115,7 @@ public class EmailWizard extends AbstractAssetSelectionWizard implements IExport
 	}
 
 	public Set<QueryField> getFilter() {
-		return metaPage == null ? null : metaPage.getFilter();
+		return metaPage != null && mainPage.getIncludeMeta() ? metaPage.getFilter() : null;
 	}
 
 }

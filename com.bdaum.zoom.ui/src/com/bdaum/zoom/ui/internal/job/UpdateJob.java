@@ -58,6 +58,7 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 
 public class UpdateJob extends AbstractUpdateJob {
 
+	private static final String ALGORITHM = "SHA-512"; //$NON-NLS-1$
 	private static final String UPDATE = Messages.Updater_update;
 	private static final String VERSION = "{version}"; //$NON-NLS-1$
 	private File downloadFile;
@@ -116,7 +117,7 @@ public class UpdateJob extends AbstractUpdateJob {
 	private File download(String pack, IProgressMonitor monitor) {
 		if (sha1 == null)
 			try {
-				sha1 = MessageDigest.getInstance("SHA1"); //$NON-NLS-1$
+				sha1 = MessageDigest.getInstance(ALGORITHM); 
 			} catch (NoSuchAlgorithmException e) {
 				// should never happen
 			}
