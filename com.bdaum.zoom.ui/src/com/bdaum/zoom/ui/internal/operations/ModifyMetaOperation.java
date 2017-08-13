@@ -442,4 +442,8 @@ public class ModifyMetaOperation extends DbOperation {
 		return Job.SHORT;
 	}
 
+	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
+		// do nothing
+	}
+
 }

@@ -5,4 +5,13 @@
 	<entry keyword="Face detection">
 		<topic href="html/clarifai.html" label="Face detection with the Clarifai web service"/>
 	</entry>
+	<entry keyword="Search">
+		<entry keyword="semantic">
+			<topic href="html/clarifai.html" />
+		</entry>
+	</entry>
+	<entry keyword="Semantic search">
+		<topic href="html/clarifai.html" />
+	</entry>
+
 </index>

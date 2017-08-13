@@ -218,7 +218,7 @@ public class SyncPicasaJob extends UiDaemon {
 							if (name == null)
 								name = ""; //$NON-NLS-1$
 							String displayName = atts.getValue(DISPLAY);
-							if (displayName == null || displayName.length() == 0)
+							if (displayName == null || displayName.isEmpty())
 								displayName = name;
 							StringBuilder sb = new StringBuilder();
 							for (int i = 0; i < atts.getLength(); i++) {
@@ -252,7 +252,7 @@ public class SyncPicasaJob extends UiDaemon {
 	}
 
 	protected void updateAlbums(String displayName, String emails) {
-		if (emails != null && emails.length() > 0) {
+		if (emails != null && !emails.isEmpty()) {
 			List<Object> toBeStored = new ArrayList<Object>();
 			for (SmartCollectionImpl sm : dbManager.<SmartCollectionImpl>obtainObjects(SmartCollectionImpl.class, false,
 					"name", //$NON-NLS-1$

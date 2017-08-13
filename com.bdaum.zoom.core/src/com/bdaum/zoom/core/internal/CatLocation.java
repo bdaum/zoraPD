@@ -48,7 +48,7 @@ public class CatLocation {
 	
 	@Override
 	public String toString() {
-		return (volume == null || volume.length() == 0) ? uri : volume + '\t'
+		return (volume == null || volume.isEmpty()) ? uri : volume + '\t'
 				+ uri;
 	}
 

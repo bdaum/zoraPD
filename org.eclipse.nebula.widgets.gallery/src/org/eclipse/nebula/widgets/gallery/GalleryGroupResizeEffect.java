@@ -64,7 +64,6 @@ public class GalleryGroupResizeEffect extends AbstractEffect {
 	 * 
 	 * @see org.sharemedia.ui.sat.AbstractEffect#applyEffect(long)
 	 */
-	@Override
 	public void applyEffect(final long currentTime) {
 		if (!item.isDisposed()) {
 			double value = src + diff

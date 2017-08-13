@@ -58,16 +58,14 @@ public abstract class AbstractForeignCatHandler implements IForeignCatHandler {
 		cal.setTime(importState.importDate);
 		if (year != cal.get(Calendar.YEAR))
 			importState.meta.setLastYearSequenceNo(0);
-		if (importState.operation.storeSafely(new Runnable() {
-			public void run() {
-				previousImport = dbManager.createLastImportCollection(
-						importState.importDate,
-						false,
-						NLS.bind(
-								Messages.AbstractForeignCatHandler_import_from_foreign,
-								fileName));
-				dbManager.store(importState.meta);
-			}
+		if (importState.operation.storeSafely(() -> {
+			previousImport = dbManager.createLastImportCollection(
+					importState.importDate,
+					false,
+					NLS.bind(
+							Messages.AbstractForeignCatHandler_import_from_foreign,
+							fileName));
+			dbManager.store(importState.meta);
 		}, 1))
 			((ImportForeignCatOperation) importState.operation)
 					.fireStructureModified();

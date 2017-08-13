@@ -24,10 +24,8 @@ import java.util.List;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.aoModeling.runtime.AomList;
@@ -238,13 +236,13 @@ public class CatalogLabelProvider extends ZColumnLabelProvider {
 		return null;
 	}
 	
-	@Override
-	protected Rectangle getIconBounds() {
-		return Icons.group.getImage().getBounds();
-	}
-	
-	@Override
-	protected String shortenText(Object element, String textValue, int maxExtent, GC gc, int maxWidth) {
-		return textValue;
-	}
+//	@Override
+//	protected Rectangle getIconBounds() {
+//		return Icons.group.getImage().getBounds();
+//	}
+//	
+//	@Override
+//	protected String shortenText(Object element, String textValue, int maxExtent, GC gc, int maxWidth) {
+//		return textValue;
+//	}
 }

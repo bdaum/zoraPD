@@ -148,7 +148,7 @@ public abstract class BasicView extends ViewPart
 	protected static Asset getVoiceNoteAsset(Asset asset) {
 		if (asset != null) {
 			String voiceFileURI = asset.getVoiceFileURI();
-			if (voiceFileURI != null && voiceFileURI.length() > 0)
+			if (voiceFileURI != null && !voiceFileURI.isEmpty() && !voiceFileURI.startsWith("?")) //$NON-NLS-1$
 				return asset;
 		}
 		return null;
@@ -263,7 +263,7 @@ public abstract class BasicView extends ViewPart
 		}
 	};
 
-	private void refreshBusy() {
+	protected void refreshBusy() {
 		BusyIndicator.showWhile(getSite().getShell().getDisplay(), refresher);
 	}
 
@@ -340,11 +340,7 @@ public abstract class BasicView extends ViewPart
 		Display display = getSite().getShell().getDisplay();
 		final SelectionChangedEvent event = new SelectionChangedEvent(BasicView.this, getSelection());
 		for (final Object listener : listeners.getListeners())
-			display.syncExec(new Runnable() { // this must be a syncExec
-				public void run() {
-					((ISelectionChangedListener) listener).selectionChanged(event);
-				}
-			});
+			display.syncExec(() -> ((ISelectionChangedListener) listener).selectionChanged(event)); // this must be a syncExec
 	}
 
 	protected void updateStatusLine() {

@@ -254,7 +254,7 @@ public class AssetSelection extends StructuredSelection implements
 	public boolean isSelected(Asset asset) {
 		if (asset == null || !picked)
 			return true;
-		if (assets.size() == 0)
+		if (assets.isEmpty())
 			return false;
 		if (assets.size() == 1)
 			return assets.get(0).equals(asset);

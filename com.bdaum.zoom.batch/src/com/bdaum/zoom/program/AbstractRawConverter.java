@@ -121,7 +121,7 @@ public abstract class AbstractRawConverter implements IRawConverter {
 
 	public boolean isValid() {
 		String p = getPath();
-		if (p == null || p.length() == 0)
+		if (p == null || p.isEmpty())
 			return false;
 		return new File(p).exists();
 	}

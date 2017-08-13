@@ -99,50 +99,48 @@ public class GeonameAction extends AbstractViewAction {
 		Trackpoint[] pnts = new Trackpoint[0];
 		final GpsConfiguration gpsConfiguration = GpsActivator.getDefault().createGpsConfiguration();
 		if (files != null) {
-			BusyIndicator.showWhile(shell.getDisplay(), new Runnable() {
-				public void run() {
-					for (int i = 0; i < files.length; i++) {
-						if (gpsConfiguration.useWaypoints) {
-							try {
-								IWaypointCollector collector = Ui.getUi().getWaypointCollector(files[i]);
-								if (collector != null) {
-									if (waypoints == null)
-										waypoints = new HashMap<RasterCoordinate, Waypoint>(201);
-									try (InputStream in = new BufferedInputStream(new FileInputStream(files[i]))) {
-										collector.collect(in, waypoints);
-									}
-								}
-							} catch (FileNotFoundException e) {
-								showError(shell, NLS.bind(Messages.getString("GeotagAction.parsing_error"), //$NON-NLS-1$
-										files[i]), e);
-							} catch (IOException e) {
-								showError(shell, NLS.bind(Messages.getString("GeotagAction.io_error_waypoints"), //$NON-NLS-1$
-										files[i]), e);
-							} catch (ParseException e) {
-								showError(shell, NLS.bind(Messages.getString("GeotagAction.parsing_error"), //$NON-NLS-1$
-										files[i]), e);
-							}
-						}
+			BusyIndicator.showWhile(shell.getDisplay(), () -> {
+				for (int i = 0; i < files.length; i++) {
+					if (gpsConfiguration.useWaypoints) {
 						try {
-							IGpsParser parser = Ui.getUi().getGpsParser(files[i]);
-							if (parser == null) {
-								GpsActivator.getDefault()
-										.logError(NLS.bind(Messages.getString("GeotagAction.no_parser"), //$NON-NLS-1$
-												files[i]), null);
-								continue;
+							IWaypointCollector collector = Ui.getUi().getWaypointCollector(files[i]);
+							if (collector != null) {
+								if (waypoints == null)
+									waypoints = new HashMap<RasterCoordinate, Waypoint>(201);
+								try (InputStream in1 = new BufferedInputStream(new FileInputStream(files[i]))) {
+									collector.collect(in1, waypoints);
+								}
 							}
-							try (InputStream in = new BufferedInputStream(new FileInputStream(files[i]))) {
-								parser.parse(in, trackpoints);
-							}
-						} catch (FileNotFoundException e) {
-							// should never happen
-						} catch (ParseException e) {
+						} catch (FileNotFoundException e1) {
 							showError(shell, NLS.bind(Messages.getString("GeotagAction.parsing_error"), //$NON-NLS-1$
-									files[i]), e);
-						} catch (IOException e) {
-							showError(shell, NLS.bind(Messages.getString("GeotagAction.io_error"), //$NON-NLS-1$
-									files[i]), e);
+									files[i]), e1);
+						} catch (IOException e2) {
+							showError(shell, NLS.bind(Messages.getString("GeotagAction.io_error_waypoints"), //$NON-NLS-1$
+									files[i]), e2);
+						} catch (ParseException e3) {
+							showError(shell, NLS.bind(Messages.getString("GeotagAction.parsing_error"), //$NON-NLS-1$
+									files[i]), e3);
 						}
+					}
+					try {
+						IGpsParser parser = Ui.getUi().getGpsParser(files[i]);
+						if (parser == null) {
+							GpsActivator.getDefault()
+									.logError(NLS.bind(Messages.getString("GeotagAction.no_parser"), //$NON-NLS-1$
+											files[i]), null);
+							continue;
+						}
+						try (InputStream in2 = new BufferedInputStream(new FileInputStream(files[i]))) {
+							parser.parse(in2, trackpoints);
+						}
+					} catch (FileNotFoundException e4) {
+						// should never happen
+					} catch (ParseException e5) {
+						showError(shell, NLS.bind(Messages.getString("GeotagAction.parsing_error"), //$NON-NLS-1$
+								files[i]), e5);
+					} catch (IOException e6) {
+						showError(shell, NLS.bind(Messages.getString("GeotagAction.io_error"), //$NON-NLS-1$
+								files[i]), e6);
 					}
 				}
 			});

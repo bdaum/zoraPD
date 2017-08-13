@@ -386,11 +386,11 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 			int autoPolicy = qfield.getAutoPolicy();
 			switch (autoPolicy) {
 			case QueryField.AUTO_CONTAINS:
-				if (valueField.getText().length() == 0)
+				if (valueField.getText().isEmpty())
 					errorMsg = Messages.AutoRuleDialog_specify_at_least_one;
 				break;
 			case QueryField.AUTO_SELECT:
-				if (valueField.getText().trim().length() == 0)
+				if (valueField.getText().trim().isEmpty())
 					errorMsg = Messages.AutoRuleDialog_specify_at_least_one;
 				break;
 			case QueryField.AUTO_DISCRETE:

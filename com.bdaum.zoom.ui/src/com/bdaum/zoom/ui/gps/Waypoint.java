@@ -53,6 +53,7 @@ public class Waypoint {
 	protected String name;
 	protected String description;
 	protected double elevation = Double.NaN;
+	private double direction = Double.NaN;
 
 	/**
 	 * Constructor
@@ -143,5 +144,15 @@ public class Waypoint {
 	public double getLon() {
 		return lon;
 	}
+	
+	
+	public double getDirection() {
+		return direction;
+	}
+
+	public void setDirection(double direction) {
+		this.direction = direction;
+	}
+
 
 }

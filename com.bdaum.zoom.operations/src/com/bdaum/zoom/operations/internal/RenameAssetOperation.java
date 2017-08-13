@@ -92,12 +92,8 @@ public class RenameAssetOperation extends AbstractRenamingOperation {
 						return close(info);
 					}
 					oldUri = asset.getUri();
-					if (!storeSafely(new Runnable() {
-						public void run() {
-							renameAsset(asset, file, dest, aMonitor,
-									fileWatchManager);
-						}
-					}, 1))
+					if (!storeSafely(() -> renameAsset(asset, file, dest, aMonitor,
+							fileWatchManager), 1))
 						return close(info);
 					for (IRelationDetector detector : info
 							.getAdapter(IRelationDetector[].class))
@@ -107,7 +103,7 @@ public class RenameAssetOperation extends AbstractRenamingOperation {
 					uri = volumeManager.findFile(asset);
 					if (uri != null) {
 						String volume = asset.getVolume();
-						if (volume != null && volume.length() > 0)
+						if (volume != null && !volume.isEmpty())
 							volumes.add(volume);
 						errands.add(uri.toString());
 						if (aMonitor.isCanceled())
@@ -118,7 +114,7 @@ public class RenameAssetOperation extends AbstractRenamingOperation {
 				fileWatchManager.stopIgnoring(opId);
 			}
 			fireAssetsModified(new BagChange<>(null, Collections.singleton(asset), null, null), QueryField.URI);
-			if (errands.size() > 0) {
+			if (!errands.isEmpty()) {
 				final IDbErrorHandler errorHandler = Core.getCore()
 						.getErrorHandler();
 				if (errorHandler != null)

@@ -383,13 +383,11 @@ public class RelationDetector implements IRelationDetector {
 			if (shell.isDisposed())
 				dialogReturn = 1;
 			else
-				shell.getDisplay().syncExec(new Runnable() {
-					public void run() {
-						UpdateDerivedDialog dialog = new UpdateDerivedDialog(
-								shell, derivedFile);
-						dialogReturn = dialog.open();
-						dontAskAgain = dialog.getAsk();
-					}
+				shell.getDisplay().syncExec(() -> {
+					UpdateDerivedDialog dialog = new UpdateDerivedDialog(
+							shell, derivedFile);
+					dialogReturn = dialog.open();
+					dontAskAgain = dialog.getAsk();
 				});
 		}
 	}

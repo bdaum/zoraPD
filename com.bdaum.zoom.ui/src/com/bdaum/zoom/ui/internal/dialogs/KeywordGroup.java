@@ -159,7 +159,7 @@ public class KeywordGroup implements IAdaptable {
 				chapters = new HashMap<Character, List<String>>(60);
 				titles = new ArrayList<>(40);
 				for (String kw : getAvailables()) {
-					if (kw.length() > 0) {
+					if (!kw.isEmpty()) {
 						Character chapterTitle = Character.toUpperCase(kw.charAt(0));
 						List<String> elements = chapters.get(chapterTitle);
 						if (elements == null) {
@@ -559,7 +559,7 @@ public class KeywordGroup implements IAdaptable {
 					recentViewer.setCheckedElements(appliedKeywords.toArray());
 			} else {
 				String text = newKeywordField.getText();
-				if (text.length() > 0)
+				if (!text.isEmpty())
 					text += '\n';
 				text += kw;
 				newKeywordField.removeVerifyListener(keywordVerifyListener);

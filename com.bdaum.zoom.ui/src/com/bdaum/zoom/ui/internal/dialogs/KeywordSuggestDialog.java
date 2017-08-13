@@ -101,23 +101,19 @@ public class KeywordSuggestDialog extends ZProgressDialog implements SelectionLi
 						++work;
 						final int work2 = work;
 						if (!shell.isDisposed()) {
-							shell.getDisplay().syncExec(new Runnable() {
-								public void run() {
-									if (!shell.isDisposed())
-										getProgressBar().setSelection(work2);
-								}
+							shell.getDisplay().syncExec(() -> {
+								if (!shell.isDisposed())
+									getProgressBar().setSelection(work2);
 							});
 						}
 					}
 					for (ScoredString ss : foundAssets.values())
 						addKeywords(allKeywords, dbManager.obtainAsset(ss.getString()), ss.getScore());
 					if (!shell.isDisposed()) {
-						shell.getDisplay().syncExec(new Runnable() {
-							public void run() {
-								if (!shell.isDisposed()) {
-									viewer.setInput(allKeywords.values());
-									getProgressBar().setVisible(false);
-								}
+						shell.getDisplay().syncExec(() -> {
+							if (!shell.isDisposed()) {
+								viewer.setInput(allKeywords.values());
+								getProgressBar().setVisible(false);
 							}
 						});
 					}
@@ -189,7 +185,7 @@ public class KeywordSuggestDialog extends ZProgressDialog implements SelectionLi
 		Algorithm algorithm = lireService.getAlgorithmById(method);
 		if (algorithm != null && CoreActivator.getDefault().getCbirAlgorithms().contains(algorithm.getName()))
 			validMethod = method;
-		if (validMethod < 0 && lireService.configureSearch(this, null))
+		if (validMethod < 0 && lireService.ShowConfigureSearch(this, null))
 			validMethod = queryOptions.getMethod();
 		options = new SimilarityOptions_typeImpl(validMethod, queryOptions.getMaxHits(), queryOptions.getScore() / 100f,
 				0, 0, 0, 0, null, queryOptions.getKeywordWeight());
@@ -259,7 +255,7 @@ public class KeywordSuggestDialog extends ZProgressDialog implements SelectionLi
 			configureButton.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					if (lireService.configureSearch(KeywordSuggestDialog.this, null)) {
+					if (lireService.ShowConfigureSearch(KeywordSuggestDialog.this, null)) {
 						Job.getJobManager().cancel(KeywordSuggestDialog.this);
 						QueryOptions queryOptions = UiActivator.getDefault().getQueryOptions();
 						options.setMaxResults(queryOptions.getMaxHits());

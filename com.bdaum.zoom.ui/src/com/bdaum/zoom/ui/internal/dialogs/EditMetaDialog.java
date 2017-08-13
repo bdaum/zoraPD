@@ -110,7 +110,6 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -177,7 +176,6 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.VocabManager;
-import com.bdaum.zoom.ui.internal.VocabManager.VocabNode;
 import com.bdaum.zoom.ui.internal.commands.LastImportCommand;
 import com.bdaum.zoom.ui.internal.operations.ModifyMetaOperation;
 import com.bdaum.zoom.ui.internal.preferences.GeneralPreferencePage;
@@ -269,18 +267,15 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				final int system1 = system;
 				final int user1 = user;
 				if (!shell.isDisposed()) {
-					shell.getDisplay().asyncExec(new Runnable() {
-						public void run() {
-							if (!shell.isDisposed()) {
-								detailsProgressBar.setVisible(false);
-								setDetails(0, Messages.EditMetaDialog_main_groups, main1);
-								setDetails(1, Messages.EditMetaDialog_subgroups, subgroup1);
-								setDetails(2, Messages.EditMetaDialog_system_groups, system1);
-								setDetails(3, Messages.EditMetaDialog_user_groups, user1);
-							}
+					shell.getDisplay().asyncExec(() -> {
+						if (!shell.isDisposed()) {
+							detailsProgressBar.setVisible(false);
+							setDetails(0, Messages.EditMetaDialog_main_groups, main1);
+							setDetails(1, Messages.EditMetaDialog_subgroups, subgroup1);
+							setDetails(2, Messages.EditMetaDialog_system_groups, system1);
+							setDetails(3, Messages.EditMetaDialog_user_groups, user1);
 						}
 					});
-
 				}
 			} else if (clazz == SmartCollectionImpl.class) {
 				int main = 0;
@@ -348,28 +343,24 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				final int albums1 = albums;
 				final int directory1 = directory;
 				if (!shell.isDisposed()) {
-					shell.getDisplay().asyncExec(new Runnable() {
-
-						public void run() {
-							if (!shell.isDisposed()) {
-								detailsProgressBar.setVisible(false);
-								setDetails(0, Messages.EditMetaDialog_main_collections, main1);
-								setDetails(1, Messages.EditMetaDialog_subcollections, subCollection1);
-								setDetails(2, Messages.EditMetaDialog_import_folders, imports1);
-								setDetails(4, Messages.EditMetaDialog_system_collections, system1);
-								setDetails(5, Messages.EditMetaDialog_directories, directory1);
-								setDetails(6, Messages.EditMetaDialog_locations_folders, locations1);
-								setDetails(7, Messages.EditMetaDialog_timeline_folders, timeline1);
-								setDetails(8, Messages.EditMetaDialog_person_folders, persons1);
-								setDetails(9, Messages.EditMetaDialog_user_collections, user1);
-								setDetails(10, Messages.EditMetaDialog_albums, albums1);
-								setDetails(11, Messages.EditMetaDialog_other_collections, user1 - albums1);
-							}
+					shell.getDisplay().asyncExec(() -> {
+						if (!shell.isDisposed()) {
+							detailsProgressBar.setVisible(false);
+							setDetails(0, Messages.EditMetaDialog_main_collections, main1);
+							setDetails(1, Messages.EditMetaDialog_subcollections, subCollection1);
+							setDetails(2, Messages.EditMetaDialog_import_folders, imports1);
+							setDetails(4, Messages.EditMetaDialog_system_collections, system1);
+							setDetails(5, Messages.EditMetaDialog_directories, directory1);
+							setDetails(6, Messages.EditMetaDialog_locations_folders, locations1);
+							setDetails(7, Messages.EditMetaDialog_timeline_folders, timeline1);
+							setDetails(8, Messages.EditMetaDialog_person_folders, persons1);
+							setDetails(9, Messages.EditMetaDialog_user_collections, user1);
+							setDetails(10, Messages.EditMetaDialog_albums, albums1);
+							setDetails(11, Messages.EditMetaDialog_other_collections, user1 - albums1);
 						}
 					});
 				}
 			} else if (clazz == LocationImpl.class) {
-
 				Set<String> regions = new HashSet<String>(10);
 				Set<String> countries = new HashSet<String>(51);
 				Set<String> cities = new HashSet<String>(777);
@@ -392,8 +383,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 					if (countryISOCode == null)
 						countryISOCode = loc.getCountryName();
 					countries.add(countryISOCode);
-					String city = loc.getCity();
-					cities.add(city);
+					cities.add(loc.getCity());
 					if (updateProgressBar(shell, ++i, incr, monitor))
 						return Status.CANCEL_STATUS;
 				}
@@ -401,14 +391,12 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				final int countries1 = countries.size();
 				final int cities1 = cities.size();
 				if (!shell.isDisposed()) {
-					shell.getDisplay().asyncExec(new Runnable() {
-						public void run() {
-							if (!shell.isDisposed()) {
-								detailsProgressBar.setVisible(false);
-								setDetails(0, Messages.EditMetaDialog_world_regions, regions1);
-								setDetails(1, Messages.EditMetaDialog_countries, countries1);
-								setDetails(2, Messages.EditMetaDialog_cities, cities1);
-							}
+					shell.getDisplay().asyncExec(() -> {
+						if (!shell.isDisposed()) {
+							detailsProgressBar.setVisible(false);
+							setDetails(0, Messages.EditMetaDialog_world_regions, regions1);
+							setDetails(1, Messages.EditMetaDialog_countries, countries1);
+							setDetails(2, Messages.EditMetaDialog_cities, cities1);
 						}
 					});
 				}
@@ -420,12 +408,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		private boolean updateProgressBar(final Shell shell, final int i, int incr, IProgressMonitor monitor) {
 			if (!monitor.isCanceled() && !shell.isDisposed()) {
 				if (i % incr == 0)
-					shell.getDisplay().syncExec(new Runnable() {
-						public void run() {
-							if (!shell.isDisposed())
-								detailsProgressBar.setSelection(i);
-						}
-					});
+					shell.getDisplay().syncExec(() -> detailsProgressBar.setSelection(i));
 				return false;
 			}
 			return true;
@@ -433,14 +416,10 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 
 		private void init(final Shell shell, final int work) {
 			if (!shell.isDisposed()) {
-				shell.getDisplay().syncExec(new Runnable() {
-					public void run() {
-						if (!shell.isDisposed()) {
-							setDetails(0, getName(), -1);
-							detailsProgressBar.setMaximum(work);
-							detailsProgressBar.setVisible(true);
-						}
-					}
+				shell.getDisplay().syncExec(() -> {
+					setDetails(0, getName(), -1);
+					detailsProgressBar.setMaximum(work);
+					detailsProgressBar.setVisible(true);
 				});
 			}
 		}
@@ -468,7 +447,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			if (chapters == null) {
 				chapters = new HashMap<Character, List<String>>();
 				for (String kw : available) {
-					if (kw.length() > 0) {
+					if (!kw.isEmpty()) {
 						Character chapterTitle = Character.toUpperCase(kw.charAt(0));
 						List<String> elements = chapters.get(chapterTitle);
 						if (elements == null) {
@@ -494,7 +473,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		public Object getParent(Object element) {
 			if (!flatKeywordGroup.isFlat()) {
 				String kw = (String) element;
-				if (kw.length() > 0) {
+				if (!kw.isEmpty()) {
 					char firstChar = Character.toUpperCase(kw.charAt(0));
 					for (Character title : chapters.keySet())
 						if (title.charValue() == firstChar)
@@ -533,11 +512,9 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 					buildLocationTree(root, null, location, LocationNode.CONTINENT, true);
 				final Control control = locTreeViewer.getControl();
 				if (!control.isDisposed()) {
-					control.getDisplay().asyncExec(new Runnable() {
-						public void run() {
-							if (!control.isDisposed())
-								locTreeViewer.setInput(root);
-						}
+					control.getDisplay().asyncExec(() -> {
+						if (!control.isDisposed())
+							locTreeViewer.setInput(root);
 					});
 				}
 				return Status.OK_STATUS;
@@ -645,29 +622,24 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			editButton = createPushButton(bar, Messages.EditMetaDialog_edit,
 					NLS.bind(Messages.EditMetaDialog_edit_selected_x, item));
 			editButton.addSelectionListener(new SelectionAdapter() {
-
 				@Override
 				public void widgetSelected(SelectionEvent e) {
 					editStruct(type);
 				}
-
 			});
 			removeButton = createPushButton(bar, Messages.EditMetaDialog_remove,
 					NLS.bind(Messages.EditMetaDialog_remove_x, item));
 			removeButton.addSelectionListener(new SelectionAdapter() {
-
 				@Override
 				public void widgetSelected(SelectionEvent e) {
 					removeItem();
 					if (type == QueryField.T_LOCATION)
 						geographic = null;
 				}
-
 			});
 			showButton = createPushButton(bar, Messages.EditMetaDialog_show_images,
 					NLS.bind(Messages.EditMetaDialog_show_x, item));
 			showButton.addSelectionListener(new SelectionAdapter() {
-
 				@Override
 				public void widgetSelected(SelectionEvent e) {
 					if (workbenchPage != null) {
@@ -723,11 +695,9 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			emailButton = createPushButton(bar, Messages.EditMetaDialog_send_email,
 					NLS.bind(Messages.EditMetaDialog_Email_x, item));
 			emailButton.addSelectionListener(new SelectionAdapter() {
-
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					ContactImpl contact = (ContactImpl) flatComponent.getSelectedElement();
-					String[] email = contact.getEmail();
+					String[] email = ((ContactImpl) flatComponent.getSelectedElement()).getEmail();
 					if (email != null && email.length > 0)
 						UiActivator.getDefault().sendMail(Arrays.asList(email));
 				}
@@ -735,11 +705,9 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			webButton = createPushButton(bar, Messages.EditMetaDialog_visit_web_site,
 					NLS.bind(Messages.EditMetaDialog_visit_x, item));
 			webButton.addSelectionListener(new SelectionAdapter() {
-
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					ContactImpl contact = (ContactImpl) flatComponent.getSelectedElement();
-					String[] web = contact.getWebUrl();
+					String[] web = ((ContactImpl) flatComponent.getSelectedElement()).getWebUrl();
 					if (web != null && web.length == 1) {
 						try {
 							PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser()
@@ -1087,7 +1055,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 						key = LocationConstants.worldRegionToContinent.get(name);
 					if (key != null)
 						name = GeoMessages.getString(GeoMessages.PREFIX + key);
-					if (name == null || name.length() == 0) {
+					if (name == null || name.isEmpty()) {
 						name = Messages.EditMetaDialog_unknown_worldregion;
 						unknown = true;
 					}
@@ -1103,7 +1071,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 					StringBuilder sb = new StringBuilder();
 					if (cname != null)
 						sb.append(cname);
-					if (iso != null && iso.length() > 0)
+					if (iso != null && !iso.isEmpty())
 						sb.append(" (").append(iso) //$NON-NLS-1$
 								.append(')').toString();
 					if (sb.length() == 0) {
@@ -1115,7 +1083,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				case LocationNode.STATE:
 					key = getUpdatedValue(location, QueryField.LOCATION_STATE, location.getProvinceOrState());
 					name = key;
-					if (name == null || name.length() == 0) {
+					if (name == null || name.isEmpty()) {
 						name = Messages.EditMetaDialog_unknown_state;
 						unknown = true;
 					}
@@ -1123,7 +1091,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				default:
 					key = getUpdatedValue(location, QueryField.LOCATION_CITY, location.getCity());
 					name = key;
-					if (name == null || name.length() == 0) {
+					if (name == null || name.isEmpty()) {
 						name = Messages.EditMetaDialog_unknown_city;
 						unknown = true;
 					}
@@ -1263,7 +1231,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		}
 
 		private void append(StringBuilder sb, String s) {
-			if (s != null && s.length() > 0) {
+			if (s != null && !s.isEmpty()) {
 				if (sb.length() > 0)
 					sb.append("; "); //$NON-NLS-1$
 				sb.append(s);
@@ -1416,7 +1384,6 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 	private CheckboxButton webgalleryDescrButton;
 	private CheckboxButton webgalleryTitleButton;
 	private CheckboxButton personsButton;
-	private CGroup simGroup;
 	private CGroup textGroup;
 	private CheckboxButton exhibitionCredButton;
 	private CheckboxButton webgalleryAltButton;
@@ -1452,6 +1419,9 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 	private TableViewer vocabViewer;
 	private Button vocabEnforceButton;
 	private VocabManager vocabManager;
+	private boolean essentialAlgos = true;
+	private Set<String> cbirAlgorithms = new HashSet<String>(CoreActivator.getDefault().getCbirAlgorithms());
+	private Composite simComp;
 
 	public EditMetaDialog(Shell parentShell, IWorkbenchPage workbenchPage, IDbManager dbManager, boolean newDb,
 			Meta previousMeta) {
@@ -1472,11 +1442,9 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		updateButtons();
 		if (newDb) {
 			final Shell c = getShell();
-			c.getDisplay().timerExec(300, new Runnable() {
-				public void run() {
-					if (c.isListening(SWT.Help))
-						c.notifyListeners(SWT.Help, new Event());
-				}
+			c.getDisplay().timerExec(300, () -> {
+				if (!c.isDisposed() && c.isListening(SWT.Help))
+					c.notifyListeners(SWT.Help, new Event());
 			});
 		}
 	}
@@ -1565,9 +1533,6 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		final Composite composite = new Composite(ixComp, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout());
-		Label label = new Label(composite, SWT.WRAP);
-		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		label.setText(Messages.EditMetaDialog_configure_index_warning);
 		noIndexButton = WidgetFactory.createCheckButton(composite, Messages.EditMetaDialog_no_indexing, null);
 		noIndexButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -1575,14 +1540,26 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				updateIndexingControls();
 			}
 		});
-		Composite vGroup = new Composite(composite, SWT.NONE);
+		simComp = new Composite(composite, SWT.NONE);
+		simComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		GridLayout layout = new GridLayout(1, false);
+		layout.marginWidth = 0;
+		simComp.setLayout(layout);
+		Label label = new Label(simComp, SWT.WRAP);
+		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		label.setText(Messages.EditMetaDialog_influences_speed);
+		label = new Label(simComp, SWT.WRAP);
+		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		label.setText(Messages.EditMetaDialog_configure_index_warning);
+		Composite vGroup = new Composite(simComp, SWT.NONE);
 		vGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		vGroup.setLayout(new GridLayout(2, false));
-
-		simGroup = new CGroup(vGroup, SWT.NONE);
+		layout = new GridLayout(2, false);
+		layout.marginWidth = 0;
+		vGroup.setLayout(layout);
+		CGroup simGroup = new CGroup(vGroup, SWT.NONE);
 		simGroup.setText(Messages.EditMetaDialog_similarity_algos);
 		simGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
-		simGroup.setLayout(new GridLayout(2, false));
+		simGroup.setLayout(new GridLayout(1, false));
 		simViewer = CheckboxTableViewer.newCheckList(simGroup, SWT.FULL_SELECTION | SWT.SINGLE | SWT.V_SCROLL);
 		setViewerLayout(simViewer, 200, 1);
 		simViewer.setContentProvider(ArrayContentProvider.getInstance());
@@ -1602,14 +1579,52 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			public String getText(Object element) {
 				return element.toString();
 			}
+
+			@Override
+			public Image getImage(Object element) {
+				if (element instanceof Algorithm && ((Algorithm) element).isAi())
+					return Icons.neural.getImage();
+				return null;
+			}
+		});
+		Button algoButton = new Button(simGroup, SWT.PUSH);
+		algoButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
+		algoButton.setText(Messages.EditMetaDialog_show_more);
+		algoButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				essentialAlgos = !essentialAlgos;
+				algoButton.setText(
+						essentialAlgos ? Messages.EditMetaDialog_show_more : Messages.EditMetaDialog_show_less);
+				updateSelectedAlgorithms();
+				Object[] checkedElements = simViewer.getCheckedElements();
+				simViewer.setInput(simViewer.getInput());
+				simViewer.setCheckedElements(checkedElements);
+				simGroup.layout(true, true);
+			}
+		});
+		simViewer.addCheckStateListener(new ICheckStateListener() {
+			@Override
+			public void checkStateChanged(CheckStateChangedEvent event) {
+				validateAlgorithms();
+			}
+		});
+		simViewer.setFilters(new ViewerFilter() {
+			@Override
+			public boolean select(Viewer viewer, Object parentElement, Object element) {
+				if (essentialAlgos && element instanceof Algorithm)
+					return ((Algorithm) element).isEssential()
+							|| cbirAlgorithms.contains(((Algorithm) element).getName());
+				return true;
+			}
 		});
 		simViewer.setInput(Core.getCore().getDbFactory().getLireService(true).getSupportedSimilarityAlgorithms());
 		textGroup = new CGroup(vGroup, SWT.NONE);
 		textGroup.setText(Messages.EditMetaDialog_fields_in_text_search);
-		textGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, true));
+		textGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		textGroup.setLayout(new GridLayout());
 		textIndexViewer = new CheckboxTreeViewer(textGroup, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL);
-		setViewerLayout(textIndexViewer, 120, 1);
+		setViewerLayout(textIndexViewer, SWT.DEFAULT, 1);
 		textIndexViewer.setLabelProvider(new MetadataLabelProvider());
 		textIndexViewer.setContentProvider(new MetadataContentProvider());
 		textIndexViewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
@@ -1669,9 +1684,32 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		webgalleryAltButton = WidgetFactory.createCheckButton(bGroup, Messages.EditMetaDialog_alt_texts, null);
 	}
 
+	protected void validateAlgorithms() {
+		Object[] checkedElements = simViewer.getCheckedElements();
+		String errorMessage = null;
+		if (checkedElements.length == 0)
+			errorMessage = Messages.EditMetaDialog_select_at_least_one;
+		else {
+			for (Object element : checkedElements) {
+				if (element instanceof Algorithm) {
+					Algorithm aiAlgorithm = (Algorithm) element;
+					if (!aiAlgorithm.isEnabled())
+						errorMessage = NLS.bind(Messages.EditMetaDialog_ai_enabled, aiAlgorithm.getName());
+					else if (!aiAlgorithm.isAccountValid())
+						errorMessage = NLS.bind(Messages.EditMetaDialog_account_valid, aiAlgorithm.getName());
+					if (errorMessage != null)
+						break;
+				}
+			}
+		}
+
+		setErrorMessage(errorMessage);
+		getButton(OK).setEnabled(errorMessage == null);
+	}
+
 	private void updateIndexingControls() {
 		boolean enabled = !noIndexButton.getSelection();
-		simGroup.setVisible(enabled);
+		simComp.setVisible(enabled);
 		textGroup.setVisible(enabled);
 	}
 
@@ -1754,12 +1792,11 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 					@Override
 					public void widgetSelected(SelectionEvent e) {
 						try {
-							IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser();
 							String language = Locale.getDefault().getLanguage();
 							String url = System.getProperty("com.bdaum.zoom.dictionaries." + language); //$NON-NLS-1$
 							if (url == null)
 								url = System.getProperty("com.bdaum.zoom.dictionaries"); //$NON-NLS-1$
-							browser.openURL(new URL(url));
+							PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(url));
 						} catch (PartInitException e1) {
 							// do nothing
 						} catch (MalformedURLException e1) {
@@ -1981,7 +2018,6 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			}
 		});
 		locationViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateCreateNowButtons();
 			}
@@ -2575,24 +2611,22 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		keywordDeleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				BusyIndicator.showWhile(keywordDeleteButton.getDisplay(), new Runnable() {
-					public void run() {
-						IStructuredSelection selection = (IStructuredSelection) keywordViewer.getSelection();
-						String kw = (String) selection.getFirstElement();
-						if (kw != null) {
-							List<AssetImpl> set = dbManager.obtainObjects(AssetImpl.class,
-									QueryField.IPTC_KEYWORDS.getKey(), kw, QueryField.EQUALS);
-							removeKeywordFromViewer(keywordViewer, kw);
-							if (!set.isEmpty()) {
-								KeywordDeleteDialog dialog = new KeywordDeleteDialog(getShell(), kw, set);
-								if (dialog.open() != Window.OK) {
-									keywords.add(kw);
-									return;
-								}
-								if (dialog.getPolicy() == KeywordDeleteDialog.REMOVE)
-									todo.add(new ManageKeywordsOperation(
-											new BagChange<String>(null, null, Collections.singleton(kw), null), set));
+				BusyIndicator.showWhile(keywordDeleteButton.getDisplay(), () -> {
+					IStructuredSelection selection = (IStructuredSelection) keywordViewer.getSelection();
+					String kw = (String) selection.getFirstElement();
+					if (kw != null) {
+						List<AssetImpl> set = dbManager.obtainObjects(AssetImpl.class,
+								QueryField.IPTC_KEYWORDS.getKey(), kw, QueryField.EQUALS);
+						removeKeywordFromViewer(keywordViewer, kw);
+						if (!set.isEmpty()) {
+							KeywordDeleteDialog dialog = new KeywordDeleteDialog(getShell(), kw, set);
+							if (dialog.open() != Window.OK) {
+								keywords.add(kw);
+								return;
 							}
+							if (dialog.getPolicy() == KeywordDeleteDialog.REMOVE)
+								todo.add(new ManageKeywordsOperation(
+										new BagChange<String>(null, null, Collections.singleton(kw), null), set));
 						}
 					}
 				});
@@ -2699,11 +2733,8 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 
 			@Override
 			public Image getImage(Object element) {
-				if (element instanceof String) {
-					File file = new File((String) element);
-					if (!file.exists())
-						return Icons.error.getImage();
-				}
+				if (element instanceof String && !new File((String) element).exists())
+					return Icons.error.getImage();
 				return null;
 			}
 
@@ -3089,8 +3120,10 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		vocabViewButton.setEnabled(vocabSel);
 		vocabEnforceButton.setEnabled(vocabularies != null && !vocabularies.isEmpty());
 		loadCatButton.setEnabled(!readonly);
-		boolean enabled = newDb ? visited[OVERVIEW] && visited[THUMBNAILS] && visited[CATEGORIES] && visited[KEYWORDS]
-				&& visited[INDEXING] : true;
+		boolean enabled = newDb
+				? visited[OVERVIEW] && visited[THUMBNAILS] && visited[CATEGORIES] && visited[KEYWORDS]
+						&& visited[INDEXING]
+				: true;
 		getButton(IDialogConstants.OK_ID).setEnabled(enabled);
 		getShell().setModified(enabled);
 		int selectionIndex = tabFolder.getSelectionIndex();
@@ -3176,7 +3209,6 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			addToKeywordsButton.setSelection(booleanValue(meta.getPersonsToKeywords()));
 		} else if (index == INDEXING) {
 			noIndexButton.setSelection(meta.getNoIndex());
-			Set<String> cbirAlgorithms = CoreActivator.getDefault().getCbirAlgorithms();
 			for (Algorithm algo : Core.getCore().getDbFactory().getLireService(true).getSupportedSimilarityAlgorithms())
 				if (cbirAlgorithms.contains(algo.getName()))
 					simViewer.setChecked(algo, true);
@@ -3201,11 +3233,11 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			personsButton.setSelection(indexedTextFields.contains(ILuceneService.INDEX_PERSON_SHOWN));
 			fileNameButton.setSelection(indexedTextFields.contains(ILuceneService.INDEX_FILENAME));
 			updateIndexingControls();
+			validateAlgorithms();
 		} else if (index == STATISTICS) {
-			tabFolder.getDisplay().timerExec(100, new Runnable() {
-				public void run() {
+			tabFolder.getDisplay().timerExec(100, () -> {
+				if (!tabFolder.isDisposed())
 					computeStatistics();
-				}
 			});
 		} else if (index == WATCHEDFOLDERS) {
 			bgimportField.setSelection(meta.getCumulateImports());
@@ -3351,14 +3383,11 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			addToKeywords = booleanValue(meta.getPersonsToKeywords());
 			kWords = meta.getKeywords();
 		}
-		Set<String> cbirAlgorithms;
 		Set<String> indexedTextFields;
 		boolean noIndex;
 		if (visited[INDEXING]) {
 			noIndex = noIndexButton.getSelection();
-			cbirAlgorithms = new HashSet<String>();
-			for (Object el : simViewer.getCheckedElements())
-				cbirAlgorithms.add(((Algorithm) el).getName());
+			updateSelectedAlgorithms();
 			cbirAlgorithms.add(""); // indicate that it has been //$NON-NLS-1$
 									// set
 			indexedTextFields = new HashSet<String>();
@@ -3388,8 +3417,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			if (fileNameButton.getSelection())
 				indexedTextFields.add(ILuceneService.INDEX_FILENAME);
 			indexedTextFields.add(""); // indicate that it has //$NON-NLS-1$
-										// been
-										// set
+										// been set
 		} else {
 			noIndex = meta.getNoIndex();
 			cbirAlgorithms = meta.getCbirAlgorithms();
@@ -3428,6 +3456,12 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		for (DbOperation operation : todo)
 			OperationJob.executeOperation(operation, workbenchPage.getActivePart());
 		super.okPressed();
+	}
+
+	protected void updateSelectedAlgorithms() {
+		cbirAlgorithms.clear();
+		for (Object el : simViewer.getCheckedElements())
+			cbirAlgorithms.add(((Algorithm) el).getName());
 	}
 
 	private void editCategory(final Composite parent) {
@@ -3487,7 +3521,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		final String[] kws = keywords.toArray(new String[keywords.size()]);
 		IInputValidator validator = new IInputValidator() {
 			public String isValid(String newText) {
-				if (newText.length() == 0)
+				if (newText.isEmpty())
 					return Messages.EditMetaDialog_please_enter_a_keyword;
 				if (keywords.contains(newText))
 					return Messages.EditMetaDialog_keyword_already_exsists;
@@ -3635,12 +3669,9 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		Iterator<Object> it = ((IStructuredSelection) vocabViewer.getSelection()).iterator();
 		while (it.hasNext())
 			selected.add((String) it.next());
-		if (!selected.isEmpty()) {
-			VocabNode root = new VocabManager(selected, EditMetaDialog.this).getVocabTree();
-			ViewVocabDialog dialog = new ViewVocabDialog(getShell(), root,
-					selected.size() != 1 ? null : new File(selected.get(0)), false);
-			dialog.open();
-		}
+		if (!selected.isEmpty())
+			new ViewVocabDialog(getShell(), new VocabManager(selected, EditMetaDialog.this).getVocabTree(),
+					selected.size() != 1 ? null : new File(selected.get(0)), false).open();
 	}
 
 }

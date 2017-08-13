@@ -82,7 +82,7 @@ public class AddToPhotosetTask extends PostProcessingTask {
 			Collection<? extends PhotoSet> photosets) {
 		int count = 0;
 		for (PhotoSet set : photosets)
-			if (set.getPhotos().size() > 0) {
+			if (!set.getPhotos().isEmpty()) {
 				numberOfSets++;
 				count += set.getPhotos().size();
 			}

@@ -131,7 +131,7 @@ public class SaveTemplateDialog extends ZTrayDialog {
 	protected void updateButtons() {
 		Button okButton = getButton(IDialogConstants.OK_ID);
 		String name = nameField.getText().trim();
-		if (name.length() == 0) {
+		if (name.isEmpty()) {
 			msgLabel.setText(Messages.SaveTemplateDialog_please_specify_a_design_name);
 			msgLabel.setForeground(msgLabel.getDisplay().getSystemColor(SWT.COLOR_RED));
 			getShell().setModified(false);

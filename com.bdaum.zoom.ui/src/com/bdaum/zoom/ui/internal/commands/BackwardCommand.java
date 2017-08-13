@@ -34,11 +34,7 @@ public class BackwardCommand extends AbstractCommandHandler {
 	@Override
 	public void run() {
 		final IWorkbenchWindow window = getActiveWorkbenchWindow();
-		BusyIndicator.showWhile(window.getShell().getDisplay(), new Runnable() {
-			public void run() {
-				UiActivator.getDefault().getNavigationHistory(window).back();
-			}
-		});
+		BusyIndicator.showWhile(window.getShell().getDisplay(), () -> UiActivator.getDefault().getNavigationHistory(window).back());
 	}
 
 	@Override

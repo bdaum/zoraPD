@@ -21,30 +21,29 @@ import com.bdaum.zoom.gps.widgets.AbstractMapComponent;
 public class MapComponent extends AbstractMapComponent {
 
 	private URL markerclusterUrl;
-	private URL iconmakerUrl;
 	private URL zoomMapUrl;
+	private URL imagesUrl;
 
 	@Override
 	protected void findResources() {
 		markerclusterUrl = findUrl("/gmap/markerclusterer.js"); //$NON-NLS-1$
-		iconmakerUrl = findUrl("/gmap/mapiconmaker.js"); //$NON-NLS-1$
 		zoomMapUrl = findUrl("/gmap/zoomMap.js"); //$NON-NLS-1$
+		imagesUrl = findUrl("/gmap/images/m1.png"); //$NON-NLS-1$
 	}
 
 	@Override
 	protected String createSetPosDetailScript(HistoryItem item) {
-		return NLS
-				.bind("map.setZoom({0});\nmap.panTo({1});", (int) item.getDetail(), createLatLng(item.getLatitude(), item.getLongitude())); //$NON-NLS-1$
+		return NLS.bind("map.setZoom({0});\nmap.panTo({1});", (int) item.getDetail(), //$NON-NLS-1$
+				createLatLng(item.getLatitude(), item.getLongitude()));
 	}
 
 	@Override
-	protected String createLatLngBounds(double swLat, double swLon,
-			double neLat, double neLon) {
+	protected String createLatLngBounds(double swLat, double swLon, double neLat, double neLon) {
 		return NLS.bind("new google.maps.LatLngBounds({0},{1}", createLatLng(swLat, swLon), createLatLng(neLat, neLon)); //$NON-NLS-1$
 	}
 
 	private URL findUrl(String path) {
-		return super.findUrl(Gmap3Activator.getDefault().getBundle(), path);
+		return findUrl(Gmap3Activator.getDefault().getBundle(), path);
 	}
 
 	/*
@@ -56,8 +55,7 @@ public class MapComponent extends AbstractMapComponent {
 
 	@Override
 	protected String createLatLng(double lat, double lon) {
-		return NLS
-				.bind("new google.maps.LatLng({0},{1})", usformat.format(lat), usformat.format(lon)); //$NON-NLS-1$
+		return NLS.bind("new google.maps.LatLng({0},{1})", usformat.format(lat), usformat.format(lon)); //$NON-NLS-1$
 	}
 
 	/*
@@ -70,9 +68,10 @@ public class MapComponent extends AbstractMapComponent {
 	@Override
 	protected String createScriptEntries() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("<script src=\"http://maps.google.com/maps/api/js?sensor=false\" type=\"text/javascript\"></script>\n"); //$NON-NLS-1$
+		sb.append(
+				"<script src=\"http://maps.google.com/maps/api/js?sensor=false\" type=\"text/javascript\"></script>\n"); //$NON-NLS-1$
 		sb.append(createScriptEntry(markerclusterUrl)).append('\n');
-		sb.append(createScriptEntry(iconmakerUrl)).append('\n');
+		// sb.append(createScriptEntry(iconmakerUrl)).append('\n');
 		sb.append(createScriptEntry(zoomMapUrl));
 		return sb.toString();
 	}
@@ -98,7 +97,11 @@ public class MapComponent extends AbstractMapComponent {
 
 	@Override
 	protected String createAdditionalVariables() {
-		return null;
+		StringBuilder sb = new StringBuilder();
+		String s = imagesUrl.toString();
+		sb.append("var imagesUrl = \"").append(s.substring(0, s.length() - 5)) //$NON-NLS-1$
+				.append("\";\n"); //$NON-NLS-1$
+		return sb.toString();
 	}
 
 	@Override
@@ -110,6 +113,5 @@ public class MapComponent extends AbstractMapComponent {
 	protected String getMappingSystemName() {
 		return "Google Maps 3"; //$NON-NLS-1$
 	}
-
 
 }

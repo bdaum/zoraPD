@@ -23,10 +23,19 @@ import java.io.IOException;
 
 public interface IDocumentIterator {
 
-	public static final int NO_MORE_DOCS = Integer.MAX_VALUE;
+	int NO_MORE_DOCS = Integer.MAX_VALUE;
 
-	public abstract void close() throws IOException;
+	/**
+	 * Close this iterator
+	 * @throws IOException
+	 */
+	void close() throws IOException;
 
-	public abstract int next() throws IOException, IOException;
+	/**
+	 * Step to next document
+	 * @return index of next document
+	 * @throws IOException
+	 */
+	int next() throws IOException;
 
 }

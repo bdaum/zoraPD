@@ -269,7 +269,7 @@ public class EditStructDialog extends ZTitleAreaDialog implements IAdaptable {
 						setFieldValue(qf, value, oldvalue);
 						viewer.update(qf, null);
 						if (qf == QueryField.LOCATION_COUNTRYCODE && value instanceof String
-								&& ((String) value).length() > 0) {
+								&& !((String) value).isEmpty()) {
 							String continentCode = LocationConstants.countryToContinent.get(value);
 							if (continentCode != null) {
 								setFieldValue(QueryField.LOCATION_WORLDREGIONCODE, continentCode,

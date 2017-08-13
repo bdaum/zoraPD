@@ -138,19 +138,17 @@ public abstract class CustomJob extends Job {
 		if (windows.length > 0) {
 			final Shell shell = windows[0].getShell();
 			final Display display = shell.getDisplay();
-			display.asyncExec(new Runnable() {
-				public void run() {
-					if (!display.isDisposed()) {
-						TaskBar taskBar = display.getSystemTaskBar();
-						if (taskBar != null) {
-							TaskItem item = taskBar.getItem(shell);
-							if (item == null)
-								item = taskBar.getItem(null);
-							if (item != null) {
-								item.setProgressState(state);
-								if (percent >= 0)
-									item.setProgress(percent);
-							}
+			display.asyncExec(() -> {
+				if (!display.isDisposed()) {
+					TaskBar taskBar = display.getSystemTaskBar();
+					if (taskBar != null) {
+						TaskItem item = taskBar.getItem(shell);
+						if (item == null)
+							item = taskBar.getItem(null);
+						if (item != null) {
+							item.setProgressState(state);
+							if (percent >= 0)
+								item.setProgress(percent);
 						}
 					}
 				}

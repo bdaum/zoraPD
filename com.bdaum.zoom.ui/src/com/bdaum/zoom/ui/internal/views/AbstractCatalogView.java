@@ -102,28 +102,26 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 		protected IStatus run(final IProgressMonitor monitor) {
 			final Control control = viewer.getControl();
 			if (!control.isDisposed())
-				control.getDisplay().asyncExec(new Runnable() {
-					public void run() {
-						if (!control.isDisposed() && !monitor.isCanceled()) {
-							IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
-							Object firstElement = selection.getFirstElement();
-							if (firstElement instanceof SlideShowImpl || firstElement instanceof ExhibitionImpl
-									|| firstElement instanceof WebGalleryImpl) {
-								openSlideShowEditor(
-										firstElement instanceof SlideShowImpl ? (SlideShowImpl) firstElement : null,
-										false);
-								openExhibitionEditor(
-										firstElement instanceof ExhibitionImpl ? (ExhibitionImpl) firstElement : null,
-										false);
-								openWebGalleryEditor(
-										firstElement instanceof WebGalleryImpl ? (WebGalleryImpl) firstElement : null,
-										false);
-							}
-							updateActions(selection);
-							fireSelection(event);
-							if (atStart)
-								fireStartListeners(true);
+				control.getDisplay().asyncExec(() -> {
+					if (!control.isDisposed() && !monitor.isCanceled()) {
+						IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+						Object firstElement = selection.getFirstElement();
+						if (firstElement instanceof SlideShowImpl || firstElement instanceof ExhibitionImpl
+								|| firstElement instanceof WebGalleryImpl) {
+							openSlideShowEditor(
+									firstElement instanceof SlideShowImpl ? (SlideShowImpl) firstElement : null,
+									false);
+							openExhibitionEditor(
+									firstElement instanceof ExhibitionImpl ? (ExhibitionImpl) firstElement : null,
+									false);
+							openWebGalleryEditor(
+									firstElement instanceof WebGalleryImpl ? (WebGalleryImpl) firstElement : null,
+									false);
 						}
+						updateActions(selection);
+						fireSelection(event);
+						if (atStart)
+							fireStartListeners(true);
 					}
 				});
 			return Status.OK_STATUS;
@@ -274,8 +272,8 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 					return;
 				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
 				if (obj instanceof SmartCollectionImpl) {
-					final SmartCollectionImpl current = (SmartCollectionImpl) obj;
-					final SmartCollectionImpl result = editCollection(current);
+					final SmartCollection current = (SmartCollectionImpl) obj;
+					final SmartCollection result = editCollection(current);
 					if (result != null) {
 						Runnable runnable = new Runnable() {
 							public void run() {
@@ -351,7 +349,7 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 				}
 			}
 
-			private SmartCollectionImpl editCollection(SmartCollectionImpl current) {
+			private SmartCollection editCollection(SmartCollection current) {
 				AomList<Criterion> criterion = current.getCriterion();
 				if (criterion != null && !criterion.isEmpty()) {
 					String field = current.getCriterion(0).getField();

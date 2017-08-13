@@ -126,7 +126,7 @@ public class WaypointCollector implements IWaypointCollector {
 								int p = s.indexOf(',');
 								if (p > 0) {
 									n = s.substring(0, p).trim();
-									if (n.length() > 0
+									if (!n.isEmpty()
 											&& Character.isDigit(n.charAt(0)))
 										s = s.substring(p + 1).trim();
 									else
@@ -136,7 +136,7 @@ public class WaypointCollector implements IWaypointCollector {
 									p = s.lastIndexOf(' ');
 									if (p >= 0) {
 										n = s.substring(p + 1).trim();
-										if (n.length() > 0
+										if (!n.isEmpty()
 												&& Character.isDigit(n
 														.charAt(0)))
 											s = s.substring(0, p).trim();

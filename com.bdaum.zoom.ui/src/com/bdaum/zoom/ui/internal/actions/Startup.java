@@ -57,6 +57,7 @@ import com.bdaum.zoom.operations.internal.ImportOperation;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.commands.OpenCatalogCommand;
 import com.bdaum.zoom.ui.internal.dialogs.StartupDialog;
 import com.bdaum.zoom.ui.internal.job.ChangeProcessor;
 import com.bdaum.zoom.ui.internal.job.CheckForUpdateJob;
@@ -175,24 +176,17 @@ public class Startup implements IStartup, IAdaptable {
 		if (Constants.REQUIRED_JAVA_VERSIONS.compareTo(version) > 0) {
 			if (shell != null) {
 				final String v = version;
-				shell.getDisplay().syncExec(new Runnable() {
-					public void run() {
-						AcousticMessageDialog.openError(shell, Messages.Startup_wrong_java_version, NLS.bind(
-								Messages.Startup_wrong_java_version_expl,
-								new Object[] { System.getProperty("java.home"), Constants.REQUIRED_JAVA_VERSIONS, v })); //$NON-NLS-1$
-					}
-				});
+				shell.getDisplay().syncExec(() -> AcousticMessageDialog.openError(shell, Messages.Startup_wrong_java_version, NLS.bind(
+						Messages.Startup_wrong_java_version_expl,
+						new Object[] { System.getProperty("java.home"), Constants.REQUIRED_JAVA_VERSIONS, v })));
 			}
 		}
 		if (ensureDbOpen(workbench)) {
 			IWorkbenchWindow[] workbenchWindows = workbench.getWorkbenchWindows();
-			workbench.getDisplay().syncExec(new Runnable() {
-				@Override
-				public void run() {
-					for (IWorkbenchWindow window : workbenchWindows)
-						window.getShell().setText(Constants.APPLICATION_NAME + " - " //$NON-NLS-1$
-								+ Core.getCore().getDbManager().getFileName());
-				}
+			workbench.getDisplay().syncExec(() -> {
+				for (IWorkbenchWindow window : workbenchWindows)
+					window.getShell().setText(Constants.APPLICATION_NAME + " - " //$NON-NLS-1$
+							+ Core.getCore().getDbManager().getFileName());
 			});
 
 			for (IWorkbenchWindow window : workbenchWindows)
@@ -266,18 +260,21 @@ public class Startup implements IStartup, IAdaptable {
 				// do nothing
 			}
 		}
+		IDbManager dbManager = coreActivator.getDbManager();
+		if (dbManager.getFile() != null) {
+			workbench.getDisplay().syncExec(() -> OpenCatalogCommand.checkPausedFolderWatch(workbench.getDisplay().getActiveShell(), dbManager));
+			return true;
+		}
 		final File file = previousCatFile;
 		int[] ret = new int[1];
 		while (coreActivator.getDbManager().getFile() == null) {
-			workbench.getDisplay().syncExec(new Runnable() {
-				public void run() {
-					try {
-						IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow() == null
-								? workbenchWindows[0] : workbench.getActiveWorkbenchWindow();
-						ret[0] = new StartupDialog(activeWorkbenchWindow, file).open();
-					} catch (Exception e) {
-						// ignore initial E4 problems
-					}
+			workbench.getDisplay().syncExec(() -> {
+				try {
+					IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow() == null
+							? workbenchWindows[0] : workbench.getActiveWorkbenchWindow();
+					ret[0] = new StartupDialog(activeWorkbenchWindow, file).open();
+				} catch (Exception e) {
+					// ignore initial E4 problems
 				}
 			});
 			if (ret[0] == Dialog.CANCEL)

@@ -40,7 +40,6 @@ public class SetBoundsEffect extends AbstractEffect {
 		easingFunction.init(0, 1, (int) lengthMilli);
 	}
 
-	@Override
 	public void applyEffect(final long currentTime) {
 		if (!control.isDisposed()) {
 			control.setBounds((int) (src.x + diff.x

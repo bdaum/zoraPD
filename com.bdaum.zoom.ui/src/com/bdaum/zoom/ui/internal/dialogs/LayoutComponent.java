@@ -477,7 +477,7 @@ public class LayoutComponent implements IInputValidator {
 	}
 
 	public String isValid(String newText) {
-		if (newText.length() == 0)
+		if (newText.isEmpty())
 			return Messages.LayoutComponent_empty_name;
 		return null;
 	}

@@ -2,8 +2,8 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Hunspell Win32_x64 Fragment
 Bundle-SymbolicName: com.bdaum.zoom.spell.win32.x64
-Bundle-Version: 3.0.0
+Bundle-Version: 3.1.0
 Bundle-Vendor: bdaum industrial communication
-Fragment-Host: com.bdaum.zoom.spell;bundle-version="3.0.0"
+Fragment-Host: com.bdaum.zoom.spell;bundle-version="3.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Eclipse-PlatformFilter: (&(osgi.os=win32)(osgi.arch=x86_64))

@@ -22,7 +22,6 @@ package com.bdaum.zoom.core.internal.lucene;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
@@ -56,12 +55,12 @@ public class NullLuceneService implements ILuceneService {
 		// do nothing
 	}
 
-	public void closeIndex(Object writerToken, File indexPath)
+	public void closeIndexWriter(Object writerToken, File indexPath)
 			throws IOException {
 		// do nothing
 	}
 
-	public void addDocument(Object writerToken, InputStream in, String assetid)
+	public void addDocument(Object writerToken, BufferedImage image, String assetid)
 			throws IOException {
 		// do nothing
 	}

@@ -81,11 +81,7 @@ public class CheckForUpdateJob extends AbstractUpdateJob {
 				Version currentVersion = Platform.getProduct().getDefiningBundle().getVersion();
 				final int result = currentVersion.compareTo(publishedVersion);
 				final Shell shell = adaptable.getAdapter(Shell.class);
-				shell.getDisplay().syncExec(new Runnable() {
-					public void run() {
-						showResult(shell, result, publishedVersion);
-					}
-				});
+				shell.getDisplay().syncExec(() -> showResult(shell, result, publishedVersion));
 			}
 		} catch (MalformedURLException e) {
 			// should never happen

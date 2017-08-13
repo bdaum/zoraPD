@@ -32,6 +32,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -85,6 +86,7 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.report.Report;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.report.internal.ReportActivator;
@@ -295,7 +297,7 @@ public class ReportComponent extends Composite {
 		}
 
 		private void collectDayValues(DefaultCategoryDataset result, IProgressMonitor monitor) {
-			List<Asset> set = fetchAssets(report);
+			List<Asset> set = fetchAssets(report, preview);
 			if (set != null) {
 				int size = set.size();
 				int incr = Math.max(1, size / 100);
@@ -343,7 +345,7 @@ public class ReportComponent extends Composite {
 		}
 
 		private void collectTimeValues(TimeSeriesCollection result, IProgressMonitor monitor) {
-			List<Asset> set = fetchAssets(report);
+			List<Asset> set = fetchAssets(report, preview);
 			if (set != null) {
 				int size = set.size();
 				int incr = Math.max(1, size / 100);
@@ -552,7 +554,7 @@ public class ReportComponent extends Composite {
 		private void collectNumericValues(DefaultCategoryDataset result, IProgressMonitor monitor) {
 			if (qfields == null)
 				return;
-			List<Asset> set = fetchAssets(report);
+			List<Asset> set = fetchAssets(report, preview);
 			if (set != null) {
 				int size = set.size();
 				int incr = Math.max(1, size / 100);
@@ -686,7 +688,7 @@ public class ReportComponent extends Composite {
 			String[] filter = report.getFilter();
 			Set<String> hiddenValues = filter != null && filter.length > 0 ? new HashSet<>(Arrays.asList(filter))
 					: null;
-			List<Asset> set = fetchAssets(report);
+			List<Asset> set = fetchAssets(report, preview);
 			if (set != null) {
 				int size = set.size();
 				int incr = Math.max(1, size / 100);
@@ -749,17 +751,38 @@ public class ReportComponent extends Composite {
 					otherEarnings += removed.getEarnings();
 				}
 			return otherCounts > 0 || otherSales > 0 || otherEarnings != 0
-					? new Cumulated(otherCounts, otherSales, otherEarnings) : null;
+					? new Cumulated(otherCounts, otherSales, otherEarnings)
+					: null;
 		}
 
-		protected List<Asset> fetchAssets(Report report) {
+		protected List<Asset> fetchAssets(Report report, int preview) {
+			List<Asset> assets = null;
 			IDbManager dbManager = Core.getCore().getDbManager();
 			String sourceId = report.getSource();
 			if (sourceId != null) {
 				SmartCollectionImpl sm = dbManager.obtainById(SmartCollectionImpl.class, sourceId);
-				return sm != null ? dbManager.createCollectionProcessor(sm).select(false) : null;
+				assets = sm != null ? dbManager.createCollectionProcessor(sm).select(false) : null;
 			}
-			return dbManager.obtainObjects(Asset.class);
+			if (assets == null)
+				assets = dbManager.obtainObjects(Asset.class);
+			if (report.getSkipOrphans()) {
+				int cnt = 0;
+				List<Asset> nonOrphans = new ArrayList<>(Math.min(1000, preview));
+				IVolumeManager volumeManager = Core.getCore().getVolumeManager();
+				Iterator<Asset> it = assets.iterator();
+				while (it.hasNext()) {
+					Asset asset = it.next();
+					if (volumeManager.findExistingFile(asset, false) != null
+							|| volumeManager.isOffline(asset.getVolume())) {
+						nonOrphans.add(asset);
+						++cnt;
+					}
+					if (cnt >= preview)
+						break;
+				}
+				return nonOrphans;
+			}
+			return assets;
 		}
 
 		private void cumulate(double[] values) {

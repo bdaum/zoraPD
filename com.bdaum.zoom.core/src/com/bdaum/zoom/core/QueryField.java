@@ -72,6 +72,9 @@ import com.bdaum.zoom.program.BatchUtilities;
 
 public class QueryField {
 
+	private static final String[] REFLABELS = new String[] { Messages.QueryField_true_dir,
+			Messages.QueryField_mag_dir };
+	private static final String[] REFVALUES = new String[] { "T", "M" }; //$NON-NLS-1$ //$NON-NLS-2$
 	private static FilterChain keywordFilter;
 	private static IMediaSupport[] mediaSupport;
 
@@ -841,7 +844,7 @@ public class QueryField {
 		@Override
 		protected Object getValue(Asset asset) {
 			String title = asset.getTitle();
-			return (title == null || title.trim().length() == 0) ? asset.getName() : title;
+			return (title == null || title.trim().isEmpty()) ? asset.getName() : title;
 		}
 	};
 
@@ -1189,8 +1192,8 @@ public class QueryField {
 	public static final QueryField EXIF_ARTIST = new QueryField(EXIF_IMAGE, "artist", //$NON-NLS-1$
 			"Artist", //$NON-NLS-1$
 			NS_DC, "creator", //$NON-NLS-1$
-			Messages.QueryField_artist, ACTION_QUERY, PHOTO | EDIT_ALWAYS | QUERY | TEXT | AUTO_DISCRETE | REPORT, CATEGORY_EXIF, T_STRING,
-			CARD_MODIFIABLEBAG, 50, 0f, Float.NaN, ISpellCheckingService.NOSPELLING) {
+			Messages.QueryField_artist, ACTION_QUERY, PHOTO | EDIT_ALWAYS | QUERY | TEXT | AUTO_DISCRETE | REPORT,
+			CATEGORY_EXIF, T_STRING, CARD_MODIFIABLEBAG, 50, 0f, Float.NaN, ISpellCheckingService.NOSPELLING) {
 
 		@Override
 		protected Object getValue(Asset asset) {
@@ -2013,6 +2016,7 @@ public class QueryField {
 		protected double getDouble(Asset asset) {
 			return asset.getGPSLatitude();
 		}
+
 	};
 	public static final QueryField EXIF_GPSLONGITUDE = new QueryField(EXIF_GPS, "gPSLongitude", //$NON-NLS-1$
 			"GPSLongitude", //$NON-NLS-1$
@@ -2024,6 +2028,7 @@ public class QueryField {
 		protected double getDouble(Asset asset) {
 			return asset.getGPSLongitude();
 		}
+		
 	};
 	public static final QueryField EXIF_GPSALTITUDE = new QueryField(EXIF_GPS, "gPSAltitude", //$NON-NLS-1$
 			"GPSAltitude", //$NON-NLS-1$
@@ -2040,26 +2045,72 @@ public class QueryField {
 			"GPSSpeed", //$NON-NLS-1$
 			NS_EXIF, "GPSSpeed", //$NON-NLS-1$
 			Messages.QueryField_GPS_Speed, ACTION_NONE, PHOTO | EDIT_ALWAYS | QUERY | AUTO_LOG | REPORT, CATEGORY_EXIF,
-			T_POSITIVEFLOAT, 1, 3, 10f, 2500f, ISpellCheckingService.NOSPELLING) {
+			T_POSITIVEFLOAT, 1, 3, 3f, 2500f, ISpellCheckingService.NOSPELLING) {
 
 		@Override
 		protected double getDouble(Asset asset) {
 			return asset.getGPSSpeed();
 		}
 	};
+	public static final QueryField EXIF_GPSTRACK = new QueryField(EXIF_GPS, "gPSTrack", //$NON-NLS-1$
+			"GPSTrack", //$NON-NLS-1$
+			NS_EXIF, "GPSTrack", //$NON-NLS-1$
+			Messages.QueryField_move_dir, ACTION_NONE, PHOTO | EDIT_ALWAYS | QUERY | AUTO_LINEAR | REPORT,
+			CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 3, -3f, 360f, ISpellCheckingService.NOSPELLING) {
+
+		@Override
+		protected double getDouble(Asset asset) {
+			return asset.getGPSTrack();
+		}
+	};
+	public static final QueryField EXIF_GPSTRACKREF = new QueryField(EXIF_GPS, "gPSTrackRef", //$NON-NLS-1$
+			"GPSTrackRef", //$NON-NLS-1$
+			NS_EXIF, "GPSTrackRef", //$NON-NLS-1$
+			Messages.QueryField_move_dir_ref, ACTION_NONE, PHOTO | EDIT_ALWAYS | QUERY | AUTO_DISCRETE | REPORT,
+			CATEGORY_EXIF, T_STRING, 1, 1, REFVALUES, REFLABELS, null, 0, ISpellCheckingService.NOSPELLING) {
+
+		@Override
+		protected Object getValue(Asset asset) {
+			return asset.getGPSTrackRef();
+		}
+	};
+
+	public static final QueryField EXIF_GPSIMAGEDIR = new QueryField(EXIF_GPS, "gPSImgDirection", //$NON-NLS-1$
+			"GPSImgDirection", //$NON-NLS-1$
+			NS_EXIF, "GPSImgDirection", //$NON-NLS-1$
+			Messages.QueryField_img_dir, ACTION_QUERY, PHOTO | EDIT_ALWAYS | ESSENTIAL | QUERY | AUTO_LINEAR | REPORT,
+			CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 3, -1f, 360f, ISpellCheckingService.NOSPELLING) {
+
+		@Override
+		protected double getDouble(Asset asset) {
+			return asset.getGPSImgDirection();
+		}
+	};
+	public static final QueryField EXIF_GPSIMAGEDIRREF = new QueryField(EXIF_GPS, "gPSImgDirectionRef", //$NON-NLS-1$
+			"GPSImgDirectionRef", //$NON-NLS-1$
+			NS_EXIF, "GPSImgDirectionRef", //$NON-NLS-1$
+			Messages.QueryField_img_dir_ref, ACTION_NONE, PHOTO | EDIT_ALWAYS | QUERY | AUTO_DISCRETE | REPORT,
+			CATEGORY_EXIF, T_STRING, 1, 1, REFVALUES, REFLABELS, null, 0, ISpellCheckingService.NOSPELLING) {
+
+		@Override
+		protected Object getValue(Asset asset) {
+			return asset.getGPSImgDirectionRef();
+		}
+	};
 	public static final QueryField EXIF_GPSLOCATIONDISTANCE = new QueryField(EXIF_GPS, "$gpsLocationDistance", //$NON-NLS-1$
 			null, null, null, Messages.QueryField_Distance_from_location, ACTION_NONE, PHOTO | EDIT_NEVER,
-			CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 3, null, null, Format.distanceFormatter, -0.1f,
+			CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 3, null, null, Format.distanceFormatter, 3f,
 			ISpellCheckingService.NOSPELLING) {
 
 		@Override
 		protected double getDouble(Asset asset) {
+			// TODO kann das weg?
 			double gpsLatitude = asset.getGPSLatitude();
 			if (Double.isNaN(gpsLatitude))
-				return gpsLatitude;
+				return Double.NaN;
 			double gpsLongitude = asset.getGPSLongitude();
 			if (Double.isNaN(gpsLongitude))
-				return gpsLongitude;
+				return Double.NaN;
 			Object loc = IPTC_LOCATIONCREATED.obtainFieldValue(asset);
 			if (loc == null)
 				return Double.NaN;
@@ -2891,6 +2942,25 @@ public class QueryField {
 		return id == null ? null : fieldMap.get(id);
 	}
 
+//	protected static void updateDirDist(Asset asset) {
+//		double lat = asset.getGPSLatitude();
+//		double lon = asset.getGPSLongitude();
+//		if (Double.isNaN(lat) || Double.isNaN(lon)) {
+//			asset.setGPSImgDirection(Double.NaN);
+//			asset.setGPSDestDistance(Double.NaN);
+//		} else {
+//			double destLat = asset.getGPSDestLatitude();
+//			double destLon = asset.getGPSDestLongitude();
+//			if (Double.isNaN(destLat) || Double.isNaN(destLon)) {
+//				asset.setGPSDestDistance(Double.NaN);
+//			} else {
+//				asset.setGPSDestDistance(Core.distance(lat, lon, destLat, destLon, 'k'));
+//				asset.setGPSImgDirection(Core.bearing(lat, lon, destLat, destLon));
+//				asset.setGPSImgDirectionRef("T"); //$NON-NLS-1$
+//			}
+//		}
+//	}
+
 	/**
 	 * Finds the QueryField instance belonging to an object sub field name
 	 *
@@ -3259,7 +3329,7 @@ public class QueryField {
 	 * @return true if field has a label
 	 */
 	public boolean hasLabel() {
-		return label != null && label.length() > 0;
+		return label != null && !label.isEmpty();
 	}
 
 	/**
@@ -3269,7 +3339,7 @@ public class QueryField {
 	 * @return true if field has a label and a key
 	 */
 	public boolean isUiField() {
-		return label != null && label.length() > 0 && key != null;
+		return hasLabel() && key != null;
 	}
 
 	/**
@@ -3279,7 +3349,7 @@ public class QueryField {
 	 * @return field label
 	 */
 	public String getLabel() {
-		if (label != null && label.length() > 0 && label.charAt(0) == '{') {
+		if (hasLabel() && label.charAt(0) == '{') {
 			ICore core = Core.getCore();
 			if (core != null) {
 				Meta meta = core.getDbManager().getMeta(true);
@@ -3752,7 +3822,7 @@ public class QueryField {
 	 */
 	public boolean isUndefined(String s) {
 		if (!(enumeration instanceof String[]))
-			return s.length() == 0;
+			return s.isEmpty();
 		String[] ids = (String[]) enumeration;
 		for (int j = 0; j < ids.length; j++)
 			if (ids[j].equals(s))

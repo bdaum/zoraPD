@@ -88,64 +88,61 @@ public class MapDisplay implements ILocationDisplay {
 						&& result.getLongitude() != null
 						&& !Double.isNaN(result.getLongitude())) {
 					BusyIndicator.showWhile(activeWorkbenchWindow.getShell()
-							.getDisplay(), new Runnable() {
-
-						public void run() {
-							try {
-								Place place = GpsUtilities.fetchPlaceInfo(
-										result.getLatitude(),
-										result.getLongitude());
-								if (place != null) {
-									if (!Double.isNaN(place.getLat())
-											&& !Double.isNaN(place.getLon())) {
-										double elevation = GpsUtilities
-												.fetchElevation(place.getLat(),
-														place.getLon());
-										if (!Double.isNaN(elevation))
-											place.setElevation(elevation);
+							.getDisplay(), () -> {
+								try {
+									Place place = GpsUtilities.fetchPlaceInfo(
+											result.getLatitude(),
+											result.getLongitude());
+									if (place != null) {
+										if (!Double.isNaN(place.getLat())
+												&& !Double.isNaN(place.getLon())) {
+											double elevation = GpsUtilities
+													.fetchElevation(place.getLat(),
+															place.getLon());
+											if (!Double.isNaN(elevation))
+												place.setElevation(elevation);
+										}
+										GpsUtilities.transferPlacedata(place,
+												result);
 									}
-									GpsUtilities.transferPlacedata(place,
-											result);
+								} catch (SocketTimeoutException e1) {
+									GpsActivator
+											.getDefault()
+											.logError(
+													Messages.getString("MapDisplay.Naming_service_connection_timed_out"), //$NON-NLS-1$
+													e1);
+								} catch (HttpException e2) {
+									GpsActivator
+											.getDefault()
+											.logError(
+													Messages.getString("MapDisplay.http_exception"), //$NON-NLS-1$
+													e2);
+								} catch (IOException e3) {
+									GpsActivator
+											.getDefault()
+											.logError(
+													Messages.getString("MapDisplay.Error_when_parsing"), //$NON-NLS-1$
+													e3);
+								} catch (SAXException e4) {
+									GpsActivator
+											.getDefault()
+											.logError(
+													Messages.getString("MapDisplay.XML_problem_when_parsing"), //$NON-NLS-1$
+													e4);
+								} catch (WebServiceException e5) {
+									GpsActivator
+											.getDefault()
+											.logError(
+													Messages.getString("MapDisplay.Webservice_problem_when_naming_places"), //$NON-NLS-1$
+													e5);
+								} catch (ParserConfigurationException e6) {
+									GpsActivator
+											.getDefault()
+											.logError(
+													Messages.getString("MapDisplay.internal_error_configuring_sax"), //$NON-NLS-1$
+													e6);
 								}
-							} catch (SocketTimeoutException e) {
-								GpsActivator
-										.getDefault()
-										.logError(
-												Messages.getString("MapDisplay.Naming_service_connection_timed_out"), //$NON-NLS-1$
-												e);
-							} catch (HttpException e) {
-								GpsActivator
-										.getDefault()
-										.logError(
-												Messages.getString("MapDisplay.http_exception"), //$NON-NLS-1$
-												e);
-							} catch (IOException e) {
-								GpsActivator
-										.getDefault()
-										.logError(
-												Messages.getString("MapDisplay.Error_when_parsing"), //$NON-NLS-1$
-												e);
-							} catch (SAXException e) {
-								GpsActivator
-										.getDefault()
-										.logError(
-												Messages.getString("MapDisplay.XML_problem_when_parsing"), //$NON-NLS-1$
-												e);
-							} catch (WebServiceException e) {
-								GpsActivator
-										.getDefault()
-										.logError(
-												Messages.getString("MapDisplay.Webservice_problem_when_naming_places"), //$NON-NLS-1$
-												e);
-							} catch (ParserConfigurationException e) {
-								GpsActivator
-										.getDefault()
-										.logError(
-												Messages.getString("MapDisplay.internal_error_configuring_sax"), //$NON-NLS-1$
-												e);
-							}
-						}
-					});
+							});
 					return result;
 				}
 			}

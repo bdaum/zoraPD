@@ -143,7 +143,7 @@ public class EditWallDialog extends ZTitleAreaDialog {
 	}
 
 	private boolean validate() {
-		if (nameField.getText().length() == 0) {
+		if (nameField.getText().isEmpty()) {
 			setErrorMessage(Messages.EditWallDialog_specify_location_name);
 			return false;
 		}

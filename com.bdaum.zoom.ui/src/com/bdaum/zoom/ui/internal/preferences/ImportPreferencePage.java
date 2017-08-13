@@ -281,7 +281,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 			FileEditor fileEditor = basicsFileEditors.get(c.getId());
 			if (fileEditor != null) {
 				String path = preferenceStore.getString(c.getPathId());
-				if (path.length() == 0) {
+				if (path.isEmpty()) {
 					String editorName = c.getName();
 					if (editorName != null) {
 						FileEditorMapping editorMapping = null;
@@ -528,6 +528,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 		rccomp.setLayout(new GridLayout(2, false));
 		new Label(rccomp, SWT.NONE).setText(Messages
 				.getString("ImportPreferencePage.raw_converter2")); //$NON-NLS-1$
+		
 		rcViewer = new ComboViewer(rccomp, SWT.NONE);
 		rcViewer.setContentProvider(ArrayContentProvider.getInstance());
 		rcViewer.setLabelProvider(new LabelProvider() {
@@ -902,7 +903,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 		boolean enabled = rc != null && rc.isDetectors()
 				&& processRecipesButton.getSelection();
 		String usesRecipes = rc == null ? "" : rc.getUsesRecipes(); //$NON-NLS-1$
-		archiveRecipesButton.setVisible(enabled || usesRecipes.length() > 0);
+		archiveRecipesButton.setVisible(enabled || !usesRecipes.isEmpty());
 		Set<String> newSelection = new HashSet<String>(selectedRecipeDetectors);
 		boolean sync = rc != null
 				&& (rc != previousRawConverter
@@ -918,7 +919,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 		IRawConverter rc = (IRawConverter) ((IStructuredSelection) rcViewer
 				.getSelection()).getFirstElement();
 		boolean visible = rc != null
-				&& (rc.getUsesRecipes().length() > 0 || (rc.isDetectors()
+				&& (!rc.getUsesRecipes().isEmpty() || (rc.isDetectors()
 						&& processRecipesButton.getEnabled() && processRecipesButton
 							.getSelection()))
 				&& Core.getCore().getDbManager().getMeta(true)
@@ -1124,7 +1125,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 					&& !Constants.RAWIMPORT_ONLYRAW.equals(selection
 							.getFirstElement())) {
 				String fn = dngpathEditor.getText();
-				if (fn.length() > 0 && !new File(fn).exists())
+				if (!fn.isEmpty() && !new File(fn).exists())
 					return Messages
 							.getString("ImportPreferencePage.dng_converter_does_not_exist"); //$NON-NLS-1$
 			}
@@ -1133,7 +1134,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 				.getSelection()).getFirstElement();
 		if (c != null) {
 			String fn = basicsFileEditors.get(c.getId()).getText();
-			if (fn.length() > 0) {
+			if (!fn.isEmpty()) {
 				if (!new File(fn).exists())
 					return NLS
 							.bind(Messages

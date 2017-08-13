@@ -1006,12 +1006,12 @@ public class CollectionProcessor implements ICollectionProcessor {
 			dist *= 1.609344;
 		}
 		double b = dist / EARTHRADIUS;
-		double az = Core.deg2rad(azimuth);
-		double l1 = Core.deg2rad(90 - lat1);
+		double az = Math.toRadians(azimuth);
+		double l1 = Math.toRadians(90 - lat1);
 		double sin_b = Math.sin(b);
 		double a = Math.acos(Math.cos(b) * Math.cos(l1) + Math.sin(l1) * sin_b * Math.cos(az));
-		return new Point2D.Double(90 - Core.rad2deg(a),
-				Core.rad2deg(Math.asin(sin_b * Math.sin(az) / Math.sin(a))) + lon1);
+		return new Point2D.Double(90 - Math.toDegrees(a),
+				Math.toDegrees(Math.asin(sin_b * Math.sin(az) / Math.sin(a))) + lon1);
 	}
 
 	protected static Constraint applyRelation(DbManager dbManager, boolean lex, String path, String field, int rel,

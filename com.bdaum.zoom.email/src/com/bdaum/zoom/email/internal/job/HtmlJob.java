@@ -193,7 +193,7 @@ public class HtmlJob extends AbstractExportJob {
 
 	private String generateTitle() {
 		StringBuilder sb = new StringBuilder();
-		if (layout.getTitle().length() > 0) {
+		if (!layout.getTitle().isEmpty()) {
 			String title = PageProcessor.computeTitle(layout.getTitle(), fileName, now, assets.size(), 1, 1, collection,
 					meta);
 			sb.append("\t<h1 align=\"center\">").append(title) //$NON-NLS-1$
@@ -204,7 +204,7 @@ public class HtmlJob extends AbstractExportJob {
 
 	private String generateSubtitle() {
 		StringBuilder sb = new StringBuilder();
-		if (layout.getSubtitle().length() > 0) {
+		if (!layout.getSubtitle().isEmpty()) {
 			String title = PageProcessor.computeTitle(layout.getSubtitle(), fileName, now, assets.size(), 1, 1,
 					collection, meta);
 			sb.append("\t<h2 align=\"center\">").append(title) //$NON-NLS-1$
@@ -242,9 +242,9 @@ public class HtmlJob extends AbstractExportJob {
 		StringBuilder sb = new StringBuilder();
 		sb.append("\t\t\t<td>\n"); //$NON-NLS-1$
 		sb.append(generateDiv(generateImg(k), "img")); //$NON-NLS-1$
-		if (layout.getCaption1().length() > 0)
+		if (!layout.getCaption1().isEmpty())
 			sb.append(generateDiv(generateCaption(k, layout.getCaption1()), "caption1")); //$NON-NLS-1$
-		if (layout.getCaption2().length() > 0)
+		if (!layout.getCaption2().isEmpty())
 			sb.append(generateDiv(generateCaption(k, layout.getCaption2()), "caption2")); //$NON-NLS-1$
 		sb.append("\t\t\t</td>\n"); //$NON-NLS-1$
 		return sb.toString();
@@ -268,7 +268,7 @@ public class HtmlJob extends AbstractExportJob {
 		sb.append("\t\t\t\t\t<img src=\"images/").append(k) //$NON-NLS-1$
 				.append((mode == Constants.FORMAT_WEBP ? ".webp\"" : ".jpg\"")); //$NON-NLS-1$ //$NON-NLS-2$
 		String alt = layout.getAlt();
-		if (alt.length() > 0)
+		if (!alt.isEmpty())
 			sb.append(" alt=\"").append(generateCaption(k, alt)).append("\""); //$NON-NLS-1$ //$NON-NLS-2$
 		sb.append("/>\n"); //$NON-NLS-1$
 		return sb.toString();

@@ -222,15 +222,13 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 					if (changes == null || changes.hasChanged(asset)) {
 						Shell shell = getSite().getShell();
 						if (!shell.isDisposed())
-							shell.getDisplay().asyncExec(new Runnable() {
-								public void run() {
-									if (!getControl().isDisposed()) {
-										resetCaches();
-										if (node != null)
-											qfvisitor.visit(node);
-										else
-											refresh();
-									}
+							shell.getDisplay().asyncExec(() -> {
+								if (!shell.isDisposed()) {
+									resetCaches();
+									if (node != null)
+										qfvisitor.visit(node);
+									else
+										refresh();
 								}
 							});
 						break;
@@ -418,7 +416,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 					Integer rating = (Integer) ((IStructuredSelection) event.getSelection()).getFirstElement();
 					if (rating != null && rating >= 0) {
 						String text = ratedByField.getText().trim();
-						if (text.length() == 0 || "-".equals(text)) //$NON-NLS-1$
+						if (text.isEmpty() || "-".equals(text)) //$NON-NLS-1$
 							ratedByField.setText(System.getProperty("user.name")); //$NON-NLS-1$
 					}
 				}
@@ -815,7 +813,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 				public void modifyText(ModifyEvent event) {
 					if (!updateSet.contains(qfield)) {
 						String text = textField.getText().trim();
-						if (text.length() == 0) {
+						if (text.isEmpty()) {
 							putValue(qfield, Double.NaN);
 							hideFieldDeco(textField);
 						} else {
@@ -1247,7 +1245,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 					setControlEnabled(control, value != QueryField.VALUE_NOTHING);
 					String text = qfield.value2text(value, CLICK_TO_VIEW_DETAILS);
 					if (text != null && value != QueryField.VALUE_MIXED) {
-						if (text.length() > 0 && value != QueryField.VALUE_NOTHING
+						if (!text.isEmpty() && value != QueryField.VALUE_NOTHING
 								&& text != Format.MISSINGENTRYSTRING) {
 							if (widget instanceof ComboViewer)
 								((ComboViewer) widget).setSelection(new StructuredSelection(value));

@@ -109,7 +109,7 @@ public final class AssetDragSourceListener implements DragSourceListener {
 						files.add(absolutePath);
 					else {
 						String volume = asset.getVolume();
-						if (volume != null && volume.length() > 0)
+						if (volume != null && !volume.isEmpty())
 							volumes.add(volume);
 						errands.add(absolutePath);
 					}
@@ -134,7 +134,7 @@ public final class AssetDragSourceListener implements DragSourceListener {
 
 	public void dragFinished(DragSourceEvent event) {
 		UiActivator.getDefault().dragFinished();
-		if (errands.size() > 0)
+		if (!errands.isEmpty())
 			AcousticMessageDialog.openWarning(host.getAdapter(Shell.class),
 					Messages.getString("AbstractGalleryView.dragging_files"), //$NON-NLS-1$
 					errands.size() == 1

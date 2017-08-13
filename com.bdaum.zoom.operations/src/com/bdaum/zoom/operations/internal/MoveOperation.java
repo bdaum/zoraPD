@@ -128,12 +128,10 @@ public class MoveOperation extends DbOperation {
 								final List<Object> toBeStored = new ArrayList<Object>();
 								toBeStored.add(backup);
 								copyRemoteAsset(asset1, assetOrigin, toBeStored, fileInfo, newFile);
-								if (!storeSafely(new Runnable() {
-									public void run() {
-										dbManager.storeTrash(backup);
-										for (Object o : toBeStored)
-											dbManager.store(o);
-									}
+								if (!storeSafely(() -> {
+									dbManager.storeTrash(backup);
+									for (Object o : toBeStored)
+										dbManager.store(o);
 								}, 1))
 									return close(info);
 								dbManager.createFolderHierarchy(asset1);
@@ -175,7 +173,7 @@ public class MoveOperation extends DbOperation {
 							dbManager.createFolderHierarchy(asset1);
 						} else {
 							String volume = asset1.getVolume();
-							if (volume != null && volume.length() > 0)
+							if (volume != null && !volume.isEmpty())
 								volumes.add(volume);
 							errands.add(file.toString());
 							if (aMonitor.isCanceled())
@@ -190,7 +188,7 @@ public class MoveOperation extends DbOperation {
 		}
 		fireAssetsModified(null, null);
 		fireStructureModified();
-		if (errands.size() > 0) {
+		if (!errands.isEmpty()) {
 			final IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
 			if (errorHandler != null)
 				errorHandler.showInformation(Messages.getString("MoveOperation.Unable_to_move"), //$NON-NLS-1$
@@ -254,17 +252,21 @@ public class MoveOperation extends DbOperation {
 					URI u = Core.getVoicefileURI(file);
 					voiceOrigURI = u == null ? null : u.toString();
 					voiceTargetURI = Core.getVoicefileURI(newFile);
-				} else
+				} else {
 					voiceOrigURI = voiceFileURI;
+					volume = movedAsset.getVoiceVolume();
+				}
 				if (voiceOrigURI != null) {
-					File voiceTarget = null;
-					voiceTarget = new File(voiceTargetURI);
-					voiceTarget.delete();
-					fileWatchManager.ignore(voiceTarget, opId);
-					sub = SubMonitor.convert(aMonitor, 1);
-					FileInfo voiceInfo = peerService.getFileInfo(assetOrigin, voiceOrigURI, volume);
-					peerService.transferRemoteFile(sub, assetOrigin, voiceInfo, voiceTarget);
-					movedAsset.setVoiceFileURI("."); //$NON-NLS-1$
+					if (!voiceOrigURI.startsWith("?")) { //$NON-NLS-1$
+						File voiceTarget = null;
+						voiceTarget = new File(voiceTargetURI);
+						voiceTarget.delete();
+						fileWatchManager.ignore(voiceTarget, opId);
+						sub = SubMonitor.convert(aMonitor, 1);
+						FileInfo voiceInfo = peerService.getFileInfo(assetOrigin, voiceOrigURI, volume);
+						peerService.transferRemoteFile(sub, assetOrigin, voiceInfo, voiceTarget);
+						movedAsset.setVoiceFileURI("."); //$NON-NLS-1$
+					}
 				} else
 					movedAsset.setVoiceFileURI(null);
 			} else
@@ -441,12 +443,10 @@ public class MoveOperation extends DbOperation {
 		cal.setTime(now);
 		if (year != cal.get(Calendar.YEAR))
 			meta.setLastYearSequenceNo(0);
-		if (storeSafely(new Runnable() {
-			public void run() {
-				previousImport = dbManager.createLastImportCollection(now, false,
-						Messages.getString("MoveOperation.import_caused")); //$NON-NLS-1$
-				dbManager.store(meta);
-			}
+		if (storeSafely(() -> {
+			previousImport = dbManager.createLastImportCollection(now, false,
+					Messages.getString("MoveOperation.import_caused")); //$NON-NLS-1$
+			dbManager.store(meta);
 		}, 1))
 			fireStructureModified();
 	}
@@ -613,14 +613,12 @@ public class MoveOperation extends DbOperation {
 				toBeStored.clear();
 				Asset asset = backup.restore(dbManager, opId, aMonitor, toBeStored, toBeDeleted);
 				final FileLocationBackup t = backup;
-				if (storeSafely(new Runnable() {
-					public void run() {
-						dbManager.deleteTrash(t);
-						for (Object o : toBeDeleted)
-							dbManager.delete(o);
-						for (Object o : toBeStored)
-							dbManager.store(o);
-					}
+				if (storeSafely(() -> {
+					dbManager.deleteTrash(t);
+					for (Object o1 : toBeDeleted)
+						dbManager.delete(o1);
+					for (Object o2 : toBeStored)
+						dbManager.store(o2);
 				}, 1) && asset != null)
 					changed |= dbManager.createFolderHierarchy(asset);
 			}
@@ -651,6 +649,10 @@ public class MoveOperation extends DbOperation {
 	@Override
 	public int getPriority() {
 		return assets.size() > 3 ? Job.LONG : Job.SHORT;
+	}
+
+	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
+		//do nothing
 	}
 
 }

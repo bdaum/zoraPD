@@ -77,7 +77,7 @@ public class GeoNamesService implements IGeonamingService {
 			throws IOException, UnknownHostException, HttpException {
 		String parms = Platform.getPreferencesService().getString(COM_BDAUM_ZOOM_GPS_NAMING_GEONAMING,
 				PreferenceConstants.GEONAMESPARMS, "", null); //$NON-NLS-1$
-		if (parms != null && parms.length() > 0) {
+		if (parms != null && !parms.isEmpty()) {
 			if (parms.startsWith("&")) //$NON-NLS-1$
 				query += parms;
 			else

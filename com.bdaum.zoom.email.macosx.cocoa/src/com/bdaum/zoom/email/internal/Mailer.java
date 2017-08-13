@@ -47,19 +47,14 @@ public class Mailer extends AbstractMailer {
 	private static final String BODYVAR = "$body$"; //$NON-NLS-1$
 	private static final String ATTACHVAR = "$attach$"; //$NON-NLS-1$
 
-
 	@Override
-	protected boolean sendMailWithAttachments(String label, List<String> to,
-			List<String> cc, List<String> bcc, String subject, String message,
-			List<String> attachments, List<String> originalNames) {
+	protected boolean sendMailWithAttachments(String label, List<String> to, List<String> cc, List<String> bcc,
+			String subject, String message, List<String> attachments, List<String> originalNames) {
 		/* Create script from template */
 		try {
-			URL url = FileLocator.find(Activator.getDefault().getBundle(),
-					new Path("scripts/mail.txt"), null); //$NON-NLS-1$
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					url.openStream()));
+			URL url = FileLocator.find(Activator.getDefault().getBundle(), new Path("scripts/mail.txt"), null); //$NON-NLS-1$
 			StringBuilder sb = new StringBuilder();
-			try {
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
 				while (true) {
 					String line = reader.readLine();
 					if (line == null)
@@ -68,8 +63,6 @@ public class Mailer extends AbstractMailer {
 						sb.append('\n');
 					sb.append(line);
 				}
-			} finally {
-				reader.close();
 			}
 			replaceText(sb, TOVAR, Core.toStringList(quote(to), ','));
 			replaceText(sb, CCVAR, Core.toStringList(quote(cc), ','));
@@ -77,10 +70,8 @@ public class Mailer extends AbstractMailer {
 			replaceText(sb, SUBJECTVAR, subject);
 			replaceText(sb, BODYVAR, message);
 			replaceText(sb, ATTACHVAR, Core.toStringList(quote(attachments), ','));
-
 			String[] parms = new String[] { "osascript", "-e", sb.toString() }; //$NON-NLS-1$ //$NON-NLS-2$
-			BatchActivator.executeCommand(parms, null, label, IStatus.OK,
-					IStatus.WARNING, 3000L, "UTF-8"); //$NON-NLS-1$
+			BatchActivator.executeCommand(parms, null, label, IStatus.OK, IStatus.WARNING, 3000L, "UTF-8"); //$NON-NLS-1$
 		} catch (Throwable e) {
 			return false;
 		}
@@ -90,7 +81,7 @@ public class Mailer extends AbstractMailer {
 	private static void replaceText(StringBuilder sb, String var, String text) {
 		int p = sb.indexOf(var);
 		if (p >= 0) {
-			if (text == null || text.length() == 0)
+			if (text == null || text.isEmpty())
 				sb.delete(p, p + var.length());
 			else
 				sb.replace(p, p + var.length(), text);
@@ -108,12 +99,11 @@ public class Mailer extends AbstractMailer {
 	}
 
 	@Override
-	protected void sendDesktopMail(StringBuilder mailto,
-			List<String> attachments) throws URISyntaxException, IOException {
+	protected void sendDesktopMail(StringBuilder mailto, List<String> attachments)
+			throws URISyntaxException, IOException {
 		java.awt.Desktop.getDesktop().mail(new URI(mailto.toString()));
 		if (attachments != null && !attachments.isEmpty())
 			BatchUtilities.showInFolder(new File(attachments.get(0)));
 	}
-
 
 }

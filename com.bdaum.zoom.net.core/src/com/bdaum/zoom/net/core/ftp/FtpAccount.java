@@ -133,7 +133,7 @@ public class FtpAccount {
 		StringBuilder sb = new StringBuilder(4096);
 		for (FtpAccount ftpAccount : ftpAccounts)
 			if (ftpAccount.getName() != null
-					&& ftpAccount.getName().length() > 0)
+					&& !ftpAccount.getName().isEmpty())
 				sb.append(ftpAccount.toString()).append(SEP);
 		BatchUtilities.putPreferences(InstanceScope.INSTANCE
 				.getNode(Activator.PLUGIN_ID), PreferenceConstants.FTPACCOUNTS, sb.toString());
@@ -212,7 +212,7 @@ public class FtpAccount {
 	}
 
 	private static void appendString(StringBuilder sb, String key, String value) {
-		if (value != null && value.length() > 0)
+		if (value != null && !value.isEmpty())
 			sb.append(FIELDSEP).append(key).append('=').append(value);
 	}
 
@@ -510,13 +510,13 @@ public class FtpAccount {
 	 */
 	public String getWebUrl() {
 		String wh = getWebHost();
-		if (wh == null || wh.length() == 0)
+		if (wh == null || wh.isEmpty())
 			return null;
 		wh = Core.furnishWebUrl(wh);
 		String pfx = getPrefix();
 		String dir = getDirectory();
 		if (dir != null) {
-			if (pfx != null && pfx.length() > 0 && dir.startsWith(pfx))
+			if (pfx != null && !pfx.isEmpty() && dir.startsWith(pfx))
 				dir = dir.substring(pfx.length());
 			dir = stripSlashes(dir);
 			wh += '/' + dir;
@@ -575,7 +575,7 @@ public class FtpAccount {
 				ftp.connect(getHost());
 			if (isAnonymous())
 				ftp.login(ANONYMOUS, GUEST);
-			else if (getSubAccount() != null && getSubAccount().length() > 0)
+			else if (getSubAccount() != null && !getSubAccount().isEmpty())
 				ftp.login(getLogin(), getPassword(), getSubAccount());
 			else
 				ftp.login(getLogin(), getPassword());

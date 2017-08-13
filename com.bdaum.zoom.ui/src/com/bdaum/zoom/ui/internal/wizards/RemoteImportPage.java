@@ -96,7 +96,7 @@ public class RemoteImportPage extends ColoredWizardPage {
 	@Override
 	protected void validatePage() {
 		String url = combo.getText();
-		if (url.length() == 0) {
+		if (url.isEmpty()) {
 			setErrorMessage(Messages.RemoteImportPage_url_must_not_be_empty);
 			setPageComplete(false);
 			return;

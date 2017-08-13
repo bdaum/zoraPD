@@ -8,10 +8,8 @@
  * Contributors :
  *    Nicolas Richeton (nicolas.richeton@gmail.com) - initial API and implementation
  *    Tom Schindl      (tom.schindl@bestsolution.at) - fix for bug 174933
- *    Berthold Daum (selection tuning marked with bd,, marked with bd)
- *    Berthold Daum (allowed for count change during update(), marked with bd2)
- *    Berthold Daum (getOrderedSelection() marked with bd3)
-*******************************************************************************/
+ *    Berthold Daum (getOrderedSelection() marked with bd3, external scrolling bd4)
+ *******************************************************************************/
 
 package org.eclipse.nebula.widgets.gallery;
 
@@ -34,6 +32,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.TreeListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -97,12 +96,11 @@ import org.eclipse.swt.widgets.TypedListener;
  * <p>
  * NOTE: THIS WIDGET AND ITS API ARE STILL UNDER DEVELOPMENT.
  * </p>
- *
+ * 
  * @author Nicolas Richeton (nicolas.richeton@gmail.com)
  * @contributor Peter Centgraf (bugs 212071, 212073)
  * @contributor Robert Handschmann (bug 215817)
- * @contributor Berthold Daum (selection tuning marked with bd, dynamic count
- *              changes marked with bd2, getOrderedSelection() marked with bd3)
+ * @contributor Berthold Daum (bug 306144 - selection tuning)
  */
 
 public class Gallery extends Canvas {
@@ -118,8 +116,10 @@ public class Gallery extends Canvas {
 
 	private GalleryItem[] selection = null;
 
-	// private int[] selectionIndices = null; // bd
-	private int[] selectionFlags = null; // bd
+	/**
+	 * Selection bit flags. Each 'int' contains flags for 32 items.
+	 */
+	protected int[] selectionFlags = null;
 
 	/**
 	 * Virtual mode flag.
@@ -191,6 +191,27 @@ public class Gallery extends Canvas {
 	 */
 	private boolean mouseClickHandled = false;
 
+	/**
+	 * Background color, if Control#getBackground() is not used.
+	 * 
+	 * @see Gallery#useControlColors
+	 */
+	private Color backgroundColor;
+
+	/**
+	 * Foreground color, if Control#getForeground() is not used.
+	 * 
+	 * @see Gallery#useControlColors
+	 */
+	private Color foregroundColor;
+
+	/**
+	 * If set to true, the gallery will get colors from parent Control. This may
+	 * generate more objects and slightly slow down the application. See Bug
+	 * 279822 : https://bugs.eclipse.org/bugs/show_bug.cgi?id=279822
+	 */
+	private boolean useControlColors = false;
+
 	AbstractGalleryItemRenderer itemRenderer;
 
 	AbstractGalleryGroupRenderer groupRenderer;
@@ -198,7 +219,7 @@ public class Gallery extends Canvas {
 	/**
 	 * Return the number of root-level items in the receiver. Does not include
 	 * children.
-	 *
+	 * 
 	 * @return
 	 */
 	public int getItemCount() {
@@ -213,7 +234,7 @@ public class Gallery extends Canvas {
 	/**
 	 * Sets the number of root-level items contained in the receiver. Only work
 	 * in VIRTUAL mode.
-	 *
+	 * 
 	 * @return
 	 */
 	public void setItemCount(int count) {
@@ -244,7 +265,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Get current item renderer
-	 *
+	 * 
 	 * @return
 	 */
 	public AbstractGalleryItemRenderer getItemRenderer() {
@@ -255,7 +276,7 @@ public class Gallery extends Canvas {
 	/**
 	 * Set item receiver. Usually, this does not trigger gallery update. redraw
 	 * must be called right after setGroupRenderer to reflect this change.
-	 *
+	 * 
 	 * @param itemRenderer
 	 */
 	public void setItemRenderer(AbstractGalleryItemRenderer itemRenderer) {
@@ -276,10 +297,10 @@ public class Gallery extends Canvas {
 	 * When <code>widgetSelected</code> is called, the item field of the event
 	 * object is valid.
 	 * </p>
-	 *
+	 * 
 	 * @param listener
 	 *            the listener which should be notified
-	 *
+	 * 
 	 * @exception IllegalArgumentException
 	 *                <ul>
 	 *                <li>ERROR_NULL_ARGUMENT - if the listener is null</li>
@@ -291,7 +312,7 @@ public class Gallery extends Canvas {
 	 *                <li>ERROR_THREAD_INVALID_ACCESS - if not called from the
 	 *                thread that created the receiver</li>
 	 *                </ul>
-	 *
+	 * 
 	 * @see SelectionListener
 	 * @see #removeSelectionListener
 	 * @see SelectionEvent
@@ -309,10 +330,10 @@ public class Gallery extends Canvas {
 	/**
 	 * Removes the listener from the collection of listeners who will be
 	 * notified when the receiver's selection changes.
-	 *
+	 * 
 	 * @param listener
 	 *            the listener which should no longer be notified
-	 *
+	 * 
 	 * @exception IllegalArgumentException
 	 *                <ul>
 	 *                <li>ERROR_NULL_ARGUMENT - if the listener is null</li>
@@ -324,7 +345,7 @@ public class Gallery extends Canvas {
 	 *                <li>ERROR_THREAD_INVALID_ACCESS - if not called from the
 	 *                thread that created the receiver</li>
 	 *                </ul>
-	 *
+	 * 
 	 * @see SelectionListener
 	 * @see #addSelectionListener(SelectionListener)
 	 */
@@ -337,7 +358,7 @@ public class Gallery extends Canvas {
 	/**
 	 * Removes the listener from the collection of listeners who will be
 	 * notified when items in the receiver are expanded or collapsed.
-	 *
+	 * 
 	 * @param listener
 	 */
 	public void removeTreeListener(SelectionListener listener) {
@@ -349,7 +370,7 @@ public class Gallery extends Canvas {
 	 * Adds the listener to the collection of listeners who will be notified
 	 * when an item in the receiver is expanded or collapsed by sending it one
 	 * of the messages defined in the TreeListener interface.
-	 *
+	 * 
 	 * @param listener
 	 */
 	public void addTreeListener(TreeListener listener) {
@@ -361,7 +382,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Send SWT.PaintItem for one item.
-	 *
+	 * 
 	 * @param item
 	 * @param index
 	 * @param gc
@@ -387,7 +408,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * #see {@link #setLowQualityOnUserAction(boolean)}
-	 *
+	 * 
 	 * @return
 	 */
 	public boolean isLowQualityOnUserAction() {
@@ -399,7 +420,7 @@ public class Gallery extends Canvas {
 	 * while the user is resizing or scrolling the gallery. This enables faster
 	 * redraws at the cost of lower image quality. When every redraw is finished
 	 * a last one will be issued using the default (higher) quality.
-	 *
+	 * 
 	 * @see #setHigherQualityDelay(int)
 	 * @param lowQualityOnUserAction
 	 */
@@ -418,7 +439,7 @@ public class Gallery extends Canvas {
 	/**
 	 * Set the delay after the last user action before the redraw at higher
 	 * quality is triggered
-	 *
+	 * 
 	 * @see #setLowQualityOnUserAction(boolean)
 	 * @param higherQualityDelay
 	 */
@@ -438,7 +459,7 @@ public class Gallery extends Canvas {
 	 * Sets the gallery's interpolation setting to the parameter, which must be
 	 * one of <code>SWT.DEFAULT</code>, <code>SWT.NONE</code>,
 	 * <code>SWT.LOW</code> or <code>SWT.HIGH</code>.
-	 *
+	 * 
 	 * @param interpolation
 	 */
 	public void setInterpolation(int interpolation) {
@@ -454,11 +475,11 @@ public class Gallery extends Canvas {
 	}
 
 	/**
-	 *
+	 * 
 	 * Sets the gallery's anti-aliasing value to the parameter, which must be
 	 * one of <code>SWT.DEFAULT</code>, <code>SWT.OFF</code> or
 	 * <code>SWT.ON</code>.
-	 *
+	 * 
 	 * @param antialias
 	 */
 	public void setAntialias(int antialias) {
@@ -467,7 +488,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Send a selection event for a gallery item
-	 *
+	 * 
 	 * @param item
 	 */
 	protected void notifySelectionListeners(GalleryItem item, int index,
@@ -494,7 +515,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Send an Expand event for a GalleryItem
-	 *
+	 * 
 	 * @param item
 	 * @param index
 	 */
@@ -517,8 +538,8 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Create a Gallery
-	 *
-	 *
+	 * 
+	 * 
 	 * @param parent
 	 * @param style
 	 *            - SWT.VIRTUAL switches in virtual mode. <br/>
@@ -533,12 +554,11 @@ public class Gallery extends Canvas {
 	 *            time.
 	 */
 	public Gallery(Composite parent, int style) {
-		super(parent, style | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
+		super(parent, style | SWT.DOUBLE_BUFFERED);
 		virtual = (style & SWT.VIRTUAL) > 0;
 		vertical = (style & SWT.V_SCROLL) > 0;
 		multi = (style & SWT.MULTI) > 0;
-		this.setBackground(getDisplay().getSystemColor(
-				SWT.COLOR_LIST_BACKGROUND));
+		setForeground(getDisplay().getSystemColor(SWT.COLOR_LIST_FOREGROUND));
 
 		// Add listeners : redraws, mouse and keyboard
 		_addDisposeListeners();
@@ -599,7 +619,6 @@ public class Gallery extends Canvas {
 	 */
 	private void _addResizeListeners() {
 		addControlListener(new ControlAdapter() {
-			@Override
 			public void controlResized(ControlEvent event) {
 				updateStructuralValues(null, true);
 				updateScrollBarsProperties();
@@ -617,7 +636,6 @@ public class Gallery extends Canvas {
 		if (verticalBar != null) {
 			verticalBar.addSelectionListener(new SelectionAdapter() {
 
-				@Override
 				public void widgetSelected(SelectionEvent event) {
 					if (vertical)
 						scrollVertical();
@@ -631,7 +649,6 @@ public class Gallery extends Canvas {
 		if (horizontalBar != null) {
 			horizontalBar.addSelectionListener(new SelectionAdapter() {
 
-				@Override
 				public void widgetSelected(SelectionEvent event) {
 					if (!vertical)
 						scrollHorizontal();
@@ -686,6 +703,12 @@ public class Gallery extends Canvas {
 		});
 	}
 
+	/**
+	 * Scroll the Gallery in order to make 'item' visible.
+	 * 
+	 * @param item
+	 *            Item to show
+	 */
 	public void showItem(GalleryItem item) {
 		this.checkWidget();
 		this._showItem(item);
@@ -816,11 +839,16 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Toggle item selection status
-	 *
-	 * @param i
+	 * 
+	 * @param item
+	 *            Item which state is to be changed.
 	 * @param selected
+	 *            true is the item is now selected, false if it is now
+	 *            unselected.
 	 * @param notifyListeners
-	 *
+	 *            If true, a selection event will be sent to all the current
+	 *            selection listeners.
+	 * 
 	 */
 	protected void setSelected(GalleryItem item, boolean selected,
 			boolean notifyListeners) {
@@ -875,28 +903,26 @@ public class Gallery extends Canvas {
 		if (item.getParentItem() != null) {
 			item.getParentItem()._addSelection(item);
 		} else {
-			// bd
-			// if (selectionIndices == null) {
-			// selectionIndices = new int[1];
-			// } else {
-			// int[] oldSelection = selectionIndices;
-			// selectionIndices = new int[oldSelection.length + 1];
-			// System.arraycopy(oldSelection, 0, selectionIndices, 0,
-			// oldSelection.length);
-			// }
-			// selectionIndices[selectionIndices.length - 1] = indexOf(item);
 			int index = indexOf(item);
+
+			// Divide position by 32 to get selection bloc for this item.
 			int n = index >> 5;
 			if (selectionFlags == null) {
+				// Create selectionFlag array
+				// Add 31 before dividing by 32 to ensure at least one 'int' is
+				// created if size < 32.
 				selectionFlags = new int[(items.length + 31) >> 5];
 			} else if (n >= selectionFlags.length) {
+				// Expand selectionArray
 				int[] oldFlags = selectionFlags;
 				selectionFlags = new int[n + 1];
 				System.arraycopy(oldFlags, 0, selectionFlags, 0,
 						oldFlags.length);
 			}
+
+			// Get flag position in the 32 bit block and ensure is selected.
 			selectionFlags[n] |= 1 << (index & 0x1f);
-			// -bd
+
 		}
 
 		if (selection == null) {
@@ -927,12 +953,8 @@ public class Gallery extends Canvas {
 	}
 
 	protected void _removeSelection(GalleryItem parent, GalleryItem item) {
-		// bd
-		// parent.selectionIndices = _arrayRemoveItem(parent.selectionIndices,
-		// _arrayIndexOf(parent.selectionIndices, _indexOf(parent, item)));
 		int index = _indexOf(parent, item);
 		parent.selectionFlags[index >> 5] &= ~(1 << (index & 0x1f));
-		// -bd
 	}
 
 	protected boolean isSelected(GalleryItem item) {
@@ -944,29 +966,20 @@ public class Gallery extends Canvas {
 			return item.getParentItem().isSelected(item);
 		}
 
-		// bd
-		// if (selectionIndices == null)
-		// return false;
-		//
-		// int index = indexOf(item);
-		// for (int i = 0; i < selectionIndices.length; i++) {
-		// if (selectionIndices[i] == index)
-		// return true;
-		// }
-		// return false;
 		if (selectionFlags == null)
 			return false;
+
 		int index = indexOf(item);
 		int n = index >> 5;
 		if (n >= selectionFlags.length)
 			return false;
 		int flags = selectionFlags[n];
 		return flags != 0 && (flags & 1 << (index & 0x1f)) != 0;
-		// -bd
+
 	}
 
 	/**
-	 * Deselects the item at the given zero-relative index in the receiver.
+	 * Deselects all items.
 	 */
 	public void deselectAll() {
 		checkWidget();
@@ -975,17 +988,26 @@ public class Gallery extends Canvas {
 		redraw();
 	}
 
+	/**
+	 * Deselects all items and send selection event depending on parameter.
+	 * 
+	 * @param notifyListeners
+	 *            If true, a selection event will be sent to all the current
+	 *            selection listeners.
+	 */
 	protected void _deselectAll(boolean notifyListeners) {
 
 		if (DEBUG)
 			System.out.println("clear"); //$NON-NLS-1$
 
 		this.selection = null;
-		// this.selectionIndices = null; //bd
+		// Deselect groups
+		// We could set selectionFlags to null, but we rather set all values to
+		// 0 to redure garbage collection. On each iteration, we deselect 32
+		// items.
 		if (selectionFlags != null)
 			for (int i = 0; i < selectionFlags.length; i++)
 				selectionFlags[i] = 0;
-		// -bd
 
 		if (items == null)
 			return;
@@ -1036,12 +1058,15 @@ public class Gallery extends Canvas {
 		}
 	}
 
+	/**
+	 * Clean up the Gallery and renderers on dispose.
+	 */
 	void onDispose() {
 		// Remove items if not Virtual.
 		if (!virtual)
 			removeAll();
 
-		// Dispose Renderers
+		// Dispose renderers
 		if (itemRenderer != null)
 			itemRenderer.dispose();
 
@@ -1144,7 +1169,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Handle right click.
-	 *
+	 * 
 	 * @param e
 	 * @param item
 	 *            : The item which is under the cursor or null
@@ -1176,26 +1201,26 @@ public class Gallery extends Canvas {
 						|| lastControlHeight != getSize().y
 						|| lastContentHeight != this.gHeight || lastContentWidth != this.gWidth));
 		try {
-			GC newGC = gc;
-
 			// Linux-GTK Bug 174932
 			if (!SWT.getPlatform().equals(BUG_PLATFORM_LINUX_GTK_174932)) {
-				newGC.setAdvanced(true);
+				gc.setAdvanced(true);
 			}
 
 			if (gc.getAdvanced()) {
 				if (lowQualityPaint) {
-					newGC.setAntialias(SWT.OFF);
-					newGC.setInterpolation(SWT.OFF);
+					gc.setAntialias(SWT.OFF);
+					gc.setInterpolation(SWT.OFF);
 				} else {
-					newGC.setAntialias(antialias);
-					newGC.setInterpolation(interpolation);
+					gc.setAntialias(antialias);
+					gc.setInterpolation(interpolation);
 				}
 			}
 			// End of Bug 174932
 
-			Rectangle clipping = newGC.getClipping();
-			drawBackground(newGC, clipping.x, clipping.y, clipping.width,
+			Rectangle clipping = gc.getClipping();
+
+			gc.setBackground(this.getBackground());
+			drawBackground(gc, clipping.x, clipping.y, clipping.width,
 					clipping.height);
 
 			int[] indexes = getVisibleItems(clipping);
@@ -1204,22 +1229,22 @@ public class Gallery extends Canvas {
 
 				// Call preDraw for optimization
 				if (groupRenderer != null)
-					groupRenderer.preDraw(newGC);
+					groupRenderer.preDraw(gc);
 				if (itemRenderer != null)
-					itemRenderer.preDraw(newGC);
+					itemRenderer.preDraw(gc);
 
 				for (int i = indexes.length - 1; i >= 0; i--) {
 					if (DEBUG)
 						System.out.println("Drawing group " + indexes[i]); //$NON-NLS-1$
 
-					_drawGroup(newGC, indexes[i]);
+					_drawGroup(gc, indexes[i]);
 				}
 
 				// Call postDraw for optimization / cleanup
 				if (groupRenderer != null)
-					groupRenderer.postDraw(newGC);
+					groupRenderer.postDraw(gc);
 				if (itemRenderer != null)
-					itemRenderer.postDraw(newGC);
+					itemRenderer.postDraw(gc);
 			}
 		} catch (Exception e) {
 			// We can't let onPaint throw an exception because unexpected
@@ -1270,7 +1295,7 @@ public class Gallery extends Canvas {
 			if (virtualGroups) {
 				item = _getItem(index, false);
 			} else {
-				item = getItem(index);
+				item = _getItem(index);
 			}
 			if ((vertical ? item.y : item.x) > end)
 				break;
@@ -1290,17 +1315,25 @@ public class Gallery extends Canvas {
 	}
 
 	/**
-	 * Not implemented
-	 *
-	 * @param nb
+	 * Refresh item by firering SWT.SetData.
+	 * <p>
+	 * Currently not implemented.
+	 * </p>
+	 * 
+	 * @param index
 	 */
-	public void refresh(int nb) {
+	public void refresh(int index) {
 		checkWidget();
-		if (nb < getItemCount()) {
+		if (index < getItemCount()) {
 			// TODO: refresh
 		}
 	}
 
+	/**
+	 * Redraw the item given as parameter.
+	 * 
+	 * @param item
+	 */
 	public void redraw(GalleryItem item) {
 		checkWidget();
 
@@ -1311,7 +1344,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Handle the drawing of root items
-	 *
+	 * 
 	 * @param gc
 	 * @param index
 	 */
@@ -1383,7 +1416,7 @@ public class Gallery extends Canvas {
 	/**
 	 * If table is virtual and item at pos i has not been set, call the callback
 	 * listener to set its value.
-	 *
+	 * 
 	 * @return
 	 */
 	private void updateItem(GalleryItem parentItem, int i, boolean create) {
@@ -1431,8 +1464,8 @@ public class Gallery extends Canvas {
 	}
 
 	/**
-	 * Send setData event. Used if SWT.VIRTUAL
-	 *
+	 * Sends SWT.SetData event. Used if SWT.VIRTUAL
+	 * 
 	 * @param galleryItem
 	 * @param index
 	 */
@@ -1448,7 +1481,7 @@ public class Gallery extends Canvas {
 	/**
 	 * Recalculate structural values using the group renderer<br>
 	 * Gallery and item size will be updated.
-	 *
+	 * 
 	 * @param keepLocation
 	 *            if true, the current scrollbars position ratio is saved and
 	 *            restored even if the gallery size has changed. (Visible items
@@ -1456,7 +1489,6 @@ public class Gallery extends Canvas {
 	 * @deprecated Use {@link #updateStructuralValues(GalleryItem,boolean)}
 	 *             instead
 	 */
-	@Deprecated
 	protected void updateStructuralValues(boolean keepLocation) {
 		updateStructuralValues(null, keepLocation);
 	}
@@ -1464,7 +1496,7 @@ public class Gallery extends Canvas {
 	/**
 	 * Recalculate structural values using the group renderer<br>
 	 * Gallery and item size will be updated.
-	 *
+	 * 
 	 * @param changedGroup
 	 *            the group that was modified since the last layout. If the
 	 *            group renderer or more that one group have changed, use null
@@ -1518,7 +1550,7 @@ public class Gallery extends Canvas {
 	/**
 	 * Calculate full height (or width) of the Gallery. The group renderer is
 	 * used to calculate the size of each group.
-	 *
+	 * 
 	 * @return
 	 */
 	private int calculateSize(GalleryItem onlyUpdateGroup) {
@@ -1537,7 +1569,7 @@ public class Gallery extends Canvas {
 			if (virtualGroups) {
 				item = this._getItem(i, false);
 			} else {
-				item = this.getItem(i);
+				item = this._getItem(i);
 			}
 
 			if (onlyUpdateGroup != null && !onlyUpdateGroup.equals(item)) {
@@ -1588,7 +1620,7 @@ public class Gallery extends Canvas {
 	 * Move the scrollbar to reflect the current visible items position. <br/>
 	 * The bar which is moved depends of the current gallery scrolling :
 	 * vertical or horizontal.
-	 *
+	 * 
 	 */
 	protected void updateScrollBarsProperties() {
 
@@ -1604,7 +1636,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Move the scrollbar to reflect the current visible items position.
-	 *
+	 * 
 	 * @param bar
 	 *            - the scroll bar to move
 	 * @param clientSize
@@ -1631,6 +1663,7 @@ public class Gallery extends Canvas {
 				System.out.println("Enabling scrollbar"); //$NON-NLS-1$
 
 			bar.setEnabled(true);
+			bar.setVisible(true);
 			bar.setSelection(translate);
 
 			// Ensure that translate has a valid value.
@@ -1640,6 +1673,7 @@ public class Gallery extends Canvas {
 				System.out.println("Disabling scrollbar"); //$NON-NLS-1$
 
 			bar.setEnabled(false);
+			bar.setVisible(false);
 			bar.setSelection(0);
 			translate = 0;
 		}
@@ -1730,10 +1764,10 @@ public class Gallery extends Canvas {
 	 * Get the item at index.<br/>
 	 * If SWT.VIRTUAL is used and the item has not been used yet, the item is
 	 * created and a SWT.SetData event is fired.
-	 *
+	 * 
 	 * @param index
-	 *            : index of the item.
-	 * @return : the GalleryItem or null if index is out of bounds
+	 *            index of the item.
+	 * @return the GalleryItem or null if index is out of bounds
 	 */
 	public GalleryItem getItem(int index) {
 		checkWidget();
@@ -1742,7 +1776,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * This method is used by items to implement getItem( index )
-	 *
+	 * 
 	 * @param parent
 	 * @param index
 	 * @return
@@ -1755,8 +1789,7 @@ public class Gallery extends Canvas {
 
 			if (parent.items == null) {
 				return null;
-				// } else { // bd2
-			} else if (index < parent.items.length) { // bd2
+			} else {
 				return parent.items[index];
 			}
 		}
@@ -1766,25 +1799,34 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Get the item at index.<br/>
-	 * If SWT.VIRTUAL is used and the item has not been used, the item is
+	 * If SWT.VIRTUAL is used and the item has not been used yet, the item is
 	 * created and a SWT.SetData is fired.<br/>
-	 *
+	 * 
 	 * This is the internal implementation of this method : checkWidget() is not
 	 * used.
-	 *
+	 * 
 	 * @param index
-	 * @return
+	 * @return The item at 'index' (not null)
 	 */
 	protected GalleryItem _getItem(int index) {
 		return _getItem(index, true);
 	}
 
-	public GalleryItem _getItem(int index, boolean create) {
+	/**
+	 * Get the item at 'index'.<br/>
+	 * If SWT.VIRTUAL is used, 'create' is true and the item has not been used
+	 * yet, the item is created and a SWT.SetData is fired.<br/>
+	 * 
+	 * @param index
+	 * @param create
+	 * @return The item at 'index' or null if there was no item and 'create' was
+	 *         false.
+	 */
+	protected GalleryItem _getItem(int index, boolean create) {
 
 		if (index < getItemCount()) {
 			updateItem(null, index, create);
-			if (index < items.length) // bd2
-				return items[index];
+			return items[index];
 		}
 
 		return null;
@@ -1793,7 +1835,7 @@ public class Gallery extends Canvas {
 	/**
 	 * Forward the mouseDown event to the corresponding group according to the
 	 * mouse position.
-	 *
+	 * 
 	 * @param e
 	 * @return
 	 */
@@ -1813,7 +1855,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Get item at pixel position
-	 *
+	 * 
 	 * @param coords
 	 * @return GalleryItem or null
 	 */
@@ -1835,9 +1877,9 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Get group at pixel position
-	 *
+	 * 
 	 * @param coords
-	 * @return
+	 * @return GalleryItem or null
 	 */
 	private GalleryItem _getGroup(Point coords) {
 		// If there is no item in the gallery, return asap
@@ -1868,10 +1910,10 @@ public class Gallery extends Canvas {
 	 * Get group at pixel position (relative to client area).
 	 * </p>
 	 * <p>
-	 * This is experimental API which is exposing an internal method, it may
+	 * This is an experimental API which is exposing an internal method, it may
 	 * become deprecated at some point.
 	 * </p>
-	 *
+	 * 
 	 * @param coords
 	 * @return
 	 */
@@ -1894,12 +1936,15 @@ public class Gallery extends Canvas {
 	// }
 
 	/**
-	 * Clear all items.<br/>
-	 *
-	 *
+	 * Clear all Gallery items.<br/>
+	 * 
+	 * 
 	 * If the Gallery is virtual, the item count is not reseted and all items
 	 * will be created again at their first use.<br/>
-	 *
+	 * 
+	 * @param all
+	 *            If true, all children will be cleared. Only groups are cleared
+	 *            otherwise.
 	 */
 	public void clearAll(boolean all) {
 		checkWidget();
@@ -1931,29 +1976,38 @@ public class Gallery extends Canvas {
 
 	}
 
+	/**
+	 * Clear all GalleryGroups
+	 */
 	public void clearAll() {
 		clearAll(false);
 	}
 
 	/**
 	 * Clear one item.<br/>
-	 *
-	 * @param i
+	 * 
+	 * @param index
 	 */
-	public void clear(int i) {
-		clear(i, false);
+	public void clear(int index) {
+		clear(index, false);
 	}
 
-	public void clear(int i, boolean all) {
+	/**
+	 * Clear one item and all its children if 'all' is true
+	 * 
+	 * @param index
+	 * @param all
+	 */
+	public void clear(int index, boolean all) {
 		checkWidget();
 
 		// Item is already cleared, return immediately.
-		if (items[i] == null)
+		if (items[index] == null)
 			return;
 
 		if (virtual) {
 			// Clear item
-			items[i] = null;
+			items[index] = null;
 
 			// In virtual mode, clearing an item can change its content, so
 			// force content update
@@ -1961,9 +2015,9 @@ public class Gallery extends Canvas {
 			updateScrollBarsProperties();
 		} else {
 			// Reset item
-			items[i].clear();
+			items[index].clear();
 			if (all) {
-				items[i].clearAll(true);
+				items[index].clearAll(true);
 			}
 		}
 
@@ -1972,12 +2026,11 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Returns the index of a GalleryItem.
-	 *
+	 * 
 	 * @param parentItem
 	 * @param item
 	 * @return
 	 */
-	@SuppressWarnings("null")
 	public int indexOf(GalleryItem item) {
 		checkWidget();
 		if (item == null) {
@@ -1985,15 +2038,16 @@ public class Gallery extends Canvas {
 			// SWT.error throws an exception
 		}
 
-		if (item.getParentItem() == null)
+		if (item.getParentItem() == null) {
 			return _indexOf(item);
+		}
 
 		return _indexOf(item.getParentItem(), item);
 	}
 
 	/**
 	 * Returns the index of a GalleryItem when it is a root Item
-	 *
+	 * 
 	 * @param parentItem
 	 * @param item
 	 * @return
@@ -2026,7 +2080,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Returns the index of a GalleryItem when it is not a root Item
-	 *
+	 * 
 	 * @param parentItem
 	 * @param item
 	 * @return
@@ -2069,6 +2123,160 @@ public class Gallery extends Canvas {
 		return itemsLocal;
 	}
 
+	/**
+	 * @see Gallery#setUseControlColors(boolean)
+	 * @return true if Gallery uses parent colors.
+	 */
+	public boolean isUseControlColors() {
+		return useControlColors;
+	}
+
+	/**
+	 * Set useControlColors to true in order to get colors from parent Control
+	 * (SWT default). This may generate more objects on painting and slightly
+	 * slow down the application. See Bug 279822 :
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=279822
+	 * 
+	 * If enabled, you'll get new Color objects each time you call getXXXColor()
+	 * on Gallery or GalleryItem.
+	 * 
+	 * Default is false : colors are stored locally in Gallery, and you'll get
+	 * the same object each time you call getXXXColor() on Gallery
+	 * orGalleryItem. The Gallery may not catch color changes on parent control.
+	 * 
+	 * @param useControlColors
+	 */
+	public void setUseControlColors(boolean useControlColors) {
+		this.useControlColors = useControlColors;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.swt.widgets.Control#getBackground()
+	 */
+	public Color getBackground() {
+		return getBackground(false);
+	}
+
+	/**
+	 * Returns the receiver's background color.
+	 * 
+	 * @param galleryOnly
+	 *            If TRUE, does not try to parent widget or Display defaults to
+	 *            guess the real background color. Note : FALSE is the default
+	 *            behavior.
+	 * 
+	 * @return The background color or null if galleryOnly was used and the
+	 *         gallery has not foreground color set.
+	 * 
+	 * @exception SWTException
+	 *                <ul>
+	 *                <li>ERROR_WIDGET_DISPOSED - if the receiver has been
+	 *                disposed</li>
+	 *                <li>ERROR_THREAD_INVALID_ACCESS - if not called from the
+	 *                thread that created the receiver</li>
+	 *                </ul>
+	 * 
+	 */
+	public Color getBackground(boolean galleryOnly) {
+		if (galleryOnly) {
+			return this.backgroundColor;
+		}
+
+		if (useControlColors) {
+			return super.getBackground();
+		}
+
+		return backgroundColor != null ? backgroundColor : getDisplay()
+				.getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.swt.widgets.Control#getForeground()
+	 */
+	public Color getForeground() {
+		return getForeground(false);
+	}
+
+	/**
+	 * Returns the receiver's foreground color.
+	 * 
+	 * @param galleryOnly
+	 *            If TRUE, does not try to parent widget or Display defaults to
+	 *            guess the real foreground color. Note : FALSE is the default
+	 *            behavior.
+	 * 
+	 * @return The foreground color or null if galleryOnly was used and the
+	 *         gallery has not foreground color set.
+	 * 
+	 * @exception SWTException
+	 *                <ul>
+	 *                <li>ERROR_WIDGET_DISPOSED - if the receiver has been
+	 *                disposed</li>
+	 *                <li>ERROR_THREAD_INVALID_ACCESS - if not called from the
+	 *                thread that created the receiver</li>
+	 *                </ul>
+	 * 
+	 */
+	public Color getForeground(boolean galleryOnly) {
+
+		if (galleryOnly) {
+			return this.foregroundColor;
+		}
+
+		if (useControlColors) {
+			return super.getForeground();
+		}
+
+		return foregroundColor != null ? foregroundColor : getDisplay()
+				.getSystemColor(SWT.COLOR_LIST_FOREGROUND);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.swt.widgets.Control#setBackground(org.eclipse.swt.graphics
+	 * .Color)
+	 */
+	public void setBackground(Color color) {
+		// Cache color locally
+		if (!useControlColors) {
+			this.backgroundColor = color;
+		}
+
+		// Always call Control#setBackground(); Additionally, this will trigger
+		// a redraw.
+		super.setBackground(color);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.swt.widgets.Control#setForeground(org.eclipse.swt.graphics
+	 * .Color)
+	 */
+	public void setForeground(Color color) {
+		// Cache color locally
+		if (!useControlColors) {
+			this.foregroundColor = color;
+		}
+
+		// Always call Control#setForeground(); Additionally, this will trigger
+		// a redraw.
+		super.setForeground(color);
+	}
+
+	/**
+	 * Checks if the Gallery was created with SWT.V_SCROLL (ie has a vertical
+	 * scroll bar).
+	 * 
+	 * @return true if the gallery has the SWT.V_SCROLL style.
+	 */
 	public boolean isVertical() {
 		checkWidget();
 		return vertical;
@@ -2078,7 +2286,6 @@ public class Gallery extends Canvas {
 	 * @deprecated
 	 * @param vertical
 	 */
-	@Deprecated
 	public void setVertical(boolean vertical) {
 		checkWidget();
 		this.vertical = vertical;
@@ -2109,7 +2316,7 @@ public class Gallery extends Canvas {
 
 		return selection;
 	}
-
+	
 	/**
 	 * Returns the selected items in the same order as they appear in the gallery
 	 * Selected group items are placed at the beginning of the result
@@ -2150,6 +2357,7 @@ public class Gallery extends Canvas {
 		}
 		return sortedSelection;
 	} // -bd3
+
 
 	public int getSelectionCount() {
 		if (selection == null)
@@ -2269,7 +2477,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Adds an item to an array.
-	 *
+	 * 
 	 * @param array
 	 * @param object
 	 * @param index
@@ -2361,7 +2569,7 @@ public class Gallery extends Canvas {
 
 	/**
 	 * @see #setVirtualGroups(boolean)
-	 *
+	 * 
 	 * @return
 	 */
 	public boolean isVirtualGroups() {
@@ -2370,43 +2578,43 @@ public class Gallery extends Canvas {
 
 	/**
 	 * Enable virtual groups
-	 *
+	 * 
 	 * <p>
 	 * When a gallery has the SWT.VIRTUAL flag, only items are initialized on
 	 * display. All groups need to be initialized from the beginning to
 	 * calculate the total size of the content.
 	 * </p>
-	 *
+	 * 
 	 * <p>
 	 * Virtual groups enable creating groups AND items lazily at the cost of a
 	 * poor approximation of the total size of the content.
 	 * </p>
-	 *
+	 * 
 	 * <p>
 	 * While a group isn't initialized, the item count defined as default item
 	 * count is used.
 	 * </p>
-	 *
+	 * 
 	 * <p>
 	 * When a group comes into view, it is initialized using the setData event,
 	 * and the size of the gallery content is updated to match the real value.
 	 * </p>
-	 *
+	 * 
 	 * <p>
 	 * From the developer point of view, virtual groups uses exactly the same
 	 * code as the standard virtual mode of SWT.
 	 * </p>
-	 *
+	 * 
 	 * <p>
 	 * This mode can create visual glitches with code that automatically scrolls
 	 * the widget such as SAT Smooth Scrolling. In that case, you can enable the
 	 * compatibility mode which is little less lazy that the default virtual
 	 * groups, but still better than the standard virtual mode
 	 * </p>
-	 *
+	 * 
 	 * @see #setVirtualGroupDefaultItemCount(int)
 	 * @see #setVirtualGroupsCompatibilityMode(boolean)
-	 *
+	 * 
 	 * @param virtualGroups
 	 */
 	public void setVirtualGroups(boolean virtualGroups) {
@@ -2432,7 +2640,7 @@ public class Gallery extends Canvas {
 	/**
 	 * Enable the compatibility workaround for problems with the ultra virtual
 	 * mode.
-	 *
+	 * 
 	 * @see #setVirtualGroups(boolean)
 	 * @param compatibilityMode
 	 */
@@ -2445,12 +2653,27 @@ public class Gallery extends Canvas {
 	 * groups). Since the virtual groups make the size of the gallery change
 	 * while scrolling, a fine tuned item count can improve the accuracy of the
 	 * slider.
-	 *
+	 * 
 	 * @see #setVirtualGroups(boolean)
-	 *
+	 * 
 	 * @param defaultItemCount
 	 */
+	
+	// bd4
 	public void setVirtualGroupDefaultItemCount(int defaultItemCount) {
 		this.virtualGroupDefaultItemCount = defaultItemCount;
 	}
+	
+	public int getTotalSize() { 
+		return vertical ? gHeight : gWidth;
+	}
+
+	public int getTranslate() { 
+		return translate;
+	}
+
+	public void setTranslate(int translate) { 
+		this.translate = translate;
+	}
+	// -bd4
 }

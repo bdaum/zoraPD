@@ -988,16 +988,18 @@ public class Main extends IdentifiableObject implements IModel,
 	 * @param valueInterval - Property
 	 * @param threshold - Property
 	 * @param properties - Property
+	 * @param skipOrphans - Property
 	 */
 	public Report createReportInstance(String name, String description,
 			String source, int mode, int sortField, boolean descending,
 			String field, long timeLower, long timeUpper, long valueLower,
 			long valueUpper, int dayInterval, int timeInterval,
-			int valueInterval, float threshold, Object properties) {
+			int valueInterval, float threshold, Object properties,
+			boolean skipOrphans) {
 		return new ReportImpl(name, description, source, mode, sortField,
 				descending, field, timeLower, timeUpper, valueLower,
 				valueUpper, dayInterval, timeInterval, valueInterval,
-				threshold, properties);
+				threshold, properties, skipOrphans);
 	}
 
 	/**

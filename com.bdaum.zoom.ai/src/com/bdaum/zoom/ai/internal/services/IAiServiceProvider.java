@@ -19,7 +19,10 @@
  */
 package com.bdaum.zoom.ai.internal.services;
 
+import java.awt.image.BufferedImage;
+
 import com.bdaum.zoom.core.internal.ai.Prediction;
+import com.bdaum.zoom.core.internal.lire.Algorithm;
 
 public interface IAiServiceProvider {
 	void setId(String id);
@@ -55,5 +58,17 @@ public interface IAiServiceProvider {
 	boolean checkSharpness();
 	
 	boolean checkColor();
+
+	float[] getFeatureVector(BufferedImage image);
+
+	boolean isAccountValid();
+
+	Algorithm getAlgorithm();
+
+	Class<?> getFeature();
+
+	void setFeatureId(int featureId);
+
+	int getFeatureId();
 
 }

@@ -20,6 +20,7 @@
 
 package com.bdaum.zoom.core.trash;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +28,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import javax.imageio.ImageIO;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
@@ -216,8 +219,7 @@ public class Trash extends HistoryItem {
 	 *            - status object
 	 * @return - the restored asset
 	 */
-	public Asset restore(IDbManager dbManager,
-			Object iw, MultiStatus status) {
+	public Asset restore(IDbManager dbManager, Object iw, MultiStatus status) {
 		String assetid = asset.getStringId();
 		dbManager.deleteTrash(asset);
 		IVolumeManager vm = CoreActivator.getDefault().getVolumeManager();
@@ -232,20 +234,16 @@ public class Trash extends HistoryItem {
 		String[] albums = asset.getAlbum();
 		if (albums != null)
 			for (String name : albums) {
-				List<SmartCollectionImpl> allAlbums = dbManager
-						.obtainObjects(
-								SmartCollectionImpl.class, false,
-								"album", true, QueryField.EQUALS, "name", name, QueryField.EQUALS); //$NON-NLS-1$//$NON-NLS-2$
+				List<SmartCollectionImpl> allAlbums = dbManager.obtainObjects(SmartCollectionImpl.class, false, "album", //$NON-NLS-1$
+						true, QueryField.EQUALS, "name", name, QueryField.EQUALS); //$NON-NLS-1$
 				for (SmartCollectionImpl album : allAlbums)
 					if (album.addAsset(assetid))
 						dbManager.store(album);
 			}
 		// Relations
-		for (DerivedByImpl rel : dbManager.obtainStruct(DerivedByImpl.class,
-				null, false, "derivative", assetid, false)) //$NON-NLS-1$
+		for (DerivedByImpl rel : dbManager.obtainStruct(DerivedByImpl.class, null, false, "derivative", assetid, false)) //$NON-NLS-1$
 			dbManager.delete(rel);
-		for (DerivedByImpl rel : dbManager.obtainStruct(DerivedByImpl.class,
-				null, false, "original", assetid, false)) //$NON-NLS-1$
+		for (DerivedByImpl rel : dbManager.obtainStruct(DerivedByImpl.class, null, false, "original", assetid, false)) //$NON-NLS-1$
 			dbManager.delete(rel);
 		if (objects != null)
 			for (IdentifiableObject rel : objects) {
@@ -254,8 +252,7 @@ public class Trash extends HistoryItem {
 			}
 		if (compositions != null) {
 			for (String compId : compositions) {
-				ComposedToImpl impl = dbManager.obtainById(
-						ComposedToImpl.class, compId);
+				ComposedToImpl impl = dbManager.obtainById(ComposedToImpl.class, compId);
 				if (impl != null && !impl.getComponent().contains(assetid)) {
 					impl.addComponent(assetid);
 					dbManager.store(impl);
@@ -263,34 +260,30 @@ public class Trash extends HistoryItem {
 			}
 		}
 		// Structures
-		if (locationCreated != null) {
+		if (locationCreated != null)
 			for (String locId : locationCreated) {
-				LocationCreatedImpl impl = dbManager.obtainById(
-						LocationCreatedImpl.class, locId);
+				LocationCreatedImpl impl = dbManager.obtainById(LocationCreatedImpl.class, locId);
 				if (impl != null && !impl.getAsset().contains(assetid)) {
 					impl.addAsset(assetid);
 					dbManager.store(impl);
 				}
 			}
-		}
-		if (creatorsContact != null) {
+		if (creatorsContact != null)
 			for (String contactId : creatorsContact) {
-				CreatorsContactImpl impl = dbManager.obtainById(
-						CreatorsContactImpl.class, contactId);
+				CreatorsContactImpl impl = dbManager.obtainById(CreatorsContactImpl.class, contactId);
 				if (impl != null && !impl.getAsset().contains(assetid)) {
 					impl.addAsset(assetid);
 					dbManager.store(impl);
 				}
 			}
-		}
-		ByteArrayInputStream in = new ByteArrayInputStream(
-				asset.getJpegThumbnail());
 		if (iw != null)
-			try {
-				Core.getCore().getDbFactory().getLuceneService().addDocument(iw, in, assetid);
+			try (ByteArrayInputStream in = new ByteArrayInputStream(asset.getJpegThumbnail())) {
+				BufferedImage image = ImageIO.read(in);
+				if (image != null)
+					Core.getCore().getDbFactory().getLuceneService().addDocument(iw, image, assetid);
 			} catch (IOException e) {
-				status.add(new Status(IStatus.ERROR, CoreActivator.PLUGIN_ID,
-						Messages.Trash_error_adding_to_lucene, e));
+				status.add(
+						new Status(IStatus.ERROR, CoreActivator.PLUGIN_ID, Messages.Trash_error_adding_to_lucene, e));
 			}
 		dbManager.deleteTrash(this);
 		return asset;
@@ -335,17 +328,13 @@ public class Trash extends HistoryItem {
 				URI[] sidecarURIs = Core.getSidecarURIs(uri);
 				for (URI sidecarURI : sidecarURIs) {
 					File xmpFile = new File(sidecarURI);
-					if (xmpFile.exists()
-							&& xmpFile.lastModified() == asset
-									.getXmpModifiedAt().getTime())
+					if (xmpFile.exists() && xmpFile.lastModified() == asset.getXmpModifiedAt().getTime())
 						toBeDeleted.add(xmpFile);
 				}
 			}
 			if (".".equals(asset.getVoiceFileURI())) { //$NON-NLS-1$
 				URI voiceFileUri = volumeManager.findVoiceFile(asset);
-				if (voiceFileUri != null
-						&& Constants.FILESCHEME
-								.equals(voiceFileUri.getScheme()))
+				if (voiceFileUri != null && Constants.FILESCHEME.equals(voiceFileUri.getScheme()))
 					toBeDeleted.add(new File(voiceFileUri));
 			}
 			FileUtils fu = FileUtils.getInstance();
@@ -353,8 +342,7 @@ public class Trash extends HistoryItem {
 			IOException exc = null;
 			if (fu.hasTrash()) {
 				try {
-					fu.moveToTrash(toBeDeleted.toArray(new File[toBeDeleted
-							.size()]));
+					fu.moveToTrash(toBeDeleted.toArray(new File[toBeDeleted.size()]));
 					trashed = true;
 				} catch (IOException e) {
 					exc = e;
@@ -375,16 +363,10 @@ public class Trash extends HistoryItem {
 				} else if (exc == null)
 					activator.logError(Messages.Trash_no_waste_basket, null);
 				else
-					activator
-							.logError(
-									Messages.Trash_io_error_moving_to_waste_basket,
-									exc);
+					activator.logError(Messages.Trash_io_error_moving_to_waste_basket, exc);
 				for (File file : toBeDeleted)
 					if (!file.delete())
-						activator
-								.logError(NLS.bind(
-										Messages.Trash_file_not_deleted, file),
-										null);
+						activator.logError(NLS.bind(Messages.Trash_file_not_deleted, file), null);
 			}
 		}
 	}

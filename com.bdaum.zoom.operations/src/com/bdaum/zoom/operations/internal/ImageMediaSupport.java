@@ -169,7 +169,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 			if (importDng && isRaw) {
 				dngUriAsString = Core.removeExtensionFromUri(uriAsString) + ".dng"; //$NON-NLS-1$
 				try {
-					if (configuration.dngFolder != null && configuration.dngFolder.length() > 0) {
+					if (configuration.dngFolder != null && !configuration.dngFolder.isEmpty()) {
 						int p = dngUriAsString.lastIndexOf('/');
 						String dngFolderUri = dngUriAsString.substring(0, p + 1) + configuration.dngFolder;
 						dngUriAsString = dngFolderUri + dngUriAsString.substring(p);
@@ -258,10 +258,10 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 				dngAsset = importState.resetEnsemble(dngEnsemble, dngURI, file, importState.importDate,
 						originalFileName, importState.importDate);
 				String dngLocation = configuration.dngLocator.getDngLocation();
-				File locat = (dngLocation == null || dngLocation.length() == 0) ? null : new File(dngLocation);
+				File locat = (dngLocation == null || dngLocation.isEmpty()) ? null : new File(dngLocation);
 				if (locat == null || !locat.exists()) {
 					locat = Core.getCore().getDbFactory().getErrorHandler().showDngDialog(locat, importState.info);
-					if (locat != null && locat.getName().length() > 0) {
+					if (locat != null && !locat.getName().isEmpty()) {
 						IPreferenceUpdater locator = importState.info.getAdapter(IPreferenceUpdater.class);
 						if (locator != null)
 							locator.setDngLocation(locat);
@@ -271,7 +271,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 					aMonitor.setCanceled(true);
 					return 0;
 				}
-				if (locat.getName().length() > 0) {
+				if (!locat.getName().isEmpty()) {
 					Options options = new Options();
 					options.put("uncompressed", //$NON-NLS-1$
 							configuration.dngUncompressed);
@@ -357,7 +357,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 							File jpegFile = findJpegSibling(originalUri);
 							if (jpegFile != null && importFromDeviceData.getSkipPolicy() == Constants.SKIP_JPEG_IF_RAW)
 								importState.skipFile = jpegFile;
-							if (importFromDeviceData.getExifTransferPrefix().length() > 0) {
+							if (!importFromDeviceData.getExifTransferPrefix().isEmpty()) {
 								int q = originalUri.lastIndexOf('/');
 								String name = (q < 0) ? originalUri : originalUri.substring(q + 1);
 								if (jpegFile != null && name.startsWith(importFromDeviceData.getExifTransferPrefix()))
@@ -938,7 +938,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 				for (Recipe.Derivative derivative : derivatives) {
 					try {
 						String section = null;
-						if (derivative.id != null && derivative.id.length() > 0)
+						if (derivative.id != null && !derivative.id.isEmpty())
 							section = NLS.bind(Messages.getString("ImageMediaSupport.section"), derivative.id); //$NON-NLS-1$
 						List<AssetImpl> derivedAssets = Core.getCore().getDbManager()
 								.obtainAssetsForFile(new URI(derivative.url));

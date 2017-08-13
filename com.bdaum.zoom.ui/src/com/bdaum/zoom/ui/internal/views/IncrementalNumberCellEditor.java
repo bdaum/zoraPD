@@ -104,7 +104,7 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 				String t = txt.getText();
 				String futureText = t.substring(0, e.start) + e.text
 						+ t.substring(e.end);
-				if (futureText.length() > 0) {
+				if (!futureText.isEmpty()) {
 					int value = Integer.parseInt(futureText);
 					if (value > maximum)
 						e.doit = false;
@@ -134,16 +134,13 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 	protected void focusLost() {
 		final Control control = getControl();
 		final Display display = control.getDisplay();
-		display.timerExec(10, new Runnable() {
-
-			public void run() {
-				if (!control.isDisposed() && !display.isDisposed()) {
-					Control focusControl = display.getFocusControl();
-					if (focusControl == text || focusControl == minusButton
-							|| focusControl == plusButton)
-						return;
-					IncrementalNumberCellEditor.super.focusLost();
-				}
+		display.timerExec(10, () -> {
+			if (!control.isDisposed()) {
+				Control focusControl = display.getFocusControl();
+				if (focusControl == text || focusControl == minusButton
+						|| focusControl == plusButton)
+					return;
+				IncrementalNumberCellEditor.super.focusLost();
 			}
 		});
 	}

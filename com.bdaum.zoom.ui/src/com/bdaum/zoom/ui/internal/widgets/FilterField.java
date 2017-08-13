@@ -49,7 +49,7 @@ public class FilterField {
 		final ModifyListener modifyListener = new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				String s = filterField.getText();
-				if (s.length() == 0)
+				if (s.isEmpty())
 					filterField.setData(EMPTY, Boolean.TRUE);
 				else
 					filterField.setData(EMPTY, null);

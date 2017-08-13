@@ -28,7 +28,7 @@ Export-Package: com.bdaum.zoom.jai,
  javax.media.jai.tilecodec,
  javax.media.jai.util,
  javax.media.jai.widget
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.osgi;bundle-version="3.6.0",
- com.bdaum.zoom.logging;bundle-version="3.0.0"
+ com.bdaum.zoom.logging;bundle-version="3.1.0"

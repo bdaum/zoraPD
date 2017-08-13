@@ -112,7 +112,7 @@ public class ExportMetadataOperation extends DbOperation {
 					}
 				}
 			}
-			if (errands.size() > 0) {
+			if (!errands.isEmpty()) {
 				final IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
 				if (errorHandler != null) {
 					String msg;
@@ -288,7 +288,7 @@ public class ExportMetadataOperation extends DbOperation {
 				firstExport = xmpFile;
 		} else {
 			String volume = asset.getVolume();
-			if (volume != null && volume.length() > 0)
+			if (volume != null && !volume.isEmpty())
 				volumes.add(volume);
 			errands.add(asset.getUri());
 		}

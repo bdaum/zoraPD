@@ -53,7 +53,7 @@ public class ProposalListener implements VerifyListener, KeyListener {
 			if (end - start > insert.length()) {
 				int kwstart = getWordStart(start, text);
 				String orig = text.substring(kwstart, start);
-				if (orig.length() > 0) {
+				if (!orig.isEmpty()) {
 					String keyword = findMatchingKeyword(orig);
 					lastProposal = text.substring(0, kwstart) + keyword;
 					keyword = orig + keyword.substring(orig.length());
@@ -80,7 +80,7 @@ public class ProposalListener implements VerifyListener, KeyListener {
 		}
 		int kwstart = getWordStart(start + insert.length(), text);
 		String orig = text.substring(kwstart, start + insert.length());
-		if (orig.length() > 0) {
+		if (!orig.isEmpty()) {
 			String keyword = findMatchingKeyword(orig);
 			e.doit = false;
 			if (keyword != null) {

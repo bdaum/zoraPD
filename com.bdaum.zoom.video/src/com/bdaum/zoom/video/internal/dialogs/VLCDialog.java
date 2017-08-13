@@ -128,7 +128,7 @@ public class VLCDialog extends ZTitleAreaDialog {
 	protected void updateButtons() {
 		String s = fileEditor.getText();
 		if (errorMessage == null) {
-			if (s.length() == 0)
+			if (s.isEmpty())
 				errorMessage = Messages.VLCDialog_not_specified;
 			else {
 				vlcLocation = new File(s);

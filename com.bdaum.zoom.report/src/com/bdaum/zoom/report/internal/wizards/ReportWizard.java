@@ -107,7 +107,7 @@ public class ReportWizard extends ZWizard implements IWorkbenchWizard, IAdaptabl
 			description = dbManager.getFile().getName();
 		String descr = NLS.bind(Messages.ReportWizard_based_on, description);
 		report = new ReportImpl(title, descr, null, TIME | BAR | IMAGECOUNT, -1, false, null, 0L, 0L, 0L, 0L, 24, 0, 50,
-				1f, null);
+				1f, null, false);
 	}
 
 	@Override

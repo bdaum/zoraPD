@@ -60,8 +60,10 @@ import com.bdaum.zoom.ui.dialogs.ZListDialog;
 import com.bdaum.zoom.ui.internal.views.CatalogLabelProvider;
 import com.bdaum.zoom.ui.internal.views.CatalogView.CatalogComparator;
 import com.bdaum.zoom.ui.internal.views.IdentifiedElementComparer;
+import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
+import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
@@ -139,6 +141,7 @@ public class SourcePage extends ColoredWizardPage implements SelectionListener {
 	private RadioButtonGroup sourceButtonGroup;
 	private List<ReportImpl> reports;
 	private Button browseButton;
+	private CheckboxButton skipOrphansButton;
 
 	public SourcePage(String id, String title, String msg, ImageDescriptor imageDescriptor) {
 		super(id, title, imageDescriptor);
@@ -213,6 +216,7 @@ public class SourcePage extends ColoredWizardPage implements SelectionListener {
 				validatePage();
 			}
 		});
+		skipOrphansButton = WidgetFactory.createCheckButton(sourceComp, Messages.SourcePage_skip_orphans, null);
 		setInput();
 		updateFields();
 		checkExistingReports();
@@ -248,11 +252,13 @@ public class SourcePage extends ColoredWizardPage implements SelectionListener {
 				setPageComplete(false);
 			} else {
 				report.setSource(((SmartCollection)firstElement).getStringId());
+				report.setSkipOrphans(skipOrphansButton.getSelection());
 				setErrorMessage(null);
 				setPageComplete(true);
 			}
 		} else  {
 			report.setSource(null);
+			report.setSkipOrphans(skipOrphansButton.getSelection());
 			setErrorMessage(null);
 			setPageComplete(true);
 		}
@@ -279,6 +285,7 @@ public class SourcePage extends ColoredWizardPage implements SelectionListener {
 			collViewer.setSelection(new StructuredSelection(sm));
 		} else
 			sourceButtonGroup.setSelection(0);
+		skipOrphansButton.setSelection(report.getSkipOrphans());
 		updateFields();
 		validatePage();
 	}

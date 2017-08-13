@@ -856,4 +856,8 @@ public class MergeCatOperation extends AbstractCloneCatOperation {
 				: IProfiledOperation.CONTENT | IProfiledOperation.CAT;
 	}
 
+	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
+		//do nothing
+	}
+
 }

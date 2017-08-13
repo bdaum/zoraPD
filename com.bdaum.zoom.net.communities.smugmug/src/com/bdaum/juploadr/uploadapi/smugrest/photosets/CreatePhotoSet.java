@@ -56,7 +56,7 @@ public class CreatePhotoSet extends SmugmugMethod implements PostUploadAction {
         params.put("Title", photoSet.getTitle()); //$NON-NLS-1$
         params.put("CategoryID", "0"); //$NON-NLS-1$ //$NON-NLS-2$
         if (photoSet.getDescription() != null
-                && photoSet.getDescription().length() > 0) {
+                && !photoSet.getDescription().isEmpty()) {
             params.put("Description", photoSet.getDescription()); //$NON-NLS-1$
         }
         params.put("SquareThumbs", "0"); //$NON-NLS-1$ //$NON-NLS-2$

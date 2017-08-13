@@ -172,7 +172,7 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements
 
 	private boolean validate() {
 		String n = nameField.getText().trim();
-		if (n.length() == 0) {
+		if (n.isEmpty()) {
 			setErrorMessage(Messages.SlideShowSaveDialog_please_enter_slideshow_name);
 			return false;
 		}
@@ -185,7 +185,7 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements
 			return false;
 		}
 		String groupName = groupField.getText().trim();
-		if (groupName.length() == 0) {
+		if (groupName.isEmpty()) {
 			setErrorMessage(Messages.SlideShowSaveDialog_please_enter_group_name);
 			return false;
 		}

@@ -28,7 +28,7 @@ public class RTRawConverter extends AbstractRawConverter {
 	private IRecipeDetector rt3Detector;
 
 	public void setConverterLocation(String location) {
-		if (location != null && location.length() > 0)
+		if (location != null && !location.isEmpty())
 			rt = new File(location);
 	}
 

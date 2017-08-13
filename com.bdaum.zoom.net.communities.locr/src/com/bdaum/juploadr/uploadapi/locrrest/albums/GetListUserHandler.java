@@ -33,17 +33,13 @@ public class GetListUserHandler extends DefaultLocrHandler {
 		this.parent = (GetListUser) parent;
 	}
 
-
 	@Override
 	public void characters(char[] ch, int start, int length)
 			throws SAXException {
 		String cdata = new String(ch, start, length).trim();
-		if (cdata.length() > 0) {
-			if (lastTag.equals("tags")) { //$NON-NLS-1$
-				parent.addTags(((ImageUploadApi) parent.getSession().getApi()).getTagParser().parse(
-						cdata));
-			}
-		}
+		if (!cdata.isEmpty() && lastTag.equals("tags")) //$NON-NLS-1$
+			parent.addTags(((ImageUploadApi) parent.getSession().getApi()).getTagParser().parse(
+					cdata));
 	}
 
 }

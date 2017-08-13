@@ -319,7 +319,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	private boolean validate() {
 		if (!adhoc) {
 			String name = nameField.getText();
-			if (name.length() == 0) {
+			if (name.isEmpty()) {
 				setErrorMessage(Messages.SlideshowEditDialog_specigy_name);
 				return false;
 			}
@@ -436,99 +436,96 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-
-			public void run() {
-				// Must create a new instance if named or cannot undo
-				if ((adhoc || canUndo) && current != null)
-					result = current;
-				else {
-					result = new SlideShowImpl();
-					if (current != null) {
-						result.setEntry(current.getEntry());
-						result.setGroup_slideshow_parent(current
-								.getGroup_slideshow_parent());
-					}
+		BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+			// Must create a new instance if named or cannot undo
+			if ((adhoc || canUndo) && current != null)
+				result = current;
+			else {
+				result = new SlideShowImpl();
+				if (current != null) {
+					result.setEntry(current.getEntry());
+					result.setGroup_slideshow_parent(current
+							.getGroup_slideshow_parent());
 				}
-				result.setAdhoc(adhoc);
-				if (nameField != null)
-					result.setName(nameField.getText());
-				else if (current != null && current.getName() != null
-						&& current.getName().length() > 0)
-					result.setName(NLS.bind(
-							Messages.SlideshowEditDialog_adhoc_slideshow_n,
-							current.getName()));
-				else
-					result.setName(Messages.SlideshowEditDialog_adhoc_slideshow);
-				if (descriptionField != null)
-					result.setDescription(descriptionField.getText());
-				else
-					result.setDescription(""); //$NON-NLS-1$
-				duration = stringToMsec(durationField);
-				result.setDuration(duration);
-				settings.put(DELAY, duration);
-				effect = Math.max(0, effectField.getSelectionIndex())
-						+ Constants.SLIDE_TRANSITION_START;
-				settings.put(EFFECT, effect);
-				result.setEffect(effect);
-				fading = stringToMsec(fadingField);
-				result.setFading(fading);
-				settings.put(FADING, fading);
-				titleDisplay = stringToMsec(titleDisplayField);
-				result.setTitleDisplay(titleDisplay);
-				settings.put(TITLEDISPLAY, titleDisplay);
-				titleContent = titleContentField.getSelectionIndex();
-				if (titleContent < 0)
-					titleContent = Constants.SLIDE_TITLEONLY;
-				result.setTitleContent(titleContent);
-				settings.put(TITLECONTENT, titleContent);
-				fromPreview = fromPreviewButton.getSelection();
-				voiceNotes = voiceButton.getSelection();
-				settings.put(FROMPREVIEW, fromPreview);
-				settings.put(VOICENOTES, voiceNotes);
-				result.setFromPreview(fromPreview);
-				result.setVoiceNotes(voiceNotes);
-				if (skipDubletteswButton != null) {
-					skipDublettes = skipDubletteswButton.getSelection();
-					settings.put(SKIP_DUBLETTES, skipDublettes);
-					result.setSkipDublettes(skipDublettes);
-				}
-				if (!adhoc && !canUndo) {
-					dbManager.safeTransaction(new Runnable() {
+			}
+			result.setAdhoc(adhoc);
+			if (nameField != null)
+				result.setName(nameField.getText());
+			else if (current != null && current.getName() != null
+					&& !current.getName().isEmpty())
+				result.setName(NLS.bind(
+						Messages.SlideshowEditDialog_adhoc_slideshow_n,
+						current.getName()));
+			else
+				result.setName(Messages.SlideshowEditDialog_adhoc_slideshow);
+			if (descriptionField != null)
+				result.setDescription(descriptionField.getText());
+			else
+				result.setDescription(""); //$NON-NLS-1$
+			duration = stringToMsec(durationField);
+			result.setDuration(duration);
+			settings.put(DELAY, duration);
+			effect = Math.max(0, effectField.getSelectionIndex())
+					+ Constants.SLIDE_TRANSITION_START;
+			settings.put(EFFECT, effect);
+			result.setEffect(effect);
+			fading = stringToMsec(fadingField);
+			result.setFading(fading);
+			settings.put(FADING, fading);
+			titleDisplay = stringToMsec(titleDisplayField);
+			result.setTitleDisplay(titleDisplay);
+			settings.put(TITLEDISPLAY, titleDisplay);
+			titleContent = titleContentField.getSelectionIndex();
+			if (titleContent < 0)
+				titleContent = Constants.SLIDE_TITLEONLY;
+			result.setTitleContent(titleContent);
+			settings.put(TITLECONTENT, titleContent);
+			fromPreview = fromPreviewButton.getSelection();
+			voiceNotes = voiceButton.getSelection();
+			settings.put(FROMPREVIEW, fromPreview);
+			settings.put(VOICENOTES, voiceNotes);
+			result.setFromPreview(fromPreview);
+			result.setVoiceNotes(voiceNotes);
+			if (skipDubletteswButton != null) {
+				skipDublettes = skipDubletteswButton.getSelection();
+				settings.put(SKIP_DUBLETTES, skipDublettes);
+				result.setSkipDublettes(skipDublettes);
+			}
+			if (!adhoc && !canUndo) {
+				dbManager.safeTransaction(new Runnable() {
 
-						public void run() {
-							if (importGroup != null) {
-								IdentifiableObject obj = importGroup
-										.getFromItem();
-								importIntoGallery(result, obj);
-							}
-							if (group == null) {
-								String groupId = (current != null) ? current
-										.getGroup_slideshow_parent()
-										: Constants.GROUP_ID_SLIDESHOW;
-								if (groupId == null)
-									groupId = Constants.GROUP_ID_SLIDESHOW;
-								group = dbManager.obtainById(GroupImpl.class,
-										groupId);
-							}
-							if (group == null) {
-								group = new GroupImpl(
-										Messages.SlideshowEditDialog_slideshows,
-										false);
-								group.setStringId(Constants.GROUP_ID_SLIDESHOW);
-							}
-							if (current != null)
-								group.removeSlideshow(current.getStringId());
-							group.addSlideshow(result.getStringId());
-							result.setGroup_slideshow_parent(group
-									.getStringId());
-							if (current != null)
-								dbManager.delete(current);
-							dbManager.store(group);
-							dbManager.store(result);
+					public void run() {
+						if (importGroup != null) {
+							IdentifiableObject obj = importGroup
+									.getFromItem();
+							importIntoGallery(result, obj);
 						}
-					});
-				}
+						if (group == null) {
+							String groupId = (current != null) ? current
+									.getGroup_slideshow_parent()
+									: Constants.GROUP_ID_SLIDESHOW;
+							if (groupId == null)
+								groupId = Constants.GROUP_ID_SLIDESHOW;
+							group = dbManager.obtainById(GroupImpl.class,
+									groupId);
+						}
+						if (group == null) {
+							group = new GroupImpl(
+									Messages.SlideshowEditDialog_slideshows,
+									false);
+							group.setStringId(Constants.GROUP_ID_SLIDESHOW);
+						}
+						if (current != null)
+							group.removeSlideshow(current.getStringId());
+						group.addSlideshow(result.getStringId());
+						result.setGroup_slideshow_parent(group
+								.getStringId());
+						if (current != null)
+							dbManager.delete(current);
+						dbManager.store(group);
+						dbManager.store(result);
+					}
+				});
 			}
 		});
 		super.okPressed();

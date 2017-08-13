@@ -53,7 +53,7 @@ public class GotoBookmarkAction extends Action {
 			IDbManager dbManager = Core.getCore().getDbManager();
 			String assetId = bookmark.getAssetId();
 			if (bookmark.getCatFile() != null
-					&& bookmark.getCatFile().length() > 0) {
+					&& !bookmark.getCatFile().isEmpty()) {
 				IPeerService peerService = Core.getCore().getPeerService();
 				if (peerService != null) {
 					try {

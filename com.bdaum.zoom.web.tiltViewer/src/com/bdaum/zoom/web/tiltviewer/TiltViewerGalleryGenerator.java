@@ -54,7 +54,7 @@ public class TiltViewerGalleryGenerator extends AbstractGalleryGenerator {
 		for (int i = 0; i < templates.length; i++) {
 			String name = templates[i].getName();
 			if (name.equals("index.html") && pageName != null //$NON-NLS-1$
-					&& pageName.length() > 0) {
+					&& !pageName.isEmpty()) {
 				name = pageName;
 			}
 			names[i] = name;
@@ -114,7 +114,7 @@ public class TiltViewerGalleryGenerator extends AbstractGalleryGenerator {
 		String f = generateFooter(
 				show,
 				"<a href=\"http://http://www.simpleviewer.net/\" target=\"_blank\">TiltViewer</a>"); //$NON-NLS-1$
-		if (f.length() > 0) {
+		if (!f.isEmpty()) {
 			f = applyFont(f, getShow().getFooterFont(), 7f);
 			varmap.put("viewerHeight", "95"); //$NON-NLS-1$ //$NON-NLS-2$
 		} else
@@ -123,7 +123,7 @@ public class TiltViewerGalleryGenerator extends AbstractGalleryGenerator {
 		if (!show.getHideHeader()) {
 			varmap.put("name", BatchUtilities.encodeHTML(show.getName(), false)); //$NON-NLS-1$
 			String description = show.getDescription();
-			if (description != null && description.length() > 0)
+			if (description != null && !description.isEmpty())
 				varmap.put(
 						"description", //$NON-NLS-1$
 						show.getHtmlDescription() ? description : BatchUtilities
@@ -216,33 +216,33 @@ public class TiltViewerGalleryGenerator extends AbstractGalleryGenerator {
 		String titleText = ""; //$NON-NLS-1$
 		if (storyboard.getShowCaptions()) {
 			String caption = exhibit.getCaption();
-			if (caption != null && caption.length() > 0) {
+			if (caption != null && !caption.isEmpty()) {
 				titleText = BatchUtilities.encodeHTML(caption, true);
-				if (titleText.length() > 0)
+				if (!titleText.isEmpty())
 					titleText = applyFont(titleText,
 							getShow().getCaptionFont(), 70f);
 			}
 		}
-		if (titleText.length() > 0)
+		if (!titleText.isEmpty())
 			varmap.put("image-title", titleText); //$NON-NLS-1$
 		String html = ""; //$NON-NLS-1$
 		if (storyboard.getShowDescriptions()) {
 			String description = exhibit.getDescription();
 			String exifdiv = getExifDiv(storyboard, exhibit, asset, "<multi>"); //$NON-NLS-1$
-			if (description != null && description.length() > 0)
+			if (description != null && !description.isEmpty())
 				html = exhibit.getHtmlDescription() ? description : BatchUtilities
 						.encodeHTML(description, true);
 			if (exifdiv != null) {
-				if (html.length() > 0)
+				if (!html.isEmpty())
 					html += "<br/><br/>"; //$NON-NLS-1$
 				html += exifdiv;
 			}
 		}
-		if (html.length() > 0) {
+		if (!html.isEmpty()) {
 			html = applyFont(html, getShow().getDescriptionFont(), 70f);
 			varmap.put("image-description", html);//$NON-NLS-1$
 		}
-		if (titleText.length() > 0 || html.length() > 0)
+		if (!titleText.isEmpty() || !html.isEmpty())
 			varmap.put("flipButton", "true");//$NON-NLS-1$ //$NON-NLS-2$
 		else
 			varmap.put("flipButton", "false");//$NON-NLS-1$ //$NON-NLS-2$
@@ -250,7 +250,7 @@ public class TiltViewerGalleryGenerator extends AbstractGalleryGenerator {
 		if (exhibit.getDownloadable() && original != null
 				&& !show.getHideDownload()) {
 			String downloadText = show.getDownloadText();
-			if (downloadText != null && downloadText.length() > 0)
+			if (downloadText != null && !downloadText.isEmpty())
 				varmap.put("downloaddiv", encodeURL(original)); //$NON-NLS-1$
 		}
 		varmap.put("bigimage", //$NON-NLS-1$
@@ -261,7 +261,7 @@ public class TiltViewerGalleryGenerator extends AbstractGalleryGenerator {
 
 	private String applyFont(String text, Font_type font, float factor) {
 		String fontString = generateFont(font, factor);
-		if (fontString.length() > 0) {
+		if (!fontString.isEmpty()) {
 			text = fontString + text + "</font>"; //$NON-NLS-1$
 			if (fontString.indexOf("<i>") >= 0) //$NON-NLS-1$
 				text += "</i>"; //$NON-NLS-1$

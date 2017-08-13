@@ -80,7 +80,7 @@ public class C1CatHandler extends AbstractForeignCatHandler {
 			try {
 				// read the result set
 				String copyright = rs.getString("ZBASIC_COPYRIGHT"); //$NON-NLS-1$
-				if (copyright != null && copyright.length() > 0) {
+				if (copyright != null && !copyright.isEmpty()) {
 					importState.overlayMap.put(
 							QueryField.IPTC_OWNER.getExifToolKey(), copyright);
 					importState.overlayMap.put(
@@ -97,7 +97,7 @@ public class C1CatHandler extends AbstractForeignCatHandler {
 					// do nothing
 				}
 				String caption = rs.getString("ZBASIC_CAPTION"); //$NON-NLS-1$
-				if (caption != null && caption.length() > 0)
+				if (caption != null && !caption.isEmpty())
 					importState.overlayMap.put(
 							QueryField.IPTC_HEADLINE.getExifToolKey(), caption);
 				return mediaSupport.importFile(file, extension, importState,

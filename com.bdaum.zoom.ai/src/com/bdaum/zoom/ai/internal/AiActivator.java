@@ -133,11 +133,8 @@ public class AiActivator extends ZUiPlugin {
 						IAiServiceProvider provider = (IAiServiceProvider) config.createExecutableExtension("class"); //$NON-NLS-1$
 						provider.setId(id);
 						provider.setName(name);
-						try {
-							provider.setLatency(Integer.parseInt(config.getAttribute("latency"))); //$NON-NLS-1$
-						} catch (NumberFormatException e) {
-							provider.setLatency(3000);
-						}
+						provider.setLatency(getInt(config, "latency", 3000)); //$NON-NLS-1$
+						provider.setFeatureId(getInt(config, "featureId", -1)); //$NON-NLS-1$
 						providerMap.put(id, provider);
 					} catch (CoreException e) {
 						logError(NLS.bind(Messages.AiActivator_error_loading_provider, name), e);
@@ -146,6 +143,17 @@ public class AiActivator extends ZUiPlugin {
 			}
 		}
 
+	}
+
+	protected int getInt(IConfigurationElement config, String att, int dflt) {
+		try {
+			String attribute = config.getAttribute(att);
+			if (attribute != null && !attribute.isEmpty())
+				return Integer.parseInt(attribute);
+		} catch (NumberFormatException e) {
+			// fall through
+		}
+		return dflt;
 	}
 
 	public void logError(String message, Throwable e) {

@@ -179,10 +179,10 @@ public class SlideshowView extends AbstractPresentationView {
 			this.slide = slide;
 			this.backup = backup;
 			this.mode = mode;
-			indexChange = (backup.getCaption() == null && slide.getCaption() != null && slide.getCaption().length() > 0)
+			indexChange = (backup.getCaption() == null && slide.getCaption() != null && !slide.getCaption().isEmpty())
 					|| (backup.getCaption() != null && !backup.getCaption().equals(slide.getCaption()))
 					|| (backup.getDescription() == null && slide.getDescription() != null
-							&& slide.getDescription().length() > 0)
+							&& !slide.getDescription().isEmpty())
 					|| (backup.getDescription() != null && !backup.getDescription().equals(slide.getDescription()));
 		}
 
@@ -699,11 +699,9 @@ public class SlideshowView extends AbstractPresentationView {
 									penColor = onlineColor;
 									break;
 								}
-								display.asyncExec(new Runnable() {
-									public void run() {
-										if (!canvas.isDisposed())
-											pslide.caption.setPenColor(penColor);
-									}
+								display.asyncExec(() -> {
+									if (!canvas.isDisposed())
+										pslide.caption.setPenColor(penColor);
 								});
 							}
 						}

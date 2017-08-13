@@ -436,15 +436,30 @@ public class ImageUtilities {
 		}
 	}
 
-	private static final byte[] JFIFHEADER = new byte[] { -1, -40, -1, -32, 0, 16, 74, 70, 73, 70, 0 };
-
 	public static boolean testOnJpeg(byte[] data) {
-		if (data == null || data.length < JFIFHEADER.length)
-			return false;
-		for (int i = 0; i < JFIFHEADER.length; i++)
-			if (JFIFHEADER[i] != data[i])
-				return false;
-		return true;
+		return (data.length > 2 && data[0] == 0xFF && data[1] == 0xD8);
+	}
+
+	public static byte[] asJpeg(byte[] bytes) {
+		if (testOnJpeg(bytes))
+			return bytes;
+		ByteArrayInputStream is = new ByteArrayInputStream(bytes);
+		BufferedImage bi = null;
+		try {
+			bi = ImageIO.read(is);
+		} catch (IOException e) {
+			// should never happen
+		}
+		if (bi == null)
+			return null;
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try {
+			ImageIO.write(bi, "jpeg", out); //$NON-NLS-1$
+			return out.toByteArray();
+		} catch (IOException e) {
+			return null;
+		}
+
 	}
 
 	private static final int LLJTRAN_ROT_90 = 5;
@@ -513,8 +528,8 @@ public class ImageUtilities {
 		return null;
 	}
 
-	public static boolean saveBufferedImageToStream(BufferedImage bufferedImage, OutputStream out, int format, int quality)
-			throws IOException {
+	public static boolean saveBufferedImageToStream(BufferedImage bufferedImage, OutputStream out, int format,
+			int quality) throws IOException {
 		try (ImageOutputStream stream = ImageIO.createImageOutputStream(out)) {
 			Iterator<ImageWriter> it = ImageIO.getImageWriters(
 					ImageTypeSpecifier.createFromRenderedImage(bufferedImage),
@@ -1537,7 +1552,7 @@ public class ImageUtilities {
 			}
 			if (copyright.startsWith("©")) //$NON-NLS-1$
 				copyright = copyright.substring(1).trim();
-			if (copyright.length() > 0) {
+			if (!copyright.isEmpty()) {
 				final String text = "© " + copyright; //$NON-NLS-1$
 				final Rectangle bounds = image.getBounds();
 				final Device device = image.getDevice();
@@ -1546,28 +1561,26 @@ public class ImageUtilities {
 				// gc.setAdvanced(true);
 				gc.drawImage(image, 0, 0);
 				Display display = (device instanceof Display) ? (Display) device : Display.getDefault();
-				display.syncExec(new Runnable() {
-					public void run() {
-						Font systemFont = device.getSystemFont();
-						gc.setFont(systemFont);
-						Point tx = gc.textExtent(text);
-						double f = (double) bounds.width / (3 * tx.x);
-						FontData fontData = systemFont.getFontData()[0];
-						int h = (int) (fontData.getHeight() * f + 0.5d);
-						fontData.setHeight(h);
-						fontData.setStyle(SWT.BOLD);
-						Font font = new Font(device, fontData);
-						gc.setFont(font);
-						tx = gc.textExtent(text);
-						gc.setAlpha(144);
-						gc.setForeground(device.getSystemColor(SWT.COLOR_WHITE));
-						int x = bounds.x + (bounds.width - tx.x) / 2;
-						int y = bounds.y + bounds.height - 2 * tx.y;
-						gc.drawText(text, x - 1, y - 1, true);
-						gc.setForeground(device.getSystemColor(SWT.COLOR_DARK_GRAY));
-						gc.drawText(text, x + 1, y + 1, true);
-						font.dispose();
-					}
+				display.syncExec(() -> {
+					Font systemFont = device.getSystemFont();
+					gc.setFont(systemFont);
+					Point tx = gc.textExtent(text);
+					double f = (double) bounds.width / (3 * tx.x);
+					FontData fontData = systemFont.getFontData()[0];
+					int h = (int) (fontData.getHeight() * f + 0.5d);
+					fontData.setHeight(h);
+					fontData.setStyle(SWT.BOLD);
+					Font font = new Font(device, fontData);
+					gc.setFont(font);
+					tx = gc.textExtent(text);
+					gc.setAlpha(144);
+					gc.setForeground(device.getSystemColor(SWT.COLOR_WHITE));
+					int x = bounds.x + (bounds.width - tx.x) / 2;
+					int y = bounds.y + bounds.height - 2 * tx.y;
+					gc.drawText(text, x - 1, y - 1, true);
+					gc.setForeground(device.getSystemColor(SWT.COLOR_DARK_GRAY));
+					gc.drawText(text, x + 1, y + 1, true);
+					font.dispose();
 				});
 				gc.dispose();
 				return outputImage;

@@ -48,7 +48,6 @@ public class DbFactory implements IDbFactory, IDbListener {
 	private static Map<String, Float> toleranceMap = new HashMap<String, Float>(
 			50);
 
-	// private StandardAnalyzer analyzer;
 	private IDbErrorHandler errorHandler;
 	private int maxImports;
 	private IPeerService peerService;

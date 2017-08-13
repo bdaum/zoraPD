@@ -44,12 +44,12 @@ public interface Remoting {
 	 * get the endpoint of the channel to the denoted service url. If the peer
 	 * is not connected, it returns <code>null</code>.
 	 * 
-	 * @param serviceURL
-	 *            the service url.
+	 * @param uri
+	 *            the service uri.
 	 * @return the endpoint or <code>null</code>
 	 * @since 0.6
 	 */
-	ChannelEndpoint getEndpoint(final String url);
+	ChannelEndpoint getEndpoint(final String uri);
 
 	/**
 	 * create an endpoint.

@@ -1424,75 +1424,73 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	public boolean createFolderHierarchy(final Asset asset, final boolean win32) {
 		final boolean[] changeIndicator = new boolean[] { false };
-		safeTransaction(new Runnable() {
-			public void run() {
-				try {
-					String path = asset.getUri();
-					int p = path.lastIndexOf('/');
-					if (p > 0) {
-						String folderUri = path.substring(0, p);
-						if (lastFolderUris.contains(folderUri))
-							return;
-						lastFolderUris.add(folderUri);
-					}
-					GroupImpl directories = getCollectionGroup(Constants.GROUP_ID_FOLDERSTRUCTURE,
-							Messages.DbManager_Directories, true);
-					SmartCollection parentColl = null;
-					int pathFrom = 0;
-					StringBuilder sb = new StringBuilder();
-					String protocol = ""; //$NON-NLS-1$
-					String device = ""; //$NON-NLS-1$
+		safeTransaction(() -> {
+			try {
+				String path = asset.getUri();
+				int p = path.lastIndexOf('/');
+				if (p > 0) {
+					String folderUri = path.substring(0, p);
+					if (lastFolderUris.contains(folderUri))
+						return;
+					lastFolderUris.add(folderUri);
+				}
+				GroupImpl directories = getCollectionGroup(Constants.GROUP_ID_FOLDERSTRUCTURE,
+						Messages.DbManager_Directories, true);
+				SmartCollection parentColl = null;
+				int pathFrom = 0;
+				StringBuilder sb = new StringBuilder();
+				String protocol = ""; //$NON-NLS-1$
+				String device = ""; //$NON-NLS-1$
+				p = path.indexOf(':', pathFrom);
+				if (p >= pathFrom) {
+					protocol = path.substring(pathFrom, p);
+					pathFrom = p;
+					sb.append(protocol).append(':');
+				}
+				while (path.charAt(++pathFrom) == '/')
+					sb.append('/');
+				String prot = sb.toString();
+				if (!Constants.FILESCHEME.equals(protocol))
+					parentColl = createDirectoryCollection(protocol + ':', parentColl, directories,
+							QueryField.URI.getKey(), prot, QueryField.STARTSWITH, changeIndicator);
+				else if (win32) {
 					p = path.indexOf(':', pathFrom);
 					if (p >= pathFrom) {
-						protocol = path.substring(pathFrom, p);
+						device = path.substring(pathFrom, p + 1);
 						pathFrom = p;
-						sb.append(protocol).append(':');
+						sb.append(device);
+						while (path.charAt(++pathFrom) == '/')
+							sb.append('/');
+						String volume = asset.getVolume();
+						if (volume == null || volume.isEmpty())
+							volume = device;
+						parentColl = createDirectoryCollection(volume, parentColl, directories,
+								QueryField.VOLUME.getKey(), volume, QueryField.EQUALS, changeIndicator);
 					}
-					while (path.charAt(++pathFrom) == '/')
-						sb.append('/');
-					String prot = sb.toString();
-					if (!Constants.FILESCHEME.equals(protocol))
-						parentColl = createDirectoryCollection(protocol + ':', parentColl, directories,
-								QueryField.URI.getKey(), prot, QueryField.STARTSWITH, changeIndicator);
-					else if (win32) {
-						p = path.indexOf(':', pathFrom);
-						if (p >= pathFrom) {
-							device = path.substring(pathFrom, p + 1);
-							pathFrom = p;
-							sb.append(device);
-							while (path.charAt(++pathFrom) == '/')
-								sb.append('/');
-							String volume = asset.getVolume();
-							if (volume == null || volume.length() == 0)
-								volume = device;
-							parentColl = createDirectoryCollection(volume, parentColl, directories,
-									QueryField.VOLUME.getKey(), volume, QueryField.EQUALS, changeIndicator);
-						}
-					}
-					StringTokenizer tokenizer = new StringTokenizer(path.substring(pathFrom), "/", true); //$NON-NLS-1$
-					String previousToken = null;
-					while (tokenizer.hasMoreTokens()) {
-						String token = tokenizer.nextToken();
-						sb.append(token);
-						if ("/".equals(token)) { //$NON-NLS-1$
-							if (previousToken != null) {
-								try {
-									previousToken = URLDecoder.decode(previousToken, "UTF-8"); //$NON-NLS-1$
-								} catch (UnsupportedEncodingException e) {
-									// do nothing
-								}
-								parentColl = createDirectoryCollection(previousToken, parentColl, directories,
-										QueryField.URI.getKey(), sb.toString(), QueryField.STARTSWITH, changeIndicator);
-								previousToken = null;
-							}
-						} else
-							previousToken = token;
-					}
-				} catch (RuntimeException e) {
-					DbActivator.getDefault().logError(Messages.DbManager_internal_error_folder_hierarchy, e);
 				}
-
+				StringTokenizer tokenizer = new StringTokenizer(path.substring(pathFrom), "/", true); //$NON-NLS-1$
+				String previousToken = null;
+				while (tokenizer.hasMoreTokens()) {
+					String token = tokenizer.nextToken();
+					sb.append(token);
+					if ("/".equals(token)) { //$NON-NLS-1$
+						if (previousToken != null) {
+							try {
+								previousToken = URLDecoder.decode(previousToken, "UTF-8"); //$NON-NLS-1$
+							} catch (UnsupportedEncodingException e1) {
+								// do nothing
+							}
+							parentColl = createDirectoryCollection(previousToken, parentColl, directories,
+									QueryField.URI.getKey(), sb.toString(), QueryField.STARTSWITH, changeIndicator);
+							previousToken = null;
+						}
+					} else
+						previousToken = token;
+				}
+			} catch (RuntimeException e2) {
+				DbActivator.getDefault().logError(Messages.DbManager_internal_error_folder_hierarchy, e2);
 			}
+
 		});
 		return changeIndicator[0];
 	}
@@ -1709,70 +1707,68 @@ public class DbManager implements IDbManager, IAdaptable {
 		final GregorianCalendar cal = new GregorianCalendar();
 		cal.setTime(dateCreated);
 		final boolean[] changeIndicator = new boolean[] { false };
-		safeTransaction(new Runnable() {
-			public void run() {
-				try {
-					GroupImpl timeLineGroup = getCollectionGroup(Constants.GROUP_ID_TIMELINE,
-							Messages.DbManager_Timeline, true);
-					int year = cal.get(Calendar.YEAR);
-					StringBuilder ksb = new StringBuilder(DATETIMEKEY);
-					ksb.append(String.valueOf(year));
-					SmartCollectionImpl parentColl = createTimelineCollection(String.valueOf(year), null, timeLineGroup,
-							ksb.toString(), new GregorianCalendar(year, 0, 1),
-							new GregorianCalendar(year, 11, 31, 23, 59, 59), changeIndicator);
-					store(timeLineGroup);
-					store(parentColl);
-					if (!timeline.equals(Meta_type.timeline_year)) {
-						if (timeline.equals(Meta_type.timeline_week)
-								|| timeline.equals(Meta_type.timeline_weekAndDay)) {
-							int week = cal.get(Calendar.WEEK_OF_YEAR);
-							GregorianCalendar from = new GregorianCalendar(year, 0, 1);
-							from.set(GregorianCalendar.WEEK_OF_YEAR, week);
-							from.set(GregorianCalendar.DAY_OF_WEEK, 0);
-							ksb.append("-W").append(week); //$NON-NLS-1$
-							GregorianCalendar to = new GregorianCalendar(year, 0, 1);
+		safeTransaction(() -> {
+			try {
+				GroupImpl timeLineGroup = getCollectionGroup(Constants.GROUP_ID_TIMELINE,
+						Messages.DbManager_Timeline, true);
+				int year = cal.get(Calendar.YEAR);
+				StringBuilder ksb = new StringBuilder(DATETIMEKEY);
+				ksb.append(String.valueOf(year));
+				SmartCollectionImpl parentColl = createTimelineCollection(String.valueOf(year), null, timeLineGroup,
+						ksb.toString(), new GregorianCalendar(year, 0, 1),
+						new GregorianCalendar(year, 11, 31, 23, 59, 59), changeIndicator);
+				store(timeLineGroup);
+				store(parentColl);
+				if (!timeline.equals(Meta_type.timeline_year)) {
+					if (timeline.equals(Meta_type.timeline_week)
+							|| timeline.equals(Meta_type.timeline_weekAndDay)) {
+						int week = cal.get(Calendar.WEEK_OF_YEAR);
+						GregorianCalendar from1 = new GregorianCalendar(year, 0, 1);
+						from1.set(GregorianCalendar.WEEK_OF_YEAR, week);
+						from1.set(GregorianCalendar.DAY_OF_WEEK, 0);
+						ksb.append("-W").append(week); //$NON-NLS-1$
+						GregorianCalendar to = new GregorianCalendar(year, 0, 1);
+						to.set(Calendar.WEEK_OF_YEAR, week);
+						to.set(Calendar.DAY_OF_WEEK, 6);
+						to.set(Calendar.HOUR_OF_DAY, 23);
+						to.set(Calendar.MINUTE, 59);
+						to.set(Calendar.SECOND, 59);
+						parentColl = createTimelineCollection(dfw.format(from1.getTime()), parentColl, timeLineGroup,
+								ksb.toString(), from1, to, changeIndicator);
+						if (!timeline.equals(Meta_type.timeline_week)) {
+							int day11 = cal.get(Calendar.DAY_OF_WEEK);
+							ksb.append('-').append(day11);
+							from1 = new GregorianCalendar(year, 0, 1);
+							from1.set(Calendar.WEEK_OF_YEAR, week);
+							from1.set(Calendar.DAY_OF_WEEK, day11);
+							to = new GregorianCalendar(year, 0, 1);
 							to.set(Calendar.WEEK_OF_YEAR, week);
-							to.set(Calendar.DAY_OF_WEEK, 6);
+							to.set(Calendar.DAY_OF_WEEK, day11);
 							to.set(Calendar.HOUR_OF_DAY, 23);
 							to.set(Calendar.MINUTE, 59);
 							to.set(Calendar.SECOND, 59);
-							parentColl = createTimelineCollection(dfw.format(from.getTime()), parentColl, timeLineGroup,
-									ksb.toString(), from, to, changeIndicator);
-							if (!timeline.equals(Meta_type.timeline_week)) {
-								int day1 = cal.get(Calendar.DAY_OF_WEEK);
-								ksb.append('-').append(day1);
-								from = new GregorianCalendar(year, 0, 1);
-								from.set(Calendar.WEEK_OF_YEAR, week);
-								from.set(Calendar.DAY_OF_WEEK, day1);
-								to = new GregorianCalendar(year, 0, 1);
-								to.set(Calendar.WEEK_OF_YEAR, week);
-								to.set(Calendar.DAY_OF_WEEK, day1);
-								to.set(Calendar.HOUR_OF_DAY, 23);
-								to.set(Calendar.MINUTE, 59);
-								to.set(Calendar.SECOND, 59);
-								createTimelineCollection(dfdw.format(from.getTime()), parentColl, timeLineGroup,
-										ksb.toString(), from, to, changeIndicator);
-							}
-						} else {
-							int month = cal.get(Calendar.MONTH);
-							GregorianCalendar from = new GregorianCalendar(year, month, 1);
-							ksb.append('-').append(month);
-							parentColl = createTimelineCollection(df.format(from.getTime()), parentColl, timeLineGroup,
-									ksb.toString(), from, new GregorianCalendar(year, month,
-											from.getActualMaximum(Calendar.DAY_OF_MONTH), 23, 59, 59),
-									changeIndicator);
-							if (!timeline.equals(Meta_type.timeline_month)) {
-								int day1 = cal.get(Calendar.DAY_OF_MONTH);
-								ksb.append('-').append(day1);
-								createTimelineCollection(String.valueOf(day1), parentColl, timeLineGroup,
-										ksb.toString(), new GregorianCalendar(year, month, day1),
-										new GregorianCalendar(year, month, day1, 23, 59, 59), changeIndicator);
-							}
+							createTimelineCollection(dfdw.format(from1.getTime()), parentColl, timeLineGroup,
+									ksb.toString(), from1, to, changeIndicator);
+						}
+					} else {
+						int month = cal.get(Calendar.MONTH);
+						GregorianCalendar from2 = new GregorianCalendar(year, month, 1);
+						ksb.append('-').append(month);
+						parentColl = createTimelineCollection(df.format(from2.getTime()), parentColl, timeLineGroup,
+								ksb.toString(), from2, new GregorianCalendar(year, month,
+										from2.getActualMaximum(Calendar.DAY_OF_MONTH), 23, 59, 59),
+								changeIndicator);
+						if (!timeline.equals(Meta_type.timeline_month)) {
+							int day12 = cal.get(Calendar.DAY_OF_MONTH);
+							ksb.append('-').append(day12);
+							createTimelineCollection(String.valueOf(day12), parentColl, timeLineGroup,
+									ksb.toString(), new GregorianCalendar(year, month, day12),
+									new GregorianCalendar(year, month, day12, 23, 59, 59), changeIndicator);
 						}
 					}
-				} catch (RuntimeException e) {
-					DbActivator.getDefault().logError(Messages.DbManager_internal_error_timeline, e);
 				}
+			} catch (RuntimeException e) {
+				DbActivator.getDefault().logError(Messages.DbManager_internal_error_timeline, e);
 			}
 		});
 		return changeIndicator[0];
@@ -1848,79 +1844,76 @@ public class DbManager implements IDbManager, IAdaptable {
 		previousLocationKeys.add(locationKey);
 		ksb.setLength(LOCATIONKEY.length());
 		final boolean[] changeIndicator = new boolean[] { false };
-		safeTransaction(new Runnable() {
-
-			public void run() {
-				try {
-					GroupImpl locationGroup = getCollectionGroup(Constants.GROUP_ID_LOCATIONS,
-							Messages.DbManager_locations, true);
-					// Continent
-					ksb.append(regionCode);
-					String name = regionCode != null ? GeoMessages.getString(GeoMessages.PREFIX + regionCode)
-							: Messages.DbManager_unknown_world_region;
-					Criterion crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
-							QueryField.LOCATION_WORLDREGIONCODE.getKey(), regionCode,
-							regionCode == null || regionCode.length() == 0 ? QueryField.UNDEFINED : QueryField.EQUALS,
-							true);
-					SmartCollectionImpl parentColl = createLocationCollection(name, null, locationGroup, ksb.toString(),
-							changeIndicator, crit);
-					store(locationGroup);
-					store(parentColl);
-					// Country
-					ksb.append('|').append(countryCode);
-					name = location.getCountryName();
+		safeTransaction(() -> {
+			try {
+				GroupImpl locationGroup = getCollectionGroup(Constants.GROUP_ID_LOCATIONS,
+						Messages.DbManager_locations, true);
+				// Continent
+				ksb.append(regionCode);
+				String name = regionCode != null ? GeoMessages.getString(GeoMessages.PREFIX + regionCode)
+						: Messages.DbManager_unknown_world_region;
+				Criterion crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
+						QueryField.LOCATION_WORLDREGIONCODE.getKey(), regionCode,
+						regionCode == null || regionCode.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS,
+						true);
+				SmartCollectionImpl parentColl = createLocationCollection(name, null, locationGroup, ksb.toString(),
+						changeIndicator, crit);
+				store(locationGroup);
+				store(parentColl);
+				// Country
+				ksb.append('|').append(countryCode);
+				name = location.getCountryName();
+				if (name == null)
+					name = Messages.DbManager_unknown_country;
+				crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
+						QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode,
+						countryCode == null || countryCode.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS,
+						true);
+				parentColl = createLocationCollection(name, parentColl, null, ksb.toString(), changeIndicator,
+						crit);
+				if (!locationOption.equals(Meta_type.locationFolders_country)) {
+					// State
+					ksb.append('|').append(state);
+					name = state;
 					if (name == null)
-						name = Messages.DbManager_unknown_country;
+						name = Messages.DbManager_unknown_state;
 					crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
+							QueryField.LOCATION_STATE.getKey(), state,
+							state == null || state.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS, true);
+					CriterionImpl crit2 = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
 							QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode,
-							countryCode == null || countryCode.length() == 0 ? QueryField.UNDEFINED : QueryField.EQUALS,
+							countryCode == null || countryCode.isEmpty() ? QueryField.UNDEFINED
+									: QueryField.EQUALS,
 							true);
 					parentColl = createLocationCollection(name, parentColl, null, ksb.toString(), changeIndicator,
-							crit);
-					if (!locationOption.equals(Meta_type.locationFolders_country)) {
-						// State
-						ksb.append('|').append(state);
-						name = state;
+							crit, crit2);
+					if (!locationOption.equals(Meta_type.locationFolders_state)) {
+						// City
+						name = city;
 						if (name == null)
-							name = Messages.DbManager_unknown_state;
+							name = Messages.DbManager_unknown_city;
 						crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
+								QueryField.LOCATION_CITY.getKey(), city,
+								city == null || city.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS,
+								true);
+
+						crit2 = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
 								QueryField.LOCATION_STATE.getKey(), state,
-								state == null || state.length() == 0 ? QueryField.UNDEFINED : QueryField.EQUALS, true);
-						CriterionImpl crit2 = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
+								state == null || state.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS,
+								true);
+						CriterionImpl crit3 = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
 								QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode,
-								countryCode == null || countryCode.length() == 0 ? QueryField.UNDEFINED
+								countryCode == null || countryCode.isEmpty() ? QueryField.UNDEFINED
 										: QueryField.EQUALS,
 								true);
-						parentColl = createLocationCollection(name, parentColl, null, ksb.toString(), changeIndicator,
-								crit, crit2);
-						if (!locationOption.equals(Meta_type.locationFolders_state)) {
-							// City
-							name = city;
-							if (name == null)
-								name = Messages.DbManager_unknown_city;
-							crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
-									QueryField.LOCATION_CITY.getKey(), city,
-									city == null || city.length() == 0 ? QueryField.UNDEFINED : QueryField.EQUALS,
-									true);
-
-							crit2 = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
-									QueryField.LOCATION_STATE.getKey(), state,
-									state == null || state.length() == 0 ? QueryField.UNDEFINED : QueryField.EQUALS,
-									true);
-							CriterionImpl crit3 = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
-									QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode,
-									countryCode == null || countryCode.length() == 0 ? QueryField.UNDEFINED
-											: QueryField.EQUALS,
-									true);
-							parentColl = createLocationCollection(name, parentColl, null, locationKey, changeIndicator,
-									crit, crit2, crit3);
-						}
+						parentColl = createLocationCollection(name, parentColl, null, locationKey, changeIndicator,
+								crit, crit2, crit3);
 					}
-				} catch (RuntimeException e) {
-					DbActivator.getDefault().logError(Messages.DbManager_internal_error_creation_locations, e);
 				}
-
+			} catch (RuntimeException e) {
+				DbActivator.getDefault().logError(Messages.DbManager_internal_error_creation_locations, e);
 			}
+
 		});
 		return changeIndicator[0];
 	}
@@ -1967,7 +1960,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				if (force || needsDefragmentation()) {
 					Meta meta1 = getMeta(false);
 					boolean hasBackups = meta1 == null
-							|| meta1.getBackupLocation() != null && meta1.getBackupLocation().length() > 0;
+							|| meta1.getBackupLocation() != null && !meta1.getBackupLocation().isEmpty();
 					if (force || hasBackups
 							|| factory.getErrorHandler().question(Messages.DbManager_Catalog_maintenance,
 									Messages.DbManager_The_cat_seems_to_be_fragmented, this)) {
@@ -2193,7 +2186,7 @@ public class DbManager implements IDbManager, IAdaptable {
 					sb.setLength(0);
 					String volume = asset.getVolume();
 					if (q > p) {
-						if (volume != null && volume.length() > 0) {
+						if (volume != null && !volume.isEmpty()) {
 							sb.append(VOLUMEKEY).append(volume);
 							added |= addDirtyCollection(sb.toString());
 						}
@@ -2448,7 +2441,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	public BackupJob performBackup(long delay, long interval, boolean block, int generations) {
 		Meta meta1 = getMeta(true);
 		String backupLocation = meta1.getBackupLocation();
-		if (backupLocation != null && backupLocation.length() > 0) {
+		if (backupLocation != null && !backupLocation.isEmpty()) {
 			if (checkAvailableSpace(backupLocation, getFile(), getIndexPath())) {
 				Date date = meta1.getLastBackup();
 				Date lastSessionEnd = meta1.getLastSessionEnd();

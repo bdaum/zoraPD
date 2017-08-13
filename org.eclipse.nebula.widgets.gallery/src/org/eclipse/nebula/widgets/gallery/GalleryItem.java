@@ -11,6 +11,7 @@
 package org.eclipse.nebula.widgets.gallery;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
@@ -31,7 +32,7 @@ import org.eclipse.swt.widgets.Item;
  * 
  * @author Nicolas Richeton (nicolas.richeton@gmail.com)
  * @contributor Peter Centgraf (bugs 212071, 212073)
- * @contributor Berthold Daum (selection tuning, marked with bd)
+ * @contributor Berthold Daum (bug 306144 - selection tuning)
  */
 
 public class GalleryItem extends Item {
@@ -86,8 +87,10 @@ public class GalleryItem extends Item {
 
 	private GalleryItem parentItem;
 
-	// protected int[] selectionIndices = null; // bd
-	protected int[] selectionFlags = null; // bd
+	/**
+	 * Selection bit flags. Each 'int' contains flags for 32 items.
+	 */
+	protected int[] selectionFlags = null;
 
 	protected Font font;
 
@@ -215,8 +218,8 @@ public class GalleryItem extends Item {
 			// old one.
 			GalleryItem[] newItems = new GalleryItem[count];
 			if (items != null) {
-				System.arraycopy(items, 0, newItems, 0, Math.min(count,
-						items.length));
+				System.arraycopy(items, 0, newItems, 0,
+						Math.min(count, items.length));
 			}
 			items = newItems;
 		}
@@ -262,7 +265,6 @@ public class GalleryItem extends Item {
 		return parent._indexOf(this, childItem);
 	}
 
-	@Override
 	public void setImage(Image image) {
 		super.setImage(image);
 		parent.redraw(this);
@@ -301,7 +303,6 @@ public class GalleryItem extends Item {
 	 * @deprecated
 	 * @return
 	 */
-	@Deprecated
 	public String getDescription() {
 		return getText(1);
 	}
@@ -310,7 +311,6 @@ public class GalleryItem extends Item {
 	 * @param description
 	 * @deprecated
 	 */
-	@Deprecated
 	public void setDescription(String description) {
 		setText(1, description);
 	}
@@ -325,13 +325,19 @@ public class GalleryItem extends Item {
 	}
 
 	protected void _deselectAll() {
-		// this.selectionIndices = null; // bd
+
+		// Deselect groups
+		// We could set selectionFlags to null, but we rather set all values to
+		// 0 to redure garbage collection. On each iteration, we deselect 32
+		// items.
 		if (selectionFlags != null)
 			for (int i = 0; i < selectionFlags.length; i++)
 				selectionFlags[i] = 0;
-		// - bd
+
 		if (items == null)
 			return;
+
+		// Deselect group content.
 		for (int i = 0; i < items.length; i++) {
 			if (items[i] != null)
 				items[i]._deselectAll();
@@ -345,61 +351,52 @@ public class GalleryItem extends Item {
 		}
 
 		if (item.getParentItem() == this) {
-			// if (selectionIndices == null) { // bd
-			// selectionIndices = new int[1];
-			// } else {
-			// int[] oldSelection = selectionIndices;
-			// selectionIndices = new int[oldSelection.length + 1];
-			// System.arraycopy(oldSelection, 0, selectionIndices, 0,
-			// oldSelection.length);
-			// }
-			// selectionIndices[selectionIndices.length - 1] = indexOf(item);
+
 			int index = indexOf(item);
+
+			// Divide position by 32 to get selection bloc for this item.
 			int n = index >> 5;
 			if (selectionFlags == null) {
+				// Create selectionFlag array
+				// Add 31 before dividing by 32 to ensure at least one 'int' is
+				// created if size < 32.
 				selectionFlags = new int[(items.length + 31) >> 5];
 			} else if (n >= selectionFlags.length) {
+				// Expand selectionArray
 				int[] oldFlags = selectionFlags;
 				selectionFlags = new int[n + 1];
 				System.arraycopy(oldFlags, 0, selectionFlags, 0,
 						oldFlags.length);
 			}
+
+			// Get flag position in the 32 bit block and ensure is selected.
 			selectionFlags[n] |= 1 << (index & 0x1f);
-			// -bd
+
 		}
 	}
 
 	protected boolean isSelected(GalleryItem item) {
 		if (item == null)
 			return false;
-		// bd
-		// if (item.getParentItem() == this) {
-		// if (selectionIndices == null)
-		// return false;
-		//
-		// int index = indexOf(item);
-		// for (int i = 0; i < selectionIndices.length; i++) {
-		// if (selectionIndices[i] == index)
-		// return true;
-		// }
-		// }
+
 		if (item.getParentItem() == this) {
 			if (selectionFlags == null)
 				return false;
+
 			int index = indexOf(item);
 			int n = index >> 5;
 			if (n >= selectionFlags.length)
 				return false;
-			int flag = selectionFlags[n];
-			return flag != 0 && (flag & 1<<(index & 0x1f)) != 0;
+			int flags = selectionFlags[n];
+			return flags != 0 && (flags & 1 << (index & 0x1f)) != 0;
 		}
-		// -bd
 		return false;
 	}
 
 	protected void select(int from, int to) {
 		if (Gallery.DEBUG)
 			System.out.println("GalleryItem.select(  " + from + "," + to + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
 		for (int i = from; i <= to; i++) {
 			GalleryItem item = getItem(i);
 			parent._addSelection(item);
@@ -417,7 +414,7 @@ public class GalleryItem extends Item {
 		// The y coords is relative to the client area because it may return
 		// wrong values
 		// on win32 when using the scroll bars. Instead, I use the absolute
-		// position and make is relative using the current translation.
+		// position and make it relative using the current translation.
 
 		if (parent.isVertical()) {
 			return new Rectangle(x, y - parent.translate, width, height);
@@ -427,8 +424,23 @@ public class GalleryItem extends Item {
 	}
 
 	public Font getFont() {
+		return getFont(false);
+	}
+
+	public Font getFont(boolean itemOnly) {
 		checkWidget();
-		return font;
+
+		if (itemOnly) {
+			return font;
+		}
+
+		// Let the renderer decide the color.
+		if (parent.getGroupRenderer() != null) {
+			return parent.getGroupRenderer().getFont(this);
+		}
+
+		// Default SWT behavior if no renderer.
+		return font != null ? font : parent.getFont();
 	}
 
 	public void setFont(Font font) {
@@ -440,11 +452,81 @@ public class GalleryItem extends Item {
 		this.parent.redraw(this);
 	}
 
+	/**
+	 * Returns the receiver's foreground color.
+	 * 
+	 * @return The foreground color
+	 * 
+	 * @exception SWTException
+	 *                <ul>
+	 *                <li>ERROR_WIDGET_DISPOSED - if the receiver has been
+	 *                disposed</li>
+	 *                <li>ERROR_THREAD_INVALID_ACCESS - if not called from the
+	 *                thread that created the receiver</li>
+	 *                </ul>
+	 * 
+	 */
 	public Color getForeground() {
+		return getForeground(false);
+	}
+
+	/**
+	 * Returns the receiver's foreground color.
+	 * 
+	 * @param itemOnly
+	 *            If TRUE, does not try to use renderer or parent widget to
+	 *            guess the real foreground color. Note : FALSE is the default
+	 *            behavior.
+	 * 
+	 * @return The foreground color
+	 * 
+	 * @exception SWTException
+	 *                <ul>
+	 *                <li>ERROR_WIDGET_DISPOSED - if the receiver has been
+	 *                disposed</li>
+	 *                <li>ERROR_THREAD_INVALID_ACCESS - if not called from the
+	 *                thread that created the receiver</li>
+	 *                </ul>
+	 * 
+	 */
+	public Color getForeground(boolean itemOnly) {
 		checkWidget();
+
+		if (itemOnly) {
+			return this.foreground;
+		}
+
+		// Let the renderer decide the color.
+		if (parent.getGroupRenderer() != null) {
+			return parent.getGroupRenderer().getForeground(this);
+		}
+
+		// Default SWT behavior if no renderer.
 		return foreground != null ? foreground : parent.getForeground();
 	}
 
+	/**
+	 * Sets the receiver's foreground color to the color specified by the
+	 * argument, or to the default system color for the item if the argument is
+	 * null.
+	 * 
+	 * @param color
+	 *            The new color (or null)
+	 * 
+	 * @exception IllegalArgumentException
+	 *                <ul>
+	 *                <li>ERROR_INVALID_ARGUMENT - if the argument has been
+	 *                disposed</li>
+	 *                </ul>
+	 * @exception SWTException
+	 *                <ul>
+	 *                <li>ERROR_WIDGET_DISPOSED - if the receiver has been
+	 *                disposed</li>
+	 *                <li>ERROR_THREAD_INVALID_ACCESS - if not called from the
+	 *                thread that created the receiver</li>
+	 *                </ul>
+	 * 
+	 */
 	public void setForeground(Color foreground) {
 		checkWidget();
 		if (foreground != null && foreground.isDisposed()) {
@@ -454,11 +536,82 @@ public class GalleryItem extends Item {
 		this.parent.redraw(this);
 	}
 
+	/**
+	 * Returns the receiver's background color.
+	 * 
+	 * @return The background color
+	 * 
+	 * @exception SWTException
+	 *                <ul>
+	 *                <li>ERROR_WIDGET_DISPOSED - if the receiver has been
+	 *                disposed</li>
+	 *                <li>ERROR_THREAD_INVALID_ACCESS - if not called from the
+	 *                thread that created the receiver</li>
+	 *                </ul>
+	 * 
+	 */
 	public Color getBackground() {
+		return getBackground(false);
+	}
+
+	/**
+	 * Returns the receiver's background color.
+	 * 
+	 * @param itemOnly
+	 *            If TRUE, does not try to use renderer or parent widget to
+	 *            guess the real background color. Note : FALSE is the default
+	 *            behavior.
+	 * 
+	 * @return The background color
+	 * 
+	 * @exception SWTException
+	 *                <ul>
+	 *                <li>ERROR_WIDGET_DISPOSED - if the receiver has been
+	 *                disposed</li>
+	 *                <li>ERROR_THREAD_INVALID_ACCESS - if not called from the
+	 *                thread that created the receiver</li>
+	 *                </ul>
+	 * 
+	 */
+	public Color getBackground(boolean itemOnly) {
 		checkWidget();
+
+		// If itemOnly, return this item's color attribute.
+		if (itemOnly) {
+			return this.background;
+		}
+
+		// Let the renderer decide the color.
+		if (parent.getGroupRenderer() != null) {
+			return parent.getGroupRenderer().getBackground(this);
+		}
+
+		// Default SWT behavior if no renderer.
 		return background != null ? background : parent.getBackground();
 	}
 
+	/**
+	 * Sets the receiver's background color to the color specified by the
+	 * argument, or to the default system color for the item if the argument is
+	 * null.
+	 * 
+	 * @param color
+	 *            The new color (or null)
+	 * 
+	 * @exception IllegalArgumentException
+	 *                <ul>
+	 *                <li>ERROR_INVALID_ARGUMENT - if the argument has been
+	 *                disposed</li>
+	 *                </ul>
+	 * @exception SWTException
+	 *                <ul>
+	 *                <li>ERROR_WIDGET_DISPOSED - if the receiver has been
+	 *                disposed</li>
+	 *                <li>ERROR_THREAD_INVALID_ACCESS - if not called from the
+	 *                thread that created the receiver</li>
+	 *                </ul>
+	 * 
+	 */
 	public void setBackground(Color background) {
 		checkWidget();
 		if (background != null && background.isDisposed()) {
@@ -569,7 +722,6 @@ public class GalleryItem extends Item {
 		}
 	}
 
-	@Override
 	public void dispose() {
 		checkWidget();
 
@@ -582,7 +734,6 @@ public class GalleryItem extends Item {
 		parent.redraw();
 	}
 
-	@Override
 	public void setText(String string) {
 		setText(0, string);
 	}
@@ -595,7 +746,6 @@ public class GalleryItem extends Item {
 		parent.redraw(this);
 	}
 
-	@Override
 	public String getText() {
 		return getText(0);
 	}

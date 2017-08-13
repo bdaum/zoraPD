@@ -79,7 +79,7 @@ public class CodeGroup extends Composite {
 
 	public void setText(String text) {
 		textfield.setText(text == null ? "" : text); //$NON-NLS-1$
-		Topic topic = (text != null && text.length() > 0 && parser != null) ? parser
+		Topic topic = (text != null && !text.isEmpty() && parser != null) ? parser
 				.findTopic(text) : null;
 		textfield.setToolTipText(topic == null ? "" : topic.getName()); //$NON-NLS-1$
 	}

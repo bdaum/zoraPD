@@ -41,12 +41,13 @@ public class Report_typeImpl extends AomObject implements Report_type {
 	 * @param valueInterval - Property
 	 * @param threshold - Property
 	 * @param properties - Property
+	 * @param skipOrphans - Property
 	 */
 	public Report_typeImpl(String name, String description, String source,
 			int mode, int sortField, boolean descending, String field,
 			long timeLower, long timeUpper, long valueLower, long valueUpper,
 			int dayInterval, int timeInterval, int valueInterval,
-			float threshold, Object properties) {
+			float threshold, Object properties, boolean skipOrphans) {
 		super();
 		this.name = name;
 		this.description = description;
@@ -64,6 +65,7 @@ public class Report_typeImpl extends AomObject implements Report_type {
 		this.valueInterval = valueInterval;
 		this.threshold = threshold;
 		this.properties = properties;
+		this.skipOrphans = skipOrphans;
 
 	}
 
@@ -469,6 +471,28 @@ public class Report_typeImpl extends AomObject implements Report_type {
 		return properties;
 	}
 
+	/* *** Property skipOrphans *** */
+
+	private boolean skipOrphans;
+
+	/**
+	 * Set value of property skipOrphans
+	 *
+	 * @param _value - new field value
+	 */
+	public void setSkipOrphans(boolean _value) {
+		skipOrphans = _value;
+	}
+
+	/**
+	 * Get value of property skipOrphans
+	 *
+	 * @return - value of field skipOrphans
+	 */
+	public boolean getSkipOrphans() {
+		return skipOrphans;
+	}
+
 	/* ----- Equality ----- */
 
 	/**
@@ -523,6 +547,8 @@ public class Report_typeImpl extends AomObject implements Report_type {
 
 				&& ((getProperties() == null && other.getProperties() == null) || (getProperties() != null && getProperties()
 						.equals(other.getProperties())))
+
+				&& getSkipOrphans() == other.getSkipOrphans()
 
 		;
 	}
@@ -581,6 +607,8 @@ public class Report_typeImpl extends AomObject implements Report_type {
 
 		hashCode = 31 * hashCode
 				+ ((getProperties() == null) ? 0 : getProperties().hashCode());
+
+		hashCode = 31 * hashCode + (getSkipOrphans() ? 1231 : 1237);
 
 		return hashCode;
 	}

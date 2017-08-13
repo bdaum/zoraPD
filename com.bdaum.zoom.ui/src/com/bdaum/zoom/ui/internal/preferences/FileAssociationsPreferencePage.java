@@ -404,7 +404,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 					ext = ext.substring(p + 1);
 				extensions.add(ext);
 			}
-			if (extensions.size() > 0)
+			if (!extensions.isEmpty())
 				list.add(new FileEditorMapping(extensions.toArray(new String[extensions.size()])));
 		}
 		for (IMediaSupport mediaSupport : CoreActivator.getDefault().getMediaSupport())
@@ -819,7 +819,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 	protected String doValidate() {
 		for (FileEditor fileEditor : fileEditorMap.values()) {
 			String fn = fileEditor.getText();
-			if (fn.length() > 0) {
+			if (!fn.isEmpty()) {
 				File file = new File(fn);
 				if (!file.exists())
 					return NLS.bind(Messages.getString("GeneralPreferencePage.external_viewer_does_not_exist"), fn); //$NON-NLS-1$

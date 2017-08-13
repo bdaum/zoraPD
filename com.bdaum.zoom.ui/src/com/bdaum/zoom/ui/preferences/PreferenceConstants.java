@@ -34,7 +34,10 @@ public interface PreferenceConstants {
 	String COLORCODE_AUTO = "auto"; //$NON-NLS-1$
 	String COLORCODE_MANUAL = "true"; //$NON-NLS-1$
 	String AUTOCOLORCODECRIT = "com.bdaum.zoom.autoColorCodeCrit"; //$NON-NLS-1$
-
+	String SHOWDECO = "com.bdaum.zoom.showThumbDeco"; //$NON-NLS-1$
+	int DECONEVER = 0;
+	int DECOSELECT = 1; 
+	int DECOALWAYS = 2;
 	String SHOWRATING = "com.bdaum.zoom.showRating"; //$NON-NLS-1$
 	String SHOWRATING_NO = "false"; //$NON-NLS-1$
 	String SHOWRATING_SIZE = "true"; //$NON-NLS-1$
@@ -128,6 +131,7 @@ public interface PreferenceConstants {
 	String TABLECOLUMNS = "com.bdaum.zoom.tableColumns"; //$NON-NLS-1$
 	String ADDNOISE = "com.bdaum.zoom.addNoise"; //$NON-NLS-1$;
 	String ENLARGESMALL = "com.bdaum.zoom.enlargeSmall"; //$NON-NLS-1$
+	String SECONDARYMONITOR = "com.bdaum.zoom.secondaryMonitor"; //$NON-NLS-1$
 
 	// Faces
 	String MAXREGIONS = "com.bdaum.zoom.maxRegions"; //$NON-NLS-1$

@@ -68,7 +68,7 @@ public class KeywordVerifyListener implements VerifyListener {
 			e.doit = false;
 			return;
 		}
-		if (insert.length() == 0 & e.end - e.start == 1 && lastProposal != null
+		if (insert.isEmpty() & e.end - e.start == 1 && lastProposal != null
 				&& lastProposal.length() > e.start) {
 			String text = field.getText();
 			text = (e.end == lastOrigLength) ? text.substring(0, e.start)
@@ -85,7 +85,7 @@ public class KeywordVerifyListener implements VerifyListener {
 		}
 		if (insert.indexOf(',') >= 0 || insert.indexOf(';') >= 0)
 			e.doit = false;
-		else if (insert.length() > 0)
+		else if (!insert.isEmpty())
 			computeProposal(e);
 		if (reveal != null && viewer != null)
 			viewer.reveal(reveal);
@@ -119,7 +119,7 @@ public class KeywordVerifyListener implements VerifyListener {
 		}
 		int kwstart = findWordStart(start + insert.length(), text);
 		String orig = text.substring(kwstart, start + insert.length());
-		if (orig.length() > 0) {
+		if (!orig.isEmpty()) {
 			Object keyword = findMatchingKeyword(orig);
 			reveal = keyword;
 			if (keyword == null) {

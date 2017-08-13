@@ -28,7 +28,7 @@ public class JnaActivator extends Plugin {
 		String libPath = System.getProperty("jna.boot.library.path", ""); //$NON-NLS-1$//$NON-NLS-2$
 		if (libPath.indexOf(jnaPath) < 0)
 			System.setProperty(
-					"jna.boot.library.path", libPath.length() > 0 ? jnaPath + ';' + libPath : jnaPath); //$NON-NLS-1$
+					"jna.boot.library.path", libPath.isEmpty() ? jnaPath : jnaPath + ';' + libPath); //$NON-NLS-1$
 	}
 
 	/**

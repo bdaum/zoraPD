@@ -43,7 +43,7 @@ public class ExrExifLoader implements IExifLoader {
 		settings.put("ImageSize", imageLoader.getImageWidth() + "x" //$NON-NLS-1$ //$NON-NLS-2$
 				+ imageLoader.getImageHeight());
 		String comments = imageLoader.getComments();
-		if (comments != null && comments.length() > 0)
+		if (comments != null && !comments.isEmpty())
 			settings.put("Software", comments); //$NON-NLS-1$
 		settings.put("BitsPerSample", "-1 -1 -1"); //$NON-NLS-1$ //$NON-NLS-2$
 		settings.put("SamplesPerPixel", "3"); //$NON-NLS-1$ //$NON-NLS-2$

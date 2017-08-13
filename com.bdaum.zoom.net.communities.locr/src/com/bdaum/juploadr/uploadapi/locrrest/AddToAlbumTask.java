@@ -92,7 +92,7 @@ public class AddToAlbumTask  extends PostProcessingTask {
 		int count = 0;
 		while (iter.hasNext()) {
 			PhotoSet set = iter.next();
-			if (set.getPhotos().size() > 0) {
+			if (!set.getPhotos().isEmpty()) {
 				numberOfSets++;
 				count += set.getPhotos().size();
 			}

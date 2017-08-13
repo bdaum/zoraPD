@@ -111,12 +111,10 @@ import com.bdaum.zoom.ui.internal.dialogs.DescriptionDialog;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class HierarchyView extends ImageView implements
-		ISelectionChangedListener, IDragHost {
+public class HierarchyView extends ImageView implements ISelectionChangedListener, IDragHost {
 
 	@SuppressWarnings("serial")
-	public static class HierarchyPostProcessor extends PostProcessorImpl
-			implements IPostProcessor {
+	public static class HierarchyPostProcessor extends PostProcessorImpl implements IPostProcessor {
 
 		private final Node node;
 
@@ -169,8 +167,7 @@ public class HierarchyView extends ImageView implements
 		}
 
 		public Asset getAsset() {
-			return asset == null ? null : Core.getCore().getDbManager()
-					.obtainAsset(asset.getStringId());
+			return asset == null ? null : Core.getCore().getDbManager().obtainAsset(asset.getStringId());
 		}
 
 		public List<Node> getChildren() {
@@ -181,8 +178,7 @@ public class HierarchyView extends ImageView implements
 				List<AomObject> descriptions = new ArrayList<AomObject>();
 				switch (typ) {
 				case Constants.DERIVATIVES:
-					List<DerivedByImpl> derived = dbManager.obtainObjects(
-							DerivedByImpl.class, "original", assetId, //$NON-NLS-1$
+					List<DerivedByImpl> derived = dbManager.obtainObjects(DerivedByImpl.class, "original", assetId, //$NON-NLS-1$
 							QueryField.EQUALS);
 					for (DerivedByImpl rel : derived) {
 						String derivative = rel.getDerivative();
@@ -193,8 +189,7 @@ public class HierarchyView extends ImageView implements
 					}
 					break;
 				case Constants.ORIGINALS:
-					derived = dbManager.obtainObjects(DerivedByImpl.class,
-							"derivative", assetId, QueryField.EQUALS); //$NON-NLS-1$
+					derived = dbManager.obtainObjects(DerivedByImpl.class, "derivative", assetId, QueryField.EQUALS); //$NON-NLS-1$
 					for (DerivedByImpl rel : derived) {
 						String original = rel.getOriginal();
 						if (original.indexOf(':') < 0) {
@@ -204,8 +199,7 @@ public class HierarchyView extends ImageView implements
 					}
 					break;
 				case Constants.COMPOSITES:
-					List<ComposedToImpl> composed = dbManager.obtainObjects(
-							ComposedToImpl.class, "component", assetId, //$NON-NLS-1$
+					List<ComposedToImpl> composed = dbManager.obtainObjects(ComposedToImpl.class, "component", assetId, //$NON-NLS-1$
 							QueryField.CONTAINS);
 					for (ComposedToImpl rel : composed) {
 						list.add(rel.getComposite());
@@ -213,8 +207,7 @@ public class HierarchyView extends ImageView implements
 					}
 					break;
 				case Constants.COMPONENTS:
-					composed = dbManager.obtainObjects(ComposedToImpl.class,
-							"composite", assetId, //$NON-NLS-1$
+					composed = dbManager.obtainObjects(ComposedToImpl.class, "composite", assetId, //$NON-NLS-1$
 							QueryField.EQUALS);
 					for (ComposedToImpl rel : composed) {
 						for (String id : rel.getComponent()) {
@@ -249,16 +242,13 @@ public class HierarchyView extends ImageView implements
 			if (image == null) {
 				Image thumbnail = getImage(asset);
 				Rectangle bounds = thumbnail.getBounds();
-				double f = (double) THUMBSIZE
-						/ Math.max(bounds.width, bounds.height);
+				double f = (double) THUMBSIZE / Math.max(bounds.width, bounds.height);
 				int width = (int) (bounds.width * f);
 				int height = (int) (bounds.height * f);
-				boolean advanced = Platform.getPreferencesService().getBoolean(
-						UiActivator.PLUGIN_ID,
+				boolean advanced = Platform.getPreferencesService().getBoolean(UiActivator.PLUGIN_ID,
 						PreferenceConstants.ADVANCEDGRAPHICS, false, null);
-				image = ImageUtilities.scaleSWT(thumbnail, width, height,
-						advanced, 1, false, thumbnail.getDevice()
-								.getSystemColor(SWT.COLOR_GRAY));
+				image = ImageUtilities.scaleSWT(thumbnail, width, height, advanced, 1, false,
+						thumbnail.getDevice().getSystemColor(SWT.COLOR_GRAY));
 			}
 			return image;
 		}
@@ -275,13 +265,10 @@ public class HierarchyView extends ImageView implements
 			for (String id : ids) {
 				Asset a = searchInHierarchy(id);
 				if (a != null)
-					return NLS
-							.bind(Messages
-									.getString("HierarchyView.image_belongs_to_hierarchy"), //$NON-NLS-1$
-									a.getName());
+					return NLS.bind(Messages.getString("HierarchyView.image_belongs_to_hierarchy"), //$NON-NLS-1$
+							a.getName());
 				if (isInOppositeHierarchy(id))
-					return Messages
-							.getString("HierarchyView.cyclic_relationship"); //$NON-NLS-1$
+					return Messages.getString("HierarchyView.cyclic_relationship"); //$NON-NLS-1$
 			}
 			LinkOperation op = new LinkOperation(typ, asset.getStringId(), ids);
 			OperationJob.executeOperation(op, HierarchyView.this);
@@ -336,8 +323,7 @@ public class HierarchyView extends ImageView implements
 	public final static String ID_COMPOSITES = "com.bdaum.zoom.ui.views.HierarchyViewComposites"; //$NON-NLS-1$
 	public final static String ID_COMPONENTS = "com.bdaum.zoom.ui.views.HierarchyViewComponents"; //$NON-NLS-1$
 
-	public final static String[] IDS = new String[] { ID_DERIVATIVES,
-			ID_ORIGINALS, ID_COMPOSITES, ID_COMPONENTS };
+	public final static String[] IDS = new String[] { ID_DERIVATIVES, ID_ORIGINALS, ID_COMPOSITES, ID_COMPONENTS };
 
 	public class ViewLabelProvider extends StyledCellLabelProvider {
 
@@ -356,33 +342,26 @@ public class HierarchyView extends ImageView implements
 			cell.setStyleRanges(styles.toArray(new StyleRange[styles.size()]));
 		}
 
-		private String getText(Object element, List<StyleRange> styles,
-				int indent) {
+		private String getText(Object element, List<StyleRange> styles, int indent) {
 			if (element instanceof Node) {
 				Node node = (Node) element;
 				Asset asset = node.getAsset();
 				StringBuilder sb = new StringBuilder();
 				insertIndent(sb, indent);
-				sb.append(UiUtilities.computeImageCaption(asset, null, null,
-						null));
+				sb.append(UiUtilities.computeImageCaption(asset, null, null, null));
 				int uriLength = sb.length();
-				Date lastModification = asset == null ? null : asset
-						.getLastModification();
+				Date lastModification = asset == null ? null : asset.getLastModification();
 				if (lastModification != null) {
 					insertIndent(sb, indent + 3);
 					sb.append(Messages.getString("HierarchyView.modified")).append(df.format(lastModification)); //$NON-NLS-1$
 				}
-				styles.add(new StyleRange(0, uriLength, viewer.getControl()
-						.getForeground(), null, SWT.BOLD));
+				styles.add(new StyleRange(0, uriLength, viewer.getControl().getForeground(), null, SWT.BOLD));
 				AomObject description = node.getDescription();
 				if (description != null) {
-					sb.append('\n').append(
-							createDescription(description, indent + 3));
-					Color fg = isDescriptionValid(description) ? getSite()
-							.getShell().getForeground() : getSite().getShell()
-							.getDisplay().getSystemColor(SWT.COLOR_RED);
-					styles.add(new StyleRange(uriLength, sb.length()
-							- uriLength, fg, null));
+					sb.append('\n').append(createDescription(description, indent + 3));
+					Color fg = isDescriptionValid(description) ? getSite().getShell().getForeground()
+							: getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_RED);
+					styles.add(new StyleRange(uriLength, sb.length() - uriLength, fg, null));
 				}
 				return sb.toString();
 			}
@@ -416,22 +395,22 @@ public class HierarchyView extends ImageView implements
 				parmFile = rel.getParameterFile();
 				archived = rel.getArchivedRecipe() != null;
 			}
-			if (kind != null && kind.length() > 0) {
+			if (kind != null && !kind.isEmpty()) {
 				insertIndent(sb, ind);
 				sb.append(kind);
 			}
-			if (tool != null && tool.length() > 0) {
+			if (tool != null && !tool.isEmpty()) {
 				insertIndent(sb, ind);
 				sb.append(Messages.getString("HierarchyView.tool")).append(tool); //$NON-NLS-1$
 			}
-			if (parmFile != null && parmFile.length() > 0) {
+			if (parmFile != null && !parmFile.isEmpty()) {
 				File file = new File(parmFile);
 				insertIndent(sb, ind);
 				sb.append(Messages.getString("HierarchyView.parameter_file")).append(file.getName()); //$NON-NLS-1$
 				if (archived)
 					sb.append(Messages.getString("HierarchyView.archived")); //$NON-NLS-1$
 			}
-			if (recipe != null && recipe.length() > 0) {
+			if (recipe != null && !recipe.isEmpty()) {
 				insertIndent(sb, ind);
 				sb.append(Messages.getString("HierarchyView.recipe")).append(recipe); //$NON-NLS-1$
 			}
@@ -464,7 +443,7 @@ public class HierarchyView extends ImageView implements
 		}
 
 		public boolean hasChildren(Object element) {
-			return ((Node) element).getChildren().size() > 0;
+			return !((Node) element).getChildren().isEmpty();
 		}
 
 		public Object[] getElements(Object inputElement) {
@@ -482,8 +461,7 @@ public class HierarchyView extends ImageView implements
 	private final static int TYPE_ORIGINAL = 1;
 	private final static int TYPE_COMPOSITES = 2;
 	private final static int TYPE_COMPONENTS = 3;
-	private static final int OPERATIONS = DND.DROP_MOVE | DND.DROP_COPY
-			| DND.DROP_LINK;
+	private static final int OPERATIONS = DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK;
 	private static final SimpleDateFormat df = new SimpleDateFormat(
 			Messages.getString("HierarchyView.modified_date_format")); //$NON-NLS-1$
 	@SuppressWarnings("unused")
@@ -512,7 +490,7 @@ public class HierarchyView extends ImageView implements
 			parmFile = ((ComposedToImpl) description).getParameterFile();
 		else if (description instanceof DerivedByImpl)
 			parmFile = ((DerivedByImpl) description).getParameterFile();
-		if (parmFile != null && parmFile.length() > 0) {
+		if (parmFile != null && !parmFile.isEmpty()) {
 			File file;
 			try {
 				file = new File(new URI(parmFile));
@@ -525,8 +503,7 @@ public class HierarchyView extends ImageView implements
 	}
 
 	@Override
-	public void setInitializationData(IConfigurationElement cfig,
-			String propertyName, Object data) {
+	public void setInitializationData(IConfigurationElement cfig, String propertyName, Object data) {
 		super.setInitializationData(cfig, propertyName, data);
 		if (data instanceof String)
 			for (int i = 0; i < types.length; i++)
@@ -538,17 +515,14 @@ public class HierarchyView extends ImageView implements
 
 	@Override
 	public void createPartControl(Composite parent) {
-		viewer = new TreeViewer(parent, SWT.SINGLE | SWT.H_SCROLL
-				| SWT.V_SCROLL);
+		viewer = new TreeViewer(parent, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL);
 		viewer.setContentProvider(new ViewContentProvider());
 		viewer.setLabelProvider(new ViewLabelProvider());
 		viewer.addSelectionChangedListener(this);
 		// Create the help context id for the viewer's control
-		PlatformUI.getWorkbench().getHelpSystem()
-				.setHelp(viewer.getControl(), HelpContextIds.HIERARCHY_VIEW);
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), HelpContextIds.HIERARCHY_VIEW);
 		// Drag & Drop
-		viewer.addDropSupport(OPERATIONS, transferTypes, new ViewerDropAdapter(
-				viewer) {
+		viewer.addDropSupport(OPERATIONS, transferTypes, new ViewerDropAdapter(viewer) {
 
 			@Override
 			public void dragEnter(DropTargetEvent event) {
@@ -568,26 +542,22 @@ public class HierarchyView extends ImageView implements
 			}
 
 			@Override
-			public boolean validateDrop(Object target, int operation,
-					TransferData transferType) {
+			public boolean validateDrop(Object target, int operation, TransferData transferType) {
 				return (textTransfer.isSupportedType(transferType) && (operation & OPERATIONS) != 0);
 			}
 
 			@Override
 			public boolean performDrop(Object data) {
 				if (data instanceof String) {
-					List<String> list = Core
-							.fromStringList((String) data, "\n"); //$NON-NLS-1$
+					List<String> list = Core.fromStringList((String) data, "\n"); //$NON-NLS-1$
 					Object target = getCurrentTarget();
 					if (target == null && !list.isEmpty())
-						setInput(CoreActivator.getDefault().getDbManager()
-								.obtainAsset(list.get(0)));
+						setInput(CoreActivator.getDefault().getDbManager().obtainAsset(list.get(0)));
 					else if (target instanceof Node) {
 						String[] ids = list.toArray(new String[list.size()]);
 						String errorMsg = ((Node) target).acceptChildren(ids);
 						if (errorMsg != null) {
-							AcousticMessageDialog.openError(
-									getSite().getShell(),
+							AcousticMessageDialog.openError(getSite().getShell(),
 									Messages.getString("HierarchyView.drag_error"), errorMsg); //$NON-NLS-1$
 							return false;
 						}
@@ -623,8 +593,7 @@ public class HierarchyView extends ImageView implements
 		viewer.getTree().addListener(SWT.MouseDoubleClick, new Listener() {
 
 			public void handleEvent(Event event) {
-				TreeItem item = viewer.getTree().getItem(
-						new Point(event.x, event.y));
+				TreeItem item = viewer.getTree().getItem(new Point(event.x, event.y));
 				Object data = item.getData();
 				if (data instanceof Node) {
 					descriptionAction.run();
@@ -711,47 +680,44 @@ public class HierarchyView extends ImageView implements
 	}
 
 	protected void addPartListener() {
-		getSite().getWorkbenchWindow().getPartService()
-				.addPartListener(new IPartListener() {
+		getSite().getWorkbenchWindow().getPartService().addPartListener(new IPartListener() {
 
-					public void partOpened(IWorkbenchPart part) {
-						if (part == HierarchyView.this) {
-							updateView();
-						}
-					}
+			public void partOpened(IWorkbenchPart part) {
+				if (part == HierarchyView.this) {
+					updateView();
+				}
+			}
 
-					public void partDeactivated(IWorkbenchPart part) {
-						// do nothing
-					}
+			public void partDeactivated(IWorkbenchPart part) {
+				// do nothing
+			}
 
-					public void partClosed(IWorkbenchPart part) {
-						if (part == HierarchyView.this) {
-							updateView();
-						}
-					}
+			public void partClosed(IWorkbenchPart part) {
+				if (part == HierarchyView.this) {
+					updateView();
+				}
+			}
 
-					public void partBroughtToTop(IWorkbenchPart part) {
-						if (part == HierarchyView.this) {
-							updateView();
-						}
-					}
+			public void partBroughtToTop(IWorkbenchPart part) {
+				if (part == HierarchyView.this) {
+					updateView();
+				}
+			}
 
-					public void partActivated(IWorkbenchPart part) {
-						// do nothing
-					}
-				});
+			public void partActivated(IWorkbenchPart part) {
+				// do nothing
+			}
+		});
 	}
 
 	@Override
 	protected void makeActions(IActionBars bars) {
 		super.makeActions(bars);
-		showPossibleOriginalsAction = new Action(
-				Messages.getString("HierarchyView.show_candiates_for_originals")) { //$NON-NLS-1$
+		showPossibleOriginalsAction = new Action(Messages.getString("HierarchyView.show_candiates_for_originals")) { //$NON-NLS-1$
 
 			@Override
 			public void run() {
-				IStructuredSelection sel = (IStructuredSelection) viewer
-						.getSelection();
+				IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
 				Object firstElement = sel.getFirstElement();
 				if (firstElement instanceof Node) {
 					Node node = (Node) firstElement;
@@ -759,15 +725,14 @@ public class HierarchyView extends ImageView implements
 				}
 			}
 		};
-		showPossibleOriginalsAction.setToolTipText(Messages
-				.getString("HierarchyView.show_candidates_originals_tooltip")); //$NON-NLS-1$
+		showPossibleOriginalsAction
+				.setToolTipText(Messages.getString("HierarchyView.show_candidates_originals_tooltip")); //$NON-NLS-1$
 		showPossibleDerivativesAction = new Action(
 				Messages.getString("HierarchyView.show_candidates_for_derivatives")) { //$NON-NLS-1$
 
 			@Override
 			public void run() {
-				IStructuredSelection sel = (IStructuredSelection) viewer
-						.getSelection();
+				IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
 				Object firstElement = sel.getFirstElement();
 				if (firstElement instanceof Node) {
 					Node node = (Node) firstElement;
@@ -776,10 +741,8 @@ public class HierarchyView extends ImageView implements
 			}
 		};
 		showPossibleDerivativesAction
-				.setToolTipText(Messages
-						.getString("HierarchyView.show_candidates_derivatives_tooltip")); //$NON-NLS-1$
-		showAssetAction = new Action(
-				Messages.getString("HierarchyView.show_hierarchy_for_selected_asset")) { //$NON-NLS-1$
+				.setToolTipText(Messages.getString("HierarchyView.show_candidates_derivatives_tooltip")); //$NON-NLS-1$
+		showAssetAction = new Action(Messages.getString("HierarchyView.show_hierarchy_for_selected_asset")) { //$NON-NLS-1$
 
 			@Override
 			public void run() {
@@ -787,22 +750,16 @@ public class HierarchyView extends ImageView implements
 				setInput(asset);
 			}
 		};
-		showAssetAction.setToolTipText(Messages
-				.getString("HierarchyView.show_hierarchy_tooltip")); //$NON-NLS-1$
-		showDerivativesAction = addAction(ZoomActionFactory.SHOWDERIVATIVES.create(bars,
-				this));
+		showAssetAction.setToolTipText(Messages.getString("HierarchyView.show_hierarchy_tooltip")); //$NON-NLS-1$
+		showDerivativesAction = addAction(ZoomActionFactory.SHOWDERIVATIVES.create(bars, this));
 		showOriginalAction = addAction(ZoomActionFactory.SHOWORIGINALS.create(bars, this));
-		showCompositesAction = ZoomActionFactory.SHOWCOMPOSITES.create(bars,
-				this);
-		showComponentsAction = addAction(ZoomActionFactory.SHOWCOMPONENTS.create(bars,
-				this));
-		unlinkAction = new Action(
-				Messages.getString("HierarchyView.unlink"), Icons.unlink.getDescriptor()) { //$NON-NLS-1$
+		showCompositesAction = ZoomActionFactory.SHOWCOMPOSITES.create(bars, this);
+		showComponentsAction = addAction(ZoomActionFactory.SHOWCOMPONENTS.create(bars, this));
+		unlinkAction = new Action(Messages.getString("HierarchyView.unlink"), Icons.unlink.getDescriptor()) { //$NON-NLS-1$
 
 			@Override
 			public void run() {
-				IStructuredSelection sel = (IStructuredSelection) viewer
-						.getSelection();
+				IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
 				Object firstElement = sel.getFirstElement();
 				if (firstElement instanceof Node) {
 					Node node = (Node) firstElement;
@@ -810,30 +767,26 @@ public class HierarchyView extends ImageView implements
 					if (parent != null) {
 						Asset a = parent.getAsset();
 						if (a != null)
-							OperationJob
-									.executeOperation(new UnlinkOperation(type,
-											a.getStringId(), node.getAsset()
-													.getStringId()),
-											HierarchyView.this);
+							OperationJob.executeOperation(
+									new UnlinkOperation(type, a.getStringId(), node.getAsset().getStringId()),
+									HierarchyView.this);
 					}
 				}
 			}
 		};
-		unlinkAction.setToolTipText(Messages
-				.getString("HierarchyView.remove_from_hierarchy")); //$NON-NLS-1$
-		descriptionAction = new Action(
-				Messages.getString("HierarchyView.edit_description"), Icons.descriptionEdit.getDescriptor()) { //$NON-NLS-1$
+		unlinkAction.setToolTipText(Messages.getString("HierarchyView.remove_from_hierarchy")); //$NON-NLS-1$
+		descriptionAction = new Action(Messages.getString("HierarchyView.edit_description"), //$NON-NLS-1$
+				Icons.descriptionEdit.getDescriptor()) {
 
 			@Override
 			public void run() {
-				IStructuredSelection sel = (IStructuredSelection) viewer
-						.getSelection();
+				IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
 				Object firstElement = sel.getFirstElement();
 				if (firstElement instanceof Node) {
 					Node node = (Node) firstElement;
 					AomObject description = node.getDescription();
-					DescriptionDialog dialog = new DescriptionDialog(getSite()
-							.getShell(), description, node.getAsset());
+					DescriptionDialog dialog = new DescriptionDialog(getSite().getShell(), description,
+							node.getAsset());
 					if (dialog.open() == Window.OK) {
 						RelationDescription newValues = dialog.getResult();
 						boolean changed = false;
@@ -853,12 +806,9 @@ public class HierarchyView extends ImageView implements
 							if (rel.getParameterFile() != null)
 								parmFile = rel.getParameterFile();
 							createdAt = rel.getDate();
-							changed = kind.equals(newValues.kind)
-									|| tool.equals(newValues.tool)
-									|| recipe.equals(newValues.recipe)
-									|| parmFile.equals(newValues.parameterFile)
-									|| createdAt == null
-									|| createdAt.equals(newValues.createdAt);
+							changed = kind.equals(newValues.kind) || tool.equals(newValues.tool)
+									|| recipe.equals(newValues.recipe) || parmFile.equals(newValues.parameterFile)
+									|| createdAt == null || createdAt.equals(newValues.createdAt);
 						} else if (description instanceof DerivedByImpl) {
 							DerivedByImpl rel = (DerivedByImpl) description;
 							if (rel.getTool() != null)
@@ -868,24 +818,20 @@ public class HierarchyView extends ImageView implements
 							if (rel.getParameterFile() != null)
 								parmFile = rel.getParameterFile();
 							createdAt = rel.getDate();
-							changed = tool.equals(newValues.tool)
-									|| recipe.equals(newValues.recipe)
-									|| parmFile.equals(newValues.parameterFile)
-									|| createdAt == null
+							changed = tool.equals(newValues.tool) || recipe.equals(newValues.recipe)
+									|| parmFile.equals(newValues.parameterFile) || createdAt == null
 									|| createdAt.equals(newValues.createdAt);
 						}
 						if (changed) {
-							ModifyRelationLegendOperation op = new ModifyRelationLegendOperation(
-									description, newValues);
-							OperationJob.executeOperation(op,
-									HierarchyView.this);
+							ModifyRelationLegendOperation op = new ModifyRelationLegendOperation(description,
+									newValues);
+							OperationJob.executeOperation(op, HierarchyView.this);
 						}
 					}
 				}
 			}
 		};
-		descriptionAction.setToolTipText(Messages
-				.getString("HierarchyView.edit_link_description")); //$NON-NLS-1$
+		descriptionAction.setToolTipText(Messages.getString("HierarchyView.edit_link_description")); //$NON-NLS-1$
 	}
 
 	protected void showCandidates(Node node, boolean originals) {
@@ -893,27 +839,22 @@ public class HierarchyView extends ImageView implements
 		if (asset != null) {
 			SmartCollectionImpl collection = new SmartCollectionImpl(
 					NLS.bind(
-							originals ? Messages
-									.getString("HierarchyView.possible_originals") : Messages.getString("HierarchyView.possible_derivatives"), //$NON-NLS-1$ //$NON-NLS-2$
-							asset.getName()), false, false, true, false, null,
-					0, null, 0, null, new HierarchyPostProcessor(node));
-			collection.addCriterion(new CriterionImpl(
-					QueryField.EXIF_ORIGINALFILENAME.getKey(), null, asset
-							.getOriginalFileName(), QueryField.EQUALS, true));
-			collection.addCriterion(new CriterionImpl(QueryField.LASTMOD
-					.getKey(), null, asset.getLastModification(),
+							originals ? Messages.getString("HierarchyView.possible_originals") //$NON-NLS-1$
+									: Messages.getString("HierarchyView.possible_derivatives"), //$NON-NLS-1$
+							asset.getName()),
+					false, false, true, false, null, 0, null, 0, null, new HierarchyPostProcessor(node));
+			collection.addCriterion(new CriterionImpl(QueryField.EXIF_ORIGINALFILENAME.getKey(), null,
+					asset.getOriginalFileName(), QueryField.EQUALS, true));
+			collection.addCriterion(new CriterionImpl(QueryField.LASTMOD.getKey(), null, asset.getLastModification(),
 					originals ? QueryField.SMALLER : QueryField.GREATER, true));
-			collection.addSortCriterion(new SortCriterionImpl(
-					QueryField.LASTMOD.getKey(), null, originals));
-			UiActivator.getDefault()
-					.getNavigationHistory(getSite().getWorkbenchWindow())
+			collection.addSortCriterion(new SortCriterionImpl(QueryField.LASTMOD.getKey(), null, originals));
+			UiActivator.getDefault().getNavigationHistory(getSite().getWorkbenchWindow())
 					.postSelection(new StructuredSelection(collection));
 		}
 	}
 
 	@Override
-	public void assetsModified(BagChange<Asset> changes,
-			QueryField node) {
+	public void assetsModified(BagChange<Asset> changes, QueryField node) {
 		if (node == null)
 			updateView();
 	}
@@ -936,8 +877,8 @@ public class HierarchyView extends ImageView implements
 	public void setInput(final Asset asset) {
 		Shell shell = getSite().getShell();
 		if (!shell.isDisposed())
-			shell.getDisplay().asyncExec(new Runnable() {
-				public void run() {
+			shell.getDisplay().asyncExec(() -> {
+				if (!shell.isDisposed()) {
 					if (rootNode != null) {
 						for (Node node : rootNode)
 							node.dispose();
@@ -952,8 +893,7 @@ public class HierarchyView extends ImageView implements
 	}
 
 	public void selectionChanged(SelectionChangedEvent event) {
-		IStructuredSelection selection = (IStructuredSelection) event
-				.getSelection();
+		IStructuredSelection selection = (IStructuredSelection) event.getSelection();
 		AssetSelection assetSelection = nodeToAssetSelection(selection);
 		fireSelectionChanged(new SelectionChangedEvent(this, assetSelection));
 		updateActions();
@@ -975,8 +915,7 @@ public class HierarchyView extends ImageView implements
 
 	@Override
 	public void updateActions() {
-		if (showPossibleDerivativesAction == null
-				|| viewer.getControl().isDisposed())
+		if (showPossibleDerivativesAction == null || viewer.getControl().isDisposed())
 			return;
 		boolean writable = !dbIsReadonly();
 		super.updateActions();
@@ -996,8 +935,7 @@ public class HierarchyView extends ImageView implements
 		showCompositesAction.setEnabled(enabled);
 		showDerivativesAction.setEnabled(enabled);
 		showOriginalAction.setEnabled(enabled);
-		showAssetAction
-				.setEnabled(getNavigationHistory().getSelectedAssets().size() == 1);
+		showAssetAction.setEnabled(getNavigationHistory().getSelectedAssets().size() == 1);
 	}
 
 	private void fireSelectionChanged(SelectionChangedEvent event) {
@@ -1024,8 +962,7 @@ public class HierarchyView extends ImageView implements
 	}
 
 	public AssetSelection getAssetSelection() {
-		return nodeToAssetSelection((IStructuredSelection) viewer
-				.getSelection());
+		return nodeToAssetSelection((IStructuredSelection) viewer.getSelection());
 	}
 
 	@Override
@@ -1086,6 +1023,5 @@ public class HierarchyView extends ImageView implements
 	public ImageRegion findBestFaceRegion(int x, int y, boolean all) {
 		return null;
 	}
-
 
 }

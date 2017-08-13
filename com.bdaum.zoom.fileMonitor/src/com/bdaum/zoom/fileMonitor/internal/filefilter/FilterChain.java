@@ -45,7 +45,7 @@ public class FilterChain {
 			StringTokenizer st = new StringTokenizer(stringlist, seps);
 			while (st.hasMoreTokens()) {
 				String token = st.nextToken().trim();
-				if (token.length() > 0)
+				if (!token.isEmpty())
 					result.add(token);
 			}
 		}

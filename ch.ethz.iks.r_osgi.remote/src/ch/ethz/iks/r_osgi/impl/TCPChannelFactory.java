@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 
 import org.osgi.service.log.LogService;
 
@@ -57,8 +56,6 @@ import ch.ethz.iks.util.SmartObjectOutputStream;
  */
 final class TCPChannelFactory implements NetworkChannelFactory {
 
-	public static final boolean beSmart = true;
-
 	static final String PROTOCOL = "r-osgi"; //$NON-NLS-1$
 	Remoting remoting;
 	private TCPAcceptorThread thread;
@@ -72,7 +69,7 @@ final class TCPChannelFactory implements NetworkChannelFactory {
 	 * @param endpointURI
 	 *            the URI of the remote host.
 	 * @return the transport channel.
-	 * @see ch.ethz.iks.r_osgi.channels.NetworkChannelFactory#getConnection(ch.ethz.iks.r_osgi.channels.ChannelEndpoint)
+	 * @throws IOException 
 	 */
 	public NetworkChannel getConnection(final ChannelEndpoint endpoint,
 			final URI endpointURI) throws IOException {
@@ -88,8 +85,6 @@ final class TCPChannelFactory implements NetworkChannelFactory {
 		remoting = r;
 		thread = new TCPAcceptorThread();
 		thread.start();
-		// TODO: remove debug output
-		System.out.println("R-OSGi protocol runs on " + listeningPort);
 	}
 
 	/**
@@ -98,9 +93,8 @@ final class TCPChannelFactory implements NetworkChannelFactory {
 	 * @see ch.ethz.iks.r_osgi.channels.NetworkChannelFactory#deactivate(ch.ethz.iks.r_osgi.Remoting)
 	 */
 	public void deactivate(final Remoting r) throws IOException {
-		if (thread != null) {
-			thread.close();
-			thread = null;
+		if(thread != null) {
+			thread.interrupt();
 		}
 		remoting = null;
 	}
@@ -196,7 +190,7 @@ final class TCPChannelFactory implements NetworkChannelFactory {
 		/**
 		 * bind the channel to a channel endpoint.
 		 * 
-		 * @param endpoint
+		 * @param e
 		 *            the channel endpoint.
 		 * 
 		 * @see ch.ethz.iks.r_osgi.channels.NetworkChannel#bind(ch.ethz.iks.r_osgi.channels.ChannelEndpoint)
@@ -225,17 +219,11 @@ final class TCPChannelFactory implements NetworkChannelFactory {
 				// for 1.2 VMs that do not support the setKeepAlive
 			}
 			socket.setTcpNoDelay(true);
-			if (beSmart) {
-				output = new SmartObjectOutputStream(socket.getOutputStream());
-				output.flush();
-				input = new SmartObjectInputStream(socket.getInputStream());
-			} else {
-				output = new ObjectOutputStream(new BufferedOutputStream(
-						socket.getOutputStream()));
-				output.flush();
-				input = new ObjectInputStream(new BufferedInputStream(
-						socket.getInputStream()));
-			}
+			output = new SmartObjectOutputStream(new BufferedOutputStream(
+					socket.getOutputStream()));
+			output.flush();
+			input = new SmartObjectInputStream(new BufferedInputStream(socket
+					.getInputStream()));
 		}
 
 		/**
@@ -250,6 +238,7 @@ final class TCPChannelFactory implements NetworkChannelFactory {
 
 		/**
 		 * close the channel.
+		 * @throws IOException 
 		 */
 		public void close() throws IOException {
 			socket.close();
@@ -292,11 +281,10 @@ final class TCPChannelFactory implements NetworkChannelFactory {
 		 *            the message.
 		 * @throws IOException
 		 *             in case of IO errors.
-		 * @see ch.ethz.iks.r_osgi.channels.NetworkChannel#sendMessage(ch.ethz.iks.r_osgi.RemoteOSGiMessage)
 		 */
 		public void sendMessage(final RemoteOSGiMessage message)
 				throws IOException {
-			if (RemoteOSGiServiceImpl.MSG_DEBUG && RemoteOSGiServiceImpl.log != null) {
+			if (RemoteOSGiServiceImpl.MSG_DEBUG) {
 				RemoteOSGiServiceImpl.log.log(LogService.LOG_DEBUG,
 						"{TCP Channel} sending " + message); //$NON-NLS-1$
 			}
@@ -321,7 +309,7 @@ final class TCPChannelFactory implements NetworkChannelFactory {
 					try {
 						final RemoteOSGiMessage msg = RemoteOSGiMessage
 								.parse(input);
-						if (RemoteOSGiServiceImpl.MSG_DEBUG && RemoteOSGiServiceImpl.log != null) {
+						if (RemoteOSGiServiceImpl.MSG_DEBUG) {
 							RemoteOSGiServiceImpl.log.log(LogService.LOG_DEBUG,
 									"{TCP Channel} received " + msg); //$NON-NLS-1$
 						}
@@ -374,16 +362,9 @@ final class TCPChannelFactory implements NetworkChannelFactory {
 										+ " already in use. This instance of R-OSGi is running on port " //$NON-NLS-1$
 										+ listeningPort);
 					}
-					System.out.println("R-OSGi listens on port "
-							+ listeningPort);
 					RemoteOSGiServiceImpl.R_OSGI_PORT = listeningPort;
 					return;
 				} catch (final BindException b) {
-					// normal behavior, get a BindException if the port is
-					// already in use
-					e++;
-				} catch (final SocketException s) {
-					// Windows 7 behavior
 					e++;
 				}
 			}
@@ -401,14 +382,9 @@ final class TCPChannelFactory implements NetworkChannelFactory {
 					// for them
 					remoting.createEndpoint(new TCPChannel(socket.accept()));
 				} catch (final IOException ioe) {
-					// TODO: to log
+					ioe.printStackTrace();
 				}
 			}
-		}
-
-		public void close() throws IOException {
-			interrupt();
-			socket.close();
 		}
 	}
 

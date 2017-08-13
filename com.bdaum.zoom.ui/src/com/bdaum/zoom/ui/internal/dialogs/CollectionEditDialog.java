@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.QueryField;
@@ -64,7 +65,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 
 	private SmartCollectionImpl result;
 
-	private SmartCollectionImpl current;
+	private SmartCollection current;
 
 	private Composite comp;
 
@@ -100,8 +101,8 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 
 	private String message;
 
-	public CollectionEditDialog(Shell parentShell, SmartCollectionImpl current, String title, String message,
-			boolean adhoc, boolean album, boolean person, boolean networkPossible) {
+	public CollectionEditDialog(Shell parentShell, SmartCollection current, String title, String message, boolean adhoc,
+			boolean album, boolean person, boolean networkPossible) {
 		super(parentShell, HelpContextIds.COLLECTION_EDIT_DIALOG);
 		this.current = current;
 		this.message = message;
@@ -332,7 +333,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		String errorMessage = null;
 		if (nameField instanceof Text) {
 			String text = ((Text) nameField).getText();
-			if (text.length() == 0)
+			if (text.isEmpty())
 				errorMessage = Messages.CollectionEditDialog_specify_name;
 			else if (text.indexOf(':') >= 0
 					&& (current == null || !current.getStringId().startsWith(IDbManager.IMPORTKEY)))
@@ -347,7 +348,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		}
 		if (errorMessage == null)
 			errorMessage = collectionEditGroup.validate();
-		if (errorMessage == null || errorMessage.length() > 0)
+		if (errorMessage == null || !errorMessage.isEmpty())
 			setErrorMessage(errorMessage);
 		else
 			setErrorMessage(null);
@@ -362,8 +363,10 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 				: Messages.CollectionEditDialog_adhoc_query;
 		boolean networked = findInNetworkGroup == null ? false : findInNetworkGroup.getSelection();
 		result = new SmartCollectionImpl(name, isSystem || person, album, adhoc, networked,
-				descriptionField != null ? (descriptionField instanceof CheckedText)
-						? ((CheckedText) descriptionField).getText() : ((Label) descriptionField).getText() : null,
+				descriptionField != null
+						? (descriptionField instanceof CheckedText) ? ((CheckedText) descriptionField).getText()
+								: ((Label) descriptionField).getText()
+						: null,
 				colorCode + 1, current != null ? current.getLastAccessDate() : null,
 				current != null ? current.getGeneration() + 1 : 0, current != null ? current.getPerspective() : null,
 				null);
@@ -388,12 +391,8 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 					String token = st.nextToken();
 					if (!";".equals(token)) { //$NON-NLS-1$
 						if (offset <= selection.x && offset + token.length() > selection.y) {
-							final List<String> to = Collections.singletonList(token.trim());
-							BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-								public void run() {
-									UiActivator.getDefault().sendMail(to);
-								}
-							});
+							BusyIndicator.showWhile(getShell().getDisplay(),
+									() -> UiActivator.getDefault().sendMail(Collections.singletonList(token.trim())));
 							break;
 						}
 					}

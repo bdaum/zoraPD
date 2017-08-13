@@ -422,7 +422,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 			assets = (List<Asset>) obj;
 		if (assets != null) {
 			String uri = sound.toURI().toString();
-			OperationJob.executeOperation(new VoiceNoteOperation(assets, uri, uri), this);
+			OperationJob.executeOperation(new VoiceNoteOperation(assets, uri, uri,null), this);
 		}
 	}
 
@@ -452,7 +452,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 					String label = bookmark.getLabel();
 					String peer = bookmark.getPeer();
 					String catFile = bookmark.getCatFile();
-					return catFile != null && catFile.length() > 0 ? (peer != null)
+					return catFile != null && !catFile.isEmpty() ? (peer != null)
 							? NLS.bind("{0} ({1}, {2})", //$NON-NLS-1$
 									new Object[] { label, peer, new File(catFile).getName() })
 							: NLS.bind("{0} ({1})", label, //$NON-NLS-1$
@@ -558,7 +558,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 				List<BookmarkImpl> existingBookmarks = new ArrayList<BookmarkImpl>(50);
 				final List<Object> tobeDeleted = new ArrayList<Object>();
 				for (BookmarkImpl bookmark : bookmarks) {
-					if (bookmark.getCatFile() != null && bookmark.getCatFile().length() > 0)
+					if (bookmark.getCatFile() != null && !bookmark.getCatFile().isEmpty())
 						existingBookmarks.add(bookmark);
 					else if (dbManager.obtainAsset(bookmark.getAssetId()) == null)
 						tobeDeleted.add(bookmark);
@@ -786,12 +786,10 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 		if (isVisible) {
 			final Shell shell = getSite().getShell();
 			if (!shell.isDisposed())
-				shell.getDisplay().asyncExec(new Runnable() {
-					public void run() {
-						if (!shell.isDisposed()) {
-							refresh();
-							updateActions();
-						}
+				shell.getDisplay().asyncExec(() -> {
+					if (!shell.isDisposed()) {
+						refresh();
+						updateActions();
 					}
 				});
 		} else

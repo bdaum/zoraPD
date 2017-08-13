@@ -156,20 +156,13 @@ public abstract class AbstractGalleryView extends ImageView
 			zoomSpeed += 3 * e.count;
 			if (zoomTask == null && zoomSpeed != 0) {
 				setFocussedItem(e);
-				zoomTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(new Runnable() {
-
-					public void run() {
-						if (!e.display.isDisposed())
-							e.display.syncExec(new Runnable() {
-								public void run() {
-									performWheelAction(wheelkey, e.stateMask);
-								}
-							});
-						zoomSpeed = zoomSpeed * lag;
-						if (zoomSpeed < lag) {
-							GalleryMouseWheelListener.this.cancel();
-							setFocussedItem(null);
-						}
+				zoomTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(() -> {
+					if (!e.display.isDisposed())
+						e.display.syncExec(() -> performWheelAction(wheelkey, e.stateMask));
+					zoomSpeed = zoomSpeed * lag;
+					if (zoomSpeed < lag) {
+						GalleryMouseWheelListener.this.cancel();
+						setFocussedItem(null);
 					}
 				}, 0L, 100L, TimeUnit.MILLISECONDS);
 			}
@@ -440,17 +433,14 @@ public abstract class AbstractGalleryView extends ImageView
 				if (currentCollection != null && currentCollection.getAdhoc()) {
 					final SmartCollection parent = currentCollection.getSmartCollection_subSelection_parent();
 					ZInputDialog dialog = new ZInputDialog(getSite().getShell(),
-							parent != null
-									? NLS.bind(Messages.getString("AbstractGalleryView.save_as_subcollection"), //$NON-NLS-1$
-											parent.getName())
-									: Messages.getString("AbstractGalleryView.save_as_collection"), //$NON-NLS-1$
+							parent != null ? NLS.bind(Messages.getString("AbstractGalleryView.save_as_subcollection"), //$NON-NLS-1$
+									parent.getName()) : Messages.getString("AbstractGalleryView.save_as_collection"), //$NON-NLS-1$
 							Messages.getString("AbstractGalleryView.collection_name"), currentCollection.getName(), //$NON-NLS-1$
 							new IInputValidator() {
 
 								public String isValid(String newText) {
-									if (newText != null && newText.length() > 0) {
+									if (newText != null && !newText.isEmpty())
 										return null;
-									}
 									return Messages.getString("AbstractGalleryView.please_specify_a_name"); //$NON-NLS-1$
 								}
 							}, false);
@@ -459,21 +449,17 @@ public abstract class AbstractGalleryView extends ImageView
 						currentCollection.setName(name);
 						currentCollection.setAdhoc(false);
 						final IDbManager dbManager = Core.getCore().getDbManager();
-						dbManager.safeTransaction(new Runnable() {
-
-							public void run() {
-								if (parent != null) {
-									parent.addSubSelection(currentCollection);
-									dbManager.store(parent);
-								} else {
-									GroupImpl user = UiUtilities.obtainUserGroup(dbManager);
-									user.addRootCollection(currentCollection.getStringId());
-									currentCollection.setGroup_rootCollection_parent(user.getStringId());
-									dbManager.store(user);
-								}
-								dbManager.store(currentCollection);
+						dbManager.safeTransaction(() -> {
+							if (parent != null) {
+								parent.addSubSelection(currentCollection);
+								dbManager.store(parent);
+							} else {
+								GroupImpl user = UiUtilities.obtainUserGroup(dbManager);
+								user.addRootCollection(currentCollection.getStringId());
+								currentCollection.setGroup_rootCollection_parent(user.getStringId());
+								dbManager.store(user);
 							}
-
+							dbManager.store(currentCollection);
 						});
 						try {
 							CatalogView catalogView = (CatalogView) getSite().getPage().showView(CatalogView.ID);
@@ -516,7 +502,8 @@ public abstract class AbstractGalleryView extends ImageView
 				int newRating = dialog.open();
 				if (newRating != RatingDialog.SELECTABORT && (newRating != rating)) {
 					IRatingFilter newFilter = newRating != QueryField.SELECTALL
-							? Core.getCore().getDbFactory().createRatingFilter(newRating) : null;
+							? Core.getCore().getDbFactory().createRatingFilter(newRating)
+							: null;
 					getNavigationHistory().updateFilters(oldFilter, newFilter);
 					String tooltip = newRating <= 0 ? null
 							: NLS.bind(Messages.getString("AbstractGalleryView.show_only_image_or_better"), //$NON-NLS-1$
@@ -581,7 +568,8 @@ public abstract class AbstractGalleryView extends ImageView
 				int newColorCode = dialog.open();
 				if (newColorCode != ColorCodeDialog.SELECTABORT && (newColorCode != colorCode)) {
 					IColorCodeFilter newFilter = newColorCode != Constants.COLOR_UNDEFINED
-							? Core.getCore().getDbFactory().createColorCodeFilter(newColorCode) : null;
+							? Core.getCore().getDbFactory().createColorCodeFilter(newColorCode)
+							: null;
 					getNavigationHistory().updateFilters(oldFilter, newFilter);
 					String tooltip = newColorCode <= 0 ? null
 							: NLS.bind(Messages.getString("AbstractGalleryView.with_color_code"), //$NON-NLS-1$
@@ -902,12 +890,7 @@ public abstract class AbstractGalleryView extends ImageView
 
 	@Override
 	public void selectAll() {
-		BusyIndicator.showWhile(getSite().getShell().getDisplay(), new Runnable() {
-			public void run() {
-				setAssetSelection(new AssetSelection(getAssetProvider()));
-				// fireSelection();
-			}
-		});
+		BusyIndicator.showWhile(getSite().getShell().getDisplay(), () -> setAssetSelection(new AssetSelection(getAssetProvider())));
 	}
 
 	@Override
@@ -923,8 +906,8 @@ public abstract class AbstractGalleryView extends ImageView
 		// QueryField.COLORCODE || node == QueryField.STATUS) {
 		Shell shell = getSite().getShell();
 		if (!shell.isDisposed())
-			shell.getDisplay().asyncExec(new Runnable() {
-				public void run() {
+			shell.getDisplay().asyncExec(() -> {
+				if (!shell.isDisposed()) {
 					// if (changes == null || changes.hasStructuralChanges())
 					refresh();
 					// else

@@ -131,12 +131,8 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 								continue;
 							}
 							uris[i] = asset.getUri();
-							if (!storeSafely(new Runnable() {
-								public void run() {
-									renameAsset(asset, file, dest, monitor,
-											fileWatchManager);
-								}
-							}, 1)) {
+							if (!storeSafely(() -> renameAsset(asset, file, dest, monitor,
+									fileWatchManager), 1)) {
 								monitor.worked(1);
 								++i;
 								continue;
@@ -151,7 +147,7 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 							uri = volumeManager.findFile(asset);
 							if (uri != null) {
 								String volume = asset.getVolume();
-								if (volume != null && volume.length() > 0)
+								if (volume != null && !volume.isEmpty())
 									volumes.add(volume);
 								errands.add(uri.toString());
 								if (monitor.isCanceled())
@@ -165,7 +161,7 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 			++i;
 		}
 		fireAssetsModified(new BagChange<>(null, modified, null, null), QueryField.URI);
-		if (errands.size() > 0) {
+		if (!errands.isEmpty()) {
 			final IDbErrorHandler errorHandler = Core.getCore()
 					.getErrorHandler();
 			if (errorHandler != null)

@@ -106,9 +106,9 @@ public class CatalogContentProvider implements ITreeContentProvider {
 				List<IdentifiableObject> set = dbManager.obtainByIds(IdentifiableObject.class, ids);
 				for (IdentifiableObject obj : set) {
 					if (obj instanceof SmartCollectionImpl
-							&& groupId.equals(((SmartCollectionImpl) obj).getGroup_rootCollection_parent()))
+							&& groupId.equals(((SmartCollectionImpl) obj).getGroup_rootCollection_parent())) {
 						children.add(obj);
-					else if (obj instanceof ExhibitionImpl
+					} else if (obj instanceof ExhibitionImpl
 							&& groupId.equals(((ExhibitionImpl) obj).getGroup_exhibition_parent()))
 						children.add(obj);
 					else if (obj instanceof WebGalleryImpl

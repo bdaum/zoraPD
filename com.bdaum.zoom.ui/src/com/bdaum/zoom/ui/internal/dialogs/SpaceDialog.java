@@ -116,7 +116,7 @@ public class SpaceDialog extends ZTitleAreaDialog {
 	public void validate() {
 		String localFolder = output.getLocalFolder();
 		String errorMessage = null;
-		if (localFolder == null || localFolder.length() == 0)
+		if (localFolder == null || localFolder.isEmpty())
 			errorMessage = Messages.ArchiveAction_specify_output;
 		else {
 			File folder = new File(localFolder);

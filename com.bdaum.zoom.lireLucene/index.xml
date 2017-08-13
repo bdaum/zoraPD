@@ -1,0 +1,36 @@
+<index>
+	<entry keyword="Search">
+		<entry keyword="for similarity">
+			<topic href="html/SearchSimilarDialog.html" />
+		</entry>
+		<entry keyword="content based">
+			<topic href="html/SearchSimilarDialog.html" />
+		</entry>
+		<entry keyword="for text">
+			<topic href="html/textSearch.html" />
+		</entry>
+		<entry keyword="semantic">
+			<topic href="html/advanced.html" />
+		</entry>
+	</entry>
+	<entry keyword="Similarity search">
+		<topic href="html/SearchSimilarDialog.html" />
+	</entry>
+	<entry keyword="Content based search">
+		<topic href="html/SearchSimilarDialog.html" />
+	</entry>
+	<entry keyword="Semantic search">
+		<topic href="html/advanced.html" />
+	</entry>
+	<entry keyword="Neuronal network">
+		<topic href="html/advanced.html" />
+	</entry>
+	<entry keyword="Text search">
+		<topic href="html/textSearch.html" />
+	</entry>
+	<entry keyword="Wild cards">
+		<entry keyword="~ in text search">
+    		<topic href="html/textSearch.html"/>
+    	</entry>
+	</entry>
+</index>

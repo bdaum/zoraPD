@@ -56,15 +56,12 @@ public class CatPreferencePage extends AbstractPreferencePage {
 					final IWorkbenchPage activePage = activeWorkbenchWindow
 							.getActivePage();
 					BusyIndicator.showWhile(activeWorkbenchWindow.getShell()
-							.getDisplay(), new Runnable() {
-
-						public void run() {
-							EditMetaDialog mdialog = new EditMetaDialog(
-									getShell(), activePage, Core.getCore()
-											.getDbManager(), false, null);
-							mdialog.open();
-						}
-					});
+							.getDisplay(), () -> {
+								EditMetaDialog mdialog = new EditMetaDialog(
+										getShell(), activePage, Core.getCore()
+												.getDbManager(), false, null);
+								mdialog.open();
+							});
 				}
 			}
 		});

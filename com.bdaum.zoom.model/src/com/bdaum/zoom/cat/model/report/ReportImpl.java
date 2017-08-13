@@ -41,15 +41,16 @@ public class ReportImpl extends Report_typeImpl implements Report {
 	 * @param valueInterval - Property
 	 * @param threshold - Property
 	 * @param properties - Property
+	 * @param skipOrphans - Property
 	 */
 	public ReportImpl(String name, String description, String source, int mode,
 			int sortField, boolean descending, String field, long timeLower,
 			long timeUpper, long valueLower, long valueUpper, int dayInterval,
 			int timeInterval, int valueInterval, float threshold,
-			Object properties) {
+			Object properties, boolean skipOrphans) {
 		super(name, description, source, mode, sortField, descending, field,
 				timeLower, timeUpper, valueLower, valueUpper, dayInterval,
-				timeInterval, valueInterval, threshold, properties);
+				timeInterval, valueInterval, threshold, properties, skipOrphans);
 
 	}
 

@@ -276,9 +276,8 @@ public class LogEntry extends AbstractEntry {
 	 * @since 3.6
 	 */
 	void appendToken(StringBuffer buffer, String token) {
-		if (buffer.length() > 0) {
+		if (buffer.length() > 0)
 			buffer.append(SPACE);
-		}
 		buffer.append(token);
 	}
 

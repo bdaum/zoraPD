@@ -86,27 +86,23 @@ public class GallerifficGenerator extends AbstractGalleryGenerator {
 		varmap.put("pagename", pageName); //$NON-NLS-1$
 		varmap.put("images", generateImageList(false, false)); //$NON-NLS-1$
 		WebGalleryImpl show = getShow();
-		WebParameter webParameter = show.getParameter(Activator.PLUGIN_ID
-				+ ".imagePosition"); //$NON-NLS-1$
+		WebParameter webParameter = show.getParameter(Activator.PLUGIN_ID + ".imagePosition"); //$NON-NLS-1$
 		int navwidth = setPaddingAndMargins(show, varmap,
-				webParameter == null ? null : webParameter.getValue()
-						.toString());
+				webParameter == null ? null : webParameter.getValue().toString());
 		File plate = getNameplate();
 		if (plate != null)
 			varmap.put("nameplatediv", generateNameplate(show, plate)); //$NON-NLS-1$
 		File bgImage = getBgImage();
 		if (bgImage != null)
 			varmap.put("bgimage", generateBg(show, bgImage)); //$NON-NLS-1$
-		String f = generateFooter(
-				show,
+		String f = generateFooter(show,
 				"<a href=\"http://www.twospy.com/galleriffic/\" target=\"_blank\">Galleriffic</a>"); //$NON-NLS-1$
 		varmap.put("footer", f); //$NON-NLS-1$
 		if (!show.getHideHeader()) {
 			varmap.put("name", BatchUtilities.encodeHTML(show.getName(), false)); //$NON-NLS-1$
 			String description = show.getDescription();
-			if (description != null && description.length() > 0) {
-				String d = show.getHtmlDescription() ? description
-						: BatchUtilities.encodeHTML(description, true);
+			if (description != null && !description.isEmpty()) {
+				String d = show.getHtmlDescription() ? description : BatchUtilities.encodeHTML(description, true);
 				varmap.put("description", d); //$NON-NLS-1$
 				varmap.put("descriptiondiv", //$NON-NLS-1$
 						"<div id=\"description\" class=\"description-container\">" //$NON-NLS-1$
@@ -115,41 +111,34 @@ public class GallerifficGenerator extends AbstractGalleryGenerator {
 		}
 		int captionheight = 0;
 		lp: for (Storyboard storyboard : show.getStoryboard()) {
-			for (WebExhibitImpl exhibit :  Core.getCore().getDbManager().obtainByIds(
-					WebExhibitImpl.class, storyboard.getExhibit())) {
-					if (exhibit.getDownloadable()
-							&& show.getDownloadText() != null
-							&& show.getDownloadText().length() > 0
-							&& !show.getHideDownload()
-							|| exhibit.getCaption() != null
-							&& exhibit.getCaption().length() > 0
-							&& storyboard.getShowCaptions()
-							|| exhibit.getDescription() != null
-							&& exhibit.getDescription().length() > 0
-							&& storyboard.getShowDescriptions()) {
-						varmap.put("captiondiv", //$NON-NLS-1$
-								"<div id=\"caption\" class=\"caption-container\"></div>"); //$NON-NLS-1$
-						String hideCaptionText = Messages.GallerifficGenerator_hide_caption;
-						WebParameter parm = show
-								.getParameter(Activator.PLUGIN_ID
-										+ ".hideCaptionText"); //$NON-NLS-1$
-						if (parm != null) {
-							Object value = parm.getValue();
-							if (value != null)
-								hideCaptionText = value.toString();
-						}
-						varmap.put(
-								"captiontogglediv", //$NON-NLS-1$
-								"<div id=\"captionToggle\">" //$NON-NLS-1$
-										+ "<a href=\"#toggleCaption\" class=\"on\" title=\"" //$NON-NLS-1$
-										+ hideCaptionText + "\">" //$NON-NLS-1$
-										+ hideCaptionText + "</a>" //$NON-NLS-1$
-										+ "</div>"); //$NON-NLS-1$
-						captionheight += storyboard.getShowExif() ? CAPTIONHEIGHT
-								+ (computeExifCount() + 1 / 2) * EXIFHEIGHT
-								: CAPTIONHEIGHT;
-						break lp;
+			for (WebExhibitImpl exhibit : Core.getCore().getDbManager().obtainByIds(WebExhibitImpl.class,
+					storyboard.getExhibit())) {
+				if (exhibit.getDownloadable() && show.getDownloadText() != null && !show.getDownloadText().isEmpty()
+						&& !show.getHideDownload()
+						|| exhibit.getCaption() != null && !exhibit.getCaption().isEmpty()
+								&& storyboard.getShowCaptions()
+						|| exhibit.getDescription() != null && !exhibit.getDescription().isEmpty()
+								&& storyboard.getShowDescriptions()) {
+					varmap.put("captiondiv", //$NON-NLS-1$
+							"<div id=\"caption\" class=\"caption-container\"></div>"); //$NON-NLS-1$
+					String hideCaptionText = Messages.GallerifficGenerator_hide_caption;
+					WebParameter parm = show.getParameter(Activator.PLUGIN_ID + ".hideCaptionText"); //$NON-NLS-1$
+					if (parm != null) {
+						Object value = parm.getValue();
+						if (value != null)
+							hideCaptionText = value.toString();
 					}
+					varmap.put("captiontogglediv", //$NON-NLS-1$
+							"<div id=\"captionToggle\">" //$NON-NLS-1$
+									+ "<a href=\"#toggleCaption\" class=\"on\" title=\"" //$NON-NLS-1$
+									+ hideCaptionText + "\">" //$NON-NLS-1$
+									+ hideCaptionText + "</a>" //$NON-NLS-1$
+									+ "</div>"); //$NON-NLS-1$
+					captionheight += storyboard.getShowExif()
+							? CAPTIONHEIGHT + (computeExifCount() + 1 / 2) * EXIFHEIGHT
+							: CAPTIONHEIGHT;
+					break lp;
+				}
 			}
 		}
 
@@ -168,26 +157,20 @@ public class GallerifficGenerator extends AbstractGalleryGenerator {
 		varmap.put("galleriffic", getDeployResourceFolder().getName() //$NON-NLS-1$
 				+ "/jquery.galleriffic.packed.js"); //$NON-NLS-1$
 		WebParameter delay = show.getParameter(Activator.PLUGIN_ID + ".delay"); //$NON-NLS-1$
-		varmap.put(
-				"delayms", String.valueOf((int) (1000 * getParamDouble(delay, 3d)))); //$NON-NLS-1$
-		WebParameter transition = show.getParameter(Activator.PLUGIN_ID
-				+ ".transition"); //$NON-NLS-1$
-		varmap.put(
-				"transitionms", String.valueOf((int) (1000 * getParamDouble(transition, 0.9d)))); //$NON-NLS-1$
+		varmap.put("delayms", String.valueOf((int) (1000 * getParamDouble(delay, 3d)))); //$NON-NLS-1$
+		WebParameter transition = show.getParameter(Activator.PLUGIN_ID + ".transition"); //$NON-NLS-1$
+		varmap.put("transitionms", String.valueOf((int) (1000 * getParamDouble(transition, 0.9d)))); //$NON-NLS-1$
 		int bodywidth = 300;
 		StringBuilder options = new StringBuilder();
 		int i = 0;
 		int ic = 0;
 		for (Storyboard storyboard : show.getStoryboard()) {
-			bodywidth = Math.max(bodywidth,
-					getImageSizeInPixels(storyboard.getImageSize()));
+			bodywidth = Math.max(bodywidth, getImageSizeInPixels(storyboard.getImageSize()));
 			options.append("$('#gallery" + (++i) + "').galleriffic('#").append( //$NON-NLS-1$ //$NON-NLS-2$
-					storyboard.toString())
-					.append("', galleryOptions);").append('\n'); //$NON-NLS-1$
+					storyboard.toString()).append("', galleryOptions);").append('\n'); //$NON-NLS-1$
 			ic += storyboard.getExhibit().size();
 		}
-		WebParameter thumbsPerPage = show.getParameter(Activator.PLUGIN_ID
-				+ ".imagePosition"); //$NON-NLS-1$
+		WebParameter thumbsPerPage = show.getParameter(Activator.PLUGIN_ID + ".imagePosition"); //$NON-NLS-1$
 		int tpp = getParamInt(thumbsPerPage, 20);
 		int maxPages = (ic + tpp - 1) / tpp;
 		varmap.put("maxPages", String.valueOf(maxPages)); //$NON-NLS-1$
@@ -207,19 +190,18 @@ public class GallerifficGenerator extends AbstractGalleryGenerator {
 	}
 
 	@Override
-	protected Map<String, String> getImageSnippetVars(WebExhibit exhibit,
-			AssetImpl asset, Storyboard storyboard, String thumbnail,
-			String image, String bigImage, String original, int i) {
+	protected Map<String, String> getImageSnippetVars(WebExhibit exhibit, AssetImpl asset, Storyboard storyboard,
+			String thumbnail, String image, String bigImage, String original, int i) {
 		Map<String, String> varmap = new HashMap<String, String>();
 		varmap.put("resources", getDeployResourceFolder().getName()); //$NON-NLS-1$
 		varmap.put("image", encodeURL(image)); //$NON-NLS-1$
 		varmap.put("thumbnail", encodeURL(thumbnail)); //$NON-NLS-1$
 		String altText = exhibit.getAltText();
-		if (altText != null && altText.length() > 0)
+		if (altText != null && !altText.isEmpty())
 			varmap.put("alt", BatchUtilities.encodeHTML(altText, false)); //$NON-NLS-1$
 		if (storyboard.getShowCaptions()) {
 			String caption = exhibit.getCaption();
-			if (caption != null && caption.length() > 0) {
+			if (caption != null && !caption.isEmpty()) {
 				String c = BatchUtilities.encodeHTML(caption, true);
 				varmap.put("title", c); //$NON-NLS-1$
 				varmap.put("image-title", c); //$NON-NLS-1$
@@ -227,20 +209,17 @@ public class GallerifficGenerator extends AbstractGalleryGenerator {
 		}
 		if (storyboard.getShowDescriptions()) {
 			String description = exhibit.getDescription();
-			if (description != null && description.length() > 0)
-				varmap.put(
-						"description", exhibit.getHtmlDescription() ? description : BatchUtilities.encodeHTML(description, true)); //$NON-NLS-1$
+			if (description != null && !description.isEmpty())
+				varmap.put("description", //$NON-NLS-1$
+						exhibit.getHtmlDescription() ? description : BatchUtilities.encodeHTML(description, true));
 		}
 		WebGalleryImpl show = getShow();
-		if (exhibit.getDownloadable() && original != null
-				&& !show.getHideDownload()) {
+		if (exhibit.getDownloadable() && original != null && !show.getHideDownload()) {
 			String downloadText = show.getDownloadText();
-			if (downloadText != null && downloadText.length() > 0)
+			if (downloadText != null && !downloadText.isEmpty())
 				varmap.put("downloaddiv", "<div class=\"download\"> <a href=\"" //$NON-NLS-1$ //$NON-NLS-2$
-						+ encodeURL(original)
-						+ "\">" //$NON-NLS-1$
-						+ BatchUtilities.encodeHTML(downloadText, false)
-						+ "</a> </div>"); //$NON-NLS-1$
+						+ encodeURL(original) + "\">" //$NON-NLS-1$
+						+ BatchUtilities.encodeHTML(downloadText, false) + "</a> </div>"); //$NON-NLS-1$
 		}
 		String exifdiv = getExifDiv(storyboard, exhibit, asset, "meta"); //$NON-NLS-1$
 		if (exifdiv != null)
@@ -266,9 +245,8 @@ public class GallerifficGenerator extends AbstractGalleryGenerator {
 		for (int i = 0; i < templates.length; i++) {
 			String name = templates[i].getName();
 			if (name.equals("index.html") && pageName != null //$NON-NLS-1$
-					&& pageName.length() > 0) {
+					&& !pageName.isEmpty())
 				name = pageName;
-			}
 			names[i] = name;
 		}
 		return names;
@@ -285,8 +263,7 @@ public class GallerifficGenerator extends AbstractGalleryGenerator {
 	protected int getThumbnailSizeInPixel(int i) {
 		if (i < 0 || i >= THUMBSIZE.length * 2)
 			i = 0;
-		return i >= THUMBSIZE.length ? -THUMBSIZE[i - THUMBSIZE.length]
-				: THUMBSIZE[i];
+		return i >= THUMBSIZE.length ? -THUMBSIZE[i - THUMBSIZE.length] : THUMBSIZE[i];
 	}
 
 	@Override
@@ -300,8 +277,7 @@ public class GallerifficGenerator extends AbstractGalleryGenerator {
 	}
 
 	@Override
-	protected Map<String, String> getSectionSnippetVars(
-			StoryboardImpl storyboard, int i) {
+	protected Map<String, String> getSectionSnippetVars(StoryboardImpl storyboard, int i) {
 		return null;
 	}
 

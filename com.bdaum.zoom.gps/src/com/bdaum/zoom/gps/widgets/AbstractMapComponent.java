@@ -35,7 +35,9 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -82,6 +84,8 @@ import com.bdaum.zoom.gps.geonames.WebServiceException;
 import com.bdaum.zoom.gps.internal.GpsActivator;
 import com.bdaum.zoom.gps.internal.GpsUtilities;
 import com.bdaum.zoom.gps.internal.Icons;
+import com.bdaum.zoom.gps.internal.Icons.Icon;
+import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.gps.Trackpoint;
@@ -94,11 +98,13 @@ public abstract class AbstractMapComponent implements IMapComponent {
 		public double lat = Double.NaN;
 		public double lng = Double.NaN;
 		public int zoom = 12;
+		public int type = CoordinatesListener.ADDLOC;
 
-		public PositionAndZoom(double lat, double lng, int zoom) {
+		public PositionAndZoom(double lat, double lng, int zoom, int type) {
 			this.lat = lat;
 			this.lng = lng;
 			this.zoom = zoom;
+			this.type = type;
 		}
 
 		public PositionAndZoom(String s) {
@@ -108,7 +114,9 @@ public abstract class AbstractMapComponent implements IMapComponent {
 			if (st.hasMoreElements())
 				lng = parseDouble(st.nextToken());
 			if (st.hasMoreElements())
-				zoom = Integer.parseInt(st.nextToken());
+				zoom = parseInt(st.nextToken(), zoom);
+			if (st.hasMoreElements())
+				type = parseInt(st.nextToken(), type);
 		}
 	}
 
@@ -117,6 +125,19 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 */
 	protected static class HistoryItem {
 		private double latitude;
+
+		public void setLatitude(double latitude) {
+			this.latitude = latitude;
+		}
+
+		public void setLongitude(double longitude) {
+			this.longitude = longitude;
+		}
+
+		public void setDetail(double detail) {
+			this.detail = detail;
+		}
+
 		private double longitude;
 		private double detail;
 
@@ -167,7 +188,6 @@ public abstract class AbstractMapComponent implements IMapComponent {
 		public int hashCode() {
 			throw new UnsupportedOperationException();
 		}
-
 	}
 
 	/**
@@ -193,12 +213,22 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 */
 	protected static final String REMOVE = "remove"; //$NON-NLS-1$
 	/**
+	 * CamCount event. Parameter: Number of cameras placed
+	 */
+	protected static final String CAMCOUNT = "camCount"; //$NON-NLS-1$
+	/**
 	 * Moved location event. Parameters: moved
 	 */
 	protected static final Object MOVED = "moved"; //$NON-NLS-1$
 	/**
+	 * Existing marker modified
+	 */
+	private static final String MODIFY = "modify"; //$NON-NLS-1$
+
+	/**
 	 * Mapmode changed location event. Parameters: empty string or 3D
 	 */
+
 	protected static final Object MAPMODE = "mapmode"; //$NON-NLS-1$
 	/**
 	 * Maptype changed location event. Parameters: maptype
@@ -247,11 +277,11 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	private ListenerList<CoordinatesListener> coordinatesListeners = new ListenerList<CoordinatesListener>();
 	private ListenerList<MaptypeChangedListener> maptypeListeners = new ListenerList<MaptypeChangedListener>();
 	private LinkedList<HistoryItem> history = new LinkedList<HistoryItem>();
-	private int historyPostion = 0;
+	private int historyPosition = 0;
 	private String maptype;
 	private Composite comp;
 	private Browser browser;
-	private ToolItem pinButton;
+	private ToolItem pin1Button;
 	private Combo combo;
 	private Label explanationLabel;
 	private Map<String, WaypointArea> areaMap;
@@ -261,6 +291,9 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	protected String mapmode;
 	private int selectionMode;
 	private Composite header;
+	private ToolItem pin2Button;
+	private int camCount = 0;
+	private ToolBar pinbar2;
 
 	static {
 		usformat.setMaximumFractionDigits(5);
@@ -307,14 +340,24 @@ public abstract class AbstractMapComponent implements IMapComponent {
 						ev = ev.substring(0, p);
 					}
 					if (CLICK.equals(ev) || DRAG.equals(ev)) {
-						fireCoordinatesChanged(new PositionAndZoom(data));
-						addPosition(data);
+						fireCoordinatesChanged(null, new PositionAndZoom(data));
+						updateHistory(data, true);
 					} else if (MOVED.equals(ev)) {
-						fireCoordinatesChanged(new PositionAndZoom(data));
-					} else if (REMOVE.equals(ev)) {
-						fireCoordinatesChanged(new PositionAndZoom("")); //$NON-NLS-1$
+						updateHistory(data, false);
+					} else if (MODIFY.equals(ev)) {
+						p = data.lastIndexOf('&');
+						if (p >= 0) {
+							String assetIds = data.substring(p + 1);
+							data = data.substring(0, p);
+							List<String> assetList = assetIds == null ? null : Core.fromStringList(assetIds, ", "); //$NON-NLS-1$
+							fireCoordinatesChanged(assetList.toArray(new String[assetList.size()]),
+									new PositionAndZoom(data));
+							updateHistory(data, true);
+						}
+					} else if (CAMCOUNT.equals(ev)) {
+						updateCamCount(data);
 					} else if (POS.equals(ev)) {
-						addPosition(data);
+						updateHistory(data, true);
 					} else if (MAPTYPE.equals(ev)) {
 						maptype = data;
 						fireMaptypeChanged(maptype);
@@ -323,8 +366,10 @@ public abstract class AbstractMapComponent implements IMapComponent {
 						updateButtons();
 					} else if (MARKERINFO.equals(ev)) {
 						showMarkerInfo(data);
+					} else if (DEBUG.equals(ev)) {
+						System.out.println(data);
 					} else {
-						System.out.println(NLS.bind("Unknown event {0}: {1}", ev, data)); //$NON-NLS-1$
+						System.err.println(NLS.bind("Unknown event {0}: {1}", ev, data)); //$NON-NLS-1$
 					}
 				}
 			}
@@ -340,18 +385,34 @@ public abstract class AbstractMapComponent implements IMapComponent {
 		});
 	}
 
+	protected void updateCamCount(String data) {
+		camCount = parseInt(data, camCount);
+		updateControls();
+	}
+
 	public void createHeader() {
 		header = new Composite(area, SWT.NONE);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-		header.setLayout(new GridLayout(5, false));
+		header.setLayout(new GridLayout(6, false));
 		ToolBar pinbar = new ToolBar(header, SWT.HORIZONTAL);
-		pinButton = new ToolItem(pinbar, SWT.PUSH);
-		pinButton.setImage(Icons.pin.getImage());
-		pinButton.setToolTipText(Messages.AbstractMapComponent_add_marker);
-		pinButton.addSelectionListener(new SelectionAdapter() {
+		pin1Button = new ToolItem(pinbar, SWT.PUSH);
+		pin1Button.setImage(Icons.pin.getImage());
+		pin1Button.setToolTipText(Messages.AbstractMapComponent_add_marker);
+		pin1Button.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				browser.execute("follow(0);"); //$NON-NLS-1$
+				browser.execute(selectionMode == ONE || selectionMode == CLUSTER || selectionMode == MULTI ? "camera();" //$NON-NLS-1$
+						: "location();"); //$NON-NLS-1$
+			}
+		});
+		pinbar2 = new ToolBar(header, SWT.HORIZONTAL);
+		pin2Button = new ToolItem(pinbar2, SWT.PUSH);
+		pin2Button.setImage(Icons.dirPin.getImage());
+		pin2Button.setToolTipText(Messages.AbstractMapComponent_add_dir_marker);
+		pin2Button.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				browser.execute("direction();"); //$NON-NLS-1$
 			}
 		});
 		explanationLabel = new Label(header, SWT.WRAP);
@@ -455,7 +516,7 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	private void updateCombo(String name) {
 		if (combo != null) {
 			String oldText = combo.getText();
-			if (oldText.length() > 0) {
+			if (!oldText.isEmpty()) {
 				GpsActivator activator = GpsActivator.getDefault();
 				String[] history = activator.getSearchHistory();
 				if (history.length >= GpsActivator.MAXHISTORYLENGTH) {
@@ -481,9 +542,9 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 * @param latitude
 	 * @param longitude
 	 */
-	protected void fireCoordinatesChanged(PositionAndZoom pz) {
+	protected void fireCoordinatesChanged(String[] assetIds, PositionAndZoom pz) {
 		for (Object listener : coordinatesListeners.getListeners())
-			((CoordinatesListener) listener).setCoordinates(pz.lat, pz.lng, pz.zoom);
+			((CoordinatesListener) listener).setCoordinates(assetIds, pz.lat, pz.lng, pz.zoom, pz.type);
 	}
 
 	/**
@@ -501,9 +562,11 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 *
 	 * @param data
 	 *            - 'pos' parameters
+	 * @param add
+	 *            - true if item is added, false if top item is updated
 	 */
-	protected void addPosition(String data) {
-		while (historyPostion < history.size() - 1)
+	protected void updateHistory(String data, boolean add) {
+		while (historyPosition < history.size() - 1)
 			history.removeLast();
 		StringTokenizer st = new StringTokenizer(data, "(),&"); //$NON-NLS-1$
 		double latitude = Double.NaN;
@@ -514,22 +577,31 @@ public abstract class AbstractMapComponent implements IMapComponent {
 		if (st.hasMoreElements())
 			longitude = parseDouble(st.nextToken());
 		if (st.hasMoreElements())
-			try {
-				detail = Integer.parseInt(st.nextToken().trim());
-			} catch (NumberFormatException e1) {
-				// leave at default
+			detail = parseInt(st.nextToken(), detail);
+		if (add) {
+			if (!Double.isNaN(latitude) && !Double.isNaN(longitude)) {
+				while (historyPosition < history.size())
+					history.removeLast();
+				HistoryItem item = new HistoryItem(latitude, longitude, detail);
+				if (!history.isEmpty() && history.getLast().equals(item))
+					return;
+				history.add(item);
+				historyPosition++;
 			}
-		if (!Double.isNaN(latitude) && !Double.isNaN(longitude)) {
-			while (historyPostion < history.size())
-				history.removeLast();
-			HistoryItem item = new HistoryItem(latitude, longitude, detail);
-			if (!history.isEmpty() && history.getLast().equals(item))
-				return;
-			history.add(item);
-			historyPostion++;
+			while (history.size() > 99)
+				history.removeFirst();
+		} else {
+			if (history.isEmpty()) {
+				HistoryItem item = new HistoryItem(latitude, longitude, detail);
+				history.add(item);
+				historyPosition++;
+			} else {
+				HistoryItem item = history.getLast();
+				item.setLatitude(latitude);
+				item.setLongitude(longitude);
+				item.setDetail(detail);
+			}
 		}
-		while (history.size() > 99)
-			history.removeFirst();
 		updateButtons();
 	}
 
@@ -541,11 +613,19 @@ public abstract class AbstractMapComponent implements IMapComponent {
 		}
 	}
 
+	private static int parseInt(String s, int dflt) {
+		try {
+			return Integer.parseInt(s.trim());
+		} catch (NumberFormatException e) {
+			return dflt;
+		}
+	}
+
 	private void updateButtons() {
 		if (forwardButton != null)
-			forwardButton.setEnabled(historyPostion < history.size());
+			forwardButton.setEnabled(historyPosition < history.size());
 		if (backButton != null)
-			backButton.setEnabled(historyPostion > 1 && !history.isEmpty());
+			backButton.setEnabled(historyPosition > 1 && !history.isEmpty());
 		updateControls();
 	}
 
@@ -556,15 +636,23 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 *            - image asset ID
 	 */
 	protected void showMarkerInfo(String id) {
+		int comma = -1;
+		if (id != null) {
+			comma = id.indexOf(',');
+			if (comma >= 0)
+				id = id.substring(0, comma);
+		}
 		AssetImpl asset = Core.getCore().getDbManager().obtainAsset(id);
 		if (asset != null) {
 			try {
 				File img = ImageActivator.getDefault().createTempFile("Gmap", ".jpg"); //$NON-NLS-1$//$NON-NLS-2$
 				img.delete();
 				try (FileOutputStream out = new FileOutputStream(img)) {
-					out.write(asset.getJpegThumbnail());
+					out.write(ImageUtilities.asJpeg(asset.getJpegThumbnail()));
 				}
 				String title = (String) QueryField.TITLEORNAME.obtainFieldValue(asset);
+				if (comma >= 0)
+					title += Messages.AbstractMapComponent_et_al;
 				double factor = 160d / Math.max(asset.getWidth(), asset.getHeight());
 				int w = (int) (factor * asset.getWidth());
 				int h = (int) (factor * asset.getHeight());
@@ -671,8 +759,8 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 * Moves one step forward in the history
 	 */
 	protected void forwards() {
-		if (historyPostion < history.size()) {
-			browser.execute(createSetPosDetailScript(history.get(historyPostion++)));
+		if (historyPosition < history.size()) {
+			browser.execute(createSetPosDetailScript(history.get(historyPosition++)));
 			updateButtons();
 		}
 	}
@@ -690,9 +778,9 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 * Moves one step backward in the history
 	 */
 	protected void backwards() {
-		if (historyPostion > 1 && !history.isEmpty()) {
-			--historyPostion;
-			browser.execute(createSetPosDetailScript(history.get(historyPostion - 1)));
+		if (historyPosition > 1 && !history.isEmpty()) {
+			--historyPosition;
+			browser.execute(createSetPosDetailScript(history.get(historyPosition - 1)));
 			updateButtons();
 		}
 	}
@@ -809,7 +897,14 @@ public abstract class AbstractMapComponent implements IMapComponent {
 			if (appkey != null)
 				cb.append("=").append(appkey).append("'"); //$NON-NLS-1$ //$NON-NLS-2$
 			cb.append(";\nvar initialDetail=").append(computeInitialDetail(initialZoomLevel, markerPositions))//$NON-NLS-1$
-					.append(";\nvar initialMapType, locCreated, locTitles, locImage, track, initialPosition;\n"); //$NON-NLS-1$
+					.append(";\nvar initialMapType, locCreated, locTitles, locImage, imgDirection, track, initialPosition;\n"); //$NON-NLS-1$
+			cb.append("var pinUrl = \"").append(findUrl("/gmap/icons/pin.png")) //$NON-NLS-1$ //$NON-NLS-2$
+					.append("\";\n"); //$NON-NLS-1$
+			cb.append("var camPinUrl = \"").append(findUrl("/gmap/icons/campin.png")) //$NON-NLS-1$ //$NON-NLS-2$
+					.append("\";\n"); //$NON-NLS-1$
+			cb.append("var dirPinUrl = \"").append(findUrl("/gmap/icons/dirpin.png")) //$NON-NLS-1$ //$NON-NLS-2$
+					.append("\";\n"); //$NON-NLS-1$
+
 			String addons = createAdditionalVariables();
 			if (addons != null)
 				cb.append(addons);
@@ -828,7 +923,7 @@ public abstract class AbstractMapComponent implements IMapComponent {
 			if (markerPositions != null && markerPositions.length > 0) {
 				Place last = markerPositions[markerPositions.length - 1];
 				for (Place place : markerPositions) {
-					cb.append("'").append(place.getImageName()).append("'"); //$NON-NLS-1$//$NON-NLS-2$
+					cb.append('"').append(place.getImageName()).append('"');
 					if (place != last)
 						cb.append(",\n"); //$NON-NLS-1$
 				}
@@ -837,15 +932,34 @@ public abstract class AbstractMapComponent implements IMapComponent {
 			if (markerPositions != null && markerPositions.length > 0) {
 				Place last = markerPositions[markerPositions.length - 1];
 				for (Place place : markerPositions) {
-					if (place.getImageAssetId() != null)
-						cb.append("'").append(place.getImageAssetId()).append("'"); //$NON-NLS-1$//$NON-NLS-2$
-					else
-						cb.append("null"); //$NON-NLS-1$
+					List<String> imageAssetIds = place.getImageAssetIds();
+					cb.append('[');
+					Iterator<String> iterator = imageAssetIds.iterator();
+					while (iterator.hasNext()) {
+						cb.append('"').append(iterator.next()).append('"');
+						if (iterator.hasNext())
+							cb.append(", "); //$NON-NLS-1$
+					}
+					cb.append(']');
 					if (place != last)
 						cb.append(",\n"); //$NON-NLS-1$
 				}
 			}
-			cb.append("];\ntrack = ["); //$NON-NLS-1$
+			cb.append("];\n"); //$NON-NLS-1$
+			cb.append("imgDirection = ["); //$NON-NLS-1$
+			if (markerPositions != null && markerPositions.length > 0) {
+				Place last = markerPositions[markerPositions.length - 1];
+				for (Place place : markerPositions) {
+					if (!Double.isNaN(place.getDirection()))
+						cb.append(place.getDirection());
+					else
+						cb.append("NaN"); //$NON-NLS-1$
+					if (place != last)
+						cb.append(",\n"); //$NON-NLS-1$
+				}
+			}
+			cb.append("];\n"); //$NON-NLS-1$
+			cb.append("track = ["); //$NON-NLS-1$
 			if (trackpoints != null && trackpoints.length > 0) {
 				Trackpoint last = trackpoints[trackpoints.length - 1];
 				for (Trackpoint pnt : trackpoints) {
@@ -886,15 +1000,13 @@ public abstract class AbstractMapComponent implements IMapComponent {
 			try (FileOutputStream out = new FileOutputStream(copy)) {
 				out.write(sb.toString().getBytes("UTF-8")); //$NON-NLS-1$
 			}
-			browser.getDisplay().asyncExec(new Runnable() {
-				public void run() {
-					if (!browser.isDisposed()) {
-						try {
-							browser.setUrl(copy.toURI().toURL().toString());
-							browser.setFocus();
-						} catch (MalformedURLException e) {
-							// should not happen
-						}
+			browser.getDisplay().asyncExec(() -> {
+				if (!browser.isDisposed()) {
+					try {
+						browser.setUrl(copy.toURI().toURL().toString());
+						browser.setFocus();
+					} catch (MalformedURLException e) {
+						// should not happen
 					}
 				}
 			});
@@ -909,47 +1021,64 @@ public abstract class AbstractMapComponent implements IMapComponent {
 
 	public void updateControls() {
 		String expl;
-		boolean pinEnabled;
+		boolean pin1Enabled = false;
+		boolean pin2Visible = false;
 		boolean blank = false;
-		if ("3D".equals(mapmode)) { //$NON-NLS-1$
+		Icon icon = Icons.pin;
+		pin1Button.setImage(Icons.pin.getImage());
+		if ("3D".equals(mapmode)) //$NON-NLS-1$
 			expl = Messages.AbstractMapComponent_no_tagging_possible;
-			pinEnabled = false;
-		} else
+		else
 			switch (selectionMode) {
 			case ADDLOCATION:
 				expl = Messages.AbstractMapComponent_create_new_location;
-				pinEnabled = true;
+				pin1Enabled = true;
 				break;
 			case LOCATION:
 				expl = ""; //$NON-NLS-1$
-				pinEnabled = false;
 				break;
 			case TRACK:
 				expl = ""; //$NON-NLS-1$
-				pinEnabled = false;
+				blank = true;
 				break;
 			case BLANK:
 				expl = ""; //$NON-NLS-1$
-				pinEnabled = false;
 				blank = true;
 				break;
 			case NONE:
 				expl = Messages.AbstractMapComponent_no_images;
-				pinEnabled = false;
 				break;
 			case ONE:
 				expl = Messages.AbstractMapComponent_single_image;
-				pinEnabled = true;
+				pin1Enabled = true;
+				pin2Visible = true;
+				icon = Icons.camPin;
+				break;
+			case CLUSTER:
+				expl = Messages.AbstractMapComponent_cluster;
+				pin1Enabled = true;
+				pin2Visible = true;
+				icon = Icons.camPin;
 				break;
 			default:
 				expl = Messages.AbstractMapComponent_multiple_images;
-				pinEnabled = true;
+				pin1Enabled = true;
+				icon = Icons.camPin;
 				break;
 			}
 		if (explanationLabel != null)
 			explanationLabel.setText(expl);
-		if (pinButton != null)
-			pinButton.setEnabled(pinEnabled);
+		if (pin1Button != null) {
+			pin1Button.setEnabled(pin1Enabled);
+			pin1Button.setToolTipText(pin1Enabled ? Messages.AbstractMapComponent_add_marker
+					: Messages.AbstractMapComponent_geotagging_disabled);
+			pin1Button.setImage(icon.getImage());
+		}
+		if (pin2Button != null) {
+			pinbar2.setVisible(pin2Visible);
+			if (pin2Visible)
+				pin2Button.setEnabled(camCount > 0);
+		}
 		area.setVisible(!blank);
 	}
 
@@ -1013,7 +1142,7 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 */
 	protected void clearHistory() {
 		history.clear();
-		historyPostion = 0;
+		historyPosition = 0;
 		updateButtons();
 	}
 
@@ -1103,7 +1232,7 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	private static void replaceText(StringBuilder sb, String var, String text) {
 		int p = sb.indexOf(var);
 		if (p >= 0) {
-			if (text == null || text.length() == 0)
+			if (text == null || text.isEmpty())
 				sb.delete(p, p + var.length());
 			else
 				sb.replace(p, p + var.length(), text);

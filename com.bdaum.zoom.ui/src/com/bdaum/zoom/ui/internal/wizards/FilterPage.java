@@ -52,7 +52,7 @@ public class FilterPage extends ColoredWizardPage {
 				s = s.substring(1);
 				rejects = true;
 			}
-			pattern = s.length() > 0 ? s : "*"; //$NON-NLS-1$
+			pattern = s.isEmpty() ? "*" : s; //$NON-NLS-1$
 		}
 
 		@Override

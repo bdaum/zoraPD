@@ -402,37 +402,35 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 			final int level, boolean force) {
 		if (viewer.getInput() == null || force)
 			BusyIndicator.showWhile(viewer.getControl().getDisplay(),
-					new Runnable() {
-						public void run() {
-							if (viewer.getInput() == null) {
-								viewer.setInput(QueryField.ALL);
-								if (level >= 0)
-									viewer.expandToLevel(level);
+					() -> {
+						if (viewer.getInput() == null) {
+							viewer.setInput(QueryField.ALL);
+							if (level >= 0)
+								viewer.expandToLevel(level);
+						}
+						StringTokenizer st = new StringTokenizer(ess, "\n"); //$NON-NLS-1$
+						if (viewer instanceof CheckboxTreeViewer) {
+							List<QueryField> fields = new ArrayList<QueryField>();
+							while (st.hasMoreTokens()) {
+								QueryField qfield = QueryField
+										.findQueryField(st.nextToken());
+								if (qfield != null)
+									fields.add(qfield);
 							}
-							StringTokenizer st = new StringTokenizer(ess, "\n"); //$NON-NLS-1$
-							if (viewer instanceof CheckboxTreeViewer) {
-								List<QueryField> fields = new ArrayList<QueryField>();
-								while (st.hasMoreTokens()) {
-									QueryField qfield = QueryField
-											.findQueryField(st.nextToken());
-									if (qfield != null)
-										fields.add(qfield);
-								}
-								UiUtilities.checkInitialHierarchy(
-										(CheckboxTreeViewer) viewer, fields);
-							} else {
-								while (st.hasMoreTokens()) {
-									String id = st.nextToken();
-									int p = id.lastIndexOf("="); //$NON-NLS-1$
-									if (p > 0) {
-										try {
-											toleranceMap.put(
-													id.substring(0, p),
-													Float.parseFloat(id
-															.substring(p + 1)));
-										} catch (NumberFormatException e) {
-											// ignore
-										}
+							UiUtilities.checkInitialHierarchy(
+									(CheckboxTreeViewer) viewer, fields);
+						} else {
+							while (st.hasMoreTokens()) {
+								String id = st.nextToken();
+								int p = id.lastIndexOf("="); //$NON-NLS-1$
+								if (p > 0) {
+									try {
+										toleranceMap.put(
+												id.substring(0, p),
+												Float.parseFloat(id
+														.substring(p + 1)));
+									} catch (NumberFormatException e) {
+										// ignore
 									}
 								}
 							}

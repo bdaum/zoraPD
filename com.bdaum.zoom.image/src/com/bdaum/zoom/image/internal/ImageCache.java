@@ -448,11 +448,7 @@ public final class ImageCache implements ImageStore {
 				// Run async to avoid deadlock from dispose
 				Display display = Display.getDefault();
 				if (display != null && !display.isDisposed()) {
-					display.asyncExec(new Runnable() {
-						public void run() {
-							staleImages.disposeStaleImages();
-						}
-					});
+					display.asyncExec(() -> staleImages.disposeStaleImages());
 				}
 			}
 		}

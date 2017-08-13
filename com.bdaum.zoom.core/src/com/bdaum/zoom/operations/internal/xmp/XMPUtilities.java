@@ -74,9 +74,9 @@ public class XMPUtilities {
 			XMPPropertyInfo prop = (XMPPropertyInfo) iterator.next();
 			StringBuilder sb = new StringBuilder();
 			String namespace = prop.getNamespace();
-			if (namespace != null && namespace.length() > 0)
+			if (namespace != null && !namespace.isEmpty())
 				sb.append(namespace).append(':');
-			else if (arrayNameSpace != null && arrayNameSpace.length() > 0)
+			else if (arrayNameSpace != null && !arrayNameSpace.isEmpty())
 				sb.append(arrayNameSpace).append(':');
 			String path = prop.getPath();
 			if (path != null) {
@@ -116,8 +116,7 @@ public class XMPUtilities {
 						int iend = struct.indexOf(']', istart);
 						if (iend > istart)
 							try {
-								index1 = Integer.parseInt(struct.substring(
-										istart + 1, iend));
+								index1 = Integer.parseInt(struct.substring(istart + 1, iend));
 							} catch (NumberFormatException e) {
 								// do nothing
 							}
@@ -128,8 +127,7 @@ public class XMPUtilities {
 						int iend = detail.indexOf(']', istart);
 						if (iend > istart)
 							try {
-								index2 = Integer.parseInt(detail.substring(
-										istart + 1, iend));
+								index2 = Integer.parseInt(detail.substring(istart + 1, iend));
 							} catch (NumberFormatException e) {
 								// do nothing
 							}
@@ -150,8 +148,7 @@ public class XMPUtilities {
 						int iend = path.indexOf(']', istart);
 						if (iend > istart)
 							try {
-								index2 = Integer.parseInt(path.substring(
-										istart + 1, iend));
+								index2 = Integer.parseInt(path.substring(istart + 1, iend));
 							} catch (NumberFormatException e) {
 								// do nothing
 							}
@@ -162,17 +159,14 @@ public class XMPUtilities {
 				path = sb.toString();
 				if (prop.getValue() != null) {
 					QueryField qfield = QueryField.findXmpProperty(path);
-					if (qfield != null && qfield.getKey() != null
-							&& qfield.getType() != QueryField.T_NONE
+					if (qfield != null && qfield.getKey() != null && qfield.getType() != QueryField.T_NONE
 							&& !qfield.isStruct()) {
 						if (qfield.getCard() == 1 || index2 >= 0) {
-							fields.add(new XMPField(xmpMeta, qfield, prop,
-									path, index1, index2, null));
+							fields.add(new XMPField(xmpMeta, qfield, prop, path, index1, index2, null));
 							arrayNameSpace = null;
 						} else {
 							PropertyOptions options = prop.getOptions();
-							if (options.isArray() || options.isArrayAlternate()
-									|| options.isArrayAltText()
+							if (options.isArray() || options.isArrayAlternate() || options.isArrayAltText()
 									|| options.isArrayOrdered()) {
 								arrayNameSpace = namespace;
 							}
@@ -184,13 +178,10 @@ public class XMPUtilities {
 		return fields;
 	}
 
-	public static void writeProperties(XMPMeta xmpMeta, Asset asset,
-			Set<QueryField> filter, boolean withId) {
+	public static void writeProperties(XMPMeta xmpMeta, Asset asset, Set<QueryField> filter, boolean withId) {
 		CoreActivator activator = CoreActivator.getDefault();
-		IMediaSupport mediaSupport = activator.getMediaSupport(asset
-				.getFormat());
-		int flags = (mediaSupport != null) ? mediaSupport.getPropertyFlags()
-				: QueryField.PHOTO;
+		IMediaSupport mediaSupport = activator.getMediaSupport(asset.getFormat());
+		int flags = (mediaSupport != null) ? mediaSupport.getPropertyFlags() : QueryField.PHOTO;
 		IDbManager dbManager = activator.getDbManager();
 		List<QueryField> qfields = new ArrayList<QueryField>(100);
 		listXmpQueryFields(QueryField.ALL, qfields);
@@ -200,13 +191,10 @@ public class XMPUtilities {
 			if (!queryField.testFlags(flags))
 				continue;
 			try {
-				String xmpNs = queryField.getXmpNs() == null ? null
-						: queryField.getXmpNs().uri;
+				String xmpNs = queryField.getXmpNs() == null ? null : queryField.getXmpNs().uri;
 				String path = queryField.getPath();
-				PropertyOptions optionsArray = new PropertyOptions(
-						PropertyOptions.ARRAY);
-				PropertyOptions optionsStruct = new PropertyOptions(
-						PropertyOptions.STRUCT);
+				PropertyOptions optionsArray = new PropertyOptions(PropertyOptions.ARRAY);
+				PropertyOptions optionsStruct = new PropertyOptions(PropertyOptions.STRUCT);
 				if (queryField.isStruct()) {
 					boolean isStructArray = queryField.getCard() != 1;
 					String id = asset.getStringId();
@@ -214,29 +202,24 @@ public class XMPUtilities {
 					List<? extends IdentifiableObject> relations = null;
 					if (queryField == QueryField.IPTC_LOCATIONCREATED) {
 						children = QueryField.LOCATION_TYPE.getChildren();
-						relations = dbManager.obtainStructForAsset(
-								LocationCreatedImpl.class, id, true);
+						relations = dbManager.obtainStructForAsset(LocationCreatedImpl.class, id, true);
 					} else if (queryField == QueryField.IPTC_LOCATIONSHOWN) {
 						children = QueryField.LOCATION_TYPE.getChildren();
-						relations = dbManager.obtainStructForAsset(
-								LocationShownImpl.class, id, false);
+						relations = dbManager.obtainStructForAsset(LocationShownImpl.class, id, false);
 					} else if (queryField == QueryField.IPTC_ARTWORK) {
-						children = QueryField.ARTWORKOROBJECT_TYPE
-								.getChildren();
-						relations = dbManager.obtainStructForAsset(
-								ArtworkOrObjectShownImpl.class, id, false);
+						children = QueryField.ARTWORKOROBJECT_TYPE.getChildren();
+						relations = dbManager.obtainStructForAsset(ArtworkOrObjectShownImpl.class, id, false);
 					} else if (queryField == QueryField.IPTC_CONTACT) {
 						children = QueryField.CONTACT_TYPE.getChildren();
-						relations = dbManager.obtainStructForAsset(
-								CreatorsContactImpl.class, id, true);
+						relations = dbManager.obtainStructForAsset(CreatorsContactImpl.class, id, true);
 					} else if (queryField == QueryField.FACESSHOWN) {
 						children = QueryField.REGION_TYPE.getChildren();
-						relations = dbManager.obtainObjects(RegionImpl.class,
-								"asset_person_parent", id, QueryField.EQUALS); //$NON-NLS-1$
+						relations = dbManager.obtainObjects(RegionImpl.class, "asset_person_parent", id, //$NON-NLS-1$
+								QueryField.EQUALS);
 					} else if (queryField == QueryField.MWG_FACESSHOWN) {
 						children = QueryField.MWG_REGION_TYPE.getChildren();
-						relations = dbManager.obtainObjects(RegionImpl.class,
-								"asset_person_parent", id, QueryField.EQUALS); //$NON-NLS-1$
+						relations = dbManager.obtainObjects(RegionImpl.class, "asset_person_parent", id, //$NON-NLS-1$
+								QueryField.EQUALS);
 					}
 					xmpMeta.deleteProperty(xmpNs, path);
 					int si = 0;
@@ -245,46 +228,35 @@ public class XMPUtilities {
 							String relId = null;
 							Class<? extends IdentifiableObject> relClass = null;
 							if (queryField == QueryField.IPTC_LOCATIONCREATED) {
-								relId = ((LocationCreatedImpl) object)
-										.getLocation();
+								relId = ((LocationCreatedImpl) object).getLocation();
 								relClass = LocationImpl.class;
 							} else if (queryField == QueryField.IPTC_LOCATIONSHOWN) {
-								relId = ((LocationShownImpl) object)
-										.getLocation();
+								relId = ((LocationShownImpl) object).getLocation();
 								relClass = LocationImpl.class;
 							} else if (queryField == QueryField.IPTC_ARTWORK) {
-								relId = ((ArtworkOrObjectShownImpl) object)
-										.getArtworkOrObject();
+								relId = ((ArtworkOrObjectShownImpl) object).getArtworkOrObject();
 								relClass = ArtworkOrObjectImpl.class;
 							} else if (queryField == QueryField.IPTC_CONTACT) {
-								relId = ((CreatorsContactImpl) object)
-										.getContact();
+								relId = ((CreatorsContactImpl) object).getContact();
 								relClass = ContactImpl.class;
-							} else if (queryField == QueryField.FACESSHOWN
-									|| queryField == QueryField.MWG_FACESSHOWN) {
+							} else if (queryField == QueryField.FACESSHOWN || queryField == QueryField.MWG_FACESSHOWN) {
 								MWGRegion mwgRegion = new AssetEnsemble.MWGRegion();
-								AssetEnsemble.transferRegionData(dbManager,
-										(RegionImpl) object, mwgRegion);
+								AssetEnsemble.transferRegionData(dbManager, (RegionImpl) object, mwgRegion);
 								object = mwgRegion;
 							}
 							String structPath;
 							if (isStructArray) {
-								xmpMeta.appendArrayItem(xmpNs, path,
-										optionsArray, null, optionsStruct);
+								xmpMeta.appendArrayItem(xmpNs, path, optionsArray, null, optionsStruct);
 								structPath = path + "[" + (++si) + "]"; //$NON-NLS-1$ //$NON-NLS-2$
 							} else {
-								xmpMeta.setProperty(xmpNs, path, null,
-										optionsStruct);
+								xmpMeta.setProperty(xmpNs, path, null, optionsStruct);
 								structPath = path;
 							}
-							IdentifiableObject struct = relClass == null ? null
-									: dbManager.obtainById(relClass, relId);
+							IdentifiableObject struct = relClass == null ? null : dbManager.obtainById(relClass, relId);
 							if (children != null) {
 								if (struct != null && withId)
-									xmpMeta.setStructField(xmpNs, structPath,
-											QueryField.NS_ZORA.uri,
-											"ZoRaId", struct //$NON-NLS-1$
-													.getStringId());
+									xmpMeta.setStructField(xmpNs, structPath, QueryField.NS_ZORA.uri, "ZoRaId", struct //$NON-NLS-1$
+											.getStringId());
 								for (QueryField qchild : children) {
 									Namespace childNs = qchild.getXmpNs();
 									if (childNs == null)
@@ -292,12 +264,9 @@ public class XMPUtilities {
 									String childPath = qchild.getPath();
 									Object structValue = null;
 									if (qchild.getCategory() == QueryField.CATEGORY_LOCAL)
-										structValue = getStructValue(qchild,
-												object, true);
+										structValue = getStructValue(qchild, object, true);
 									else if (struct != null)
-										structValue = getStructValue(
-												qchild,
-												struct,
+										structValue = getStructValue(qchild, struct,
 												qchild.getCategory() != QueryField.CATEGORY_FOREIGN
 														|| qchild.getType() != QueryField.T_FLOATB); // because
 																										// of
@@ -305,37 +274,23 @@ public class XMPUtilities {
 																										// lon,
 																										// alt
 									if (structValue != null) {
-										if (qchild.getCard() != 1
-												&& structValue instanceof String[]) {
-											xmpMeta.setStructField(xmpNs,
-													structPath, childNs.uri,
-													childPath, null,
+										if (qchild.getCard() != 1 && structValue instanceof String[]) {
+											xmpMeta.setStructField(xmpNs, structPath, childNs.uri, childPath, null,
 													optionsArray);
-											String qChildPath = structPath
-													+ "/" //$NON-NLS-1$
-													+ childNs.defaultPrefix
-													+ childPath;
+											String qChildPath = structPath + "/" //$NON-NLS-1$
+													+ childNs.defaultPrefix + childPath;
 											String[] array = (String[]) structValue;
 											for (int i = 0; i < array.length; i++) {
-												if (array[i] != null
-														&& array[i].length() > 0)
-													xmpMeta.appendArrayItem(
-															xmpNs, qChildPath,
-															optionsArray,
-															array[i], null);
+												if (array[i] != null && !array[i].isEmpty())
+													xmpMeta.appendArrayItem(xmpNs, qChildPath, optionsArray, array[i],
+															null);
 											}
-										} else if (!structValue.equals(qchild
-												.getDefaultValue())) {
+										} else if (!structValue.equals(qchild.getDefaultValue())) {
 											if (structValue instanceof MWGRegion)
-												writeMwgRegion(xmpMeta, asset,
-														xmpNs, path, si == 1,
-														structPath, childNs,
-														childPath,
-														(MWGRegion) structValue);
+												writeMwgRegion(xmpMeta, asset, xmpNs, path, si == 1, structPath,
+														childNs, childPath, (MWGRegion) structValue);
 											else
-												xmpMeta.setStructField(xmpNs,
-														structPath,
-														childNs.uri, childPath,
+												xmpMeta.setStructField(xmpNs, structPath, childNs.uri, childPath,
 														structValue.toString());
 										}
 									}
@@ -351,35 +306,28 @@ public class XMPUtilities {
 						int[] array = (int[]) fieldValue;
 						for (int i = 0; i < array.length; i++) {
 							if (array[i] != 0)
-								xmpMeta.appendArrayItem(xmpNs, path,
-										new PropertyOptions(
-												PropertyOptions.ARRAY_ORDERED),
+								xmpMeta.appendArrayItem(xmpNs, path, new PropertyOptions(PropertyOptions.ARRAY_ORDERED),
 										String.valueOf(array[i]), null);
 						}
 					} else if (fieldValue instanceof boolean[]) {
 						boolean[] array = (boolean[]) fieldValue;
 						for (int i = 0; i < array.length; i++) {
 							if (array[i])
-								xmpMeta.appendArrayItem(xmpNs, path,
-										new PropertyOptions(
-												PropertyOptions.ARRAY_ORDERED),
+								xmpMeta.appendArrayItem(xmpNs, path, new PropertyOptions(PropertyOptions.ARRAY_ORDERED),
 										String.valueOf(array[i]), null);
 						}
 					} else if (fieldValue instanceof double[]) {
 						double[] array = (double[]) fieldValue;
 						for (int i = 0; i < array.length; i++) {
 							if (array[i] != 0d)
-								xmpMeta.appendArrayItem(xmpNs, path,
-										new PropertyOptions(
-												PropertyOptions.ARRAY_ORDERED),
+								xmpMeta.appendArrayItem(xmpNs, path, new PropertyOptions(PropertyOptions.ARRAY_ORDERED),
 										String.valueOf(array[i]), null);
 						}
 					} else if (fieldValue instanceof String[]) {
 						String[] array = (String[]) fieldValue;
 						for (int i = 0; i < array.length; i++) {
-							if (array[i] != null && array[i].length() > 0)
-								xmpMeta.appendArrayItem(xmpNs, path,
-										optionsArray, array[i], null);
+							if (array[i] != null && !array[i].isEmpty())
+								xmpMeta.appendArrayItem(xmpNs, path, optionsArray, array[i], null);
 						}
 					}
 				} else {
@@ -392,57 +340,48 @@ public class XMPUtilities {
 						p = path.indexOf(':');
 						if (p >= 0) {
 							String prefix = path.substring(0, p);
-							fieldNs = XMPMetaFactory.getSchemaRegistry()
-									.getNamespaceURI(prefix);
+							fieldNs = XMPMetaFactory.getSchemaRegistry().getNamespaceURI(prefix);
 						} else
 							fieldNs = xmpNs;
 						xmpMeta.deleteStructField(xmpNs, group, fieldNs, path);
-						if (value != null
-								&& !value.equals(queryField.getDefaultValue()))
-							xmpMeta.setStructField(xmpNs, group, xmpNs, path,
-									value.toString());
+						if (value != null && !value.equals(queryField.getDefaultValue()))
+							xmpMeta.setStructField(xmpNs, group, xmpNs, path, value.toString());
 					} else
 						xmpMeta.deleteProperty(xmpNs, path);
-					if (value != null
-							&& !value.equals(queryField.getDefaultValue()))
+					if (value != null && !value.equals(queryField.getDefaultValue()))
 						xmpMeta.setProperty(xmpNs, path, value);
+//					if (queryField == QueryField.EXIF_GPSDESTDIST) {
+//						xmpMeta.setProperty(QueryField.EXIF_GPSDESTDIST.getXmpNs().uri,
+//								QueryField.EXIF_GPSDESTDIST.getPath(),
+//								QueryField.EXIF_GPSDESTDIST.obtainPlainFieldValue(asset));
+//					} else
 					if (queryField == QueryField.COLORCODE) {
-						xmpMeta.deleteProperty(QueryField.NS_XMP.uri,
-								queryField.getExifToolKey());
+						xmpMeta.deleteProperty(QueryField.NS_XMP.uri, queryField.getExifToolKey());
 						if (value != null) {
 							int code = (Integer) value;
-							if (code >= 0
-									&& code < QueryField.XMPCOLORCODES.length)
-								xmpMeta.setProperty(QueryField.NS_XMP.uri,
-										queryField.getExifToolKey(),
+							if (code >= 0 && code < QueryField.XMPCOLORCODES.length)
+								xmpMeta.setProperty(QueryField.NS_XMP.uri, queryField.getExifToolKey(),
 										QueryField.XMPCOLORCODES[code][0]);
 						}
 					}
 				}
 			} catch (XMPException e) {
-				activator.logError(NLS.bind(
-						Messages.XMPUtilities_cannot_write_xmp,
-						queryField.getLabel()), e);
+				activator.logError(NLS.bind(Messages.XMPUtilities_cannot_write_xmp, queryField.getLabel()), e);
 			}
 		}
 	}
 
-	public static void writeMwgRegion(XMPMeta xmpMeta, Asset asset,
-			String xmpNs, String path, boolean first, String structPath,
-			Namespace childNs, String childPath, MWGRegion region)
-			throws XMPException {
+	public static void writeMwgRegion(XMPMeta xmpMeta, Asset asset, String xmpNs, String path, boolean first,
+			String structPath, Namespace childNs, String childPath, MWGRegion region) throws XMPException {
 		if (first) {
 			String regionPath = path;
 			int p = regionPath.lastIndexOf('/');
 			if (p >= 0)
 				regionPath = regionPath.substring(0, p);
-			xmpMeta.setStructField(xmpNs, regionPath,
-					QueryField.MWG_APPLIEDTODIM.getXmpNs().uri,
-					QueryField.MWG_APPLIEDTODIM.getPath(), null,
-					new PropertyOptions(PropertyOptions.STRUCT));
-			String structName = regionPath + '/'
-					+ QueryField.MWG_APPLIEDTODIM.getXmpNs().defaultPrefix
-					+ ':' + QueryField.MWG_APPLIEDTODIM.getPath();
+			xmpMeta.setStructField(xmpNs, regionPath, QueryField.MWG_APPLIEDTODIM.getXmpNs().uri,
+					QueryField.MWG_APPLIEDTODIM.getPath(), null, new PropertyOptions(PropertyOptions.STRUCT));
+			String structName = regionPath + '/' + QueryField.MWG_APPLIEDTODIM.getXmpNs().defaultPrefix + ':'
+					+ QueryField.MWG_APPLIEDTODIM.getPath();
 			String uri = QueryField.NS_MWG_DIM.uri;
 			xmpMeta.setStructField(xmpNs, structName, uri, "w", //$NON-NLS-1$
 					String.valueOf(asset.getWidth()));
@@ -452,8 +391,7 @@ public class XMPUtilities {
 		}
 		xmpMeta.setStructField(xmpNs, structPath, childNs.uri, childPath, null,
 				new PropertyOptions(PropertyOptions.STRUCT));
-		String structName = structPath + '/' + childNs.defaultPrefix + ':'
-				+ childPath;
+		String structName = structPath + '/' + childNs.defaultPrefix + ':' + childPath;
 		String uri = QueryField.NS_MWG_AREA.uri;
 		xmpMeta.setStructField(xmpNs, structName, uri, "x", //$NON-NLS-1$
 				String.valueOf(region.getCenterX()));
@@ -467,8 +405,7 @@ public class XMPUtilities {
 				"normalized"); //$NON-NLS-1$
 	}
 
-	private static void listXmpQueryFields(QueryField qfield,
-			List<QueryField> qfields) {
+	private static void listXmpQueryFields(QueryField qfield, List<QueryField> qfields) {
 		if (!qfield.hasChildren()) {
 			if (qfield.getXmpNs() != null)
 				qfields.add(qfield);
@@ -487,8 +424,8 @@ public class XMPUtilities {
 				double v = (Double) obj;
 				if (Double.isNaN(v))
 					return null;
-				if ((qfield.getType() == QueryField.T_POSITIVEFLOAT || qfield
-						.getType() == QueryField.T_CURRENCY) && v < 0)
+				if ((qfield.getType() == QueryField.T_POSITIVEFLOAT || qfield.getType() == QueryField.T_CURRENCY)
+						&& v < 0)
 					return null;
 			} else if (obj instanceof Integer) {
 				int v = (Integer) obj;
@@ -505,17 +442,12 @@ public class XMPUtilities {
 			}
 			return obj;
 		} catch (Exception e) {
-			Core.getCore()
-					.logError(
-							NLS.bind(
-									Messages.XMPUtilities_Internal_error_accessing_field,
-									key), e);
+			Core.getCore().logError(NLS.bind(Messages.XMPUtilities_Internal_error_accessing_field, key), e);
 		}
 		return null;
 	}
 
-	private static Object getStructValue(QueryField qfield, Object obj,
-			boolean useFormatter) {
+	private static Object getStructValue(QueryField qfield, Object obj, boolean useFormatter) {
 		try {
 			Object o = qfield.obtainPlainFieldValue(obj);
 			if (!useFormatter)
@@ -523,11 +455,7 @@ public class XMPUtilities {
 			IFormatter formatter = qfield.getFormatter();
 			return formatter != null ? formatter.toString(o) : o;
 		} catch (Exception e) {
-			Core.getCore()
-					.logError(
-							NLS.bind(
-									Messages.XMPUtilities_Internal_error_accessing_field,
-									qfield.getKey()), e);
+			Core.getCore().logError(NLS.bind(Messages.XMPUtilities_Internal_error_accessing_field, qfield.getKey()), e);
 		}
 		return null;
 	}
@@ -559,8 +487,7 @@ public class XMPUtilities {
 		int ml2 = (ml + 1) & 0xfffffffe;
 		int q = 2;
 		if (jpeg.length > APP1.length) {
-			if (jpeg[q + 4] == APP1[4] && jpeg[q + 5] == APP1[5]
-					&& jpeg[q + 6] == APP1[6] && jpeg[q + 7] == APP1[7]) {
+			if (jpeg[q + 4] == APP1[4] && jpeg[q + 5] == APP1[5] && jpeg[q + 6] == APP1[6] && jpeg[q + 7] == APP1[7]) {
 				// Has already an EXIF header
 				int oml = readWord(jpeg, q + 26);
 				q += APP1.length + oml + 1;

@@ -307,12 +307,12 @@ public class CriterionGroup extends AbstractCriterionGroup {
 					return enumCombo.getItem(e);
 				}
 				if (layout.topControl == codeComposite) {
-					if (!codeField.isEnabled() || codeField.getText().length() == 0)
+					if (!codeField.isEnabled() || codeField.getText().isEmpty())
 						return null;
 					return UiUtilities.computeCookedValue(des, codeField.getText());
 				}
 				if (layout.topControl == textComposite) {
-					if (!textField.isEnabled() || textField.getText().length() == 0)
+					if (!textField.isEnabled() || textField.getText().isEmpty())
 						return null;
 					return UiUtilities.computeCookedValue(des, textField.getText());
 				}
@@ -327,7 +327,7 @@ public class CriterionGroup extends AbstractCriterionGroup {
 					return intField.getSelection();
 				}
 				if (layout.topControl == valueComposite) {
-					if (!valueCombo.isEnabled() || valueCombo.getText().length() == 0)
+					if (!valueCombo.isEnabled() || valueCombo.getText().isEmpty())
 						return null;
 					return UiUtilities.computeCookedValue(des, valueCombo.getText());
 				}

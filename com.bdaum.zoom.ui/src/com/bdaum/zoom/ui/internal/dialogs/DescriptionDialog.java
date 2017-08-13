@@ -296,7 +296,7 @@ public class DescriptionDialog extends ZTitleAreaDialog {
 		getShell().setModified(!readonly);
 		if (restoreButton != null)
 			restoreButton
-					.setEnabled(parmFileField.getText().length() > 0 && valid && description instanceof DerivedByImpl
+					.setEnabled(!parmFileField.getText().isEmpty() && valid && description instanceof DerivedByImpl
 							&& ((DerivedByImpl) description).getArchivedRecipe() != null);
 		Button okButton = getButton(IDialogConstants.OK_ID);
 		if (okButton != null)
@@ -312,11 +312,11 @@ public class DescriptionDialog extends ZTitleAreaDialog {
 		}
 		parmFileField.setData("id", null); //$NON-NLS-1$
 		CssActivator.getDefault().setColors(parmFileField);
-		return parmFileField.getText().length() > 0;
+		return !parmFileField.getText().isEmpty();
 	}
 
 	private static File getParmFile(String path) {
-		if (path.length() > 0) {
+		if (!path.isEmpty()) {
 			File file;
 			try {
 				file = new File(new URI(path));

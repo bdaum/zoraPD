@@ -44,6 +44,7 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +53,6 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.CRC32;
 
-import org.objectweb.asm.Type;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -63,7 +63,6 @@ import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.log.LogService;
-import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
@@ -94,7 +93,7 @@ import ch.ethz.iks.util.StringUtils;
  * </p>
  * 
  * @author Jan S. Rellermeyer, ETH Zurich
- * @author Berthold Daum, fixed an ambiguity problem, excluded E4 topics
+ * @author Berthold Daum fixed NPEs (bd)
  * @since 0.1
  */
 final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
@@ -102,9 +101,7 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	static boolean IS_JAVA5 = false;
 
 	static boolean IS_R4 = false;
-
-	static final String ORG_ECLIPSE_E4 = "org/eclipse/e4/"; // bd //$NON-NLS-1$
-
+	
 	private final static Method getEntry;
 	private final static Method getEntryPaths;
 	private final static File base;
@@ -114,15 +111,18 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 		if (verString != null && Float.parseFloat(verString) >= 49) {
 			IS_JAVA5 = true;
 		}
-		final String osgiVerString = System.getProperty(Constants.FRAMEWORK_VERSION);
+		final String osgiVerString = System
+				.getProperty(Constants.FRAMEWORK_VERSION);
 		if (osgiVerString != null && (!osgiVerString.trim().startsWith("1.3"))) { //$NON-NLS-1$
 			IS_R4 = true;
 		}
 		Method m = null;
 		Method n = null;
 		try {
-			m = Bundle.class.getMethod("getEntry", new Class[] { String.class });
-			n = Bundle.class.getMethod("getEntryPaths", new Class[] { String.class });
+			m = Bundle.class
+					.getMethod("getEntry", new Class[] { String.class });
+			n = Bundle.class.getMethod("getEntryPaths",
+					new Class[] { String.class });
 		} catch (SecurityException e) {
 			e.printStackTrace();
 		} catch (NoSuchMethodException e) {
@@ -130,14 +130,8 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 		getEntry = m;
 		getEntryPaths = n;
 
-		File b = null;
-		try {
-			b = getEntry == null
-					? RemoteOSGiActivator.getActivator().getContext().getDataFile("../..").getCanonicalFile() : null;
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-		}
-		base = b;
+		base = getEntry == null ? RemoteOSGiActivator.getActivator()
+				.getContext().getDataFile("../..") : null;
 	}
 
 	/**
@@ -202,7 +196,8 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	/**
 	 * how many worker threads per endpoint?
 	 */
-	static final int MAX_THREADS_PER_ENDPOINT = Integer.getInteger(THREADS_PER_ENDPOINT, 16).intValue();
+	static final int MAX_THREADS_PER_ENDPOINT = Integer.getInteger(
+			THREADS_PER_ENDPOINT, 2).intValue();
 
 	/**
 	 * log proxy generation debug output.
@@ -238,11 +233,6 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * OSGi log service instance.
 	 */
 	static LogService log;
-
-	/**
-	 * 
-	 */
-	static ServiceTracker logServiceTracker;
 
 	/**
 	 * the event admin tracker
@@ -283,6 +273,11 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * Channel ID --> ChannelEndpointMultiplexer
 	 */
 	private static Map multiplexers = new HashMap(0);
+	
+	/**
+	 * Event topics this instance is going to ignore and not remote
+	 */
+	private static final Set topicFilters = new HashSet(0);
 
 	/**
 	 * The package admin
@@ -296,37 +291,32 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 *             in case of IO problems.
 	 */
 	RemoteOSGiServiceImpl() throws IOException {
+		// [R_OSGi] Event Admin problems
+		// https://bugs.eclipse.org/419327
+		final String topics = System.getProperty("ch.ethz.iks.r_osgi.topic.filter", "");
+		final String[] strings = StringUtils.stringToArray(topics, ",");
+		for (int i = 0; i < strings.length; i++) {
+			topicFilters.add(strings[i]);
+		}
+		// [TCK][r-OSGi] NonSerializableException when running remoteserviceadmin ct
+		// https://bugs.eclipse.org/418740
+		topicFilters.add("org/osgi/service/remoteserviceadmin/*");
+		
 		// find out own IP address
 		try {
-			MY_ADDRESS = InetAddress.getAllByName(InetAddress.getLocalHost().getHostName())[0].getHostAddress();
+			MY_ADDRESS = InetAddress.getAllByName(InetAddress.getLocalHost()
+					.getHostName())[0].getHostAddress();
 		} catch (final Throwable t) {
 			MY_ADDRESS = System.getProperty("ch.ethz.iks.r_osgi.ip", //$NON-NLS-1$
 					"127.0.0.1"); //$NON-NLS-1$
 		}
 
 		// set the debug switches
-		final BundleContext context = RemoteOSGiActivator.getActivator().getContext();
-
-		logServiceTracker = new ServiceTracker(context, LogService.class.getName(), new ServiceTrackerCustomizer() {
-
-			public Object addingService(ServiceReference reference) {
-				System.err.println("LOG SERVICE ATTACHED");
-				log = (LogService) context.getService(reference);
-				return log;
-			}
-
-			public void modifiedService(ServiceReference reference, Object service) {
-
-			}
-
-			public void removedService(ServiceReference reference, Object service) {
-				log = (LogService) logServiceTracker.getService();
-			}
-
-		});
-
+		final BundleContext context = RemoteOSGiActivator.getActivator()
+				.getContext();
 		String prop = context.getProperty(PROXY_DEBUG_PROPERTY);
-		PROXY_DEBUG = prop != null ? Boolean.valueOf(prop).booleanValue() : false;
+		PROXY_DEBUG = prop != null ? Boolean.valueOf(prop).booleanValue()
+				: false;
 		prop = context.getProperty(MSG_DEBUG_PROPERTY);
 		MSG_DEBUG = prop != null ? Boolean.valueOf(prop).booleanValue() : false;
 		prop = context.getProperty(DEBUG_PROPERTY);
@@ -344,8 +334,11 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 			}
 		} else {
 			if (PROXY_DEBUG || MSG_DEBUG || DEBUG) {
-				System.err.println(
-						"WARNING: NO LOG SERVICE PRESENT, DEBUG PROPERTIES HAVE NO EFFECT UNTIL A LOG SERVICE HAS BEEN STARTED"); //$NON-NLS-1$
+				System.err
+						.println("WARNING: NO LOG SERVICE PRESENT, DEBUG PROPERTIES HAVE NO EFFECT ..."); //$NON-NLS-1$
+				PROXY_DEBUG = false;
+				MSG_DEBUG = false;
+				DEBUG = false;
 			}
 		}
 
@@ -357,10 +350,12 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 		nextXid = (short) Math.round(Math.random() * Short.MAX_VALUE);
 
 		// get the package admin
-		final ServiceReference ref = context.getServiceReference(PackageAdmin.class.getName());
+		final ServiceReference ref = context
+				.getServiceReference(PackageAdmin.class.getName());
 		if (ref == null) {
 			// TODO: handle this more gracefully
-			throw new RuntimeException("No package admin service available, R-OSGi terminates."); //$NON-NLS-1$
+			throw new RuntimeException(
+					"No package admin service available, R-OSGi terminates."); //$NON-NLS-1$
 		}
 		pkgAdmin = (PackageAdmin) context.getService(ref);
 
@@ -370,49 +365,100 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	private void setupTrackers(final BundleContext context) throws IOException {
 
 		// initialize service trackers
-		eventAdminTracker = new ServiceTracker(context, EventAdmin.class.getName(), null);
+		eventAdminTracker = new ServiceTracker(context, EventAdmin.class
+				.getName(), null);
 		eventAdminTracker.open();
 		if (eventAdminTracker.getTrackingCount() == 0 && log != null) {
-			log.log(LogService.LOG_WARNING, "NO EVENT ADMIN FOUND. REMOTE EVENT DELIVERY TEMPORARILY DISABLED."); //$NON-NLS-1$
+			log
+					.log(LogService.LOG_WARNING,
+							"NO EVENT ADMIN FOUND. REMOTE EVENT DELIVERY TEMPORARILY DISABLED."); //$NON-NLS-1$
 		}
 
 		try {
-			eventHandlerTracker = new ServiceTracker(context,
+			eventHandlerTracker = new ServiceTracker(
+					context,
 					context.createFilter("(&(" + Constants.OBJECTCLASS + "=" //$NON-NLS-1$ //$NON-NLS-2$
-							+ EventHandler.class.getName() + ")(!(" //$NON-NLS-1$
-							+ R_OSGi_INTERNAL + "=*)))"), //$NON-NLS-1$
+							+ EventHandler.class.getName()
+							+ ")(|(!(" //$NON-NLS-1$
+							+ R_OSGi_INTERNAL
+							+ "=*))" //$NON-NLS-1$
+							// [TCK][r-OSGi] NonSerializableException when running remoteserviceadmin ct
+							// https://bugs.eclipse.org/418740
+							+ "(!(" //$NON-NLS-1$
+							+ EventConstants.EVENT_TOPIC
+							+ "=org/osgi/service/remoteserviceadmin/*))))"), //$NON-NLS-1$
 					new ServiceTrackerCustomizer() {
 
-						public Object addingService(final ServiceReference reference) {
-							final String[] theTopics = (String[]) reference.getProperty(EventConstants.EVENT_TOPIC);
+						public Object addingService(
+								final ServiceReference reference) {
+
+							// https://bugs.eclipse.org/bugs/show_bug.cgi?id=326033
+							Collection theTopics;
+							Object topic = reference
+									.getProperty(EventConstants.EVENT_TOPIC);
+							if (topic instanceof String)
+								theTopics = Arrays
+										.asList(new String[] { (String) topic });
+							else
+								theTopics = Arrays.asList((String[]) topic);
+
+							// Remove filtered topics
+							theTopics = StringUtils.rightDifference(
+									topicFilters, theTopics);
+
+							
 							final LeaseUpdateMessage lu = new LeaseUpdateMessage();
 							lu.setType(LeaseUpdateMessage.TOPIC_UPDATE);
 							lu.setServiceID(""); //$NON-NLS-1$
-							lu.setPayload(new Object[] { theTopics, null });
+							lu.setPayload(new Object[] {
+									theTopics.toArray(new String[theTopics
+											.size()]), null });
 							updateLeases(lu);
 
-							return Arrays.asList(theTopics);
+							return theTopics;
 						}
 
-						public void modifiedService(final ServiceReference reference, final Object oldTopics) {
+						public void modifiedService(
+								final ServiceReference reference,
+								final Object oldTopics) {
 
 							final List oldTopicList = (List) oldTopics;
-							final List newTopicList = Arrays
-									.asList((String[]) reference.getProperty(EventConstants.EVENT_TOPIC));
-							final Collection removed = CollectionUtils.rightDifference(newTopicList, oldTopicList);
-							final Collection added = CollectionUtils.leftDifference(newTopicList, oldTopicList);
-							final String[] addedTopics = (String[]) added.toArray(new String[removed.size()]);
-							final String[] removedTopics = (String[]) removed.toArray(addedTopics);
+
+							// https://bugs.eclipse.org/bugs/show_bug.cgi?id=326033
+							Collection newTopicList;
+							Object topic = reference
+									.getProperty(EventConstants.EVENT_TOPIC);
+							if (topic instanceof String)
+								newTopicList = Arrays
+										.asList(new String[] { (String) topic });
+							else
+								newTopicList = Arrays.asList((String[]) topic);
+							
+							// Remove filtered topics
+							newTopicList = StringUtils.rightDifference(
+									topicFilters, newTopicList);
+
+							final Collection removed = CollectionUtils
+									.rightDifference(newTopicList, oldTopicList);
+							final Collection added = CollectionUtils
+									.leftDifference(newTopicList, oldTopicList);
+							final String[] addedTopics = (String[]) added
+									.toArray(new String[removed.size()]);
+							final String[] removedTopics = (String[]) removed
+									.toArray(addedTopics);
 							oldTopicList.removeAll(removed);
 							oldTopicList.addAll(added);
 							final LeaseUpdateMessage lu = new LeaseUpdateMessage();
 							lu.setType(LeaseUpdateMessage.TOPIC_UPDATE);
 							lu.setServiceID(""); //$NON-NLS-1$
-							lu.setPayload(new Object[] { addedTopics, removedTopics });
+							lu.setPayload(new Object[] { addedTopics,
+									removedTopics });
 							updateLeases(lu);
 						}
 
-						public void removedService(final ServiceReference reference, final Object oldTopics) {
+						public void removedService(
+								final ServiceReference reference,
+								final Object oldTopics) {
 							final List oldTopicsList = (List) oldTopics;
 							final String[] removedTopics = (String[]) oldTopicsList
 									.toArray(new String[oldTopicsList.size()]);
@@ -425,88 +471,119 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 					});
 			eventHandlerTracker.open();
 
-			if (DEBUG && log != null) {
+			if (DEBUG) {
 				log.log(LogService.LOG_DEBUG, "Local topic space " //$NON-NLS-1$
 						+ Arrays.asList(getTopics()));
 			}
 
-			remoteServiceListenerTracker = new ServiceTracker(context, RemoteServiceListener.class.getName(), null);
+			remoteServiceListenerTracker = new ServiceTracker(context,
+					RemoteServiceListener.class.getName(), null);
 			remoteServiceListenerTracker.open();
 
-			serviceDiscoveryHandlerTracker = new ServiceTracker(context, ServiceDiscoveryHandler.class.getName(),
+			serviceDiscoveryHandlerTracker = new ServiceTracker(context,
+					ServiceDiscoveryHandler.class.getName(),
 					new ServiceTrackerCustomizer() {
 
-						public Object addingService(final ServiceReference reference) {
+						public Object addingService(
+								final ServiceReference reference) {
 							// register all known services for discovery
 							final ServiceDiscoveryHandler handler = (ServiceDiscoveryHandler) context
 									.getService(reference);
 
-							final RemoteServiceRegistration[] regs = (RemoteServiceRegistration[]) serviceRegistrations
-									.values().toArray(new RemoteServiceRegistration[serviceRegistrations.size()]);
+							RemoteServiceRegistration[] regs = null;
+
+							synchronized (serviceRegistrations) {
+								regs = (RemoteServiceRegistration[]) serviceRegistrations.values()
+										.toArray(new RemoteServiceRegistration[serviceRegistrations.size()]);
+							}
 
 							for (int i = 0; i < regs.length; i++) {
-								handler.registerService(regs[i].getReference(), regs[i].getProperties(),
-										URI.create("r-osgi://" //$NON-NLS-1$
-												+ RemoteOSGiServiceImpl.MY_ADDRESS + ":" //$NON-NLS-1$
-												+ RemoteOSGiServiceImpl.R_OSGI_PORT + "#" //$NON-NLS-1$
-												+ regs[i].getServiceID()));
+								handler
+										.registerService(
+												regs[i].getReference(),
+												regs[i].getProperties(),
+												URI
+														.create("r-osgi://" //$NON-NLS-1$
+																+ RemoteOSGiServiceImpl.MY_ADDRESS
+																+ ":" //$NON-NLS-1$
+																+ RemoteOSGiServiceImpl.R_OSGI_PORT
+																+ "#" //$NON-NLS-1$
+																+ regs[i]
+																		.getServiceID()));
 							}
 							return handler;
 						}
 
-						public void modifiedService(final ServiceReference reference, final Object service) {
+						public void modifiedService(
+								final ServiceReference reference,
+								final Object service) {
 
 						}
 
-						public void removedService(final ServiceReference reference, final Object service) {
+						public void removedService(
+								final ServiceReference reference,
+								final Object service) {
 
 						}
 
 					});
 			serviceDiscoveryHandlerTracker.open();
 
-			remoteServiceTracker = new ServiceTracker(context, context.createFilter("(" //$NON-NLS-1$
-					+ RemoteOSGiService.R_OSGi_REGISTRATION + "=*)"), new ServiceTrackerCustomizer() { //$NON-NLS-1$
+			remoteServiceTracker = new ServiceTracker(
+					context,
+					context.createFilter("(" //$NON-NLS-1$
+							+ RemoteOSGiService.R_OSGi_REGISTRATION + "=*)"), new ServiceTrackerCustomizer() { //$NON-NLS-1$
 
-						public Object addingService(final ServiceReference reference) {
+						public Object addingService(
+								final ServiceReference reference) {
 
 							// FIXME: Surrogates have to be monitored
 							// separately!!!
 							final ServiceReference service = Arrays
-									.asList((String[]) reference.getProperty(Constants.OBJECTCLASS))
-									.contains(SurrogateRegistration.class.getName())
-											? (ServiceReference) reference
-													.getProperty(SurrogateRegistration.SERVICE_REFERENCE)
-											: reference;
+									.asList(
+											(String[]) reference
+													.getProperty(Constants.OBJECTCLASS))
+									.contains(
+											SurrogateRegistration.class
+													.getName()) ? (ServiceReference) reference
+									.getProperty(SurrogateRegistration.SERVICE_REFERENCE)
+									: reference;
 
 							try {
-								final RemoteServiceRegistration reg = new RemoteServiceRegistration(reference, service);
+								final RemoteServiceRegistration reg = new RemoteServiceRegistration(
+										reference, service);
 
 								if (log != null) {
 									log.log(LogService.LOG_INFO, "REGISTERING " //$NON-NLS-1$
-											+ reference + " AS PROXIED SERVICES"); //$NON-NLS-1$
+											+ reference
+											+ " AS PROXIED SERVICES"); //$NON-NLS-1$
 								}
 
-								serviceRegistrations.put(service, reg);
+								synchronized (serviceRegistrations) {
+									serviceRegistrations.put(service, reg);
+								}
 
 								registerWithServiceDiscovery(reg);
 
 								final LeaseUpdateMessage lu = new LeaseUpdateMessage();
 								lu.setType(LeaseUpdateMessage.SERVICE_ADDED);
-								lu.setServiceID(String.valueOf(reg.getServiceID()));
-								lu.setPayload(new Object[] { reg.getInterfaceNames(), reg.getProperties() });
+								lu.setServiceID(String.valueOf(reg
+										.getServiceID()));
+								lu.setPayload(new Object[] {
+										reg.getInterfaceNames(),
+										reg.getProperties() });
 								updateLeases(lu);
 								return service;
 							} catch (final ClassNotFoundException e) {
 								e.printStackTrace();
-								throw new RemoteOSGiException("Cannot find class " + service, e); //$NON-NLS-1$
-							} catch (final RemoteOSGiException r) {
-								r.printStackTrace();
-								throw r;
+								throw new RemoteOSGiException(
+										"Cannot find class " + service, e); //$NON-NLS-1$
 							}
 						}
 
-						public void modifiedService(final ServiceReference reference, final Object service) {
+						public void modifiedService(
+								final ServiceReference reference,
+								final Object service) {
 							if (reference.getProperty(R_OSGi_REGISTRATION) == null) {
 								removedService(reference, service);
 								return;
@@ -514,24 +591,29 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 							final RemoteServiceRegistration reg = (RemoteServiceRegistration) serviceRegistrations
 									.get(reference);
 
-							unregisterFromServiceDiscovery(reg);
 							registerWithServiceDiscovery(reg);
 
 							final LeaseUpdateMessage lu = new LeaseUpdateMessage();
 							lu.setType(LeaseUpdateMessage.SERVICE_MODIFIED);
 							lu.setServiceID(String.valueOf(reg.getServiceID()));
-							lu.setPayload(new Object[] { null, reg.getProperties() });
+							lu.setPayload(new Object[] { null,
+									reg.getProperties() });
 							updateLeases(lu);
 						}
 
-						public void removedService(final ServiceReference reference, final Object service) {
+						public void removedService(
+								final ServiceReference reference,
+								final Object service) {
 
 							final ServiceReference sref = Arrays
-									.asList((String[]) reference.getProperty(Constants.OBJECTCLASS))
-									.contains(SurrogateRegistration.class.getName())
-											? (ServiceReference) reference
-													.getProperty(SurrogateRegistration.SERVICE_REFERENCE)
-											: reference;
+									.asList(
+											(String[]) reference
+													.getProperty(Constants.OBJECTCLASS))
+									.contains(
+											SurrogateRegistration.class
+													.getName()) ? (ServiceReference) reference
+									.getProperty(SurrogateRegistration.SERVICE_REFERENCE)
+									: reference;
 
 							final RemoteServiceRegistration reg = (RemoteServiceRegistration) serviceRegistrations
 									.remove(sref);
@@ -546,30 +628,36 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 						}
 
 					});
-			remoteServiceTracker.open();
+			remoteServiceTracker.open(true);
 
-			networkChannelFactoryTracker = new ServiceTracker(context,
+			networkChannelFactoryTracker = new ServiceTracker(
+					context,
 					context.createFilter("(" + Constants.OBJECTCLASS + "=" //$NON-NLS-1$ //$NON-NLS-2$
-							+ NetworkChannelFactory.class.getName() + ")"), //$NON-NLS-1$
-					new ServiceTrackerCustomizer() {
+							+ NetworkChannelFactory.class.getName() + ")"), new ServiceTrackerCustomizer() { //$NON-NLS-1$
 
-						public Object addingService(final ServiceReference reference) {
-							final NetworkChannelFactory factory = (NetworkChannelFactory) context.getService(reference);
+						public Object addingService(
+								final ServiceReference reference) {
+							final NetworkChannelFactory factory = (NetworkChannelFactory) context
+									.getService(reference);
 							try {
 								factory.activate(RemoteOSGiServiceImpl.this);
 							} catch (final IOException ioe) {
 								if (log != null) {
-									log.log(LogService.LOG_ERROR, ioe.getMessage(), ioe);
+									log.log(LogService.LOG_ERROR, ioe
+											.getMessage(), ioe);
 								}
-								ioe.printStackTrace();
 							}
 							return factory;
 						}
 
-						public void modifiedService(final ServiceReference reference, final Object factory) {
+						public void modifiedService(
+								final ServiceReference reference,
+								final Object factory) {
 						}
 
-						public void removedService(final ServiceReference reference, final Object factory) {
+						public void removedService(
+								final ServiceReference reference,
+								final Object factory) {
 						}
 					});
 			networkChannelFactoryTracker.open();
@@ -580,18 +668,23 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 
 	}
 
-	private NetworkChannelFactory getNetworkChannelFactory(final String protocol) throws RemoteOSGiException {
+	private NetworkChannelFactory getNetworkChannelFactory(final String protocol)
+			throws RemoteOSGiException {
 		try {
-			final Filter filter = RemoteOSGiActivator.getActivator().getContext()
-					.createFilter("(" //$NON-NLS-1$
-							+ NetworkChannelFactory.PROTOCOL_PROPERTY + "=" + protocol //$NON-NLS-1$
-							+ ")"); //$NON-NLS-1$
-			final ServiceReference[] refs = networkChannelFactoryTracker.getServiceReferences();
+			final Filter filter = RemoteOSGiActivator.getActivator()
+					.getContext().createFilter(
+							"(" //$NON-NLS-1$
+									+ NetworkChannelFactory.PROTOCOL_PROPERTY
+									+ "=" + protocol //$NON-NLS-1$
+									+ ")"); //$NON-NLS-1$
+			final ServiceReference[] refs = networkChannelFactoryTracker
+					.getServiceReferences();
 
 			if (refs != null) {
 				for (int i = 0; i < refs.length; i++) {
 					if (filter.match(refs[i])) {
-						return (NetworkChannelFactory) networkChannelFactoryTracker.getService(refs[i]);
+						return (NetworkChannelFactory) networkChannelFactoryTracker
+								.getService(refs[i]);
 					}
 				}
 			}
@@ -608,25 +701,23 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	/**
 	 * connect to a remote OSGi host.
 	 * 
-	 * @param host
-	 *            the address of the remote OSGi peer.
-	 * @param port
-	 *            the port of the remote OSGi peer.
-	 * @param protocol
-	 *            the protocol to be used or <code>null</code> for default.
+	 * @param uri
+	 *            the uri of the remote OSGi peer.
 	 * @return the array of service urls of services offered by the remote peer.
 	 * @throws RemoteOSGiException
 	 *             in case of errors.
+	 * @throws IOException
+	 *             in case of IO problems.
 	 * @since 0.6
 	 */
-	public RemoteServiceReference[] connect(final URI uri) throws RemoteOSGiException, IOException {
+	public RemoteServiceReference[] connect(final URI uri)
+			throws RemoteOSGiException, IOException {
 
 		final URI endpoint = URI.create(getChannelURI(uri));
-		final ChannelEndpointImpl test = (ChannelEndpointImpl) channels.get(endpoint.toString());
+		final ChannelEndpointImpl test = (ChannelEndpointImpl) channels
+				.get(endpoint.toString());
 		if (test != null) {
-			synchronized (test) {
-				test.usageCounter++;
-			}
+			test.usageCounter++;
 			return test.getAllRemoteReferences(null);
 		}
 
@@ -636,7 +727,7 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 		final NetworkChannelFactory factory = getNetworkChannelFactory(protocol);
 		channel = new ChannelEndpointImpl(factory, endpoint);
 
-		return channel.sendLease(getServices(), getTopics());
+		return channel.sendLease(getServices(endpoint.getScheme()), getTopics());
 	}
 
 	/**
@@ -644,30 +735,28 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * @see ch.ethz.iks.r_osgi.RemoteOSGiService#getListeningPort(java.lang.String)
 	 * @category RemoteOSGiService
 	 */
-	public int getListeningPort(final String protocol) throws RemoteOSGiException {
+	public int getListeningPort(final String protocol)
+			throws RemoteOSGiException {
 		final NetworkChannelFactory factory = getNetworkChannelFactory(protocol);
 		return factory.getListeningPort(protocol);
 	}
 
 	/**
+	 * @param endpoint
+	 * @throws RemoteOSGiException
 	 * 
 	 */
 	public void disconnect(final URI endpoint) throws RemoteOSGiException {
 		final String channelURI = getChannelURI(endpoint).toString();
-		final ChannelEndpointImpl channel = (ChannelEndpointImpl) channels.get(channelURI);
+		final ChannelEndpointImpl channel = (ChannelEndpointImpl) channels
+				.get(channelURI);
 		if (channel != null) {
-			synchronized (channel) {
-				if (channel.usageCounter == 1) {
-					channel.dispose();
-					multiplexers.remove(channelURI);
-				} else {
-					channel.usageCounter--;
-				}
+			if (channel.usageCounter == 1) {
+				channel.dispose();
+				multiplexers.remove(channelURI);
+			} else {
+				channel.usageCounter--;
 			}
-		} else {
-			// TODO: to log
-			System.err.println("No channel " + endpoint + " to close (" + channelURI + ")");
-			System.err.println("channels " + channels);
 		}
 	}
 
@@ -677,7 +766,8 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 */
 	public RemoteServiceReference getRemoteServiceReference(final URI serviceURI) {
 		final String uri = getChannelURI(serviceURI);
-		ChannelEndpointImpl channel = (ChannelEndpointImpl) channels.get(getChannelURI(serviceURI));
+		ChannelEndpointImpl channel = (ChannelEndpointImpl) channels
+				.get(getChannelURI(serviceURI));
 		if (channel == null) {
 			try {
 				connect(serviceURI);
@@ -694,8 +784,8 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * @see ch.ethz.iks.r_osgi.RemoteOSGiService#getRemoteServiceReferences(ch.ethz.iks.r_osgi.URI,
 	 *      java.lang.String, org.osgi.framework.Filter)
 	 */
-	public RemoteServiceReference[] getRemoteServiceReferences(final URI service, final String clazz,
-			final Filter filter) {
+	public RemoteServiceReference[] getRemoteServiceReferences(
+			final URI service, final String clazz, final Filter filter) {
 		final String uri = getChannelURI(service);
 		ChannelEndpointImpl channel = (ChannelEndpointImpl) channels.get(uri);
 		if (channel == null) {
@@ -710,12 +800,11 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 			return channel.getAllRemoteReferences(null);
 		}
 		try {
-			return channel.getAllRemoteReferences(RemoteOSGiActivator.getActivator().getContext()
-					.createFilter(filter != null
-							? "(&" + filter + "(" //$NON-NLS-1$ //$NON-NLS-2$
-									+ Constants.OBJECTCLASS + "=" + clazz + "))" //$NON-NLS-1$ //$NON-NLS-2$
-							: "(" //$NON-NLS-1$
-									+ Constants.OBJECTCLASS + "=" + clazz + ")")); //$NON-NLS-1$ //$NON-NLS-2$
+			return channel.getAllRemoteReferences(RemoteOSGiActivator
+					.getActivator().getContext()
+					.createFilter(filter != null ? "(&" + filter + "(" //$NON-NLS-1$ //$NON-NLS-2$
+							+ Constants.OBJECTCLASS + "=" + clazz + "))" : "(" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+							+ Constants.OBJECTCLASS + "=" + clazz + ")")); //$NON-NLS-1$ //$NON-NLS-2$
 		} catch (final InvalidSyntaxException ise) {
 			ise.printStackTrace();
 			return null;
@@ -728,7 +817,7 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 *            the <code>RemoteServiceReference</code>.
 	 * @return the service object or <code>null</code> if the service is not
 	 *         (yet) present.
-	 * @see ch.ethz.iks.r_osgi.RemoteOSGiService#getFetchedService(ch.ethz.iks.r_osgi.RemoteServiceReference)
+	 * @see ch.ethz.iks.r_osgi.RemoteOSGiService#getRemoteService(ch.ethz.iks.r_osgi.RemoteServiceReference)
 	 * @category RemoteOSGiService
 	 * @since 0.6
 	 */
@@ -741,17 +830,19 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 			fetchService(ref);
 			sref = getFetchedServiceReference(ref);
 		}
-		return sref == null ? null : RemoteOSGiActivator.getActivator().getContext().getService(sref);
+		return sref == null ? null : RemoteOSGiActivator.getActivator()
+				.getContext().getService(sref);
 	}
 
 	/**
 	 * 
 	 * @throws InterruptedException
-	 * @see ch.ethz.iks.r_osgi.RemoteOSGiService#getRemoteServiceBundle(ch.ethz.iks.r_osgi.RemoteServiceReference)
+	 * @see ch.ethz.iks.r_osgi.RemoteOSGiService#getRemoteServiceBundle(ch.ethz.iks.r_osgi.RemoteServiceReference,
+	 *      int)
 	 * @since 1.0.0.RC4
 	 */
-	public Object getRemoteServiceBundle(final RemoteServiceReference ref, final int timeout)
-			throws InterruptedException {
+	public Object getRemoteServiceBundle(final RemoteServiceReference ref,
+			final int timeout) throws InterruptedException {
 		if (ref == null) {
 			throw new IllegalArgumentException("Remote Reference is null."); //$NON-NLS-1$
 		}
@@ -760,8 +851,9 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 			return null;
 		}
 		// TODO: FIXME use at least all service interfaces
-		final ServiceTracker tracker = new ServiceTracker(RemoteOSGiActivator.getActivator().getContext(),
-				ref.getServiceInterfaces()[0], null);
+		final ServiceTracker tracker = new ServiceTracker(RemoteOSGiActivator
+				.getActivator().getContext(), ref.getServiceInterfaces()[0],
+				null);
 		tracker.open();
 		tracker.waitForService(0);
 		// TODO: FIXME compare that the service is actually the one from the
@@ -780,11 +872,13 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * @category RemoteOSGiService
 	 * @since 0.6
 	 */
-	private ServiceReference getFetchedServiceReference(final RemoteServiceReference ref) {
+	private ServiceReference getFetchedServiceReference(
+			final RemoteServiceReference ref) {
 		try {
-			final ServiceReference[] refs = RemoteOSGiActivator.getActivator().getContext()
-					.getServiceReferences(ref.getServiceInterfaces()[0], "(" //$NON-NLS-1$
-							+ SERVICE_URI + "=" + ref.getURI() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+			final ServiceReference[] refs = RemoteOSGiActivator.getActivator()
+					.getContext().getServiceReferences(
+							ref.getServiceInterfaces()[0], "(" //$NON-NLS-1$
+									+ SERVICE_URI + "=" + ref.getURI() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 			if (refs != null) {
 				return refs[0];
 			}
@@ -807,13 +901,15 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * @since 0.1
 	 * @category RemoteOSGiService
 	 */
-	private void fetchService(final RemoteServiceReference ref) throws RemoteOSGiException {
+	private void fetchService(final RemoteServiceReference ref)
+			throws RemoteOSGiException {
 		try {
 			ChannelEndpointImpl channel;
 			channel = ((RemoteServiceReferenceImpl) ref).getChannel();
 			channel.getProxyBundle(ref);
 		} catch (final UnknownHostException e) {
-			throw new RemoteOSGiException("Cannot resolve host " + ref.getURI(), e); //$NON-NLS-1$
+			throw new RemoteOSGiException(
+					"Cannot resolve host " + ref.getURI(), e); //$NON-NLS-1$
 		} catch (final IOException ioe) {
 			throw new RemoteOSGiException("Proxy generation error", ioe); //$NON-NLS-1$
 		}
@@ -837,7 +933,8 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * @see ch.ethz.iks.r_osgi.RemoteOSGiService#getEndpointManager(ch.ethz.iks.r_osgi.URI)
 	 * @category Remoting
 	 */
-	public ChannelEndpointManager getEndpointManager(final URI remoteEndpointAddress) {
+	public ChannelEndpointManager getEndpointManager(
+			final URI remoteEndpointAddress) {
 		return getMultiplexer(remoteEndpointAddress.toString());
 	}
 
@@ -848,9 +945,11 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 */
 	private ChannelEndpointMultiplexer getMultiplexer(final String uri) {
 		final String channel = getChannelURI(URI.create(uri));
-		ChannelEndpointMultiplexer multiplexer = (ChannelEndpointMultiplexer) multiplexers.get(channel);
-		if (multiplexer == null) {
-			multiplexer = new ChannelEndpointMultiplexer((ChannelEndpointImpl) channels.get(channel));
+		ChannelEndpointMultiplexer multiplexer = (ChannelEndpointMultiplexer) multiplexers
+				.get(channel);
+		if (multiplexer == null || !multiplexer.isConnected()) {
+			multiplexer = new ChannelEndpointMultiplexer(
+					(ChannelEndpointImpl) channels.get(channel));
 			multiplexers.put(channel, multiplexer);
 		}
 		return multiplexer;
@@ -862,8 +961,9 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * @return
 	 */
 	private static String getChannelURI(final URI serviceURI) {
-		return URI.create(serviceURI.getScheme() + "://" + serviceURI.getHost() + ":" //$NON-NLS-1$ //$NON-NLS-2$
-				+ serviceURI.getPort()).toString();
+		return URI.create(
+				serviceURI.getScheme() + "://" + serviceURI.getHost() + ":" //$NON-NLS-1$ //$NON-NLS-2$
+						+ serviceURI.getPort()).toString();
 	}
 
 	/**
@@ -871,19 +971,22 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * removes all registered proxy bundles.
 	 */
 	void cleanup() {
-		final ChannelEndpoint[] c = (ChannelEndpoint[]) channels.values().toArray(new ChannelEndpoint[channels.size()]);
+		final ChannelEndpoint[] c = (ChannelEndpoint[]) channels.values()
+				.toArray(new ChannelEndpoint[channels.size()]);
 		channels.clear();
 		for (int i = 0; i < c.length; i++) {
 			if (c[i] != null)  //bd
-				c[i].dispose();
+			c[i].dispose();
 		}
 		final Object[] factories = networkChannelFactoryTracker.getServices();
-		for (int i = 0; i < factories.length; i++) {
-			try {
-				((NetworkChannelFactory) factories[i]).deactivate(this);
-			} catch (final IOException ioe) {
-				if (log != null) {
-					log.log(LogService.LOG_ERROR, ioe.getMessage(), ioe);
+		if (factories != null) {
+			for (int i = 0; i < factories.length; i++) {
+				try {
+					((NetworkChannelFactory) factories[i]).deactivate(this);
+				} catch (final IOException ioe) {
+					if (log != null) {
+						log.log(LogService.LOG_ERROR, ioe.getMessage(), ioe);
+					}
 				}
 			}
 		}
@@ -899,9 +1002,17 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * 
 	 * @return return the services.
 	 */
-	static RemoteServiceRegistration[] getServices() {
-		return (RemoteServiceRegistration[]) serviceRegistrations.values()
-				.toArray(new RemoteServiceRegistration[serviceRegistrations.size()]);
+	static RemoteServiceRegistration[] getServices(String transport) {
+		List results = new ArrayList();
+		synchronized (serviceRegistrations) {
+			for (Iterator i = serviceRegistrations.keySet().iterator(); i.hasNext();) {
+				ServiceReference ref = (ServiceReference) i.next();
+				Object propVal = ref.getProperty(RemoteOSGiService.R_OSGi_REGISTRATION);
+				if (transport == null || propVal == null || propVal.equals(Boolean.TRUE) || propVal.equals(transport))
+					results.add(serviceRegistrations.get(ref));
+			}
+		}
+		return (RemoteServiceRegistration[]) results.toArray(new RemoteServiceRegistration[results.size()]);
 	}
 
 	/**
@@ -909,22 +1020,24 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * @param serviceID
 	 * @return
 	 */
-	static RemoteServiceRegistration getServiceRegistration(final String serviceID) {
+	static RemoteServiceRegistration getServiceRegistration(
+			final String serviceID) {
 
 		final String filter = "".equals(serviceID) ? null : '(' //$NON-NLS-1$
 				+ Constants.SERVICE_ID + "=" + serviceID + ")"; //$NON-NLS-1$ //$NON-NLS-2$
 
 		try {
 			final ServiceReference[] refs = RemoteOSGiActivator.getActivator()
-					// .getContext().getServiceReferences(null, filter);
-					.getContext().getServiceReferences((String) null, filter); // bd
+					.getContext().getAllServiceReferences((String) null, filter);
 			if (refs == null) {
 				if (log != null) {
 					log.log(LogService.LOG_WARNING, "COULD NOT FIND " + filter); //$NON-NLS-1$
 				}
 				return null;
 			}
-			return (RemoteServiceRegistration) serviceRegistrations.get(refs[0]);
+			synchronized (serviceRegistrations) {
+				return (RemoteServiceRegistration) serviceRegistrations.get(refs[0]);
+			}
 		} catch (final InvalidSyntaxException e) {
 			e.printStackTrace();
 			return null;
@@ -941,12 +1054,7 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 		final List topics = new ArrayList();
 		if (topicLists != null) {
 			for (int i = 0; i < topicLists.length; i++) {
-				for (Object topic : (List) topicLists[i]) {
-					if (topic instanceof String && ((String) topic).startsWith(ORG_ECLIPSE_E4)) // bd
-						continue; // bd
-					topics.add(topic); // bd
-				}
-				// topics.addAll((List) topicLists[i]);
+				topics.addAll((List) topicLists[i]);
 			}
 		}
 		return (String[]) topics.toArray(new String[topics.size()]);
@@ -982,15 +1090,14 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 */
 	static void unregisterChannelEndpoint(final String channelURI) {
 		channels.remove(channelURI);
-		multiplexers.remove(channelURI);
 	}
 
 	/**
 	 * update the leases.
 	 */
 	static void updateLeases(final LeaseUpdateMessage msg) {
-		final ChannelEndpointImpl[] endpoints = (ChannelEndpointImpl[]) channels.values()
-				.toArray(new ChannelEndpointImpl[channels.size()]);
+		final ChannelEndpointImpl[] endpoints = (ChannelEndpointImpl[]) channels
+				.values().toArray(new ChannelEndpointImpl[channels.size()]);
 		for (int i = 0; i < endpoints.length; i++) {
 			if (endpoints[i] != null) // bd
 			endpoints[i].sendLeaseUpdate(msg);
@@ -1002,13 +1109,16 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * @param event
 	 */
 	static void notifyRemoteServiceListeners(final RemoteServiceEvent event) {
-		final ServiceReference[] refs = remoteServiceListenerTracker.getServiceReferences();
+		final ServiceReference[] refs = remoteServiceListenerTracker
+				.getServiceReferences();
 		if (refs == null) {
 			return;
 		}
-		final Set serviceIfaces = new HashSet(Arrays.asList(event.getRemoteReference().getServiceInterfaces()));
+		final Set serviceIfaces = new HashSet(Arrays.asList(event
+				.getRemoteReference().getServiceInterfaces()));
 		for (int i = 0; i < refs.length; i++) {
-			final String[] ifaces = (String[]) refs[i].getProperty(RemoteServiceListener.SERVICE_INTERFACES);
+			final String[] ifaces = (String[]) refs[i]
+					.getProperty(RemoteServiceListener.SERVICE_INTERFACES);
 			if (ifaces == null) {
 				match(refs[i], event);
 			} else {
@@ -1027,10 +1137,15 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * @param ref
 	 * @param event
 	 */
-	private static void match(final ServiceReference ref, final RemoteServiceEvent event) {
-		final Filter filter = (Filter) ref.getProperty(RemoteServiceListener.FILTER);
-		if (filter == null || filter.match(((RemoteServiceReferenceImpl) event.getRemoteReference()).getProperties())) {
-			final RemoteServiceListener listener = (RemoteServiceListener) remoteServiceListenerTracker.getService(ref);
+	private static void match(final ServiceReference ref,
+			final RemoteServiceEvent event) {
+		final Filter filter = (Filter) ref
+				.getProperty(RemoteServiceListener.FILTER);
+		if (filter == null
+				|| filter.match(((RemoteServiceReferenceImpl) event
+						.getRemoteReference()).getProperties())) {
+			final RemoteServiceListener listener = (RemoteServiceListener) remoteServiceListenerTracker
+					.getService(ref);
 			if (listener != null) {
 				listener.remoteServiceEvent(event);
 			}
@@ -1042,18 +1157,17 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 */
 	void registerWithServiceDiscovery(final RemoteServiceRegistration reg) {
 		// register the service with all service
-		// discovery
-		// handler
-		final Dictionary props = reg.getProperties();
+		// discovery handler
 		final Object[] handler = serviceDiscoveryHandlerTracker.getServices();
 
 		if (handler != null) {
 			for (int i = 0; i < handler.length; i++) {
-				((ServiceDiscoveryHandler) handler[i]).registerService(reg.getReference(), props,
-						URI.create("r-osgi://" //$NON-NLS-1$
-								+ RemoteOSGiServiceImpl.MY_ADDRESS + ":" //$NON-NLS-1$
-								+ RemoteOSGiServiceImpl.R_OSGI_PORT + "#" //$NON-NLS-1$
-								+ reg.getServiceID()));
+				final Dictionary props = reg.getProperties();
+				((ServiceDiscoveryHandler) handler[i]).registerService(reg
+						.getReference(), props, URI.create("r-osgi://" //$NON-NLS-1$
+						+ RemoteOSGiServiceImpl.MY_ADDRESS + ":" //$NON-NLS-1$
+						+ RemoteOSGiServiceImpl.R_OSGI_PORT + "#" //$NON-NLS-1$
+						+ reg.getServiceID()));
 			}
 		}
 
@@ -1069,7 +1183,8 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 		final Object[] handler = serviceDiscoveryHandlerTracker.getServices();
 		if (handler != null) {
 			for (int i = 0; i < handler.length; i++) {
-				((ServiceDiscoveryHandler) handler[i]).unregisterService(reg.getReference());
+				((ServiceDiscoveryHandler) handler[i]).unregisterService(reg
+						.getReference());
 			}
 		}
 	}
@@ -1077,7 +1192,9 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	static byte[] getBundle(final Bundle bundle) throws IOException {
 		final byte[] buffer = new byte[BUFFER_SIZE];
 		final CRC32 crc = getEntry == null ? null : new CRC32();
-		final ByteArrayOutputStream out = getEntry == null ? new ByteArrayOutputStream(BUFFER_SIZE) : null;
+		final ByteArrayOutputStream out = getEntry == null ? new ByteArrayOutputStream(
+				BUFFER_SIZE)
+				: null;
 
 		if (getEntry == null) {
 			return getBundleConcierge(bundle, buffer, out);
@@ -1086,9 +1203,9 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 		try {
 			// workaround for Eclipse
 			final String prefix = getEntry.invoke(bundle,
-					new Object[] { pkgAdmin.getExportedPackages(bundle)[0].getName().replace('.', '/') }) == null
-							? "/bin" //$NON-NLS-1$
-							: ""; //$NON-NLS-1$
+					new Object[] { pkgAdmin.getExportedPackages(bundle)[0]
+							.getName().replace('.', '/') }) == null ? "/bin" //$NON-NLS-1$
+					: ""; //$NON-NLS-1$
 
 			return generateBundle(bundle, prefix, buffer, crc);
 		} catch (Exception e) {
@@ -1097,47 +1214,8 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 		}
 	}
 
-	static String[] getMissingPackages(final String[] packages) {
-		final List missing = new ArrayList();
-		for (int i = 0; i < packages.length; i++) {
-			if (getBundleForPackage(packages[i]) == null) {
-				missing.add(packages[i]);
-			}
-		}
-		return (String[]) missing.toArray(new String[missing.size()]);
-
-	}
-
-	private static Bundle getBundleForPackage(final String packageStr) {
-		ExportedPackage pkg = null;
-		final String pkgString;
-		String versionString = null;
-		final String[] tokens = StringUtils.splitString(packageStr, ";");
-		pkgString = tokens[0];
-		for (int j = 0; j < tokens.length; j++) {
-			if (tokens[j].startsWith("version")) {
-				versionString = tokens[j].substring("version=".length());
-				break;
-			}
-		}
-		if (RemoteOSGiServiceImpl.IS_R4 && versionString != null) {
-			final ExportedPackage[] pkgs = pkgAdmin.getExportedPackages(pkgString);
-			if (pkgs == null) {
-				return null;
-			}
-			for (int j = 0; j < pkgs.length; j++) {
-				final boolean matches = StringUtils.isVersionInRange(pkgs[j].getVersion(), versionString);
-				if (matches && (pkg == null || pkgs[j].getVersion().compareTo(pkg.getVersion()) > 0)) {
-					pkg = pkgs[j];
-				}
-			}
-		} else {
-			pkg = pkgAdmin.getExportedPackage(pkgString);
-		}
-		return pkg == null ? null : pkg.getExportingBundle();
-	}
-
-	static byte[][] getBundlesForPackages(final String[] packages) throws IOException {
+	static byte[][] getBundlesForPackages(final String[] packages)
+			throws IOException {
 		final HashSet visitedBundles = new HashSet(packages.length);
 		final ArrayList bundleBytes = new ArrayList(packages.length);
 
@@ -1146,11 +1224,14 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 		// the performance on smaller VMs.
 		final byte[] buffer = new byte[BUFFER_SIZE];
 		final CRC32 crc = getEntry == null ? null : new CRC32();
-		final ByteArrayOutputStream out = getEntry == null ? new ByteArrayOutputStream(BUFFER_SIZE) : null;
+		final ByteArrayOutputStream out = getEntry == null ? new ByteArrayOutputStream(
+				BUFFER_SIZE)
+				: null;
 
+		// TODO: for R4, handle multiple versions
 		for (int i = 0; i < packages.length; i++) {
-			final Bundle bundle = getBundleForPackage(packages[i]);
-
+			final Bundle bundle = pkgAdmin.getExportedPackage(packages[i])
+					.getExportingBundle();
 			if (visitedBundles.contains(bundle)) {
 				continue;
 			}
@@ -1164,8 +1245,9 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 				try {
 					final String prefix = getEntry.invoke(bundle,
 							new Object[] { packages[i].replace('.', '/') }) == null ? "/bin" //$NON-NLS-1$
-									: ""; //$NON-NLS-1$
-					bundleBytes.add(generateBundle(bundle, prefix, buffer, crc));
+							: ""; //$NON-NLS-1$
+					bundleBytes
+							.add(generateBundle(bundle, prefix, buffer, crc));
 				} catch (Exception e) {
 					e.printStackTrace();
 					throw new IOException(e.getMessage());
@@ -1176,9 +1258,12 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 		return (byte[][]) bundleBytes.toArray(new byte[bundleBytes.size()][]);
 	}
 
-	private static byte[] getBundleConcierge(final Bundle bundle, final byte[] buffer, final ByteArrayOutputStream out)
+	private static byte[] getBundleConcierge(final Bundle bundle,
+			final byte[] buffer, final ByteArrayOutputStream out)
 			throws IOException {
-		FileInputStream in = new FileInputStream(new File(base, bundle.getBundleId() + "/bundle"));
+		FileInputStream in = new FileInputStream(new File(base, bundle
+				.getBundleId()
+				+ "/bundle"));
 		out.reset();
 
 		int read;
@@ -1189,10 +1274,20 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 		return out.toByteArray();
 	}
 
-	private static byte[] generateBundle(final Bundle bundle, final String prefix, final byte[] buffer, final CRC32 crc)
+	static boolean checkPackageImport(final String pkg) {
+		// TODO: use versions if on R4
+		if (pkg.startsWith("org.osgi")) {
+			return true;
+		}
+		return pkgAdmin.getExportedPackage(pkg) != null;
+	}
+
+	private static byte[] generateBundle(final Bundle bundle,
+			final String prefix, final byte[] buffer, final CRC32 crc)
 			throws Exception {
 
-		final URL url = (URL) getEntry.invoke(bundle, new Object[] { SEPARATOR_CHAR + MANIFEST_FILE_NAME });
+		final URL url = (URL) getEntry.invoke(bundle,
+				new Object[] { SEPARATOR_CHAR + MANIFEST_FILE_NAME });
 		final Manifest mf = new Manifest();
 		mf.read(url.openStream());
 
@@ -1207,8 +1302,9 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 		return bout.toByteArray();
 	}
 
-	private static void scan(final Bundle bundle, final String prefix, final String path, final JarOutputStream out,
-			final byte[] buffer, final CRC32 crc) throws Exception {
+	private static void scan(final Bundle bundle, final String prefix,
+			final String path, final JarOutputStream out, final byte[] buffer,
+			final CRC32 crc) throws Exception {
 
 		final Enumeration e = (Enumeration) getEntryPaths.invoke(bundle,
 				new Object[] { prefix + SEPARATOR_CHAR + path });
@@ -1216,13 +1312,14 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 			return;
 		}
 		while (e.hasMoreElements()) {
-			final String entry = ((String) e.nextElement()).substring(prefix.length());
+			final String entry = ((String) e.nextElement()).substring(prefix
+					.length());
 			if (entry.equals(MANIFEST_FILE_NAME)) {
 				continue;
 			} else if (entry.endsWith(SEPARATOR_CHAR)) {
 				scan(bundle, prefix, entry, out, buffer, crc);
 			} else {
-				final URL url = bundle.getEntry(prefix + "/" + entry);
+				final URL url = bundle.getResource(prefix + "/" + entry);
 				final InputStream in = url.openStream();
 				int read;
 				int totallyRead = 0;
@@ -1243,7 +1340,7 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 				out.closeEntry();
 			}
 		}
-	}
+	} 
 
 	/**
 	 * 
@@ -1260,20 +1357,18 @@ final class RemoteOSGiServiceImpl implements RemoteOSGiService, Remoting {
 	 * @see ch.ethz.iks.r_osgi.RemoteOSGiService#ungetRemoteService(ch.ethz.iks.r_osgi.RemoteServiceReference)
 	 * @category RemoteOSGiService
 	 */
-	public void ungetRemoteService(final RemoteServiceReference remoteServiceReference) {
+	public void ungetRemoteService(
+			final RemoteServiceReference remoteServiceReference) {
 		((RemoteServiceReferenceImpl) remoteServiceReference).getChannel()
 				.ungetRemoteService(remoteServiceReference.getURI());
 
 	}
 
-	public void asyncRemoteCall(URI service, String methodSignature, Object[] args, AsyncRemoteCallCallback callback) {
+	public void asyncRemoteCall(URI service, String methodSignature,
+			Object[] args, AsyncRemoteCallCallback callback) {
 		final ChannelEndpointImpl endpoint = getChannel(service);
-		endpoint.asyncRemoteCall(service.getFragment(), methodSignature, args, callback);
-	}
-
-	public void asyncRemoteCall(final URI service, final Method method, final Object[] args,
-			final AsyncRemoteCallCallback callback) {
-		asyncRemoteCall(service, Type.getMethodDescriptor(method), args, callback);
+		endpoint.asyncRemoteCall(service.getFragment(), methodSignature, args,
+				callback);
 	}
 
 }

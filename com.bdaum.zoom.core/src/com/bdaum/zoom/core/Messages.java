@@ -230,6 +230,8 @@ public class Messages extends NLS {
 	public static String QueryField_Image;
 	public static String QueryField_Image_creation_date;
 	public static String QueryField_image_data;
+	public static String QueryField_img_dir;
+	public static String QueryField_img_dir_ref;
 	public static String QueryField_infinite;
 	public static String QueryField_internal_error_accessing_field;
 	public static String QueryField_Image_Description;
@@ -241,6 +243,7 @@ public class Messages extends NLS {
 	public static String QueryField_ISO_studio_tungsten;
 	public static String QueryField_Job_ID;
 	public static String QueryField_Keywords;
+	public static String QueryField_km;
 	public static String QueryField_kodak_disc;
 	public static String QueryField_Landscape;
 	public static String QueryField_Landscape_mode;
@@ -273,9 +276,13 @@ public class Messages extends NLS {
 	public static String QueryField_Maximum_width;
 	public static String QueryField_Metering_Mode;
 	public static String QueryField_MIME_type;
+	public static String QueryField_mag_dir;
 	public static String QueryField_maker_notes;
+	public static String QueryField_mi;
 	public static String QueryField_mixed;
 	public static String QueryField_moderate;
+	public static String QueryField_move_dir;
+	public static String QueryField_move_dir_ref;
 	public static String QueryField_ms_hierarchical_keywords;
 	public static String QueryField_Model_age;
 	public static String QueryField_MultiSpot;
@@ -295,6 +302,7 @@ public class Messages extends NLS {
 	public static String QueryField_n_records;
 	public static String QueryField_negative;
 	public static String QueryField_ninth_plate;
+	public static String QueryField_nm;
 	public static String QueryField_no;
 	public static String QueryField_no_persons;
 	public static String QueryField_not_between;
@@ -391,6 +399,9 @@ public class Messages extends NLS {
 	public static String QueryField_similar;
 	public static String QueryField_sixth_plate;
 	public static String QueryField_starts_with;
+	public static String QueryField_subj_dist;
+	public static String QueryField_subj_lat;
+	public static String QueryField_subj_long;
 	public static String QueryField_ThreeChip;
 	public static String QueryField_Title;
 	public static String QueryField_Title_art;
@@ -401,6 +412,7 @@ public class Messages extends NLS {
 	public static String QueryField_track;
 	public static String QueryField_track_date_format;
 	public static String QueryField_transparency;
+	public static String QueryField_true_dir;
 	public static String QueryField_Transparency_Mask;
 	public static String QueryField_Trilinear;
 	public static String QueryField_Tungsten;

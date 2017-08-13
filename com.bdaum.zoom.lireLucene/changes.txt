@@ -1,0 +1,2 @@
+Added a second parameter "String identifier" to the createDescriptors() method of all Builder classes (bd)
+Fixed some NPEs in GenericFastImageSearcher (bd)

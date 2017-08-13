@@ -108,7 +108,7 @@ public class WildCardFilter {
 	public WildCardFilter(String wildString, String prefixes,
 			boolean includeDirs) {
 		wildPattern = wildString;
-		if (prefixes != null && wildString.length() > 0) {
+		if (prefixes != null && !wildString.isEmpty()) {
 			char c = wildString.charAt(0);
 			switch (prefixes.length()) {
 			case 1:

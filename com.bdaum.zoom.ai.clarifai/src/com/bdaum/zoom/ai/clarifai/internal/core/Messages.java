@@ -23,6 +23,9 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.ai.clarifai.internal.core.messages"; //$NON-NLS-1$
+	public static String Clarifai_request_refused;
+	public static String Clarifai_service_disabled;
+	public static String ClarifaiServiceProvider_clarifai_expl;
 	public static String ClarifaiServiceProvider_network_error;
 	public static String ClarifaiServiceProvider_not_set_or_wrong;
 	public static String ClarifaiServiceProvider_pending;

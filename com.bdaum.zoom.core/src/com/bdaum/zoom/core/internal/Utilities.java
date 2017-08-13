@@ -487,7 +487,7 @@ public class Utilities {
 
 	public static String computeWatchedFolderId(File folder, String volume) {
 		String uri = folder.toURI().toString();
-		if (volume == null || volume.length() == 0 || !Constants.WIN32)
+		if (volume == null || volume.isEmpty() || !Constants.WIN32)
 			return uri;
 		if (uri.startsWith("file:")) { //$NON-NLS-1$
 			int q = uri.indexOf(':', 5);
@@ -578,7 +578,7 @@ public class Utilities {
 			Group catGroup, Collection<Object> toBeStored) {
 		String label = category.getLabel();
 		SmartCollectionImpl coll = new SmartCollectionImpl(
-				label.length() > 0 ? label : Messages.Utilities_not_categorized, true, false, false, false, null, 0,
+				label.isEmpty() ? Messages.Utilities_not_categorized : label, true, false, false, false, null, 0,
 				null, 0, null, null);
 		coll.setStringId(IDbManager.CATKEY + label);
 		Criterion crit = new CriterionImpl(QueryField.IPTC_CATEGORY.getKey(), null, label, QueryField.EQUALS, false);
@@ -667,7 +667,7 @@ public class Utilities {
 							StringTokenizer st = new StringTokenizer(property, ","); //$NON-NLS-1$
 							while (st.hasMoreTokens()) {
 								String token = st.nextToken().trim();
-								if (token.length() > 0) {
+								if (!token.isEmpty()) {
 									StringTokenizer st2 = new StringTokenizer(token, "/"); //$NON-NLS-1$
 									Category parentCat = null;
 									while (st2.hasMoreTokens()) {
@@ -882,7 +882,7 @@ public class Utilities {
 			if (p >= 0) {
 				int q = uri.lastIndexOf(':', uri.length() - 2);
 				StringBuilder sb = new StringBuilder();
-				if (q > p && volume != null && volume.length() > 0)
+				if (q > p && volume != null && !volume.isEmpty())
 					sb.append(IDbManager.VOLUMEKEY).append(volume);
 				else
 					sb.append(IDbManager.URIKEY).append(uri);
@@ -1216,7 +1216,7 @@ public class Utilities {
 			loc.setCountryISOCode(countryISOCode);
 			return true;
 		}
-		if (worldRegionCode == null || worldRegionCode.length() == 0) {
+		if (worldRegionCode == null || worldRegionCode.isEmpty()) {
 			String continentCode = null;
 			if (countryISOCode != null)
 				continentCode = LocationConstants.countryToContinent.get(countryISOCode);
@@ -1494,7 +1494,7 @@ public class Utilities {
 
 	public static boolean updateAlbumWithEmail(SmartCollectionImpl album, String emails) {
 		String description = album.getDescription();
-		if (description == null || description.length() == 0) {
+		if (description == null || description.isEmpty()) {
 			album.setDescription(EMAIL + emails);
 			return true;
 		}
@@ -1519,29 +1519,31 @@ public class Utilities {
 	}
 
 	public static void extractKeywords(LocationImpl location, Collection<String> keywords) {
-		if (location.getWorldRegion() != null)
-			keywords.add(location.getWorldRegion());
-		if (location.getCity() != null)
-			keywords.add(location.getCity());
-		if (location.getProvinceOrState() != null)
-			keywords.add(location.getProvinceOrState());
-		if (location.getCountryName() != null)
-			keywords.add(location.getCountryName());
-		if (location.getCountryISOCode() != null)
-			keywords.add(location.getCountryISOCode());
-		if (location.getSublocation() != null) {
-			String street = location.getSublocation();
-			int p = street.indexOf(',');
-			if (p >= 0) {
-				String s1 = street.substring(0, p).trim();
-				String s2 = street.substring(p + 1).trim();
-				if (s1.length() > 0 && !Character.isDigit(s1.charAt(0)))
-					street = s1;
-				else if (s2.length() > 0 && !Character.isDigit(s2.charAt(0)))
-					street = s2;
+		if (location != null) {
+			if (location.getWorldRegion() != null)
+				keywords.add(location.getWorldRegion());
+			if (location.getCity() != null)
+				keywords.add(location.getCity());
+			if (location.getProvinceOrState() != null)
+				keywords.add(location.getProvinceOrState());
+			if (location.getCountryName() != null)
+				keywords.add(location.getCountryName());
+			if (location.getCountryISOCode() != null)
+				keywords.add(location.getCountryISOCode());
+			if (location.getSublocation() != null) {
+				String street = location.getSublocation();
+				int p = street.indexOf(',');
+				if (p >= 0) {
+					String s1 = street.substring(0, p).trim();
+					String s2 = street.substring(p + 1).trim();
+					if (!s1.isEmpty() && !Character.isDigit(s1.charAt(0)))
+						street = s1;
+					else if (!s2.isEmpty() && !Character.isDigit(s2.charAt(0)))
+						street = s2;
+				}
+				if (!street.isEmpty())
+					keywords.add(street);
 			}
-			if (street.length() > 0)
-				keywords.add(street);
 		}
 	}
 

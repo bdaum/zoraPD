@@ -433,4 +433,8 @@ public class MultiModifyAssetOperation extends DbOperation {
 		return assets.size() > 1 ? Job.LONG : Job.SHORT;
 	}
 
+	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
+		//do nothing
+	}
+
 }

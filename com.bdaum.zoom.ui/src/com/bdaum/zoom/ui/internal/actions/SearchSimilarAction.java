@@ -99,17 +99,15 @@ public class SearchSimilarAction extends RetargetAction {
 				dbFactory.getLireService(true).performQuery(asset, adaptable, ICollectionProcessor.SIMILARITY);
 			} else if (AcousticMessageDialog.openQuestion(shell, Messages.SearchSimilarAction_similarity_search,
 					Messages.SearchSimilarAction_search_not_possible)) {
-				BusyIndicator.showWhile(shell.getDisplay(), new Runnable() {
-					public void run() {
-						IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-						if (activeWorkbenchWindow != null) {
-							IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-							if (activePage != null) {
-								EditMetaDialog mdialog = new EditMetaDialog(shell, activePage,
-										Core.getCore().getDbManager(), false, null);
-								mdialog.setInitialPage(EditMetaDialog.INDEXING);
-								mdialog.open();
-							}
+				BusyIndicator.showWhile(shell.getDisplay(), () -> {
+					IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+					if (activeWorkbenchWindow != null) {
+						IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+						if (activePage != null) {
+							EditMetaDialog mdialog = new EditMetaDialog(shell, activePage,
+									Core.getCore().getDbManager(), false, null);
+							mdialog.setInitialPage(EditMetaDialog.INDEXING);
+							mdialog.open();
 						}
 					}
 				});

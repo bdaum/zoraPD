@@ -36,8 +36,7 @@ public class RetargetOperation extends DbOperation {
 	private final boolean voiceNote;
 	private String[] vAssetIds;
 
-	public RetargetOperation(AssetImpl asset, File newFile, int level,
-			boolean voiceNote) {
+	public RetargetOperation(AssetImpl asset, File newFile, int level, boolean voiceNote) {
 		super(Messages.getString("RetargetOperation.retarget")); //$NON-NLS-1$
 		this.asset = asset;
 		this.newFile = newFile;
@@ -54,8 +53,7 @@ public class RetargetOperation extends DbOperation {
 	}
 
 	@Override
-	public IStatus execute(IProgressMonitor aMonitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus execute(IProgressMonitor aMonitor, IAdaptable info) throws ExecutionException {
 		boolean changed = false;
 		boolean prune = false;
 		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
@@ -68,8 +66,7 @@ public class RetargetOperation extends DbOperation {
 		for (int i = folderLevel; i > 0 && p >= 0; i--)
 			p = oldFolderUri.lastIndexOf('/', p - 1);
 		if (p >= 0) {
-			newFolderUri = newFolderUri.substring(0, newFolderUri.length()
-					- oldFolderUri.length() + p);
+			newFolderUri = newFolderUri.substring(0, newFolderUri.length() - oldFolderUri.length() + p);
 			oldFolderUri = oldFolderUri.substring(0, p);
 		}
 		if (level == 0) {
@@ -89,15 +86,13 @@ public class RetargetOperation extends DbOperation {
 			aMonitor.worked(1);
 		} else {
 			oldFolderUriSlash = oldFolderUri.substring(0, p + 1);
-			List<AssetImpl> assets = dbManager.obtainObjects(AssetImpl.class,
-					"uri", oldFolderUriSlash, //$NON-NLS-1$
+			List<AssetImpl> assets = dbManager.obtainObjects(AssetImpl.class, "uri", oldFolderUriSlash, //$NON-NLS-1$
 					QueryField.STARTSWITH);
 			int size = assets.size();
 			int vsize = 0;
 			List<AssetImpl> vAssets = null;
 			if (voiceNote) {
-				vAssets = dbManager.obtainObjects(AssetImpl.class,
-						"voiceFileURI", oldFolderUriSlash, //$NON-NLS-1$
+				vAssets = dbManager.obtainObjects(AssetImpl.class, "voiceFileURI", oldFolderUriSlash, //$NON-NLS-1$
 						QueryField.STARTSWITH);
 				vsize = vAssets.size();
 				vAssetIds = new String[vsize];
@@ -110,8 +105,7 @@ public class RetargetOperation extends DbOperation {
 			for (AssetImpl a : assets) {
 				URI existingFile = volumeManager.findExistingFile(a, false);
 				if (existingFile == null) {
-					String newAssetUri = newFolderUri
-							+ a.getUri().substring(oldFolderUri.length());
+					String newAssetUri = newFolderUri + a.getUri().substring(oldFolderUri.length());
 					try {
 						File nFile = new File(new URI(newAssetUri));
 						if (nFile.exists()) {
@@ -124,10 +118,8 @@ public class RetargetOperation extends DbOperation {
 							}
 						}
 					} catch (URISyntaxException e) {
-						addError(
-								NLS.bind(
-										Messages.getString("RetargetOperation.bad_uri_execute"), //$NON-NLS-1$
-										newAssetUri), e);
+						addError(NLS.bind(Messages.getString("RetargetOperation.bad_uri_execute"), //$NON-NLS-1$
+								newAssetUri), e);
 					}
 				}
 				if (n >= interval) {
@@ -150,25 +142,23 @@ public class RetargetOperation extends DbOperation {
 				i = 0;
 				for (AssetImpl a : vAssets) {
 					String voiceUri = a.getVoiceFileURI();
-					try {
-						File voiceFile = new File(new URI(voiceUri));
-						if (!voiceFile.exists()) {
-							String newVoiceUri = newFolderUri
-									+ voiceUri.substring(oldFolderUri.length());
-							File nVoiceFile = new File(new URI(newVoiceUri));
-							if (nVoiceFile.exists()) {
-								a.setVoiceFileURI(newVoiceUri);
-								a.setVoiceVolume(volume);
-								if (dbManager.safeTransaction(null, a))
-									vAssetIds[i] = a.getStringId();
+					if (voiceUri != null && !".".equals(voiceUri) && !voiceUri.startsWith("?")) //$NON-NLS-1$ //$NON-NLS-2$
+						try {
+							File voiceFile = new File(new URI(voiceUri));
+							if (!voiceFile.exists()) {
+								String newVoiceUri = newFolderUri + voiceUri.substring(oldFolderUri.length());
+								File nVoiceFile = new File(new URI(newVoiceUri));
+								if (nVoiceFile.exists()) {
+									a.setVoiceFileURI(newVoiceUri);
+									a.setVoiceVolume(volume);
+									if (dbManager.safeTransaction(null, a))
+										vAssetIds[i] = a.getStringId();
+								}
 							}
+						} catch (URISyntaxException e) {
+							addError(NLS.bind(Messages.getString("RetargetOperation.bad_uri_execute"), //$NON-NLS-1$
+									voiceUri), e);
 						}
-					} catch (URISyntaxException e) {
-						addError(
-								NLS.bind(
-										Messages.getString("RetargetOperation.bad_uri_execute"), //$NON-NLS-1$
-										voiceUri), e);
-					}
 					aMonitor.worked(1);
 					++i;
 				}
@@ -182,14 +172,12 @@ public class RetargetOperation extends DbOperation {
 	}
 
 	@Override
-	public IStatus redo(IProgressMonitor aMonitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus redo(IProgressMonitor aMonitor, IAdaptable info) throws ExecutionException {
 		return execute(aMonitor, info);
 	}
 
 	@Override
-	public IStatus undo(IProgressMonitor aMonitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus undo(IProgressMonitor aMonitor, IAdaptable info) throws ExecutionException {
 		boolean changed = false;
 		if (level == 0) {
 			initUndo(aMonitor, 1);
@@ -214,8 +202,7 @@ public class RetargetOperation extends DbOperation {
 						String uri = a.getUri();
 						if (uri.startsWith(newFolderUri)) {
 							a.setVolume(oldVolume);
-							a.setUri(oldFolderUri
-									+ uri.substring(newFolderUri.length()));
+							a.setUri(oldFolderUri + uri.substring(newFolderUri.length()));
 							if (dbManager.safeTransaction(null, a)) {
 								assets.add(a);
 								changed |= dbManager.createFolderHierarchy(a);
@@ -232,10 +219,9 @@ public class RetargetOperation extends DbOperation {
 						AssetImpl a = dbManager.obtainAsset(assetId);
 						if (a != null) {
 							String uri = a.getVoiceFileURI();
-							if (uri.startsWith(newFolderUri)) {
+							if (uri != null && uri.startsWith(newFolderUri)) {
 								a.setVoiceVolume(oldVolume);
-								a.setVoiceFileURI(oldFolderUri
-										+ uri.substring(newFolderUri.length()));
+								a.setVoiceFileURI(oldFolderUri + uri.substring(newFolderUri.length()));
 								dbManager.safeTransaction(null, a);
 							}
 						}

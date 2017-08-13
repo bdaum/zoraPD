@@ -218,7 +218,7 @@ public class FileMonitor {
 						fireFileChanged(child.toFile(),
 								FileWatchListener.MODIFIED);
 					else if (kind == StandardWatchEventKinds.ENTRY_DELETE
-							&& pathSet.contains(child))
+							&& pathSet.contains(child.toString()))
 						removeWatch(child.toFile());
 				} else if (kind == StandardWatchEventKinds.ENTRY_MODIFY)
 					fireFileChanged(child.toFile(), FileWatchListener.MODIFIED);

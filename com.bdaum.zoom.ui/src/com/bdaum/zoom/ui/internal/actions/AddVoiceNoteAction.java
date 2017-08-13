@@ -53,12 +53,15 @@ public class AddVoiceNoteAction extends AbstractMultiMediaAction {
 		if (!localAssets.isEmpty()) {
 			if (!localAssets.isEmpty()) {
 				UiActivator.getDefault().stopAudio();
-				VoiceNoteDialog dialog = new VoiceNoteDialog(window.getShell(), localAssets);
-				dialog.open();
-				String sourceURI = dialog.getSourceUri();
-				String targetURI = dialog.getTargetUri();
-				if (sourceURI != null && targetURI != null || dialog.isDeleteVoiceNote())
-					OperationJob.executeOperation(new VoiceNoteOperation(localAssets, sourceURI, targetURI), adaptable);
+				VoiceNoteDialog dialog = new VoiceNoteDialog(window.getShell(), localAssets, true);
+				if (dialog.open() == VoiceNoteDialog.OK) {
+					String noteText = dialog.getNoteText();
+					String sourceURI = dialog.getSourceUri();
+					String targetURI = dialog.getTargetUri();
+					if (sourceURI != null && targetURI != null || noteText != null || dialog.isDeleteVoiceNote())
+						OperationJob.executeOperation(
+								new VoiceNoteOperation(localAssets, sourceURI, targetURI, noteText), adaptable);
+				}
 			}
 		}
 	}

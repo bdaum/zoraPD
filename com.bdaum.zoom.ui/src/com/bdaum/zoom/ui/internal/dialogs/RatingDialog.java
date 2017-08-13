@@ -62,8 +62,7 @@ public class RatingDialog extends ZDialog implements PaintListener {
 	private boolean select;
 	private boolean focusWatch = true;
 
-	public RatingDialog(Shell parentShell, int rating, double scale,
-			boolean focusWatch) {
+	public RatingDialog(Shell parentShell, int rating, double scale, boolean focusWatch) {
 		super(parentShell);
 		this.focusWatch = focusWatch;
 		setShellStyle(SWT.NO_TRIM);
@@ -115,11 +114,9 @@ public class RatingDialog extends ZDialog implements PaintListener {
 				int r = e.x / width - 1;
 				rating = select ? r - 1 : r < 0 ? DELETE : r;
 				canvas.redraw();
-				getShell().getDisplay().timerExec(100, new Runnable() {
-
-					public void run() {
+				getShell().getDisplay().timerExec(100, () -> {
+					if (!canvas.isDisposed())
 						close();
-					}
 				});
 
 			}
@@ -185,8 +182,7 @@ public class RatingDialog extends ZDialog implements PaintListener {
 			if (i == 0) {
 				drawCell(e, trash.getImage(), i, DELETE);
 			} else if (i == 1 && select) {
-				drawCell(e, Icons.rating60.getImage(), i,
-						QueryField.SELECTUNDEF);
+				drawCell(e, Icons.rating60.getImage(), i, QueryField.SELECTUNDEF);
 			} else if (i == zero) {
 				drawCell(e, null, i, r);
 			} else if (i > zero) {
@@ -206,8 +202,7 @@ public class RatingDialog extends ZDialog implements PaintListener {
 			double factor = r < 0 ? 0.8d : (i + 0.6d) / 5.6d;
 			int w = (int) (width * factor + 0.5d);
 			int h = (int) (height * factor + 0.5d);
-			gc.drawImage(image, bounds.x, bounds.y, bounds.width,
-					bounds.height, width * i + (width - w) / 2,
+			gc.drawImage(image, bounds.x, bounds.y, bounds.width, bounds.height, width * i + (width - w) / 2,
 					(height - h) / 2, w, h);
 		}
 	}

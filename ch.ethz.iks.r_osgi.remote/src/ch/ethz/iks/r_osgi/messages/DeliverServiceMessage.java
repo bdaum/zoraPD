@@ -33,7 +33,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+
+import ch.ethz.iks.util.StringUtils;
 
 /**
  * <p>
@@ -74,7 +79,7 @@ public final class DeliverServiceMessage extends RemoteOSGiMessage {
 	/**
 	 * the injections.
 	 */
-	private Map injections;
+	private Map<String, byte[]> injections;
 
 	/**
 	 * the imports.
@@ -85,6 +90,11 @@ public final class DeliverServiceMessage extends RemoteOSGiMessage {
 	 * the exports.
 	 */
 	private String exports;
+
+	/**
+	 * Optional imports
+	 */
+	private String optionalImports = ""; //$NON-NLS-1$
 
 	/**
 	 * Create a new DeliverServiceMessage.
@@ -138,10 +148,31 @@ public final class DeliverServiceMessage extends RemoteOSGiMessage {
 		smartProxyName = "".equals(p) ? null : p; //$NON-NLS-1$
 		// process all class injections
 		final short blocks = input.readShort();
-		injections = new HashMap(blocks);
-		for (short i = 0; i < blocks; i++) {
+		injections = new HashMap<>(blocks);
+		for (short i = 0; i < blocks; i++)
 			injections.put(input.readUTF(), readBytes(input));
+
+		// generate option imports from injections
+		final Set<String> set = new HashSet<>();
+
+		// no need to add imports twice
+		final String[] imp = (imports != null ? StringUtils.stringToArray(imports, ",") : new String[0]); //$NON-NLS-1$
+		for (int i = 0; i < imp.length; i++) {
+			String string = imp[i].trim();
+			set.add(string);
 		}
+
+		for (final Iterator<String> itr = injections.keySet().iterator(); itr.hasNext();) {
+			final String className = itr.next();
+			final int lastIndexOf = className.lastIndexOf("/"); //$NON-NLS-1$
+			final String pkgName = className.substring(0, lastIndexOf).replace('/', '.');
+			if (!set.contains(pkgName)) {
+				set.add(pkgName);
+				optionalImports += (optionalImports.isEmpty() ? "" : ", ") //$NON-NLS-1$//$NON-NLS-2$
+						+ pkgName + ";resolution:=optional"; //$NON-NLS-1$
+			}
+		}
+
 	}
 
 	/**
@@ -160,11 +191,10 @@ public final class DeliverServiceMessage extends RemoteOSGiMessage {
 		out.writeUTF(smartProxyName == null ? "" : smartProxyName); //$NON-NLS-1$
 		final short blocks = (short) injections.size();
 		out.writeShort(blocks);
-		final String[] injectionNames = (String[]) injections.keySet().toArray(
-				new String[blocks]);
+		final String[] injectionNames = injections.keySet().toArray(new String[blocks]);
 		for (short i = 0; i < blocks; i++) {
 			out.writeUTF(injectionNames[i]);
-			writeBytes(out, (byte[]) injections.get(injectionNames[i]));
+			writeBytes(out, injections.get(injectionNames[i]));
 		}
 	}
 
@@ -193,7 +223,7 @@ public final class DeliverServiceMessage extends RemoteOSGiMessage {
 	 * @param injections
 	 *            the injections.
 	 */
-	public void setInjections(final Map injections) {
+	public void setInjections(final Map<String, byte[]> injections) {
 		this.injections = injections;
 	}
 
@@ -222,9 +252,7 @@ public final class DeliverServiceMessage extends RemoteOSGiMessage {
 	 * @return the interface class.
 	 */
 	public byte[] getInterfaceClass() {
-		return (byte[]) injections.get(serviceInterfaceNames[0].replace('.',
-				'/')
-				+ ".class"); //$NON-NLS-1$
+		return injections.get(serviceInterfaceNames[0].replace('.', '/') + ".class"); //$NON-NLS-1$
 	}
 
 	/**
@@ -252,11 +280,9 @@ public final class DeliverServiceMessage extends RemoteOSGiMessage {
 	 * @return the class or null if undefined.
 	 */
 	public byte[] getProxyClass() {
-		if (smartProxyName == null) {
+		if (smartProxyName == null)
 			return null;
-		}
-		return (byte[]) injections.get(smartProxyName.replace('.', '/')
-				+ ".class"); //$NON-NLS-1$
+		return injections.get(smartProxyName.replace('.', '/') + ".class"); //$NON-NLS-1$
 	}
 
 	/**
@@ -264,7 +290,7 @@ public final class DeliverServiceMessage extends RemoteOSGiMessage {
 	 * 
 	 * @return a <code>List</code> of class names.
 	 */
-	public Map getInjections() {
+	public Map<String, byte[]> getInjections() {
 		return injections;
 	}
 
@@ -329,6 +355,10 @@ public final class DeliverServiceMessage extends RemoteOSGiMessage {
 			buffer.append(injections.keySet());
 		}
 		return buffer.toString();
+	}
+
+	public String getOptionalImports() {
+		return optionalImports;
 	}
 
 }

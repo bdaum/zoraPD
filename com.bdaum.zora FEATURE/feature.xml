@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE"
       label="ZoRa Photo Director Feature"
-      version="3.0.1"
+      version="3.1.0"
       provider-name="bdaum industrial communications"
       plugin="com.bdaum.zoom.rcp">
 
@@ -137,13 +137,6 @@ your option) any later version.
 
    <plugin
          id="org.apache.commons.logging"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.apache.lucene.analysis"
          download-size="0"
          install-size="0"
          version="0.0.0"
@@ -656,13 +649,6 @@ your option) any later version.
 
    <plugin
          id="org.eclipse.core.databinding.beans"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jface.databinding"
          download-size="0"
          install-size="0"
          version="0.0.0"
@@ -1262,13 +1248,6 @@ your option) any later version.
          unpack="false"/>
 
    <plugin
-         id="com.ibm.icu.base"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="com.bdaum.zoom.image.webp"
          download-size="0"
          install-size="0"
@@ -1277,6 +1256,55 @@ your option) any later version.
 
    <plugin
          id="com.bdaum.zoom.image.twelvemonkeys"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.ibm.icu"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.osgi.util"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.apache.felix.scr"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.apache.lucene.analyzers-common"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.apache.lucene.analyzers-smartcn"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.apache.lucene.misc"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.e4.core.di.extensions.supplier"
          download-size="0"
          install-size="0"
          version="0.0.0"

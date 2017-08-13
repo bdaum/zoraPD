@@ -193,6 +193,7 @@ public class Icons {
 	public static final Icon trashrestoreSmall = new Icon(
 			"icons/restoretrash_s.png"); //$NON-NLS-1$
 	public static final Icon trash = new Icon("icons/trashcan.png"); //$NON-NLS-1$
+	public static final Icon trash32 = new Icon("icons/trashcan32.png"); //$NON-NLS-1$
 	public static final Icon cleartrash = new Icon("icons/clearTrash.png"); //$NON-NLS-1$
 	public static final Icon file = new Icon("icons/file_obj.png"); //$NON-NLS-1$
 	public static final Icon filter = new Icon("icons/filter.png"); //$NON-NLS-1$
@@ -312,6 +313,10 @@ public class Icons {
 	public static final Icon move = new Icon("icons/lorry_flatbed.png"); //$NON-NLS-1$
 	public static final Icon warning= new Icon("icons/warn_tsk.gif"); //$NON-NLS-1$
 	public static final Icon info= new Icon("icons/info_tsk.gif"); //$NON-NLS-1$
+	public static final Icon note= new Icon("icons/note.png"); //$NON-NLS-1$
+	public static final Icon note32= new Icon("icons/note32.png"); //$NON-NLS-1$
+	public static final Icon cancel32= new Icon("icons/cancel32.png"); //$NON-NLS-1$
+	public static final Icon neural= new Icon("icons/neural.png"); //$NON-NLS-1$
 
 	public static Icon toColorIcon(int code) {
 		switch (code) {

@@ -5,4 +5,12 @@
 	<entry keyword="Gesichtserkennung">
 		<topic href="html/clarifai.html" label="Gesichtserkennung mit dem Clarifai-Webservice"/>
 	</entry>
+	<entry keyword="Suche">
+		<entry keyword="semantisch">
+			<topic href="html/clarifai.html" />
+		</entry>
+	</entry>
+	<entry keyword="Semantische Suche">
+		<topic href="html/clarifai.html" />
+	</entry>
 </index>

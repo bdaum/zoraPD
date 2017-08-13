@@ -122,11 +122,7 @@ public abstract class AbstractHistoryControl extends WorkbenchWindowControlContr
 				menuItem.addSelectionListener(new SelectionAdapter() {
 					@Override
 					public void widgetSelected(SelectionEvent e) {
-						BusyIndicator.showWhile(window.getShell().getDisplay(), new Runnable() {
-							public void run() {
-								goTo(historyItem);
-							}
-						});
+						BusyIndicator.showWhile(window.getShell().getDisplay(), () -> goTo(historyItem));
 					}
 				});
 			}
@@ -148,11 +144,7 @@ public abstract class AbstractHistoryControl extends WorkbenchWindowControlContr
 	@Override
 	public void mouseDown(MouseEvent e) {
 		if (e.button <= 1)
-			BusyIndicator.showWhile(window.getShell().getDisplay(), new Runnable() {
-				public void run() {
-					goTo();
-				}
-			});
+			BusyIndicator.showWhile(window.getShell().getDisplay(), () -> goTo());
 		else
 			createDropDownMenu();
 	}

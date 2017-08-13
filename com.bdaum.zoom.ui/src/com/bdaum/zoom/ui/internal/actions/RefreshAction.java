@@ -143,19 +143,17 @@ public class RefreshAction extends Action {
 		CatalogView catView = (CatalogView) page.findView(CatalogView.ID);
 		if (catView != null) {
 			final IStructuredSelection sel = (IStructuredSelection) catView.getSelection();
-			BusyIndicator.showWhile(shell.getDisplay(), new Runnable() {
-				public void run() {
-					IDbManager dbManager = Core.getCore().getDbManager();
-					Iterator<?> iterator = sel.iterator();
-					while (iterator.hasNext()) {
-						Object object = iterator.next();
-						if (object instanceof SmartCollectionImpl)
-							assets.addAll(
-									dbManager
-											.createCollectionProcessor(
-													Utilities.localizeSmartCollection((SmartCollection) object))
-											.select(false));
-					}
+			BusyIndicator.showWhile(shell.getDisplay(), () -> {
+				IDbManager dbManager = Core.getCore().getDbManager();
+				Iterator<?> iterator = sel.iterator();
+				while (iterator.hasNext()) {
+					Object object = iterator.next();
+					if (object instanceof SmartCollectionImpl)
+						assets.addAll(
+								dbManager
+										.createCollectionProcessor(
+												Utilities.localizeSmartCollection((SmartCollection) object))
+										.select(false));
 				}
 			});
 		}

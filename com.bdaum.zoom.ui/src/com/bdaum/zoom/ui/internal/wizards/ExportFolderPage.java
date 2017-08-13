@@ -164,14 +164,14 @@ public class ExportFolderPage extends ColoredWizardPage {
 					allmx = Math.max(allmx, Math.max(asset.getWidth(), asset.getHeight()));
 				else {
 					String volume = asset.getVolume();
-					if (volume != null && volume.length() > 0)
+					if (volume != null && !volume.isEmpty())
 						volumes.add(volume);
 					errands.add(uri.toString());
 				}
 			}
 		}
 		exportModeGroup.setMaximumDim(allmx);
-		if (errands.size() > 0) {
+		if (!errands.isEmpty()) {
 			String msg;
 			if (errands.size() == 1)
 				msg = NLS.bind(Messages.SendEmailPage_File_offline, errands.get(0), volumes.toArray()[0]);

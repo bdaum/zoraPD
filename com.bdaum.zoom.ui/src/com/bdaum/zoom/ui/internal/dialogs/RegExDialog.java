@@ -282,14 +282,14 @@ public class RegExDialog extends ZTitleAreaDialog {
 		String target = fTargetField.getText();
 		String volume = fTargetField.isEnabled() ? fTargetField.getText()
 				: null;
-		if (source.length() > 0) {
-			if (testPath != null && testPath.length() > 0) {
+		if (!source.isEmpty()) {
+			if (testPath != null && !testPath.isEmpty()) {
 				try {
 					int flags = Constants.WIN32 ? Pattern.CASE_INSENSITIVE : 0;
 					Pattern pattern = Pattern.compile(source, flags);
 					Matcher matcher = pattern.matcher(testPath);
 					if (matcher.matches()) {
-						if (target.length() > 0) {
+						if (!target.isEmpty()) {
 							StringBuffer sb = new StringBuffer();
 							matcher.appendReplacement(sb, target);
 							String result = sb.toString();
@@ -344,10 +344,10 @@ public class RegExDialog extends ZTitleAreaDialog {
 
 	protected void validate() {
 		String errormessage = null;
-		if (volumeField != null && volumeField.getText().length() == 0)
+		if (volumeField != null && volumeField.getText().isEmpty())
 			errormessage = Messages.RegExDialog_specify_target_volume;
 		if (!targetOnly) {
-			if (fSourceField.getText().length() == 0)
+			if (fSourceField.getText().isEmpty())
 				errormessage = Messages.RegExDialog_specify_source_pattern;
 			else {
 				try {
@@ -379,13 +379,13 @@ public class RegExDialog extends ZTitleAreaDialog {
 			dialogSettings.put(VOLUMEHISTORY,
 					Core.toStringList(volumeHistory, '\n'));
 		}
-		if (testPath != null && testPath.length() > 0)
+		if (testPath != null && !testPath.isEmpty())
 			dialogSettings.put(TESTPATH, testPath);
 		super.okPressed();
 	}
 
 	private static void updateHistory(String s, List<String> history) {
-		if (s == null || s.length() == 0)
+		if (s == null || s.isEmpty())
 			return;
 		int index = history.indexOf(s);
 		if (index != 0) {

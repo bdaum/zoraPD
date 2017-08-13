@@ -62,22 +62,18 @@ public abstract class AbstractGridGroupRenderer extends
 	 */
 	private boolean alwaysExpanded = false;
 
-	@Override
 	public void draw(GC gc, GalleryItem group, int x, int y, int clipX,
 			int clipY, int clipWidth, int clipHeight) {
 	}
 
-	@Override
 	public GalleryItem getItem(GalleryItem group, Point coords) {
 		return null;
 	}
 
-	@Override
 	public Rectangle getSize(GalleryItem item) {
 		return null;
 	}
 
-	@Override
 	public void layout(GC gc, GalleryItem group) {
 	}
 
@@ -376,12 +372,10 @@ public abstract class AbstractGridGroupRenderer extends
 		return new Point(x, y);
 	}
 
-	@Override
 	public void dispose() {
 		// Nothing required here. This method can be overridden when needed.
 	}
 
-	@Override
 	public boolean mouseDown(GalleryItem group, MouseEvent e, Point coords) {
 		return false;
 	}
@@ -393,7 +387,6 @@ public abstract class AbstractGridGroupRenderer extends
 	 * org.eclipse.nebula.widgets.gallery.AbstractGalleryGroupRenderer#preLayout
 	 * (org.eclipse.swt.graphics.GC)
 	 */
-	@Override
 	public void preLayout(GC gc) {
 		// Reset margin to minimal value before "best fit" calculation
 		this.margin = this.minMargin;
@@ -717,7 +710,6 @@ public abstract class AbstractGridGroupRenderer extends
 		return gallery.getClientArea().width / itemWidth;
 	}
 
-	@Override
 	public GalleryItem getNextItem(GalleryItem item, int key) {
 		// Key navigation is useless with an empty gallery
 		if (gallery.getItemCount() == 0) {

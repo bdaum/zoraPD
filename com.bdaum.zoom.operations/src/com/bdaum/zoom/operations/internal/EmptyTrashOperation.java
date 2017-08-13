@@ -46,12 +46,7 @@ public class EmptyTrashOperation extends DbOperation {
 		if (!set.isEmpty()) {
 			for (Trash trash : set) {
 				final Trash t = trash;
-				if (!storeSafely(new Runnable() {
-
-					public void run() {
-						t.removeItem(dbManager);
-					}
-				}, 1))
+				if (!storeSafely(() -> t.removeItem(dbManager), 1))
 					return close(info);
 			}
 			fireAssetsModified(null, null);

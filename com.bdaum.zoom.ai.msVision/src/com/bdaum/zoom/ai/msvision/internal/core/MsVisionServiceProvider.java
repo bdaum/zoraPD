@@ -239,5 +239,10 @@ public class MsVisionServiceProvider extends AbstractAiServiceProvider {
 		return MsVisionActivator.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.MARKKNOWNONLY);
 	}
 
+	@Override
+	public boolean isAccountValid() {
+		return MsVisionActivator.getDefault().getClient() != null;
+	}
+
 
 }

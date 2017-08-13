@@ -110,15 +110,13 @@ public class StructComponent implements DisposeListener {
 			}
 			final Control control = viewer.getControl();
 			if (!control.isDisposed())
-				control.getDisplay().asyncExec(new Runnable() {
-					public void run() {
-						if (!control.isDisposed()) {
-							viewer.setInput(objects);
-							if (value != null)
-								viewer.setSelection(new StructuredSelection(
-										value), true);
-							control.setFocus();
-						}
+				control.getDisplay().asyncExec(() -> {
+					if (!control.isDisposed()) {
+						viewer.setInput(objects);
+						if (value != null)
+							viewer.setSelection(new StructuredSelection(
+									value), true);
+						control.setFocus();
 					}
 				});
 			return Status.OK_STATUS;
@@ -150,7 +148,7 @@ public class StructComponent implements DisposeListener {
 				for (IIdentifiableObject ob : shownObjects) {
 					String kw = ((LabelProvider) viewer.getLabelProvider())
 							.getText(ob);
-					if (kw.length() > 0) {
+					if (!kw.isEmpty()) {
 						Character chapterTitle = Character.toUpperCase(kw
 								.charAt(0));
 						List<IIdentifiableObject> elements = chapters
@@ -180,7 +178,7 @@ public class StructComponent implements DisposeListener {
 			if (!radioGroup.isFlat()) {
 				String kw = ((LabelProvider) viewer.getLabelProvider())
 						.getText(element);
-				if (kw.length() > 0) {
+				if (!kw.isEmpty()) {
 					char firstChar = Character.toUpperCase(kw.charAt(0));
 					for (Character title : chapters.keySet())
 						if (title.charValue() == firstChar)
@@ -390,7 +388,7 @@ public class StructComponent implements DisposeListener {
 	}
 
 	private static void append(StringBuilder sb, String s) {
-		if (s != null && s.length() > 0) {
+		if (s != null && !s.isEmpty()) {
 			if (sb.length() > 0)
 				sb.append("; "); //$NON-NLS-1$
 			sb.append(s);

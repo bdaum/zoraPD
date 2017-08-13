@@ -241,9 +241,9 @@ public abstract class DbOperation extends AbstractOperation implements IProfiled
 	 *            - info message
 	 */
 	public void addInfo(String message) {
-		if (status != null)
-			status.add(new Status(IStatus.INFO, CoreActivator.PLUGIN_ID, message, null));
-		else
+//		if (status != null)
+//			status.add(new Status(IStatus.INFO, CoreActivator.PLUGIN_ID, message, null));
+//		else
 			CoreActivator.getDefault().logInfo(message);
 	}
 
@@ -385,7 +385,7 @@ public abstract class DbOperation extends AbstractOperation implements IProfiled
 	protected void closeIndex() {
 		if (iw != null) {
 			try {
-				CoreActivator.getDefault().getDbFactory().getLuceneService().closeIndex(iw, indexPath);
+				CoreActivator.getDefault().getDbFactory().getLuceneService().closeIndexWriter(iw, indexPath);
 			} catch (IOException e) {
 				addError(Messages.getString("DbOperation.ioerror_closing_lucene_index"), e); //$NON-NLS-1$
 			}

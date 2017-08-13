@@ -187,7 +187,7 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 							allmx = Math.max(allmx, Math.max(asset.getWidth(), asset.getHeight()));
 						else {
 							String volume = asset.getVolume();
-							if (volume != null && volume.length() > 0)
+							if (volume != null && !volume.isEmpty())
 								volumes.add(volume);
 							errands.add(file.getAbsolutePath());
 						}

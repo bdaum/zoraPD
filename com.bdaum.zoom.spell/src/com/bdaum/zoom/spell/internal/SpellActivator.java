@@ -63,7 +63,7 @@ public class SpellActivator extends ZUiPlugin {
 		String libPath = System.getProperty("jna.library.path", ""); //$NON-NLS-1$//$NON-NLS-2$
 		if (libPath.indexOf(hunPath) < 0)
 			System.setProperty(
-					"jna.library.path", libPath.length() > 0 ? hunPath + ';' + libPath : hunPath); //$NON-NLS-1$
+					"jna.library.path", libPath.isEmpty() ? hunPath : hunPath + ';' + libPath); //$NON-NLS-1$
 	}
 
 	/*

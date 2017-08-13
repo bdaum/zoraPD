@@ -28,13 +28,8 @@ public class EditMetaCommand extends AbstractCommandHandler {
 
 	@Override
 	public void run() {
-		BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-
-			public void run() {
-				new EditMetaDialog(getShell(), getActiveWorkbenchWindow().getActivePage(),
-						Core.getCore().getDbManager(), false, null).open();
-			}
-		});
+		BusyIndicator.showWhile(getShell().getDisplay(), () -> new EditMetaDialog(getShell(), getActiveWorkbenchWindow().getActivePage(),
+				Core.getCore().getDbManager(), false, null).open());
 	}
 
 }

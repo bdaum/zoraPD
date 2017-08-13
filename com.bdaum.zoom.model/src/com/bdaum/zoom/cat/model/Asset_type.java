@@ -1826,21 +1826,21 @@ public interface Asset_type extends AomValueChangedNotifier,
 	 */
 	public double getGPSDestBearing();
 
-	public static final String gPSDestDistance__unit = "kmh";
+	public static final String gPSDestDistance__unit = "km";
 
 	public static final String[] gPSDestDistanceALLATTRIBUTES = new String[] { gPSDestDistance__unit };
 
 	/**
 	 * Set value of property gPSDestDistance
 	 *
-	 * @param _value - new element value(unit=kmh)
+	 * @param _value - new element value(unit=km)
 	 */
 	public void setGPSDestDistance(double _value);
 
 	/**
 	 * Get value of property gPSDestDistance
 	 *
-	 * @return - value of field gPSDestDistance(unit=kmh)
+	 * @return - value of field gPSDestDistance(unit=km)
 	 */
 	public double getGPSDestDistance();
 

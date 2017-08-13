@@ -57,11 +57,7 @@ public class AuthDialog extends ZTitleAreaDialog {
 		final Shell shell = workbench.getWorkbenchWindows()[0].getShell();
 		final AuthDialog dialog = new AuthDialog(shell, authLink, authmessage,
 				w, h, respond);
-		shell.getDisplay().syncExec(new Runnable() {
-			public void run() {
-				dialog.open();
-			}
-		});
+		shell.getDisplay().syncExec(() -> dialog.open());
 		if (dialog.getReturnCode() == Window.OK)
 			return dialog.getResult();
 		return null;

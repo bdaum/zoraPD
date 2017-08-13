@@ -183,7 +183,7 @@ public class WebGalleryView extends AbstractPresentationView {
 							w.offset(0, -ydiff);
 					}
 				}
-				storyboards.remove(storyboard);
+				storyboards.remove(pStoryboard);
 				setPanAndZoomHandlers();
 			}
 			return Status.OK_STATUS;
@@ -274,7 +274,7 @@ public class WebGalleryView extends AbstractPresentationView {
 							w.offset(0, -ydiff);
 					}
 				}
-				storyboards.remove(storyboard);
+				storyboards.remove(added);
 				setPanAndZoomHandlers();
 			}
 			return Status.OK_STATUS;
@@ -376,11 +376,7 @@ public class WebGalleryView extends AbstractPresentationView {
 		private void doSetText(String t) {
 			storyboard.setTitle(t);
 			final IDbManager dbManager = Core.getCore().getDbManager();
-			dbManager.safeTransaction(new Runnable() {
-				public void run() {
-					dbManager.store(storyboard);
-				}
-			});
+			dbManager.safeTransaction(() -> dbManager.store(storyboard));
 		}
 	}
 
@@ -796,7 +792,7 @@ public class WebGalleryView extends AbstractPresentationView {
 
 		@Override
 		protected boolean mayRun() {
-			return storyboards != null && storyboards.size() > 0;
+			return storyboards != null && !storyboards.isEmpty();
 		}
 
 		@Override
@@ -833,11 +829,9 @@ public class WebGalleryView extends AbstractPresentationView {
 									}
 									if (penColor != null && !display.isDisposed()
 											&& !((PWebExhibit) child).caption.getPenColor().equals(penColor))
-										display.asyncExec(new Runnable() {
-											public void run() {
-												if (!canvas.isDisposed())
-													pexhibit.caption.setPenColor(penColor);
-											}
+										display.asyncExec(() -> {
+											if (!canvas.isDisposed())
+												pexhibit.caption.setPenColor(penColor);
 										});
 								}
 							}
@@ -972,7 +966,7 @@ public class WebGalleryView extends AbstractPresentationView {
 
 		private String getDescription(WebExhibit exh) {
 			String des = exh.getDescription();
-			if (des == null || des.length() == 0)
+			if (des == null || des.isEmpty())
 				des = Messages.getString("WebGalleryView.description"); //$NON-NLS-1$
 			return des;
 		}
@@ -1088,8 +1082,7 @@ public class WebGalleryView extends AbstractPresentationView {
 		/*
 		 * (non-Javadoc)
 		 *
-		 * @see
-		 * com.bdaum.zoom.ui.views.PTextHandler#processTextEvent(com.bdaum.zoom
+		 * @see com.bdaum.zoom.ui.views.PTextHandler#processTextEvent(com.bdaum.zoom
 		 * .ui.widgets.TextField)
 		 */
 
@@ -1632,8 +1625,8 @@ public class WebGalleryView extends AbstractPresentationView {
 		String selectedEngine = show.getSelectedEngine();
 		boolean isFtp = show.getIsFtp();
 		String outputFolder = (isFtp) ? show.getFtpDir() : show.getOutputFolder();
-		while (selectedEngine == null || outputFolder == null || selectedEngine.length() == 0
-				|| outputFolder.length() == 0) {
+		while (selectedEngine == null || outputFolder == null || selectedEngine.isEmpty()
+				|| outputFolder.isEmpty()) {
 			show = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, show, show.getName(), true,
 					false, Messages.getString("WebGalleryView.select_web_gallery")); //$NON-NLS-1$
 			if (show == null)
@@ -1664,8 +1657,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			if (!Boolean.parseBoolean(sections) && show.getStoryboard().size() > 1) {
 				AcousticMessageDialog dialog = new AcousticMessageDialog(getSite().getShell(),
 						Messages.getString("WebGalleryView.multiple_storyboards"), //$NON-NLS-1$
-						null,
-						NLS.bind(Messages.getString("WebGalleryView.does_not_support_multiple_storyboards"), //$NON-NLS-1$
+						null, NLS.bind(Messages.getString("WebGalleryView.does_not_support_multiple_storyboards"), //$NON-NLS-1$
 								el.getAttribute("name")), //$NON-NLS-1$
 						MessageDialog.WARNING, new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL },
 						0);
@@ -1682,8 +1674,7 @@ public class WebGalleryView extends AbstractPresentationView {
 					if (n > max) {
 						AcousticMessageDialog dialog = new AcousticMessageDialog(getSite().getShell(),
 								Messages.getString("WebGalleryView.too_many"), //$NON-NLS-1$
-								null,
-								NLS.bind(Messages.getString("WebGalleryView.n_exceeds_max"), //$NON-NLS-1$
+								null, NLS.bind(Messages.getString("WebGalleryView.n_exceeds_max"), //$NON-NLS-1$
 										new Object[] { n, max, el.getAttribute("name") }), //$NON-NLS-1$
 								MessageDialog.WARNING,
 								new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL }, 0);
@@ -1702,8 +1693,7 @@ public class WebGalleryView extends AbstractPresentationView {
 				AcousticMessageDialog dialog = new AcousticMessageDialog(getSite().getShell(),
 						Messages.getString("WebGalleryView.overwrite"), //$NON-NLS-1$
 						null, NLS.bind(Messages.getString("WebGalleryView.output_folder_not_empty"), file), //$NON-NLS-1$
-						MessageDialog.QUESTION,
-						new String[] { Messages.getString("WebGalleryView.overwrite_button"), //$NON-NLS-1$
+						MessageDialog.QUESTION, new String[] { Messages.getString("WebGalleryView.overwrite_button"), //$NON-NLS-1$
 								Messages.getString("WebGalleryView.clear_folder"), //$NON-NLS-1$
 								IDialogConstants.CANCEL_LABEL },
 						0);
@@ -1718,7 +1708,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			}
 			String page = show.getPageName();
 			final boolean ftp = isFtp;
-			final File start = new File(file, (page == null || page.length() == 0) ? "index.html" //$NON-NLS-1$
+			final File start = new File(file, (page == null || page.isEmpty()) ? "index.html" //$NON-NLS-1$
 					: page);
 			final WebGalleryImpl gal = show;
 			final WebGalleryJob job = new WebGalleryJob(gal, generator, WebGalleryView.this);
@@ -1756,36 +1746,33 @@ public class WebGalleryView extends AbstractPresentationView {
 
 	private void showWebGallery(final boolean save, final File start, final WebGalleryImpl show) {
 		final Display display = getSite().getShell().getDisplay();
-		display.asyncExec(new Runnable() {
-			public void run() {
-				BusyIndicator.showWhile(display, new Runnable() {
-					public void run() {
-						try {
-							URL url = start.toURI().toURL();
-							if (save) {
-								SaveTemplateDialog dialog = new SaveTemplateDialog(getSite().getShell(), start, show);
-								if (dialog.open() == Window.OK) {
-									final WebGalleryImpl template = dialog.getResult();
-									final IDbManager dbManager = Core.getCore().getDbManager();
-									List<IdentifiableObject> set = dbManager.obtainObjects(WebGalleryImpl.class, false,
-											"name", template.getName(), QueryField.EQUALS, "template", true, //$NON-NLS-1$//$NON-NLS-2$
-											QueryField.EQUALS);
-									dbManager.safeTransaction(set, template);
-								}
-							} else {
-								IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport()
-										.getExternalBrowser();
-								if (browser != null)
-									browser.openURL(url);
+		display.asyncExec(() -> {
+			if (!display.isDisposed())
+				BusyIndicator.showWhile(display, () -> {
+					try {
+						URL url = start.toURI().toURL();
+						if (save) {
+							SaveTemplateDialog dialog = new SaveTemplateDialog(getSite().getShell(), start, show);
+							if (dialog.open() == Window.OK) {
+								final WebGalleryImpl template = dialog.getResult();
+								final IDbManager dbManager = Core.getCore().getDbManager();
+								List<IdentifiableObject> set = dbManager.obtainObjects(WebGalleryImpl.class, false,
+										"name", template.getName(), QueryField.EQUALS, "template", true, //$NON-NLS-1$//$NON-NLS-2$
+										QueryField.EQUALS);
+								dbManager.safeTransaction(set, template);
 							}
-						} catch (MalformedURLException e) {
-							// should not happen
-						} catch (PartInitException e) {
-							// ignore
+						} else {
+							IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport()
+									.getExternalBrowser();
+							if (browser != null)
+								browser.openURL(url);
 						}
+					} catch (MalformedURLException e1) {
+						// should not happen
+					} catch (PartInitException e2) {
+						// ignore
 					}
 				});
-			}
 		});
 	}
 

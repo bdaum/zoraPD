@@ -10,8 +10,7 @@ import org.eclipse.osgi.util.NLS;
 import com.bdaum.zoom.gps.leaflet.internal.LeafletActivator;
 import com.bdaum.zoom.gps.widgets.AbstractMapComponent;
 
-public class MapComponent extends AbstractMapComponent implements
-		IExecutableExtension {
+public class MapComponent extends AbstractMapComponent implements IExecutableExtension {
 
 	private URL leafletUrl;
 	private URL zoomMapUrl;
@@ -25,8 +24,8 @@ public class MapComponent extends AbstractMapComponent implements
 	private URL markerClusterGroupCss;
 	private URL markerClusterGroupDefaultCss;
 
-	public void setInitializationData(IConfigurationElement config,
-			String propertyName, Object data) throws CoreException {
+	public void setInitializationData(IConfigurationElement config, String propertyName, Object data)
+			throws CoreException {
 		if (data instanceof String)
 			mapProvider = (String) data;
 	}
@@ -40,15 +39,15 @@ public class MapComponent extends AbstractMapComponent implements
 		makimarkersUrl = findUrl("/gmap/Leaflet.MakiMarkers.js"); //$NON-NLS-1$
 		minimapUrl = findUrl("/gmap/Control.MiniMap.js"); //$NON-NLS-1$
 		minimapCss = findUrl("/gmap/Control.MiniMap.css"); //$NON-NLS-1$
-		markerClusterGroupUrl = findUrl("/gmap/leaflet.markercluster-src.js"); //$NON-NLS-1$
+		markerClusterGroupUrl = findUrl("/gmap/leaflet.markercluster.js"); //$NON-NLS-1$
 		markerClusterGroupCss = findUrl("/gmap/MarkerCluster.css"); //$NON-NLS-1$
 		markerClusterGroupDefaultCss = findUrl("/gmap/MarkerCluster.Default.css"); //$NON-NLS-1$
 	}
 
 	@Override
 	protected String createSetPosDetailScript(HistoryItem item) {
-		return NLS
-				.bind("map.setZoom({0});\nmap.panTo({1});", (int) item.getDetail(), createLatLng(item.getLatitude(), item.getLongitude())); //$NON-NLS-1$
+		return NLS.bind("map.setZoom({0});\nmap.panTo({1});", (int) item.getDetail(), //$NON-NLS-1$
+				createLatLng(item.getLatitude(), item.getLongitude()));
 	}
 
 	private URL findUrl(String path) {
@@ -91,15 +90,12 @@ public class MapComponent extends AbstractMapComponent implements
 
 	@Override
 	protected String createLatLng(double lat, double lon) {
-		return NLS
-				.bind("L.latLng({0},{1})", usformat.format(lat), usformat.format(lon)); //$NON-NLS-1$
+		return NLS.bind("L.latLng({0},{1})", usformat.format(lat), usformat.format(lon)); //$NON-NLS-1$
 	}
 
 	@Override
-	protected String createLatLngBounds(double swLat, double swLon,
-			double neLat, double neLon) {
-		return NLS
-				.bind("L.latLngBounds({0},{1})", createLatLng(swLat, swLon), createLatLng(neLat, neLon)); //$NON-NLS-1$;
+	protected String createLatLngBounds(double swLat, double swLon, double neLat, double neLon) {
+		return NLS.bind("L.latLngBounds({0},{1})", createLatLng(swLat, swLon), createLatLng(neLat, neLon)); //$NON-NLS-1$ ;
 	}
 
 	/*

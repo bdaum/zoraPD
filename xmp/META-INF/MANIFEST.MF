@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Xmp Plug-in
 Bundle-SymbolicName: xmp
 Bundle-Version: 5.1.0
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: com.adobe.xmp,
  com.adobe.xmp.impl,
  com.adobe.xmp.impl.xpath,

@@ -22,8 +22,7 @@ import com.bdaum.zoom.gps.widgets.AbstractMapComponent;
 public class MapComponent extends AbstractMapComponent {
 
 	private URL zoomMapUrl;
-	private URL markerIconUrl;
-
+	
 	private URL findUrl(String path) {
 		return super.findUrl(BingActivator.getDefault().getBundle(), path);
 	}
@@ -61,7 +60,6 @@ public class MapComponent extends AbstractMapComponent {
 
 	@Override
 	protected void findResources() {
-		markerIconUrl = findUrl("/gmap/greenpin.png"); //$NON-NLS-1$
 		zoomMapUrl = findUrl("/gmap/zoomMap.js"); //$NON-NLS-1$
 	}
 
@@ -78,10 +76,9 @@ public class MapComponent extends AbstractMapComponent {
 
 	@Override
 	protected String createAdditionalVariables() {
-		StringBuilder cb = new StringBuilder();
-		cb.append("var markerIconUrl='").append(markerIconUrl); //$NON-NLS-1$
-		cb.append("';\nvar keyInvalid='").append(Messages.getString("MapComponent.map_key_invalid")).append("';\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		return cb.toString();
+		StringBuilder sb = new StringBuilder();
+		sb.append("var keyInvalid='").append(Messages.getString("MapComponent.map_key_invalid")).append("';\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		return sb.toString();
 	}
 
 

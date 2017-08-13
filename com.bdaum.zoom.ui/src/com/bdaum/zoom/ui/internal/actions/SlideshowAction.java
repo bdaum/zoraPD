@@ -61,11 +61,7 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 
 	@Override
 	public void run() {
-		BusyIndicator.showWhile(window.getShell().getDisplay(), new Runnable() {
-			public void run() {
-				doRun();
-			}
-		});
+		BusyIndicator.showWhile(window.getShell().getDisplay(), () -> doRun());
 	}
 
 	private void doRun() {
@@ -152,19 +148,20 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 		String id = show.getStringId();
 		Set<String> done = new HashSet<String>(slides.size() * 3 / 2);
 		for (Asset asset : selectedAssets) {
-			String name = asset.getUri();
-			int p = name.lastIndexOf('/');
+			String fileName = asset.getUri();
+			int p = fileName.lastIndexOf('/');
 			if (p >= 0)
-				name = name.substring(p + 1);
-			if (filter.accept(name)) {
+				fileName = fileName.substring(p + 1);
+			if (filter.accept(fileName)) {
 				String tit = asset.getTitle();
-				if (tit == null || tit.length() == 0) {
+				if (tit == null || tit.isEmpty()) {
 					if (show.getSkipDublettes()) {
-						if (done.contains(show))
+						String name = asset.getName();
+						if (done.contains(name))
 							continue;
-						done.add(asset.getName());
+						done.add(name);
 					}
-					tit = name;
+					tit = fileName;
 				}
 				index++;
 				int fading = show.getFading();

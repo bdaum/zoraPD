@@ -26,8 +26,7 @@ public class WatchedFolderTargetPage extends ColoredWizardPage {
 	private Label copyLabel;
 	private final WatchedFolderImpl watchedFolder;
 
-	public WatchedFolderTargetPage(String pageName,
-			WatchedFolderImpl watchedFolder) {
+	public WatchedFolderTargetPage(String pageName, WatchedFolderImpl watchedFolder) {
 		super(pageName);
 		this.watchedFolder = watchedFolder;
 	}
@@ -39,8 +38,7 @@ public class WatchedFolderTargetPage extends ColoredWizardPage {
 		targetComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		targetComp.setLayout(new GridLayout(3, false));
 		copyLabel = new Label(targetComp, SWT.NONE);
-		copyLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false,
-				3, 1));
+		copyLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		Label transferToLabel = new Label(targetComp, SWT.NONE);
 		transferToLabel.setText(Messages.ImportFromDeviceWizard_transfer_to);
 
@@ -49,8 +47,8 @@ public class WatchedFolderTargetPage extends ColoredWizardPage {
 		gd_text.widthHint = 200;
 		targetDirField.setLayoutData(gd_text);
 
-		final Button browseButton = WidgetFactory.createPushButton(targetComp,
-				Messages.ImportFromDeviceWizard_browse, SWT.BEGINNING);
+		final Button browseButton = WidgetFactory.createPushButton(targetComp, Messages.ImportFromDeviceWizard_browse,
+				SWT.BEGINNING);
 		browseButton.addSelectionListener(new SelectionAdapter() {
 
 			@Override
@@ -59,8 +57,7 @@ public class WatchedFolderTargetPage extends ColoredWizardPage {
 				dialog.setText(Messages.ImportTargetPage_target_folder);
 				dialog.setMessage(Messages.ImportTargetPage_select_folder);
 				String lastTargetDir = targetDirField.getText();
-				dialog.setFilterPath(lastTargetDir.length() > 0 ? lastTargetDir
-						: null);
+				dialog.setFilterPath(lastTargetDir.isEmpty() ? null : lastTargetDir);
 				String dir = dialog.open();
 				if (dir != null) {
 					if (!dir.endsWith(File.separator))
@@ -71,17 +68,13 @@ public class WatchedFolderTargetPage extends ColoredWizardPage {
 			}
 		});
 
-		new Label(targetComp, SWT.NONE)
-				.setText(Messages.ImportFromDeviceWizard_create_subfolder);
+		new Label(targetComp, SWT.NONE).setText(Messages.ImportFromDeviceWizard_create_subfolder);
 
 		subfolderCombo = new Combo(targetComp, SWT.READ_ONLY);
-		subfolderCombo.setItems(new String[] {
-				Messages.ImportFromDeviceWizard_no,
-				Messages.ImportFromDeviceWizard_by_year,
-				Messages.ImportFromDeviceWizard_by_year_month,
+		subfolderCombo.setItems(new String[] { Messages.ImportFromDeviceWizard_no,
+				Messages.ImportFromDeviceWizard_by_year, Messages.ImportFromDeviceWizard_by_year_month,
 				Messages.ImportFromDeviceWizard_by_year_month_day });
-		final GridData gd_subfolderCombo = new GridData(SWT.LEFT, SWT.CENTER,
-				true, false);
+		final GridData gd_subfolderCombo = new GridData(SWT.LEFT, SWT.CENTER, true, false);
 		subfolderCombo.setLayoutData(gd_subfolderCombo);
 		new Label(targetComp, SWT.NONE);
 		setControl(targetComp);
@@ -103,7 +96,7 @@ public class WatchedFolderTargetPage extends ColoredWizardPage {
 	@Override
 	protected void validatePage() {
 		String target = targetDirField.getText();
-		if (target.length() == 0) {
+		if (target.isEmpty()) {
 			setErrorMessage(Messages.ImportFromDeviceWizard_specify_output_dir);
 			setPageComplete(false);
 		} else {

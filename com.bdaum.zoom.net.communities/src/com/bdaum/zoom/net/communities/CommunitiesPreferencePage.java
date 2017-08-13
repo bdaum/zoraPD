@@ -131,16 +131,13 @@ public class CommunitiesPreferencePage extends AbstractPreferencePagePart {
 							.getConfiguration().getParent();
 					final CommunityApi communitiesApi = CommunitiesActivator
 							.getCommunitiesApi(conf);
-					BusyIndicator.showWhile(e.display, new Runnable() {
-
-						public void run() {
-							EditCommunityAccountDialog dialog = new EditCommunityAccountDialog(
-									parent.getShell(), account, communitiesApi);
-							if (dialog.open() == Window.OK) {
-								CommunityAccount result = dialog.getResult();
-								accountViewer.update(result, null);
-								changed.add(result.getCommunityId());
-							}
+					BusyIndicator.showWhile(e.display, () -> {
+						EditCommunityAccountDialog dialog = new EditCommunityAccountDialog(
+								parent.getShell(), account, communitiesApi);
+						if (dialog.open() == Window.OK) {
+							CommunityAccount result = dialog.getResult();
+							accountViewer.update(result, null);
+							changed.add(result.getCommunityId());
 						}
 					});
 				}

@@ -161,6 +161,12 @@
 			<topic href="html/reference/appearancePrefs.html" />
 		</entry>
 	</entry>
+	<entry keyword="Secondary monitor">
+		<topic href="html/reference/generalPrefs.html" />
+	</entry>
+	<entry keyword="Monitor">
+		<topic href="html/reference/generalPrefs.html" />
+	</entry>
 	<entry keyword="Histogram">
 		<topic href="html/reference/histogram.html" />
 	</entry>
@@ -459,6 +465,11 @@
 			<topic href="html/reference/galleries.html" />
 		</entry>
 		<entry keyword="Face detection">
+			<topic href="html/reference/appearancePrefs.html" />
+		</entry>
+	</entry>
+	<entry keyword="Decoration">
+		<entry keyword="Thumbnail">
 			<topic href="html/reference/appearancePrefs.html" />
 		</entry>
 	</entry>

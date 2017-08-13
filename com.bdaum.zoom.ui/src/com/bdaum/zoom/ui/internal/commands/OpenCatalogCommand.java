@@ -24,7 +24,9 @@ import java.io.File;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Shell;
 
+import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
@@ -46,7 +48,7 @@ public class OpenCatalogCommand extends AbstractCatCommandHandler {
 				String path = dialog.open();
 				if (path != null) {
 					catFile = new File(path);
-					File currentFile =  CoreActivator.getDefault().getDbManager().getFile();
+					File currentFile = CoreActivator.getDefault().getDbManager().getFile();
 					if (currentFile != null && currentFile.equals(catFile)) {
 						AcousticMessageDialog.openWarning(getShell(), Messages.OpenCatAction_Open_existing,
 								Messages.OpenCatalogCommand_already_open);
@@ -55,22 +57,33 @@ public class OpenCatalogCommand extends AbstractCatCommandHandler {
 				}
 			}
 			if (catFile != null) {
-				BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-					public void run() {
-						if (preCatClose(false))
-							try {
-								IDbManager db = CoreActivator.getDefault().openDatabase(catFile.getAbsolutePath());
-								postCatOpen(db.getFileName(), false);
-								postCatInit(false);
-							} catch (IllegalStateException e) {
-								AcousticMessageDialog.openError(getShell(), Messages.OpenCatAction_Operations_running,
-										e.getMessage());
-							}
-					}
+				BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+					if (preCatClose(false))
+						try {
+							IDbManager db = CoreActivator.getDefault().openDatabase(catFile.getAbsolutePath());
+							checkPausedFolderWatch(getShell(), db);
+							postCatOpen(db.getFileName(), false);
+							postCatInit(false);
+						} catch (IllegalStateException e) {
+							AcousticMessageDialog.openError(getShell(), Messages.OpenCatAction_Operations_running,
+									e.getMessage());
+						}
 				});
 			}
 		} finally {
 			catFile = null;
+		}
+
+	}
+
+	public static void checkPausedFolderWatch(Shell shell, IDbManager dbManager) {
+		if (dbManager.getFile() != null) {
+			Meta meta = dbManager.getMeta(true);
+			if (meta.getPauseFolderWatch() && AcousticMessageDialog.openQuestion(shell, Messages.OpenCatalogCommand_paused,
+					Messages.OpenCatalogCommand_resume_watch)) {
+				meta.setPauseFolderWatch(false);
+				dbManager.storeAndCommit(meta);
+			}
 		}
 
 	}

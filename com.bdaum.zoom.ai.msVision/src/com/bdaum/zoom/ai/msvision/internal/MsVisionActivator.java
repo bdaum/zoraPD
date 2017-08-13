@@ -19,8 +19,12 @@
  */
 package com.bdaum.zoom.ai.msvision.internal;
 
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.osgi.framework.BundleContext;
 
+import com.bdaum.zoom.ai.internal.AiActivator;
 import com.bdaum.zoom.ai.msvision.internal.preference.PreferenceConstants;
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
 import com.microsoft.projectoxford.vision.VisionServiceRestClient;
@@ -61,6 +65,14 @@ public class MsVisionActivator extends ZUiPlugin {
 		super.start(context);
 		plugin = this;
 		key = getPreferenceStore().getString(PreferenceConstants.KEY);
+		InstanceScope.INSTANCE.getNode(AiActivator.PLUGIN_ID)
+				.addPreferenceChangeListener(new IEclipsePreferences.IPreferenceChangeListener() {
+					@Override
+					public void preferenceChange(PreferenceChangeEvent event) {
+						if (com.bdaum.zoom.ai.internal.preference.PreferenceConstants.ENABLE.equals(event.getKey()))
+							disposeClient();
+					}
+				});
 	}
 
 	/*

@@ -64,14 +64,12 @@ public class NewCatalogCommand extends AbstractCatCommandHandler {
 			final Meta meta = (dbManager instanceof NullDbManager) ? null : dbManager.getMeta(false);
 			if (preCatClose(false))
 				try {
-					BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-						public void run() {
-							IDbManager db = coreActivator.openDatabase(file, true, null);
-							postCatOpen(db.getFileName(), true);
-							new EditMetaDialog(getShell(), getActiveWorkbenchWindow().getActivePage(), db, true, meta)
-									.open();
-							postCatInit(false);
-						}
+					BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+						IDbManager db = coreActivator.openDatabase(file, true, null);
+						postCatOpen(db.getFileName(), true);
+						new EditMetaDialog(getShell(), getActiveWorkbenchWindow().getActivePage(), db, true, meta)
+								.open();
+						postCatInit(false);
 					});
 				} catch (IllegalStateException e) {
 					AcousticMessageDialog.openError(getShell(), Messages.NewCatAction_Operations_running,

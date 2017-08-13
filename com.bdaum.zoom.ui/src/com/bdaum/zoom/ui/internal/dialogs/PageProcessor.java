@@ -151,13 +151,13 @@ public class PageProcessor {
 		fontLead = fontPixelSize / 3;
 		titlePixelSize = 0;
 		int titleLead = 0;
-		if (layout.getTitle().length() > 0) {
+		if (!layout.getTitle().isEmpty()) {
 			titlePixelSize = (int) (titleSize * iDpi / 72);
 			titleLead = titlePixelSize;
 		}
 		subtitlePixelSize = 0;
 		subtitleLead = 0;
-		if (layout.getSubtitle().length() > 0) {
+		if (!layout.getSubtitle().isEmpty()) {
 			subtitlePixelSize = (int) (subtitleSize * iDpi / 72);
 			subtitleLead = subtitlePixelSize;
 		}
@@ -166,9 +166,9 @@ public class PageProcessor {
 		int footerLead = footerPixelSize;
 		int footerTextSize = footerPixelSize + footerLead;
 		int textHeight = 0;
-		if (layout.getCaption1().length() > 0)
+		if (!layout.getCaption1().isEmpty())
 			textHeight += fontPixelSize + fontLead;
-		if (layout.getCaption2().length() > 0)
+		if (!layout.getCaption2().isEmpty())
 			textHeight += fontPixelSize + fontLead;
 		int horizontalGap = (int) (layout.getHorizontalGap() * iDpi / MMPERINCH);
 		leftMargins = (int) Math.max(layout.getLeftMargin() * iDpi / MMPERINCH, -trim.x * factorX * iDpi / dpiX);
@@ -271,14 +271,14 @@ public class PageProcessor {
 			iGc.setForeground(device.getSystemColor(SWT.COLOR_DARK_GRAY));
 			iGc.fillRectangle(cBounds);
 			final int size = assets.size();
-			if (layout.getTitle().length() > 0) {
+			if (!layout.getTitle().isEmpty()) {
 				if (titleFont == null)
 					titleFont = createFont(device, titleSize, SWT.BOLD);
 				iGc.setFont(titleFont);
 				String title = computeTitle(layout.getTitle(), fileName, now, size, pageNo, pages, collection, meta);
 				iGc.drawText(title, (cBounds.width - iGc.textExtent(title).x) / 2, topMargins, true);
 			}
-			if (layout.getSubtitle().length() > 0) {
+			if (!layout.getSubtitle().isEmpty()) {
 				if (subtitleFont == null)
 					subtitleFont = createFont(device, subtitleSize, SWT.NORMAL);
 				iGc.setFont(subtitleFont);
@@ -287,7 +287,7 @@ public class PageProcessor {
 				iGc.drawText(subtitle, (cBounds.width - iGc.textExtent(subtitle).x) / 2,
 						topMargins + titlePixelSize + subtitleLead, true);
 			}
-			if (layout.getFooter().length() > 0) {
+			if (!layout.getFooter().isEmpty()) {
 				if (footerFont == null)
 					footerFont = createFont(device, footerSize, SWT.NORMAL);
 				iGc.setFont(footerFont);
@@ -348,7 +348,7 @@ public class PageProcessor {
 								}
 								swtImage.draw(iGc, 0, 0, ibounds.width, ibounds.height - 1, ix, iy, iw, ih,
 										ZImage.CROPPED, pixelWidth, pixelHeight, false);
-								if (layout.getCaption1().length() > 0) {
+								if (!layout.getCaption1().isEmpty()) {
 									if (textFont == null)
 										textFont = createFont(device, fontSize, SWT.NORMAL);
 									iGc.setFont(textFont);
@@ -358,7 +358,7 @@ public class PageProcessor {
 									int ty = (iy + ih + fontLead + keyLine);
 									iGc.drawText(caption1, tx, ty, true);
 								}
-								if (layout.getCaption2().length() > 0) {
+								if (!layout.getCaption2().isEmpty()) {
 									if (textFont == null)
 										textFont = createFont(device, fontSize, SWT.NORMAL);
 									iGc.setFont(textFont);

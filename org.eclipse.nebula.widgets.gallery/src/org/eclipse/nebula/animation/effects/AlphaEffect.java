@@ -34,7 +34,6 @@ public class AlphaEffect extends AbstractEffect {
 	 * @param onStop
 	 * @param onCancel
 	 */
-	@Deprecated
 	public static void setAlpha(AnimationRunner runner, Shell w, int alpha,
 			int duration, IMovement movement, Runnable onStop, Runnable onCancel) {
 		AlphaEffect effect = new AlphaEffect(w, w.getAlpha(), alpha, duration,
@@ -51,7 +50,6 @@ public class AlphaEffect extends AbstractEffect {
 	 * @deprecated Use {@link #fadeOnClose(Shell,int,IMovement,AnimationRunner)}
 	 *             instead
 	 */
-	@Deprecated
 	public static void fadeOnClose(final Shell shell, final int duration,
 			final IMovement easing) {
 		fadeOnClose(shell, duration, easing, null);
@@ -127,7 +125,6 @@ public class AlphaEffect extends AbstractEffect {
 
 	}
 
-	@Override
 	public void applyEffect(final long currentTime) {
 		if (shell.isDisposed())
 			return;

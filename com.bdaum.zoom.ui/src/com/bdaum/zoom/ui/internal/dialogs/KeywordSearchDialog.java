@@ -132,7 +132,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 	private boolean validate() {
 		String errorMessage = null;
 		String text = combo.getText();
-		if (text.length() == 0)
+		if (text.isEmpty())
 			errorMessage = Messages.KeywordSearchDialog_please_enter_keywords;
 		else
 			errorMessage = validate(text, keywords);
@@ -302,7 +302,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 			if (end - start > insert.length()) {
 				int kwstart = getWordStart(start, text);
 				String orig = text.substring(kwstart, start);
-				if (orig.length() > 0) {
+				if (!orig.isEmpty()) {
 					String keyword = findMatchingKeyword(orig, keywords);
 					lastProposal = text.substring(0, kwstart) + keyword;
 					keyword = orig + keyword.substring(orig.length());
@@ -324,7 +324,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 		if (insert.equals(" ")) { //$NON-NLS-1$
 			int kwstart = getWordStart(start, text);
 			String orig = text.substring(kwstart, start);
-			if (orig.length() > 0) {
+			if (!orig.isEmpty()) {
 				String keyword = findMatchingKeyword(orig, keywords);
 				if (keyword != null && keyword.length() == orig.length())
 					text = text.substring(0, kwstart) + keyword;
@@ -348,7 +348,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 		}
 		int kwstart = getWordStart(start + insert.length(), text);
 		String orig = text.substring(kwstart, start + insert.length());
-		if (orig.length() > 0) {
+		if (!orig.isEmpty()) {
 			String keyword = findMatchingKeyword(orig, keywords);
 			if (keyword == null) {
 				int q = text.lastIndexOf(' ', start);

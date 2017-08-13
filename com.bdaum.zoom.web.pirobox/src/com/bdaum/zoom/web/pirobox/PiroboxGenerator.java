@@ -90,17 +90,17 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 		varmap.put("sectionclass", "pirobox_gall_" + i); //$NON-NLS-1$ //$NON-NLS-2$
 		varmap.put("thumbnail", encodeURL(thumbnail)); //$NON-NLS-1$
 		String altText = exhibit.getAltText();
-		if (altText != null && altText.length() > 0)
+		if (altText != null && !altText.isEmpty())
 			varmap.put("alt", BatchUtilities.encodeHTML(altText, false)); //$NON-NLS-1$
 		if (storyboard.getShowCaptions()) {
 			String caption = exhibit.getCaption();
-			if (caption != null && caption.length() > 0) {
+			if (caption != null && !caption.isEmpty()) {
 				StringBuilder sb = new StringBuilder();
 				String c = BatchUtilities.encodeHTML(caption, false);
 				sb.append(c);
 				if (storyboard.getShowDescriptions()) {
 					String description = exhibit.getDescription();
-					if (description != null && description.length() > 0) {
+					if (description != null && !description.isEmpty()) {
 						if (exhibit.getHtmlDescription()) {
 							sb.append("<br/>").append(description); //$NON-NLS-1$
 						} else {
@@ -119,7 +119,7 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 				if (exhibit.getDownloadable() && original != null
 						&& !show.getHideDownload()) {
 					String downloadText = show.getDownloadText();
-					if (downloadText != null && downloadText.length() > 0) {
+					if (downloadText != null && !downloadText.isEmpty()) {
 						sb.append("<div class='download'><a href='").append(encodeURL(original)) //$NON-NLS-1$
 								.append("'>").append(BatchUtilities.encodeHTML(downloadText, false)) //$NON-NLS-1$
 								.append("</a></div>"); //$NON-NLS-1$
@@ -181,7 +181,7 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 		if (!show.getHideHeader()) {
 			varmap.put("name", BatchUtilities.encodeHTML(show.getName(), false)); //$NON-NLS-1$
 			String description = show.getDescription();
-			if (description != null && description.length() > 0) {
+			if (description != null && !description.isEmpty()) {
 				String d = show.getHtmlDescription() ? description
 						: BatchUtilities.encodeHTML(description, true);
 				varmap.put("description", d); //$NON-NLS-1$
@@ -233,13 +233,13 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 				WebExhibitImpl.class, storyboard.getExhibit())) {
 				if (exhibit.getDownloadable()
 						&& show.getDownloadText() != null
-						&& show.getDownloadText().length() > 0
+						&& !show.getDownloadText().isEmpty()
 						&& !show.getHideDownload()
 						|| exhibit.getCaption() != null
-						&& exhibit.getCaption().length() > 0
+						&& !exhibit.getCaption().isEmpty()
 						&& storyboard.getShowCaptions()
 						|| exhibit.getDescription() != null
-						&& exhibit.getDescription().length() > 0
+						&& !exhibit.getDescription().isEmpty()
 						&& storyboard.getShowDescriptions()) {
 					varmap.put("captiondiv", //$NON-NLS-1$
 							"<div id=\"caption\" class=\"embox\"></div>"); //$NON-NLS-1$
@@ -286,7 +286,7 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 		for (int i = 0; i < templates.length; i++) {
 			String name = templates[i].getName();
 			if (name.equals("index.html") && pageName != null //$NON-NLS-1$
-					&& pageName.length() > 0) {
+					&& !pageName.isEmpty()) {
 				name = pageName;
 			}
 			names[i] = name;
@@ -312,7 +312,7 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 		varmap.put(
 				"title", BatchUtilities.encodeHTML(storyboard.getTitle(), true)); //$NON-NLS-1$
 		String description = storyboard.getDescription();
-		if (description != null && description.length() > 0) {
+		if (description != null && !description.isEmpty()) {
 			String d = storyboard.getHtmlDescription() ? description
 					: BatchUtilities.encodeHTML(description, true);
 			varmap.put("descriptiondiv", //$NON-NLS-1$

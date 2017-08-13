@@ -142,25 +142,22 @@ public class DeleteOperation extends DbOperation {
 						story.removeExhibit(webexhibit.getStringId());
 				}
 			}
-			dbManager.safeTransaction(new Runnable() {
-
-				public void run() {
-					if (slides != null)
-						for (SlideImpl slide : slides)
-							dbManager.delete(slide);
-					if (exhibits != null)
-						for (ExhibitImpl exhibit : exhibits)
-							dbManager.delete(exhibit);
-					if (webexhibits != null)
-						for (WebExhibitImpl webexhibit : webexhibits)
-							dbManager.delete(webexhibit);
-					for (SlideShowImpl show : showMap.values())
-						dbManager.store(show);
-					for (WallImpl wall : wallMap.values())
-						dbManager.store(wall);
-					for (StoryboardImpl story : storyMap.values())
-						dbManager.store(story);
-				}
+			dbManager.safeTransaction(() -> {
+				if (slides != null)
+					for (SlideImpl slide : slides)
+						dbManager.delete(slide);
+				if (exhibits != null)
+					for (ExhibitImpl exhibit : exhibits)
+						dbManager.delete(exhibit);
+				if (webexhibits != null)
+					for (WebExhibitImpl webexhibit : webexhibits)
+						dbManager.delete(webexhibit);
+				for (SlideShowImpl show : showMap.values())
+					dbManager.store(show);
+				for (WallImpl wall : wallMap.values())
+					dbManager.store(wall);
+				for (StoryboardImpl story : storyMap.values())
+					dbManager.store(story);
 			});
 		}
 		openIndexWriter();
@@ -178,7 +175,7 @@ public class DeleteOperation extends DbOperation {
 								deleted = true;
 							} else {
 								String volume = a.getVolume();
-								if (volume != null && volume.length() > 0)
+								if (volume != null && !volume.isEmpty())
 									volumes.add(volume);
 								errands.add(a.getUri());
 							}
@@ -200,32 +197,32 @@ public class DeleteOperation extends DbOperation {
 			final IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
 			if (errorHandler != null) {
 				Shell shell = info.getAdapter(Shell.class);
-				Display display = shell.getDisplay();
-				display.asyncExec(new Runnable() {
+				if (shell != null && !shell.isDisposed()) {
+					Display display = shell.getDisplay();
+					display.asyncExec(() -> {
+						if (!shell.isDisposed()) {
+							if (!errands.isEmpty()) {
+								String msg;
+								if (errands.size() == 1) {
+									msg = NLS.bind(Messages.getString("DeleteOperation.File_offline"), //$NON-NLS-1$
+											errands.get(0), volumes.toArray()[0]);
+								} else {
+									StringBuffer sb = new StringBuffer();
+									for (String volume : volumes) {
+										if (sb.length() > 0)
+											sb.append(", "); //$NON-NLS-1$
+										sb.append(volume);
+									}
+									msg = NLS.bind(Messages.getString("DeleteOperation.Files_offline"), //$NON-NLS-1$
+											errands.size(), sb.toString());
 
-					public void run() {
-						if (errands.size() > 0) {
-							String msg;
-							if (errands.size() == 1) {
-								msg = NLS.bind(Messages.getString("DeleteOperation.File_offline"), //$NON-NLS-1$
-										errands.get(0), volumes.toArray()[0]);
-							} else {
-								StringBuffer sb = new StringBuffer();
-								for (String volume : volumes) {
-									if (sb.length() > 0)
-										sb.append(", "); //$NON-NLS-1$
-									sb.append(volume);
 								}
-								msg = NLS.bind(Messages.getString("DeleteOperation.Files_offline"), //$NON-NLS-1$
-										errands.size(), sb.toString());
-
+								errorHandler.showInformation(Messages.getString("DeleteOperation.Unable_to_delete"), //$NON-NLS-1$
+										msg, info);
 							}
-							errorHandler.showInformation(Messages.getString("DeleteOperation.Unable_to_delete"), msg, //$NON-NLS-1$
-									info);
 						}
-					}
-
-				});
+					});
+				}
 			}
 			assets = null;
 		}
@@ -233,11 +230,7 @@ public class DeleteOperation extends DbOperation {
 	}
 
 	private void deleteAsset(final Asset anAsset, final boolean files, final boolean needsGhost) {
-		storeSafely(new Runnable() {
-			public void run() {
-				doDeleteAsset(anAsset, files, needsGhost);
-			}
-		}, 1);
+		storeSafely(() -> doDeleteAsset(anAsset, files, needsGhost), 1);
 	}
 
 	private void doDeleteAsset(Asset anAsset, boolean files, boolean needsGhost) {
@@ -361,11 +354,7 @@ public class DeleteOperation extends DbOperation {
 		try {
 			for (Trash trash : set) {
 				final Trash t = trash;
-				if (!storeSafely(new Runnable() {
-					public void run() {
-						asset = t.restore(dbManager, iw, status);
-					}
-				}, 1))
+				if (!storeSafely(() -> asset = t.restore(dbManager, iw, status), 1))
 					break;
 				changed |= updateFolderHierarchies(asset, true, configuration.timeline, configuration.locations, false);
 				aMonitor.worked(1);

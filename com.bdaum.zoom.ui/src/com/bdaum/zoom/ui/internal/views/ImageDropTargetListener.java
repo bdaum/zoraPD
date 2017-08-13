@@ -184,7 +184,7 @@ public final class ImageDropTargetListener extends EffectDropTargetListener {
 			assets = (List<Asset>) obj;
 		if (assets != null) {
 			String uri = sound.toURI().toString();
-			OperationJob.executeOperation(new VoiceNoteOperation(assets, uri, uri), host);
+			OperationJob.executeOperation(new VoiceNoteOperation(assets, uri, uri,null), host);
 		}
 	}
 

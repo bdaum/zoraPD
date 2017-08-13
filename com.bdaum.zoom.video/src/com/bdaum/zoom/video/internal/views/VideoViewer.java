@@ -12,6 +12,8 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -35,12 +37,9 @@ import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
-
-import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.meta.Meta;
@@ -57,6 +56,7 @@ import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.UpdateThumbnailOperation;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.FadingShell;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.views.IImageViewer;
@@ -64,8 +64,10 @@ import com.bdaum.zoom.video.internal.Icons;
 import com.bdaum.zoom.video.internal.VideoActivator;
 import com.bdaum.zoom.video.internal.widgets.VideoControl;
 
+import uk.co.caprica.vlcj.player.MediaPlayerFactory;
+
 @SuppressWarnings("restriction")
-public class VideoViewer implements IImageViewer, PaintListener, KeyListener, IAdaptable {
+public class VideoViewer implements IImageViewer, PaintListener, KeyListener, IAdaptable, DisposeListener {
 
 	private static final String[] VLC_ARGS = { // "--intf", "dummy", /* no
 			// interface */
@@ -105,11 +107,13 @@ public class VideoViewer implements IImageViewer, PaintListener, KeyListener, IA
 	private boolean addNoise;
 	private boolean soundOn = true;
 	private int currentVolume = 100;
-
 	private MediaPlayerFactory factory;
+	private Shell shell;
 
-	public void init(Display d, RGB bw, int cropmode) {
-		this.display = d;
+	public void init(IWorkbenchWindow window, RGB bw, int cropmode) {
+		this.shell = window.getShell();
+		shell.addDisposeListener(this);
+		this.display = shell.getDisplay();
 		this.bwmode = bw;
 		keyDown = false;
 		errorMessage = null;
@@ -123,17 +127,14 @@ public class VideoViewer implements IImageViewer, PaintListener, KeyListener, IA
 
 	private void redraw() {
 		if (!display.isDisposed())
-			display.asyncExec(new Runnable() {
-				public void run() {
-					if (!topCanvas.isDisposed())
-						topCanvas.redraw();
-				}
+			display.asyncExec(() -> {
+				if (!topCanvas.isDisposed())
+					topCanvas.redraw();
 			});
 	}
 
 	public void create() {
-		Monitor monitor = display.getPrimaryMonitor();
-		Rectangle mbounds = monitor.getBounds();
+		Rectangle mbounds = UiUtilities.getSecondaryMonitorBounds(shell);
 		topShell = new Shell(display, SWT.NO_TRIM);
 		topShell.setImage(Icons.zoraShell.getImage());
 		topShell.setText(Constants.APPNAME + Messages.VideoViewer_video_viewer);
@@ -147,18 +148,13 @@ public class VideoViewer implements IImageViewer, PaintListener, KeyListener, IA
 		topCanvas.setCursor(transparentCursor);
 		topCanvas.addMouseMoveListener(new MouseMoveListener() {
 			public void mouseMove(MouseEvent e) {
-				if (running) {
-					mouseMovements++;
-					if (mouseMovements > 3) {
-						if (controlShell == null) {
-							if (playingThread != null) {
-								if (!playingThread.isPaused())
-									playingThread.pause();
-							}
-							showControl();
-						}
-						mouseMovements = 0;
+				if (running && ++mouseMovements > 3) {
+					if (controlShell == null) {
+						if (playingThread != null && !playingThread.isPaused())
+							playingThread.pause();
+						showControl();
 					}
+					mouseMovements = 0;
 				}
 			}
 		});
@@ -167,11 +163,9 @@ public class VideoViewer implements IImageViewer, PaintListener, KeyListener, IA
 
 	private void showControl() {
 		if (!topShell.isDisposed()) {
-			display.syncExec(new Runnable() {
-				public void run() {
-					if (!topShell.isDisposed())
-						doShowControl();
-				}
+			display.asyncExec(() -> {
+				if (!topShell.isDisposed())
+					doShowControl();
 			});
 		}
 	}
@@ -243,13 +237,7 @@ public class VideoViewer implements IImageViewer, PaintListener, KeyListener, IA
 			}
 
 			public void applyPause() {
-				if (!display.isDisposed())
-					display.asyncExec(new Runnable() {
-						public void run() {
-							if (topShell.isDisposed())
-								showControl();
-						}
-					});
+				showControl();
 			}
 
 			public void showError(String msg) {
@@ -260,10 +248,8 @@ public class VideoViewer implements IImageViewer, PaintListener, KeyListener, IA
 		});
 		if (!playingThread.startVideoThread()) {
 			String volume = asset.getVolume();
-			if (volume == null || volume.trim().length() == 0)
-				errorMessage = Messages.VideoViewer_no_stream;
-			else
-				errorMessage = NLS.bind(Messages.VideoViewer_currently_not_available, volume);
+			errorMessage = volume == null || volume.trim().isEmpty() ? Messages.VideoViewer_no_stream
+					: NLS.bind(Messages.VideoViewer_currently_not_available, volume);
 		}
 	}
 
@@ -280,8 +266,10 @@ public class VideoViewer implements IImageViewer, PaintListener, KeyListener, IA
 			controlShell.close();
 			controlShell = null;
 		}
-		topShell.close();
-		topShell = null;
+		if (topShell != null) {
+			topShell.close();
+			topShell = null;
+		}
 		if (image != null) {
 			image.dispose();
 			image = null;
@@ -474,7 +462,7 @@ public class VideoViewer implements IImageViewer, PaintListener, KeyListener, IA
 		shell.pack();
 		Point size = shell.getSize();
 		Rectangle bounds = topShell.getBounds();
-		shell.setLocation((bounds.width - size.x) / 2, bounds.height - size.y);
+		shell.setLocation(bounds.x + (bounds.width - size.x) / 2, bounds.y + bounds.height - size.y);
 		CssActivator.getDefault().setColors(controlShell.getShell());
 		controlShell.setAlpha(0);
 		controlShell.open();
@@ -572,6 +560,11 @@ public class VideoViewer implements IImageViewer, PaintListener, KeyListener, IA
 				return activeWorkbenchWindow.getShell();
 		}
 		return null;
+	}
+
+	@Override
+	public void widgetDisposed(DisposeEvent e) {
+		close();
 	}
 
 }

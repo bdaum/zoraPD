@@ -30,10 +30,9 @@ public class SinusVariation extends AbstractMovement {
 		this.amplitude = amplitude;
 	}
 
-	@Override
 	public double getValue(double step) {
 		return amplitude
-				* Math.sin(step / duration * Math.PI * variations);
+				* Math.sin(step / duration * Math.PI * (double) variations);
 	}
 
 }

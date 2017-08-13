@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
@@ -38,12 +39,15 @@ import org.eclipse.swt.browser.StatusTextEvent;
 import org.eclipse.swt.browser.StatusTextListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.operations.IWorkbenchOperationSupport;
+import org.eclipse.ui.operations.UndoRedoActionGroup;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.location.Location;
@@ -60,9 +64,11 @@ import com.bdaum.zoom.gps.internal.GpsActivator;
 import com.bdaum.zoom.gps.internal.GpsConfiguration;
 import com.bdaum.zoom.gps.internal.HelpContextIds;
 import com.bdaum.zoom.gps.internal.Icons;
+import com.bdaum.zoom.gps.internal.operations.GeodirOperation;
 import com.bdaum.zoom.gps.internal.operations.GeotagOperation;
 import com.bdaum.zoom.gps.widgets.IMapComponent;
 import com.bdaum.zoom.job.OperationJob;
+import com.bdaum.zoom.operations.IProfiledOperation;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.gps.RasterCoordinate;
@@ -139,8 +145,6 @@ public class MapView extends BasicView {
 	private static final String LAST_LATITUDE = "lastLatitude"; //$NON-NLS-1$
 	public static final String ID = "com.bdaum.zoom.gps.MapView"; //$NON-NLS-1$
 	private static final String LAST_ZOOM = "lastZoom"; //$NON-NLS-1$
-	private Action lockAction;
-	protected boolean locked = true;
 	private double lastLongitude = Double.NaN;
 	private double lastLatitude = Double.NaN;
 	private AssetSelection lastSelection = AssetSelection.EMPTY;
@@ -155,6 +159,7 @@ public class MapView extends BasicView {
 	private Action webAction;
 	protected int lastZoom;
 	private IConfigurationElement currentConf;
+	private Action refreshAction;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -205,7 +210,22 @@ public class MapView extends BasicView {
 		Core.getCore().addCatalogListener(new CatalogAdapter() {
 			@Override
 			public void assetsModified(BagChange<Asset> changes, QueryField node) {
-				assetsChanged(getNavigationHistory().getSelectedAssets());
+				// Refresh for Undo only
+				assetsChanged(getNavigationHistory().getSelectedAssets(), changes == null);
+			}
+
+			@Override
+			public void catalogClosed(int mode) {
+				refresh();
+			}
+
+			@Override
+			public void catalogOpened(boolean newDb) {
+				if (!parent.isDisposed())
+					parent.getDisplay().asyncExec(() -> {
+						if (!parent.isDisposed())
+							refresh();
+					});
 			}
 		});
 		updateActions();
@@ -218,11 +238,13 @@ public class MapView extends BasicView {
 			clientClustering = Boolean.parseBoolean(conf.getAttribute("clientClustering")); //$NON-NLS-1$
 			mapComponent.createComponent(parent, true);
 			mapComponent.addCoordinatesListener(new CoordinatesListener() {
-				public void setCoordinates(double latitude, double longitude, int zoom) {
-					updateGeoPosition(latitude, longitude);
-					lastLatitude = latitude;
-					lastLongitude = longitude;
-					lastZoom = zoom;
+				public void setCoordinates(String[] assetIds, double latitude, double longitude, int zoom, int type) {
+					updateGeoPosition(assetIds, latitude, longitude, type);
+					if (Double.isNaN(latitude) && Double.isNaN(longitude)) {
+						lastLatitude = latitude;
+						lastLongitude = longitude;
+						lastZoom = zoom;
+					}
 				}
 			});
 			mapComponent.addMaptypeListener(new MaptypeChangedListener() {
@@ -266,17 +288,24 @@ public class MapView extends BasicView {
 		}
 	}
 
-	protected void updateGeoPosition(double latitude, double longitude) {
+	protected void updateGeoPosition(String[] assetIds, double latitude, double longitude, int type) {
 		if (!lastSelection.isEmpty()) {
 			GpsConfiguration gpsConfig = GpsActivator.getDefault().createGpsConfiguration();
 			gpsConfig.overwrite = true;
-			String[] assetIds = new String[lastSelection.size()];
-			int i = 0;
-			for (Asset asset : lastSelection)
-				assetIds[i++] = asset.getStringId();
-			OperationJob.executeOperation(new GeotagOperation(
-					new Trackpoint[] { new Trackpoint(latitude, longitude, false) }, assetIds, gpsConfig), this);
-			isDirty = true;
+			if (assetIds == null || assetIds.length == 0) {
+				assetIds = new String[lastSelection.size()];
+				int i = 0;
+				for (Asset asset : lastSelection)
+					assetIds[i++] = asset.getStringId();
+			}
+			if (assetIds.length != 0) {
+				IProfiledOperation op = type == CoordinatesListener.IMGDIR
+						? new GeodirOperation(new Trackpoint(latitude, longitude, false), assetIds[0])
+						: new GeotagOperation(new Trackpoint[] { new Trackpoint(latitude, longitude, false) }, assetIds,
+								gpsConfig);
+				OperationJob.executeOperation(op, this);
+				isDirty = true;
+			}
 		}
 	}
 
@@ -289,11 +318,15 @@ public class MapView extends BasicView {
 		fillLocalPullDown(menuManager);
 		toolBarManager.update(true);
 		menuManager.update(true);
+		IWorkbenchOperationSupport operationSupport = PlatformUI.getWorkbench().getOperationSupport();
+		IUndoContext undoContext = operationSupport.getUndoContext();
+		UndoRedoActionGroup undoRedoGroup = new UndoRedoActionGroup(viewSite, undoContext, true);
+		undoRedoGroup.fillActionBars(bars);
 	}
 
 	protected void fillLocalPullDown(IMenuManager menuManager) {
 		menuManager.add(webAction);
-		menuManager.add(lockAction);
+		menuManager.add(refreshAction);
 	}
 
 	protected void fillLocalToolBar(IToolBarManager manager) {
@@ -302,30 +335,12 @@ public class MapView extends BasicView {
 			manager.add(new Separator());
 		}
 		manager.add(webAction);
-		manager.add(lockAction);
+		manager.add(refreshAction);
 	}
 
 	@Override
 	protected void makeActions() {
 		super.makeActions();
-		lockAction = new Action(Messages.MapView_lock_locked, IAction.AS_CHECK_BOX) {
-			@Override
-			public void run() {
-				locked = !locked;
-				lockAction.setChecked(locked);
-				lockAction.setImageDescriptor((locked ? Icons.closedlock : Icons.openlock).getDescriptor());
-				lockAction.setToolTipText(locked ? Messages.MapView_click_to_unlock : Messages.MapView_click_to_lock);
-				lockAction.setText(locked ? Messages.MapView_lock_locked : Messages.MapView_lock_unlocked);
-				AssetSelection selectedAssets = lastSelection;
-				lastSelection = null;
-				if (assetsChanged(selectedAssets))
-					refresh();
-			}
-		};
-		lockAction.setImageDescriptor(Icons.closedlock.getDescriptor());
-		lockAction.setChecked(true);
-		lockAction.setToolTipText(Messages.MapView_click_to_unlock);
-
 		webAction = new Action(Messages.MapView_show_in_web, IAction.AS_PUSH_BUTTON) {
 			@Override
 			public void run() {
@@ -337,7 +352,15 @@ public class MapView extends BasicView {
 			}
 		};
 		webAction.setImageDescriptor(Icons.external.getDescriptor());
-
+		webAction.setToolTipText(Messages.MapView_external_tooltip);
+		refreshAction = new Action(Messages.MapView_refresh, IAction.AS_PUSH_BUTTON) {
+			@Override
+			public void run() {
+				refreshBusy();
+			}
+		};
+		refreshAction.setImageDescriptor(Icons.refresh.getDescriptor());
+		refreshAction.setToolTipText(Messages.MapView_refresh_tooltip);
 		createComboContributionItem();
 	}
 
@@ -368,11 +391,11 @@ public class MapView extends BasicView {
 			mapPosition.setState(provinceOrState);
 			String sublocation = loc.getSublocation();
 			mapPosition.setStreet(sublocation);
-			if (sublocation != null && sublocation.length() > 0)
+			if (sublocation != null && !sublocation.isEmpty())
 				initialZoomLevel = 14;
-			else if (city != null && city.length() > 0)
+			else if (city != null && !city.isEmpty())
 				initialZoomLevel = 12;
-			else if (provinceOrState != null && provinceOrState.length() > 0)
+			else if (provinceOrState != null && !provinceOrState.isEmpty())
 				initialZoomLevel = 7;
 			else
 				initialZoomLevel = 5;
@@ -384,8 +407,7 @@ public class MapView extends BasicView {
 	}
 
 	public void showLocations(AssetSelection selectedAssets) {
-		assetsChanged(selectedAssets);
-		refresh();
+		assetsChanged(selectedAssets, true);
 		updateActions();
 	}
 
@@ -400,7 +422,7 @@ public class MapView extends BasicView {
 			} else {
 				mapPosition = new Place();
 				String country = Locale.getDefault().getCountry();
-				if (country.length() == 0) {
+				if (country.isEmpty()) {
 					mapPosition.setCountryCode("DE"); //$NON-NLS-1$
 					initialZoomLevel = 2;
 				} else {
@@ -414,7 +436,7 @@ public class MapView extends BasicView {
 			Collection<Place> values = placeMap.values();
 			mapPosition = values.toArray(new Place[values.size()])[0];
 			initialZoomLevel = 12;
-			mode = IMapComponent.ONE;
+			mode = lastSelection.size() > 1 ? IMapComponent.CLUSTER : IMapComponent.ONE;
 			break;
 		default:
 			mapPosition = new Place();
@@ -474,28 +496,27 @@ public class MapView extends BasicView {
 
 	@Override
 	public boolean assetsChanged() {
-		return assetsChanged(getNavigationHistory().getSelectedAssets());
+		assetsChanged(getNavigationHistory().getSelectedAssets(), true);
+		return false;
 	}
 
-	protected boolean assetsChanged(AssetSelection selectedAssets) {
-		if (locked) {
-			lastSelection = selectedAssets;
-			int oldMapSize = placeMap.size();
-			extractLocations(selectedAssets);
-			int mapSize = placeMap.size();
-			return (oldMapSize > 0 || mapSize > 0 || mapSize != oldMapSize
-					|| lastSelection.isEmpty() != selectedAssets.isEmpty());
-		}
+	protected void assetsChanged(AssetSelection selectedAssets, boolean refresh) {
 		lastSelection = selectedAssets;
-		if (!placeMap.isEmpty()) {
-			placeMap.clear();
-			return true;
+		extractLocations(selectedAssets);
+		if (refresh) {
+			Shell shell = getSite().getShell();
+			if (!shell.isDisposed())
+				shell.getDisplay().asyncExec(() -> {
+					if (!shell.isDisposed())
+						refreshBusy();
+				});
 		}
-		return false;
 	}
 
 	private void extractLocations(AssetSelection selectedAssets) {
 		placeMap.clear();
+		boolean mixedDir = false;
+		int n = 0;
 		for (Asset asset : selectedAssets.getAssets()) {
 			double lat = asset.getGPSLatitude();
 			double lon = asset.getGPSLongitude();
@@ -503,11 +524,12 @@ public class MapView extends BasicView {
 				RasterCoordinate coord = new RasterCoordinate(lat, lon, 2);
 				Place place = (Place) (clientClustering ? coord.findExactMatch(placeMap)
 						: coord.findClosestMatch(placeMap, 0.06d, 'K'));
+				double direction = asset.getGPSImgDirection();
 				if (place == null) {
 					place = new Place(lat, lon);
 					place.setImageName(asset.getName());
 					placeMap.put(coord, place);
-					place.setImageAssetId(asset.getStringId());
+					place.setDirection(direction);
 				} else {
 					String description = place.getImageName();
 					if (description.length() > 40) {
@@ -516,7 +538,20 @@ public class MapView extends BasicView {
 					} else
 						description += ", " + asset.getName(); //$NON-NLS-1$
 					place.setImageName(description);
+					if (!mixedDir) {
+						if (Double.isNaN(place.getDirection()))
+							place.setDirection(direction);
+						else if (!Double.isNaN(direction)) {
+							if (Math.abs(place.getDirection() - direction) < 1d)
+								place.setDirection((place.getDirection() * n + direction) / ++n);
+							else {
+								place.setDirection(Double.NaN);
+								mixedDir = true;
+							}
+						}
+					}
 				}
+				place.addImageAssetId(asset.getStringId());
 			}
 		}
 	}

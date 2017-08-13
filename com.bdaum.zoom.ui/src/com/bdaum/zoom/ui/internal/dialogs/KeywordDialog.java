@@ -74,7 +74,7 @@ public class KeywordDialog extends ZTitleAreaDialog {
 		recentKeywords = null;
 		settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
 		String recent = settings.get(RECENT);
-		if (recent != null && recent.length() > 0) {
+		if (recent != null && !recent.isEmpty()) {
 			recentKeywords = new LinkedList<String>();
 			StringTokenizer st = new StringTokenizer(recent, "\n"); //$NON-NLS-1$
 			while (st.hasMoreTokens())

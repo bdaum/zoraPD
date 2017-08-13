@@ -41,11 +41,8 @@ public class GetListUserHandler extends DefaultSmugmugHandler {
 	public void characters(char[] ch, int start, int length)
             throws SAXException {
         String cdata = new String(ch, start, length).trim();
-        if (cdata.length() > 0) {
-            if (lastTag.equals("tag")) { //$NON-NLS-1$
-                parent.addTag(cdata);
-            }
-        }
+        if (!cdata.isEmpty() && lastTag.equals("tag")) //$NON-NLS-1$
+			parent.addTag(cdata);
     }
 
 }

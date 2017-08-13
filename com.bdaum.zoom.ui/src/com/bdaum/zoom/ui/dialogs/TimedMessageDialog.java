@@ -50,15 +50,15 @@ public class TimedMessageDialog extends AcousticMessageDialog {
 	 * unequal <code>null</code> the dialog will cancel.
 	 * </p>
 	 * <p>
-	 * The labels of the buttons to appear in the button bar are supplied in
-	 * this constructor as an array. The <code>open</code> method will return
-	 * the index of the label in this array corresponding to the button that was
-	 * pressed to close the dialog.
+	 * The labels of the buttons to appear in the button bar are supplied in this
+	 * constructor as an array. The <code>open</code> method will return the index
+	 * of the label in this array corresponding to the button that was pressed to
+	 * close the dialog.
 	 * </p>
 	 * <p>
-	 * <strong>Note:</strong> If the dialog was dismissed without pressing a
-	 * button (ESC key, close box, etc.) then {@link SWT#DEFAULT} is returned.
-	 * Note that the <code>open</code> method blocks.
+	 * <strong>Note:</strong> If the dialog was dismissed without pressing a button
+	 * (ESC key, close box, etc.) then {@link SWT#DEFAULT} is returned. Note that
+	 * the <code>open</code> method blocks.
 	 * </p>
 	 *
 	 * @param parentShell
@@ -76,14 +76,14 @@ public class TimedMessageDialog extends AcousticMessageDialog {
 	 *            <ul>
 	 *            <li><code>MessageDialog.NONE</code> for a dialog with no image
 	 *            </li>
-	 *            <li><code>MessageDialog.ERROR</code> for a dialog with an
-	 *            error image</li>
-	 *            <li><code>MessageDialog.INFORMATION</code> for a dialog with
-	 *            an information image</li>
+	 *            <li><code>MessageDialog.ERROR</code> for a dialog with an error
+	 *            image</li>
+	 *            <li><code>MessageDialog.INFORMATION</code> for a dialog with an
+	 *            information image</li>
 	 *            <li><code>MessageDialog.QUESTION </code> for a dialog with a
 	 *            question image</li>
-	 *            <li><code>MessageDialog.WARNING</code> for a dialog with a
-	 *            warning image</li>
+	 *            <li><code>MessageDialog.WARNING</code> for a dialog with a warning
+	 *            image</li>
 	 *            </ul>
 	 * @param dialogButtonLabels
 	 *            an array of labels for the buttons in the button bar
@@ -94,13 +94,12 @@ public class TimedMessageDialog extends AcousticMessageDialog {
 	 * @param interval
 	 *            the interval for periodic validator checks
 	 */
-	public TimedMessageDialog(Shell parentShell, IInputValidator validator,
-			String dialogTitle, Image dialogTitleImage, String dialogMessage,
-			int dialogImageType, String[] dialogButtonLabels, int defaultIndex,
-			int cancelIndex, long interval) {
+	public TimedMessageDialog(Shell parentShell, IInputValidator validator, String dialogTitle, Image dialogTitleImage,
+			String dialogMessage, int dialogImageType, String[] dialogButtonLabels, int defaultIndex, int cancelIndex,
+			long interval) {
 
-		super(parentShell, dialogTitle, dialogTitleImage, dialogMessage,
-				dialogImageType, dialogButtonLabels, defaultIndex);
+		super(parentShell, dialogTitle, dialogTitleImage, dialogMessage, dialogImageType, dialogButtonLabels,
+				defaultIndex);
 		Assert.isNotNull(validator);
 		this.validator = validator;
 		this.cancelIndex = cancelIndex;
@@ -119,11 +118,7 @@ public class TimedMessageDialog extends AcousticMessageDialog {
 		dialogJob = new Daemon(Messages.TimedMessageDialog_update_dialog, interval) {
 			@Override
 			protected void doRun(IProgressMonitor monitor) {
-				display.asyncExec(new Runnable() {
-					public void run() {
-						execTimer();
-					}
-				});
+				display.asyncExec(() -> execTimer());
 			}
 		};
 		dialogJob.schedule(interval);
@@ -157,19 +152,18 @@ public class TimedMessageDialog extends AcousticMessageDialog {
 	}
 
 	/**
-	 * Called periodically by the timer. The default implementation checks if
-	 * the validator returns null. If yes, it fires the Cancel button.
-	 * Subclasses may override.
+	 * Called periodically by the timer. The default implementation checks if the
+	 * validator returns null. If yes, it fires the Cancel button. Subclasses may
+	 * override.
 	 */
 	@Override
 	protected void execTimer() {
 		if (validator.isValid(null) == null) {
 			Shell shell = getShell();
 			if (shell != null && !shell.isDisposed())
-				shell.getDisplay().asyncExec(new Runnable() {
-					public void run() {
+				shell.getDisplay().asyncExec(() -> {
+					if (!shell.isDisposed())
 						buttonPressed(cancelIndex);
-					}
 				});
 		}
 	}

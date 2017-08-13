@@ -320,4 +320,8 @@ public class SplitCatOperation extends AbstractCloneCatOperation {
 			toBeStored.add(regionImpl);
 	}
 
+	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
+		// do nothing
+	}
+
 }

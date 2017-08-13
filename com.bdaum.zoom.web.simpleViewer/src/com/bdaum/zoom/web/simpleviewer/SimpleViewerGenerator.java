@@ -49,9 +49,8 @@ public class SimpleViewerGenerator extends AbstractGalleryGenerator {
 		for (int i = 0; i < templates.length; i++) {
 			String name = templates[i].getName();
 			if (name.equals("index.html") && pageName != null //$NON-NLS-1$
-					&& pageName.length() > 0) {
+					&& !pageName.isEmpty())
 				name = pageName;
-			}
 			names[i] = name;
 		}
 		return names;
@@ -113,7 +112,7 @@ public class SimpleViewerGenerator extends AbstractGalleryGenerator {
 		String f = generateFooter(
 				show,
 				"<a href=\"http://http://www.simpleviewer.net/\" target=\"_blank\">SimpleViewer</a>"); //$NON-NLS-1$
-		if (f.length() > 0) {
+		if (!f.isEmpty()) {
 			f = applyFont(f, getShow().getFooterFont(), 7f);
 			varmap.put("viewerHeight", "95"); //$NON-NLS-1$ //$NON-NLS-2$
 		} else
@@ -122,7 +121,7 @@ public class SimpleViewerGenerator extends AbstractGalleryGenerator {
 		if (!show.getHideHeader()) {
 			varmap.put("name", BatchUtilities.encodeHTML(show.getName(), false)); //$NON-NLS-1$
 			String description = show.getDescription();
-			if (description != null && description.length() > 0)
+			if (description != null && !description.isEmpty())
 				varmap.put("description", //$NON-NLS-1$
 						show.getHtmlDescription() ? description
 								: BatchUtilities.encodeHTML(description, true));
@@ -207,34 +206,34 @@ public class SimpleViewerGenerator extends AbstractGalleryGenerator {
 		String text = ""; //$NON-NLS-1$
 		if (storyboard.getShowCaptions()) {
 			String caption = exhibit.getCaption();
-			if (caption != null && caption.length() > 0)
+			if (caption != null && !caption.isEmpty())
 				text = applyFont(caption, getShow().getCaptionFont(), 35f);
 		}
 		if (storyboard.getShowDescriptions()) {
 			String xml = ""; //$NON-NLS-1$
 			String description = exhibit.getDescription();
 			String exifdiv = getExifDiv(storyboard, exhibit, asset, "<single>"); //$NON-NLS-1$
-			if (description != null && description.length() > 0)
+			if (description != null && !description.isEmpty())
 				xml = exhibit.getHtmlDescription() ? BatchUtilities
 						.decodeHTML(description) : description;
 			if (exifdiv != null) {
-				if (xml.length() > 0)
+				if (!xml.isEmpty())
 					xml += "\n\n"; //$NON-NLS-1$
 				xml += exifdiv;
 			}
-			if (xml.length() > 0)
+			if (!xml.isEmpty())
 				xml = applyFont(xml, getShow().getDescriptionFont(), 35f);
-			if (text.length() > 0 && xml.length() > 0)
+			if (!text.isEmpty() && !xml.isEmpty())
 				text += '\n';
 			text += xml;
 		}
-		if (text.length() > 0)
+		if (!text.isEmpty())
 			varmap.put("image-title", "<![CDATA[" + text + "]]>"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		WebGalleryImpl show = getShow();
 		if (exhibit.getDownloadable() && original != null
 				&& !show.getHideDownload()) {
 			String downloadText = show.getDownloadText();
-			if (downloadText != null && downloadText.length() > 0)
+			if (downloadText != null && !downloadText.isEmpty())
 				varmap.put("downloaddiv", encodeURL(original)); //$NON-NLS-1$
 		}
 		varmap.put("bigimage", //$NON-NLS-1$
@@ -245,7 +244,7 @@ public class SimpleViewerGenerator extends AbstractGalleryGenerator {
 
 	private String applyFont(String text, Font_type font, float factor) {
 		String fontString = generateFont(font, factor);
-		if (fontString.length() > 0) {
+		if (!fontString.isEmpty()) {
 			text = fontString + text + "</font>"; //$NON-NLS-1$
 			if (fontString.indexOf("<i>") >= 0) //$NON-NLS-1$
 				text += "</i>"; //$NON-NLS-1$

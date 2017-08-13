@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Ij Plug-in
 Bundle-SymbolicName: ij
 Bundle-Version: 1.4.3
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: tools.jar,
  .
 Export-Package: ij,

@@ -22,9 +22,11 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import java.util.List;
 
+import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MenuDetectEvent;
@@ -51,13 +53,18 @@ import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.core.ISpellCheckingService.ISpellIncident;
 import com.bdaum.zoom.ui.internal.job.SpellCheckingJob;
 
-public class CheckedText extends Composite implements ISpellCheckingTarget,
-		PaintListener {
+public class CheckedText extends Composite implements ISpellCheckingTarget, PaintListener {
 	private static final int[] NOREDSEA = new int[0];
 	private StyledText control;
 	private int maxSuggestions = 10;
 	private int spellingOptions = ISpellCheckingService.KEYWORDOPTIONS;
 	private ISpellIncident[] incidents;
+	private FocusListener focusListener;
+	private String hint = ""; //$NON-NLS-1$
+	protected boolean hintShown;
+	protected Color originalTextColor;
+	private ListenerList<ModifyListener> modifyListeners;
+	private ListenerList<VerifyListener> verifyListeners;
 
 	public CheckedText(Composite parent, int style) {
 		this(parent, style, ISpellCheckingService.DESCRIPTIONOPTIONS);
@@ -68,14 +75,15 @@ public class CheckedText extends Composite implements ISpellCheckingTarget,
 		this.spellingOptions = spellingOptions;
 		control = new StyledText(this, style);
 		setLayout(new FillLayout());
-		if (spellingOptions != ISpellCheckingService.NOSPELLING)
-			control.addModifyListener(new ModifyListener() {
-
+		if (spellingOptions != ISpellCheckingService.NOSPELLING) {
+			ModifyListener modifyListener = new ModifyListener() {
 				public void modifyText(ModifyEvent e) {
-					if (control.getText().length() > 0)
+					if (!control.getText().isEmpty())
 						checkSpelling();
 				}
-			});
+			};
+			addModifyListener(modifyListener);
+		}
 		control.addPaintListener(this);
 		control.addMenuDetectListener(new MenuDetectListener() {
 
@@ -92,33 +100,21 @@ public class CheckedText extends Composite implements ISpellCheckingTarget,
 						for (ISpellIncident inc : incidents) {
 							final ISpellIncident incident = inc;
 							if (incident.happensAt(offset)) {
-								Menu menu = new Menu(control.getShell(),
-										SWT.POP_UP);
-								String[] suggestions = incident
-										.getSuggestions();
-								if (suggestions != null
-										&& suggestions.length > 0) {
+								Menu menu = new Menu(control.getShell(), SWT.POP_UP);
+								String[] suggestions = incident.getSuggestions();
+								if (suggestions != null && suggestions.length > 0) {
 									for (String proposal : suggestions) {
 										final String newWord = proposal;
-										MenuItem item = new MenuItem(menu,
-												SWT.PUSH);
+										MenuItem item = new MenuItem(menu, SWT.PUSH);
 										item.setText(proposal);
 										item.addSelectionListener(new SelectionAdapter() {
 											@Override
-											public void widgetSelected(
-													SelectionEvent e1) {
-												String oldText = control
-														.getText();
+											public void widgetSelected(SelectionEvent e1) {
+												String oldText = control.getText();
 												int woff = incident.getOffset();
-												int wlen = incident
-														.getWrongWord()
-														.length();
-												String newText = oldText
-														.substring(0, woff)
-														+ newWord
-														+ oldText
-																.substring(woff
-																		+ wlen);
+												int wlen = incident.getWrongWord().length();
+												String newText = oldText.substring(0, woff) + newWord
+														+ oldText.substring(woff + wlen);
 												control.setText(newText);
 											}
 										});
@@ -148,10 +144,73 @@ public class CheckedText extends Composite implements ISpellCheckingTarget,
 		});
 	}
 
+	public void setHint(String hint) {
+		if (hint == null)
+			SWT.error(SWT.ERROR_NULL_ARGUMENT);
+		this.hint = hint;
+		if (!hint.isEmpty()) {
+			focusListener = new FocusListener() {
+				@Override
+				public void focusLost(FocusEvent e) {
+					showHint();
+				}
+
+				@Override
+				public void focusGained(FocusEvent e) {
+					removeHint();
+				}
+			};
+			showHint();
+			control.addFocusListener(focusListener);
+		} else if (focusListener != null) {
+			control.removeFocusListener(focusListener);
+			removeHint();
+		}
+	}
+
+	protected void showHint() {
+		if (!hintShown) {
+			String text = control.getText();
+			if (text.isEmpty()) {
+				removeAllListeners();
+				originalTextColor = control.getForeground();
+				control.setForeground(control.getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW));
+				control.setText(hint);
+				hintShown = true;
+			}
+		}
+	}
+
+	protected void removeHint() {
+		if (hintShown) {
+			control.setForeground(originalTextColor);
+			control.setText(""); //$NON-NLS-1$
+			hintShown = false;
+			addAllListeners();
+		}
+	}
+
+	protected void addAllListeners() {
+		if (modifyListeners != null)
+			for (ModifyListener modifyListener : modifyListeners)
+				control.addModifyListener(modifyListener);
+		if (verifyListeners != null)
+			for (VerifyListener verifyListener : verifyListeners)
+				control.addVerifyListener(verifyListener);
+	}
+
+	protected void removeAllListeners() {
+		if (modifyListeners != null)
+			for (ModifyListener modifyListener : modifyListeners)
+				control.removeModifyListener(modifyListener);
+		if (verifyListeners != null)
+			for (VerifyListener verifyListener : verifyListeners)
+				control.removeVerifyListener(verifyListener);
+	}
+
 	void checkSpelling() {
 		Job.getJobManager().cancel(Constants.SPELLING);
-		new SpellCheckingJob(this, getText(), spellingOptions, maxSuggestions)
-				.schedule(10);
+		new SpellCheckingJob(this, getText(), spellingOptions, maxSuggestions).schedule(10);
 	}
 
 	/**
@@ -170,14 +229,18 @@ public class CheckedText extends Composite implements ISpellCheckingTarget,
 	}
 
 	public void addVerifyListener(VerifyListener listener) {
+		if (verifyListeners == null)
+			verifyListeners = new ListenerList<>();
+		verifyListeners.add(listener);
 		control.addVerifyListener(listener);
 	}
 
 	public void removeVerifyListener(VerifyListener listener) {
-		control.removeVerifyListener(listener);
+		if (verifyListeners != null) {
+			verifyListeners.remove(listener);
+			control.removeVerifyListener(listener);
+		}
 	}
-
-
 
 	@Override
 	public boolean setFocus() {
@@ -223,13 +286,10 @@ public class CheckedText extends Composite implements ISpellCheckingTarget,
 
 	public void setSpellIncidents(List<ISpellIncident> incidents) {
 		if (!control.isDisposed()) {
-			this.incidents = incidents.toArray(new ISpellIncident[incidents
-					.size()]);
-			control.getDisplay().asyncExec(new Runnable() {
-				public void run() {
-					if (!control.isDisposed())
-						control.redraw();
-				}
+			this.incidents = incidents.toArray(new ISpellIncident[incidents.size()]);
+			control.getDisplay().asyncExec(() -> {
+				if (!control.isDisposed())
+					control.redraw();
 			});
 		}
 	}
@@ -248,11 +308,9 @@ public class CheckedText extends Composite implements ISpellCheckingTarget,
 					if (offset >= 0 && offset < charCount) {
 						Point off1 = control.getLocationAtOffset(offset);
 						if (off1 != null) {
-							Point off2 = control.getLocationAtOffset(offset
-									+ incident.getWrongWord().length());
+							Point off2 = control.getLocationAtOffset(offset + incident.getWrongWord().length());
 							if (off2 != null)
-								e.gc.drawPolyline(computePolyline(off1, off2,
-										charHeight));
+								e.gc.drawPolyline(computePolyline(off1, off2, charHeight));
 						}
 					}
 				} catch (Exception ex) {
@@ -356,8 +414,7 @@ public class CheckedText extends Composite implements ISpellCheckingTarget,
 	 */
 	@Override
 	public int getBorderWidth() {
-		return control != null ? control.getBorderWidth() : super
-				.getBorderWidth();
+		return control != null ? control.getBorderWidth() : super.getBorderWidth();
 	}
 
 	/**
@@ -388,11 +445,17 @@ public class CheckedText extends Composite implements ISpellCheckingTarget,
 	}
 
 	public void addModifyListener(ModifyListener listener) {
+		if (modifyListeners == null)
+			modifyListeners = new ListenerList<>();
+		modifyListeners.add(listener);
 		control.addModifyListener(listener);
 	}
 
 	public void removeModifyListener(ModifyListener listener) {
-		control.removeModifyListener(listener);
+		if (modifyListeners != null) {
+			modifyListeners.remove(listener);
+			control.removeModifyListener(listener);
+		}
 	}
 
 	/**

@@ -24,14 +24,18 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.gps.widgets.messages"; //$NON-NLS-1$
+	public static String AbstractMapComponent_add_dir_marker;
 	public static String AbstractMapComponent_add_marker;
+	public static String AbstractMapComponent_cluster;
 	public static String AbstractMapComponent_create_new_location;
 	public static String AbstractMapComponent_drag_me;
 	public static String AbstractMapComponent_embedded_map;
 	public static String AbstractMapComponent_enable_JS;
 	public static String AbstractMapComponent_error_search;
 	public static String AbstractMapComponent_error_unpacking;
+	public static String AbstractMapComponent_et_al;
 	public static String AbstractMapComponent_explanation;
+	public static String AbstractMapComponent_geotagging_disabled;
 	public static String AbstractMapComponent_Init_failed;
 	public static String AbstractMapComponent_io_error_loading;
 	public static String AbstractMapComponent_location_not_found;

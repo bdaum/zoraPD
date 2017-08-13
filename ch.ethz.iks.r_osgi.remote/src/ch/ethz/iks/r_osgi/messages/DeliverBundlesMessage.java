@@ -76,7 +76,7 @@ public class DeliverBundlesMessage extends RemoteOSGiMessage {
 	/**
 	 * get the bytes of the dependency bundles.
 	 * 
-	 * @return
+	 * @return the bundle bytes.
 	 */
 	public byte[][] getDependencies() {
 		return bytes;

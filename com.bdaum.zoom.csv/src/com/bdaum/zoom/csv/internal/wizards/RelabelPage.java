@@ -79,7 +79,7 @@ public class RelabelPage extends ColoredWizardPage {
 			protected void setValue(Object element, Object value) {
 				if (element instanceof String) {
 					if (value instanceof String
-							&& ((String) value).length() > 0) {
+							&& !((String) value).isEmpty()) {
 						relabelMap.put((String) element, (String) value);
 					} else
 						relabelMap.remove(element);

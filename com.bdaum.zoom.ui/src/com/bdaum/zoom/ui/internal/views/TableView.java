@@ -187,7 +187,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 			event.width = thumbsize;
 			event.height = thumbsize;
 		}
-		
+
 		@Override
 		protected void erase(Event event, Object element) {
 			// do nothing
@@ -457,8 +457,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		props.add("$"); //$NON-NLS-1$
 		QueryField scoreField = QueryField.SCORE;
 		scoreColumn = createColumn(table, scoreField, Messages.getString("TableView.score"), 50, //$NON-NLS-1$
-				new MetaDataLabelProvider(
-						scoreField));
+				new MetaDataLabelProvider(scoreField));
 		props.add(scoreField.getKey());
 		StringTokenizer st = new StringTokenizer(
 				UiActivator.getDefault().getPreferenceStore().getString(PreferenceConstants.TABLECOLUMNS), "\n"); //$NON-NLS-1$
@@ -829,9 +828,8 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 			boolean invalid = CoreActivator.getDefault().resetInfrastructure(getAssetProvider(), assets, node);
 			Display display = shell.getDisplay();
 			if (assets == null || invalid) {
-				display.asyncExec(new Runnable() {
-
-					public void run() {
+				display.asyncExec(() -> {
+					if (!shell.isDisposed()) {
 						redrawCollection(assets, node);
 						if (selection instanceof AssetSelection) {
 							Object firstElement = ((AssetSelection) selection).getFirstElement();
@@ -841,17 +839,15 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 					}
 				});
 			} else if (node == null || affectsDisplayedFields(node)) {
-				display.asyncExec(new Runnable() {
-					public void run() {
+				display.asyncExec(() -> {
+					if (!shell.isDisposed())
 						for (Asset asset : assets)
 							gallery.update(asset, null);
-					}
 				});
 			}
-			display.asyncExec(new Runnable() {
-				public void run() {
+			display.asyncExec(() -> {
+				if (!shell.isDisposed())
 					updateActions();
-				}
 			});
 		}
 	}

@@ -65,18 +65,15 @@ public abstract class AbstractPerspective implements IPerspectiveFactory {
 	@Override
 	public void createInitialLayout(IPageLayout layout) {
 		final Display display = PlatformUI.getWorkbench().getDisplay();
-		display.timerExec(1000, new Runnable() {
-			@Override
-			public void run() {
-				if (!display.isDisposed()) {
-					IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-					if (activeWorkbenchWindow != null) {
-						IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-						for (String fastViewId : fastViews) {
-							IViewReference viewRef = activePage.findViewReference(fastViewId, null);
-							if (viewRef != null)
-								activePage.setPartState(viewRef, IWorkbenchPage.STATE_MINIMIZED);
-						}
+		display.timerExec(1000, () -> {
+			if (!display.isDisposed()) {
+				IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+				if (activeWorkbenchWindow != null) {
+					IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+					for (String fastViewId : fastViews) {
+						IViewReference viewRef = activePage.findViewReference(fastViewId, null);
+						if (viewRef != null)
+							activePage.setPartState(viewRef, IWorkbenchPage.STATE_MINIMIZED);
 					}
 				}
 			}

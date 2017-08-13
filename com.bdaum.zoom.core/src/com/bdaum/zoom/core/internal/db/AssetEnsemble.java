@@ -1189,9 +1189,9 @@ public class AssetEnsemble {
 				for (int j = 0; j < regions[i].length; j++) {
 					MWGRegion region = regions[i][j];
 					if (region != null) {
-						if (region.type == null || region.type.length() == 0)
+						if (region.type == null || region.type.isEmpty())
 							region.type = Region.type_face;
-						if (region.name != null && region.name.length() == 0)
+						if (region.name != null && region.name.isEmpty())
 							region.name = null;
 					}
 				}
@@ -1308,7 +1308,7 @@ public class AssetEnsemble {
 						return;
 				cContact.setAddress(Utilities.addToStringArray(v, address, false));
 			} else if (qfield == QueryField.COLORCODE) {
-				if (v.length() == 0)
+				if (v.isEmpty())
 					return;
 				try {
 					asset.setColorCode(Integer.parseInt(v));
@@ -1336,22 +1336,22 @@ public class AssetEnsemble {
 								: Boolean.FALSE;
 						break;
 					case QueryField.T_POSITIVEINTEGER:
-						if (v.length() == 0)
+						if (v.isEmpty())
 							return;
 						arg = qfield.parseInt(v, -1);
 						break;
 					case QueryField.T_INTEGER:
-						if (v.length() == 0)
+						if (v.isEmpty())
 							return;
 						arg = qfield.parseInt(v, 0);
 						break;
 					case QueryField.T_POSITIVELONG:
-						if (v.length() == 0)
+						if (v.isEmpty())
 							return;
 						arg = QueryField.parseLong(v, -1L);
 						break;
 					case QueryField.T_LONG:
-						if (v.length() == 0)
+						if (v.isEmpty())
 							return;
 						arg = QueryField.parseLong(v, 0L);
 						break;
@@ -1359,12 +1359,12 @@ public class AssetEnsemble {
 					case QueryField.T_FLOAT:
 					case QueryField.T_CURRENCY:
 					case QueryField.T_FLOATB:
-						if (v.length() == 0)
+						if (v.isEmpty())
 							return;
 						arg = QueryField.parseDouble(v);
 						break;
 					case QueryField.T_DATE:
-						if (v.length() == 0)
+						if (v.isEmpty())
 							return;
 						arg = QueryField.parseDate(v);
 						break;

@@ -52,7 +52,7 @@ public class MakerSupport {
 						.getExifToolKey());
 				String height = metadata.get(QueryField.EXIF_IMAGEHEIGHT
 						.getExifToolKey());
-				if (facePositions != null && facePositions.length() > 0
+				if (facePositions != null && !facePositions.isEmpty()
 						&& width != null && height != null) {
 					int imageWidth = Integer.parseInt(width);
 					int imageHeight = Integer.parseInt(height);
@@ -109,7 +109,7 @@ public class MakerSupport {
 								"RecognizedFace{0}Position", j)); //$NON-NLS-1$
 						String age = metadata.get(NLS.bind(
 								"RecognizedFace{0}Age", j)); //$NON-NLS-1$
-						if (name != null && name.length() > 0 && region != null
+						if (name != null && !name.isEmpty() && region != null
 								&& age != null && !age.startsWith("9999:")) //$NON-NLS-1$
 							faceMap.put(region, name);
 					}
@@ -177,7 +177,7 @@ public class MakerSupport {
 					List<String> facesDetected = Core.fromStringList(
 							numPositions, " "); //$NON-NLS-1$
 					boolean newModels = facesDetected.size() > 2;
-					if (facesDetected.size() > 0)
+					if (!facesDetected.isEmpty())
 						try {
 							n = Integer.parseInt(facesDetected.get(0));
 						} catch (NumberFormatException e) {

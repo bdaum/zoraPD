@@ -3188,16 +3188,16 @@ public class Asset_typeImpl extends AomObject implements Asset_type {
 		return gPSDestBearing;
 	}
 
-	/* *** Property gPSDestDistance(unit=kmh) *** */
+	/* *** Property gPSDestDistance(unit=km) *** */
 
-	public static final String gPSDestDistance__unit = "kmh";
+	public static final String gPSDestDistance__unit = "km";
 
 	private double gPSDestDistance;
 
 	/**
 	 * Set value of property gPSDestDistance
 	 *
-	 * @param _value - new field value(unit=kmh)
+	 * @param _value - new field value(unit=km)
 	 */
 	public void setGPSDestDistance(double _value) {
 		gPSDestDistance = _value;
@@ -3206,7 +3206,7 @@ public class Asset_typeImpl extends AomObject implements Asset_type {
 	/**
 	 * Get value of property gPSDestDistance
 	 *
-	 * @return - value of field gPSDestDistance(unit=kmh)
+	 * @return - value of field gPSDestDistance(unit=km)
 	 */
 	public double getGPSDestDistance() {
 		return gPSDestDistance;

@@ -41,23 +41,19 @@ public abstract class PrepareDataJob extends Job implements DisposeListener {
 
 	@Override
 	protected IStatus run(IProgressMonitor monitor) {
-		asyncExec(new Runnable() {
-			public void run() {
-				if (!control.isDisposed()) {
-					control.addDisposeListener(PrepareDataJob.this);
-					control.setCursor(control.getDisplay().getSystemCursor(
-							SWT.CURSOR_APPSTARTING));
-				}
+		asyncExec(() -> {
+			if (!control.isDisposed()) {
+				control.addDisposeListener(PrepareDataJob.this);
+				control.setCursor(control.getDisplay().getSystemCursor(
+						SWT.CURSOR_APPSTARTING));
 			}
 		});
 		doRun(monitor);
-		asyncExec(new Runnable() {
-			public void run() {
-				if (!control.isDisposed()) {
-					control.removeDisposeListener(PrepareDataJob.this);
-					control.setCursor(control.getDisplay().getSystemCursor(
-							SWT.CURSOR_ARROW));
-				}
+		asyncExec(() -> {
+			if (!control.isDisposed()) {
+				control.removeDisposeListener(PrepareDataJob.this);
+				control.setCursor(control.getDisplay().getSystemCursor(
+						SWT.CURSOR_ARROW));
 			}
 		});
 		return Status.OK_STATUS;

@@ -84,7 +84,7 @@ public class ImageGalleryGenerator extends AbstractGalleryGenerator {
 		varmap.put("thumbnail", encodeURL(thumbnail)); //$NON-NLS-1$
 		StringBuilder sb = new StringBuilder();
 		if (storyboard.getShowCaptions() && exhibit.getCaption() != null
-				&& exhibit.getCaption().length() > 0) {
+				&& !exhibit.getCaption().isEmpty()) {
 			String c = exhibit.getCaption();
 			sb.append(BatchUtilities.encodeXML(c, -1));
 			varmap.put("caption", BatchUtilities.encodeXML(c, 1)); //$NON-NLS-1$
@@ -92,7 +92,7 @@ public class ImageGalleryGenerator extends AbstractGalleryGenerator {
 			varmap.put("caption", "&nbsp;"); //$NON-NLS-1$ //$NON-NLS-2$
 		if (storyboard.getShowDescriptions()
 				&& exhibit.getDescription() != null
-				&& exhibit.getDescription().length() > 0) {
+				&& !exhibit.getDescription().isEmpty()) {
 			if (sb.length() > 0)
 				sb.append("&#13;"); //$NON-NLS-1$
 			String des = exhibit.getDescription();
@@ -163,7 +163,7 @@ public class ImageGalleryGenerator extends AbstractGalleryGenerator {
 		if (!show.getHideHeader()) {
 			varmap.put("name", BatchUtilities.encodeHTML(show.getName(), false)); //$NON-NLS-1$
 			String description = show.getDescription();
-			if (description != null && description.length() > 0) {
+			if (description != null && !description.isEmpty()) {
 				String d = show.getHtmlDescription() ? description
 						: BatchUtilities.encodeHTML(description, true);
 				varmap.put("description", d); //$NON-NLS-1$
@@ -207,9 +207,8 @@ public class ImageGalleryGenerator extends AbstractGalleryGenerator {
 		for (int i = 0; i < templates.length; i++) {
 			String name = templates[i].getName();
 			if (name.equals("gallery.html") && pageName != null //$NON-NLS-1$
-					&& pageName.length() > 0) {
+					&& !pageName.isEmpty())
 				name = pageName;
-			}
 			names[i] = name;
 		}
 		return names;

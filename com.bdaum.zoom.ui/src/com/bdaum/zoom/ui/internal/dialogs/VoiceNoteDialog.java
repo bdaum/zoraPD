@@ -39,6 +39,7 @@ import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -55,25 +56,28 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.audio.AudioCapture;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
+import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
-import com.bdaum.zoom.ui.internal.widgets.ZDialog;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class VoiceNoteDialog extends ZDialog {
+public class VoiceNoteDialog extends ZTitleAreaDialog {
 
 	private static final int CHANNELS = 1;
 	private static final int RECORD = 0;
 	private static final int STOP = 1;
 	private static final int IMPORT = 2;
+	private static final int NOTE = 3;
+	private static final int DELETE = 4;
+	private static final int CANCEL = 5;
 	private static final String SETTINGSID = "com.bdaum.zoom.addVoiceNote"; //$NON-NLS-1$
 	private static final String SOUNDFILE = "soundFile"; //$NON-NLS-1$
 	private static final String REPLAY = "replay"; //$NON-NLS-1$
-	private static final int DELETE = 3;
 	private Button stopButton;
 	private Button recordButton;
 	private Button importButton;
@@ -86,18 +90,41 @@ public class VoiceNoteDialog extends ZDialog {
 	private boolean replay = true;
 	private File outputFile;
 	private String targetUri;
-	private boolean delete;
+	private boolean existingVoiceNotes;
 	private Button deleteButton;
 	private boolean deleteVoiceNote;
 	private boolean remote;
 	private boolean replaying;
+	private Button noteButton;
+	private StackLayout stackLayout;
+	private Composite voiceComp;
+	private Composite noteComp;
+	private CheckedText note;
+	private Composite stack;
+	private String noteText;
+	private Button cancelButton;
+	private boolean textNotes;
+	private boolean multi;
+	private boolean mixed;
 
-	public VoiceNoteDialog(Shell parentShell, List<Asset> assets) {
+	public VoiceNoteDialog(Shell parentShell, List<Asset> assets, boolean textNotes) {
 		super(parentShell);
+		this.textNotes = textNotes;
 		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
+		multi = assets.size() > 1;
 		for (Asset asset : assets) {
+			if (!mixed) {
+				String voiceFileURI = asset.getVoiceFileURI();
+				if (voiceFileURI != null && voiceFileURI.startsWith("?")) { //$NON-NLS-1$
+					if (noteText == null)
+						noteText = voiceFileURI;
+					else if (!noteText.equals(voiceFileURI))
+						mixed = true;
+					continue;
+				}
+			}
 			if (volumeManager.findVoiceFile(asset) != null)
-				delete = true;
+				existingVoiceNotes = true;
 			if (volumeManager.findExistingFile(asset, true) == null)
 				remote = true;
 		}
@@ -107,7 +134,8 @@ public class VoiceNoteDialog extends ZDialog {
 	public void create() {
 		super.create();
 		fillValues();
-		getShell().setText(Messages.VoiceNoteDialog_add_voice_note);
+		setTitle(Messages.VoiceNoteDialog_add_voice_note);
+		setMessage(textNotes ? Messages.VoiceNoteDialog_voice_note_msg : Messages.VoiceNoteDialog_voice_text_note_msg);
 	}
 
 	private void fillValues() {
@@ -119,41 +147,70 @@ public class VoiceNoteDialog extends ZDialog {
 			// ignore
 		}
 		recordButton.setSelection(replay);
+		if (noteText != null && textNotes) {
+			if (mixed) {
+				note.setHint(Messages.VoiceNoteDialog_mixed_contents);
+				cancelButton.setFocus();
+			} else {
+				note.setText(noteText.substring(1));
+			}
+			stackLayout.topControl = noteComp;
+			stack.layout(true, true);
+			noteButton.setEnabled(false);
+		} else {
+			stackLayout.topControl = voiceComp;
+			stack.layout(true, true);
+		}
 	}
 
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
-		if (delete) {
+		if (existingVoiceNotes) {
 			deleteButton = createButton(parent, DELETE, "", true); //$NON-NLS-1$
-			deleteButton.setImage(Icons.delete32.getImage());
-			deleteButton
-					.setToolTipText(Messages.VoiceNoteDialog_delete_voicenote);
+			deleteButton.setImage(Icons.trash32.getImage());
+			deleteButton.setToolTipText(Messages.VoiceNoteDialog_delete_voicenote);
 		}
 		recordButton = createButton(parent, RECORD, "", true); //$NON-NLS-1$
 		recordButton.setImage(Icons.record.getImage());
-		recordButton
-				.setToolTipText(Messages.VoiceNoteDialog_record_instant_note);
+		recordButton.setToolTipText(Messages.VoiceNoteDialog_record_instant_note);
 		stopButton = createButton(parent, STOP, "", true); //$NON-NLS-1$
 		stopButton.setImage(Icons.stop.getImage());
-		stopButton
-				.setToolTipText(Messages.VoiceNoteDialog_stop_recording_cancel);
+		stopButton.setToolTipText(Messages.VoiceNoteDialog_stop_recording_cancel);
 		importButton = createButton(parent, IMPORT, "", true); //$NON-NLS-1$
 		importButton.setImage(Icons.folder32.getImage());
 		importButton.setToolTipText(Messages.VoiceNoteDialog_attach_voice_note);
+		if (textNotes) {
+			noteButton = createButton(parent, NOTE, "", true); //$NON-NLS-1$
+			noteButton.setImage(Icons.note32.getImage());
+			noteButton.setToolTipText(Messages.VoiceNoteDialog_enter_text);
+		}
+		cancelButton = createButton(parent, CANCEL, "", true); //$NON-NLS-1$
+		cancelButton.setImage(Icons.cancel32.getImage());
+		cancelButton.setToolTipText(Messages.VoiceNoteDialog_cancel);
 	}
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-		Composite comp = new Composite(area, SWT.NONE);
-		comp.setLayout(new GridLayout());
-		comp.setLayoutData(new GridData(GridData.FILL_BOTH));
-
-		text = new Label(comp, SWT.READ_ONLY | SWT.BORDER);
+		stack = new Composite(area, SWT.NONE);
+		stack.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		stackLayout = new StackLayout();
+		stack.setLayout(stackLayout);
+		voiceComp = new Composite(stack, SWT.NONE);
+		voiceComp.setLayout(new GridLayout());
+		text = new Label(voiceComp, SWT.READ_ONLY | SWT.BORDER);
 		text.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		text.setText(Messages.VoiceNoteDialog_ready);
-		replayButton = WidgetFactory.createCheckButton(comp,
-				Messages.VoiceNoteDialog_replay_Recording, null);
+		replayButton = WidgetFactory.createCheckButton(voiceComp, Messages.VoiceNoteDialog_replay_Recording, null);
+		noteComp = new Composite(stack, SWT.NONE);
+		noteComp.setLayout(new GridLayout());
+		if (textNotes) {
+			new Label(noteComp, SWT.NONE).setText(Messages.VoiceNoteDialog_text_note);
+			note = new CheckedText(noteComp, SWT.MULTI | SWT.VERTICAL | SWT.WRAP);
+			GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
+			layoutData.heightHint = 120;
+			note.setLayoutData(layoutData);
+		}
 		return area;
 	}
 
@@ -162,70 +219,64 @@ public class VoiceNoteDialog extends ZDialog {
 		switch (buttonId) {
 		case DELETE:
 			deleteVoiceNote = true;
-			close();
+			noteText = null;
+			okPressed();
 			break;
 		case RECORD:
+			if (askOverwrite(buttonId))
+				break;
+			noteText = null;
+			stackLayout.topControl = voiceComp;
+			stack.layout(true, true);
 			recordButton.setEnabled(false);
 			importButton.setEnabled(false);
+			if (noteButton != null)
+				noteButton.setEnabled(true);
 			try {
 				record();
 			} catch (LineUnavailableException e1) {
-				UiActivator.getDefault().logError(
-						Messages.VoiceNoteDialog_cannot_record, e1);
+				UiActivator.getDefault().logError(Messages.VoiceNoteDialog_cannot_record, e1);
 				recordButton.setEnabled(true);
 				importButton.setEnabled(true);
 				return;
 			}
 			text.setText(Messages.VoiceNoteDialog_recording);
-			recordJob = new Daemon(Messages.VoiceNoteDialog_record_voicenote,
-					1000L) {
+			recordJob = new Daemon(Messages.VoiceNoteDialog_record_voicenote, 1000L) {
 				private int seconds = 0;
 
 				@Override
 				protected void doRun(IProgressMonitor monitor) {
 					++seconds;
 					if (!text.isDisposed())
-						text.getDisplay().asyncExec(new Runnable() {
-							public void run() {
-								if (!text.isDisposed())
-									text.setText(NLS
-											.bind(Messages.VoiceNoteDialog_recording_n_secs,
-													seconds));
-							}
+						text.getDisplay().asyncExec(() -> {
+							if (!text.isDisposed())
+								text.setText(NLS.bind(Messages.VoiceNoteDialog_recording_n_secs, seconds));
 						});
 				}
 			};
 			recordJob.schedule(1000L);
 			break;
 		case STOP:
-			if (replaying)
-				UiActivator.getDefault().stopAudio();
-			else {
-				if (recorder != null)
-					recorder.stopCapture();
-				if (recordJob != null)
-					Job.getJobManager().cancel(recordJob);
+			stopAudio();
+			if (!replaying)
 				saveAndClose();
-			}
 			break;
 		case IMPORT:
-			if (askOverwrite())
+			if (askOverwrite(buttonId))
 				break;
-			IDialogSettings settings = UiActivator.getDefault()
-					.getDialogSettings(SETTINGSID);
+			stackLayout.topControl = voiceComp;
+			stack.layout(true, true);
 			String file = openFileDialog(settings, SWT.OPEN);
 			if (file != null) {
+				noteText = null;
+				IDialogSettings settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
 				settings.put(SOUNDFILE, file);
 				try {
-					settings.save(UiActivator.getDefault().getStateLocation()
-							.toString()
-							+ "/dialog_settings.xml"); //$NON-NLS-1$
+					settings.save(UiActivator.getDefault().getStateLocation().toString() + "/dialog_settings.xml"); //$NON-NLS-1$
 				} catch (IllegalStateException e) {
-					UiActivator.getDefault().logError(
-							Messages.VoiceNoteDialog_internal_error_writing, e);
+					UiActivator.getDefault().logError(Messages.VoiceNoteDialog_internal_error_writing, e);
 				} catch (IOException e) {
-					UiActivator.getDefault().logError(
-							Messages.VoiceNoteDialog_io_error_writing, e);
+					UiActivator.getDefault().logError(Messages.VoiceNoteDialog_io_error_writing, e);
 				}
 				outputFile = new File(file);
 				sourceUri = outputFile.toURI().toString();
@@ -233,37 +284,64 @@ public class VoiceNoteDialog extends ZDialog {
 				saveAndClose();
 			}
 			break;
+		case NOTE:
+			if (askOverwrite(buttonId))
+				break;
+			stopAudio();
+			noteButton.setEnabled(false);
+			stackLayout.topControl = noteComp;
+			stack.layout(true, true);
+			break;
+		case CANCEL:
+			stopAudio();
+			cancelPressed();
+			break;
+		}
+	}
+
+	protected void stopAudio() {
+		if (replaying)
+			UiActivator.getDefault().stopAudio();
+		else {
+			if (recorder != null)
+				recorder.stopCapture();
+			if (recordJob != null)
+				Job.getJobManager().cancel(recordJob);
+
 		}
 	}
 
 	private void saveAndClose() {
-		replay = replayButton.getSelection();
-		settings.put(REPLAY, replay);
-		if (replay && outputFile != null && outputFile.exists()) {
-			if (deleteButton != null)
-				deleteButton.setEnabled(false);
-			recordButton.setEnabled(false);
-			importButton.setEnabled(false);
-			replayButton.setEnabled(false);
-			replaying = true;
-			try {
-				UiActivator.getDefault().playSoundfile(
-						outputFile.toURI().toURL(), new Runnable() {
-							public void run() {
-								replayButton.getDisplay().asyncExec(
-										new Runnable() {
-											public void run() {
-												close();
-											}
-										});
-							}
-						});
-				return;
-			} catch (MalformedURLException e) {
-				// should not happen
+		if (stackLayout.topControl == voiceComp) {
+			noteText = null;
+			replay = replayButton.getSelection();
+			settings.put(REPLAY, replay);
+			if (replay && outputFile != null && outputFile.exists()) {
+				if (deleteButton != null)
+					deleteButton.setEnabled(false);
+				recordButton.setEnabled(false);
+				importButton.setEnabled(false);
+				replayButton.setEnabled(false);
+				replaying = true;
+				try {
+					UiActivator.getDefault().playSoundfile(outputFile.toURI().toURL(),
+							() -> replayButton.getDisplay().asyncExec(() -> {
+								if (!replayButton.isDisposed())
+									okPressed();
+							}));
+					return;
+				} catch (MalformedURLException e) {
+					// should not happen
+				}
 			}
+		} else {
+			if (mixed) {
+				cancelPressed();
+				return;
+			}
+			noteText = '?' + note.getText();
 		}
-		close();
+		okPressed();
 	}
 
 	private String openFileDialog(IDialogSettings settings, int style) {
@@ -282,24 +360,14 @@ public class VoiceNoteDialog extends ZDialog {
 	}
 
 	private void record() throws LineUnavailableException {
-		if (delete) {
-			if (askOverwrite())
-				return;
-		}
 		if (remote) {
-			boolean r = AcousticMessageDialog
-					.openQuestion(
-							getShell(),
-							Messages.VoiceNoteDialog_add_voice_file,
-							Messages.VoiceNoteDialog_the_voice_file_cannot_be_stored_alongside);
-			if (r) {
-				IDialogSettings settings = UiActivator.getDefault()
-						.getDialogSettings(SETTINGSID);
+			if (AcousticMessageDialog.openQuestion(getShell(), Messages.VoiceNoteDialog_add_voice_file,
+					Messages.VoiceNoteDialog_the_voice_file_cannot_be_stored_alongside)) {
+				IDialogSettings settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
 				String file = openFileDialog(settings, SWT.SAVE);
 				if (file != null) {
 					try {
-						outputFile = ImageActivator.getDefault()
-								.createTempFile("Voice", ".wav"); //$NON-NLS-1$ //$NON-NLS-2$
+						outputFile = ImageActivator.getDefault().createTempFile("Voice", ".wav"); //$NON-NLS-1$ //$NON-NLS-2$
 						sourceUri = outputFile.toURI().toString();
 						outputFile.delete();
 						targetUri = new File(file).toURI().toString();
@@ -310,29 +378,22 @@ public class VoiceNoteDialog extends ZDialog {
 			}
 		} else {
 			try {
-				outputFile = ImageActivator.getDefault().createTempFile(
-						"Voice", ".wav"); //$NON-NLS-1$ //$NON-NLS-2$
+				outputFile = ImageActivator.getDefault().createTempFile("Voice", ".wav"); //$NON-NLS-1$ //$NON-NLS-2$
 				sourceUri = outputFile.toURI().toString();
 				targetUri = "."; //$NON-NLS-1$
 				outputFile.delete();
-
 			} catch (IOException e) {
 				return;
 			}
 		}
-		IPreferencesService preferencesService = Platform
-				.getPreferencesService();
-		float samplingRate = (float) preferencesService.getDouble(
-				UiActivator.PLUGIN_ID, PreferenceConstants.AUDIOSAMPLINGRATE,
-				PreferenceConstants.AUDIO22KHZ, null);
-		int bitDepth = preferencesService.getInt(UiActivator.PLUGIN_ID,
-				PreferenceConstants.AUDIOBITDEPTH,
+		IPreferencesService preferencesService = Platform.getPreferencesService();
+		float samplingRate = (float) preferencesService.getDouble(UiActivator.PLUGIN_ID,
+				PreferenceConstants.AUDIOSAMPLINGRATE, PreferenceConstants.AUDIO22KHZ, null);
+		int bitDepth = preferencesService.getInt(UiActivator.PLUGIN_ID, PreferenceConstants.AUDIOBITDEPTH,
 				PreferenceConstants.AUDIO8BIT, null);
-		AudioFormat audioFormat = new AudioFormat(
-				AudioFormat.Encoding.PCM_SIGNED, samplingRate, bitDepth,
-				CHANNELS, ((bitDepth + 7) / 8) * CHANNELS, samplingRate, false);
-		DataLine.Info info = new DataLine.Info(TargetDataLine.class,
-				audioFormat);
+		AudioFormat audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, samplingRate, bitDepth, CHANNELS,
+				((bitDepth + 7) / 8) * CHANNELS, samplingRate, false);
+		DataLine.Info info = new DataLine.Info(TargetDataLine.class, audioFormat);
 		TargetDataLine targetDataLine = null;
 		targetDataLine = (TargetDataLine) AudioSystem.getLine(info);
 		targetDataLine.open(audioFormat);
@@ -341,17 +402,13 @@ public class VoiceNoteDialog extends ZDialog {
 		recorder.startCapture();
 	}
 
-	public boolean askOverwrite() {
-		if (delete) {
-			boolean r = AcousticMessageDialog.openQuestion(getShell(),
-					Messages.VoiceNoteDialog_add_voice_file,
-					Messages.VoiceNoteDialog_voice_notes_exist);
-			if (!r) {
-				close();
-				return true;
-			}
-		}
-		return false;
+	public boolean askOverwrite(int buttonId) {
+		String t = null;
+		if (note != null && buttonId != NOTE)
+			t = note.getText();
+		return ((t != null || existingVoiceNotes) && !AcousticMessageDialog.openQuestion(getShell(),
+				Messages.VoiceNoteDialog_add_voice_file,
+				multi ? Messages.VoiceNoteDialog_voice_notes_exist : Messages.VoiceNoteDialog_overwrite_single));
 	}
 
 	public String getSourceUri() {
@@ -367,6 +424,10 @@ public class VoiceNoteDialog extends ZDialog {
 	 */
 	public boolean isDeleteVoiceNote() {
 		return deleteVoiceNote;
+	}
+
+	public String getNoteText() {
+		return noteText;
 	}
 
 }

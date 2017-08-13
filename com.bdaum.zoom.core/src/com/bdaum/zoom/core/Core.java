@@ -19,6 +19,8 @@
  */
 package com.bdaum.zoom.core;
 
+import java.awt.geom.Point2D;
+import java.awt.geom.Point2D.Double;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -56,6 +58,7 @@ import com.bdaum.zoom.program.BatchUtilities;
 @SuppressWarnings("restriction")
 public class Core {
 
+	private static final double EARTHRADIUS = 6371.01;
 	private static final String XMP = ".xmp"; //$NON-NLS-1$
 	private static final ICore core = CoreActivator.getDefault();
 	private static final URI[] EMPTYURIS = new URI[0];
@@ -153,13 +156,6 @@ public class Core {
 					++offset;
 				result.add(new String(chars, offset, l - offset));
 			}
-
-			// StringTokenizer st = new StringTokenizer(stringlist, seps);
-			// while (st.hasMoreTokens()) {
-			// String token = st.nextToken().trim();
-			// if (token.length() > 0)
-			// result.add(token);
-			// }
 		}
 		return result;
 	}
@@ -170,8 +166,7 @@ public class Core {
 	 *
 	 * South latitudes are negative, east longitudes are positive
 	 *
-	 * Based on algorithm from Hexa Software Development Center. All Rights
-	 * Reserved 2004
+	 * Source: https://software.intel.com/node/341473
 	 *
 	 * @param lat1
 	 *            - Latitude of point 1 (in decimal degrees)
@@ -186,50 +181,30 @@ public class Core {
 	 *            kilometers, 'N' is nautical miles
 	 * @return distance
 	 */
+
 	public static double distance(double lat1, double lon1, double lat2, double lon2, char unit) {
-		double theta = lon1 - lon2;
-		double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2))
-				+ Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
-		dist = Math.acos(dist);
-		dist = rad2deg(dist);
-		dist *= 69.09; // 60 * 1.1515
+		double phi1 = Math.toRadians(lat1);
+		double phi2 = Math.toRadians(lat2);
+		double lam1 = Math.toRadians(lon1);
+		double lam2 = Math.toRadians(lon2);
+		double dist = EARTHRADIUS
+				* Math.acos(Math.sin(phi1) * Math.sin(phi2) + Math.cos(phi1) * Math.cos(phi2) * Math.cos(lam2 - lam1));
 		switch (unit) {
 		case 'K':
 		case 'k':
-			return dist * 1.609344;
+			return dist;
 		case 'N':
 		case 'n':
-			return dist * 0.8684;
+			return dist / 1.852;
 		default:
-			return dist;
+			return dist / 1.609344;
 		}
 	}
 
 	/**
-	 * This function converts decimal degrees to radians
-	 *
-	 * @param deg
-	 *            - decimal degrees
-	 * @return radians
-	 */
-	public static double deg2rad(double deg) {
-		return (deg * Math.PI / 180.0);
-	}
-
-	/**
-	 * This function converts radians to decimal degrees
-	 *
-	 * @param rad
-	 *            - radians
-	 * @return - decimal degrees
-	 */
-	public static double rad2deg(double rad) {
-		return (rad * 180 / Math.PI);
-	}
-
-	/**
-	 * This routine calculates the initial bearing between two points
-	 *
+	 * This routine calculates the initial bearing between two points Source:
+	 * https://software.intel.com/en-us/blogs/2012/11/30/calculating-a-bearing-between-points-in-location-aware-apps
+	 * 
 	 * @param lat1
 	 *            - Latitude of point 1 (in decimal degrees)
 	 * @param lon1
@@ -240,16 +215,62 @@ public class Core {
 	 *            - Longitude of point 2 (in decimal degrees)
 	 * @return bearing in degrees
 	 */
+
 	public static double bearing(double lat1, double lon1, double lat2, double lon2) {
-		double d = distance(lat1, lon1, lat2, lon2, 'N') / 60d;
-		double c = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) + Math.cos(d);
-		double q = Math.sin(d) * Math.cos(deg2rad(lat1));
-		if (q == 0d)
-			return 90;
-		c = rad2deg(Math.acos(c / q));
-		while (c < 0d)
-			c += 360d;
-		return c;
+		double phi1 = Math.toRadians(lat1);
+		double phi2 = Math.toRadians(lat2);
+		double lam1 = Math.toRadians(lon1);
+		double lam2 = Math.toRadians(lon2);
+		double angle = Math.atan2(Math.sin(lam2 - lam1) * Math.cos(phi2),
+				Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(lam2 - lam1));
+		return (Math.toDegrees(angle) + 360.0) % 360;
+	}
+
+	/**
+	 * This routine calculates the distance between two points (given the
+	 * latitude/longitude of those points).
+	 *
+	 * South latitudes are negative, east longitudes are positive
+	 *
+	 * Source: https://software.intel.com/node/341473
+	 *
+	 * @param lat1
+	 *            - Latitude of point 1 (in decimal degrees)
+	 * @param lon1
+	 *            - Longitude of point 1 (in decimal degrees)
+	 * @param lat2
+	 *            - Latitude of point 2 (in decimal degrees)
+	 * @param lon2
+	 *            - Longitude of point 2 (in decimal degrees)
+	 * @param unit
+	 *            - the unit for results: 'M' is statute miles, 'K' is
+	 *            kilometers, 'N' is nautical miles
+	 * @return distance
+	 */
+
+	public static Double coord(double lat1, double lon1, double bearing, double distance, char unit) {
+		double dist;
+		switch (unit) {
+		case 'K':
+		case 'k':
+			dist = distance;
+			break;
+		case 'N':
+		case 'n':
+			dist = distance * 1.852;
+			break;
+		default:
+			dist = distance * 1.609344;
+		}
+		double brg = Math.toRadians(bearing);
+		dist = dist / EARTHRADIUS;
+		double lat2 = Math.asin(Math.sin(lat1) * Math.cos(dist) + Math.cos(lat1) * Math.sin(dist) * Math.cos(brg));
+		double lon2 = lon1 + Math.atan2(Math.sin(brg) * Math.sin(dist) * Math.cos(lat1),
+				Math.cos(dist) - Math.sin(lat1) * Math.sin(lat2));
+		lat2 = Math.toDegrees(lat2);
+		lon2 = Math.toDegrees(lon2);
+		lon2 = (lon2 +540) % 360 - 180;
+		return new Point2D.Double(lat2, lon2);
 	}
 
 	/** File utilities **/
@@ -421,7 +442,7 @@ public class Core {
 	 */
 	public static String getFileExtension(String uri) {
 		String fileExtension = BatchUtilities.getTrueFileExtension(uri);
-		return (fileExtension.length() > 0) ? fileExtension.toLowerCase() : ImageUtilities.detectImageFormat(uri);
+		return fileExtension.isEmpty() ? ImageUtilities.detectImageFormat(uri) : fileExtension.toLowerCase() ;
 	}
 
 	/**

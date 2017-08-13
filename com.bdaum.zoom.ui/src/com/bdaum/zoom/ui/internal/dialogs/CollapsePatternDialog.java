@@ -125,9 +125,9 @@ public class CollapsePatternDialog extends ZTitleAreaDialog {
 	private boolean validate() {
 		String errorMessage = null;
 		String pattern = patternField.getText();
-		if (pattern.length() == 0 && !stackButton.getSelection())
+		if (pattern.isEmpty() && !stackButton.getSelection())
 			errorMessage = Messages.CollapsePatternDialog_specify_pattern;
-		else if (pattern.length() > 0) {
+		else if (!pattern.isEmpty()) {
 			errorMessage = Messages.CollapsePatternDialog_no_relevant_parts;
 			int pos = 0;
 			while (true) {
@@ -179,7 +179,7 @@ public class CollapsePatternDialog extends ZTitleAreaDialog {
 		stack = stackButton.getSelection();
 		dialogSettings.put(NOSTACK, !stack);
 		if (stack)
-			pattern = pattern.length() > 0 ? UiConstants.STACKPATTERN + ';' + pattern : UiConstants.STACKPATTERN;
+			pattern = pattern.isEmpty() ?  UiConstants.STACKPATTERN : UiConstants.STACKPATTERN + ';' + pattern;
 		super.okPressed();
 	}
 

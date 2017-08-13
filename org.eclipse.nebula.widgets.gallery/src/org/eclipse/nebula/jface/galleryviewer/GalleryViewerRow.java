@@ -51,7 +51,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#clone()
 	 */
-	@Override
 	public Object clone() {
 		return new GalleryViewerRow(item);
 	}
@@ -61,7 +60,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getBackground(int)
 	 */
-	@Override
 	public Color getBackground(int columnIndex) {
 		// XXX: should this use getBackgroundColor() instead?
 		return item.getBackground();
@@ -72,7 +70,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getBounds()
 	 */
-	@Override
 	public Rectangle getBounds() {
 		return item.getBounds();
 	}
@@ -82,7 +79,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getBounds(int)
 	 */
-	@Override
 	public Rectangle getBounds(int columnIndex) {
 		return item.getBounds();
 	}
@@ -92,7 +88,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getColumnCount()
 	 */
-	@Override
 	public int getColumnCount() {
 		return 0;
 	}
@@ -102,7 +97,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getControl()
 	 */
-	@Override
 	public Control getControl() {
 		return item.getParent();
 	}
@@ -112,7 +106,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getElement()
 	 */
-	@Override
 	public Object getElement() {
 		return item.getData();
 	}
@@ -122,7 +115,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getFont(int)
 	 */
-	@Override
 	public Font getFont(int columnIndex) {
 		return item.getFont();
 	}
@@ -132,7 +124,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getForeground(int)
 	 */
-	@Override
 	public Color getForeground(int columnIndex) {
 		return item.getForeground();
 	}
@@ -142,7 +133,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getImage(int)
 	 */
-	@Override
 	public Image getImage(int columnIndex) {
 		return item.getImage();
 	}
@@ -152,7 +142,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getItem()
 	 */
-	@Override
 	public Widget getItem() {
 		return item;
 	}
@@ -162,7 +151,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getNeighbor(int, boolean)
 	 */
-	@Override
 	public ViewerRow getNeighbor(int direction, boolean sameLevel) {
 		if (direction == ViewerRow.ABOVE) {
 			// TODO: handle grouping
@@ -224,7 +212,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getText(int)
 	 */
-	@Override
 	public String getText(int columnIndex) {
 		return item.getText();
 	}
@@ -234,7 +221,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#getTreePath()
 	 */
-	@Override
 	public TreePath getTreePath() {
 		LinkedList path = new LinkedList();
 		path.add(item.getData());
@@ -253,7 +239,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * @see org.eclipse.jface.viewers.ViewerRow#setBackground(int,
 	 *      org.eclipse.swt.graphics.Color)
 	 */
-	@Override
 	public void setBackground(int columnIndex, Color color) {
 		item.setBackground(color);
 	}
@@ -264,7 +249,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * @see org.eclipse.jface.viewers.ViewerRow#setFont(int,
 	 *      org.eclipse.swt.graphics.Font)
 	 */
-	@Override
 	public void setFont(int columnIndex, Font font) {
 		item.setFont(font);
 	}
@@ -275,7 +259,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * @see org.eclipse.jface.viewers.ViewerRow#setForeground(int,
 	 *      org.eclipse.swt.graphics.Color)
 	 */
-	@Override
 	public void setForeground(int columnIndex, Color color) {
 		item.setForeground(color);
 	}
@@ -286,7 +269,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * @see org.eclipse.jface.viewers.ViewerRow#setImage(int,
 	 *      org.eclipse.swt.graphics.Image)
 	 */
-	@Override
 	public void setImage(int columnIndex, Image image) {
 		Image oldImage = item.getImage();
 		if (image != oldImage) {
@@ -299,7 +281,6 @@ public class GalleryViewerRow extends ViewerRow {
 	 * 
 	 * @see org.eclipse.jface.viewers.ViewerRow#setText(int, java.lang.String)
 	 */
-	@Override
 	public void setText(int columnIndex, String text) {
 		item.setText(text == null ? "" : text);
 	}

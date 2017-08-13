@@ -659,26 +659,23 @@ public class BatchUtilities {
 	 *            - the file to be shown
 	 */
 	public static void showInFolder(final File file) {
-		BusyIndicator.showWhile(null, new Runnable() {
-
-			public void run() {
-				try {
-					if (BatchConstants.WIN32) {
-						if (BatchActivator.getDefault().runScript(new String[] { "/select.bat", //$NON-NLS-1$
-								file.getAbsolutePath() }) > 1)
-							throw new IOException(Messages.getString("BatchUtilities.script_execution_failed")); //$NON-NLS-1$
-					} else if (BatchConstants.OSX)
-						Runtime.getRuntime().exec(new String[] { "open", file.getParentFile().getAbsolutePath() }) //$NON-NLS-1$
-								.waitFor();
-					else
-						Runtime.getRuntime().exec(new String[] { "xdg-open", file.getParentFile().getAbsolutePath() }) //$NON-NLS-1$
-								.waitFor();
-				} catch (IOException e1) {
-					BatchActivator.getDefault().logError(Messages.getString("BatchUtilities.io_error_showFile"), //$NON-NLS-1$
-							e1);
-				} catch (InterruptedException e) {
-					// ignore
-				}
+		BusyIndicator.showWhile(null, () -> {
+			try {
+				if (BatchConstants.WIN32) {
+					if (BatchActivator.getDefault().runScript(new String[] { "/select.bat", //$NON-NLS-1$
+							file.getAbsolutePath() }) > 1)
+						throw new IOException(Messages.getString("BatchUtilities.script_execution_failed")); //$NON-NLS-1$
+				} else if (BatchConstants.OSX)
+					Runtime.getRuntime().exec(new String[] { "open", file.getParentFile().getAbsolutePath() }) //$NON-NLS-1$
+							.waitFor();
+				else
+					Runtime.getRuntime().exec(new String[] { "xdg-open", file.getParentFile().getAbsolutePath() }) //$NON-NLS-1$
+							.waitFor();
+			} catch (IOException e1) {
+				BatchActivator.getDefault().logError(Messages.getString("BatchUtilities.io_error_showFile"), //$NON-NLS-1$
+						e1);
+			} catch (InterruptedException e) {
+				// ignore
 			}
 		});
 
@@ -772,7 +769,7 @@ public class BatchUtilities {
 					return inputGrabber.getData();
 				}
 				String errorData = errorGrabber.getData().trim();
-				if (errorData.length() == 0
+				if (errorData.isEmpty()
 						&& (ret != 0 && errorHandling < 0 || errorHandling == ret && errorHandling > 0))
 					errorData = Arrays.toString(parms);
 				throw new ExecutionException(

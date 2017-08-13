@@ -67,9 +67,13 @@ public interface IMapComponent {
 	 */
 	int ONE = 1;
 	/**
+	 * Multiple images at same position
+	 */
+	int CLUSTER = 2;
+	/**
 	 * Multiple images with geo tags
 	 */
-	int MULTI = 2;
+	int MULTI = 3;
 
 	/**
 	 * Sets input position and markers

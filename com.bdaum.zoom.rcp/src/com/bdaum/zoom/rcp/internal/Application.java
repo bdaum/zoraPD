@@ -38,46 +38,40 @@ public class Application implements IApplication {
 		Display display = PlatformUI.createDisplay();
 		ColorRegistry colorRegistry = JFaceResources.getColorRegistry();
 		// Regions
-		colorRegistry.put(Constants.APPCOLOR_REGION_FACE, new RGB(255,160,0));
+		colorRegistry.put(Constants.APPCOLOR_REGION_FACE, new RGB(255, 160, 0));
 		// Background
 		colorRegistry.put("b", new RGB(0, 0, 0)); //$NON-NLS-1$
 		colorRegistry.put("d", new RGB(64, 64, 64)); //$NON-NLS-1$
 		colorRegistry.put("g", new RGB(240, 240, 248)); //$NON-NLS-1$
 		colorRegistry.put("w", new RGB(255, 255, 255)); //$NON-NLS-1$
-		colorRegistry
-				.put("p", display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB()); //$NON-NLS-1$
+		colorRegistry.put("p", display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB()); //$NON-NLS-1$
 		// Widget text
 		colorRegistry.put("b_", new RGB(255, 255, 255)); //$NON-NLS-1$
 		colorRegistry.put("d_", new RGB(255, 255, 255)); //$NON-NLS-1$
 		colorRegistry.put("g_", new RGB(0, 0, 0)); //$NON-NLS-1$
 		colorRegistry.put("w_", new RGB(0, 0, 0)); //$NON-NLS-1$
-		colorRegistry
-				.put("p_", display.getSystemColor(SWT.COLOR_WIDGET_FOREGROUND).getRGB()); //$NON-NLS-1$
+		colorRegistry.put("p_", display.getSystemColor(SWT.COLOR_WIDGET_FOREGROUND).getRGB()); //$NON-NLS-1$
 		// Gallery item text
 		colorRegistry.put("b-", new RGB(128, 128, 128)); //$NON-NLS-1$
 		colorRegistry.put("d-", new RGB(144, 144, 144)); //$NON-NLS-1$
 		colorRegistry.put("g-", new RGB(32, 32, 32)); //$NON-NLS-1$
 		colorRegistry.put("w-", new RGB(128, 128, 128)); //$NON-NLS-1$
-		colorRegistry
-				.put("p-", display.getSystemColor(SWT.COLOR_LIST_FOREGROUND).getRGB()); //$NON-NLS-1$
+		colorRegistry.put("p-", display.getSystemColor(SWT.COLOR_LIST_FOREGROUND).getRGB()); //$NON-NLS-1$
 		// Selected gallery item background
 		colorRegistry.put("b#", new RGB(128, 128, 128)); //$NON-NLS-1$
 		colorRegistry.put("d#", new RGB(144, 144, 144)); //$NON-NLS-1$
 		colorRegistry.put("g#", new RGB(64, 64, 64)); //$NON-NLS-1$
 		colorRegistry.put("w#", new RGB(144, 144, 144)); //$NON-NLS-1$
-		colorRegistry
-				.put("p#", display.getSystemColor(SWT.COLOR_LIST_SELECTION).getRGB()); //$NON-NLS-1$
+		colorRegistry.put("p#", display.getSystemColor(SWT.COLOR_LIST_SELECTION).getRGB()); //$NON-NLS-1$
 		// Selected gallery item text
 		colorRegistry.put("b!", new RGB(0, 0, 0)); //$NON-NLS-1$
 		colorRegistry.put("d!", new RGB(64, 64, 64)); //$NON-NLS-1$
 		colorRegistry.put("g!", new RGB(128, 128, 128)); //$NON-NLS-1$
 		colorRegistry.put("w!", new RGB(255, 255, 255)); //$NON-NLS-1$
-		colorRegistry
-				.put("p!", display.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT).getRGB()); //$NON-NLS-1$
+		colorRegistry.put("p!", display.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT).getRGB()); //$NON-NLS-1$
 
 		try {
-			int returnCode = PlatformUI.createAndRunWorkbench(display,
-					new ApplicationWorkbenchAdvisor());
+			int returnCode = PlatformUI.createAndRunWorkbench(display, new ApplicationWorkbenchAdvisor());
 			if (returnCode == PlatformUI.RETURN_RESTART)
 				return IApplication.EXIT_RESTART;
 			return IApplication.EXIT_OK;
@@ -102,11 +96,6 @@ public class Application implements IApplication {
 			return;
 		final Display display = workbench.getDisplay();
 		if (!display.isDisposed())
-			display.syncExec(new Runnable() {
-				public void run() {
-					if (!display.isDisposed())
-						workbench.close();
-				}
-			});
+			display.syncExec(() -> workbench.close());
 	}
 }

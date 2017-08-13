@@ -96,21 +96,15 @@ public final class InertiaMouseWheelListener implements MouseWheelListener,
 					* Math.pow(Math.abs(e.count), nonlinearity);
 			if (wheelTask == null && currentSpeed != 0) {
 				wheelTask = UiActivator.getScheduledExecutorService()
-						.scheduleAtFixedRate(new Runnable() {
-							public void run() {
-								if (e.display.isDisposed())
-									currentSpeed = 0;
-								else {
-									e.display.syncExec(new Runnable() {
-										public void run() {
-											performWheelAction(e);
-										}
-									});
-									currentSpeed = currentSpeed * lag;
-								}
-								if (Math.abs(currentSpeed) < lag)
-									InertiaMouseWheelListener.this.cancel();
+						.scheduleAtFixedRate(() -> {
+							if (e.display.isDisposed())
+								currentSpeed = 0;
+							else {
+								e.display.syncExec(() -> performWheelAction(e));
+								currentSpeed = currentSpeed * lag;
 							}
+							if (Math.abs(currentSpeed) < lag)
+								InertiaMouseWheelListener.this.cancel();
 						}, 0L, 60L, TimeUnit.MILLISECONDS);
 			}
 		}

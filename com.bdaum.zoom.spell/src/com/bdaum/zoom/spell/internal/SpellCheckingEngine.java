@@ -200,7 +200,7 @@ public class SpellCheckingEngine {
 	}
 
 	private static boolean checkOptions(String str, int options) {
-		if (str.length() == 0 || str.matches("\\s+")) //$NON-NLS-1$
+		if (str.isEmpty() || str.matches("\\s+")) //$NON-NLS-1$
 			return false;
 		// option rules
 		if ((options & ISpellCheckingService.IGNORESINGLELETTER) > 0) {

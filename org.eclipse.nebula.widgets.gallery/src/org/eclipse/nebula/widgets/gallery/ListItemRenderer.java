@@ -89,6 +89,8 @@ public class ListItemRenderer extends AbstractGalleryItemRenderer {
 	}
 
 	public ListItemRenderer() {
+		super();
+
 		// Set defaults
 		foregroundColor = Display.getDefault().getSystemColor(
 				SWT.COLOR_LIST_FOREGROUND);
@@ -102,12 +104,25 @@ public class ListItemRenderer extends AbstractGalleryItemRenderer {
 				SWT.COLOR_DARK_GRAY);
 	}
 
-	@Override
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.nebula.widgets.gallery.AbstractGalleryItemRenderer#preDraw
+	 * (org.eclipse.swt.graphics.GC)
+	 */
 	public void preDraw(GC gc) {
 		super.preDraw(gc);
 	}
 
-	@Override
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.nebula.widgets.gallery.AbstractGalleryItemRenderer#draw(org
+	 * .eclipse.swt.graphics.GC, org.eclipse.nebula.widgets.gallery.GalleryItem,
+	 * int, int, int, int, int)
+	 */
 	public void draw(GC gc, GalleryItem item, int index, int x, int y,
 			int width, int height) {
 
@@ -287,7 +302,12 @@ public class ListItemRenderer extends AbstractGalleryItemRenderer {
 		return dropShadowsSize;
 	}
 
-	@Override
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.nebula.widgets.gallery.AbstractGalleryItemRenderer#dispose()
+	 */
 	public void dispose() {
 		freeDropShadowsColors();
 	}
@@ -340,7 +360,6 @@ public class ListItemRenderer extends AbstractGalleryItemRenderer {
 	 *             {@link GalleryItem#setFont(Font)} instead.
 	 * @return the font
 	 */
-	@Deprecated
 	public Font getTextFont() {
 		return textFont;
 	}
@@ -353,7 +372,6 @@ public class ListItemRenderer extends AbstractGalleryItemRenderer {
 	 * @param font
 	 *            the font to set
 	 */
-	@Deprecated
 	public void setTextFont(Font textFont) {
 		this.textFont = textFont;
 	}

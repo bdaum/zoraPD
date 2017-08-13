@@ -84,7 +84,7 @@ public class FileNameExtensionFilter implements FileFilter {
 		int i = fileName.lastIndexOf('.');
 		if (i <= 0) {
 			for (String extension : lowerCaseExtensions)
-				if (extension.length() == 0)
+				if (extension.isEmpty())
 					return true;
 			return false;
 		}

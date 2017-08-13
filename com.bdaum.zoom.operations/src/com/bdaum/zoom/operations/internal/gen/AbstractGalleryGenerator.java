@@ -169,7 +169,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 					return;
 			}
 			String logo = webGallery.getLogo();
-			if (logo != null && logo.length() > 0) {
+			if (logo != null && !logo.isEmpty()) {
 				File logoFile = new File(logo);
 				if (logoFile.exists()) {
 					nameplate = copyImage(logoFile, new File(rTarget, logoFile.getName()));
@@ -178,7 +178,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 				}
 			}
 			String bgimg = webGallery.getBgImage();
-			if (bgimg != null && bgimg.length() > 0) {
+			if (bgimg != null && !bgimg.isEmpty()) {
 				File imageFile = new File(bgimg);
 				if (imageFile.exists()) {
 					bgImage = copyImage(imageFile, new File(rTarget, imageFile.getName()));
@@ -514,9 +514,9 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 							String copyright = null;
 							if (gallery.getAddWatermark()) {
 								copyright = asset.getCopyright();
-								if (copyright == null || copyright.length() == 0)
+								if (copyright == null || copyright.isEmpty())
 									copyright = gallery.getCopyright();
-								if (copyright != null && copyright.length() == 0)
+								if (copyright != null && copyright.isEmpty())
 									copyright = null;
 							}
 							URI uri = volumeManager.findExistingFile(asset, false);
@@ -603,7 +603,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 									File copiedFile = new File(originalsFolder, originalFile.getName());
 									boolean downloadable = exhibit.getDownloadable()
 											&& gallery.getDownloadText() != null
-											&& gallery.getDownloadText().length() > 0 && !gallery.getHideDownload();
+											&& !gallery.getDownloadText().isEmpty() && !gallery.getHideDownload();
 									if (originalModified(settings, copiedFile, downloadable, uri)) {
 										if (downloadable)
 											copiedFile = copyImage(originalFile, copiedFile);
@@ -906,7 +906,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		if (tag != null) {
 			if (color == null)
 				return ""; //$NON-NLS-1$
-			return new StringBuilder().append(tag).append(tag.length() == 0 ? "rgb(" : ":rgb(").append(color.getR()) //$NON-NLS-1$//$NON-NLS-2$
+			return new StringBuilder().append(tag).append(tag.isEmpty() ? "rgb(" : ":rgb(").append(color.getR()) //$NON-NLS-1$//$NON-NLS-2$
 					.append(',').append(color.getG()).append(',').append(color.getB()).append(");").toString(); //$NON-NLS-1$
 		}
 		if (color == null)
@@ -1018,7 +1018,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 					if (qf != null && qf.hasLabel())
 						fields.add(qf);
 				}
-				if (fields.size() > 0) {
+				if (!fields.isEmpty()) {
 					Collections.sort(fields, new Comparator<QueryField>() {
 						public int compare(QueryField f1, QueryField f2) {
 							return f1.getLabel().compareTo(f2.getLabel());
@@ -1090,22 +1090,22 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 			String label = web;
 			web = formatWebUrl(web);
 			String copyright = show.getCopyright();
-			if (copyright != null && copyright.length() > 0)
+			if (copyright != null && !copyright.isEmpty())
 				sb.append("&copy; ").append(BatchUtilities.encodeHTML(copyright, false)); //$NON-NLS-1$
 			String contact = show.getContactName();
 			String email = show.getEmail();
-			if (contact == null || contact.length() == 0)
+			if (contact == null || contact.isEmpty())
 				contact = email;
-			if (contact != null && contact.length() > 0) {
+			if (contact != null && !contact.isEmpty()) {
 				if (sb.length() > 0)
 					sb.append("  -  "); //$NON-NLS-1$
-				if (email != null && email.length() > 0)
+				if (email != null && !email.isEmpty())
 					sb.append("<a href=\"mailto:").append(email).append("\">") //$NON-NLS-1$ //$NON-NLS-2$
 							.append(BatchUtilities.encodeHTML(contact, false)).append("</a>"); //$NON-NLS-1$
 				else
 					sb.append(BatchUtilities.encodeHTML(contact, false));
 			}
-			if (web != null && web.length() > 0) {
+			if (web != null && !web.isEmpty()) {
 				if (sb.length() > 0)
 					sb.append("  -  "); //$NON-NLS-1$
 				if (label.startsWith(HTTP))
@@ -1116,7 +1116,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 				sb.append(BatchUtilities.encodeHTML(label, false)).append("</a>"); //$NON-NLS-1$
 			}
 			String poweredBy = show.getPoweredByText();
-			if (poweredBy != null && poweredBy.length() > 0) {
+			if (poweredBy != null && !poweredBy.isEmpty()) {
 				if (sb.length() > 0)
 					sb.append("<br/>"); //$NON-NLS-1$
 				if (poweredBy.indexOf("{0}") < 0) //$NON-NLS-1$
@@ -1128,7 +1128,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	}
 
 	private static String formatWebUrl(String web) {
-		return web != null && web.length() > 0 && !web.startsWith(HTTP) && !web.startsWith(HTTPS) ? HTTP + web : web;
+		return web != null && !web.isEmpty() && !web.startsWith(HTTP) && !web.startsWith(HTTPS) ? HTTP + web : web;
 	}
 
 	protected String generateBg(WebGalleryImpl show, File backgroundImage) {
@@ -1143,12 +1143,12 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		sb.append("<div>"); //$NON-NLS-1$
 		String web = show.getWebUrl();
 		web = formatWebUrl(web);
-		if (web != null && web.length() > 0)
+		if (web != null && !web.isEmpty())
 			generateLink(web, sb);
 		sb.append("<img border=\"0\" src=\"") //$NON-NLS-1$
 				.append(encodeURL(getDeployResourceFolder().getName())).append('/').append(encodeURL(plate.getName()))
 				.append("\"/>"); //$NON-NLS-1$
-		if (web != null && web.length() > 0)
+		if (web != null && !web.isEmpty())
 			sb.append("</a>"); //$NON-NLS-1$
 		return sb.append("</div>").toString(); //$NON-NLS-1$
 	}

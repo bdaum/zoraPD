@@ -33,8 +33,8 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Font;
@@ -64,6 +64,7 @@ public abstract class AbstractSelectExhibitDialog extends ZDialog {
 	protected boolean advanced;
 	protected Object selection;
 	protected final List<? extends IdentifiableObject> exhibits;
+	protected boolean focusGained;
 
 	public AbstractSelectExhibitDialog(Shell parentShell, List<? extends IdentifiableObject> exhibits) {
 		super(parentShell);
@@ -180,11 +181,17 @@ public abstract class AbstractSelectExhibitDialog extends ZDialog {
 					processSelection();
 			}
 		});
-		viewer.getControl().addFocusListener(new FocusAdapter() {
+		viewer.getControl().addFocusListener(new FocusListener() {
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				cancelPressed();
+				if (focusGained)
+					cancelPressed();
+			}
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				focusGained = true;
 			}
 		});
 		viewer.getTable().pack();

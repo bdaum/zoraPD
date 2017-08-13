@@ -25,12 +25,22 @@ public class Algorithm {
 	private String name;
 	private String label;
 	private String description;
+	private boolean essential;
+	protected String providerId;
 
-	public Algorithm(int id, String name, String label, String description) {
+	/**
+	 * @param id - algorithm ID
+	 * @param name - algorithm internal name
+	 * @param label - algorithm display name
+	 * @param description - algorithm description
+	 * @param essential - true if algorithm is always shown
+	 */
+	public Algorithm(int id, String name, String label, String description, boolean essential) {
 		this.id = id;
 		this.name = name;
 		this.label = label;
 		this.description = description;
+		this.essential = essential;
 	}
 
 	/**
@@ -64,6 +74,41 @@ public class Algorithm {
 	@Override
 	public String toString() {
 		return label;
+	}
+
+	/**
+	 * @return essential
+	 */
+	public boolean isEssential() {
+		return essential;
+	}
+
+	/**
+	 * @return providerId
+	 */
+	public String getProviderId() {
+		return providerId;
+	}
+
+	/**
+	 * @return true if this is an AI algorithm
+	 */
+	public boolean isAi() {
+		return false;
+	}
+
+	/**
+	 * @return true if AI service is enabled
+	 */
+	public boolean isEnabled() {
+		return true;
+	}
+
+	/**
+	 * @return true if AI web service account is valid
+	 */
+	public boolean isAccountValid() {
+		return true;
 	}
 
 }

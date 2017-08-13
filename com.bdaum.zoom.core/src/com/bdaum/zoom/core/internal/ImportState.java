@@ -224,6 +224,11 @@ public class ImportState {
 				// ignore
 			}
 		}
+		if (!Double.isNaN(asset.getGPSDestDistance())) {
+			String distref = metaData.get("GPSDestDistanceRef"); //$NON-NLS-1$
+			if (distref != null)
+				convertDestDist(asset, distref);
+		}
 		if (asset.getWidth() <= 0 || asset.getHeight() <= 0) {
 			String size = metaData.get("ImageSize"); //$NON-NLS-1$
 			if (size != null) {
@@ -256,7 +261,7 @@ public class ImportState {
 			asset.setScalarSpeedRatings(CANCEL);
 		if (importFromDeviceData != null) {
 			String artist = importFromDeviceData.getArtist();
-			if (artist != null && artist.length() > 0) {
+			if (artist != null && !artist.isEmpty()) {
 				String[] artists = asset.getArtist();
 				if (artists != null) {
 					for (String a : artists)
@@ -269,7 +274,7 @@ public class ImportState {
 					asset.setArtist(Utilities.addToStringArray(artist, artists, true));
 			}
 			String event = importFromDeviceData.getEvent();
-			if (event != null && event.length() > 0 && (asset.getEvent() == null || asset.getEvent().length() == 0))
+			if (event != null && !event.isEmpty() && (asset.getEvent() == null || asset.getEvent().isEmpty()))
 				asset.setEvent(event);
 			String[] kw = importFromDeviceData.getKeywords();
 			if (kw != null && kw.length > 0)
@@ -277,6 +282,13 @@ public class ImportState {
 		}
 		meta.getKeywords().addAll(QueryField.getKeywordFilter().filter(asset.getKeyword()));
 		return true;
+	}
+
+	protected void convertDestDist(Asset asset, String ref) {
+		if ("M".equalsIgnoreCase(ref)) //$NON-NLS-1$
+			asset.setGPSDestDistance(asset.getGPSDestDistance() * 1.609344);
+		else if ("N".equalsIgnoreCase(ref)) //$NON-NLS-1$
+			asset.setGPSDestDistance(asset.getGPSDestDistance() * 1.852);
 	}
 
 	private void setProperty(AssetEnsemble ensemble, QueryField qfield, String v, File file) {
@@ -387,12 +399,21 @@ public class ImportState {
 
 	public void readXMP(InputStream in, String file, AssetEnsemble ensemble) {
 		try {
+//			String distRef = null;
 			List<XMPField> fieldList = XMPUtilities.readXMP(in);
 			for (XMPField field : fieldList) {
 				QueryField qfield = field.getQfield();
+//				if (qfield == QueryField.EXIF_GPSDESTDISTREF)
+//					distRef = field.getProp().getValue();
+//				else
 				if (!overlayMap.containsKey(qfield.getExifToolKey()))
 					assignValue(field, ensemble, file);
 			}
+//			if (distRef != null) {
+//				Asset asset = ensemble.getAsset();
+//				if (!Double.isNaN(asset.getGPSDestDistance()))
+//					convertDestDist(asset, distRef);
+//			}
 		} catch (XMPException e) {
 			operation.addError(NLS.bind(Messages.ImportState_Malformed_XMP, file), e);
 		}
@@ -470,15 +491,13 @@ public class ImportState {
 			int importNo) throws ImportException {
 		CoreActivator coreActivator = CoreActivator.getDefault();
 		final IDbManager dbManager = coreActivator.getDbManager();
-		if (!operation.storeSafely(new Runnable() {
-			public void run() {
-				for (Object del : toBeDeleted)
-					dbManager.delete(del);
-				for (Object obj : toBeStored)
-					dbManager.store(obj);
-				for (Object obj : trashed)
-					dbManager.deleteTrash(obj);
-			}
+		if (!operation.storeSafely(() -> {
+			for (Object del : toBeDeleted)
+				dbManager.delete(del);
+			for (Object obj1 : toBeStored)
+				dbManager.store(obj1);
+			for (Object obj2 : trashed)
+				dbManager.deleteTrash(obj2);
 		}, 1))
 			throw new ImportException();
 		allDeletedAssets.addAll(deletedAssets);

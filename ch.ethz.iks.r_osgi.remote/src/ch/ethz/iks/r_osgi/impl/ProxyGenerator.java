@@ -30,8 +30,6 @@ package ch.ethz.iks.r_osgi.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -48,17 +46,14 @@ import java.util.zip.CRC32;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
-import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.osgi.framework.Constants;
 import org.osgi.service.log.LogService;
 
 import ch.ethz.iks.r_osgi.RemoteOSGiService;
@@ -75,7 +70,7 @@ import ch.ethz.iks.r_osgi.types.ServiceUIComponent;
  * @author Jan S. Rellermeyer, ETH Zurich.
  * @since 0.1
  */
-class ProxyGenerator implements ClassVisitor, Opcodes {
+class ProxyGenerator extends ClassVisitor implements Opcodes {
 
 	/**
 	 * sourceID.
@@ -188,7 +183,7 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 	 * constructor.
 	 */
 	ProxyGenerator() {
-
+		super(Opcodes.ASM5);
 	}
 
 	/**
@@ -222,18 +217,20 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 		final Attributes attr = mf.getMainAttributes();
 		attr.putValue("Manifest-Version", "1.0"); //$NON-NLS-1$ //$NON-NLS-2$
 		attr.putValue("Created-By", "R-OSGi Proxy Generator"); //$NON-NLS-1$ //$NON-NLS-2$
-		attr.putValue(Constants.BUNDLE_ACTIVATOR, className);
-		attr.putValue(Constants.BUNDLE_CLASSPATH, "."); //$NON-NLS-1$ 
+		attr.putValue("Bundle-Activator", className); //$NON-NLS-1$
+		attr.putValue("Bundle-Classpath", "."); //$NON-NLS-1$ //$NON-NLS-2$
 		attr.putValue(
-				Constants.IMPORT_PACKAGE,
+				"Bundle-SymbolicName", RemoteOSGiService.R_OSGi_PROXY_PREFIX + service.getHost()+"."+service.getPort()+"."+service.getFragment()); //$NON-NLS-1$ //$NON-NLS-2$
+		attr.putValue(
+				"Import-Package", //$NON-NLS-1$
 				"org.osgi.framework, ch.ethz.iks.r_osgi, ch.ethz.iks.r_osgi.types, ch.ethz.iks.r_osgi.channels" //$NON-NLS-1$
+						+ ("".equals(deliv.getOptionalImports()) ? "" : ", " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+								+ deliv.getOptionalImports())
 						+ ("".equals(deliv.getImports()) ? "" : ", ") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 						+ deliv.getImports());
 		if (!"".equals(deliv.getExports())) { //$NON-NLS-1$
-			attr.putValue(Constants.EXPORT_PACKAGE, deliv.getExports());
+			attr.putValue("Export-Package", deliv.getExports()); //$NON-NLS-1$
 		}
-		attr.putValue(Constants.BUNDLE_SYMBOLICNAME,
-				"proxy for " + uri.toString());
 		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		final JarOutputStream out = new JarOutputStream(bout, mf);
 
@@ -295,14 +292,12 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 		out.close();
 
 		if (RemoteOSGiServiceImpl.PROXY_DEBUG) {
-			final File file = RemoteOSGiActivator.getActivator().getContext()
-					.getDataFile("bundle_" + sourceID + ".jar");
+			// final File file =
+			// RemoteOSGiActivator.context.getDataFile(fileName
+			// + "_" + sourceID + ".jar");
 
-			final FileOutputStream fout = new FileOutputStream(file);
-			fout.write(bout.toByteArray());
-			fout.close();
-			System.err.println("Wrote proxy bundle to "
-					+ file.getAbsolutePath());
+			// RemoteOSGiServiceImpl.log.log(LogService.LOG_DEBUG,
+			// "Created Proxy Bundle " + file);
 		}
 
 		return new ByteArrayInputStream(bout.toByteArray());
@@ -377,14 +372,20 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 					final ClassReader reader;
 					if (bytes == null) {
 						try {
-							final ClassLoader cl = Class.forName(
-									superIface.replace('/', '.'))
-									.getClassLoader();
+							final Class clazz = Class.forName(superIface
+									.replace('/', '.'));
+							ClassLoader classLoader = clazz.getClassLoader();
+							if (classLoader == null) {
+								// For classes loaded by the bootstrap CL, the
+								// CL will be null. This happens e.g. on classes
+								// like java.io.Serializable (or other classes
+								// provided by the JRE).
+								// (see https://bugs.eclipse.org/420112)
+								classLoader = getClass().getClassLoader();
+							}
 							reader = new ClassReader(
-									(cl == null ? ClassLoader
-											.getSystemClassLoader() : cl)
-											.getResourceAsStream(superIface
-													+ ".class")); //$NON-NLS-1$
+									classLoader.getResourceAsStream(superIface
+											+ ".class")); //$NON-NLS-1$
 						} catch (final IOException ioe) {
 							throw new IOException("While processing " //$NON-NLS-1$
 									+ superIface.replace('/', '.') + ": " //$NON-NLS-1$
@@ -430,8 +431,7 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 				|| (smartProxyClassName == null && name
 						.equals(serviceInterfaceNames[0].replace('.', '/')))) {
 
-			if (RemoteOSGiServiceImpl.PROXY_DEBUG
-					&& RemoteOSGiServiceImpl.log != null) {
+			if (RemoteOSGiServiceImpl.PROXY_DEBUG) {
 				RemoteOSGiServiceImpl.log.log(LogService.LOG_DEBUG,
 						"creating proxy class " + implName); //$NON-NLS-1$
 			}
@@ -468,7 +468,7 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 						(version >= V1_5 && RemoteOSGiServiceImpl.IS_JAVA5) ? V1_5
 								: V1_2, ACC_PUBLIC + ACC_SUPER, implName, null,
 						"java/lang/Object", serviceInterfaces); //$NON-NLS-1$
-				if (RemoteOSGiServiceImpl.PROXY_DEBUG && RemoteOSGiServiceImpl.log != null) {
+				if (RemoteOSGiServiceImpl.PROXY_DEBUG) {
 					RemoteOSGiServiceImpl.log.log(LogService.LOG_DEBUG,
 							"Creating Proxy Bundle from Interfaces " //$NON-NLS-1$
 									+ Arrays.asList(serviceInterfaceNames));
@@ -887,6 +887,7 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 
 			implemented.add(name + desc);
 			return null;
+
 		} else {
 			// proxy method, contains code so just rewrite the code ...
 			final MethodVisitor method = writer.visitMethod(access, name, desc,
@@ -904,18 +905,18 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 		writer.visitEnd();
 	}
 
-	private final class ClassRewriter extends ClassAdapter {
+	private final class ClassRewriter extends ClassVisitor {
 
 		/**
 		 * 
 		 */
 		ClassRewriter(final ClassWriter writer) {
-			super(writer);
+			super(Opcodes.ASM5, writer);
 		}
 
 		/**
 		 * 
-		 * @see org.objectweb.asm.ClassAdapter#visit(int, int, java.lang.String,
+		 * @see org.objectweb.asm.ClassVisitor#visit(int, int, java.lang.String,
 		 *      java.lang.String, java.lang.String, java.lang.String[])
 		 */
 		public void visit(final int version, final int access,
@@ -931,7 +932,7 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 
 		/**
 		 * 
-		 * @see org.objectweb.asm.ClassAdapter#visitField(int, java.lang.String,
+		 * @see org.objectweb.asm.ClassVisitor#visitField(int, java.lang.String,
 		 *      java.lang.String, java.lang.String, java.lang.Object)
 		 */
 		public FieldVisitor visitField(final int access, final String name,
@@ -964,7 +965,7 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 
 		/**
 		 * 
-		 * @see org.objectweb.asm.ClassAdapter#visitInnerClass(java.lang.String,
+		 * @see org.objectweb.asm.ClassVisitor#visitInnerClass(java.lang.String,
 		 *      java.lang.String, java.lang.String, int)
 		 */
 		public void visitInnerClass(final String name, final String outerName,
@@ -975,7 +976,7 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 
 		/**
 		 * 
-		 * @see org.objectweb.asm.ClassAdapter#visitMethod(int,
+		 * @see org.objectweb.asm.ClassVisitor#visitMethod(int,
 		 *      java.lang.String, java.lang.String, java.lang.String,
 		 *      java.lang.String[])
 		 */
@@ -997,13 +998,13 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 	 * 
 	 * @author Jan S. Rellermeyer, ETH Zurich
 	 */
-	private final class MethodRewriter extends MethodAdapter {
+	private final class MethodRewriter extends MethodVisitor {
 		/**
 		 * @param methodWriter
 		 *            methodWriter
 		 */
 		MethodRewriter(final MethodVisitor methodWriter) {
-			super(methodWriter);
+			super(Opcodes.ASM5, methodWriter);
 		}
 
 		/**
@@ -1053,6 +1054,16 @@ class ProxyGenerator implements ClassVisitor, Opcodes {
 			// rewriting
 			super.mv.visitMethodInsn(opcode, checkRewrite(owner), name,
 					checkRewriteDesc(desc));
+		}
+
+		/**
+		 * @see org.objectweb.asm.MethodVisitor#visitMethodInsn(int,
+		 *      java.lang.String, java.lang.String, java.lang.String, boolean)
+		 */
+		public void visitMethodInsn(int opcode, String owner, String name,
+				String desc, boolean itf) {
+			super.mv.visitMethodInsn(opcode, checkRewrite(owner), name,
+					checkRewriteDesc(desc), itf);
 		}
 
 		/**

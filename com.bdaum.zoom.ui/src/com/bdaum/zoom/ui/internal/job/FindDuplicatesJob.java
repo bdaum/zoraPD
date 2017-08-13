@@ -80,19 +80,17 @@ public class FindDuplicatesJob extends CustomJob {
 		if (activePage == null)
 			return Status.CANCEL_STATUS;
 		Display display = window.getShell().getDisplay();
-		display.syncExec(new Runnable() {
-			public void run() {
-				try {
-					IViewPart view = activePage.showView(DuplicatesView.ID);
-					if (view instanceof DuplicatesView) {
-						duplicatesView = (DuplicatesView) view;
-						duplicatesView.reset();
-						duplicatesView.showBusy(true);
-						duplicatesView.setItemType(Messages.FindDuplicatesJob_duplicates);
-					}
-				} catch (PartInitException e) {
-					// ignore
+		display.syncExec(() -> {
+			try {
+				IViewPart view = activePage.showView(DuplicatesView.ID);
+				if (view instanceof DuplicatesView) {
+					duplicatesView = (DuplicatesView) view;
+					duplicatesView.reset();
+					duplicatesView.showBusy(true);
+					duplicatesView.setItemType(Messages.FindDuplicatesJob_duplicates);
 				}
+			} catch (PartInitException e) {
+				// ignore
 			}
 		});
 		if (duplicatesView == null)

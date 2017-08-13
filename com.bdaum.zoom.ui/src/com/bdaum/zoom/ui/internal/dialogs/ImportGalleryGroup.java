@@ -97,7 +97,7 @@ public class ImportGalleryGroup {
 	}
 
 	protected void updateButtons() {
-		clearButton.setEnabled(fromField.getText().length() > 0);
+		clearButton.setEnabled(!fromField.getText().isEmpty());
 	}
 
 	protected void fireSelectionChanged() {

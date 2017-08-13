@@ -348,7 +348,7 @@ public class MigrateDialog extends ZTitleAreaDialog {
 			upButton.setEnabled(false);
 		}
 		String errorMessage = null;
-		if (fileEditor.getText().length() == 0)
+		if (fileEditor.getText().isEmpty())
 			errorMessage = Messages.MigrateDialog_define_target_cat_file;
 		else if (rules.isEmpty())
 			errorMessage = Messages.MigrateDialog_define_one_pattern;

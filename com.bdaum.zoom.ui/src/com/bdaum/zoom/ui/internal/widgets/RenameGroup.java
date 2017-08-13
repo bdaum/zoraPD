@@ -78,7 +78,7 @@ public class RenameGroup extends Composite {
 				}
 				return template.getLabel() + "  (" //$NON-NLS-1$
 						+ Utilities.computeFileName(template.getContent(), filename, new Date(), 1, start, 1,
-								cue.length() > 0 ? cue : Messages.RenameGroup_cue2, asset, maxLength,
+								!cue.isEmpty() ? cue : Messages.RenameGroup_cue2, asset, maxLength,
 								QueryField.URI == field, transfer)
 						+ ")"; //$NON-NLS-1$
 			}
@@ -386,7 +386,7 @@ public class RenameGroup extends Composite {
 	public String validate() {
 		if (selectedTemplate == null)
 			return Messages.RenameGroup_select_template;
-		if (cueField.isVisible() && cueField.getText().trim().length() == 0)
+		if (cueField.isVisible() && cueField.getText().trim().isEmpty())
 			return Messages.RenameGroup_cue_empty;
 		return null;
 	}

@@ -180,7 +180,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 			String communityName = ((IConfigurationElement) account.getConfiguration().getParent())
 					.getAttribute("name"); //$NON-NLS-1$
 			msg = NLS.bind(Messages.EditCommunityAccountDialog_connection_failed, account.getName(), communityName);
-		} else if (nameField != null && nameField.getText().length() == 0)
+		} else if (nameField != null && nameField.getText().isEmpty())
 			msg = Messages.EditCommunityAccountDialog_please_specify_account_name;
 		if (msg != null)
 			setErrorMessage(msg);
@@ -568,12 +568,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				BusyIndicator.showWhile(e.display, new Runnable() {
-
-					public void run() {
-						importAlbums();
-					}
-				});
+				BusyIndicator.showWhile(e.display, () -> importAlbums());
 			}
 
 			private void importAlbums() {
@@ -681,12 +676,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				BusyIndicator.showWhile(e.display, new Runnable() {
-
-					public void run() {
-						importAllCats();
-					}
-				});
+				BusyIndicator.showWhile(e.display, () -> importAllCats());
 			}
 
 			private void importAllCats() {
@@ -827,12 +817,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				BusyIndicator.showWhile(e.display, new Runnable() {
-
-					public void run() {
-						importAllUsedCats();
-					}
-				});
+				BusyIndicator.showWhile(e.display, () -> importAllUsedCats());
 			}
 
 			private void importAllUsedCats() {
@@ -947,7 +932,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 	}
 
 	private void updateTestButton() {
-		testUrlButton.setEnabled(visitField.getText().length() > 0);
+		testUrlButton.setEnabled(!visitField.getText().isEmpty());
 	}
 
 	public void handleError(Object source, Exception e) {

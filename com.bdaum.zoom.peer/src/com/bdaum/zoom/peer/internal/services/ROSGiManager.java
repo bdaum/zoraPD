@@ -78,10 +78,9 @@ public class ROSGiManager {
 		protected void doRun(IProgressMonitor monitor) {
 			for (PeerDefinition peer : activator.getPeers()) {
 				try {
-					RemoteServiceReference[] references = remote
-							.getRemoteServiceReferences(new URI(PROTOCOL
-									+ "://" + peer), //$NON-NLS-1$
-									IPeerProvider.class.getName(), null);
+					RemoteServiceReference[] references = remote.getRemoteServiceReferences(
+							new URI(PROTOCOL + "://" + peer), //$NON-NLS-1$
+							IPeerProvider.class.getName(), null);
 					if (references == null || references.length == 0) {
 						if (onlineMap.remove(peer.toString()) != null)
 							firePeerStatusChanged(peer, false);
@@ -117,8 +116,7 @@ public class ROSGiManager {
 
 	private URI endpoint;
 
-	public ROSGiManager(PeerActivator activator, BundleContext context,
-			String host) {
+	public ROSGiManager(PeerActivator activator, BundleContext context, String host) {
 		this.activator = activator;
 		this.context = context;
 		this.host = host;
@@ -126,8 +124,7 @@ public class ROSGiManager {
 		listeningPort = remote.getListeningPort(PROTOCOL);
 		ownLocation = host + ":" + listeningPort; //$NON-NLS-1$
 		try {
-			endpoint = new URI(new StringBuilder().append(PROTOCOL)
-					.append("://").append(ownLocation).toString()); //$NON-NLS-1$
+			endpoint = new URI(new StringBuilder().append(PROTOCOL).append("://").append(ownLocation).toString()); //$NON-NLS-1$
 			remote.connect(endpoint);
 		} catch (RemoteOSGiException e) {
 			activator.logError(Messages.ROSGiManager_framework_error, e);
@@ -141,35 +138,26 @@ public class ROSGiManager {
 		if (listeningPort != port) {
 			final Shell shell = adaptable.getAdapter(Shell.class);
 			if (shell != null && !shell.isDisposed()) {
-				shell.getDisplay().asyncExec(new Runnable() {
-					public void run() {
-						new AcousticMessageDialog(shell,
-								Constants.APPLICATION_NAME, null, NLS.bind(
-										Messages.ROSGiManager_port_occupied,
-										port, listeningPort),
-								AcousticMessageDialog.WARNING,
-								new String[] { IDialogConstants.OK_LABEL }, 0) {
+				shell.getDisplay().asyncExec(() -> {
+					if (!shell.isDisposed()) {
+						new AcousticMessageDialog(shell, Constants.APPLICATION_NAME, null,
+								NLS.bind(Messages.ROSGiManager_port_occupied, port, listeningPort),
+								AcousticMessageDialog.WARNING, new String[] { IDialogConstants.OK_LABEL }, 0) {
 							@Override
 							protected Control createCustomArea(Composite parent) {
-								Composite composite = new Composite(parent,
-										SWT.NONE);
-								composite.setLayoutData(new GridData(SWT.FILL,
-										SWT.FILL, true, true));
+								Composite composite = new Composite(parent, SWT.NONE);
+								composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 								composite.setLayout(new GridLayout());
 								CLink link = new CLink(composite, SWT.NONE);
-								link.setLayoutData(new GridData(SWT.CENTER,
-										SWT.CENTER, true, false));
+								link.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
 								link.setText(Messages.ROSGiManager_configure_network);
 								link.addSelectionListener(new SelectionAdapter() {
 									@Override
-									public void widgetSelected(
-											org.eclipse.swt.events.SelectionEvent e) {
+									public void widgetSelected(org.eclipse.swt.events.SelectionEvent e) {
 										close();
-										PreferencesUtil
-												.createPreferenceDialogOn(
-														shell,
-														"com.bdaum.zoom.peer.PeerPreferencePage", //$NON-NLS-1$
-														new String[0], null).open();
+										PreferencesUtil.createPreferenceDialogOn(shell,
+												"com.bdaum.zoom.peer.PeerPreferencePage", //$NON-NLS-1$
+												new String[0], null).open();
 									}
 								});
 								return composite;
@@ -178,15 +166,13 @@ public class ROSGiManager {
 					}
 				});
 			}
-
 		}
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private RemoteOSGiService getRemoteOSGiService() {
 		if (remoteOSGiServiceTracker == null) {
-			remoteOSGiServiceTracker = new ServiceTracker(context,
-					RemoteOSGiService.class.getName(), null);
+			remoteOSGiServiceTracker = new ServiceTracker(context, RemoteOSGiService.class.getName(), null);
 			remoteOSGiServiceTracker.open();
 		}
 		return (RemoteOSGiService) remoteOSGiServiceTracker.getService();
@@ -196,8 +182,7 @@ public class ROSGiManager {
 		Dictionary<String, Object> properties = new Hashtable<String, Object>();
 		properties.put(RemoteOSGiService.R_OSGi_REGISTRATION, Boolean.TRUE);
 		ownPeerProvider = new PeerProvider(host, listeningPort);
-		peerProviderRegistration = context.registerService(IPeerProvider.class,
-				ownPeerProvider, properties);
+		peerProviderRegistration = context.registerService(IPeerProvider.class, ownPeerProvider, properties);
 	}
 
 	public void dispose() {
@@ -228,8 +213,7 @@ public class ROSGiManager {
 
 	public IPeerProvider[] getPeerProviders(List<PeerDefinition> peersDefs) {
 
-		List<IPeerProvider> result = new ArrayList<IPeerProvider>(
-				peersDefs.size());
+		List<IPeerProvider> result = new ArrayList<IPeerProvider>(peersDefs.size());
 		for (PeerDefinition peer : peersDefs) {
 			String location = peer.toString();
 			IPeerProvider peerProvider = getPeerProvider(location);
@@ -248,8 +232,7 @@ public class ROSGiManager {
 			return ownPeerProvider;
 		RemoteServiceReference ref = onlineMap.get(location);
 		if (ref != null) {
-			IPeerProvider remoteService = (IPeerProvider) remote
-					.getRemoteService(ref);
+			IPeerProvider remoteService = (IPeerProvider) remote.getRemoteService(ref);
 			if (remoteService != null)
 				return remoteService;
 			activator.logError(Messages.ROSGiManager_service_not_found, null);

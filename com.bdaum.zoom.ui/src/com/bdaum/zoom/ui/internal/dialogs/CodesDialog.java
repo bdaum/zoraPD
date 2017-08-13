@@ -205,13 +205,11 @@ public class CodesDialog extends ZTitleAreaDialog {
 	@Override
 	public void create() {
 		super.create();
-		BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-			public void run() {
-				fillValues();
-				updateButtons();
-				setTitle(parser.getTitle());
-				setMessage(parser.getMessage());
-			}
+		BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+			fillValues();
+			updateButtons();
+			setTitle(parser.getTitle());
+			setMessage(parser.getMessage());
 		});
 	}
 
@@ -308,7 +306,7 @@ public class CodesDialog extends ZTitleAreaDialog {
 
 	private void fillValues() {
 		topicViewer.setInput(parser.loadCodes());
-		if (dflt != null && dflt.length() > 0) {
+		if (dflt != null && !dflt.isEmpty()) {
 			selectedTopic = parser.findTopic(dflt);
 			if (selectedTopic != null)
 				topicViewer.setSelection(

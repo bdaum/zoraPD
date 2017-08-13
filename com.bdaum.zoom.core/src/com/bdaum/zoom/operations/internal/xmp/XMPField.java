@@ -314,7 +314,7 @@ public class XMPField {
 				case QueryField.T_REGION:
 					String s = prop.getValue();
 					if (attribute == null) {
-						if (s == null || s.length() == 0)
+						if (s == null || s.isEmpty())
 							return;
 						value = s;
 					} else {
@@ -332,7 +332,7 @@ public class XMPField {
 		} else {
 			value = backup != null ? backup : prop.getValue();
 			if (backup == null && value != null
-					&& value.toString().length() > 0) {
+					&& !value.toString().isEmpty()) {
 				if (card == QueryField.CARD_BAG
 						|| card == QueryField.CARD_MODIFIABLEBAG) {
 					value = new String[] { value.toString() };

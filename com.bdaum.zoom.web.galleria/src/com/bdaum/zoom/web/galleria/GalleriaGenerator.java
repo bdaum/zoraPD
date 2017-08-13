@@ -74,7 +74,7 @@ public class GalleriaGenerator extends AbstractGalleryGenerator {
 		if (!show.getHideHeader()) {
 			varmap.put("name", BatchUtilities.encodeHTML(show.getName(), false)); //$NON-NLS-1$
 			String description = show.getDescription();
-			if (description != null && description.length() > 0) {
+			if (description != null && !description.isEmpty()) {
 				String d = show.getHtmlDescription() ? description : BatchUtilities.encodeHTML(description, true);
 				varmap.put("description", d); //$NON-NLS-1$
 				varmap.put("descriptiondiv", //$NON-NLS-1$
@@ -167,11 +167,11 @@ public class GalleriaGenerator extends AbstractGalleryGenerator {
 		varmap.put("image", encodeURL(image)); //$NON-NLS-1$
 		varmap.put("thumbnail", encodeURL(thumbnail)); //$NON-NLS-1$
 		String altText = exhibit.getAltText();
-		if (altText != null && altText.length() > 0)
+		if (altText != null && !altText.isEmpty())
 			varmap.put("alt", BatchUtilities.encodeHTML(altText, false)); //$NON-NLS-1$
 		if (storyboard.getShowCaptions()) {
 			String caption = exhibit.getCaption();
-			if (caption != null && caption.length() > 0) {
+			if (caption != null && !caption.isEmpty()) {
 				String c = BatchUtilities.encodeHTML(caption, true);
 				varmap.put("title", c); //$NON-NLS-1$
 				varmap.put("image-title", c); //$NON-NLS-1$
@@ -180,12 +180,12 @@ public class GalleriaGenerator extends AbstractGalleryGenerator {
 		if (storyboard.getShowDescriptions()) {
 			String description = exhibit.getDescription();
 			String exifdiv = getExifDiv(storyboard, exhibit, asset, null);
-			if ((description != null && description.length() > 0) || exifdiv != null) {
+			if ((description != null && !description.isEmpty()) || exifdiv != null) {
 				String html = description != null
 						? exhibit.getHtmlDescription() ? description : BatchUtilities.encodeHTML(description, true)
 						: ""; //$NON-NLS-1$
 				if (exifdiv != null) {
-					if (html.length() > 0)
+					if (!html.isEmpty())
 						html += "<br/>"; //$NON-NLS-1$
 					html += exifdiv;
 				}
@@ -195,7 +195,7 @@ public class GalleriaGenerator extends AbstractGalleryGenerator {
 		WebGalleryImpl show = getShow();
 		if (exhibit.getDownloadable() && original != null && !show.getHideDownload()) {
 			String downloadText = show.getDownloadText();
-			if (downloadText != null && downloadText.length() > 0)
+			if (downloadText != null && !downloadText.isEmpty())
 				varmap.put("downloaddiv", "link: '" //$NON-NLS-1$ //$NON-NLS-2$
 						+ encodeURL(original) + "',"); //$NON-NLS-1$
 		}
@@ -226,7 +226,7 @@ public class GalleriaGenerator extends AbstractGalleryGenerator {
 		for (int i = 0; i < templates.length; i++) {
 			String name = templates[i].getName();
 			if (name.equals("index.html") && pageName != null //$NON-NLS-1$
-					&& pageName.length() > 0) {
+					&& !pageName.isEmpty()) {
 				name = pageName;
 			}
 			names[i] = name;
@@ -288,12 +288,10 @@ public class GalleriaGenerator extends AbstractGalleryGenerator {
 				File themeFile = new File(rTarget, theme + ".min.js"); //$NON-NLS-1$
 				if (!themeFile.exists()) {
 					final Shell shell = adaptable.getAdapter(Shell.class);
-					shell.getDisplay().syncExec(new Runnable() {
-						public void run() {
-							AcousticMessageDialog.openWarning(shell, Messages.GalleriaGenerator_missing_resources,
-									NLS.bind(Messages.GalleriaGenerator_please_install_theme, theme, rTarget));
-						}
-					});
+					shell.getDisplay()
+							.syncExec(() -> AcousticMessageDialog.openWarning(shell,
+									Messages.GalleriaGenerator_missing_resources,
+									NLS.bind(Messages.GalleriaGenerator_please_install_theme, theme, rTarget)));
 				}
 			}
 		} else {

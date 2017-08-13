@@ -82,7 +82,7 @@ public class Ticketbox {
 	}
 
 	public static String computeErrorMessage(List<String> errands, Set<String> volumes) {
-		if (errands.size() > 0) {
+		if (!errands.isEmpty()) {
 			String msg;
 			if (errands.size() == 1) {
 				msg = NLS.bind(Messages.Ticketbox_file_offline, errands.get(0),

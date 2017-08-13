@@ -111,7 +111,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 			prefixField.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseDoubleClick(MouseEvent e) {
-					if (prefixField.getText().length() == 0)
+					if (prefixField.getText().isEmpty())
 						prefixField.setText("IMG_"); //$NON-NLS-1$
 				}
 			});
@@ -197,7 +197,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 						.getMeta(true).getLastDeviceImport(key);
 				if (lastImport != null) {
 					String owner = lastImport.getOwner();
-					if (owner != null && owner.length() > 0) {
+					if (owner != null && !owner.isEmpty()) {
 						artistField.setText(owner);
 						presetAuthor = owner;
 					}

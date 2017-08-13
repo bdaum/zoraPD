@@ -73,11 +73,7 @@ public class KeywordCollectDialog extends ZProgressDialog {
 			candidates = new HashSet<String>();
 			final List<AssetImpl> set = dbManager.obtainObjects(AssetImpl.class);
 			if (!shell.isDisposed())
-				shell.getDisplay().syncExec(new Runnable() {
-					public void run() {
-						setMinMax(0, Math.max(1, set.size()));
-					}
-				});
+				shell.getDisplay().syncExec(() -> setMinMax(0, Math.max(1, set.size())));
 			int i = 0;
 			for (AssetImpl asset : set) {
 				String[] list = asset.getKeyword();
@@ -91,31 +87,25 @@ public class KeywordCollectDialog extends ZProgressDialog {
 				if (++i % 10 == 0) {
 					if (!shell.isDisposed()) {
 						final int p = i;
-						shell.getDisplay().syncExec(new Runnable() {
-							public void run() {
-								progressBar.setSelection(p);
-							}
-						});
+						shell.getDisplay().syncExec(() -> progressBar.setSelection(p));
 					}
 				}
 				if (monitor.isCanceled())
 					return Status.CANCEL_STATUS;
 			}
 			if (!shell.isDisposed()) {
-				shell.getDisplay().syncExec(new Runnable() {
-					public void run() {
-						candLabel.setText(NLS.bind(Messages.KeywordCollectDialog_candidates_x, candidates.size()));
-						unusedLabel.setText(NLS.bind(Messages.KeywordCollectDialog_unused_x, unused.size()));
-						viewer1.setInput(candidates);
-						viewer2.setInput(unused);
-						setMessage(Messages.KeywordCollectDialog_please_select_keywords);
-						validate();
-						progressBar.setVisible(false);
-						shell.pack();
-						Point size = shell.getSize();
-						shell.setSize(size.x, Math.min(size.y, 700));
-						shell.layout(true, true);
-					}
+				shell.getDisplay().syncExec(() -> {
+					candLabel.setText(NLS.bind(Messages.KeywordCollectDialog_candidates_x, candidates.size()));
+					unusedLabel.setText(NLS.bind(Messages.KeywordCollectDialog_unused_x, unused.size()));
+					viewer1.setInput(candidates);
+					viewer2.setInput(unused);
+					setMessage(Messages.KeywordCollectDialog_please_select_keywords);
+					validate();
+					progressBar.setVisible(false);
+					shell.pack();
+					Point size = shell.getSize();
+					shell.setSize(size.x, Math.min(size.y, 700));
+					shell.layout(true, true);
 				});
 			}
 			return Status.OK_STATUS;
@@ -145,11 +135,7 @@ public class KeywordCollectDialog extends ZProgressDialog {
 		super.create();
 		setTitle(Messages.KeywordCollectDialog_collected_keywords);
 		setMessage(Messages.KeywordCollectDialog_collecting_keywords);
-		BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-			public void run() {
-				new CollectJob().schedule();
-			}
-		});
+		BusyIndicator.showWhile(getShell().getDisplay(), () -> new CollectJob().schedule());
 	}
 
 	private void validate() {

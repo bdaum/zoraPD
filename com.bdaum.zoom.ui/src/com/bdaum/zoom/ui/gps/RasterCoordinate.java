@@ -64,8 +64,7 @@ public class RasterCoordinate {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		return (obj instanceof RasterCoordinate) ? ((RasterCoordinate) obj).x == x
-				&& ((RasterCoordinate) obj).y == y
+		return (obj instanceof RasterCoordinate) ? ((RasterCoordinate) obj).x == x && ((RasterCoordinate) obj).y == y
 				: super.equals(obj);
 	}
 
@@ -91,9 +90,8 @@ public class RasterCoordinate {
 	 *            kilometers, 'N' is nautical miles
 	 * @return - closest waypoint within tolerance radius or null
 	 */
-	public Waypoint findClosestMatch(
-			Map<RasterCoordinate, ? extends Waypoint> placeMap,
-			double tolerance, char unit) {
+	public Waypoint findClosestMatch(Map<RasterCoordinate, ? extends Waypoint> placeMap, double tolerance,
+			char unit) {
 		if (placeMap == null)
 			return null;
 		int oldX = x;
@@ -104,10 +102,8 @@ public class RasterCoordinate {
 			x = oldX + xdiff[i];
 			y = oldY + ydiff[i];
 			Waypoint cand = placeMap.get(this);
-			if (cand != null && !Double.isNaN(cand.getLat())
-					&& !Double.isNaN(cand.getLon())) {
-				double distance = Core.distance(lat, lon, cand.getLat(),
-						cand.getLon(), unit);
+			if (cand != null && !Double.isNaN(cand.getLat()) && !Double.isNaN(cand.getLon())) {
+				double distance = Core.distance(lat, lon, cand.getLat(), cand.getLon(), unit);
 				if (distance < minDist) {
 					minDist = distance;
 					place = cand;
@@ -126,8 +122,7 @@ public class RasterCoordinate {
 	 *            - mapping raster coordinates to waypoints
 	 * @return matching waypoint or null
 	 */
-	public Waypoint findExactMatch(
-			Map<RasterCoordinate, ? extends Waypoint> placeMap) {
+	public Waypoint findExactMatch(Map<RasterCoordinate, ? extends Waypoint> placeMap) {
 		return placeMap.get(this);
 	}
 

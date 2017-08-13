@@ -134,7 +134,7 @@ public class PDFTargetFilePage extends ColoredWizardPage {
 		if (assets.isEmpty())
 			errorMessage = Messages.PDFTargetFilePage_no_image_selected;
 		else if (fileEditor != null) {
-			if (targetFile.length() == 0)
+			if (targetFile.isEmpty())
 				errorMessage = Messages.PDFTargetFilePage_file_name_empty;
 			else if (targetFile.indexOf('*') >= 0 || targetFile.indexOf('?') >= 0)
 				errorMessage = Messages.PDFTargetFilePage_please_specify_target_file;
@@ -157,7 +157,7 @@ public class PDFTargetFilePage extends ColoredWizardPage {
 		if (linkField == null)
 			return null;
 		String weblink = linkField.getText().trim();
-		return weblink.length() == 0 ? "index.html" : weblink; //$NON-NLS-1$
+		return weblink.isEmpty() ? "index.html" : weblink; //$NON-NLS-1$
 	}
 
 	public int getQuality() {

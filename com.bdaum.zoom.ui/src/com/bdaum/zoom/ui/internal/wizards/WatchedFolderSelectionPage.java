@@ -79,7 +79,7 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 				dialog.setText(Messages.WatchedFolderSelectionPage_watched_folder);
 				dialog.setMessage(Messages.WatchedFolderSelectionPage_Select_a_folder);
 				String lastTargetDir = folderField.getText();
-				dialog.setFilterPath(lastTargetDir.length() > 0 ? lastTargetDir : null);
+				dialog.setFilterPath(lastTargetDir.isEmpty() ? null : lastTargetDir);
 				String dir = dialog.open();
 				if (dir != null) {
 					if (!dir.endsWith(File.separator))
@@ -123,7 +123,7 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 
 	@Override
 	protected void validatePage() {
-		if (folderField.getText().length() == 0) {
+		if (folderField.getText().isEmpty()) {
 			setErrorMessage(Messages.WatchedFolderSelectionPage_specify_path);
 			setPageComplete(false);
 		} else {

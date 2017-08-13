@@ -70,8 +70,7 @@ import com.bdaum.zoom.operations.jobs.AbstractExportJob;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 
 @SuppressWarnings("restriction")
-public class ExportToCommunityJob extends AbstractExportJob implements
-		IErrorHandler {
+public class ExportToCommunityJob extends AbstractExportJob implements IErrorHandler {
 
 	private static final class ExportRule implements ISchedulingRule {
 
@@ -82,19 +81,16 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 		public boolean contains(ISchedulingRule rule) {
 			if (rule == this)
 				return true;
-			if (rule instanceof UploadJob.UploadRule
-					&& ((UploadJob.UploadRule) rule).getParentJob().getRule() == this)
+			if (rule instanceof UploadJob.UploadRule && ((UploadJob.UploadRule) rule).getParentJob().getRule() == this)
 				return true;
 			if (rule instanceof PostProcessingTask.PostProcessingRule
-					&& ((PostProcessingTask.PostProcessingRule) rule)
-							.getParentJob().getRule() == this)
+					&& ((PostProcessingTask.PostProcessingRule) rule).getParentJob().getRule() == this)
 				return true;
 			return false;
 		}
 	}
 
-	protected static final SimpleDateFormat df = new SimpleDateFormat(
-			Messages.ExportToCommunityJob_tracik_date_format);
+	protected static final SimpleDateFormat df = new SimpleDateFormat(Messages.ExportToCommunityJob_tracik_date_format);
 	private static int exportCounter = 0;
 	private Session session;
 	private String communityName;
@@ -115,17 +111,13 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 	private MultiStatus status;
 	private final int cropMode;
 
-	public ExportToCommunityJob(IConfigurationElement config,
-			List<Asset> assets, AlbumDescriptor[] associatedAlbums,
-			String[] titles, String[] descriptions, int mode, int sizing, double scale,
-			int maxSize, int cropMode, UnsharpMask umask, int jpegQuality,
-			Session session, Set<QueryField> xmpFilter, boolean showDescription,
+	public ExportToCommunityJob(IConfigurationElement config, List<Asset> assets, AlbumDescriptor[] associatedAlbums,
+			String[] titles, String[] descriptions, int mode, int sizing, double scale, int maxSize, int cropMode,
+			UnsharpMask umask, int jpegQuality, Session session, Set<QueryField> xmpFilter, boolean showDescription,
 			boolean createWatermark, String copyright, IAdaptable adaptable) {
-		super(
-				NLS.bind("Export to {0}", config.getAttribute("name")), assets, //$NON-NLS-1$ //$NON-NLS-2$
-				mode, sizing, scale, maxSize, umask, jpegQuality, xmpFilter,
-				createWatermark, copyright, QueryField.SAFETY_RESTRICTED,
-				adaptable);
+		super(NLS.bind("Export to {0}", config.getAttribute("name")), assets, //$NON-NLS-1$ //$NON-NLS-2$
+				mode, sizing, scale, maxSize, umask, jpegQuality, xmpFilter, createWatermark, copyright,
+				QueryField.SAFETY_RESTRICTED, adaptable);
 		this.associatedAlbums = associatedAlbums;
 		this.titles = titles;
 		this.descriptions = descriptions;
@@ -142,30 +134,24 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 
 	@Override
 	public boolean belongsTo(Object family) {
-		return Constants.OPERATIONJOBFAMILY == family
-				|| Constants.CRITICAL == family;
+		return Constants.OPERATIONJOBFAMILY == family || Constants.CRITICAL == family;
 	}
 
 	@Override
 	protected IStatus doRun(IProgressMonitor monitor) {
 		long startTime = System.currentTimeMillis();
 
-		status = new MultiStatus(CommunitiesActivator.PLUGIN_ID, 0, NLS.bind(
-				Messages.ExportToCommunityJob_export_to_report, communityName),
-				null);
+		status = new MultiStatus(CommunitiesActivator.PLUGIN_ID, 0,
+				NLS.bind(Messages.ExportToCommunityJob_export_to_report, communityName), null);
 		int size = assets.size();
-		monitor.beginTask(NLS.bind(Messages.ExportToCommunityJob_exporting_to,
-				communityName), size + 1);
-		SubMonitor progress = SubMonitor.convert(monitor,
-				1200 * (size + 1) + 100);
+		monitor.beginTask(NLS.bind(Messages.ExportToCommunityJob_exporting_to, communityName), size + 1);
+		SubMonitor progress = SubMonitor.convert(monitor, 1200 * (size + 1) + 100);
 		File targetFolder;
 		try {
 			targetFolder = Core.createTempDirectory(communityName + "Transfer"); //$NON-NLS-1$
 		} catch (IOException e) {
-			status.add(new Status(IStatus.ERROR,
-					CommunitiesActivator.PLUGIN_ID, NLS.bind(
-							Messages.ExportToCommunityJob_error_when_exporting,
-							communityName), e));
+			status.add(new Status(IStatus.ERROR, CommunitiesActivator.PLUGIN_ID,
+					NLS.bind(Messages.ExportToCommunityJob_error_when_exporting, communityName), e));
 			return status;
 		}
 		IVolumeManager vm = Core.getCore().getVolumeManager();
@@ -179,30 +165,23 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 			try {
 				for (int i = 0; i < size; i++) {
 					Asset asset = assets.get(i);
-					AlbumDescriptor album = (associatedAlbums == null) ? null
-							: associatedAlbums[i];
+					AlbumDescriptor album = (associatedAlbums == null) ? null : associatedAlbums[i];
 					String title = (titles == null) ? null : titles[i];
-					String description = (descriptions == null) ? null
-							: descriptions[i];
+					String description = (descriptions == null) ? null : descriptions[i];
 					URI uri = vm.findExistingFile(asset, false);
 					if (uri != null) {
 						File file = null;
 						try {
 							file = box.obtainFile(uri);
 						} catch (IOException e) {
-							status.add(new Status(
-									IStatus.ERROR,
-									CommunitiesActivator.PLUGIN_ID,
-									NLS.bind(
-											Messages.ExportToCommunityJob_download_failed,
-											uri), e));
+							status.add(new Status(IStatus.ERROR, CommunitiesActivator.PLUGIN_ID,
+									NLS.bind(Messages.ExportToCommunityJob_download_failed, uri), e));
 						}
 						if (file != null) {
-							File outfile = makeUniqueTargetFile(targetFolder,
-									uri, mode);
+							File outfile = makeUniqueTargetFile(targetFolder, uri, mode);
 							if (mode == Constants.FORMAT_ORIGINAL) {
-								ImageAttributes imageAttributes = new ImageAttributes(
-										session, asset, album, file, false);
+								ImageAttributes imageAttributes = new ImageAttributes(session, asset, album, file,
+										false);
 								imageAttributes.setTitle(title);
 								if (showDescription)
 									imageAttributes.setDescription(description);
@@ -213,17 +192,14 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 								if (monitor.isCanceled())
 									break;
 							} else {
-								if (downScaleImage(status, progress, asset,
-										file, outfile, 1d, cropMode) != null) {
+								if (downScaleImage(status, progress, asset, file, outfile, 1d, cropMode) != null) {
 									if (monitor.isCanceled())
 										break;
-									ImageAttributes imageAttributes = new ImageAttributes(
-											session, asset, album, outfile,
-											true);
+									ImageAttributes imageAttributes = new ImageAttributes(session, asset, album,
+											outfile, true);
 									imageAttributes.setTitle(title);
 									if (showDescription)
-										imageAttributes
-												.setDescription(description);
+										imageAttributes.setDescription(description);
 									else
 										imageAttributes.setDescription(""); //$NON-NLS-1$
 									imagesTransferred.add(imageAttributes);
@@ -237,37 +213,24 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 						}
 					}
 					if (monitor.isCanceled()) {
-						status.add(new Status(
-								IStatus.WARNING,
-								CommunitiesActivator.PLUGIN_ID,
-								NLS.bind(
-										Messages.ExportToCommunityJob_export_was_canceled,
-										communityName)));
+						status.add(new Status(IStatus.WARNING, CommunitiesActivator.PLUGIN_ID,
+								NLS.bind(Messages.ExportToCommunityJob_export_was_canceled, communityName)));
 						return status;
 					}
 				}
 			} finally {
 				box.endSession();
 			}
-			imageUploadApi.postProcessAllUploads(imagesTransferred, session,
-					this);
+			imageUploadApi.postProcessAllUploads(imagesTransferred, session, this);
 			try {
 				getJobManager().join(exportId, monitor);
 				session.getAccount().save();
 				if (!track.isEmpty())
-					OperationJob.executeOperation(new AddTrackRecordsOperation(
-							track), adaptable);
-				CommunitiesActivator
-						.getDefault()
-						.getLog()
-						.log(new Status(
-								IStatus.INFO,
-								CommunitiesActivator.PLUGIN_ID,
-								NLS.bind(
-										Messages.ExportToCommunityJob_n_images_transferred,
-										new Object[] { track.size(),
-												communityName,
-												session.getAccount().getName() })));
+					OperationJob.executeOperation(new AddTrackRecordsOperation(track), adaptable);
+				CommunitiesActivator.getDefault().getLog()
+						.log(new Status(IStatus.INFO, CommunitiesActivator.PLUGIN_ID,
+								NLS.bind(Messages.ExportToCommunityJob_n_images_transferred,
+										new Object[] { track.size(), communityName, session.getAccount().getName() })));
 			} catch (OperationCanceledException e) {
 				// do nothing
 			} catch (InterruptedException e) {
@@ -291,13 +254,12 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 	private void showCommunityWebPage() {
 		try {
 			if (uploadCounter > 0 && session.getAccount().getVisit() != null
-					&& session.getAccount().getVisit().length() > 0) {
+					&& !session.getAccount().getVisit().isEmpty()) {
 				Shell shell = adaptable.getAdapter(Shell.class);
-				if (shell != null) {
-					shell.getDisplay().asyncExec(new Runnable() {
-						public void run() {
+				if (shell != null && !shell.isDisposed()) {
+					shell.getDisplay().asyncExec(() -> {
+						if (!shell.isDisposed())
 							session.getAccount().testVisit();
-						}
 					});
 				}
 			}
@@ -307,8 +269,7 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 	}
 
 	@SuppressWarnings("fallthrough")
-	private void upload(ImageAttributes imageAttributes,
-			final IProgressMonitor monitor, boolean deleteAfterTransfer) {
+	private void upload(ImageAttributes imageAttributes, final IProgressMonitor monitor, boolean deleteAfterTransfer) {
 		boolean replace = false;
 		final Shell shell = adaptable.getAdapter(Shell.class);
 		String name = imageAttributes.getAsset().getName();
@@ -320,22 +281,14 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 			if (skipalloversized)
 				return;
 			String[] buttons = single ? new String[] { IDialogConstants.CANCEL_LABEL }
-					: new String[] { Messages.ExportToCommunityJob_skip_all,
-							IDialogConstants.SKIP_LABEL,
+					: new String[] { Messages.ExportToCommunityJob_skip_all, IDialogConstants.SKIP_LABEL,
 							IDialogConstants.CANCEL_LABEL };
-			final AcousticMessageDialog dialog = new AcousticMessageDialog(
-					shell, Messages.ExportToCommunityJob_image_too_large, null,
-					NLS.bind(
-							Messages.ExportToCommunityJob_image_is_larger_than,
-							name, session.getAccount().getMaxFilesize()
-									/ (1024 * 1024)), MessageDialog.QUESTION,
-					buttons, 1);
-			shell.getDisplay().syncExec(new Runnable() {
-
-				public void run() {
-					dialog.open();
-				}
-			});
+			final AcousticMessageDialog dialog = new AcousticMessageDialog(shell,
+					Messages.ExportToCommunityJob_image_too_large, null,
+					NLS.bind(Messages.ExportToCommunityJob_image_is_larger_than, name,
+							session.getAccount().getMaxFilesize() / (1024 * 1024)),
+					MessageDialog.QUESTION, buttons, 1);
+			shell.getDisplay().syncExec(() -> dialog.open());
 			int ret = dialog.getReturnCode();
 			if (single) {
 				monitor.setCanceled(true);
@@ -350,24 +303,14 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 				monitor.setCanceled(true);
 				return;
 			}
-		} else if (filesize > (session.getAccount().getTrafficLimit() - session
-				.getAccount().getCurrentUploadUsed())) {
+		} else if (filesize > (session.getAccount().getTrafficLimit() - session.getAccount().getCurrentUploadUsed())) {
 			shell.getDisplay().syncExec(new Runnable() {
 
 				public void run() {
-					AcousticMessageDialog
-							.openWarning(
-									shell,
-									Messages.ExportToCommunityJob_traffic_limit_exceeded,
-									NLS.bind(
-											Messages.ExportToCommunityJob_the_traffic_limit_of,
-											new Object[] {
-													session.getAccount()
-															.getTrafficLimit()
-															/ (1024 * 1024),
-													communityName,
-													session.getAccount()
-															.getName() }));
+					AcousticMessageDialog.openWarning(shell, Messages.ExportToCommunityJob_traffic_limit_exceeded,
+							NLS.bind(Messages.ExportToCommunityJob_the_traffic_limit_of,
+									new Object[] { session.getAccount().getTrafficLimit() / (1024 * 1024),
+											communityName, session.getAccount().getName() }));
 				}
 			});
 			monitor.setCanceled(true);
@@ -380,36 +323,25 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 					if (replaceall)
 						replace = true;
 					else {
-						String[] buttons = session.getAccount().isCanReplace() ? (single ? new String[] {
-								Messages.ExportToCommunityJob_replace,
-								Messages.ExportToCommunityJob_upload,
-								Messages.ExportToCommunityJob_cancel }
-								: new String[] {
-										Messages.ExportToCommunityJob_replace_all,
-										Messages.ExportToCommunityJob_replace,
-										Messages.ExportToCommunityJob_upload_all,
-										Messages.ExportToCommunityJob_upload,
-										Messages.ExportToCommunityJob_skip_all,
-										Messages.ExportToCommunityJob_skp,
-										Messages.ExportToCommunityJob_cancel })
-								: (single ? new String[] {
-										Messages.ExportToCommunityJob_upload,
-										Messages.ExportToCommunityJob_cancel }
-										: new String[] {
-												Messages.ExportToCommunityJob_upload_all,
+						String[] buttons = session.getAccount().isCanReplace() ? (single
+								? new String[] { Messages.ExportToCommunityJob_replace,
+										Messages.ExportToCommunityJob_upload, Messages.ExportToCommunityJob_cancel }
+								: new String[] { Messages.ExportToCommunityJob_replace_all,
+										Messages.ExportToCommunityJob_replace, Messages.ExportToCommunityJob_upload_all,
+										Messages.ExportToCommunityJob_upload, Messages.ExportToCommunityJob_skip_all,
+										Messages.ExportToCommunityJob_skp, Messages.ExportToCommunityJob_cancel })
+								: (single
+										? new String[] { Messages.ExportToCommunityJob_upload,
+												Messages.ExportToCommunityJob_cancel }
+										: new String[] { Messages.ExportToCommunityJob_upload_all,
 												Messages.ExportToCommunityJob_upload,
 												Messages.ExportToCommunityJob_skip_all,
 												Messages.ExportToCommunityJob_skp,
 												Messages.ExportToCommunityJob_cancel });
-						final AcousticMessageDialog dialog = new AcousticMessageDialog(
-								shell,
-								Messages.ExportToCommunityJob_image_already_uploaded,
-								null,
-								NLS.bind(
-										Messages.ExportToCommunityJob_image_uploaded_at,
-										new Object[] { name, df.format(date),
-												communityName,
-												session.getAccount().getName() }),
+						final AcousticMessageDialog dialog = new AcousticMessageDialog(shell,
+								Messages.ExportToCommunityJob_image_already_uploaded, null,
+								NLS.bind(Messages.ExportToCommunityJob_image_uploaded_at, new Object[] { name,
+										df.format(date), communityName, session.getAccount().getName() }),
 								MessageDialog.QUESTION, buttons, 1);
 						shell.getDisplay().syncExec(new Runnable() {
 
@@ -478,24 +410,16 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 				if (photoset != null && photoset.isUnsafe(imageAttributes)) {
 					if (skipallunsafe)
 						return;
-					String[] buttons = (single ? new String[] {
-							Messages.ExportToCommunityJob_upload,
-							Messages.ExportToCommunityJob_cancel }
-							: new String[] {
-									Messages.ExportToCommunityJob_upload_all,
-									Messages.ExportToCommunityJob_upload,
-									Messages.ExportToCommunityJob_skip_all,
-									Messages.ExportToCommunityJob_skp,
-									Messages.ExportToCommunityJob_cancel });
-					final AcousticMessageDialog dialog = new AcousticMessageDialog(
-							shell,
-							Messages.ExportToCommunityJob_privacy_violated,
-							null,
-							NLS.bind(
-									Messages.ExportToCommunityJob_image_classified_as_unsafe,
-									new Object[] { name, photoset.getTitle(),
-											communityName,
-											session.getAccount().getName() }),
+					String[] buttons = (single
+							? new String[] { Messages.ExportToCommunityJob_upload,
+									Messages.ExportToCommunityJob_cancel }
+							: new String[] { Messages.ExportToCommunityJob_upload_all,
+									Messages.ExportToCommunityJob_upload, Messages.ExportToCommunityJob_skip_all,
+									Messages.ExportToCommunityJob_skp, Messages.ExportToCommunityJob_cancel });
+					final AcousticMessageDialog dialog = new AcousticMessageDialog(shell,
+							Messages.ExportToCommunityJob_privacy_violated, null,
+							NLS.bind(Messages.ExportToCommunityJob_image_classified_as_unsafe, new Object[] { name,
+									photoset.getTitle(), communityName, session.getAccount().getName() }),
 							MessageDialog.QUESTION, buttons, 1);
 					shell.getDisplay().syncExec(new Runnable() {
 						public void run() {
@@ -525,8 +449,7 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 					}
 				}
 			}
-			new UploadJob(this, imageAttributes, replace, deleteAfterTransfer)
-					.schedule();
+			new UploadJob(this, imageAttributes, replace, deleteAfterTransfer).schedule();
 		}
 	}
 
@@ -536,13 +459,11 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 		if (imageTrack != null) {
 			ImageUploadApi imageUploadApi = getImageUploadApi();
 			for (String id : imageTrack) {
-				TrackRecordImpl record = dbManager.obtainById(
-						TrackRecordImpl.class, id);
+				TrackRecordImpl record = dbManager.obtainById(TrackRecordImpl.class, id);
 				if (record != null) {
 					try {
 
-						if (imageUploadApi.getImageInfo(session,
-								record.getDerivative()) != null)
+						if (imageUploadApi.getImageInfo(session, record.getDerivative()) != null)
 							return record.getExportDate();
 					} catch (InfoFailedException e) {
 						// ignore
@@ -600,8 +521,7 @@ public class ExportToCommunityJob extends AbstractExportJob implements
 
 	public void handleError(Object source, Exception e) {
 		status.add(new Status(IStatus.ERROR, CommunitiesActivator.PLUGIN_ID,
-				NLS.bind(Messages.ExportToCommunityJob_communication_error,
-						session.getApi().getSiteName()), e));
+				NLS.bind(Messages.ExportToCommunityJob_communication_error, session.getApi().getSiteName()), e));
 	}
 
 	public MultiStatus getStatus() {

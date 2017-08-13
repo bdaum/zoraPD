@@ -93,7 +93,7 @@ public class GpsUtilities {
 	}
 
 	private static boolean isEmpty(String text) {
-		return text == null || text.length() == 0;
+		return text == null || text.isEmpty();
 	}
 
 	public static Place fetchPlaceInfo(double lat, double lon)

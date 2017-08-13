@@ -147,14 +147,14 @@ public class HoverInfo implements IHoverInfo {
 							description = album.getDescription();
 					}
 				}
-				if (region.getDescription() != null && region.getDescription().length() > 0) {
-					if (description.length() > 0)
+				if (region.getDescription() != null && !region.getDescription().isEmpty()) {
+					if (!description.isEmpty())
 						description += "; "; //$NON-NLS-1$
 					description += region.getDescription();
 				}
 				StringBuilder lsb = new StringBuilder();
 				lsb.append(name);
-				if (description.length() > 0)
+				if (!description.isEmpty())
 					lsb.append(" - ").append(description); //$NON-NLS-1$
 				String line = lsb.toString();
 				lines.remove(line);
@@ -208,11 +208,11 @@ public class HoverInfo implements IHoverInfo {
 				text = sbt.toString();
 			} else
 				text = qfield.value2text(value, ""); //$NON-NLS-1$
-			if (text != null && text.length() > 0 && text != Format.MISSINGENTRYSTRING) {
+			if (text != null && !text.isEmpty() && text != Format.MISSINGENTRYSTRING) {
 				if (sb.length() > 0)
 					sb.append('\n');
 				String label = qfield.getLabel();
-				if (text.length() > 0) {
+				if (!text.isEmpty()) {
 					if (qfield.getUnit() != null)
 						text += ' ' + qfield.getUnit();
 					else if (value instanceof String[] && ((String[]) value).length > 0)

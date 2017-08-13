@@ -100,11 +100,9 @@ public class HoveringController extends MouseTrackAdapter {
 					@Override
 					protected void doRun(IProgressMonitor monitor) {
 						if (!control.isDisposed())
-							control.getDisplay().asyncExec(new Runnable() {
-								public void run() {
-									if (!control.isDisposed())
-										stop();
-								}
+							control.getDisplay().asyncExec(() -> {
+								if (!control.isDisposed())
+									stop();
 							});
 
 					}
@@ -208,11 +206,9 @@ public class HoveringController extends MouseTrackAdapter {
 
 		public void focusLost(FocusEvent event) {
 			if (subject.getControl() == event.widget) {
-				event.display.asyncExec(new Runnable() {
-
-					public void run() {
+				event.display.asyncExec(() -> {
+					if (!event.display.isDisposed())
 						stop();
-					}
 				});
 			}
 		}
@@ -243,12 +239,12 @@ public class HoveringController extends MouseTrackAdapter {
 
 	/**
 	 * Creates a new hovering controller for the given hovering subject. The
-	 * controller registers as mouse listener on the subject. Initially, the
-	 * popup window is invisible.
+	 * controller registers as mouse listener on the subject. Initially, the popup
+	 * window is invisible.
 	 *
 	 * @param subject
-	 *            the subject for which the controller is created. Must
-	 *            implement IHoverSubject
+	 *            the subject for which the controller is created. Must implement
+	 *            IHoverSubject
 	 */
 	public HoveringController(IHoverSubject subject) {
 		this.subject = subject;
@@ -320,21 +316,20 @@ public class HoveringController extends MouseTrackAdapter {
 	}
 
 	/**
-	 * Opens the hover popup window at the specified location. The window closes
-	 * if the mouse pointer leaves the specified area.
+	 * Opens the hover popup window at the specified location. The window closes if
+	 * the mouse pointer leaves the specified area.
 	 *
 	 * @param control
 	 *            the control on which the hover controller was installed
 	 * @param coveredArea
-	 *            the area about which the hover popup window presents
-	 *            information
+	 *            the area about which the hover popup window presents information
 	 * @param coveredArea
 	 *            a list of annotated subregions
 	 * @param location
 	 *            the location of the hover popup window will pop up
-	 * @param control 
+	 * @param control
 	 */
-	private void showWindow( Control control, Object coveredObject, ImageRegion[] coveredRegions, Point location) {
+	private void showWindow(Control control, Object coveredObject, ImageRegion[] coveredRegions, Point location) {
 		toolTip.setText(info.getTitle());
 		toolTip.setMessage(info.getText());
 		toolTip.setLocation(location);

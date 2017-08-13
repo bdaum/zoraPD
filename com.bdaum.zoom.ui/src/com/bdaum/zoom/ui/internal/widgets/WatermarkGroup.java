@@ -103,7 +103,7 @@ public class WatermarkGroup {
 	public void fillValues(IDialogSettings settings) {
 		if (settings != null) {
 			String copyright = settings.get(COPYRIGHT);
-			if (copyright == null || copyright.trim().length() == 0
+			if (copyright == null || copyright.trim().isEmpty()
 					|| copyright.trim().length() == 4 && testYear(copyright))
 				copyrightField.setText(df.format(new Date()) + " "); //$NON-NLS-1$
 			boolean watermark = settings.getBoolean(WATERMARK);

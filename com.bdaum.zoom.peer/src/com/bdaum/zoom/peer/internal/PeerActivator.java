@@ -122,6 +122,8 @@ public class PeerActivator extends ZUiPlugin
 		super.start(context);
 		this.context = context;
 		plugin = this;
+		 // cut out internal platform events
+		System.setProperty("ch.ethz.iks.r_osgi.topic.filter", "org/eclipse/*"); //$NON-NLS-1$ //$NON-NLS-2$
 		IEclipsePreferences node = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
 		StringTokenizer st = new StringTokenizer(node.get(PreferenceConstants.RECEIVERS, ""), "\n"); //$NON-NLS-1$ //$NON-NLS-2$
 		Map<String, PeerDefinition> incoming = getIncomingCalls();
@@ -517,7 +519,7 @@ public class PeerActivator extends ZUiPlugin
 
 	public String getHostOrHostname() {
 		String name = getHostName();
-		return name.length() > 0 ? name : getHost();
+		return name.isEmpty() ? getHost() : name;
 	}
 
 	public IPeerProvider getPeerProvider(String location) throws ConnectionLostException {

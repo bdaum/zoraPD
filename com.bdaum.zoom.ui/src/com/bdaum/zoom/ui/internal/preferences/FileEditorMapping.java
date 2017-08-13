@@ -44,8 +44,7 @@ public class FileEditorMapping implements Cloneable {
 	// if considered the default one.
 	private List<EditorDescriptor> editors = new ArrayList<EditorDescriptor>(1);
 
-	private List<EditorDescriptor> declaredDefaultEditors = new ArrayList<EditorDescriptor>(
-			1);
+	private List<EditorDescriptor> declaredDefaultEditors = new ArrayList<EditorDescriptor>(1);
 
 	/**
 	 * Create an instance of this class.
@@ -101,8 +100,7 @@ public class FileEditorMapping implements Cloneable {
 	public Object clone() {
 		try {
 			FileEditorMapping clone = (FileEditorMapping) super.clone();
-			clone.editors = (List<EditorDescriptor>) ((ArrayList<EditorDescriptor>) editors)
-					.clone();
+			clone.editors = (List<EditorDescriptor>) ((ArrayList<EditorDescriptor>) editors).clone();
 			return clone;
 		} catch (CloneNotSupportedException e) {
 			return null;
@@ -144,11 +142,9 @@ public class FileEditorMapping implements Cloneable {
 	}
 
 	/**
-	 * Compare the editor ids from both lists and return true if they are
-	 * equals.
+	 * Compare the editor ids from both lists and return true if they are equals.
 	 */
-	private static boolean compareList(List<EditorDescriptor> l1,
-			List<EditorDescriptor> l2) {
+	private static boolean compareList(List<EditorDescriptor> l1, List<EditorDescriptor> l2) {
 		if (l1.size() != l2.size()) {
 			return false;
 		}
@@ -169,12 +165,7 @@ public class FileEditorMapping implements Cloneable {
 	 * (non-Javadoc) Method declared on IFileEditorMapping.
 	 */
 	public EditorDescriptor getDefaultEditor() {
-
-		if (editors.size() == 0) {
-			return null;
-		}
-
-		return editors.get(0);
+		return editors.isEmpty() ? null : editors.get(0);
 	}
 
 	/*
@@ -246,8 +237,7 @@ public class FileEditorMapping implements Cloneable {
 	}
 
 	/**
-	 * Set the default editor registered for file type described by this
-	 * mapping.
+	 * Set the default editor registered for file type described by this mapping.
 	 *
 	 * @param editor
 	 *            the editor to be set as default
@@ -260,12 +250,11 @@ public class FileEditorMapping implements Cloneable {
 	}
 
 	/**
-	 * Set the collection of all editors (EditorDescriptor) registered for the
-	 * file type described by this mapping. Typically an editor is registered
-	 * either through a plugin or explicitly by the user modifying the
-	 * associations in the preference pages. This modifies the internal list to
-	 * share the passed list. (hence the clear indication of list in the method
-	 * name)
+	 * Set the collection of all editors (EditorDescriptor) registered for the file
+	 * type described by this mapping. Typically an editor is registered either
+	 * through a plugin or explicitly by the user modifying the associations in the
+	 * preference pages. This modifies the internal list to share the passed list.
+	 * (hence the clear indication of list in the method name)
 	 *
 	 * @param newEditors
 	 *            the new list of associated editors
@@ -296,21 +285,20 @@ public class FileEditorMapping implements Cloneable {
 	}
 
 	/**
-	 * Get the editors that have been declared as default. This may be via
-	 * plugin declarations or the preference page.
+	 * Get the editors that have been declared as default. This may be via plugin
+	 * declarations or the preference page.
 	 *
 	 * @return the editors the default editors
 	 * @since 3.1
 	 */
 	public EditorDescriptor[] getDeclaredDefaultEditors() {
-		return declaredDefaultEditors
-				.toArray(new EditorDescriptor[declaredDefaultEditors.size()]);
+		return declaredDefaultEditors.toArray(new EditorDescriptor[declaredDefaultEditors.size()]);
 	}
 
 	/**
-	 * Return whether the editor is declared default. If this is
-	 * EditorDescriptor fails the ExpressionsCheck it will always return
-	 * <code>false</code>, even if it's the original default editor.
+	 * Return whether the editor is declared default. If this is EditorDescriptor
+	 * fails the ExpressionsCheck it will always return <code>false</code>, even if
+	 * it's the original default editor.
 	 *
 	 * @param editor
 	 *            the editor to test

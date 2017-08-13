@@ -176,9 +176,10 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 
 	private void performSearch(boolean shift) {
 		String text = inputField.getText().trim();
-		if (text.length() == 0 || shift || !validate(text)) {
+		if (text.isEmpty() || shift || !validate(text)) {
 			if (fullSearchActivated())
-				Core.getCore().getDbFactory().getLireService(true).performQuery(text, this, ICollectionProcessor.TEXTSEARCH);
+				Core.getCore().getDbFactory().getLireService(true).performQuery(text, this,
+						ICollectionProcessor.TEXTSEARCH);
 			else {
 				KeywordSearchDialog dialog = new KeywordSearchDialog(getWorkbenchWindow().getShell(), text);
 				if (dialog.open() == Window.OK)
@@ -205,11 +206,9 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 	@Override
 	public void focusGained(FocusEvent e) {
 		inputField.selectAll();
-		e.display.timerExec(300, new Runnable() {
-			@Override
-			public void run() {
+		e.display.timerExec(300, () -> {
+			if (!e.display.isDisposed())
 				showToolTip(false);
-			}
 		});
 	}
 
@@ -306,7 +305,8 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 			public void dragOperationChanged(DropTargetEvent event) {
 				event.detail = fullSearchActivated() ? DND.DROP_NONE
 						: textTransfer.isSupportedType(event.currentDataType)
-								? (event.detail & ops) == 0 ? DND.DROP_NONE : DND.DROP_COPY : DND.DROP_NONE;
+								? (event.detail & ops) == 0 ? DND.DROP_NONE : DND.DROP_COPY
+								: DND.DROP_NONE;
 			}
 
 			@Override
@@ -360,7 +360,7 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 		Point displayLocation = inputField.toDisplay(inputField.getLocation());
 		displayLocation.y += 15;
 		displayLocation.x += 20;
-		return Core.getCore().getDbFactory().getLireService(true).configureSearch(this, displayLocation);
+		return Core.getCore().getDbFactory().getLireService(true).ShowConfigureSearch(this, displayLocation);
 	}
 
 	@Override

@@ -747,7 +747,7 @@ public class LogView extends ViewPart implements ILogListener {
 		String message = Messages.LogView_confirmDelete_message;
 		if (!MessageDialog.openConfirm(getSite().getShell(), title, message))
 			return;
-		if (fInputFile.delete() || elements.size() > 0) {
+		if (fInputFile.delete() || !elements.isEmpty()) {
 			handleClear();
 		}
 	}
@@ -1057,7 +1057,7 @@ public class LogView extends ViewPart implements ILogListener {
 	 */
 	private void copyToClipboard(ISelection selection) {
 		String textVersion = selectionToString(selection);
-		if ((textVersion != null) && (textVersion.trim().length() > 0)) {
+		if (textVersion != null && !textVersion.trim().isEmpty()) {
 			// set the clipboard contents
 			fClipboard.setContents(new Object[] { textVersion }, new Transfer[] { TextTransfer.getInstance() });
 		}

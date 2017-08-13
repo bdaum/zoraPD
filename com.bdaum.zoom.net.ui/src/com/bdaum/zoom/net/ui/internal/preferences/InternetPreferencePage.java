@@ -311,9 +311,9 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 				IProxyData proxyData = proxyService.getProxyData(IProxyData.HTTP_PROXY_TYPE);
 				if (proxyData != null) {
 					String text = proxyField.getText();
-					proxyData.setHost(text.length() == 0 ? null : text);
+					proxyData.setHost(text.isEmpty() ? null : text);
 					text = portField.getText();
-					proxyData.setPort(text.length() == 0 ? -1 : Integer.parseInt(text));
+					proxyData.setPort(text.isEmpty() ? -1 : Integer.parseInt(text));
 					try {
 						proxyService.setProxyData(new IProxyData[] { proxyData });
 					} catch (CoreException e) {

@@ -88,7 +88,7 @@ public class StackDialog extends ZTitleAreaDialog {
 	private boolean validate() {
 		String errorMessage = null;
 		String name = nameField.getText();
-		if (name.length() == 0)
+		if (name.isEmpty())
 			errorMessage = Messages.StackDialog_please_define;
 		else
 			for (int i = 0; i < name.length(); i++) {

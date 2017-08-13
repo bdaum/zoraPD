@@ -135,7 +135,7 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider implem
 	}
 
 	private CSSValue getCSSValue(Widget widget, String propertyName) {
-		if (widget == null)
+		if (widget == null || engine == null)
 			return null;
 		Element elt = engine.getElement(widget);
 		if (elt == null)
@@ -160,12 +160,12 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider implem
 		Color color = getColor(element, "color"); //$NON-NLS-1$
 		return color != null ? color : viewerControl.getForeground();
 	}
-	
+
 	@Override
 	public Color getToolTipBackgroundColor(Object element) {
 		return getColor(element, "tooltip-background-color"); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public Color getToolTipForegroundColor(Object element) {
 		return getColor(element, "tooltip-color"); //$NON-NLS-1$
@@ -220,10 +220,21 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider implem
 			if (iconHeight < 0)
 				iconHeight = event.height;
 			int x = event.x + iconWidth + 4;
-			String shortened = shortenText(element, text, textExtent.x, gc, getColumnWidth() - x + getColumnXOrigin());
+			int mxWidth = getColumnWidth() - x + getColumnXOrigin();
+			String shortened = shortenText(element, text, textExtent.x, gc, mxWidth);
 			if (shortened.length() < text.length())
 				tooltip = text;
-			gc.drawText(shortened, x, event.y + (rowHeight - textExtent.y) / 2, (event.detail & SWT.SELECTED) != 0);
+			int ty = event.y + (rowHeight - textExtent.y) / 2;
+			if (element instanceof ITitle) {
+				Point tx = gc.stringExtent(shortened);
+				int len = tx.x;
+				if (len < mxWidth)
+					x += (mxWidth - len) / 2;
+				int th = ty + tx.y / 2;
+				gc.drawLine(0, th, mxWidth, th);
+				gc.drawLine(0, th + 2, mxWidth, th + 2);
+			}
+			gc.drawText(shortened, x, ty, (event.detail & SWT.SELECTED) != 0);
 		}
 		if (image != null) {
 			if (iconSize == null)
@@ -290,6 +301,8 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider implem
 	}
 
 	protected Font getFont(Object element) {
+		if (element instanceof ITitle)
+			return JFaceResources.getBannerFont();
 		return null;
 	}
 
@@ -297,11 +310,11 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider implem
 	public String getToolTipText(Object element) {
 		return tooltip;
 	}
-	
+
 	@Override
 	public int getToolTipTimeDisplayed(Object element) {
 		String text = getToolTipText(element);
-		return Math.max(MINTOOLTIPTIME, text.length()*MSECPERCHAR);
+		return text == null ? 0 : Math.max(MINTOOLTIPTIME, text.length() * MSECPERCHAR);
 	}
 
 	public String getText(Object element) {

@@ -311,7 +311,7 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 		if (okbutton != null) {
 			String errorMessage = null;
 			String fn = fnumberTimeField.getText().trim();
-			if (fn.length() > 0) {
+			if (!fn.isEmpty()) {
 				try {
 					QueryField.EXIF_FNUMBER.getFormatter().fromString(fn);
 				} catch (ParseException e) {
@@ -319,7 +319,7 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 				}
 			}
 			String exp = exposureTimeField.getText().trim();
-			if (exp.length() > 0) {
+			if (!exp.isEmpty()) {
 				try {
 					QueryField.EXIF_EXPOSURETIME.getFormatter().fromString(exp);
 				} catch (ParseException e) {
@@ -327,7 +327,7 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 				}
 			}
 			String lv = lvField.getText();
-			if (lv.length() > 0) {
+			if (!lv.isEmpty()) {
 				try {
 					double v = Double.parseDouble(lv);
 					if (v < -20 || v > 25)
@@ -495,8 +495,8 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 	protected void okPressed() {
 		result = createResult();
 		StringBuilder sb = new StringBuilder();
-		if (makeField.getText().trim().length() > 0
-				&& modelField.getText().trim().length() > 0) {
+		if (!makeField.getText().trim().isEmpty()
+				&& !modelField.getText().trim().isEmpty()) {
 			sb.append(encode(makeField.getText())).append('\n')
 					.append(encode(modelField.getText())).append('\n')
 					.append(encode(serialField.getText())).append('\n')
@@ -527,7 +527,7 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 			settings.put(CAMERA, sb.toString());
 			sb.setLength(0);
 		}
-		if (lensField.getText().trim().length() > 0) {
+		if (!lensField.getText().trim().isEmpty()) {
 			sb.append(encode(lensField.getText())).append('\n')
 					.append(encode(lensserialField.getText())).append('\n')
 					.append(focalLengthField.getSelection());
@@ -552,7 +552,7 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 			sb.setLength(0);
 		}
 		String a = artistField.getText().trim();
-		if (a.length() > 0) {
+		if (!a.isEmpty()) {
 			int n = 1;
 			sb.append(a);
 			String newChoice = sb.toString();
@@ -567,7 +567,7 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 			sb.setLength(0);
 		}
 		String c = copyrightField.getText().trim();
-		if (c.length() > 0) {
+		if (!c.isEmpty()) {
 			int n = 1;
 			sb.append(c);
 			String newChoice = sb.toString();
@@ -587,7 +587,7 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 		if (si >= 0)
 			settings.put(TYPE, si);
 		String em = emulsionField.getText().trim();
-		if (em.length() > 0)
+		if (!em.isEmpty())
 			settings.put(EMULSION, em);
 		settings.put(DATE, sf.format(result.creationDate));
 		super.okPressed();
@@ -595,7 +595,7 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 
 	private static Object encode(String text) {
 		text = text.trim();
-		if (text.length() > 0)
+		if (!text.isEmpty())
 			return text;
 		return "-"; //$NON-NLS-1$
 	}
@@ -669,28 +669,28 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 		int i = typeField.getSelectionIndex();
 		properties.type = ((int[]) QueryField.ANALOGTYPE.getEnumeration())[i];
 		String s = emulsionField.getText().trim();
-		if (s.length() > 0)
+		if (!s.isEmpty())
 			properties.emulsion = s;
 		i = formatField.getSelectionIndex();
 		properties.format = ((int[]) QueryField.ANALOGFORMAT.getEnumeration())[i];
 		properties.scalarSpeedRatings = isoField.getSelection();
 		s = notesField.getText().trim();
-		if (s.length() > 0)
+		if (!s.isEmpty())
 			properties.processingNotes = s;
 		s = makeField.getText().trim();
-		if (s.length() > 0)
+		if (!s.isEmpty())
 			properties.make = s;
 		s = modelField.getText().trim();
-		if (s.length() > 0)
+		if (!s.isEmpty())
 			properties.model = s;
 		s = serialField.getText().trim();
-		if (s.length() > 0)
+		if (!s.isEmpty())
 			properties.serial = s;
 		s = lensField.getText().trim();
-		if (s.length() > 0)
+		if (!s.isEmpty())
 			properties.lens = s;
 		s = lensserialField.getText().trim();
-		if (s.length() > 0)
+		if (!s.isEmpty())
 			properties.lensSerial = s;
 		properties.focalLength = (double) focalLengthField.getSelection() / 10;
 		properties.focalLengthFactor = (double) factorField.getSelection() / 100;
@@ -703,7 +703,7 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 		properties.lightSource = ((int[]) QueryField.EXIF_LIGHTSOURCE
 				.getEnumeration())[i];
 		String lv = lvField.getText().trim();
-		if (lv.length() > 0) {
+		if (!lv.isEmpty()) {
 			try {
 				properties.lv = Double.parseDouble(lv);
 			} catch (NumberFormatException e) {
@@ -711,7 +711,7 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 			}
 		}
 		String exp = exposureTimeField.getText().trim();
-		if (exp.length() > 0) {
+		if (!exp.isEmpty()) {
 			try {
 				properties.exposureTime = (Double) QueryField.EXIF_EXPOSURETIME
 						.getFormatter().fromString(exp);
@@ -720,7 +720,7 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 			}
 		}
 		String fn = fnumberTimeField.getText().trim();
-		if (fn.length() > 0) {
+		if (!fn.isEmpty()) {
 			try {
 				properties.fNumber = (Double) QueryField.EXIF_FNUMBER
 						.getFormatter().fromString(fn);
@@ -729,10 +729,10 @@ public class AnalogPropertiesDialog extends ZTitleAreaDialog {
 			}
 		}
 		s = artistField.getText().trim();
-		if (s.length() > 0)
+		if (!s.isEmpty())
 			properties.artist = s;
 		s = copyrightField.getText().trim();
-		if (s.length() > 0)
+		if (!s.isEmpty())
 			properties.copyright = s;
 		return properties;
 	}

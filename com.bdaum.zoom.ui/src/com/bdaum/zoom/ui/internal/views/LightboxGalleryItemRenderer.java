@@ -96,7 +96,7 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 	private boolean dropShadows = false;
 
 	int dropShadowsSize = 0;
-
+	
 	Color selectionForegroundColor;
 
 	Color selectionBackgroundColor;
@@ -160,32 +160,6 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 		createColors();
 	}
 
-	/**
-	 * This method is called before drawing the first item. It may be used to
-	 * calculate some values (like font metrics) that will be used for each
-	 * item.
-	 *
-	 * @param gc
-	 */
-
-	// @Override
-	// public void preDraw(GC gc) {
-	// // Cache gallery color since this method is resource intensive.
-	// galleryBackgroundColor = gallery.getBackground();
-	// }
-
-	/**
-	 * This method is called after drawing the last item. It may be used to
-	 * cleanup and release resources created in preDraw().
-	 *
-	 * @param gc
-	 */
-
-	// @Override
-	// public void postDraw(GC gc) {
-	// galleryForegroundColor = null;
-	// galleryBackgroundColor = null;
-	// }
 
 	/*
 	 * (non-Javadoc)

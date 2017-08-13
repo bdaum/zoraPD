@@ -67,14 +67,13 @@ public abstract class DefaultSmugmugHandler extends DefaultHandler {
 			throws SAXException {
 		if (fault) {
 			String cdata = new String(chars, start, end).trim();
-			if (cdata.length() > 0) {
-				if ("name".equals(lastTag)) { //$NON-NLS-1$
+			if (!cdata.isEmpty()) {
+				if ("name".equals(lastTag)) //$NON-NLS-1$
 					lastName = cdata;
-				} else if ("int".equals(lastTag) && "faultCode".equals(lastName)) { //$NON-NLS-1$ //$NON-NLS-2$
+				else if ("int".equals(lastTag) && "faultCode".equals(lastName))  //$NON-NLS-1$//$NON-NLS-2$
 					errorCode = Integer.parseInt(cdata);
-				} else if ("string".equals(lastTag) && "faultString".equals(lastName)) {  //$NON-NLS-1$//$NON-NLS-2$
-					failureReason = cdata;
-				} 
+				else if ("string".equals(lastTag) && "faultString".equals(lastName))  //$NON-NLS-1$//$NON-NLS-2$
+					failureReason = cdata; 
 			}
 		}
 	}

@@ -143,15 +143,11 @@ public class VideoActivator extends ZUiPlugin {
 		File locat = null;
 		while (true) {
 			String vlcLocation = getVlcLocation();
-			locat = (vlcLocation == null || vlcLocation.length() == 0) ? null
+			locat = (vlcLocation == null || vlcLocation.isEmpty()) ? null
 					: new File(vlcLocation);
 			if (locat == null || !locat.exists()) {
 				final VLCDialog dialog = new VLCDialog(shell, locat, null);
-				shell.getDisplay().syncExec(new Runnable() {
-					public void run() {
-						dialog.open();
-					}
-				});
+				shell.getDisplay().syncExec(() -> dialog.open());
 				locat = dialog.getResult();
 				if (locat != null)
 					setVlcLocation(locat);
@@ -170,11 +166,7 @@ public class VideoActivator extends ZUiPlugin {
 									Platform.getOSArch().indexOf("64") >= 0 ? Messages.Activator_invalid_libary //$NON-NLS-1$
 											: Messages.VideoActivator_invalid_library_64,
 									Constants.APPNAME));
-					shell.getDisplay().syncExec(new Runnable() {
-						public void run() {
-							dialog.open();
-						}
-					});
+					shell.getDisplay().syncExec(() -> dialog.open());
 					locat = dialog.getResult();
 					if (locat != null)
 						setVlcLocation(locat);

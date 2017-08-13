@@ -110,7 +110,7 @@ class LogReader {
 						//do nothing, just toss the entry
 					}
 				} else if (state == SUBENTRY_STATE) {
-					if (parents.size() > 0) {
+					if (!parents.isEmpty()) {
 						try {
 							LogEntry entry = new LogEntry();
 							entry.setSession(session);

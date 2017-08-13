@@ -56,11 +56,7 @@ public class StructDeleteOperation extends DbOperation {
 			assetsToUpdate.clear();
 			return abort();
 		}
-		storeSafely(new Runnable() {
-			public void run() {
-				backup.performDelete(dbManager);
-			}
-		}, 1);
+		storeSafely(() -> backup.performDelete(dbManager), 1);
 		return close(info);
 	}
 
@@ -77,11 +73,7 @@ public class StructDeleteOperation extends DbOperation {
 		initUndo(aMonitor, set.size());
 		for (StructBackup backup : set) {
 			final StructBackup b = backup;
-			if (!storeSafely(new Runnable() {
-				public void run() {
-					b.restore(dbManager);
-				}
-			}, 1))
+			if (!storeSafely(() -> b.restore(dbManager), 1))
 				break;
 		}
 		return close(info);

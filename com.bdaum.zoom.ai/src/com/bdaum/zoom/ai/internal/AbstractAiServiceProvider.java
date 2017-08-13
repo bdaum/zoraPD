@@ -19,13 +19,17 @@
  */
 package com.bdaum.zoom.ai.internal;
 
+import java.awt.image.BufferedImage;
+
 import com.bdaum.zoom.ai.internal.services.IAiServiceProvider;
+import com.bdaum.zoom.core.internal.lire.Algorithm;
 
 public abstract class AbstractAiServiceProvider  implements IAiServiceProvider {
 
 	private String id;
 	private String name;
 	private int latency;
+	private int featureId;
 
 	@Override
 	public void setId(String id) {
@@ -85,6 +89,30 @@ public abstract class AbstractAiServiceProvider  implements IAiServiceProvider {
 	public boolean checkColor() {
 		return false;
 	}
+	
 
+	@Override
+	public float[] getFeatureVector(BufferedImage image) {
+		return null;
+	}
+	
+	@Override
+	public Algorithm getAlgorithm() {
+		return null;
+	}
+
+	@Override
+	public Class<?> getFeature() {
+		return null;
+	}
+
+	@Override
+	public int getFeatureId() {
+		return featureId;
+	}
+	@Override
+	public void setFeatureId(int featureId) {
+		this.featureId = featureId;
+	}
 
 }

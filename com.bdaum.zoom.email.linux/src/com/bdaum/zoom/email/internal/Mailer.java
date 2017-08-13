@@ -65,7 +65,7 @@ public class Mailer extends AbstractMailer {
 	}
 
 	private static String quote(String s) {
-		if (s != null && s.length() > 0) {
+		if (s != null && !s.isEmpty()) {
 			StringTokenizer st = new StringTokenizer(s, "'"); //$NON-NLS-1$
 			StringBuilder sb = new StringBuilder();
 			if (s.startsWith("'")) //$NON-NLS-1$
@@ -83,7 +83,7 @@ public class Mailer extends AbstractMailer {
 	}
 
 	private static void addXdgParameter(StringBuilder mailto, String parm, String value) {
-		if (value != null && value.trim().length() > 0)
+		if (value != null && !value.trim().isEmpty())
 			mailto.append(" --").append(parm).append(' ').append(value.trim()); //$NON-NLS-1$
 	}
 

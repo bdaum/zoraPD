@@ -34,7 +34,6 @@ public class MoveControlEffect extends AbstractEffect {
 	 * @param onStop
 	 * @param onCancel
 	 */
-	@Deprecated
 	public static void move(AnimationRunner runner, Control w, int x, int y,
 			int duration, IMovement movement, Runnable onStop, Runnable onCancel) {
 		Point oldSize = w.getLocation();
@@ -65,7 +64,6 @@ public class MoveControlEffect extends AbstractEffect {
 		this.control = control;
 	}
 
-	@Override
 	public void applyEffect(final long currentTime) {
 		if (!control.isDisposed()) {
 			control.setLocation(((int) (startX + stepX

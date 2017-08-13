@@ -266,12 +266,12 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 	}
 
 	private boolean validate() {
-		if (nameField.getText().trim().length() == 0) {
+		if (nameField.getText().trim().isEmpty()) {
 			setErrorMessage(Messages.TemplateEditDialog_specify_name);
 			return false;
 		}
 		String content = templateField.getText().trim();
-		if (content.length() == 0) {
+		if (content.isEmpty()) {
 			setErrorMessage(Messages.TemplateEditDialog_content_empty);
 			return false;
 		}

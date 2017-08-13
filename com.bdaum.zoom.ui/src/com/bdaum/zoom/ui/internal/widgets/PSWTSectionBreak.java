@@ -119,7 +119,7 @@ public class PSWTSectionBreak extends ZPSWTImage {
 			sb.append(slide.getCaption());
 		int boldLength = sb.length();
 		if (slide.getDescription() != null
-				&& slide.getDescription().length() > 0) {
+				&& !slide.getDescription().isEmpty()) {
 			if (sb.length() > 0)
 				sb.append("\n\n"); //$NON-NLS-1$
 			sb.append(slide.getDescription());

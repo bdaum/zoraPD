@@ -251,7 +251,7 @@ public class HighresImageLoader {
 			ImageEntry entry = imageDirectory.get(key);
 			if (entry != null) {
 				if (key.isOutdated(entry))
-					imageDirectory.remove(entry);
+					imageDirectory.remove(key);
 				else
 					workfile = entry.getConverted();
 			}

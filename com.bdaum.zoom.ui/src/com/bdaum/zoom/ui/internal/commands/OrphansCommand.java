@@ -78,7 +78,7 @@ public class OrphansCommand extends AbstractCommandHandler {
 							result.add(asset);
 						else {
 							String volume = asset.getVolume();
-							if (volume != null && volume.length() > 0)
+							if (volume != null && !volume.isEmpty())
 								volumes.add(volume);
 						}
 					}

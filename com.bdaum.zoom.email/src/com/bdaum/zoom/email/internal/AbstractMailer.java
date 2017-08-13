@@ -19,7 +19,7 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.program.Program;
 
 import com.bdaum.zoom.core.Core;
-import com.lowagie.text.pdf.codec.Base64;
+import com.itextpdf.text.pdf.codec.Base64;
 
 public abstract class AbstractMailer implements IMailer {
 
@@ -57,7 +57,7 @@ public abstract class AbstractMailer implements IMailer {
 				writeRecipients(writer, "To", to); //$NON-NLS-1$
 				writeRecipients(writer, "Cc", cc); //$NON-NLS-1$
 				writeRecipients(writer, "Bcc", bcc); //$NON-NLS-1$
-				if (subject != null && subject.length() > 0)
+				if (subject != null && !subject.isEmpty())
 					writer.write("Subject: " + encodeAscii(subject) + '\n'); //$NON-NLS-1$
 				String boundary = UUID.randomUUID().toString();
 				writer.write(NLS.bind("Content-Type: multipart/mixed; boundary=\"{0}\"\n", boundary)); //$NON-NLS-1$
@@ -185,11 +185,11 @@ public abstract class AbstractMailer implements IMailer {
 				int len = token.length();
 				if (cnt + len > 72) {
 					if (len > 72) {
-						while (token.length() > 0) {
+						while (!token.isEmpty()) {
 							int q = Math.min(token.length(), 72 - cnt);
 							sb.append(token.substring(0, q));
 							token = token.substring(q);
-							if (token.length() == 0)
+							if (token.isEmpty())
 								cnt += q;
 							else {
 								sb.append('\n');

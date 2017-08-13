@@ -5,7 +5,7 @@ CLink {color:rgb(0,128,255);background-color:transparent;}
 Label#errors {color:red;background-color:transparent;}
 Label#disabled {color:rgb(120,120,120);background-color:transparent;}
 Label {color:black;background-color:transparent;}
-Button {color:black;background-color:transparent;}
+Button {color:black;background-color:white;}
 Text#errors {color:red;background-color:rgb(240,240,240);}
 Text[editable=false] {color:black;background-color:white;}
 Text[style='SWT.READ_ONLY'] {color:black;background-color:white;}

@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.Label;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.group.Criterion;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
+import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterion;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
@@ -87,12 +88,10 @@ public class CollectionEditGroup {
 			}
 			preparedValues = valueMap;
 			if (!control.isDisposed())
-				asyncExec(new Runnable() {
-					public void run() {
-						if (!control.isDisposed())
-							for (Runnable runnable : applyPreparationList)
-								runnable.run();
-					}
+				asyncExec(() -> {
+					if (!control.isDisposed())
+						for (Runnable runnable : applyPreparationList)
+							runnable.run();
 				});
 		}
 
@@ -118,7 +117,7 @@ public class CollectionEditGroup {
 
 	private final boolean album;
 
-	private final SmartCollectionImpl current;
+	private final SmartCollection current;
 
 	private boolean isSystem;
 
@@ -136,7 +135,7 @@ public class CollectionEditGroup {
 
 	private boolean networked;
 
-	public CollectionEditGroup(Composite comp, SmartCollectionImpl current, boolean album, boolean readOnly,
+	public CollectionEditGroup(Composite comp, SmartCollection current, boolean album, boolean readOnly,
 			boolean networked, ISizeHandler sizeHandler) {
 		this.comp = comp;
 		this.current = current;

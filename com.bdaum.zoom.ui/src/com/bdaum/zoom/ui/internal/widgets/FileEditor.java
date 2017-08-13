@@ -170,13 +170,13 @@ public class FileEditor extends Composite {
 				public void widgetSelected(SelectionEvent e) {
 					String text = getText();
 					setText(""); //$NON-NLS-1$
-					if (text.length() > 0)
+					if (!text.isEmpty())
 						fireModifyEvent(createModifyEvent());
 				}
 			});
 			addModifyListener(new ModifyListener() {
 				public void modifyText(ModifyEvent e) {
-					clearButton.setEnabled(getText().length() > 0);
+					clearButton.setEnabled(!getText().isEmpty());
 				}
 			});
 		}
@@ -202,7 +202,7 @@ public class FileEditor extends Composite {
 	public void setText(String string) {
 		fileNameField.setText(string);
 		if (clearButton != null)
-			clearButton.setEnabled(getText().length() > 0);
+			clearButton.setEnabled(!getText().isEmpty());
 	}
 
 	public String getFilterPath() {
@@ -228,7 +228,7 @@ public class FileEditor extends Composite {
 			dialog.setFilterNames(filterNames);
 			dialog.setFilterPath(path);
 			String fn = fileNameField.getText().trim();
-			if (fn.length() > 0) {
+			if (!fn.isEmpty()) {
 				int q = fn.lastIndexOf('\\');
 				int p = Math.max(q, fn.lastIndexOf('/'));
 				if (p > 0) {
@@ -253,7 +253,7 @@ public class FileEditor extends Composite {
 			dialog.setText(lab);
 			dialog.setFilterPath(path);
 			String fn = fileNameField.getText().trim();
-			if (fn.length() > 0)
+			if (!fn.isEmpty())
 				dialog.setFilterPath(fn);
 			else if (path != null)
 				dialog.setFilterPath(path);

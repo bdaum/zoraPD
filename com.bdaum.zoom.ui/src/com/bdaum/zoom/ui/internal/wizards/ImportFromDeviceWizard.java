@@ -91,21 +91,19 @@ public class ImportFromDeviceWizard extends ZWizard implements
 
 	@Override
 	public boolean performFinish() {
-		BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-			public void run() {
-				fileSelectionPage.performFinish(importData);
-				targetPage.performFinish(importData);
-				renamingPage.performFinish(importData);
-				metaDataPage.performFinish(importData);
-				saveDialogSettings();
-				OperationJob.executeOperation(
-						new ImportOperation(importData, UiActivator
-								.getDefault().createImportConfiguration(
-										ImportFromDeviceWizard.this),
-								media ? Constants.FILESOURCE_DIGITAL_CAMERA
-										: Constants.FILESOURCE_UNKNOWN),
-						ImportFromDeviceWizard.this);
-			}
+		BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+			fileSelectionPage.performFinish(importData);
+			targetPage.performFinish(importData);
+			renamingPage.performFinish(importData);
+			metaDataPage.performFinish(importData);
+			saveDialogSettings();
+			OperationJob.executeOperation(
+					new ImportOperation(importData, UiActivator
+							.getDefault().createImportConfiguration(
+									ImportFromDeviceWizard.this),
+							media ? Constants.FILESOURCE_DIGITAL_CAMERA
+									: Constants.FILESOURCE_UNKNOWN),
+					ImportFromDeviceWizard.this);
 		});
 		return true;
 	}

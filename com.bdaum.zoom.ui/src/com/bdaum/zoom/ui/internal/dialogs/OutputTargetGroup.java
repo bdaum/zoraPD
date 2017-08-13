@@ -107,7 +107,7 @@ public class OutputTargetGroup {
 				dialog.setText(Messages.OutputTargetGroup_output_folder);
 				dialog.setMessage(Messages.OutputTargetGroup_select_output_folder);
 				String path = folderField.getText();
-				if (path.length() > 0)
+				if (!path.isEmpty())
 					dialog.setFilterPath(path);
 				String dir = dialog.open();
 				if (dir != null) {
@@ -303,7 +303,7 @@ public class OutputTargetGroup {
 				return Messages.OutputTargetGroup_select_ftp_dir;
 		} else {
 			String folder = folderField.getText();
-			if (folder.length() == 0)
+			if (folder.isEmpty())
 				return Messages.OutputTargetGroup_select_target_folder;
 			if (!new File(folder).exists())
 				return Messages.OutputTargetGroup_selected_folder_does_not_exist;

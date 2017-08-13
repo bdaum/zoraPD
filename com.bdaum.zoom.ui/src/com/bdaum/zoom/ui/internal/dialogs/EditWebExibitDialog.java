@@ -91,7 +91,7 @@ public class EditWebExibitDialog extends ZTitleAreaDialog {
 				Messages.EditWebExibitDialog_downloadable, new GridData(
 						SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
 		downloadableButton.setEnabled(gallery.getDownloadText() != null
-				&& gallery.getDownloadText().length() > 0
+				&& !gallery.getDownloadText().isEmpty()
 				&& !gallery.getHideDownload());
 		includeMetadataButton = WidgetFactory.createCheckButton(comp,
 				Messages.EditWebExibitDialog_include_metadata, new GridData(

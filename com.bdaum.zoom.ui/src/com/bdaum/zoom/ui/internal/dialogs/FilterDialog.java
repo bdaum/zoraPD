@@ -73,6 +73,7 @@ public class FilterDialog extends ZTitleAreaDialog {
 		typeGroup.setText(Messages.FilterDialog_hide_by_type);
 		typeGroup.setLayout(new GridLayout(1, false));
 		typeViewer = CheckboxTableViewer.newCheckList(typeGroup, SWT.NONE);
+		typeViewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		typeViewer.setContentProvider(ArrayContentProvider.getInstance());
 		typeViewer.setLabelProvider(new ZColumnLabelProvider() {
 			@Override

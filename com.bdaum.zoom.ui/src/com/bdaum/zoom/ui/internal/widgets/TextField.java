@@ -89,8 +89,8 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 	private int wordX = -1;
 	private int wordY;
 
-	public TextField(String str, int textWidth, Font font, Color penColor,
-			Color backgroundColor, boolean transparent, int style) {
+	public TextField(String str, int textWidth, Font font, Color penColor, Color backgroundColor, boolean transparent,
+			int style) {
 		this.style = style;
 		control = PSWTCanvas.CURRENT_CANVAS;
 		lead = font.getSize() * 5 / 3;
@@ -157,8 +157,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		wordX = -1;
 		textfield.setText(processRawText(str));
 		setCanvasSize();
-		if (str.length() > 0
-				&& spellingOptions != ISpellCheckingService.NOSPELLING)
+		if (!str.isEmpty() && spellingOptions != ISpellCheckingService.NOSPELLING)
 			checkSpelling(cancelSpellchecking);
 	}
 
@@ -172,8 +171,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 					char c = str.charAt(i);
 					sb.append(c);
 					String recentLine = sb.substring(lastLineBreak);
-					if (textfield.textExtent(recentLine).x > textfield
-							.getTextWidth()) {
+					if (textfield.textExtent(recentLine).x > textfield.getTextWidth()) {
 						if (lastWordBreak > lastLineBreak) {
 							sb.replace(lastWordBreak, lastWordBreak + 1, "\n"); //$NON-NLS-1$
 							lastLineBreak = lastWordBreak;
@@ -209,8 +207,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 					if (showChar) {
 						sb.append(c);
 						String recentLine = sb.substring(lastLineBreak);
-						if (textfield.textExtent(recentLine).x > textfield
-								.getTextWidth()) {
+						if (textfield.textExtent(recentLine).x > textfield.getTextWidth()) {
 							sb.append('…');
 							showChar = false;
 						}
@@ -226,14 +223,13 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		if (cancelSpellchecking)
 			Job.getJobManager().cancel(Constants.SPELLING);
 		if (spellingOptions != ISpellCheckingService.NOSPELLING)
-			new SpellCheckingJob(this, text, spellingOptions, maxSuggestions)
-					.schedule();
+			new SpellCheckingJob(this, text, spellingOptions, maxSuggestions).schedule();
 	}
 
 	private void setCanvasSize() {
 		PBounds newBounds = textfield.getBoundsReference();
-		textCanvas.setPathToRectangle((float) newBounds.x, (float) newBounds.y,
-				(float) newBounds.width, (float) newBounds.height);
+		textCanvas.setPathToRectangle((float) newBounds.x, (float) newBounds.y, (float) newBounds.width,
+				(float) newBounds.height);
 
 	}
 
@@ -281,54 +277,41 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 			public void menuDetected(MenuDetectEvent e) {
 				disposeMenu(control);
 				ISpellIncident incident = null;
-				if (currentSegments != null && !currentSegments.isEmpty()
-						&& incidents != null) {
-					org.eclipse.swt.graphics.Point cp = control.toControl(e.x,
-							e.y);
+				if (currentSegments != null && !currentSegments.isEmpty() && incidents != null) {
+					org.eclipse.swt.graphics.Point cp = control.toControl(e.x, e.y);
 					Point2D loc = new Point(cp.x, cp.y);
 					PPickPath pickPath = PPickPath.CURRENT_PICK_PATH;
-					Point2D canvasToLocal = pickPath.canvasToLocal(loc,
-							textfield);
+					Point2D canvasToLocal = pickPath.canvasToLocal(loc, textfield);
 					localToGlobal(canvasToLocal);
 					try {
 						for (ISpellIncident inc : incidents) {
 							// Convert to coordinates
-							Point wordBounds = computeRawSelection(
-									inc.getOffset(), inc.getOffset()
-											+ inc.getWrongWord().length());
-							org.eclipse.swt.graphics.Point startTop = textfield
-									.getLocationAtOffset(wordBounds.x);
+							Point wordBounds = computeRawSelection(inc.getOffset(),
+									inc.getOffset() + inc.getWrongWord().length());
+							org.eclipse.swt.graphics.Point startTop = textfield.getLocationAtOffset(wordBounds.x);
 							org.eclipse.swt.graphics.Point endTop = textfield
-									.getLocationAtOffset(wordBounds.x
-											+ wordBounds.y);
+									.getLocationAtOffset(wordBounds.x + wordBounds.y);
 							if (startTop != null && endTop != null) {
 								Point2D st = new Point(startTop.x, startTop.y);
 								localToGlobal(st);
 								Point2D et = new Point(endTop.x, endTop.y);
 								localToGlobal(et);
-								Point2D sb = new Point(startTop.x, startTop.y
-										+ lead);
+								Point2D sb = new Point(startTop.x, startTop.y + lead);
 								localToGlobal(sb);
 								if (st.getY() == et.getY()) {
-									if (st.getY() <= loc.getY()
-											&& st.getX() <= loc.getX()
-											&& sb.getY() >= loc.getY()
+									if (st.getY() <= loc.getY() && st.getX() <= loc.getX() && sb.getY() >= loc.getY()
 											&& et.getX() >= loc.getX()) {
 										incident = inc;
 										break;
 									}
 								} else {
-									Point2D eb = new Point(endTop.x, endTop.y
-											+ lead);
+									Point2D eb = new Point(endTop.x, endTop.y + lead);
 									localToGlobal(eb);
-									if (loc.getY() > sb.getY()
-											&& loc.getY() < et.getY()
-											|| loc.getY() >= st.getY()
-											&& loc.getY() <= sb.getY()
-											&& loc.getX() >= st.getX()
-											|| loc.getY() >= et.getY()
-											&& loc.getY() <= eb.getY()
-											&& loc.getX() <= et.getX()) {
+									if (loc.getY() > sb.getY() && loc.getY() < et.getY()
+											|| loc.getY() >= st.getY() && loc.getY() <= sb.getY()
+													&& loc.getX() >= st.getX()
+											|| loc.getY() >= et.getY() && loc.getY() <= eb.getY()
+													&& loc.getX() <= et.getX()) {
 										incident = inc;
 										break;
 									}
@@ -401,8 +384,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 			setHighlight(false);
 		} else {
 			if (sy1 == sy2)
-				highlight.setPathToRectangle(sx1 + lx, sy1 * h + base, sx2
-						- sx1, h);
+				highlight.setPathToRectangle(sx1 + lx, sy1 * h + base, sx2 - sx1, h);
 			else if (lines2 != null) {
 				float[] xp = new float[(sy2 - sy1) * 2 + 6];
 				float[] yp = new float[(sy2 - sy1) * 2 + 6];
@@ -448,14 +430,12 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		if ((style & SWT.READ_ONLY) == 0) {
 			float d = lead / 5f;
 			caret.setPathToPolyline(
-					new float[] { 0f, 1f - d, 1f - d, d + 1f, d + 1f, 1.5f,
-							1.5f, d + 1f, d + 1f, 1f - d, 1f - d, 0f, 0f },
-					new float[] { 1f, 1f, 0f, 0f, 1f, 1f, lead - 1f, lead - 1f,
-							lead, lead, lead - 1f, lead - 1f, 1f });
+					new float[] { 0f, 1f - d, 1f - d, d + 1f, d + 1f, 1.5f, 1.5f, d + 1f, d + 1f, 1f - d, 1f - d, 0f,
+							0f },
+					new float[] { 1f, 1f, 0f, 0f, 1f, 1f, lead - 1f, lead - 1f, lead, lead, lead - 1f, lead - 1f, 1f });
 			caret.setPaint(Color.cyan);
 		} else {
-			caret.setPathToPolyline(new float[] { 1f, 1f, -1f, -1f },
-					new float[] { 1f, lead - 1f, lead - 1f, 1f });
+			caret.setPathToPolyline(new float[] { 1f, 1f, -1f, -1f }, new float[] { 1f, lead - 1f, lead - 1f, 1f });
 			caret.setPaint(Color.red);
 		}
 		caret.setStrokeColor(null);
@@ -507,8 +487,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		case '\b':
 			if ((style & SWT.READ_ONLY) == 0) {
 				if (selection.y > 0) {
-					newText = replace(sb, selection.x, selection.x
-							+ selection.y, ""); //$NON-NLS-1$
+					newText = replace(sb, selection.x, selection.x + selection.y, ""); //$NON-NLS-1$
 					selection.y = 0;
 				} else if (selection.x > 0) {
 					newText = replace(sb, selection.x - 1, selection.x, ""); //$NON-NLS-1$
@@ -522,8 +501,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		case SWT.DEL:
 			if ((style & SWT.READ_ONLY) == 0) {
 				if (selection.y > 0) {
-					newText = replace(sb, selection.x, selection.x
-							+ selection.y, ""); //$NON-NLS-1$
+					newText = replace(sb, selection.x, selection.x + selection.y, ""); //$NON-NLS-1$
 					selection.y = 0;
 				} else if (selection.x < sb.length())
 					newText = replace(sb, selection.x, selection.x + 1, ""); //$NON-NLS-1$
@@ -612,14 +590,12 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 					keyChar = '\n';
 				default:
 					if (selection.y > 0) {
-						newText = replace(sb, selection.x, selection.x
-								+ selection.y, new String(
-								new char[] { keyChar }));
+						newText = replace(sb, selection.x, selection.x + selection.y,
+								new String(new char[] { keyChar }));
 						// sb.delete(selection.x, selection.x + selection.y);
 						selection.y = 0;
 					} else
-						newText = replace(sb, selection.x, selection.x,
-								new String(new char[] { keyChar }));
+						newText = replace(sb, selection.x, selection.x, new String(new char[] { keyChar }));
 					// sb.insert(selection.x, keyChar);
 					selection.x += 1;
 					break;
@@ -633,8 +609,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 			if (validator != null) {
 				String errorMessage = validator.isValid(text);
 				valid = errorMessage == null;
-				textfield.setPenColor(errorMessage == null ? penColor
-						: Color.red);
+				textfield.setPenColor(errorMessage == null ? penColor : Color.red);
 				if (!listeners.isEmpty()) {
 					Event e = new Event();
 					e.widget = PSWTCanvas.CURRENT_CANVAS;
@@ -653,13 +628,10 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 	private Point copy() {
 		Point sel = selection;
 		if (sel.y > 0 && sel.x >= 0) {
-			Clipboard clipboard = UiActivator.getDefault().getClipboard(
-					control.getDisplay());
-			if (textfield.getTextWidth() != SWT.DEFAULT
-					&& (style & SWT.WRAP) != 0)
+			Clipboard clipboard = UiActivator.getDefault().getClipboard(control.getDisplay());
+			if (textfield.getTextWidth() != SWT.DEFAULT && (style & SWT.WRAP) != 0)
 				sel = computeTrueSelection(selection);
-			clipboard.setContents(
-					new Object[] { text.substring(sel.x, sel.x + sel.y) },
+			clipboard.setContents(new Object[] { text.substring(sel.x, sel.x + sel.y) },
 					new Transfer[] { TextTransfer.getInstance() });
 		}
 		return sel;
@@ -673,8 +645,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		for (int i = 0, j = 0; i < internal.length() && j < text.length(); i++) {
 			char ci = internal.charAt(i);
 			char ct = text.charAt(j);
-			if (ci == ct || Character.isWhitespace(ci)
-					&& Character.isWhitespace(ct)) {
+			if (ci == ct || Character.isWhitespace(ci) && Character.isWhitespace(ct)) {
 				if (i == sel.x) {
 					result.x = j;
 					xset = true;
@@ -694,12 +665,12 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 	}
 
 	private void paste() {
-		Clipboard clipboard = UiActivator.getDefault().getClipboard(
-				control.getDisplay());
+		Clipboard clipboard = UiActivator.getDefault().getClipboard(control.getDisplay());
 		Object contents = clipboard.getContents(TextTransfer.getInstance());
 		if (contents instanceof String) {
 			StringBuilder sb = new StringBuilder(text);
-			Point sel = (textfield.getTextWidth() != SWT.DEFAULT && (style & SWT.WRAP) != 0) ? computeTrueSelection(selection)
+			Point sel = (textfield.getTextWidth() != SWT.DEFAULT && (style & SWT.WRAP) != 0)
+					? computeTrueSelection(selection)
 					: selection;
 			sb.replace(sel.x, sel.x + sel.y, (String) contents);
 			setText(sb.toString());
@@ -719,8 +690,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		for (int i = 0, j = 0; i < internal.length() && j < text.length(); i++) {
 			char ci = internal.charAt(i);
 			char ct = text.charAt(j);
-			if (ci == ct || Character.isWhitespace(ci)
-					&& Character.isWhitespace(ct)) {
+			if (ci == ct || Character.isWhitespace(ci) && Character.isWhitespace(ct)) {
 				if (j == start) {
 					sel.x = i;
 					xset = true;
@@ -792,8 +762,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 	 */
 	public void mouseDragged(double startX, double startY, Point2D to) {
 		int sx = Math.max(0, textfield.getOffsetAtLocation(startX, startY));
-		int sy = Math.max(0,
-				textfield.getOffsetAtLocation(to.getX(), to.getY()));
+		int sy = Math.max(0, textfield.getOffsetAtLocation(to.getX(), to.getY()));
 		selection.x = Math.min(sx, sy);
 		selection.y = Math.abs(sy - sx);
 		setCaretAndHighlight();
@@ -863,8 +832,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		int x = sel.x;
 		while (x > 0) {
 			char c = text.charAt(x--);
-			if (!Character.isLetterOrDigit(c) && c != '_' && c != '-'
-					&& c != '\'') {
+			if (!Character.isLetterOrDigit(c) && c != '_' && c != '-' && c != '\'') {
 				x += 2;
 				break;
 			}
@@ -872,8 +840,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		int y = sel.x;
 		while (y < text.length()) {
 			char c = text.charAt(y++);
-			if (!Character.isLetterOrDigit(c) && c != '_' && c != '-'
-					&& c != '\'') {
+			if (!Character.isLetterOrDigit(c) && c != '_' && c != '-' && c != '\'') {
 				--y;
 				break;
 			}
@@ -913,14 +880,11 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 	 * (java.util.List)
 	 */
 	public void setSpellIncidents(final List<ISpellIncident> incidents) {
-		if (control == null || control.isDisposed())
-			return;
-		control.getDisplay().asyncExec(new Runnable() {
-			public void run() {
-				processIncidents(incidents.toArray(new ISpellIncident[incidents
-						.size()]));
-			}
-		});
+		if (control != null && !control.isDisposed())
+			control.getDisplay().asyncExec(() -> {
+				if (!control.isDisposed())
+					processIncidents(incidents.toArray(new ISpellIncident[incidents.size()]));
+			});
 	}
 
 	private void processIncidents(final ISpellIncident[] incid) {
@@ -937,30 +901,21 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 			int textWidth = textfield.getTextWidth();
 			for (ISpellIncident incident : incid) {
 				int offset = incident.getOffset();
-				Point wordBounds = computeRawSelection(offset, offset
-						+ incident.getWrongWord().length());
+				Point wordBounds = computeRawSelection(offset, offset + incident.getWrongWord().length());
 				// Convert to coordinates
-				org.eclipse.swt.graphics.Point off1 = textfield
-						.getLocationAtOffset(wordBounds.x);
+				org.eclipse.swt.graphics.Point off1 = textfield.getLocationAtOffset(wordBounds.x);
 				if (off1 != null) {
 					off1.y -= charHeight / 9;
-					org.eclipse.swt.graphics.Point off2 = textfield
-							.getLocationAtOffset(wordBounds.x + wordBounds.y);
+					org.eclipse.swt.graphics.Point off2 = textfield.getLocationAtOffset(wordBounds.x + wordBounds.y);
 					if (off2 != null) {
 						off2.y -= charHeight / 9;
 						if (off2.y > off1.y) {
-							currentSegments
-									.add(createRedSeaSegment(computePolyline(
-											off1,
-											new org.eclipse.swt.graphics.Point(
-													textWidth, off1.y),
-											charHeight)));
+							currentSegments.add(createRedSeaSegment(computePolyline(off1,
+									new org.eclipse.swt.graphics.Point(textWidth, off1.y), charHeight)));
 							off1.x = 0;
 							off1.y = off2.y;
 						}
-						currentSegments
-								.add(createRedSeaSegment(computePolyline(off1,
-										off2, charHeight)));
+						currentSegments.add(createRedSeaSegment(computePolyline(off1, off2, charHeight)));
 					}
 				}
 			}
@@ -978,9 +933,8 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		return segment;
 	}
 
-	public static Point2D[] computePolyline(
-			org.eclipse.swt.graphics.Point left,
-			org.eclipse.swt.graphics.Point right, int height) {
+	public static Point2D[] computePolyline(org.eclipse.swt.graphics.Point left, org.eclipse.swt.graphics.Point right,
+			int height) {
 
 		final int WIDTH = 3;
 		final int HEIGHT = 2;
@@ -1014,8 +968,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 	}
 
 	@SuppressWarnings("unused")
-	private void showMenu(final Composite composite,
-			final ISpellIncident incident) {
+	private void showMenu(final Composite composite, final ISpellIncident incident) {
 		Menu menu = new Menu(composite.getShell(), SWT.POP_UP);
 		if ((style & SWT.READ_ONLY) == 0) {
 			MenuItem item = new MenuItem(menu, SWT.PUSH);
@@ -1046,11 +999,9 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 					paste();
 				}
 			});
-			Object contents = UiActivator.getDefault()
-					.getClipboard(composite.getDisplay())
+			Object contents = UiActivator.getDefault().getClipboard(composite.getDisplay())
 					.getContents(TextTransfer.getInstance());
-			item.setEnabled(contents instanceof String
-					&& ((String) contents).length() > 0);
+			item.setEnabled(contents instanceof String && !((String) contents).isEmpty());
 		}
 		if (incident != null) {
 			new MenuItem(menu, SWT.SEPARATOR);
@@ -1064,9 +1015,8 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 						@Override
 						public void widgetSelected(SelectionEvent e) {
 							int woff = incident.getOffset();
-							setText(new StringBuilder(text).replace(woff,
-									woff + incident.getWrongWord().length(),
-									newWord).toString());
+							setText(new StringBuilder(text)
+									.replace(woff, woff + incident.getWrongWord().length(), newWord).toString());
 						}
 					});
 				}

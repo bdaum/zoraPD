@@ -131,7 +131,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#addTreeListener(org.eclipse
 	 * .swt.widgets.Control, org.eclipse.swt.events.TreeListener)
 	 */
-	@Override
 	protected void addTreeListener(Control control, TreeListener listener) {
 		((Gallery) control).addTreeListener(listener);
 	}
@@ -143,7 +142,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#getChild(org.eclipse.swt
 	 * .widgets.Widget, int)
 	 */
-	@Override
 	protected Item getChild(Widget widget, int index) {
 		if (widget instanceof GalleryItem) {
 			return ((GalleryItem) widget).getItem(index);
@@ -161,7 +159,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#getChildren(org.eclipse.
 	 * swt.widgets.Widget)
 	 */
-	@Override
 	protected Item[] getChildren(Widget widget) {
 		if (widget instanceof GalleryItem) {
 			return ((GalleryItem) widget).getItems();
@@ -172,7 +169,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 		return null;
 	}
 
-	@Override
 	protected Widget getColumnViewerOwner(int columnIndex) {
 		if (columnIndex == 0) {
 			return getGallery();
@@ -187,7 +183,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#getExpanded(org.eclipse.
 	 * swt.widgets.Item)
 	 */
-	@Override
 	protected boolean getExpanded(Item item) {
 		return ((GalleryItem) item).isExpanded();
 	}
@@ -199,7 +194,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#getItemCount(org.eclipse
 	 * .swt.widgets.Control)
 	 */
-	@Override
 	protected int getItemCount(Control control) {
 		return ((Gallery) control).getItemCount();
 	}
@@ -211,7 +205,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#getItemCount(org.eclipse
 	 * .swt.widgets.Item)
 	 */
-	@Override
 	protected int getItemCount(Item item) {
 		return ((GalleryItem) item).getItemCount();
 	}
@@ -223,7 +216,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#getItems(org.eclipse.swt
 	 * .widgets.Item)
 	 */
-	@Override
 	protected Item[] getItems(Item item) {
 		return ((GalleryItem) item).getItems();
 	}
@@ -235,7 +227,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#getParentItem(org.eclipse
 	 * .swt.widgets.Item)
 	 */
-	@Override
 	protected Item getParentItem(Item item) {
 		return ((GalleryItem) item).getParentItem();
 	}
@@ -247,7 +238,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#getSelection(org.eclipse
 	 * .swt.widgets.Control)
 	 */
-	@Override
 	protected Item[] getSelection(Control control) {
 		Item[] selection = ((Gallery) control).getSelection();
 		if (selection == null) {
@@ -275,7 +265,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#newItem(org.eclipse.swt.
 	 * widgets.Widget, int, int)
 	 */
-	@Override
 	protected Item newItem(Widget parent, int style, int index) {
 
 		GalleryItem item;
@@ -297,12 +286,10 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#removeAll(org.eclipse.swt
 	 * .widgets.Control)
 	 */
-	@Override
 	protected void removeAll(Control control) {
 		((Gallery) control).removeAll();
 	}
 
-	@Override
 	public void setAutoExpandLevel(int level) {
 		throw new UnsupportedOperationException(
 				"Gallery must be fully expanded.");
@@ -325,7 +312,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * </p>
 	 * <code>getGallery().setGroupRenderer(new NoGroupRenderer());</code>
 	 */
-	@Override
 	public void setContentProvider(IContentProvider provider) {
 		if (provider instanceof IStructuredContentProvider
 				&& !(provider instanceof ITreeContentProvider || provider instanceof ITreePathContentProvider)) {
@@ -344,7 +330,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#setExpanded(org.eclipse.
 	 * swt.widgets.Item, boolean)
 	 */
-	@Override
 	protected void setExpanded(Item item, boolean expand) {
 		((GalleryItem) item).setExpanded(expand);
 		// if (contentProviderIsLazy) {
@@ -359,7 +344,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * @see
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#setSelection(java.util.List)
 	 */
-	@Override
 	protected void setSelection(List items) {
 		Item[] current = getSelection(getGallery());
 
@@ -380,7 +364,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.AbstractTreeViewer#showItem(org.eclipse.swt
 	 * .widgets.Item)
 	 */
-	@Override
 	protected void showItem(Item item) {
 		gallery.showItem((GalleryItem) item);
 	}
@@ -390,7 +373,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * 
 	 * @see org.eclipse.jface.viewers.Viewer#getControl()
 	 */
-	@Override
 	public Control getControl() {
 		return gallery;
 	}
@@ -404,12 +386,10 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 		return gallery;
 	}
 
-	@Override
 	protected Item getItemAt(Point point) {
 		return gallery.getItem(point);
 	}
 
-	@Override
 	protected ColumnViewerEditor createViewerEditor() {
 		// TODO: implement editing support
 		return null;
@@ -452,7 +432,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 	 * org.eclipse.jface.viewers.ColumnViewer#getRowPartFromItem(org.eclipse
 	 * .swt.widgets.Widget)
 	 */
-	@Override
 	protected ViewerRow getViewerRowFromItem(Widget item) {
 		if (cachedRow == null) {
 			cachedRow = new GalleryViewerRow((GalleryItem) item);
@@ -554,7 +533,6 @@ public class GalleryTreeViewer extends AbstractTreeViewer {
 		});
 	}
 
-	@Override
 	public void editElement(Object element, int column) {
 		if (element instanceof TreePath) {
 			setSelection(new TreeSelection((TreePath) element));

@@ -109,7 +109,7 @@ public class ExifParser {
 				case ',':
 					if (element == null)
 						element = token.toString();
-					if (key.length() > 0)
+					if (!key.isEmpty())
 						result.put(key, element);
 					key = null;
 					element = null;
@@ -118,7 +118,7 @@ public class ExifParser {
 				case '}':
 					if (element == null)
 						element = token.toString();
-					if (key.length() > 0)
+					if (!key.isEmpty())
 						result.put(key, element);
 					return result;
 				case '|':

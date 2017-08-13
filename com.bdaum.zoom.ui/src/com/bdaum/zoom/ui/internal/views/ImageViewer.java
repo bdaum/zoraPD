@@ -36,6 +36,8 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.HelpEvent;
 import org.eclipse.swt.events.HelpListener;
 import org.eclipse.swt.events.KeyEvent;
@@ -61,9 +63,9 @@ import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolTip;
+import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.batch.internal.ExifTool;
 import com.bdaum.zoom.batch.internal.IFileWatcher;
@@ -83,6 +85,7 @@ import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiConstants;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.hover.HoverInfo;
 import com.bdaum.zoom.ui.internal.hover.IHoverInfo;
 import com.bdaum.zoom.ui.internal.widgets.FadingShell;
@@ -93,7 +96,7 @@ import edu.umd.cs.piccolo.util.PAffineTransform;
 import edu.umd.cs.piccolo.util.PAffineTransformException;
 
 @SuppressWarnings("restriction")
-public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiConstants {
+public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiConstants, DisposeListener {
 
 	private static final long USEPREVIEWTHRESHOLD = 4000000L;
 	private static final double MAXZOOM = 4d;
@@ -112,12 +115,10 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 			}
 			if (zimage != null) {
 				if (!canvas.isDisposed()) {
-					display.syncExec(new Runnable() {
-						public void run() {
-							if (!canvas.isDisposed()) {
-								canvas.redraw();
-								shell.setActive();
-							}
+					display.syncExec(() -> {
+						if (!canvas.isDisposed()) {
+							canvas.redraw();
+							shell.setActive();
 						}
 					});
 				}
@@ -126,11 +127,9 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 						break;
 					if (monitor.isCanceled())
 						break;
-					display.syncExec(new Runnable() {
-						public void run() {
-							if (!shell.isDisposed())
-								shell.setAlpha(Math.min(255, shell.getAlpha() + 16));
-						}
+					display.syncExec(() -> {
+						if (!shell.isDisposed())
+							shell.setAlpha(Math.min(255, shell.getAlpha() + 16));
 					});
 					try {
 						Thread.sleep(60);
@@ -139,14 +138,12 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 					}
 				}
 				if (!formerShell.isDisposed()) {
-					display.syncExec(new Runnable() {
-						public void run() {
-							formerShell.close();
-							if (!shell.isDisposed()) {
-								shell.forceActive();
-								shell.forceFocus();
-								canvas.setFocus();
-							}
+					display.syncExec(() -> {
+						formerShell.close();
+						if (!shell.isDisposed()) {
+							shell.forceActive();
+							shell.forceFocus();
+							canvas.setFocus();
 						}
 					});
 				}
@@ -250,24 +247,19 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 				if (panTask == null && xSpeed != 0 && ySpeed != 0) {
 					targetPnt.x = e.x;
 					targetPnt.y = e.y;
-					panTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(new Runnable() {
-
-						public void run() {
-							if (e.display.isDisposed() || topCanvas.isDisposed())
-								xSpeed = ySpeed = 0;
-							else {
-								e.display.syncExec(new Runnable() {
-									public void run() {
-										if (!topCanvas.isDisposed())
-											performMouseAction(e);
-									}
-								});
-								xSpeed *= lag;
-								ySpeed *= lag;
-							}
-							if (Math.abs(xSpeed) < stop && Math.abs(ySpeed) < stop)
-								InertiaMousePanListener.this.cancel();
+					panTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(() -> {
+						if (e.display.isDisposed() || topCanvas.isDisposed())
+							xSpeed = ySpeed = 0;
+						else {
+							e.display.syncExec(() -> {
+								if (!topCanvas.isDisposed())
+									performMouseAction(e);
+							});
+							xSpeed *= lag;
+							ySpeed *= lag;
 						}
+						if (Math.abs(xSpeed) < stop && Math.abs(ySpeed) < stop)
+							InertiaMousePanListener.this.cancel();
 					}, 0L, 60L, TimeUnit.MILLISECONDS);
 				}
 			}
@@ -327,12 +319,10 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 							asset.getFocalLengthIn35MmFilm(), null, 1d, 1d, adv, cms1, bwmode, null,
 							cropmode == ZImage.ORIGINAL ? Recipe.NULL : null, fileWatcher, opId, null);
 					if (image != null) {
-						display.syncExec(new Runnable() {
-							public void run() {
-								if (!topCanvas.isDisposed()) {
-									Rectangle area = topCanvas.getClientArea();
-									image.develop(monitor, display, cropmode, area.width, area.height);
-								}
+						display.syncExec(() -> {
+							if (!topCanvas.isDisposed()) {
+								Rectangle area = topCanvas.getClientArea();
+								image.develop(monitor, display, cropmode, area.width, area.height);
 							}
 						});
 						ibounds = image.getBounds();
@@ -342,18 +332,17 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 					}
 				} catch (UnsupportedOperationException e) {
 					loadFailed = e.getMessage();
-					display.syncExec(new Runnable() {
-						public void run() {
-							if (!bottomCanvas.isDisposed())
-								bottomCanvas.redraw();
-							if (!previewCanvas.isDisposed())
-								previewCanvas.redraw();
-						}
+					display.syncExec(() -> {
+						if (!bottomCanvas.isDisposed())
+							bottomCanvas.redraw();
+						if (!previewCanvas.isDisposed())
+							previewCanvas.redraw();
 					});
 				}
-//				status = new Fader().fadein(status, monitor, image, topShell, topCanvas,
-//						(previewShown) ? previewShell : bottomShell);
-//				highResVisible = true;
+				// status = new Fader().fadein(status, monitor, image, topShell,
+				// topCanvas,
+				// (previewShown) ? previewShell : bottomShell);
+				// highResVisible = true;
 				return status;
 			} finally {
 				fileWatcher.stopIgnoring(opId);
@@ -449,23 +438,18 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 			}
 			currentSpeed += sensitivity * e.count * Math.pow(Math.abs(e.count), nonlinearity);
 			if (wheelTask == null && currentSpeed != 0) {
-				wheelTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(new Runnable() {
-
-					public void run() {
-						if (e.display.isDisposed())
-							currentSpeed = 0;
-						else {
-							e.display.syncExec(new Runnable() {
-								public void run() {
-									if (!((Canvas) e.widget).isDisposed())
-										zoom(currentSpeed, e.x, e.y);
-								}
-							});
-							currentSpeed = currentSpeed * lag;
-						}
-						if (Math.abs(currentSpeed) < lag)
-							InertiaMouseWheelListener.this.cancel();
+				wheelTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(() -> {
+					if (e.display.isDisposed())
+						currentSpeed = 0;
+					else {
+						e.display.syncExec(() -> {
+							if (!((Canvas) e.widget).isDisposed())
+								zoom(currentSpeed, e.x, e.y);
+						});
+						currentSpeed = currentSpeed * lag;
 					}
+					if (Math.abs(currentSpeed) < lag)
+						InertiaMouseWheelListener.this.cancel();
 				}, 0L, 60L, TimeUnit.MILLISECONDS);
 			}
 		}
@@ -521,6 +505,7 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	private long oldTime;
 	protected int canvasXoffset;
 	protected int canvasYoffset;
+	private Shell shell;
 
 	/*
 	 * (non-Javadoc)
@@ -530,8 +515,10 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	 * , boolean)
 	 */
 
-	public void init(Display d, RGB bw, int crop) {
-		this.display = d;
+	public void init(IWorkbenchWindow window, RGB bw, int crop) {
+		this.shell = window.getShell();
+		shell.addDisposeListener(this);
+		this.display = shell.getDisplay();
 		this.bwmode = bw;
 		this.cropmode = crop;
 		IPreferencesService preferencesService = Platform.getPreferencesService();
@@ -568,8 +555,7 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	 */
 
 	public void create() {
-		Monitor monitor = display.getPrimaryMonitor();
-		Rectangle mbounds = monitor.getBounds();
+		Rectangle mbounds = UiUtilities.getSecondaryMonitorBounds(shell);
 		bottomShell = new FadingShell(createKioskShell(Messages.getString("ImageViewer.lowres_viewer")), false, -1); //$NON-NLS-1$
 		bottomCanvas = new Canvas(bottomShell.getShell(), SWT.DOUBLE_BUFFERED);
 		previewShell = new FadingShell(createKioskShell(Messages.getString("ImageViewer.preview_viewer")), true, //$NON-NLS-1$
@@ -594,16 +580,14 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 		bottomCanvas.addKeyListener(this);
 		previewCanvas.addKeyListener(this);
 		MouseMoveListener mouseMoveListener = new MouseMoveListener() {
-
 			public void mouseMove(MouseEvent e) {
-
 				Canvas canvas = (Canvas) e.widget;
 				Rectangle clientArea = canvas.getClientArea();
 				if (e.y < clientArea.y + 2 * HOTSPOTSIZE) {
 					if (e.x < clientArea.x + 2 * HOTSPOTSIZE)
-						showCloseButton(clientArea.x, clientArea.y);
+						showCloseButton(canvas.toDisplay(clientArea.x, clientArea.y));
 					else if (e.x > clientArea.x + clientArea.width - 2 * HOTSPOTSIZE)
-						showCloseButton(clientArea.x + clientArea.width - HOTSPOTSIZE, clientArea.y);
+						showCloseButton(canvas.toDisplay(clientArea.x + clientArea.width - HOTSPOTSIZE, clientArea.y));
 					else
 						controlShell.setVisible(false);
 				} else
@@ -612,8 +596,8 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 					controlShell.forceActive();
 			}
 
-			private void showCloseButton(int x, int y) {
-				controlShell.setLocation(x, y);
+			private void showCloseButton(Point pnt) {
+				controlShell.setLocation(pnt);
 				controlShell.setVisible(true);
 			}
 		};
@@ -659,7 +643,7 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 					String volume = asset.getVolume();
 					String text;
 					if (file == null)
-						text = volume == null || volume.trim().length() == 0
+						text = volume == null || volume.trim().isEmpty()
 								? Messages.getString("ImageViewer.highres_not_available") //$NON-NLS-1$
 								: NLS.bind(Messages.getString("ImageViewer.high_res_image_not_available"), //$NON-NLS-1$
 										volume);
@@ -743,8 +727,8 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 					canvasYoffset = Math.max(0, (sbounds.height - canvasHeight) / 2);
 					rectSrc.setBounds(0, 0, canvasWidth, canvasHeight);
 					viewTransform.inverseTransform(rectSrc, rectDst);
-					int cropWidth =  Math.min((int) (rectDst.getWidth()), ibounds.width);
-					int cropHeight =  Math.min((int) (rectDst.getHeight()), ibounds.height);
+					int cropWidth = Math.min((int) (rectDst.getWidth()), ibounds.width);
+					int cropHeight = Math.min((int) (rectDst.getHeight()), ibounds.height);
 					int maxX = ibounds.width - cropWidth;
 					int maxY = ibounds.height - cropHeight;
 					int cropXoffset = Math.max(0, Math.min(maxX, (int) (rectDst.getX())));
@@ -897,11 +881,11 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 			topShell.open();
 			highResJob = new HighResJob(file, advanced, cms);
 			highResJob.schedule();
-			while (!topShell.isDisposed())
+			while (topShell != null && !topShell.isDisposed())
 				if (!display.readAndDispatch())
 					display.sleep();
 		} else
-			while (!bottomShell.isDisposed())
+			while (bottomShell != null && !bottomShell.isDisposed())
 				if (!display.readAndDispatch())
 					display.sleep();
 		if (tempFile != null)
@@ -1018,11 +1002,26 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 			bwImage.dispose();
 		if (highResJob != null)
 			highResJob.cancel();
-		topShell.close();
-		bottomShell.close();
-		previewShell.close();
-		controlShell.close();
-		controlRegion.dispose();
+		if (topShell != null) {
+			topShell.close();
+			topShell = null;
+		}
+		if (previewShell != null) {
+			previewShell.close();
+			previewShell = null;
+		}
+		if (bottomShell != null) {
+			bottomShell.close();
+			bottomShell = null;
+		}
+		if (controlShell != null) {
+			controlShell.close();
+			controlShell = null;
+		}
+		if (controlRegion != null) {
+			controlRegion.dispose();
+			controlRegion = null;
+		}
 		if (tlayout != null)
 			tlayout.dispose();
 		if (font != null)
@@ -1044,8 +1043,10 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	}
 
 	private void pan(double xDir, double yDir) {
-//		double fac = Math.pow(2d, (Platform.getPreferencesService().getInt(UiActivator.PLUGIN_ID,
-//				PreferenceConstants.MOUSE_SPEED, 10, null) - 10) / 3d) / viewTransform.getScale();
+		// double fac = Math.pow(2d,
+		// (Platform.getPreferencesService().getInt(UiActivator.PLUGIN_ID,
+		// PreferenceConstants.MOUSE_SPEED, 10, null) - 10) / 3d) /
+		// viewTransform.getScale();
 		viewTransform.translate(xDir, yDir);
 		rectSrc.setBounds(ibounds.x, ibounds.y, ibounds.width, ibounds.height);
 		viewTransform.transform(rectSrc, rectDst);
@@ -1164,6 +1165,11 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 
 	private boolean isEnlarged() {
 		return viewTransform.getScale() > wheelListener.getMinScale() + EPSILON;
+	}
+
+	@Override
+	public void widgetDisposed(DisposeEvent e) {
+		close();
 	}
 
 }

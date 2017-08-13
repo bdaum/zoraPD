@@ -82,20 +82,18 @@ public class FindSeriesJob extends CustomJob {
 		if (activePage == null)
 			return Status.CANCEL_STATUS;
 		Display display = window.getShell().getDisplay();
-		display.syncExec(new Runnable() {
-			public void run() {
-				try {
-					IViewPart view = activePage.showView(DuplicatesView.ID);
-					if (view instanceof DuplicatesView) {
-						duplicatesView = (DuplicatesView) view;
-						duplicatesView.reset();
-						duplicatesView.showBusy(true);
-						duplicatesView
-								.setItemType(Messages.FindSeriesJob_series);
-					}
-				} catch (PartInitException e) {
-					// ignore
+		display.syncExec(() -> {
+			try {
+				IViewPart view = activePage.showView(DuplicatesView.ID);
+				if (view instanceof DuplicatesView) {
+					duplicatesView = (DuplicatesView) view;
+					duplicatesView.reset();
+					duplicatesView.showBusy(true);
+					duplicatesView
+							.setItemType(Messages.FindSeriesJob_series);
 				}
+			} catch (PartInitException e) {
+				// ignore
 			}
 		});
 		if (duplicatesView == null)
@@ -107,16 +105,14 @@ public class FindSeriesJob extends CustomJob {
 		duplicatesProvider.findDuplicates(monitor);
 		final AbstractDuplicatesProvider provider = duplicatesProvider;
 		if (!display.isDisposed() && !window.getShell().isDisposed())
-			display.syncExec(new Runnable() {
-				public void run() {
-					try {
-						DuplicatesView view = (DuplicatesView) activePage
-								.showView(DuplicatesView.ID);
-						view.showBusy(false);
-						view.setDuplicatesProvider(provider);
-					} catch (PartInitException e) {
-						// ignore
-					}
+			display.syncExec(() -> {
+				try {
+					DuplicatesView view = (DuplicatesView) activePage
+							.showView(DuplicatesView.ID);
+					view.showBusy(false);
+					view.setDuplicatesProvider(provider);
+				} catch (PartInitException e) {
+					// ignore
 				}
 			});
 		return Status.OK_STATUS;

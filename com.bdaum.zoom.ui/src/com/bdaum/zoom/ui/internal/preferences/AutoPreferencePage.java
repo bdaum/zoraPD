@@ -262,8 +262,8 @@ public class AutoPreferencePage extends AbstractPreferencePage {
 		IStructuredSelection selection = (IStructuredSelection) ruleViewer
 				.getSelection();
 		editAutoButton.setEnabled(selection.size() == 1);
-		removeAutoButton.setEnabled(selection.size() > 0);
-		applyButton.setEnabled(selection.size() > 0);
+		removeAutoButton.setEnabled(!selection.isEmpty());
+		applyButton.setEnabled(!selection.isEmpty());
 	}
 
 	@Override

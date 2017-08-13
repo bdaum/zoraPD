@@ -46,6 +46,7 @@ public class ColorCodeDialog extends ZDialog {
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
+		Shell shell = getShell();
 		colorCodeGroup = new ColorCodeGroup(parent, SWT.NONE, code);
 		colorCodeGroup.addFocusListener(new FocusAdapter() {
 
@@ -59,14 +60,12 @@ public class ColorCodeDialog extends ZDialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				code = colorCodeGroup.getCode();
-				getShell().getDisplay().timerExec(100, new Runnable() {
-					public void run() {
+				shell.getDisplay().timerExec(100, () -> {
+					if (!shell.isDisposed())
 						close();
-					}
 				});
 			}
 		});
-		Shell shell = getShell();
 		shell.pack();
 		shell.layout();
 		colorCodeGroup.setFocus();

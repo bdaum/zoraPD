@@ -20,7 +20,6 @@
 
 package com.bdaum.zoom.email.internal.job;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -39,6 +38,7 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
 
 import com.bdaum.zoom.batch.internal.IFileWatcher;
@@ -62,17 +62,18 @@ import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.job.CustomJob;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.ui.internal.dialogs.PageProcessor;
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Element;
-import com.lowagie.text.Font;
-import com.lowagie.text.FontFactory;
-import com.lowagie.text.PageSize;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Rectangle;
-import com.lowagie.text.pdf.PdfPCell;
-import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfWriter;
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 
 @SuppressWarnings("restriction")
 public class PdfJob extends CustomJob {
@@ -166,6 +167,8 @@ public class PdfJob extends CustomJob {
 				status.add(sendStatus);
 		}
 		cleanUp();
+		if (subject == null)
+			Program.launch(targetFile.getAbsolutePath());
 		return status;
 	}
 
@@ -192,13 +195,13 @@ public class PdfJob extends CustomJob {
 		fontLead = fontSize / 3f;
 		titlePixelSize = 0;
 		titleLead = 0;
-		if (layout.getTitle().length() > 0) {
+		if (!layout.getTitle().isEmpty()) {
 			titlePixelSize = titleSize;
 			titleLead = titlePixelSize;
 		}
 		subtitlePixelSize = 0;
 		subtitleLead = 0;
-		if (layout.getSubtitle().length() > 0) {
+		if (!layout.getSubtitle().isEmpty()) {
 			subtitlePixelSize = subtitleSize;
 			subtitleLead = subtitlePixelSize;
 		}
@@ -206,9 +209,9 @@ public class PdfJob extends CustomJob {
 		footerLead = footerSize;
 		int footerTextSize = footerSize + footerLead;
 		int textHeight = 0;
-		if (layout.getCaption1().length() > 0)
+		if (!layout.getCaption1().isEmpty())
 			textHeight += fontSize + fontLead;
-		if (layout.getCaption2().length() > 0)
+		if (!layout.getCaption2().isEmpty())
 			textHeight += fontSize + fontLead;
 		leftMargins = layout.getLeftMargin() / MMPERINCH * 72;
 		rightMargins = layout.getRightMargin() / MMPERINCH * 72;
@@ -253,6 +256,7 @@ public class PdfJob extends CustomJob {
 		Document document = new Document();
 		document.addCreationDate();
 		document.addCreator(Constants.APPLICATION_NAME);
+		document.addAuthor(System.getProperty("user.name")); //$NON-NLS-1$
 		document.setPageSize(format);
 		document.setMargins(Math.max(0, leftMargins - horizontalGap / 2), Math.max(0, rightMargins - horizontalGap / 2),
 				topMargins, 0);
@@ -291,23 +295,23 @@ public class PdfJob extends CustomJob {
 		document.setPageCount(pageNo);
 		final Display display = Display.getDefault();
 		int pageItem = 0;
-		if (layout.getTitle().length() > 0) {
+		if (!layout.getTitle().isEmpty()) {
 			String title = PageProcessor.computeTitle(layout.getTitle(), fileName, now, assets.size(), pageNo, pages,
 					collection, meta);
 			Paragraph p = new Paragraph(title,
-					FontFactory.getFont(FontFactory.HELVETICA, titleSize, Font.BOLD, Color.DARK_GRAY));
+					FontFactory.getFont(FontFactory.HELVETICA, titleSize, Font.BOLD, BaseColor.DARK_GRAY));
 			p.setAlignment(Element.ALIGN_CENTER);
-			if (layout.getSubtitle().length() > 0)
+			if (!layout.getSubtitle().isEmpty())
 				p.setSpacingAfter(titleLead);
 			else
 				p.setSpacingAfter(titleLead + upperWaste);
 			document.add(p);
 		}
-		if (layout.getSubtitle().length() > 0) {
+		if (!layout.getSubtitle().isEmpty()) {
 			String subtitle = PageProcessor.computeTitle(layout.getSubtitle(), fileName, now, assets.size(), pageNo,
 					pages, collection, meta);
 			Paragraph p = new Paragraph(subtitle,
-					FontFactory.getFont(FontFactory.HELVETICA, subtitleSize, Font.NORMAL, Color.DARK_GRAY));
+					FontFactory.getFont(FontFactory.HELVETICA, subtitleSize, Font.NORMAL, BaseColor.DARK_GRAY));
 			p.setAlignment(Element.ALIGN_CENTER);
 			p.setSpacingAfter(subtitleLead + upperWaste);
 			document.add(p);
@@ -361,39 +365,36 @@ public class PdfJob extends CustomJob {
 								box.cleanup();
 							}
 						}
-						display.syncExec(new Runnable() {
-
-							public void run() {
-								int kl = (keyLine > 0) ? (int) Math.max(1, (keyLine * dpi / 144)) : 0;
-								org.eclipse.swt.graphics.Rectangle ibounds = zimage.getBounds();
-								double factor = Math.min((double) pixelWidth / ibounds.width,
-										(double) pixelHeight / ibounds.height);
-								int lw = pixelWidth + 2 * kl;
-								int lh = pixelHeight + 2 * kl;
-								Image newImage = new Image(display, lw, lh);
-								GC gc = new GC(newImage);
-								try {
-									gc.setAntialias(SWT.ON);
-									gc.setInterpolation(SWT.HIGH);
-									gc.setAdvanced(true);
-									gc.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
-									gc.fillRectangle(0, 0, lw, lh);
-									int width = (int) (ibounds.width * factor + 2 * kl);
-									int height = (int) (ibounds.height * factor + 2 * kl);
-									int xoff = (lw - width) / 2;
-									int yoff = (lh - height) / 2;
-									if (kl > 0) {
-										gc.setBackground(display.getSystemColor(SWT.COLOR_DARK_GRAY));
-										gc.fillRectangle(xoff, yoff, width, height);
-									}
-									zimage.draw(gc, 0, 0, ibounds.width, ibounds.height, xoff + kl, yoff + kl,
-											width - 2 * kl, height - 2 * kl, ZImage.CROPPED, pixelWidth, pixelHeight,
-											false);
-								} finally {
-									gc.dispose();
-									zimage.dispose();
-									zimage = new ZImage(newImage, null);
+						display.syncExec(() -> {
+							int kl = (keyLine > 0) ? (int) Math.max(1, (keyLine * dpi / 144)) : 0;
+							org.eclipse.swt.graphics.Rectangle ibounds = zimage.getBounds();
+							double factor = Math.min((double) pixelWidth / ibounds.width,
+									(double) pixelHeight / ibounds.height);
+							int lw = pixelWidth + 2 * kl;
+							int lh = pixelHeight + 2 * kl;
+							Image newImage = new Image(display, lw, lh);
+							GC gc = new GC(newImage);
+							try {
+								gc.setAntialias(SWT.ON);
+								gc.setInterpolation(SWT.HIGH);
+								gc.setAdvanced(true);
+								gc.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
+								gc.fillRectangle(0, 0, lw, lh);
+								int width = (int) (ibounds.width * factor + 2 * kl);
+								int height = (int) (ibounds.height * factor + 2 * kl);
+								int xoff = (lw - width) / 2;
+								int yoff = (lh - height) / 2;
+								if (kl > 0) {
+									gc.setBackground(display.getSystemColor(SWT.COLOR_DARK_GRAY));
+									gc.fillRectangle(xoff, yoff, width, height);
 								}
+								zimage.draw(gc, 0, 0, ibounds.width, ibounds.height, xoff + kl, yoff + kl,
+										width - 2 * kl, height - 2 * kl, ZImage.CROPPED, pixelWidth, pixelHeight,
+										false);
+							} finally {
+								gc.dispose();
+								zimage.dispose();
+								zimage = new ZImage(newImage, null);
 							}
 						});
 						bounds = zimage.getBounds();
@@ -404,7 +405,7 @@ public class PdfJob extends CustomJob {
 									SWT.IMAGE_JPEG, jpegQuality);
 						}
 						zimage.dispose();
-						com.lowagie.text.Image pdfImage = com.lowagie.text.Image.getInstance(jpegFile.getPath());
+						com.itextpdf.text.Image pdfImage = com.itextpdf.text.Image.getInstance(jpegFile.getPath());
 						double factor = Math.min(imageWidth / bounds.width, imageHeight / bounds.height);
 						float w = (float) (bounds.width * factor);
 						float h = (float) (bounds.height * factor);
@@ -433,11 +434,11 @@ public class PdfJob extends CustomJob {
 			}
 			table.setWidthPercentage(100f);
 			document.add(table);
-			if (layout.getFooter().length() > 0) {
+			if (!layout.getFooter().isEmpty()) {
 				String footer = PageProcessor.computeTitle(layout.getFooter(), fileName, now, assets.size(), pageNo,
 						pages, collection, meta);
 				Paragraph p = new Paragraph(footer,
-						FontFactory.getFont(FontFactory.HELVETICA, subtitleSize, Font.NORMAL, Color.DARK_GRAY));
+						FontFactory.getFont(FontFactory.HELVETICA, subtitleSize, Font.NORMAL, BaseColor.DARK_GRAY));
 				p.setAlignment(Element.ALIGN_CENTER);
 				p.setSpacingBefore(upperWaste / 2 + footerLead);
 				document.add(p);
@@ -448,7 +449,7 @@ public class PdfJob extends CustomJob {
 	}
 
 	private void renderCaptions(int pageNo, int seqNo, int pageItem, PdfPTable table, int ni, String caption) {
-		if (caption.length() > 0) {
+		if (!caption.isEmpty()) {
 			for (int j = 0; j < layout.getColumns(); j++) {
 				int a = (pageNo - 1) * imagesPerPage + ni + j;
 				PdfPCell cell;
@@ -458,7 +459,7 @@ public class PdfJob extends CustomJob {
 					String cc = PageProcessor.computeCaption(caption, assets.get(a), collection, seqNo + j + 1,
 							pageItem + j + 1);
 					Paragraph p = new Paragraph(cc,
-							FontFactory.getFont(FontFactory.HELVETICA, fontSize, Font.NORMAL, Color.DARK_GRAY));
+							FontFactory.getFont(FontFactory.HELVETICA, fontSize, Font.NORMAL, BaseColor.DARK_GRAY));
 					p.setSpacingBefore(0);
 					cell = new PdfPCell(p);
 					cell.setHorizontalAlignment(Element.ALIGN_CENTER);

@@ -105,12 +105,10 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 
 		public void fatalError(final String title, final String msg, IAdaptable adaptable) {
 			final Shell shell = getShell(adaptable);
-			syncExec(shell, new Runnable() {
-				public void run() {
-					if (!shell.isDisposed()) {
-						AcousticMessageDialog.openError(shell, title, msg);
-						shell.getDisplay().dispose();
-					}
+			syncExec(shell, () -> {
+				if (!shell.isDisposed()) {
+					AcousticMessageDialog.openError(shell, title, msg);
+					shell.getDisplay().dispose();
 				}
 			});
 			System.exit(4);
@@ -120,38 +118,32 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 				final IAdaptable adaptable) {
 			final Shell shell = getShell(adaptable);
 			final InvalidFileDialog dialog = new InvalidFileDialog(shell, title, message, uri, monitor);
-			syncExec(shell, new Runnable() {
-				public void run() {
-					if (!shell.isDisposed()) {
-						dialog.open();
-					}
+			syncExec(shell, () -> {
+				if (!shell.isDisposed()) {
+					dialog.open();
 				}
 			});
 		}
 
 		public void connectionLostWarning(final String title, final String message, final IAdaptable adaptable) {
 			final Shell shell = getShell(adaptable);
-			syncExec(shell, new Runnable() {
-				public void run() {
-					if (!shell.isDisposed() && !AcousticMessageDialog.openQuestion(shell, title, message))
-						return;
-					configurer.emergencyClose();
-				}
+			syncExec(shell, () -> {
+				if (!shell.isDisposed() && !AcousticMessageDialog.openQuestion(shell, title, message))
+					return;
+				configurer.emergencyClose();
 			});
 		}
 
 		public void promptForReconnect(final String title, final String message, final IInputValidator validator,
 				final IAdaptable adaptable) {
 			final Shell shell = getShell(adaptable);
-			syncExec(shell, new Runnable() {
-				public void run() {
-					if (!shell.isDisposed()
-							&& new TimedMessageDialog(shell, validator, title, null, message, MessageDialog.WARNING,
-									new String[] { IDialogConstants.RETRY_LABEL, IDialogConstants.ABORT_LABEL }, 0, 0,
-									1000L).open() != 0) {
-						shell.getDisplay().dispose();
-						System.exit(4);
-					}
+			syncExec(shell, () -> {
+				if (!shell.isDisposed()
+						&& new TimedMessageDialog(shell, validator, title, null, message, MessageDialog.WARNING,
+								new String[] { IDialogConstants.RETRY_LABEL, IDialogConstants.ABORT_LABEL }, 0, 0,
+								1000L).open() != 0) {
+					shell.getDisplay().dispose();
+					System.exit(4);
 				}
 			});
 		}
@@ -160,31 +152,23 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 			final Shell shell = getShell(adaptable);
 			final AcousticMessageDialog dialog = new AcousticMessageDialog(shell, title, null, message,
 					MessageDialog.QUESTION, new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL }, 0);
-			syncExec(shell, new Runnable() {
-				public void run() {
-					dialog.open();
-				}
-			});
+			syncExec(shell, () -> dialog.open());
 			return dialog.getReturnCode() == 0;
 		}
 
 		public void showError(final String title, final String message, IAdaptable adaptable) {
 			final Shell shell = getShell(adaptable);
-			asyncExec(shell, new Runnable() {
-				public void run() {
-					if (!shell.isDisposed())
-						AcousticMessageDialog.openError(shell, title, message);
-				}
+			asyncExec(shell, () -> {
+				if (!shell.isDisposed())
+					AcousticMessageDialog.openError(shell, title, message);
 			});
 		}
 
 		public void showWarning(final String title, final String message, IAdaptable adaptable) {
 			final Shell shell = getShell(adaptable);
-			asyncExec(shell, new Runnable() {
-				public void run() {
-					if (!shell.isDisposed())
-						AcousticMessageDialog.openWarning(shell, title, message);
-				}
+			asyncExec(shell, () -> {
+				if (!shell.isDisposed())
+					AcousticMessageDialog.openWarning(shell, title, message);
 			});
 		}
 
@@ -195,11 +179,9 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 		public void showInformation(final String title, final String message, IAdaptable adaptable,
 				final IValidator validator) {
 			final Shell shell = getShell(adaptable);
-			asyncExec(shell, new Runnable() {
-				public void run() {
-					if (!shell.isDisposed())
-						AcousticMessageDialog.openInformation(shell, title, message, validator);
-				}
+			asyncExec(shell, () -> {
+				if (!shell.isDisposed())
+					AcousticMessageDialog.openInformation(shell, title, message, validator);
 			});
 		}
 
@@ -208,11 +190,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 			final Shell shell = getShell(adaptable);
 			final AcousticMessageDialog dialog = new AcousticMessageDialog(shell, dialogTitle, dialogTitleImage,
 					dialogMessage, dialogImageType, dialogButtonLabels, defaultIndex);
-			syncExec(shell, new Runnable() {
-				public void run() {
-					dialog.open();
-				}
-			});
+			syncExec(shell, () -> dialog.open());
 			return dialog.getReturnCode();
 		}
 
@@ -220,11 +198,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 				ImportConfiguration currentConfig, boolean multi, IAdaptable adaptable) {
 			final Shell shell = getShell(adaptable);
 			final ConflictDialog dialog = new ConflictDialog(shell, title, message, asset, currentConfig, multi);
-			syncExec(shell, new Runnable() {
-				public void run() {
-					dialog.open();
-				}
-			});
+			syncExec(shell, () -> dialog.open());
 			return dialog.getCurrentConfig();
 		}
 
@@ -255,12 +229,10 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 			if (shell == null) {
 				final Display display = Display.getDefault();
 				if (!display.isDisposed()) {
-					display.syncExec(new Runnable() {
-						public void run() {
-							auxShell = display.getActiveShell();
-							if (auxShell == null)
-								auxShell = new Shell(display);
-						}
+					display.syncExec(() -> {
+						auxShell = display.getActiveShell();
+						if (auxShell == null)
+							auxShell = new Shell(display);
 					});
 					shell = auxShell;
 					auxShell = null;
@@ -272,11 +244,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 		public File showDngDialog(File dngLocation, IAdaptable adaptable) {
 			Shell shell = getShell(adaptable);
 			final DNGConverterDialog dialog = new DNGConverterDialog(shell, dngLocation);
-			syncExec(shell, new Runnable() {
-				public void run() {
-					dialog.open();
-				}
-			});
+			syncExec(shell, () -> dialog.open());
 			return dialog.getResult();
 		}
 
@@ -286,12 +254,8 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 					Messages.getString("ApplicationWorkbenchAdvisor.no_raw_converter"), adaptable); //$NON-NLS-1$
 			if (result) {
 				final int ret[] = new int[1];
-				syncExec(shell, new Runnable() {
-					public void run() {
-						ret[0] = PreferencesUtil.createPreferenceDialogOn(shell, ImportPreferencePage.ID, new String[0],
-								ImportPreferencePage.RAW).open();
-					}
-				});
+				syncExec(shell, () -> ret[0] = PreferencesUtil.createPreferenceDialogOn(shell, ImportPreferencePage.ID, new String[0],
+						ImportPreferencePage.RAW).open());
 				if (ret[0] == Dialog.OK)
 					return BatchActivator.getDefault().getCurrentRawConverter(true);
 			}
@@ -607,7 +571,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 				}
 			}
 			String recentCats = memento.getString(RECENTCATS);
-			if (recentCats != null && recentCats.length() > 0) {
+			if (recentCats != null && !recentCats.isEmpty()) {
 				LinkedList<CatLocation> recentList = new LinkedList<CatLocation>();
 				StringTokenizer st = new StringTokenizer(recentCats, "\n"); //$NON-NLS-1$
 				while (st.hasMoreTokens())

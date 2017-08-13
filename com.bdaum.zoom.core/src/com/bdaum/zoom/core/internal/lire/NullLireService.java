@@ -33,7 +33,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.graphics.Point;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
+import com.bdaum.zoom.cat.model.group.SmartCollection;
 
 public class NullLireService implements ILireService {
 
@@ -78,17 +78,17 @@ public class NullLireService implements ILireService {
 	}
 
 	@Override
-	public SmartCollectionImpl updateQuery(SmartCollectionImpl current, Object value, IAdaptable adaptable, String kind) {
-		return current;
+	public SmartCollection updateQuery(SmartCollection query, Object value, IAdaptable adaptable, String field) {
+		return query;
 	}
 
 	@Override
-	public void performQuery(Object value, IAdaptable adaptable, String kind) {
+	public void performQuery(Object value, IAdaptable adaptable, String field) {
 		// do nothing
 	}
 
 	@Override
-	public boolean configureSearch(IAdaptable adaptable, Point displayLocation) {
+	public boolean ShowConfigureSearch(IAdaptable adaptable, Point displayLocation) {
 		return false;
 	}
 

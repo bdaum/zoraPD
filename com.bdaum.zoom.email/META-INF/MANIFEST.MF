@@ -2,14 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.email;singleton:=true
-Bundle-Version: 3.0.1
+Bundle-Version: 3.1.0
 Bundle-Activator: com.bdaum.zoom.email.internal.Activator
 Bundle-Vendor: %Bundle-Vendor.bdaum
-Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.0.0",
+Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.1.0",
  com.bdaum.iText;bundle-version="2.1.7",
  org.eclipse.help;bundle-version="3.5.100",
  org.eclipse.equinox.ds;bundle-version="1.3.1",
- com.bdaum.zoom.net.core;bundle-version="3.0.0"
+ com.bdaum.zoom.net.core;bundle-version="3.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .

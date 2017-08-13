@@ -24,10 +24,9 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.gps.internal.views.messages"; //$NON-NLS-1$
-	public static String MapView_click_to_lock;
-	public static String MapView_click_to_unlock;
-	public static String MapView_lock_locked;
-	public static String MapView_lock_unlocked;
+	public static String MapView_external_tooltip;
+	public static String MapView_refresh;
+	public static String MapView_refresh_tooltip;
 	public static String MapView_show_in_web;
 	static {
 		// initialize resource bundle

@@ -64,7 +64,7 @@ public class LocrGetAlbumsHandler extends DefaultLocrHandler {
 			throws SAXException {
 		super.characters(chars, start, end);
 		String cdata = new String(chars, start, end).trim();
-		if (cdata.length() > 0 && photoSet != null) {
+		if (!cdata.isEmpty() && photoSet != null) {
 			if ("name".equals(lastTag)) { //$NON-NLS-1$
 				photoSet.setTitle(cdata);
 			} else if ("description".equals(lastTag)) { //$NON-NLS-1$

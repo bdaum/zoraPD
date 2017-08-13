@@ -63,7 +63,7 @@ public class GoogleGeonamingService implements IGeonamingService {
 				null);
 		String privateKey = preferencesService.getString(COM_BDAUM_ZOOM_GPS, PreferenceConstants.GOOGLEPRIVATEKEY, "", //$NON-NLS-1$
 				null);
-		if (clientId != null && clientId.length() > 0 && privateKey != null && privateKey.length() > 0) {
+		if (clientId != null && !clientId.isEmpty() && privateKey != null && !privateKey.isEmpty()) {
 			String cand = query + (NLS.bind("&client={0}", clientId)); //$NON-NLS-1$
 			try {
 				query += (NLS.bind("&client={0}&signature={0}", clientId, //$NON-NLS-1$

@@ -56,7 +56,7 @@ public class NetActivator extends ZUiPlugin implements IFTPService {
 			String host = url.getHost();
 			int port = url.getPort();
 			String userInfo = url.getUserInfo();
-			if (userInfo != null && userInfo.length() > 0) {
+			if (userInfo != null && !userInfo.isEmpty()) {
 				disposeClient(connectionMap.remove(host));
 				FtpAccount acc = new FtpAccount();
 				acc.setHost(host);

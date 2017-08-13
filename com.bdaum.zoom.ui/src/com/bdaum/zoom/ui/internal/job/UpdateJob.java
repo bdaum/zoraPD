@@ -241,23 +241,17 @@ public class UpdateJob extends AbstractUpdateJob {
 		if (display.isDisposed())
 			return Status.CANCEL_STATUS;
 		if (downloadFile == null) {
-			display.syncExec(new Runnable() {
-				public void run() {
-					MessageDialog.openError(null, Constants.APPNAME + UPDATE,
-							Messages.Updater_download_of_new_version_failed);
-				}
-			});
+			display.syncExec(() -> MessageDialog.openError(null, Constants.APPNAME + UPDATE,
+					Messages.Updater_download_of_new_version_failed));
 			return Status.CANCEL_STATUS;
 		}
 		if (monitor.isCanceled())
 			return Status.CANCEL_STATUS;
-		display.syncExec(new Runnable() {
-			public void run() {
-				AcousticMessageDialog dialog = new AcousticMessageDialog(null, Constants.APPNAME + UPDATE, null,
-						NLS.bind(Messages.Updater_installer_package_successfully_downloaded, downloadFile.getName()),
-						MessageDialog.QUESTION, new String[] { Messages.Updater_yes, Messages.Updater_no }, 0);
-				result = dialog.open();
-			}
+		display.syncExec(() -> {
+			AcousticMessageDialog dialog = new AcousticMessageDialog(null, Constants.APPNAME + UPDATE, null,
+					NLS.bind(Messages.Updater_installer_package_successfully_downloaded, downloadFile.getName()),
+					MessageDialog.QUESTION, new String[] { Messages.Updater_yes, Messages.Updater_no }, 0);
+			result = dialog.open();
 		});
 		if (monitor.isCanceled())
 			return Status.CANCEL_STATUS;

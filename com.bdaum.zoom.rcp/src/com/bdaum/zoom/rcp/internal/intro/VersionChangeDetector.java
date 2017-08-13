@@ -53,7 +53,7 @@ public class VersionChangeDetector extends IntroContentDetector {
 				.getPreferenceStore();
 		String v = preferenceStore
 				.getString(PreferenceConstants.PREVIOUSVERSION);
-		if (v == null || v.length() == 0) {
+		if (v == null || v.isEmpty()) {
 			preferenceStore.putValue(PreferenceConstants.PREVIOUSVERSION,
 					Platform.getProduct().getDefiningBundle().getVersion()
 							.toString());

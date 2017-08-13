@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" activate="activate" deactivate="deactivate" immediate="false" name="Lire Services">
-   <implementation class="com.bdaum.zoom.lal.internal.lire.Lire"/>
-   <service>
-      <provide interface="com.bdaum.zoom.core.internal.lire.ILireService"/>
-   </service>
-   <reference cardinality="1..1" interface="com.bdaum.zoom.core.internal.lucene.ILuceneService" name="ILuceneService" policy="static"/>
-   <property name="version" type="Integer" value="1"/>
-</scr:component>

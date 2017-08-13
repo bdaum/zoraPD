@@ -83,6 +83,13 @@
                </documentation>
             </annotation>
          </attribute>
+         <attribute name="featureId" type="string">
+            <annotation>
+               <documentation>
+                  An unique integer number greater 1000 identifying the Lire feature provided by this service provider
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 

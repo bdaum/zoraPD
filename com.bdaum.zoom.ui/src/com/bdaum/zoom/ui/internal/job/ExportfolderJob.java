@@ -372,7 +372,7 @@ public class ExportfolderJob extends AbstractExportJob {
 	private static File createCatSubfolder(File parent, Asset asset) {
 		File subFolder = parent;
 		Object value = QueryField.IPTC_CATEGORY.obtainFieldValue(asset);
-		if (value instanceof String && ((String) value).length() > 0) {
+		if (value instanceof String && !((String) value).isEmpty()) {
 			StringTokenizer st = new StringTokenizer((String) value, "."); //$NON-NLS-1$
 			while (st.hasMoreTokens())
 				subFolder = new File(subFolder,
@@ -406,7 +406,7 @@ public class ExportfolderJob extends AbstractExportJob {
 			QueryField qfield) {
 		String text = qfield.formatScalarValue(qfield.obtainFieldValue(asset),
 				true, false, null);
-		if (text != null && text.length() > 0)
+		if (text != null && !text.isEmpty())
 			return new File(parent, BatchUtilities.toValidFilename(text));
 		return parent;
 	}

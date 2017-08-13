@@ -15,13 +15,20 @@ package com.bdaum.zoom.gps;
  * Listens to coordinate changes in a map marker
  */
 public interface CoordinatesListener {
+	
+	// Event types
+	public static final int ADDLOC = 0;
+	public static final int CAMPOS = 1;
+	public static final int IMGDIR = 2;
 
 	/**
 	 * New coordinates
+	 * @param assetIds - Asset ID (modify event) or null
 	 * @param latitude - Latitude
 	 * @param longitude - Longitude
 	 * @param zoomLevel - Zoom level
+	 * @param type - event type
 	 */
-	void setCoordinates(double latitude, double longitude, int zoomLevel);
+	void setCoordinates(String[] assetIds, double latitude, double longitude, int zoomLevel, int type);
 
 }

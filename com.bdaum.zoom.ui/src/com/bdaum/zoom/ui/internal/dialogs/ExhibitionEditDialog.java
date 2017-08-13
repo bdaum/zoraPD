@@ -20,7 +20,6 @@
 
 package com.bdaum.zoom.ui.internal.dialogs;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -84,6 +83,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.printing.PrintDialog;
 import org.eclipse.swt.printing.PrinterData;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Combo;
@@ -135,17 +135,20 @@ import com.bdaum.zoom.ui.internal.widgets.WebColorGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
-import com.lowagie.text.Cell;
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Element;
-import com.lowagie.text.FontFactory;
-import com.lowagie.text.HeaderFooter;
-import com.lowagie.text.PageSize;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Phrase;
-import com.lowagie.text.Table;
-import com.lowagie.text.pdf.PdfWriter;
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.ColumnText;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfPageEventHelper;
+import com.itextpdf.text.pdf.PdfWriter;
 
 import net.sf.paperclips.DefaultGridLook;
 import net.sf.paperclips.GridPrint;
@@ -227,16 +230,14 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	public static ExhibitionImpl open(final Shell shell, final GroupImpl group, final ExhibitionImpl gallery,
 			final String title, final boolean canUndo, final String errorMsg) {
 		final ExhibitionImpl[] box = new ExhibitionImpl[1];
-		BusyIndicator.showWhile(shell.getDisplay(), new Runnable() {
-			public void run() {
-				ExhibitionEditDialog dialog = new ExhibitionEditDialog(shell, group, gallery, title, canUndo);
-				if (errorMsg != null) {
-					dialog.create();
-					dialog.selectOutputPage(errorMsg);
-				}
-				if (dialog.open() == Window.OK)
-					box[0] = dialog.getResult();
+		BusyIndicator.showWhile(shell.getDisplay(), () -> {
+			ExhibitionEditDialog dialog = new ExhibitionEditDialog(shell, group, gallery, title, canUndo);
+			if (errorMsg != null) {
+				dialog.create();
+				dialog.selectOutputPage(errorMsg);
 			}
+			if (dialog.open() == Window.OK)
+				box[0] = dialog.getResult();
 		});
 		return box[0];
 	}
@@ -259,7 +260,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		updateButtons();
 		Shell shell = getShell();
 		shell.layout();
-		ImageData cursorData = UiActivator.getImageDescriptor("icons/cursors/rotCursor.bmp").getImageData(); //$NON-NLS-1$
+		ImageData cursorData = UiActivator.getImageDescriptor("icons/cursors/rotCursor.bmp").getImageData(100); //$NON-NLS-1$
 		cursorData.transparentPixel = 1;
 		rotCursor = new Cursor(shell.getDisplay(), cursorData, cursorData.width / 2, cursorData.height / 2);
 		shell.addDisposeListener(new DisposeListener() {
@@ -312,7 +313,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	protected int dragHandle;
 	protected Object draggedObject;
 	protected Point dragStart;
-	protected Point origin = new Point(0,0);
+	protected Point origin = new Point(0, 0);
 	protected Object recentlyDraggedObject;
 
 	private CheckedText infoField;
@@ -494,35 +495,32 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		final List<Wall> walls = current.getWall();
 		if (walls == null)
 			return;
-		BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-
-			public void run() {
-				Set<String> keywords = new HashSet<String>();
-				StringTokenizer st = new StringTokenizer(keywordField.getText().trim(), "\n"); //$NON-NLS-1$
-				while (st.hasMoreTokens())
-					keywords.add(st.nextToken());
-				for (Wall wall : walls) {
-					List<String> exhibit = wall.getExhibit();
-					if (exhibit != null) {
-						for (String exhibitId : exhibit) {
-							WebExhibitImpl obj = dbManager.obtainById(WebExhibitImpl.class, exhibitId);
-							if (obj != null) {
-								String assetId = obj.getAsset();
-								AssetImpl asset = dbManager.obtainAsset(assetId);
-								if (asset != null) {
-									String[] kw = asset.getKeyword();
-									if (kw != null)
-										for (String k : kw)
-											keywords.add(k);
-								}
+		BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+			Set<String> keywords = new HashSet<String>();
+			StringTokenizer st = new StringTokenizer(keywordField.getText().trim(), "\n"); //$NON-NLS-1$
+			while (st.hasMoreTokens())
+				keywords.add(st.nextToken());
+			for (Wall wall : walls) {
+				List<String> exhibit = wall.getExhibit();
+				if (exhibit != null) {
+					for (String exhibitId : exhibit) {
+						WebExhibitImpl obj = dbManager.obtainById(WebExhibitImpl.class, exhibitId);
+						if (obj != null) {
+							String assetId = obj.getAsset();
+							AssetImpl asset = dbManager.obtainAsset(assetId);
+							if (asset != null) {
+								String[] kw = asset.getKeyword();
+								if (kw != null)
+									for (String k : kw)
+										keywords.add(k);
 							}
 						}
 					}
 				}
-				String[] kws = keywords.toArray(new String[keywords.size()]);
-				Arrays.sort(kws, Utilities.KEYWORDCOMPARATOR);
-				keywordField.setText(Core.toStringList(kws, "\n")); //$NON-NLS-1$
 			}
+			String[] kws = keywords.toArray(new String[keywords.size()]);
+			Arrays.sort(kws, Utilities.KEYWORDCOMPARATOR);
+			keywordField.setText(Core.toStringList(kws, "\n")); //$NON-NLS-1$
 		});
 	}
 
@@ -1010,12 +1008,12 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 							if (Math.sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)) <= TOLERANCE) {
 								hotIndex = 1;
 								hotObject = wall;
-								origin.x =wxs[i];
+								origin.x = wxs[i];
 								origin.y = wys[i];
 							} else if (Math.sqrt((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y)) <= TOLERANCE) {
 								hotIndex = 2;
 								hotObject = wall;
-								origin.x =wx2s[i];
+								origin.x = wx2s[i];
 								origin.y = wy2s[i];
 							}
 						}
@@ -1365,7 +1363,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 
 	private boolean validate() {
 		String name = nameField.getText();
-		if (name.length() == 0) {
+		if (name.isEmpty()) {
 			setErrorMessage(Messages.ExhibitionEditDialog_specify_name);
 			return false;
 		}
@@ -1376,14 +1374,14 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				return false;
 			}
 		}
-		if (logoField.getText().length() > 0) {
+		if (!logoField.getText().isEmpty()) {
 			File logoFile = new File(logoField.getText());
 			if (!logoFile.exists()) {
 				setErrorMessage(Messages.ExhibitionEditDialog_nameplate_does_not_exist);
 				return false;
 			}
 		}
-		if (audioField.getText().length() > 0) {
+		if (!audioField.getText().isEmpty()) {
 			File audioFile = new File(audioField.getText());
 			if (!audioFile.exists()) {
 				setErrorMessage(Messages.ExhibitionEditDialog_audio_file_does_not_exist);
@@ -1415,7 +1413,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			gridSizeField.setSelection(show.getGridSize() / 10);
 			snapToGridField.setSelection(show.getSnapToGrid());
 			String labelFontFamily = show.getLabelFontFamily();
-			if (labelFontFamily != null && labelFontFamily.length() > 0) {
+			if (labelFontFamily != null && !labelFontFamily.isEmpty()) {
 				if (selectedFont != null)
 					selectedFont.dispose();
 				selectedFont = new Font(getShell().getDisplay(), labelFontFamily, show.getLabelFontSize(), SWT.NORMAL);
@@ -1443,7 +1441,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			setCondText(audioField, soundTrack);
 			setCondText(logoField, show.getLogo());
 			String link = show.getPageName();
-			if (link != null && link.length() > 0)
+			if (link != null && !link.isEmpty())
 				linkField.setText(link);
 			List<String> keywords = show.getKeyword();
 			keywordField.setText(Core.toStringList(keywords, '\n'));
@@ -1487,12 +1485,12 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		}
 		showCreditsButton.setSelection(!settings.getBoolean(HIDECREDITS));
 		String link = settings.get(LINKPAGE);
-		if (link == null || link.length() == 0)
+		if (link == null || link.isEmpty())
 			link = "index.html"; //$NON-NLS-1$
 		setCondText(linkField, link);
 		setCondText(logoField, settings.get(LOGO));
 		String copyright = settings.get(COPYRIGHT);
-		if (copyright == null || copyright.length() == 0) {
+		if (copyright == null || copyright.isEmpty()) {
 			GregorianCalendar cal = new GregorianCalendar();
 			copyright = cal.get(Calendar.YEAR) + " "; //$NON-NLS-1$
 		}
@@ -1558,11 +1556,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	protected void buttonPressed(int buttonId) {
 		switch (buttonId) {
 		case PDFBUTTON:
-			BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-				public void run() {
-					pdf();
-				}
-			});
+			BusyIndicator.showWhile(getShell().getDisplay(), () -> pdf());
 			return;
 		case PRINTBUTTON:
 			print();
@@ -1584,13 +1578,11 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			if (!fileName.toUpperCase().endsWith(".PDF")) //$NON-NLS-1$
 				fileName += ".pdf"; //$NON-NLS-1$
 			final File targetFile = new File(fileName);
-			BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-
-				public void run() {
-					targetFile.delete();
-					writeDocument(createDocument(), targetFile);
-				}
+			BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+				targetFile.delete();
+				writeDocument(createDocument(), targetFile);
 			});
+			Program.launch(fileName);
 		}
 	}
 
@@ -1598,6 +1590,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		Document document = new Document();
 		document.addCreationDate();
 		document.addCreator(Constants.APPLICATION_NAME);
+		document.addAuthor(System.getProperty("user.name")); //$NON-NLS-1$
 		document.setPageSize(PageSize.A4);
 		document.setMargins(20, 10, 10, 10);
 		return document;
@@ -1606,35 +1599,42 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	private void writeDocument(Document document, File targetFile) {
 		boolean frame = detailTabfolder.getSelectionIndex() == 1;
 		try (FileOutputStream out = new FileOutputStream(targetFile)) {
-			PdfWriter.getInstance(document, out);
+			PdfWriter writer = PdfWriter.getInstance(document, out);
 			document.open();
-			Phrase before = new Phrase(" "); //$NON-NLS-1$
-			before.setFont(FontFactory.getFont(FontFactory.HELVETICA, 8, com.lowagie.text.Font.NORMAL, Color.GRAY));
-			HeaderFooter footer = new HeaderFooter(before, new Phrase(" ")); //$NON-NLS-1$
-			footer.setPageNumber(1);
-			footer.setAlignment(Element.ALIGN_CENTER);
-			footer.setBorderColor(new Color(224, 224, 224));
-			document.setFooter(footer);
+			writer.setPageEvent(new PdfPageEventHelper() {
+				int pageNo = 0;
+				com.itextpdf.text.Font ffont = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA,
+						9, com.itextpdf.text.Font.NORMAL, BaseColor.DARK_GRAY);
+
+				@Override
+				public void onEndPage(PdfWriter w, Document d) {
+					PdfContentByte cb = w.getDirectContent();
+					Phrase footer = new Phrase(String.valueOf(++pageNo), ffont);
+					ColumnText.showTextAligned(cb, Element.ALIGN_CENTER, footer,
+							(document.right() - document.left()) / 2 + document.leftMargin(), document.bottom(),
+							0);
+				}
+			});
 			String tit = NLS.bind(Messages.ExhibitionEditDialog_exhibition_name, nameField.getText());
 			Paragraph p = new Paragraph(tit,
-					FontFactory.getFont(FontFactory.HELVETICA, 14, com.lowagie.text.Font.BOLD, Color.BLACK));
+					FontFactory.getFont(FontFactory.HELVETICA, 14, com.itextpdf.text.Font.BOLD, BaseColor.BLACK));
 			p.setAlignment(Element.ALIGN_CENTER);
 			p.setSpacingAfter(8);
 			document.add(p);
 			String subtitle = NLS.bind(Messages.ExhibitionEditDialog_image_list, Constants.DFDT.format(new Date()),
 					frame ? Messages.ExhibitionEditDialog_image_sizes : Messages.ExhibitionEditDialog_frame_sizes);
 			p = new Paragraph(subtitle,
-					FontFactory.getFont(FontFactory.HELVETICA, 10, com.lowagie.text.Font.NORMAL, Color.BLACK));
+					FontFactory.getFont(FontFactory.HELVETICA, 10, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK));
 			p.setAlignment(Element.ALIGN_CENTER);
 			p.setSpacingAfter(14);
 			document.add(p);
 			p = new Paragraph(descriptionField.getText(),
-					FontFactory.getFont(FontFactory.HELVETICA, 10, com.lowagie.text.Font.NORMAL, Color.BLACK));
+					FontFactory.getFont(FontFactory.HELVETICA, 10, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK));
 			p.setAlignment(Element.ALIGN_CENTER);
 			p.setSpacingAfter(10);
 			document.add(p);
 			p = new Paragraph(infoField.getText(),
-					FontFactory.getFont(FontFactory.HELVETICA, 10, com.lowagie.text.Font.NORMAL, Color.BLACK));
+					FontFactory.getFont(FontFactory.HELVETICA, 10, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK));
 			p.setAlignment(Element.ALIGN_CENTER);
 			p.setSpacingAfter(10);
 			document.add(p);
@@ -1649,49 +1649,24 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			});
 			for (Wall wall : sortedWalls) {
 				p = new Paragraph(wall.getLocation(),
-						FontFactory.getFont(FontFactory.HELVETICA, 12, com.lowagie.text.Font.BOLD, Color.BLACK));
+						FontFactory.getFont(FontFactory.HELVETICA, 12, com.itextpdf.text.Font.BOLD, BaseColor.BLACK));
 				p.setAlignment(Element.ALIGN_LEFT);
 				p.setSpacingAfter(12);
 				document.add(p);
-				Table table = new Table(7);
-				table.setBorderWidth(1);
-				table.setBorderColor(new Color(224, 224, 224));
-				table.setPadding(5);
-				table.setSpacing(0);
+				PdfPTable table = new PdfPTable(7);
+				// table.setBorderWidth(1);
+				// table.setBorderColor(new Color(224, 224, 224));
+				// table.setPadding(5);
+				// table.setSpacing(0);
 				table.setWidths(new int[] { 8, 33, 13, 13, 20, 13, 20 });
-				Cell cell = new Cell(new Paragraph(Messages.ExhibitionEditDialog_No,
-						FontFactory.getFont(FontFactory.HELVETICA, 10, com.lowagie.text.Font.BOLD, Color.BLACK)));
-				cell.setHeader(true);
-				table.addCell(cell);
-				cell = new Cell(new Paragraph(Messages.ExhibitionEditDialog_title,
-						FontFactory.getFont(FontFactory.HELVETICA, 10, com.lowagie.text.Font.BOLD, Color.BLACK)));
-				cell.setHeader(true);
-				table.addCell(cell);
-				cell = new Cell(new Paragraph(Messages.ExhibitionEditDialog_xpos,
-						FontFactory.getFont(FontFactory.HELVETICA, 10, com.lowagie.text.Font.BOLD, Color.BLACK)));
-				cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-				cell.setHeader(true);
-				table.addCell(cell);
-				cell = new Cell(new Paragraph(Messages.ExhibitionEditDialog_height,
-						FontFactory.getFont(FontFactory.HELVETICA, 10, com.lowagie.text.Font.BOLD, Color.BLACK)));
-				cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-				cell.setHeader(true);
-				table.addCell(cell);
-				cell = new Cell(new Paragraph(Messages.ExhibitionEditDialog_size,
-						FontFactory.getFont(FontFactory.HELVETICA, 10, com.lowagie.text.Font.BOLD, Color.BLACK)));
-				cell.setHeader(true);
-				table.addCell(cell);
-				cell = new Cell(new Paragraph(Messages.ExhibitionEditDialog_dpi,
-						FontFactory.getFont(FontFactory.HELVETICA, 10, com.lowagie.text.Font.BOLD, Color.BLACK)));
-				cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-				cell.setHeader(true);
-				table.addCell(cell);
-				cell = new Cell(new Paragraph("", FontFactory.getFont( //$NON-NLS-1$
-						FontFactory.HELVETICA, 10, com.lowagie.text.Font.BOLD, Color.BLACK)));
-				cell.setHorizontalAlignment(Element.ALIGN_LEFT);
-				cell.setHeader(true);
-				table.addCell(cell);
-				table.endHeaders();
+				table.addCell(createTableHeader(Messages.ExhibitionEditDialog_No, Element.ALIGN_RIGHT));
+				table.addCell(createTableHeader(Messages.ExhibitionEditDialog_title, Element.ALIGN_LEFT));
+				table.addCell(createTableHeader(Messages.ExhibitionEditDialog_xpos, Element.ALIGN_RIGHT));
+				table.addCell(createTableHeader(Messages.ExhibitionEditDialog_height, Element.ALIGN_RIGHT));
+				table.addCell(createTableHeader(Messages.ExhibitionEditDialog_size, Element.ALIGN_RIGHT));
+				table.addCell(createTableHeader(Messages.ExhibitionEditDialog_dpi, Element.ALIGN_RIGHT));
+				table.addCell(createTableHeader("", Element.ALIGN_LEFT)); //$NON-NLS-1$
+				// table.endHeaders();
 				List<ExhibitImpl> exhibits = new ArrayList<ExhibitImpl>();
 				for (String exhibitId : wall.getExhibit()) {
 					ExhibitImpl exhibit = db.obtainById(ExhibitImpl.class, exhibitId);
@@ -1709,38 +1684,29 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				int no = 1;
 				for (ExhibitImpl exhibit : exhibits) {
 					int tara = computeTara(frame, exhibit);
-					cell = new Cell(String.valueOf(no++));
-					cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-					table.addCell(cell);
-					table.addCell(exhibit.getTitle());
+					table.addCell(createTableCell(String.valueOf(no++), Element.ALIGN_RIGHT));
+					table.addCell(createTableCell(exhibit.getTitle(), Element.ALIGN_LEFT));
 					af.setMaximumFractionDigits(2);
 					af.setMinimumFractionDigits(2);
 					String x = af.format((exhibit.getX() - tara) / 1000d);
-					cell = new Cell(NLS.bind("{0} m", x));//$NON-NLS-1$
-					cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-					table.addCell(cell);
+					table.addCell(createTableCell(NLS.bind("{0} m", x), Element.ALIGN_RIGHT)); //$NON-NLS-1$
 					String y = af.format((exhibit.getY() + tara) / 1000d);
-					cell = new Cell(NLS.bind("{0} m", y));//$NON-NLS-1$
-					cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-					table.addCell(cell);
+					table.addCell(createTableCell(NLS.bind("{0} m", y), Element.ALIGN_RIGHT)); //$NON-NLS-1$
 					af.setMaximumFractionDigits(1);
 					af.setMinimumFractionDigits(1);
 					String h = af.format((exhibit.getHeight() + 2 * tara) / 10d);
 					int width = exhibit.getWidth();
 					String w = af.format((width + 2 * tara) / 10d);
-					table.addCell(NLS.bind("{0} x {1} cm", w, h)); //$NON-NLS-1$
+					table.addCell(createTableCell(NLS.bind("{0} x {1} cm", w, h), Element.ALIGN_RIGHT)); //$NON-NLS-1$
 					AssetImpl asset = dbManager.obtainAsset(exhibit.getAsset());
 					if (asset != null) {
 						int pixels = asset.getWidth();
 						double dpi = pixels * 25.4d / width;
-						cell = new Cell(String.valueOf((int) dpi));
-						cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-						table.addCell(cell);
+						table.addCell(createTableCell(String.valueOf((int) dpi), Element.ALIGN_RIGHT));
 					} else
 						table.addCell(""); //$NON-NLS-1$
-					cell = new Cell(exhibit.getSold() ? Messages.ExhibitionEditDialog_sold : ""); //$NON-NLS-1$
-					cell.setHorizontalAlignment(Element.ALIGN_LEFT);
-					table.addCell(cell);
+					table.addCell(createTableCell(exhibit.getSold() ? Messages.ExhibitionEditDialog_sold : "", //$NON-NLS-1$
+							Element.ALIGN_LEFT));
 				}
 				document.add(table);
 			}
@@ -1753,6 +1719,26 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		}
 	}
 
+	private static PdfPCell createTableHeader(String header, int alignment) {
+		PdfPCell cell = new PdfPCell(new Paragraph(header,
+				FontFactory.getFont(FontFactory.HELVETICA, 10, com.itextpdf.text.Font.BOLD, BaseColor.BLACK)));
+		cell.setBorderColor(new BaseColor(224, 224, 224));
+		cell.setBorderWidth(1);
+		cell.setPadding(5);
+		cell.setHorizontalAlignment(alignment);
+		return cell;
+	}
+
+	private static PdfPCell createTableCell(String value, int alignment) {
+		PdfPCell cell = new PdfPCell(new Paragraph(value,
+				FontFactory.getFont(FontFactory.HELVETICA, 9, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK)));
+		cell.setBorderColor(new BaseColor(224, 224, 224));
+		cell.setBorderWidth(1);
+		cell.setPadding(5);
+		cell.setHorizontalAlignment(alignment);
+		return cell;
+	}
+
 	private void print() {
 		final String name = nameField.getText();
 		PrintDialog dialog = new PrintDialog(getShell());
@@ -1761,13 +1747,10 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			dialog.setPrinterData(printerData);
 		printerData = dialog.open();
 		if (printerData != null) {
-			BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-
-				public void run() {
-					String fontName = getShell().getDisplay().getSystemFont().getFontData()[0].getName();
-					PaperClips.print(new PrintJob(NLS.bind(Messages.ExhibitionEditDialog_exh_image_list, name),
-							createHeader(createPrint(fontName), fontName)), printerData);
-				}
+			BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+				String fontName = getShell().getDisplay().getSystemFont().getFontData()[0].getName();
+				PaperClips.print(new PrintJob(NLS.bind(Messages.ExhibitionEditDialog_exh_image_list, name),
+						createHeader(createPrint(fontName), fontName)), printerData);
 			});
 		}
 	}
@@ -1840,9 +1823,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				af.setMaximumFractionDigits(1);
 				af.setMinimumFractionDigits(1);
 				int width = exhibit.getWidth();
-				grid.add(new TextPrint(
-						NLS.bind("{0} x {1} cm", //$NON-NLS-1$
-								af.format((width + 2 * tara) / 10d), af.format((exhibit.getHeight() + 2 * tara) / 10d)),
+				grid.add(new TextPrint(NLS.bind("{0} x {1} cm", //$NON-NLS-1$
+						af.format((width + 2 * tara) / 10d), af.format((exhibit.getHeight() + 2 * tara) / 10d)),
 						textFont, SWT.LEFT));
 				AssetImpl asset = dbManager.obtainAsset(exhibit.getAsset());
 				String reso = asset != null ? String.valueOf((int) (asset.getWidth() * 25.4d / width)) : ""; //$NON-NLS-1$
@@ -1873,109 +1855,107 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-			public void run() {
-				// Must create a new instance if not undoable
-				if (canUndo)
-					result = current;
-				else {
-					result = new ExhibitionImpl();
-					if (current != null) {
-						result.setStringId(current.getStringId());
-						result.setWall(current.getWall());
-						for (Wall wall : result.getWall())
-							wall.setExhibition_wall_parent(result);
-						result.setGroup_exhibition_parent(current.getGroup_exhibition_parent());
-						result.setStartX(current.getStartX());
-						result.setStartY(current.getStartY());
-					}
+		BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+			// Must create a new instance if not undoable
+			if (canUndo)
+				result = current;
+			else {
+				result = new ExhibitionImpl();
+				if (current != null) {
+					result.setStringId(current.getStringId());
+					result.setWall(current.getWall());
+					for (Wall wall : result.getWall())
+						wall.setExhibition_wall_parent(result);
+					result.setGroup_exhibition_parent(current.getGroup_exhibition_parent());
+					result.setStartX(current.getStartX());
+					result.setStartY(current.getStartY());
 				}
-				result.setName(nameField.getText());
-				if (itemViewer != null) {
-					IStructuredSelection selection = (IStructuredSelection) itemViewer.getSelection();
-					Object firstElement = selection.getFirstElement();
-					if (!(firstElement instanceof Wall)) {
-						result.setStartX(xspinner.getSelection() * 10);
-						result.setStartY(yspinner.getSelection() * 10);
-					}
-				}
-				result.setDescription(descriptionField.getText());
-				result.setInfo(infoField.getText());
-				result.setInfoPlatePosition(Math.max(-1, infoPosField.getSelectionIndex() - 1));
-				result.setHideCredits(!showCreditsButton.getSelection());
-				result.setDefaultViewingHeight(viewingHeightField.getSelection() * 10);
-				result.setVariance(varianceField.getSelection() * 10);
-				result.setShowGrid(showGridButton.getSelection());
-				result.setSnapToGrid(snapToGridField.getSelection());
-				result.setGridSize(gridSizeField.getSelection() * 10);
-				if (selectedFont != null) {
-					FontData fontData = selectedFont.getFontData()[0];
-					result.setLabelFontFamily(fontData.getName());
-					result.setLabelFontSize(fontData.getHeight());
-				}
-				result.setLabelSequence(sequenceCombo.getSelectionIndex());
-				result.setDefaultDescription(labelTextField.getText());
-				result.setHideLabel(labelLayoutGroup.isHide());
-				result.setLabelAlignment(labelLayoutGroup.getAlign());
-				result.setLabelDistance(labelLayoutGroup.getDist());
-				result.setLabelIndent(labelLayoutGroup.getIndent());
-				result.setMatWidth(matWidthField.getSelection());
-				result.setMatColor(matColorGroup.getRGB());
-				result.setFrameWidth(frameWidthField.getSelection());
-				result.setFrameColor(frameColorGroup.getRGB());
-				result.setGroundColor(groundColorGroup.getRGB());
-				result.setHorizonColor(horizonColorGroup.getRGB());
-				result.setCeilingColor(ceilingColorGroup.getRGB());
-				result.setAudio(audioField.getText());
-				result.setLogo(logoField.getText());
-				result.setPageName(linkField.getText());
-				result.setKeyword(Core.fromStringList(keywordField.getText(), "\n")); //$NON-NLS-1$
-				result.setContactName(contactField.getText());
-				result.setCopyright(copyrightField.getText());
-				result.setEmail(emailField.getText());
-				result.setWebUrl(weburlField.getText());
-				result.setApplySharpening(qualityGroup.getApplySharpening());
-				result.setAmount(qualityGroup.getAmount());
-				result.setRadius(qualityGroup.getRadius());
-				result.setThreshold(qualityGroup.getThreshold());
-				result.setJpegQuality(qualityGroup.getJpegQuality());
-//				result.setScalingMethod(qualityGroup.getScalingMethod());
-				result.setAddWatermark(watermarkButton.getSelection());
-				result.setOutputFolder(outputTargetGroup.getLocalFolder());
-				FtpAccount ftpDir = outputTargetGroup.getFtpDir();
-				result.setFtpDir(ftpDir != null ? ftpDir.getName() : null);
-				if (!canUndo)
-					dbManager.safeTransaction(new Runnable() {
-
-						public void run() {
-							if (importGroup != null) {
-								importIntoGallery(result, importGroup.getFromItem());
-							}
-							if (group == null) {
-								String groupId = (current != null) ? current.getGroup_exhibition_parent()
-										: Constants.GROUP_ID_EXHIBITION;
-								if (groupId == null)
-									groupId = Constants.GROUP_ID_EXHIBITION;
-								group = dbManager.obtainById(GroupImpl.class, groupId);
-							}
-							if (group == null) {
-								group = new GroupImpl(Messages.ExhibitionEditDialog_exhibitions, false);
-								group.setStringId(Constants.GROUP_ID_EXHIBITION);
-							}
-							if (current != null)
-								group.removeExhibition(current.getStringId());
-							group.addExhibition(result.getStringId());
-							result.setGroup_exhibition_parent(group.getStringId());
-							if (current != null)
-								dbManager.delete(current);
-							for (Wall wall : result.getWall())
-								dbManager.store(wall);
-							dbManager.store(result);
-							dbManager.store(group);
-						}
-					});
-				saveSettings(result);
 			}
+			result.setName(nameField.getText());
+			if (itemViewer != null) {
+				IStructuredSelection selection = (IStructuredSelection) itemViewer.getSelection();
+				Object firstElement = selection.getFirstElement();
+				if (!(firstElement instanceof Wall)) {
+					result.setStartX(xspinner.getSelection() * 10);
+					result.setStartY(yspinner.getSelection() * 10);
+				}
+			}
+			result.setDescription(descriptionField.getText());
+			result.setInfo(infoField.getText());
+			result.setInfoPlatePosition(Math.max(-1, infoPosField.getSelectionIndex() - 1));
+			result.setHideCredits(!showCreditsButton.getSelection());
+			result.setDefaultViewingHeight(viewingHeightField.getSelection() * 10);
+			result.setVariance(varianceField.getSelection() * 10);
+			result.setShowGrid(showGridButton.getSelection());
+			result.setSnapToGrid(snapToGridField.getSelection());
+			result.setGridSize(gridSizeField.getSelection() * 10);
+			if (selectedFont != null) {
+				FontData fontData = selectedFont.getFontData()[0];
+				result.setLabelFontFamily(fontData.getName());
+				result.setLabelFontSize(fontData.getHeight());
+			}
+			result.setLabelSequence(sequenceCombo.getSelectionIndex());
+			result.setDefaultDescription(labelTextField.getText());
+			result.setHideLabel(labelLayoutGroup.isHide());
+			result.setLabelAlignment(labelLayoutGroup.getAlign());
+			result.setLabelDistance(labelLayoutGroup.getDist());
+			result.setLabelIndent(labelLayoutGroup.getIndent());
+			result.setMatWidth(matWidthField.getSelection());
+			result.setMatColor(matColorGroup.getRGB());
+			result.setFrameWidth(frameWidthField.getSelection());
+			result.setFrameColor(frameColorGroup.getRGB());
+			result.setGroundColor(groundColorGroup.getRGB());
+			result.setHorizonColor(horizonColorGroup.getRGB());
+			result.setCeilingColor(ceilingColorGroup.getRGB());
+			result.setAudio(audioField.getText());
+			result.setLogo(logoField.getText());
+			result.setPageName(linkField.getText());
+			result.setKeyword(Core.fromStringList(keywordField.getText(), "\n")); //$NON-NLS-1$
+			result.setContactName(contactField.getText());
+			result.setCopyright(copyrightField.getText());
+			result.setEmail(emailField.getText());
+			result.setWebUrl(weburlField.getText());
+			result.setApplySharpening(qualityGroup.getApplySharpening());
+			result.setAmount(qualityGroup.getAmount());
+			result.setRadius(qualityGroup.getRadius());
+			result.setThreshold(qualityGroup.getThreshold());
+			result.setJpegQuality(qualityGroup.getJpegQuality());
+			// result.setScalingMethod(qualityGroup.getScalingMethod());
+			result.setAddWatermark(watermarkButton.getSelection());
+			result.setOutputFolder(outputTargetGroup.getLocalFolder());
+			FtpAccount ftpDir = outputTargetGroup.getFtpDir();
+			result.setFtpDir(ftpDir != null ? ftpDir.getName() : null);
+			if (!canUndo)
+				dbManager.safeTransaction(new Runnable() {
+
+					public void run() {
+						if (importGroup != null) {
+							importIntoGallery(result, importGroup.getFromItem());
+						}
+						if (group == null) {
+							String groupId = (current != null) ? current.getGroup_exhibition_parent()
+									: Constants.GROUP_ID_EXHIBITION;
+							if (groupId == null)
+								groupId = Constants.GROUP_ID_EXHIBITION;
+							group = dbManager.obtainById(GroupImpl.class, groupId);
+						}
+						if (group == null) {
+							group = new GroupImpl(Messages.ExhibitionEditDialog_exhibitions, false);
+							group.setStringId(Constants.GROUP_ID_EXHIBITION);
+						}
+						if (current != null)
+							group.removeExhibition(current.getStringId());
+						group.addExhibition(result.getStringId());
+						result.setGroup_exhibition_parent(group.getStringId());
+						if (current != null)
+							dbManager.delete(current);
+						for (Wall wall : result.getWall())
+							dbManager.store(wall);
+						dbManager.store(result);
+						dbManager.store(group);
+					}
+				});
+			saveSettings(result);
 		});
 		super.okPressed();
 	}
@@ -2080,8 +2060,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 						ExhibitImpl newExhibit = new ExhibitImpl(slide.getCaption(), slide.getDescription(),
 								Core.toStringList(asset.getArtist(), " "), //$NON-NLS-1$
 								(dateCreated == null) ? "" //$NON-NLS-1$
-										: EDF
-												.format(dateCreated),
+										: EDF.format(dateCreated),
 								pos, y, w, h, null, null, null, null, false, null, null, null, null,
 								asset.getStringId());
 						pos += 2 * w;
@@ -2161,8 +2140,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		int y = show.getDefaultViewingHeight() + h / 2;
 		ExhibitImpl newExhibit = new ExhibitImpl(caption, description, Core.toStringList(asset.getArtist(), " "), //$NON-NLS-1$
 				(dateCreated == null) ? "" //$NON-NLS-1$
-						: EDF
-								.format(dateCreated),
+						: EDF.format(dateCreated),
 				pos, y, w, h, null, null, null, null, false, null, null, null, null, asset.getStringId());
 		pos += 2 * w;
 		dbManager.store(newExhibit);

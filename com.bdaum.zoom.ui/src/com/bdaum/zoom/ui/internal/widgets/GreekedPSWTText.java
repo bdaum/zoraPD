@@ -195,7 +195,7 @@ public class GreekedPSWTText extends PSWTText {
 	 */
 	private boolean isTextEmpty() {
 		return lines.isEmpty() || lines.size() == 1
-				&& ((String) lines.get(0)).length() == 0;
+				&& ((String) lines.get(0)).isEmpty();
 	}
 
 	public int getOffsetAtLocation(double x, double y) {
@@ -243,7 +243,7 @@ public class GreekedPSWTText extends PSWTText {
 			if (!"\n".equals(line) && !"\r".equals(line)) { //$NON-NLS-1$ //$NON-NLS-2$
 				if (offset >= la && offset <= lb) {
 					String linesAbove = str.substring(0, la);
-					if (linesAbove.length() > 0) {
+					if (!linesAbove.isEmpty()) {
 						Point tx = textExtent(linesAbove);
 						result.y += tx.y;
 					}

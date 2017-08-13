@@ -37,6 +37,7 @@
          point="com.bdaum.zoom.ai.serviceProvider">
       <provider
             class="com.bdaum.zoom.ai.clarifai.internal.core.ClarifaiServiceProvider"
+            featureId="1001"
             id="com.bdaum.zoom.ai.provider.clarifai"
             latency="1000"
             name="Clarifai">

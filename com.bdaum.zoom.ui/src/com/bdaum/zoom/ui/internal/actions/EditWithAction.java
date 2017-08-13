@@ -93,11 +93,7 @@ public class EditWithAction extends Action {
 
 	@Override
 	public void run() {
-		BusyIndicator.showWhile(shell.getDisplay(), new Runnable() {
-			public void run() {
-				doRun();
-			}
-		});
+		BusyIndicator.showWhile(shell.getDisplay(), () -> doRun());
 	}
 
 	private void doRun() {
@@ -138,7 +134,7 @@ public class EditWithAction extends Action {
 						editors = computeEditors(editors, mapping);
 						defaultEditors = computeDefaultEditors(defaultEditors, editors, mapping);
 						String le = asset.getLastEditor();
-						if (mapping != null && mapping.isRememberLast() && le != null && le.length() > 0) {
+						if (mapping != null && mapping.isRememberLast() && le != null && !le.isEmpty()) {
 							if (le.startsWith(">") || new File(le).exists()) { //$NON-NLS-1$
 								if (lastEditor == null)
 									lastEditor = le;
@@ -259,7 +255,7 @@ public class EditWithAction extends Action {
 
 	private EditorDescriptor showDialog(final Set<EditorDescriptor> editors, final Set<EditorDescriptor> defaultEditors,
 			final String ext) {
-		if (editors.size() > 0) {
+		if (!editors.isEmpty()) {
 			if (isDefault() && defaultEditors.size() == 1)
 				return (EditorDescriptor) defaultEditors.toArray()[0];
 			final ZListDialog dialog = new ZListDialog(shell, SWT.SINGLE | SWT.V_SCROLL | SWT.BORDER) {

@@ -20,10 +20,13 @@
 
 package com.bdaum.zoom.gps.geonames;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.bdaum.zoom.ui.gps.WaypointExtension;
 
 /**
- * Decriptor for a geographical place
+ * Descriptor for a geographical place
  */
 public class Place extends WaypointExtension {
 
@@ -33,7 +36,7 @@ public class Place extends WaypointExtension {
 	private String countryCode;
 	private String continent;
 	private String imageName;
-	private String imageAssetId;
+	private List<String> imageAssetIds = new ArrayList<>(3);
 
 	/**
 	 * Constructor
@@ -48,7 +51,7 @@ public class Place extends WaypointExtension {
 	}
 
 	/**
-	 * Default contructor
+	 * Default constructor
 	 */
 	public Place() {
 	}
@@ -151,8 +154,8 @@ public class Place extends WaypointExtension {
 	 * 
 	 * @return asset ID of the associated image
 	 */
-	public String getImageAssetId() {
-		return imageAssetId;
+	public List<String> getImageAssetIds() {
+		return imageAssetIds;
 	}
 
 	/**
@@ -161,8 +164,8 @@ public class Place extends WaypointExtension {
 	 * @param id
 	 *            - asset ID of the associated image
 	 */
-	public void setImageAssetId(String id) {
-		this.imageAssetId = id;
+	public void addImageAssetId(String id) {
+		imageAssetIds.add(id);
 	}
 
 }

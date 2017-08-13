@@ -57,7 +57,7 @@ public class PreferenceTargetPage extends ColoredWizardPage {
 	@Override
 	protected void validatePage() {
 		String errorMessage = null;
-		if (path == null || path.length() == 0
+		if (path == null || path.isEmpty()
 				|| (path.indexOf('/') < 0 && path.indexOf('\\') < 0))
 			errorMessage = Messages.PreferenceTargetPage_specify_target_file;
 		setErrorMessage(errorMessage);

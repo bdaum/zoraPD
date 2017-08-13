@@ -269,7 +269,7 @@ public abstract class AbstractImageInfo <F extends LLJTran> extends BasicJpegIo 
 	@Override
 	public String toString() {
 		String result = getReport();
-		if (result != null && result.length() > 0)
+		if (result != null && !result.isEmpty())
 			return result;
 		return super.toString();
 	}

@@ -81,6 +81,8 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 				| SWT.MULTI);
 		gallery.setBackground(parent.getDisplay().getSystemColor(
 				SWT.COLOR_WHITE));
+		gallery.setHigherQualityDelay(300);
+		gallery.setLowQualityOnUserAction(true);
 		setHelp();
 		// Renderers
 		groupRenderer = new EnhancedGalleryGroupRenderer(new IImageProvider() {
@@ -131,11 +133,9 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 					protected void doRun(IProgressMonitor monitor) {
 						Shell shell = getSite().getShell();
 						if (shell != null && !shell.isDisposed()) {
-							shell.getDisplay().asyncExec(new Runnable() {
-								public void run() {
-									if (!gallery.isDisposed())
-										gallery.redraw();
-								}
+							shell.getDisplay().asyncExec(() -> {
+								if (!gallery.isDisposed())
+									gallery.redraw();
 							});
 						}
 					}
@@ -315,7 +315,6 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 
 	public void handleEvent(final Event event) {
 		Runnable runnable = new Runnable() {
-
 			public void run() {
 				final GalleryItem item = (GalleryItem) event.item;
 				GalleryItem parentItem = item.getParentItem();

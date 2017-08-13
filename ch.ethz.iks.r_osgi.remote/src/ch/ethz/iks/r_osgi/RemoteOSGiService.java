@@ -29,7 +29,6 @@
 package ch.ethz.iks.r_osgi;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 
 import org.osgi.framework.Filter;
 
@@ -77,6 +76,12 @@ import ch.ethz.iks.r_osgi.channels.ChannelEndpointManager;
 public interface RemoteOSGiService {
 
 	// public constants for service registrations
+
+	/**
+	 * Default proxy prefix.
+	 */
+    String R_OSGi_PROXY_PREFIX = System.getProperty("ch.ethz.iks.r_osgi.proxyprefix",
+			"ch.ethz.iks.r_osgi.genproxy.endpoint.");
 
 	/**
 	 * this property has to be set in order to release a service for remote
@@ -146,7 +151,6 @@ public interface RemoteOSGiService {
 	 *         remote frameworks offers.
 	 * @throws RemoteOSGiException
 	 *             in case of connection errors.
-	 * @throws ConnectException
 	 *             if the connection attempt fails.
 	 * @throws IOException
 	 * @since 0.6
@@ -215,7 +219,7 @@ public interface RemoteOSGiService {
 	 *            all.
 	 * @return the service object or null if the timeout is exceeded and the
 	 *         service has not appeared.
-	 * @throws InterruptedException
+	 * @throws InterruptedException 
 	 */
 	Object getRemoteServiceBundle(final RemoteServiceReference ref,
 			final int timeout) throws InterruptedException;
@@ -253,9 +257,6 @@ public interface RemoteOSGiService {
 	 *            a callback to be called when the result is available
 	 */
 	void asyncRemoteCall(final URI service, final String methodSignature,
-			final Object[] args, final AsyncRemoteCallCallback callback);
-
-	void asyncRemoteCall(final URI service, final Method method,
 			final Object[] args, final AsyncRemoteCallCallback callback);
 
 	/**

@@ -470,7 +470,9 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 						rotate(asset, value);
 						break;
 					case AnimatedGallery.VOICENOTE:
-						UiActivator.getDefault().playVoicenote(asset);
+						String voiceFileURI = asset.getVoiceFileURI();
+						if (voiceFileURI != null && !voiceFileURI.startsWith("?")) //$NON-NLS-1$
+							UiActivator.getDefault().playVoicenote(asset);
 						break;
 					case AnimatedGallery.STATUS:
 						setStatus(asset, value);

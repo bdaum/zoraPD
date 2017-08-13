@@ -85,15 +85,13 @@ public class TransferJob extends CustomJob {
 			Activator.getDefault().getLog().log(new Status(IStatus.INFO, Activator.PLUGIN_ID, msg));
 			if (transferred >= 0)
 				OperationJob.signalJobEnd(startTime);
-			if (account.getWebHost() != null && account.getWebHost().length() > 0) {
+			if (account.getWebHost() != null && !account.getWebHost().isEmpty()) {
 				Shell shell = adaptable.getAdapter(Shell.class);
-				if (shell != null) {
-					shell.getDisplay().asyncExec(new Runnable() {
-						public void run() {
-							account.testWebUrl();
-						}
+				if (shell != null && !shell.isDisposed())
+					shell.getDisplay().asyncExec(() -> {
+						if (!shell.isDisposed())
+						account.testWebUrl();
 					});
-				}
 			}
 		} catch (IOException e) {
 			status.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TransferJob_error_during_file_transfer));

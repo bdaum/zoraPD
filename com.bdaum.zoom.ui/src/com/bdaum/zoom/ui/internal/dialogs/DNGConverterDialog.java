@@ -138,7 +138,7 @@ public class DNGConverterDialog extends ZTitleAreaDialog {
 	protected void updateButtons() {
 		boolean enabled = false;
 		String s = fileEditor.getText();
-		if (s.length() > 0) {
+		if (!s.isEmpty()) {
 			dngLocation = new File(s);
 			enabled = dngLocation.exists();
 		}
@@ -154,7 +154,7 @@ public class DNGConverterDialog extends ZTitleAreaDialog {
 	}
 
 	public File getResult() {
-		if (dngLocation != null && dngLocation.getName().length() > 0
+		if (dngLocation != null && !dngLocation.getName().isEmpty()
 				&& !dngLocation.exists())
 			return null;
 		return dngLocation;

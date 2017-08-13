@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.cat.model.group.Criterion;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
+import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
 import com.bdaum.zoom.core.Core;
@@ -46,7 +47,7 @@ import com.bdaum.zoom.ui.widgets.NumericControl;
 
 public class ProximityEditDialog extends ZTitleAreaDialog {
 
-	private final SmartCollectionImpl coll;
+	private final SmartCollection coll;
 	private NumericControl distanceField;
 	private Text latField;
 	private Text lonField;
@@ -59,7 +60,7 @@ public class ProximityEditDialog extends ZTitleAreaDialog {
 	private SmartCollectionImpl collection;
 	private FindInNetworkGroup findInNetworkGroup;
 
-	public ProximityEditDialog(Shell parentShell, SmartCollectionImpl coll) {
+	public ProximityEditDialog(Shell parentShell, SmartCollection coll) {
 		super(parentShell);
 		this.coll = coll;
 	}

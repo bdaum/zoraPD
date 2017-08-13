@@ -300,10 +300,10 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 		try {
 			String helpId = href.substring(HELP.length());
 			IWorkbenchHelpSystem helpSystem = getIntroSite().getWorkbenchWindow().getWorkbench().getHelpSystem();
-			if (helpId.length() > 0)
-				helpSystem.displayHelp(helpId);
-			else
+			if (helpId.isEmpty())
 				helpSystem.displayHelp();
+			else
+				helpSystem.displayHelp(helpId);
 		} finally {
 			form.setBusy(false);
 		}

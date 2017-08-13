@@ -23,7 +23,7 @@ package com.bdaum.zoom.ui.views;
 import java.io.IOException;
 
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 
@@ -32,14 +32,14 @@ public interface IImageViewer {
 	/**
 	 * Initializes and configures the viewer
 	 *
-	 * @param display
-	 *            - the current display
+	 * @param window
+	 *            - the parent workbench window
 	 * @param bwmode
 	 *            - RGB value if images are to be displayed as grayscale images, null otherwise. The RGB value is used as a filter
 	 * @param cropmode
 	 *            - ZImage.CROPPED, ZImage.CROPMASK, ZImage.ORIGINAL
 	 */
-	void init(Display display, RGB bwmode, int cropmode);
+	void init(IWorkbenchWindow window, RGB bwmode, int cropmode);
 
 	/**
 	 * Creates the GUI of the image viewer

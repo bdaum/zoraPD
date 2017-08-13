@@ -255,7 +255,7 @@ public class RestFlickrApi extends ImageUploadApi {
 			}
 		}
 
-		while (unfinishedActions.size() > 0
+		while (!unfinishedActions.isEmpty()
 				&& showUnfinishedUploadErrorMessage()) {
 			retryUnfinishedActions();
 		}
@@ -336,20 +336,18 @@ public class RestFlickrApi extends ImageUploadApi {
 			session.getAccount().setAuthenticated(false);
 			Display display = PlatformUI.getWorkbench().getDisplay();
 			if (display != null)
-				display.syncExec(new Runnable() {
-					public void run() {
-						try {
-							authenticate(session);
-						} catch (ProtocolException e) {
-							// oh boy, this is terrible.
-							e.printStackTrace();
-						} catch (CommunicationException e) {
-							MessageDialog.openError(
-									null,
-									Messages.getString("RestFlickrApi.communication_error"), //$NON-NLS-1$
-									org.scohen.juploadr.Messages
-											.getString("juploadr.ui.dialog.error.communication") + e.getMessage()); //$NON-NLS-1$
-						}
+				display.syncExec(() -> {
+					try {
+						authenticate(session);
+					} catch (ProtocolException e1) {
+						// oh boy, this is terrible.
+						e1.printStackTrace();
+					} catch (CommunicationException e2) {
+						MessageDialog.openError(
+								null,
+								Messages.getString("RestFlickrApi.communication_error"), //$NON-NLS-1$
+								org.scohen.juploadr.Messages
+										.getString("juploadr.ui.dialog.error.communication") + e2.getMessage()); //$NON-NLS-1$
 					}
 				});
 		}

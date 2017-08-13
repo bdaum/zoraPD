@@ -74,22 +74,26 @@ public class GeotagOperation extends DbOperation {
 	private static final String[] EMPTYSTRINGS = new String[0];
 	private static final long ONEMINUTE = 60000L;
 	private static final long DELAY = 64 * ONEMINUTE;
-	private GpsConfiguration gpsConfiguration;
+	private static final long ONEHOUR = ONEMINUTE * 60;
+	private static long startTime = 0L;
+	private static int alreadyDone = 0;
+
 	private String[] assetIds;
 	private Backup[] backups;
+	private final Date refDate = new Date(0);
+	private String[] assetsTobeNamed;
+	private boolean resumeLater;
+	private List<String> postPonedAssets;
+	private GpsConfiguration gpsConfiguration;
 	private Trackpoint[] trackpoints = new Trackpoint[0];
 	private int tagged = 0;
 	private int declined = 0;
 	private int named;
 	private int notnamed;
-	private Map<RasterCoordinate, Double> elevationMap = new HashMap<RasterCoordinate, Double>();
 	private Map<RasterCoordinate, Waypoint> placeMap = new HashMap<RasterCoordinate, Waypoint>();
 	private List<String> processed = new ArrayList<String>();
 	private Map<RasterCoordinate, Waypoint> waypoints;
-	private final Date refDate = new Date(0);
-	private String[] assetsTobeNamed;
-	private boolean resumeLater;
-	private List<String> postPonedAssets;
+	private Map<RasterCoordinate, Double> elevationMap = new HashMap<RasterCoordinate, Double>();
 
 	public GeotagOperation(GpsConfiguration gpsConfiguration) {
 		super(Messages.getString("GeotagOperation.Geonaming")); //$NON-NLS-1$
@@ -106,6 +110,10 @@ public class GeotagOperation extends DbOperation {
 
 	@Override
 	public IStatus execute(IProgressMonitor aMonitor, IAdaptable info) throws ExecutionException {
+		return execute(aMonitor, info, false);
+	}
+
+	private IStatus execute(IProgressMonitor aMonitor, IAdaptable info, boolean redo) {
 		if (gpsConfiguration == null)
 			return Status.CANCEL_STATUS;
 		resumeLater = false;
@@ -139,11 +147,11 @@ public class GeotagOperation extends DbOperation {
 			fireApplyRules(assets, QueryField.EXIF_GPS);
 			fireAssetsModified(new BagChange<>(null, assets, null, null), QueryField.EXIF_GPS);
 		}
-		aMonitor.subTask(Messages.getString("GeotagOperation.Geonaming_assets")); //$NON-NLS-1$
 		if (aMonitor.isCanceled())
 			return close(info);
+		aMonitor.subTask(Messages.getString("GeotagOperation.Geonaming_assets")); //$NON-NLS-1$
 		int resumed = 0;
-		if (postponed == null || postponed.size() == 0)
+		if (postponed == null || postponed.isEmpty())
 			assetsTobeNamed = assetIds;
 		else {
 			resumed = postponed.size();
@@ -172,15 +180,14 @@ public class GeotagOperation extends DbOperation {
 			dbManager.storeAndCommit(meta);
 			addInfo(NLS.bind(Messages.getString("GeotagOperation.n_images_decorated"), //$NON-NLS-1$
 					named, notnamed));
-			fireApplyRules(assets, null);
-			fireAssetsModified(new BagChange<>(null, assets, null, null), null);
+			if (!redo)
+				fireApplyRules(assets, null);
+			fireAssetsModified(redo ? null : new BagChange<>(null, assets, null, null), null);
 		} catch (UnknownHostException e) {
 			addError(Messages.getString("GeotagOperation.webservice_not_reached"), //$NON-NLS-1$
 					e);
 		}
-		assetIds = null;
 		backups = null;
-		trackpoints = null;
 		return close(info, processed.isEmpty() ? (String[]) null : processed.toArray(new String[processed.size()]));
 	}
 
@@ -202,24 +209,21 @@ public class GeotagOperation extends DbOperation {
 
 	private boolean geoname(final Asset asset, final Meta meta, final int resumed, final int i,
 			IProgressMonitor aMonitor, IAdaptable info) throws UnknownHostException {
-		long time = System.currentTimeMillis();
 		double latitude = asset.getGPSLatitude();
 		double longitude = asset.getGPSLongitude();
 		if (!Double.isNaN(latitude) && !Double.isNaN(longitude)) {
 			LocationImpl location = null;
-			List<String> oldKeywords = null;
+			List<String> oldKeywords = new ArrayList<String>();
 			LocationCreatedImpl rel = null;
 			String assetId = asset.getStringId();
-			for (LocationCreatedImpl locationCreated : new ArrayList<LocationCreatedImpl>(
-					dbManager.obtainStructForAsset(LocationCreatedImpl.class, assetId, true))) {
+			for (LocationCreatedImpl locationCreated : dbManager.obtainStructForAsset(LocationCreatedImpl.class,
+					assetId, true)) {
 				rel = locationCreated;
 				LocationImpl obj = dbManager.obtainById(LocationImpl.class, rel.getLocation());
-				if (obj != null) {
-					oldKeywords = new ArrayList<String>(3);
+				if (obj != null)
 					Utilities.extractKeywords(location = obj, oldKeywords);
-					break;
-				}
 			}
+			yieldWebservice(aMonitor);
 			final LocationImpl loc = location;
 			final List<String> ok = oldKeywords;
 			final LocationCreatedImpl created = rel;
@@ -230,24 +234,37 @@ public class GeotagOperation extends DbOperation {
 						createBackup(asset, i - resumed);
 					final LocationImpl newLocation = new LocationImpl();
 					GpsUtilities.transferPlacedata(wp, newLocation);
-					return storeSafely(new Runnable() {
-						public void run() {
-							assignGeoNames(asset, meta, i >= resumed ? backups[i - resumed] : null, loc, ok, created,
-									newLocation);
-						}
-					}, 1);
+					return storeSafely(() -> assignGeoNames(asset, meta, i >= resumed ? backups[i - resumed] : null, loc, ok, created,
+							newLocation), 1);
 				}
 			}
 		}
-		long delay = gpsConfiguration.interval - (System.currentTimeMillis() - time);
-		if (delay > 0)
-			try {
-				Thread.sleep(delay);
-			} catch (InterruptedException e) {
-				// do noting
-			}
 		aMonitor.worked(1);
 		return false;
+	}
+
+	private void yieldWebservice(IProgressMonitor aMonitor) {
+		long interval = gpsConfiguration.interval;
+		int hourly = (int) (ONEHOUR / interval);
+		long time = System.currentTimeMillis();
+		if (time - startTime >= ONEHOUR) {
+			startTime = time / ONEHOUR * ONEHOUR;
+			alreadyDone = 0;
+		}
+		if (alreadyDone > hourly / 10) {
+			long requiredTime = alreadyDone * interval;
+			long passedTime = time - startTime;
+			long delay = requiredTime - passedTime;
+			while (delay > 0 && !aMonitor.isCanceled()) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// do noting
+				}
+				delay -= 100;
+			}
+		}
+		++alreadyDone;
 	}
 
 	private void createBackup(final Asset asset, final int i) {
@@ -308,77 +325,8 @@ public class GeotagOperation extends DbOperation {
 		processed.add(asset.getStringId());
 	}
 
-	private void addKeywordsToCat(Meta meta, List<String> newKeywords) {
-		meta.getKeywords()
-				.addAll(gpsConfiguration.keywordFilter.filter(newKeywords.toArray(new String[newKeywords.size()])));
-	}
-
-	private Waypoint getPlaceInfo(Meta meta, int i, double lat, double lon, IProgressMonitor aMonitor, IAdaptable info)
-			throws UnknownHostException {
-		RasterCoordinate coord = new RasterCoordinate(lat, lon, 2);
-		Waypoint place = coord.findClosestMatch(waypoints, 0.06d, 'K');
-		if (place != null)
-			place = coord.findClosestMatch(placeMap, 0.06d, 'K');
-		if (place != null)
-			return place;
-		try {
-			place = GpsUtilities.fetchPlaceInfo(lat, lon);
-			if (place != null && !Double.isNaN(place.getLat()) && !Double.isNaN(place.getLon())) {
-				double elevation = getElevation(place.getLat(), place.getLon());
-				if (!Double.isNaN(elevation))
-					place.setElevation(elevation);
-			}
-			if (place != null) {
-				placeMap.put(coord, place);
-				return place;
-			}
-		} catch (MalformedURLException e) {
-			// should never happen
-		} catch (SocketTimeoutException e) {
-			addError(Messages.getString("GeotagOperation.connection_timed_out"), //$NON-NLS-1$
-					null);
-		} catch (HttpException e) {
-			String message = e.getMessage();
-			if (message.indexOf("(503)") >= 0) { //$NON-NLS-1$
-				addError(Messages.getString("GeotagOperation.geonaming_aborted"), e); //$NON-NLS-1$
-				aMonitor.setCanceled(true);
-			} else
-				addError(Messages.getString("GeotagOperation.http_exception"), //$NON-NLS-1$
-						null);
-		} catch (IOException e) {
-			if (e instanceof UnknownHostException)
-				throw (UnknownHostException) e;
-			addError(Messages.getString("GeotagOperation.IO_Error_parsing_response"), //$NON-NLS-1$
-					e);
-		} catch (NumberFormatException e) {
-			addError(Messages.getString("GeotagOperation.Number_format_parsing_response"), //$NON-NLS-1$
-					e);
-		} catch (WebServiceException e) {
-			addWarning(Messages.getString("GeotagOperation.Geoname_signalled_exception"), e); //$NON-NLS-1$
-			Throwable e2 = e.getCause();
-			if (e2 instanceof WebServiceException && e2 != e) {
-				try {
-					int code = Integer.parseInt(e2.getMessage());
-					if (code >= 18 && code <= 20) {
-						handleResume(meta, code, i, info);
-						resumeLater = true;
-						return null;
-					}
-				} catch (NumberFormatException e1) {
-					// do nothing
-				}
-				addError(Messages.getString("GeotagOperation.geonaming_aborted"), e2); //$NON-NLS-1$
-				aMonitor.setCanceled(true);
-			}
-		} catch (SAXException e) {
-			addError(Messages.getString("GeotagOperation.XML_problem_parsing_response"), e); //$NON-NLS-1$
-		} catch (ParserConfigurationException e) {
-			addError(Messages.getString("GeotagOperation.internal_error_configuring_sax"), e); //$NON-NLS-1$
-		}
-		return null;
-	}
-
-	private void handleResume(Meta meta, int code, int i, IAdaptable info) {
+	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
+		resumeLater = true;
 		Shell shell = info.getAdapter(Shell.class);
 		String msg;
 		switch (code) {
@@ -409,24 +357,6 @@ public class GeotagOperation extends DbOperation {
 			}
 			meta.setPostponed(postponedNaming);
 		}
-	}
-
-	private double getElevation(double lat, double lon) {
-		RasterCoordinate coord = new RasterCoordinate(lat, lon, 3);
-		Double elevation = elevationMap.get(coord);
-		if (elevation != null)
-			return elevation.doubleValue();
-		try {
-			double v = GpsUtilities.fetchElevation(lat, lon);
-			elevationMap.put(coord, v);
-			return v;
-		} catch (MalformedURLException e) {
-			// should never happen
-		} catch (IOException e) {
-			addError(Messages.getString("GeotagOperation.IO_Error_retrieving_elevation"), //$NON-NLS-1$
-					e);
-		}
-		return Double.NaN;
 	}
 
 	private boolean tag(AssetImpl asset, Meta meta, int i) {
@@ -510,44 +440,21 @@ public class GeotagOperation extends DbOperation {
 			if (!Double.isNaN(lower.getSpeed()) && !Double.isNaN(upper.getSpeed()))
 				asset.setGPSSpeed((lower.getSpeed() * fac1 + upper.getSpeed() * fac2));
 		}
-		if (gpsConfiguration.updateAltitude && !Double.isNaN(asset.getGPSDestLatitude())
+		if (gpsConfiguration.updateAltitude && !Double.isNaN(asset.getGPSLatitude())
 				&& !Double.isNaN(asset.getGPSLongitude())) {
-			long time = System.currentTimeMillis();
-			double elevation = getElevation(asset.getGPSDestLatitude(), asset.getGPSLongitude());
+			yieldWebservice(monitor);
+			double elevation = getElevation(asset.getGPSLatitude(), asset.getGPSLongitude());
 			if (!Double.isNaN(elevation))
 				asset.setGPSAltitude(elevation);
-			long delay = gpsConfiguration.interval - (System.currentTimeMillis() - time);
-			if (delay > 0)
-				try {
-					Thread.sleep(delay);
-				} catch (InterruptedException e) {
-					// do noting
-				}
 		}
-		if (gpsConfiguration.includeCoordinates) {
-			String[] keywords = asset.getKeyword();
-			List<String> oldKeywords = new ArrayList<String>(keywords.length);
-			for (String kw : keywords)
-				if (!kw.startsWith("geo:lat=") && !kw.startsWith("geo:lon=") //$NON-NLS-1$ //$NON-NLS-2$
-						&& !kw.equals("geotagged")) //$NON-NLS-1$
-					oldKeywords.add(kw);
-			List<String> newKeywords = new ArrayList<String>(3);
-			newKeywords.add("geo:lat=" + asset.getGPSDestLatitude()); //$NON-NLS-1$
-			newKeywords.add("geo:lon=" + asset.getGPSDestLongitude()); //$NON-NLS-1$
-			newKeywords.add("geotagged"); //$NON-NLS-1$
-			addKeywordsToCat(meta, newKeywords);
-			newKeywords.addAll(oldKeywords);
-			String[] kws = newKeywords.toArray(new String[newKeywords.size()]);
-			Arrays.sort(kws, Utilities.KEYWORDCOMPARATOR);
-			asset.setKeyword(kws);
-			return storeSafely(null, 1, meta, asset);
-		}
+		if (gpsConfiguration.includeCoordinates)
+			return addCoordinateKeywords(asset, asset.getGPSLatitude(), asset.getGPSLongitude(), meta);
 		return storeSafely(null, 1, asset);
 	}
 
 	@Override
 	public IStatus redo(IProgressMonitor aMonitor, IAdaptable info) throws ExecutionException {
-		return execute(aMonitor, info);
+		return execute(aMonitor, info, true);
 	}
 
 	@Override
@@ -579,6 +486,112 @@ public class GeotagOperation extends DbOperation {
 		}
 		fireAssetsModified(null, null);
 		return close(info);
+	}
+
+	protected boolean addCoordinateKeywords(Asset asset, double lat, double lon, Meta meta) {
+		String[] keywords = asset.getKeyword();
+		List<String> oldKeywords = new ArrayList<String>(keywords.length);
+		for (String kw : keywords)
+			if (!kw.startsWith("geo:lat=") && !kw.startsWith("geo:lon=") //$NON-NLS-1$ //$NON-NLS-2$
+					&& !kw.equals("geotagged")) //$NON-NLS-1$
+				oldKeywords.add(kw);
+		List<String> newKeywords = new ArrayList<String>(3);
+		newKeywords.add("geo:lat=" + lat); //$NON-NLS-1$
+		newKeywords.add("geo:lon=" + lon); //$NON-NLS-1$
+		newKeywords.add("geotagged"); //$NON-NLS-1$
+		addKeywordsToCat(meta, newKeywords);
+		newKeywords.addAll(oldKeywords);
+		String[] kws = newKeywords.toArray(new String[newKeywords.size()]);
+		Arrays.sort(kws, Utilities.KEYWORDCOMPARATOR);
+		asset.setKeyword(kws);
+		return storeSafely(null, 1, meta, asset);
+	}
+
+	protected void addKeywordsToCat(Meta meta, List<String> newKeywords) {
+		meta.getKeywords()
+				.addAll(gpsConfiguration.keywordFilter.filter(newKeywords.toArray(new String[newKeywords.size()])));
+	}
+
+	protected double getElevation(double lat, double lon) {
+		RasterCoordinate coord = new RasterCoordinate(lat, lon, 3);
+		Double elevation = elevationMap.get(coord);
+		if (elevation != null)
+			return elevation.doubleValue();
+		try {
+			double v = GpsUtilities.fetchElevation(lat, lon);
+			elevationMap.put(coord, v);
+			return v;
+		} catch (MalformedURLException e) {
+			// should never happen
+		} catch (IOException e) {
+			addError(Messages.getString("GeotagOperation.IO_Error_retrieving_elevation"), //$NON-NLS-1$
+					e);
+		}
+		return Double.NaN;
+	}
+
+	protected Waypoint getPlaceInfo(Meta meta, int i, double lat, double lon, IProgressMonitor aMonitor,
+			IAdaptable info) throws UnknownHostException {
+		RasterCoordinate coord = new RasterCoordinate(lat, lon, 2);
+		Waypoint place = coord.findClosestMatch(waypoints, 0.06d, 'K');
+		if (place != null)
+			place = coord.findClosestMatch(placeMap, 0.06d, 'K');
+		if (place != null)
+			return place;
+		try {
+			place = GpsUtilities.fetchPlaceInfo(lat, lon);
+			if (place != null && !Double.isNaN(place.getLat()) && !Double.isNaN(place.getLon())) {
+				double elevation = getElevation(place.getLat(), place.getLon());
+				if (!Double.isNaN(elevation))
+					place.setElevation(elevation);
+			}
+			if (place != null) {
+				placeMap.put(coord, place);
+				return place;
+			}
+		} catch (MalformedURLException e) {
+			// should never happen
+		} catch (SocketTimeoutException e) {
+			addError(Messages.getString("GeotagOperation.connection_timed_out"), //$NON-NLS-1$
+					null);
+		} catch (HttpException e) {
+			String message = e.getMessage();
+			if (message.indexOf("(503)") >= 0) { //$NON-NLS-1$
+				addError(Messages.getString("GeotagOperation.geonaming_aborted"), e); //$NON-NLS-1$
+				aMonitor.setCanceled(true);
+			} else
+				addError(Messages.getString("GeotagOperation.http_exception"), //$NON-NLS-1$
+						null);
+		} catch (IOException e) {
+			if (e instanceof UnknownHostException)
+				throw (UnknownHostException) e;
+			addError(Messages.getString("GeotagOperation.IO_Error_parsing_response"), //$NON-NLS-1$
+					e);
+		} catch (NumberFormatException e) {
+			addError(Messages.getString("GeotagOperation.Number_format_parsing_response"), //$NON-NLS-1$
+					e);
+		} catch (WebServiceException e) {
+			addWarning(Messages.getString("GeotagOperation.Geoname_signalled_exception"), e); //$NON-NLS-1$
+			Throwable e2 = e.getCause();
+			if (e2 instanceof WebServiceException && e2 != e) {
+				try {
+					int code = Integer.parseInt(e2.getMessage());
+					if (code >= 18 && code <= 20) {
+						handleResume(meta, code, i, info);
+						return null;
+					}
+				} catch (NumberFormatException e1) {
+					// do nothing
+				}
+				addError(Messages.getString("GeotagOperation.geonaming_aborted"), e2); //$NON-NLS-1$
+				aMonitor.setCanceled(true);
+			}
+		} catch (SAXException e) {
+			addError(Messages.getString("GeotagOperation.XML_problem_parsing_response"), e); //$NON-NLS-1$
+		} catch (ParserConfigurationException e) {
+			addError(Messages.getString("GeotagOperation.internal_error_configuring_sax"), e); //$NON-NLS-1$
+		}
+		return null;
 	}
 
 	public int getExecuteProfile() {

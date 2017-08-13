@@ -171,6 +171,12 @@
 			<topic href="html/reference/appearancePrefs.html" />
 		</entry>
 	</entry>
+	<entry keyword="Sekundärer Monitor">
+		<topic href="html/reference/generalPrefs.html" />
+	</entry>
+	<entry keyword="Monitor">
+		<topic href="html/reference/generalPrefs.html" />
+	</entry>
 	<entry keyword="Histogramm">
 		<topic href="html/reference/histogram.html" />
 	</entry>
@@ -489,6 +495,11 @@
 		</entry>
 		<entry keyword="Schaltflächen">
 	    	<topic href="html/reference/galleries.html#imagebuttons" label="Galerien - Bildschaltflächen"/>
+		</entry>
+	</entry>
+	<entry keyword="Dekoration">
+		<entry keyword="Miniaturansicht">
+			<topic href="html/reference/appearancePrefs.html" />
 		</entry>
 	</entry>
 	<entry keyword="Zeitstempel">

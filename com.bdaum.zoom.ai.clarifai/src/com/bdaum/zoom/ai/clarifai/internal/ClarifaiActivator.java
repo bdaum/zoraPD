@@ -25,9 +25,13 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.framework.BundleContext;
 
 import com.bdaum.zoom.ai.clarifai.internal.preference.PreferenceConstants;
+import com.bdaum.zoom.ai.internal.AiActivator;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.Theme;
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
@@ -69,6 +73,14 @@ public class ClarifaiActivator extends ZUiPlugin {
 		plugin = this;
 		clientId = getPreferenceStore().getString(PreferenceConstants.CLIENTID);
 		clientSecret = getPreferenceStore().getString(PreferenceConstants.CLIENTSECRET);
+		InstanceScope.INSTANCE.getNode(AiActivator.PLUGIN_ID)
+				.addPreferenceChangeListener(new IEclipsePreferences.IPreferenceChangeListener() {
+					@Override
+					public void preferenceChange(PreferenceChangeEvent event) {
+						if (com.bdaum.zoom.ai.internal.preference.PreferenceConstants.ENABLE.equals(event.getKey()))
+							disposeClient();
+					}
+				});
 	}
 
 	/*

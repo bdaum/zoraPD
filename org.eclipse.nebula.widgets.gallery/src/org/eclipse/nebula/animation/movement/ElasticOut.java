@@ -68,7 +68,6 @@ public class ElasticOut extends AbstractMovement {
 		super();
 	}
 
-	@Override
 	public double getValue(double step) {
 		// Conversion from Robert Penner's action scripts
 		//

@@ -53,7 +53,7 @@ public class GeoService implements IGeoService {
 				.findCurrentMappingSystem();
 		if (mappingSystem != null) {
 			String query = mappingSystem.getAttribute("query"); //$NON-NLS-1$
-			if (query != null && query.length() > 0) {
+			if (query != null && !query.isEmpty()) {
 				NumberFormat nf = NumberFormat.getInstance(Locale.US);
 				nf.setMaximumFractionDigits(5);
 				browser.openURL(new URL(NLS.bind(query, new Object[] {nf.format(lat), nf.format(lon), zoom})));

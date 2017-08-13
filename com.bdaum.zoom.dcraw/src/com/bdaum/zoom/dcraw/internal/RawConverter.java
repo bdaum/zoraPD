@@ -60,7 +60,7 @@ public class RawConverter extends AbstractRawConverter {
 	}
 
 	public void setConverterLocation(String location) {
-		if (location == null || location.length() == 0) {
+		if (location == null || location.isEmpty()) {
 			if (dcraw == null || external)
 				dcraw = Activator.getDefault().locateDCRAW();
 			external = false;

@@ -126,12 +126,10 @@ public class AssetProvider implements IAssetProvider {
 				|| (currentSort == null && currentProcessor.getCustomSort() != null)
 				|| (currentSort != null && !currentSort.equals(currentProcessor
 						.getCustomSort()))) {
-			BusyIndicator.showWhile(null, new Runnable() {
-				public void run() {
-					currentProcessor = dbManager.createCollectionProcessor(
-							currentCollection, currentFilters, currentSort);
-					assets = currentProcessor.select(true);
-				}
+			BusyIndicator.showWhile(null, () -> {
+				currentProcessor = dbManager.createCollectionProcessor(
+						currentCollection, currentFilters, currentSort);
+				assets = currentProcessor.select(true);
 			});
 		} else if (invalid)
 			BusyIndicator.showWhile(null, new Runnable() {

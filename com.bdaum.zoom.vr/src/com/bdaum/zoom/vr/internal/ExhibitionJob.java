@@ -221,7 +221,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 		if (monitor.isCanceled())
 			return;
 		String link = gallery.getPageName();
-		if (link == null || link.length() == 0)
+		if (link == null || link.isEmpty())
 			link = "index.html"; //$NON-NLS-1$
 		File linkFile = new File(targetFolder, link);
 		try (Writer writer = new BufferedWriter(new FileWriter(linkFile))) {
@@ -247,7 +247,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 		File roomFile = copyResources(room, resFile, ROOMPREFIX + exhibitionId, false, monitor);
 		String audio = gallery.getAudio();
 		File audioTarget = null;
-		if (audio != null && audio.length() > 0) {
+		if (audio != null && !audio.isEmpty()) {
 			File audioSource = new File(audio);
 			if (audioSource.exists()) {
 				audioTarget = new File(audioFile, audioSource.getName());
@@ -262,7 +262,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 		String logo = gallery.getLogo();
 		File logoTarget = null;
 		File imageFolder = new File(targetFolder, "images"); //$NON-NLS-1$
-		if (logo != null && logo.length() > 0) {
+		if (logo != null && !logo.isEmpty()) {
 			File logoSource = new File(logo);
 			if (logoSource.exists()) {
 				logoTarget = new File(imageFolder, logoSource.getName());
@@ -316,22 +316,22 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 		String label = web;
 		web = formatWebUrl(web);
 		String copyright = gallery.getCopyright();
-		if (copyright != null && copyright.length() > 0)
+		if (copyright != null && !copyright.isEmpty())
 			sb.append("&copy; ").append(BatchUtilities.encodeHTML(copyright, false)); //$NON-NLS-1$
 		String contact = gallery.getContactName();
 		String email = gallery.getEmail();
-		if (contact == null || contact.length() == 0)
+		if (contact == null || contact.isEmpty())
 			contact = email;
-		if (contact != null && contact.length() > 0) {
+		if (contact != null && !contact.isEmpty()) {
 			if (sb.length() > 0)
 				sb.append("<br/>"); //$NON-NLS-1$
-			if (email != null && email.length() > 0)
+			if (email != null && !email.isEmpty())
 				sb.append("<a href='mailto:").append(email).append("'>") //$NON-NLS-1$ //$NON-NLS-2$
 						.append(BatchUtilities.encodeHTML(contact, false)).append("</a>"); //$NON-NLS-1$
 			else
 				sb.append(BatchUtilities.encodeHTML(contact, false));
 		}
-		if (web != null && web.length() > 0) {
+		if (web != null && !web.isEmpty()) {
 			if (sb.length() > 0)
 				sb.append(", "); //$NON-NLS-1$
 			if (label.startsWith(HTTP))
@@ -383,13 +383,13 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 				.append(nf1.format(ty)).append(",\r\n		\"targetX\": 0,\r\n\t\t\"targetZ\": 0,\r\n"); //$NON-NLS-1$
 		if (audioFile != null)
 			sb.append("\t\t\"audio\": \"../res/audio/").append(audioFile.getName()).append("\",\r\n");//$NON-NLS-1$ //$NON-NLS-2$
-		if (impressum.length() > 0)
+		if (!impressum.isEmpty())
 			sb.append("\t\t\"contact\": \"").append(impressum).append("\",\r\n");//$NON-NLS-1$ //$NON-NLS-2$
 
 		sb.append("\t\t\"imgCount\": ").append(cnt).append(",\r\n" //$NON-NLS-1$ //$NON-NLS-2$
 				+ "\t\t\"startIndex\": 1,\r\n"); //$NON-NLS-1$
 		String webUrl = gallery.getWebUrl();
-		if (webUrl != null && webUrl.length() > 0)
+		if (webUrl != null && !webUrl.isEmpty())
 			sb.append("\t\t\"logoUrl\": \"").append(webUrl).append("\",\r\n"); //$NON-NLS-1$ //$NON-NLS-2$
 		sb.append("\t\t\"map_bg\":\"../res/").append(roomName).append("/map_bg.png\",\r\n") //$NON-NLS-1$ //$NON-NLS-2$
 				.append("\t\t\"map_color\": \"#75755f\",\r\n\t\t\"map_obj_color\": \"#acaa92\",\r\n\t\t\"sceneW\": ") //$NON-NLS-1$
@@ -585,9 +585,9 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 							String copyright = null;
 							if (gallery.getAddWatermark()) {
 								copyright = asset.getCopyright();
-								if (copyright == null || copyright.length() == 0)
+								if (copyright == null || copyright.isEmpty())
 									copyright = gallery.getCopyright();
-								if (copyright != null && copyright.length() == 0)
+								if (copyright != null && copyright.isEmpty())
 									copyright = null;
 							}
 							URI uri = volumeManager.findExistingFile(asset, false);
@@ -618,8 +618,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 											zimage = CoreActivator.getDefault().getHighresImageLoader().loadImage(null,
 													status, originalFile, rotation, asset.getFocalLengthIn35MmFilm(),
 													new Rectangle(0, 0, isize, isize), 1d, 1d, true,
-													ImageConstants.SRGB, null, umask, null, fileWatcher,
-													opId, this);
+													ImageConstants.SRGB, null, umask, null, fileWatcher, opId, this);
 										} catch (UnsupportedOperationException e) {
 											// do nothing
 										}
@@ -655,10 +654,9 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 									boolean hideLabel = b == null ? gallery.getHideLabel() : b.booleanValue();
 									if (!hideLabel) {
 										final int tid = tagId;
-										shell.getDisplay().asyncExec(new Runnable() {
-											public void run() {
+										shell.getDisplay().asyncExec(() -> {
+											if (!shell.isDisposed())
 												generateLabel(shell.getDisplay(), exhibit, roomFolder, tid);
-											}
 										});
 									}
 									box.cleanup();
@@ -821,7 +819,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 			artistfont.dispose();
 			textLayout.dispose();
 		}
-		if (gallery.getInfo() != null && gallery.getInfo().length() > 0) {
+		if (gallery.getInfo() != null && !gallery.getInfo().isEmpty()) {
 			Font font = new Font(device, fontFamily, fontSize * 2, SWT.NORMAL);
 			gc.setFont(font);
 			textLayout = new TextLayout(device);
@@ -890,7 +888,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 	}
 
 	private static String formatWebUrl(String web) {
-		if (web != null && web.length() > 0 && !web.startsWith(HTTP) && !web.startsWith(HTTPS))
+		if (web != null && !web.isEmpty() && !web.startsWith(HTTP) && !web.startsWith(HTTPS))
 			return HTTP + web;
 		return web;
 	}
@@ -967,7 +965,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 	}
 
 	private static int createTextline(GC gc, TextLayout textLayout, int margins, String text, int y) {
-		if (text != null && text.length() > 0) {
+		if (text != null && !text.isEmpty()) {
 			textLayout.setText(text);
 			textLayout.draw(gc, margins, y);
 			return textLayout.getBounds().height + margins / 2;

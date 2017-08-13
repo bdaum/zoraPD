@@ -108,11 +108,9 @@ public class AssetDropTargetEffect extends DropTargetEffect implements PaintList
 		}
 		if (mode != event.detail)
 			setMode(event.detail);
-		getControl().getDisplay().syncExec(new Runnable() {
-			public void run() {
-				if (mode != DND.DROP_NONE && shell != null && !shell.isDisposed())
-					shell.setLocation(pos);
-			}
+		getControl().getDisplay().syncExec(() -> {
+			if (mode != DND.DROP_NONE && shell != null && !shell.isDisposed())
+				shell.setLocation(pos);
 		});
 
 	}

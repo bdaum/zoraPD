@@ -90,7 +90,7 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 	@Override
 	protected void validatePage() {
 		String fn = fileEditor.getText();
-		if (fn.length() == 0) {
+		if (fn.isEmpty()) {
 			setErrorMessage(Messages.MergeCatPage_please_select_cat);
 			setPageComplete(false);
 			return;

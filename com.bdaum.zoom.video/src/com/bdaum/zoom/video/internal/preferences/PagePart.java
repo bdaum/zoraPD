@@ -131,7 +131,7 @@ public class PagePart extends AbstractPreferencePagePart {
 	@Override
 	public String validate() {
 		String fn = fileEditor.getText();
-		if (fn.length() > 0) {
+		if (!fn.isEmpty()) {
 			File file = new File(fn);
 			if (!file.exists())
 				return NLS.bind(Messages.VideoPreferencePage_no_executable, fn);

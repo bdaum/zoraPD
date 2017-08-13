@@ -31,8 +31,7 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 		 * Value descriptor for parameter values
 		 *
 		 */
-		public static class RecipeParameterValue implements
-				IRecipeParameterValue {
+		public static class RecipeParameterValue implements IRecipeParameterValue {
 
 			private String label;
 
@@ -119,10 +118,8 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 		/*
 		 * (non-Javadoc)
 		 *
-		 * @see
-		 * com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter#addValueDescriptor
-		 * (com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter.
-		 * IRecipeParameterValue)
+		 * @see com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter#addValueDescriptor
+		 * (com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter. IRecipeParameterValue)
 		 */
 		public void addValueDescriptor(IRecipeParameterValue v) {
 			values.add(v);
@@ -140,8 +137,7 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 		/*
 		 * (non-Javadoc)
 		 *
-		 * @see
-		 * com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter#getLabel(java
+		 * @see com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter#getLabel(java
 		 * .lang.String)
 		 */
 		public String getLabel(String anId) {
@@ -163,8 +159,7 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 		/*
 		 * (non-Javadoc)
 		 *
-		 * @see
-		 * com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter#setValue(java
+		 * @see com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter#setValue(java
 		 * .lang.String)
 		 */
 		public void setValue(String value) {
@@ -178,8 +173,7 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 
 	private String id;
 
-	private List<IRecipeParameter> parameters = new ArrayList<IRecipeDetector.IRecipeParameter>(
-			2);
+	private List<IRecipeParameter> parameters = new ArrayList<IRecipeDetector.IRecipeParameter>(2);
 
 	/*
 	 * (non-Javadoc)
@@ -193,8 +187,7 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.image.recipe.IRecipeDetector#setName(java.lang.String)
+	 * @see com.bdaum.zoom.image.recipe.IRecipeDetector#setName(java.lang.String)
 	 */
 	public void setName(String name) {
 		this.name = name;
@@ -221,8 +214,7 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IRecipeDetector#addParameter(com.bdaum.zoom.core.
+	 * @see com.bdaum.zoom.core.IRecipeDetector#addParameter(com.bdaum.zoom.core.
 	 * IRecipeDetector.IRecipeParameter)
 	 */
 	public void addParameter(IRecipeParameter parameter) {
@@ -253,8 +245,7 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IRecipeDetector#getParameterValue(java.lang.String)
+	 * @see com.bdaum.zoom.core.IRecipeDetector#getParameterValue(java.lang.String)
 	 */
 	public String getParameterValue(String anId) {
 		IRecipeParameter parameter = getParameter(anId);
@@ -264,8 +255,7 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IRecipeDetector#getIntegerParameterValue(java.lang
+	 * @see com.bdaum.zoom.core.IRecipeDetector#getIntegerParameterValue(java.lang
 	 * .String)
 	 */
 	public int getIntegerParameterValue(String anId) {
@@ -280,20 +270,20 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 	}
 
 	/**
-	 * Common utility method to compute additional folders to be watched and
-	 * updates the map that associates watched folders with recipe detectors
+	 * Common utility method to compute additional folders to be watched and updates
+	 * the map that associates watched folders with recipe detectors
 	 *
 	 * @param watchedFolders
 	 *            - folders to be added or removed from the list of currently
 	 *            watched folders
 	 * @param detectorMap
 	 *            - map describing the relationship between folders containing
-	 *            metafiles and recipe detectors required to process those
-	 *            metafiles when no subfolders are to be considered
+	 *            metafiles and recipe detectors required to process those metafiles
+	 *            when no subfolders are to be considered
 	 * @param recursiveDetectorMap
 	 *            - map describing the relationship between folders containing
-	 *            metafiles and recipe detectors required to process those
-	 *            metafiles when also subfolders are to be considered
+	 *            metafiles and recipe detectors required to process those metafiles
+	 *            when also subfolders are to be considered
 	 * @param remove
 	 *            - true if specified folders shall be removed from the list of
 	 *            currently watched folders, false if specified folders shall be
@@ -305,29 +295,23 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 	 *         standard watched folders
 	 */
 
-	protected List<RecipeFolder> computeWatchedMetaFolders(
-			WatchedFolder[] watchedFolders,
-			Map<File, List<IRecipeDetector>> detectorMap,
-			Map<File, List<IRecipeDetector>> recursiveDetectorMap,
+	protected List<RecipeFolder> computeWatchedMetaFolders(WatchedFolder[] watchedFolders,
+			Map<File, List<IRecipeDetector>> detectorMap, Map<File, List<IRecipeDetector>> recursiveDetectorMap,
 			boolean remove, String[] subPaths) {
 		List<RecipeFolder> result = new ArrayList<RecipeFolder>();
 		for (WatchedFolder wfolder : watchedFolders) {
 			String uri = wfolder.getUri();
 			if (wfolder.getRecursive())
 				try {
-					updateWatchedMetaFolders(recursiveDetectorMap, result,
-							new File(new URI(uri)), this, remove, true);
+					updateWatchedMetaFolders(recursiveDetectorMap, result, new File(new URI(uri)), this, remove, true);
 				} catch (URISyntaxException e) {
 					// dont watch this
 				}
 			else
 				for (int i = 0; i < subPaths.length; i++)
 					try {
-						File subfolder = new File(new URI(
-								subPaths[i].length() > 0 ? uri + '/'
-										+ subPaths[i] : uri));
-						updateWatchedMetaFolders(detectorMap, result,
-								subfolder, this, remove, false);
+						File subfolder = new File(new URI(subPaths[i].isEmpty() ? uri : uri + '/' + subPaths[i]));
+						updateWatchedMetaFolders(detectorMap, result, subfolder, this, remove, false);
 					} catch (URISyntaxException e) {
 						// dont watch this
 					}
@@ -351,10 +335,8 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 	 * @param recursive
 	 *            - true if folder is watched recursively
 	 */
-	protected void updateWatchedMetaFolders(
-			Map<File, List<IRecipeDetector>> detectorMap,
-			List<RecipeFolder> folders, File folder, IRecipeDetector detector,
-			boolean remove, boolean recursive) {
+	protected void updateWatchedMetaFolders(Map<File, List<IRecipeDetector>> detectorMap, List<RecipeFolder> folders,
+			File folder, IRecipeDetector detector, boolean remove, boolean recursive) {
 		folders.add(new RecipeFolder(folder, recursive));
 		if (remove)
 			detectorMap.remove(folder);
@@ -386,12 +368,15 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 
 	/**
 	 * Adds a struct field to the struc description
-	 * @param sb - struct description
-	 * @param qfield - field spec
-	 * @param value - field value
+	 * 
+	 * @param sb
+	 *            - struct description
+	 * @param qfield
+	 *            - field spec
+	 * @param value
+	 *            - field value
 	 */
-	protected void addStructField(StringBuilder sb,
-			QueryField qfield, Object value) {
+	protected void addStructField(StringBuilder sb, QueryField qfield, Object value) {
 		if (sb.length() > 0)
 			sb.append(',');
 		sb.append(qfield.getExifToolKey()).append('=');
@@ -403,17 +388,19 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 
 	/**
 	 * Completes a struct description and stores it in a map
-	 * @param overlayMap - receiving map
-	 * @param qfield - field spec
-	 * @param sb - struct description
+	 * 
+	 * @param overlayMap
+	 *            - receiving map
+	 * @param qfield
+	 *            - field spec
+	 * @param sb
+	 *            - struct description
 	 */
-	protected void setStruct(Map<String, String> overlayMap,
-			QueryField qfield, StringBuilder sb) {
+	protected void setStruct(Map<String, String> overlayMap, QueryField qfield, StringBuilder sb) {
 		if (sb.length() > 0) {
 			sb.insert(0, '{').append('}');
 			overlayMap.put(qfield.getExifToolKey(), sb.toString());
 		}
 	}
-
 
 }

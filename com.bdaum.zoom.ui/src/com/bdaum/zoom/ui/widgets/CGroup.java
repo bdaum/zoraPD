@@ -80,7 +80,7 @@ public class CGroup extends Composite implements PaintListener {
 	}
 
 	private void computeTopTrim(Font font) {
-		if (text != null && text.length() > 0) {
+		if (text != null && !text.isEmpty()) {
 			GC gc = new GC(this);
 			gc.setFont(font);
 			Point textExtent = gc.textExtent(text);

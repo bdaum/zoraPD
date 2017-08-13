@@ -64,7 +64,7 @@ public class CreateAllPhotosetsTask extends PostProcessingTask {
 	}
 
 	public boolean hasSetsToCreate() {
-		return sets.size() > 0;
+		return !sets.isEmpty();
 	}
 
 	private static Collection<PhotoSet> getNewPhotoSets(Collection<PhotoSet> photoSets) {

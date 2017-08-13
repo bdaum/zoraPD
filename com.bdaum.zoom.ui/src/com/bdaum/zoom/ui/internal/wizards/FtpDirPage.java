@@ -326,7 +326,7 @@ public class FtpDirPage extends ColoredWizardPage {
 			if (ftp != null) {
 				try {
 					dir = url.getPath();
-					if (dir.length() > 0) {
+					if (!dir.isEmpty()) {
 						boolean result = ftp.changeWorkingDirectory(dir);
 						if (!result)
 							ftp = null;
@@ -399,8 +399,8 @@ public class FtpDirPage extends ColoredWizardPage {
 							dirPath = stripSlashes(dirPaths.get(parent));
 						try {
 							URI uri = new URI(prefix
-									+ (dirPath.length() > 0 ? dirPath + '/'
-											+ file.getName() : file.getName()));
+									+ (dirPath.isEmpty() ? file.getName() : dirPath + '/'
+											+ file.getName() ));
 							list.add(uri);
 						} catch (URISyntaxException e) {
 							// should never happen

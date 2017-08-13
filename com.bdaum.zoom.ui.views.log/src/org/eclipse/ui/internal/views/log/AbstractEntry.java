@@ -53,7 +53,7 @@ public abstract class AbstractEntry extends PlatformObject implements IWorkbench
 	 * @return true if this entry has children, false otherwise
 	 */
 	public boolean hasChildren() {
-		return children.size() > 0;
+		return !children.isEmpty();
 	}
 
 	/**

@@ -67,17 +67,12 @@ import ch.ethz.iks.util.StringUtils;
  * @author Jan S. Rellermeyer, ETH Zurich
  * @since 0.6
  */
-final class CodeAnalyzer implements ClassVisitor {
+final class CodeAnalyzer extends ClassVisitor {
 
 	/**
 	 * the class loader of the service provider bundle.
 	 */
 	private final ClassLoader loader;
-
-	/**
-	 * the class loader of the smart proxy
-	 */
-	private ClassLoader smartProxyLoader;
 
 	/**
 	 * the closure list.
@@ -133,10 +128,11 @@ final class CodeAnalyzer implements ClassVisitor {
 	 */
 	CodeAnalyzer(final ClassLoader loader, final String imports,
 			final String exports) {
+		super(Opcodes.ASM5);
 		this.loader = loader;
 
 		if (imports != null) {
-			final String[] tokens = StringUtils.splitString(imports, ","); //$NON-NLS-1$
+			final String[] tokens = StringUtils.stringToArray(imports, ","); //$NON-NLS-1$
 			importsMap = new HashMap(tokens.length);
 			for (int i = 0; i < tokens.length; i++) {
 				final int pos = tokens[i].indexOf(";"); //$NON-NLS-1$
@@ -152,7 +148,7 @@ final class CodeAnalyzer implements ClassVisitor {
 		}
 
 		if (exports != null) {
-			final String[] tokens = StringUtils.splitString(exports, ","); //$NON-NLS-1$
+			final String[] tokens = StringUtils.stringToArray(exports, ","); //$NON-NLS-1$
 			exportsMap = new HashMap(tokens.length);
 			for (int i = 0; i < tokens.length; i++) {
 				final int pos = tokens[i].indexOf(";"); //$NON-NLS-1$
@@ -195,14 +191,6 @@ final class CodeAnalyzer implements ClassVisitor {
 
 		if (smartProxy != null) {
 			closure.add(smartProxy);
-			try {
-				smartProxyLoader = Class.forName(smartProxy).getClassLoader();
-			} catch (final ClassNotFoundException c) {
-				smartProxyLoader = null;
-			}
-			if (smartProxyLoader == loader) {
-				smartProxyLoader = null;
-			}
 		}
 		if (presentation != null) {
 			closure.add(presentation);
@@ -211,7 +199,6 @@ final class CodeAnalyzer implements ClassVisitor {
 			closure.addAll(Arrays.asList(explicitInjections));
 		}
 
-		// do the real work
 		while (!closure.isEmpty()) {
 			visit((String) closure.remove(0));
 		}
@@ -283,6 +270,12 @@ final class CodeAnalyzer implements ClassVisitor {
 	 */
 	private void visit(final String className) throws ClassNotFoundException {
 		currentClass = className.replace('.', '/');
+		// remove array indicators
+		if (currentClass.startsWith("[L")) {
+			currentClass = currentClass.substring(2);
+		} else if (currentClass.startsWith("L")) {
+			currentClass = currentClass.substring(1);
+		}
 		final String classFile = currentClass + ".class"; //$NON-NLS-1$
 
 		final String pkg = packageOf(className);
@@ -300,24 +293,7 @@ final class CodeAnalyzer implements ClassVisitor {
 			}
 			reader.accept(this, ClassReader.SKIP_DEBUG
 					+ ClassReader.SKIP_FRAMES);
-			return;
 		} catch (final IOException ioe) {
-			if (smartProxyLoader != null) {
-				try {
-					final ClassReader reader = new ClassReader(
-							smartProxyLoader.getResourceAsStream(classFile));
-
-					injections.put(classFile, reader.b);
-					if (exportsMap.containsKey(pkg)) {
-						proxyExports.add(pkg);
-					}
-					reader.accept(this, ClassReader.SKIP_DEBUG
-							+ ClassReader.SKIP_FRAMES);
-					return;
-				} catch (final IOException ioe2) {
-					throw new ClassNotFoundException(className);
-				}
-			}
 			throw new ClassNotFoundException(className);
 		}
 	}
@@ -511,7 +487,11 @@ final class CodeAnalyzer implements ClassVisitor {
 	 * 
 	 * @author Jan S. Rellermeyer, ETH Zurich
 	 */
-	final class MethodAnalyzer implements MethodVisitor {
+	final class MethodAnalyzer extends MethodVisitor {
+
+		protected MethodAnalyzer() {
+			super(Opcodes.ASM5);
+		}
 
 		/**
 		 * 
@@ -520,6 +500,7 @@ final class CodeAnalyzer implements ClassVisitor {
 		 */
 		public AnnotationVisitor visitAnnotation(final String desc,
 				final boolean visible) {
+
 			if (!visited.contains(desc)) {
 				visitType(Type.getType("L" + desc + ";")); //$NON-NLS-1$ //$NON-NLS-2$
 			}
@@ -658,6 +639,17 @@ final class CodeAnalyzer implements ClassVisitor {
 		 */
 		public void visitMethodInsn(final int opcode, final String owner,
 				final String name, final String desc) {
+			if (!visited.contains(owner)) {
+				visitType(Type.getType("L" + owner + ";")); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		}
+
+		/**
+		 * @see org.objectweb.asm.MethodVisitor#visitMethodInsn(int,
+		 *      java.lang.String, java.lang.String, java.lang.String, boolean)
+		 */
+		public void visitMethodInsn(int opcode, String owner, String name,
+				String desc, boolean itf) {
 			if (!visited.contains(owner)) {
 				visitType(Type.getType("L" + owner + ";")); //$NON-NLS-1$ //$NON-NLS-2$
 			}

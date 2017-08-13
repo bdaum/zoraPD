@@ -23,12 +23,26 @@ import java.io.IOException;
 
 public interface ISearchHits {
 
+	/**
+	 * @return number if hits
+	 */
 	int length();
 
+	/**
+	 * @param position - index of search hit
+	 * @return - score of search hit
+	 */
 	float score(int position);
 
+	/**
+	 * @param position - index of search hit
+	 * @return - asset ID of search hit
+	 */
 	String getAssetId(int position) throws IOException;
 
+	/**
+	 * @return maximum score
+	 */
 	float getMaxScore();
 
 }

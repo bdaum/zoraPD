@@ -26,10 +26,12 @@ import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Monitor;
 
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.image.ImageConstants;
@@ -55,6 +57,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 	private CheckboxButton noProgressButton;
 	private ComboViewer backupGenerationsField;
 	private CheckboxButton enlargeButton;
+	private CheckboxButton displayButton;
 
 	@Override
 	protected void createPageContents(Composite composite) {
@@ -86,8 +89,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 		advancedButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("GeneralPreferencePage.use_quality_interpolation"), //$NON-NLS-1$
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		Label inactivityLabel = new Label(group, SWT.NONE);
-		inactivityLabel.setText(Messages.getString("GeneralPreferencePage.inactivity_timeout")); //$NON-NLS-1$
+		new Label(group, SWT.NONE).setText(Messages.getString("GeneralPreferencePage.inactivity_timeout")); //$NON-NLS-1$
 		inactivityField = new NumericControl(group, SWT.NONE);
 		inactivityField.setMinimum(1);
 		inactivityField.setMaximum(180);
@@ -104,6 +106,14 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 		enlargeButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("GeneralPreferencePage.enlarge_small_images"), new GridData( //$NON-NLS-1$
 						SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		Monitor[] monitors = composite.getDisplay().getMonitors();
+		if (monitors.length > 1) {
+			Rectangle r = composite.getShell().getBounds();
+			if (composite.getDisplay().getPrimaryMonitor().getBounds().contains(r.x + r.width/2,  r.y + r.height/2))
+				displayButton = WidgetFactory.createCheckButton(group,
+						Messages.getString("GeneralPreferencePage.use_secondary_monitor"), //$NON-NLS-1$
+						new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		}
 	}
 
 	private void createBackupGroup(Composite composite) {
@@ -111,8 +121,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		group.setLayout(new GridLayout(2, false));
 		group.setText(Messages.getString("GeneralPreferencePage.backup_update")); //$NON-NLS-1$
-		Label backupLabel = new Label(group, SWT.NONE);
-		backupLabel.setText(Messages.getString("GeneralPreferencePage.backup_interval")); //$NON-NLS-1$
+		new Label(group, SWT.NONE).setText(Messages.getString("GeneralPreferencePage.backup_interval")); //$NON-NLS-1$
 		backupField = new NumericControl(group, SWT.NONE);
 		backupField.setMinimum(1);
 		backupField.setMaximum(365);
@@ -125,8 +134,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 		backupGenerationsField = createComboViewer(group,
 				Messages.getString("GeneralPreferencePage.max_backup_generations"), options, labels, false); //$NON-NLS-1$
 
-		Label updateLabel = new Label(group, SWT.NONE);
-		updateLabel.setText(Messages.getString("GeneralPreferencePage.check_for_updates")); //$NON-NLS-1$
+		new Label(group, SWT.NONE).setText(Messages.getString("GeneralPreferencePage.check_for_updates")); //$NON-NLS-1$
 		updateViewer = new ComboViewer(group);
 		updateViewer.setContentProvider(ArrayContentProvider.getInstance());
 		updateViewer.setLabelProvider(new ZColumnLabelProvider() {
@@ -147,8 +155,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 
 	private void createMiscGroup(Composite composite) {
 		CGroup group = createGroup(composite, 2, Messages.getString("GeneralPreferencePage.general")); //$NON-NLS-1$
-		Label undoLabel = new Label(group, SWT.NONE);
-		undoLabel.setText(Messages.getString("GeneralPreferencePage.Undo_levels")); //$NON-NLS-1$
+		new Label(group, SWT.NONE).setText(Messages.getString("GeneralPreferencePage.Undo_levels")); //$NON-NLS-1$
 		undoField = new NumericControl(group, SWT.NONE);
 		undoField.setMinimum(1);
 		undoField.setMaximum(99);
@@ -169,6 +176,8 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 		previewButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.PREVIEW));
 		noiseButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ADDNOISE));
 		enlargeButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ENLARGESMALL));
+		if (displayButton != null)
+			displayButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.SECONDARYMONITOR));
 		inactivityField.setSelection(preferenceStore.getInt(PreferenceConstants.INACTIVITYINTERVAL));
 		updateViewer.setSelection(new StructuredSelection(preferenceStore.getString(PreferenceConstants.UPDATEPOLICY)));
 		noProgressButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.NOPROGRESS));
@@ -193,6 +202,8 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 				preferenceStore.getDefaultBoolean(PreferenceConstants.ADDNOISE));
 		preferenceStore.setValue(PreferenceConstants.ENLARGESMALL,
 				preferenceStore.getDefaultBoolean(PreferenceConstants.ENLARGESMALL));
+		preferenceStore.setValue(PreferenceConstants.SECONDARYMONITOR,
+				preferenceStore.getDefaultBoolean(PreferenceConstants.SECONDARYMONITOR));
 		preferenceStore.setValue(PreferenceConstants.INACTIVITYINTERVAL,
 				preferenceStore.getDefaultInt(PreferenceConstants.INACTIVITYINTERVAL));
 		preferenceStore.setValue(PreferenceConstants.AUTOEXPORT,
@@ -221,6 +232,8 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 		preferenceStore.setValue(PreferenceConstants.PREVIEW, previewButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.ADDNOISE, noiseButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.ENLARGESMALL, enlargeButton.getSelection());
+		if (displayButton != null)
+			preferenceStore.setValue(PreferenceConstants.SECONDARYMONITOR, displayButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.INACTIVITYINTERVAL, inactivityField.getSelection());
 		IStructuredSelection sel = (IStructuredSelection) updateViewer.getSelection();
 		if (!sel.isEmpty())

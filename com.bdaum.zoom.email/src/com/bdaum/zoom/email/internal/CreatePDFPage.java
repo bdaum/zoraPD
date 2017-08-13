@@ -48,7 +48,7 @@ import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.dialogs.LayoutComponent;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
-import com.lowagie.text.Rectangle;
+import com.itextpdf.text.Rectangle;
 
 @SuppressWarnings("restriction")
 public class CreatePDFPage extends ColoredWizardPage {
@@ -107,7 +107,7 @@ public class CreatePDFPage extends ColoredWizardPage {
 						commonHeight = asset.getHeight();
 				} else {
 					String volume = asset.getVolume();
-					if (volume != null && volume.length() > 0)
+					if (volume != null && !volume.isEmpty())
 						volumes.add(volume);
 					errands.add(uri.toString());
 				}
@@ -164,7 +164,7 @@ public class CreatePDFPage extends ColoredWizardPage {
 				job.schedule();
 			} else {
 				String weblink = w.getWeblink();
-				if (weblink == null || weblink.length() == 0)
+				if (weblink == null || weblink.isEmpty())
 					weblink = "index.html"; //$NON-NLS-1$
 				int mode = w.getMode();
 				new HtmlJob(assets, mode, layout, file, account, w.getQuality(),

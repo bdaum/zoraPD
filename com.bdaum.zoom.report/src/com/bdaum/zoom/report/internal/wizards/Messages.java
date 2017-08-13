@@ -86,6 +86,7 @@ public class Messages extends NLS {
 	public static String SourcePage_name;
 	public static String SourcePage_not_a_group;
 	public static String SourcePage_please_select;
+	public static String SourcePage_skip_orphans;
 	public static String ValuePage_by_day;
 	public static String ValuePage_by_month;
 	public static String ValuePage_by_quarter;

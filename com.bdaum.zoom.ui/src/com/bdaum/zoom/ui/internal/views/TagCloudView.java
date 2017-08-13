@@ -314,7 +314,7 @@ public class TagCloudView extends ViewPart implements IDbListener {
 			public float getAngle(Object element) {
 				if (element instanceof ScoredString) {
 					String label = ((ScoredString) element).getString();
-					if (label.length() > 0 && Character.isDigit(label.charAt(0)))
+					if (!label.isEmpty() && Character.isDigit(label.charAt(0)))
 						return -90;
 					if (label.length() <= 3)
 						return -45;
@@ -409,11 +409,9 @@ public class TagCloudView extends ViewPart implements IDbListener {
 			scoredStrings = null;
 		final List<ScoredString> scoredStrings = getScoredStrings();
 		if (scoredStrings != null)
-			BusyIndicator.showWhile(viewer.getControl().getDisplay(), new Runnable() {
-				public void run() {
-					viewer.setInput(scoredStrings);
-					viewer.setSelection(selection);
-				}
+			BusyIndicator.showWhile(viewer.getControl().getDisplay(), () -> {
+				viewer.setInput(scoredStrings);
+				viewer.setSelection(selection);
 			});
 	}
 
@@ -740,14 +738,8 @@ public class TagCloudView extends ViewPart implements IDbListener {
 	}
 
 	private List<ScoredString> getScoredStrings() {
-		if (scoredStrings == null) {
-			BusyIndicator.showWhile(viewer.getControl().getDisplay(), new Runnable() {
-				public void run() {
-					doGetScoredStrings();
-				}
-			});
-
-		}
+		if (scoredStrings == null)
+			BusyIndicator.showWhile(viewer.getControl().getDisplay(), () -> doGetScoredStrings());
 		return scoredStrings;
 	}
 

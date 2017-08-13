@@ -59,11 +59,9 @@ public class RestoreOperation extends DbOperation {
 		try {
 			for (Object obj : selection) {
 				final Trash t = (Trash) obj;
-				if (!storeSafely(new Runnable() {
-					public void run() {
-						asset = t.restore(dbManager, iw, status);
-						restoredAssets.add(asset);
-					}
+				if (!storeSafely(() -> {
+					asset = t.restore(dbManager, iw, status);
+					restoredAssets.add(asset);
 				}, 1))
 					return close(info);
 				changed |= updateFolderHierarchies(asset, true, configuration.timeline, configuration.locations, false);

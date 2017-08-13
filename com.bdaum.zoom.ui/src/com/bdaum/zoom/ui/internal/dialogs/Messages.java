@@ -264,6 +264,7 @@ public class Messages extends NLS {
 	public static String EditFtpDialog_track_exports;
 	public static String EditFtpDialog_web;
 	public static String EditFtpDialog_web_host;
+	public static String EditMetaDialog_account_valid;
 	public static String EditMetaDialog_add;
 	public static String EditMetaDialog_add_category;
 	public static String EditMetaDialog_add_keyword;
@@ -273,6 +274,7 @@ public class Messages extends NLS {
 	public static String EditMetaDialog_add_vocab;
 	public static String EditMetaDialog_add_watched_folder;
 	public static String EditMetaDialog_add_x;
+	public static String EditMetaDialog_ai_enabled;
 	public static String EditMetaDialog_albums;
 	public static String EditMetaDialog_all;
 	public static String EditMetaDialog_alt_texts;
@@ -368,6 +370,7 @@ public class Messages extends NLS {
 	public static String EditMetaDialog_images;
 	public static String EditMetaDialog_import_folders;
 	public static String EditMetaDialog_indexing;
+	public static String EditMetaDialog_influences_speed;
 	public static String EditMetaDialog_initial_values;
 	public static String EditMetaDialog_intall_dict;
 	public static String EditMetaDialog_invalid_web_url;
@@ -432,6 +435,7 @@ public class Messages extends NLS {
 	public static String EditMetaDialog_save;
 	public static String EditMetaDialog_save_category;
 	public static String EditMetaDialog_save_keyword_tooltip;
+	public static String EditMetaDialog_select_at_least_one;
 	public static String EditMetaDialog_select_vocab;
 	public static String EditMetaDialog_send_email;
 	public static String EditMetaDialog_seqno;
@@ -440,6 +444,8 @@ public class Messages extends NLS {
 	public static String EditMetaDialog_show_images;
 	public static String EditMetaDialog_show_in_map;
 	public static String EditMetaDialog_show_keyword_tooltip;
+	public static String EditMetaDialog_show_less;
+	public static String EditMetaDialog_show_more;
 	public static String EditMetaDialog_show_x;
 	public static String EditMetaDialog_show_x_in_map;
 	public static String EditMetaDialog_similar_keywords;
@@ -1116,10 +1122,14 @@ public class Messages extends NLS {
 	public static String VoiceNoteDialog_add_voice_file;
 	public static String VoiceNoteDialog_add_voice_note;
 	public static String VoiceNoteDialog_attach_voice_note;
+	public static String VoiceNoteDialog_cancel;
 	public static String VoiceNoteDialog_cannot_record;
 	public static String VoiceNoteDialog_delete_voicenote;
+	public static String VoiceNoteDialog_enter_text;
 	public static String VoiceNoteDialog_internal_error_writing;
 	public static String VoiceNoteDialog_io_error_writing;
+	public static String VoiceNoteDialog_mixed_contents;
+	public static String VoiceNoteDialog_overwrite_single;
 	public static String VoiceNoteDialog_ready;
 	public static String VoiceNoteDialog_record_instant_note;
 	public static String VoiceNoteDialog_record_voicenote;
@@ -1127,8 +1137,11 @@ public class Messages extends NLS {
 	public static String VoiceNoteDialog_recording_n_secs;
 	public static String VoiceNoteDialog_replay_Recording;
 	public static String VoiceNoteDialog_stop_recording_cancel;
+	public static String VoiceNoteDialog_text_note;
 	public static String VoiceNoteDialog_the_voice_file_cannot_be_stored_alongside;
+	public static String VoiceNoteDialog_voice_note_msg;
 	public static String VoiceNoteDialog_voice_notes_exist;
+	public static String VoiceNoteDialog_voice_text_note_msg;
 	public static String WebFontDialog_bold;
 	public static String WebFontDialog_bolder;
 	public static String WebFontDialog_color;

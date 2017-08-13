@@ -83,7 +83,7 @@ public class BingActivator extends ZUiPlugin {
 
 	public String getMapKey() {
 		String key = getPreferenceStore().getString(PreferenceConstants.BINGKEY);
-		if (key != null && key.trim().length() == 0)
+		if (key != null && key.trim().isEmpty())
 			return null;
 		return key;
 	}

@@ -145,7 +145,7 @@ public class ImportOperation extends AbstractImportOperation {
 				final int skipPolicy = importState.importFromDeviceData.getSkipPolicy();
 				if (skipPolicy == Constants.SKIP_RAW_IF_JPEG || skipPolicy == Constants.SKIP_JPEG_IF_RAW
 						|| importState.importFromDeviceData.getExifTransferPrefix() == null
-						|| importState.importFromDeviceData.getExifTransferPrefix().length() > 0) {
+						|| !importState.importFromDeviceData.getExifTransferPrefix().isEmpty()) {
 					Collections.sort(allFiles, new Comparator<URI>() {
 
 						public int compare(URI o1, URI o2) {
@@ -179,7 +179,7 @@ public class ImportOperation extends AbstractImportOperation {
 					Collections.sort(allFiles);
 			}
 			final Meta meta = dbManager.getMeta(true);
-			if (allFiles.size() > 0) {
+			if (!allFiles.isEmpty()) {
 				int work = IMediaSupport.IMPORTWORKSTEPS * allFiles.size();
 				final boolean userImport = !importState.getConfiguration().isSynchronize && !isSilent();
 				if (userImport || meta.getCumulateImports()) {
@@ -191,12 +191,10 @@ public class ImportOperation extends AbstractImportOperation {
 					if (year != cal.get(Calendar.YEAR))
 						meta.setLastYearSequenceNo(0);
 					final String description = createImportDescription(userImport);
-					if (storeSafely(new Runnable() {
-						public void run() {
-							previousImport = dbManager.createLastImportCollection(importState.importDate, !userImport,
-									description);
-							dbManager.store(meta);
-						}
+					if (storeSafely(() -> {
+						previousImport = dbManager.createLastImportCollection(importState.importDate, !userImport,
+								description);
+						dbManager.store(meta);
 					}, 1))
 						fireStructureModified();
 				} else
@@ -510,6 +508,10 @@ public class ImportOperation extends AbstractImportOperation {
 
 	public List<Asset> obtainImportedAssets() {
 		return importState.obtainImportedAssets();
+	}
+
+	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
+		//do nothing
 	}
 
 }

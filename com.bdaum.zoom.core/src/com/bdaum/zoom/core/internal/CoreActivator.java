@@ -370,11 +370,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	}
 
 	public IDbManager openDatabase(final String fileName, final boolean newDb, final Meta meta) {
-		BusyIndicator.showWhile(null, new Runnable() {
-			public void run() {
-				doOpenDatabase(fileName, newDb, meta);
-			}
-		});
+		BusyIndicator.showWhile(null, () -> doOpenDatabase(fileName, newDb, meta));
 		return dbManager;
 	}
 
@@ -393,7 +389,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 				copyMeta(oldMeta, cfile, toBeStored, newMeta);
 			else if (newDb) {
 				String property = System.getProperty("com.bdaum.zoom.userFields"); //$NON-NLS-1$
-				if (property != null && property.length() > 0) {
+				if (property != null && !property.isEmpty()) {
 					int p = property.indexOf(',');
 					if (p >= 0) {
 						newMeta.setUserFieldLabel1(property.substring(0, p).trim());
@@ -482,7 +478,8 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 			return cbirAlgorithms;
 		cbirAlgorithms = new HashSet<String>();
 		for (Algorithm algorithm : dbFactory.getLireService(true).getSupportedSimilarityAlgorithms())
-			cbirAlgorithms.add(algorithm.getName());
+			if (!(algorithm.isAi()) && algorithm.isEssential())
+				cbirAlgorithms.add(algorithm.getName());
 		return cbirAlgorithms;
 	}
 
@@ -1351,7 +1348,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 		}
 		return themes;
 	}
-	
+
 	public Theme getCurrentTheme() {
 		String themeID = dbManager.getMeta(true).getThemeID();
 		Map<String, Theme> themes = getThemes();

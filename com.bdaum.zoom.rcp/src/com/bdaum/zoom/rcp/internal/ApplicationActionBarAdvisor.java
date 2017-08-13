@@ -140,7 +140,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 			label.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseDown(MouseEvent e) {
-					if (getText().length() > 0)
+					if (!getText().isEmpty())
 						handler.run();
 				}
 			});
@@ -409,13 +409,10 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 					Shell shell = window.getShell();
 					if (shell != null && !shell.isDisposed()) {
 						final Display display = shell.getDisplay();
-						display.asyncExec(new Runnable() {
-							@Override
-							public void run() {
-								if (!display.isDisposed()) {
-									undoStatusLineItem.setText(undolabel);
-									redoStatusLineItem.setText(redolabel);
-								}
+						display.asyncExec(() -> {
+							if (!shell.isDisposed()) {
+								undoStatusLineItem.setText(undolabel);
+								redoStatusLineItem.setText(redolabel);
 							}
 						});
 					}

@@ -107,7 +107,7 @@ public class PeerDefinition {
 
 	@Override
 	public String toString() {
-		return nickname != null && nickname.length() > 0 ? nickname + '\t' + address : address;
+		return nickname != null && !nickname.isEmpty() ? nickname + '\t' + address : address;
 	}
 
 	/**

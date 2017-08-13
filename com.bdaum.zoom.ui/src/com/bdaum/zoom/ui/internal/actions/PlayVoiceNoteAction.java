@@ -47,8 +47,12 @@ public class PlayVoiceNoteAction extends AbstractMultiMediaAction {
 	@Override
 	public void run() {
 		List<Asset> localAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
-		if (localAssets.size() == 1)
-			UiActivator.getDefault().playVoicenote(localAssets.get(0));
+		if (localAssets.size() == 1) {
+			Asset asset = localAssets.get(0);
+			String voiceFileURI = asset.getVoiceFileURI();
+			if (voiceFileURI != null && !voiceFileURI.startsWith("?")) //$NON-NLS-1$
+				UiActivator.getDefault().playVoicenote(asset);
+		}
 	}
 
 }

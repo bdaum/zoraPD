@@ -46,12 +46,8 @@ public class AdhocQueryCommand extends AbstractCommandHandler {
 		if (dialog.open() == Window.OK) {
 			final SmartCollectionImpl coll = dialog.getResult();
 			activator.setLastAdhocQuery(coll);
-			BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-				public void run() {
-					UiActivator.getDefault().getNavigationHistory(getActiveWorkbenchWindow())
-							.postSelection(new StructuredSelection(coll));
-				}
-			});
+			BusyIndicator.showWhile(getShell().getDisplay(), () -> UiActivator.getDefault().getNavigationHistory(getActiveWorkbenchWindow())
+					.postSelection(new StructuredSelection(coll)));
 		}
 	}
 

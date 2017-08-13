@@ -95,6 +95,7 @@ import com.bdaum.zoom.core.internal.ai.Prediction;
 import com.bdaum.zoom.core.internal.ai.Prediction.Token;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.image.ImageStore;
+import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.operations.internal.CatResult;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
@@ -215,7 +216,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 			monitor.beginTask(Messages.CategorizeDialog_collecting, assets.size() * 2);
 			int latency = aiService.getLatency(null);
 			for (Asset asset : assets) {
-				Prediction prediction = aiService.predict(asset.getJpegThumbnail(), null);
+				Prediction prediction = aiService.predict(ImageUtilities.asJpeg(asset.getJpegThumbnail()), null);
 				String assetId = asset.getStringId();
 				predictions.put(assetId, prediction);
 				if (monitor.isCanceled())
@@ -773,12 +774,9 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		if (currentAsset != null && assetId == currentAsset.getStringId()) {
 			final Shell shell = getShell();
 			if (!shell.isDisposed())
-				shell.getDisplay().asyncExec(new Runnable() {
-					@Override
-					public void run() {
-						if (!shell.isDisposed())
-							fillValues(false);
-					}
+				shell.getDisplay().asyncExec(() -> {
+					if (!shell.isDisposed())
+						fillValues(false);
 				});
 		}
 	}
@@ -1096,26 +1094,24 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				final Shell shell = getShell();
-				BusyIndicator.showWhile(shell.getDisplay(), new Runnable() {
-					public void run() {
-						IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-						if (activeWorkbenchWindow != null) {
-							IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-							if (activePage != null) {
-								EditMetaDialog mdialog = new EditMetaDialog(shell, activePage,
-										Core.getCore().getDbManager(), false, null);
-								mdialog.setInitialPage(EditMetaDialog.CATEGORIES);
-								if (catBackup != null)
-									mdialog.setCategories(catBackup);
-								if (mdialog.open() == EditMetaDialog.OK) {
-									categories = mdialog.getCategories();
-									catBackup = null;
-									Node oldRoot = root;
-									constructTree(categories);
-									oldRoot.transferTo(root);
-									drawCat();
-									updateButtons();
-								}
+				BusyIndicator.showWhile(shell.getDisplay(), () -> {
+					IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+					if (activeWorkbenchWindow != null) {
+						IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+						if (activePage != null) {
+							EditMetaDialog mdialog = new EditMetaDialog(shell, activePage,
+									Core.getCore().getDbManager(), false, null);
+							mdialog.setInitialPage(EditMetaDialog.CATEGORIES);
+							if (catBackup != null)
+								mdialog.setCategories(catBackup);
+							if (mdialog.open() == EditMetaDialog.OK) {
+								categories = mdialog.getCategories();
+								catBackup = null;
+								Node oldRoot = root;
+								constructTree(categories);
+								oldRoot.transferTo(root);
+								drawCat();
+								updateButtons();
 							}
 						}
 					}
@@ -1297,13 +1293,13 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 			setPrivacy(newPrivacyGroup, safety);
 		}
 		for (String sup : supplementalCats)
-			if (sup != null && sup.length() > 0) {
+			if (sup != null && !sup.isEmpty()) {
 				Node found = root.find(sup);
 				if (found != null)
 					found.setChecked(SUPPLEMENTAL, false);
 			}
 		forcePrimary = true;
-		if (primary != null && primary.length() > 0) {
+		if (primary != null && !primary.isEmpty()) {
 			forcePrimary = false;
 			Node found = root.find(primary);
 			if (found != null)
@@ -1313,7 +1309,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 			String proposal = currentResult.getProposal();
 			String[] supProposals = currentResult.getSupProposals();
 			for (String sup : supProposals)
-				if (sup != null && sup.length() > 0) {
+				if (sup != null && !sup.isEmpty()) {
 					Node found = root.find(sup);
 					if (found != null)
 						found.setChecked(SUPPROPOSED, false);

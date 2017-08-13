@@ -273,6 +273,20 @@ public interface Report_type extends AomValueChangedNotifier,
 	 */
 	public Object getProperties();
 
+	/**
+	 * Set value of property skipOrphans
+	 *
+	 * @param _value - new element value
+	 */
+	public void setSkipOrphans(boolean _value);
+
+	/**
+	 * Get value of property skipOrphans
+	 *
+	 * @return - value of field skipOrphans
+	 */
+	public boolean getSkipOrphans();
+
 	/* ----- Validation ----- */
 
 	/**

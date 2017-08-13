@@ -204,19 +204,23 @@ public class ArchiveCommand extends AbstractCommandHandler {
 											asset.setUri(targetFile.toURI().toString());
 											String volume = volumeManager.getVolumeForFile(targetFile);
 											asset.setVolume(volume);
-											URI voiceUri = volumeManager.findVoiceFile(asset);
-											if (voiceUri != null) {
-												String voiceName = Core.getFileName(uri, false);
-												File voiceTargetFile = BatchUtilities.makeUniqueFile(output, name,
-														Core.getFileName(voiceUri, true).substring(voiceName.length()));
-												BatchUtilities.copyFile(new File(voiceUri), voiceTargetFile, null);
-												if (fileReadOnly)
-													voiceTargetFile.setReadOnly();
-												asset.setVoiceFileURI(voiceTargetFile.toURI().toString());
-												asset.setVoiceVolume(volume);
-											} else {
-												asset.setVoiceFileURI(null);
-												asset.setVoiceVolume(null);
+											if (asset.getVoiceFileURI() == null
+													|| !asset.getVoiceFileURI().startsWith("?")) { //$NON-NLS-1$
+												URI voiceUri = volumeManager.findVoiceFile(asset);
+												if (voiceUri != null) {
+													String voiceName = Core.getFileName(uri, false);
+													File voiceTargetFile = BatchUtilities.makeUniqueFile(output, name,
+															Core.getFileName(voiceUri, true)
+																	.substring(voiceName.length()));
+													BatchUtilities.copyFile(new File(voiceUri), voiceTargetFile, null);
+													if (fileReadOnly)
+														voiceTargetFile.setReadOnly();
+													asset.setVoiceFileURI(voiceTargetFile.toURI().toString());
+													asset.setVoiceVolume(volume);
+												} else {
+													asset.setVoiceFileURI(null);
+													asset.setVoiceVolume(null);
+												}
 											}
 											for (IRecipeDetector recipeDetector : recipeDetectors)
 												recipeDetector.archiveRecipes(output, uri.toString(), asset.getUri(),

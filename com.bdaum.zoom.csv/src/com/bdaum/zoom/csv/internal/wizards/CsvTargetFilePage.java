@@ -98,7 +98,7 @@ public class CsvTargetFilePage extends ColoredWizardPage {
 		if (assets.isEmpty()) {
 			setErrorMessage(Messages.CsvTargetFilePage_no_image_selected);
 			valid = false;
-		} else if (targetFile.length() == 0) {
+		} else if (targetFile.isEmpty()) {
 			setErrorMessage(Messages.CsvTargetFilePage_file_name_empty);
 			valid = false;
 		} else if (targetFile.indexOf('*') >= 0 || targetFile.indexOf('?') >= 0) {

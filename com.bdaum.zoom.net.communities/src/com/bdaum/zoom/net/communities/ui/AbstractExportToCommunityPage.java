@@ -88,25 +88,23 @@ public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
 					final CommunityApi api = ((AbstractCommunityExportWizard) getWizard())
 							.getApi();
 					final CommunityAccount account = (CommunityAccount) el;
-					BusyIndicator.showWhile(e.display, new Runnable() {
-						public void run() {
-							EditCommunityAccountDialog dialog = new EditCommunityAccountDialog(
-									editButton.getShell(), account, api);
-							if (dialog.open() == Window.OK) {
-								CommunityAccount result = dialog.getResult();
-								if (account.isNullAccount()) {
-									communityAccounts
-											.add(0, new CommunityAccount(
-													accountConfig));
-									accountViewer.setInput(communityAccounts);
-									accountViewer
-											.setSelection(new StructuredSelection(
-													result));
-								} else
-									accountViewer.update(result, null);
-								CommunityAccount.saveAllAccounts(id,
-										communityAccounts);
-							}
+					BusyIndicator.showWhile(e.display, () -> {
+						EditCommunityAccountDialog dialog = new EditCommunityAccountDialog(
+								editButton.getShell(), account, api);
+						if (dialog.open() == Window.OK) {
+							CommunityAccount result = dialog.getResult();
+							if (account.isNullAccount()) {
+								communityAccounts
+										.add(0, new CommunityAccount(
+												accountConfig));
+								accountViewer.setInput(communityAccounts);
+								accountViewer
+										.setSelection(new StructuredSelection(
+												result));
+							} else
+								accountViewer.update(result, null);
+							CommunityAccount.saveAllAccounts(id,
+									communityAccounts);
 						}
 					});
 					validatePage();

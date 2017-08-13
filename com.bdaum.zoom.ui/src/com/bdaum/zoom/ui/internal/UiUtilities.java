@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ViewerFilter;
@@ -51,6 +52,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.aoModeling.runtime.AomList;
@@ -89,6 +91,7 @@ import com.bdaum.zoom.ui.internal.Icons.Icon;
 import com.bdaum.zoom.ui.internal.codes.CodeParser;
 import com.bdaum.zoom.ui.internal.codes.Topic;
 import com.bdaum.zoom.ui.internal.views.ImageRegion;
+import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
 public class UiUtilities {
@@ -104,9 +107,9 @@ public class UiUtilities {
 
 	public static String createSlideTitle(Asset asset) {
 		String tit = asset.getTitle();
-		if (tit == null || tit.trim().length() == 0)
+		if (tit == null || tit.trim().isEmpty())
 			tit = asset.getHeadline();
-		if (tit == null || tit.trim().length() == 0) {
+		if (tit == null || tit.trim().isEmpty()) {
 			String uri = asset.getUri();
 			int p = uri.lastIndexOf('/');
 			if (p >= 0)
@@ -271,7 +274,7 @@ public class UiUtilities {
 			for (Asset asset : errands)
 				if (asset.getFileState() != IVolumeManager.PEER) {
 					String volume = asset.getVolume();
-					if (volume != null && volume.length() > 0)
+					if (volume != null && !volume.isEmpty())
 						volumes.add(volume);
 				}
 			String[] vols = volumes.toArray(new String[volumes.size()]);
@@ -286,7 +289,7 @@ public class UiUtilities {
 	public static String[] updateComboHistory(Combo combo) {
 		List<String> newItems = new LinkedList<String>(Arrays.asList(combo.getItems()));
 		String s = combo.getText();
-		if (s.length() > 0) {
+		if (!s.isEmpty()) {
 			newItems.remove(s);
 			newItems.add(0, s);
 			while (newItems.size() > 8)
@@ -376,7 +379,7 @@ public class UiUtilities {
 		}
 		if (scoreFormatter != null) {
 			String remark = scoreFormatter.format(asset.getScore());
-			if (remark.length() > 0)
+			if (!remark.isEmpty())
 				sb.append(" (").append(remark).append(')'); //$NON-NLS-1$
 		}
 		return sb.toString();
@@ -525,7 +528,7 @@ public class UiUtilities {
 	public static Object computeCookedValue(FieldDescriptor fd, String text) {
 		IFormatter formatter = fd.getDetailQueryField().getFormatter();
 		String trim = text == null ? "" : text.trim(); //$NON-NLS-1$
-		boolean undefined = trim.length() == 0 || trim.equals("-"); //$NON-NLS-1$
+		boolean undefined = trim.isEmpty() || trim.equals("-"); //$NON-NLS-1$
 		if (formatter != null)
 			try {
 				return formatter.fromString(trim);
@@ -573,7 +576,7 @@ public class UiUtilities {
 
 	public static String verifyText(FieldDescriptor fieldDescriptor, String text, int rel) {
 		String errorMessage = null;
-		if (text.length() > 0) {
+		if (!text.isEmpty()) {
 			IFormatter formatter = fieldDescriptor.getDetailQueryField().getFormatter();
 			if (formatter != null)
 				try {
@@ -689,77 +692,77 @@ public class UiUtilities {
 				result = new HashSet<String>(10);
 				for (LocationImpl loc : db.obtainObjects(LocationImpl.class)) {
 					String worldRegion = loc.getWorldRegion();
-					if (worldRegion != null && worldRegion.length() > 0)
+					if (worldRegion != null && !worldRegion.isEmpty())
 						result.add(worldRegion);
 				}
 			} else if (qfield == QueryField.LOCATION_WORLDREGIONCODE) {
 				result = new HashSet<String>(10);
 				for (LocationImpl loc : db.obtainObjects(LocationImpl.class)) {
 					String worldRegionCode = loc.getWorldRegionCode();
-					if (worldRegionCode != null && worldRegionCode.length() > 0)
+					if (worldRegionCode != null && !worldRegionCode.isEmpty())
 						result.add(worldRegionCode);
 				}
 			} else if (qfield == QueryField.LOCATION_COUNTRYNAME) {
 				result = new HashSet<String>(100);
 				for (LocationImpl loc : db.obtainObjects(LocationImpl.class)) {
 					String country = loc.getCountryName();
-					if (country != null && country.length() > 0)
+					if (country != null && !country.isEmpty())
 						result.add(country);
 				}
 			} else if (qfield == QueryField.LOCATION_COUNTRYCODE) {
 				result = new HashSet<String>(100);
 				for (LocationImpl loc : db.obtainObjects(LocationImpl.class)) {
 					String code = loc.getCountryISOCode();
-					if (code != null && code.length() > 0)
+					if (code != null && !code.isEmpty())
 						result.add(code);
 				}
 			} else if (qfield == QueryField.LOCATION_STATE) {
 				result = new HashSet<String>(100);
 				for (LocationImpl loc : db.obtainObjects(LocationImpl.class)) {
 					String state = loc.getProvinceOrState();
-					if (state != null && state.length() > 0)
+					if (state != null && !state.isEmpty())
 						result.add(state);
 				}
 			} else if (qfield == QueryField.LOCATION_CITY) {
 				result = new HashSet<String>(200);
 				for (LocationImpl loc : db.obtainObjects(LocationImpl.class)) {
 					String city = loc.getCity();
-					if (city != null && city.length() > 0)
+					if (city != null && !city.isEmpty())
 						result.add(city);
 				}
 			} else if (qfield == QueryField.LOCATION_SUBLOCATION) {
 				result = new HashSet<String>(300);
 				for (LocationImpl loc : db.obtainObjects(LocationImpl.class)) {
 					String sub = loc.getSublocation();
-					if (sub != null && sub.length() > 0)
+					if (sub != null && !sub.isEmpty())
 						result.add(sub);
 				}
 			} else if (qfield == QueryField.CONTACT_COUNTRY) {
 				result = new HashSet<String>(100);
 				for (ContactImpl contact : db.obtainObjects(ContactImpl.class)) {
 					String country = contact.getCountry();
-					if (country != null && country.length() > 0)
+					if (country != null && !country.isEmpty())
 						result.add(country);
 				}
 			} else if (qfield == QueryField.CONTACT_STATE) {
 				result = new HashSet<String>(50);
 				for (ContactImpl contact : db.obtainObjects(ContactImpl.class)) {
 					String state = contact.getState();
-					if (state != null && state.length() > 0)
+					if (state != null && !state.isEmpty())
 						result.add(state);
 				}
 			} else if (qfield == QueryField.CONTACT_CITY) {
 				result = new HashSet<String>(50);
 				for (ContactImpl contact : db.obtainObjects(ContactImpl.class)) {
 					String city = contact.getCity();
-					if (city != null && city.length() > 0)
+					if (city != null && !city.isEmpty())
 						result.add(city);
 				}
 			} else if (qfield == QueryField.CONTACT_POSTALCODE) {
 				result = new HashSet<String>(50);
 				for (ContactImpl contact : db.obtainObjects(ContactImpl.class)) {
 					String zip = contact.getPostalCode();
-					if (zip != null && zip.length() > 0)
+					if (zip != null && !zip.isEmpty())
 						result.add(zip);
 				}
 			} else if (qfield == QueryField.CONTACT_EMAIL) {
@@ -768,7 +771,7 @@ public class UiUtilities {
 					String[] emails = contact.getEmail();
 					if (emails != null)
 						for (String email : emails)
-							if (email != null && email.length() > 0)
+							if (email != null && !email.isEmpty())
 								result.add(email);
 				}
 			} else if (qfield == QueryField.CONTACT_WEBURL) {
@@ -777,7 +780,7 @@ public class UiUtilities {
 					String[] urls = contact.getWebUrl();
 					if (urls != null)
 						for (String url : urls)
-							if (url != null && url.length() > 0)
+							if (url != null && !url.isEmpty())
 								result.add(url);
 				}
 			} else if (qfield == QueryField.CONTACT_ADDRESS) {
@@ -786,35 +789,35 @@ public class UiUtilities {
 					String[] lines = contact.getAddress();
 					if (lines != null)
 						for (String line : lines)
-							if (line != null && line.length() > 0)
+							if (line != null && !line.isEmpty())
 								result.add(line);
 				}
 			} else if (qfield == QueryField.ARTWORKOROBJECT_COPYRIGHT) {
 				result = new HashSet<String>(200);
 				for (ArtworkOrObjectImpl art : db.obtainObjects(ArtworkOrObjectImpl.class)) {
 					String copy = art.getCopyrightNotice();
-					if (copy != null && copy.length() > 0)
+					if (copy != null && !copy.isEmpty())
 						result.add(copy);
 				}
 			} else if (qfield == QueryField.ARTWORKOROBJECT_INVENTORYNUMBER) {
 				result = new HashSet<String>(200);
 				for (ArtworkOrObjectImpl art : db.obtainObjects(ArtworkOrObjectImpl.class)) {
 					String no = art.getSourceInventoryNumber();
-					if (no != null && no.length() > 0)
+					if (no != null && !no.isEmpty())
 						result.add(no);
 				}
 			} else if (qfield == QueryField.ARTWORKOROBJECT_TITLE) {
 				result = new HashSet<String>(200);
 				for (ArtworkOrObjectImpl art : db.obtainObjects(ArtworkOrObjectImpl.class)) {
 					String title = art.getTitle();
-					if (title != null && title.length() > 0)
+					if (title != null && !title.isEmpty())
 						result.add(title);
 				}
 			} else if (qfield == QueryField.ARTWORKOROBJECT_SOURCE) {
 				result = new HashSet<String>(200);
 				for (ArtworkOrObjectImpl art : db.obtainObjects(ArtworkOrObjectImpl.class)) {
 					String copy = art.getSource();
-					if (copy != null && copy.length() > 0)
+					if (copy != null && !copy.isEmpty())
 						result.add(copy);
 				}
 			} else if (qfield == QueryField.ARTWORKOROBJECT_CREATOR) {
@@ -823,7 +826,7 @@ public class UiUtilities {
 					String[] creators = art.getCreator();
 					if (creators != null)
 						for (String creator : creators)
-							if (creator != null && creator.length() > 0)
+							if (creator != null && !creator.isEmpty())
 								result.add(creator);
 				}
 			}
@@ -1043,7 +1046,7 @@ public class UiUtilities {
 						String type = region.getType();
 						String name = null;
 						int color = SWT.COLOR_RED;
-						if (type == null || type.length() == 0 || Region.type_face.equals(type)
+						if (type == null || type.isEmpty() || Region.type_face.equals(type)
 								|| Region.type_pet.equals(type)) {
 							String albumId = region.getAlbum();
 							SmartCollectionImpl album = albumId == null ? null
@@ -1081,7 +1084,7 @@ public class UiUtilities {
 		List<RegionImpl> regions = dbManager.obtainObjects(RegionImpl.class, "album", sm.getStringId(), //$NON-NLS-1$
 				QueryField.EQUALS);
 		int noRegions = regions.size();
-		int trials = Math.min(5,  noRegions);
+		int trials = Math.min(5, noRegions);
 		while (noRegions > 0) {
 			int j = (int) (Math.random() * noRegions);
 			RegionImpl region = regions.get(j);
@@ -1111,8 +1114,7 @@ public class UiUtilities {
 				image = Core.getCore().getImageCache().getImage(asset);
 				rotation = asset.getRotation();
 				Rectangle bounds = image.getBounds();
-				frame = UiUtilities.computeFrame(maxRegion.getStringId(), 0, 0, bounds.width, bounds.height,
-						rotation);
+				frame = UiUtilities.computeFrame(maxRegion.getStringId(), 0, 0, bounds.width, bounds.height, rotation);
 			}
 		}
 		if (image == null) {
@@ -1146,6 +1148,30 @@ public class UiUtilities {
 		gc.drawImage(image, srcX, srcY, srcWidth, srcHeight, destX + margins, destY + margins, destWidth, destHeight);
 		gc.dispose();
 		return thumb;
+	}
+
+	public static Rectangle getSecondaryMonitorBounds(Shell parentShell) {
+		Monitor primaryMonitor = parentShell.getDisplay().getPrimaryMonitor();
+		Rectangle mbounds = primaryMonitor.getBounds();
+		Monitor[] monitors = parentShell.getDisplay().getMonitors();
+		if (monitors.length > 1 && Platform.getPreferencesService().getBoolean(UiActivator.PLUGIN_ID,
+				PreferenceConstants.SECONDARYMONITOR, false, null)) {
+			Rectangle r = parentShell.getBounds();
+			if (mbounds.contains(r.x + r.width/2,  r.y + r.height/2)) {
+				int max = 0;
+				for (Monitor monitor : monitors) {
+					if (!monitor.equals(primaryMonitor)) {
+						r = monitor.getBounds();
+						int d = r.width * r.width + r.height * r.height;
+						if (d > max) {
+							max = d;
+							mbounds = r;
+						}
+					}
+				}
+			}
+		}
+		return mbounds;
 	}
 
 }

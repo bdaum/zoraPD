@@ -546,12 +546,10 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			expansions = ex != null ? ex.toArray() : new Object[0];
 			Shell shell = getSite().getShell();
 			if (!shell.isDisposed())
-				shell.getDisplay().asyncExec(new Runnable() {
-					public void run() {
-						if (!viewer.getControl().isDisposed()) {
-							refresh();
-							fireStartListeners(false);
-						}
+				shell.getDisplay().asyncExec(() -> {
+					if (!shell.isDisposed()) {
+						refresh();
+						fireStartListeners(false);
 					}
 				});
 			return Status.OK_STATUS;
@@ -711,12 +709,12 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 	@Override
 	public void createPartControl(final Composite parent) {
 		undoContext = new UndoContext() {
-
 			@Override
 			public String getLabel() {
 				return Messages.getString("CatalogView.catalog_undo_context"); //$NON-NLS-1$
 			}
 		};
+		
 		viewer = new TreeViewer(parent, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL);
 		drillDownAdapter = new DrillDownAdapter((TreeViewer) viewer);
 		viewer.setContentProvider(new CatalogContentProvider());
@@ -763,11 +761,9 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			public void structureModified() {
 				Shell shell = getSite().getShell();
 				if (shell != null && !shell.isDisposed())
-					shell.getDisplay().asyncExec(new Runnable() {
-						public void run() {
-							if (!viewer.getControl().isDisposed())
-								refresh();
-						}
+					shell.getDisplay().asyncExec(() -> {
+						if (!shell.isDisposed())
+							refresh();
 					});
 			}
 
@@ -786,16 +782,14 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			private void forceSelectionUpdate() {
 				Shell shell = getSite().getShell();
 				if (shell != null && !shell.isDisposed())
-					shell.getDisplay().asyncExec(new Runnable() {
-						public void run() {
-							if (!viewer.getControl().isDisposed()) {
-								ISelection selection = viewer.getSelection();
-								viewer.setSelection(StructuredSelection.EMPTY);
-								settingSelection = true;
-								viewer.setSelection(selection, true);
-								settingSelection = false;
-								fireSelection(new SelectionChangedEvent(CatalogView.this, selection));
-							}
+					shell.getDisplay().asyncExec(() -> {
+						if (!shell.isDisposed()) {
+							ISelection selection = viewer.getSelection();
+							viewer.setSelection(StructuredSelection.EMPTY);
+							settingSelection = true;
+							viewer.setSelection(selection, true);
+							settingSelection = false;
+							fireSelection(new SelectionChangedEvent(CatalogView.this, selection));
 						}
 					});
 			}
@@ -809,28 +803,19 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				}
 				Shell shell = getSite().getShell();
 				if (shell != null && !shell.isDisposed())
-					shell.getDisplay().asyncExec(new Runnable() {
-						public void run() {
-							if (!viewer.getControl().isDisposed())
-								setSelection(selection, forceUpdate);
-						}
+					shell.getDisplay().asyncExec(() -> {
+						if (!shell.isDisposed())
+							setSelection(selection, forceUpdate);
 					});
 			}
 
 			@Override
 			public void catalogOpened(boolean newDb) {
 				Display display = getSite().getShell().getDisplay();
-				display.syncExec(new Runnable() {
-					@Override
-					public void run() {
-						BusyIndicator.showWhile(display, new Runnable() {
-							public void run() {
-								structureModified();
-								restoreLastSelection();
-							}
-						});
-					}
-				});
+				display.syncExec(() -> BusyIndicator.showWhile(display, () -> {
+					structureModified();
+					restoreLastSelection();
+				}));
 			}
 
 			@Override
@@ -1787,11 +1772,9 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		final IDbManager dbManager = Core.getCore().getDbManager();
 		group.addRootCollection(result.getStringId());
 		result.setGroup_rootCollection_parent(group.getStringId());
-		dbManager.safeTransaction(new Runnable() {
-			public void run() {
-				dbManager.store(result);
-				dbManager.store(group);
-			}
+		dbManager.safeTransaction(() -> {
+			dbManager.store(result);
+			dbManager.store(group);
 		});
 		((TreeViewer) viewer).add(group, result);
 		viewer.setSelection(new StructuredSelection(result), true);

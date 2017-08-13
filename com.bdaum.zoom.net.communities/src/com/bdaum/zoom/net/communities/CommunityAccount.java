@@ -246,7 +246,7 @@ public class CommunityAccount {
 				.getNode(CommunitiesActivator.PLUGIN_ID);
 		StringBuilder sb = new StringBuilder(4096);
 		for (CommunityAccount acc : communityAccounts)
-			if (acc.getName() != null && acc.getName().length() > 0)
+			if (acc.getName() != null && !acc.getName().isEmpty())
 				sb.append(acc.toString()).append(SEP);
 		BatchUtilities.putPreferences(node, PreferenceConstants.COMMUNITYACCOUNTS + id, sb.toString());
 	}
@@ -340,7 +340,7 @@ public class CommunityAccount {
 	}
 
 	private static void appendString(StringBuilder sb, String key, String value) {
-		if (value != null && value.length() > 0)
+		if (value != null && !value.isEmpty())
 			sb.append(FIELDSEP).append(key).append('=').append(value);
 	}
 
@@ -473,7 +473,7 @@ public class CommunityAccount {
 	}
 
 	public boolean isNullAccount() {
-		return name == null || name.trim().length() == 0;
+		return name == null || name.trim().isEmpty();
 	}
 
 	public boolean isAlbumsAsSets() {
@@ -573,7 +573,7 @@ public class CommunityAccount {
 	 */
 	public String testVisit() {
 		String wh = getVisit();
-		if (wh != null && wh.length() > 0) {
+		if (wh != null && !wh.isEmpty()) {
 			wh = Core.furnishWebUrl(wh);
 			try {
 				IWebBrowser browser = PlatformUI.getWorkbench()

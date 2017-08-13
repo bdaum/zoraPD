@@ -453,11 +453,9 @@ public class PreviewView extends ImageView implements PaintListener {
 	}
 
 	private void asyncRefresh() {
-		getSite().getShell().getDisplay().asyncExec(new Runnable() {
-			public void run() {
-				if (!canvas.isDisposed())
-					refresh();
-			}
+		getSite().getShell().getDisplay().asyncExec(() -> {
+			if (!canvas.isDisposed())
+				refresh();
 		});
 	}
 

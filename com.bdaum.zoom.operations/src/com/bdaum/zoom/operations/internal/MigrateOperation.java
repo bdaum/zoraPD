@@ -175,13 +175,13 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 					String oldVolume = watchedFolder.getVolume();
 					String oldTarget = watchedFolder.getTargetDir();
 					String source = migrateUri(oldUri, oldVolume);
-					if (source.length() == 0) {
+					if (source.isEmpty()) {
 						failedWatchedFolders.add(volumeManager.findFile(oldUri, oldVolume));
 						continue;
 					}
 					if (watchedFolder.getTransfer()) {
 						String target = migrate(oldTarget);
-						if (target.length() == 0) {
+						if (target.isEmpty()) {
 							failedWatchedFolders.add(volumeManager.findFile(oldUri, oldVolume));
 							continue;
 						}
@@ -190,7 +190,7 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 					watchedFolder.setUri(toUri(source));
 					watchedFolder.setVolume(extractVolume(source));
 					String oldFilters = watchedFolder.getFilters();
-					if (oldFilters != null && oldFilters.length() > 0)
+					if (oldFilters != null && !oldFilters.isEmpty())
 						watchedFoldersWithFilters.add(volumeManager.findFile(oldUri, oldVolume));
 					newDbManager.storeAndCommit(watchedFolder);
 					newMeta.addWatchedFolder(id);
@@ -248,7 +248,7 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 				String oldVolume = asset.getVolume();
 				boolean remote = volumeManager.isRemote(asset);
 				String migratedPath = migrateUri(oldUri, oldVolume);
-				if (remote || migratedPath.length() > 0) {
+				if (remote || !migratedPath.isEmpty()) {
 					toBeStored.clear();
 					toBeStored.add(asset);
 					String assetId = asset.getStringId();
@@ -261,9 +261,11 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 						asset.setUri(migratedUri);
 						migratedVolume = extractVolume(migratedPath);
 						asset.setVolume(migratedVolume);
-						String migratedVoicePath = migrateUri(oldVoiceFileURI, oldVoiceVolume);
-						asset.setVoiceFileURI(migratedVoicePath.length() == 0 ? null : toUri(migratedVoicePath));
-						asset.setVoiceVolume(extractVolume(migratedVoicePath));
+						if (oldVoiceFileURI == null || !oldVoiceFileURI.startsWith("?")) { //$NON-NLS-1$
+							String migratedVoicePath = migrateUri(oldVoiceFileURI, oldVoiceVolume);
+							asset.setVoiceFileURI(migratedVoicePath.isEmpty() ? null : toUri(migratedVoicePath));
+							asset.setVoiceVolume(extractVolume(migratedVoicePath));
+						}
 					}
 					visited.add(assetId);
 					List<Ghost_typeImpl> ghosts = dbManager.obtainObjects(Ghost_typeImpl.class,
@@ -475,7 +477,7 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 							path = uri.substring(VolumeManager.FILE.length()).replace('/', File.separatorChar);
 						}
 						String migrated = migrate(path);
-						if (migrated.length() == 0) {
+						if (migrated.isEmpty()) {
 							if (coll.getSmartCollection_subSelection_parent() == null) {
 								GroupImpl group = newDbManager.obtainById(GroupImpl.class,
 										coll.getGroup_rootCollection_parent());
@@ -527,7 +529,7 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 		if (migratedPath == null)
 			return null;
 		if (winTarget) {
-			if (currentVolume != null && currentVolume.length() > 0)
+			if (currentVolume != null && !currentVolume.isEmpty())
 				return currentVolume;
 		} else if (migratedPath.startsWith("/")) //$NON-NLS-1$
 			return ((VolumeManager) volumeManager).extractLinuxPath(migratedPath);
@@ -561,7 +563,7 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 			if (matcher.matches()) {
 				currentVolume = rule.getTargetVolume();
 				String targetPattern = rule.getTargetPattern();
-				if (targetPattern == null || targetPattern.length() == 0)
+				if (targetPattern == null || targetPattern.isEmpty())
 					break;
 				StringBuffer sb = new StringBuffer();
 				matcher.appendReplacement(sb, targetPattern);
@@ -591,6 +593,10 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 	 */
 	public int getSeverity() {
 		return severity;
+	}
+
+	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
+		//do nothing
 	}
 
 }

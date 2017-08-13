@@ -52,10 +52,11 @@ public class Icons {
 	}
 
 
-	public static final Icon closedlock = new Icon( "/icons/closedlock.png"); //$NON-NLS-1$
-	public static final Icon openlock = new Icon("/icons/openlock.png"); //$NON-NLS-1$
 	public static final Icon external = new Icon("/icons/external.png"); //$NON-NLS-1$
+	public static final Icon refresh = new Icon("/icons/refresh.png"); //$NON-NLS-1$
 	public static final Icon pin = new Icon("/icons/pin.png"); //$NON-NLS-1$
 	public static final Icon forward = new Icon("/icons/forward_nav.gif"); //$NON-NLS-1$
 	public static final Icon backward = new Icon("/icons/backward_nav.gif"); //$NON-NLS-1$
+	public static final Icon camPin = new Icon("/icons/campin.png"); //$NON-NLS-1$
+	public static final Icon dirPin = new Icon("/icons/dirpin.png"); //$NON-NLS-1$
 }

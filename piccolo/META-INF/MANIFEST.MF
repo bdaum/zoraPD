@@ -2,9 +2,9 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Piccolo Plug-in
 Bundle-SymbolicName: piccolo
-Bundle-Version: 3.0.0
+Bundle-Version: 3.1.0
 Bundle-Vendor: bdaum industrial communications
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.eclipse.swt;bundle-version="3.4.1"
 Export-Package: edu.umd.cs.piccolo,
  edu.umd.cs.piccolo.activities,

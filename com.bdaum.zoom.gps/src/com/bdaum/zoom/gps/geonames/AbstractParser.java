@@ -51,7 +51,7 @@ public abstract class AbstractParser {
 
 	protected double getDouble(String s) throws ParseException {
 		s = s.trim();
-		if (s.length() == 0)
+		if (s.isEmpty())
 			return Double.NaN;
 		try {
 			return Double.parseDouble(s);

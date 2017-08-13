@@ -45,7 +45,7 @@ public class GetUploadStatusHandler extends DefaultLocrHandler {
 	public void characters(char[] chars, int start, int end)
 			throws SAXException {
 		String cdata = new String(chars, start, end).trim();
-		if (cdata.trim().length() > 0) {
+		if (!cdata.trim().isEmpty()) {
 			if ("name".equals(lastTag)) { //$NON-NLS-1$
 				parent.setUsername(cdata);
 			} else if ("pro_account_expiration_date".equals(lastTag)) { //$NON-NLS-1$

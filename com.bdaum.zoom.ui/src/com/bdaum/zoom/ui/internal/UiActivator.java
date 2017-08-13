@@ -521,7 +521,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 			return display.getSystemCursor(SWT.CURSOR_ARROW);
 		Cursor cursor = cursorShapes.get(key);
 		if (cursor == null) {
-			ImageData cursorData = UiActivator.getImageDescriptor("icons/cursors/" + key + ".BMP").getImageData(); //$NON-NLS-1$//$NON-NLS-2$
+			ImageData cursorData = UiActivator.getImageDescriptor("icons/cursors/" + key + ".BMP").getImageData(100); //$NON-NLS-1$//$NON-NLS-2$
 			cursorData.transparentPixel = 1;
 			cursor = new Cursor(display, cursorData, cursorData.width / 2, cursorData.height / 2);
 			cursorShapes.put(key, cursor);
@@ -540,11 +540,9 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	public Clipboard getClipboard(Display display) {
 		if (clipboard == null) {
 			clipboard = new Clipboard(display);
-			display.disposeExec(new Runnable() {
-				public void run() {
-					if (clipboard != null)
-						clipboard.dispose();
-				}
+			display.disposeExec(() -> {
+				if (clipboard != null)
+					clipboard.dispose();
 			});
 		}
 		return clipboard;
@@ -654,11 +652,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 								Messages.UiActivator_return_to_workbench, Messages.UiActivator_cancel_all_operations },
 						0, 1, 200L);
 				if (!display.isDisposed())
-					display.syncExec(new Runnable() {
-						public void run() {
-							dialog.open();
-						}
-					});
+					display.syncExec(() -> dialog.open());
 
 				int returnCode = dialog.getReturnCode();
 				if (hideShell && returnCode == 0 && activeWorkbenchWindow != null)
@@ -678,7 +672,6 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
 	public void performClosingTasks(final int mode) {
 		Runnable runnable = new Runnable() {
-
 			public void run() {
 				for (Object listener : lifeCycleListeners.getListeners())
 					((LifeCycleListener) listener).sessionClosed(mode);
@@ -732,7 +725,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 								dbManager.checkDbSanity(true);
 							else {
 								boolean hasBackups = meta == null
-										|| meta.getBackupLocation() != null && meta.getBackupLocation().length() > 0;
+										|| meta.getBackupLocation() != null && !meta.getBackupLocation().isEmpty();
 								long interval = activator.getBackupInterval() * ONEDAY;
 								if (!hasBackups) {
 									if (mode != CatalogListener.TASKBAR)
@@ -851,11 +844,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 				if (peerService != null) {
 					final AssetOrigin assetOrigin = peerService.getAssetOrigin(asset.getStringId());
 					if (assetOrigin != null) {
-						BusyIndicator.showWhile(null, new Runnable() {
-							public void run() {
-								playRemoteVoiceNote(asset, peerService, assetOrigin);
-							}
-						});
+						BusyIndicator.showWhile(null, () -> playRemoteVoiceNote(asset, peerService, assetOrigin));
 						return;
 					}
 				}
@@ -953,18 +942,15 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	}
 
 	public void sendMail(final List<String> to) {
-		BusyIndicator.showWhile(null, new Runnable() {
-
-			public void run() {
-				BundleContext context = getBundle().getBundleContext();
-				ServiceReference<?> ref = context.getServiceReference(IEmailService.class.getName());
-				if (ref != null) {
-					IEmailService service = (IEmailService) context.getService(ref);
-					IStatus status = service.sendMail(to, null, null, null, null, null);
-					context.ungetService(ref);
-					if (!status.isOK())
-						getLog().log(status);
-				}
+		BusyIndicator.showWhile(null, () -> {
+			BundleContext context = getBundle().getBundleContext();
+			ServiceReference<?> ref = context.getServiceReference(IEmailService.class.getName());
+			if (ref != null) {
+				IEmailService service = (IEmailService) context.getService(ref);
+				IStatus status = service.sendMail(to, null, null, null, null, null);
+				context.ungetService(ref);
+				if (!status.isOK())
+					getLog().log(status);
 			}
 		});
 	}
@@ -1268,18 +1254,15 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	public void restart() {
 		final Display display = PlatformUI.getWorkbench().getDisplay();
 		if (!display.isDisposed()) {
-			display.timerExec(300, new Runnable() {
-				public void run() {
-					if (!display.isDisposed()) {
-						AcousticMessageDialog dialog = new AcousticMessageDialog(null,
-								NLS.bind(Messages.UiActivator_restart_required, Constants.APPLICATION_NAME), null,
-								Messages.UiActivator_restart_msg, MessageDialog.QUESTION,
-								new String[] { Messages.UiActivator_restart_now, Messages.UiActivator_restart_later },
-								0);
-						if (dialog.open() == 0)
-							PlatformUI.getWorkbench().restart();
-					}
-
+			display.timerExec(300, () -> {
+				if (!display.isDisposed()) {
+					AcousticMessageDialog dialog = new AcousticMessageDialog(null,
+							NLS.bind(Messages.UiActivator_restart_required, Constants.APPLICATION_NAME), null,
+							Messages.UiActivator_restart_msg, MessageDialog.QUESTION,
+							new String[] { Messages.UiActivator_restart_now, Messages.UiActivator_restart_later },
+							0);
+					if (dialog.open() == 0)
+						PlatformUI.getWorkbench().restart();
 				}
 			});
 		}
@@ -1386,6 +1369,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		Meta meta = Core.getCore().getDbManager().getMeta(true);
 		if (!meta.getPauseFolderWatch() && meta.getWatchedFolder() != null && !meta.getWatchedFolder().isEmpty())
 			new FolderWatchJob(null).schedule(traymode ? 120000L : 6100L);
+		Job.getJobManager().cancel(Constants.SYNCPICASA);
 		new SyncPicasaJob(this).schedule(traymode ? 180000L : 30000L);
 	}
 
@@ -1450,5 +1434,6 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	public boolean hasStarted() {
 		return started;
 	}
+
 
 }

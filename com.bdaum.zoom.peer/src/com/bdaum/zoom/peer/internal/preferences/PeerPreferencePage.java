@@ -156,7 +156,7 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 	private void createHeaderGroup(Composite composite) {
 		String hostName = PeerActivator.getDefault().getHostName();
 		String host = PeerActivator.getDefault().getHost();
-		String location = hostName.length() == 0 ? host : NLS.bind("{0} ({1})", //$NON-NLS-1$
+		String location = hostName.isEmpty() ? host : NLS.bind("{0} ({1})", //$NON-NLS-1$
 				hostName, host);
 		CGroup locationGroup = new CGroup(composite, SWT.NONE);
 		locationGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
@@ -826,11 +826,7 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 	}
 
 	public void statusChanged(final PeerDefinition peer, boolean online) {
-		getControl().getDisplay().syncExec(new Runnable() {
-			public void run() {
-				peerViewer.update(peer, null);
-			}
-		});
+		getControl().getDisplay().syncExec(() -> peerViewer.update(peer, null));
 	}
 
 }

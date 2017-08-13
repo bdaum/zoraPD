@@ -200,7 +200,7 @@ public class SmugmugRestApi extends ImageUploadApi {
 			// we're in sync
 			GetPhotosetList getPhotoSets = new GetPhotosetList(session);
 			executeMethod(getPhotoSets);
-			while (unfinishedActions.size() > 0
+			while (!unfinishedActions.isEmpty()
 					&& showUnfinishedUploadErrorMessage()) {
 				retryUnfinishedActions();
 			}
@@ -214,15 +214,11 @@ public class SmugmugRestApi extends ImageUploadApi {
 		if (singlePhotosets && !photoSets.isEmpty()) {
 			if (photoSets.size() > 1) {
 				final Shell shell = (Shell) job.getAdapter(Shell.class);
-				shell.getDisplay().syncExec(new Runnable() {
-
-
-					public void run() {
-						AlbumPolicyDialog dialog = new AlbumPolicyDialog(shell,
-								session);
-						if (dialog.open() != Window.OK) {
-							job.cancel();
-						}
+				shell.getDisplay().syncExec(() -> {
+					AlbumPolicyDialog dialog = new AlbumPolicyDialog(shell,
+							session);
+					if (dialog.open() != Window.OK) {
+						job.cancel();
 					}
 				});
 			} else {

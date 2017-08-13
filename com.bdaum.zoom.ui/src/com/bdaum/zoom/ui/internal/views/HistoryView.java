@@ -23,7 +23,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -36,8 +35,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -67,6 +64,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.css.ITitle;
 import com.bdaum.zoom.ui.HistoryListener;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
@@ -183,12 +181,9 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 			setRule(rule);
 			final Control control = viewer.getControl();
 			if (!control.isDisposed())
-				control.getDisplay().asyncExec(new Runnable() {
-					public void run() {
-						if (!control.isDisposed()) {
-							control.setCursor(control.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
-						}
-					}
+				control.getDisplay().asyncExec(() -> {
+					if (!control.isDisposed())
+						control.setCursor(control.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
 				});
 		}
 
@@ -336,19 +331,17 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 			monitor.done();
 			final Control control = viewer.getControl();
 			if (!control.isDisposed())
-				control.getDisplay().asyncExec(new Runnable() {
-					public void run() {
-						if (!control.isDisposed()) {
-							viewer.setInput(history);
-							control.setCursor(control.getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
-						}
-						--settingSelection;
+				control.getDisplay().asyncExec(() -> {
+					if (!control.isDisposed()) {
+						viewer.setInput(history);
+						control.setCursor(control.getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
 					}
+					--settingSelection;
 				});
 		}
 	}
 
-	private class HistoryTitle {
+	private class HistoryTitle implements ITitle {
 		private String name;
 		private Date titleDate;
 		private int type;
@@ -392,36 +385,6 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 			if (element instanceof SmartCollection)
 				return composeLabel((SmartCollection) element);
 			return element.toString();
-		}
-
-		@Override
-		public Font getFont(Object element) {
-			if (element instanceof HistoryTitle)
-				return JFaceResources.getBannerFont();
-			return null;
-		}
-
-		@Override
-		protected String shortenText(Object element, String textValue, int textExtent, GC gc, int maxWidth) {
-			if (element instanceof HistoryTitle) {
-				String str = "================================================================================"; //$NON-NLS-1$
-				int length = str.length();
-				int maxExtent = gc.textExtent(str).x;
-				int charsNeeded = Math.round(length * ((float) maxWidth / maxExtent));
-				int l = textValue.length();
-				if (charsNeeded < l + 2)
-					return textValue;
-				StringBuilder sb = new StringBuilder(str);
-				sb.setLength(Math.min(length, charsNeeded + l - textExtent * length / maxExtent));
-				int sbl = sb.length();
-				int start = (sbl - l) / 2;
-				int end = start + l;
-				sb.replace(start, end, textValue);
-				sb.setCharAt(start - 1, ' ');
-				sb.setCharAt(end, ' ');
-				return sb.toString();
-			}
-			return super.shortenText(element, textValue, textExtent, gc, maxWidth);
 		}
 
 	}
@@ -503,13 +466,11 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 			private void forceSelectionUpdate() {
 				Shell shell = getSite().getShell();
 				if (shell != null && !shell.isDisposed())
-					shell.getDisplay().asyncExec(new Runnable() {
-						public void run() {
-							if (!viewer.getControl().isDisposed()) {
-								ISelection selection = viewer.getSelection();
-								viewer.setSelection(StructuredSelection.EMPTY);
-								viewer.setSelection(selection, true);
-							}
+					shell.getDisplay().asyncExec(() -> {
+						if (!shell.isDisposed()) {
+							ISelection selection = viewer.getSelection();
+							viewer.setSelection(StructuredSelection.EMPTY);
+							viewer.setSelection(selection, true);
 						}
 					});
 			}
@@ -518,11 +479,9 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 			public void setCatalogSelection(final ISelection selection, final boolean forceUpdate) {
 				Shell shell = getSite().getShell();
 				if (shell != null && !shell.isDisposed())
-					shell.getDisplay().asyncExec(new Runnable() {
-						public void run() {
-							if (!viewer.getControl().isDisposed())
-								setSelection(selection, forceUpdate);
-						}
+					shell.getDisplay().asyncExec(() -> {
+						if (!shell.isDisposed())
+							setSelection(selection, forceUpdate);
 					});
 			}
 
@@ -531,15 +490,13 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 				Shell shell = getSite().getShell();
 				if (shell != null && !shell.isDisposed()) {
 					Display display = shell.getDisplay();
-					display.asyncExec(new Runnable() {
-						public void run() {
-							if (!shell.isDisposed())
-								BusyIndicator.showWhile(display, new Runnable() {
-									public void run() {
-										structureModified();
-									}
-								});
-						}
+					display.asyncExec(() -> {
+						if (!shell.isDisposed())
+							BusyIndicator.showWhile(display, new Runnable() {
+								public void run() {
+									structureModified();
+								}
+							});
 					});
 				}
 			}

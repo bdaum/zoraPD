@@ -156,11 +156,12 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 		gallery = new Gallery(parent, orientation | SWT.VIRTUAL | SWT.MULTI);
 		gallery.setBackground(gallery.getDisplay().getSystemColor(
 				SWT.COLOR_WHITE));
+		gallery.setHigherQualityDelay(300);
+		gallery.setLowQualityOnUserAction(true);
 		setAppStarting(gallery);
 
 		if (isStrip)
 			gallery.addControlListener(new ControlAdapter() {
-
 				@Override
 				public void controlResized(ControlEvent e) {
 					Rectangle clientArea = gallery.getClientArea();
@@ -678,22 +679,20 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 						event.widget = gallery;
 						Display display = gallery.getDisplay();
 						display.post(event);
-						display.asyncExec(new Runnable() {
-							public void run() {
-								if (!gallery.isDisposed()) {
-									GalleryItem[] sel = gallery.getSelection();
-									if (sel.length == 1) {
-										GalleryItem item = sel[0];
-										AssetImpl asset = (AssetImpl) item
-												.getData(ASSET);
-										Hotspots hotSpots = (Hotspots) item
-												.getData(HOTSPOTS);
-										if (hotSpots != null && asset != null) {
-											Rectangle titleArea = hotSpots
-													.getTitleArea();
-											if (titleArea != null)
-												editTitleArea(item, titleArea);
-										}
+						display.asyncExec(() -> {
+							if (!gallery.isDisposed()) {
+								GalleryItem[] sel = gallery.getSelection();
+								if (sel.length == 1) {
+									GalleryItem item1 = sel[0];
+									AssetImpl asset1 = (AssetImpl) item1
+											.getData(ASSET);
+									Hotspots hotSpots = (Hotspots) item1
+											.getData(HOTSPOTS);
+									if (hotSpots != null && asset1 != null) {
+										Rectangle titleArea = hotSpots
+												.getTitleArea();
+										if (titleArea != null)
+											editTitleArea(item1, titleArea);
 									}
 								}
 							}

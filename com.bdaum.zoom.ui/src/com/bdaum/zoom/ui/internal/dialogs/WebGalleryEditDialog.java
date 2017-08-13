@@ -285,17 +285,15 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 			final WebGalleryImpl gal, final String title, final boolean promptForEngine, final boolean canUndo,
 			final String errorMsg) {
 		final WebGalleryImpl[] box = new WebGalleryImpl[1];
-		BusyIndicator.showWhile(shell.getDisplay(), new Runnable() {
-			public void run() {
-				WebGalleryEditDialog dialog = new WebGalleryEditDialog(shell, group, gal, title, promptForEngine,
-						canUndo);
-				if (errorMsg != null) {
-					dialog.create();
-					dialog.selectOutputPage(errorMsg);
-				}
-				if (dialog.open() == Window.OK)
-					box[0] = dialog.getResult();
+		BusyIndicator.showWhile(shell.getDisplay(), () -> {
+			WebGalleryEditDialog dialog = new WebGalleryEditDialog(shell, group, gal, title, promptForEngine,
+					canUndo);
+			if (errorMsg != null) {
+				dialog.create();
+				dialog.selectOutputPage(errorMsg);
 			}
+			if (dialog.open() == Window.OK)
+				box[0] = dialog.getResult();
 		});
 		return box[0];
 	}
@@ -460,11 +458,11 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 	private String[] initValues() {
 		outputTargetGroup.initValues(settings);
 		String link = settings.get(LINKPAGE);
-		if (link == null || link.length() == 0)
+		if (link == null || link.isEmpty())
 			link = "index.html"; //$NON-NLS-1$
 		setCondText(linkField, link);
 		String download = settings.get(DOWNLOAD_TEXT);
-		if (download == null || download.length() == 0)
+		if (download == null || download.isEmpty())
 			download = Messages.WebGalleryEditDialog_download_original;
 		setCondText(downloadField, download);
 		downloadButton.setSelection(settings.getBoolean(HIDE_DOWNLOAD));
@@ -474,7 +472,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		setCondText(imageField, settings.get(BG_IMAGE));
 		repeatBgButton.setSelection(settings.getBoolean(REPEAT_BG));
 		String copyright = settings.get(COPYRIGHT);
-		if (copyright == null || copyright.length() == 0) {
+		if (copyright == null || copyright.isEmpty()) {
 			GregorianCalendar cal = new GregorianCalendar();
 			copyright = cal.get(Calendar.YEAR) + " "; //$NON-NLS-1$
 		}
@@ -483,7 +481,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		setCondText(emailField, settings.get(EMAIL));
 		setCondText(weburlField, settings.get(WEBURL));
 		String poweredBy = settings.get(POWEREDBY_TEXT);
-		if (poweredBy == null || poweredBy.length() == 0)
+		if (poweredBy == null || poweredBy.isEmpty())
 			poweredBy = Messages.WebGalleryEditDialog_powered_by;
 		setCondText(poweredByField, poweredBy);
 		watermarkButton.setSelection(settings.getBoolean(WATER_MARK));
@@ -740,7 +738,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 	}
 
 	private void setSelectedWebEngine(String engineId) {
-		if (engineId != null && engineId.length() > 0) {
+		if (engineId != null && !engineId.isEmpty()) {
 			for (IConfigurationElement generator : generators)
 				if (engineId.equals(generator.getAttribute("id"))) { //$NON-NLS-1$
 					engineViewer.setSelection(new StructuredSelection(generator));
@@ -810,7 +808,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 			@Override
 			public void mouseDoubleClick(MouseEvent e) {
 				if (!downloadButton.getSelection()) {
-					if (downloadField.getText().length() > 0)
+					if (!downloadField.getText().isEmpty())
 						downloadField.setText(""); //$NON-NLS-1$
 					else
 						downloadField.setText(Messages.WebGalleryEditDialog_download_original);
@@ -894,7 +892,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 
 			@Override
 			public void mouseDoubleClick(MouseEvent e) {
-				if (poweredByField.getText().length() > 0)
+				if (!poweredByField.getText().isEmpty())
 					poweredByField.setText(""); //$NON-NLS-1$
 				else
 					poweredByField.setText(Messages.WebGalleryEditDialog_powered_by);
@@ -927,34 +925,32 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		final List<Storyboard> storyboards = current.getStoryboard();
 		if (storyboards == null)
 			return;
-		BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-			public void run() {
-				Set<String> keywords = new HashSet<String>();
-				StringTokenizer st = new StringTokenizer(keywordField.getText().trim(), "\n"); //$NON-NLS-1$
-				while (st.hasMoreTokens())
-					keywords.add(st.nextToken());
-				for (Storyboard storyboard : storyboards) {
-					List<String> exhibit = storyboard.getExhibit();
-					if (exhibit != null) {
-						for (String exhibitId : exhibit) {
-							WebExhibitImpl obj = dbManager.obtainById(WebExhibitImpl.class, exhibitId);
-							if (obj != null) {
-								String assetId = obj.getAsset();
-								AssetImpl asset = dbManager.obtainAsset(assetId);
-								if (asset != null) {
-									String[] kw = asset.getKeyword();
-									if (kw != null)
-										for (String k : kw)
-											keywords.add(k);
-								}
+		BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+			Set<String> keywords = new HashSet<String>();
+			StringTokenizer st = new StringTokenizer(keywordField.getText().trim(), "\n"); //$NON-NLS-1$
+			while (st.hasMoreTokens())
+				keywords.add(st.nextToken());
+			for (Storyboard storyboard : storyboards) {
+				List<String> exhibit = storyboard.getExhibit();
+				if (exhibit != null) {
+					for (String exhibitId : exhibit) {
+						WebExhibitImpl obj = dbManager.obtainById(WebExhibitImpl.class, exhibitId);
+						if (obj != null) {
+							String assetId = obj.getAsset();
+							AssetImpl asset = dbManager.obtainAsset(assetId);
+							if (asset != null) {
+								String[] kw = asset.getKeyword();
+								if (kw != null)
+									for (String k : kw)
+										keywords.add(k);
 							}
 						}
 					}
 				}
-				String[] kws = keywords.toArray(new String[keywords.size()]);
-				Arrays.sort(kws, Utilities.KEYWORDCOMPARATOR);
-				keywordField.setText(Core.toStringList(kws, "\n")); //$NON-NLS-1$
 			}
+			String[] kws = keywords.toArray(new String[keywords.size()]);
+			Arrays.sort(kws, Utilities.KEYWORDCOMPARATOR);
+			keywordField.setText(Core.toStringList(kws, "\n")); //$NON-NLS-1$
 		});
 	}
 
@@ -1239,11 +1235,11 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 			newValue = ((Button) control).getSelection();
 		else if (control instanceof Text) {
 			String text = ((Text) control).getText().trim();
-			if (text.length() > 0)
+			if (!text.isEmpty())
 				newValue = text;
 		} else if (control instanceof Combo) {
 			String text = ((Combo) control).getText().trim();
-			if (text.length() > 0)
+			if (!text.isEmpty())
 				newValue = ((Map<String, String>) ((Combo) control).getData("map")).get(text); //$NON-NLS-1$
 		} else if (control instanceof NumericControl) {
 			NumericControl spinner = (NumericControl) control;
@@ -1360,7 +1356,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 			control = button;
 		} else if ("color".equals(type)) { //$NON-NLS-1$
 			WebColorGroup colorGroup = new WebColorGroup(genComp, label);
-			if (dflt != null && dflt.length() > 0) {
+			if (dflt != null && !dflt.isEmpty()) {
 				StringTokenizer st = new StringTokenizer(dflt);
 				int i = 0;
 				int[] rgb = new int[3];
@@ -1492,7 +1488,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 	}
 
 	private void updateButtons() {
-		repeatBgButton.setEnabled(imageField.getText().length() > 0);
+		repeatBgButton.setEnabled(!imageField.getText().isEmpty());
 		Button okButton = getButton(IDialogConstants.OK_ID);
 		if (okButton != null) {
 			boolean enabled = validate() && !readonly;
@@ -1506,7 +1502,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 
 	private boolean validate() {
 		String name = nameField.getText();
-		if (name.length() == 0) {
+		if (name.isEmpty()) {
 			setErrorMessage(Messages.WebGalleryEditDialog_please_specify_web_gallery_name);
 			return false;
 		}
@@ -1528,14 +1524,14 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 				return false;
 			}
 		}
-		if (logoField.getText().length() > 0) {
+		if (!logoField.getText().isEmpty()) {
 			File logoFile = new File(logoField.getText());
 			if (!logoFile.exists()) {
 				setErrorMessage(Messages.WebGalleryEditDialog_nameplate_image_does_not_exist);
 				return false;
 			}
 		}
-		if (imageField.getText().length() > 0) {
+		if (!imageField.getText().isEmpty()) {
 			File imageFile = new File(imageField.getText());
 			if (!imageFile.exists()) {
 				setErrorMessage(Messages.WebGalleryEditDialog_background_image_does_not_exist);
@@ -1550,12 +1546,12 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 					Object control = controlMap.get(computeKey(ns, child.getAttribute("id"))); //$NON-NLS-1$
 					String label = child.getAttribute("label"); //$NON-NLS-1$
 					if (control instanceof Text) {
-						if (((Text) control).getText().trim().length() == 0) {
+						if (((Text) control).getText().trim().isEmpty()) {
 							setErrorMessage(NLS.bind(Messages.WebGalleryEditDialog_please_specify_value, label));
 							return false;
 						}
 					} else if (control instanceof Combo) {
-						if (((Combo) control).getText().trim().length() == 0) {
+						if (((Combo) control).getText().trim().isEmpty()) {
 							setErrorMessage(NLS.bind(Messages.WebGalleryEditDialog_please_specify_value, label));
 							return false;
 						}
@@ -1569,129 +1565,127 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-			public void run() {
-				// Must create a new instance if operation cannot be undone
-				if (canUndo)
-					result = current;
-				else {
-					result = new WebGalleryImpl();
-					if (current != null) {
-						result.setStoryboard(current.getStoryboard());
-						for (Storyboard storyboard : result.getStoryboard())
-							storyboard.setWebGallery_storyboard_parent(result);
-						result.setGroup_webGallery_parent(current.getGroup_webGallery_parent());
-						for (WebParameter parm : current.getParameter().values())
-							dbManager.delete(parm);
-						dbManager.delete(current);
-					}
+		BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+			// Must create a new instance if operation cannot be undone
+			if (canUndo)
+				result = current;
+			else {
+				result = new WebGalleryImpl();
+				if (current != null) {
+					result.setStoryboard(current.getStoryboard());
+					for (Storyboard storyboard : result.getStoryboard())
+						storyboard.setWebGallery_storyboard_parent(result);
+					result.setGroup_webGallery_parent(current.getGroup_webGallery_parent());
+					for (WebParameter parm : current.getParameter().values())
+						dbManager.delete(parm);
+					dbManager.delete(current);
 				}
-				result.setName(nameField.getText().trim());
-				result.setHtmlDescription(descriptionGroup.isHtml());
-				result.setDescription(descriptionGroup.getText());
-				String webLink = linkField.getText().trim();
-				if (webLink.length() == 0)
-					webLink = "index.html"; //$NON-NLS-1$
-				result.setPageName(webLink);
-				StringTokenizer st = new StringTokenizer(keywordField.getText().trim(), "\n"); //$NON-NLS-1$
-				List<String> keywords = new ArrayList<String>();
-				while (st.hasMoreTokens())
-					keywords.add(st.nextToken());
-				result.setKeyword(keywords.toArray(new String[keywords.size()]));
-				result.setDownloadText(downloadField.getText().trim());
-				result.setHideDownload(downloadButton.getSelection());
-				result.setHideHeader(hideHeaderButton.getSelection());
-				result.setHideFooter(hideFooterButton.getSelection());
-				result.setPoweredByText(poweredByField.getText().trim());
-				String logo = logoField.getText().trim();
-				result.setLogo(logo.length() > 0 ? logo : null);
-				String image = imageField.getText().trim();
-				result.setBgImage(image.length() > 0 ? image : null);
-				result.setBgRepeat(repeatBgButton.getSelection());
-				result.setCopyright(copyrightField.getText().trim());
-				result.setContactName(contactField.getText().trim());
-				result.setEmail(emailField.getText().trim());
-				result.setWebUrl(weburlField.getText().trim());
-				result.setAddWatermark(watermarkButton.getSelection());
-				result.setXmpFilter(getXmpFilter());
-				result.setBgColor(bgButton.getRGB());
-				result.setShadeColor(shadeButton.getRGB());
-				result.setBorderColor(borderButton.getRGB());
-				result.setLinkColor(linkButton.getRGB());
-				result.setOpacity(opacityField.getSelection());
-				result.setThumbSize(thumbsizeField.getSelectionIndex());
-				result.setPadding(paddingField.getSelection());
-				result.setMargins(new int[] { marginsTopField.getSelection(), marginsRightField.getSelection(),
-						marginsBottomField.getSelection(), marginsLeftField.getSelection() });
-				result.setTitleFont(titleButton.getFont());
-				result.setSectionFont(sectionButton.getFont());
-				result.setCaptionFont(captionButton.getFont());
-				result.setControlsFont(navigationButton.getFont());
-				result.setDescriptionFont(descriptionButton.getFont());
-				result.setFooterFont(footerButton.getFont());
-				result.setTopHtml(topViewer.getDocument().get());
-				result.setHeadHtml(headViewer.getDocument().get());
-				result.setFooterHtml(footerViewer.getDocument().get());
-				result.setShowMeta(showMetaButton.getSelection());
-				result.setApplySharpening(qualityGroup.getApplySharpening());
-				result.setRadius(qualityGroup.getRadius());
-				result.setAmount(qualityGroup.getAmount());
-				result.setThreshold(qualityGroup.getThreshold());
-//				result.setScalingMethod(qualityGroup.getScalingMethod());
-				result.setOutputFolder(outputTargetGroup.getLocalFolder());
-				FtpAccount ftpDir = outputTargetGroup.getFtpDir();
-				result.setFtpDir(ftpDir != null ? ftpDir.getName() : null);
-				result.setIsFtp(outputTargetGroup.getTarget() == Constants.FTP);
-				if (selectedEngine != null)
-					result.setSelectedEngine(selectedEngine.getAttribute("id")); //$NON-NLS-1$
-				Map<String, WebParameter> parameters = new HashMap<String, WebParameter>();
-				for (IConfigurationElement element : generators) {
-					IConfigurationElement[] children = element.getChildren();
-					for (IConfigurationElement child : children) {
-						WebParameter newParm = saveParameterValue(child, parameters);
-						if (newParm != null)
-							dbManager.store(newParm);
-					}
-				}
-				result.setParameter(parameters);
-				if (!canUndo)
-					dbManager.safeTransaction(new Runnable() {
-
-						public void run() {
-							if (importGroup != null)
-								importIntoGallery(result, importGroup.getFromItem());
-							if (group == null) {
-								String groupId = (current != null) ? current.getGroup_webGallery_parent()
-										: Constants.GROUP_ID_WEBGALLERY;
-								if (groupId == null)
-									groupId = Constants.GROUP_ID_WEBGALLERY;
-								group = dbManager.obtainById(GroupImpl.class, groupId);
-							}
-							if (group == null) {
-								group = new GroupImpl(Messages.WebGalleryEditDialog_web_galleries, false);
-								group.setStringId(Constants.GROUP_ID_WEBGALLERY);
-							}
-							if (current != null)
-								group.removeWebGallery(current.getStringId());
-							group.addWebGallery(result.getStringId());
-							result.setGroup_webGallery_parent(group.getStringId());
-							if (current != null)
-								dbManager.delete(current);
-							dbManager.store(group);
-							for (Storyboard storyboard : result.getStoryboard())
-								dbManager.store(storyboard);
-							dbManager.store(result);
-						}
-					});
-				saveSettings(result);
 			}
+			result.setName(nameField.getText().trim());
+			result.setHtmlDescription(descriptionGroup.isHtml());
+			result.setDescription(descriptionGroup.getText());
+			String webLink = linkField.getText().trim();
+			if (webLink.isEmpty())
+				webLink = "index.html"; //$NON-NLS-1$
+			result.setPageName(webLink);
+			StringTokenizer st = new StringTokenizer(keywordField.getText().trim(), "\n"); //$NON-NLS-1$
+			List<String> keywords = new ArrayList<String>();
+			while (st.hasMoreTokens())
+				keywords.add(st.nextToken());
+			result.setKeyword(keywords.toArray(new String[keywords.size()]));
+			result.setDownloadText(downloadField.getText().trim());
+			result.setHideDownload(downloadButton.getSelection());
+			result.setHideHeader(hideHeaderButton.getSelection());
+			result.setHideFooter(hideFooterButton.getSelection());
+			result.setPoweredByText(poweredByField.getText().trim());
+			String logo = logoField.getText().trim();
+			result.setLogo(logo.isEmpty() ? null : logo);
+			String image = imageField.getText().trim();
+			result.setBgImage(image.isEmpty() ? null : image);
+			result.setBgRepeat(repeatBgButton.getSelection());
+			result.setCopyright(copyrightField.getText().trim());
+			result.setContactName(contactField.getText().trim());
+			result.setEmail(emailField.getText().trim());
+			result.setWebUrl(weburlField.getText().trim());
+			result.setAddWatermark(watermarkButton.getSelection());
+			result.setXmpFilter(getXmpFilter());
+			result.setBgColor(bgButton.getRGB());
+			result.setShadeColor(shadeButton.getRGB());
+			result.setBorderColor(borderButton.getRGB());
+			result.setLinkColor(linkButton.getRGB());
+			result.setOpacity(opacityField.getSelection());
+			result.setThumbSize(thumbsizeField.getSelectionIndex());
+			result.setPadding(paddingField.getSelection());
+			result.setMargins(new int[] { marginsTopField.getSelection(), marginsRightField.getSelection(),
+					marginsBottomField.getSelection(), marginsLeftField.getSelection() });
+			result.setTitleFont(titleButton.getFont());
+			result.setSectionFont(sectionButton.getFont());
+			result.setCaptionFont(captionButton.getFont());
+			result.setControlsFont(navigationButton.getFont());
+			result.setDescriptionFont(descriptionButton.getFont());
+			result.setFooterFont(footerButton.getFont());
+			result.setTopHtml(topViewer.getDocument().get());
+			result.setHeadHtml(headViewer.getDocument().get());
+			result.setFooterHtml(footerViewer.getDocument().get());
+			result.setShowMeta(showMetaButton.getSelection());
+			result.setApplySharpening(qualityGroup.getApplySharpening());
+			result.setRadius(qualityGroup.getRadius());
+			result.setAmount(qualityGroup.getAmount());
+			result.setThreshold(qualityGroup.getThreshold());
+//				result.setScalingMethod(qualityGroup.getScalingMethod());
+			result.setOutputFolder(outputTargetGroup.getLocalFolder());
+			FtpAccount ftpDir = outputTargetGroup.getFtpDir();
+			result.setFtpDir(ftpDir != null ? ftpDir.getName() : null);
+			result.setIsFtp(outputTargetGroup.getTarget() == Constants.FTP);
+			if (selectedEngine != null)
+				result.setSelectedEngine(selectedEngine.getAttribute("id")); //$NON-NLS-1$
+			Map<String, WebParameter> parameters = new HashMap<String, WebParameter>();
+			for (IConfigurationElement element : generators) {
+				IConfigurationElement[] children = element.getChildren();
+				for (IConfigurationElement child : children) {
+					WebParameter newParm = saveParameterValue(child, parameters);
+					if (newParm != null)
+						dbManager.store(newParm);
+				}
+			}
+			result.setParameter(parameters);
+			if (!canUndo)
+				dbManager.safeTransaction(new Runnable() {
+
+					public void run() {
+						if (importGroup != null)
+							importIntoGallery(result, importGroup.getFromItem());
+						if (group == null) {
+							String groupId = (current != null) ? current.getGroup_webGallery_parent()
+									: Constants.GROUP_ID_WEBGALLERY;
+							if (groupId == null)
+								groupId = Constants.GROUP_ID_WEBGALLERY;
+							group = dbManager.obtainById(GroupImpl.class, groupId);
+						}
+						if (group == null) {
+							group = new GroupImpl(Messages.WebGalleryEditDialog_web_galleries, false);
+							group.setStringId(Constants.GROUP_ID_WEBGALLERY);
+						}
+						if (current != null)
+							group.removeWebGallery(current.getStringId());
+						group.addWebGallery(result.getStringId());
+						result.setGroup_webGallery_parent(group.getStringId());
+						if (current != null)
+							dbManager.delete(current);
+						dbManager.store(group);
+						for (Storyboard storyboard : result.getStoryboard())
+							dbManager.store(storyboard);
+						dbManager.store(result);
+					}
+				});
+			saveSettings(result);
 		});
 		super.okPressed();
 	}
 
 	private void importIntoGallery(WebGalleryImpl gallery, IdentifiableObject obj) {
 		if (obj instanceof SlideShowImpl) {
-			boolean downloadable = gallery.getDownloadText() != null && gallery.getDownloadText().length() > 0;
+			boolean downloadable = gallery.getDownloadText() != null && !gallery.getDownloadText().isEmpty();
 			boolean includeMetadata = gallery.getXmpFilter() != null && gallery.getXmpFilter().length > 0;
 			int seqNo = 0;
 			int index = 0;
@@ -1734,7 +1728,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		} else if (obj instanceof ExhibitionImpl) {
 			AomList<Wall> walls = ((ExhibitionImpl) obj).getWall();
 			int seqNo = 1;
-			boolean downloadable = gallery.getDownloadText() != null && gallery.getDownloadText().length() > 0;
+			boolean downloadable = gallery.getDownloadText() != null && !gallery.getDownloadText().isEmpty();
 			boolean includeMetadata = gallery.getXmpFilter() != null && gallery.getXmpFilter().length > 0;
 			int sequenceNo = 0;
 			for (Wall wall : walls) {

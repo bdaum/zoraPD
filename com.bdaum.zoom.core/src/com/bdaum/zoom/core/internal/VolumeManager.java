@@ -171,7 +171,7 @@ public class VolumeManager implements IVolumeManager {
 	 */
 
 	public File findExistingFile(String uri, String volume) {
-		if (volume != null && volume.length() > 0 && Constants.WIN32) {
+		if (volume != null && !volume.isEmpty() && Constants.WIN32) {
 			File device = volumeToRoot(volume);
 			if (device != null) {
 				int q = uri.indexOf(":/", FILE.length()); //$NON-NLS-1$
@@ -183,8 +183,7 @@ public class VolumeManager implements IVolumeManager {
 			init();
 			File file = new File(new URI(uri));
 			File root = getRootFile(file);
-			if (Constants.WIN32
-					&& root.getPath().equals("\\\\") && file.exists()) //$NON-NLS-1$
+			if (Constants.WIN32 && root.getPath().equals("\\\\") && file.exists()) //$NON-NLS-1$
 				return file;
 			for (File rootFile : roots)
 				if (rootFile.equals(root) && file.exists())
@@ -230,8 +229,7 @@ public class VolumeManager implements IVolumeManager {
 			} else
 				for (int i = 0; i < list.length; i++) {
 					long lastModified = list[i].lastModified();
-					if (timeStamps[i] != lastModified
-							|| !roots[i].equals(list[i])) {
+					if (timeStamps[i] != lastModified || !roots[i].equals(list[i])) {
 						changed = true;
 						roots[i] = list[i];
 						timeStamps[i] = lastModified;
@@ -311,8 +309,7 @@ public class VolumeManager implements IVolumeManager {
 	private void init() {
 		if (roots == null) {
 			updateVolumes();
-			monitorJob = new Daemon(Messages.VolumeManager_monitor_volumes,
-					4000L) {
+			monitorJob = new Daemon(Messages.VolumeManager_monitor_volumes, 4000L) {
 				@Override
 				protected void doRun(IProgressMonitor monitor) {
 					updateVolumes();
@@ -339,21 +336,17 @@ public class VolumeManager implements IVolumeManager {
 		if (asset != null) {
 			synchronized (this) {
 				String uri = asset.getVoiceFileURI();
-				if (uri != null && uri.length() > 0) {
+				if (uri != null && !uri.isEmpty() && !uri.startsWith("?")) { //$NON-NLS-1$
 					if (".".equals(uri)) { //$NON-NLS-1$
 						try {
-							uri = Core
-									.getVoicefileURI(
-											new File(new URI(asset.getUri())
-													.toString())).toString();
+							uri = Core.getVoicefileURI(new File(new URI(asset.getUri()))).toString();
 						} catch (URISyntaxException e) {
 							return null;
 						}
 						return findExistingFile(asset, uri, true);
 					}
 					if (uri.startsWith(FILE)) {
-						File file = findExistingFile(uri,
-								asset.getVoiceVolume());
+						File file = findExistingFile(uri, asset.getVoiceVolume());
 						return file == null ? null : file.toURI();
 					}
 				}
@@ -379,9 +372,8 @@ public class VolumeManager implements IVolumeManager {
 	}
 
 	public boolean isRemote(Asset asset) {
-		return asset != null
-				&& (!asset.getUri().startsWith(FILE) || peerService != null
-						&& peerService.isOwnedByPeer(asset.getStringId()));
+		return asset != null && (!asset.getUri().startsWith(FILE)
+				|| peerService != null && peerService.isOwnedByPeer(asset.getStringId()));
 	}
 
 	public String obtainVolumeLabel(String path) {
@@ -394,7 +386,7 @@ public class VolumeManager implements IVolumeManager {
 			String name = getFileSystemView().getSystemDisplayName(dir);
 			if (name != null) {
 				name = name.trim();
-				if (name != null && name.length() > 0) {
+				if (name != null && !name.isEmpty()) {
 					int index = name.lastIndexOf(" ("); //$NON-NLS-1$
 					if (index > 0)
 						return name.substring(0, index);
@@ -408,12 +400,10 @@ public class VolumeManager implements IVolumeManager {
 
 	public String extractLinuxPath(String path) {
 		if (volumePatterns == null) {
-			URL iniUri = FileLocator.find(ImageActivator.getDefault()
-					.getBundle(), new Path(VOLUME_PATTERNS_INI), null);
+			URL iniUri = FileLocator.find(ImageActivator.getDefault().getBundle(), new Path(VOLUME_PATTERNS_INI), null);
 			try {
 				iniUri = FileLocator.toFileURL(iniUri);
-				try (BufferedReader r = new BufferedReader(new FileReader(new File(
-						iniUri.getPath())))) {
+				try (BufferedReader r = new BufferedReader(new FileReader(new File(iniUri.getPath())))) {
 					String line;
 					List<Pattern> patterns = new ArrayList<Pattern>(3);
 					while ((line = r.readLine()) != null) {
@@ -422,16 +412,11 @@ public class VolumeManager implements IVolumeManager {
 						try {
 							patterns.add(Pattern.compile(line.trim()));
 						} catch (PatternSyntaxException e) {
-							CoreActivator
-									.getDefault()
-									.logError(
-											NLS.bind(
-													Messages.VolumeManager_error_compiling_pattern,
-													line, iniUri), e);
+							CoreActivator.getDefault().logError(
+									NLS.bind(Messages.VolumeManager_error_compiling_pattern, line, iniUri), e);
 						}
 					}
-					volumePatterns = patterns.toArray(new Pattern[patterns
-							.size()]);
+					volumePatterns = patterns.toArray(new Pattern[patterns.size()]);
 				} catch (Exception e) {
 					volumePatterns = new Pattern[0];
 				}
@@ -479,8 +464,7 @@ public class VolumeManager implements IVolumeManager {
 		if (asset != null) {
 			if (!asset.getUri().startsWith(FILE))
 				return REMOTE;
-			if (peerService != null
-					&& peerService.isOwnedByPeer(asset.getStringId()))
+			if (peerService != null && peerService.isOwnedByPeer(asset.getStringId()))
 				return PEER;
 			return (findExistingFile(asset, true) != null ? ONLINE : OFFLINE);
 		}

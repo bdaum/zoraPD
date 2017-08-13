@@ -34,10 +34,8 @@ public class LocrUploadResponseHandler extends DefaultLocrHandler {
 		super(parent);
 	}
 
-	
 	@Override
-	public void startElement(String uri, String localName, String qname,
-			Attributes atts) throws SAXException {
+	public void startElement(String uri, String localName, String qname, Attributes atts) throws SAXException {
 		if ("post_photo".equals(qname)) { //$NON-NLS-1$
 			status = atts.getValue("status"); //$NON-NLS-1$
 		}
@@ -49,18 +47,13 @@ public class LocrUploadResponseHandler extends DefaultLocrHandler {
 	 * 
 	 * @see org.xml.sax.ContentHandler#characters(char[], int, int)
 	 */
-	
-	@Override
-	public void characters(char[] chars, int start, int end)
-			throws SAXException {
-		super.characters(chars, start, end);
 
+	@Override
+	public void characters(char[] chars, int start, int end) throws SAXException {
+		super.characters(chars, start, end);
 		String cdata = new String(chars, start, end).trim();
-		if (cdata.length() > 0) {
-			if ("id".equals(lastTag)) { //$NON-NLS-1$
-				photoID = cdata;
-			} 
-		}
+		if (!cdata.isEmpty() && "id".equals(lastTag)) //$NON-NLS-1$
+			photoID = cdata;
 	}
 
 	/**

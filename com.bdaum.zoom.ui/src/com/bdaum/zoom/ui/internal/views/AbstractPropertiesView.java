@@ -338,7 +338,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 					return (String) value;
 				String text = qfield.value2text(value, CLICK_TO_VIEW_DETAILS);
 				if (text != null) {
-					if (text.length() > 0 && value != QueryField.VALUE_MIXED && value != QueryField.VALUE_NOTHING
+					if (!text.isEmpty() && value != QueryField.VALUE_MIXED && value != QueryField.VALUE_NOTHING
 							&& text != Format.MISSINGENTRYSTRING) {
 						String unit = qfield.getUnit();
 						if (unit != null)
@@ -676,8 +676,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 	public abstract QueryField getRootElement();
 
 	/**
-	 * This is a callback that will allow us to create the viewer and initialize
-	 * it.
+	 * This is a callback that will allow us to create the viewer and initialize it.
 	 */
 
 	@SuppressWarnings("unused")
@@ -726,24 +725,24 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		viewer.setFilters(new ViewerFilter[] { new DetailsViewerFilter(), new ContentTypeViewerFilter() });
 		// ColumnViewerToolTipSupport.enableFor(viewer);
 		viewer.setInput(getRootElement());
-		parent.getDisplay().asyncExec(new Runnable() {
-			public void run() {
+		parent.getDisplay().asyncExec(() -> {
+			if (!parent.isDisposed()) {
 				if (expandedElements != null) {
 					List<QueryField> elements = new ArrayList<QueryField>();
 					StringTokenizer st = new StringTokenizer(expandedElements);
 					while (st.hasMoreTokens()) {
-						QueryField qf = QueryField.findQueryField(st.nextToken());
-						if (qf != null)
-							elements.add(qf);
+						QueryField qf1 = QueryField.findQueryField(st.nextToken());
+						if (qf1 != null)
+							elements.add(qf1);
 					}
 					viewer.setExpandedElements(elements.toArray());
 					expandedElements = null;
 				} else
 					viewer.expandToLevel(getExpandLevel());
 				if (selectedElement != null) {
-					QueryField qf = QueryField.findQueryField(selectedElement);
-					if (qf != null)
-						viewer.setSelection(new StructuredSelection(qf), true);
+					QueryField qf2 = QueryField.findQueryField(selectedElement);
+					if (qf2 != null)
+						viewer.setSelection(new StructuredSelection(qf2), true);
 					selectedElement = null;
 				}
 			}
@@ -817,15 +816,13 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 					if (changes == null || changes.hasChanged(asset)) {
 						Shell shell = getSite().getShell();
 						if (shell != null && !shell.isDisposed())
-							shell.getDisplay().asyncExec(new Runnable() {
-								public void run() {
-									if (!tree.isDisposed()) {
-										resetCaches();
-										if (node != null)
-											viewer.expandToLevel(node, qfVisitor.visit(node));
-										else
-											refresh();
-									}
+							shell.getDisplay().asyncExec(() -> {
+								if (!tree.isDisposed()) {
+									resetCaches();
+									if (node != null)
+										viewer.expandToLevel(node, qfVisitor.visit(node));
+									else
+										refresh();
 								}
 							});
 						break;
@@ -915,7 +912,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 			return false;
 		switch (qfield.getType()) {
 		case QueryField.T_STRING:
-			return !(value instanceof String && ((String) value).length() == 0);
+			return !(value instanceof String && ((String) value).isEmpty());
 		case QueryField.T_POSITIVEINTEGER:
 			return !(value instanceof Integer && ((Integer) value).intValue() < 0);
 		case QueryField.T_POSITIVELONG:

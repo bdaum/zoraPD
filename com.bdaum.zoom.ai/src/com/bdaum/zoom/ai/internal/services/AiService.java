@@ -19,6 +19,10 @@
  */
 package com.bdaum.zoom.ai.internal.services;
 
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.PreferenceDialog;
@@ -30,6 +34,7 @@ import com.bdaum.zoom.ai.internal.preference.AiPreferencePage;
 import com.bdaum.zoom.ai.internal.preference.PreferenceConstants;
 import com.bdaum.zoom.core.internal.ai.IAiService;
 import com.bdaum.zoom.core.internal.ai.Prediction;
+import com.bdaum.zoom.core.internal.lire.Algorithm;
 
 public class AiService implements IAiService {
 
@@ -165,6 +170,57 @@ public class AiService implements IAiService {
 				return provider.getLatency();
 		}
 		return -1;
+	}
+
+	@Override
+	public float[] getFeatureVector(BufferedImage image, String serviceId) {
+		if (isEnabled()) {
+			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(serviceId);
+			if (provider != null)
+				return provider.getFeatureVector(image);
+		}
+		return null;
+	}
+
+	@Override
+	public boolean hasProvider(String id) {
+		IAiServiceProvider[] providers = AiActivator.getDefault().getServiceProviders();
+		for (IAiServiceProvider provider : providers)
+			if (provider.getId().equals(id))
+				return true;
+		return false;
+	}
+
+	@Override
+	public boolean isAccountValid(String providerId) {
+		if (isEnabled()) {
+			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(providerId);
+			if (provider != null)
+				return provider.isAccountValid();
+		}
+		return false;
+	}
+
+	@Override
+	public Algorithm[] getLireAlgorithms() {
+		List<Algorithm> algs = new ArrayList<>(3);
+		IAiServiceProvider[] providers = AiActivator.getDefault().getServiceProviders();
+		for (IAiServiceProvider provider : providers) {
+			Algorithm alg = provider.getAlgorithm();
+			if (alg != null)
+				algs.add(alg);
+		}
+		return algs.toArray(new Algorithm[algs.size()]);
+	}
+
+	@Override
+	public Class<?> getFeature(String providerId) {
+		if (isEnabled()) {
+			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(providerId);
+			if (provider != null)
+				return provider.getFeature();
+		}
+		return null;
 	}
 
 }

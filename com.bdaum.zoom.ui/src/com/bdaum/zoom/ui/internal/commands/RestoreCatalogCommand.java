@@ -57,7 +57,7 @@ public class RestoreCatalogCommand extends AbstractCatCommandHandler {
 		if (catFile != null) {
 			Meta meta1 = dbManager.getMeta(true);
 			String backupLocation = meta1.getBackupLocation();
-			if (backupLocation != null && backupLocation.length() > 0) {
+			if (backupLocation != null && !backupLocation.isEmpty()) {
 				String[] result = Utilities.computeBackupLocation(catFile, backupLocation);
 				File generationFolder = new File(result[1]);
 				FileNameExtensionFilter filter = new FileNameExtensionFilter(new String[] { Constants.BACKUPEXT },
@@ -125,34 +125,31 @@ public class RestoreCatalogCommand extends AbstractCatCommandHandler {
 						absolutePath.substring(0, absolutePath.length() - BatchConstants.CATEXTENSION.length())
 								+ Constants.INDEXEXTENSION);
 				coreActivator.closeDatabase();
-				BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-
-					public void run() {
-						targetFile.delete();
-						try {
-							BatchUtilities.copyFile(sourceFile, targetFile, null);
-							if (targetIndexFolder.exists())
-								BatchUtilities.deleteFileOrFolder(targetIndexFolder);
-							if (sourceIndexFolder.exists())
-								BatchUtilities.copyFolder(sourceIndexFolder, targetIndexFolder, null);
-							coreActivator.openDatabase(targetFile.getAbsolutePath());
-							CoreActivator.logDebug("Database created", null); //$NON-NLS-1$
-							getShell().setText(Constants.APPLICATION_NAME + " - " //$NON-NLS-1$
-									+ targetFile);
-							coreActivator.fireCatalogOpened(false);
-						} catch (IOException e) {
-							AcousticMessageDialog.openError(getShell(), Messages.RestoreCatActionDelegate_restore_cat,
-									NLS.bind(Messages.RestoreCatActionDelegate_io_error, e, targetFile));
-							BatchActivator.setFastExit(true);
-							getActiveWorkbenchWindow().getWorkbench().close();
-						} catch (DiskFullException e) {
-							AcousticMessageDialog.openError(getShell(), Messages.RestoreCatActionDelegate_restore_cat,
-									NLS.bind(Messages.RestoreCatActionDelegate_disk_full, targetFile));
-							BatchActivator.setFastExit(true);
-							getActiveWorkbenchWindow().getWorkbench().close();
-						}
-
+				BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+					targetFile.delete();
+					try {
+						BatchUtilities.copyFile(sourceFile, targetFile, null);
+						if (targetIndexFolder.exists())
+							BatchUtilities.deleteFileOrFolder(targetIndexFolder);
+						if (sourceIndexFolder.exists())
+							BatchUtilities.copyFolder(sourceIndexFolder, targetIndexFolder, null);
+						coreActivator.openDatabase(targetFile.getAbsolutePath());
+						CoreActivator.logDebug("Database created", null); //$NON-NLS-1$
+						getShell().setText(Constants.APPLICATION_NAME + " - " //$NON-NLS-1$
+								+ targetFile);
+						coreActivator.fireCatalogOpened(false);
+					} catch (IOException e1) {
+						AcousticMessageDialog.openError(getShell(), Messages.RestoreCatActionDelegate_restore_cat,
+								NLS.bind(Messages.RestoreCatActionDelegate_io_error, e1, targetFile));
+						BatchActivator.setFastExit(true);
+						getActiveWorkbenchWindow().getWorkbench().close();
+					} catch (DiskFullException e2) {
+						AcousticMessageDialog.openError(getShell(), Messages.RestoreCatActionDelegate_restore_cat,
+								NLS.bind(Messages.RestoreCatActionDelegate_disk_full, targetFile));
+						BatchActivator.setFastExit(true);
+						getActiveWorkbenchWindow().getWorkbench().close();
 					}
+
 				});
 			}
 

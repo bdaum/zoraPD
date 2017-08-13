@@ -656,8 +656,8 @@ public abstract class AbstractPresentationView extends BasicView
 			if (node == null) {
 				Shell shell = getSite().getShell();
 				if (!shell.isDisposed())
-					shell.getDisplay().asyncExec(new Runnable() {
-						public void run() {
+					shell.getDisplay().asyncExec(() -> {
+						if (!shell.isDisposed()) {
 							if (changes != null)
 								updatePresentation(changes.getChanged());
 							else
@@ -694,11 +694,7 @@ public abstract class AbstractPresentationView extends BasicView
 	@Override
 	public void refresh() {
 		if (canvas != null && !canvas.isDisposed())
-			canvas.getDisplay().syncExec(new Runnable() {
-				public void run() {
-					canvas.redraw();
-				}
-			});
+			canvas.getDisplay().syncExec(() -> canvas.redraw());
 	}
 
 	@Override

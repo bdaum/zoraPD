@@ -36,11 +36,7 @@ public class ImportDeviceCommand extends AbstractCommandHandler {
 
 	@Override
 	public void run() {
-		BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-			public void run() {
-				doRun();
-			}
-		});
+		BusyIndicator.showWhile(getShell().getDisplay(), () -> doRun());
 	}
 
 	public void doRun() {

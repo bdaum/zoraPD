@@ -120,7 +120,7 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 		boolean validUrl = true;
 		if (testUrlButton != null && webHostField != null) {
 			validUrl = validateUrl();
-			testUrlButton.setEnabled(webHostField.getText().length() > 0
+			testUrlButton.setEnabled(!webHostField.getText().isEmpty()
 					&& validUrl);
 		}
 		boolean enabled = valid && validUrl;
@@ -136,11 +136,11 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 	@SuppressWarnings("unused")
 	private boolean validateUrl() {
 		String wh = webHostField.getText();
-		if (wh.length() > 0) {
+		if (!wh.isEmpty()) {
 			wh = Core.furnishWebUrl(wh);
 			String pfx = prefixField.getText();
 			String dir = targetDirField.getText();
-			if (pfx.length() > 0 && dir.startsWith(pfx))
+			if (!pfx.isEmpty() && dir.startsWith(pfx))
 				dir = dir.substring(pfx.length());
 			while (dir.startsWith("/")) //$NON-NLS-1$
 				dir = dir.substring(1);
@@ -159,14 +159,14 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 	private boolean validate() {
 		setMessage(Messages.EditFtpDialog_please_fill_in_details);
 		String msg = null;
-		if (nameField != null && nameField.getText().length() == 0)
+		if (nameField != null && nameField.getText().isEmpty())
 			msg = Messages.EditFtpDialog_please_specify_an_account_name;
-		else if (hostField.getText().length() == 0)
+		else if (hostField.getText().isEmpty())
 			msg = Messages.EditFtpDialog_please_specify_a_host_name;
-		else if ((loginField.getText().length() == 0 || passwordField.getText()
-				.length() == 0) && !anonymousButton.getSelection())
+		else if ((loginField.getText().isEmpty() || passwordField.getText()
+				.isEmpty()) && !anonymousButton.getSelection())
 			msg = Messages.EditFtpDialog_please_specify_login_name;
-		else if (targetDirField.getText().length() == 0)
+		else if (targetDirField.getText().isEmpty())
 			msg = Messages.EditFtpDialog_please_specify_target_dir;
 		else if (prefixField != null && !prefixValid())
 			msg = Messages.EditFtpDialog_target_dir_does_not_start_with_prefix;
@@ -177,7 +177,7 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 
 	private boolean prefixValid() {
 		String pfx = prefixField.getText();
-		if (pfx.length() == 0)
+		if (pfx.isEmpty())
 			return true;
 		String dir = targetDirField.getText();
 		if (!dir.startsWith(pfx))

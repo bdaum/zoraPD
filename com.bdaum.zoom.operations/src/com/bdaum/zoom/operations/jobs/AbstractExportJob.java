@@ -209,7 +209,7 @@ public abstract class AbstractExportJob extends CustomJob {
 			if (createWatermark) {
 				Image image = zimage.getSwtImage(Display.getDefault(), true, cropMode, SWT.DEFAULT, SWT.DEFAULT);
 				String c = asset.getCopyright();
-				if (c == null || c.length() == 0)
+				if (c == null || c.isEmpty())
 					c = copyright;
 				Image outImage = ImageUtilities.addWatermark(image, c);
 				if (outImage != image) {

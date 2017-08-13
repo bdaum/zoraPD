@@ -366,7 +366,7 @@ public class ExhibitionView extends AbstractPresentationView {
 						}
 					}
 				}
-				walls.remove(wall);
+				walls.remove(added);
 				setPanAndZoomHandlers();
 			}
 			return Status.OK_STATUS;
@@ -1388,7 +1388,7 @@ public class ExhibitionView extends AbstractPresentationView {
 		private void createContent(PSWTCanvas canvas, PWall pwall, final ExhibitImpl exhibit, double pos, double y) {
 			String fontFamily = "Arial"; //$NON-NLS-1$
 			int fontsize = 11;
-			if (exhibition.getLabelFontFamily() != null && exhibition.getLabelFontFamily().length() > 0) {
+			if (exhibition.getLabelFontFamily() != null && !exhibition.getLabelFontFamily().isEmpty()) {
 				fontFamily = exhibition.getLabelFontFamily();
 				fontsize = Math.max(5, exhibition.getLabelFontSize());
 			}
@@ -2625,9 +2625,8 @@ public class ExhibitionView extends AbstractPresentationView {
 			Arrays.sort(volumes);
 			AcousticMessageDialog.openInformation(getSite().getShell(),
 					Messages.getString("ExhibitionView.images_offline"), //$NON-NLS-1$
-					volumes.length > 1
-							? NLS.bind(Messages.getString("ExhibitionView.volumes_offline"), //$NON-NLS-1$
-									Core.toStringList(volumes, ", ")) //$NON-NLS-1$
+					volumes.length > 1 ? NLS.bind(Messages.getString("ExhibitionView.volumes_offline"), //$NON-NLS-1$
+							Core.toStringList(volumes, ", ")) //$NON-NLS-1$
 							: NLS.bind(Messages.getString("ExhibitionView.volume_offline"), //$NON-NLS-1$
 									volumes[0]));
 			return;
@@ -2642,7 +2641,7 @@ public class ExhibitionView extends AbstractPresentationView {
 		String exhibitionId = sb.toString();
 		boolean isFtp = show.getIsFtp();
 		String outputFolder = (isFtp) ? show.getFtpDir() : show.getOutputFolder();
-		while (outputFolder == null || outputFolder.length() == 0) {
+		while (outputFolder == null || outputFolder.isEmpty()) {
 			show = ExhibitionEditDialog.open(getSite().getShell(), null, show, show.getName(), false,
 					Messages.getString("ExhibitionView.please_specify_target")); //$NON-NLS-1$
 			if (show == null)
@@ -2669,8 +2668,7 @@ public class ExhibitionView extends AbstractPresentationView {
 					dialog = new AcousticMessageDialog(getSite().getShell(),
 							Messages.getString("ExhibitionView.overwriteTitle"), //$NON-NLS-1$
 							null, NLS.bind(Messages.getString("ExhibitionView.exhibition_exists"), file), //$NON-NLS-1$
-							MessageDialog.QUESTION,
-							new String[] { Messages.getString("ExhibitionView.overwrite"), //$NON-NLS-1$
+							MessageDialog.QUESTION, new String[] { Messages.getString("ExhibitionView.overwrite"), //$NON-NLS-1$
 									Messages.getString("ExhibitionView.clear_folder"), //$NON-NLS-1$
 									IDialogConstants.CANCEL_LABEL },
 							0);
@@ -2678,8 +2676,7 @@ public class ExhibitionView extends AbstractPresentationView {
 					askForDefault = true;
 					dialog = new AcousticMessageDialog(getSite().getShell(), Messages.getString("ExhibitionView.add"), //$NON-NLS-1$
 							null, NLS.bind(Messages.getString("ExhibitionView.other_exhibitions"), file), //$NON-NLS-1$
-							MessageDialog.QUESTION,
-							new String[] { Messages.getString("ExhibitionView.add_room"), //$NON-NLS-1$
+							MessageDialog.QUESTION, new String[] { Messages.getString("ExhibitionView.add_room"), //$NON-NLS-1$
 									Messages.getString("ExhibitionView.clear_folder"), //$NON-NLS-1$
 									IDialogConstants.CANCEL_LABEL },
 							0);
@@ -2688,8 +2685,7 @@ public class ExhibitionView extends AbstractPresentationView {
 				dialog = new AcousticMessageDialog(getSite().getShell(),
 						Messages.getString("ExhibitionView.overwriteTitle"), //$NON-NLS-1$
 						null, NLS.bind(Messages.getString("ExhibitionView.not_empty"), file), //$NON-NLS-1$
-						MessageDialog.QUESTION,
-						new String[] { Messages.getString("ExhibitionView.overwrite"), //$NON-NLS-1$
+						MessageDialog.QUESTION, new String[] { Messages.getString("ExhibitionView.overwrite"), //$NON-NLS-1$
 								Messages.getString("ExhibitionView.clear_folder"), //$NON-NLS-1$
 								IDialogConstants.CANCEL_LABEL },
 						0);
@@ -2709,7 +2705,7 @@ public class ExhibitionView extends AbstractPresentationView {
 					Messages.getString("ExhibitionView.start_viewing")); //$NON-NLS-1$
 		String page = show.getPageName();
 		final boolean ftp = isFtp;
-		final File start = new File(file, (page == null || page.length() == 0) ? "index.html" //$NON-NLS-1$
+		final File start = new File(file, (page == null || page.isEmpty()) ? "index.html" //$NON-NLS-1$
 				: page);
 		final ExhibitionJob job = new ExhibitionJob(show, exhibitionId, ExhibitionView.this, makeDefault);
 		final FtpAccount account;
@@ -2759,23 +2755,20 @@ public class ExhibitionView extends AbstractPresentationView {
 
 	private void showExhibition(final File start) {
 		final Display display = getSite().getShell().getDisplay();
-		display.asyncExec(new Runnable() {
-			public void run() {
-				BusyIndicator.showWhile(display, new Runnable() {
-					public void run() {
-						try {
-							URL url = start.toURI().toURL();
-							IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser();
-							if (browser != null)
-								browser.openURL(url);
-						} catch (MalformedURLException e) {
-							// should not happen
-						} catch (PartInitException e) {
-							// ignore
-						}
+		display.asyncExec(() -> {
+			if (!display.isDisposed())
+				BusyIndicator.showWhile(display, () -> {
+					try {
+						URL url = start.toURI().toURL();
+						IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser();
+						if (browser != null)
+							browser.openURL(url);
+					} catch (MalformedURLException e1) {
+						// should not happen
+					} catch (PartInitException e2) {
+						// ignore
 					}
 				});
-			}
 		});
 	}
 

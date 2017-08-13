@@ -39,7 +39,7 @@ public class ResumeGeonamingHandler implements IResumeHandler, IAdaptable {
 
 	public void resumeWork(Meta meta) {
 		Set<String> postponedNaming = meta.getPostponedNaming();
-		if (postponedNaming != null && postponedNaming.size() > 0)
+		if (postponedNaming != null && !postponedNaming.isEmpty())
 			OperationJob.executeOperation(new GeotagOperation(GpsActivator
 					.getDefault().createGpsConfiguration()), this, false,
 					ONEMINUTE);

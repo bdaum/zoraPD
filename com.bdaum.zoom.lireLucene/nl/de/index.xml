@@ -1,0 +1,36 @@
+<index>
+	<entry keyword="Suche">
+		<entry keyword="nach Ähnlichkeit">
+			<topic href="html/SearchSimilarDialog.html" />
+		</entry>
+		<entry keyword="inhaltsbasiert">
+			<topic href="html/SearchSimilarDialog.html" />
+		</entry>
+		<entry keyword="nach Text">
+			<topic href="html/textSearch.html" />
+		</entry>
+		<entry keyword="semantisch">
+			<topic href="html/advanced.html" />
+		</entry>
+	</entry>
+	<entry keyword="Ähnlichkeitssuche">
+		<topic href="html/SearchSimilarDialog.html" />
+	</entry>
+	<entry keyword="inhaltsbasierte Suche">
+		<topic href="html/SearchSimilarDialog.html" />
+	</entry>
+	<entry keyword="Semantische Suche">
+		<topic href="html/advanced.html" />
+	</entry>
+	<entry keyword="Neuronales Netz">
+		<topic href="html/advanced.html" />
+	</entry>
+	<entry keyword="Textsuche">
+		<topic href="html/textSearch.html" />
+	</entry>
+	<entry keyword="Platzhalter">
+		<entry keyword="~ bei der Textsuche">
+    		<topic href="html/textSearch.html"/>
+    	</entry>
+	</entry>
+</index>

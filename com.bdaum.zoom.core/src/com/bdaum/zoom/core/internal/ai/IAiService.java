@@ -19,7 +19,11 @@
  */
 package com.bdaum.zoom.core.internal.ai;
 
+import java.awt.image.BufferedImage;
+
 import org.eclipse.swt.widgets.Shell;
+
+import com.bdaum.zoom.core.internal.lire.Algorithm;
 
 public interface IAiService {
 
@@ -48,4 +52,14 @@ public interface IAiService {
 	float getMarkAbove(String providerId);
 
 	boolean getMarkKnownOnly(String providerId);
+
+	float[] getFeatureVector(BufferedImage image, String serviceId);
+
+	boolean hasProvider(String id);
+
+	boolean isAccountValid(String providerId);
+
+	Algorithm[] getLireAlgorithms();
+
+	Class<?> getFeature(String providerId);
 }

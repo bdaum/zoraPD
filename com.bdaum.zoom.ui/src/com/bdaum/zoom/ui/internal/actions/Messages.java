@@ -158,6 +158,8 @@ public class Messages extends NLS {
 	public static String OpenCatAction_Open_existing;
 	public static String OpenCatAction_Operations_running;
 	public static String OpenCatalogCommand_already_open;
+	public static String OpenCatalogCommand_paused;
+	public static String OpenCatalogCommand_resume_watch;
 	public static String PasteAction_Error_pasting;
 	public static String PasteMetadataAction_xmp_error_reading_from_clipboard;
 	public static String PrintAction_Nothing_to_print;

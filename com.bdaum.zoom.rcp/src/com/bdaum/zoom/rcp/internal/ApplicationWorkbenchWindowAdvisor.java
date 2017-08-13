@@ -76,7 +76,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		RcpActivator activator = RcpActivator.getDefault();
 		String v = activator.getPreferenceStore()
 				.getString(com.bdaum.zoom.rcp.internal.PreferenceConstants.PREVIOUSVERSION);
-		activator.setNew(v == null || v.length() == 0);
+		activator.setNew(v == null || v.isEmpty());
 		super.openIntro();
 	}
 

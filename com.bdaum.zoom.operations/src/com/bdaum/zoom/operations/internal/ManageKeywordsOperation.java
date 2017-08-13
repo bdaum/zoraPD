@@ -142,4 +142,8 @@ public class ManageKeywordsOperation extends DbOperation {
 		return assets.size() > 3 ? Job.LONG : Job.SHORT;
 	}
 
+	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
+		//do nothing
+	}
+
 }

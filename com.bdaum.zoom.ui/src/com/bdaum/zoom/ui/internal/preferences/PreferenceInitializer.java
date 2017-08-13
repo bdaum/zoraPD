@@ -20,7 +20,6 @@
 
 package com.bdaum.zoom.ui.internal.preferences;
 
-import java.util.Collection;
 import java.util.Map;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
@@ -49,6 +48,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.put(PreferenceConstants.BACKGROUNDCOLOR, PreferenceConstants.BACKGROUNDCOLOR_DARKGREY);
 		defaultNode.putBoolean(PreferenceConstants.AUTOEXPORT, true);
 		defaultNode.put(PreferenceConstants.DERIVERELATIONS, Constants.DERIVE_ALL);
+		defaultNode.putInt(PreferenceConstants.SHOWDECO, PreferenceConstants.DECOALWAYS);
 		defaultNode.put(PreferenceConstants.SHOWRATING, PreferenceConstants.SHOWRATING_SIZE);
 		defaultNode.putBoolean(PreferenceConstants.SHOWLOCATION, true);
 		defaultNode.putBoolean(PreferenceConstants.SHOWROTATEBUTTONS, true);
@@ -73,60 +73,20 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.put(PreferenceConstants.DNGFOLDER, "dng"); //$NON-NLS-1$
 
 		defaultNode.put(PreferenceConstants.FILEASSOCIATION, FileAssociationsPreferencePage.DFLTMAPPINGS);
-
-		// String[] supportedImageFileExtensions = ImageConstants
-		// .getSupportedImageFileExtensions(true);
-		// List<FileEditorMapping> list = new ArrayList<FileEditorMapping>();
-		// for (int i = 0; i < supportedImageFileExtensions.length; i++) {
-		// String extension = supportedImageFileExtensions[i];
-		// List<String> extensions = new ArrayList<String>();
-		// StringTokenizer st = new StringTokenizer(extension, "; ");
-		// //$NON-NLS-1$
-		// while (st.hasMoreTokens()) {
-		// String ext = st.nextToken();
-		// int p = ext.lastIndexOf('.');
-		// if (p >= 0)
-		// ext = ext.substring(p + 1);
-		// extensions.add(ext);
-		// }
-		// if (extensions.size() > 0)
-		// list.add(new FileEditorMapping(extensions
-		// .toArray(new String[extensions.size()])));
-		// }
-		// for (IMediaSupport mediaSupport : CoreActivator.getDefault()
-		// .getMediaSupport())
-		// list.add(new FileEditorMapping(mediaSupport.getFileExtensions()));
-		// FileEditorMapping[] mappings = list.toArray(new
-		// FileEditorMapping[list
-		// .size()]);
-		// FileAssociationsPreferencePage.saveMappings(mappings, true);
-
 		StringBuilder sb = new StringBuilder();
 		StringBuilder sbh = new StringBuilder();
 		StringBuilder sbt = new StringBuilder();
 		StringBuilder sbe = new StringBuilder();
-		Collection<String> queryFieldKeys = QueryField.getQueryFieldKeys();
-		for (String id : queryFieldKeys) {
-			QueryField qfield = QueryField.findQueryField(id);
+		for (QueryField qfield : QueryField.getQueryFields()) {
 			if (qfield.hasLabel() && qfield.getChildren().length == 0) {
-				if (sbe.length() > 0)
-					sbe.append('\n');
-				sbe.append(id);
-				if (qfield.isEssential()) {
-					if (sb.length() > 0)
-						sb.append('\n');
-					sb.append(id);
-				}
-				if (qfield.isHover()) {
-					if (sbh.length() > 0)
-						sbh.append('\n');
-					sbh.append(id);
-				}
-				if (qfield.getTolerance() != 0f) {
-					if (sbt.length() > 0)
-						sbt.append('\n');
-					sbt.append(id).append("=").append(qfield.getTolerance()); //$NON-NLS-1$
-				}
+				String id = qfield.getId();
+				sbe.append(id).append('\n');
+				if (qfield.isEssential())
+					sb.append(id).append('\n');
+				if (qfield.isHover())
+					sbh.append(id).append('\n');
+				if (qfield.getTolerance() != 0f)
+					sbt.append(id).append("=").append(qfield.getTolerance()).append('\n'); //$NON-NLS-1$
 			}
 		}
 		defaultNode.put(PreferenceConstants.ESSENTIALMETADATA, sb.toString());

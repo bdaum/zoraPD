@@ -29,11 +29,7 @@ public class ForwardCommand extends AbstractCommandHandler {
 	@Override
 	public void run() {
 		final IWorkbenchWindow window = getActiveWorkbenchWindow();
-		BusyIndicator.showWhile(window.getShell().getDisplay(), new Runnable() {
-			public void run() {
-				UiActivator.getDefault().getNavigationHistory(window).forward();
-			}
-		});
+		BusyIndicator.showWhile(window.getShell().getDisplay(), () -> UiActivator.getDefault().getNavigationHistory(window).forward());
 	}
 
 	@Override

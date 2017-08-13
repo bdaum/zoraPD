@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+
+
+  
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Erweiterte Suche</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../../../com.bdaum.zoom.rcp/book.css">
+
+  
+  <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
+<h2>Erweiterte Suche</h2>Die optional installierten erweiterten Suchfunktionen umfassen die folgenden:<br>
+<br>
+<ul>
+  <li><span style="font-weight: bold;">Volltextsuche</span>. Sie können einen beliebigen, im Zusammenhang mit einem Bild vorkommenden Text
+suchen: zum Beispiel Schlagworte, Überschriften, Text in Dias,
+Ausstellungen und andere Texte. Welche Textelemente für die Suche
+indiziert sind, kann in den <span style="font-weight: bold;">Katalogeigenschaften</span>, Abschnitt <span style="font-weight: bold;">Indizierung</span>, konfiguriert werden. Sie können <a href="textSearch.html">Suchausdrücke</a> verwenden. Die Ergebnisse werden mit einer Trefferwahrscheinlichkeit angezeigt.</li>
+  <li><span style="font-weight: bold;">Inhaltsbasierte Suche</span>. Sie können auf der Grundlage der visuellen Ähnlichkeit zu einem gegebenen Bild suchen. Für jede <a href="SearchSimilarDialog.html">Suchanfrage</a>
+ist es möglich, Schlagworte und inhaltsbasierte Suche zu kombinieren
+und das gegebenen Bild mit Malwerkzeugen verändern. Die verwendeten
+Algorithmen können in den<span style="font-weight: bold;"> Katalogeigenschaften</span>, Abschnitt <span style="font-weight: bold;">Indizierung</span>, konfiguriert werden.<br>
+    <span id="result_box" class="" tabindex="-1" lang="de"><span class="">Bildähnlichkeit basiert auf Farbe, Textur und Form.</span> <span class="">Verschiedene Algorithmen interpretieren diese Merkmale auf unterschiedliche Weise.</span> <span class="">Welcher Algorithmus am besten geeignet ist, hängt von Ihrem Bild ab.</span> <span class="">Landschaftsbilder benötigen zum Beispiel einen anderen Algorithmus als Firmenlogos.</span> <span class="">Sie
+ können Ihre Bilder mit mehreren Algorithmen indizieren und dann bei der
+ Suche verschiedene Algorithmen ausprobieren, um herauszufinden, welcher am besten für Ihre Bilder funktioniert.</span> <span class="">Aber Vorsicht vor der Verwendung zu vielen Algorithmen für die Indizierung, weil dies den Indizierungsprozess </span></span><span id="result_box" class="" tabindex="-1" lang="de"><span class="">verlangsamt</span></span><span id="result_box" class="" tabindex="-1" lang="de"><span class="">.</span><br><br><span class="">Ein spezieller Fall sind AI-Algorithmen&nbsp;</span></span> (markiert mit <img style="width: 16px; height: 16px;" alt="neural" src="PLUGINS_ROOT/com.bdaum.zoom.lireLucene/html/images/neural.png">)<span id="result_box" class="" tabindex="-1" lang="de"><span class=""> wie der <span style="font-style: italic;">Clarifai</span>-Algorithmus.</span> <span class="">Diese
+ Algorithmen verwenden keine Low-Level-</span></span><span id="result_box" class="" tabindex="-1" lang="de"><span class="">Merkmale</span></span><span id="result_box" class="" tabindex="-1" lang="de"><span class="">, sondern vergleichen 
+High-Level-Bildkonzepte, die von einem tiefen neuronalen Netzwerk ermittelt werden.</span> <span class="">Hier ist die Ähnlichkeit eher semantisch als visuell.</span> <span class="">Der Nachteil ist, dass diese Dienste in der Regel einen Web-Service </span></span><span id="result_box" class="" tabindex="-1" lang="de"><span class="">benötigen</span></span><span id="result_box" class="" tabindex="-1" lang="de"><span class="">.</span> <span class="">Beim Indexieren erzeugt jedes Bild eine Webdienstanforderung.</span> <span class="">Für
+ große Kataloge kann dies die Kapazität der kostenlosen 
+Web-Service-Konten übersteigen, so dass ein kostenpflichtiges Konto 
+erforderlich wäre.</span></span><br>
+</li>
+</ul>
+<br>
+Das Suchfeld in der globalen Werkzeugleiste akzeptiert sowohl
+Schlagwortausdrücke als auch Bilder. Diese ziehen Sie einfach mit der
+Maus in das Feld. Wenn die erweiterten Suchfunktionen nicht installiert
+wurden, führt das Suchfeld eine Schlagwortsuche durch.<br>
+<br>
+Sowohl die Text- als auch die inhaltsbasierte Suche verwenden die Suchmaschine <a href="http://lucene.apache.org/">Lucene</a>. Die inhaltsbasierte Suche basiert zusätzlich auf den <a href="http://www.lire-project.net/">LIRE</a>-Bibliotheken.<br>
+
+<br>
+</body></html>

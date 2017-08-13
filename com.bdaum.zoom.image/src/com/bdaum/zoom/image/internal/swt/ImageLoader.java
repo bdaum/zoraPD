@@ -367,7 +367,7 @@ public void save(OutputStream stream, int format) {
  * @see #removeImageLoaderListener(ImageLoaderListener)
  */
 public boolean hasListeners() {
-	return imageLoaderListeners != null && imageLoaderListeners.size() > 0;
+	return imageLoaderListeners != null && !imageLoaderListeners.isEmpty();
 }
 
 /**

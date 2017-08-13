@@ -459,7 +459,7 @@ public class ColorCodeGroup {
 		resetValues();
 		if (crit == null)
 			crit = new CriterionImpl();
-		if (crit.getField() == null || crit.getField().length() == 0) {
+		if (crit.getField() == null || crit.getField().isEmpty()) {
 			fieldDescriptor = null;
 			critGroupCombo.setSelection(new StructuredSelection(QueryField.CATEGORY_ALL));
 		} else {
@@ -580,15 +580,15 @@ public class ColorCodeGroup {
 		if (valueLayout.topControl == enumRangeGroup
 				&& (enumFromField.getSelectionIndex() < 0 || enumToField.getSelectionIndex() < 0))
 			return null;
-		if (valueLayout.topControl == codeGroup && codeValueField.getText().length() == 0)
+		if (valueLayout.topControl == codeGroup && codeValueField.getText().isEmpty())
 			return null;
 		if (valueLayout.topControl == codeRangeGroup
-				&& (codeFromField.getText().length() == 0 || codeToField.getText().length() == 0))
+				&& (codeFromField.getText().isEmpty() || codeToField.getText().isEmpty()))
 			return null;
-		if (valueLayout.topControl == textGroup && textValueField.getText().length() == 0)
+		if (valueLayout.topControl == textGroup && textValueField.getText().isEmpty())
 			return null;
 		if (valueLayout.topControl == textRangeGroup
-				&& (textFromField.getText().length() == 0 || textToField.getText().length() == 0))
+				&& (textFromField.getText().isEmpty() || textToField.getText().isEmpty()))
 			return null;
 		Criterion criterion = new CriterionImpl();
 		FieldDescriptor des = fieldDescriptors.get(field);

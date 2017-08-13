@@ -66,8 +66,7 @@ public class ViewImageAction extends Action {
 
 	private final IAdaptable adaptable;
 
-	public ViewImageAction(String label, String tooltip, ImageDescriptor image,
-			IAdaptable adaptable) {
+	public ViewImageAction(String label, String tooltip, ImageDescriptor image, IAdaptable adaptable) {
 		super(label, image);
 		this.adaptable = adaptable;
 		setToolTipText(tooltip);
@@ -87,70 +86,45 @@ public class ViewImageAction extends Action {
 		else if (event.data instanceof AssetContainer)
 			asset = ((AssetContainer) event.data).getAsset();
 		if (asset == null) {
-			AssetSelection selection = adaptable
-					.getAdapter(AssetSelection.class);
+			AssetSelection selection = adaptable.getAdapter(AssetSelection.class);
 			if (!selection.isEmpty())
 				asset = selection.get(0);
 		}
 		if (asset != null) {
 			final Asset a = asset;
 			final boolean b = bw;
-			BusyIndicator.showWhile(Display.getCurrent(), new Runnable() {
-				public void run() {
-					launchViewer(a, shift, b, ctrl,
-							adaptable
-									.getAdapter(IWorkbenchWindow.class));
-				}
-			});
+			BusyIndicator.showWhile(Display.getCurrent(), () -> launchViewer(a, shift, b, ctrl, adaptable.getAdapter(IWorkbenchWindow.class)));
 		}
 	}
 
-	protected void launchViewer(Asset asset, boolean shift, boolean alt,
-			boolean ctrl, final IWorkbenchWindow window) {
-		IImageViewer imageViewer = UiActivator.getDefault().getImageViewer(
-				asset);
-		URI uri = Core.getCore().getVolumeManager()
-				.findExistingFile(asset, false);
-		boolean isFile = uri == null
-				|| Constants.FILESCHEME.equals(uri.getScheme());
-		boolean isFtp = uri == null
-				|| IFTPService.FTPSCHEME.equals(uri.getScheme());
+	protected void launchViewer(Asset asset, boolean shift, boolean alt, boolean ctrl, final IWorkbenchWindow window) {
+		IImageViewer imageViewer = UiActivator.getDefault().getImageViewer(asset);
+		URI uri = Core.getCore().getVolumeManager().findExistingFile(asset, false);
+		boolean isFile = uri == null || Constants.FILESCHEME.equals(uri.getScheme());
+		boolean isFtp = uri == null || IFTPService.FTPSCHEME.equals(uri.getScheme());
 		try {
-			if (uri != null && !isFile && !isFtp
-					&& (imageViewer == null || !imageViewer.canHandleRemote())) {
-				PlatformUI.getWorkbench().getBrowserSupport()
-						.getExternalBrowser().openURL(uri.toURL());
+			if (uri != null && !isFile && !isFtp && (imageViewer == null || !imageViewer.canHandleRemote())) {
+				PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(uri.toURL());
 				return;
 			}
 		} catch (Exception e) {
-			Core.getCore()
-					.logError(
-							NLS.bind(
-									Messages.ViewImageAction_error_viewing_remote_image,
-									uri), e);
+			Core.getCore().logError(NLS.bind(Messages.ViewImageAction_error_viewing_remote_image, uri), e);
 		}
-		IPreferencesService preferencesService = Platform
-				.getPreferencesService();
-		RGB filter = StringConverter.asRGB(preferencesService
-				.getString(UiActivator.PLUGIN_ID, PreferenceConstants.BWFILTER,
-						null, null), new RGB(64, 128, 64));
-		if (!shift
-				&& !alt
-				&& !ctrl
-				&& (isFile || imageViewer == null || !imageViewer
-						.canHandleRemote())) {
-			String viewerPath = preferencesService.getString(
-					UiActivator.PLUGIN_ID,
+		IPreferencesService preferencesService = Platform.getPreferencesService();
+		RGB filter = StringConverter.asRGB(
+				preferencesService.getString(UiActivator.PLUGIN_ID, PreferenceConstants.BWFILTER, null, null),
+				new RGB(64, 128, 64));
+		if (!shift && !alt && !ctrl && (isFile || imageViewer == null || !imageViewer.canHandleRemote())) {
+			String viewerPath = preferencesService.getString(UiActivator.PLUGIN_ID,
 					imageViewer == null ? PreferenceConstants.EXTERNALVIEWER
-							: PreferenceConstants.EXTERNALMEDIAVIEWER
-									+ imageViewer.getId(), "", null); //$NON-NLS-1$
-			if (viewerPath != null && viewerPath.length() > 0) {
+							: PreferenceConstants.EXTERNALMEDIAVIEWER + imageViewer.getId(),
+					"", null); //$NON-NLS-1$
+			if (viewerPath != null && !viewerPath.isEmpty()) {
 				File viewer = new File(viewerPath);
 				if (viewer.exists()) {
 					try {
 						if (uri == null) {
-							UiUtilities.showFileIsOffline(window.getShell(),
-									asset);
+							UiUtilities.showFileIsOffline(window.getShell(), asset);
 							return;
 						}
 						File tempFile = null;
@@ -161,42 +135,32 @@ public class ViewImageAction extends Action {
 							file = Core.download(uri, null);
 							tempFile = file;
 						}
-						boolean autoExport = preferencesService.getBoolean(
-								UiActivator.PLUGIN_ID,
+						boolean autoExport = preferencesService.getBoolean(UiActivator.PLUGIN_ID,
 								PreferenceConstants.AUTOEXPORT, true, null);
 						if (autoExport && tempFile == null) {
-							ExportMetadataOperation op = new ExportMetadataOperation(
-									Collections.singletonList(asset),
-									UiActivator.getDefault().getExportFilter(),
-									UiActivator
-											.getDefault()
-											.getPreferenceStore()
-											.getBoolean(
-													PreferenceConstants.JPEGMETADATA),
+							ExportMetadataOperation op = new ExportMetadataOperation(Collections.singletonList(asset),
+									UiActivator.getDefault().getExportFilter(), UiActivator.getDefault()
+											.getPreferenceStore().getBoolean(PreferenceConstants.JPEGMETADATA),
 									true, false);
 							try {
-								op.execute(new NullProgressMonitor(),
-										new IAdaptable() {
+								op.execute(new NullProgressMonitor(), new IAdaptable() {
 
-											@SuppressWarnings({ "unchecked", "rawtypes" })
-											public Object getAdapter(
-													Class adapter) {
-												if (Shell.class.equals(adapter))
-													return window.getShell();
-												return null;
-											}
-										});
+									@SuppressWarnings({ "unchecked", "rawtypes" })
+									public Object getAdapter(Class adapter) {
+										if (Shell.class.equals(adapter))
+											return window.getShell();
+										return null;
+									}
+								});
 							} catch (ExecutionException e) {
 								// should not happen
 							}
 						}
-						Process process = Runtime.getRuntime().exec(
-								new String[] { viewerPath,
-										file.getAbsolutePath() });
-						BufferedReader br = new BufferedReader(
-								new InputStreamReader(process.getErrorStream()));
+						Process process = Runtime.getRuntime()
+								.exec(new String[] { viewerPath, file.getAbsolutePath() });
+						BufferedReader br = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 						while ((br.readLine()) != null) {
-							//do nothing
+							// do nothing
 						}
 						try {
 							process.waitFor();
@@ -207,36 +171,22 @@ public class ViewImageAction extends Action {
 						}
 						return;
 					} catch (Exception e) {
-						Core.getCore()
-								.logError(
-										NLS.bind(
-												Messages.ViewImageAction_error_launching,
-												viewerPath), e);
+						Core.getCore().logError(NLS.bind(Messages.ViewImageAction_error_launching, viewerPath), e);
 					}
 					return;
 				}
-				AcousticMessageDialog
-						.openError(
-								window.getShell(),
-								Messages.ViewImageAction_viewer_missing,
-								NLS.bind(
-										Messages.ViewImageAction_configured_external_viewer,
-										viewerPath));
+				AcousticMessageDialog.openError(window.getShell(), Messages.ViewImageAction_viewer_missing,
+						NLS.bind(Messages.ViewImageAction_configured_external_viewer, viewerPath));
 			}
 		}
 		IImageViewer viewer = UiActivator.getDefault().getImageViewer(asset);
 		if (viewer == null)
 			viewer = new ImageViewer();
-		viewer.init(window.getShell().getDisplay(), alt ? filter : null,
-				ctrl ? (shift ? ZImage.ORIGINAL : ZImage.CROPPED)
-						: ZImage.CROPMASK);
+		viewer.init(window, alt ? filter : null, ctrl ? (shift ? ZImage.ORIGINAL : ZImage.CROPPED) : ZImage.CROPMASK);
 		try {
 			viewer.open(asset);
 		} catch (IOException e) {
-			Core.getCore()
-					.logError(
-							Messages.ViewImageAction_error_launching_internal_viewer,
-							e);
+			Core.getCore().logError(Messages.ViewImageAction_error_launching_internal_viewer, e);
 		}
 	}
 }

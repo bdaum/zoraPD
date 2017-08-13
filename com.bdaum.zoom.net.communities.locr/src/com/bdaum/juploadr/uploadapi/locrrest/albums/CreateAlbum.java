@@ -46,10 +46,10 @@ public class CreateAlbum extends LocrMethod {
 		params.put("method", "create_album_xml.php?"); //$NON-NLS-1$ //$NON-NLS-2$
 		params.put("name", photoSet.getTitle()); //$NON-NLS-1$
 		if (photoSet.getDescription() != null
-				&& photoSet.getDescription().length() > 0) {
+				&& !photoSet.getDescription().isEmpty()) {
 			params.put("description", photoSet.getDescription()); //$NON-NLS-1$
 		}
-		if (photoSet.getKeywords() != null && photoSet.getKeywords().size() > 0) {
+		if (photoSet.getKeywords() != null && !photoSet.getKeywords().isEmpty()) {
 			TagParser tagParser = new TagParser(',');
 			params.put(
 					"tags", tagParser.toRequestString(photoSet.getKeywords())); //$NON-NLS-1$

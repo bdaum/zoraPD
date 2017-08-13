@@ -193,7 +193,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 	}
 
 	protected void verifyAccountCredenials(int time) {
-		disposeTimer();
+		disposeResources();
 		timer = new Timer();
 		timer.schedule(new TimerTask() {
 			@Override
@@ -220,7 +220,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		}, time);
 	}
 
-	private void disposeTimer() {
+	private void disposeResources() {
 		if (timer != null) {
 			timer.cancel();
 			timer = null;
@@ -277,7 +277,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 
 	@Override
 	public void performOk() {
-		disposeTimer();
+		disposeResources();
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		preferenceStore.setValue(PreferenceConstants.CLIENTID, clientIdField.getText());
 		preferenceStore.setValue(PreferenceConstants.CLIENTSECRET, clientSecretField.getText());
@@ -337,7 +337,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 
 	@Override
 	public void performCancel() {
-		disposeTimer();
+		disposeResources();
 	}
 
 	@Override

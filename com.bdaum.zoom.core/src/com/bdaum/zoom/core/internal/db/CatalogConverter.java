@@ -77,7 +77,7 @@ public class CatalogConverter {
 					update = true;
 				}
 				String format = asset.getFormat();
-				if (format == null || format.length() == 0) {
+				if (format == null || format.isEmpty()) {
 					String uri = asset.getUri();
 					int p = uri.lastIndexOf('.');
 					if (p > 0) {

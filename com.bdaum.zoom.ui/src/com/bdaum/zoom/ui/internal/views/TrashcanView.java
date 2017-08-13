@@ -109,8 +109,7 @@ public class TrashcanView extends LightboxView {
 
 	@Override
 	protected void addGalleryPaintListener() {
-		gallery.addListener(SWT.PaintItem, new TrashGalleryPaintListener(
-				itemRenderer));
+		gallery.addListener(SWT.PaintItem, new TrashGalleryPaintListener(itemRenderer));
 	}
 
 	@Override
@@ -121,8 +120,7 @@ public class TrashcanView extends LightboxView {
 	@Override
 	protected void setHelp(int orientation) {
 		// Create the help context id for the viewer's control
-		PlatformUI.getWorkbench().getHelpSystem()
-				.setHelp(gallery, HelpContextIds.TRASHCAN_VIEW);
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(gallery, HelpContextIds.TRASHCAN_VIEW);
 	}
 
 	@Override
@@ -150,10 +148,9 @@ public class TrashcanView extends LightboxView {
 		if (node == null) {
 			Shell shell = getSite().getShell();
 			if (!shell.isDisposed())
-				shell.getDisplay().asyncExec(new Runnable() {
-					public void run() {
+				shell.getDisplay().asyncExec(() -> {
+					if (!shell.isDisposed())
 						refresh();
-					}
 				});
 		}
 	}
@@ -162,8 +159,8 @@ public class TrashcanView extends LightboxView {
 	public void catalogModified() {
 		Shell shell = getSite().getShell();
 		if (!shell.isDisposed())
-			shell.getDisplay().asyncExec(new Runnable() {
-				public void run() {
+			shell.getDisplay().asyncExec(() -> {
+				if (!shell.isDisposed()) {
 					refresh();
 					updateActions();
 				}
@@ -186,29 +183,22 @@ public class TrashcanView extends LightboxView {
 		createScaleContributionItem(MINTHUMBSIZE, MAXTHUMBSIZE);
 		createSelectallAction();
 
-		sortModeAction = new Action(
-				Messages.getString("TrashcanView.sort_by_name"), IAction.AS_CHECK_BOX) { //$NON-NLS-1$
+		sortModeAction = new Action(Messages.getString("TrashcanView.sort_by_name"), IAction.AS_CHECK_BOX) { //$NON-NLS-1$
 
 			@Override
 			public void run() {
 				sortMode = isChecked();
 				if (isChecked()) {
-					sortModeAction.setText(Messages
-							.getString("TrashcanView.sort_by_date")); //$NON-NLS-1$
-					sortModeAction
-							.setToolTipText(Messages
-									.getString("TrashcanView.sort_items_by_deletion_date")); //$NON-NLS-1$
+					sortModeAction.setText(Messages.getString("TrashcanView.sort_by_date")); //$NON-NLS-1$
+					sortModeAction.setToolTipText(Messages.getString("TrashcanView.sort_items_by_deletion_date")); //$NON-NLS-1$
 				} else {
-					sortModeAction.setText(Messages
-							.getString("TrashcanView.sort_by_name")); //$NON-NLS-1$
-					sortModeAction.setToolTipText(Messages
-							.getString("TrashcanView.sort_items_by_name")); //$NON-NLS-1$
+					sortModeAction.setText(Messages.getString("TrashcanView.sort_by_name")); //$NON-NLS-1$
+					sortModeAction.setToolTipText(Messages.getString("TrashcanView.sort_items_by_name")); //$NON-NLS-1$
 				}
 				redrawCollection(null, null);
 			}
 		};
-		sortModeAction.setToolTipText(Messages
-				.getString("TrashcanView.sort_items_by_name")); //$NON-NLS-1$
+		sortModeAction.setToolTipText(Messages.getString("TrashcanView.sort_items_by_name")); //$NON-NLS-1$
 		sortModeAction.setImageDescriptor(Icons.alphab_sort.getDescriptor());
 
 		restoreAction = new Action(Messages.getString("TrashcanView.restore"), //$NON-NLS-1$
@@ -216,32 +206,29 @@ public class TrashcanView extends LightboxView {
 
 			@Override
 			public void run() {
-				if (selection != null
-						&& selection.getFirstElement() instanceof HistoryItem) {
+				if (selection != null && selection.getFirstElement() instanceof HistoryItem) {
 					HistoryItem[] hist = new HistoryItem[selection.size()];
 					Iterator<?> it = selection.iterator();
 					int i = 0;
 					while (it.hasNext())
 						hist[i++] = (HistoryItem) it.next();
-					OperationJob.executeOperation(new RestoreOperation(hist,
-							UiActivator.getDefault()
-									.createImportConfiguration(TrashcanView.this)), TrashcanView.this);
+					OperationJob.executeOperation(
+							new RestoreOperation(hist,
+									UiActivator.getDefault().createImportConfiguration(TrashcanView.this)),
+							TrashcanView.this);
 				}
 			}
 		};
-		restoreAction.setToolTipText(Messages
-				.getString("TrashcanView.restore_selected_items")); //$NON-NLS-1$
+		restoreAction.setToolTipText(Messages.getString("TrashcanView.restore_selected_items")); //$NON-NLS-1$
 
-		emptyTrashcanAction = new Action(
-				Messages.getString("TrashcanView.empty_trashcan"), Icons.cleartrash //$NON-NLS-1$
-						.getDescriptor()) {
+		emptyTrashcanAction = new Action(Messages.getString("TrashcanView.empty_trashcan"), Icons.cleartrash //$NON-NLS-1$
+				.getDescriptor()) {
 			@Override
 			public void run() {
 				OperationJob.executeOperation(new EmptyTrashOperation(), TrashcanView.this);
 			}
 		};
-		emptyTrashcanAction.setToolTipText(Messages
-				.getString("TrashcanView.clear_trashcan_and_delete_all")); //$NON-NLS-1$
+		emptyTrashcanAction.setToolTipText(Messages.getString("TrashcanView.clear_trashcan_and_delete_all")); //$NON-NLS-1$
 	}
 
 	@Override
@@ -290,28 +277,23 @@ public class TrashcanView extends LightboxView {
 
 	@Override
 	public void selectAll() {
-		BusyIndicator.showWhile(getSite().getShell().getDisplay(),
-				new Runnable() {
-					public void run() {
-						GalleryItem[] items = new GalleryItem[trashSet == null ? 0
-								: trashSet.size()];
-						HistoryItem[] hist = new HistoryItem[items.length];
-						GalleryItem group = gallery.getItem(0);
-						for (int i = 0; i < items.length; i++) {
-							items[i] = group.getItem(i);
-							hist[i] = (HistoryItem) items[i].getData("trash"); //$NON-NLS-1$
-						}
-						gallery.setSelection(items);
-						if (items.length > 0)
-							gallery.showItem(items[0]);
-						selection = new StructuredSelection(hist);
-					}
-				});
+		BusyIndicator.showWhile(getSite().getShell().getDisplay(), () -> {
+			GalleryItem[] items = new GalleryItem[trashSet == null ? 0 : trashSet.size()];
+			HistoryItem[] hist = new HistoryItem[items.length];
+			GalleryItem group = gallery.getItem(0);
+			for (int i = 0; i < items.length; i++) {
+				items[i] = group.getItem(i);
+				hist[i] = (HistoryItem) items[i].getData("trash"); //$NON-NLS-1$
+			}
+			gallery.setSelection(items);
+			if (items.length > 0)
+				gallery.showItem(items[0]);
+			selection = new StructuredSelection(hist);
+		});
 	}
 
 	@Override
-	public boolean redrawCollection(Collection<? extends Asset> assets,
-			QueryField node) {
+	public boolean redrawCollection(Collection<? extends Asset> assets, QueryField node) {
 		if (gallery == null || gallery.isDisposed())
 			return false;
 		trashSet = Core.getCore().getDbManager().obtainTrash(sortMode);
@@ -340,10 +322,8 @@ public class TrashcanView extends LightboxView {
 	@Override
 	protected void updateStatusLine() {
 		if (trashSet != null)
-			setStatusMessage(NLS.bind(
-					Messages.getString("AbstractGalleryView.n_images"), String //$NON-NLS-1$
-							.valueOf(trashSet.size()),
-					String.valueOf(selection == null ? 0 : selection.size())), false);
+			setStatusMessage(NLS.bind(Messages.getString("AbstractGalleryView.n_images"), String //$NON-NLS-1$
+					.valueOf(trashSet.size()), String.valueOf(selection == null ? 0 : selection.size())), false);
 	}
 
 	@Override

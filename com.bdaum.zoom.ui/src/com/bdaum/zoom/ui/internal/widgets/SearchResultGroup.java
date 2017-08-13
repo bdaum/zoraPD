@@ -137,21 +137,19 @@ public class SearchResultGroup {
 			link.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					BusyIndicator.showWhile(link.getDisplay(), new Runnable() {
-						public void run() {
-							IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench()
-									.getActiveWorkbenchWindow();
-							if (activeWorkbenchWindow != null) {
-								IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-								if (activePage != null) {
-									EditMetaDialog mdialog = new EditMetaDialog(link.getShell(), activePage,
-											Core.getCore().getDbManager(), false, null);
-									mdialog.setInitialPage(EditMetaDialog.INDEXING);
-									if (mdialog.open() == Dialog.OK) {
-										ISelection selection = algoViewer.getSelection();
-										fillAlgoViewer();
-										algoViewer.setSelection(selection);
-									}
+					BusyIndicator.showWhile(link.getDisplay(), () -> {
+						IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench()
+								.getActiveWorkbenchWindow();
+						if (activeWorkbenchWindow != null) {
+							IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+							if (activePage != null) {
+								EditMetaDialog mdialog = new EditMetaDialog(link.getShell(), activePage,
+										Core.getCore().getDbManager(), false, null);
+								mdialog.setInitialPage(EditMetaDialog.INDEXING);
+								if (mdialog.open() == Dialog.OK) {
+									ISelection selection = algoViewer.getSelection();
+									fillAlgoViewer();
+									algoViewer.setSelection(selection);
 								}
 							}
 						}

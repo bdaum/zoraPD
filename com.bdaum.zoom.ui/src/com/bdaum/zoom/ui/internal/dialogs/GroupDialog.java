@@ -42,7 +42,7 @@ public class GroupDialog extends ZInputDialog {
 				new IInputValidator() {
 
 					public String isValid(String newText) {
-						if (newText.length() == 0)
+						if (newText.isEmpty())
 							return Messages.GroupDialog_specify_name;
 						List<GroupImpl> set = Core
 								.getCore()

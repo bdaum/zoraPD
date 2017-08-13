@@ -449,7 +449,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 			addChild(slide);
 			// overlay region frames
 			if (asset != null) {
-				if (showRegions > 0) {
+				if (showRegions > 0 && deco != PreferenceConstants.DECONEVER) {
 					String[] regionIds = asset.getPerson();
 					if (regionIds != null && regionIds.length > 0) {
 						String fontFamily = "Arial"; //$NON-NLS-1$
@@ -483,7 +483,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 								slide.addChild(frameFill);
 								Color color = Color.RED;
 								String name = "?"; //$NON-NLS-1$
-								if (type == null || type.length() == 0 || Region.type_face.equals(type)
+								if (type == null || type.isEmpty() || Region.type_face.equals(type)
 										|| Region.type_pet.equals(type)) {
 									String albumId = region.getAlbum();
 									SmartCollectionImpl album = albumId == null ? null
@@ -509,12 +509,14 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 			// Decoration
 			addMediaIcon(canvas, asset, x, y, width);
 			addCaption(canvas, asset, captionText, x, y, height);
-			addRatingStar(canvas, asset, x, y, width);
-			addDoneMark(canvas, asset, x, y, width);
-			double x1 = addColorCode(canvas, asset);
-			addLocationPin(canvas, asset, x1, y);
-			addRotateButtons(canvas, asset, width, height);
-			addVoiceNote(canvas, asset, width, height);
+			if (deco != PreferenceConstants.DECONEVER) {
+				addRatingStar(canvas, asset, x, y, width);
+				addDoneMark(canvas, asset, x, y, width);
+				double x1 = addColorCode(canvas, asset);
+				addLocationPin(canvas, asset, x1, y);
+				addRotateButtons(canvas, asset, width, height);
+				addVoiceNote(canvas, asset, width, height);
+			}
 			textEventHandler = new TextEventHandler(UiUtilities.getAwtBackground(canvas, selectionBackgroundColor),
 					this);
 		}
@@ -574,12 +576,15 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		private void addVoiceNote(PSWTCanvas pswtCanvas, Asset anAsset, double width, double height) {
 			if (showVoicenoteButton && anAsset != null) {
 				String voiceFileURI = anAsset.getVoiceFileURI();
-				if (voiceFileURI != null && voiceFileURI.length() > 0) {
-					Image speakerIcon = Icons.speaker.getImage();
+				if (voiceFileURI != null && !voiceFileURI.isEmpty()) {
+					boolean isTextNote = voiceFileURI.startsWith("?"); //$NON-NLS-1$
+					Image speakerIcon = isTextNote ? Icons.note.getImage() : Icons.speaker.getImage();
 					Rectangle ibounds = speakerIcon.getBounds();
 					speakerNode = new ZPSWTImage(pswtCanvas, speakerIcon);
 					speakerNode.setOffset((width - ibounds.width) / 2, height - ibounds.height);
-					speakerNode.setName(Messages.AnimatedGallery_play_voicenote);
+
+					speakerNode
+							.setName(isTextNote ? voiceFileURI.substring(1) : Messages.AnimatedGallery_play_voicenote);
 					addChild(speakerNode);
 				}
 			}
@@ -639,12 +644,12 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		}
 
 		private void addRatingStar(PSWTCanvas pswtCanvas, Asset anAsset, double x, double y, double width) {
-			if (!PreferenceConstants.SHOWRATING_NO.equals(showRating) && anAsset != null) {
+			if (RATING_NO != showRating && anAsset != null) {
 				int rating = anAsset.getRating();
 				double rfactor;
 				Image icon;
 				if (rating > 0) {
-					if (PreferenceConstants.SHOWRATING_SIZE.equals(showRating)) {
+					if (RATING_SIZE == showRating) {
 						icon = Icons.rating61.getImage();
 						rfactor = (rating + 0.6d) / 5.6d;
 					} else {
@@ -916,11 +921,9 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		public boolean traverse(char keyCharacter, int stateMask) {
 			if (keyCharacter == SWT.TAB) {
 				nav((stateMask & SWT.SHIFT) != 0 ? -1 : 1, 0);
-				getControl().getDisplay().asyncExec(new Runnable() {
-					public void run() {
-						if (!getControl().isDisposed())
-							focusOnTitle();
-					}
+				getControl().getDisplay().asyncExec(() -> {
+					if (!getControl().isDisposed())
+						focusOnTitle();
 				});
 				return true;
 			}
@@ -950,6 +953,10 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 
 	private static final PGalleryItem[] NOSLIDES = new PGalleryItem[0];
 
+	private static final int RATING_NO = 0;
+	private static final int RATING_SIZE = 1;
+	private static final int RATING_COUNT = 2;
+
 	private Color offlineColor;
 	private Color remoteColor;
 
@@ -976,7 +983,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 	Image shadowImage;
 	protected boolean showRotateButtons;
 	protected boolean showColorCode;
-	protected String showRating;
+	protected int showRating;
 	protected boolean showLocation;
 	protected boolean showVoicenoteButton;
 	protected boolean showDoneMark;
@@ -1018,6 +1025,8 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 	protected AffineTransform oldTransform;
 
 	private List<Rectangle> rectangleList = new ArrayList<>();
+
+	private int deco;
 
 	public AnimatedGallery(final PSWTCanvas canvas, int slideSize, int thumbSize, ImageStore imageSource) {
 		this.thumbSize = thumbSize;
@@ -1141,43 +1150,38 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 	}
 
 	protected void setPreferences() {
-		final IPreferenceStore preferenceStore = UiActivator.getDefault().getPreferenceStore();
-		showRotateButtons = preferenceStore.getBoolean(PreferenceConstants.SHOWROTATEBUTTONS);
-		showColorCode = !PreferenceConstants.COLORCODE_NO
-				.equals(preferenceStore.getString(PreferenceConstants.SHOWCOLORCODE));
-		showRating = preferenceStore.getString(PreferenceConstants.SHOWRATING);
-		showLocation = preferenceStore.getBoolean(PreferenceConstants.SHOWLOCATION);
-		showVoicenoteButton = preferenceStore.getBoolean(PreferenceConstants.SHOWVOICENOTE);
-		showDoneMark = preferenceStore.getBoolean(PreferenceConstants.SHOWDONEMARK);
-		showRegions = preferenceStore.getInt(PreferenceConstants.MAXREGIONS);
+		IPreferenceStore preferenceStore = applyPreferences();
 		preferenceStore.addPropertyChangeListener(new IPropertyChangeListener() {
-
 			public void propertyChange(PropertyChangeEvent event) {
 				String property = event.getProperty();
-				if (PreferenceConstants.SHOWROTATEBUTTONS.equals(property)) {
-					showRotateButtons = (Boolean) event.getNewValue();
-					setCollection(collection, false);
-				} else if (PreferenceConstants.SHOWCOLORCODE.equals(property)) {
-					showColorCode = !PreferenceConstants.COLORCODE_NO.equals(event.getNewValue());
-					setCollection(collection, false);
-				} else if (PreferenceConstants.SHOWRATING.equals(property)) {
-					showRating = (String) event.getNewValue();
-					setCollection(collection, false);
-				} else if (PreferenceConstants.SHOWLOCATION.equals(property)) {
-					showLocation = (Boolean) event.getNewValue();
-					setCollection(collection, false);
-				} else if (PreferenceConstants.SHOWVOICENOTE.equals(property)) {
-					showVoicenoteButton = (Boolean) event.getNewValue();
-					setCollection(collection, false);
-				} else if (PreferenceConstants.SHOWDONEMARK.equals(property)) {
-					showDoneMark = (Boolean) event.getNewValue();
-					setCollection(collection, false);
-				} else if (PreferenceConstants.MAXREGIONS.equals(property)) {
-					showRegions = preferenceStore.getInt(PreferenceConstants.MAXREGIONS);
-					setCollection(collection, false);
+				if (PreferenceConstants.SHOWDECO.equals(property)
+						|| PreferenceConstants.SHOWROTATEBUTTONS.equals(property)
+						|| PreferenceConstants.SHOWCOLORCODE.equals(property)
+						|| PreferenceConstants.SHOWRATING.equals(property)
+						|| PreferenceConstants.SHOWLOCATION.equals(property)
+						|| PreferenceConstants.SHOWDONEMARK.equals(property)
+						|| PreferenceConstants.SHOWVOICENOTE.equals(property)
+						|| PreferenceConstants.MAXREGIONS.equals(property)) {
+					applyPreferences();
 				}
 			}
 		});
+	}
+
+	protected IPreferenceStore applyPreferences() {
+		final IPreferenceStore preferenceStore = UiActivator.getDefault().getPreferenceStore();
+		deco = preferenceStore.getInt(PreferenceConstants.SHOWDECO);
+		showRotateButtons = preferenceStore.getBoolean(PreferenceConstants.SHOWROTATEBUTTONS);
+		showColorCode = !PreferenceConstants.COLORCODE_NO
+				.equals(preferenceStore.getString(PreferenceConstants.SHOWCOLORCODE));
+		showLocation = preferenceStore.getBoolean(PreferenceConstants.SHOWLOCATION);
+		String rating = preferenceStore.getString(PreferenceConstants.SHOWRATING);
+		showRating = PreferenceConstants.SHOWRATING_NO.equals(rating) ? RATING_NO
+				: PreferenceConstants.SHOWRATING_SIZE.equals(rating) ? RATING_SIZE : RATING_COUNT;
+		showDoneMark = preferenceStore.getBoolean(PreferenceConstants.SHOWDONEMARK);
+		showVoicenoteButton = preferenceStore.getBoolean(PreferenceConstants.SHOWVOICENOTE);
+		showRegions = preferenceStore.getInt(PreferenceConstants.MAXREGIONS);
+		return preferenceStore;
 	}
 
 	public void setMinScale(double minScale) {
