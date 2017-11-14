@@ -135,12 +135,12 @@ public class DbFactory implements IDbFactory, IDbListener {
 		toleranceMap.clear();
 		StringTokenizer st = new StringTokenizer(prefs, "\n"); //$NON-NLS-1$
 		while (st.hasMoreTokens()) {
-			String key = st.nextToken();
-			int p = key.lastIndexOf("="); //$NON-NLS-1$
+			String token = st.nextToken();
+			int p = token.lastIndexOf("="); //$NON-NLS-1$
 			if (p > 0) {
 				try {
-					toleranceMap.put(key.substring(0, p),
-							Float.parseFloat(key.substring(p + 1)));
+					toleranceMap.put(token.substring(0, p),
+							Float.parseFloat(token.substring(p + 1)));
 				} catch (NumberFormatException e) {
 					// ignore
 				}
@@ -259,6 +259,7 @@ public class DbFactory implements IDbFactory, IDbListener {
 	 */
 	public ILuceneService getLuceneService() {
 		if (luceneService == null) {
+			getLireService(true);
 			luceneService = DbActivator.getDefault().getLuceneService();
 			luceneService.configureTextIndex(CoreActivator.getDefault().getIndexedTextFields());
 		}

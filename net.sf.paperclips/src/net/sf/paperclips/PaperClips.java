@@ -30,6 +30,7 @@ import org.eclipse.swt.printing.PrinterData;
  * @author Matthew Hall
  */
 public class PaperClips {
+	//TODO upgrade to version 1.4
 	private PaperClips() {
 	} // no instances
 

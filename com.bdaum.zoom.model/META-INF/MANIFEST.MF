@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Model Plug-in
 Bundle-SymbolicName: com.bdaum.zoom.model
-Bundle-Version: 3.1.0
+Bundle-Version: 3.2.0
 Bundle-Vendor: %Bundle-Vendor.bdaum
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: com.bdaum.aoModeling.runtime,

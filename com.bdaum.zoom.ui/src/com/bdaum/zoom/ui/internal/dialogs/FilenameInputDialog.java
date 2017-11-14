@@ -36,7 +36,7 @@ public class FilenameInputDialog extends ZInputDialog {
 						if (newText.equals(initialValue))
 							return Messages.FilenameInputDialog_old_name;
 						char c = BatchUtilities.checkFilename(newText);
-						return (c >= 0) ? NLS.bind(
+						return (c > 0) ? NLS.bind(
 								Messages.FilenameInputDialog_bad_characters, c)
 								: null;
 					}

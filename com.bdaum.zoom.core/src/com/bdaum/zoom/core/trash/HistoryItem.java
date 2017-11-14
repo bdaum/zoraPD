@@ -31,6 +31,11 @@ public class HistoryItem {
 
 	protected String opId;
 	protected String id;
+	private long timestamp;
+
+	public long getTimestamp() {
+		return timestamp;
+	}
 
 	/**
 	 * Constructor
@@ -39,6 +44,7 @@ public class HistoryItem {
 	public HistoryItem(String opId) {
 		this.opId = opId;
 		this.id = UUID.randomUUID().toString(); 
+		this.timestamp = System.currentTimeMillis();
 	}
 
 	/**

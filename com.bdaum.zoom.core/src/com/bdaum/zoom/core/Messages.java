@@ -53,6 +53,7 @@ public class Messages extends NLS {
 	public static String FileLocationBackup_IO_error_restoring_file;
 	public static String Format_am;
 	public static String Format_bad_aperture;
+	public static String Format_bad_bearing;
 	public static String Format_bad_exp_time;
 	public static String Format_bad_file_size;
 	public static String Format_bad_lat_lon;

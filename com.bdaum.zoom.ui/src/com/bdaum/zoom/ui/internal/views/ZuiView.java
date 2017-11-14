@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -29,6 +29,9 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -47,8 +50,12 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.cat.model.asset.Region;
+import com.bdaum.zoom.cat.model.group.Group;
+import com.bdaum.zoom.cat.model.group.GroupImpl;
+import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
+import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
@@ -162,6 +169,12 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 
 	private SmartCollectionImpl currentCollection;
 
+	private int showLabelDflt;
+
+	private String labelTemplateDflt;
+
+	private int labelFontsizeDflt;
+
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
 		super.init(site, memento);
@@ -185,12 +198,12 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 	}
 
 	/**
-	 * This is a callback that will allow us to create the viewer and initialize
-	 * it.
+	 * This is a callback that will allow us to create the viewer and initialize it.
 	 */
 
 	@Override
 	public void createPartControl(final Composite parent) {
+		setPreferences();
 		animatedGallery = new AnimatedGallery(new ZPSWTCanvas(parent, SWT.NONE), DIST, THUMB, this);
 		setCanvasCursor(null, SWT.CURSOR_APPSTARTING);
 		animatedGallery.setMinScale(0.2d);
@@ -363,8 +376,46 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 	protected boolean doRedrawCollection(Collection<? extends Asset> assets, QueryField node) {
 		if (animatedGallery == null || animatedGallery.isDisposed())
 			return false;
+		IAssetProvider assetProvider = getAssetProvider();
+		if (assetProvider != null) {
+			int showLabel = Constants.INHERIT_LABEL;
+			String labelTemplate = null;
+			SmartCollection coll = assetProvider.getCurrentCollection();
+			int labelFontsize = 0;
+			if (coll != null) {
+				while (true) {
+					showLabel = coll.getShowLabel();
+					if (showLabel != Constants.INHERIT_LABEL) {
+						labelTemplate = coll.getLabelTemplate();
+						labelFontsize = coll.getFontSize();
+						break;
+					}
+					if (coll.getSmartCollection_subSelection_parent() == null)
+						break;
+					coll = coll.getSmartCollection_subSelection_parent();
+				}
+				if (showLabel == Constants.INHERIT_LABEL) {
+					String groupId = coll.getGroup_rootCollection_parent();
+					Group group = Core.getCore().getDbManager().obtainById(GroupImpl.class, groupId);
+					while (group != null) {
+						showLabel = group.getShowLabel();
+						if (showLabel != Constants.INHERIT_LABEL) {
+							labelTemplate = group.getLabelTemplate();
+							labelFontsize = group.getFontSize();
+							break;
+						}
+						group = group.getGroup_subgroup_parent();
+					}
+				}
+			}
+			if (showLabel == Constants.INHERIT_LABEL) {
+				showLabel = showLabelDflt;
+				labelTemplate = labelTemplateDflt;
+				labelFontsize = labelFontsizeDflt;
+			}
+			animatedGallery.setAppearance(showLabel, labelTemplate, labelFontsize);
+		}
 		if (assets == null) {
-			IAssetProvider assetProvider = getAssetProvider();
 			if (assetProvider != null) {
 				if (fetchAssets()) {
 					SmartCollectionImpl selectedCollection = getNavigationHistory().getSelectedCollection();
@@ -372,7 +423,8 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 					currentCollection = selectedCollection;
 					animatedGallery.setPersonFilter(selectedCollection == null ? null
 							: selectedCollection.getSystem() && selectedCollection.getAlbum()
-									? selectedCollection.getStringId() : null);
+									? selectedCollection.getStringId()
+									: null);
 					scoreFormatter = assetProvider.getScoreFormatter();
 					animatedGallery.setScoreFormatter(scoreFormatter);
 					if (forceExternalSelection && selection instanceof AssetSelection) {
@@ -450,10 +502,9 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 			break;
 		case SWT.SetData:
 			int value = event.keyCode;
-			if (event.detail == AnimatedGallery.REGION) {
-				ImageRegion imageRegion = (ImageRegion) event.data;
-				editRegionName(imageRegion);
-			} else {
+			if (event.detail == AnimatedGallery.REGION)
+				editRegionName((ImageRegion) event.data);
+			else {
 				Asset asset = (Asset) event.data;
 				if (asset != null)
 					switch (event.detail) {
@@ -526,15 +577,12 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 
 	@Override
 	public ImageRegion[] findAllRegions(MouseEvent event) {
-		return animatedGallery.getRegions(event.x, event.y);
+		return animatedGallery.findAllRegions(event);
 	}
 
 	@Override
 	public ImageRegion findBestFaceRegion(int x, int y, boolean all) {
-		ImageRegion bestRegion = animatedGallery.getBestFaceRegion(x, y, all);
-		if (bestRegion == null && all)
-			bestRegion = ImageRegion.getBestRegion(animatedGallery.getRegions(x, y), Region.type_face, false, x, y);
-		return bestRegion;
+		return animatedGallery.getBestFaceRegion(x, y, all, null);
 	}
 
 	public AssetSelection getAssetSelection() {
@@ -561,6 +609,27 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 	@Override
 	protected void setDefaultPartName() {
 		setPartName(Messages.getString("ZuiView.sleeves")); //$NON-NLS-1$
+	}
+
+	protected void setPreferences() {
+		IPreferenceStore preferenceStore = applyPreferences();
+		preferenceStore.addPropertyChangeListener(new IPropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent event) {
+				String property = event.getProperty();
+				if (PreferenceConstants.SHOWLABEL.equals(property)
+						|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
+						|| PreferenceConstants.LABELFONTSIZE.equals(property))
+					applyPreferences();
+			}
+		});
+	}
+
+	protected IPreferenceStore applyPreferences() {
+		final IPreferenceStore preferenceStore = UiActivator.getDefault().getPreferenceStore();
+		showLabelDflt = preferenceStore.getInt(PreferenceConstants.SHOWLABEL);
+		labelTemplateDflt = preferenceStore.getString(PreferenceConstants.THUMBNAILTEMPLATE);
+		labelFontsizeDflt = preferenceStore.getInt(PreferenceConstants.LABELFONTSIZE);
+		return preferenceStore;
 	}
 
 }

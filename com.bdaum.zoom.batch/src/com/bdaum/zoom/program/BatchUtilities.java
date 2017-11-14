@@ -358,8 +358,7 @@ public class BatchUtilities {
 	 */
 	public static String getTrueFileExtension(String path) {
 		int p = path.lastIndexOf('.');
-		int q = path.lastIndexOf('/');
-		return (p > q) ? path.substring(p + 1) : ""; //$NON-NLS-1$
+		return (p > path.lastIndexOf('/')) ? path.substring(p + 1) : ""; //$NON-NLS-1$
 	}
 
 	/**
@@ -962,8 +961,7 @@ public class BatchUtilities {
 						sb.append(code.charValue());
 					else if (name.startsWith("#")) { //$NON-NLS-1$
 						try {
-							int v = Integer.parseInt(name.substring(1));
-							sb.append((char) v);
+							sb.append((char) Integer.parseInt(name.substring(1)));
 						} catch (NumberFormatException e) {
 							sb.append(entity);
 						}
@@ -1055,7 +1053,12 @@ public class BatchUtilities {
 		}
 		return 0;
 	}
-
+	
+	public static void putPreferences(String key, String value) {
+		putPreferences(InstanceScope.INSTANCE.getNode(BatchActivator.PLUGIN_ID),
+				key, value);
+	}
+	
 	public static void putPreferences(IEclipsePreferences node, String key, String value) {
 		node.put(key, value);
 		try {

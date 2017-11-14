@@ -263,7 +263,7 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 			GridData layoutData = new GridData(GridData.FILL_BOTH);
 			layoutData.widthHint = layoutData.heightHint = 500;
 			mapComponent.getControl().setLayoutData(layoutData);
-			mapComponent.setInput(null, 12, null, null, IMapComponent.BLANK);
+			mapComponent.setInput(null, 12, null, null, null, IMapComponent.BLANK);
 		}
 	}
 
@@ -465,7 +465,7 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 				previous = pnt;
 			}
 		}
-		mapComponent.setInput(null, 12, null,
+		mapComponent.setInput(null, 12, null, null,
 				pnts.toArray(new Trackpoint[pnts.size()]), IMapComponent.TRACK);
 	}
 

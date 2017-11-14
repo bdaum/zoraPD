@@ -44,6 +44,7 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.net.ui.internal.HelpContextIds;
 import com.bdaum.zoom.net.ui.internal.NetActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.EditFtpDialog;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
@@ -91,7 +92,7 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.INTERNET_PREFERENCE_PAGE);
 		createTabFolder(composite, "Internet"); //$NON-NLS-1$
-		tabItem0 = createTabItem(tabFolder, Messages.InternetPreferencePage_http_ftp);
+		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.InternetPreferencePage_http_ftp);
 		tabItem0.setControl(createHttpGroup(tabFolder));
 		initTabFolder(0);
 		createExtensions(tabFolder, "com.bdaum.zoom.net.preferences.InternetPreferencePage"); //$NON-NLS-1$
@@ -109,7 +110,7 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createFtpGroup(Composite parent) {
-		CGroup group = createGroup(parent, 2, Messages.InternetPreferencePage_ftp_accounts);
+		CGroup group = UiUtilities.createGroup(parent, 2, Messages.InternetPreferencePage_ftp_accounts);
 		ftpViewer = new TableViewer(group, SWT.V_SCROLL | SWT.SINGLE | SWT.BORDER);
 		ftpViewer.getControl().setLayoutData(new GridData(GridData.FILL_BOTH));
 		ftpViewer.setContentProvider(ArrayContentProvider.getInstance());
@@ -199,7 +200,7 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 
 	@SuppressWarnings("unused")
 	private void createProxyGroup(Composite parent) {
-		CGroup group = createGroup(parent, 2, Messages.InternetPreferencePage_http_proxy);
+		CGroup group = UiUtilities.createGroup(parent, 2, Messages.InternetPreferencePage_http_proxy);
 		proxyGroup = new RadioButtonGroup(group, null, SWT.NONE,
 				Messages.InternetPreferencePage_System_proxy_config, Messages.InternetPreferencePage_Direct_connection, Messages.InternetPreferencePage_Manual_config);
 		proxyGroup.addSelectionListener(new SelectionAdapter() {
@@ -287,7 +288,7 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createTimeoutGroup(Composite comp) {
-		CGroup grp = createGroup(comp, 2, Messages.InternetPreferencePage_connection_timeout);
+		CGroup grp = UiUtilities.createGroup(comp, 2, Messages.InternetPreferencePage_connection_timeout);
 		new Label(grp, SWT.NONE).setText(Messages.InternetPreferencePage_Timeout);
 		timeoutField = new NumericControl(grp, SWT.NONE);
 		timeoutField.setMinimum(1);

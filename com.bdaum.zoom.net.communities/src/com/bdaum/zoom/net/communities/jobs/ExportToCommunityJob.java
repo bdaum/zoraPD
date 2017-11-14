@@ -90,7 +90,6 @@ public class ExportToCommunityJob extends AbstractExportJob implements IErrorHan
 		}
 	}
 
-	protected static final SimpleDateFormat df = new SimpleDateFormat(Messages.ExportToCommunityJob_tracik_date_format);
 	private static int exportCounter = 0;
 	private Session session;
 	private String communityName;
@@ -338,6 +337,7 @@ public class ExportToCommunityJob extends AbstractExportJob implements IErrorHan
 												Messages.ExportToCommunityJob_skip_all,
 												Messages.ExportToCommunityJob_skp,
 												Messages.ExportToCommunityJob_cancel });
+						SimpleDateFormat df = new SimpleDateFormat(Messages.ExportToCommunityJob_tracik_date_format);
 						final AcousticMessageDialog dialog = new AcousticMessageDialog(shell,
 								Messages.ExportToCommunityJob_image_already_uploaded, null,
 								NLS.bind(Messages.ExportToCommunityJob_image_uploaded_at, new Object[] { name,

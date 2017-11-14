@@ -58,7 +58,7 @@ use Image::ExifTool::Exif;
 use Image::ExifTool::GPS;
 use Image::ExifTool::HP;
 
-$VERSION = '3.12';
+$VERSION = '3.20';
 
 sub CryptShutterCount($$);
 sub PrintFilter($$$);
@@ -178,7 +178,8 @@ sub DecodeAFPoints($$$$;$);
     '4 2' => 'smc PENTAX-FA 80-320mm F4.5-5.6',
     '4 3' => 'smc PENTAX-FA 43mm F1.9 Limited',
     '4 6' => 'smc PENTAX-FA 35-80mm F4-5.6',
-    '4 10' => 'Irix 15mm F2.4', #forum3833
+    '4 9' => 'Irix 11mm F4 Firefly', #27
+    '4 10' => 'Irix 15mm F2.4', #27
     '4 12' => 'smc PENTAX-FA 50mm F1.4', #17
     '4 15' => 'smc PENTAX-FA 28-105mm F4-5.6 [IF]',
     '4 16' => 'Tamron AF 80-210mm F4-5.6 (178D)', #13
@@ -325,6 +326,7 @@ sub DecodeAFPoints($$$$;$);
     '8 30' => 'Sigma 17-70mm F2.8-4 DC Macro HSM | C', #27
     '8 31' => 'Sigma 18-35mm F1.8 DC HSM', #27
     '8 32' => 'Sigma 30mm F1.4 DC HSM | A', #27
+    '8 33' => 'Sigma 18-200mm F3.5-6.3 DC MACRO HSM', #DieterPearcey (C014)
     '8 34' => 'Sigma 18-300mm F3.5-6.3 DC Macro HSM', #NJ
     '8 59' => 'HD PENTAX-D FA 150-450mm F4.5-5.6 ED DC AW', #29
     '8 60' => 'HD PENTAX-D FA* 70-200mm F2.8 ED DC AW', #29
@@ -377,8 +379,7 @@ sub DecodeAFPoints($$$$;$);
     '13 19' => 'smc PENTAX-D FA 645 25mm F4 AL [IF] SDM AW', #PH
     '13 20' => 'HD PENTAX-D FA 645 90mm F2.8 ED AW SR', #PH
     '13 253' => 'HD PENTAX-DA 645 28-45mm F4.5 ED AW SR', #Dominique Schrekling email
-    # missing:
-    # 'smc PENTAX-DA 645 25mm F4.0 AL SDM AW [IF]' ? different than D FA version?
+    '13 254' => 'smc PENTAX-DA 645 25mm F4 AL [IF] SDM AW', #forum8253
 #
 # Q-mount lenses (21=auto focus lens, 22=manual focus)
 #
@@ -1490,7 +1491,7 @@ my %binaryDataAttrs = (
             284 => 409600, #PH (NC)
             285 => 576000, #PH (NC)
             286 => 819200, #PH (NC)
-            # 65534 Auto? (Q/Q10/Q7 MOV) PH
+            65534 => 'Auto 2', #PH (Q/Q10/Q7 MOV) [how is this different from 65535?]
             65535 => 'Auto', #PH/31 (K-01/K-70 MP4)
         },
     },
@@ -1504,14 +1505,28 @@ my %binaryDataAttrs = (
             approximate Light Value.  May not be valid for some models, eg. Optio S
         },
     },
-    0x0016 => { #PH
+    0x0016 => [{ #PH
         Name => 'ExposureCompensation',
+        Condition => '$count == 1',
+        Notes => q{
+            some models write two values here.  The second value is meaning of the
+            second value is not yet known
+        },
         Writable => 'int16u',
         ValueConv => '($val - 50) / 10',
         ValueConvInv => 'int($val * 10 + 50.5)',
         PrintConv => '$val ? sprintf("%+.1f", $val) : 0',
         PrintConvInv => 'Image::ExifTool::Exif::ConvertFraction($val)',
-    },
+    },{
+        Name => 'ExposureCompensation',
+        Writable => 'int16u',
+        # (2 values for K-70, etc -- have only seen "0" for the 2nd value - PH)
+        Count => 2,
+        ValueConv => '$val =~ s/ .*//; ($val - 50) / 10',
+        ValueConvInv => 'int($val * 10 + 50.5) . " 0"',
+        PrintConv => '$val ? sprintf("%+.1f", $val) : 0',
+        PrintConvInv => 'Image::ExifTool::Exif::ConvertFraction($val)',
+    }],
     0x0017 => { #3
         Name => 'MeteringMode',
         Writable => 'int16u',
@@ -1663,8 +1678,8 @@ my %binaryDataAttrs = (
             0 => '-2 (low)', #PH
             1 => '0 (normal)', #PH
             2 => '+2 (high)', #PH
-            3 => '-1 (med low)', #2
-            4 => '+1 (med high)', #2
+            3 => '-1 (medium low)', #2
+            4 => '+1 (medium high)', #2
             5 => '-3 (very low)', #PH
             6 => '+3 (very high)', #PH (NC)
             7 => '-4 (minimum)', #PH (NC)
@@ -1682,8 +1697,8 @@ my %binaryDataAttrs = (
             0 => '-2 (low)', #PH
             1 => '0 (normal)', #PH
             2 => '+2 (high)', #PH
-            3 => '-1 (med low)', #2
-            4 => '+1 (med high)', #2
+            3 => '-1 (medium low)', #2
+            4 => '+1 (medium high)', #2
             5 => '-3 (very low)', #PH
             6 => '+3 (very high)', #PH (NC)
             7 => '-4 (minimum)', #PH (NC)
@@ -1701,8 +1716,8 @@ my %binaryDataAttrs = (
             0 => '-2 (soft)', #PH
             1 => '0 (normal)', #PH
             2 => '+2 (hard)', #PH
-            3 => '-1 (med soft)', #2
-            4 => '+1 (med hard)', #2
+            3 => '-1 (medium soft)', #2
+            4 => '+1 (medium hard)', #2
             5 => '-3 (very soft)', #(NC)
             6 => '+3 (very hard)', #(NC)
             7 => '-4 (minimum)', #PH (NC)
@@ -1874,8 +1889,13 @@ my %binaryDataAttrs = (
             '18 3' => 'Auto Program (MTF)', #PH (NC)
             '18 22' => 'Auto Program (Shallow DOF)', #PH (NC)
             '20 22' => 'Blur Control', #PH (Q)
-            '254 0' => 'Video', #PH (K-7,K-5)
-            '255 0' => 'Video (Auto Aperture)', #PH (K-5)
+            '249 0' => 'Movie (TAv)', #31
+            '250 0' => 'Movie (TAv, Auto Aperture)', #31
+            '251 0' => 'Movie (Manual)', #31
+            '252 0' => 'Movie (Manual, Auto Aperture)', #31
+            '253 0' => 'Movie (Av)', #31
+            '254 0' => 'Movie (Av, Auto Aperture)', #31
+            '255 0' => 'Movie (P, Auto Aperture)', #31
             '255 4' => 'Video (4)', #PH (K-x,K-01)
         },{
             # EV step size (ref 19)
@@ -1909,6 +1929,13 @@ my %binaryDataAttrs = (
         },{
             0x00 => 'Single Exposure',
             0x01 => 'Multiple Exposure',
+            0x02 => 'Composite Average', #31
+            0x03 => 'Composite Additive', #31
+            0x04 => 'Composite Bright', #31
+            0x08 => 'Interval Shooting', #31
+            0x0a => 'Interval Composite Average', #31
+            0x0b => 'Interval Composite Additive', #31
+            0x0c => 'Interval Composite Bright', #31
             0x0f => 'Interval Movie', #PH (K-01)
             0x10 => 'HDR', #PH (645D)
             0x20 => 'HDR Strong 1', #PH (NC) (K-5)
@@ -2497,6 +2524,24 @@ my %binaryDataAttrs = (
         Priority => 0,
         Writable => 'int32u',
     },
+    0x0092 => { #31
+        Name => 'IntervalShooting',
+        Notes => '2 numbers: 1. Shot number 2. Total number of shots',
+        Writable => 'int16u',
+        Count => 2,
+        PrintConv => {
+            '0 0' => 'Off',
+            OTHER => sub {
+                my ($val, $inv) = @_;
+                if ($inv) {
+                    $val =~ tr/0-9 //dc;
+                } else {
+                    $val =~ s/(\d+) (\d+)/Shot $1 of $2/;
+                }
+                return $val;
+            },
+        },
+    },
     0x0095 => { #31
         Name => 'SkinToneCorrection',
         Writable => 'int8s',
@@ -2821,10 +2866,10 @@ my %binaryDataAttrs = (
         Groups => { 2 => 'Author' },
         Writable => 'string',
     },
-    0x0230 => { #PH (K-x AVI videos)
+    0x0230 => { #PH (K-x AVI videos) (and K-70/Q-S1 MOV videos, ref 31)
         Name => 'FirmwareVersion',
-        Notes => 'only in AVI videos',
-        # this tag only exists in AVI videos, and for the K-x the value of
+        Notes => 'only in videos',
+        # this tag only exists in AVI/MOV videos, and for the K-x the value of
         # this tag is "K-x Ver 1.00", which is the same as the EXIF Software
         # tag.  I used a different tag name for this because Pentax uses the
         # AVI Software tag for a different string, "PENTAX K-x".
@@ -2857,6 +2902,11 @@ my %binaryDataAttrs = (
     # 0x023b - undef[9] (K-01)
     #  01a700500000000000, 91a700500000000000, 41a700500000000000, 002700500000000000
     #  c00500400000000000, 400500500000000000, 4004ff420100000000, 4087ff480000000000
+    0x023f => { #31 (K-70 MOV videos)
+        Name => 'Model',
+        Description => 'Camera Model Name',
+        Writable => 'string',
+    },
     0x0243 => { #PH
         Name => 'PixelShiftInfo',
         SubDirectory => { TagTable => 'Image::ExifTool::Pentax::PixelShiftInfo' },
@@ -2990,8 +3040,10 @@ my %binaryDataAttrs = (
             5 => 'On but Disabled', # (NC for K-3)
             6 => 'On (Video)', # (NC for K-3)
             7 => 'On (AA simulation off)',
+            8 => 'Off (AA simulation type 1) (8)', #forum8362 (K-70)
             12 => 'Off (AA simulation type 1)', # (AA linear motion)
             15 => 'On (AA simulation type 1)', # (AA linear motion)
+            16 => 'Off (AA simulation type 2) (16)', #forum8362 (K-70)
             20 => 'Off (AA simulation type 2)', # (AA circular motion)
             23 => 'On (AA simulation type 2)', # (AA circular motion)
         },
@@ -5596,8 +5648,8 @@ my %binaryDataAttrs = (
             800 => 800, #PH
             1600 => 1600, #PH
             3200 => 3200, #PH
-            # seen 65534 for Q-S1 MOV video - PH
-            # seen 65535 for K-S1 MOV video - PH
+            65534 => 'Auto 2', #PH (Q-S1 MOV) [how is this different from 65535?]
+            65535 => 'Auto', #PH (K-S1 MOV)
         },
     },
     0x0017 => {
@@ -5703,7 +5755,16 @@ my %binaryDataAttrs = (
             TagTable => 'Image::ExifTool::Pentax::Main',
             Start => 10,
             Base => '$start',
-            ByteOrder => 'BigEndian',
+            ByteOrder => 'Unknown', # K-70 is little-endian, K-x is big-endian
+        },
+    },
+    mknt => { # (Q-S1)
+        Name => 'MakerNotes',
+        SubDirectory => {
+            TagTable => 'Image::ExifTool::Pentax::Main',
+            Start => 10,
+            Base => '$start',
+            ByteOrder => 'Unknown',
         },
     },
 );
@@ -5726,6 +5787,7 @@ my %binaryDataAttrs = (
     GROUPS => { 0 => 'MakerNotes', 2 => 'Camera' },
     0x0c => {
         Name => 'Model',
+        Description => 'Camera Model Name',
         Format => 'string[32]',
     },
 );
@@ -6145,8 +6207,8 @@ Pentax and Asahi maker notes in EXIF information.
 
 I couldn't find a good source for Pentax maker notes information, but I've
 managed to discover a fair bit of information by analyzing sample images
-downloaded from the internet, and through tests with my own Optio WP,
-K10D, and K-5, and with help provided by other ExifTool users (see
+downloaded from the internet, and through tests with my own Optio S, Optio
+WP, K10D, K-01 and K-5, and with help provided by other ExifTool users (see
 L</ACKNOWLEDGEMENTS>).
 
 The Pentax maker notes are stored in standard EXIF format, but the offsets
@@ -6178,11 +6240,11 @@ the information should be stored to deduce the correct offsets.
 
 =head1 ACKNOWLEDGEMENTS
 
-Thanks to Wayne Smith, John Francis, Douglas O'Brien Cvetan Ivanov, Jens
-Duttke and Dave Nicholson for help figuring out some Pentax tags, Ger
-Vermeulen and Niels Kristian Bech Jensen for contributing print conversion
-values for some tags, and everyone who helped contribute to the LensType
-values.
+Thanks to Wayne Smith, John Francis, Douglas O'Brien, Cvetan Ivanov, Jens
+Duttke, Dave Nicholson, Iliah Borg, Klaus Homeister, Louis Granboulan and
+Andras Salamon for help figuring out some Pentax tags, Ger Vermeulen and
+Niels Kristian Bech Jensen for contributing print conversion values for some
+tags, and everyone who helped contribute to the LensType values.
 
 =head1 AUTHOR
 

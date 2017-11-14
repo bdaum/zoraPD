@@ -359,7 +359,7 @@ public class DeleteOperation extends DbOperation {
 				changed |= updateFolderHierarchies(asset, true, configuration.timeline, configuration.locations, false);
 				aMonitor.worked(1);
 			}
-			storeSafely(ghosts.toArray(), 1, new Object[0]);
+			storeSafely(ghosts.toArray(), 1);
 		} finally {
 			closeIndex();
 			if (changed)

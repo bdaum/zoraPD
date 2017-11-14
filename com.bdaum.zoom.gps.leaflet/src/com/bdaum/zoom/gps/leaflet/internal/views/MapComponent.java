@@ -1,3 +1,22 @@
+/*
+ * This file is part of the ZoRa project: http://www.photozora.org.
+ *
+ * ZoRa is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ZoRa is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ZoRa; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ */
 package com.bdaum.zoom.gps.leaflet.internal.views;
 
 import java.net.URL;
@@ -14,7 +33,6 @@ public class MapComponent extends AbstractMapComponent implements IExecutableExt
 
 	private URL leafletUrl;
 	private URL zoomMapUrl;
-	private URL makimarkersUrl;
 	private URL leafletCss;
 	private URL providersUrl;
 	private URL minimapUrl;
@@ -36,7 +54,6 @@ public class MapComponent extends AbstractMapComponent implements IExecutableExt
 		providersUrl = findUrl("/gmap/leaflet-providers.js"); //$NON-NLS-1$
 		leafletCss = findUrl("/gmap/leaflet.css"); //$NON-NLS-1$
 		zoomMapUrl = findUrl("/gmap/zoomMap.js"); //$NON-NLS-1$
-		makimarkersUrl = findUrl("/gmap/Leaflet.MakiMarkers.js"); //$NON-NLS-1$
 		minimapUrl = findUrl("/gmap/Control.MiniMap.js"); //$NON-NLS-1$
 		minimapCss = findUrl("/gmap/Control.MiniMap.css"); //$NON-NLS-1$
 		markerClusterGroupUrl = findUrl("/gmap/leaflet.markercluster.js"); //$NON-NLS-1$
@@ -66,26 +83,21 @@ public class MapComponent extends AbstractMapComponent implements IExecutableExt
 
 	@Override
 	protected String createAdditionalVariables() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("var selectedProvider = \"").append(mapProvider) //$NON-NLS-1$
-				.append("\";\n"); //$NON-NLS-1$
-		return sb.toString();
+		return new StringBuilder().append("var selectedProvider = \"").append(mapProvider) //$NON-NLS-1$
+				.append("\";\n") //$NON-NLS-1$
+				.toString();
 	}
 
 	@Override
 	protected String createScriptEntries() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(createStyleEntry(leafletCss)).append('\n');
-		sb.append(createStyleEntry(minimapCss)).append('\n');
-		sb.append(createScriptEntry(leafletUrl)).append('\n');
-		sb.append(createScriptEntry(makimarkersUrl)).append('\n');
-		sb.append(createScriptEntry(providersUrl)).append('\n');
-		sb.append(createScriptEntry(minimapUrl)).append('\n');
-		sb.append(createScriptEntry(markerClusterGroupUrl)).append('\n');
-		sb.append(createStyleEntry(markerClusterGroupCss)).append('\n');
-		sb.append(createStyleEntry(markerClusterGroupDefaultCss)).append('\n');
-		sb.append(createScriptEntry(zoomMapUrl));
-		return sb.toString();
+		return new StringBuilder().append(createStyleEntry(leafletCss)).append('\n')
+				.append(createStyleEntry(minimapCss)).append('\n').append(createScriptEntry(leafletUrl)).append('\n')
+				.append(createScriptEntry(providersUrl))
+				.append('\n').append(createScriptEntry(minimapUrl)).append('\n')
+				.append(createScriptEntry(markerClusterGroupUrl)).append('\n')
+				.append(createStyleEntry(markerClusterGroupCss)).append('\n')
+				.append(createStyleEntry(markerClusterGroupDefaultCss)).append('\n')
+				.append(createScriptEntry(zoomMapUrl)).toString();
 	}
 
 	@Override

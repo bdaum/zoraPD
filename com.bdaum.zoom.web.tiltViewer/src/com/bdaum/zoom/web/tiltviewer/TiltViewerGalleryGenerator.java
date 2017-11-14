@@ -1,8 +1,11 @@
 package com.bdaum.zoom.web.tiltviewer;
 
 import java.io.File;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import com.bdaum.zoom.cat.model.Font_type;
@@ -131,6 +134,8 @@ public class TiltViewerGalleryGenerator extends AbstractGalleryGenerator {
 		}
 		varmap.put("keywords", BatchUtilities.encodeHTML( //$NON-NLS-1$
 				Core.toStringList(show.getKeyword(), ", "), false)); //$NON-NLS-1$
+		NumberFormat nf = (NumberFormat.getNumberInstance(Locale.US));
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ"); //$NON-NLS-1$
 		Date now = new Date();
 		String s = df.format(now);
 		s = s.substring(0, s.length() - 2) + ':' + s.substring(s.length() - 2);

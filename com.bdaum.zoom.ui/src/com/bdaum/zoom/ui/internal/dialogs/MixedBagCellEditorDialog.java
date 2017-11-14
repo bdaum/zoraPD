@@ -34,8 +34,9 @@ import org.eclipse.swt.widgets.Text;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.core.internal.Utilities;
 
+@SuppressWarnings("restriction")
 public class MixedBagCellEditorDialog extends AbstractListCellEditorDialog {
 
 	private Text viewer;
@@ -61,7 +62,7 @@ public class MixedBagCellEditorDialog extends AbstractListCellEditorDialog {
 		GridData layoutData = new GridData(GridData.FILL_BOTH);
 		layoutData.heightHint = 50;
 		viewer.setLayoutData(layoutData);
-		viewer.setText(UiUtilities.csv(value, qfield.getType(), "\n")); //$NON-NLS-1$
+		viewer.setText(Utilities.csv(value, qfield.getType(), "\n")); //$NON-NLS-1$
 		return comp;
 	}
 

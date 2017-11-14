@@ -20,11 +20,13 @@
 
 package com.bdaum.zoom.ui.internal.preferences;
 
+import java.io.File;
 import java.util.Map;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.resource.StringConverter;
 import org.eclipse.swt.graphics.RGB;
 
@@ -48,7 +50,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.put(PreferenceConstants.BACKGROUNDCOLOR, PreferenceConstants.BACKGROUNDCOLOR_DARKGREY);
 		defaultNode.putBoolean(PreferenceConstants.AUTOEXPORT, true);
 		defaultNode.put(PreferenceConstants.DERIVERELATIONS, Constants.DERIVE_ALL);
-		defaultNode.putInt(PreferenceConstants.SHOWDECO, PreferenceConstants.DECOALWAYS);
 		defaultNode.put(PreferenceConstants.SHOWRATING, PreferenceConstants.SHOWRATING_SIZE);
 		defaultNode.putBoolean(PreferenceConstants.SHOWLOCATION, true);
 		defaultNode.putBoolean(PreferenceConstants.SHOWROTATEBUTTONS, true);
@@ -56,6 +57,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.putBoolean(PreferenceConstants.SHOWEXPANDCOLLAPSE, true);
 		defaultNode.put(PreferenceConstants.SHOWCOLORCODE, PreferenceConstants.COLORCODE_MANUAL);
 		defaultNode.putBoolean(PreferenceConstants.SHOWDONEMARK, true);
+		defaultNode.put(PreferenceConstants.THUMBNAILTEMPLATE, "{creationDate} {meta=exposureTime} {meta=fNumber}"); //$NON-NLS-1$
+		defaultNode.putInt(PreferenceConstants.LABELFONTSIZE, JFaceResources.getDefaultFont().getFontData()[0].getHeight());
+		defaultNode.putInt(PreferenceConstants.SHOWLABEL, Constants.TITLE_LABEL);
 		defaultNode.put(PreferenceConstants.WATCHFILTER, DEFAULTWATCHFILTER);
 		defaultNode.put(PreferenceConstants.KEYWORDFILTER, DEFAULTKEYWORDFILTER);
 		defaultNode.put(PreferenceConstants.RAWIMPORT,
@@ -104,10 +108,14 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.putDouble(PreferenceConstants.AUDIOSAMPLINGRATE, PreferenceConstants.AUDIO22KHZ);
 		defaultNode.putInt(PreferenceConstants.AUDIOBITDEPTH, PreferenceConstants.AUDIO8BIT);
 		Map<String, IRawConverter> rawConverters = BatchActivator.getDefault().getRawConverters();
-		for (IRawConverter rc : rawConverters.values())
+		for (IRawConverter rc : rawConverters.values()) {
 			for (IRawConverter.RawProperty prop : rc.getProperties())
 				if (prop.dflt != null)
 					defaultNode.put(prop.id, prop.dflt);
+			File path = rc.findModule(null);
+			if (path != null)
+				defaultNode.put(rc.getPathId(), path.getAbsolutePath());
+		}
 		defaultNode.put(PreferenceConstants.UPDATEPOLICY, PreferenceConstants.UPDATEPOLICY_WITHBACKUP);
 		defaultNode.putInt(PreferenceConstants.MOUSE_SPEED, 10);
 		defaultNode.putInt(PreferenceConstants.ZOOMKEY,

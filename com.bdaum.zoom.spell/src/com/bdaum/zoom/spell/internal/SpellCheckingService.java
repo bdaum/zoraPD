@@ -206,23 +206,15 @@ public class SpellCheckingService implements ISpellCheckingService {
 		if (folder.exists()) {
 			String[] list = folder.list();
 			if (list != null)
-				for (String name : list) {
-					String loc = null;
-					if (name.endsWith(DICEXTENSION) && !name.contains("hyph")) //$NON-NLS-1$
-						loc = name.substring(0, name.length() - DICEXTENSION.length());
-					else if (name.endsWith(OXTEXTENSION))
-						loc = name.substring(0, name.length() - OXTEXTENSION.length());
-					if (loc != null) {
-						if (loc.startsWith("dict-")) //$NON-NLS-1$
-							loc = loc.substring(5);
-						if (loc.startsWith("dic-")) //$NON-NLS-1$
-							loc = loc.substring(4);
-						int p = loc.indexOf('-');
-						if (p > 0)
-							loc = loc.substring(0, p);
-							result.add(loc);
+				for (String name : list)
+					if (name.endsWith(DICEXTENSION) && !name.contains("hyph") || name.endsWith(OXTEXTENSION)) { //$NON-NLS-1$
+						int r = (name.startsWith("dict-")) ? //$NON-NLS-1$
+								5 : (name.startsWith("dic-")) ? //$NON-NLS-1$
+										4 : 0;
+						int p = name.indexOf('-', r);
+						if (p > r)
+							result.add(name.substring(r, p));
 					}
-				}
 		}
 	}
 

@@ -865,22 +865,6 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 		return false;
 	}
 
-	// /*
-	// * (non-Javadoc)
-	// *
-	// * @see com.bdaum.zoom.core.ICore#fireCatalogModified()
-	// */
-	//
-	// public void fireCatalogModified() {
-	// if (assetProvider != null)
-	// assetProvider.resetProcessor();
-	// for (Object listener : listeners.getListeners())
-	// ((CatalogListener) listener).catalogModified();
-	// System.setProperty(Constants.PROP_CATACCESS,
-	// dbManager.isReadOnly() ? Constants.PROP_CATACCESS_READ :
-	// Constants.PROP_CATACCESS_WRITE);
-	// }
-
 	/*
 	 * (non-Javadoc)
 	 *

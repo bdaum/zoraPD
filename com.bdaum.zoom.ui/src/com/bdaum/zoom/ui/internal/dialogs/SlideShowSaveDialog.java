@@ -53,8 +53,7 @@ import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 
-public class SlideShowSaveDialog extends ZTitleAreaDialog implements
-		ModifyListener, SelectionListener {
+public class SlideShowSaveDialog extends ZTitleAreaDialog implements ModifyListener, SelectionListener {
 
 	private Map<String, GroupImpl> groupMap = new HashMap<String, GroupImpl>(50);
 	private Combo groupField;
@@ -87,23 +86,19 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements
 		nameField = new Text(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		layoutData.verticalIndent = 10;
-		nameField
-				.setLayoutData(layoutData);
-		nameField.setText(Messages.SlideShowSaveDialog_slideshow+Constants.DFDT.format(new Date()));
+		nameField.setLayoutData(layoutData);
+		nameField.setText(Messages.SlideShowSaveDialog_slideshow + Constants.DFDT.format(new Date()));
 		nameField.addModifyListener(this);
 		Label glabel = new Label(composite, SWT.NONE);
 		glabel.setText(Messages.SlideShowSaveDialog_group);
 		groupField = new Combo(composite, SWT.DROP_DOWN);
-		groupField
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		List<GroupImpl> set = Core.getCore().getDbManager()
-				.obtainObjects(GroupImpl.class);
+		groupField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		List<GroupImpl> set = Core.getCore().getDbManager().obtainObjects(GroupImpl.class);
 		List<String> items = new ArrayList<String>(set.size());
 		for (GroupImpl group : set) {
 			boolean exhibition = !group.getExhibition().isEmpty();
 			boolean slideshow = !group.getSlideshow().isEmpty();
-			boolean webgallery = group.getWebGallery() != null
-					&& !group.getWebGallery().isEmpty();
+			boolean webgallery = group.getWebGallery() != null && !group.getWebGallery().isEmpty();
 			boolean collection = !group.getRootCollection().isEmpty();
 			if (!exhibition && !slideshow && !webgallery && !collection) {
 				String groupId = group.getStringId();
@@ -126,9 +121,8 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements
 			groupField.setText(array[0]);
 		groupField.addModifyListener(this);
 		groupField.addSelectionListener(this);
-		openButton = WidgetFactory.createCheckButton(composite,
-				Messages.SlideShowSaveDialog_open_editor, new GridData(
-						SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		openButton = WidgetFactory.createCheckButton(composite, Messages.SlideShowSaveDialog_open_editor,
+				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		nameField.setFocus();
 		return area;
 	}
@@ -139,7 +133,7 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements
 		String groupName = groupField.getText().trim();
 		selectedGroup = groupMap.get(groupName);
 		if (selectedGroup == null)
-			selectedGroup = new GroupImpl(groupName, false);
+			selectedGroup = new GroupImpl(groupName, false, Constants.INHERIT_LABEL, null, 0, null);
 		open = openButton.getSelection();
 		super.okPressed();
 	}
@@ -177,8 +171,7 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements
 			return false;
 		}
 		IDbManager db = Core.getCore().getDbManager();
-		List<SlideShowImpl> set = db.obtainObjects(SlideShowImpl.class,
-				"name", n, //$NON-NLS-1$
+		List<SlideShowImpl> set = db.obtainObjects(SlideShowImpl.class, "name", n, //$NON-NLS-1$
 				QueryField.EQUALS);
 		if (!set.isEmpty()) {
 			setErrorMessage(Messages.SlideShowSaveDialog_a_slideshow_with_that_name_exists);
@@ -190,8 +183,7 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements
 			return false;
 		}
 		if (!groupMap.containsKey(groupName)) {
-			List<GroupImpl> groups = db.obtainObjects(GroupImpl.class,
-					"name", groupName, //$NON-NLS-1$
+			List<GroupImpl> groups = db.obtainObjects(GroupImpl.class, "name", groupName, //$NON-NLS-1$
 					QueryField.EQUALS);
 			if (!groups.isEmpty()) {
 				setErrorMessage(Messages.SlideShowSaveDialog_group_already_exists);

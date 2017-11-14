@@ -23,7 +23,7 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -83,12 +83,7 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 		this.asset = asset;
 		this.field = field;
 		this.transfer = transfer;
-		if (asset != null)
-			variables = Constants.TV_RENAME;
-		else if (transfer)
-			variables = Constants.TV_TRANSFER;
-		else
-			variables = Constants.TV_ALL;
+		variables = asset != null ? Constants.TV_RENAME : transfer ? Constants.TV_TRANSFER : Constants.TV_ALL;
 	}
 
 	@Override
@@ -128,9 +123,7 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 		final GridLayout gridLayout_1 = new GridLayout();
 		gridLayout_1.numColumns = 2;
 		composite.setLayout(gridLayout_1);
-		final Label nameLabel = new Label(composite, SWT.NONE);
-		nameLabel.setText(Messages.TemplateEditDialog_name);
-
+		new Label(composite, SWT.NONE).setText(Messages.TemplateEditDialog_name);
 		nameField = new Text(composite, SWT.BORDER);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		nameField.addModifyListener(new ModifyListener() {
@@ -139,21 +132,16 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 			}
 		});
 
-		final Label templateLabel = new Label(composite, SWT.NONE);
-		templateLabel.setText(Messages.TemplateEditDialog_template);
-
+		new Label(composite, SWT.NONE).setText(Messages.TemplateEditDialog_template);
 		templateField = new Text(composite, SWT.BORDER);
 		templateField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		templateField.addVerifyListener(new VerifyListener() {
 			public void verifyText(VerifyEvent e) {
-				String text = e.text;
-				for (int i = 0; i < text.length(); i++) {
-					char c = text.charAt(i);
-					if (INVALIDCAHRS.indexOf(c) >= 0) {
+				for (int i = 0; i < e.text.length(); i++)
+					if (INVALIDCAHRS.indexOf(e.text.charAt(i)) >= 0) {
 						e.doit = false;
 						return;
 					}
-				}
 			}
 		});
 		templateField.addModifyListener(new ModifyListener() {
@@ -162,9 +150,7 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 				computeExample();
 			}
 		});
-		final Label exampleLabel = new Label(composite, SWT.NONE);
-		exampleLabel.setText(Messages.TemplateEditDialog_example);
-
+		new Label(composite, SWT.NONE).setText(Messages.TemplateEditDialog_example);
 		exampleField = new Text(composite, SWT.READ_ONLY | SWT.BORDER);
 		final GridData gd_exampleField = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		exampleField.setLayoutData(gd_exampleField);
@@ -206,10 +192,9 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 			public String getText(Object element) {
 				if (element instanceof String) {
 					String varName = ((String) element);
-					if (varName.startsWith("{") && varName.endsWith("}")) { //$NON-NLS-1$//$NON-NLS-2$
-						varName = varName.substring(1, varName.length() - 1);
-						return element + TemplateMessages.getString(TemplateMessages.PREFIX + varName);
-					}
+					if (varName.startsWith("{") && varName.endsWith("}")) //$NON-NLS-1$ //$NON-NLS-2$
+						return element + TemplateMessages
+								.getString(TemplateMessages.PREFIX + varName.substring(1, varName.length() - 1));
 				}
 				return super.getText(element);
 			}
@@ -228,9 +213,9 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 					if (dialog.open() != TemplateFieldSelectionDialog.OK)
 						return;
 					FieldDescriptor fd = dialog.getResult();
-					String qname = fd.subfield == null ? fd.qfield.getId()
-							: fd.qfield.getId() + '&' + fd.subfield.getId();
-					templateField.insert(Constants.TV_META + qname + '}');
+					templateField.insert(Constants.TV_META
+							+ (fd.subfield == null ? fd.qfield.getId() : fd.qfield.getId() + '&' + fd.subfield.getId())
+							+ '}');
 				}
 			});
 			new Label(buttonComp, SWT.NONE).setText(Messages.TemplateEditDialog_example_shows_metadata);
@@ -255,8 +240,10 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 				// use default
 			}
 		}
-		exampleField.setText(Utilities.computeFileName(templateField.getText(), filename, new Date(), 1, 1, 1,
-				Messages.TemplateEditDialog_exmp, asset, maxLength, QueryField.URI == field, transfer));
+		exampleField.setText(Utilities.evaluateTemplate(templateField.getText(),
+				asset != null ? Constants.TV_RENAME : transfer ? Constants.TV_TRANSFER : Constants.TV_ALL, filename,
+				new GregorianCalendar(), 1, 1, 1, Messages.TemplateEditDialog_exmp, asset, "", maxLength, //$NON-NLS-1$
+				QueryField.URI == field));
 	}
 
 	protected void updateButtons() {

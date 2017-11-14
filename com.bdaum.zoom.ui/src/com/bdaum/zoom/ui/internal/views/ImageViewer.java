@@ -329,6 +329,7 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 						status = new Fader().fadein(status, monitor, image, topShell, topCanvas,
 								(previewShown) ? previewShell : bottomShell);
 						highResVisible = true;
+						//TODO show subsampling hint
 					}
 				} catch (UnsupportedOperationException e) {
 					loadFailed = e.getMessage();
@@ -339,10 +340,6 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 							previewCanvas.redraw();
 					});
 				}
-				// status = new Fader().fadein(status, monitor, image, topShell,
-				// topCanvas,
-				// (previewShown) ? previewShell : bottomShell);
-				// highResVisible = true;
 				return status;
 			} finally {
 				fileWatcher.stopIgnoring(opId);
@@ -511,8 +508,8 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	 * (non-Javadoc)
 	 *
 	 * @see
-	 * com.bdaum.zoom.ui.views.IImageViewer#init(org.eclipse.swt.widgets.Display
-	 * , boolean)
+	 * com.bdaum.zoom.ui.views.IImageViewer#init(org.eclipse.swt.widgets.Display ,
+	 * boolean)
 	 */
 
 	public void init(IWorkbenchWindow window, RGB bw, int crop) {
@@ -793,12 +790,11 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	}
 
 	private String getKeyboardHelp(boolean help) {
-		return NLS.bind(
-				help ? Messages.getString("ImageViewer.use_mouse_wheel2") //$NON-NLS-1$
-						: Messages.getString("ImageViewer.use_mouse_wheel"), //$NON-NLS-1$
+		return NLS.bind(help ? Messages.getString("ImageViewer.use_mouse_wheel2") //$NON-NLS-1$
+				: Messages.getString("ImageViewer.use_mouse_wheel"), //$NON-NLS-1$
 				modMask == SWT.BUTTON3 ? Messages.getString("ImageViewer.right_mouse_button") //$NON-NLS-1$
-						: modMask == SWT.ALT ? Messages.getString("ImageViewer.ALT") : Messages //$NON-NLS-1$
-								.getString("ImageViewer.SHIFT")); //$NON-NLS-1$
+						: modMask == SWT.ALT ? Messages.getString("ImageViewer.ALT") //$NON-NLS-1$
+								: Messages.getString("ImageViewer.SHIFT")); //$NON-NLS-1$
 	}
 
 	private Shell createKioskShell(String label) {
@@ -812,8 +808,7 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.views.IImageViewer#open(com.bdaum.zoom.cat.model.asset
+	 * @see com.bdaum.zoom.ui.views.IImageViewer#open(com.bdaum.zoom.cat.model.asset
 	 * .Asset)
 	 */
 
@@ -909,86 +904,95 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 			return;
 		oldTime = time;
 		oldKeyCode = e.keyCode;
-		switch (e.character) {
-		case SWT.TAB:
-			if (highResVisible)
-				close();
-			break;
-		case '+':
-			zoom(2, mousePoint.x, mousePoint.y);
-			break;
-		case '-':
-			zoom(-2, mousePoint.x, mousePoint.y);
-			break;
-		case ' ':
-		case '*':
-			resetView();
-			break;
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-			fix(e.character - '0', mousePoint.x, mousePoint.y);
-			break;
-		default:
-			if ((e.stateMask & SWT.SHIFT) != 0) {
-				switch (e.keyCode) {
-				case '1':
-				case '2':
-				case '3':
-				case '4':
-					fix(1d / (e.keyCode - '0'), mousePoint.x, mousePoint.y);
+		if (e.character == Messages.getString("ImageViewer.w").charAt(0)) { //$NON-NLS-1$
+			Rectangle sbounds = topShell.getBounds();
+			double factor = (double) ibounds.width / sbounds.width;
+			fix(factor, mousePoint.x, mousePoint.y);
+		} else if (e.character == Messages.getString("ImageViewer.h").charAt(0)) { //$NON-NLS-1$
+			Rectangle sbounds = topShell.getBounds();
+			double factor = (double) ibounds.height / sbounds.height;
+			fix(factor, mousePoint.x, mousePoint.y);
+		} else
+			switch (e.character) {
+			case SWT.TAB:
+				if (highResVisible)
+					close();
+				break;
+			case '+':
+				zoom(2, mousePoint.x, mousePoint.y);
+				break;
+			case '-':
+				zoom(-2, mousePoint.x, mousePoint.y);
+				break;
+			case ' ':
+			case '*':
+				resetView();
+				break;
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+				fix(e.character - '0', mousePoint.x, mousePoint.y);
+				break;
+			default:
+				if ((e.stateMask & SWT.SHIFT) != 0) {
+					switch (e.keyCode) {
+					case '1':
+					case '2':
+					case '3':
+					case '4':
+						fix(1d / (e.keyCode - '0'), mousePoint.x, mousePoint.y);
+						break;
+					}
 					break;
+				}
+				int f = (e.stateMask & SWT.CONTROL) != 0 ? 5 : 1;
+				switch (e.keyCode) {
+				case SWT.ESC:
+					close();
+					break;
+				case SWT.ARROW_LEFT:
+					viewTransform.translate(-INCREMENT * f, 0);
+					topCanvas.redraw();
+					break;
+				case SWT.ARROW_RIGHT:
+					viewTransform.translate(INCREMENT * f, 0);
+					topCanvas.redraw();
+					break;
+				case SWT.ARROW_UP:
+					viewTransform.translate(0, -INCREMENT * f);
+					topCanvas.redraw();
+					break;
+				case SWT.ARROW_DOWN:
+					viewTransform.translate(0, INCREMENT * f);
+					topCanvas.redraw();
+					break;
+				case SWT.HOME:
+					viewTransform.translate(-PAGEINCREMENT * f, 0);
+					topCanvas.redraw();
+					break;
+				case SWT.END:
+					viewTransform.translate(PAGEINCREMENT * f, 0);
+					topCanvas.redraw();
+					break;
+				case SWT.PAGE_UP:
+					viewTransform.translate(0, -PAGEINCREMENT * f);
+					topCanvas.redraw();
+					break;
+				case SWT.PAGE_DOWN:
+					viewTransform.translate(0, PAGEINCREMENT * f);
+					topCanvas.redraw();
+					break;
+				case SWT.F2:
+					metadataRequested(asset);
 				}
 				break;
 			}
-			int f = (e.stateMask & SWT.CONTROL) != 0 ? 5 : 1;
-			switch (e.keyCode) {
-			case SWT.ESC:
-				close();
-				break;
-			case SWT.ARROW_LEFT:
-				viewTransform.translate(-INCREMENT * f, 0);
-				topCanvas.redraw();
-				break;
-			case SWT.ARROW_RIGHT:
-				viewTransform.translate(INCREMENT * f, 0);
-				topCanvas.redraw();
-				break;
-			case SWT.ARROW_UP:
-				viewTransform.translate(0, -INCREMENT * f);
-				topCanvas.redraw();
-				break;
-			case SWT.ARROW_DOWN:
-				viewTransform.translate(0, INCREMENT * f);
-				topCanvas.redraw();
-				break;
-			case SWT.HOME:
-				viewTransform.translate(-PAGEINCREMENT * f, 0);
-				topCanvas.redraw();
-				break;
-			case SWT.END:
-				viewTransform.translate(PAGEINCREMENT * f, 0);
-				topCanvas.redraw();
-				break;
-			case SWT.PAGE_UP:
-				viewTransform.translate(0, -PAGEINCREMENT * f);
-				topCanvas.redraw();
-				break;
-			case SWT.PAGE_DOWN:
-				viewTransform.translate(0, PAGEINCREMENT * f);
-				topCanvas.redraw();
-				break;
-			case SWT.F2:
-				metadataRequested(asset);
-			}
-			break;
-		}
 	}
 
 	public void close() {
@@ -1043,10 +1047,6 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	}
 
 	private void pan(double xDir, double yDir) {
-		// double fac = Math.pow(2d,
-		// (Platform.getPreferencesService().getInt(UiActivator.PLUGIN_ID,
-		// PreferenceConstants.MOUSE_SPEED, 10, null) - 10) / 3d) /
-		// viewTransform.getScale();
 		viewTransform.translate(xDir, yDir);
 		rectSrc.setBounds(ibounds.x, ibounds.y, ibounds.width, ibounds.height);
 		viewTransform.transform(rectSrc, rectDst);
@@ -1063,19 +1063,25 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	}
 
 	private void zoom(double factor, double x, double y) {
-		zoomDelta(1d + factor * 0.01d, x, y);
+		double vx = viewTransform.getTranslateX();
+		double vy = viewTransform.getTranslateY();
+		zoomDelta(1d + factor * 0.01d, x - vx, y - vy);
 	}
 
 	private void fix(double ratio, double x, double y) {
 		double scale = viewTransform.getScale();
+		double vx = viewTransform.getTranslateX();
+		double vy = viewTransform.getTranslateY();
 		if (oldRatio == ratio) {
-			zoomDelta(oldScale / scale, x, y);
+			zoomDelta(oldScale / scale, x - vx, y - vy);
 			oldRatio = -1d;
 		} else {
 			if (oldRatio < 0)
 				oldScale = scale;
 			oldRatio = ratio;
-			zoomDelta(1 / (ratio * scale), x, y);
+			zoomDelta(1 / (ratio * scale), x - vx, y - vy);
+			if (!isEnlarged())
+				oldRatio = -1d;
 		}
 	}
 
@@ -1087,8 +1093,9 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 			newScale = Math.max(newScale, minScale);
 			delta = newScale / scale;
 			try {
-				viewTransform.scaleAboutPoint(delta, (x - canvasXoffset) / scale, (y - canvasYoffset) / scale);
-				viewTransform.translate(canvasXoffset, canvasYoffset);
+				viewTransform.translate((x - canvasXoffset) / scale, (y - canvasYoffset) / scale);
+				viewTransform.scale(delta, delta);
+				viewTransform.translate(-(x - canvasXoffset) / scale, -(y - canvasYoffset) / scale);
 				topCanvas.redraw();
 			} catch (PAffineTransformException e) {
 				// ignore

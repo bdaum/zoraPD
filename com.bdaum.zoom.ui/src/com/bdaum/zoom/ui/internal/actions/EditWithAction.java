@@ -58,6 +58,7 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.ExportMetadataOperation;
 import com.bdaum.zoom.operations.internal.SetLastEditorOperation;
+import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.dialogs.ZListDialog;
 import com.bdaum.zoom.ui.internal.Icons;
@@ -125,10 +126,7 @@ public class EditWithAction extends Action {
 					}
 					String path = (new File(uri)).getAbsolutePath();
 					parms.add(path);
-					String ext = ""; //$NON-NLS-1$
-					int p = path.lastIndexOf('.');
-					if (p >= 0)
-						ext = path.substring(p + 1);
+					String ext = BatchUtilities.getTrueFileExtension(path);
 					if (visited.add(ext)) {
 						FileEditorMapping mapping = UiActivator.getDefault().getFileEditorMapping(ext);
 						editors = computeEditors(editors, mapping);

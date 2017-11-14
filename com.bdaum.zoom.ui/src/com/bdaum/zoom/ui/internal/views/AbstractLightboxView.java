@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -24,6 +24,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -51,6 +55,7 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.asset.Region;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
+import com.bdaum.zoom.cat.model.locationShown.LocationShownImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
@@ -74,6 +79,35 @@ import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 @SuppressWarnings("restriction")
 public abstract class AbstractLightboxView extends AbstractGalleryView
 		implements SelectionListener, IExtendedColorModel2 {
+
+	public static class DecoJob extends Job {
+		public static final Object ID = "ThumbDeco"; //$NON-NLS-1$
+		private GalleryItem currentItem;
+		private Gallery gallery;
+
+		public DecoJob(Gallery gallery, GalleryItem currentItem) {
+			super(Messages.getString("AbstractLightboxView.deco_thumb")); //$NON-NLS-1$
+			this.gallery = gallery;
+			this.currentItem = currentItem;
+			setSystem(true);
+			setPriority(Job.INTERACTIVE);
+		}
+
+		@Override
+		public boolean belongsTo(Object family) {
+			return family == ID;
+		}
+
+		@Override
+		protected IStatus run(IProgressMonitor monitor) {
+			if (currentItem != null && !gallery.isDisposed())
+				gallery.getDisplay().asyncExec(() -> {
+					if (!gallery.isDisposed())
+						gallery.redraw(currentItem);
+				});
+			return Status.OK_STATUS;
+		}
+	}
 
 	protected static final String ROT = "rot"; //$NON-NLS-1$
 	protected static final int LOWER_THUMBNAIL_HMARGINS = 5;
@@ -109,8 +143,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 				return;
 			ISelection sel = getSelection();
 			boolean isSelected = (sel instanceof AssetSelection && ((AssetSelection) sel).isSelected(asset));
-			boolean hasDeco = deco == PreferenceConstants.DECOALWAYS
-					|| deco == PreferenceConstants.DECOSELECT && isSelected;
+			boolean hasMouse = item == currentItem;
 			ir.setSelected(isSelected);
 			GC gc = e.gc;
 			int x = e.x;
@@ -118,7 +151,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 			int width = e.width;
 			int height = e.height;
 			// Regions
-			ir.setShowRegions(hasDeco ? 0 : showRegions);
+			ir.setShowRegions(showRegions, hasMouse || isSelected);
 			SmartCollectionImpl selectedCollection = getNavigationHistory().getSelectedCollection();
 			ir.setPersonFilter(selectedCollection == null ? null
 					: selectedCollection.getSystem() && selectedCollection.getAlbum() ? selectedCollection.getStringId()
@@ -150,7 +183,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 							y + th + h * 3 / 4, w, h);
 				}
 			}
-			if (hasDeco) {
+			if (hasMouse) {
 				if ((!showExpandCollapseButton || !folding || item.getData(CARD) == null)
 						&& asset.getFileState() == IVolumeManager.ONLINE) {
 					int titleHeight = fontHeight + 5;
@@ -158,8 +191,8 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 				}
 				if (showRotateButtons) {
 					Object rot = item.getData(ROT);
-					Image rotate270icon = (rot == R270) ? Icons.rotate270f.getImage()
-							: (isSelected) ? Icons.rotate270.getImage() : Icons.rotate270d.getImage();
+					Image rotate270icon = ((rot == R270) ? Icons.rotate270f
+							: (isSelected) ? Icons.rotate270 : Icons.rotate270d).getImage();
 					bounds1 = rotate270icon.getBounds();
 					int w = (int) (bounds1.width * factor + 0.5d);
 					int h = (int) (bounds1.height * factor + 0.5d);
@@ -180,165 +213,164 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 					bounds2.width = w + 10;
 					bounds2.height = h + 10;
 				}
-				// Voicenote
-				String voiceFileURI = asset.getVoiceFileURI();
-				if (showVoicenoteButton && voiceFileURI != null && !voiceFileURI.isEmpty()) {
-					Image speakerIcon = voiceFileURI.startsWith("?") ? Icons.note.getImage() : Icons.speaker.getImage(); //$NON-NLS-1$
-					Rectangle ibounds = speakerIcon.getBounds();
-					bounds5 = new Rectangle(x + (width - (int) (ibounds.width * factor + 0.5d)) / 2,
-							y + height - (int) (ibounds.height * factor + 0.5d) - fontHeight,
-							(int) (ibounds.width * factor + 0.5d), (int) (ibounds.height * factor + 0.5d));
-					gc.drawImage(speakerIcon, ibounds.x, ibounds.y, ibounds.width, ibounds.height, bounds5.x, bounds5.y,
-							bounds5.width, bounds5.height);
+			}
+			// Voicenote
+			String voiceFileURI = asset.getVoiceFileURI();
+			if (showVoicenoteButton && voiceFileURI != null && !voiceFileURI.isEmpty()) {
+				Image speakerIcon = (voiceFileURI.startsWith("?") ? Icons.note : Icons.speaker).getImage(); //$NON-NLS-1$
+				Rectangle ibounds = speakerIcon.getBounds();
+				bounds5 = new Rectangle(x + (width - (int) (ibounds.width * factor + 0.5d)) / 2,
+						y + height - (int) (ibounds.height * factor + 0.5d) - fontHeight,
+						(int) (ibounds.width * factor + 0.5d), (int) (ibounds.height * factor + 0.5d));
+				gc.drawImage(speakerIcon, ibounds.x, ibounds.y, ibounds.width, ibounds.height, bounds5.x, bounds5.y,
+						bounds5.width, bounds5.height);
+			}
+			th = (int) (UPPER_THUMBNAIL_HMARGINS * factor + 0.5d);
+			int w = (int) (COLORSPOT * factor + 0.5d);
+			// ColorCode
+			if (showColorCode) {
+				int colorCode = asset.getColorCode();
+				if (colorCode == Constants.COLOR_UNDEFINED) {
+					IPostProcessor2[] processors = Core.getCore().getDbFactory().getAutoColoringProcessors();
+					if (processors != null)
+						for (int i = 0; i < processors.length; i++)
+							if (processors[i] != null && processors[i].accept(asset)) {
+								colorCode = i;
+								break;
+							}
+				} else if (hasMouse) {
+					bounds3 = new Rectangle(x + th, y + th, w, w);
+					Image colorCodeIcon = Icons.toSwtColors(colorCode);
+					Rectangle ibounds = colorCodeIcon.getBounds();
+					gc.drawImage(colorCodeIcon, ibounds.x, ibounds.y, ibounds.width, ibounds.height, bounds3.x,
+							bounds3.y, bounds3.width, bounds3.height);
 				}
-				th = (int) (UPPER_THUMBNAIL_HMARGINS * factor + 0.5d);
-				int w = (int) (COLORSPOT * factor + 0.5d);
-				// ColorCode
-				if (showColorCode) {
-					int colorCode = asset.getColorCode();
-					if (colorCode == Constants.COLOR_UNDEFINED) {
-						IPostProcessor2[] processors = Core.getCore().getDbFactory().getAutoColoringProcessors();
-						if (processors != null)
-							for (int i = 0; i < processors.length; i++)
-								if (processors[i] != null && processors[i].accept(asset)) {
-									colorCode = i;
-									break;
-								}
-					}
-					if (colorCode != Constants.COLOR_UNDEFINED || isSelected) {
-						bounds3 = new Rectangle(x + th, y + th, w, w);
-						Image colorCodeIcon = Icons.toSwtColors(colorCode);
-						Rectangle ibounds = colorCodeIcon.getBounds();
-						gc.drawImage(colorCodeIcon, ibounds.x, ibounds.y, ibounds.width, ibounds.height, bounds3.x,
-								bounds3.y, bounds3.width, bounds3.height);
-					}
+			}
+			// Location
+			if (showLocation) {
+				boolean gps = !(Double.isNaN(asset.getGPSLatitude()) || Double.isNaN(asset.getGPSLatitude()));
+				if (!gps)
+					gps = !Core.getCore().getDbManager()
+							.obtainStructForAsset(LocationShownImpl.class, asset.getStringId(), false).isEmpty();
+				if (gps || hasMouse) {
+					Image locationIcon = (gps ? Icons.location : Icons.nolocation).getImage();
+					bounds8 = locationIcon.getBounds();
+					w = (int) (bounds8.width * factor + 0.5d);
+					int h = (int) (bounds8.height * factor + 0.5d);
+					int x1 = x;
+					if (bounds3 != null)
+						x1 += bounds3.width + UPPER_THUMBNAIL_SPACING + th;
+					int y1 = y + th;
+					gc.drawImage(locationIcon, bounds8.x, bounds8.y, bounds8.width, bounds8.height, x1, y1, w, h);
+					bounds8.x = x1;
+					bounds8.y = y1;
+					bounds8.width = w;
+					bounds8.height = h;
 				}
-				// Location
-				if (showLocation) {
-					boolean gps = !(Double.isNaN(asset.getGPSLatitude()) || Double.isNaN(asset.getGPSLatitude()));
-					if (gps || isSelected) {
-						Image locationIcon = gps ? Icons.location.getImage() : Icons.nolocation.getImage();
-						bounds8 = locationIcon.getBounds();
-						w = (int) (bounds8.width * factor + 0.5d);
-						int h = (int) (bounds8.height * factor + 0.5d);
-						int x1 = x;
-						if (bounds3 != null)
-							x1 += bounds3.width + UPPER_THUMBNAIL_SPACING + th;
-						int y1 = y + th;
-						gc.drawImage(locationIcon, bounds8.x, bounds8.y, bounds8.width, bounds8.height, x1, y1, w, h);
-						bounds8.x = x1;
-						bounds8.y = y1;
-						bounds8.width = w;
-						bounds8.height = h;
-					}
-				}
-				// Rating
-				if (RATING_NO != showRating) {
-					int rating = asset.getRating();
-					if (rating > 0) {
-						double rfactor;
-						Image ratingIcon;
-						if (RATING_SIZE == showRating) {
-							rfactor = factor * (rating + 0.6d) / 5.6d;
+			}
+			// Rating
+			if (RATING_NO != showRating) {
+				int rating = asset.getRating();
+				if (rating > 0) {
+					double rfactor;
+					Image ratingIcon;
+					if (RATING_SIZE == showRating) {
+						rfactor = factor * (rating + 0.6d) / 5.6d;
+						ratingIcon = Icons.rating61.getImage();
+					} else {
+						rfactor = factor * 2.6d / 5.6d;
+						switch (rating) {
+						case 1:
 							ratingIcon = Icons.rating61.getImage();
-						} else {
-							rfactor = factor * 2.6d / 5.6d;
-							switch (rating) {
-							case 1:
-								ratingIcon = Icons.rating61.getImage();
-								break;
-							case 2:
-								ratingIcon = Icons.rating62.getImage();
-								break;
-							case 3:
-								ratingIcon = Icons.rating63.getImage();
-								break;
-							case 4:
-								ratingIcon = Icons.rating64.getImage();
-								break;
-							default:
-								ratingIcon = Icons.rating65.getImage();
-								break;
-							}
-						}
-						bounds4 = ratingIcon.getBounds();
-						w = (int) (bounds4.width * rfactor + 0.5d);
-						int h = (int) (bounds4.height * rfactor + 0.5d);
-						int x1 = width + x - w - th;
-						int y1 = y + th - h / 4;
-						gc.drawImage(ratingIcon, bounds4.x, bounds4.y, bounds4.width, bounds4.height, x1, y1, w, h);
-						bounds4.x = x1;
-						bounds4.y = y1;
-						bounds4.width = w;
-						bounds4.height = h;
-					} else if (isSelected) {
-						double rfactor = factor * 3.6d / 5.6d;
-						Image ratingEmptyIcon = Icons.rating60.getImage();
-						bounds4 = ratingEmptyIcon.getBounds();
-						w = (int) (bounds4.width * rfactor + 0.5d);
-						int h = (int) (bounds4.height * rfactor + 0.5d);
-						int x1 = width + x - w - th;
-						int y1 = y + th - h / 4;
-						gc.drawImage(ratingEmptyIcon, bounds4.x, bounds4.y, bounds4.width, bounds4.height, x1, y1, w,
-								h);
-						bounds4.x = x1;
-						bounds4.y = y1;
-						bounds4.width = w;
-						bounds4.height = h;
-					}
-				}
-				// Done mark
-				if (showDoneMark) {
-					int status = asset.getStatus();
-					String mimeType = asset.getMimeType();
-					if (status == Constants.STATE_READY
-							|| status == Constants.STATE_CORRECTED && ImageConstants.IMAGE_X_RAW.equals(mimeType)) {
-						Image doneIcon = Icons.done.getImage();
-						bounds7 = doneIcon.getBounds();
-						w = (int) (bounds7.width * factor + 0.5d);
-						int h = (int) (bounds7.height * factor + 0.5d);
-						int x1 = width + x - w;
-						if (bounds4 != null)
-							x1 -= bounds4.width + UPPER_THUMBNAIL_SPACING + th;
-						int y1 = y + th - h / 3;
-						gc.drawImage(doneIcon, bounds7.x, bounds7.y, bounds7.width, bounds7.height, x1, y1, w, h);
-						bounds7.x = x1;
-						bounds7.y = y1;
-						bounds7.width = w;
-						bounds7.height = h;
-					}
-				}
-
-				// Expand/Collapse
-				if (showExpandCollapseButton && folding) {
-					Image expIcon = null;
-					if (item.getData(CARD) != null)
-						expIcon = Icons.expand.getImage();
-					else {
-						GalleryItem parentItem = item.getParentItem();
-						int index = parentItem.indexOf(item);
-						if (index >= 0) {
-							GalleryItem nextItem = parentItem.getItem(index + 1);
-							if (nextItem != null) {
-								AssetImpl nextAsset = (AssetImpl) nextItem.getData(ASSET);
-								if (nextAsset != null && nextAsset.getName().equals(asset.getName())) {
-									expIcon = Icons.collaps.getImage();
-								}
-							}
+							break;
+						case 2:
+							ratingIcon = Icons.rating62.getImage();
+							break;
+						case 3:
+							ratingIcon = Icons.rating63.getImage();
+							break;
+						case 4:
+							ratingIcon = Icons.rating64.getImage();
+							break;
+						default:
+							ratingIcon = Icons.rating65.getImage();
+							break;
 						}
 					}
-					if (expIcon != null) {
-						bounds6 = expIcon.getBounds();
-						int x1 = x + (width - w) / 2;
-						int y1 = y + th / 2;
-						w = (int) (bounds6.width * factor + 0.5d);
-						int h = (int) (bounds6.height * factor + 0.5d);
-						gc.drawImage(expIcon, bounds6.x, bounds6.y, bounds6.width, bounds6.height, x1, y1, w, h);
-						bounds6.x = x1;
-						bounds6.y = y1;
-						bounds6.width = w;
-						bounds6.height = h;
+					bounds4 = ratingIcon.getBounds();
+					w = (int) (bounds4.width * rfactor + 0.5d);
+					int h = (int) (bounds4.height * rfactor + 0.5d);
+					int x1 = width + x - w - th;
+					int y1 = y + th - h / 4;
+					gc.drawImage(ratingIcon, bounds4.x, bounds4.y, bounds4.width, bounds4.height, x1, y1, w, h);
+					bounds4.x = x1;
+					bounds4.y = y1;
+					bounds4.width = w;
+					bounds4.height = h;
+				} else if (hasMouse) {
+					double rfactor = factor * 0.64d;
+					Image ratingEmptyIcon = Icons.rating60.getImage();
+					bounds4 = ratingEmptyIcon.getBounds();
+					w = (int) (bounds4.width * rfactor + 0.5d);
+					int h = (int) (bounds4.height * rfactor + 0.5d);
+					int x1 = width + x - w - th;
+					int y1 = y + th - h / 4;
+					gc.drawImage(ratingEmptyIcon, bounds4.x, bounds4.y, bounds4.width, bounds4.height, x1, y1, w, h);
+					bounds4.x = x1;
+					bounds4.y = y1;
+					bounds4.width = w;
+					bounds4.height = h;
+				}
+			}
+			// Done mark
+			if (showDoneMark) {
+				int status = asset.getStatus();
+				String mimeType = asset.getMimeType();
+				if (status == Constants.STATE_READY
+						|| status == Constants.STATE_CORRECTED && ImageConstants.IMAGE_X_RAW.equals(mimeType)) {
+					Image doneIcon = Icons.done.getImage();
+					bounds7 = doneIcon.getBounds();
+					w = (int) (bounds7.width * factor + 0.5d);
+					int h = (int) (bounds7.height * factor + 0.5d);
+					int x1 = width + x - w;
+					if (bounds4 != null)
+						x1 -= bounds4.width + UPPER_THUMBNAIL_SPACING + th;
+					int y1 = y + th - h / 3;
+					gc.drawImage(doneIcon, bounds7.x, bounds7.y, bounds7.width, bounds7.height, x1, y1, w, h);
+					bounds7.x = x1;
+					bounds7.y = y1;
+					bounds7.width = w;
+					bounds7.height = h;
+				}
+			}
+			// Expand/Collapse
+			if (showExpandCollapseButton && folding && hasMouse) {
+				Image expIcon = null;
+				if (item.getData(CARD) != null)
+					expIcon = Icons.expand.getImage();
+				else {
+					GalleryItem parentItem = item.getParentItem();
+					int index = parentItem.indexOf(item);
+					if (index >= 0) {
+						GalleryItem nextItem = parentItem.getItem(index + 1);
+						if (nextItem != null) {
+							AssetImpl nextAsset = (AssetImpl) nextItem.getData(ASSET);
+							if (nextAsset != null && nextAsset.getName().equals(asset.getName()))
+								expIcon = Icons.collaps.getImage();
+						}
 					}
+				}
+				if (expIcon != null) {
+					bounds6 = expIcon.getBounds();
+					int x1 = x + (width - w) / 2;
+					int y1 = y + th / 2;
+					w = (int) (bounds6.width * factor + 0.5d);
+					int h = (int) (bounds6.height * factor + 0.5d);
+					gc.drawImage(expIcon, bounds6.x, bounds6.y, bounds6.width, bounds6.height, x1, y1, w, h);
+					bounds6.x = x1;
+					bounds6.y = y1;
+					bounds6.width = w;
+					bounds6.height = h;
 				}
 			}
 			item.setData(HOTSPOTS,
@@ -421,11 +453,10 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 				return Messages.getString("AbstractLightboxView.rotate_left"); //$NON-NLS-1$
 			if (isRotate90(x, y))
 				return Messages.getString("AbstractLightboxView.rotate_right"); //$NON-NLS-1$
-			if (isLocationPin(x, y)) {
+			if (isLocationPin(x, y))
 				return !(Double.isNaN(asset.getGPSLatitude()) || Double.isNaN(asset.getGPSLatitude()))
 						? Messages.getString("AbstractLightboxView.location_data") //$NON-NLS-1$
 						: Messages.getString("AbstractLightboxView.no_location_data"); //$NON-NLS-1$
-			}
 			if (isVoicenotes(x, y)) {
 				String voiceFileURI = asset.getVoiceFileURI();
 				return voiceFileURI.startsWith("?") ? voiceFileURI.substring(1) //$NON-NLS-1$
@@ -444,7 +475,6 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 	protected boolean shift;
 	protected LightboxGalleryItemRenderer itemRenderer;
 	protected GalleryItem focussedItem;
-	private int deco;
 	protected boolean showRotateButtons;
 	protected boolean showColorCode;
 	protected boolean showLocation;
@@ -454,6 +484,10 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 	private boolean showExpandCollapseButton;
 	private int showRegions;
 	private boolean showDoneMark;
+	protected int showLabelDflt;
+	protected String labelTemplateDflt;
+	protected int labelFontsizeDflt;
+	private GalleryItem currentItem;
 
 	protected static final GalleryItem[] NOITEM = new GalleryItem[0];
 
@@ -629,6 +663,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 		pnt.x = x;
 		pnt.y = y;
 		GalleryItem item = gallery.getItem(pnt);
+		handleMouseOver(item);
 		if (item == null)
 			return null;
 		Asset asset = (Asset) item.getData(ASSET);
@@ -650,6 +685,17 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 			return assets;
 		}
 		return asset;
+	}
+
+	private void handleMouseOver(GalleryItem item) {
+		if (currentItem != item) {
+			GalleryItem oldItem = currentItem;
+			currentItem = item;
+			if (oldItem != null)
+				gallery.redraw(oldItem);
+			Job.getJobManager().cancel(DecoJob.ID);
+			new DecoJob(gallery, currentItem).schedule(250);
+		}
 	}
 
 	@Override
@@ -702,13 +748,11 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 	protected int getSelectionCount(boolean local) {
 		if (local) {
 			int i = 0;
-			GalleryItem[] sel = gallery.getSelection();
-			for (GalleryItem galleryItem : sel) {
+			for (GalleryItem galleryItem : gallery.getSelection()) {
 				Asset a = (Asset) galleryItem.getData(ASSET);
-				if (a == null || a.getFileState() != IVolumeManager.PEER) {
+				if (a == null || a.getFileState() != IVolumeManager.PEER)
 					if (++i >= 2)
 						return i;
-				}
 			}
 			return i;
 		}
@@ -745,7 +789,9 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 		preferenceStore.addPropertyChangeListener(new IPropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent event) {
 				String property = event.getProperty();
-				if (PreferenceConstants.SHOWDECO.equals(property)
+				if (PreferenceConstants.SHOWLABEL.equals(property)
+						|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
+						|| PreferenceConstants.LABELFONTSIZE.equals(property)
 						|| PreferenceConstants.SHOWROTATEBUTTONS.equals(property)
 						|| PreferenceConstants.SHOWCOLORCODE.equals(property)
 						|| PreferenceConstants.SHOWRATING.equals(property)
@@ -763,14 +809,16 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 
 	protected IPreferenceStore applyPreferences() {
 		final IPreferenceStore preferenceStore = UiActivator.getDefault().getPreferenceStore();
-		deco = preferenceStore.getInt(PreferenceConstants.SHOWDECO);
+		showLabelDflt = preferenceStore.getInt(PreferenceConstants.SHOWLABEL);
+		labelTemplateDflt = preferenceStore.getString(PreferenceConstants.THUMBNAILTEMPLATE);
+		labelFontsizeDflt = preferenceStore.getInt(PreferenceConstants.LABELFONTSIZE);
 		showRotateButtons = preferenceStore.getBoolean(PreferenceConstants.SHOWROTATEBUTTONS);
 		showColorCode = !PreferenceConstants.COLORCODE_NO
 				.equals(preferenceStore.getString(PreferenceConstants.SHOWCOLORCODE));
 		showLocation = preferenceStore.getBoolean(PreferenceConstants.SHOWLOCATION);
 		String rating = preferenceStore.getString(PreferenceConstants.SHOWRATING);
 		showRating = PreferenceConstants.SHOWRATING_NO.equals(rating) ? RATING_NO
-				: PreferenceConstants.SHOWRATING_SIZE.equals(rating) ? RATING_SIZE : RATING_COUNT;
+				: PreferenceConstants.SHOWRATING_COUNT.equals(rating) ? RATING_COUNT : RATING_SIZE;
 		showDoneMark = preferenceStore.getBoolean(PreferenceConstants.SHOWDONEMARK);
 		showVoicenoteButton = preferenceStore.getBoolean(PreferenceConstants.SHOWVOICENOTE);
 		showExpandCollapseButton = preferenceStore.getBoolean(PreferenceConstants.SHOWEXPANDCOLLAPSE);
@@ -780,7 +828,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 
 	@Override
 	public void themeChanged() {
-		configureItemRenderer(gallery);
+		applyStyle(gallery);
 		GalleryItem group = gallery.getItem(0);
 		if (group != null)
 			for (GalleryItem item : group.getItems())
@@ -788,7 +836,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 					gallery.redraw(item);
 	}
 
-	protected void configureItemRenderer(Gallery gal) {
+	protected void applyStyle(Gallery gal) {
 		CssActivator.getDefault().applyExtendedStyle(gal, this);
 	}
 
@@ -854,7 +902,6 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 		addDragDropSupport();
 		// Hover
 		installHoveringController();
-		addCueListener();
 		addCueListener();
 		// Contributions
 		hookContextMenu();

@@ -364,7 +364,8 @@ public class AssetEnsemble {
 		}
 		mwgRegion.setPersonEmailDigest(region.getPersonEmailDigest());
 		mwgRegion.setType(Region.type_face);
-		mwgRegion.setPersonLiveCID(region.getPersonLiveCID());
+		if (region.getPersonLiveCID() != null)
+			mwgRegion.setPersonLiveCID(region.getPersonLiveCID());
 		mwgRegion.setDescription(region.getDescription());
 		mwgRegion.setType(type);
 	}
@@ -895,11 +896,12 @@ public class AssetEnsemble {
 								GroupImpl personAlbumsGroup = dbManager.obtainById(GroupImpl.class,
 										Constants.GROUP_ID_PERSONS);
 								if (personAlbumsGroup == null) {
-									personAlbumsGroup = new GroupImpl(Messages.AssetEnsemble_persons, true);
+									personAlbumsGroup = new GroupImpl(Messages.AssetEnsemble_persons, true,
+											Constants.INHERIT_LABEL, null, 0, null);
 									personAlbumsGroup.setStringId(Constants.GROUP_ID_PERSONS);
 								}
 								album = new SmartCollectionImpl(name, true, true, false, false, "", 0, null, 0, null, //$NON-NLS-1$
-										null);
+										Constants.INHERIT_LABEL, null, 0, null);
 								album.setGroup_rootCollection_parent(Constants.GROUP_ID_PERSONS);
 								album.addCriterion(new CriterionImpl(Constants.OID, null, album.getStringId(),
 										QueryField.XREF, false));

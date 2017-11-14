@@ -15,6 +15,7 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
 import java.util.Timer;
@@ -310,6 +311,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 		workbench.getPreferenceManager().remove("org.eclipse.help.ui.browsersPreferencePage"); //$NON-NLS-1$
 		System.setProperty("zoom.version", Platform.getProduct() //$NON-NLS-1$
 				.getDefiningBundle().getVersion().toString());
+		System.setProperty("zoom.year", String.valueOf(new GregorianCalendar().get(GregorianCalendar.YEAR))); //$NON-NLS-1$
 		FontRegistry fontRegistry = JFaceResources.getFontRegistry();
 		FontData fontData = fontRegistry.defaultFontDescriptor().getFontData()[0];
 		fontRegistry.put(UiConstants.MESSAGEFONT,

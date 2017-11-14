@@ -72,7 +72,6 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 
 @SuppressWarnings("restriction")
 public class PageProcessor {
-	private static final SimpleDateFormat cf = new SimpleDateFormat(Messages.PageProcessor_yyyymdhmm);
 	private static final double MMPERINCH = 25.4d;
 	private static final int fontSize = 8;
 	private static final int titleSize = 12;
@@ -108,9 +107,6 @@ public class PageProcessor {
 	private Meta meta;
 	private String fileName;
 	private String collection = ""; //$NON-NLS-1$
-	// private double factorX;
-	// private double factorY;
-	// private Rectangle trim;
 	private int keyLine;
 	private IAdaptable adaptable;
 	private int cms;
@@ -122,6 +118,9 @@ public class PageProcessor {
 	protected boolean aborted;
 	private ZImage swtImage;
 	private Map<URI, File> tempFiles = new HashMap<URI, File>();
+	private double iDpi;
+	private double dpiX;
+	private double dpiY;
 
 	public PageProcessor(PrinterData printerData, PageLayout_typeImpl layout, List<Asset> assets, int w, int h,
 			double factorX, double factorY, Rectangle trim, Point printerDpi, int cms, UnsharpMask umask,
@@ -233,7 +232,7 @@ public class PageProcessor {
 				double h = r ? asset.getWidth() : asset.getHeight();
 				double scale = w == 0 || h == 0 ? 1d : (2 * pixelWidth <= w && 2 * pixelHeight <= h) ? 0.5d : 1d;
 				ZImage hrImage = null;
-				 try {
+				try {
 					hrImage = CoreActivator.getDefault().getHighresImageLoader().loadImage(
 							progress != null ? progress.newChild(1000) : null, status, file, asset.getRotation(),
 							asset.getFocalLengthIn35MmFilm(), null, scale, Double.MAX_VALUE, true, ImageConstants.SRGB,
@@ -258,8 +257,6 @@ public class PageProcessor {
 		if (pageNo > pages)
 			return true;
 		aborted = false;
-		// int offX = (int) (-trim.x * factorX);
-		// int offY = (int) (-trim.y * factorY);
 		Color white = device.getSystemColor(SWT.COLOR_WHITE);
 		gc.setBackground(white);
 		gc.fillRectangle(0, 0, w, h);
@@ -352,8 +349,8 @@ public class PageProcessor {
 									if (textFont == null)
 										textFont = createFont(device, fontSize, SWT.NORMAL);
 									iGc.setFont(textFont);
-									String caption1 = computeCaption(layout.getCaption1(), asset, collection, seqNo,
-											pageItem);
+									String caption1 = computeCaption(layout.getCaption1(), Constants.PI_ALL, asset,
+											collection, seqNo, pageItem);
 									int tx = (cx + (cellWidth - iGc.textExtent(caption1).x) / 2);
 									int ty = (iy + ih + fontLead + keyLine);
 									iGc.drawText(caption1, tx, ty, true);
@@ -362,8 +359,8 @@ public class PageProcessor {
 									if (textFont == null)
 										textFont = createFont(device, fontSize, SWT.NORMAL);
 									iGc.setFont(textFont);
-									String caption2 = computeCaption(layout.getCaption2(), asset, collection, seqNo,
-											pageItem);
+									String caption2 = computeCaption(layout.getCaption2(), Constants.PI_ALL, asset,
+											collection, seqNo, pageItem);
 									int tx = (cx + (cellWidth - iGc.textExtent(caption2).x) / 2);
 									int ty = (iy + ih + 2 * fontLead + fontPixelSize + keyLine);
 									iGc.drawText(caption2, tx, ty, true);
@@ -405,18 +402,13 @@ public class PageProcessor {
 		return sb.toString();
 	}
 
-	private static final SimpleDateFormat df = new SimpleDateFormat(Messages.PageProcessor_yyyymd);
-	private double iDpi;
-	private double dpiX;
-	private double dpiY;
-
 	private static void replaceTitleContent(StringBuilder sb, int p, String tv, String catname, Date date, int count,
 			int pageNo, int pages, String collection, Meta meta) {
 		String value = ""; //$NON-NLS-1$
 		if (tv == Constants.PT_CATALOG)
 			value = catname;
 		else if (tv == Constants.PT_TODAY)
-			value = df.format(date);
+			value = new SimpleDateFormat(Messages.PageProcessor_yyyymd).format(date);
 		else if (tv == Constants.PT_COUNT)
 			value = String.valueOf(count);
 		else if (tv == Constants.PT_PAGENO)
@@ -432,63 +424,10 @@ public class PageProcessor {
 		sb.replace(p, p + tv.length(), value);
 	}
 
-	public static String computeCaption(String template, Asset asset, String collection, int sequenceNo, int pageItem) {
-		StringBuilder sb = new StringBuilder(template);
-		for (String tv : Constants.PI_ALL)
-			while (true) {
-				int p = sb.indexOf(tv);
-				if (p < 0)
-					break;
-				replaceCaptionContent(sb, p, tv, asset, collection, sequenceNo, pageItem);
-			}
-		while (true) {
-			int p = sb.indexOf(Constants.TV_META);
-			if (p >= 0) {
-				int q = sb.indexOf("}", p + 1); //$NON-NLS-1$
-				if (q < 0)
-					break;
-				String fname = sb.substring(p + Constants.TV_META.length(), q);
-				QueryField[] qpath = QueryField.findQuerySubField(fname);
-				if (qpath == null)
-					break;
-				Object value = QueryField.obtainFieldValue(asset, QueryField.findQueryField(fname), qpath[1]);
-				String text = qpath[1].value2text(value, ""); //$NON-NLS-1$
-				if (text != null) {
-					String unit = qpath[1].getUnit();
-					if (unit != null)
-						text += ' ' + unit;
-				} else
-					text = ""; //$NON-NLS-1$
-				sb.replace(p, q + 1, text);
-			} else
-				break;
-		}
-		return sb.toString();
-	}
-
-	private static void replaceCaptionContent(StringBuilder sb, int p, String tv, Asset asset, String collection,
+	public static String computeCaption(String template, String[] variables, Asset asset, String collection,
 			int sequenceNo, int pageItem) {
-		String value = ""; //$NON-NLS-1$
-		if (tv == Constants.PI_TITLE)
-			value = (String) QueryField.TITLEORNAME.obtainFieldValue(asset);
-		else if (tv == Constants.PI_NAME)
-			value = asset.getName();
-		else if (tv == Constants.PI_CREATIONDATE) {
-			Date crDate = asset.getDateTimeOriginal();
-			if (crDate == null)
-				crDate = asset.getDateTime();
-			value = crDate == null ? "" : cf.format(crDate); //$NON-NLS-1$
-		} else if (tv == Constants.PT_COLLECTION)
-			value = collection;
-		else if (tv == Constants.PI_SEQUENCENO)
-			value = String.valueOf(sequenceNo);
-		else if (tv == Constants.PI_PAGEITEM)
-			value = String.valueOf(pageItem);
-		else if (tv == Constants.PI_SIZE)
-			value = NLS.bind(Messages.PageProcessor_nxm_pixel, asset.getWidth(), asset.getHeight());
-		else if (tv == Constants.PI_FORMAT)
-			value = asset.getFormat();
-		sb.replace(p, p + tv.length(), value);
+		return Utilities.evaluateTemplate(template, Constants.PI_ALL, null, null, 0, pageItem, sequenceNo, null, asset,
+				collection, Integer.MAX_VALUE, false);
 	}
 
 	private static Font createFont(Device device, int size, int style) {

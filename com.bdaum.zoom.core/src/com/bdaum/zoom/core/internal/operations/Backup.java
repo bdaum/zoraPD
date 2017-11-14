@@ -18,9 +18,10 @@
  * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
  */
 
-package com.bdaum.zoom.operations.internal;
+package com.bdaum.zoom.core.internal.operations;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -61,6 +62,7 @@ public class Backup extends HistoryItem {
 	private boolean timeLineChange;
 	private boolean locationChange;
 	private boolean folderHierarchyChange;
+	private AssetImpl asset;
 
 	public Backup() {
 		super();
@@ -111,11 +113,17 @@ public class Backup extends HistoryItem {
 		deleted.add(obj);
 	}
 
+	public void addAllDeleted(Collection<? extends AomObject> set) {
+		if (deleted == null)
+			deleted = new ArrayList<AomObject>(2);
+		deleted.addAll(set);
+	}
+
 	public boolean restore(List<Object> toBeStored, List<Object> toBeDeleted)
 			throws IllegalArgumentException, SecurityException {
 		boolean structureChange = false;
 		IDbManager dbManager = Core.getCore().getDbManager();
-		AssetImpl asset = dbManager.obtainAsset(assetId);
+		asset = dbManager.obtainAsset(assetId);
 		if (asset == null)
 			return false;
 		if (timeLineChange || folderHierarchyChange || locationChange)
@@ -186,6 +194,14 @@ public class Backup extends HistoryItem {
 	public boolean isEmpty() {
 		return keys.length == 0 && deleted != null && objects != null
 				&& modifications != null;
+	}
+
+	/**
+	 * Only to be used after restore
+	 * @return asset or null
+	 */
+	public AssetImpl getAsset() {
+		return asset;
 	}
 
 }

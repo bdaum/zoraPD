@@ -41,7 +41,6 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import com.bdaum.aoModeling.runtime.AomList;
 import com.bdaum.aoModeling.runtime.AomMap;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.SimilarityOptions_typeImpl;
@@ -96,19 +95,21 @@ public class CollectionProcessor implements ICollectionProcessor {
 
 	public static class GenericScoreFormatter implements IScoreFormatter {
 
-		NumberFormat nf = NumberFormat.getNumberInstance();
 		private final float factor;
 		private final String suffix;
 		private final String label;
+		private int fractionDigits;
 
 		public GenericScoreFormatter(int fractionDigits, float factor, String suffix, String label) {
+			this.fractionDigits = fractionDigits;
 			this.factor = factor;
 			this.suffix = suffix;
 			this.label = label;
-			nf.setMaximumFractionDigits(fractionDigits);
 		}
 
 		public String format(float score) {
+			NumberFormat nf = NumberFormat.getNumberInstance();
+			nf.setMaximumFractionDigits(fractionDigits);
 			return (Float.isNaN(score)) ? "" : //$NON-NLS-1$
 					nf.format(factor * score) + suffix;
 		}
@@ -308,7 +309,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 		}
 
 		public void evaluate(Candidate candidate) {
-			
+
 			Asset asset = (Asset) candidate.getObject();
 			Date dateCreated = asset.getDateCreated();
 			if (dateCreated == null)
@@ -386,7 +387,8 @@ public class CollectionProcessor implements ICollectionProcessor {
 			this.relation = relation;
 			this.value = value;
 			this.filter = relation == QueryField.WILDCARDS || relation == QueryField.NOTWILDCARDS
-					? new WildCardFilter(value, false) : null;
+					? new WildCardFilter(value, false)
+					: null;
 		}
 
 		public void evaluate(Candidate candidate) {
@@ -643,7 +645,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 										idSet = new HashSet<String>();
 								} else if (relation == QueryField.XREF) {
 									dynamic = true;
-									AomList<String> assetIds = tempColl.getAsset();
+									List<String> assetIds = tempColl.getAsset();
 									if (assetIds != null)
 										idSet = new HashSet<String>(assetIds);
 								} else if (relation == QueryField.UNDEFINED && value instanceof Double) {
@@ -789,7 +791,8 @@ public class CollectionProcessor implements ICollectionProcessor {
 					if (assetFilters != null)
 						for (IAssetFilter assetFilter : assetFilters) {
 							Constraint filterConstraint = assetFilter instanceof AssetFilter
-									? ((AssetFilter) assetFilter).getConstraint(dbManager, query) : null;
+									? ((AssetFilter) assetFilter).getConstraint(dbManager, query)
+									: null;
 							if (filterConstraint != null) {
 								if (conjunction == null)
 									conjunction = filterConstraint;
@@ -1091,8 +1094,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.ICollectionProcessor#addPostProcessor(com.bdaum.zoom
+	 * @see com.bdaum.zoom.core.ICollectionProcessor#addPostProcessor(com.bdaum.zoom
 	 * .core.IPostProcessor)
 	 */
 
@@ -1108,7 +1110,8 @@ public class CollectionProcessor implements ICollectionProcessor {
 		int type = QueryField.findQueryField(path).getType();
 		return (type == QueryField.T_POSITIVEFLOAT || type == QueryField.T_CURRENCY
 				|| type == QueryField.T_POSITIVEINTEGER || type == QueryField.T_POSITIVELONG)
-						? constraint.and(qe.descend(field).constrain(0).greater()) : constraint;
+						? constraint.and(qe.descend(field).constrain(0).greater())
+						: constraint;
 	}
 
 	/*

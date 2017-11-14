@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
 import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
@@ -96,7 +97,7 @@ public class ApplicationPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createScreenGroup(Composite composite) {
-		CGroup group = createGroup(composite, 1,
+		CGroup group = UiUtilities.createGroup(composite, 1,
 				Messages.getString("ApplicationPreferencePage.fullscreen_mode")); //$NON-NLS-1$
 		Label explLabel = new Label(group, SWT.WRAP);
 		explLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true,
@@ -113,7 +114,7 @@ public class ApplicationPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createTaskGroup(Composite composite) {
-		CGroup group = createGroup(composite, 1,
+		CGroup group = UiUtilities.createGroup(composite, 1,
 				Messages.getString("ApplicationPreferencePage.tray_mode")); //$NON-NLS-1$
 		Label explLabel = new Label(group, SWT.WRAP);
 		explLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true,

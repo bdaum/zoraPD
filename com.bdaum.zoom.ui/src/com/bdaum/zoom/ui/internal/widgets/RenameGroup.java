@@ -5,7 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.dialogs.Dialog;
@@ -77,9 +77,12 @@ public class RenameGroup extends Composite {
 					}
 				}
 				return template.getLabel() + "  (" //$NON-NLS-1$
-						+ Utilities.computeFileName(template.getContent(), filename, new Date(), 1, start, 1,
-								!cue.isEmpty() ? cue : Messages.RenameGroup_cue2, asset, maxLength,
-								QueryField.URI == field, transfer)
+						+ Utilities.evaluateTemplate(template.getContent(),
+								asset != null ? Constants.TV_RENAME
+										: transfer ? Constants.TV_TRANSFER : Constants.TV_ALL,
+								filename, new GregorianCalendar(), 1, start, 1,
+								!cue.isEmpty() ? cue : Messages.RenameGroup_cue2, asset, "", maxLength, //$NON-NLS-1$
+								QueryField.URI == field)
 						+ ")"; //$NON-NLS-1$
 			}
 			return element.toString();

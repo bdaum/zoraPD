@@ -178,7 +178,7 @@ public class Startup implements IStartup, IAdaptable {
 				final String v = version;
 				shell.getDisplay().syncExec(() -> AcousticMessageDialog.openError(shell, Messages.Startup_wrong_java_version, NLS.bind(
 						Messages.Startup_wrong_java_version_expl,
-						new Object[] { System.getProperty("java.home"), Constants.REQUIRED_JAVA_VERSIONS, v })));
+						new Object[] { System.getProperty("java.home"), Constants.REQUIRED_JAVA_VERSIONS, v }))); //$NON-NLS-1$
 			}
 		}
 		if (ensureDbOpen(workbench)) {
@@ -260,6 +260,7 @@ public class Startup implements IStartup, IAdaptable {
 				// do nothing
 			}
 		}
+		//TODO Optionally show catalog selection prompt always on open
 		IDbManager dbManager = coreActivator.getDbManager();
 		if (dbManager.getFile() != null) {
 			workbench.getDisplay().syncExec(() -> OpenCatalogCommand.checkPausedFolderWatch(workbench.getDisplay().getActiveShell(), dbManager));

@@ -255,11 +255,9 @@ public class XMPField {
 					if (v.startsWith("+")) //$NON-NLS-1$
 						v = v.substring(1);
 					int p = v.indexOf('/');
-					if (p >= 0) {
-						long a = Long.parseLong(v.substring(0, p));
-						long b = Long.parseLong(v.substring(p + 1));
-						value = ((double) a / b);
-					} else {
+					if (p >= 0)
+						value = ((double) Long.parseLong(v.substring(0, p)) / Long.parseLong(v.substring(p + 1)));
+					else {
 						p = v.indexOf(',');
 						if (p >= 0) {
 							String degrees = v.substring(0, p);

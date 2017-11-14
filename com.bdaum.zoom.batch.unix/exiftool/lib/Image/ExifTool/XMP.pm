@@ -48,7 +48,7 @@ use Image::ExifTool::Exif;
 use Image::ExifTool::GPS;
 require Exporter;
 
-$VERSION = '3.02';
+$VERSION = '3.07';
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(EscapeXML UnescapeXML);
 
@@ -141,6 +141,7 @@ my %xmpNS = (
     MPReg     => 'http://ns.microsoft.com/photo/1.2/t/Region#',
     lr        => 'http://ns.adobe.com/lightroom/1.0/',
     DICOM     => 'http://ns.adobe.com/DICOM/',
+   'drone-dji'=> 'http://www.dji.com/drone-dji/1.0/',
     svg       => 'http://www.w3.org/2000/svg',
     et        => 'http://ns.exiftool.ca/1.0/',
 #
@@ -167,10 +168,13 @@ my %xmpNS = (
     fpv       => 'http://ns.fastpictureviewer.com/fpv/1.0/',
     creatorAtom=>'http://ns.adobe.com/creatorAtom/1.0/',
    'apple-fi' => 'http://ns.apple.com/faceinfo/1.0/',
+    GAudio    => 'http://ns.google.com/photos/1.0/audio/',
+    GImage    => 'http://ns.google.com/photos/1.0/image/',
     GPano     => 'http://ns.google.com/photos/1.0/panorama/',
+    GSpherical=> 'http://ns.google.com/videos/1.0/spherical/',
+    GDepth    => 'http://ns.google.com/photos/1.0/depthmap/',
     dwc       => 'http://rs.tdwg.org/dwc/index.htm',
     GettyImagesGIFT => 'http://xmp.gettyimages.com/gift/1.0/',
-    GSpherical=> 'http://ns.google.com/videos/1.0/spherical/',
 );
 
 # build reverse namespace lookup
@@ -713,9 +717,25 @@ my %sRetouchArea = (
         Name => 'apple-fi',
         SubDirectory => { TagTable => 'Image::ExifTool::XMP::apple_fi' },
     },
+    GAudio => {
+        Name => 'GAudio',
+        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GAudio' },
+    },
+    GImage => {
+        Name => 'GImage',
+        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GImage' },
+    },
     GPano => {
         Name => 'GPano',
         SubDirectory => { TagTable => 'Image::ExifTool::XMP::GPano' },
+    },
+    GSpherical => {
+        Name => 'GSpherical',
+        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GSpherical' },
+    },
+    GDepth => {
+        Name => 'GDepth',
+        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GDepth' },
     },
     dwc => {
         Name => 'dwc',
@@ -725,9 +745,9 @@ my %sRetouchArea = (
         Name => 'getty',
         SubDirectory => { TagTable => 'Image::ExifTool::XMP::GettyImages' },
     },
-    GSpherical => {
-        Name => 'GSpherical',
-        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GSpherical' },
+   'drone-dji' => {
+        Name => 'drone-dji',
+        SubDirectory => { TagTable => 'Image::ExifTool::DJI::XMP' },
     },
 );
 
@@ -2027,9 +2047,8 @@ my %sPantryItem = (
         PrintConv => \&Image::ExifTool::Exif::PrintLensInfo,
         PrintConvInv => \&Image::ExifTool::Exif::ConvertLensInfo,
         Notes => q{
-            called LensSpecification by the spec.  Unfortunately the EXIF 2.3 for XMP
-            specification defined this new tag instead of using the existing
-            XMP-aux:LensInfo
+            unfortunately the EXIF 2.3 for XMP specification defined this new tag
+            instead of using the existing XMP-aux:LensInfo
         },
     },
     LensMake            => { },
@@ -2383,12 +2402,13 @@ sub IsUTF8($)
 }
 
 #------------------------------------------------------------------------------
-# Fix malformed UTF8 (by replacing bad bytes with '?')
-# Inputs: 0) string reference
+# Fix malformed UTF8 (by replacing bad bytes with specified character)
+# Inputs: 0) string reference, 1) string to replace each bad byte,
+#         may be '' to delete bad bytes, or undef to use '?'
 # Returns: true if string was fixed, and updates string
-sub FixUTF8($)
+sub FixUTF8($;$)
 {
-    my $strPt = shift;
+    my ($strPt, $bad) = @_;
     my $fixed;
     pos($$strPt) = 0; # start at beginning of string
     for (;;) {
@@ -2400,9 +2420,11 @@ sub FixUTF8($)
             my $n = $ch < 0xe0 ? 1 : ($ch < 0xf0 ? 2 : 3);
             next if $$strPt =~ /\G[\x80-\xbf]{$n}/g;
         }
-        # replace bad character with '?'
-        substr($$strPt, $pos-1, 1) = '?';
-        pos($$strPt) = $fixed = $pos;
+        # replace bad character
+        $bad = '?' unless defined $bad;
+        substr($$strPt, $pos-1, 1) = $bad;
+        pos($$strPt) = $pos-1 + length $bad;
+        $fixed = 1;
     }
     return $fixed;
 }
@@ -3595,6 +3617,8 @@ sub ProcessXMP($$;$)
                             $isSVG = 1;
                         } elsif ($1 eq 'plist') {
                             $type = 'PLIST';
+                        } elsif ($1 eq 'REDXIF') {
+                            $type = 'RMD';
                         } else {
                             return 0;
                         }

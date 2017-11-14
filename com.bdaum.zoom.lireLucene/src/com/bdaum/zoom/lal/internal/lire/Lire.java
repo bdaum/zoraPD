@@ -101,7 +101,6 @@ public class Lire implements ILireService {
 	 */
 	public void activate() {
 		LireActivator.getDefault().logInfo(Messages.Lire_lire_service_started);
-		setUpAlgorithms();
 	}
 
 	/**
@@ -112,7 +111,7 @@ public class Lire implements ILireService {
 	}
 
 	// Place default algorithm to top of list
-	private static void setUpAlgorithms() {
+	public static void setUpAlgorithms() {
 		SupportedSimilarityAlgorithms = new Algorithm[] {
 				new Algorithm(ACCID, "ACCID", "ACCID", //$NON-NLS-1$ //$NON-NLS-2$
 						Messages.Lire_ACCID_expl, true),
@@ -210,7 +209,7 @@ public class Lire implements ILireService {
 	}
 
 	public Algorithm[] getSupportedSimilarityAlgorithms() {
-		return SupportedSimilarityAlgorithms;
+		return LireActivator.getDefault().getSupportedSimilarityAlgorithms();
 	}
 
 	public Algorithm getAlgorithmById(int method) {

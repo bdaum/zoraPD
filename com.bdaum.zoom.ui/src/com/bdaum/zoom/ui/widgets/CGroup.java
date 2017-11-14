@@ -129,11 +129,8 @@ public class CGroup extends Composite implements PaintListener {
 							: indent;
 					int space = (clientArea.width - 2 * arcWidth - xoff) * 2 / 3;
 					String s = text;
-					if (tw > space) {
-						int l = text.length();
-						int w = Math.max(3, l * space / tw);
-						s = text.substring(0, w) + '…';
-					}
+					if (tw > space)
+						s = text.substring(0, Math.max(3, text.length() * space / tw)) + '…';
 					gc.setFont(getFont());
 					gc.drawText(s, clientArea.x + arcWidth + xoff, clientArea.y);
 				}

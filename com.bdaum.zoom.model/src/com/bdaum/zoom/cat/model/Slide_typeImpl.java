@@ -35,10 +35,11 @@ public class Slide_typeImpl extends AomObject implements Slide_type {
 	 * @param fadeOut - Property
 	 * @param effect - Property
 	 * @param noVoice - Property
+	 * @param safety - Property
 	 */
 	public Slide_typeImpl(String caption, int sequenceNo, String description,
 			int layout, int delay, int fadeIn, int duration, int fadeOut,
-			int effect, boolean noVoice) {
+			int effect, boolean noVoice, int safety) {
 		super();
 		this.caption = caption;
 		this.sequenceNo = sequenceNo;
@@ -50,6 +51,7 @@ public class Slide_typeImpl extends AomObject implements Slide_type {
 		this.fadeOut = fadeOut;
 		this.effect = effect;
 		this.noVoice = noVoice;
+		this.safety = safety;
 
 	}
 
@@ -276,6 +278,28 @@ public class Slide_typeImpl extends AomObject implements Slide_type {
 	 */
 	public boolean getNoVoice() {
 		return noVoice;
+	}
+
+	/* *** Property safety *** */
+
+	private int safety;
+
+	/**
+	 * Set value of property safety
+	 *
+	 * @param _value - new field value
+	 */
+	public void setSafety(int _value) {
+		safety = _value;
+	}
+
+	/**
+	 * Get value of property safety
+	 *
+	 * @return - value of field safety
+	 */
+	public int getSafety() {
+		return safety;
 	}
 
 	/* ----- Equality ----- */

@@ -221,8 +221,7 @@ public class ZImage {
 								Math.min((double) bounds.width / image.width, (double) bounds.height / image.height));
 			if (scalingFactor != 1d)
 				image.setScaling((int) (image.width * scalingFactor + 0.5d),
-						(int) (image.height * scalingFactor + 0.5d), advanced, 0, null); // ,
-																							// scalingMethod);
+						(int) (image.height * scalingFactor + 0.5d), advanced, 0, null); 
 			image.setRotation(rotation, 1f, 1f);
 			image.setOutputColorConvert(cop);
 			image.setOutputSharpening(umask);
@@ -257,7 +256,9 @@ public class ZImage {
 						double pix = (double) w * h;
 						ImageReadParam param = reader.getDefaultReadParam();
 						if (pix > maxPix) {
+							//TODO make this optional?
 							int fac = (int) Math.sqrt(pix / maxPix);
+							//TODO make the subsamapling factor available to clients
 							param.setSourceSubsampling(fac, fac, 0, 0);
 						}
 						BufferedImage bImage = reader.read(0, param);

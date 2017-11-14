@@ -66,7 +66,7 @@ public class CssActivator extends AbstractUIPlugin {
 				public void handleEvent(Event event) {
 					if (engine != null) {
 						Widget widget = event.widget;
-						if  (widget instanceof Control) {
+						if (widget instanceof Control) {
 							Shell shell = ((Control) widget).getShell();
 							if (shell.getData("css") == null) //$NON-NLS-1$
 								return;
@@ -254,20 +254,18 @@ public class CssActivator extends AbstractUIPlugin {
 					continue;
 				if (line.startsWith(JFACE)) {
 					ColorRegistry colorRegistry = JFaceResources.getColorRegistry();
-					String spec = line.substring(JFACE.length());
-					if (spec.startsWith("{")) //$NON-NLS-1$
-						spec = spec.substring(1);
-					if (spec.endsWith("}")) //$NON-NLS-1$
-						spec = spec.substring(0, spec.length() - 1);
-					StringTokenizer st2 = new StringTokenizer(spec, ";"); //$NON-NLS-1$
+					int p = JFACE.length();
+					int q = line.length();
+					if (line.length() > p && line.charAt(p) == '{')
+						++p;
+					if (line.charAt(q - 1) == '}')
+						--q;
+					StringTokenizer st2 = new StringTokenizer(line.substring(p, q), ";"); //$NON-NLS-1$
 					while (st2.hasMoreTokens()) {
 						String token = st2.nextToken();
-						int p = token.indexOf(':');
-						if (p > 0) {
-							String key = token.substring(0, p);
-							String cspec = token.substring(p + 1);
-							colorRegistry.put(key, convertToRGB(cspec));
-						}
+						p = token.indexOf(':');
+						if (p > 0)
+							colorRegistry.put(token.substring(0, p), convertToRGB(token.substring(p + 1)));
 					}
 					break;
 				}

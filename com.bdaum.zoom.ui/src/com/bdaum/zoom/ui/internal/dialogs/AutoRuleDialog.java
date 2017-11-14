@@ -7,8 +7,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ComboViewer;
+import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -43,7 +45,7 @@ import com.bdaum.zoom.ui.internal.widgets.GroupComboCatFilter;
 import com.bdaum.zoom.ui.internal.widgets.GroupComboLabelProvider;
 
 @SuppressWarnings("restriction")
-public class AutoRuleDialog extends ZTitleAreaDialog {
+public class AutoRuleDialog extends ZTitleAreaDialog implements ModifyListener {
 
 	private static NumberFormat af = NumberFormat.getNumberInstance();
 
@@ -65,8 +67,13 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 
 	private Text valueField;
 
-	public AutoRuleDialog(Shell parentShell, AutoRule rule,
-			List<AutoRule> autoRules) {
+	private StackLayout stackLayout;
+
+	private Composite comp;
+
+	private Text nameField;
+
+	public AutoRuleDialog(Shell parentShell, AutoRule rule, List<AutoRule> autoRules) {
 		super(parentShell, HelpContextIds.CLUSTER_DIALOG);
 		this.rule = rule;
 		this.autoRules = autoRules;
@@ -84,12 +91,17 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-		Composite composite = new Composite(area, SWT.NONE);
-		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		composite.setLayout(new GridLayout(4, false));
-		new Label(composite, SWT.NONE).setText(Messages.AutoRuleDialog_group);
+		comp = new Composite(area, SWT.NONE);
+		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		comp.setLayout(new GridLayout(4, false));
+		Label label = new Label(comp, SWT.NONE);
+		label.setText(Messages.AutoRuleDialog_name);
+		nameField = new Text(comp, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
+		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+		nameField.addModifyListener(this);
+		new Label(comp, SWT.NONE).setText(Messages.AutoRuleDialog_group);
 		List<Object> categories = QueryField.getCategoriesAndSubgroups();
-		groupCombo = new ComboViewer(composite, SWT.READ_ONLY | SWT.BORDER);
+		groupCombo = new ComboViewer(comp, SWT.READ_ONLY | SWT.BORDER);
 		Combo comboControl = groupCombo.getCombo();
 		comboControl.setVisibleItemCount(categories.size());
 		groupCombo.setContentProvider(ArrayContentProvider.getInstance());
@@ -103,11 +115,11 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 				fieldCombo.setSelection(new StructuredSelection(fields.get(0)));
 			}
 		});
-		new Label(composite, SWT.NONE).setText(Messages.AutoRuleDialog_field);
-		fieldCombo = new ComboViewer(composite, SWT.READ_ONLY | SWT.BORDER);
+		new Label(comp, SWT.NONE).setText(Messages.AutoRuleDialog_field);
+		fieldCombo = new ComboViewer(comp, SWT.READ_ONLY | SWT.BORDER);
 		comboControl = fieldCombo.getCombo();
 		comboControl.setVisibleItemCount(10);
-		comboControl.setLayoutData(new GridData(300, SWT.DEFAULT));
+		comboControl.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		fieldCombo.setContentProvider(ArrayContentProvider.getInstance());
 		fieldCombo.setLabelProvider(new LabelProvider() {
 			@Override
@@ -120,8 +132,7 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 		if (autoRules != null)
 			fieldCombo.setFilters(new ViewerFilter[] { new ViewerFilter() {
 				@Override
-				public boolean select(Viewer viewer, Object parentElement,
-						Object element) {
+				public boolean select(Viewer viewer, Object parentElement, Object element) {
 					if (element instanceof QueryField) {
 						for (AutoRule rule : autoRules)
 							if (rule.getQfield() == element)
@@ -135,53 +146,44 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 		fieldCombo.addSelectionChangedListener(new ISelectionChangedListener() {
 
 			public void selectionChanged(SelectionChangedEvent event) {
-				qfield = (QueryField) ((IStructuredSelection) event
-						.getSelection()).getFirstElement();
+				qfield = (QueryField) ((IStructuredSelection) event.getSelection()).getFirstElement();
 				fillExplanation(qfield);
 				intervalField.setText(""); //$NON-NLS-1$
 				updateStack();
 				validate();
 			}
 		});
-		Label space = new Label(comboControl, SWT.NONE);
-		space.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
-				false, 4, 1));
+		Label space = new Label(comp, SWT.NONE);
+		space.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1));
 
-		explanation = new Label(composite, SWT.WRAP);
+		explanation = new Label(comp, SWT.WRAP);
 
-		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true,
-				false, 4, 1);
-		layoutData.heightHint = 40;
+		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 4, 1);
+		layoutData.heightHint = 46;
 		layoutData.widthHint = 500;
 		explanation.setLayoutData(layoutData);
 
-		stack = new Composite(composite, SWT.NONE);
+		stack = new Composite(comp, SWT.NONE);
 		stack.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 4, 1));
-		stack.setLayout(new StackLayout());
+		stackLayout = new StackLayout();
+		stack.setLayout(stackLayout);
 		intervalGroup = new Composite(stack, SWT.NONE);
 		GridLayout layout = new GridLayout(2, false);
 		layout.marginHeight = 0;
 		intervalGroup.setLayout(layout);
 
-		new Label(intervalGroup, SWT.NONE)
-				.setText(Messages.AutoRuleDialog_interval);
-		intervalField = new Text(intervalGroup, SWT.SINGLE | SWT.LEAD
-				| SWT.BORDER);
-		intervalField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false));
+		new Label(intervalGroup, SWT.NONE).setText(Messages.AutoRuleDialog_interval);
+		intervalField = new Text(intervalGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
+		intervalField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		intervalField.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
-				QueryField qfield = (QueryField) ((IStructuredSelection) fieldCombo
-						.getSelection()).getFirstElement();
+				QueryField qfield = (QueryField) ((IStructuredSelection) fieldCombo.getSelection()).getFirstElement();
 				if (qfield != null)
-					setResultingInterval(
-							compileInterval(intervalField.getText(), qfield),
-							qfield);
+					setResultingInterval(compileInterval(intervalField.getText(), qfield), qfield);
 				validate();
 			}
 		});
-		new Label(intervalGroup, SWT.NONE)
-				.setText(Messages.AutoRuleDialog_result);
+		new Label(intervalGroup, SWT.NONE).setText(Messages.AutoRuleDialog_result);
 		resultingIntervals = new Label(intervalGroup, SWT.WRAP);
 		layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
 		layoutData.widthHint = 500;
@@ -191,14 +193,13 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 		layout = new GridLayout(2, false);
 		layout.marginHeight = 0;
 		enumGroup.setLayout(layout);
-		Label label = new Label(enumGroup, SWT.NONE);
-		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true,
-				false, 2, 1));
+		label = new Label(enumGroup, SWT.NONE);
+		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
 		label.setText(Messages.AutoRuleDialog_values);
-		enumViewer = CheckboxTableViewer.newCheckList(enumGroup, SWT.BORDER
-				| SWT.V_SCROLL);
-		enumViewer.getControl().setLayoutData(
-				new GridData(SWT.FILL, SWT.BEGINNING, true, true));
+		enumViewer = CheckboxTableViewer.newCheckList(enumGroup, SWT.BORDER | SWT.V_SCROLL);
+		layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, true);
+		layoutData.heightHint = 200;
+		enumViewer.getControl().setLayoutData(layoutData);
 		enumViewer.setContentProvider(ArrayContentProvider.getInstance());
 		enumViewer.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
@@ -206,6 +207,12 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 				if (qfield != null)
 					return qfield.formatScalarValue(element);
 				return null;
+			}
+		});
+		enumViewer.addCheckStateListener(new ICheckStateListener() {
+			@Override
+			public void checkStateChanged(CheckStateChangedEvent event) {
+				validate();
 			}
 		});
 		new AllNoneGroup(enumGroup, new SelectionAdapter() {
@@ -218,11 +225,9 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 		layout = new GridLayout(2, false);
 		layout.marginHeight = 0;
 		selectGroup.setLayout(layout);
-		new Label(selectGroup, SWT.NONE)
-				.setText(Messages.AutoRuleDialog_values);
+		new Label(selectGroup, SWT.NONE).setText(Messages.AutoRuleDialog_values);
 		valueField = new Text(selectGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
-		valueField
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		valueField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		valueField.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				validate();
@@ -235,29 +240,25 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 		List<String> list = Core.fromStringList(text, ";"); //$NON-NLS-1$
 		double[] intervals = new double[list.size()];
 		int i = 0;
-		for (String s : list) {
+		for (String s : list)
 			try {
 				af.setMaximumFractionDigits(7);
 				af.setMinimumFractionDigits(0);
 				double ld = af.parse(s).doubleValue();
-				if (i > 0) {
+				if (i > 0)
 					if (ld <= intervals[i - 1])
-						return NLS.bind(
-								Messages.AutoRuleDialog_value_not_greater, s);
-				}
+						return NLS.bind(Messages.AutoRuleDialog_value_not_greater, s);
 				intervals[i++] = ld;
 			} catch (ParseException e1) {
 				return NLS.bind(Messages.AutoRuleDialog_not_a_valid_number, s);
 			}
-		}
 		if (intervals.length == 0)
 			return qfield.getAutoPolicy() == QueryField.AUTO_LOG ? Messages.AutoRuleDialog_specify_base
 					: Messages.AutoRuleDialog_specify_interval;
 		if (intervals.length == 1) {
 			if (intervals[0] <= 0)
 				return Messages.AutoRuleDialog_not_negative;
-			if (intervals[0] <= 1
-					&& qfield.getAutoPolicy() == QueryField.AUTO_LOG)
+			if (intervals[0] <= 1 && qfield.getAutoPolicy() == QueryField.AUTO_LOG)
 				return Messages.AutoRuleDialog_not_less_one;
 		}
 		return intervals;
@@ -266,46 +267,35 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 	private void fillExplanation(QueryField qfield) {
 		if (qfield == null)
 			explanation.setText(""); //$NON-NLS-1$
-		else {
-			int autoPolicy = qfield.getAutoPolicy();
-			switch (autoPolicy) {
+		else
+			switch (qfield.getAutoPolicy()) {
 			case QueryField.AUTO_DISCRETE:
-				if (qfield.getEnumeration() == null
-						&& qfield.getType() != QueryField.T_BOOLEAN)
-					explanation
-							.setText(Messages.AutoRuleDialog_discrete_values);
+				if (qfield.getEnumeration() == null && qfield.getType() != QueryField.T_BOOLEAN)
+					explanation.setText(Messages.AutoRuleDialog_discrete_values);
 				else
-					explanation
-							.setText(Messages.AutoRuleDialog_enumerated_values);
+					explanation.setText(Messages.AutoRuleDialog_enumerated_values);
 				break;
 			case QueryField.AUTO_LINEAR:
-				explanation
-						.setText(Messages.AutoRuleDialog_linear_distribution);
+				explanation.setText(Messages.AutoRuleDialog_linear_distribution);
 				break;
 			case QueryField.AUTO_LOG:
-				explanation
-						.setText(Messages.AutoRuleDialog_exponential_distribution);
+				explanation.setText(Messages.AutoRuleDialog_exponential_distribution);
 				break;
 			case QueryField.AUTO_CONTAINS:
-				explanation
-						.setText(Messages.AutoRuleDialog_arbitrary_text);
+				explanation.setText(Messages.AutoRuleDialog_arbitrary_text);
 				break;
 			case QueryField.AUTO_SELECT:
-				explanation
-						.setText(Messages.AutoRuleDialog_multiple_value);
+				explanation.setText(Messages.AutoRuleDialog_multiple_value);
 				break;
 			}
-		}
 	}
 
 	protected void fillFieldCombo() {
 		fields.clear();
-		Object g = ((IStructuredSelection) groupCombo.getSelection())
-				.getFirstElement();
+		Object g = ((IStructuredSelection) groupCombo.getSelection()).getFirstElement();
 		for (String id : QueryField.getQueryFieldKeys()) {
 			QueryField mainField = QueryField.findQueryField(id);
-			if (mainField.belongsTo(g) && mainField.hasLabel()
-					&& mainField.getAutoPolicy() != 0)
+			if (mainField.belongsTo(g) && mainField.hasLabel() && mainField.getAutoPolicy() != 0)
 				fields.add(mainField);
 		}
 		fieldCombo.setInput(fields);
@@ -313,22 +303,27 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 
 	private void fillValues() {
 		if (rule == null)
-			groupCombo.setSelection(new StructuredSelection(
-					QueryField.CATEGORY_ALL));
+			groupCombo.setSelection(new StructuredSelection(QueryField.CATEGORY_ALL));
 		else {
+			nameField.setText(rule.getName());
 			QueryField qfield = rule.getQfield();
-			groupCombo.setSelection(new StructuredSelection(qfield
-					.getCategoryOrSubgroup()));
+			groupCombo.setSelection(new StructuredSelection(qfield.getCategoryOrSubgroup()));
 			fieldCombo.setSelection(new StructuredSelection(qfield));
+			updateStack();
 			switch (qfield.getAutoPolicy()) {
 			case QueryField.AUTO_CONTAINS:
 			case QueryField.AUTO_SELECT:
 				valueField.setText(rule.getValueSpec());
 				break;
 			case QueryField.AUTO_DISCRETE:
-				if (rule.getEnumeration() != null)
+				if (qfield.getEnumeration() != null) {
 					enumViewer.setCheckedElements(rule.getEnumeration());
-				break;
+					break;
+				} else if (qfield.getType() == QueryField.T_BOOLEAN) {
+					enumViewer.setCheckedElements(rule.getEnumeration());
+					break;
+				}
+				//$FALL-THROUGH$
 			default:
 				intervalField.setText(rule.getIntervalSpec());
 				break;
@@ -339,18 +334,8 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 
 	protected void updateStack() {
 		if (qfield != null) {
-			StackLayout stackLayout = (StackLayout) stack.getLayout();
 			switch (qfield.getAutoPolicy()) {
 			case QueryField.AUTO_DISCRETE:
-				stackLayout.topControl = intervalGroup;
-				stack.setVisible(true);
-				break;
-			case QueryField.AUTO_CONTAINS:
-			case QueryField.AUTO_SELECT:
-				stackLayout.topControl = selectGroup;
-				stack.setVisible(true);
-				break;
-			default:
 				Object enumeration = qfield.getEnumeration();
 				if (enumeration != null) {
 					stackLayout.topControl = enumGroup;
@@ -362,6 +347,7 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 						for (int v : ((int[]) enumeration))
 							input.add(v);
 					enumViewer.setInput(input);
+					break;
 				} else if (qfield.getType() == QueryField.T_BOOLEAN) {
 					stackLayout.topControl = enumGroup;
 					stack.setVisible(true);
@@ -369,40 +355,59 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 					input.add(Boolean.FALSE);
 					input.add(Boolean.TRUE);
 					enumViewer.setInput(input);
-				} else
-					stack.setVisible(false);
-
+					break;
+				}
+				//$FALL-THROUGH$
+			case QueryField.AUTO_LINEAR:
+			case QueryField.AUTO_LOG:
+				stackLayout.topControl = intervalGroup;
+				stack.setVisible(true);
+				break;
+			case QueryField.AUTO_CONTAINS:
+			case QueryField.AUTO_SELECT:
+				stackLayout.topControl = selectGroup;
+				stack.setVisible(true);
+				break;
+			default:
+				stack.setVisible(false);
 				break;
 			}
-			stack.layout();
+			comp.layout(true, true);
 		}
 	}
 
 	private void validate() {
 		String errorMsg = null;
-		if (qfield == null)
-			errorMsg = Messages.AutoRuleDialog_select_metadata;
-		else {
-			int autoPolicy = qfield.getAutoPolicy();
-			switch (autoPolicy) {
-			case QueryField.AUTO_CONTAINS:
-				if (valueField.getText().isEmpty())
-					errorMsg = Messages.AutoRuleDialog_specify_at_least_one;
-				break;
-			case QueryField.AUTO_SELECT:
-				if (valueField.getText().trim().isEmpty())
-					errorMsg = Messages.AutoRuleDialog_specify_at_least_one;
-				break;
-			case QueryField.AUTO_DISCRETE:
-				if ((qfield.getEnumeration() != null || qfield.getType() == QueryField.T_BOOLEAN)
-						&& enumViewer.getCheckedElements().length == 0)
-					errorMsg = Messages.AutoRuleDialog_at_least_one_value;
-				break;
-			default:
-				Object result = compileInterval(intervalField.getText(), qfield);
-				if (result instanceof String)
-					errorMsg = (String) result;
-				break;
+		String name = nameField.getText();
+		if (name.isEmpty())
+			errorMsg = Messages.AutoRuleDialog_name_empty;
+		else if (name.indexOf("::") >= 0) //$NON-NLS-1$
+			errorMsg = Messages.AutoRuleDialog_name_colons;
+		if (errorMsg == null) {
+			if (qfield == null)
+				errorMsg = Messages.AutoRuleDialog_select_metadata;
+			else {
+				int autoPolicy = qfield.getAutoPolicy();
+				switch (autoPolicy) {
+				case QueryField.AUTO_CONTAINS:
+					if (valueField.getText().isEmpty())
+						errorMsg = Messages.AutoRuleDialog_specify_at_least_one;
+					break;
+				case QueryField.AUTO_SELECT:
+					if (valueField.getText().trim().isEmpty())
+						errorMsg = Messages.AutoRuleDialog_specify_at_least_one;
+					break;
+				case QueryField.AUTO_DISCRETE:
+					if ((qfield.getEnumeration() != null || qfield.getType() == QueryField.T_BOOLEAN)
+							&& enumViewer.getCheckedElements().length == 0)
+						errorMsg = Messages.AutoRuleDialog_at_least_one_value;
+					break;
+				default:
+					Object result = compileInterval(intervalField.getText(), qfield);
+					if (result instanceof String)
+						errorMsg = (String) result;
+					break;
+				}
 			}
 		}
 		getButton(OK).setEnabled(errorMsg == null);
@@ -411,20 +416,26 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		int autoPolicy = qfield.getAutoPolicy();
-		if (autoPolicy == QueryField.AUTO_CONTAINS
-				|| autoPolicy == QueryField.AUTO_SELECT) {
+		switch (qfield.getAutoPolicy()) {
+		case QueryField.AUTO_CONTAINS:
+		case QueryField.AUTO_SELECT:
 			if (rule == null)
 				rule = new AutoRule();
 			rule.setValues(Core.fromStringList(valueField.getText(), ";")); //$NON-NLS-1$
-		} else if (autoPolicy == QueryField.AUTO_DISCRETE) {
+			break;
+		case QueryField.AUTO_DISCRETE:
 			if (rule == null)
 				rule = new AutoRule();
 			rule.setQfield(qfield);
-			if (qfield.getEnumeration() != null
-					|| qfield.getType() == QueryField.T_BOOLEAN)
+			if (qfield.getEnumeration() != null) {
 				rule.setEnumeration(enumViewer.getCheckedElements());
-		} else {
+				break;
+			} else if (qfield.getType() == QueryField.T_BOOLEAN) {
+				rule.setEnumeration(enumViewer.getCheckedElements());
+				break;
+			}
+			//$FALL-THROUGH$
+		default:
 			Object result = compileInterval(intervalField.getText(), qfield);
 			if (result instanceof double[]) {
 				if (rule == null)
@@ -432,7 +443,10 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 				rule.setQfield(qfield);
 				rule.setIntervals((double[]) result);
 			}
+			break;
 		}
+		if (rule != null)
+			rule.setName(nameField.getText());
 		super.okPressed();
 	}
 
@@ -446,11 +460,9 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 	private void setResultingInterval(Object spec, QueryField queryField) {
 		if (spec instanceof String) {
 			resultingIntervals.setText((String) spec);
-			resultingIntervals.setForeground(getShell().getDisplay()
-					.getSystemColor(SWT.COLOR_RED));
+			resultingIntervals.setForeground(getShell().getDisplay().getSystemColor(SWT.COLOR_RED));
 		} else {
-			resultingIntervals.setForeground(resultingIntervals.getParent()
-					.getForeground());
+			resultingIntervals.setForeground(resultingIntervals.getParent().getForeground());
 			StringBuilder sb = new StringBuilder();
 			double[] intervals = (double[]) spec;
 			if (intervals.length > 1) {
@@ -465,8 +477,7 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 				if (queryField.getAutoPolicy() == QueryField.AUTO_LINEAR) {
 					double d = 0;
 					int type = queryField.getType();
-					if (type == QueryField.T_POSITIVEFLOAT
-							|| type == QueryField.T_POSITIVELONG
+					if (type == QueryField.T_POSITIVEFLOAT || type == QueryField.T_POSITIVELONG
 							|| type == QueryField.T_POSITIVEINTEGER)
 						start = 0;
 					else {
@@ -495,13 +506,13 @@ public class AutoRuleDialog extends ZTitleAreaDialog {
 
 	private static Object nice(double d) {
 		af.setMinimumFractionDigits(0);
-		if (d >= 10d)
-			af.setMaximumFractionDigits(2);
-		else if (d < 0.1d)
-			af.setMaximumFractionDigits(5);
-		else
-			af.setMaximumFractionDigits(3);
+		af.setMaximumFractionDigits(d >= 10d ? 2 : d < 0.1d ? 5 : 3);
 		return af.format(d);
+	}
+
+	@Override
+	public void modifyText(ModifyEvent e) {
+		validate();
 	}
 
 }

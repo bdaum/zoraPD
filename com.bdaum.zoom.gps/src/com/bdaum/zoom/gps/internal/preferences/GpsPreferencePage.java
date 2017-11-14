@@ -29,6 +29,7 @@ import org.eclipse.ui.IWorkbench;
 
 import com.bdaum.zoom.gps.internal.GpsActivator;
 import com.bdaum.zoom.gps.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
@@ -72,10 +73,10 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.PREFERENCE_PAGE);
 		createTabFolder(composite, "GPS"); //$NON-NLS-1$
-		tabItem0 = createTabItem(tabFolder,
+		tabItem0 = UiUtilities.createTabItem(tabFolder,
 				Messages.getString("GpsPreferencePage.general")); //$NON-NLS-1$
 		tabItem0.setControl(createGeneralGroup(tabFolder));
-		tabItem1 = createTabItem(tabFolder,
+		tabItem1 = UiUtilities.createTabItem(tabFolder,
 				Messages.getString("GpsPreferencePage.webservices")); //$NON-NLS-1$
 		tabItem1.setControl(createWebServiceGroup(tabFolder));
 		initTabFolder(0);
@@ -92,7 +93,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createSelectionGroup(Composite composite) {
-		CGroup group = createGroup(composite, 2,
+		CGroup group = UiUtilities.createGroup(composite, 2,
 				Messages.getString("AdvancedPreferencePage.webservice")); //$NON-NLS-1$
 		combo = new Combo(group, SWT.DROP_DOWN);
 		combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2,
@@ -117,7 +118,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createPremiumGroup(Composite composite) {
-		CGroup group = createGroup(composite, 2,
+		CGroup group = UiUtilities.createGroup(composite, 2,
 				Messages.getString("AdvancedPreferencePage.premium")); //$NON-NLS-1$
 		Label label = new Label(group, SWT.NONE);
 		label.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false,
@@ -251,7 +252,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createTimingGroup(Composite composite) {
-		CGroup group = createGroup(composite, 2,
+		CGroup group = UiUtilities.createGroup(composite, 2,
 				Messages.getString("GpsPreferencePage.timing")); //$NON-NLS-1$
 		new Label(group, SWT.NONE).setText(Messages
 				.getString("GpsPreferencePage.Timeshift")); //$NON-NLS-1$
@@ -284,7 +285,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createModeGroup(Composite composite) {
-		CGroup group = createGroup(composite, 1,
+		CGroup group = UiUtilities.createGroup(composite, 1,
 				Messages.getString("GpsPreferencePage.mode")); //$NON-NLS-1$
 		editButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("GpsPreferencePage.edit_trackpoints"), null); //$NON-NLS-1$
@@ -297,7 +298,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createKeywordGroup(Composite composite) {
-		CGroup group = createGroup(composite, 1,
+		CGroup group = UiUtilities.createGroup(composite, 1,
 				Messages.getString("GpsPreferencePage.keywords")); //$NON-NLS-1$
 		coordinateButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("GpsPreferencePage.Include_coordinates"), //$NON-NLS-1$

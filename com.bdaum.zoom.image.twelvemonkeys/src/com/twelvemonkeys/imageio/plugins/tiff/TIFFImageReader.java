@@ -115,6 +115,7 @@ import static com.twelvemonkeys.imageio.util.IIOUtil.lookupProviderByName;
  *
  * @author <a href="mailto:harald.kuhr@gmail.com">Harald Kuhr</a>
  * @author last modified by $Author: haraldk$
+ * @author bd added OutOfMemoryError caused by bad ICC header
  * @version $Id: TIFFImageReader.java,v 1.0 08.05.12 15:14 haraldk Exp$
  */
 public final class TIFFImageReader extends ImageReaderBase {
@@ -129,8 +130,7 @@ public final class TIFFImageReader extends ImageReaderBase {
     // TODO: Tiling support (readTile, readTileRaster)
     // TODO: Implement readAsRenderedImage to allow tiled RenderedImage?
     //       For some layouts, we could do reads super-fast with a memory mapped buffer.
-    // TODO: Implement readAsRaster directly (100% correctly)
-    // http://download.java.net/media/jai-imageio/javadoc/1.1/com/sun/media/imageio/plugins/tiff/package-summary.html#ImageMetadata
+    // TODO: Implement readRaster directly (100% correctly)
 
     // TODOs Extension support
     // TODO: Auto-rotate based on Orientation
@@ -144,6 +144,7 @@ public final class TIFFImageReader extends ImageReaderBase {
     // Source region
     // Subsampling
     // IIOMetadata (stay close to Sun's TIFF metadata)
+    // http://download.java.net/media/jai-imageio/javadoc/1.1/com/sun/media/imageio/plugins/tiff/package-summary.html#ImageMetadata
     // Support ICCProfile
     // Support PlanarConfiguration 2
     // Support Compression 3 & 4 (CCITT T.4 & T.6)
@@ -157,7 +158,7 @@ public final class TIFFImageReader extends ImageReaderBase {
     private CompoundDirectory IFDs;
     private Directory currentIFD;
 
-    TIFFImageReader(final TIFFImageReaderSpi provider) {
+    TIFFImageReader(final ImageReaderSpi provider) {
         super(provider);
     }
 
@@ -2211,12 +2212,23 @@ public final class TIFFImageReader extends ImageReaderBase {
                 ICC_Profile profile = ICC_Profile.getInstance(new ByteArrayInputStream(value));
                 return ColorSpaces.validateProfile(profile);
             }
-            catch (CMMException | IllegalArgumentException ignore) {
+            //TODO check of OutOfMemory also for other references to ICC_Profile.getInstance()
+            catch (CMMException | IllegalArgumentException | OutOfMemoryError ignore) { // bd added OutOfMemoryError caused by bad ICC header
                 processWarningOccurred("Ignoring broken/incompatible ICC profile: " + ignore.getMessage());
             }
         }
 
         return null;
+    }
+
+    @Override
+    public boolean canReadRaster() {
+        return true;
+    }
+
+    @Override
+    public Raster readRaster(int imageIndex, ImageReadParam param) throws IOException {
+        return read(imageIndex, param).getData();
     }
 
     // TODO: Tiling support
@@ -2387,7 +2399,7 @@ public final class TIFFImageReader extends ImageReaderBase {
 //    //                    System.err.println("Scale time: " + (System.currentTimeMillis() - start) + " ms");
 //                }
 
-                        if (image.getType() == BufferedImage.TYPE_CUSTOM) {
+                        if (image != null && image.getType() == BufferedImage.TYPE_CUSTOM) {
                             start = System.currentTimeMillis();
                             image = new ColorConvertOp(null).filter(image, new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB));
                             System.err.println("Conversion time: " + (System.currentTimeMillis() - start) + " ms");
@@ -2396,7 +2408,7 @@ public final class TIFFImageReader extends ImageReaderBase {
                         showIt(image, String.format("Image: %s [%d x %d]", file.getName(), reader.getWidth(imageNo), reader.getHeight(imageNo)));
 
                         try {
-                            int numThumbnails = reader.getNumThumbnails(0);
+                            int numThumbnails = reader.getNumThumbnails(imageNo);
                             for (int thumbnailNo = 0; thumbnailNo < numThumbnails; thumbnailNo++) {
                                 BufferedImage thumbnail = reader.readThumbnail(imageNo, thumbnailNo);
                                 //                        System.err.println("thumbnail: " + thumbnail);
@@ -2430,7 +2442,7 @@ public final class TIFFImageReader extends ImageReaderBase {
 
     private static void deregisterOSXTIFFImageReaderSpi() {
         IIORegistry registry = IIORegistry.getDefaultInstance();
-        ImageReaderSpi provider = lookupProviderByName(registry, "com.sun.imageio.plugins.tiff.TIFFImageReaderSpi");
+        ImageReaderSpi provider = lookupProviderByName(registry, "com.sun.imageio.plugins.tiff.TIFFImageReaderSpi", ImageReaderSpi.class);
 
         if (provider != null) {
             registry.deregisterServiceProvider(provider);

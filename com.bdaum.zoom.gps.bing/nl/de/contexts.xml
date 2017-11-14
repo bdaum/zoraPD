@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<contexts>
-   <context id="advancedPref_page_context" title="Bing-Einstellungen">
-      <description>Einstellungen für die Bing-Kartenkomponente</description>
-      <topic href="html/BingPreferences.html" label="Bing-Einstellungen"/>
-   </context>
-</contexts>

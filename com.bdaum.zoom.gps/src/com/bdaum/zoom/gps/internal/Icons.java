@@ -59,4 +59,6 @@ public class Icons {
 	public static final Icon backward = new Icon("/icons/backward_nav.gif"); //$NON-NLS-1$
 	public static final Icon camPin = new Icon("/icons/campin.png"); //$NON-NLS-1$
 	public static final Icon dirPin = new Icon("/icons/dirpin.png"); //$NON-NLS-1$
+	public static final Icon shownPin = new Icon("/icons/shownPin.png"); //$NON-NLS-1$
+	public static final Icon delete = new Icon("/icons/delete32.png"); //$NON-NLS-1$
 }

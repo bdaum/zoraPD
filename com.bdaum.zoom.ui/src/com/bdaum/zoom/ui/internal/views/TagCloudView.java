@@ -82,6 +82,7 @@ import org.eclipse.zest.cloudio.Word;
 import com.bdaum.zoom.cat.model.TextSearchOptions_typeImpl;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.db.ICollectionProcessor;
 import com.bdaum.zoom.core.db.IDbFactory;
@@ -707,7 +708,8 @@ public class TagCloudView extends ViewPart implements IDbListener {
 			int maxNumber = queryOptions.getMaxHits();
 			SmartCollectionImpl sm = new SmartCollectionImpl(
 					s + NLS.bind(Messages.getString("TagCloudView.maxmin"), maxNumber, score), //$NON-NLS-1$
-					false, false, true, networkAction != null && networked, null, 0, null, 0, null, null);
+					false, false, true, networkAction != null && networked, null, 0, null, 0, null,
+					Constants.INHERIT_LABEL, null, 0, null);
 			sm.addCriterion(new CriterionImpl(ICollectionProcessor.TEXTSEARCH, null,
 					new TextSearchOptions_typeImpl(s, maxNumber, score / 100f), score, false));
 			Ui.getUi().getNavigationHistory(getSite().getWorkbenchWindow()).postSelection(new StructuredSelection(sm));

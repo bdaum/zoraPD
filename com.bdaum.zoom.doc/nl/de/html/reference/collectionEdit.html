@@ -1,14 +1,24 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="de"><head>
-<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Kollektionen-Dialog</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head>
-<body>
+
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Kollektionen-Dialog</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
 <h2>Kollektionen-Dialog
 </h2>
 <br>
 Der
 <span style="font-style: italic;">Kollektionen</span>-Dialog erlaubt sowohl die Definition einer Katalogabfrage
 als auch die Definition von Sortierkriterien, um die
-Ergebnisse der Abfrage zu sortieren. <br><h4>Abfrage</h4>Jede
+Ergebnisse der Abfrage zu sortieren. <br>
+<br>
+<h4>Allgemein</h4>
+
+<ul>
+<li>Der <span style="font-weight: bold;">Name</span> der Kollektion. Ad-hoc-Abfragen haben keinen Namen.</li><li>Eine <span style="font-weight: bold;">Beschreibung</span> der Kollektion. Ad-hoc-Abfragen haben keine Beschreibung.</li><li> Ein <span style="font-weight: bold;">Farbcode</span>, der zusammen mit der Kollektion im Katalogsichtfenster angezeigt wird. Ad-hoc-Abfragen haben keine Farbcode.</li><li>Für Ad-hoc-Abfragen können Sie angeben, ob Sie die Abfrage nur <span style="font-weight: bold;">innerhalb</span> der gerade ausgewählten Kollektion durchführen möchten.</li>
+  <li>Im Falle eines Peer-to-peer-<span style="font-weight: bold;">Netzwerks</span> können Sie angeben, ob die Abfrage über das gesamte Netzwerk ausgeführt werden soll.<br>
+  </li>
+</ul>
+
+<br><h4>Abfrage</h4>Jede
 Abfrage kann aus mehreren Kriterien bestehen, die mittels <abbr>UND</abbr> und <abbr>ODER</abbr>
 Operatoren verbunden werden können. Die
 Verarbeitungs-Sequenz verläuft strikt von oben nach unten, zuerst definierte
@@ -38,10 +48,20 @@ konfiguriert werden.</li>
 <li>die&nbsp;Relationen&nbsp;<code>enthält</code> und&nbsp;<code>enthält nicht</code><span style="font-family: Arial;"></span><span style="font-family: Arial;"></span><code><span style="font-family: Arial;"> </span></code>sind auch möglich bei Zeichenfolgen. Der angegebene
 Wert wird dann innerhalb der Zeichenfolge gesucht.</li><li>die&nbsp;Relationen <code>Platzhaltermuster</code> und <code>Muster ausschließen</code> erlauben die Verwendung von Platzhaltersymbolen (<code>*</code>, <code>?</code>) im Suchfeld. </li>
 </ul>
-<h4>Sortieren</h4>Sortierkriterien
+<h5>Sortieren</h5>
+Sortierkriterien
 können mit Hilfe des <abbr>UND</abbr>-Operators miteinander kombiniert werden.
 Typen, die&nbsp;mehrere Werte enthalten können,&nbsp;können
 nicht in Suchkriterien verwendet werden. Die am Anfang spezifizierten Sortierkriterien sind die dominanten Sortierkriterien.<br>
+<br>
+<h4>Darstellung</h4>
+<ul>
+  <li><span style="font-weight: bold;">Beschriftungen für Vorschaubilder</span>.
+Hier kann angegeben werden, was in der Beschriftung der Vorschaubilder
+angezeigt wird. Bei der Wahl von "vererbt" werden die Einstellungen von
+der übergeordneten Kollektion bzw. Gruppe bzw. den <a href="appearancePrefs.html">Benutzereinstellungen</a> verwendet. Beachten Sie, dass Unterkollektionen diese Einstellungen überschreiben können.</li>
+</ul>
+
 <br>
 
 

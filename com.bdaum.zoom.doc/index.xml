@@ -80,8 +80,17 @@
 	</entry>
 	<entry keyword="Collection">
 		<topic href="html/reference/collectionEdit.html"  label="Edit collection definition"/>
+		<entry keyword="automatic creation of ~">
+			<topic href="html/reference/autoPrefs.html" />
+			<topic href="html/reference/autoRule.html" />
+		</entry>
 	</entry>
-	<entry keyword="Commandline">
+	<entry keyword="Rules">
+		<entry keyword="for the automatic creation of collections">
+			<topic href="html/reference/autoPrefs.html" />
+			<topic href="html/reference/autoRule.html" />
+		</entry>
+	</entry>	<entry keyword="Commandline">
 		<topic href="html/reference/commandline.html" />
 	</entry>
 	<entry keyword="Web Community">
@@ -107,6 +116,9 @@
 	</entry>
 	<entry keyword="Relations">
 		<topic href="html/reference/hierarchy.html" />
+		<entry keyword="automatic creation of ~">
+			<topic href="html/reference/autoPrefs.html" />
+		</entry>
 		<entry keyword="Description">
 			<topic href="html/reference/descriptionEdit.html" />
 		</entry>

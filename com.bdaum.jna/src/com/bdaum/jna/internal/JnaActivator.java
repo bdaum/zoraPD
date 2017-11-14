@@ -17,8 +17,7 @@ public class JnaActivator extends Plugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
-		URL resource = FileLocator.find(getBundle(), new Path('/' + libName()),
-				null);
+		URL resource = FileLocator.find(getBundle(), new Path('/' + libName()), null);
 		try {
 			resource = FileLocator.toFileURL(resource);
 		} catch (IOException e) {
@@ -27,22 +26,15 @@ public class JnaActivator extends Plugin {
 		String jnaPath = new File(resource.getPath()).getParent().toString();
 		String libPath = System.getProperty("jna.boot.library.path", ""); //$NON-NLS-1$//$NON-NLS-2$
 		if (libPath.indexOf(jnaPath) < 0)
-			System.setProperty(
-					"jna.boot.library.path", libPath.isEmpty() ? jnaPath : jnaPath + ';' + libPath); //$NON-NLS-1$
+			System.setProperty("jna.boot.library.path", libPath.isEmpty() ? jnaPath : jnaPath + ';' + libPath); //$NON-NLS-1$
 	}
 
-	/**
-	 * Calculate the filename of the native hunspell lib. The files have
-	 * completely different names to allow them to live in the same directory
-	 * and avoid confusion.
-	 */
 	public static String libName() throws UnsupportedOperationException {
 		String os = System.getProperty("os.name").toLowerCase(); //$NON-NLS-1$
-		if (os.startsWith("windows")) //$NON-NLS-1$
-			return "jnidispatch.dll"; //$NON-NLS-1$
-		if (os.startsWith("mac os x")) //$NON-NLS-1$
-			return "libjnidispatch.jnilib"; //$NON-NLS-1$
-		return "libjnidispatch.so"; //$NON-NLS-1$
+		return (os.startsWith("windows")) ? "jnidispatch.dll" : //$NON-NLS-1$//$NON-NLS-2$
+				(os.startsWith("mac os x")) //$NON-NLS-1$
+						? "libjnidispatch.jnilib" //$NON-NLS-1$
+						: "libjnidispatch.so"; //$NON-NLS-1$
 	}
 
 	@Override

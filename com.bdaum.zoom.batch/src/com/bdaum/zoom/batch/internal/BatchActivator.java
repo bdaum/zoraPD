@@ -29,7 +29,6 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -479,7 +478,6 @@ public class BatchActivator extends Plugin {
 	public void setCurrentRawConverter(IRawConverter c) {
 		currentRawConverter = c;
 		BatchUtilities.putPreferences(
-				InstanceScope.INSTANCE.getNode(PLUGIN_ID),
 				PreferenceConstants.RAWCONVERTER, c.getId());
 	}
 

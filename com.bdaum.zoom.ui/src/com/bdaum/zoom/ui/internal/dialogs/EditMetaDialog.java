@@ -41,6 +41,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -48,6 +49,7 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -148,6 +150,7 @@ import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.ISpellCheckingService;
+import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
@@ -203,18 +206,35 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 
 		private final Class<? extends IIdentifiableObject> clazz;
 		private final String label;
+		private LinkedHashMap<String, Integer> values = new LinkedHashMap<>();
 
 		public DetailSelectionAdapter(Class<? extends IIdentifiableObject> clazz, String label) {
 			this.clazz = clazz;
 			this.label = label;
+			new DetailsJob(clazz, values).schedule();
 		}
 
 		@Override
 		public void widgetSelected(SelectionEvent e) {
-			Job.getJobManager().cancel(EditMetaDialog.this);
+			detailsProgressBar.setData(clazz);
 			detailsGroup.setText(label);
 			detailsGroup.setVisible(true);
-			new DetailsJob(clazz).schedule();
+			try {
+				Job.getJobManager().join(clazz, null);
+			} catch (OperationCanceledException | InterruptedException e1) {
+				// should not happen
+			}
+			Shell shell = getShell();
+			if (!shell.isDisposed()) {
+				shell.getDisplay().asyncExec(() -> {
+					if (!shell.isDisposed()) {
+						int i = 0;
+						for (Map.Entry<String, Integer> entry : values.entrySet())
+							setDetails(i++, entry.getKey(), entry.getValue());
+						detailsProgressBar.setVisible(false);
+					}
+				});
+			}
 		}
 
 	}
@@ -224,17 +244,19 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 	public class DetailsJob extends Job {
 
 		private final Class<? extends IIdentifiableObject> clazz;
+		private LinkedHashMap<String, Integer> values;
 
-		public DetailsJob(Class<? extends IIdentifiableObject> clazz) {
+		public DetailsJob(Class<? extends IIdentifiableObject> clazz, LinkedHashMap<String, Integer> values) {
 			super(Messages.EditMetaDialog_collecting_details);
 			this.clazz = clazz;
+			this.values = values;
 			setSystem(true);
 			setPriority(Job.INTERACTIVE);
 		}
 
 		@Override
 		public boolean belongsTo(Object family) {
-			return family == EditMetaDialog.this;
+			return family == clazz;
 		}
 
 		@Override
@@ -244,7 +266,6 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				final Shell shell = getShell();
 				int work = groups.size();
 				int incr = Math.max(1, (work + 15) / 16);
-				init(shell, work);
 				int main = 0;
 				int subgroup = 0;
 				int system = 0;
@@ -259,23 +280,12 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 						++system;
 					else
 						++user;
-					if (updateProgressBar(shell, ++i, incr, monitor))
+					values.put(Messages.EditMetaDialog_main_groups, main);
+					values.put(Messages.EditMetaDialog_subgroups, subgroup);
+					values.put(Messages.EditMetaDialog_system_groups, system);
+					values.put(Messages.EditMetaDialog_user_groups, user);
+					if (updateProgressBar(shell, ++i, work, incr, monitor))
 						return Status.CANCEL_STATUS;
-				}
-				final int main1 = main;
-				final int subgroup1 = subgroup;
-				final int system1 = system;
-				final int user1 = user;
-				if (!shell.isDisposed()) {
-					shell.getDisplay().asyncExec(() -> {
-						if (!shell.isDisposed()) {
-							detailsProgressBar.setVisible(false);
-							setDetails(0, Messages.EditMetaDialog_main_groups, main1);
-							setDetails(1, Messages.EditMetaDialog_subgroups, subgroup1);
-							setDetails(2, Messages.EditMetaDialog_system_groups, system1);
-							setDetails(3, Messages.EditMetaDialog_user_groups, user1);
-						}
-					});
 				}
 			} else if (clazz == SmartCollectionImpl.class) {
 				int main = 0;
@@ -288,11 +298,14 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				int locations = 0;
 				int imports = 0;
 				int directory = 0;
+				int offline = 0;
+				int local = 0;
+				int auto = 0;
 				List<SmartCollectionImpl> collections = dbManager.obtainObjects(SmartCollectionImpl.class);
 				final int work = collections.size();
 				int incr = Math.max(1, (work + 31) / 32);
 				final Shell shell = getShell();
-				init(shell, work);
+				IVolumeManager volumeManager = Core.getCore().getVolumeManager();
 				String uriKey = QueryField.URI.getKey() + '=';
 				String volumeKey = QueryField.VOLUME.getKey() + '=';
 				int i = 0;
@@ -312,53 +325,50 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 							++albums;
 					} else {
 						String id = sm.getStringId();
-						if (id.startsWith(uriKey) || id.startsWith(volumeKey))
+						if (id.startsWith(uriKey)) {
 							++directory;
-						else {
+							if (volumeManager.findExistingFile(id.substring(uriKey.length()), null) == null)
+								++offline;
+							else
+								++local;
+						} else if (id.startsWith(volumeKey)) {
+							++directory;
+							if (volumeManager.isOffline(id.substring(volumeKey.length())))
+								++offline;
+							else
+								++local;
+						} else {
+							if (id.startsWith(Constants.GROUP_ID_AUTOSUB))
+								++auto;
 							List<Criterion> crits = sm.getCriterion();
 							if (!crits.isEmpty()) {
-								Criterion criterion = crits.get(0);
-								String field = criterion.getField();
+								String field = crits.get(0).getField();
 								if (sm.getSystem()) {
 									if (field.equals(QueryField.IPTC_DATECREATED.getKey()))
 										++timeline;
-									else if (criterion.getField().equals(QueryField.IPTC_LOCATIONCREATED.getKey()))
+									else if (field.equals(QueryField.IPTC_LOCATIONCREATED.getKey()))
 										++locations;
 								} else if (field.equals(QueryField.IMPORTDATE.getKey()))
 									++imports;
 							}
 						}
 					}
-					if (updateProgressBar(shell, ++i, incr, monitor))
+					values.put(Messages.EditMetaDialog_main_collections, main);
+					values.put(Messages.EditMetaDialog_subcollections, subCollection);
+					values.put(Messages.EditMetaDialog_import_folders, imports);
+					values.put(Messages.EditMetaDialog_system_collections, system);
+					values.put(Messages.EditMetaDialog_directories, directory);
+					values.put(Messages.EditMetaDialog_local_dir, local);
+					values.put(Messages.EditMetaDialog_offline_dir, offline);
+					values.put(Messages.EditMetaDialog_locations_folders, locations);
+					values.put(Messages.EditMetaDialog_timeline_folders, timeline);
+					values.put(Messages.EditMetaDialog_person_folders, persons);
+					values.put(Messages.EditMetaDialog_user_collections, user);
+					values.put(Messages.EditMetaDialog_albums, albums);
+					values.put(Messages.EditMetaDialog_created_by_rule, auto);
+					values.put(Messages.EditMetaDialog_other_collections, user - albums - auto);
+					if (updateProgressBar(shell, ++i, work, incr, monitor))
 						return Status.CANCEL_STATUS;
-				}
-				final int main1 = main;
-				final int subCollection1 = subCollection;
-				final int system1 = system;
-				final int imports1 = imports;
-				final int user1 = user - imports + 1;
-				final int locations1 = locations;
-				final int timeline1 = timeline;
-				final int persons1 = persons;
-				final int albums1 = albums;
-				final int directory1 = directory;
-				if (!shell.isDisposed()) {
-					shell.getDisplay().asyncExec(() -> {
-						if (!shell.isDisposed()) {
-							detailsProgressBar.setVisible(false);
-							setDetails(0, Messages.EditMetaDialog_main_collections, main1);
-							setDetails(1, Messages.EditMetaDialog_subcollections, subCollection1);
-							setDetails(2, Messages.EditMetaDialog_import_folders, imports1);
-							setDetails(4, Messages.EditMetaDialog_system_collections, system1);
-							setDetails(5, Messages.EditMetaDialog_directories, directory1);
-							setDetails(6, Messages.EditMetaDialog_locations_folders, locations1);
-							setDetails(7, Messages.EditMetaDialog_timeline_folders, timeline1);
-							setDetails(8, Messages.EditMetaDialog_person_folders, persons1);
-							setDetails(9, Messages.EditMetaDialog_user_collections, user1);
-							setDetails(10, Messages.EditMetaDialog_albums, albums1);
-							setDetails(11, Messages.EditMetaDialog_other_collections, user1 - albums1);
-						}
-					});
 				}
 			} else if (clazz == LocationImpl.class) {
 				Set<String> regions = new HashSet<String>(10);
@@ -368,8 +378,6 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				final int work = collections.size();
 				int incr = Math.max(1, (work + 31) / 32);
 				final Shell shell = getShell();
-
-				init(shell, work);
 				int i = 0;
 				for (LocationImpl loc : collections) {
 					String worldRegionCode = loc.getWorldRegionCode();
@@ -384,46 +392,34 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 						countryISOCode = loc.getCountryName();
 					countries.add(countryISOCode);
 					cities.add(loc.getCity());
-					if (updateProgressBar(shell, ++i, incr, monitor))
+					values.put(Messages.EditMetaDialog_world_regions, regions.size());
+					values.put(Messages.EditMetaDialog_countries, countries.size());
+					values.put(Messages.EditMetaDialog_cities, cities.size());
+					if (updateProgressBar(shell, ++i, work, incr, monitor))
 						return Status.CANCEL_STATUS;
-				}
-				final int regions1 = regions.size();
-				final int countries1 = countries.size();
-				final int cities1 = cities.size();
-				if (!shell.isDisposed()) {
-					shell.getDisplay().asyncExec(() -> {
-						if (!shell.isDisposed()) {
-							detailsProgressBar.setVisible(false);
-							setDetails(0, Messages.EditMetaDialog_world_regions, regions1);
-							setDetails(1, Messages.EditMetaDialog_countries, countries1);
-							setDetails(2, Messages.EditMetaDialog_cities, cities1);
-						}
-					});
 				}
 			}
 			return Status.OK_STATUS;
-
 		}
 
-		private boolean updateProgressBar(final Shell shell, final int i, int incr, IProgressMonitor monitor) {
+		private boolean updateProgressBar(final Shell shell, final int i, int work, int incr,
+				IProgressMonitor monitor) {
 			if (!monitor.isCanceled() && !shell.isDisposed()) {
 				if (i % incr == 0)
-					shell.getDisplay().syncExec(() -> detailsProgressBar.setSelection(i));
+					shell.getDisplay().syncExec(() -> {
+						if (detailsProgressBar.getData() == clazz) {
+							int j = 0;
+							for (Map.Entry<String, Integer> entry : values.entrySet())
+								setDetails(j++, entry.getKey(), entry.getValue());
+							detailsProgressBar.setMaximum(work);
+							detailsProgressBar.setSelection(i);
+							detailsProgressBar.setVisible(true);
+						}
+					});
 				return false;
 			}
 			return true;
 		}
-
-		private void init(final Shell shell, final int work) {
-			if (!shell.isDisposed()) {
-				shell.getDisplay().syncExec(() -> {
-					setDetails(0, getName(), -1);
-					detailsProgressBar.setMaximum(work);
-					detailsProgressBar.setVisible(true);
-				});
-			}
-		}
-
 	}
 
 	public class KeywordContentProvider implements ITreeContentProvider {
@@ -643,8 +639,8 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
 					if (workbenchPage != null) {
-						UiActivator.getDefault().getNavigationHistory(workbenchPage.getWorkbenchWindow()).postSelection(
-								new StructuredSelection(createAdhocQuery(flatComponent.getSelectedElement())));
+						UiActivator.getDefault().getNavigationHistory(workbenchPage.getWorkbenchWindow())
+								.postSelection(new StructuredSelection(createAdhocQuery(getSelectedElement())));
 						close();
 					}
 				}
@@ -697,7 +693,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			emailButton.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					String[] email = ((ContactImpl) flatComponent.getSelectedElement()).getEmail();
+					String[] email = ((ContactImpl) getSelectedElement()).getEmail();
 					if (email != null && email.length > 0)
 						UiActivator.getDefault().sendMail(Arrays.asList(email));
 				}
@@ -707,7 +703,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			webButton.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					String[] web = ((ContactImpl) flatComponent.getSelectedElement()).getWebUrl();
+					String[] web = ((ContactImpl) getSelectedElement()).getWebUrl();
 					if (web != null && web.length == 1) {
 						try {
 							PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser()
@@ -728,7 +724,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 
 		protected SmartCollection createAdhocQuery(Object sel) {
 			SmartCollectionImpl coll = new SmartCollectionImpl("", true, false, true, false, null, 0, null, 0, null, //$NON-NLS-1$
-					null);
+					Constants.INHERIT_LABEL, null, 0, null);
 			if (sel instanceof LocationNode && ((LocationNode) sel).getLocation() == null) {
 				LocationNode node = (LocationNode) sel;
 				QueryField subfield;
@@ -2104,7 +2100,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		layoutData.horizontalIndent = 30;
 		detailsGroup.setLayoutData(layoutData);
 		detailsGroup.setLayout(new GridLayout(2, false));
-		detailFields = new Label[13];
+		detailFields = new Label[16];
 		for (int i = 0; i < detailFields.length; i++)
 			detailFields[i] = createDetailsField(detailsGroup, 100);
 		detailsProgressBar = new ProgressBar(detailsGroup, SWT.HORIZONTAL);
@@ -2382,8 +2378,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 	}
 
 	protected static Composite createTabPage(CTabFolder folder, String lab, String descr, int columns) {
-		final CTabItem tabItem = new CTabItem(folder, SWT.NONE);
-		tabItem.setText(lab);
+		final CTabItem tabItem = UiUtilities.createTabItem(folder, lab);
 		tabItem.setToolTipText(descr);
 		final Composite pageComp = new Composite(folder, SWT.NONE);
 		pageComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -2432,13 +2427,10 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		final Composite thComp = createTabPage(folder, Messages.EditMetaDialog_thumbnails,
 				Messages.EditMetaDialog_thumbnail_tooltip, 1, 0);
 
-		final CGroup thButtonComp = new CGroup(thComp, SWT.NONE);
-		thButtonComp.setText(Messages.EditMetaDialog_thumbnail_resolution);
-		thButtonComp.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		final CGroup thButtonComp = UiUtilities.createGroup(thComp, 1, Messages.EditMetaDialog_thumbnail_resolution);
 		final Label highResolutionWillLabel = new Label(thButtonComp, SWT.WRAP);
 		highResolutionWillLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		highResolutionWillLabel.setText(Messages.EditMetaDialog_high_res_will_increase);
-		thButtonComp.setLayout(new GridLayout());
 		thumbSizeGroup = new RadioButtonGroup(thButtonComp, null, SWT.NONE, Messages.EditMetaDialog_low,
 				Messages.EditMetaDialog_medium, Messages.EditMetaDialog_high, Messages.EditMetaDialog_very_high);
 
@@ -2451,10 +2443,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		fromPreviewButton = new Button(composite, SWT.CHECK);
 
 		// Sharpening
-		final CGroup shButtonComp = new CGroup(thComp, SWT.NONE);
-		shButtonComp.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-		shButtonComp.setText(Messages.EditMetaDialog_sharpen_during_import);
-		shButtonComp.setLayout(new GridLayout(8, false));
+		final CGroup shButtonComp = UiUtilities.createGroup(thComp, 8, Messages.EditMetaDialog_sharpen_during_import);
 		sharpenButtonGroup = new RadioButtonGroup(shButtonComp, null, SWT.HORIZONTAL,
 				Messages.EditMetaDialog_dont_sharpen, Messages.EditMetaDialog_light_sharpen,
 				Messages.EditMetaDialog_medium_sharpen, Messages.EditMetaDialog_heavy_sharpen);
@@ -2641,7 +2630,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				String kw = (String) selection.getFirstElement();
 				if (kw != null) {
 					SmartCollectionImpl sm = new SmartCollectionImpl(kw, false, false, true, false, null, 0, null, 0,
-							null, null);
+							null, Constants.INHERIT_LABEL, null, 0, null);
 					sm.addCriterion(
 							new CriterionImpl(QueryField.IPTC_KEYWORDS.getKey(), null, kw, QueryField.EQUALS, false));
 					sm.addSortCriterion(new SortCriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, true));

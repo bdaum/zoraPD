@@ -114,14 +114,10 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 		}
 	};
 
-	private static NumberFormat df;
-
 	public static NumberFormat getDurationFormat() {
-		if (df == null) {
-			df = NumberFormat.getNumberInstance();
-			df.setMaximumFractionDigits(3);
-			df.setMinimumFractionDigits(0);
-		}
+		NumberFormat df = NumberFormat.getNumberInstance();
+		df.setMaximumFractionDigits(3);
+		df.setMinimumFractionDigits(0);
 		return df;
 	}
 
@@ -231,8 +227,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 			VIDEO | QueryField.EDIT_NEVER | QueryField.QUERY | QueryField.AUTO_LINEAR | QueryField.ESSENTIAL
 					| QueryField.HOVER | QueryField.REPORT,
 			CATEGORY_VIDEO, QueryField.T_INTEGER, 1, QueryField.T_NONE,
-			new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 },
-			new String[] { "1 + 1", //$NON-NLS-1$
+			new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 }, new String[] { "1 + 1", //$NON-NLS-1$
 					"1", "2", //$NON-NLS-1$ //$NON-NLS-2$
 					"3", "2/1", "3/1", "2/2", "3/2", //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 					"1", "2 max", "3 max", "4 max", "5 max", "6 max" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
@@ -265,9 +260,9 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 			null, "SurroundMode", Messages.QueryField_surround_mode, QueryField.ACTION_QUERY, //$NON-NLS-1$
 			VIDEO | QueryField.EDIT_NEVER | QueryField.QUERY | QueryField.AUTO_DISCRETE | QueryField.ESSENTIAL
 					| QueryField.HOVER | QueryField.REPORT,
-			CATEGORY_VIDEO, QueryField.T_INTEGER, 1, QueryField.T_NONE,
-			new int[] { 0, 1, 2 }, new String[] { Messages.QueryField_not_indicated,
-					Messages.QueryField_not_dolby_surround, Messages.QueryField_dolby_surround },
+			CATEGORY_VIDEO, QueryField.T_INTEGER, 1, QueryField.T_NONE, new int[] { 0, 1, 2 },
+			new String[] { Messages.QueryField_not_indicated, Messages.QueryField_not_dolby_surround,
+					Messages.QueryField_dolby_surround },
 			null, 0f, ISpellCheckingService.NOSPELLING) {
 		@Override
 		protected int getInt(Asset asset) {
@@ -569,7 +564,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 				changed = true;
 				GroupImpl group = getMediaGroup(dbManager);
 				SmartCollectionImpl coll = new SmartCollectionImpl(Messages.VideoSupport_Videos, true, false, false,
-						false, null, 0, null, 0, null, null);
+						false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 				coll.setStringId(collectionID);
 				Criterion crit = new CriterionImpl(QueryField.MIMETYPE.getKey(), null, "video/", QueryField.STARTSWITH, //$NON-NLS-1$
 						false);
@@ -637,7 +632,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 					height = width;
 					width = www;
 				}
-				image.setScaling(width, height, false, ImportState.MCUWidth, null); //, ZImage.SCALE_DEFAULT);
+				image.setScaling(width, height, false, ImportState.MCUWidth, null); // , ZImage.SCALE_DEFAULT);
 				if (angle != 0)
 					image.setRotation(angle, 1f, 1f);
 			}
@@ -673,10 +668,9 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 
 					@Override
 					public void positionChanged(MediaPlayer mediaPlayer, float newPosition) {
-						if (newPosition >= VLC_THUMBNAIL_POSITION
-								* 0.9f) { /*
-											 * 90 % margin
-											 */
+						if (newPosition >= VLC_THUMBNAIL_POSITION * 0.9f) { /*
+																			 * 90 % margin
+																			 */
 							// System.out.println("Countdown "+newPosition);
 							inPositionLatch.countDown();
 						}
@@ -804,8 +798,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.IMediaSupport#transferExtension(com.bdaum
+	 * @see com.bdaum.zoom.core.internal.IMediaSupport#transferExtension(com.bdaum
 	 * .zoom.cat.model.asset.Asset, com.bdaum.zoom.cat.model.asset.Asset)
 	 */
 	public void transferExtension(Asset sourceAsset, Asset targetAsset) {
@@ -900,8 +893,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.IMediaSupport#resetExtension(com.bdaum.zoom
+	 * @see com.bdaum.zoom.core.internal.IMediaSupport#resetExtension(com.bdaum.zoom
 	 * .cat.model.asset.Asset)
 	 */
 	public void resetExtension(Asset asset) {
@@ -959,8 +951,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.IMediaSupport#setFieldValue(com.bdaum.zoom
+	 * @see com.bdaum.zoom.core.internal.IMediaSupport#setFieldValue(com.bdaum.zoom
 	 * .core.QueryField, com.bdaum.zoom.cat.model.asset.Asset, java.lang.Object)
 	 */
 	public boolean setFieldValue(QueryField qfield, Asset asset, Object value) throws IllegalAccessException,
@@ -988,8 +979,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.IMediaSupport#getMediaExtension(com.bdaum
+	 * @see com.bdaum.zoom.core.internal.IMediaSupport#getMediaExtension(com.bdaum
 	 * .zoom.cat.model.asset.Asset)
 	 */
 	public MediaExtension getMediaExtension(Asset asset) {
@@ -1008,8 +998,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.IMediaSupport#getFieldValue(com.bdaum.zoom
+	 * @see com.bdaum.zoom.core.internal.IMediaSupport#getFieldValue(com.bdaum.zoom
 	 * .core.QueryField, com.bdaum.zoom.cat.model.asset.MediaExtension)
 	 */
 	public Object getFieldValue(QueryField qfield, MediaExtension ext) throws IllegalAccessException,
@@ -1054,8 +1043,8 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 			if (backup.exists()) {
 				String name = backup.getName();
 				if (name.endsWith(BAK)) {
-					name = name.substring(0, name.length() - BAK.length());
-					File videoFile = new File(backup.getParent(), name);
+					File videoFile = new File(backup.getParent(),
+							name = name.substring(0, name.length() - BAK.length()));
 					videoFile.delete();
 					backup.renameTo(videoFile);
 				}

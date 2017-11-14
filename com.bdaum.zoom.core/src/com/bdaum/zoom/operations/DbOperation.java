@@ -22,7 +22,9 @@ package com.bdaum.zoom.operations;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -53,6 +55,7 @@ import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.core.internal.operations.Backup;
 import com.bdaum.zoom.core.internal.operations.UpdateTextIndexOperation;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
 import com.bdaum.zoom.core.trash.StructBackup;
@@ -86,8 +89,8 @@ public abstract class DbOperation extends AbstractOperation implements IProfiled
 	}
 
 	/**
-	 * Initializes the operation Subclasses should call this method at the
-	 * beginning of the execute() and redo() methods
+	 * Initializes the operation Subclasses should call this method at the beginning
+	 * of the execute() and redo() methods
 	 *
 	 * @param aMonitor
 	 *            - progress monitor
@@ -101,8 +104,8 @@ public abstract class DbOperation extends AbstractOperation implements IProfiled
 	}
 
 	/**
-	 * Initializes the undo Subclasses should call this method at the beginning
-	 * of the undo() method
+	 * Initializes the undo Subclasses should call this method at the beginning of
+	 * the undo() method
 	 *
 	 * @param aMonitor
 	 *            - progress monitor
@@ -117,8 +120,8 @@ public abstract class DbOperation extends AbstractOperation implements IProfiled
 	}
 
 	/**
-	 * Updates the monitor and check for cancellation If the operation is
-	 * cancelled the database is rolled back, too
+	 * Updates the monitor and check for cancellation If the operation is cancelled
+	 * the database is rolled back, too
 	 *
 	 * @param work
 	 *            - incremental amount of work done
@@ -241,15 +244,15 @@ public abstract class DbOperation extends AbstractOperation implements IProfiled
 	 *            - info message
 	 */
 	public void addInfo(String message) {
-//		if (status != null)
-//			status.add(new Status(IStatus.INFO, CoreActivator.PLUGIN_ID, message, null));
-//		else
-			CoreActivator.getDefault().logInfo(message);
+		// if (status != null)
+		// status.add(new Status(IStatus.INFO, CoreActivator.PLUGIN_ID, message, null));
+		// else
+		CoreActivator.getDefault().logInfo(message);
 	}
 
 	/**
-	 * Finalizes the operation. Should be called at the end of execute(),
-	 * undo(), and redo()
+	 * Finalizes the operation. Should be called at the end of execute(), undo(),
+	 * and redo()
 	 *
 	 * @param info
 	 *            - adaptable answering at least to Shell.class
@@ -264,42 +267,42 @@ public abstract class DbOperation extends AbstractOperation implements IProfiled
 	}
 
 	/**
-	 * Finalizes the operation. Should be called at the end of execute(),
-	 * undo(), and redo()
+	 * Finalizes the operation. Should be called at the end of execute(), undo(),
+	 * and redo()
 	 *
 	 * @param info
 	 *            - adaptable answering at least to Shell.class
 	 * @param assetsToIndex
-	 *            - IDs of assets to be indexed for content based search and
-	 *            text search, may be null.
-	 * @return - operation status
-	 */
-	protected IStatus close(IAdaptable info, String[] assetsToIndex) {
-		if (assetsToIndex != null && !dbManager.getMeta(true).getNoIndex())
-			OperationJob.executeSlaveOperation(new UpdateTextIndexOperation(assetsToIndex), info);
-		return close(info);
-	}
-
-	/**
-	 * Finalizes the operation. Should be called at the end of execute(),
-	 * undo(), and redo()
-	 *
-	 * @param info
-	 *            - adaptable answering at least to Shell.class
-	 * @param assetsToIndex
-	 *            - assets to be indexed for content based search and text
+	 *            - IDs of assets to be indexed for content based search and text
 	 *            search, may be null.
 	 * @return - operation status
 	 */
-	protected IStatus close(IAdaptable info, Collection<? extends Asset> assetsToIndex) {
-		if (assetsToIndex != null && !dbManager.getMeta(true).getNoIndex())
+	protected IStatus close(IAdaptable info, String[] assetsToIndex) {
+		if (assetsToIndex != null && assetsToIndex.length > 0 && !dbManager.getMeta(true).getNoIndex())
 			OperationJob.executeSlaveOperation(new UpdateTextIndexOperation(assetsToIndex), info);
 		return close(info);
 	}
 
 	/**
-	 * Aborts the operation. Should be called when an operation was cancelled
-	 * via the monitor
+	 * Finalizes the operation. Should be called at the end of execute(), undo(),
+	 * and redo()
+	 *
+	 * @param info
+	 *            - adaptable answering at least to Shell.class
+	 * @param assetsToIndex
+	 *            - assets to be indexed for content based search and text search,
+	 *            may be null.
+	 * @return - operation status
+	 */
+	protected IStatus close(IAdaptable info, Collection<? extends Asset> assetsToIndex) {
+		if (assetsToIndex != null && !assetsToIndex.isEmpty() && !dbManager.getMeta(true).getNoIndex())
+			OperationJob.executeSlaveOperation(new UpdateTextIndexOperation(assetsToIndex), info);
+		return close(info);
+	}
+
+	/**
+	 * Aborts the operation. Should be called when an operation was cancelled via
+	 * the monitor
 	 *
 	 * @return - operation status
 	 */
@@ -365,8 +368,8 @@ public abstract class DbOperation extends AbstractOperation implements IProfiled
 	}
 
 	/**
-	 * Opens the Lucene index for modification Make sure to call closeIndex() in
-	 * a finally clause
+	 * Opens the Lucene index for modification Make sure to call closeIndex() in a
+	 * finally clause
 	 */
 	protected void openIndexWriter() {
 		indexPath = dbManager.getIndexPath();
@@ -575,6 +578,30 @@ public abstract class DbOperation extends AbstractOperation implements IProfiled
 	 */
 	public void setJob(OperationJob operationJob) {
 		this.operationJob = operationJob;
+	}
+	
+	protected Backup[] getBackupsFromTrash() {
+		List<Backup> set = dbManager.getTrash(Backup.class, opId);
+		Backup[] backups = set.toArray(new Backup[set.size()]);
+		Arrays.sort(backups, new Comparator<Backup>() {
+			@Override
+			public int compare(Backup b1, Backup b2) {
+				long t1 = b1.getTimestamp();
+				long t2 = b2.getTimestamp();
+				return t1 == t2 ? 0 : t1 > t2 ? -1 : 1;
+			}
+		});
+		return backups;
+	}
+
+
+	@Override
+	public void dispose() {
+		List<Backup> set = dbManager.getTrash(Backup.class, opId);
+		if (!set.isEmpty()) {
+			dbManager.deleteAllTrash(set);
+			dbManager.commitTrash();
+		}
 	}
 
 }

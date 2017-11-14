@@ -28,16 +28,13 @@ public interface PreferenceConstants {
 	String BACKGROUNDCOLOR_GREY = "g"; //$NON-NLS-1$
 	String BACKGROUNDCOLOR_WHITE = "w"; //$NON-NLS-1$
 	String BACKGROUNDCOLOR_PLATFORM = "p"; //$NON-NLS-1$
+	
 	// Appearance
 	String SHOWCOLORCODE = "com.bdaum.zoom.showColorCode"; //$NON-NLS-1$
 	String COLORCODE_NO = "false"; //$NON-NLS-1$
 	String COLORCODE_AUTO = "auto"; //$NON-NLS-1$
 	String COLORCODE_MANUAL = "true"; //$NON-NLS-1$
 	String AUTOCOLORCODECRIT = "com.bdaum.zoom.autoColorCodeCrit"; //$NON-NLS-1$
-	String SHOWDECO = "com.bdaum.zoom.showThumbDeco"; //$NON-NLS-1$
-	int DECONEVER = 0;
-	int DECOSELECT = 1; 
-	int DECOALWAYS = 2;
 	String SHOWRATING = "com.bdaum.zoom.showRating"; //$NON-NLS-1$
 	String SHOWRATING_NO = "false"; //$NON-NLS-1$
 	String SHOWRATING_SIZE = "true"; //$NON-NLS-1$
@@ -47,6 +44,9 @@ public interface PreferenceConstants {
 	String SHOWVOICENOTE = "com.bdaum.zoom.showVoiceNote"; //$NON-NLS-1$
 	String SHOWDONEMARK = "com.bdaum.zoom.showDoneMark"; //$NON-NLS-1$
 	String SHOWEXPANDCOLLAPSE = "com.bdaum.zoom.showExpandCollapse"; //$NON-NLS-1$
+	String SHOWLABEL = "com.bdaum.zoom.showLabel"; //$NON-NLS-1$
+	String THUMBNAILTEMPLATE  = "com.bdaum.zoom.thumbnailTemplate"; //$NON-NLS-1$
+	String LABELFONTSIZE ="com.bdaum.zoom.labelFontSize"; //$NON-NLS-1$
 
 	// Mouse
 	String MOUSE_SPEED = "com.bdaum.zoom.mouseSpeed"; //$NON-NLS-1$
@@ -73,6 +73,7 @@ public interface PreferenceConstants {
 	String RECIPEDETECTORCONFIGURATIONS = "com.bdaum.zoom.recipeDetectorConfigurations"; //$NON-NLS-1$
 	String PROCESSRECIPES = "com.bdaum.zoom.processRecipes"; //$NON-NLS-1$
 	String DNGFOLDER = "com.bdaum.zoom.dngFolder"; //$NON-NLS-1$
+	
 	// Import
 	String KEYWORDFILTER = "com.bdaum.zoom.keywordFilter"; //$NON-NLS-1$
 	String DERIVERELATIONS = "com.bdaum.zoom.deriveRelations"; //$NON-NLS-1$
@@ -85,7 +86,6 @@ public interface PreferenceConstants {
 	String SHOWIMPORTED = "com.bdaum.zoom.showImported"; //$NON-NLS-1$
 	String RELATIONDETECTORS = "com.bdaum.zoom.relationDetectors"; //$NON-NLS-1$
 	String AUTORULES = "com.bdaum.zoom.auto_rules"; //$NON-NLS-1$
-
 
 	// External programs
 	String FILEASSOCIATION = "com.bdaum.zoom.fileAssociations"; //$NON-NLS-1$
@@ -104,6 +104,7 @@ public interface PreferenceConstants {
 	double AUDIO11KHZ = 11025;
 	double AUDIO22KHZ = 22050;
 	double AUDIO44KHZ = 44100;
+	
 	// Metadata
 	String ESSENTIALMETADATA = "com.bdaum.zoom.essentialMetadata"; //$NON-NLS-1$
 	String HOVERMETADATA = "com.bdaum.zoom.hoverMetadata"; //$NON-NLS-1$
@@ -135,9 +136,11 @@ public interface PreferenceConstants {
 
 	// Faces
 	String MAXREGIONS = "com.bdaum.zoom.maxRegions"; //$NON-NLS-1$
+	
 	// Application
 	String HIDE_MENU_BAR = "hide_menu_bar"; //$NON-NLS-1$
 	String HIDE_STATUS_BAR = "hide_status_bar"; //$NON-NLS-1$
 	String TRAY_MODE = "tray_mode"; //$NON-NLS-1$
 	String FORCEDELETETRASH = "force_delete_trash"; //$NON-NLS-1$
+
 }

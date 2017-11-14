@@ -81,13 +81,8 @@ public class ExportFolderPage extends ColoredWizardPage {
 						validatePage();
 					}
 				}, true, true);
-		final Label modeLabel = new Label(composite, SWT.NONE);
-		final GridData data = new GridData();
-		data.horizontalIndent = 5;
-		modeLabel.setLayoutData(data);
-		boolean raw = Core.getCore().containsRawImage(assets, true);
-		exportModeGroup = new ExportModeGroup(composite,
-				ExportModeGroup.ALLFORMATS | ExportModeGroup.SIZING | (raw ? ExportModeGroup.RAWCROP : 0));
+		exportModeGroup = new ExportModeGroup(composite, ExportModeGroup.ALLFORMATS | ExportModeGroup.SIZING
+				| (Core.getCore().containsRawImage(assets, true) ? ExportModeGroup.RAWCROP : 0));
 		exportModeGroup.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -207,13 +202,13 @@ public class ExportFolderPage extends ColoredWizardPage {
 
 	public boolean finish() {
 		saveSettings();
-		new ExportfolderJob(assets, getMode(), getSizing(), exportModeGroup.getScalingFactor(), exportModeGroup.getDimension(),
-				exportModeGroup.getUnsharpMask(), exportModeGroup.getJpegQuality(), exportModeGroup.getCropMode(),
-				outputTargetGroup.getTarget(), outputTargetGroup.getFtpDir(), outputTargetGroup.getLocalFolder(),
-				outputTargetGroup.getSubfolderoption(), getIncludeMeta() ? ((ExportFolderWizard) getWizard()).getFilter() : null,
-				watermarkGroup.getCreateWatermark(),
-				watermarkGroup.getCopyright(), privacyGroup.getSelection(), addToCatGroup.getAddSelection(),
-				addToCatGroup.getWatchSelection(), this).schedule();
+		new ExportfolderJob(assets, getMode(), getSizing(), exportModeGroup.getScalingFactor(),
+				exportModeGroup.getDimension(), exportModeGroup.getUnsharpMask(), exportModeGroup.getJpegQuality(),
+				exportModeGroup.getCropMode(), outputTargetGroup.getTarget(), outputTargetGroup.getFtpDir(),
+				outputTargetGroup.getLocalFolder(), outputTargetGroup.getSubfolderoption(),
+				getIncludeMeta() ? ((ExportFolderWizard) getWizard()).getFilter() : null,
+				watermarkGroup.getCreateWatermark(), watermarkGroup.getCopyright(), privacyGroup.getSelection(),
+				addToCatGroup.getAddSelection(), addToCatGroup.getWatchSelection(), this).schedule();
 		return true;
 	}
 

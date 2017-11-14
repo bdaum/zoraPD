@@ -32,6 +32,7 @@ import com.bdaum.aoModeling.runtime.AomList;
 import com.bdaum.zoom.cat.model.SimilarityOptions_type;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.group.Criterion;
+import com.bdaum.zoom.cat.model.group.Group;
 import com.bdaum.zoom.cat.model.group.GroupImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
@@ -154,7 +155,15 @@ public class CatalogLabelProvider extends ZColumnLabelProvider {
 		if (!UiActivator.getDefault().getShowHover())
 			return null;
 		StringBuilder tooltip = new StringBuilder();
-		if (element instanceof SmartCollection) {
+		if (element instanceof Group) {
+			String anno = ((Group) element).getAnnotations();
+			if (anno != null && !anno.isEmpty()) {
+				if (Constants.GROUP_ID_AUTO.equals(((Group) element).getStringId()))
+					tooltip.append(Messages.getString("CatalogLabelProvider.rules_defined")); //$NON-NLS-1$
+				else
+					tooltip.append(Messages.getString("CatalogLabelProvider.filter_set")); //$NON-NLS-1$
+			}
+		} else if (element instanceof SmartCollection) {
 			SmartCollection sm = (SmartCollection) element;
 			if (sm.getSystem()) {
 				List<Criterion> crits = sm.getCriterion();
@@ -232,17 +241,8 @@ public class CatalogLabelProvider extends ZColumnLabelProvider {
 		if (obj instanceof WebGallery)
 			return Icons.webGallery.getImage();
 		if (obj instanceof GroupImpl)
-			return Icons.group.getImage();
+			return (((GroupImpl) obj).getAnnotations() == null ? Icons.group : Icons.groupfiltered).getImage();
 		return null;
 	}
-	
-//	@Override
-//	protected Rectangle getIconBounds() {
-//		return Icons.group.getImage().getBounds();
-//	}
-//	
-//	@Override
-//	protected String shortenText(Object element, String textValue, int maxExtent, GC gc, int maxWidth) {
-//		return textValue;
-//	}
+
 }

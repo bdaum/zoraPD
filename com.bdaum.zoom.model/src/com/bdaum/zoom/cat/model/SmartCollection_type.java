@@ -159,6 +159,48 @@ public interface SmartCollection_type extends AomValueChangedNotifier,
 	 */
 	public String getPerspective();
 
+	/**
+	 * Set value of property showLabel
+	 *
+	 * @param _value - new element value
+	 */
+	public void setShowLabel(int _value);
+
+	/**
+	 * Get value of property showLabel
+	 *
+	 * @return - value of field showLabel
+	 */
+	public int getShowLabel();
+
+	/**
+	 * Set value of property labelTemplate
+	 *
+	 * @param _value - new element value
+	 */
+	public void setLabelTemplate(String _value);
+
+	/**
+	 * Get value of property labelTemplate
+	 *
+	 * @return - value of field labelTemplate
+	 */
+	public String getLabelTemplate();
+
+	/**
+	 * Set value of property fontSize
+	 *
+	 * @param _value - new element value
+	 */
+	public void setFontSize(int _value);
+
+	/**
+	 * Get value of property fontSize
+	 *
+	 * @return - value of field fontSize
+	 */
+	public int getFontSize();
+
 	/* ----- Validation ----- */
 
 	/**

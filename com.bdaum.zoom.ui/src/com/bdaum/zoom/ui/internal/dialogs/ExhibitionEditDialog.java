@@ -354,22 +354,20 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		tabFolder = new CTabFolder(composite, SWT.BORDER);
 		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-		final CTabItem overviewTabItem = new CTabItem(tabFolder, SWT.NONE);
-		overviewTabItem.setText(Messages.ExhibitionEditDialog_overview);
+		final CTabItem overviewTabItem = UiUtilities.createTabItem(detailTabfolder,
+				Messages.ExhibitionEditDialog_overview);
 
 		final Composite comp = new Composite(tabFolder, SWT.NONE);
 		overviewTabItem.setControl(comp);
 		createOverview(comp);
 
-		final CTabItem layoutTabItem = new CTabItem(tabFolder, SWT.NONE);
-		layoutTabItem.setText(Messages.ExhibitionEditDialog_layout);
+		final CTabItem layoutTabItem = UiUtilities.createTabItem(detailTabfolder, Messages.ExhibitionEditDialog_layout);
 
 		final Composite layoutComp = new Composite(tabFolder, SWT.NONE);
 		layoutTabItem.setControl(layoutComp);
 		createLayoutGroup(layoutComp);
 
-		final CTabItem gridTabItem = new CTabItem(tabFolder, SWT.NONE);
-		gridTabItem.setText(Messages.ExhibitionEditDialog_grid);
+		final CTabItem gridTabItem = UiUtilities.createTabItem(detailTabfolder, Messages.ExhibitionEditDialog_grid);
 
 		final Composite gridComp = new Composite(tabFolder, SWT.NONE);
 		gridTabItem.setControl(gridComp);
@@ -1147,10 +1145,10 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 
 	private void createDetails(Composite comp) {
 		detailTabfolder = new CTabFolder(comp, SWT.BOTTOM | SWT.BORDER);
-		Composite composite1 = createTabItem(detailTabfolder, Messages.ExhibitionEditDialog_Image);
-		Composite composite2 = createTabItem(detailTabfolder, Messages.ExhibitionEditDialog_Frame);
-		imageDetailViewer = createDetailViewer(composite1, false);
-		frameDetailViewer = createDetailViewer(composite2, true);
+		imageDetailViewer = createDetailViewer(createTabItem(detailTabfolder, Messages.ExhibitionEditDialog_Image),
+				false);
+		frameDetailViewer = createDetailViewer(createTabItem(detailTabfolder, Messages.ExhibitionEditDialog_Frame),
+				true);
 		detailTabfolder.setSelection(0);
 	}
 
@@ -1228,12 +1226,11 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	}
 
 	private static Composite createTabItem(CTabFolder folder, String label) {
-		CTabItem item = new CTabItem(folder, SWT.NONE);
+		CTabItem item = UiUtilities.createTabItem(folder, label);
 		Composite composite = new Composite(folder, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(1, false));
 		item.setControl(composite);
-		item.setText(label);
 		return composite;
 	}
 
@@ -1611,8 +1608,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 					PdfContentByte cb = w.getDirectContent();
 					Phrase footer = new Phrase(String.valueOf(++pageNo), ffont);
 					ColumnText.showTextAligned(cb, Element.ALIGN_CENTER, footer,
-							(document.right() - document.left()) / 2 + document.leftMargin(), document.bottom(),
-							0);
+							(document.right() - document.left()) / 2 + document.leftMargin(), document.bottom(), 0);
 				}
 			});
 			String tit = NLS.bind(Messages.ExhibitionEditDialog_exhibition_name, nameField.getText());
@@ -1940,7 +1936,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 							group = dbManager.obtainById(GroupImpl.class, groupId);
 						}
 						if (group == null) {
-							group = new GroupImpl(Messages.ExhibitionEditDialog_exhibitions, false);
+							group = new GroupImpl(Messages.ExhibitionEditDialog_exhibitions, false,
+									Constants.INHERIT_LABEL, null, 0, null);
 							group.setStringId(Constants.GROUP_ID_EXHIBITION);
 						}
 						if (current != null)

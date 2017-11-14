@@ -39,7 +39,6 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -69,8 +68,6 @@ import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
 public class SendEmailPage extends ColoredWizardPage {
-
-	private static final NumberFormat nf = NumberFormat.getNumberInstance();
 
 	private List<Asset> assets;
 	private Label mailSizeLabel;
@@ -160,11 +157,7 @@ public class SendEmailPage extends ColoredWizardPage {
 			if (!pdf)
 				imageSizeLabel.setText(Messages.SendEmailPage_Image_size);
 		}
-		CGroup textGroup = new CGroup(composite, SWT.NONE);
-		textGroup.setText(Messages.SendEmailPage_email);
-		textGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-		textGroup.setLayout(new GridLayout(2, false));
-
+		CGroup textGroup = UiUtilities.createGroup(composite, 2, Messages.SendEmailPage_email);
 		final Label subjectLabel = new Label(textGroup, SWT.NONE);
 		subjectLabel.setText(Messages.SendEmailPage_Subject);
 
@@ -179,10 +172,7 @@ public class SendEmailPage extends ColoredWizardPage {
 		GridData data = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
 		data.heightHint = 70;
 		messageField.setLayoutData(data);
-		final CGroup metaGroup = new CGroup(composite, SWT.NONE);
-		metaGroup.setText(Messages.SendEmailPage_Matadata);
-		metaGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		metaGroup.setLayout(new GridLayout(2, false));
+		final CGroup metaGroup = UiUtilities.createGroup(composite, 2, Messages.SendEmailPage_Matadata);
 		if (!pdf && size > 0) {
 			metaButton = WidgetFactory.createCheckButton(metaGroup, Messages.SendEmailPage_include_metadata, null);
 			metaButton.addSelectionListener(new SelectionAdapter() {
@@ -311,6 +301,7 @@ public class SendEmailPage extends ColoredWizardPage {
 
 	private void computeScaledSize() {
 		long scaledBytes = exportModeGroup.computeScaledSize(totalSize);
+		NumberFormat nf = NumberFormat.getNumberInstance();
 		nf.setMaximumFractionDigits(2);
 		if (mailSizeLabel != null) {
 			double mbytes = scaledBytes / 1000000d;
@@ -325,6 +316,7 @@ public class SendEmailPage extends ColoredWizardPage {
 				scaledBytes = (long) (scaledBytes * 0.02f);
 			else
 				scaledBytes = (long) (scaledBytes * 0.13f);
+			NumberFormat nf = NumberFormat.getNumberInstance();
 			nf.setMaximumFractionDigits(2);
 			if (mailSizeLabel != null)
 				mailSizeLabel
@@ -396,11 +388,11 @@ public class SendEmailPage extends ColoredWizardPage {
 			}
 		}
 
-		new EmailJob(assets, to, getMode(), getSizing(), exportModeGroup.getScalingFactor(), exportModeGroup.getDimension(),
-				exportModeGroup.getCropMode(), exportModeGroup.getUnsharpMask(), exportModeGroup.getJpegQuality(),
-				subjectField.getText(), messageField.getText(), filter, watermarkGroup.getCreateWatermark(),
-				watermarkGroup.getCopyright(), privacyGroup.getSelection(), trackExportButton.getSelection(),
-				this).schedule();
+		new EmailJob(assets, to, getMode(), getSizing(), exportModeGroup.getScalingFactor(),
+				exportModeGroup.getDimension(), exportModeGroup.getCropMode(), exportModeGroup.getUnsharpMask(),
+				exportModeGroup.getJpegQuality(), subjectField.getText(), messageField.getText(), filter,
+				watermarkGroup.getCreateWatermark(), watermarkGroup.getCopyright(), privacyGroup.getSelection(),
+				trackExportButton.getSelection(), this).schedule();
 		return true;
 	}
 
@@ -489,8 +481,9 @@ public class SendEmailPage extends ColoredWizardPage {
 				: (qualityGroup != null) ? qualityGroup.getJpegQuality() : -1;
 	}
 
-//	public int getScalingMethod() {
-//		return (qualityGroup != null) ? qualityGroup.getScalingMethod() : ZImage.SCALE_DEFAULT;
-//	}
+	// public int getScalingMethod() {
+	// return (qualityGroup != null) ? qualityGroup.getScalingMethod() :
+	// ZImage.SCALE_DEFAULT;
+	// }
 
 }

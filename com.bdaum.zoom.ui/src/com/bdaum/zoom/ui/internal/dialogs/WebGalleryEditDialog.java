@@ -329,7 +329,6 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 			importGroup = new ImportGalleryGroup(composite, new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1),
 					Messages.WebGalleryEditDialog_web_gallery);
 			importGroup.addChangeListener(new ISelectionChangedListener() {
-
 				public void selectionChanged(SelectionChangedEvent event) {
 					IdentifiableObject fromItem = importGroup.getFromItem();
 					if (fromItem instanceof WebGalleryImpl)
@@ -342,22 +341,19 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		tabFolder = new CTabFolder(composite, SWT.BORDER);
 		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-		final CTabItem overviewTabItem = new CTabItem(tabFolder, SWT.NONE);
-		overviewTabItem.setText(Messages.WebGalleryEditDialog_overview);
+		final CTabItem overviewTabItem = UiUtilities.createTabItem(tabFolder, Messages.WebGalleryEditDialog_overview);
 
 		final Composite comp = new Composite(tabFolder, SWT.NONE);
 		overviewTabItem.setControl(comp);
 
 		createOverview(comp);
-		final CTabItem appearanceTabItem = new CTabItem(tabFolder, SWT.NONE);
-		appearanceTabItem.setText(Messages.WebGalleryEditDialog_appearance);
+		final CTabItem appearanceTabItem = UiUtilities.createTabItem(tabFolder, Messages.WebGalleryEditDialog_appearance);
 
 		final Composite comp2 = new Composite(tabFolder, SWT.NONE);
 		appearanceTabItem.setControl(comp2);
 		createAppearanceGroup(comp2);
 
-		final CTabItem htmlTabItem = new CTabItem(tabFolder, SWT.NONE);
-		htmlTabItem.setText("HTML"); //$NON-NLS-1$
+		final CTabItem htmlTabItem = UiUtilities.createTabItem(tabFolder, "&HTML"); //$NON-NLS-1$
 
 		final Composite comp0 = new Composite(tabFolder, SWT.NONE);
 		htmlTabItem.setControl(comp0);
@@ -1663,7 +1659,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 							group = dbManager.obtainById(GroupImpl.class, groupId);
 						}
 						if (group == null) {
-							group = new GroupImpl(Messages.WebGalleryEditDialog_web_galleries, false);
+							group = new GroupImpl(Messages.WebGalleryEditDialog_web_galleries, false, Constants.INHERIT_LABEL, null, 0, null);
 							group.setStringId(Constants.GROUP_ID_WEBGALLERY);
 						}
 						if (current != null)

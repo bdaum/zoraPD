@@ -219,22 +219,16 @@ public class ExportModeGroup {
 		}
 		if (qualityGroup != null)
 			qualityGroup.setVisible(visible);
-		if (sizeButtonGroup != null) {
+		if (sizeButtonGroup != null && visible) {
 			int sizing = sizeButtonGroup.getSelection();
 			if (sizing == s_scale || sizing == s_fixed) {
 				stackComp.setVisible(true);
 				stackLayout.topControl = sizing == s_scale ? scaleComp : dimComp;
 				stackComp.layout(true, true);
-//				if (qualityGroup != null)
-//					qualityGroup.setFullSize(false);
 			} else {
 				stackComp.setVisible(false);
-//				if (qualityGroup != null)
-//					qualityGroup.setFullSize(true);
 			}
 		}
-//		else if (qualityGroup != null)
-//			qualityGroup.setFullSize(true);
 	}
 
 	public void addSelectionListener(SelectionListener listener) {
@@ -409,10 +403,6 @@ public class ExportModeGroup {
 		}
 		return ZImage.UNCROPPED;
 	}
-
-//	public int getScalingMethod() {
-//		return qualityGroup != null ? qualityGroup.getScalingMethod() : 0;
-//	}
 
 	public int getQuality() {
 		return qualityGroup != null ? qualityGroup.getQuality() : Constants.SCREEN_QUALITY;

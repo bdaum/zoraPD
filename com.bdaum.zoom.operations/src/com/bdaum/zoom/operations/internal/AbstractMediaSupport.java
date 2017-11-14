@@ -54,7 +54,8 @@ public abstract class AbstractMediaSupport implements IMediaSupport {
 	protected GroupImpl getMediaGroup(IDbManager dbManager) {
 		GroupImpl group = dbManager.obtainById(GroupImpl.class, Constants.GROUP_ID_MEDIA);
 		if (group == null) {
-			group = new GroupImpl(Messages.getString("AbstractMediaSupport.media"), true); //$NON-NLS-1$
+			group = new GroupImpl(Messages.getString("AbstractMediaSupport.media"), true, Constants.INHERIT_LABEL, //$NON-NLS-1$
+					null, 0, null);
 			group.setStringId(Constants.GROUP_ID_MEDIA);
 		}
 		return group;

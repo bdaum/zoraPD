@@ -36,6 +36,7 @@ public class Messages extends NLS {
 	public static String ExifTool_Interna_error_fetching_metadata;
 	public static String ExifTool_Internal_error_fetching_ICC;
 	public static String ExifTool_Internal_error_fetching_preview;
+	public static String ExifTool_timeout;
 	public static String StreamCapture_unsupported_code_page;
 
 	static {

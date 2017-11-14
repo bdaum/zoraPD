@@ -114,6 +114,7 @@ import com.bdaum.zoom.ui.internal.operations.ExhibitionPropertiesOperation;
 import com.bdaum.zoom.ui.internal.widgets.AbstractHandle;
 import com.bdaum.zoom.ui.internal.widgets.GalleryPanEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.GreekedPSWTText;
+import com.bdaum.zoom.ui.internal.widgets.IAugmentedTextField;
 import com.bdaum.zoom.ui.internal.widgets.PPanel;
 import com.bdaum.zoom.ui.internal.widgets.PSWTAssetThumbnail;
 import com.bdaum.zoom.ui.internal.widgets.PTextHandler;
@@ -430,9 +431,9 @@ public class ExhibitionView extends AbstractPresentationView {
 		private final Wall wall;
 		private final String text;
 		private String oldtext;
-		private final TextField textField;
+		private final IAugmentedTextField textField;
 
-		public EditWallTextOperation(Wall wall, String text, TextField textField) {
+		public EditWallTextOperation(Wall wall, String text, IAugmentedTextField textField) {
 			super(Messages.getString("ExhibitionView.edit_wall_loc_undo")); //$NON-NLS-1$
 			this.wall = wall;
 			this.text = text;
@@ -471,9 +472,9 @@ public class ExhibitionView extends AbstractPresentationView {
 		private final Exhibition exhibition;
 		private final String text;
 		private String oldtext;
-		private final TextField textField;
+		private final IAugmentedTextField textField;
 
-		public EditInfoTextOperation(Exhibition exhibition, String text, TextField textField) {
+		public EditInfoTextOperation(Exhibition exhibition, String text, IAugmentedTextField textField) {
 			super(Messages.getString("ExhibitionView.edit_info_text")); //$NON-NLS-1$
 			this.exhibition = exhibition;
 			this.text = text;
@@ -516,10 +517,10 @@ public class ExhibitionView extends AbstractPresentationView {
 		private final ExhibitImpl exhibit;
 		private final String text;
 		private String oldtext;
-		private final TextField textField;
+		private final IAugmentedTextField textField;
 		private final int type;
 
-		public EditTextOperation(ExhibitImpl exhibit, String text, TextField textField, int type) {
+		public EditTextOperation(ExhibitImpl exhibit, String text, IAugmentedTextField textField, int type) {
 			super(Messages.getString("ExhibitionView.edit_exh_text_undo")); //$NON-NLS-1$
 			this.exhibit = exhibit;
 			this.text = text;
@@ -1748,7 +1749,7 @@ public class ExhibitionView extends AbstractPresentationView {
 	public static final String ID = "com.bdaum.zoom.ui.ExhibitionView"; //$NON-NLS-1$
 	private static final String LAST_EXHIBITION = "com.bdaum.zoom.lastExhibition"; //$NON-NLS-1$
 	protected static final SimpleDateFormat EDF = new SimpleDateFormat("yyyy"); //$NON-NLS-1$
-	public static final String EXHIBITION_PERSPECTIVE = "com.bdaum.zoom.ExhibitionPerspective"; //$NON-NLS-1$
+	public static final String EXHIBITION_PERSPECTIVE = "com.bdaum.zoom.PresentationPerspective"; //$NON-NLS-1$
 	private static final float DOORWIDTH = 1000;
 	private static final int DOORHEIGHT = 2000;
 	private static final int INFOLEFT = 1;
@@ -2426,6 +2427,11 @@ public class ExhibitionView extends AbstractPresentationView {
 			boolean restricted, PNode presentationObject) {
 		return new AbstractPresentationView.AbstractHandleDragSequenceEventHandler(node, relative, restricted,
 				presentationObject) {
+
+			@Override
+			protected void moveToFront(PNode object) {
+				updateActions();
+			}
 
 			@Override
 			protected void drop(PInputEvent event, PNode pnode) {

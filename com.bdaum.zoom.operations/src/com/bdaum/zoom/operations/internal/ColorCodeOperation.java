@@ -91,7 +91,7 @@ public class ColorCodeOperation extends DbOperation {
 			}
 			++i;
 		}
-		if (storeSafely(null, size, toBeStored))
+		if (storeSafely(null, size, toBeStored.toArray()))
 			fireAssetsModified(new BagChange<>(null, assets, null, null), QueryField.COLORCODE);
 		return close(info);
 	}

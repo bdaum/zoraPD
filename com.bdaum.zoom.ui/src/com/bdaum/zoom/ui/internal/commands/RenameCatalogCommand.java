@@ -44,7 +44,7 @@ public class RenameCatalogCommand extends AbstractCommandHandler {
 			return;
 		String fileName = file.getName();
 		int p = fileName.lastIndexOf('.');
-		final String name = (p >= 0) ? fileName.substring(0, p) : fileName;
+		final String name = p >= 0 ? fileName.substring(0, p) : fileName;
 		FilenameInputDialog dialog = new FilenameInputDialog(activeShell, Messages.RenameCatActionDelegate_rename_cat,
 				Messages.RenameCatActionDelegate_specify_new_name, name);
 		if (dialog.open() == InputDialog.OK) {

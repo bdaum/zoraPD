@@ -15,19 +15,23 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Point;
 import java.awt.event.InputEvent;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.operations.IOperationHistory;
+import org.eclipse.core.commands.operations.IUndoContext;
+import org.eclipse.core.commands.operations.UndoContext;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.IInputValidator;
@@ -35,22 +39,26 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
-import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.operations.IWorkbenchOperationSupport;
 
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.core.ISpellCheckingService.ISpellIncident;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.job.SpellCheckingJob;
+import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
@@ -58,8 +66,9 @@ import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPickPath;
 import edu.umd.cs.piccolox.swt.PSWTCanvas;
 import edu.umd.cs.piccolox.swt.PSWTPath;
+import jdk.nashorn.tools.Shell;
 
-public class TextField extends PNode implements ISpellCheckingTarget {
+public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable, IAugmentedTextField {
 
 	private static final int MINDELAYAFTERDOUBLECLICK = 200;
 	private static final long serialVersionUID = 1686165715967343718L;
@@ -88,6 +97,12 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 	private long when;
 	private int wordX = -1;
 	private int wordY;
+	private IOperationHistory history;
+	private IUndoContext context;
+	private char lastChar;
+	private char previousChar;
+	private TextOperation currentOperation;
+	private long timeStamp;
 
 	public TextField(String str, int textWidth, Font font, Color penColor, Color backgroundColor, boolean transparent,
 			int style) {
@@ -109,6 +124,27 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		addChild(textfield);
 		setPenColor(penColor);
 		setText(str);
+		control.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				if (history != null) {
+					history.dispose(context, true, true, true);
+					history = null;
+					context = null;
+				}
+			}
+		});
+	}
+
+	private IOperationHistory getHistory() {
+		if (history == null) {
+			IWorkbenchOperationSupport operationSupport = PlatformUI.getWorkbench().getOperationSupport();
+			history = operationSupport.getOperationHistory();
+			context = new UndoContext();
+			history.setLimit(context,
+					UiActivator.getDefault().getPreferenceStore().getInt(PreferenceConstants.UNDOLEVELS));
+		}
+		return history;
 	}
 
 	private void setHighlight(boolean b) {
@@ -148,6 +184,12 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		textCanvas.setPaint(color);
 	}
 
+	/*
+	 * (nicht-Javadoc)
+	 * 
+	 * @see com.bdaum.zoom.ui.internal.widgets.ITextField#setText(java.lang.String)
+	 */
+	@Override
 	public void setText(String str) {
 		if (!str.equals(text))
 			doSetText(text = str, true);
@@ -219,7 +261,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		return str;
 	}
 
-	private void checkSpelling(boolean cancelSpellchecking) {
+	public void checkSpelling(boolean cancelSpellchecking) {
 		if (cancelSpellchecking)
 			Job.getJobManager().cancel(Constants.SPELLING);
 		if (spellingOptions != ISpellCheckingService.NOSPELLING)
@@ -230,17 +272,17 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		PBounds newBounds = textfield.getBoundsReference();
 		textCanvas.setPathToRectangle((float) newBounds.x, (float) newBounds.y, (float) newBounds.width,
 				(float) newBounds.height);
-
 	}
 
 	public void setFocus(boolean hasFocus) {
 		this.hasFocus = hasFocus;
 		if (control == null || control.isDisposed())
 			return;
+		boolean setText = textfield.getTextWidth() != SWT.DEFAULT && (style & SWT.WRAP) == 0;
 		if (hasFocus) {
 			if ((style & SWT.READ_ONLY) == 0) {
 				selection.x = 0;
-				selection.y = textfield.getText().length();
+				selection.y = setText ? text.length() : textfield.getText().length();
 				wordX = -1;
 				textCanvas.setStrokeColor(penColor);
 			}
@@ -252,11 +294,10 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 				control.setMenu(null);
 			}
 			if (menuListener == null)
-				menuListener = createMenuListener();
+				menuListener = new TextMenuListener(this, style);
 			control.addMenuDetectListener(menuListener);
 		} else {
-			selection.x = -1;
-			selection.y = -1;
+			selection.x = selection.y = -1;
 			textCanvas.setStrokeColor(null);
 			if (incidents != null)
 				processIncidents(null);
@@ -267,64 +308,9 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 			if (menuListener != null)
 				control.removeMenuDetectListener(menuListener);
 		}
-		if (textfield.getTextWidth() != SWT.DEFAULT && (style & SWT.WRAP) == 0)
+		if (setText)
 			doSetText(text, false);
 		setCaretAndHighlight();
-	}
-
-	private MenuDetectListener createMenuListener() {
-		return new MenuDetectListener() {
-			public void menuDetected(MenuDetectEvent e) {
-				disposeMenu(control);
-				ISpellIncident incident = null;
-				if (currentSegments != null && !currentSegments.isEmpty() && incidents != null) {
-					org.eclipse.swt.graphics.Point cp = control.toControl(e.x, e.y);
-					Point2D loc = new Point(cp.x, cp.y);
-					PPickPath pickPath = PPickPath.CURRENT_PICK_PATH;
-					Point2D canvasToLocal = pickPath.canvasToLocal(loc, textfield);
-					localToGlobal(canvasToLocal);
-					try {
-						for (ISpellIncident inc : incidents) {
-							// Convert to coordinates
-							Point wordBounds = computeRawSelection(inc.getOffset(),
-									inc.getOffset() + inc.getWrongWord().length());
-							org.eclipse.swt.graphics.Point startTop = textfield.getLocationAtOffset(wordBounds.x);
-							org.eclipse.swt.graphics.Point endTop = textfield
-									.getLocationAtOffset(wordBounds.x + wordBounds.y);
-							if (startTop != null && endTop != null) {
-								Point2D st = new Point(startTop.x, startTop.y);
-								localToGlobal(st);
-								Point2D et = new Point(endTop.x, endTop.y);
-								localToGlobal(et);
-								Point2D sb = new Point(startTop.x, startTop.y + lead);
-								localToGlobal(sb);
-								if (st.getY() == et.getY()) {
-									if (st.getY() <= loc.getY() && st.getX() <= loc.getX() && sb.getY() >= loc.getY()
-											&& et.getX() >= loc.getX()) {
-										incident = inc;
-										break;
-									}
-								} else {
-									Point2D eb = new Point(endTop.x, endTop.y + lead);
-									localToGlobal(eb);
-									if (loc.getY() > sb.getY() && loc.getY() < et.getY()
-											|| loc.getY() >= st.getY() && loc.getY() <= sb.getY()
-													&& loc.getX() >= st.getX()
-											|| loc.getY() >= et.getY() && loc.getY() <= eb.getY()
-													&& loc.getX() <= et.getX()) {
-										incident = inc;
-										break;
-									}
-								}
-							}
-						}
-					} catch (IllegalArgumentException e1) {
-						// nothing found
-					}
-				}
-				showMenu(control, incident);
-			}
-		};
 	}
 
 	private void setCaretAndHighlight() {
@@ -454,38 +440,52 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 	public void keyPressed(PInputEvent event) {
 		String oldText = textfield.getText();
 		String newText = text;
+		boolean editable = (style & SWT.READ_ONLY) == 0;
 		int modifiers = event.getModifiers();
 		if ((modifiers & InputEvent.CTRL_MASK) != 0) {
+			createUndoPoint();
 			int keyCode = event.getKeyCode();
 			switch (keyCode) {
-			case 97:
+			case 'a':
 				// Ctrl+A
-				selection.x = 0;
-				selection.y = oldText.length();
+				selectAll();
 				break;
-			case 99:
+			case 'c':
 				// Ctrl+C
 				copy();
 				break;
-			case 118:
+			case 'v':
 				// Ctrl+V
-				if ((style & SWT.READ_ONLY) == 0)
+				if (editable)
 					paste();
 				break;
-			case 120:
+			case 'x':
 				// Ctrl+X
-				if ((style & SWT.READ_ONLY) == 0)
+				if (editable)
 					cut();
+				break;
+			case 'z':
+				// Ctrl+Z
+				if (editable)
+					undo();
+				break;
+			case 'y':
+				// Ctrl+Y
+				if (editable)
+					redo();
 				break;
 			}
 			setCaretAndHighlight();
 			return;
 		}
+		long time = System.currentTimeMillis();
 		StringBuilder sb = new StringBuilder(oldText);
-		int keyCode = event.getKeyCode();
-		switch (keyCode) {
+		switch (event.getKeyCode()) {
 		case '\b':
-			if ((style & SWT.READ_ONLY) == 0) {
+			if (lastChar != '\b')
+				createUndoPoint();
+			lastChar = '\b';
+			if (editable) {
 				if (selection.y > 0) {
 					newText = replace(sb, selection.x, selection.x + selection.y, ""); //$NON-NLS-1$
 					selection.y = 0;
@@ -496,10 +496,14 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 			}
 			break;
 		case SWT.ESC:
+			createUndoPoint();
 			selection.y = 0;
 			break;
 		case SWT.DEL:
-			if ((style & SWT.READ_ONLY) == 0) {
+			if (lastChar != SWT.DEL)
+				createUndoPoint();
+			lastChar = SWT.DEL;
+			if (editable) {
 				if (selection.y > 0) {
 					newText = replace(sb, selection.x, selection.x + selection.y, ""); //$NON-NLS-1$
 					selection.y = 0;
@@ -508,6 +512,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 			}
 			break;
 		case SWT.ARROW_LEFT:
+			createUndoPoint();
 			if (event.isShiftDown()) {
 				if (selection.y == 0)
 					dirleft = true;
@@ -527,6 +532,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 			}
 			break;
 		case SWT.ARROW_RIGHT:
+			createUndoPoint();
 			if (event.isShiftDown()) {
 				if (selection.y == 0)
 					dirleft = false;
@@ -548,6 +554,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 			}
 			break;
 		case SWT.HOME:
+			createUndoPoint();
 			if (event.isShiftDown()) {
 				if (selection.y == 0)
 					dirleft = true;
@@ -564,6 +571,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 			}
 			break;
 		case SWT.END:
+			createUndoPoint();
 			if (event.isShiftDown()) {
 				if (selection.y == 0)
 					dirleft = false;
@@ -577,26 +585,36 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 				selection.x = sb.length();
 			}
 			break;
+		case SWT.ARROW_UP:
+		case SWT.ARROW_DOWN:
+		case SWT.PAGE_DOWN:
+		case SWT.PAGE_UP:
+			createUndoPoint();
+			break;
 		default:
-			if ((style & SWT.READ_ONLY) == 0) {
+			if (editable) {
 				char keyChar = event.getKeyChar();
-				switch (keyChar) {
-				case 0:
+				if (keyChar == 0)
 					break;
+				if ((timeStamp != 0 && time - timeStamp > 1000) || (!UiUtilities.isInterPunction(previousChar)
+						&& UiUtilities.isInterPunction(lastChar) && Character.isWhitespace(keyChar))) {
+					createUndoPoint();
+				} else {
+					previousChar = lastChar;
+					lastChar = keyChar;
+					timeStamp = time;
+				}
+				switch (keyChar) {
 				case '\n':
 				case '\r':
 					if ((style & SWT.SINGLE) != 0)
 						return;
 					keyChar = '\n';
+					// FALL THROUGH
 				default:
-					if (selection.y > 0) {
-						newText = replace(sb, selection.x, selection.x + selection.y,
-								new String(new char[] { keyChar }));
-						// sb.delete(selection.x, selection.x + selection.y);
-						selection.y = 0;
-					} else
-						newText = replace(sb, selection.x, selection.x, new String(new char[] { keyChar }));
-					// sb.insert(selection.x, keyChar);
+					String str = new String(new char[] { keyChar });
+					newText = replace(sb, selection.x, selection.x + selection.y, str);
+					selection.y = 0;
 					selection.x += 1;
 					break;
 				}
@@ -625,7 +643,49 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 			setCaretAndHighlight();
 	}
 
-	private Point copy() {
+	public void selectAll() {
+		createUndoPoint();
+		selection.x = 0;
+		selection.y = textfield.getText().length();
+	}
+
+	public void undo() {
+		if (history != null)
+			try {
+				history.undo(context, null, this);
+			} catch (ExecutionException e) {
+				// should never happen
+			}
+	}
+
+	public void redo() {
+		if (history != null)
+			try {
+				history.redo(context, null, this);
+			} catch (ExecutionException e) {
+				// should never happen
+			}
+	}
+
+	private void createUndoPoint() {
+		if ((style & SWT.READ_ONLY) == 0) {
+			IOperationHistory hist = getHistory();
+			if (currentOperation != null)
+				currentOperation.addToHistory(hist);
+			if (currentOperation == null || !currentOperation.isEmpty())
+				currentOperation = new TextOperation(this, context, text, selection);
+			timeStamp = 0;
+			previousChar = 0;
+			lastChar = 0;
+		}
+	}
+
+	public void copy() {
+		createUndoPoint();
+		doCopy();
+	}
+
+	private Point doCopy() {
 		Point sel = selection;
 		if (sel.y > 0 && sel.x >= 0) {
 			Clipboard clipboard = UiActivator.getDefault().getClipboard(control.getDisplay());
@@ -664,17 +724,20 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		return result;
 	}
 
-	private void paste() {
-		Clipboard clipboard = UiActivator.getDefault().getClipboard(control.getDisplay());
-		Object contents = clipboard.getContents(TextTransfer.getInstance());
-		if (contents instanceof String) {
-			StringBuilder sb = new StringBuilder(text);
-			Point sel = (textfield.getTextWidth() != SWT.DEFAULT && (style & SWT.WRAP) != 0)
-					? computeTrueSelection(selection)
-					: selection;
-			sb.replace(sel.x, sel.x + sel.y, (String) contents);
-			setText(sb.toString());
-			setSelection(sel.x, sel.x + ((String) contents).length());
+	public void paste() {
+		if ((style & SWT.READ_ONLY) == 0) {
+			createUndoPoint();
+			Clipboard clipboard = UiActivator.getDefault().getClipboard(control.getDisplay());
+			Object contents = clipboard.getContents(TextTransfer.getInstance());
+			if (contents instanceof String) {
+				StringBuilder sb = new StringBuilder(text);
+				Point sel = (textfield.getTextWidth() != SWT.DEFAULT && (style & SWT.WRAP) != 0)
+						? computeTrueSelection(selection)
+						: selection;
+				String t = replace(sb, sel.x, sel.x + sel.y, (String) contents);
+				setText(t);
+				setSelection(sel.x, sel.x + ((String) contents).length());
+			}
 		}
 	}
 
@@ -709,13 +772,14 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		return sel;
 	}
 
-	private void cut() {
-		Point sel = copy();
-		if (sel.y > 0 && sel.x >= 0) {
-			StringBuilder sb = new StringBuilder(text);
-			sb.replace(sel.x, sel.x + sel.y, ""); //$NON-NLS-1$
-			setText(sb.toString());
-			selection.y = 0;
+	public void cut() {
+		if ((style & SWT.READ_ONLY) == 0) {
+			createUndoPoint();
+			Point sel = doCopy();
+			if (sel.y > 0 && sel.x >= 0) {
+				setText(replace(new StringBuilder(text), sel.x, sel.x + sel.y, "")); //$NON-NLS-1$
+				selection.y = 0;
+			}
 		}
 	}
 
@@ -746,10 +810,15 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 					++j;
 				}
 			}
-			return result.toString();
+			sb = result;
+		} else
+			sb.replace(start, end, str);
+		String t = sb.toString();
+		if (currentOperation != null) {
+			currentOperation.setReplacement(t, selection);
+			currentOperation.addToHistory(getHistory());
 		}
-		sb.replace(start, end, str);
-		return sb.toString();
+		return t;
 	}
 
 	/**
@@ -769,6 +838,7 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 	}
 
 	public void mouseReleased(PInputEvent event) {
+		createUndoPoint();
 		long w = event.getWhen();
 		if (w - when < MINDELAYAFTERDOUBLECLICK)
 			return;
@@ -811,9 +881,9 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 						dirleft = false;
 					}
 				} else {
-					if (sx >= selection.x) {
+					if (sx >= selection.x)
 						selection.y += sx - end;
-					} else {
+					else {
 						selection.y = selection.x - sx;
 						selection.x = sx;
 						dirleft = true;
@@ -959,93 +1029,16 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 		int index = 0;
 		for (int i = 0; i < peeks; i++) {
 			int x = leftX + (w2 * i);
-			coordinates[index++] = new Point(x, bottom);
-			coordinates[index++] = new Point(x + WIDTH, top);
+			coordinates[index++] = new java.awt.Point(x, bottom);
+			coordinates[index++] = new java.awt.Point(x + WIDTH, top);
 		}
 		// add the last down flank
-		coordinates[length - 1] = new Point(left.x + (w2 * peeks), bottom + 1);
+		coordinates[length - 1] = new java.awt.Point(left.x + (w2 * peeks), bottom + 1);
 		return coordinates;
-	}
-
-	@SuppressWarnings("unused")
-	private void showMenu(final Composite composite, final ISpellIncident incident) {
-		Menu menu = new Menu(composite.getShell(), SWT.POP_UP);
-		if ((style & SWT.READ_ONLY) == 0) {
-			MenuItem item = new MenuItem(menu, SWT.PUSH);
-			item.setText(Messages.TextField_cut);
-			item.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					cut();
-				}
-			});
-			item.setEnabled(selection.y > 0);
-		}
-		MenuItem item = new MenuItem(menu, SWT.PUSH);
-		item.setText(Messages.TextField_copy);
-		item.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				copy();
-			}
-		});
-		item.setEnabled(selection.y > 0);
-		if ((style & SWT.READ_ONLY) == 0) {
-			item = new MenuItem(menu, SWT.PUSH);
-			item.setText(Messages.TextField_paste);
-			item.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					paste();
-				}
-			});
-			Object contents = UiActivator.getDefault().getClipboard(composite.getDisplay())
-					.getContents(TextTransfer.getInstance());
-			item.setEnabled(contents instanceof String && !((String) contents).isEmpty());
-		}
-		if (incident != null) {
-			new MenuItem(menu, SWT.SEPARATOR);
-			String[] suggestions = incident.getSuggestions();
-			if (suggestions != null && suggestions.length > 0) {
-				for (String proposal : suggestions) {
-					final String newWord = proposal;
-					item = new MenuItem(menu, SWT.PUSH);
-					item.setText(proposal);
-					item.addSelectionListener(new SelectionAdapter() {
-						@Override
-						public void widgetSelected(SelectionEvent e) {
-							int woff = incident.getOffset();
-							setText(new StringBuilder(text)
-									.replace(woff, woff + incident.getWrongWord().length(), newWord).toString());
-						}
-					});
-				}
-				new MenuItem(menu, SWT.SEPARATOR);
-			}
-			item = new MenuItem(menu, SWT.PUSH);
-			item.setText(Messages.TextField_add_to_dict);
-
-			item.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					incident.addWord();
-					checkSpelling(true);
-				}
-			});
-		}
-		composite.setMenu(menu);
 	}
 
 	public boolean hasSpellingErrors() {
 		return incidents != null && incidents.length > 0;
-	}
-
-	private static void disposeMenu(final Composite composite) {
-		Menu menu = composite.getMenu();
-		if (menu != null) {
-			composite.setMenu(null);
-			menu.dispose();
-		}
 	}
 
 	public void setValidator(IInputValidator validator) {
@@ -1066,6 +1059,91 @@ public class TextField extends PNode implements ISpellCheckingTarget {
 
 	public int getStyle() {
 		return style;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public Object getAdapter(Class adapter) {
+		if (adapter == Shell.class)
+			return control.getShell();
+		return null;
+	}
+
+	@Override
+	public void setSelection(Point selection) {
+		this.selection.x = selection.x;
+		this.selection.y = selection.y;
+	}
+
+	public ISpellIncident findSpellIncident(MenuDetectEvent e) {
+		if (currentSegments != null && !currentSegments.isEmpty() && incidents != null) {
+			Point cp = control.toControl(e.x, e.y);
+			Point2D loc = new java.awt.Point(cp.x, cp.y);
+			PPickPath pickPath = PPickPath.CURRENT_PICK_PATH;
+			Point2D canvasToLocal = pickPath.canvasToLocal(loc, textfield);
+			localToGlobal(canvasToLocal);
+			try {
+				for (ISpellIncident inc : incidents) {
+					// Convert to coordinates
+					Point wordBounds = computeRawSelection(inc.getOffset(),
+							inc.getOffset() + inc.getWrongWord().length());
+					org.eclipse.swt.graphics.Point startTop = textfield.getLocationAtOffset(wordBounds.x);
+					org.eclipse.swt.graphics.Point endTop = textfield.getLocationAtOffset(wordBounds.x + wordBounds.y);
+					if (startTop != null && endTop != null) {
+						Point2D st = new java.awt.Point(startTop.x, startTop.y);
+						localToGlobal(st);
+						Point2D et = new java.awt.Point(endTop.x, endTop.y);
+						localToGlobal(et);
+						Point2D sb = new java.awt.Point(startTop.x, startTop.y + lead);
+						localToGlobal(sb);
+						if (st.getY() == et.getY()) {
+							if (st.getY() <= loc.getY() && st.getX() <= loc.getX() && sb.getY() >= loc.getY()
+									&& et.getX() >= loc.getX()) {
+								return inc;
+							}
+						} else {
+							Point2D eb = new java.awt.Point(endTop.x, endTop.y + lead);
+							localToGlobal(eb);
+							if (loc.getY() > sb.getY() && loc.getY() < et.getY()
+									|| loc.getY() >= st.getY() && loc.getY() <= sb.getY() && loc.getX() >= st.getX()
+									|| loc.getY() >= et.getY() && loc.getY() <= eb.getY() && loc.getX() <= et.getX()) {
+								return inc;
+							}
+						}
+					}
+				}
+			} catch (IllegalArgumentException e1) {
+				// nothing found
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public Control getControl() {
+		return control;
+	}
+
+	@Override
+	public boolean canUndo() {
+		return getHistory().canUndo(context);
+	}
+
+	@Override
+	public boolean canRedo() {
+		return getHistory().canRedo(context);
+	}
+
+	@Override
+	public Point getSelection() {
+		return selection;
+	}
+
+	@Override
+	public void applyCorrection(ISpellIncident incident, String newWord) {
+		createUndoPoint();
+		int woff = incident.getOffset();
+		setText(replace(new StringBuilder(text), woff, woff + incident.getWrongWord().length(), newWord));
 	}
 
 }

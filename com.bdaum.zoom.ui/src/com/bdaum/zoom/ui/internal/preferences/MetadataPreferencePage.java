@@ -139,27 +139,27 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 		new Label(comp, SWT.NONE);
 		createTabFolder(comp, "Meta"); //$NON-NLS-1$
 
-		final CTabItem tabItem = createTabItem(tabFolder,
+		final CTabItem tabItem = UiUtilities.createTabItem(tabFolder,
 				Messages.getString("MetadataPreferencePage.essential_metadata")); //$NON-NLS-1$
 		final Composite composite = new Composite(tabFolder, SWT.NONE);
 		tabItem.setControl(composite);
 		composite.setLayout(new GridLayout(2, false));
 		essentialsViewer = createViewerGroup(composite);
-		final CTabItem tabItem_1 = createTabItem(tabFolder,
+		final CTabItem tabItem_1 = UiUtilities.createTabItem(tabFolder,
 				Messages.getString("MetadataPreferencePage.hover_metadata")); //$NON-NLS-1$
 		final Composite composite_1 = new Composite(tabFolder, SWT.NONE);
 		composite_1.setLayout(new GridLayout(2, false));
 		tabItem_1.setControl(composite_1);
 		hoverViewer = createViewerGroup(composite_1);
 
-		final CTabItem tolerancesTabItem = createTabItem(tabFolder,
+		final CTabItem tolerancesTabItem = UiUtilities.createTabItem(tabFolder,
 				Messages.getString("MetadataPreferencePage.tolerances")); //$NON-NLS-1$
 
 		final Composite composite_2 = new Composite(tabFolder, SWT.NONE);
 		composite_2.setLayout(new GridLayout());
 		tolerancesTabItem.setControl(composite_2);
 		tolerancesViewer = createTolerancesViewer(composite_2);
-		final CTabItem exportTabItem = createTabItem(tabFolder,
+		final CTabItem exportTabItem = UiUtilities.createTabItem(tabFolder,
 				Messages.getString("MetadataPreferencePage.export")); //$NON-NLS-1$
 		final Composite composite_3 = new Composite(tabFolder, SWT.NONE);
 		composite_3.setLayout(new GridLayout());

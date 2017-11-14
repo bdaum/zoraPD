@@ -47,8 +47,7 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 	private NumberFormat nf;
 	private int maximum = Integer.MAX_VALUE;
 
-	public IncrementalNumberCellEditor(Composite parent, int digits,
-			int increment) {
+	public IncrementalNumberCellEditor(Composite parent, int digits, int increment) {
 		super(parent);
 		this.increment = increment;
 		nf = NumberFormat.getNumberInstance();
@@ -61,8 +60,7 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 					try {
 						nf.parse(value.toString());
 					} catch (ParseException e1) {
-						return Messages
-								.getString("IncrementalNumberCellEditor.bad_number"); //$NON-NLS-1$
+						return Messages.getString("IncrementalNumberCellEditor.bad_number"); //$NON-NLS-1$
 					}
 				}
 				return null;
@@ -93,22 +91,16 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 		final Text txt = (Text) super.createControl(composite);
 		txt.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		txt.addVerifyListener(new VerifyListener() {
-
 			public void verifyText(VerifyEvent e) {
-				if (e.keyCode != 0 && e.character != '\b'
-						&& e.character != SWT.DEL
+				if (e.keyCode != 0 && e.character != '\b' && e.character != SWT.DEL
 						&& !Character.isDigit(e.character)) {
 					e.doit = false;
 					return;
 				}
 				String t = txt.getText();
-				String futureText = t.substring(0, e.start) + e.text
-						+ t.substring(e.end);
-				if (!futureText.isEmpty()) {
-					int value = Integer.parseInt(futureText);
-					if (value > maximum)
-						e.doit = false;
-				}
+				String futureText = t.substring(0, e.start) + e.text + t.substring(e.end);
+				if (!futureText.isEmpty() && Integer.parseInt(futureText) > maximum)
+					e.doit = false;
 			}
 		});
 		minusButton = new Button(composite, SWT.ARROW | SWT.DOWN);
@@ -137,8 +129,7 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 		display.timerExec(10, () -> {
 			if (!control.isDisposed()) {
 				Control focusControl = display.getFocusControl();
-				if (focusControl == text || focusControl == minusButton
-						|| focusControl == plusButton)
+				if (focusControl == text || focusControl == minusButton || focusControl == plusButton)
 					return;
 				IncrementalNumberCellEditor.super.focusLost();
 			}

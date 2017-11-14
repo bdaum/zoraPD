@@ -14,6 +14,7 @@ package com.bdaum.zoom.rcp.internal;
 import java.io.File;
 import java.util.LinkedList;
 
+import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IOperationHistoryListener;
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.IUndoableOperation;
@@ -38,19 +39,21 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IMemento;
+import org.eclipse.ui.IPartListener;
+import org.eclipse.ui.IWindowListener;
+import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchCommandConstants;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
-import org.eclipse.ui.operations.IWorkbenchOperationSupport;
 
 import com.bdaum.zoom.batch.internal.BatchActivator;
 import com.bdaum.zoom.core.Constants;
@@ -62,6 +65,7 @@ import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.commands.AbstractCatCommandHandler;
 import com.bdaum.zoom.ui.internal.commands.OpenCatalogCommand;
+import com.bdaum.zoom.ui.internal.views.IUndoHost;
 
 @SuppressWarnings("restriction")
 public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
@@ -74,9 +78,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		private CLabel label;
 
 		/**
-		 * The composite into which this contribution item has been placed. This
-		 * will be <code>null</code> if this instance has not yet been
-		 * initialized.
+		 * The composite into which this contribution item has been placed. This will be
+		 * <code>null</code> if this instance has not yet been initialized.
 		 */
 		private Composite statusLine = null;
 
@@ -90,8 +93,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		 * Creates a status line contribution item with the given id.
 		 *
 		 * @param id
-		 *            the contribution item's id, or <code>null</code> if it is
-		 *            to have no id
+		 *            the contribution item's id, or <code>null</code> if it is to have
+		 *            no id
 		 * @param handler
 		 *            - click handler
 		 */
@@ -100,17 +103,17 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		}
 
 		/**
-		 * Creates a status line contribution item with the given id that
-		 * displays the given number of characters.
+		 * Creates a status line contribution item with the given id that displays the
+		 * given number of characters.
 		 *
 		 * @param id
-		 *            the contribution item's id, or <code>null</code> if it is
-		 *            to have no id
+		 *            the contribution item's id, or <code>null</code> if it is to have
+		 *            no id
 		 * @param charWidth
 		 *            the number of characters to display. If the value is
-		 *            CALC_TRUE_WIDTH then the contribution will compute the
-		 *            preferred size exactly. Otherwise the size will be based
-		 *            on the average character size * 'charWidth'
+		 *            CALC_TRUE_WIDTH then the contribution will compute the preferred
+		 *            size exactly. Otherwise the size will be based on the average
+		 *            character size * 'charWidth'
 		 * @param handler
 		 *            - click handler
 		 * 
@@ -176,6 +179,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 	private StatusLineContributionItem statusLineItem;
 	private ClickableStatusLineContributionItem undoStatusLineItem;
 	private ClickableStatusLineContributionItem redoStatusLineItem;
+	private IWorkbenchPart activePart;
 
 	public class OpenAction extends Action {
 
@@ -277,7 +281,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		redoStatusLineItem = new ClickableStatusLineContributionItem("RedoContributionItem", //$NON-NLS-1$
 				ActionFactory.REDO.create(window));
 	}
-	
+
 	@Override
 	protected void fillMenuBar(IMenuManager menuBar) {
 		MenuManager catMenu = new MenuManager(Messages.getString("ApplicationActionBarAdvisor.Catalog"), //$NON-NLS-1$
@@ -394,31 +398,94 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 	}
 
 	public void hookUndoMessenger() {
-		IWorkbenchOperationSupport operationSupport = PlatformUI.getWorkbench().getOperationSupport();
-		final IUndoContext undoContext = operationSupport.getUndoContext();
-		operationSupport.getOperationHistory().addOperationHistoryListener(new IOperationHistoryListener() {
-			public void historyNotification(OperationHistoryEvent event) {
-				IUndoableOperation undoOperation = event.getHistory().getUndoOperation(undoContext);
-				IUndoableOperation redoOperation = event.getHistory().getRedoOperation(undoContext);
-				final String undolabel = undoOperation == null ? "" //$NON-NLS-1$
-						: NLS.bind(Messages.getString("ApplicationActionBarAdvisor.undo"), undoOperation.getLabel()); //$NON-NLS-1$
-				final String redolabel = redoOperation == null ? "" //$NON-NLS-1$
-						: NLS.bind(Messages.getString("ApplicationActionBarAdvisor.redo"), redoOperation.getLabel()); //$NON-NLS-1$
-				IWorkbenchWindow window = getActionBarConfigurer().getWindowConfigurer().getWindow();
-				if (window != null) {
-					Shell shell = window.getShell();
-					if (shell != null && !shell.isDisposed()) {
-						final Display display = shell.getDisplay();
-						display.asyncExec(() -> {
-							if (!shell.isDisposed()) {
-								undoStatusLineItem.setText(undolabel);
-								redoStatusLineItem.setText(redolabel);
-							}
-						});
-					}
-				}
+		IPartListener partListener = new IPartListener() {
+
+			@Override
+			public void partOpened(IWorkbenchPart part) {
+				// do nothing
+			}
+
+			@Override
+			public void partDeactivated(IWorkbenchPart part) {
+				activePart = null;
+				updateStatusLineItems();
+			}
+
+			@Override
+			public void partClosed(IWorkbenchPart part) {
+				// do nothing
+			}
+
+			@Override
+			public void partBroughtToTop(IWorkbenchPart part) {
+				// do nothing
+			}
+
+			@Override
+			public void partActivated(IWorkbenchPart part) {
+				activePart = part;
+				updateStatusLineItems();
+			}
+		};
+		IWorkbench workbench = PlatformUI.getWorkbench();
+		workbench.addWindowListener(new IWindowListener() {
+
+			@Override
+			public void windowOpened(IWorkbenchWindow window) {
+				// do nothing
+			}
+
+			@Override
+			public void windowDeactivated(IWorkbenchWindow window) {
+				window.getPartService().removePartListener(partListener);
+			}
+
+			@Override
+			public void windowClosed(IWorkbenchWindow window) {
+				// do nothing
+			}
+
+			@Override
+			public void windowActivated(IWorkbenchWindow window) {
+				window.getPartService().addPartListener(partListener);
 			}
 		});
+		workbench.getOperationSupport().getOperationHistory().addOperationHistoryListener(new IOperationHistoryListener() {
+			public void historyNotification(OperationHistoryEvent event) {
+				updateStatusLineItems();
+			}
+		});
+	}
+
+	protected void updateStatusLineItems() {
+		if (activePart != null) {
+			Shell shell = activePart.getSite().getShell();
+			if (shell != null && !shell.isDisposed()) {
+				shell.getDisplay().asyncExec(() -> {
+					if (!shell.isDisposed()) {
+						String undoLabel = ""; //$NON-NLS-1$
+						String redoLabel = ""; //$NON-NLS-1$
+						if (activePart instanceof IUndoHost) {
+							IUndoContext undoContext = ((IUndoHost) activePart).getUndoContext();
+							if (undoContext != null) {
+								IOperationHistory history = PlatformUI.getWorkbench().getOperationSupport()
+										.getOperationHistory();
+								IUndoableOperation undoOperation = history.getUndoOperation(undoContext);
+								IUndoableOperation redoOperation = history.getRedoOperation(undoContext);
+								if (undoOperation != null)
+									undoLabel = NLS.bind(Messages.getString("ApplicationActionBarAdvisor.undo"), //$NON-NLS-1$
+											undoOperation.getLabel());
+								if (redoOperation != null)
+									redoLabel = NLS.bind(Messages.getString("ApplicationActionBarAdvisor.redo"), //$NON-NLS-1$
+											redoOperation.getLabel());
+							}
+						}
+						undoStatusLineItem.setText(undoLabel);
+						redoStatusLineItem.setText(redoLabel);
+					}
+				});
+			}
+		}
 	}
 
 }

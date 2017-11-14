@@ -21,7 +21,6 @@ package com.bdaum.zoom.ui.internal.codes;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -54,8 +53,6 @@ public class CodeParser {
 	private static final String SUBJECT_MATTER = "SubjectMatter"; //$NON-NLS-1$
 
 	private static final String CODEFOLDER = "codes/XML/"; //$NON-NLS-1$
-	private static final DateFormat DFXML = new SimpleDateFormat(
-			"yyyyMMdd'T'HHmmssZ"); //$NON-NLS-1$
 
 	private static final String TOPIC = "Topic"; //$NON-NLS-1$
 	private static final String FORMALNAME = "FormalName"; //$NON-NLS-1$
@@ -86,8 +83,7 @@ public class CodeParser {
 		case QueryField.SUBJECTCODES:
 			filename = "topicset.iptc-subjectcode.xml"; //$NON-NLS-1$
 			title = Messages.CodeParser_subject_codes;
-			msg = Messages.CodeParser_subject_codes_msg + '\n'
-					+ Messages.CodeParser_revision;
+			msg = Messages.CodeParser_subject_codes_msg + '\n' + Messages.CodeParser_revision;
 			topicMap = new HashMap<String, Topic>(2250);
 			topicType = new String[] { SUBJECT, SUBJECT_MATTER, SUBJECT_DETAIL };
 			hierarchy = new Topic[3];
@@ -95,16 +91,14 @@ public class CodeParser {
 		case QueryField.SCENECODES:
 			filename = "topicset.iptc-scene.xml"; //$NON-NLS-1$
 			title = Messages.CodeParser_scene_codes;
-			msg = Messages.CodeParser_scene_codes_msg + '\n'
-					+ Messages.CodeParser_revision;
+			msg = Messages.CodeParser_scene_codes_msg + '\n' + Messages.CodeParser_revision;
 			topicMap = new HashMap<String, Topic>(150);
 			topicType = new String[] { SCENE };
 			hierarchy = new Topic[1];
 			break;
 		}
 
-		File installFolder = new File(Platform.getInstallLocation().getURL()
-				.getPath());
+		File installFolder = new File(Platform.getInstallLocation().getURL().getPath());
 		file = new File(installFolder.getParent(), CODEFOLDER + filename);
 		if (!file.exists())
 			file = new File(installFolder, CODEFOLDER + filename);
@@ -114,17 +108,13 @@ public class CodeParser {
 			try {
 				saxParser = factory.newSAXParser();
 			} catch (Exception e) {
-				UiActivator.getDefault().logError(
-						Messages.CodeParser_error_creating_code_parser, e);
+				UiActivator.getDefault().logError(Messages.CodeParser_error_creating_code_parser, e);
 			}
 		} else
-			UiActivator.getDefault().logError(
-					NLS.bind(Messages.CodeParser_code_catalog_not_found,
-							filename), null);
+			UiActivator.getDefault().logError(NLS.bind(Messages.CodeParser_code_catalog_not_found, filename), null);
 		if (saxParser == null) {
 			title = Messages.CodeParser_cat_not_found;
-			msg = NLS
-					.bind(Messages.CodeParser_code_catalog_not_found, filename);
+			msg = NLS.bind(Messages.CodeParser_code_catalog_not_found, filename);
 		}
 	}
 
@@ -143,12 +133,9 @@ public class CodeParser {
 				if (saxParser != null)
 					saxParser.parse(file, getHandler());
 			} catch (SAXException e) {
-				UiActivator.getDefault().logError(
-						NLS.bind(Messages.CodeParser_sax_parsing_exceptiion,
-								file), e);
+				UiActivator.getDefault().logError(NLS.bind(Messages.CodeParser_sax_parsing_exceptiion, file), e);
 			} catch (IOException e) {
-				UiActivator.getDefault().logError(
-						NLS.bind(Messages.CodeParser_io_exception, file), e);
+				UiActivator.getDefault().logError(NLS.bind(Messages.CodeParser_io_exception, file), e);
 			}
 			done = true;
 		}
@@ -162,8 +149,8 @@ public class CodeParser {
 			private Topic topic;
 
 			@Override
-			public void startElement(String namespaceURI, String localName,
-					String qName, Attributes atts) throws SAXException {
+			public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
+					throws SAXException {
 				if (TOPIC.equals(qName)) {
 					topc = true;
 					topic = new Topic();
@@ -195,8 +182,7 @@ public class CodeParser {
 			}
 
 			@Override
-			public void endElement(String uri, String localName, String qName)
-					throws SAXException {
+			public void endElement(String uri, String localName, String qName) throws SAXException {
 				if (topc) {
 					if (TOPIC.equals(qName)) {
 						topicMap.put(topic.getCode(), topic);
@@ -214,7 +200,7 @@ public class CodeParser {
 					}
 				} else if (DATE_AND_TIME.equals(qName)) {
 					try {
-						dateAndTime = DFXML.parse(text.toString());
+						dateAndTime = new SimpleDateFormat("yyyyMMdd'T'HHmmssZ").parse(text.toString()); //$NON-NLS-1$
 					} catch (ParseException e) {
 						// do nothing
 					}
@@ -237,8 +223,7 @@ public class CodeParser {
 	 */
 	public String getMessage() {
 		doLoad();
-		return NLS.bind(msg, dateAndTime == null ? Messages.CodeParser_unknown
-				: Constants.DFDT.format(dateAndTime));
+		return NLS.bind(msg, dateAndTime == null ? Messages.CodeParser_unknown : Constants.DFDT.format(dateAndTime));
 	}
 
 	public Topic findTopic(String code) {

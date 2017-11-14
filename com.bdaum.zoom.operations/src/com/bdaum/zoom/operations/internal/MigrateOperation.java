@@ -441,7 +441,8 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 		PostProcessor postProcessor = coll.getPostProcessor();
 		SmartCollectionImpl newColl = new SmartCollectionImpl(coll.getName(), coll.getSystem(), coll.getAlbum(),
 				coll.getAdhoc(), coll.getNetwork(), coll.getDescription(), coll.getColorCode(),
-				coll.getLastAccessDate(), coll.getGeneration(), coll.getPerspective(), postProcessor);
+				coll.getLastAccessDate(), coll.getGeneration(), coll.getPerspective(), coll.getShowLabel(),
+				coll.getLabelTemplate(), coll.getFontSize(), postProcessor);
 		String id = coll.getStringId();
 		newColl.setStringId(id);
 		toBeStored.add(newColl);
@@ -596,7 +597,7 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 	}
 
 	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
-		//do nothing
+		// do nothing
 	}
 
 }

@@ -71,13 +71,19 @@ public class AssetProvider implements IAssetProvider {
 		String key = node.getKey();
 		if (currentCollection != null)
 			invalid |= isAffectedBy(currentCollection, key);
-		SortCriterion customSort = currentProcessor == null ? null
-				: currentProcessor.getCustomSort();
+		SortCriterion customSort = currentProcessor == null ? null : currentProcessor.getCustomSort();
 		invalid |= (customSort != null && !customSort.getField().equals(key));
 		if (cloneMap != null)
 			for (AssetProvider child : cloneMap.values())
 				child.invalidate(node);
-		return invalid;
+		if (invalid)
+			return true;
+		QueryField[] children = node.getChildren();
+		if (children != null)
+			for (QueryField child : children)
+				if (invalidate(child))
+					return true;
+		return false;
 	}
 
 	private static boolean isAffectedBy(SmartCollection sm, String key) {
@@ -120,15 +126,12 @@ public class AssetProvider implements IAssetProvider {
 		count = -1;
 		if (currentCollection == null)
 			return;
-		if (currentProcessor == null
-				|| currentProcessor.getCollection() != currentCollection
-				|| !Arrays.equals(currentProcessor.getFilters(),currentFilters)
+		if (currentProcessor == null || currentProcessor.getCollection() != currentCollection
+				|| !Arrays.equals(currentProcessor.getFilters(), currentFilters)
 				|| (currentSort == null && currentProcessor.getCustomSort() != null)
-				|| (currentSort != null && !currentSort.equals(currentProcessor
-						.getCustomSort()))) {
+				|| (currentSort != null && !currentSort.equals(currentProcessor.getCustomSort()))) {
 			BusyIndicator.showWhile(null, () -> {
-				currentProcessor = dbManager.createCollectionProcessor(
-						currentCollection, currentFilters, currentSort);
+				currentProcessor = dbManager.createCollectionProcessor(currentCollection, currentFilters, currentSort);
 				assets = currentProcessor.select(true);
 			});
 		} else if (invalid)
@@ -196,8 +199,7 @@ public class AssetProvider implements IAssetProvider {
 	 */
 
 	public Asset getAsset(int index) {
-		return (assets == null) ? null : (index < assets.size() ? assets
-				.get(index) : null);
+		return (assets == null) ? null : (index < assets.size() ? assets.get(index) : null);
 	}
 
 	/*
@@ -251,8 +253,7 @@ public class AssetProvider implements IAssetProvider {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IAssetProvider#setCurrentCollection(com.bdaum.zoom
+	 * @see com.bdaum.zoom.core.IAssetProvider#setCurrentCollection(com.bdaum.zoom
 	 * .cat.model.group.SmartCollectionImpl)
 	 */
 
@@ -265,8 +266,7 @@ public class AssetProvider implements IAssetProvider {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IAssetProvider#setCurrentFilter(com.bdaum.zoom.core
+	 * @see com.bdaum.zoom.core.IAssetProvider#setCurrentFilter(com.bdaum.zoom.core
 	 * .IAssetFilter)
 	 */
 
@@ -297,8 +297,7 @@ public class AssetProvider implements IAssetProvider {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IAssetProvider#setCurrentSort(com.bdaum.zoom.cat.
+	 * @see com.bdaum.zoom.core.IAssetProvider#setCurrentSort(com.bdaum.zoom.cat.
 	 * model.group.SortCriterion)
 	 */
 
@@ -313,8 +312,7 @@ public class AssetProvider implements IAssetProvider {
 	 */
 
 	public IScoreFormatter getScoreFormatter() {
-		return currentProcessor == null ? null : currentProcessor
-				.getScoreFormatter();
+		return currentProcessor == null ? null : currentProcessor.getScoreFormatter();
 	}
 
 	/*
@@ -325,9 +323,8 @@ public class AssetProvider implements IAssetProvider {
 
 	public SmartCollectionImpl getParentCollection() {
 		SmartCollectionImpl coll = getCurrentCollection();
-		return (coll == null || coll.getCriterion().size() == 1
-				&& coll.getCriterion(0).getField().startsWith("*")) //$NON-NLS-1$
-		? null
+		return (coll == null || coll.getCriterion().size() == 1 && coll.getCriterion(0).getField().startsWith("*")) //$NON-NLS-1$
+				? null
 				: coll;
 	}
 
@@ -343,7 +340,9 @@ public class AssetProvider implements IAssetProvider {
 		return indexOf(o.getStringId());
 	}
 
-	/* (nicht-Javadoc)
+	/*
+	 * (nicht-Javadoc)
+	 * 
 	 * @see com.bdaum.zoom.core.IAssetProvider#indexOf(java.lang.String)
 	 */
 	public int indexOf(String assetId) {

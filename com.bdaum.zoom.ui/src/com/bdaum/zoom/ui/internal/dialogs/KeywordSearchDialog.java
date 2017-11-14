@@ -67,6 +67,7 @@ import com.bdaum.zoom.cat.model.group.CriterionImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.Ui;
@@ -254,7 +255,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 
 	public static SmartCollection computeQuery(String searchString, boolean network, SmartCollection parent) {
 		SmartCollectionImpl sm = new SmartCollectionImpl(searchString, false, false, true, network, null, 0, null, 0,
-				null, null);
+				null, Constants.INHERIT_LABEL, null, 0, null);
 		boolean neg = false;
 		boolean and = false;
 		int p = 0;

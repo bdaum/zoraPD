@@ -12,6 +12,10 @@
 		<topic href="html/gettingstarted/newcat.html" label="Einen neuen Katalog anlegen"/>
 		<topic href="html/reference/catProperties.html" label="Katalogeigenschaften"/>
 	</context>
+ <context id="group_dialog_context" title="Dialog für Gruppeneigenschaften">
+    <description>Gruppenname, Filter und Regeln</description>
+    <topic href="html/reference/groupEdit.html" label="Dialog für Gruppeneigenschaften"/>
+ </context>
  <context id="collectionEdit_dialog_context" title="Dialog für Kollektionssuchkriterien">
     <description>Suchkriterien einer Kollektion bearbeiten</description>
     <topic href="html/reference/collectionEdit.html" label="Dialog für Kollektionssuchkriterien"/>
@@ -104,6 +108,10 @@
  <context id="audio_page_context" title="Audio-Einstellungen">
     <description>Audio-Einstellungen</description>
     <topic href="html/reference/audioPrefs.html" label="Audio-Einstellungen"/>
+ </context>
+ <context id="auto_page_context" title="Einstellungen für automatische Aktionen">
+    <description>Automatische Aktionen konfigurieren</description>
+    <topic href="html/reference/autoPrefs.html" label="Einstellungen für automatische Aktionen"/>
  </context>
  <context id="general_page_context" title="Allgemeine Einstellungen">
     <description>Allgemeine Einstellungen</description>

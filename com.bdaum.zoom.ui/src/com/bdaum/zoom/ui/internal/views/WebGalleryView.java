@@ -118,6 +118,7 @@ import com.bdaum.zoom.ui.internal.operations.ExhibitionPropertiesOperation;
 import com.bdaum.zoom.ui.internal.operations.WebGalleryPropertiesOperation;
 import com.bdaum.zoom.ui.internal.widgets.GalleryPanEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.GreekedPSWTText;
+import com.bdaum.zoom.ui.internal.widgets.IAugmentedTextField;
 import com.bdaum.zoom.ui.internal.widgets.PPanel;
 import com.bdaum.zoom.ui.internal.widgets.PSWTAssetThumbnail;
 import com.bdaum.zoom.ui.internal.widgets.PSWTButton;
@@ -343,7 +344,7 @@ public class WebGalleryView extends AbstractPresentationView {
 		private final Storyboard storyboard;
 		private final String text;
 		private String oldtext;
-		private final TextField textField;
+		private final IAugmentedTextField textField;
 
 		public EditStoryboardTextOperation(Storyboard storyboard, TextField textField) {
 			super(Messages.getString("WebGalleryView.edit_storyboard_title_undo")); //$NON-NLS-1$
@@ -387,10 +388,10 @@ public class WebGalleryView extends AbstractPresentationView {
 		private final WebExhibitImpl exhibit;
 		private final String text;
 		private String oldtext;
-		private final TextField textField;
+		private final IAugmentedTextField textField;
 		private final int type;
 
-		public EditTextOperation(WebExhibitImpl exhibit, String text, TextField textField, int type) {
+		public EditTextOperation(WebExhibitImpl exhibit, String text, IAugmentedTextField textField, int type) {
 			super(Messages.getString("WebGalleryView.edit_exh_undo")); //$NON-NLS-1$
 			this.exhibit = exhibit;
 			this.text = text;
@@ -945,16 +946,7 @@ public class WebGalleryView extends AbstractPresentationView {
 		}
 
 		private void editExhibitProperties() {
-			textEventHandler.commit();
-			WebExhibitImpl exh = PWebExhibit.this.exhibit;
-			WebExhibitImpl backup = new WebExhibitImpl(exh.getCaption(), exh.getSequenceNo(), exh.getDescription(),
-					exh.getHtmlDescription(), exh.getAltText(), exh.getDownloadable(), exh.getIncludeMetadata(),
-					exh.getAsset());
-			EditWebExibitDialog dialog = new EditWebExibitDialog(getSite().getShell(), exh, exh.getCaption(), gallery);
-			if (dialog.open() == Window.OK) {
-				performOperation(new EditExhibitOperation(PWebExhibit.this, backup, exh));
-				setCaptionAndDescription(exh);
-			}
+			doEditExhibitProperties(PWebExhibit.this);
 		}
 
 		private void setCaptionAndDescription(WebExhibit exh) {
@@ -1123,7 +1115,7 @@ public class WebGalleryView extends AbstractPresentationView {
 	}
 
 	public static final String ID = "com.bdaum.zoom.ui.WebGalleryView"; //$NON-NLS-1$
-	public static final String WEBGALLERY_PERSPECTIVE = "com.bdaum.zoom.WebGalleryPerspective"; //$NON-NLS-1$
+	public static final String WEBGALLERY_PERSPECTIVE = "com.bdaum.zoom.PresentationPerspective"; //$NON-NLS-1$
 	private static final String LAST_GALLERY = "com.bdaum.zoom.lastGallery"; //$NON-NLS-1$
 	private static final int STORYBOARDWIDTH = 1500;
 	private static final int CELLSIZE = 250;
@@ -1171,7 +1163,6 @@ public class WebGalleryView extends AbstractPresentationView {
 		super.createPartControl(parent);
 		canvas.setData("id", "webgallery"); //$NON-NLS-1$ //$NON-NLS-2$
 		undoContext = new UndoContext() {
-
 			@Override
 			public String getLabel() {
 				return Messages.getString("WebGalleryView.webgallery_undo_context"); //$NON-NLS-1$
@@ -1490,7 +1481,28 @@ public class WebGalleryView extends AbstractPresentationView {
 			}
 		};
 		editStoryboardAction.setToolTipText(Messages.getString("WebGalleryView.edit_storyboard_tooltip")); //$NON-NLS-1$
+		exhibitPropertiesAction = new Action(Messages.getString("WebGalleryView.properties")) { //$NON-NLS-1$
+			@Override
+			public void run() {
+				doEditExhibitProperties((PWebExhibit) getAdapter(IPresentationItem.class));
+			}
+		};
+		exhibitPropertiesAction.setToolTipText(Messages.getString("WebGalleryView.properties_tooltip")); //$NON-NLS-1$
+	}
 
+	protected void doEditExhibitProperties(PWebExhibit pWebExhibit) {
+		if (pWebExhibit != null) {
+			textEventHandler.commit();
+			WebExhibitImpl exh = pWebExhibit.exhibit;
+			WebExhibitImpl backup = new WebExhibitImpl(exh.getCaption(), exh.getSequenceNo(), exh.getDescription(),
+					exh.getHtmlDescription(), exh.getAltText(), exh.getDownloadable(), exh.getIncludeMetadata(),
+					exh.getAsset());
+			EditWebExibitDialog dialog = new EditWebExibitDialog(getSite().getShell(), exh, exh.getCaption(), gallery);
+			if (dialog.open() == Window.OK) {
+				performOperation(new EditExhibitOperation(pWebExhibit, backup, exh));
+				pWebExhibit.setCaptionAndDescription(exh);
+			}
+		}
 	}
 
 	protected PStoryboard addStoryboard(Storyboard storyboard, double y, ProgressIndicator progrBar) {
@@ -1625,8 +1637,7 @@ public class WebGalleryView extends AbstractPresentationView {
 		String selectedEngine = show.getSelectedEngine();
 		boolean isFtp = show.getIsFtp();
 		String outputFolder = (isFtp) ? show.getFtpDir() : show.getOutputFolder();
-		while (selectedEngine == null || outputFolder == null || selectedEngine.isEmpty()
-				|| outputFolder.isEmpty()) {
+		while (selectedEngine == null || outputFolder == null || selectedEngine.isEmpty() || outputFolder.isEmpty()) {
 			show = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, show, show.getName(), true,
 					false, Messages.getString("WebGalleryView.select_web_gallery")); //$NON-NLS-1$
 			if (show == null)
@@ -1762,8 +1773,7 @@ public class WebGalleryView extends AbstractPresentationView {
 								dbManager.safeTransaction(set, template);
 							}
 						} else {
-							IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport()
-									.getExternalBrowser();
+							IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser();
 							if (browser != null)
 								browser.openURL(url);
 						}
@@ -1819,6 +1829,11 @@ public class WebGalleryView extends AbstractPresentationView {
 			boolean restricted, PNode presentationObject) {
 		return new AbstractPresentationView.AbstractHandleDragSequenceEventHandler(node, relative, restricted,
 				presentationObject) {
+
+			@Override
+			protected void moveToFront(PNode object) {
+				updateActions();
+			}
 
 			@Override
 			protected void drop(PInputEvent event, PNode pnode) {

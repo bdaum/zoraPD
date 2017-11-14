@@ -17,6 +17,7 @@
 #               8) http://u88.n24.queensu.ca/exiftool/forum/index.php/topic,5223.0.html
 #               9) Zilvinas Brobliauskas private communication
 #               10) Albert Shan private communication
+#               11) http://u88.n24.queensu.ca/exiftool/forum/index.php/topic,8377.0.html
 #               IB) Iliah Borg private communication (LibRaw)
 #               JD) Jens Duttke private communication
 #------------------------------------------------------------------------------
@@ -28,7 +29,7 @@ use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 use Image::ExifTool::Exif;
 
-$VERSION = '1.56';
+$VERSION = '1.60';
 
 sub ProcessFujiDir($$$);
 sub ProcessFaceRec($$$);
@@ -43,6 +44,8 @@ my %testedRAF = (
     '0106' => 'S5Pro Ver1.06',
     '0111' => 'S5Pro Ver1.11',
     '0114' => 'S9600 Ver1.00',
+    '0132' => 'X-T2 Ver1.32',
+    '0144' => 'X100T Ver1.44',
     '0159' => 'S2Pro Ver1.00',
     '0200' => 'X10 Ver2.00',
     '0212' => 'S3Pro Ver2.12',
@@ -55,6 +58,7 @@ my %testedRAF = (
     '0300' => 'X-E2',
     '0712' => 'S5000 Ver3.00',
     '0716' => 'S5000 Ver3.00', # (yes, 2 RAF versions with the same Software version)
+    '0Dgi' => 'X-A10 Ver1.01 and X-A3 Ver1.02', # (yes, non-digits in the firmware number)
 );
 
 my %faceCategories = (
@@ -102,14 +106,15 @@ my %faceCategories = (
         Flags => 'PrintHex',
         Writable => 'int16u',
         PrintConv => {
-            0x00 => 'Very Soft', #10 (-4)
-            0x01 => 'Soft',
-            0x02 => 'Soft2',
-            0x03 => 'Normal',
-            0x04 => 'Hard',
-            0x05 => 'Hard2',
-            0x82 => 'Medium Soft', #2
-            0x84 => 'Medium Hard', #2
+            0x00 => '-4 (softest)', #10
+            0x01 => '-3 (very soft)',
+            0x02 => '-2 (soft)',
+            0x03 => '0 (normal)',
+            0x04 => '+2 (hard)',
+            0x05 => '+3 (very hard)',
+            0x06 => '+4 (hardest)',
+            0x82 => '-1 (medium soft)', #2
+            0x84 => '+1 (medium hard)', #2
             0x8000 => 'Film Simulation', #2
             0xffff => 'n/a', #2
         },
@@ -144,17 +149,21 @@ my %faceCategories = (
         Flags => 'PrintHex',
         Writable => 'int16u',
         PrintConv => {
-            0x0   => 'Normal', # # ("Color 0", ref 8)
-            0x080 => 'Medium High', #2 ("Color +1", ref 8)
-            0x100 => 'High', # ("Color +2", ref 8)
-            0x180 => 'Medium Low', #2 ("Color -1", ref 8)
+            0x0   => '0 (normal)', # # ("Color 0", ref 8)
+            0x080 => '+1 (medium high)', #2 ("Color +1", ref 8)
+            0x100 => '+2 (high)', # ("Color +2", ref 8)
+            0x0c0 => '+3 (very high)',
+            0x0e0 => '+4 (highest)',
+            0x180 => '-1 (medium low)', #2 ("Color -1", ref 8)
             0x200 => 'Low',
             0x300 => 'None (B&W)', #2
             0x301 => 'B&W Red Filter', #PH/8
             0x302 => 'B&W Yellow Filter', #PH (X100)
             0x303 => 'B&W Green Filter', #PH/8
             0x310 => 'B&W Sepia', #PH (X100)
-            0x400 => 'Low 2', #8 ("Color -2")
+            0x400 => '-2 (low)', #8 ("Color -2")
+            0x4c0 => '-3 (very low)',
+            0x4e0 => '-4 (lowest)',
             0x500 => 'Acros', #PH (X-Pro2)
             0x501 => 'Acros Red Filter', #PH (X-Pro2)
             0x502 => 'Acros Yellow Filter', #PH (X-Pro2)
@@ -211,13 +220,15 @@ my %faceCategories = (
         Flags => 'PrintHex',
         Writable => 'int16u',
         PrintConv => {
-            0x000 => 'Normal', # ("NR 0, ref 8)
-            0x100 => 'Strong', # ("NR+2, ref 8)
-            0x180 => 'Medium Strong', #8 ("NR+1")
-            0x200 => 'Weak', # ("NR-2, ref 8)
-            0x280 => 'Medium Weak', #8 ("NR-1")
-            0x2c0 => 'Very Weak', #10 (-3)
-            0x2e0 => 'Weakest', #10 (-4)
+            0x000 => '0 (normal)', # ("NR 0, ref 8)
+            0x100 => '+2 (strong)', # ("NR+2, ref 8)
+            0x180 => '+1 (medium strong)', #8 ("NR+1")
+            0x1c0 => '+3 (very strong)',
+            0x1e0 => '+4 (strongest)',
+            0x200 => '-2 (weak)', # ("NR-2, ref 8)
+            0x280 => '-1 (medium weak)', #8 ("NR-1")
+            0x2c0 => '-3 (very weak)', #10 (-3)
+            0x2e0 => '-4 (weakest)', #10 (-4)
         },
     },
     0x1010 => {
@@ -289,7 +300,7 @@ my %faceCategories = (
         Flags => 'PrintHex',
         Writable => 'int16u',
         PrintConv => {
-            0x0 => 'Auto',
+            0x0 => 'Auto', # (or 'SR+' if SceneRecognition present, ref 11)
             0x1 => 'Portrait',
             0x2 => 'Landscape',
             0x3 => 'Macro', #JD
@@ -350,22 +361,26 @@ my %faceCategories = (
         Name => 'ShadowTone',
         Writable => 'int32s',
         PrintConv => {
-            -32 => 'Hard',
-            -16 => 'Medium-hard',
-            0 => 'Normal',
-            16 => 'Medium-soft',
-            32 => 'Soft',
+            -64 => '+4 (hardest)',
+            -48 => '+3 (very hard)',
+            -32 => '+2 (hard)',
+            -16 => '+1 (medium hard)',
+            0 => '0 (normal)',
+            16 => '-1 (medium soft)',
+            32 => '-2 (soft)',
         },
     },
     0x1041 => { #8
         Name => 'HighlightTone',
         Writable => 'int32s',
         PrintConv => {
-            -32 => 'Hard',
-            -16 => 'Medium-hard',
-            0 => 'Normal',
-            16 => 'Medium-soft',
-            32 => 'Soft',
+            -64 => '+4 (hardest)',
+            -48 => '+3 (very hard)',
+            -32 => '+2 (hard)',
+            -16 => '+1 (medium hard)',
+            0 => '0 (normal)',
+            16 => '-1 (medium soft)',
+            32 => '-2 (soft)',
         },
     },
     0x1044 => { #forum7668
@@ -535,7 +550,7 @@ my %faceCategories = (
     },
     # 0x1408 - values: '0100', 'S100', 'VQ10'
     # 0x1409 - values: same as 0x1408
-    # 0x140a - values: 0, 1, 3, 5, 7
+    # 0x140a - values: 0, 1, 3, 5, 7 (bit 2=red-eye detection, ref 11)
     0x140b => { #6
         Name => 'AutoDynamicRange',
         Writable => 'int16u',
@@ -556,6 +571,18 @@ my %faceCategories = (
             1 => 'On (mode 1, continuous)',
             2 => 'On (mode 2, shooting only)',
         }],
+    },
+    0x1425 => { # if present and 0x1031 PictureMode is zero, then PictureMode is SR+, not Auto (ref 11)
+        Name => 'SceneRecognition',
+        Writable => 'int16u',
+        PrintHex => 1,
+        PrintConv => {
+            0 => 'Unrecognized',
+            0x100 => 'Portrait Image',
+            0x200 => 'Landscape Image',
+            0x300 => 'Night Scene',
+            0x400 => 'Macro',
+        },
     },
     0x1431 => { #forum6109
         Name => 'Rating',
@@ -604,6 +631,30 @@ my %faceCategories = (
         Notes => q{
             left, top, right and bottom coordinates in full-sized image for each face
             detected
+        },
+    },
+    0x4200 => { #11
+        Name => 'NumFaceElements',
+        Writable => 'int16u',
+    },
+    0x4201 => { #11
+        Name => 'FaceElementTypes',
+        Writable => 'int8u',
+        Count => -1,
+        PrintConv => [{
+            1 => 'Face',
+            2 => 'Left Eye',
+            3 => 'Right Eye',
+        },'REPEAT'],
+    },
+    # 0x4202 int8u[-1] - number of cooredinates in each rectangle? (ref 11)
+    0x4203 => { #11
+        Name => 'FaceElementPositions',
+        Writable => 'int16u',
+        Count => -1,
+        Notes => q{
+            left, top, right and bottom coordinates in full-sized image for each face
+            element
         },
     },
     # 0x4101-0x4105 - exist only if face detection active
@@ -1065,7 +1116,7 @@ sub WriteRAF($$)
     $raf->Read($hdr,0x94) == 0x94  or return 0;
     $hdr =~ /^FUJIFILM/            or return 0;
     my $ver = substr($hdr, 0x3c, 4);
-    $ver =~ /^\d{4}$/              or return 0;
+    $ver =~ /^\d{4}$/ or $testedRAF{$ver} or return 0;
 
     # get the position and size of embedded JPEG
     my ($jpos, $jlen) = unpack('x84NN', $hdr);

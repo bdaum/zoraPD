@@ -22,23 +22,31 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import java.util.List;
 
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.operations.IOperationHistory;
+import org.eclipse.core.commands.operations.IUndoContext;
+import org.eclipse.core.commands.operations.UndoContext;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.TraverseListener;
+import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
@@ -46,14 +54,20 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.core.ISpellCheckingService.ISpellIncident;
+import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.job.SpellCheckingJob;
+import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
-public class CheckedText extends Composite implements ISpellCheckingTarget, PaintListener {
+import jdk.nashorn.tools.Shell;
+
+public class CheckedText extends Composite
+		implements ISpellCheckingTarget, PaintListener, IAugmentedTextField, IAdaptable {
 	private static final int[] NOREDSEA = new int[0];
 	private StyledText control;
 	private int maxSuggestions = 10;
@@ -65,6 +79,18 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, Pain
 	protected Color originalTextColor;
 	private ListenerList<ModifyListener> modifyListeners;
 	private ListenerList<VerifyListener> verifyListeners;
+	private IOperationHistory history;
+	private IUndoContext context;
+	private char lastChar;
+	private char previousChar;
+	private TextOperation currentOperation;
+	private long timeStamp;
+	private ModifyListener afterListener;
+	protected MenuDetectListener menuListener;
+	protected Menu previousMenu;
+	private VerifyListener beforeListener;
+	protected boolean lastWasDel;
+	private int style;
 
 	public CheckedText(Composite parent, int style) {
 		this(parent, style, ISpellCheckingService.DESCRIPTIONOPTIONS);
@@ -72,76 +98,207 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, Pain
 
 	public CheckedText(Composite parent, int style, int spellingOptions) {
 		super(parent, SWT.NONE);
+		this.style = style;
 		this.spellingOptions = spellingOptions;
 		control = new StyledText(this, style);
 		setLayout(new FillLayout());
-		if (spellingOptions != ISpellCheckingService.NOSPELLING) {
-			ModifyListener modifyListener = new ModifyListener() {
+		installUndoSupport();
+		if (spellingOptions != ISpellCheckingService.NOSPELLING)
+			addModifyListener(new ModifyListener() {
 				public void modifyText(ModifyEvent e) {
 					if (!control.getText().isEmpty())
-						checkSpelling();
+						checkSpelling(true);
 				}
-			};
-			addModifyListener(modifyListener);
-		}
+			});
 		control.addPaintListener(this);
-		control.addMenuDetectListener(new MenuDetectListener() {
+		installMenu(style);
+	}
 
-			@SuppressWarnings("unused")
-			public void menuDetected(MenuDetectEvent e) {
-				Menu oldMenu = control.getMenu();
-				if (oldMenu != null)
-					oldMenu.dispose();
-				if (incidents != null) {
-					Point loc = control.toControl(e.x, e.y);
-					int offset;
-					try {
-						offset = control.getOffsetAtLocation(loc);
-						for (ISpellIncident inc : incidents) {
-							final ISpellIncident incident = inc;
-							if (incident.happensAt(offset)) {
-								Menu menu = new Menu(control.getShell(), SWT.POP_UP);
-								String[] suggestions = incident.getSuggestions();
-								if (suggestions != null && suggestions.length > 0) {
-									for (String proposal : suggestions) {
-										final String newWord = proposal;
-										MenuItem item = new MenuItem(menu, SWT.PUSH);
-										item.setText(proposal);
-										item.addSelectionListener(new SelectionAdapter() {
-											@Override
-											public void widgetSelected(SelectionEvent e1) {
-												String oldText = control.getText();
-												int woff = incident.getOffset();
-												int wlen = incident.getWrongWord().length();
-												String newText = oldText.substring(0, woff) + newWord
-														+ oldText.substring(woff + wlen);
-												control.setText(newText);
-											}
-										});
-									}
-									new MenuItem(menu, SWT.SEPARATOR);
-								}
-								MenuItem item = new MenuItem(menu, SWT.PUSH);
-								item.setText(Messages.CheckedText_add_to_dict);
-
-								item.addSelectionListener(new SelectionAdapter() {
-									@Override
-									public void widgetSelected(SelectionEvent e1) {
-										incident.addWord();
-										checkSpelling();
-									}
-								});
-								control.setMenu(menu);
-								break;
-							}
-						}
-					} catch (IllegalArgumentException e1) {
-						// nothing found
+	protected void installUndoSupport() {
+		addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent event) {
+				int modifiers = event.stateMask;
+				if ((modifiers & SWT.CTRL) != 0) {
+					int keyCode = event.keyCode;
+					switch (keyCode) {
+					case 'a':
+						selectAll();
+						break;
+					// c,v,x handled by StyledText
+					case 'z':
+						// Ctrl+Z
+						if ((style & SWT.READ_ONLY) == 0)
+							undo();
+						break;
+					case 'y':
+						// Ctrl+Y
+						if ((style & SWT.READ_ONLY) == 0)
+							redo();
+						break;
 					}
-
+					return;
+				}
+				switch (event.keyCode) {
+				case SWT.ESC:
+				case SWT.ARROW_LEFT:
+				case SWT.ARROW_RIGHT:
+				case SWT.ARROW_UP:
+				case SWT.ARROW_DOWN:
+				case SWT.HOME:
+				case SWT.END:
+				case SWT.PAGE_DOWN:
+				case SWT.PAGE_UP:
+					createUndoPoint();
+					break;
 				}
 			}
 		});
+		if ((style & SWT.READ_ONLY) == 0) {
+			beforeListener = new VerifyListener() {
+				@Override
+				public void verifyText(VerifyEvent e) {
+					String text = e.text;
+					if (text.length() == 0 || e.start != e.end) {
+						if (!lastWasDel) {
+							createUndoPoint();
+							lastWasDel = true;
+						}
+					} else
+						lastWasDel = false;
+					if (text.length() > 1)
+						createUndoPoint();
+					else {
+						char keyChar = e.character;
+						if (keyChar != 0) {
+							long time = System.currentTimeMillis();
+							if ((timeStamp != 0 && time - timeStamp > 1000)
+									|| (!UiUtilities.isInterPunction(previousChar)
+											&& UiUtilities.isInterPunction(lastChar)
+											&& Character.isWhitespace(keyChar))) {
+								createUndoPoint();
+							} else {
+								previousChar = lastChar;
+								lastChar = keyChar;
+								timeStamp = time;
+							}
+						}
+					}
+				}
+			};
+			addVerifyListener(beforeListener);
+			afterListener = new ModifyListener() {
+				@Override
+				public void modifyText(ModifyEvent e) {
+					if (currentOperation != null) {
+						currentOperation.setReplacement(getText(), getSelection());
+						currentOperation.addToHistory(getHistory());
+					}
+				}
+			};
+			addModifyListener(afterListener);
+		}
+		addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent e) {
+				createUndoPoint();
+			}
+		});
+	}
+
+	@Override
+	public void dispose() {
+		if (history != null) {
+			history.dispose(context, true, true, true);
+			history = null;
+			context = null;
+		}
+		super.dispose();
+	}
+
+	protected void installMenu(int style) {
+		addFocusListener(new FocusListener() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				if (previousMenu != null) {
+					control.setMenu(previousMenu);
+					previousMenu = null;
+				}
+				if (menuListener != null)
+					control.removeMenuDetectListener(menuListener);
+			}
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				Menu menu = control.getMenu();
+				if (menu != null) {
+					if (previousMenu != null)
+						previousMenu.dispose();
+					previousMenu = menu;
+					control.setMenu(null);
+				}
+				if (menuListener == null)
+					menuListener = createMenuListener(style);
+				control.addMenuDetectListener(menuListener);
+			}
+		});
+	}
+
+	protected MenuDetectListener createMenuListener(int style) {
+		MenuDetectListener listener = new TextMenuListener(this, style);
+		control.addMenuDetectListener(listener);
+		return listener;
+	}
+
+	public void redo() {
+		if (history != null)
+			try {
+				removeVerifyListener(beforeListener);
+				removeModifyListener(afterListener);
+				history.redo(context, null, this);
+			} catch (ExecutionException e) {
+				// should never happen
+			} finally {
+				addModifyListener(afterListener);
+				addVerifyListener(beforeListener);
+			}
+	}
+
+	public void undo() {
+		if (history != null)
+			try {
+				removeVerifyListener(beforeListener);
+				removeModifyListener(afterListener);
+				history.undo(context, null, this);
+			} catch (ExecutionException e) {
+				// should never happen
+			} finally {
+				addModifyListener(afterListener);
+				addVerifyListener(beforeListener);
+			}
+	}
+
+	private IOperationHistory getHistory() {
+		if (history == null) {
+			history = PlatformUI.getWorkbench().getOperationSupport().getOperationHistory();
+			context = new UndoContext();
+			history.setLimit(context,
+					UiActivator.getDefault().getPreferenceStore().getInt(PreferenceConstants.UNDOLEVELS));
+		}
+		return history;
+	}
+
+	private void createUndoPoint() {
+		if ((style & SWT.READ_ONLY) == 0) {
+			IOperationHistory hist = getHistory();
+			if (currentOperation != null)
+				currentOperation.addToHistory(hist);
+			if (currentOperation == null || !currentOperation.isEmpty())
+				currentOperation = new TextOperation(this, context, getText(), getSelection());
+			timeStamp = 0;
+			previousChar = 0;
+			lastChar = 0;
+		}
 	}
 
 	public void setHint(String hint) {
@@ -208,8 +365,9 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, Pain
 				control.removeVerifyListener(verifyListener);
 	}
 
-	void checkSpelling() {
-		Job.getJobManager().cancel(Constants.SPELLING);
+	public void checkSpelling(boolean cancelSpellchecking) {
+		if (cancelSpellchecking)
+			Job.getJobManager().cancel(Constants.SPELLING);
 		new SpellCheckingJob(this, getText(), spellingOptions, maxSuggestions).schedule(10);
 	}
 
@@ -225,7 +383,15 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, Pain
 	}
 
 	public void setText(String text) {
+		if (beforeListener != null)
+			removeVerifyListener(beforeListener);
+		if (afterListener != null)
+			removeModifyListener(afterListener);
 		control.setText(text == null ? "" : text); //$NON-NLS-1$
+		if (beforeListener != null)
+			addVerifyListener(beforeListener);
+		if (afterListener != null)
+			addModifyListener(afterListener);
 	}
 
 	public void addVerifyListener(VerifyListener listener) {
@@ -391,10 +557,6 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, Pain
 		control.removeKeyListener(listener);
 	}
 
-	// public void dispose() {
-	// control.dispose();
-	// }
-
 	@Override
 	public void setFont(Font font) {
 		control.setFont(font);
@@ -405,6 +567,7 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, Pain
 	 * @see org.eclipse.swt.custom.StyledText#selectAll()
 	 */
 	public void selectAll() {
+		createUndoPoint();
 		control.selectAll();
 	}
 
@@ -474,6 +637,72 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, Pain
 	@Override
 	public void removeTraverseListener(TraverseListener listener) {
 		control.removeTraverseListener(listener);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public Object getAdapter(Class adapter) {
+		if (adapter == Shell.class)
+			return control.getShell();
+		return null;
+	}
+
+	@Override
+	public void cut() {
+		if ((style & SWT.READ_ONLY) == 0) {
+			createUndoPoint();
+			control.cut();
+		}
+	}
+
+	@Override
+	public void copy() {
+		createUndoPoint();
+		control.copy();
+	}
+
+	@Override
+	public void paste() {
+		if ((style & SWT.READ_ONLY) == 0) {
+			createUndoPoint();
+			control.paste();
+		}
+	}
+
+	@Override
+	public ISpellIncident findSpellIncident(MenuDetectEvent e) {
+		if (incidents != null) {
+			try {
+				Point loc = control.toControl(e.x, e.y);
+				int offset = control.getOffsetAtLocation(loc);
+				for (ISpellIncident inc : incidents) {
+					if (inc.happensAt(offset)) {
+						return inc;
+					}
+				}
+			} catch (IllegalArgumentException e1) {
+				// nothing found
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public boolean canUndo() {
+		return getHistory().canUndo(context);
+	}
+
+	@Override
+	public boolean canRedo() {
+		return getHistory().canRedo(context);
+	}
+
+	@Override
+	public void applyCorrection(ISpellIncident incident, String newWord) {
+		String oldText = control.getText();
+		int woff = incident.getOffset();
+		control.setText(
+				oldText.substring(0, woff) + newWord + oldText.substring(woff + incident.getWrongWord().length()));
 	}
 
 }

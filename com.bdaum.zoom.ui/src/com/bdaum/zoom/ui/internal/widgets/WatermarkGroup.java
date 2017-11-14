@@ -41,7 +41,6 @@ public class WatermarkGroup {
 	public static final String COPYRIGHT = "copyright"; //$NON-NLS-1$
 	public static final String WATERMARK = "watermark"; //$NON-NLS-1$
 
-	private static final SimpleDateFormat df = new SimpleDateFormat("yyyy"); //$NON-NLS-1$
 	private CheckboxButton createWatermarkButton;
 	private Text copyrightField;
 	private Button fileButton;
@@ -93,7 +92,7 @@ public class WatermarkGroup {
 
 	private static boolean testYear(String s) {
 		try {
-			df.parse(s.trim());
+			new SimpleDateFormat("yyyy").parse(s.trim()); //$NON-NLS-1$
 			return true;
 		} catch (ParseException e) {
 			return false;
@@ -105,7 +104,7 @@ public class WatermarkGroup {
 			String copyright = settings.get(COPYRIGHT);
 			if (copyright == null || copyright.trim().isEmpty()
 					|| copyright.trim().length() == 4 && testYear(copyright))
-				copyrightField.setText(df.format(new Date()) + " "); //$NON-NLS-1$
+				copyrightField.setText(new SimpleDateFormat("yyyy").format(new Date()) + " "); //$NON-NLS-1$ //$NON-NLS-2$
 			boolean watermark = settings.getBoolean(WATERMARK);
 			createWatermarkButton.setSelection(watermark);
 			if (copyright != null)

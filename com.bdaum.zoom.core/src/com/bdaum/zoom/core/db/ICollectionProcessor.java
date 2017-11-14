@@ -27,6 +27,7 @@ import com.bdaum.zoom.cat.model.group.Criterion;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterion;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.IAssetFilter;
 import com.bdaum.zoom.core.IPostProcessor;
 import com.bdaum.zoom.core.IScoreFormatter;
@@ -36,7 +37,7 @@ public interface ICollectionProcessor {
 
 	SmartCollectionImpl EMPTYCOLLECTION = new SmartCollectionImpl(
 			Messages.CollectionProcessor_Empty, false, false, false, false,
-			null, 0, null, 0, null, null);
+			null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 	String SIMILARITY = "*similarity"; //$NON-NLS-1$
 	String TEXTSEARCH = "*textsearch"; //$NON-NLS-1$
 	String ORPHANS = "*orphans"; //$NON-NLS-1$

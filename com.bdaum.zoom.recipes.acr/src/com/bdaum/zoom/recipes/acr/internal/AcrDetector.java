@@ -115,8 +115,7 @@ public class AcrDetector extends AbstractRecipeDetector {
 		return -1L;
 	}
 
-	public Recipe loadRecipeForImage(String uri, boolean highres,
-			IFocalLengthProvider focalLengthProvider,
+	public Recipe loadRecipeForImage(String uri, boolean highres, IFocalLengthProvider focalLengthProvider,
 			Map<String, String> overlayMap) {
 		String xmpUri = uri;
 
@@ -147,12 +146,10 @@ public class AcrDetector extends AbstractRecipeDetector {
 				// no XMP file
 			}
 		}
-		return (xmpIn != null) ? loadRecipeFile(xmpUri, xmpIn, overlayMap)
-				: null;
+		return (xmpIn != null) ? loadRecipeFile(xmpUri, xmpIn, overlayMap) : null;
 	}
 
-	private Recipe loadRecipeFile(String xmpUri, InputStream xmpIn,
-			Map<String, String> overlayMap) {
+	private Recipe loadRecipeFile(String xmpUri, InputStream xmpIn, Map<String, String> overlayMap) {
 		Recipe recipe = null;
 		// Values
 		int orientation = 1;
@@ -240,29 +237,23 @@ public class AcrDetector extends AbstractRecipeDetector {
 		float perspectiveScale = 1f;
 		double focalLength = DIA35MM;
 		try {
-			XMPSchemaRegistry schemaRegistry = XMPMetaFactory
-					.getSchemaRegistry();
+			XMPSchemaRegistry schemaRegistry = XMPMetaFactory.getSchemaRegistry();
 			String crs = QueryField.NS_ACR.defaultPrefix;
 			String crsPrefix = crs + ':';
 			schemaRegistry.registerNamespace(QueryField.NS_ACR.uri, crs);
-			schemaRegistry.registerNamespace(QueryField.NS_EXIF.uri,
-					QueryField.NS_EXIF.defaultPrefix);
-			schemaRegistry.registerNamespace(QueryField.NS_TIFF.uri,
-					QueryField.NS_TIFF.defaultPrefix);
+			schemaRegistry.registerNamespace(QueryField.NS_EXIF.uri, QueryField.NS_EXIF.defaultPrefix);
+			schemaRegistry.registerNamespace(QueryField.NS_TIFF.uri, QueryField.NS_TIFF.defaultPrefix);
 
 			XMPMeta xmpMeta = XMPMetaFactory.parse(xmpIn);
-			Integer v = xmpMeta.getPropertyInteger(QueryField.NS_TIFF.uri,
-					"Orientation"); //$NON-NLS-1$
+			Integer v = xmpMeta.getPropertyInteger(QueryField.NS_TIFF.uri, "Orientation"); //$NON-NLS-1$
 			if (v != null)
 				orientation = v;
 			IteratorOptions options = new IteratorOptions();
 			options.setJustLeafnodes(true).setJustLeafname(true);
-			XMPProperty prop = xmpMeta.getProperty(QueryField.NS_EXIF.uri,
-					"FocalLengthIn35mmFilm"); //$NON-NLS-1$
+			XMPProperty prop = xmpMeta.getProperty(QueryField.NS_EXIF.uri, "FocalLengthIn35mmFilm"); //$NON-NLS-1$
 			if (prop != null)
 				focalLength = convertToFloat(prop.getValue().toString());
-			XMPIterator iterator = xmpMeta.iterator(QueryField.NS_ACR.uri,
-					null, options);
+			XMPIterator iterator = xmpMeta.iterator(QueryField.NS_ACR.uri, null, options);
 			while (iterator.hasNext()) {
 				XMPPropertyInfo info = (XMPPropertyInfo) iterator.next();
 				String key = info.getPath();
@@ -443,45 +434,33 @@ public class AcrDetector extends AbstractRecipeDetector {
 						perspectiveScale = convertToFloat(value) / 100f;
 					}
 				} catch (XMPException e) {
-					AcrActivator.getDefault().logError(
-							NLS.bind(Messages.AcrDetector_cannot_decode, key,
-									value), e);
+					AcrActivator.getDefault().logError(NLS.bind(Messages.AcrDetector_cannot_decode, key, value), e);
 				}
 			}
 			// Point curve
-			iterator = xmpMeta.iterator(QueryField.NS_ACR.uri,
-					"crs:ToneCurve", options); //$NON-NLS-1$
+			iterator = xmpMeta.iterator(QueryField.NS_ACR.uri, "crs:ToneCurve", options); //$NON-NLS-1$
 			if (iterator.hasNext()) {
 				if (recipe == null)
 					recipe = new Recipe(getName(), xmpUri, true);
-				pointCurve = new Curve(Curve.TYPE_CATMULL_ROM,
-						"PointCurve", Curve.CHANNEL_ALL, 0f); //$NON-NLS-1$
+				pointCurve = new Curve(Curve.TYPE_CATMULL_ROM, "PointCurve", Curve.CHANNEL_ALL, 0f); //$NON-NLS-1$
 				while (iterator.hasNext()) {
 					XMPPropertyInfo info = (XMPPropertyInfo) iterator.next();
 					String s = info.getValue().toString();
 					int q = s.indexOf(',');
 					if (q > 0) {
 						try {
-							pointCurve
-									.addKnot(
-											convertToFloat(s.substring(0, q)) / 255f,
-											convertToFloat(s.substring(q + 1)
-													.trim()) / 255f);
+							pointCurve.addKnot(convertToFloat(s.substring(0, q)) / 255f,
+									convertToFloat(s.substring(q + 1).trim()) / 255f);
 						} catch (XMPException e) {
-							AcrActivator.getDefault().logError(
-									NLS.bind(
-											Messages.AcrDetector_cannot_decode,
-											"crs:ToneCurve", //$NON-NLS-1$
+							AcrActivator.getDefault()
+									.logError(NLS.bind(Messages.AcrDetector_cannot_decode, "crs:ToneCurve", //$NON-NLS-1$
 											s), e);
 						}
 					}
 				}
 			}
 		} catch (XMPException e) {
-			AcrActivator.getDefault()
-					.logError(
-							NLS.bind(Messages.AcrDetector_cannot_read_xmp_file,
-									xmpUri), e);
+			AcrActivator.getDefault().logError(NLS.bind(Messages.AcrDetector_cannot_read_xmp_file, xmpUri), e);
 		} finally {
 			try {
 				xmpIn.close();
@@ -583,8 +562,7 @@ public class AcrDetector extends AbstractRecipeDetector {
 				recipe.whiteBalanceMethod = Recipe.wbAUTO;
 			else
 				recipe.whiteBalanceMethod = Recipe.wbNONE;
-			if (recipe.whiteBalanceMethod == Recipe.wbNONE
-					&& (colorTemperature != 6500f || tint != 0f))
+			if (recipe.whiteBalanceMethod == Recipe.wbNONE && (colorTemperature != 6500f || tint != 0f))
 				recipe.setColorTemperature(colorTemperature, tint / 255f + 1f);
 			// Exposure
 			recipe.exposure = (float) Math.pow(2d, exposure);
@@ -598,22 +576,17 @@ public class AcrDetector extends AbstractRecipeDetector {
 			recipe.chromaticAberrationB = 1f + chromaticAberrationB / 50000f;
 			// Cropping
 			if (hasCrop)
-				recipe.setCropping(new Cropping(topCrop, bottomCrop, leftCrop,
-						rightCrop, cropAngle,
-						cropConstrainToWarp ? Cropping.FILL : Cropping.NOFILL,
-						new RGB(128, 128, 128)));
+				recipe.setCropping(new Cropping(topCrop, bottomCrop, leftCrop, rightCrop, cropAngle,
+						cropConstrainToWarp ? Cropping.FILL : Cropping.NOFILL, new RGB(128, 128, 128)));
 			if (vignetteAmount != 0f)
-				recipe.setVignette(new Vignette(vignetteAmount / 100f,
-						vignetteMidpoint / 100f, Vignette.HSL));
+				recipe.setVignette(new Vignette(vignetteAmount / 100f, vignetteMidpoint / 100f, Vignette.HSL));
 			// Brightness and contrast
-			if (brightness != 0d || contrast != 0d || shadows != 0f
-					|| fillLight != 0f || shadow2012 != 0f || highlights != 0f
-					|| blacks != 0 || whites != 0) {
+			if (brightness != 0d || contrast != 0d || shadows != 0f || fillLight != 0f || shadow2012 != 0f
+					|| highlights != 0f || blacks != 0 || whites != 0) {
 				float b = brightness / 255f + 1f;
 				float c = contrast / 255f + 1f;
 				float f = fillLight / 255f;
-				Curve brightnessCurve = new Curve(Curve.TYPE_B_SPLINE,
-						"BrightnessContrast", Curve.CHANNEL_ALL, 1f); //$NON-NLS-1$
+				Curve brightnessCurve = new Curve(Curve.TYPE_B_SPLINE, "BrightnessContrast", Curve.CHANNEL_ALL, 1f); //$NON-NLS-1$
 				// Equation: y = (brightness*x-0.5) * contrast + 0.5
 				float xHigh = (c + 1f) / (2f * c * b);
 				float yHigh;
@@ -656,8 +629,7 @@ public class AcrDetector extends AbstractRecipeDetector {
 					float ys = yShadow + (yHigh - yShadow) / 4 * 3 + highlights;
 					brightnessCurve.addKnot(xs, ys);
 				}
-				if (shadow2012 < 0 || blacks < 0 || highlights < 0
-						|| whites < 0)
+				if (shadow2012 < 0 || blacks < 0 || highlights < 0 || whites < 0)
 					brightnessCurve.setPreserveShadow(0f);
 				brightnessCurve.addKnot(xHigh, yHigh);
 				if (xHigh < 1f)
@@ -665,146 +637,102 @@ public class AcrDetector extends AbstractRecipeDetector {
 				recipe.addCurve(brightnessCurve);
 			}
 			// Parametric curve
-			if (parametricHighlights != 0f || parametricLights != 0f
-					|| parametricDarks != 0f || parametricShadows != 0f
-					|| parametricShadowSplit != 25f
-					|| parametricMidtoneSplit != 50f
+			if (parametricHighlights != 0f || parametricLights != 0f || parametricDarks != 0f || parametricShadows != 0f
+					|| parametricShadowSplit != 25f || parametricMidtoneSplit != 50f
 					|| parametricHighlightSplit != 75f) {
-				Curve parmCurve = new Curve(Curve.TYPE_B_SPLINE,
-						"ParametricCurve", Curve.CHANNEL_ALL, 0f); //$NON-NLS-1$
+				Curve parmCurve = new Curve(Curve.TYPE_B_SPLINE, "ParametricCurve", Curve.CHANNEL_ALL, 0f); //$NON-NLS-1$
 				parmCurve.addKnot(0f, 0f);
 				float px1 = parametricShadowSplit / 100f * 0.5f;
-				float py1 = px1 + parametricShadows / 100f
-						+ parametricShadowSplit / 100f;
+				float py1 = px1 + parametricShadows / 100f + parametricShadowSplit / 100f;
 				parmCurve.addKnot(px1, py1);
 				float px2 = parametricShadowSplit / 100f;
-				float py2 = px2 + parametricDarks / 100f
-						* parametricMidtoneSplit / 100f;
+				float py2 = px2 + parametricDarks / 100f * parametricMidtoneSplit / 100f;
 				parmCurve.addKnot(px2, py2);
 				float px3 = parametricHighlightSplit / 100f;
-				float py3 = px3 + parametricLights / 100f
-						* (1f - parametricMidtoneSplit / 100f);
+				float py3 = px3 + parametricLights / 100f * (1f - parametricMidtoneSplit / 100f);
 				parmCurve.addKnot(px3, py3);
 				float px4 = (parametricHighlightSplit / 100f + 1f) * 0.5f;
-				float py4 = px4 + parametricHighlights / 100f
-						* (1f - parametricHighlightSplit / 100f);
+				float py4 = px4 + parametricHighlights / 100f * (1f - parametricHighlightSplit / 100f);
 				parmCurve.addKnot(px4, py4);
 				parmCurve.addKnot(1f, 1f);
 				recipe.addCurve(parmCurve);
 			}
 			// Color
 			if (convertToGrayScale)
-				recipe.setGrayConvert(new GrayConvert(grayMixerRed / 100f + 1f,
-						grayMixerOrange / 100f + 1f,
-						grayMixerYellow / 100f + 1f,
-						grayMixerGreen / 100f + 1f, grayMixerAqua / 100f + 1f,
-						grayMixerBlue / 100f + 1f, grayMixerPurple / 100f + 1f,
-						grayMixerMagenta / 100f + 1f));
+				recipe.setGrayConvert(new GrayConvert(grayMixerRed / 100f + 1f, grayMixerOrange / 100f + 1f,
+						grayMixerYellow / 100f + 1f, grayMixerGreen / 100f + 1f, grayMixerAqua / 100f + 1f,
+						grayMixerBlue / 100f + 1f, grayMixerPurple / 100f + 1f, grayMixerMagenta / 100f + 1f));
 			else {
-				ColorShift shift = new ColorShift(0f, Float.NaN,
-						saturation / 100f + 1f, ColorShift.SAT_MULT, 1f,
+				ColorShift shift = new ColorShift(0f, Float.NaN, saturation / 100f + 1f, ColorShift.SAT_MULT, 1f,
 						vibrance / 100f + 1f);
-				shift.addSector(0.98f, 0.0666f, 0.0666f,
-						hueAdjustmentRed / 100f,
-						saturationAdjustmentRed / 100f + 1f,
+				shift.addSector(0.98f, 0.0666f, 0.0666f, hueAdjustmentRed / 100f, saturationAdjustmentRed / 100f + 1f,
 						luminanceAdjustmentRed / 255f + 1f, ColorShift.SAT_MULT);
-				shift.addSector(0.082f, 0.045f, 0.045f,
-						hueAdjustmentOrange / 100f,
-						saturationAdjustmentOrange / 100f + 1f,
-						luminanceAdjustmentOrange / 255f + 1f,
+				shift.addSector(0.082f, 0.045f, 0.045f, hueAdjustmentOrange / 100f,
+						saturationAdjustmentOrange / 100f + 1f, luminanceAdjustmentOrange / 255f + 1f,
 						ColorShift.SAT_MULT);
-				shift.addSector(0.22f, 0.0666f, 0.0666f,
-						hueAdjustmentYellow / 100f,
-						saturationAdjustmentYellow / 100f + 1f,
-						luminanceAdjustmentYellow / 255f + 1f,
+				shift.addSector(0.22f, 0.0666f, 0.0666f, hueAdjustmentYellow / 100f,
+						saturationAdjustmentYellow / 100f + 1f, luminanceAdjustmentYellow / 255f + 1f,
 						ColorShift.SAT_MULT);
-				shift.addSector(0.333f, 0.086f, 0.086f,
-						hueAdjustmentGreen / 100f,
-						saturationAdjustmentGreen / 100f + 1f,
-						luminanceAdjustmentGreen / 255f + 1f,
+				shift.addSector(0.333f, 0.086f, 0.086f, hueAdjustmentGreen / 100f,
+						saturationAdjustmentGreen / 100f + 1f, luminanceAdjustmentGreen / 255f + 1f,
 						ColorShift.SAT_MULT);
-				shift.addSector(0.5f, 0.086f, 0.086f, hueAdjustmentAqua / 100f,
-						saturationAdjustmentAqua / 100f + 1f,
-						luminanceAdjustmentAqua / 255f + 1f,
+				shift.addSector(0.5f, 0.086f, 0.086f, hueAdjustmentAqua / 100f, saturationAdjustmentAqua / 100f + 1f,
+						luminanceAdjustmentAqua / 255f + 1f, ColorShift.SAT_MULT);
+				shift.addSector(0.647f, 0.0666f, 0.0666f, hueAdjustmentBlue / 100f,
+						saturationAdjustmentBlue / 100f + 1f, luminanceAdjustmentBlue / 255f + 1f, ColorShift.SAT_MULT);
+				shift.addSector(0.749f, 0.045f, 0.045f, hueAdjustmentPurple / 100f,
+						saturationAdjustmentPurple / 100f + 1f, luminanceAdjustmentPurple / 255f + 1f,
 						ColorShift.SAT_MULT);
-				shift.addSector(0.647f, 0.0666f, 0.0666f,
-						hueAdjustmentBlue / 100f,
-						saturationAdjustmentBlue / 100f + 1f,
-						luminanceAdjustmentBlue / 255f + 1f,
-						ColorShift.SAT_MULT);
-				shift.addSector(0.749f, 0.045f, 0.045f,
-						hueAdjustmentPurple / 100f,
-						saturationAdjustmentPurple / 100f + 1f,
-						luminanceAdjustmentPurple / 255f + 1f,
-						ColorShift.SAT_MULT);
-				shift.addSector(0.855f, 0.0666f, 0.0666f,
-						hueAdjustmentMagenta / 100f,
-						saturationAdjustmentMagenta / 100f + 1f,
-						luminanceAdjustmentMagenta / 255f + 1f,
+				shift.addSector(0.855f, 0.0666f, 0.0666f, hueAdjustmentMagenta / 100f,
+						saturationAdjustmentMagenta / 100f + 1f, luminanceAdjustmentMagenta / 255f + 1f,
 						ColorShift.SAT_MULT);
 				recipe.setHSL(shift);
 			}
 			// Point curve
 			recipe.addCurve(pointCurve);
 			// Split toning
-			Curve splitMask = new Curve(Curve.TYPE_B_SPLINE,
-					"splitMask", Curve.CHANNEL_ALL, 1f); //$NON-NLS-1$
+			Curve splitMask = new Curve(Curve.TYPE_B_SPLINE, "splitMask", Curve.CHANNEL_ALL, 1f); //$NON-NLS-1$
 			splitMask.addKnot(0, 0);
 			splitMask.addKnot(0.5f - splitToningBalance / 200f, 0.5f);
 			splitMask.addKnot(1f, 1f);
-			recipe.setSplitToning(new SplitTone(splitToningShadowHue / 360f,
-					splitToningShadowSaturation / 255,
-					splitToningHighlightHue / 360f,
-					splitToningHighlightSaturation / 255, splitMask));
+			recipe.setSplitToning(new SplitTone(splitToningShadowHue / 360f, splitToningShadowSaturation / 255,
+					splitToningHighlightHue / 360f, splitToningHighlightSaturation / 255, splitMask));
 			// Sharpening
 			if (sharpen > 0d && sharpenRadius > 0f)
-				recipe.addUnsharpFilter(new UnsharpMask(sharpen / 150f,
-						sharpenRadius, sharpenEdgeMasking / 255f,
+				recipe.addUnsharpFilter(new UnsharpMask(sharpen / 150f, sharpenRadius, sharpenEdgeMasking / 255f,
 						sharpenDetail / 100f, null, UnsharpMask.SHARPEN));
 			// Local contrast
 			if (clarity != 0f) {
-				Curve toneMask = new Curve(Curve.TYPE_LINEAR,
-						"toneMask", Curve.CHANNEL_ALL, 1f); //$NON-NLS-1$
+				Curve toneMask = new Curve(Curve.TYPE_LINEAR, "toneMask", Curve.CHANNEL_ALL, 1f); //$NON-NLS-1$
 				toneMask.addKnot(0, 0);
 				toneMask.addKnot(1 / 3f, 1f);
 				toneMask.addKnot(2 / 3f, 1f);
 				toneMask.addKnot(1f, 0f);
-				recipe.addUnsharpFilter(new UnsharpMask(clarity / 30f, Math
-						.abs(clarity / 150f) + 30, -05f, 0f, toneMask,
-						UnsharpMask.LOCAL_CONTRAST));
+				recipe.addUnsharpFilter(new UnsharpMask(clarity / 30f, Math.abs(clarity / 150f) + 30, -05f, 0f,
+						toneMask, UnsharpMask.LOCAL_CONTRAST));
 			}
 			// Noise reduction
 			recipe.noiseReduction = 100 + 9 * (int) luminanceSmoothing;
 			// Perspective
-			if (horizontalTilt != 0f || verticalTilt != 0f
-					|| perspectiveScale != 1f || perspectiveRotate != 0f) {
+			if (horizontalTilt != 0f || verticalTilt != 0f || perspectiveScale != 1f || perspectiveRotate != 0f) {
 				double flen = focalLength / DIA35MM;
 
-				Matrix trans = new Matrix(new double[][] { { 1d, 0d, 0d, 0d },
-						{ 0d, 1d, 0d, 0d }, { 0d, 0d, 1d, -flen },
-						{ 0d, 0d, 0d, 1d } });
+				Matrix trans = new Matrix(new double[][] { { 1d, 0d, 0d, 0d }, { 0d, 1d, 0d, 0d },
+						{ 0d, 0d, 1d, -flen }, { 0d, 0d, 0d, 1d } });
 				double theta = verticalTilt / 200d;
-				Matrix xrot = new Matrix(new double[][] { { 1d, 0d, 0d, 0d },
-						{ 0d, Math.cos(theta), -Math.sin(theta), 0d },
-						{ 0d, Math.sin(theta), Math.cos(theta), 0d },
-						{ 0d, 0d, 0d, 1d } });
+				Matrix xrot = new Matrix(
+						new double[][] { { 1d, 0d, 0d, 0d }, { 0d, Math.cos(theta), -Math.sin(theta), 0d },
+								{ 0d, Math.sin(theta), Math.cos(theta), 0d }, { 0d, 0d, 0d, 1d } });
 				theta = -horizontalTilt / 200d;
-				Matrix yrot = new Matrix(new double[][] {
-						{ Math.cos(theta), 0d, Math.sin(theta), 0d },
-						{ 0d, 1d, 0d, 0d },
-						{ -Math.sin(theta), 0d, Math.cos(theta), 0d },
-						{ 0d, 0d, 0d, 1d } });
+				Matrix yrot = new Matrix(new double[][] { { Math.cos(theta), 0d, Math.sin(theta), 0d },
+						{ 0d, 1d, 0d, 0d }, { -Math.sin(theta), 0d, Math.cos(theta), 0d }, { 0d, 0d, 0d, 1d } });
 				theta = -Math.toRadians(perspectiveRotate);
-				Matrix zrot = new Matrix(new double[][] {
-						{ Math.cos(theta), -Math.sin(theta), 0d, 0d },
-						{ Math.sin(theta), Math.cos(theta), 0d, 0d },
-						{ 0d, 0d, 1d, 0d }, { 0d, 0d, 0d, 1d } });
+				Matrix zrot = new Matrix(new double[][] { { Math.cos(theta), -Math.sin(theta), 0d, 0d },
+						{ Math.sin(theta), Math.cos(theta), 0d, 0d }, { 0d, 0d, 1d, 0d }, { 0d, 0d, 0d, 1d } });
 				double f = 1d / perspectiveScale;
-				Matrix persp = new Matrix(new double[][] {
-						{ flen, 0d, 0d, 0d }, { 0d, flen, 0d, 0d },
+				Matrix persp = new Matrix(new double[][] { { flen, 0d, 0d, 0d }, { 0d, flen, 0d, 0d },
 						{ 0d, 0d, flen, 0d }, { 0d, 0d, 1d, 0d } });
-				Matrix pm = new Matrix(new double[][] { { f, 0d, 0d, 0d },
-						{ 0d, f, 0d, 0d }, { 0d, 0d, 1d, 0d },
+				Matrix pm = new Matrix(new double[][] { { f, 0d, 0d, 0d }, { 0d, f, 0d, 0d }, { 0d, 0d, 1d, 0d },
 						{ 0d, 0d, 0d, 1d } });
 				pm = pm.times(persp);
 				pm = pm.times(trans.inverse());
@@ -812,23 +740,18 @@ public class AcrDetector extends AbstractRecipeDetector {
 				pm = pm.times(yrot);
 				pm = pm.times(xrot);
 				pm = pm.times(trans);
-				recipe.setPerspectiveCorrection(new PerspectiveCorrection(pm,
-						flen, new RGB(128, 128, 128)));
+				recipe.setPerspectiveCorrection(new PerspectiveCorrection(pm, flen, new RGB(128, 128, 128)));
 			}
 		}
 		return recipe;
 	}
 
 	private static float convertToFloat(String value) throws XMPException {
-		if (value.startsWith("+")) //$NON-NLS-1$
-			value = value.substring(1);
-		return (float) XMPUtils.convertToDouble(value);
+		return (float) XMPUtils.convertToDouble(value.startsWith("+") ? value.substring(1) : value); //$NON-NLS-1$
 	}
 
-	public List<RecipeFolder> computeWatchedMetaFilesOrFolders(
-			WatchedFolder[] watchedFolders,
-			Map<File, List<IRecipeDetector>> detectorMap,
-			Map<File, List<IRecipeDetector>> recursiveDetectorMap,
+	public List<RecipeFolder> computeWatchedMetaFilesOrFolders(WatchedFolder[] watchedFolders,
+			Map<File, List<IRecipeDetector>> detectorMap, Map<File, List<IRecipeDetector>> recursiveDetectorMap,
 			boolean update, boolean remove) {
 		return null;
 	}
@@ -837,8 +760,7 @@ public class AcrDetector extends AbstractRecipeDetector {
 		return null;
 	}
 
-	public File getChangedImageFile(File metaFile,
-			WatchedFolder[] watchedFolders) {
+	public File getChangedImageFile(File metaFile, WatchedFolder[] watchedFolders) {
 		return null;
 	}
 
@@ -862,13 +784,12 @@ public class AcrDetector extends AbstractRecipeDetector {
 		return null;
 	}
 
-	public void archiveRecipes(File targetFolder, String uri, String newUri,
-			boolean readOnly) throws IOException, DiskFullException {
+	public void archiveRecipes(File targetFolder, String uri, String newUri, boolean readOnly)
+			throws IOException, DiskFullException {
 		File[] metafiles = getMetafiles(uri);
 		if (metafiles != null) {
 			for (File file : metafiles) {
-				File targetFile = new File(targetFolder, Core.getFileName(
-						newUri, false) + XMP);
+				File targetFile = new File(targetFolder, Core.getFileName(newUri, false) + XMP);
 				BatchUtilities.copyFile(file, targetFile, null);
 				if (readOnly)
 					targetFile.setReadOnly();
@@ -877,25 +798,21 @@ public class AcrDetector extends AbstractRecipeDetector {
 
 	}
 
-	public Recipe loadRecipe(String uri, boolean highres,
-			IFocalLengthProvider focalLengthProvider,
+	public Recipe loadRecipe(String uri, boolean highres, IFocalLengthProvider focalLengthProvider,
 			Map<String, String> overlayMap) {
 		uri = uri.toLowerCase();
 		try {
 			if (uri.endsWith(XMP))
-				return loadRecipeFile(uri, new FileInputStream(new File(
-						new URI(uri))), overlayMap);
+				return loadRecipeFile(uri, new FileInputStream(new File(new URI(uri))), overlayMap);
 			if (uri.endsWith(DNG)) {
 				InputStream xmpIn = ImageUtilities.extractXMP(uri);
 				if (xmpIn != null)
 					return loadRecipeFile(uri, xmpIn, overlayMap);
 			}
 		} catch (URISyntaxException e) {
-			AcrActivator.getDefault().logError(
-					NLS.bind(Messages.AcrDetector_bad_uri, uri), e);
+			AcrActivator.getDefault().logError(NLS.bind(Messages.AcrDetector_bad_uri, uri), e);
 		} catch (IOException e) {
-			AcrActivator.getDefault().logError(
-					NLS.bind(Messages.AcrDetector_io_exception, uri), e);
+			AcrActivator.getDefault().logError(NLS.bind(Messages.AcrDetector_io_exception, uri), e);
 		}
 		return null;
 	}

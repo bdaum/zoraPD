@@ -92,8 +92,10 @@ public class Messages extends NLS {
 	public static String Utilities_last_background_imports;
 	public static String Utilities_last_import;
 	public static String Utilities_not_categorized;
+	public static String Utilities_nxmpixel;
 	public static String Utilities_Written_by_cat;
 	public static String Utilities_Written_by_keywords;
+	public static String Utilities_yyyymdhmm;
 	public static String VolumeManager_error_compiling_pattern;
 	public static String VolumeManager_monitor_volumes;
 	static {

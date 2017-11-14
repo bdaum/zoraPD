@@ -36,6 +36,7 @@ import org.eclipse.osgi.util.NLS;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IVolumeManager;
@@ -124,7 +125,7 @@ public class OrphansCommand extends AbstractCommandHandler {
 				}
 				if (show) {
 					SmartCollectionImpl collection = new SmartCollectionImpl(Messages.FindOrphansActionDelegate_orphans,
-							true, false, true, false, null, 0, null, 0, null, null);
+							true, false, true, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 					collection.addCriterion(
 							new CriterionImpl(ICollectionProcessor.ORPHANS, null, result, QueryField.XREF, false));
 					UiActivator.getDefault().getNavigationHistory(getActiveWorkbenchWindow())

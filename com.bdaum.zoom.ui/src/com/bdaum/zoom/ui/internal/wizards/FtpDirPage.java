@@ -62,8 +62,7 @@ public class FtpDirPage extends ColoredWizardPage {
 
 	private CheckboxTreeViewer viewer;
 	private FTPClient ftp;
-	protected Map<FTPFile, FTPFile> fileParents = new HashMap<FTPFile, FTPFile>(
-			57);
+	protected Map<FTPFile, FTPFile> fileParents = new HashMap<FTPFile, FTPFile>(57);
 	protected Map<FTPFile, String> dirPaths = new HashMap<FTPFile, String>(57);
 	private FileNameExtensionFilter filter;
 	private String dir;
@@ -76,10 +75,8 @@ public class FtpDirPage extends ColoredWizardPage {
 	public FtpDirPage() {
 		super("FTP-Import"); //$NON-NLS-1$
 		filter = CoreActivator.getDefault().getFilenameExtensionFilter();
-		BundleContext bundleContext = UiActivator.getDefault().getBundle()
-				.getBundleContext();
-		serviceReference = bundleContext.getServiceReference(IFTPService.class
-				.getName());
+		BundleContext bundleContext = UiActivator.getDefault().getBundle().getBundleContext();
+		serviceReference = bundleContext.getServiceReference(IFTPService.class.getName());
 		if (serviceReference != null) {
 			service = (IFTPService) bundleContext.getService(serviceReference);
 			try {
@@ -109,8 +106,7 @@ public class FtpDirPage extends ColoredWizardPage {
 	private CheckboxTreeViewer createViewerGroup(Composite comp) {
 		urlLabel = new Label(comp, SWT.NONE);
 		urlLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(comp,
-				SWT.NONE);
+		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(comp, SWT.NONE);
 		final CheckboxTreeViewer cbViewer = new CheckboxTreeViewer(comp,
 				SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
 		expandCollapseGroup.setViewer(cbViewer);
@@ -146,8 +142,7 @@ public class FtpDirPage extends ColoredWizardPage {
 							if (ftpFile.isDirectory()) {
 								if (!ftpFile.getName().endsWith(".")) { //$NON-NLS-1$
 									files.add(ftpFile);
-									dirPaths.put(ftpFile,
-											dir + '/' + ftpFile.getName());
+									dirPaths.put(ftpFile, dir + '/' + ftpFile.getName());
 								}
 							} else if (filter.accept(ftpFile.getName()))
 								files.add(ftpFile);
@@ -178,25 +173,17 @@ public class FtpDirPage extends ColoredWizardPage {
 						String path = dirPaths.get(parent);
 						if (path != null) {
 							try {
-								boolean result = ftp
-										.changeWorkingDirectory(path);
+								boolean result = ftp.changeWorkingDirectory(path);
 								if (result) {
 									List<FTPFile> files = new ArrayList<FTPFile>();
 									FTPFile[] listFiles = ftp.listFiles();
 									for (FTPFile ftpFile : listFiles) {
 										if (ftpFile.isDirectory()) {
-											if (!ftpFile.getName()
-													.endsWith(".")) { //$NON-NLS-1$
+											if (!ftpFile.getName().endsWith(".")) { //$NON-NLS-1$
 												files.add(ftpFile);
-												dirPaths.put(
-														ftpFile,
-														path
-																+ '/'
-																+ ftpFile
-																		.getName());
+												dirPaths.put(ftpFile, path + '/' + ftpFile.getName());
 											}
-										} else if (filter.accept(ftpFile
-												.getName())) {
+										} else if (filter.accept(ftpFile.getName())) {
 											files.add(ftpFile);
 										}
 										fileParents.put(ftpFile, parent);
@@ -221,8 +208,7 @@ public class FtpDirPage extends ColoredWizardPage {
 					int i2 = ((FTPFile) e2).isDirectory() ? 1 : 2;
 					if (i1 != i2)
 						return i1 - i2;
-					return ((FTPFile) e1).getName().compareToIgnoreCase(
-							((FTPFile) e2).getName());
+					return ((FTPFile) e1).getName().compareToIgnoreCase(((FTPFile) e2).getName());
 				}
 				return super.compare(v, e1, e2);
 			}
@@ -239,8 +225,7 @@ public class FtpDirPage extends ColoredWizardPage {
 		return cbViewer;
 	}
 
-	public void checkHierarchy(CheckboxTreeViewer v, Object element,
-			boolean checked, boolean down, boolean up) {
+	public void checkHierarchy(CheckboxTreeViewer v, Object element, boolean checked, boolean down, boolean up) {
 		v.setGrayChecked(element, false);
 		v.setChecked(element, checked);
 		if (element instanceof FTPFile) {
@@ -248,15 +233,12 @@ public class FtpDirPage extends ColoredWizardPage {
 				if (((FTPFile) element).isDirectory()) {
 					if (checked)
 						v.expandToLevel(element, 1);
-					Set<Entry<FTPFile, FTPFile>> entrySet = fileParents
-							.entrySet();
+					Set<Entry<FTPFile, FTPFile>> entrySet = fileParents.entrySet();
 					@SuppressWarnings("unchecked")
-					Entry<FTPFile, FTPFile>[] entries = entrySet
-							.toArray(new Entry[entrySet.size()]);
+					Entry<FTPFile, FTPFile>[] entries = entrySet.toArray(new Entry[entrySet.size()]);
 					for (Map.Entry<FTPFile, FTPFile> entry : entries) {
 						if (entry.getValue() == element)
-							checkHierarchy(v, entry.getKey(), checked, true,
-									false);
+							checkHierarchy(v, entry.getKey(), checked, true, false);
 					}
 				}
 			}
@@ -265,15 +247,13 @@ public class FtpDirPage extends ColoredWizardPage {
 				while (parent != null) {
 					boolean allChecked = true;
 					boolean someChecked = false;
-					for (Map.Entry<FTPFile, FTPFile> entry : fileParents
-							.entrySet()) {
+					for (Map.Entry<FTPFile, FTPFile> entry : fileParents.entrySet()) {
 						if (entry.getValue() == parent) {
 							if (v.getGrayed(entry.getKey())) {
 								allChecked = false;
 								someChecked = true;
 							} else {
-								boolean childChecked = v.getChecked(entry
-										.getKey());
+								boolean childChecked = v.getChecked(entry.getKey());
 								allChecked &= childChecked;
 								someChecked |= childChecked;
 							}
@@ -312,7 +292,7 @@ public class FtpDirPage extends ColoredWizardPage {
 				while (++q < s.length())
 					if (s.charAt(q) != '/')
 						break;
-				s = s.substring(0, q) + s.substring(p + 1);
+				s = new StringBuilder().append(s, 0, q).append(s, p + 1, s.length()).toString();
 			}
 		}
 		return s;
@@ -373,8 +353,7 @@ public class FtpDirPage extends ColoredWizardPage {
 		if (ticket != null)
 			service.endSession(ticket);
 		if (serviceReference != null)
-			UiActivator.getDefault().getBundle().getBundleContext()
-					.ungetService(serviceReference);
+			UiActivator.getDefault().getBundle().getBundleContext().ungetService(serviceReference);
 		super.dispose();
 	}
 
@@ -398,9 +377,8 @@ public class FtpDirPage extends ColoredWizardPage {
 						else
 							dirPath = stripSlashes(dirPaths.get(parent));
 						try {
-							URI uri = new URI(prefix
-									+ (dirPath.isEmpty() ? file.getName() : dirPath + '/'
-											+ file.getName() ));
+							URI uri = new URI(
+									prefix + (dirPath.isEmpty() ? file.getName() : dirPath + '/' + file.getName()));
 							list.add(uri);
 						} catch (URISyntaxException e) {
 							// should never happen

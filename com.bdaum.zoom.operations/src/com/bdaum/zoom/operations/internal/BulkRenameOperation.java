@@ -36,6 +36,7 @@ import org.eclipse.osgi.util.NLS;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.BagChange;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IRelationDetector;
 import com.bdaum.zoom.core.IVolumeManager;
@@ -50,8 +51,7 @@ import com.bdaum.zoom.program.BatchConstants;
 @SuppressWarnings("restriction")
 public class BulkRenameOperation extends AbstractRenamingOperation {
 
-	protected FileWatchManager fileWatchManager = CoreActivator.getDefault()
-			.getFileWatchManager();
+	protected FileWatchManager fileWatchManager = CoreActivator.getDefault().getFileWatchManager();
 	private final GregorianCalendar cal = new GregorianCalendar();
 	private final List<Asset> assets;
 	private final String template;
@@ -60,8 +60,7 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 	private final QueryField field;
 	private int start;
 
-	public BulkRenameOperation(List<Asset> assets, String template, String cue,
-			int start, QueryField field) {
+	public BulkRenameOperation(List<Asset> assets, String template, String cue, int start, QueryField field) {
 		super(Messages.getString("BulkRenameOperation.renaming")); //$NON-NLS-1$
 		this.assets = assets;
 		this.template = template;
@@ -72,11 +71,9 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 	}
 
 	@Override
-	public IStatus execute(final IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus execute(final IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		init(monitor, 2 * assets.size());
-		for (IRelationDetector detector : info
-				.getAdapter(IRelationDetector[].class))
+		for (IRelationDetector detector : info.getAdapter(IRelationDetector[].class))
 			detector.reset();
 		final Set<String> volumes = new HashSet<String>();
 		final List<String> errands = new ArrayList<String>();
@@ -89,11 +86,9 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 					URI uri = volumeManager.findFile(asset);
 					if (uri != null) {
 						final File file = new File(uri);
-						String filename = file.getName();
 						cal.setTimeInMillis(file.lastModified());
-						asset.setTitle(Utilities.computeFileName(template,
-								filename, cal.getTime(), -1, i + start, -1,
-								cue, asset, field.getMaxlength(), false, false));
+						asset.setTitle(Utilities.evaluateTemplate(template, Constants.TV_RENAME, file.getName(), cal, -1,
+								i + start, -1, cue, asset, "", field.getMaxlength(), false)); //$NON-NLS-1$
 						dbManager.storeAndCommit(asset);
 						modified.add(asset);
 					}
@@ -106,33 +101,26 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 							String filename = file.getName();
 							int p = filename.lastIndexOf('.');
 							String ext = p >= 0 ? filename.substring(p) : ""; //$NON-NLS-1$
-							int maxLength = BatchConstants.MAXPATHLENGTH
-									- folder.getAbsolutePath().length() - 1
+							int maxLength = BatchConstants.MAXPATHLENGTH - folder.getAbsolutePath().length() - 1
 									- ext.length();
 							cal.setTimeInMillis(file.lastModified());
-							String newFilename = Utilities.computeFileName(
-									template, filename, cal.getTime(), -1,
-									i + 1, -1, cue, asset, maxLength, true,
-									false);
-							final File dest = new File(folder, newFilename
-									+ ext);
+							String newFilename = Utilities.evaluateTemplate(template,Constants.TV_RENAME, filename, cal,
+									-1, i + 1, -1, cue, asset, "", maxLength, true); //$NON-NLS-1$
+							final File dest = new File(folder, newFilename + ext);
 							if (file.equals(dest)) {
 								monitor.worked(2);
 								++i;
 								continue;
 							}
 							if (dest.exists()) {
-								addError(
-										NLS.bind(
-												Messages.getString("BulkRenameOperation.file_already_exists"), //$NON-NLS-1$
-												file, dest), null);
+								addError(NLS.bind(Messages.getString("BulkRenameOperation.file_already_exists"), //$NON-NLS-1$
+										file, dest), null);
 								monitor.worked(2);
 								++i;
 								continue;
 							}
 							uris[i] = asset.getUri();
-							if (!storeSafely(() -> renameAsset(asset, file, dest, monitor,
-									fileWatchManager), 1)) {
+							if (!storeSafely(() -> renameAsset(asset, file, dest, monitor, fileWatchManager), 1)) {
 								monitor.worked(1);
 								++i;
 								continue;
@@ -140,8 +128,7 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 							modified.add(asset);
 							IRelationDetector[] detectors = info.getAdapter(IRelationDetector[].class);
 							for (IRelationDetector detector : detectors)
-								if (detector.renameAsset(asset, file, dest,
-										info, opId))
+								if (detector.renameAsset(asset, file, dest, info, opId))
 									break;
 						} else {
 							uri = volumeManager.findFile(asset);
@@ -162,46 +149,36 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 		}
 		fireAssetsModified(new BagChange<>(null, modified, null, null), QueryField.URI);
 		if (!errands.isEmpty()) {
-			final IDbErrorHandler errorHandler = Core.getCore()
-					.getErrorHandler();
+			final IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
 			if (errorHandler != null)
-				errorHandler.showInformation(Messages
-						.getString("BulkRenameOperation.unable_to_rename"), //$NON-NLS-1$
+				errorHandler.showInformation(Messages.getString("BulkRenameOperation.unable_to_rename"), //$NON-NLS-1$
 						Ticketbox.computeErrorMessage(errands, volumes), info);
 		}
 		return close(info);
 	}
 
 	@Override
-	public IStatus redo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		return execute(monitor, info);
 	}
 
 	@Override
-	public IStatus undo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		init(monitor, 2 * assets.size());
 		int i = 0;
 		for (final Asset asset : assets) {
 			try {
-				if (asset.getFileState() != IVolumeManager.PEER
-						&& uris[i] != null) {
-					IVolumeManager volumeManager = Core.getCore()
-							.getVolumeManager();
+				if (asset.getFileState() != IVolumeManager.PEER && uris[i] != null) {
+					IVolumeManager volumeManager = Core.getCore().getVolumeManager();
 					URI uri = volumeManager.findExistingFile(asset, true);
 					if (uri == null) {
-						addError(
-								NLS.bind(
-										Messages.getString("BulkRenameOperation.file_does_not_exisst"), //$NON-NLS-1$
-										uri), null);
+						addError(NLS.bind(Messages.getString("BulkRenameOperation.file_does_not_exisst"), //$NON-NLS-1$
+								uri), null);
 						return close(info);
 					}
-					File dest = volumeManager.findExistingFile(uris[i],
-							asset.getVolume());
+					File dest = volumeManager.findExistingFile(uris[i], asset.getVolume());
 					if (dest.exists()) {
-						addError(NLS.bind(Messages
-								.getString("BulkRenameOperation.undo_failed"), //$NON-NLS-1$
+						addError(NLS.bind(Messages.getString("BulkRenameOperation.undo_failed"), //$NON-NLS-1$
 								dest), null);
 						return close(info);
 					}

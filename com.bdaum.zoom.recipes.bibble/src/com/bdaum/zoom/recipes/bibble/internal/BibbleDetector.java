@@ -105,8 +105,8 @@ public class BibbleDetector extends AbstractRecipeDetector {
 
 	private static final String XMP = ".xmp"; //$NON-NLS-1$
 	private static final float P16 = 65535f;
-	private static final int[] CURVETYPES = new int[] { Curve.CHANNEL_ALL,
-			Curve.CHANNEL_RED, Curve.CHANNEL_GREEN, Curve.CHANNEL_BLUE };
+	private static final int[] CURVETYPES = new int[] { Curve.CHANNEL_ALL, Curve.CHANNEL_RED, Curve.CHANNEL_GREEN,
+			Curve.CHANNEL_BLUE };
 
 	// <blay:options
 	// bopt:colormode="1"
@@ -196,7 +196,7 @@ public class BibbleDetector extends AbstractRecipeDetector {
 	// bopt:croppercent="1"
 	// bopt:Date="2008-11-30 16:41:22.000"
 	// bopt:DigitizedDateTime="2008-11-30 16:41:22.000"
-	// bopt:description="x-default|OLYMPUS DIGITAL CAMERA         "
+	// bopt:description="x-default|OLYMPUS DIGITAL CAMERA "
 	// bopt:tag="0"
 	// bopt:rating="0"
 	// bopt:label="0"
@@ -295,8 +295,7 @@ public class BibbleDetector extends AbstractRecipeDetector {
 		File[] metafiles = getMetafiles(uri);
 		if (metafiles != null) {
 			for (File file : metafiles) {
-				File targetFile = new File(targetFolder, Core.getFileName(
-						newUri, false) + XMP);
+				File targetFile = new File(targetFolder, Core.getFileName(newUri, false) + XMP);
 				BatchUtilities.copyFile(file, targetFile, null);
 				if (readOnly)
 					targetFile.setReadOnly();
@@ -305,8 +304,7 @@ public class BibbleDetector extends AbstractRecipeDetector {
 
 	}
 
-	public Recipe loadRecipeForImage(String uri, boolean highres,
-			IFocalLengthProvider focalLengthProvider,
+	public Recipe loadRecipeForImage(String uri, boolean highres, IFocalLengthProvider focalLengthProvider,
 			Map<String, String> overlayMap) {
 		String xmpUri = uri;
 		InputStream xmpIn = null;
@@ -326,12 +324,10 @@ public class BibbleDetector extends AbstractRecipeDetector {
 		} catch (FileNotFoundException e) {
 			// no XMP file
 		}
-		return (xmpIn != null) ? loadRecipeFile(xmpUri, xmpIn, overlayMap)
-				: null;
+		return (xmpIn != null) ? loadRecipeFile(xmpUri, xmpIn, overlayMap) : null;
 	}
 
-	private Recipe loadRecipeFile(String xmpUri, InputStream xmpIn,
-			Map<String, String> overlayMap) {
+	private Recipe loadRecipeFile(String xmpUri, InputStream xmpIn, Map<String, String> overlayMap) {
 		Recipe recipe = null;
 		// Values
 		float whiteBalanceMethod = 8f;
@@ -375,10 +371,8 @@ public class BibbleDetector extends AbstractRecipeDetector {
 		int newTone = -1;
 
 		try {
-			XMPSchemaRegistry schemaRegistry = XMPMetaFactory
-					.getSchemaRegistry();
-			schemaRegistry.registerNamespace(QueryField.NS_BIBBLE.uri,
-					QueryField.NS_BIBBLE.defaultPrefix);
+			XMPSchemaRegistry schemaRegistry = XMPMetaFactory.getSchemaRegistry();
+			schemaRegistry.registerNamespace(QueryField.NS_BIBBLE.uri, QueryField.NS_BIBBLE.defaultPrefix);
 			XMPMeta xmpMeta = XMPMetaFactory.parse(xmpIn);
 			IteratorOptions options = new IteratorOptions();
 			options.setJustLeafnodes(true).setJustLeafname(true);
@@ -473,16 +467,12 @@ public class BibbleDetector extends AbstractRecipeDetector {
 						bnn_lstrength = convertToFloat(value);
 					} else if (key == "rating") { //$NON-NLS-1$
 						if (overlayMap != null) {
-							overlayMap.put(QueryField.RATING.getExifToolKey(),
-									value);
-							overlayMap.put(QueryField.RATEDBY.getExifToolKey(),
-									getName());
+							overlayMap.put(QueryField.RATING.getExifToolKey(), value);
+							overlayMap.put(QueryField.RATEDBY.getExifToolKey(), getName());
 						}
 					} else if (key == "keywordlist") { //$NON-NLS-1$
 						if (overlayMap != null)
-							overlayMap.put(
-									QueryField.IPTC_KEYWORDS.getExifToolKey(),
-									value);
+							overlayMap.put(QueryField.IPTC_KEYWORDS.getExifToolKey(), value);
 					} else if (key == "label") { //$NON-NLS-1$
 						if (overlayMap != null) {
 							int label = (int) convertToFloat(value);
@@ -505,15 +495,12 @@ public class BibbleDetector extends AbstractRecipeDetector {
 								break;
 							}
 							if (code >= 0)
-								overlayMap.put(
-										QueryField.COLORCODE.getExifToolKey(),
-										String.valueOf(code));
+								overlayMap.put(QueryField.COLORCODE.getExifToolKey(), String.valueOf(code));
 						}
 					}
 				} catch (XMPException e) {
-					BibbleActivator.getDefault().logError(
-							NLS.bind(Messages.BibbleDetector_cannot_decode,
-									key, value), e);
+					BibbleActivator.getDefault().logError(NLS.bind(Messages.BibbleDetector_cannot_decode, key, value),
+							e);
 				}
 			}
 			if (recipe != null) {
@@ -539,8 +526,7 @@ public class BibbleDetector extends AbstractRecipeDetector {
 				case 5: // Product grayscale
 					sharpenon = true;
 					newsharpen += 50f;
-					GrayConvert grayConvert = new GrayConvert(1f, 01f, 1f, 1f,
-							1f, 1f, 1f, 1f);
+					GrayConvert grayConvert = new GrayConvert(1f, 01f, 1f, 1f, 1f, 1f, 1f, 1f);
 					recipe.setGrayConvert(grayConvert);
 					break;
 				case 6: // Portrait reduced
@@ -553,8 +539,7 @@ public class BibbleDetector extends AbstractRecipeDetector {
 					contrast -= 30f;
 					newsharpen += 30f;
 					sharpenon = true;
-					grayConvert = new GrayConvert(1f, 01f, 1f, 1f, 1f, 1f, 1f,
-							1f);
+					grayConvert = new GrayConvert(1f, 01f, 1f, 1f, 1f, 1f, 1f, 1f);
 					recipe.setGrayConvert(grayConvert);
 					break;
 
@@ -566,10 +551,8 @@ public class BibbleDetector extends AbstractRecipeDetector {
 					recipe.whiteBalanceMethod = Recipe.wbASSHOT;
 				else
 					recipe.whiteBalanceMethod = Recipe.wbNONE;
-				if (recipe.whiteBalanceMethod == Recipe.wbNONE
-						&& (colorTemperature != 6500f || tint != 0f))
-					recipe.setColorTemperature(colorTemperature,
-							tint / 255f + 1f);
+				if (recipe.whiteBalanceMethod == Recipe.wbNONE && (colorTemperature != 6500f || tint != 0f))
+					recipe.setColorTemperature(colorTemperature, tint / 255f + 1f);
 				// Exposure
 				recipe.exposure = (float) Math.pow(2d, exposure);
 				if (exposure < 0)
@@ -585,8 +568,7 @@ public class BibbleDetector extends AbstractRecipeDetector {
 				// Brightness and contrast
 				if (contrast != 0d) {
 					float c = contrast / 255f + 1f;
-					Curve brightnessCurve = new Curve(Curve.TYPE_B_SPLINE,
-							"BrightnessContrast", Curve.CHANNEL_ALL, 1f); //$NON-NLS-1$
+					Curve brightnessCurve = new Curve(Curve.TYPE_B_SPLINE, "BrightnessContrast", Curve.CHANNEL_ALL, 1f); //$NON-NLS-1$
 					// Equation: y = (brightness*x-0.5) * contrast + 0.5
 					float xHigh = (c + 1f) / (2f * c);
 					float xShadow = (c - 1f) / (2f * c);
@@ -611,27 +593,23 @@ public class BibbleDetector extends AbstractRecipeDetector {
 				}
 				if (fillLight != 0f) {
 					float f = fillLight / 4f; // 6.3f;
-					Curve lightnessCurve = new Curve(Curve.TYPE_B_SPLINE,
-							"Lightness", Curve.CHANNEL_ALL, 1f); //$NON-NLS-1$
+					Curve lightnessCurve = new Curve(Curve.TYPE_B_SPLINE, "Lightness", Curve.CHANNEL_ALL, 1f); //$NON-NLS-1$
 					lightnessCurve.addKnot(0f, Math.min(fillRange, f));
 					lightnessCurve.addKnot(fillRange, fillRange);
 					lightnessCurve.addKnot(1f, 1f);
 					recipe.addCurve(lightnessCurve);
 				}
 				// Point curve
-				if (cn != null && cx != null && cy != null && cn.length > 1
-						&& cx.length > 1 && cy.length > 1 && cn[0] == cx[0]
-						&& cn[0] == cy[0] && cn[1] == 1 && cx[1] == cy[1]) {
+				if (cn != null && cx != null && cy != null && cn.length > 1 && cx.length > 1 && cy.length > 1
+						&& cn[0] == cx[0] && cn[0] == cy[0] && cn[1] == 1 && cx[1] == cy[1]) {
 					int n = cn[0];
 					int pn = cx[1];
 					int ln = n * pn + 2;
-					if ((n == 1 || n == 4) && cx.length == ln
-							&& cy.length == ln && cn.length == n + 2) {
+					if ((n == 1 || n == 4) && cx.length == ln && cy.length == ln && cn.length == n + 2) {
 						for (int c = 0; c < n; c++) {
 							int m = cn[c + 2];
 							int off = c * pn + 2;
-							Curve curve = new Curve(Curve.TYPE_CATMULL_ROM,
-									"pointCurve", CURVETYPES[c], 0f); //$NON-NLS-1$
+							Curve curve = new Curve(Curve.TYPE_CATMULL_ROM, "pointCurve", CURVETYPES[c], 0f); //$NON-NLS-1$
 							for (int k = 0; k < m; k++) {
 								int x = cx[off + k];
 								int y = cy[off + k];
@@ -643,25 +621,21 @@ public class BibbleDetector extends AbstractRecipeDetector {
 				}
 				// Color
 				float globS = saturation / 100f + 1f;
-				ColorShift shift = new ColorShift(hue, Float.NaN, globS,
-						ColorShift.SAT_MULT, 1f, vibrance / 100f + 1f);
+				ColorShift shift = new ColorShift(hue, Float.NaN, globS, ColorShift.SAT_MULT, 1f, vibrance / 100f + 1f);
 				if (redShift != 0) {
-					Curve redCurve = new Curve(Curve.TYPE_CATMULL_ROM,
-							"redShift", Curve.CHANNEL_RED, 0f); //$NON-NLS-1$
+					Curve redCurve = new Curve(Curve.TYPE_CATMULL_ROM, "redShift", Curve.CHANNEL_RED, 0f); //$NON-NLS-1$
 					redCurve.addKnot(0f, 0f);
 					redCurve.addKnot(0.5f, 0.5f + redShift / 200f);
 					redCurve.addKnot(1f, 1f);
 					recipe.addCurve(redCurve);
 					if (redShift < 0) {
-						Curve greenCurve = new Curve(Curve.TYPE_CATMULL_ROM,
-								"greenShift", //$NON-NLS-1$
+						Curve greenCurve = new Curve(Curve.TYPE_CATMULL_ROM, "greenShift", //$NON-NLS-1$
 								Curve.CHANNEL_GREEN, 0f);
 						greenCurve.addKnot(0f, 0f);
 						greenCurve.addKnot(0.5f, 0.5f - redShift / 200f);
 						greenCurve.addKnot(1f, 1f);
 						recipe.addCurve(greenCurve);
-						Curve blueCurve = new Curve(Curve.TYPE_CATMULL_ROM,
-								"blueShift", Curve.CHANNEL_BLUE, 0f); //$NON-NLS-1$
+						Curve blueCurve = new Curve(Curve.TYPE_CATMULL_ROM, "blueShift", Curve.CHANNEL_BLUE, 0f); //$NON-NLS-1$
 						blueCurve.addKnot(0f, 0f);
 						blueCurve.addKnot(0.5f, 0.5f - redShift / 200f);
 						blueCurve.addKnot(1f, 1f);
@@ -669,21 +643,18 @@ public class BibbleDetector extends AbstractRecipeDetector {
 					}
 				}
 				if (greenShift != 0) {
-					Curve greenCurve = new Curve(Curve.TYPE_CATMULL_ROM,
-							"greenShift", Curve.CHANNEL_GREEN, 0f); //$NON-NLS-1$
+					Curve greenCurve = new Curve(Curve.TYPE_CATMULL_ROM, "greenShift", Curve.CHANNEL_GREEN, 0f); //$NON-NLS-1$
 					greenCurve.addKnot(0f, 0f);
 					greenCurve.addKnot(0.5f, 0.5f + greenShift / 200f);
 					greenCurve.addKnot(1f, 1f);
 					recipe.addCurve(greenCurve);
 					if (greenShift < 0) {
-						Curve redCurve = new Curve(Curve.TYPE_CATMULL_ROM,
-								"redShift", Curve.CHANNEL_RED, 0f); //$NON-NLS-1$
+						Curve redCurve = new Curve(Curve.TYPE_CATMULL_ROM, "redShift", Curve.CHANNEL_RED, 0f); //$NON-NLS-1$
 						redCurve.addKnot(0f, 0f);
 						redCurve.addKnot(0.5f, 0.5f - greenShift / 200f);
 						redCurve.addKnot(1f, 1f);
 						recipe.addCurve(redCurve);
-						Curve blueCurve = new Curve(Curve.TYPE_CATMULL_ROM,
-								"blueShift", Curve.CHANNEL_BLUE, 0f); //$NON-NLS-1$
+						Curve blueCurve = new Curve(Curve.TYPE_CATMULL_ROM, "blueShift", Curve.CHANNEL_BLUE, 0f); //$NON-NLS-1$
 						blueCurve.addKnot(0f, 0f);
 						blueCurve.addKnot(0.5f, 0.5f - greenShift / 200f);
 						blueCurve.addKnot(1f, 1f);
@@ -691,21 +662,18 @@ public class BibbleDetector extends AbstractRecipeDetector {
 					}
 				}
 				if (blueShift != 0) {
-					Curve blueCurve = new Curve(Curve.TYPE_CATMULL_ROM,
-							"blueShift", Curve.CHANNEL_BLUE, 0f); //$NON-NLS-1$
+					Curve blueCurve = new Curve(Curve.TYPE_CATMULL_ROM, "blueShift", Curve.CHANNEL_BLUE, 0f); //$NON-NLS-1$
 					blueCurve.addKnot(0f, 0f);
 					blueCurve.addKnot(0.5f, 0.5f + blueShift / 200f);
 					blueCurve.addKnot(1f, 1f);
 					recipe.addCurve(blueCurve);
 					if (greenShift < 0) {
-						Curve redCurve = new Curve(Curve.TYPE_CATMULL_ROM,
-								"redShift", Curve.CHANNEL_RED, 0f); //$NON-NLS-1$
+						Curve redCurve = new Curve(Curve.TYPE_CATMULL_ROM, "redShift", Curve.CHANNEL_RED, 0f); //$NON-NLS-1$
 						redCurve.addKnot(0f, 0f);
 						redCurve.addKnot(0.5f, 0.5f - blueShift / 200f);
 						redCurve.addKnot(1f, 1f);
 						recipe.addCurve(redCurve);
-						Curve greenCurve = new Curve(Curve.TYPE_CATMULL_ROM,
-								"greenShift", Curve.CHANNEL_GREEN, 0f); //$NON-NLS-1$
+						Curve greenCurve = new Curve(Curve.TYPE_CATMULL_ROM, "greenShift", Curve.CHANNEL_GREEN, 0f); //$NON-NLS-1$
 						greenCurve.addKnot(0f, 0f);
 						greenCurve.addKnot(0.5f, 0.5f - blueShift / 200f);
 						greenCurve.addKnot(1f, 1f);
@@ -726,11 +694,9 @@ public class BibbleDetector extends AbstractRecipeDetector {
 						if (line.startsWith("Version")) { //$NON-NLS-1$
 							int k = line.indexOf('=');
 							if (k >= 0) {
-								int v = Integer.parseInt(line.substring(k + 1)
-										.trim());
+								int v = Integer.parseInt(line.substring(k + 1).trim());
 								if (v == 1) {
-									sections = new ArrayList<BibbleDetector.Section>(
-											12);
+									sections = new ArrayList<BibbleDetector.Section>(12);
 									continue;
 								}
 							}
@@ -740,35 +706,27 @@ public class BibbleDetector extends AbstractRecipeDetector {
 					}
 					if (sections != null) {
 						for (Section section : sections) {
-							shift.addSector(section.deg, section.window / 2f,
-									section.valFalloff, section.hue,
-									section.sat, section.lum,
-									ColorShift.SAT_MULT);
+							shift.addSector(section.deg, section.window / 2f, section.valFalloff, section.hue,
+									section.sat, section.lum, ColorShift.SAT_MULT);
 						}
 					}
 				}
 				// Sharpness and Noise
 				if (sharpenon)
-					recipe.addUnsharpFilter(new UnsharpMask(newsharpen / 150f,
-							sharpenrad < 1f ? 1f : sharpenrad,
+					recipe.addUnsharpFilter(new UnsharpMask(newsharpen / 150f, sharpenrad < 1f ? 1f : sharpenrad,
 							sharpensense / 255f, 0f, null, UnsharpMask.SHARPEN));
 				if (bnn_enabled && bnn_lstrength > 0f)
-					recipe.noiseReduction = (int) (100 * Math.pow(10d,
-							bnn_lstrength / 20d));
+					recipe.noiseReduction = (int) (100 * Math.pow(10d, bnn_lstrength / 20d));
 				// Cropping
 				if (hasCrop)
 					recipe.setCropping(new Cropping(cropTop, cropLeft,
-							new Dimension((int) (cropWidth * cropDpi),
-									(int) (cropHeight * cropDpi)), cropAngle,
+							new Dimension((int) (cropWidth * cropDpi), (int) (cropHeight * cropDpi)), cropAngle,
 							Cropping.NOFILL, new RGB(128, 128, 128)));
 				if (hasVignette && vignetteAmount != 0f)
-					recipe.setVignette(new Vignette(vignetteAmount,
-							vignetteMidpoint / 100f, Vignette.HSL));
+					recipe.setVignette(new Vignette(vignetteAmount, vignetteMidpoint / 100f, Vignette.HSL));
 			}
 		} catch (XMPException e) {
-			BibbleActivator.getDefault().logError(
-					NLS.bind(Messages.BibbleDetector_cannot_read_xmp_file,
-							xmpUri), e);
+			BibbleActivator.getDefault().logError(NLS.bind(Messages.BibbleDetector_cannot_read_xmp_file, xmpUri), e);
 		}
 		return recipe;
 	}
@@ -782,16 +740,13 @@ public class BibbleDetector extends AbstractRecipeDetector {
 		return result;
 	}
 
-	public List<RecipeFolder> computeWatchedMetaFilesOrFolders(
-			WatchedFolder[] watchedFolders,
-			Map<File, List<IRecipeDetector>> detectorMap,
-			Map<File, List<IRecipeDetector>> recursiveDetectorMap,
+	public List<RecipeFolder> computeWatchedMetaFilesOrFolders(WatchedFolder[] watchedFolders,
+			Map<File, List<IRecipeDetector>> detectorMap, Map<File, List<IRecipeDetector>> recursiveDetectorMap,
 			boolean update, boolean remove) {
 		return null;
 	}
 
-	public File getChangedImageFile(File metaFile,
-			WatchedFolder[] watchedFolders) {
+	public File getChangedImageFile(File metaFile, WatchedFolder[] watchedFolders) {
 		return null;
 	}
 
@@ -800,24 +755,18 @@ public class BibbleDetector extends AbstractRecipeDetector {
 	}
 
 	private static float convertToFloat(String value) throws XMPException {
-		if (value.startsWith("+")) //$NON-NLS-1$
-			value = value.substring(1);
-		return (float) XMPUtils.convertToDouble(value);
+		return (float) XMPUtils.convertToDouble(value.startsWith("+") ? value.substring(1) : value); //$NON-NLS-1$
 	}
 
-	public Recipe loadRecipe(String uri, boolean highres,
-			IFocalLengthProvider focalLengthProvider,
+	public Recipe loadRecipe(String uri, boolean highres, IFocalLengthProvider focalLengthProvider,
 			Map<String, String> overlayMap) {
 		try {
 			if (uri.toLowerCase().endsWith(XMP))
-				return loadRecipeFile(uri, new FileInputStream(new File(
-						new URI(uri))), overlayMap);
+				return loadRecipeFile(uri, new FileInputStream(new File(new URI(uri))), overlayMap);
 		} catch (URISyntaxException e) {
-			BibbleActivator.getDefault().logError(
-					NLS.bind(Messages.BibbleDetector_bad_uri, uri), e);
+			BibbleActivator.getDefault().logError(NLS.bind(Messages.BibbleDetector_bad_uri, uri), e);
 		} catch (IOException e) {
-			BibbleActivator.getDefault().logError(
-					NLS.bind(Messages.BibbleDetector_io_exception, uri), e);
+			BibbleActivator.getDefault().logError(NLS.bind(Messages.BibbleDetector_io_exception, uri), e);
 		}
 		return null;
 	}

@@ -28,7 +28,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuListener;
@@ -272,18 +271,12 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
 		IWorkbenchOperationSupport operationSupport = PlatformUI.getWorkbench().getOperationSupport();
-		IUndoContext undoContext = operationSupport.getUndoContext();
+		undoContext = operationSupport.getUndoContext();
 		UndoRedoActionGroup undoRedoGroup = new UndoRedoActionGroup(viewSite, undoContext, true);
 		undoRedoGroup.fillActionBars(bars);
 		IWorkbenchWindow workbenchWindow = viewSite.getWorkbenchWindow();
-		// Clipboard clipboard =
-		// UiActivator.getDefault().getClipboard(workbenchWindow.getShell().getDisplay());
-		// bars.setGlobalActionHandler(ActionFactory.COPY.getId(), new
-		// CopyAction(workbenchWindow, clipboard));
 		bars.setGlobalActionHandler(ActionFactory.COPY.getId(), copyAction);
 		String pasteId = ActionFactory.PASTE.getId();
-		// pasteHandler = new PasteAction(workbenchWindow, clipboard, pasteId,
-		// Messages.getString("ImageView.paste")); //$NON-NLS-1$
 		bars.setGlobalActionHandler(pasteId, pasteAction);
 		bars.setGlobalActionHandler(ActionFactory.PRINT.getId(), new PrintAction(workbenchWindow));
 		if (selectAllAction != null)

@@ -43,6 +43,8 @@ import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
@@ -50,7 +52,10 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
@@ -92,18 +97,53 @@ import com.bdaum.zoom.ui.internal.codes.CodeParser;
 import com.bdaum.zoom.ui.internal.codes.Topic;
 import com.bdaum.zoom.ui.internal.views.ImageRegion;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
+import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
 public class UiUtilities {
 	private static final int USHRT_MAXV = 65535;
 	private static final Integer MINUSONE = Integer.valueOf(-1);
-	private static NumberFormat af = (NumberFormat.getNumberInstance());
 
 	public static final Comparator<String> stringComparator = new Comparator<String>() {
 		public int compare(String s1, String s2) {
 			return s1.compareToIgnoreCase(s2);
 		}
 	};
+
+	/**
+	 * Creates a labeled group
+	 *
+	 * @param parent
+	 *            - parent composite
+	 * @param columns
+	 *            - number of columns within group
+	 * @param label
+	 *            - group label
+	 * @return - group control
+	 */
+	public static CGroup createGroup(Composite parent, int columns, String label) {
+		CGroup group = new CGroup(parent, SWT.NONE);
+		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		group.setLayout(new GridLayout(columns, false));
+		group.setText(label);
+		return group;
+	}
+
+	/**
+	 * Creates a tab item
+	 *
+	 * @param tabFolder
+	 *            - tab folder
+	 * @param text
+	 *            - tab item label
+	 * @return - tab item
+	 */
+	public static CTabItem createTabItem(CTabFolder tabFolder, String text) {
+		CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
+		tabItem.setFont(JFaceResources.getBannerFont());
+		tabItem.setText(' ' + text + ' ');
+		return tabItem;
+	}
 
 	public static String createSlideTitle(Asset asset) {
 		String tit = asset.getTitle();
@@ -339,10 +379,10 @@ public class UiUtilities {
 			int s = fontData.getStyle();
 			s = (s == SWT.BOLD ? Font.BOLD : s == SWT.ITALIC ? Font.ITALIC : Font.PLAIN);
 			return new Font(family != null ? family : fontData.getName(), style >= 0 ? style : s,
-					size >= 0 ? style : fontData.getHeight());
+					size >= 0 ? size : fontData.getHeight());
 		}
 		return new Font(family != null ? family : "Arial", //$NON-NLS-1$
-				style >= 0 ? style : Font.PLAIN, size >= 0 ? style : 9);
+				style >= 0 ? style : Font.PLAIN, size >= 0 ? size : 9);
 	}
 
 	public static Color getAwtForeground(Control control, org.eclipse.swt.graphics.Color color) {
@@ -356,26 +396,33 @@ public class UiUtilities {
 	}
 
 	public static String computeImageCaption(Asset asset, IScoreFormatter scoreFormatter, Integer cardinality,
-			WildCardFilter filter) {
+			WildCardFilter filter, String template) {
 		if (asset == null)
 			return ""; //$NON-NLS-1$
 		StringBuilder sb;
-		if (cardinality != null) {
-			String name = asset.getName();
-			if (filter != null) {
-				String s = Core.getFileName(asset.getUri(), true);
-				String[] capture = filter.capture(s);
-				for (String c : capture) {
-					if (c.length() < s.length())
-						name = c;
-				}
-			}
-			sb = new StringBuilder(name).append(" (").append(cardinality.intValue()).append(')'); //$NON-NLS-1$
-		} else {
-			String s = Core.getFileName(asset.getUri(), true);
+		if (template != null) {
+			String s = Utilities.evaluateTemplate(template, Constants.TH_ALL, "", null, -1, -1, -1, null, asset, //$NON-NLS-1$
+					"", Integer.MAX_VALUE, false); //$NON-NLS-1$
 			if (scoreFormatter == null)
 				return s;
 			sb = new StringBuilder(s);
+		} else {
+			if (cardinality != null) {
+				String name = asset.getName();
+				if (filter != null) {
+					String s = Core.getFileName(asset.getUri(), true);
+					String[] capture = filter.capture(s);
+					for (String c : capture)
+						if (c.length() < s.length())
+							name = c;
+				}
+				sb = new StringBuilder(name).append(" (").append(cardinality.intValue()).append(')'); //$NON-NLS-1$
+			} else {
+				String s = Core.getFileName(asset.getUri(), true);
+				if (scoreFormatter == null)
+					return s;
+				sb = new StringBuilder(s);
+			}
 		}
 		if (scoreFormatter != null) {
 			String remark = scoreFormatter.format(asset.getScore());
@@ -459,49 +506,10 @@ public class UiUtilities {
 		return false;
 	}
 
-	public static String csv(Object v, int type, String sep) {
-		if (v instanceof String)
-			return (String) v;
-		StringBuilder sb = new StringBuilder();
-		if (v != null) {
-			switch (type) {
-			case QueryField.T_INTEGER:
-			case QueryField.T_POSITIVEINTEGER: {
-				for (int i : (int[]) v) {
-					if (sb.length() > 0)
-						sb.append(sep);
-					sb.append(String.valueOf(i));
-				}
-				break;
-			}
-			case QueryField.T_POSITIVELONG:
-			case QueryField.T_LONG: {
-				for (long i : (long[]) v) {
-					if (sb.length() > 0)
-						sb.append(sep);
-					sb.append(String.valueOf(i));
-				}
-				break;
-			}
-			case QueryField.T_STRING: {
-				for (String s : (String[]) v) {
-					if (s != null) {
-						if (sb.length() > 0)
-							sb.append(sep);
-						sb.append(s);
-					}
-				}
-				break;
-			}
-			}
-		}
-		return sb.toString();
-	}
-
 	public static GroupImpl obtainUserGroup(final IDbManager dbManager) {
 		GroupImpl user = dbManager.obtainById(GroupImpl.class, Constants.GROUP_ID_USER);
 		if (user == null) {
-			user = new GroupImpl(Messages.UiUtilities_user_defined, false);
+			user = new GroupImpl(Messages.UiUtilities_user_defined, false, Constants.INHERIT_LABEL, null, 0, null);
 			user.setStringId(Constants.GROUP_ID_USER);
 		}
 		return user;
@@ -517,6 +525,7 @@ public class UiUtilities {
 		case QueryField.T_FLOAT:
 		case QueryField.T_FLOATB:
 		case QueryField.T_POSITIVEFLOAT:
+			NumberFormat af = (NumberFormat.getNumberInstance());
 			af.setMaximumFractionDigits(fd.getDetailQueryField().getMaxlength());
 			return af.format(value);
 		default:
@@ -554,11 +563,13 @@ public class UiUtilities {
 					return Double.POSITIVE_INFINITY;
 				if (undefined)
 					return Double.NaN;
+				NumberFormat af = (NumberFormat.getNumberInstance());
 				af.setMaximumFractionDigits(8);
 				return af.parse(trim).doubleValue();
 			case QueryField.T_CURRENCY:
 				if (undefined)
 					return Double.NaN;
+				af = (NumberFormat.getNumberInstance());
 				af.setMaximumFractionDigits(Format.getCurrencyDigits());
 				return af.parse(trim).doubleValue();
 			case QueryField.T_BOOLEAN:
@@ -623,6 +634,7 @@ public class UiUtilities {
 			case QueryField.T_FLOATB:
 				try {
 					if (!UiConstants.INFINITE.equals(trim)) {
+						NumberFormat af = (NumberFormat.getNumberInstance());
 						af.setMaximumFractionDigits(8);
 						af.parse(text);
 					}
@@ -633,6 +645,7 @@ public class UiUtilities {
 			case QueryField.T_POSITIVEFLOAT:
 				try {
 					if (!UiConstants.INFINITE.equals(trim)) {
+						NumberFormat af = (NumberFormat.getNumberInstance());
 						af.setMaximumFractionDigits(8);
 						double v = af.parse(text).doubleValue();
 						if (v <= 0)
@@ -644,6 +657,7 @@ public class UiUtilities {
 				break;
 			case QueryField.T_CURRENCY:
 				try {
+					NumberFormat af = (NumberFormat.getNumberInstance());
 					af.setMaximumFractionDigits(Format.getCurrencyDigits());
 					double v = af.parse(text).doubleValue();
 					if (v <= 0)
@@ -1157,7 +1171,7 @@ public class UiUtilities {
 		if (monitors.length > 1 && Platform.getPreferencesService().getBoolean(UiActivator.PLUGIN_ID,
 				PreferenceConstants.SECONDARYMONITOR, false, null)) {
 			Rectangle r = parentShell.getBounds();
-			if (mbounds.contains(r.x + r.width/2,  r.y + r.height/2)) {
+			if (mbounds.contains(r.x + r.width / 2, r.y + r.height / 2)) {
 				int max = 0;
 				for (Monitor monitor : monitors) {
 					if (!monitor.equals(primaryMonitor)) {
@@ -1172,6 +1186,10 @@ public class UiUtilities {
 			}
 		}
 		return mbounds;
+	}
+
+	public static boolean isInterPunction(char c) {
+		return "!.,:;?".indexOf(c) >= 0; //$NON-NLS-1$
 	}
 
 }

@@ -27,11 +27,20 @@ public class Group_typeImpl extends AomObject implements Group_type {
 	 *
 	 * @param name - Property
 	 * @param system - Property
+	 * @param showLabel - Property
+	 * @param labelTemplate - Property
+	 * @param fontSize - Property
+	 * @param annotations - Property
 	 */
-	public Group_typeImpl(String name, boolean system) {
+	public Group_typeImpl(String name, boolean system, int showLabel,
+			String labelTemplate, int fontSize, String annotations) {
 		super();
 		this.name = name;
 		this.system = system;
+		this.showLabel = showLabel;
+		this.labelTemplate = labelTemplate;
+		this.fontSize = fontSize;
+		this.annotations = annotations;
 
 	}
 
@@ -84,6 +93,94 @@ public class Group_typeImpl extends AomObject implements Group_type {
 		return system;
 	}
 
+	/* *** Property showLabel *** */
+
+	private int showLabel;
+
+	/**
+	 * Set value of property showLabel
+	 *
+	 * @param _value - new field value
+	 */
+	public void setShowLabel(int _value) {
+		showLabel = _value;
+	}
+
+	/**
+	 * Get value of property showLabel
+	 *
+	 * @return - value of field showLabel
+	 */
+	public int getShowLabel() {
+		return showLabel;
+	}
+
+	/* *** Property labelTemplate *** */
+
+	private String labelTemplate;
+
+	/**
+	 * Set value of property labelTemplate
+	 *
+	 * @param _value - new field value
+	 */
+	public void setLabelTemplate(String _value) {
+		labelTemplate = _value;
+	}
+
+	/**
+	 * Get value of property labelTemplate
+	 *
+	 * @return - value of field labelTemplate
+	 */
+	public String getLabelTemplate() {
+		return labelTemplate;
+	}
+
+	/* *** Property fontSize *** */
+
+	private int fontSize;
+
+	/**
+	 * Set value of property fontSize
+	 *
+	 * @param _value - new field value
+	 */
+	public void setFontSize(int _value) {
+		fontSize = _value;
+	}
+
+	/**
+	 * Get value of property fontSize
+	 *
+	 * @return - value of field fontSize
+	 */
+	public int getFontSize() {
+		return fontSize;
+	}
+
+	/* *** Property annotations *** */
+
+	private String annotations;
+
+	/**
+	 * Set value of property annotations
+	 *
+	 * @param _value - new field value
+	 */
+	public void setAnnotations(String _value) {
+		annotations = _value;
+	}
+
+	/**
+	 * Get value of property annotations
+	 *
+	 * @return - value of field annotations
+	 */
+	public String getAnnotations() {
+		return annotations;
+	}
+
 	/* ----- Equality ----- */
 
 	/**
@@ -102,7 +199,17 @@ public class Group_typeImpl extends AomObject implements Group_type {
 		return ((getName() == null && other.getName() == null) || (getName() != null && getName()
 				.equals(other.getName())))
 
-		&& getSystem() == other.getSystem()
+				&& getSystem() == other.getSystem()
+
+				&& getShowLabel() == other.getShowLabel()
+
+				&& ((getLabelTemplate() == null && other.getLabelTemplate() == null) || (getLabelTemplate() != null && getLabelTemplate()
+						.equals(other.getLabelTemplate())))
+
+				&& getFontSize() == other.getFontSize()
+
+				&& ((getAnnotations() == null && other.getAnnotations() == null) || (getAnnotations() != null && getAnnotations()
+						.equals(other.getAnnotations())))
 
 		;
 	}
@@ -121,6 +228,19 @@ public class Group_typeImpl extends AomObject implements Group_type {
 				.hashCode());
 
 		hashCode = 31 * hashCode + (getSystem() ? 1231 : 1237);
+
+		hashCode = 31 * hashCode + getShowLabel();
+
+		hashCode = 31
+				* hashCode
+				+ ((getLabelTemplate() == null) ? 0 : getLabelTemplate()
+						.hashCode());
+
+		hashCode = 31 * hashCode + getFontSize();
+
+		hashCode = 31
+				* hashCode
+				+ ((getAnnotations() == null) ? 0 : getAnnotations().hashCode());
 
 		return hashCode;
 	}

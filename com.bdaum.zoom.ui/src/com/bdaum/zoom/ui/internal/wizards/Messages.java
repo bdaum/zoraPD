@@ -72,11 +72,16 @@ public class Messages extends NLS {
 	public static String FtpDirPage_select_images;
 	public static String ImportAddMetadataPage_add_metadata;
 	public static String ImportAddMetadataPage_advanced_options;
+	public static String ImportAddMetadataPage_Medium;
 	public static String ImportAddMetadataPage_metadata_options_chdk;
+	public static String ImportAddMetadataPage_Privacy;
+	public static String ImportAddMetadataPage_Private;
+	public static String ImportAddMetadataPage_Public;
 	public static String ImportAddMetadataPage_specify_metadata;
 	public static String ImportFileSelectionPage_all_jpeg;
 	public static String ImportFileSelectionPage_all_raw;
 	public static String ImportFileSelectionPage_analyzing_folder_contents;
+	public static String ImportFileSelectionPage_Difference;
 	public static String ImportFileSelectionPage_dropped_files;
 	public static String ImportFileSelectionPage_file_selection;
 	public static String ImportFileSelectionPage_import_date_mask;

@@ -49,12 +49,6 @@ import com.bdaum.zoom.ui.gps.WaypointExtension;
 @SuppressWarnings("restriction")
 public class GpsUtilities {
 
-	public static final NumberFormat usformat = NumberFormat
-			.getInstance(Locale.US);
-	static {
-		usformat.setMaximumFractionDigits(5);
-	}
-
 	public static void transferPlacedata(Waypoint wp, Location newLocation) {
 		newLocation.setCity(wp.getName());
 		newLocation.setLatitude(wp.getLat());
@@ -78,53 +72,40 @@ public class GpsUtilities {
 					street = wpe.getStreetnumber() + ", " + street; //$NON-NLS-1$
 				newLocation.setSublocation(street);
 			}
-			Utilities.completeLocation(Core.getCore().getDbManager(),
-					newLocation);
+			Utilities.completeLocation(Core.getCore().getDbManager(), newLocation);
 		}
 	}
 
 	public static boolean isEmpty(LocationImpl location) {
-		return isEmpty(location.getCity())
-				&& isEmpty(location.getCountryName())
-				&& isEmpty(location.getCountryISOCode())
-				&& isEmpty(location.getProvinceOrState())
-				&& isEmpty(location.getWorldRegion())
-				&& isEmpty(location.getSublocation());
+		return isEmpty(location.getCity()) && isEmpty(location.getCountryName())
+				&& isEmpty(location.getCountryISOCode()) && isEmpty(location.getProvinceOrState())
+				&& isEmpty(location.getWorldRegion()) && isEmpty(location.getSublocation());
 	}
 
 	private static boolean isEmpty(String text) {
 		return text == null || text.isEmpty();
 	}
 
-	public static Place fetchPlaceInfo(double lat, double lon)
-			throws SocketTimeoutException, IOException, WebServiceException,
-			SAXException, ParserConfigurationException, UnknownHostException, HttpException {
-		IGeonamingService service = GpsActivator.getDefault()
-				.getNamingService();
+	public static Place fetchPlaceInfo(double lat, double lon) throws SocketTimeoutException, IOException,
+			WebServiceException, SAXException, ParserConfigurationException, UnknownHostException, HttpException {
+		IGeonamingService service = GpsActivator.getDefault().getNamingService();
 		return (service != null) ? service.fetchPlaceInfo(lat, lon) : null;
 	}
 
-	public static WaypointArea[] findLocation(String address)
-			throws SocketTimeoutException, IOException, WebServiceException,
-			SAXException, ParserConfigurationException, HttpException {
-		IGeonamingService service = GpsActivator.getDefault()
-				.getNamingService();
+	public static WaypointArea[] findLocation(String address) throws SocketTimeoutException, IOException,
+			WebServiceException, SAXException, ParserConfigurationException, HttpException {
+		IGeonamingService service = GpsActivator.getDefault().getNamingService();
 		return (service != null) ? service.findLocation(address) : null;
 	}
 
-	public static double fetchElevation(double lat, double lon)
-			throws IOException, HttpException {
+	public static double fetchElevation(double lat, double lon) throws IOException, HttpException {
 		BufferedReader reader = null;
 		try {
-			reader = new BufferedReader(
-					new InputStreamReader(
-							NetActivator
-									.getDefault()
-									.openStream(
-											NLS.bind(
-													"http://ws.geonames.org/srtm3?lat={0}&lng={1}", //$NON-NLS-1$
-													usformat.format(lat),
-													usformat.format(lon)))));
+			NumberFormat usformat = NumberFormat.getInstance(Locale.US);
+			usformat.setMaximumFractionDigits(5);
+			reader = new BufferedReader(new InputStreamReader(
+					NetActivator.getDefault().openStream(NLS.bind("http://ws.geonames.org/srtm3?lat={0}&lng={1}", //$NON-NLS-1$
+							usformat.format(lat), usformat.format(lon)))));
 			String readLine = reader.readLine();
 			if (readLine == null)
 				return Double.NaN;

@@ -24,7 +24,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.osgi.framework.BundleContext;
 
-import com.bdaum.zoom.gps.bing.internal.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
 /**
@@ -79,13 +78,6 @@ public class BingActivator extends ZUiPlugin {
 
 	public void logError(String message, Throwable e) {
 		getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, message, e));
-	}
-
-	public String getMapKey() {
-		String key = getPreferenceStore().getString(PreferenceConstants.BINGKEY);
-		if (key != null && key.trim().isEmpty())
-			return null;
-		return key;
 	}
 
 }

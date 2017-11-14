@@ -135,6 +135,8 @@ public class CollectionEditGroup {
 
 	private boolean networked;
 
+	private boolean isImport;
+
 	public CollectionEditGroup(Composite comp, SmartCollection current, boolean album, boolean readOnly,
 			boolean networked, ISizeHandler sizeHandler) {
 		this.comp = comp;
@@ -144,6 +146,7 @@ public class CollectionEditGroup {
 		this.networked = networked;
 		this.sizeHandler = sizeHandler;
 		this.isSystem = current != null && current.getSystem();
+		this.isImport = current != null && current.getStringId().startsWith(IDbManager.IMPORTKEY);
 		createSelectionAndSortCriteria(comp);
 	}
 
@@ -161,9 +164,8 @@ public class CollectionEditGroup {
 			createLabel(rowComp, Messages.CollectionEditDialog_group);
 			createLabel(rowComp, Messages.CollectionEditDialog_field);
 			createLabel(rowComp, Messages.CollectionEditDialog_relation);
-			Label valueLabel = createLabel(rowComp, Messages.CollectionEditDialog_value);
-			valueLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 6, 1));
-			parent.getShell().pack();
+			createLabel(rowComp, Messages.CollectionEditDialog_value)
+					.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 6, 1));
 			if (current == null || current.getCriterion().isEmpty())
 				addGroup(rowComp, null, null, false);
 			else
@@ -180,8 +182,7 @@ public class CollectionEditGroup {
 		createLabel(sortComp, Messages.CollectionEditDialog_sort_group);
 		createLabel(sortComp, Messages.CollectionEditDialog_sort_field);
 		createLabel(sortComp, Messages.CollectionEditDialog_direction);
-		Label filler = new Label(sortComp, SWT.NONE);
-		filler.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		new Label(sortComp, SWT.NONE).setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 
 		if (current == null)
 			addSortGroup(sortComp, null, new SortCriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, false));
@@ -201,7 +202,8 @@ public class CollectionEditGroup {
 
 	public void addGroup(Composite parent, CriterionGroup sender, Criterion crit, boolean and) {
 		int groupNo = sender != null ? groups.indexOf(sender) + 1 : groups.size();
-		CriterionGroup group = new CriterionGroup(parent, groupNo, this, crit, !readOnly && !isSystem, and, networked);
+		CriterionGroup group = new CriterionGroup(parent, groupNo, this, crit, !readOnly && !isSystem && !isImport, and,
+				networked);
 		if (sender != null)
 			group.moveBelow(sender);
 		groups.add(groupNo, group);

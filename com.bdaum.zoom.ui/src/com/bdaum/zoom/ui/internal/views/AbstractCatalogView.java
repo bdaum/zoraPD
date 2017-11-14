@@ -10,7 +10,6 @@ import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IOperationHistoryListener;
 import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.core.commands.operations.OperationHistoryEvent;
-import org.eclipse.core.commands.operations.UndoContext;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -109,8 +108,7 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 						if (firstElement instanceof SlideShowImpl || firstElement instanceof ExhibitionImpl
 								|| firstElement instanceof WebGalleryImpl) {
 							openSlideShowEditor(
-									firstElement instanceof SlideShowImpl ? (SlideShowImpl) firstElement : null,
-									false);
+									firstElement instanceof SlideShowImpl ? (SlideShowImpl) firstElement : null, false);
 							openExhibitionEditor(
 									firstElement instanceof ExhibitionImpl ? (ExhibitionImpl) firstElement : null,
 									false);
@@ -135,7 +133,6 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 	private IAction splitCatAction;
 	protected ColumnViewer viewer;
 	protected IOperationHistory operationHistory;
-	protected UndoContext undoContext;
 
 	protected static final IElementComparer elementComparer = new IdentifiedElementComparer();
 
@@ -339,12 +336,20 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 					}
 				} else if (obj instanceof GroupImpl) {
 					final GroupImpl current = (GroupImpl) obj;
+					String oldAnno = current.getAnnotations();
 					GroupDialog dialog = new GroupDialog(getSite().getShell(), current,
 							current.getGroup_subgroup_parent());
 					if (dialog.open() == Window.OK) {
-						current.setName(dialog.getValue());
+						current.setName(dialog.getName());
+						String newAnno = dialog.getAnnotations();
+						current.setAnnotations(newAnno);
+						current.setShowLabel(dialog.getShowLabel());
+						current.setLabelTemplate(dialog.getLabelTemplate());
 						dbManager.safeTransaction(null, current);
-						viewer.update(current, null);
+						if (oldAnno != null && !oldAnno.equals(newAnno) || oldAnno == null && newAnno != null)
+							refresh();
+						else
+							viewer.update(current, null);
 					}
 				}
 			}

@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
 import com.bdaum.zoom.css.internal.CssActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 public abstract class AbstractPreferencePagePart implements
@@ -104,7 +105,7 @@ public abstract class AbstractPreferencePagePart implements
 	 * @return - group control
 	 */
 	protected CGroup createGroup(Composite parent, int columns, String label) {
-		return AbstractPreferencePage.createGroup(parent, columns, label);
+		return UiUtilities.createGroup(parent, columns, label);
 	}
 
 	/**

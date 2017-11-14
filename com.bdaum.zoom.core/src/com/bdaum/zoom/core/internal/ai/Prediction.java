@@ -33,10 +33,10 @@ import org.eclipse.swt.graphics.Rectangle;
 
 public class Prediction {
 
-	private static NumberFormat nf = NumberFormat.getNumberInstance();
-	static {
-		nf.setMaximumFractionDigits(1);
-	}
+	// private static NumberFormat nf = NumberFormat.getNumberInstance();
+	// static {
+	// nf.setMaximumFractionDigits(1);
+	// }
 
 	public static class Token {
 
@@ -60,7 +60,9 @@ public class Prediction {
 
 		@Override
 		public String toString() {
-			return NLS.bind("{0} ({1}%)", label, nf.format(score*100)); //$NON-NLS-1$
+			NumberFormat nf = NumberFormat.getPercentInstance();
+			nf.setMaximumFractionDigits(1);
+			return NLS.bind("{0} ({1})", label, nf.format(score)); //$NON-NLS-1$
 		}
 
 		public void setMatch(int match) {
@@ -112,7 +114,7 @@ public class Prediction {
 	public void setConcepts(Token[] tokens) {
 		this.concepts = fold(tokens);
 	}
-	
+
 	public Token[] getKeywords() {
 		return keywords;
 	}
@@ -125,7 +127,7 @@ public class Prediction {
 		if (tokens == null)
 			return null;
 		Map<String, Token> map = new HashMap<>(tokens.length * 3 / 2);
-		for (Token token : tokens) { 
+		for (Token token : tokens) {
 			String label = token.label;
 			Token alias = map.get(label);
 			if (alias == null || token.score > alias.score)

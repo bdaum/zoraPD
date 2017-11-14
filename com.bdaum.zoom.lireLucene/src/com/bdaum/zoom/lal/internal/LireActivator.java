@@ -170,12 +170,10 @@ public class LireActivator extends Plugin {
 				} catch (IOException e) {
 					// ignore
 				}
-			else {
-				if (useCount > 1)
-					readerCounts.put(indexReader, new Integer(Math.max(0, useCount - 1)));
-				else
-					readerCounts.remove(indexReader);
-			}
+			else if (useCount > 1)
+				readerCounts.put(indexReader, new Integer(Math.max(0, useCount - 1)));
+			else
+				readerCounts.remove(indexReader);
 			Iterator<IndexReader> it = obsoleteReaders.iterator();
 			while (it.hasNext()) {
 				IndexReader reader = it.next();
@@ -189,7 +187,6 @@ public class LireActivator extends Plugin {
 						// ignore
 					}
 					it.remove();
-					indexReaderMap.remove(reader);
 				}
 			}
 		}
@@ -528,6 +525,8 @@ public class LireActivator extends Plugin {
 	}
 
 	public Algorithm[] getSupportedSimilarityAlgorithms() {
+		if (Lire.SupportedSimilarityAlgorithms == null)
+			Lire.setUpAlgorithms();
 		return Lire.SupportedSimilarityAlgorithms;
 	}
 

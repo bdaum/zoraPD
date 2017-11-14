@@ -23,6 +23,7 @@ package com.bdaum.zoom.ui.internal.actions;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -116,28 +117,44 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 					Messages.SlideshowActionDelegate_adhoc_slideshow, true, false);
 			List<SlideImpl> slides = createSlides(selectedAssets, show);
 			SlideShowPlayer player = new SlideShowPlayer(window, show, slides, true);
-			player.create(0);
+			player.create();
+			player.prepare(0);
 			if (dialog.open() == Window.OK) {
-				updateSlides(slides, show);
+				if (updateSlides(slides, show, dialog.getPrivacy())) {
+					if (slides.isEmpty()) {
+						player.close();
+						return;
+					}
+					player.prepare(0);
+				}
 				player.open(0);
-
 			} else
 				player.close();
 		}
 	}
 
-	private static void updateSlides(List<SlideImpl> slides, SlideShowImpl show) {
+	private static boolean updateSlides(List<SlideImpl> slides, SlideShowImpl show, int privacy) {
+		boolean filtered = false;
 		int fading = show.getFading();
 		int duration = show.getDuration();
 		int lag = Math.min(fading / 3, duration / 2);
 		int effect = show.getEffect();
-		for (SlideImpl slide : slides) {
-			slide.setDelay(fading);
-			slide.setFadeIn(fading);
-			slide.setDuration(duration);
-			slide.setFadeOut(fading + lag);
-			slide.setEffect(effect);
+		Iterator<SlideImpl> it = slides.iterator();
+		while (it.hasNext()) {
+			SlideImpl slide = it.next();
+			int safety = slide.getSafety();
+			if (safety > privacy) {
+				it.remove();
+				filtered = true;
+			} else {
+				slide.setDelay(fading);
+				slide.setFadeIn(fading);
+				slide.setDuration(duration);
+				slide.setFadeOut(fading + lag);
+				slide.setEffect(effect);
+			}
 		}
+		return filtered;
 	}
 
 	private static List<SlideImpl> createSlides(List<Asset> selectedAssets, SlideShowImpl show) {
@@ -171,7 +188,7 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 				if (effect == Constants.SLIDE_TRANSITION_RANDOM)
 					effect = (int) (Math.random() * Constants.SLIDE_TRANSITION_N);
 				SlideImpl slide = new SlideImpl(tit, index, null, Constants.SLIDE_NO_THUMBNAILS, fading, fading,
-						duration, fading + lag, effect, false, asset.getStringId());
+						duration, fading + lag, effect, false, asset.getSafety(), asset.getStringId());
 				slides.add(slide);
 				show.addEntry(slide.getStringId());
 				slide.setSlideShow_entry_parent(id);

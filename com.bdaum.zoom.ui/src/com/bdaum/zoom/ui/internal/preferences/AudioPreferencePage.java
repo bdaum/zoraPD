@@ -26,6 +26,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 
 import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
@@ -75,7 +76,7 @@ public class AudioPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createVoiceGroup(Composite composite) {
-		CGroup group = createGroup(composite, 2, Messages.getString("AudioPreferencePage.voice_notes")); //$NON-NLS-1$
+		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("AudioPreferencePage.voice_notes")); //$NON-NLS-1$
 		final String[] rateLabels = new String[] { "11 kHz", //$NON-NLS-1$
 				"22 kHz", //$NON-NLS-1$
 				"44 kHz" }; //$NON-NLS-1$
@@ -90,7 +91,7 @@ public class AudioPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createSignalsGroup(Composite composite) {
-		CGroup group = createGroup(composite, 2, Messages.getString("AudioPreferencePage.signals")); //$NON-NLS-1$
+		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("AudioPreferencePage.signals")); //$NON-NLS-1$
 		alarmOnPromptButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("AppearancePreferencePage.acoustinc_alarm_on_prompt"), //$NON-NLS-1$
 				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));

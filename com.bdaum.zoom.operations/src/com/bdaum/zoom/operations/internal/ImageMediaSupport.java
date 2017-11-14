@@ -26,6 +26,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -171,10 +172,12 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 				try {
 					if (configuration.dngFolder != null && !configuration.dngFolder.isEmpty()) {
 						int p = dngUriAsString.lastIndexOf('/');
-						String dngFolderUri = dngUriAsString.substring(0, p + 1) + configuration.dngFolder;
-						dngUriAsString = dngFolderUri + dngUriAsString.substring(p);
-						dngFolder = new File(new URI(dngFolderUri));
+						StringBuilder sb = new StringBuilder();
+						sb.append(dngUriAsString, 0, p + 1).append(configuration.dngFolder);
+						dngFolder = new File(new URI(sb.toString()));
 						dngFolder.mkdir();
+						sb.append(dngUriAsString, p, dngUriAsString.length());
+						dngUriAsString = sb.toString();
 					}
 					dngURI = new URI(dngUriAsString);
 					existingDng = AssetEnsemble.getAllAssets(dbManager, dngURI, importState);
@@ -354,7 +357,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 					if (importFromDeviceData != null && originalFile != null) {
 						String originalUri = (remote != null ? remote : originalFile.toURI()).toString();
 						if (isRaw || isDng) {
-							File jpegFile = findJpegSibling(originalUri);
+							File jpegFile = remote != null ? null : findJpegSibling(originalFile);
 							if (jpegFile != null && importFromDeviceData.getSkipPolicy() == Constants.SKIP_JPEG_IF_RAW)
 								importState.skipFile = jpegFile;
 							if (!importFromDeviceData.getExifTransferPrefix().isEmpty()) {
@@ -364,7 +367,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 									exifFile = jpegFile;
 							}
 						} else if (isJpeg) {
-							File rawFile = findRawSibling(originalUri);
+							File rawFile = remote != null ? null : findRawSibling(originalFile);
 							if (rawFile != null && importFromDeviceData.getSkipPolicy() == Constants.SKIP_RAW_IF_JPEG)
 								importState.skipFile = rawFile;
 						}
@@ -530,7 +533,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 				String assetId = asset.getStringId();
 				List<DerivedByImpl> set = dbManager.obtainObjects(DerivedByImpl.class, "derivative", imageURI, //$NON-NLS-1$
 						QueryField.EQUALS);
-				for (DerivedByImpl rel : set) {
+				for (DerivedByImpl rel : set)
 					if (!toBeDeleted.contains(rel)) {
 						toBeDeleted.add(rel);
 						importState.allDeletedRelations.add(rel);
@@ -540,16 +543,14 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 								tool == null ? asset.getSoftware() : tool,
 								date.getTime() == 0 ? asset.getLastModification() : date, assetId, rel.getOriginal()));
 					}
-				}
 				set = dbManager.obtainObjects(DerivedByImpl.class, "original", imageURI, QueryField.EQUALS); //$NON-NLS-1$
-				for (DerivedByImpl rel : set) {
+				for (DerivedByImpl rel : set)
 					if (toBeDeleted.contains(rel)) {
 						toBeDeleted.add(rel);
 						importState.allDeletedRelations.add(rel);
 						toBeStored.add(new DerivedByImpl(rel.getRecipe(), rel.getParameterFile(), rel.getTool(),
 								rel.getDate(), rel.getDerivative(), assetId));
 					}
-				}
 			}
 
 			List<Asset> assetsToIndex = new ArrayList<Asset>();
@@ -601,7 +602,8 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 						theight = twidth;
 						twidth = www;
 					}
-					previewImage.setScaling(twidth, theight, false, ImportState.MCUWidth, null); // , ZImage.SCALE_DEFAULT);
+					previewImage.setScaling(twidth, theight, false, ImportState.MCUWidth, null); // ,
+																									// ZImage.SCALE_DEFAULT);
 					String s = tool.getMetadata().get(QueryField.EXIF_ORIENTATION.getExifToolKey());
 					if (s != null) {
 						try {
@@ -634,10 +636,8 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 			importState.getConfiguration().rawConverter = rawConverter;
 		}
 		Options options = null;
-		if (recipe != null && recipe != Recipe.NULL) {
-			options = new Options();
-			recipe.setSampleFactor(rawConverter.deriveOptions(recipe, options, IRawConverter.THUMB));
-		}
+		if (recipe != null && recipe != Recipe.NULL)
+			recipe.setSampleFactor(rawConverter.deriveOptions(recipe, options = new Options(), IRawConverter.THUMB));
 		return BatchActivator.getDefault().convertFile(dngFile, rawConverter.getId(), rawConverter.getPath(), options,
 				true, CoreActivator.getDefault().getFileWatchManager(), importState.operation.getOpId(), monitor);
 	}
@@ -650,30 +650,33 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 		}
 	}
 
-	private static File findJpegSibling(String originalUri) throws URISyntaxException {
-		String jpegUri = Core.removeExtensionFromUri(originalUri);
-		for (String ext : ImageConstants.JPEGEXTENSIONS) {
-			File jpegFile = new File(new URI(jpegUri + ext));
-			if (jpegFile.exists())
-				return jpegFile;
-			jpegFile = new File(new URI(jpegUri + ext.toUpperCase()));
-			if (jpegFile.exists())
-				return jpegFile;
-		}
-		return null;
+	private static File findJpegSibling(File file) {
+		File folder = file.getParentFile();
+		String oname = file.getName();
+		int p = oname.lastIndexOf('.');
+		final String origname = p < 0 ? oname + '.' : oname.substring(0, p + 1);
+		String[] members = folder.list(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith(origname) && ImageConstants.isJpeg(name.substring(origname.length()));
+			}
+		});
+		return members == null || members.length == 0 ? null : new File(folder, members[0]);
 	}
 
-	private static File findRawSibling(String originalUri) throws URISyntaxException {
-		String rawUri = Core.removeExtensionFromUri(originalUri);
-		for (String ext : ImageConstants.getRawFormatMap().keySet()) {
-			File rawFile = new File(new URI(rawUri + '.' + ext));
-			if (rawFile.exists())
-				return rawFile;
-			rawFile = new File(new URI(rawUri + '.' + ext.toUpperCase()));
-			if (rawFile.exists())
-				return rawFile;
-		}
-		return null;
+	private static File findRawSibling(File file) {
+		File folder = file.getParentFile();
+		String oname = file.getName();
+		int p = oname.lastIndexOf('.');
+		final String origname = p < 0 ? oname + '.' : oname.substring(0, p + 1);
+		String[] members = folder.list(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith(origname)
+						&& ImageConstants.getRawFormatMap().containsKey(name.substring(origname.length()));
+			}
+		});
+		return members == null || members.length == 0 ? null : new File(folder, members[0]);
 	}
 
 	private byte[] archiveRecipe(String parmFile, byte[] archivedRecipe) {
@@ -711,8 +714,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 			String recipe, boolean archiveRecipe, Date creationDate, Date lastModification, String tool,
 			String parmFile, Collection<Object> toBeStored, Collection<Object> toBeDeleted) {
 		IDbManager dbManager = Core.getCore().getDbManager();
-		// First check if inverse relationship
-		// exists
+		// First check if inverse relationship exists
 		List<DerivedByImpl> set = dbManager.obtainObjects(DerivedByImpl.class, false, "derivative", origId, //$NON-NLS-1$
 				QueryField.EQUALS, "original", //$NON-NLS-1$
 				derivId, QueryField.EQUALS);
@@ -998,8 +1000,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 					height = twidth;
 					twidth = www;
 				}
-				double scale = image.setScaling(twidth, height, false, ImportState.MCUWidth, null); //,
-//						ZImage.SCALE_DEFAULT);
+				double scale = image.setScaling(twidth, height, false, ImportState.MCUWidth, null);
 				if (recipe != null)
 					recipe.setScaling((float) scale);
 				if (angle != 0)

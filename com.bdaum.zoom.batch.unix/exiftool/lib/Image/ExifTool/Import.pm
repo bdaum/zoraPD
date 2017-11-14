@@ -12,7 +12,7 @@ require Exporter;
 
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = '1.06';
+$VERSION = '1.08';
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(ReadCSV ReadJSON);
 
@@ -100,6 +100,8 @@ sub ReadCSV($$;$)
             }
             last if $err;
             @tags or $err = 'No tags found', last;
+            # fix "SourceFile" case if necessary
+            $tags[0] = 'SourceFile' if lc $tags[0] eq 'sourcefile';
         }
     }
     close CSVFILE if $openedFile;
@@ -137,6 +139,9 @@ sub ReadJSONObject($;$)
         $pos = 0;
     }
 Tok: for (;;) {
+        # (didn't spend the time to understand how $pos could be undef, but
+        #  put a test here to be safe because one user reported this problem)
+        last unless defined $pos;
         if ($pos >= length $$buffPt or $readMore) {
             # read another 64kB and add to unparsed data
             my $offset = length($$buffPt) - $pos;
@@ -259,8 +264,16 @@ sub ReadJSON($$;$$)
     my ($info, $found);
     foreach $info (@$obj) {
         next unless ref $info eq 'HASH';
-        # assume a SourceFile of '*' if none specified
-        defined $$info{SourceFile} or $$info{SourceFile} = '*';
+        # fix "SourceFile" case, or assume '*' if SourceFile not specified
+        unless (defined $$info{SourceFile}) {
+            my ($key) = grep /^SourceFile$/i, keys %$info;
+            if ($key) {
+                $$info{SourceFile} = $$info{$key};
+                delete $$info{$key};
+            } else {
+                $$info{SourceFile} = '*';
+            }
+        }
         if (defined $missingValue) {
             $$info{$_} eq $missingValue and $$info{$_} = undef foreach keys %$info;
         }

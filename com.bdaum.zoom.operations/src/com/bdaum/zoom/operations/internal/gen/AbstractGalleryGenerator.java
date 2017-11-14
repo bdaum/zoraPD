@@ -34,8 +34,6 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URI;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -43,7 +41,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -232,8 +229,6 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	private static final int COND = 3;
 	private static final int CONDEND = 4;
 	protected static final String HTTP = "http://"; //$NON-NLS-1$
-	protected static final NumberFormat nf = (NumberFormat.getNumberInstance(Locale.US));
-	protected static final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ"); //$NON-NLS-1$
 	protected static final String HTTPS = "https://"; //$NON-NLS-1$
 	private static final File[] EMPTYFILES = new File[0];
 	private File imageFolder;
@@ -1110,7 +1105,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 					sb.append("  -  "); //$NON-NLS-1$
 				if (label.startsWith(HTTP))
 					label = label.substring(HTTP.length());
-				if (label.startsWith(HTTPS))
+				else if (label.startsWith(HTTPS))
 					label = label.substring(HTTPS.length());
 				generateLink(web, sb);
 				sb.append(BatchUtilities.encodeHTML(label, false)).append("</a>"); //$NON-NLS-1$

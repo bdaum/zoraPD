@@ -76,6 +76,7 @@ import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.FileEditor;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
@@ -110,8 +111,6 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 
 	protected Button defaultEditorButton;
 
-	protected Label editorLabel;
-
 	protected Map<EditorDescriptor, Image> editorsToImages;
 
 	private Button editResourceTypeButton;
@@ -129,6 +128,8 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 
 	private Set<EditorDescriptor> addedEditors = new HashSet<EditorDescriptor>(5);
 
+	private CGroup editorGroup;
+
 	public FileAssociationsPreferencePage() {
 		setDescription(Messages.getString("FileAssociationsPreferencePage.how_to_interact")); //$NON-NLS-1$
 	}
@@ -141,9 +142,9 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		GridLayout layout = new GridLayout();
 		composite.setLayout(layout);
 		createTabFolder(composite, "Asso"); //$NON-NLS-1$
-		CTabItem tabItem0 = createTabItem(tabFolder, Messages.getString("FileAssociationsPreferencePage.general")); //$NON-NLS-1$
+		CTabItem tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.getString("FileAssociationsPreferencePage.general")); //$NON-NLS-1$
 		tabItem0.setControl(createGeneralGroup(tabFolder));
-		CTabItem tabItem1 = createTabItem(tabFolder, Messages.getString("FileAssociationsPreferencePage.file_assos")); //$NON-NLS-1$
+		CTabItem tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.getString("FileAssociationsPreferencePage.file_assos")); //$NON-NLS-1$
 		tabItem1.setControl(createAssociationGroup(tabFolder));
 		initTabFolder(0);
 		setHelp(HelpContextIds.FILE_ASSOCIATIONS_PREFERENCE_PAGE);
@@ -207,38 +208,29 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		// define container & its gridding
 		Composite innerComp = new Composite(comp, SWT.NONE);
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		innerComp.setLayout(layout);
-		GridData data = new GridData();
-		data.verticalAlignment = GridData.FILL;
-		data.horizontalAlignment = GridData.FILL;
-		innerComp.setLayoutData(data);
+		innerComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		// layout the top table & its buttons
-		Label label = new Label(innerComp, SWT.LEFT);
-		label.setText(Messages.getString("FileAssociationsPreferencePage.File_types")); //$NON-NLS-1$
-		data = new GridData();
-		data.horizontalAlignment = GridData.FILL;
-		data.horizontalSpan = 2;
-		label.setLayoutData(data);
+		CGroup resGroup = UiUtilities.createGroup(innerComp, 2, Messages.getString("FileAssociationsPreferencePage.File_types")); //$NON-NLS-1$
 
-		resourceTypeTable = new Table(innerComp,
+		resourceTypeTable = new Table(resGroup,
 				SWT.SINGLE | SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL);
 		resourceTypeTable.addListener(SWT.Selection, this);
 		resourceTypeTable.addListener(SWT.DefaultSelection, this);
-		data = new GridData(GridData.FILL_HORIZONTAL);
+		
 		int fontHeight = (innerComp.getFont().getFontData())[0].getHeight();
 		int displayHeight = innerComp.getDisplay().getPrimaryMonitor().getClientArea().height;
 
 		int availableRows = displayHeight / fontHeight;
-
-		data.heightHint = resourceTypeTable.getItemHeight() * (availableRows / 8);
-		data.widthHint = 330;
+		GridData data = new GridData(SWT.FILL, SWT.BEGINNING, false, false);
+		data.heightHint = resourceTypeTable.getItemHeight() * (availableRows / 11);
+		data.widthHint = 500;
 		resourceTypeTable.setLayoutData(data);
 
-		Composite groupComponent = new Composite(innerComp, SWT.NULL);
+		Composite groupComponent = new Composite(resGroup, SWT.NULL);
 		GridLayout groupLayout = new GridLayout();
 		groupLayout.marginWidth = 0;
 		groupLayout.marginHeight = 0;
@@ -266,27 +258,29 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		setButtonLayoutData(removeResourceTypeButton);
 
 		// Spacer
-		label = new Label(innerComp, SWT.LEFT);
-		data = new GridData();
-		data.horizontalAlignment = GridData.FILL;
-		data.horizontalSpan = 2;
-		label.setLayoutData(data);
+//		new Label(innerComp, SWT.LEFT);
+//		data = new GridData();
+//		data.horizontalAlignment = GridData.FILL;
+//		data.horizontalSpan = 2;
+//		label.setLayoutData(data);
+		
+		editorGroup = UiUtilities.createGroup(innerComp, 2, Messages.getString("FileAssociationsPreferencePage.editors")); //$NON-NLS-1$
 
-		// layout the bottom table & its buttons
-		editorLabel = new Label(innerComp, SWT.LEFT);
-		data = new GridData();
-		data.horizontalAlignment = GridData.FILL;
-		data.horizontalSpan = 2;
-		editorLabel.setLayoutData(data);
+//		// layout the bottom table & its buttons
+//		editorLabel = new Label(innerComp, SWT.LEFT);
+//		data = new GridData();
+//		data.horizontalAlignment = GridData.FILL;
+//		data.horizontalSpan = 2;
+//		editorLabel.setLayoutData(data);
 
-		editorTable = new Table(innerComp, SWT.SINGLE | SWT.BORDER);
+		editorTable = new Table(editorGroup, SWT.SINGLE | SWT.BORDER);
 		editorTable.addListener(SWT.Selection, this);
 		editorTable.addListener(SWT.DefaultSelection, this);
 		data = new GridData(GridData.FILL_BOTH);
-		data.heightHint = editorTable.getItemHeight() * 7;
+		data.heightHint = editorTable.getItemHeight() * 6;
 		editorTable.setLayoutData(data);
 
-		groupComponent = new Composite(innerComp, SWT.NULL);
+		groupComponent = new Composite(editorGroup, SWT.NULL);
 		groupLayout = new GridLayout();
 		groupLayout.marginWidth = 0;
 		groupLayout.marginHeight = 0;
@@ -332,11 +326,12 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 					editor.setProgram(program);
 					addEditorToResourceType(editor);
 				}
-				updateSelectedResourceType();
 			}
 		});
+		
+		CGroup optionsGroup = UiUtilities.createGroup(innerComp, 1, Messages.getString("FileAssociationsPreferencePage.options")); //$NON-NLS-1$
 
-		rememberLastButton = WidgetFactory.createCheckButton(innerComp,
+		rememberLastButton = WidgetFactory.createCheckButton(optionsGroup,
 				Messages.getString("FileAssociationsPreferencePage.remember_last"), null); //$NON-NLS-1$
 		rememberLastButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -503,7 +498,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 			String fileTypes = items[0].getText();
 			if (fileTypes.length() > 20)
 				fileTypes = fileTypes.substring(0, 20) + "…"; //$NON-NLS-1$
-			editorLabel.setText(
+			editorGroup.setText(
 					NLS.bind(Messages.getString("FileAssociationsPreferencePage.Associates_editors"), fileTypes)); //$NON-NLS-1$
 			if (resourceType != null) {
 				rememberLast = resourceType.isRememberLast();
@@ -529,7 +524,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 				}
 			}
 		} else
-			editorLabel.setText(""); //$NON-NLS-1$
+			editorGroup.setText(Messages.getString("FileAssociationsPreferencePage.editors")); //$NON-NLS-1$
 		rememberLastButton.setSelection(rememberLast);
 	}
 
@@ -570,20 +565,9 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 			item.setImage(getImage(editor));
 			editorTable.setSelection(i);
 			editorTable.setFocus();
-			updateSelectedResourceType(); // in case of new default
 		}
 	}
 
-	/**
-	 * Update the selected type.
-	 */
-	public void updateSelectedResourceType() {
-		// TableItem item = resourceTypeTable.getSelection()[0]; //Single select
-		// Image image =
-		// ((FileEditorMapping)item.getData()).getImageDescriptor().getImage();
-		// imagesToDispose.addElement(image);
-		// item.setImage(image);
-	}
 
 	/**
 	 * Prompt for resource type.
@@ -752,7 +736,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		boolean editorSelected = editorTable.getSelectionIndex() != -1;
 		editResourceTypeButton.setEnabled(resourceTypeSelected);
 		removeResourceTypeButton.setEnabled(resourceTypeSelected);
-		editorLabel.setEnabled(resourceTypeSelected);
+		editorGroup.setEnabled(resourceTypeSelected);
 		addEditorButton.setEnabled(resourceTypeSelected);
 		removeEditorButton.setEnabled(editorSelected);
 		defaultEditorButton.setEnabled(editorSelected);

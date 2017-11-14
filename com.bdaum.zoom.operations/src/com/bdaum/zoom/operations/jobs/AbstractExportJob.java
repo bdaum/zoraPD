@@ -103,7 +103,7 @@ public abstract class AbstractExportJob extends CustomJob {
 	 *            - true if watermark is to be created
 	 * @param copyright
 	 *            - copyright notice for watermark
-	 * @param rating
+	 * @param privacy
 	 *            - privacy level (QueryField.SAFETY_SAFE,
 	 *            QueryField.SAFETY_MODERATE, QueryField.SAFETY_RESTRICTED)
 	 * @param adaptable
@@ -111,18 +111,17 @@ public abstract class AbstractExportJob extends CustomJob {
 	 */
 	public AbstractExportJob(String name, List<Asset> assets, int mode, int sizing, double scale, int maxSize,
 			UnsharpMask umask, int jpegQuality, Set<QueryField> xmpFilter, boolean createWatermark, String copyright,
-			int rating, IAdaptable adaptable) {
+			int privacy, IAdaptable adaptable) {
 		super(name);
 		this.sizing = sizing;
 		this.umask = umask;
-//		this.scalingMethod = scalingMethod;
 		this.jpegQuality = jpegQuality;
-		if (rating == QueryField.SAFETY_RESTRICTED)
+		if (privacy == QueryField.SAFETY_RESTRICTED)
 			this.assets = assets;
 		else {
 			List<Asset> filteredAssets = new ArrayList<Asset>();
 			for (Asset asset : assets)
-				if (asset.getSafety() <= rating)
+				if (asset.getSafety() <= privacy)
 					filteredAssets.add(asset);
 			this.assets = filteredAssets;
 		}

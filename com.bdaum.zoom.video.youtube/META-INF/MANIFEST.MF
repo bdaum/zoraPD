@@ -2,10 +2,10 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.video.youtube;singleton:=true
-Bundle-Version: 3.1.0
+Bundle-Version: 3.2.0
 Bundle-Activator: com.bdaum.zoom.video.youtube.internal.Activator
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: com.bdaum.zoom.video;bundle-version="3.1.0",
+Require-Bundle: com.bdaum.zoom.video;bundle-version="3.2.0",
  com.bdaum.zoom.net.communities
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
@@ -14,5 +14,5 @@ Bundle-ClassPath: .,
  gdata-media-1.0.jar,
  gdata-youtube-2.0.jar,
  gdata-core-1.0.jar,
- guava-13.1.0.jar,
+ guava-13.2.0.jar,
  mailapi.jar

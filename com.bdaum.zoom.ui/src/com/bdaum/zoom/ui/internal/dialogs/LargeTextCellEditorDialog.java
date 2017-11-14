@@ -49,7 +49,6 @@ public class LargeTextCellEditorDialog extends ZTitleAreaDialog {
 			viewer.setText(value.toString());
 		viewer.setLayoutData(layoutData);
 		viewer.addVerifyListener(new VerifyListener() {
-
 			public void verifyText(VerifyEvent e) {
 				String newText = viewer.getText().substring(0, e.start) + e.text
 						+ viewer.getText().substring(e.end);

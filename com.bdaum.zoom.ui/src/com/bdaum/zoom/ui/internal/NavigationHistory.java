@@ -763,15 +763,15 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	}
 
 	public void perspectiveActivated(IWorkbenchPage page, IPerspectiveDescriptor perspective) {
-		// do nothing
-	}
-
-	public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId) {
 		if (!previousStack.isEmpty()) {
 			HistoryItem current = previousStack.peek();
 			push(new HistoryItem(current.getQuery(), current.getGeneration(), perspective.getId(),
 					current.getFilters(), current.getSort()));
 		}
+	}
+
+	public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId) {
+		// do nothing
 	}
 
 	/*

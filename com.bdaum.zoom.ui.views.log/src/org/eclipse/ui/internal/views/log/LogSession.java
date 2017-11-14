@@ -63,8 +63,7 @@ public class LogSession extends Group {
 			if (delim == -1) {
 				return;
 			}
-			String dateBuffer = line.substring(0, delim).trim();
-			setDate(dateBuffer);
+			setDate(line.substring(0, delim).trim());
 		}
 	}
 

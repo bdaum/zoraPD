@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Monitor;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
@@ -76,7 +77,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createDisplayGroup(Composite composite) {
-		CGroup group = createGroup(composite, 2, Messages.getString("GeneralPreferencePage.display")); //$NON-NLS-1$
+		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("GeneralPreferencePage.display")); //$NON-NLS-1$
 		final String[] options = new String[] { String.valueOf(ImageConstants.NOCMS),
 				String.valueOf(ImageConstants.SRGB), String.valueOf(ImageConstants.ARGB) };
 
@@ -96,7 +97,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createViewerGroup(Composite composite) {
-		CGroup group = createGroup(composite, 2, Messages.getString("GeneralPreferencePage.internal_viewers")); //$NON-NLS-1$
+		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("GeneralPreferencePage.internal_viewers")); //$NON-NLS-1$
 		previewButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("GeneralPreferencePage.precede_with_preview"), //$NON-NLS-1$
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
@@ -154,7 +155,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createMiscGroup(Composite composite) {
-		CGroup group = createGroup(composite, 2, Messages.getString("GeneralPreferencePage.general")); //$NON-NLS-1$
+		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("GeneralPreferencePage.general")); //$NON-NLS-1$
 		new Label(group, SWT.NONE).setText(Messages.getString("GeneralPreferencePage.Undo_levels")); //$NON-NLS-1$
 		undoField = new NumericControl(group, SWT.NONE);
 		undoField.setMinimum(1);

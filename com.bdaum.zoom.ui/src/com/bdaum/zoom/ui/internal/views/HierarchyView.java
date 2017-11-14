@@ -348,7 +348,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 				Asset asset = node.getAsset();
 				StringBuilder sb = new StringBuilder();
 				insertIndent(sb, indent);
-				sb.append(UiUtilities.computeImageCaption(asset, null, null, null));
+				sb.append(UiUtilities.computeImageCaption(asset, null, null, null, null));
 				int uriLength = sb.length();
 				Date lastModification = asset == null ? null : asset.getLastModification();
 				if (lastModification != null) {
@@ -838,11 +838,11 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		Asset asset = node.getAsset();
 		if (asset != null) {
 			SmartCollectionImpl collection = new SmartCollectionImpl(
-					NLS.bind(
-							originals ? Messages.getString("HierarchyView.possible_originals") //$NON-NLS-1$
-									: Messages.getString("HierarchyView.possible_derivatives"), //$NON-NLS-1$
+					NLS.bind(originals ? Messages.getString("HierarchyView.possible_originals") //$NON-NLS-1$
+							: Messages.getString("HierarchyView.possible_derivatives"), //$NON-NLS-1$
 							asset.getName()),
-					false, false, true, false, null, 0, null, 0, null, new HierarchyPostProcessor(node));
+					false, false, true, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0,
+					new HierarchyPostProcessor(node));
 			collection.addCriterion(new CriterionImpl(QueryField.EXIF_ORIGINALFILENAME.getKey(), null,
 					asset.getOriginalFileName(), QueryField.EQUALS, true));
 			collection.addCriterion(new CriterionImpl(QueryField.LASTMOD.getKey(), null, asset.getLastModification(),

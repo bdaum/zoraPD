@@ -115,7 +115,7 @@ public class GotoBookmarkAction extends Action {
 						if (!shown) {
 							SmartCollectionImpl newColl = new SmartCollectionImpl(
 									Messages.GotoBookmarkAction_bookmarked,
-									false, false, true, true, null, 0, null, 0, null, null);
+									false, false, true, true, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 							newColl.addCriterion(new CriterionImpl(
 									Constants.OID, null, assetId,
 									QueryField.EQUALS, false));

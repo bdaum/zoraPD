@@ -106,12 +106,6 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 
 	private static final String VAR_START = "var start = '"; //$NON-NLS-1$
 	private static final String ROOMPREFIX = "room_"; //$NON-NLS-1$
-	private static final NumberFormat nf1 = NumberFormat.getInstance(Locale.US);
-
-	static {
-		nf1.setMaximumFractionDigits(8);
-		nf1.setGroupingUsed(false);
-	}
 
 	private String opId = java.util.UUID.randomUUID().toString();
 	private IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
@@ -367,6 +361,9 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 		sangle -= 190;
 		double tx = 30 * Math.cos(Math.toRadians(sangle));
 		double ty = 30 * Math.sin(Math.toRadians(sangle));
+		NumberFormat nf1 = NumberFormat.getInstance(Locale.US);
+		nf1.setMaximumFractionDigits(8);
+		nf1.setGroupingUsed(false);
 		sb.append("],") //$NON-NLS-1$
 				.append("\r\n\t\"params\": {\r\n\t\t\"id\" : '").append(exhibitionId) //$NON-NLS-1$
 				.append("',\r\n" //$NON-NLS-1$
@@ -738,6 +735,9 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 
 	private static void generateImageFragment(StringBuilder sb, String roomName, int tagId, String image, double ix,
 			double iy, double iz, double iangle, double dzoom, double distView, String doorColor) {
+		NumberFormat nf1 = NumberFormat.getInstance(Locale.US);
+		nf1.setMaximumFractionDigits(8);
+		nf1.setGroupingUsed(false);
 		sb.append(",\r\n\t\t\"image\": {\r\n\t\t\t\"tagid\":") //$NON-NLS-1$
 				.append(tagId).append(",\r\n\t\t\t\"src\": \"") //$NON-NLS-1$
 				.append(roomName).append('/').append(image).append("\",\r\n\t\t\t\"x\":").append(nf1.format(ix)) //$NON-NLS-1$
@@ -753,6 +753,9 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 
 	private static void generateWallFragment(StringBuilder sb, double x1, double y1, double z1, double x2, double y2,
 			double z2, Rgb_type rgb, int zIndexOffset, int zIdx, boolean horizontal, String comment) {
+		NumberFormat nf1 = NumberFormat.getInstance(Locale.US);
+		nf1.setMaximumFractionDigits(8);
+		nf1.setGroupingUsed(false);
 		sb.append(",\r\n\t{\r\n\t// ") //$NON-NLS-1$
 				.append(comment).append("\r\n\t\"type\": \"poly\",\r\n		\"fillColor\": {\"r\": ") //$NON-NLS-1$
 				.append(rgb.getR()).append(", \"g\": ") //$NON-NLS-1$
@@ -1205,6 +1208,9 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 
 	private void generateSpriteFragment(StringBuilder sb, String roomName, String sprite, double lx, double ly,
 			double lz, double zoom) {
+		NumberFormat nf1 = NumberFormat.getInstance(Locale.US);
+		nf1.setMaximumFractionDigits(8);
+		nf1.setGroupingUsed(false);
 		sb.append("{\r\n\t\t\"type\": \"sprite\",\r\n\t\t\"src\": \"") //$NON-NLS-1$
 				.append(roomName).append('/').append(sprite).append("\",\r\n\t\t\"x\": ") //$NON-NLS-1$
 				.append(nf1.format(lx)).append(",\r\n\t\t\"y\": ") //$NON-NLS-1$

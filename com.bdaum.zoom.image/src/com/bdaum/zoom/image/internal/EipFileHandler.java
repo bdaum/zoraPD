@@ -33,11 +33,7 @@ public class EipFileHandler implements IFileHandler {
 				String entryName = entry.getName();
 				if (entryName.startsWith("0.")) { //$NON-NLS-1$
 					int p = entryName.lastIndexOf('.');
-					String extension;
-					if (p >= 0)
-						extension = entryName.substring(p);
-					else
-						extension = ""; //$NON-NLS-1$
+					String extension = p >= 0 ? entryName.substring(p) : ""; //$NON-NLS-1$
 					File out = ImageActivator.getDefault().createTempFile("Eip", extension); //$NON-NLS-1$
 					int count;
 					byte data[] = new byte[BUFFER];

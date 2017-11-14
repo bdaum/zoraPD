@@ -1,298 +1,171 @@
+/*
+ * This file is part of the ZoRa project: http://www.photozora.org.
+ *
+ * ZoRa is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ZoRa is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ZoRa; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c) 2009-2917 Berthold Daum  (berthold.daum@bdaum.de)
+ */
 package com.bdaum.zoom.ui.internal.preferences;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
-import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.internal.operations.AutoRule;
-import com.bdaum.zoom.css.ZColumnLabelProvider;
-import com.bdaum.zoom.job.OperationJob;
-import com.bdaum.zoom.operations.internal.AutoRuleOperation;
+import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.IRelationDetector;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
-import com.bdaum.zoom.ui.internal.dialogs.AutoRuleDialog;
+import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.dialogs.AutoRuleComponent;
+import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
+import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
-@SuppressWarnings("restriction")
 public class AutoPreferencePage extends AbstractPreferencePage {
 
+	public static final String ID = "com.bdaum.zoom.ui.preferences.AutoPreferencePage"; //$NON-NLS-1$
+	public static final String RULES = "rules"; //$NON-NLS-1$
 	private CTabItem tabItem0;
-	private TableViewer ruleViewer;
-	private List<AutoRule> autoRules = new ArrayList<AutoRule>();
-
-	private Button editAutoButton;
-
-	private Button removeAutoButton;
-	private Button applyButton;
+	private AutoRuleComponent ruleComponent;
+	private CTabItem tabItem1;
+	private CheckboxButton autoButton;
+	private Map<String, CheckboxButton> detectorButtons = new HashMap<>(5);
+	private CheckboxButton xmpButton;
+	private ComboViewer relviewer;
 
 	public AutoPreferencePage() {
 		setDescription(Messages.getString("AutoPreferencePage.control_which")); //$NON-NLS-1$
 	}
 
 	@Override
+	public void applyData(Object data) {
+		tabFolder.setSelection(RULES.equals(data) ? tabItem1 : tabItem0);
+	}
+
+	@Override
 	protected void createPageContents(Composite composite) {
-		setHelp(HelpContextIds.IMPORT_PREFERENCE_PAGE);
+		setHelp(HelpContextIds.AUTO_PREFERENCE_PAGE);
 		createTabFolder(composite, "Auto"); //$NON-NLS-1$
-		tabItem0 = createTabItem(
-				tabFolder,
+		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.getString("AutoPreferencePage.relations")); //$NON-NLS-1$
+		Composite comp0 = createRelationsPage(tabFolder);
+		tabItem0.setControl(comp0);
+		tabItem1 = UiUtilities.createTabItem(tabFolder,
 				Messages.getString("AutoPreferencePage.automatic_collection_creation")); //$NON-NLS-1$
-		tabItem0.setControl(createCollectionGroup(tabFolder));
+		ruleComponent = new AutoRuleComponent(tabFolder, this);
+		tabItem1.setControl(ruleComponent.getControl());
 		initTabFolder(0);
-		createExtensions(tabFolder,
-				"com.bdaum.zoom.ui.preferences.AutoPreferencePage"); //$NON-NLS-1$
+		createExtensions(tabFolder, "com.bdaum.zoom.ui.preferences.AutoPreferencePage"); //$NON-NLS-1$
 		fillValues();
 	}
 
-	private Control createCollectionGroup(Composite parent) {
-		Composite composite = new Composite(parent, SWT.NONE);
+	private Composite createRelationsPage(CTabFolder tabFolder) {
+		Composite composite = new Composite(tabFolder, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout());
-		CGroup autoGroup = createGroup(composite, 2,
-				Messages.getString("ImportPreferencePage.automatic_creation")); //$NON-NLS-1$
-		ruleViewer = new TableViewer(autoGroup, SWT.BORDER | SWT.FULL_SELECTION
-				| SWT.MULTI | SWT.V_SCROLL);
-		TableViewerColumn col0 = new TableViewerColumn(ruleViewer, SWT.NONE);
-		col0.getColumn().setText(
-				Messages.getString("ImportPreferencePage.group")); //$NON-NLS-1$
-		col0.getColumn().setWidth(180);
-		col0.setLabelProvider(new ZColumnLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				if (element instanceof AutoRule)
-					return ((AutoRule) element).getQfield().getCategory()
-							.toString();
-				return element.toString();
-			}
-		});
-		TableViewerColumn col1 = new TableViewerColumn(ruleViewer, SWT.NONE);
-		col1.getColumn().setText(
-				Messages.getString("ImportPreferencePage.field")); //$NON-NLS-1$
-		col1.getColumn().setWidth(220);
-		col1.setLabelProvider(new ZColumnLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				if (element instanceof AutoRule)
-					return ((AutoRule) element).getQfield().getLabel();
-				return element.toString();
-			}
-		});
-		TableViewerColumn col2 = new TableViewerColumn(ruleViewer, SWT.NONE);
-		col2.getColumn().setText(
-				Messages.getString("ImportPreferencePage.type")); //$NON-NLS-1$
-		col2.getColumn().setWidth(160);
-		col2.setLabelProvider(new ZColumnLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				if (element instanceof AutoRule) {
-					AutoRule rule = (AutoRule) element;
-					if (rule.hasCustomIntervals())
-						return Messages
-								.getString("ImportPreferencePage.custom"); //$NON-NLS-1$
-					switch (rule.getQfield().getAutoPolicy()) {
-					case QueryField.AUTO_DISCRETE:
-						if (rule.getEnumeration() != null)
-							return Messages
-									.getString("AutoPreferencePage.enumeration"); //$NON-NLS-1$
-						return Messages
-								.getString("ImportPreferencePage.discrete"); //$NON-NLS-1$
-					case QueryField.AUTO_LINEAR:
-						return Messages
-								.getString("ImportPreferencePage.linear"); //$NON-NLS-1$
-					case QueryField.AUTO_LOG:
-						return Messages
-								.getString("ImportPreferencePage.logarithmic"); //$NON-NLS-1$
-					case QueryField.AUTO_CONTAINS:
-						return Messages
-								.getString("AutoPreferencePage.arbitrary"); //$NON-NLS-1$
-					case QueryField.AUTO_SELECT:
-						return Messages
-								.getString("AutoPreferencePage.multiple"); //$NON-NLS-1$
-					}
-				}
-				return element.toString();
-			}
-		});
-		TableViewerColumn col3 = new TableViewerColumn(ruleViewer, SWT.NONE);
-		col3.getColumn().setText(
-				Messages.getString("ImportPreferencePage.parameters")); //$NON-NLS-1$
-		col3.getColumn().setWidth(220);
-		col3.setLabelProvider(new ZColumnLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				if (element instanceof AutoRule) {
-					AutoRule rule = (AutoRule) element;
-					QueryField qfield = rule.getQfield();
-					switch (qfield.getAutoPolicy()) {
-					case QueryField.AUTO_DISCRETE:
-						return rule.getEnumerationSpec();
-					case QueryField.AUTO_CONTAINS:
-					case QueryField.AUTO_SELECT:
-						return rule.getValueSpec();
-					default:
-						return rule.getIntervalSpec();
-					}
-				}
-				return element.toString();
-			}
-		});
-
-		ruleViewer.getTable().setHeaderVisible(true);
-		ruleViewer.getTable().setLinesVisible(true);
-		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
-		layoutData.heightHint = 300;
-		ruleViewer.getTable().setLayoutData(layoutData);
-		ruleViewer.setContentProvider(ArrayContentProvider.getInstance());
-		ruleViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateAutoRuleButtons();
-			}
-		});
-		ruleViewer.setInput(autoRules);
-		Composite autoButtonBar = new Composite(autoGroup, SWT.NONE);
-		autoButtonBar.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING,
-				false, false));
-		autoButtonBar.setLayout(new GridLayout(1, false));
-		Button addAutoButton = new Button(autoButtonBar, SWT.PUSH);
-		addAutoButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false));
-		addAutoButton.setText(Messages.getString("ImportPreferencePage.add")); //$NON-NLS-1$
-		addAutoButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				AutoRuleDialog dialog = new AutoRuleDialog(getShell(), null,
-						autoRules);
-				if (dialog.open() == AutoRuleDialog.OK) {
-					AutoRule rule = dialog.getRule();
-					autoRules.add(rule);
-					ruleViewer.add(rule);
-					ruleViewer.setSelection(new StructuredSelection(rule));
-					updateAutoRuleButtons();
-				}
-			}
-		});
-		editAutoButton = new Button(autoButtonBar, SWT.PUSH);
-		editAutoButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false));
-		editAutoButton.setText(Messages.getString("ImportPreferencePage.edit")); //$NON-NLS-1$
-		editAutoButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				AutoRule rule = (AutoRule) ((IStructuredSelection) ruleViewer
-						.getSelection()).getFirstElement();
-				List<AutoRule> otherRules = new ArrayList<AutoRule>(autoRules);
-				otherRules.remove(rule);
-				AutoRuleDialog dialog = new AutoRuleDialog(getShell(), rule,
-						otherRules);
-				if (dialog.open() == AutoRuleDialog.OK)
-					ruleViewer.update(rule, null);
-				updateAutoRuleButtons();
-			}
-		});
-		removeAutoButton = new Button(autoButtonBar, SWT.PUSH);
-		removeAutoButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false));
-		removeAutoButton.setText(Messages
-				.getString("ImportPreferencePage.remove")); //$NON-NLS-1$
-		removeAutoButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				@SuppressWarnings("unchecked")
-				Iterator<AutoRule> it = ((IStructuredSelection) ruleViewer
-						.getSelection()).iterator();
-				while (it.hasNext()) {
-					AutoRule rule = it.next();
-					int index = autoRules.indexOf(rule);
-					autoRules.remove(rule);
-					if (index >= autoRules.size())
-						--index;
-					ruleViewer.remove(rule);
-					if (index >= 0)
-						ruleViewer.setSelection(new StructuredSelection(
-								autoRules.get(index)));
-				}
-				updateAutoRuleButtons();
-			}
-		});
-		Label sep = new Label(autoButtonBar, SWT.SEPARATOR | SWT.HORIZONTAL);
-		sep.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		applyButton = new Button(autoButtonBar, SWT.PUSH);
-		applyButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false));
-		applyButton.setText(Messages.getString("AutoPreferencePage.apply_now")); //$NON-NLS-1$
-		applyButton.setToolTipText(Messages
-				.getString("AutoPreferencePage.apply_selected_rules")); //$NON-NLS-1$
-		applyButton.addSelectionListener(new SelectionAdapter() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection sel = (IStructuredSelection) ruleViewer
-						.getSelection();
-				if (!sel.isEmpty())
-					OperationJob.executeSlaveOperation(new AutoRuleOperation(
-							new ArrayList<AutoRule>(sel.toList()), null, null),
-							AutoPreferencePage.this);
-			}
-		});
-		updateAutoRuleButtons();
+		new Label(composite, SWT.NONE).setText(
+				Messages.getString("AutoPreferencePage.relations_expl")); //$NON-NLS-1$
+		CGroup group = UiUtilities.createGroup(composite, 2,Messages.getString("AutoPreferencePage.options")); //$NON-NLS-1$
+		if (Constants.WIN32 || Constants.OSX) {
+			final String[] deriveOptions = new String[] { Constants.DERIVE_NO, Constants.DERIVE_FOLDER,
+					Constants.DERIVE_ALL };
+			final String[] deriveLabels = new String[] { Messages.getString("ImportPreferencePage.no"), //$NON-NLS-1$
+					Messages.getString("ImportPreferencePage.within_folders"), //$NON-NLS-1$
+					Messages.getString("ImportPreferencePage.across_folders") }; //$NON-NLS-1$
+			relviewer = createComboViewer(group,
+					Messages.getString("ImportPreferencePage.automatically_derive_relationships"), //$NON-NLS-1$
+					deriveOptions, deriveLabels, false);
+		}
+		autoButton = WidgetFactory.createCheckButton(group,
+				Messages.getString("ImportPreferencePage.automatically_detect_derived"), //$NON-NLS-1$
+				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		Collection<IRelationDetector> relationDetectors = UiActivator.getDefault().getRelationDetectors();
+		for (IRelationDetector detector : relationDetectors)
+			detectorButtons.put(detector.getId(), WidgetFactory.createCheckButton(group, detector.getDescription(),
+					new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1)));
+		xmpButton = WidgetFactory.createCheckButton(group,
+				Messages.getString("ImportPreferencePage.applyXmp_to_Derivates"), //$NON-NLS-1$
+				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		return composite;
-	}
-
-	protected void updateAutoRuleButtons() {
-		IStructuredSelection selection = (IStructuredSelection) ruleViewer
-				.getSelection();
-		editAutoButton.setEnabled(selection.size() == 1);
-		removeAutoButton.setEnabled(!selection.isEmpty());
-		applyButton.setEnabled(!selection.isEmpty());
 	}
 
 	@Override
 	protected void doFillValues() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		autoRules = AutoRule.constructRules(preferenceStore
-				.getString(PreferenceConstants.AUTORULES));
-		ruleViewer.setInput(autoRules);
+		ruleComponent.fillValues(preferenceStore.getString(PreferenceConstants.AUTORULES));
+		autoButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.AUTODERIVE));
+		xmpButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.APPLYXMPTODERIVATES));
+		StringTokenizer st = new StringTokenizer(preferenceStore.getString(PreferenceConstants.RELATIONDETECTORS));
+		while (st.hasMoreTokens()) {
+			CheckboxButton button = detectorButtons.get(st.nextToken());
+			if (button != null)
+				button.setSelection(true);
+		}
+		if (relviewer != null)
+			relviewer.setSelection(
+					new StructuredSelection(preferenceStore.getString(PreferenceConstants.DERIVERELATIONS)));
 	}
 
 	@Override
 	protected void doPerformOk() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
+		preferenceStore.setValue(PreferenceConstants.AUTORULES, ruleComponent.getResult());
+		preferenceStore.setValue(PreferenceConstants.AUTODERIVE, autoButton.getSelection());
+		preferenceStore.setValue(PreferenceConstants.APPLYXMPTODERIVATES, xmpButton.getSelection());
 		StringBuilder sb = new StringBuilder();
-		for (AutoRule rule : autoRules) {
-			if (sb.length() > 0)
-				sb.append("\n"); //$NON-NLS-1$
-			sb.append(rule.toString());
+		for (Map.Entry<String, CheckboxButton> entry : detectorButtons.entrySet())
+			if (entry.getValue().getSelection()) {
+				if (sb.length() > 0)
+					sb.append(' ');
+				sb.append(entry.getKey());
+			}
+		preferenceStore.setValue(PreferenceConstants.RELATIONDETECTORS, sb.toString());
+		if (relviewer != null) {
+			IStructuredSelection selection = (IStructuredSelection) relviewer.getSelection();
+			if (!selection.isEmpty())
+				preferenceStore.setValue(PreferenceConstants.DERIVERELATIONS, (String) selection.getFirstElement());
 		}
-		preferenceStore.setValue(PreferenceConstants.AUTORULES, sb.toString());
 	}
 
 	@Override
 	public void doPerformDefaults() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		preferenceStore
-				.setValue(PreferenceConstants.AUTORULES, preferenceStore
-						.getDefaultString(PreferenceConstants.AUTORULES));
-
+		preferenceStore.setValue(PreferenceConstants.AUTORULES,
+				preferenceStore.getDefaultString(PreferenceConstants.AUTORULES));
+		preferenceStore.setValue(PreferenceConstants.AUTODERIVE,
+				preferenceStore.getDefaultBoolean(PreferenceConstants.AUTODERIVE));
+		preferenceStore.setValue(PreferenceConstants.APPLYXMPTODERIVATES,
+				preferenceStore.getDefaultBoolean(PreferenceConstants.APPLYXMPTODERIVATES));
+		preferenceStore.setValue(PreferenceConstants.RELATIONDETECTORS,
+				preferenceStore.getDefaultBoolean(PreferenceConstants.RELATIONDETECTORS));
+		preferenceStore.setValue(PreferenceConstants.DERIVERELATIONS,
+				preferenceStore.getDefaultString(PreferenceConstants.DERIVERELATIONS));
 	}
 
 }

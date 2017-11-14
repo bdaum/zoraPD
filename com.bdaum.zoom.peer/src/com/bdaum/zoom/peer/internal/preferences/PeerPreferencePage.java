@@ -76,9 +76,11 @@ import com.bdaum.zoom.peer.internal.model.PeerDefinition;
 import com.bdaum.zoom.peer.internal.model.SharedCatalog;
 import com.bdaum.zoom.peer.internal.ui.HelpContextIds;
 import com.bdaum.zoom.peer.internal.ui.PeerDefinitionDialog;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
+@SuppressWarnings("restriction")
 public class PeerPreferencePage extends AbstractPreferencePage implements IPeerListener {
 
 	private static final Object[] EMPTY = new Object[0];
@@ -135,11 +137,11 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 
 		createHeaderGroup(composite);
 		createTabFolder(composite, "Peer"); //$NON-NLS-1$
-		CTabItem tabItem0 = createTabItem(tabFolder, Messages.PeerPreferencePage_shared_cats);
+		CTabItem tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.PeerPreferencePage_shared_cats);
 		tabItem0.setControl(createSharedGroup(tabFolder));
-		CTabItem tabItem1 = createTabItem(tabFolder, Messages.PeerPreferencePage_peer_nodes);
+		CTabItem tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.PeerPreferencePage_peer_nodes);
 		tabItem1.setControl(createPeerGroup(tabFolder));
-		CTabItem tabItem2 = createTabItem(tabFolder, Messages.PeerPreferencePage_incoming_calls);
+		CTabItem tabItem2 = UiUtilities.createTabItem(tabFolder, Messages.PeerPreferencePage_incoming_calls);
 		tabItem2.setControl(createIncomingGroup(tabFolder));
 		initTabFolder(0);
 		setHelp(HelpContextIds.PEER_PREFERENCE_PAGE);

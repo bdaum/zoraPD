@@ -1137,25 +1137,6 @@ public class Recipe {
 		return curves;
 	}
 
-	// /**
-	// * Set a list of keywords
-	// *
-	// * @param keywords
-	// * - list of keywords
-	// */
-	// public void setKeywords(List<String> keywords) {
-	// this.keywords = keywords;
-	// }
-	//
-	// /**
-	// * Returns list of keywords
-	// *
-	// * @return list of keywords or null
-	// */
-	// public List<String> getKeywords() {
-	// return keywords;
-	// }
-
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();

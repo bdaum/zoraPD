@@ -147,7 +147,6 @@ public class ImportOperation extends AbstractImportOperation {
 						|| importState.importFromDeviceData.getExifTransferPrefix() == null
 						|| !importState.importFromDeviceData.getExifTransferPrefix().isEmpty()) {
 					Collections.sort(allFiles, new Comparator<URI>() {
-
 						public int compare(URI o1, URI o2) {
 							String p1 = o1.toString();
 							String p2 = o2.toString();
@@ -250,12 +249,13 @@ public class ImportOperation extends AbstractImportOperation {
 
 	private String createImportDescription(boolean userImport) {
 		if (userImport) {
+			String user = System.getProperty("user.name"); //$NON-NLS-1$
 			if (importState.importFromDeviceData != null) {
 				if (importState.importFromDeviceData.isMedia())
-					return Messages.getString("ImportOperation.user_import_device"); //$NON-NLS-1$
-				return Messages.getString("ImportOperation.user_import_new_structure"); //$NON-NLS-1$
+					return NLS.bind(Messages.getString("ImportOperation.user_import_device"), user); //$NON-NLS-1$
+				return NLS.bind(Messages.getString("ImportOperation.user_import_new_structure"), user); //$NON-NLS-1$
 			}
-			return Messages.getString("ImportOperation.user_import"); //$NON-NLS-1$
+			return NLS.bind(Messages.getString("ImportOperation.user_import"), user); //$NON-NLS-1$
 		}
 		SimpleDateFormat df = null;
 		Date importDate = importState.importDate;

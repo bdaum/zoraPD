@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -32,6 +32,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.nebula.widgets.gallery.Gallery;
 import org.eclipse.nebula.widgets.gallery.GalleryItem;
@@ -51,6 +52,8 @@ import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -68,9 +71,13 @@ import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
+import com.bdaum.zoom.cat.model.group.Group;
+import com.bdaum.zoom.cat.model.group.GroupImpl;
+import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterion;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.ISpellCheckingService;
@@ -100,8 +107,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	protected static final int TRIM = 5;
 	private static final String COLLAPSEPATTERN = "collapsePattern"; //$NON-NLS-1$
 	private static final String DEFAULTPATTERN = "/*.*"; //$NON-NLS-1$
-	private static final SortCriterionImpl URISORT = new SortCriterionImpl(
-			QueryField.URI.getKey(), null, false);
+	private static final SortCriterionImpl URISORT = new SortCriterionImpl(QueryField.URI.getKey(), null, false);
 	private static final String FOLDING = "folding"; //$NON-NLS-1$
 	private String layout = GRID;
 	private boolean isStrip;
@@ -113,10 +119,13 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	private boolean titleInputValid;
 	private SelectionAdapter closeTitleAreaListener;
 	protected IAction toggleCollapseAction;
+	private Font smallFont;
+	private int showLabel;
+	private String labelTemplate;
+	private int currentFontsize;
 
 	@Override
-	public void setInitializationData(IConfigurationElement cfig,
-			String propertyName, Object data) {
+	public void setInitializationData(IConfigurationElement cfig, String propertyName, Object data) {
 		super.setInitializationData(cfig, propertyName, data);
 		if (data instanceof String) {
 			layout = (String) data;
@@ -134,8 +143,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 				folding = fold.booleanValue();
 			pattern = memento.getString(COLLAPSEPATTERN);
 		}
-		collapseFilter = new WildCardFilter(pattern == null ? DEFAULTPATTERN
-				: pattern);
+		collapseFilter = new WildCardFilter(pattern == null ? DEFAULTPATTERN : pattern);
 	}
 
 	@Override
@@ -151,11 +159,9 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	public void createPartControl(Composite parent) {
 		// Create gallery
 		setPreferences();
-		final int orientation = HSTRIP.equals(layout) ? SWT.H_SCROLL
-				: SWT.V_SCROLL;
+		final int orientation = HSTRIP.equals(layout) ? SWT.H_SCROLL : SWT.V_SCROLL;
 		gallery = new Gallery(parent, orientation | SWT.VIRTUAL | SWT.MULTI);
-		gallery.setBackground(gallery.getDisplay().getSystemColor(
-				SWT.COLOR_WHITE));
+		gallery.setBackground(gallery.getDisplay().getSystemColor(SWT.COLOR_WHITE));
 		gallery.setHigherQualityDelay(300);
 		gallery.setLowQualityOnUserAction(true);
 		setAppStarting(gallery);
@@ -165,9 +171,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 				@Override
 				public void controlResized(ControlEvent e) {
 					Rectangle clientArea = gallery.getClientArea();
-					thumbsize = (orientation == SWT.H_SCROLL) ? clientArea.height
-							- TRIM
-							: clientArea.width - TRIM;
+					thumbsize = (orientation == SWT.H_SCROLL) ? clientArea.height - TRIM : clientArea.width - TRIM;
 					fireSizeChanged();
 				}
 			});
@@ -177,7 +181,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 		groupRenderer.setItemSize(thumbsize, thumbsize);
 		groupRenderer.setMinMargin(3);
 		itemRenderer = new LightboxGalleryItemRenderer(gallery);
-		configureItemRenderer(gallery);
+		applyStyle(gallery);
 		gallery.setGroupRenderer(groupRenderer);
 		// Custom draw
 		gallery.setItemRenderer(null);
@@ -195,20 +199,15 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 
 	protected void setHelp(final int orientation) {
 		// Create the help context id for the viewer's control
-		PlatformUI
-				.getWorkbench()
-				.getHelpSystem()
-				.setHelp(
-						gallery,
-						isStrip ? ((orientation == SWT.H_SCROLL) ? HelpContextIds.HSTRIP_VIEW
-								: HelpContextIds.VSTRIP_VIEW)
-								: HelpContextIds.LIGHTBOX_VIEW);
+		PlatformUI.getWorkbench().getHelpSystem()
+				.setHelp(gallery, isStrip
+						? ((orientation == SWT.H_SCROLL) ? HelpContextIds.HSTRIP_VIEW : HelpContextIds.VSTRIP_VIEW)
+						: HelpContextIds.LIGHTBOX_VIEW);
 	}
 
 	@Override
 	protected void makeActions(IActionBars bars) {
-		configureCollapseAction = new Action(
-				Messages.getString("LightboxView.configure_folding")) { //$NON-NLS-1$
+		configureCollapseAction = new Action(Messages.getString("LightboxView.configure_folding")) { //$NON-NLS-1$
 			@Override
 			public void run() {
 				if (configureCollapse() && folding) {
@@ -217,10 +216,8 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 				}
 			}
 		};
-		configureCollapseAction.setToolTipText(Messages
-				.getString("LightboxView.configure_folding_tooltip")); //$NON-NLS-1$
-		collapseAction = new Action(
-				Messages.getString("LightboxView.collapsed"), IAction.AS_CHECK_BOX) { //$NON-NLS-1$
+		configureCollapseAction.setToolTipText(Messages.getString("LightboxView.configure_folding_tooltip")); //$NON-NLS-1$
+		collapseAction = new Action(Messages.getString("LightboxView.collapsed"), IAction.AS_CHECK_BOX) { //$NON-NLS-1$
 
 			@Override
 			public void runWithEvent(Event event) {
@@ -248,13 +245,11 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 			}
 		};
 		collapseAction.setImageDescriptor(Icons.collapsed.getDescriptor());
-		collapseAction
-				.setToolTipText(NLS.bind(
-						Messages.getString("LightboxView.fold_unfolds_images"), collapseFilter.toString())); //$NON-NLS-1$
+		collapseAction.setToolTipText(
+				NLS.bind(Messages.getString("LightboxView.fold_unfolds_images"), collapseFilter.toString())); //$NON-NLS-1$
 		collapseAction.setChecked(folding);
-		toggleCollapseAction = new Action(
-				Messages.getString("LightboxView.toggle_collapsed"), Icons.collapsed //$NON-NLS-1$
-						.getDescriptor()) {
+		toggleCollapseAction = new Action(Messages.getString("LightboxView.toggle_collapsed"), Icons.collapsed //$NON-NLS-1$
+				.getDescriptor()) {
 
 			@Override
 			public void run() {
@@ -277,8 +272,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 				refresh();
 			}
 		};
-		toggleCollapseAction.setToolTipText(Messages
-				.getString("LightboxView.expand_collapsed_or")); //$NON-NLS-1$
+		toggleCollapseAction.setToolTipText(Messages.getString("LightboxView.expand_collapsed_or")); //$NON-NLS-1$
 		if (!isStrip)
 			createScaleContributionItem(MINTHUMBSIZE, MAXTHUMBSIZE);
 		super.makeActions(bars);
@@ -293,9 +287,8 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	}
 
 	protected boolean configureCollapse() {
-		CollapsePatternDialog dialog = new CollapsePatternDialog(getSite()
-				.getShell(), HelpContextIds.COLLAPSEPATTERN_DIALOG,
-				collapseFilter.toString());
+		CollapsePatternDialog dialog = new CollapsePatternDialog(getSite().getShell(),
+				HelpContextIds.COLLAPSEPATTERN_DIALOG, collapseFilter.toString());
 		if (dialog.open() == Dialog.OK) {
 			collapseFilter = new WildCardFilter(dialog.getPattern());
 			updateCollapseAction();
@@ -311,8 +304,8 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	}
 
 	protected void updateCollapseAction() {
-		String msg = NLS
-				.bind(Messages.getString("LightboxView.fold_unfolds_images"), collapseFilter.toString(), folding ? Messages.getString("LightboxView.ON") : Messages.getString("LightboxView.OFF")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		String msg = NLS.bind(Messages.getString("LightboxView.fold_unfolds_images"), collapseFilter.toString(), //$NON-NLS-1$
+				folding ? Messages.getString("LightboxView.ON") : Messages.getString("LightboxView.OFF")); //$NON-NLS-1$ //$NON-NLS-2$
 		if (canBeCollapsed())
 			msg += Messages.getString("LightboxView.causes_resort"); //$NON-NLS-1$
 		collapseAction.setToolTipText(msg);
@@ -325,14 +318,12 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 			final SmartCollectionImpl currentCollection = assetProvider == null ? null
 					: assetProvider.getCurrentCollection();
 			if (currentCollection != null) {
-				List<SortCriterion> sortCriterion = currentCollection
-						.getSortCriterion();
+				List<SortCriterion> sortCriterion = currentCollection.getSortCriterion();
 				if (!sortCriterion.isEmpty())
 					sort = sortCriterion.get(0);
 			}
 		}
-		return sort != null ? (QueryField.findQueryField(sort.getField()) == QueryField.URI)
-				: false;
+		return sort != null ? (QueryField.findQueryField(sort.getField()) == QueryField.URI) : false;
 	}
 
 	@Override
@@ -369,18 +360,15 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	public boolean assetsChanged() {
 		INavigationHistory navigationHistory = getNavigationHistory();
 		if (navigationHistory != null && !gallery.isDisposed()) {
-			AssetSelection selectedAssets = navigationHistory
-					.getSelectedAssets();
+			AssetSelection selectedAssets = navigationHistory.getSelectedAssets();
 			if (selectedAssets.isPicked()) {
-				List<GalleryItem> items = new ArrayList<GalleryItem>(
-						selectedAssets.size());
+				List<GalleryItem> items = new ArrayList<GalleryItem>(selectedAssets.size());
 				for (Asset asset : selectedAssets.getAssets()) {
 					GalleryItem item = getGalleryItem(asset);
 					if (item != null)
 						items.add(item);
 				}
-				GalleryItem[] selectedItems = items
-						.toArray(new GalleryItem[items.size()]);
+				GalleryItem[] selectedItems = items.toArray(new GalleryItem[items.size()]);
 				gallery.setSelection(selectedItems);
 				if (selectedItems.length > 0)
 					gallery.showItem(selectedItems[0]);
@@ -421,25 +409,58 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	}
 
 	@Override
-	protected boolean doRedrawCollection(Collection<? extends Asset> assets,
-			QueryField node) {
+	protected boolean doRedrawCollection(Collection<? extends Asset> assets, QueryField node) {
 		if (gallery == null || gallery.isDisposed())
 			return false;
+		int labelFontsize = 0;
+		IAssetProvider assetProvider = getAssetProvider();
+		if (assetProvider != null) {
+			SmartCollection coll = assetProvider.getCurrentCollection();
+			if (coll != null) {
+				while (true) {
+					showLabel = coll.getShowLabel();
+					if (showLabel != Constants.INHERIT_LABEL) {
+						labelTemplate = coll.getLabelTemplate();
+						labelFontsize = coll.getFontSize();
+						break;
+					}
+					if (coll.getSmartCollection_subSelection_parent() == null)
+						break;
+					coll = coll.getSmartCollection_subSelection_parent();
+				}
+				if (showLabel == Constants.INHERIT_LABEL) {
+					String groupId = coll.getGroup_rootCollection_parent();
+					Group group = Core.getCore().getDbManager().obtainById(GroupImpl.class, groupId);
+					while (group != null) {
+						showLabel = group.getShowLabel();
+						if (showLabel != Constants.INHERIT_LABEL) {
+							labelTemplate = group.getLabelTemplate();
+							labelFontsize = coll.getFontSize();
+							break;
+						}
+						group = group.getGroup_subgroup_parent();
+					}
+				}
+			}
+		}
+		if (showLabel == Constants.INHERIT_LABEL) {
+			showLabel = showLabelDflt;
+			labelTemplate = labelTemplateDflt;
+			labelFontsize = labelFontsizeDflt;
+		}
+		itemRenderer.setShowLabels(showLabel != Constants.NO_LABEL);
+		gallery.setFont(showLabel == Constants.CUSTOM_LABEL && labelFontsize != 0 ? getSmallFont(labelFontsize)
+				: JFaceResources.getDefaultFont());
 		if (assets == null) {
 			if (fetchAssets()) {
-				IAssetProvider assetProvider = getAssetProvider();
 				scoreFormatter = assetProvider.getScoreFormatter();
-				gallery.getItem(0).setItemCount(
-						getAssetProvider().getAssetCount());
+				gallery.getItem(0).setItemCount(assetProvider.getAssetCount());
 				gallery.clearAll();
 				gallery.redraw();
-				AssetSelection oldSelection = (AssetSelection) (selection == null ? AssetSelection.EMPTY
-						: selection);
+				AssetSelection oldSelection = (AssetSelection) (selection == null ? AssetSelection.EMPTY : selection);
 				if (oldSelection.isPicked()) {
-					List<Asset> selectedAssets = new ArrayList<Asset>(
-							oldSelection.size());
-					List<GalleryItem> items = new ArrayList<GalleryItem>(
-							oldSelection.size());
+					List<Asset> selectedAssets = new ArrayList<Asset>(oldSelection.size());
+					List<GalleryItem> items = new ArrayList<GalleryItem>(oldSelection.size());
 					for (Asset asset : oldSelection.getAssets()) {
 						GalleryItem item = getGalleryItem(asset);
 						if (item != null) {
@@ -447,8 +468,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 							selectedAssets.add(asset);
 						}
 					}
-					GalleryItem[] selectedItems = items
-							.toArray(new GalleryItem[items.size()]);
+					GalleryItem[] selectedItems = items.toArray(new GalleryItem[items.size()]);
 					galleryMap.clear();
 					gallery.setSelection(selectedItems);
 					selection = new AssetSelection(selectedAssets);
@@ -481,6 +501,21 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 		return true;
 	}
 
+	private Font getSmallFont(int labelFontsize) {
+		if (labelFontsize != currentFontsize) {
+			currentFontsize = labelFontsize;
+			if (smallFont != null) {
+				smallFont.dispose();
+				smallFont = null;
+			}
+		}
+		if (smallFont == null) {
+			FontData[] fd = JFaceResources.getDefaultFontDescriptor().getFontData();
+			smallFont = new Font(gallery.getDisplay(), fd[0].getName(), currentFontsize, fd[0].getStyle());
+		}
+		return smallFont;
+	}
+
 	public void handleEvent(Event event) {
 		final GalleryItem item = (GalleryItem) event.item;
 		IAssetProvider assetProvider = getAssetProvider();
@@ -505,8 +540,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 					int i = foldingIndex[foldingHw];
 					Asset host = assetProvider.getAsset(i);
 					if (host != null) {
-						String[] relevantPart = collapseFilter.capture(Core
-								.getFileName(host.getUri(), true));
+						String[] relevantPart = collapseFilter.capture(Core.getFileName(host.getUri(), true));
 						while (relevantPart != null && index >= foldingHw) {
 							Asset nextAsset = assetProvider.getAsset(++i);
 							if (nextAsset == null) {
@@ -514,8 +548,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 								break;
 							}
 							String[] nextRelevantPart = collapseFilter
-									.capture(Core.getFileName(
-											nextAsset.getUri(), true));
+									.capture(Core.getFileName(nextAsset.getUri(), true));
 							boolean match = false;
 							for (int j = 0; j < nextRelevantPart.length; j++)
 								if (relevantPart[j].equals(nextRelevantPart[j])) {
@@ -588,11 +621,10 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	}
 
 	@Override
-	protected void setItemText(final GalleryItem item, Asset asset,
-			Integer cardinality) {
+	protected void setItemText(final GalleryItem item, Asset asset, Integer cardinality) {
 		if (asset != null)
-			item.setText(UiUtilities.computeImageCaption(asset, scoreFormatter,
-					cardinality, collapseFilter));
+			item.setText(UiUtilities.computeImageCaption(asset, scoreFormatter, cardinality, collapseFilter,
+					showLabel == Constants.CUSTOM_LABEL ? labelTemplate : null));
 	}
 
 	protected Object vstripSizeProvider = new ISizeProvider() {
@@ -601,8 +633,8 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 			return width ? SWT.MIN : SWT.NONE;
 		}
 
-		public int computePreferredSize(boolean width, int availableParallel,
-				int availablePerpendicular, int preferredResult) {
+		public int computePreferredSize(boolean width, int availableParallel, int availablePerpendicular,
+				int preferredResult) {
 			return width ? MINTHUMBSIZE + TRIM : preferredResult;
 		}
 	};
@@ -613,8 +645,8 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 			return width ? SWT.NONE : SWT.MIN;
 		}
 
-		public int computePreferredSize(boolean width, int availableParallel,
-				int availablePerpendicular, int preferredResult) {
+		public int computePreferredSize(boolean width, int availableParallel, int availablePerpendicular,
+				int preferredResult) {
 			return width ? preferredResult : MINTHUMBSIZE + TRIM;
 		}
 	};
@@ -648,8 +680,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 		final Asset asset = (Asset) item.getData("asset"); //$NON-NLS-1$
 		if (asset != null) {
 			cancelInput();
-			final String captionText = UiUtilities.computeImageCaption(asset,
-					null, null, null);
+			final String captionText = UiUtilities.computeImageCaption(asset, null, null, null, null);
 			titleInputValid = true;
 			if (titleInput != null)
 				titleInput.dispose();
@@ -665,16 +696,14 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 			Point textExtent = gc.textExtent(captionText);
 			gc.dispose();
 			int w = Math.max(bounds.width, textExtent.x + 20);
-			titleInput.setBounds(bounds.x - (w - bounds.width) / 2, bounds.y
-					- bw, w, bounds.height + 2 * bw);
+			titleInput.setBounds(bounds.x - (w - bounds.width) / 2, bounds.y - bw, w, bounds.height + 2 * bw);
 			titleInput.addTraverseListener(new TraverseListener() {
 				public void keyTraversed(TraverseEvent e) {
 					if (e.character == SWT.TAB) {
 						ignoreTab();
 						commitInput(asset, captionText);
 						Event event = new Event();
-						event.keyCode = (e.stateMask & SWT.SHIFT) != 0 ? SWT.ARROW_LEFT
-								: SWT.ARROW_RIGHT;
+						event.keyCode = (e.stateMask & SWT.SHIFT) != 0 ? SWT.ARROW_LEFT : SWT.ARROW_RIGHT;
 						event.type = SWT.KeyDown;
 						event.widget = gallery;
 						Display display = gallery.getDisplay();
@@ -684,13 +713,10 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 								GalleryItem[] sel = gallery.getSelection();
 								if (sel.length == 1) {
 									GalleryItem item1 = sel[0];
-									AssetImpl asset1 = (AssetImpl) item1
-											.getData(ASSET);
-									Hotspots hotSpots = (Hotspots) item1
-											.getData(HOTSPOTS);
+									AssetImpl asset1 = (AssetImpl) item1.getData(ASSET);
+									Hotspots hotSpots = (Hotspots) item1.getData(HOTSPOTS);
 									if (hotSpots != null && asset1 != null) {
-										Rectangle titleArea = hotSpots
-												.getTitleArea();
+										Rectangle titleArea = hotSpots.getTitleArea();
 										if (titleArea != null)
 											editTitleArea(item1, titleArea);
 									}
@@ -728,18 +754,16 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 				scrollBar.addSelectionListener(closeTitleAreaListener);
 			titleInput.addVerifyListener(new VerifyListener() {
 				public void verifyText(VerifyEvent e) {
-					showError(QueryField.NAME.isValid(titleInput.getText()
-							.substring(0, e.start)
-							+ e.text
-							+ titleInput.getText().substring(e.end), asset));
+					showError(QueryField.NAME.isValid(
+							titleInput.getText().substring(0, e.start) + e.text + titleInput.getText().substring(e.end),
+							asset));
 				}
 
 				private void showError(String msg) {
 					titleInputValid = msg == null;
 					setStatusMessage(msg, true);
 					titleInput.setForeground(titleInputValid ? foreground
-							: titleInput.getControl().getDisplay()
-									.getSystemColor(SWT.COLOR_RED));
+							: titleInput.getControl().getDisplay().getSystemColor(SWT.COLOR_RED));
 				}
 			});
 			titleInput.setFocus();
@@ -755,8 +779,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 			if (p >= 0 && newTitle.lastIndexOf('.') < 0)
 				newTitle += title.substring(p);
 			if (titleInputValid && !newTitle.equals(title))
-				OperationJob.executeOperation(new RenameAssetOperation(asset,
-						newTitle, true), this);
+				OperationJob.executeOperation(new RenameAssetOperation(asset, newTitle, true), this);
 		}
 	}
 
@@ -776,14 +799,15 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 
 	@Override
 	public void dispose() {
+		if (smallFont != null)
+			smallFont.dispose();
 		cancelInput();
 		super.dispose();
 	}
 
 	@Override
 	protected void setDefaultPartName() {
-		setPartName(isStrip ? (HSTRIP.equals(layout) ? Messages
-				.getString("LightboxView.horizontal_strip") //$NON-NLS-1$
+		setPartName(isStrip ? (HSTRIP.equals(layout) ? Messages.getString("LightboxView.horizontal_strip") //$NON-NLS-1$
 				: Messages.getString("LightboxView.vertical_strip")) : Messages.getString("LightboxView.lightbox")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 

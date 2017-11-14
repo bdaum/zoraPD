@@ -51,6 +51,8 @@ public interface HelpContextIds extends IHelpContexts {
 			+ "face" + PAGE_POSTFIX; //$NON-NLS-1$
 	public static final String CAT_PREFERENCE_PAGE =  PREFIX
 			+ "catalog" + PAGE_POSTFIX; //$NON-NLS-1$
+	public static final String AUTO_PREFERENCE_PAGE = PREFIX
+			+ "auto" + PAGE_POSTFIX; //$NON-NLS-1$
 
 
 	/* Dialogs */
@@ -175,6 +177,9 @@ public interface HelpContextIds extends IHelpContexts {
 
 	public static final String CATEGORIZE_DIALOG = PREFIX
 			+ "categorize" + DIALOG_POSTFIX; //$NON-NLS-1$
+
+	public static final String GROUP_DIALOG = PREFIX
+			+ "group" + DIALOG_POSTFIX; //$NON-NLS-1$
 
 
 	/* Views */

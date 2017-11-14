@@ -38,8 +38,6 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.scohen.juploadr.uploadapi.AuthException;
@@ -56,6 +54,7 @@ import com.bdaum.zoom.net.communities.CommunityAccount;
 import com.bdaum.zoom.net.communities.CommunityApi;
 import com.bdaum.zoom.net.communities.HelpContextIds;
 import com.bdaum.zoom.net.communities.jobs.ExportToCommunityJob;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WatermarkGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
@@ -116,10 +115,7 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 				checkImages();
 			}
 		});
-		final CGroup metaGroup = new CGroup(composite, SWT.NONE);
-		metaGroup.setText(Messages.ExportToCommunityPage_metadata);
-		metaGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		metaGroup.setLayout(new GridLayout());
+		final CGroup metaGroup = UiUtilities.createGroup(parent, 1, Messages.ExportToCommunityPage_metadata);
 		metaButton = WidgetFactory.createCheckButton(metaGroup, Messages.ExportToCommunityPage_include_metadata, null);
 		metaButton.addSelectionListener(new SelectionAdapter() {
 			@Override

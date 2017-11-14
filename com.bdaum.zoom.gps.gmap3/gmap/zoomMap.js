@@ -7,23 +7,26 @@ var camCount = 0;
 var lmarker;
 var cmarker;
 var dmarker;
+var smarker;
 var mouseMove;
 var mapClick;
 var ldragEnd;
 var cdragEnd;
 var ddragEnd;
+var sdragEnd;
 var draggedMarker;
 var diagonal = 1;
 var batch = [];
 var arrowBatch = [];
 var redraw = false;
+var selected;
 
-// Setup Map
 function setupMap() {
 	document.getElementById("map").innerHTML = mapIsLoading;
 	var mapTypeIds = [];
-	for ( var type in google.maps.MapTypeId)
+	for ( var type in google.maps.MapTypeId) {
 		mapTypeIds.push(google.maps.MapTypeId[type]);
+	}
 	mapTypeIds.push("OSM");
 	var mapTypeControlOptions = {
 		mapTypeIds : mapTypeIds
@@ -43,6 +46,7 @@ function setupMap() {
 		navigationControl : true,
 		streetViewControl : true,
 		overviewMapControl : true,
+		fullscreenControl : false,
 		overviewMapControlOptions : overviewMapControlOptions,
 		mapTypeId : initialMapType,
 		zoom : initialDetail
@@ -54,10 +58,11 @@ function setupMap() {
 		imagePath : imagesUrl
 	});
 	if (initialPosition)
-		sendPosition('pos', map.getCenter(), map.getZoom(), 0);
+		sendMapPosition();
 	google.maps.event.addListener(map, 'maptypechanged', function() {
 		sendMessage('maptype', map.getMapTypeId());
 	});
+	google.maps.event.addListener(map, 'click', MapClickHandler);
 	google.maps.event.addListener(map, 'zoom_changed', function() {
 		var zoom = map.getZoom();
 		if (zoom > 18) {
@@ -80,6 +85,8 @@ function setupMap() {
 					releaseCamera();
 				else if (dmarker === draggedMarker)
 					releaseDirection();
+				else if (smarker === draggedMarker)
+					releaseLocationShown();
 				endFollowing();
 			}
 		}
@@ -88,6 +95,16 @@ function setupMap() {
 		performDrawing(redraw);
 		redraw = true;
 	});
+}
+
+function MapClickHandler(event) {
+	if (closeInfoWindow())
+		return;
+	if (selected) {
+		selected = null;
+		sendSelection();
+		setMarkers();
+	}
 }
 
 function performDrawing(redraw) {
@@ -99,8 +116,9 @@ function performDrawing(redraw) {
 			setBoundsForShape(track);
 	} else {
 		setMarkers();
-		if (!redraw && locCreated.length > 0)
-			setBoundsForShape(locCreated);
+		if (!redraw && (locCreated.length > 0 || locShown.length > 0)) {
+			setBoundsForShape(locCreated.concat(locShown));
+		}
 	}
 }
 
@@ -111,12 +129,17 @@ function moved() {
 function unloadMap() {
 }
 
-function sendPosition(name, point, zoom, type) {
-	sendMessage(name, point.toString() + '&' + zoom + '&' + type);
+function sendPosition(name, point, zoom, type, uuid) {
+	sendMessage(name, point.lat() + ',' + point.lng() + '&' + zoom + '&' + type
+			+ (uuid ? '&' + uuid : ""));
 }
 
 function sendCamCount() {
 	sendMessage('camCount', camCount);
+}
+
+function sendSelection() {
+	sendMessage('select', selected);
 }
 
 function debug(data) {
@@ -128,36 +151,55 @@ function sendMessage(name, data) {
 			+ (data ? name + '?' + data : name);
 }
 
-// Set marker
-
 function setMarkers() {
 	clearMarkers();
+	var bearing, marker, markerLocation;
 	for (var i = 0; i < locCreated.length; i++) {
-		var markerLocation = locCreated[i];
-		var bearing = imgDirection ? imgDirection[i] : NaN;
-		var marker = new google.maps.Marker({
-			position : markerLocation,
+		bearing = imgDirection ? imgDirection[i] : NaN;
+
+		marker = new google.maps.Marker({
+			position : locCreated[i],
 			map : map,
+			icon : selected == locImage[i].join() ? primaryIconSelUrl
+					: primaryIconUrl,
+			anchorPoint : new google.maps.Point(12, 38),
 			title : locTitles[i],
-			draggable : true,
-			imageAssetIds : locImage[i]
+			draggable : true
 		});
 		google.maps.event.addListener(marker, 'dblclick',
 				makeDoubleClickCallback(marker, locImage[i]));
 		google.maps.event.addListener(marker, 'click', makeClickCallback(
-				marker, markerLocation));
+				marker, locCreated[i], locImage[i]));
 		google.maps.event.addListener(marker, 'dragend', makeDragEndCallback(
-				marker, markerLocation, bearing, arrowBatch.length));
+				marker, bearing, i, locImage[i]));
 		batch.push(marker);
 		mgr.addMarker(marker);
 		++camCount;
 	}
-
-	for (var i = 0; i < locCreated.length; i++) {
-		var markerLocation = locCreated[i];
-		var bearing = imgDirection ? imgDirection[i] : NaN;
+	for (i = 0; i < locShown.length; i++) {
+		marker = new google.maps.Marker({
+			position : locShown[i],
+			map : map,
+			icon : selected == locShownImage[i] ? secondaryIconSelUrl
+					: secondaryIconUrl,
+			anchorPoint : new google.maps.Point(10, 32),
+			title : locShownTitles[i],
+			draggable : true
+		});
+		google.maps.event.addListener(marker, 'dblclick',
+				makeDoubleClickCallback(marker, locShownImage[i]));
+		google.maps.event.addListener(marker, 'click', makeClickCallback(
+				marker, locShown[i], locShownImage[i]));
+		google.maps.event.addListener(marker, 'dragend', makeDragEndCallback(
+				marker, NaN, -1, locShownImage[i]));
+		batch.push(marker);
+		mgr.addMarker(marker);
+	}
+	for (i = 0; i < locCreated.length; i++) {
+		markerLocation = locCreated[i];
+		bearing = imgDirection ? imgDirection[i] : NaN;
 		if (bearing !== bearing) {
-			// skip NaN
+			arrowBatch.push(null);
 		} else if (!isClustered(batch[i]))
 			arrowBatch.push(createArrow(markerLocation, bearing));
 	}
@@ -236,32 +278,24 @@ function coord(coord, dist, bearing) {
 	return new google.maps.LatLng(lat2, lon2);
 }
 
-function freezeMarkers() {
-	for (var i = 0; i < batch.length; i++)
-		batch[i].draggable = false;
-}
-
-function makeDragEndCallback(marker, imageAssetIds, bearing, arrowIndex) {
+function makeDragEndCallback(marker, bearing, i, ids) {
 	return function() {
-		sendPosition('modify', marker.getPosition(), map.getZoom(),
-				arrayToString(imageAssetIds));
+		var markerPoint = marker.getPosition();
+		if (typeof (ids) === "string") {
+			locShown[i] = markerPoint;
+		} else {
+			locCreated[i] = markerPoint;
+		}
+		setSelection(ids);
+		sendPosition('modify', markerPoint, map.getZoom(),
+				typeof (ids) === "string" ? ids : ids.join());
 		if (bearing !== bearing) {
 			// skip NaN
-		} else {
-			arrowBatch[arrowIndex].setMap(null);
-			arrowBatch[arrowIndex] = createArrow(marker.getPosition(), bearing);
+		} else if (i >= 0 && arrowBatch[i]) {
+			arrowBatch[i].setMap(null);
+			arrowBatch[i] = createArrow(markerPoint, bearing);
 		}
 	};
-}
-
-function arrayToString(arr) {
-	var result = '';
-	for (var i = 0; i < arr.length; i++) {
-		if (i > 0)
-			result += ',';
-		result += arr[i];
-	}
-	return result;
 }
 
 function setTrack() {
@@ -272,82 +306,94 @@ function setTrack() {
 	});
 }
 
-function setBoundsForShape(shape) {
-	var bounds;
-	for (var i = 0; i < shape.length; i++) {
-		var location = shape[i];
-		if (bounds)
-			bounds.extend(location);
+function setBoundsForShape(positions) {
+	if (positions.length > 0) {
+		var bounds;
+		for (var i = 0; i < positions.length; i++) {
+			var location = positions[i];
+			if (bounds)
+				bounds.extend(location);
+			else
+				bounds = new google.maps.LatLngBounds(location, location);
+		}
+		if (bounds.getNorthEast().equals(bounds.getSouthWest()))
+			setCenter(bounds.getNorthEast(), map.getZoom());
 		else
-			bounds = new google.maps.LatLngBounds(location, location);
+			setViewPort(bounds);
 	}
-	if (bounds && !bounds.getNorthEast().equals(bounds.getSouthWest()))
-		setViewPort(bounds);
 }
 
-function makeDoubleClickCallback(marker, imageAssetIds) {
+function setSelection(ids) {
+	selected = typeof (ids) === "string" ? ids : ids.join();
+	sendSelection();
+	setMarkers();
+}
+
+function closeInfoWindow() {
+	if (infowindow) {
+		infowindow.close();
+		infowindow = null;
+		return true;
+	}
+	return false;
+}
+
+function makeDoubleClickCallback(marker, ids) {
 	return function() {
 		dbl = true;
-		if (infowindow) {
-			infowindow.close();
-			infowindow = null;
-		}
-		if (imageAssetIds.length > 0 && !currentMarker) {
-			currentMarker = marker;
-			sendMessage('info', arrayToString(imageAssetIds));
+		closeInfoWindow();
+		if (!currentMarker) {
+			sendSelection();
+			if (typeof (ids) === "string") {
+				if (ids != "shown=") {
+					currentMarker = marker;
+					sendMessage('info', ids);
+				}
+			} else if (ids.length > 0) {
+				currentMarker = marker;
+				sendMessage('info', ids.join());
+			}
 		}
 	};
 }
 
 function showInfo(html) {
-	infowindow = new google.maps.InfoWindow({
-		content : html
-	});
-	infowindow.open(map, currentMarker);
-	currentMarker = null;
+	if (currentMarker) {
+		infowindow = new google.maps.InfoWindow({
+			content : html,
+			position : currentMarker.getPosition(),
+			pixelOffset : new google.maps.Size(3, -30)
+		});
+		infowindow.open(map);
+		currentMarker = null;
+	}
 }
 
 /*
  * Delayed execution to inhibit firing in case of double click
  */
-function makeClickCallback(marker, position) {
+function makeClickCallback(marker, position, ids) {
 	return function() {
-		if (infowindow) {
-			infowindow.close();
-			infowindow = null;
-		}
+		closeInfoWindow();
 		dbl = false;
 		setTimeout(function() {
-			clickCallback(position);
+			clickCallback(position, ids);
 		}, 300);
 	};
 }
 
-function clickCallback(position) {
+function clickCallback(position, ids) {
+	setSelection(ids);
 	if (!dbl) {
 		map.panTo(position);
 		var z = map.getZoom();
 		map.setZoom(z < 10 ? z + 2 : z + 1);
 		mgr.resetViewport();
-		sendPosition('pos', position, map.getZoom(), 0);
+		sendMapPosition();
 	}
 }
 
-// prevent page scroll
-
-function wheelevent(e) {
-	if (!e)
-		e = window.event;
-	if (e.preventDefault)
-		e.preventDefault();
-	e.returnValue = false;
-}
-
-/**
- * follow() function
- */
-
-function location() {
+function locationPin() {
 	if (draggedMarker)
 		return;
 	releaseLocation();
@@ -356,7 +402,6 @@ function location() {
 				var cursorPoint = event.latLng;
 				if (!lmarker) {
 					lmarker = createPin(cursorPoint, pinUrl);
-					// Marker dragged
 					ldragEnd = google.maps.event.addListener(lmarker,
 							'dragend', function(event) {
 								if (lmarker) {
@@ -382,19 +427,19 @@ function location() {
 }
 
 function createPin(cursorPoint, url) {
-	var marker = new google.maps.Marker({
+	draggedMarker = new google.maps.Marker({
 		position : cursorPoint,
 		map : map,
 		icon : url,
+		anchorPoint : new google.maps.Point(15, 48),
 		title : newLocationTitle,
 		draggable : true,
 		visible : true
 	});
-	draggedMarker = marker;
-	return marker;
+	return draggedMarker;
 }
 
-function camera() {
+function cameraPin() {
 	if (draggedMarker)
 		return;
 	releaseCamera();
@@ -409,9 +454,9 @@ function camera() {
 								if (cmarker) {
 									sendPosition('drag', cmarker.getPosition(),
 											map.getZoom(), 1);
-									camCount = locCreated.length === 0 ? 1
-											: locCreated.length;
-									sendCamCount();
+									applyCameraSet(cmarker.getPosition());
+									releaseCamera();
+									setMarkers();
 								}
 							});
 					mapClick = google.maps.event.addListener(map, 'click',
@@ -421,7 +466,9 @@ function camera() {
 											cmarker.getPosition(), map
 													.getZoom(), 1);
 									endFollowing();
-									freezeMarkers();
+									applyCameraSet(cmarker.getPosition());
+									releaseCamera();
+									setMarkers();
 								}
 							});
 				}
@@ -431,7 +478,6 @@ function camera() {
 }
 
 function direction() {
-
 	if (draggedMarker)
 		return;
 	releaseDirection();
@@ -443,9 +489,13 @@ function direction() {
 					// Marker dragged
 					ddragEnd = google.maps.event.addListener(dmarker,
 							'dragend', function(event) {
-								if (dmarker)
+								if (dmarker) {
 									sendPosition('drag', dmarker.getPosition(),
 											map.getZoom(), 2);
+									applyDirectionSet(dmarker.getPosition());
+									releaseDirection();
+									setMarkers();
+								}
 							});
 					mapClick = google.maps.event.addListener(map, 'click',
 							function() {
@@ -454,12 +504,56 @@ function direction() {
 											dmarker.getPosition(), map
 													.getZoom(), 2);
 									endFollowing();
+									applyDirectionSet(dmarker.getPosition());
+									releaseDirection();
+									setMarkers();
 								}
 							});
 
 				}
 				if (dmarker)
 					dmarker.setPosition(cursorPoint);
+			});
+}
+
+function locationShown() {
+	if (draggedMarker)
+		return;
+	releaseLocationShown();
+	mouseMove = google.maps.event.addListener(map, 'mousemove',
+			function(event) {
+				var cursorPoint = event.latLng;
+				if (!smarker) {
+					smarker = createPin(cursorPoint, shownPinUrl);
+					// Marker dragged
+					sdragEnd = google.maps.event.addListener(smarker,
+							'dragend', function(event) {
+								if (smarker) {
+									var uuid = applyShownSet(smarker
+											.getPosition());
+									sendPosition('drag', smarker.getPosition(),
+											map.getZoom(), 3, uuid);
+									releaseLocationShown();
+									setMarkers();
+								}
+							});
+					mapClick = google.maps.event.addListener(map, 'click',
+							function() {
+								if (smarker) {
+									var uuid = applyShownSet(smarker
+											.getPosition());
+									sendPosition('click',
+											smarker.getPosition(), map
+													.getZoom(), 3, uuid);
+									endFollowing();
+									releaseLocationShown();
+									setMarkers();
+								}
+							});
+
+				}
+				if (smarker)
+					smarker.setPosition(cursorPoint);
 			});
 }
 
@@ -473,7 +567,6 @@ function endFollowing() {
 		google.maps.event.removeListener(mapClick);
 		mapClick = null;
 	}
-	// reset state
 	draggedMarker = null;
 }
 
@@ -517,12 +610,160 @@ function releaseDirection() {
 	}
 }
 
+function releaseLocationShown() {
+	if (smarker) {
+		if (sdragEnd) {
+			google.maps.event.removeListener(sdragEnd);
+			sdragEnd = null;
+		}
+		smarker.setMap(null);
+		smarker = null;
+		draggedMarker = null;
+	}
+}
+
 function setViewPort(bounds) {
 	map.fitBounds(bounds);
-	sendPosition('pos', map.getCenter(), map.getZoom(), 0);
+	sendMapPosition();
 }
 
 function setCenter(pos, zoom) {
 	map.setCenter(pos, zoom);
-	sendPosition('pos', pos, zoom, 0);
+	sendMapPosition();
+}
+
+function sendMapPosition() {
+	var point = map.getCenter();
+	sendMessage('pos', point.lat() + ',' + point.lng() + "&" + map.getZoom());
+}
+
+function applyCameraSet(pos) {
+	locCreated = [];
+	locCreated.push(pos);
+	var titles = concatTitles(locTitles);
+	locTitles = [];
+	locTitles.push(titles);
+	selected = flatten(locImage);
+	locImage = [];
+	locImage.push(selected);
+	imgDirection = [];
+	if (locShown && locShown.length > 0) {
+		imgDirection.push(bearing(pos, locShown[0]));
+	} else {
+		imgDirection.push(NaN);
+	}
+}
+
+function concatTitles(array) {
+	var l = array.length;
+	if (l == 0)
+		return "";
+	if (l == 1)
+		return array[0];
+	var newTitle = "";
+	for (var i = 0; i < array.length; i++) {
+		var titles = array[i].split(",");
+		for (var j = 0; j < titles.length; j++) {
+			var t = titles[j];
+			if (newTitle != "" && newTitle.length + t.length > 40 || t == "...")
+				return newTitle + ",...";
+			if (newTitle != "")
+				newTitle += ",";
+			newTitle += t;
+		}
+	}
+	return newTitle;
+}
+
+function flatten(array) {
+	var result = [];
+	for (var i = 0; i < array.length; i++) {
+		var subArray = array[i];
+		for (var j = 0; j < subArray.length; j++) {
+			result.push(subArray[j]);
+		}
+	}
+	return result;
+}
+
+function bearing(from, to) {
+	var phi1 = from.lat() / 180.0 * Math.PI;
+	var phi2 = to.lat() / 180.0 * Math.PI;
+	var lam1 = from.lng() / 180.0 * Math.PI;
+	var lam2 = to.lng() / 180.0 * Math.PI;
+	var angle = Math.atan2(Math.sin(lam2 - lam1) * Math.cos(phi2), Math
+			.cos(phi1)
+			* Math.sin(phi2)
+			- Math.sin(phi1)
+			* Math.cos(phi2)
+			* Math.cos(lam2 - lam1));
+	return (angle * 180.0 / Math.PI + 360.0) % 360;
+}
+
+function applyShownSet(pos) {
+	locShown.push(pos);
+	if (locTitles.length > 0) {
+		locShownTitles.push(locTitles[0]);
+	} else {
+		locShownTitles.push("");
+	}
+	var uuid = generateQuickGuid();
+	selected = "shown=" + uuid;
+	locShownImage.push(selected);
+	applyDirectionSet(pos);
+	return uuid;
+}
+
+function applyDirectionSet(pos) {
+	if (imgDirection.length > 0 && locCreated.length > 0) {
+		imgDirection[0] = bearing(locCreated[0], pos);
+	}
+}
+
+function generateQuickGuid() {
+	return Math.random().toString(36).substring(2, 15)
+			+ Math.random().toString(36).substring(2, 15);
+}
+
+function deleteSelected() {
+	if (selected) {
+		var p = findItem(locImage, selected);
+		if (p >= 0) {
+			batch = removeItem(batch, p);
+			locCreated = removeItem(locCreated, p);
+			locTitles = removeItem(locTitles, p);
+			locImage = removeItem(locImage, p);
+			if (imgDirection)
+				imgDirection = removeItem(imgDirection, p);
+			selected = null;
+			setMarkers();
+		} else {
+			p = findItem(locShownImage, selected);
+			if (p >= 0) {
+				locShown = removeItem(locShown, p);
+				locShownTitles = removeItem(locShownTitles, p);
+				locShownImage = removeItem(locShownImage, p);
+				selected = null;
+				setMarkers();
+			}
+		}
+	}
+}
+
+function removeItem(array, index) {
+	var newArray = [];
+	for (var i = 0; i < array.length; i++) {
+		if (i !== index) {
+			newArray.push(array[i]);
+		}
+	}
+	return newArray;
+}
+function findItem(array, item) {
+	for (var i = 0; i < array.length; i++) {
+		if (item == array[i]) {
+			return i;
+		}
+	}
+	return -1;
 }

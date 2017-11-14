@@ -27,10 +27,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.ui.internal.dialogs.AbstractListCellEditorDialog;
 import com.bdaum.zoom.ui.internal.dialogs.MixedBagCellEditorDialog;
 
+@SuppressWarnings("restriction")
 public class MixedBagCellEditor extends AbstractMixedBagDialogCellEditor {
 
 	private Object value;
@@ -48,8 +49,7 @@ public class MixedBagCellEditor extends AbstractMixedBagDialogCellEditor {
 
 	@Override
 	protected void doSetValue(Object v) {
-		this.value = v;
-		super.doSetValue(UiUtilities.csv(v, qfield.getType(), ", ")); //$NON-NLS-1$
+		super.doSetValue(Utilities.csv(value = v, qfield.getType(), ", ")); //$NON-NLS-1$
 	}
 
 
@@ -63,8 +63,7 @@ public class MixedBagCellEditor extends AbstractMixedBagDialogCellEditor {
 		location.y += 30;
 		dialog.getShell().setLocation(location);
 		if (dialog.open() == Window.OK) {
-			value = dialog.getResult();
-			return value;
+			return value = dialog.getResult();
 		}
 		return null;
 	}

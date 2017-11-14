@@ -92,8 +92,8 @@ public class Core {
 	}
 
 	/**
-	 * Converts an array of tokens into a string list separated by separators
-	 * Null tokens are supressed
+	 * Converts an array of tokens into a string list separated by separators Null
+	 * tokens are supressed
 	 *
 	 * @param tokens
 	 *            - tokens
@@ -177,8 +177,8 @@ public class Core {
 	 * @param lon2
 	 *            - Longitude of point 2 (in decimal degrees)
 	 * @param unit
-	 *            - the unit for results: 'M' is statute miles, 'K' is
-	 *            kilometers, 'N' is nautical miles
+	 *            - the unit for results: 'M' is statute miles, 'K' is kilometers,
+	 *            'N' is nautical miles
 	 * @return distance
 	 */
 
@@ -243,8 +243,8 @@ public class Core {
 	 * @param lon2
 	 *            - Longitude of point 2 (in decimal degrees)
 	 * @param unit
-	 *            - the unit for results: 'M' is statute miles, 'K' is
-	 *            kilometers, 'N' is nautical miles
+	 *            - the unit for results: 'M' is statute miles, 'K' is kilometers,
+	 *            'N' is nautical miles
 	 * @return distance
 	 */
 
@@ -269,7 +269,7 @@ public class Core {
 				Math.cos(dist) - Math.sin(lat1) * Math.sin(lat2));
 		lat2 = Math.toDegrees(lat2);
 		lon2 = Math.toDegrees(lon2);
-		lon2 = (lon2 +540) % 360 - 180;
+		lon2 = (lon2 + 540) % 360 - 180;
 		return new Point2D.Double(lat2, lon2);
 	}
 
@@ -339,8 +339,8 @@ public class Core {
 	 *            - file URI
 	 * @param box
 	 *            - a ticket box containing a session ticket
-	 * @return - the downloaded file (temp file). When file needs to be
-	 *         preserved it must be copied to a different location.
+	 * @return - the downloaded file (temp file). When file needs to be preserved it
+	 *         must be copied to a different location.
 	 * @throws IOException
 	 */
 	public static File download(URI uri, Ticketbox box) throws IOException {
@@ -433,8 +433,8 @@ public class Core {
 	}
 
 	/**
-	 * Extract the file extension from a path specification If path does not
-	 * contain a file extension, the file header is analyzed for the image type
+	 * Extract the file extension from a path specification If path does not contain
+	 * a file extension, the file header is analyzed for the image type
 	 *
 	 * @param uri
 	 *            - URI
@@ -442,7 +442,7 @@ public class Core {
 	 */
 	public static String getFileExtension(String uri) {
 		String fileExtension = BatchUtilities.getTrueFileExtension(uri);
-		return fileExtension.isEmpty() ? ImageUtilities.detectImageFormat(uri) : fileExtension.toLowerCase() ;
+		return fileExtension.isEmpty() ? ImageUtilities.detectImageFormat(uri) : fileExtension.toLowerCase();
 	}
 
 	/**
@@ -451,8 +451,8 @@ public class Core {
 	 * @param uri
 	 *            - the given URI
 	 * @param withExtension
-	 *            - true if filename shall be return including file name
-	 *            extension, false otherwise
+	 *            - true if filename shall be return including file name extension,
+	 *            false otherwise
 	 * @return - file name
 	 */
 	public static String getFileName(URI uri, boolean withExtension) {
@@ -465,20 +465,18 @@ public class Core {
 	 * @param uri
 	 *            - the given URI
 	 * @param withExtension
-	 *            - true if filename shall be return including file name
-	 *            extension, false otherwise
+	 *            - true if filename shall be return including file name extension,
+	 *            false otherwise
 	 * @return - file name
 	 */
 	public static String getFileName(String uri, boolean withExtension) {
-		int p = uri.lastIndexOf('/');
-		if (p >= 0)
-			uri = uri.substring(p + 1);
+		int p = uri.lastIndexOf('/') + 1;
 		if (!withExtension) {
-			p = uri.lastIndexOf('.');
-			if (p >= 0)
-				uri = uri.substring(0, p);
+			int q = uri.lastIndexOf('.', p);
+			if (q >= 0)
+				return decodeUrl(uri.substring(p, q));
 		}
-		return decodeUrl(uri);
+		return decodeUrl(uri.substring(p));
 	}
 
 	/**
@@ -498,9 +496,8 @@ public class Core {
 	}
 
 	/**
-	 * Encodes a URL segment into the application/x-www-form-urlencoded format.
-	 * In addition, '+' characters (that represent whitespace) are encoded into
-	 * '%20'
+	 * Encodes a URL segment into the application/x-www-form-urlencoded format. In
+	 * addition, '+' characters (that represent whitespace) are encoded into '%20'
 	 *
 	 * @param s
 	 *            - input string
@@ -535,8 +532,8 @@ public class Core {
 	 *
 	 * @param uri
 	 *            - image file
-	 * @return possible URIs of associated XMP file. The most specific URI is
-	 *         given first
+	 * @return possible URIs of associated XMP file. The most specific URI is given
+	 *         first
 	 */
 	public static URI[] getSidecarURIs(URI uri) {
 		String u = uri.toString();
@@ -596,9 +593,7 @@ public class Core {
 		for (String family : families) {
 			try {
 				Job.getJobManager().join(family, null);
-			} catch (OperationCanceledException e) {
-				// ignore
-			} catch (InterruptedException e) {
+			} catch (OperationCanceledException | InterruptedException e) {
 				// ignore
 			}
 		}

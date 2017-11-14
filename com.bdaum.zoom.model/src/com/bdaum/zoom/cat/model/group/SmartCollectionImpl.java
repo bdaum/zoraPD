@@ -38,14 +38,19 @@ public class SmartCollectionImpl extends SmartCollection_typeImpl implements
 	 * @param lastAccessDate - Property
 	 * @param generation - Property
 	 * @param perspective - Property
+	 * @param showLabel - Property
+	 * @param labelTemplate - Property
+	 * @param fontSize - Property
 	 * @param postProcessor - Arc
 	 */
 	public SmartCollectionImpl(String name, boolean system, boolean album,
 			boolean adhoc, boolean network, String description, int colorCode,
 			Date lastAccessDate, int generation, String perspective,
+			int showLabel, String labelTemplate, int fontSize,
 			PostProcessor postProcessor) {
 		super(name, system, album, adhoc, network, description, colorCode,
-				lastAccessDate, generation, perspective);
+				lastAccessDate, generation, perspective, showLabel,
+				labelTemplate, fontSize);
 		this.postProcessor = postProcessor;
 
 	}

@@ -39,7 +39,6 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -61,7 +60,7 @@ import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.ui.internal.UiActivator;
-import com.bdaum.zoom.ui.widgets.CGroup;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.widgets.CLink;
 
 public abstract class AbstractPreferencePage extends PreferencePage implements IWorkbenchPreferencePage, IAdaptable {
@@ -306,25 +305,6 @@ public abstract class AbstractPreferencePage extends PreferencePage implements I
 		return viewer;
 	}
 
-	/**
-	 * Creates a labeled group
-	 *
-	 * @param parent
-	 *            - parent composite
-	 * @param columns
-	 *            - number of columns within group
-	 * @param label
-	 *            - group label
-	 * @return - group control
-	 */
-	public static CGroup createGroup(Composite parent, int columns, String label) {
-		CGroup group = new CGroup(parent, SWT.NONE);
-		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-		group.setLayout(new GridLayout(columns, false));
-		group.setText(label);
-		return group;
-	}
-
 	protected CTabFolder createTabFolder(Composite parent, String tabName) {
 		this.tabName = tabName;
 		tabFolder = new CTabFolder(parent, SWT.BORDER);
@@ -346,21 +326,7 @@ public abstract class AbstractPreferencePage extends PreferencePage implements I
 		tabFolder.setSelection(lastSelectedItem);
 	}
 
-	/**
-	 * Creates a tab item
-	 *
-	 * @param tabFolder
-	 *            - tab folder
-	 * @param text
-	 *            - tab item label
-	 * @return - tab item
-	 */
-	protected CTabItem createTabItem(CTabFolder tabFolder, String text) {
-		CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
-		tabItem.setFont(JFaceResources.getBannerFont());
-		tabItem.setText(' ' + text + ' ');
-		return tabItem;
-	}
+
 
 	/**
 	 * Extents the preference page with registered IPreferencePageExtensions
@@ -382,10 +348,10 @@ public abstract class AbstractPreferencePage extends PreferencePage implements I
 						IPreferencePageExtension ext = (IPreferencePageExtension) conf
 								.createExecutableExtension("class"); //$NON-NLS-1$
 						if (parent instanceof CTabFolder)
-							createTabItem((CTabFolder) parent, ext.getLabel())
+							UiUtilities.createTabItem((CTabFolder) parent, ext.getLabel())
 									.setControl(ext.createPageContents(parent, this));
 						else
-							ext.createPageContents(createGroup(parent, 1, ext.getLabel()), this);
+							ext.createPageContents(UiUtilities.createGroup(parent, 1, ext.getLabel()), this);
 						addOns.add(ext);
 					} catch (CoreException e) {
 						UiActivator.getDefault().logError(

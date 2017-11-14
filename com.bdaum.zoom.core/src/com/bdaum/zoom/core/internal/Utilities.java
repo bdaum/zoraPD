@@ -56,7 +56,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.util.NLS;
 
-import com.bdaum.aoModeling.runtime.AomMap;
 import com.bdaum.zoom.cat.model.Meta_type;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
@@ -93,8 +92,7 @@ public class Utilities {
 	private static final String FILE2 = "file://"; //$NON-NLS-1$
 
 	/**
-	 * Clones a collection and removes the network attribute and the sort
-	 * criteria
+	 * Clones a collection and removes the network attribute and the sort criteria
 	 *
 	 * @param scoll
 	 *            - source collection
@@ -103,7 +101,8 @@ public class Utilities {
 	public static SmartCollection localizeSmartCollection(SmartCollection scoll) {
 		SmartCollection ncoll = new SmartCollectionImpl(scoll.getName(), scoll.getSystem(), scoll.getAlbum(),
 				scoll.getAdhoc(), false, scoll.getDescription(), scoll.getColorCode(), scoll.getLastAccessDate(),
-				scoll.getGeneration() + 1, scoll.getPerspective(), scoll.getPostProcessor());
+				scoll.getGeneration() + 1, scoll.getPerspective(), scoll.getShowLabel(), scoll.getLabelTemplate(),
+				scoll.getFontSize(), scoll.getPostProcessor());
 		for (Criterion crit : scoll.getCriterion())
 			ncoll.addCriterion(crit);
 		ncoll.setSmartCollection_subSelection_parent(scoll.getSmartCollection_subSelection_parent());
@@ -155,16 +154,14 @@ public class Utilities {
 	 * @return - new array or null
 	 */
 	public static String[] removeFromStringArray(String s, String[] array) {
-		if (array != null) {
-			for (int i = 0; i < array.length; i++) {
+		if (array != null)
+			for (int i = 0; i < array.length; i++)
 				if (s.equals(array[i])) {
 					String[] newArray = new String[array.length - 1];
 					System.arraycopy(array, 0, newArray, 0, i);
 					System.arraycopy(array, i + 1, newArray, i, newArray.length - i);
 					return newArray;
 				}
-			}
-		}
 		return array;
 	}
 
@@ -234,11 +231,8 @@ public class Utilities {
 				while ((line = r.readLine()) != null) {
 					++lineNo;
 					line = line.trim();
-					if (line.isEmpty())
-						continue;
-					if (line.startsWith("{") && line.endsWith("}")) //$NON-NLS-1$ //$NON-NLS-2$
-						continue;
-					if (line.startsWith("[") && line.endsWith("]")) //$NON-NLS-1$ //$NON-NLS-2$
+					if (line.isEmpty() || line.startsWith("{") && line.endsWith("}") //$NON-NLS-1$ //$NON-NLS-2$
+							|| line.startsWith("[") && line.endsWith("]")) //$NON-NLS-1$//$NON-NLS-2$
 						continue;
 					keywords.add(line);
 				}
@@ -329,41 +323,46 @@ public class Utilities {
 		}
 	}
 
-	public static String computeFileName(String template, String filename, Date date, int importNo, int imageNo,
-			int sequenceNo, String cue, Asset asset, int maxLength, boolean toFilename, boolean transfer) {
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.setTime(date);
+	public static String evaluateTemplate(String template, String[] variables, String filename, GregorianCalendar cal,
+			int importNo, int imageNo, int sequenceNo, String cue, Asset asset, String collection, int maxLength,
+			boolean toFilename) {
+		if (cal == null && asset != null) {
+			Date crDate = asset.getDateTimeOriginal();
+			if (crDate == null)
+				crDate = asset.getDateTime();
+			if (crDate != null) {
+				cal = new GregorianCalendar();
+				cal.setTime(crDate);
+			}
+		}
 		StringBuilder sb = new StringBuilder(template);
-		for (String tv : asset != null ? Constants.TV_RENAME : transfer ? Constants.TV_TRANSFER : Constants.TV_ALL) {
+		for (String tv : variables)
 			while (true) {
 				int p = sb.indexOf(tv);
 				if (p < 0)
 					break;
-				replaceContent(sb, p, tv, filename, cal, importNo, imageNo, sequenceNo, cue, toFilename);
+				replaceContent(sb, p, tv, asset, collection, filename, cal, importNo, imageNo, sequenceNo, cue,
+						toFilename);
 			}
-		}
 		if (asset != null) {
 			while (true) {
 				int p = sb.indexOf(Constants.TV_META);
-				if (p >= 0) {
-					int q = sb.indexOf("}", p + 1); //$NON-NLS-1$
-					if (q < 0)
-						break;
-					String fname = sb.substring(p + Constants.TV_META.length(), q);
-					QueryField[] qpath = QueryField.findQuerySubField(fname);
-					if (qpath == null)
-						break;
-					Object value = QueryField.obtainFieldValue(asset, QueryField.findQueryField(fname), qpath[1]);
-					String text = qpath[1].value2text(value, ""); //$NON-NLS-1$
-					if (text != null) {
-						String unit = qpath[1].getUnit();
-						if (unit != null)
-							text += ' ' + unit;
-					} else
-						text = ""; //$NON-NLS-1$
-					sb.replace(p, q + 1, removeBadChars(text, toFilename));
-				} else
+				if (p < 0)
 					break;
+				int q = sb.indexOf("}", p + 1); //$NON-NLS-1$
+				if (q < 0)
+					break;
+				QueryField[] qpath = QueryField.findQuerySubField(sb.substring(p + Constants.TV_META.length(), q));
+				if (qpath == null)
+					break;
+				String text = qpath[1].value2text(QueryField.obtainFieldValue(asset, qpath[0], qpath[1]), ""); //$NON-NLS-1$
+				if (text != null) {
+					String unit = qpath[1].getUnit();
+					if (unit != null)
+						text += ' ' + unit;
+				} else
+					text = ""; //$NON-NLS-1$
+				sb.replace(p, q + 1, removeBadChars(text, toFilename));
 			}
 		}
 		if (sb.length() > maxLength) {
@@ -376,76 +375,89 @@ public class Utilities {
 		return sb.toString();
 	}
 
-	private static void replaceContent(StringBuilder sb, int p, String tv, String filename, GregorianCalendar cal,
-			int importNo, int imageNo, int sequenceNo, String cue, boolean toFilename) {
+	private static void replaceContent(StringBuilder sb, int p, String tv, Asset asset, String collection,
+			String filename, GregorianCalendar cal, int importNo, int imageNo, int sequenceNo, String cue,
+			boolean toFilename) {
 		String value = ""; //$NON-NLS-1$
-		if (tv == Constants.TV_SS) {
-			value = leadingZeros(cal.get(Calendar.SECOND), 2);
-		} else if (tv == Constants.TV_II) {
-			value = leadingZeros(cal.get(Calendar.MINUTE), 2);
-		} else if (tv == Constants.TV_HH) {
-			value = leadingZeros(cal.get(Calendar.HOUR_OF_DAY), 2);
-		} else if (tv == Constants.TV_JJJ) {
-			value = leadingZeros(cal.get(Calendar.DAY_OF_YEAR), 3);
-		} else if (tv == Constants.TV_DD) {
-			value = leadingZeros(cal.get(Calendar.DAY_OF_MONTH), 2);
-		} else if (tv == Constants.TV_MONTH) {
-			value = Constants.DATEFORMATS.getMonths()[cal.get(Calendar.MONTH)];
-		} else if (tv == Constants.TV_WW) {
-			value = leadingZeros(cal.get(Calendar.WEEK_OF_YEAR), 2);
-		} else if (tv == Constants.TV_MM) {
-			value = leadingZeros(cal.get(Calendar.MONTH) + 1, 2);
-		} else if (tv == Constants.TV_YY) {
-			value = leadingZeros(cal.get(Calendar.YEAR) % 100, 2);
-		} else if (tv == Constants.TV_YYYY) {
-			value = String.valueOf(cal.get(Calendar.YEAR));
-		} else if (tv == Constants.TV_SEQUENCE_NO5) {
-			value = leadingZeros(sequenceNo, 5);
-		} else if (tv == Constants.TV_SEQUENCE_NO4) {
-			value = leadingZeros(sequenceNo, 4);
-		} else if (tv == Constants.TV_SEQUENCE_NO3) {
-			value = leadingZeros(sequenceNo, 3);
-		} else if (tv == Constants.TV_SEQUENCE_NO2) {
-			value = leadingZeros(sequenceNo, 2);
-		} else if (tv == Constants.TV_SEQUENCE_NO1) {
+		if (tv == Constants.PI_TITLE)
+			value = (String) QueryField.TITLEORNAME.obtainFieldValue(asset);
+		else if (tv == Constants.PI_NAME)
+			value = asset.getName();
+		else if (tv == Constants.PI_CREATIONDATE)
+			value = cal == null ? "" : new SimpleDateFormat(Messages.Utilities_yyyymdhmm).format(cal.getTime()); //$NON-NLS-1$
+		else if (tv == Constants.PT_COLLECTION)
+			value = collection;
+		else if (tv == Constants.PI_SEQUENCENO)
 			value = String.valueOf(sequenceNo);
-		} else if (tv == Constants.TV_IMAGE_NO5) {
-			value = leadingZeros(imageNo, 5);
-		} else if (tv == Constants.TV_IMAGE_NO4) {
-			value = leadingZeros(imageNo, 4);
-		} else if (tv == Constants.TV_IMAGE_NO3) {
-			value = leadingZeros(imageNo, 3);
-		} else if (tv == Constants.TV_IMAGE_NO2) {
-			value = leadingZeros(imageNo, 2);
-		} else if (tv == Constants.TV_IMAGE_NO1) {
+		else if (tv == Constants.PI_PAGEITEM)
 			value = String.valueOf(imageNo);
-		} else if (tv == Constants.TV_IMPORT_NO5) {
+		else if (tv == Constants.PI_SIZE)
+			value = NLS.bind(Messages.Utilities_nxmpixel, asset.getWidth(), asset.getHeight());
+		else if (tv == Constants.PI_FORMAT)
+			value = asset.getFormat();
+		else if (tv == Constants.TV_SS)
+			value = cal == null ? "" : leadingZeros(cal.get(Calendar.SECOND), 2); //$NON-NLS-1$
+		else if (tv == Constants.TV_II)
+			value = cal == null ? "" : leadingZeros(cal.get(Calendar.MINUTE), 2); //$NON-NLS-1$
+		else if (tv == Constants.TV_HH)
+			value = cal == null ? "" : leadingZeros(cal.get(Calendar.HOUR_OF_DAY), 2); //$NON-NLS-1$
+		else if (tv == Constants.TV_JJJ)
+			value = cal == null ? "" : leadingZeros(cal.get(Calendar.DAY_OF_YEAR), 3); //$NON-NLS-1$
+		else if (tv == Constants.TV_DD)
+			value = cal == null ? "" : leadingZeros(cal.get(Calendar.DAY_OF_MONTH), 2); //$NON-NLS-1$
+		else if (tv == Constants.TV_MONTH)
+			value = cal == null ? "" : Constants.DATEFORMATS.getMonths()[cal.get(Calendar.MONTH)]; //$NON-NLS-1$
+		else if (tv == Constants.TV_WW)
+			value = cal == null ? "" : leadingZeros(cal.get(Calendar.WEEK_OF_YEAR), 2); //$NON-NLS-1$
+		else if (tv == Constants.TV_MM)
+			value = cal == null ? "" : leadingZeros(cal.get(Calendar.MONTH) + 1, 2); //$NON-NLS-1$
+		else if (tv == Constants.TV_YY)
+			value = cal == null ? "" : leadingZeros(cal.get(Calendar.YEAR) % 100, 2); //$NON-NLS-1$
+		else if (tv == Constants.TV_YYYY)
+			value = cal == null ? "" : String.valueOf(cal.get(Calendar.YEAR)); //$NON-NLS-1$
+		else if (tv == Constants.TV_SEQUENCE_NO5)
+			value = leadingZeros(sequenceNo, 5);
+		else if (tv == Constants.TV_SEQUENCE_NO4)
+			value = leadingZeros(sequenceNo, 4);
+		else if (tv == Constants.TV_SEQUENCE_NO3)
+			value = leadingZeros(sequenceNo, 3);
+		else if (tv == Constants.TV_SEQUENCE_NO2)
+			value = leadingZeros(sequenceNo, 2);
+		else if (tv == Constants.TV_SEQUENCE_NO1)
+			value = String.valueOf(sequenceNo);
+		else if (tv == Constants.TV_IMAGE_NO5)
+			value = leadingZeros(imageNo, 5);
+		else if (tv == Constants.TV_IMAGE_NO4)
+			value = leadingZeros(imageNo, 4);
+		else if (tv == Constants.TV_IMAGE_NO3)
+			value = leadingZeros(imageNo, 3);
+		else if (tv == Constants.TV_IMAGE_NO2)
+			value = leadingZeros(imageNo, 2);
+		else if (tv == Constants.TV_IMAGE_NO1)
+			value = String.valueOf(imageNo);
+		else if (tv == Constants.TV_IMPORT_NO5)
 			value = leadingZeros(importNo, 5);
-		} else if (tv == Constants.TV_IMPORT_NO4) {
+		else if (tv == Constants.TV_IMPORT_NO4)
 			value = leadingZeros(importNo, 4);
-		} else if (tv == Constants.TV_IMPORT_NO3) {
+		else if (tv == Constants.TV_IMPORT_NO3)
 			value = leadingZeros(importNo, 3);
-		} else if (tv == Constants.TV_IMPORT_NO2) {
+		else if (tv == Constants.TV_IMPORT_NO2)
 			value = leadingZeros(importNo, 2);
-		} else if (tv == Constants.TV_IMPORT_NO1) {
+		else if (tv == Constants.TV_IMPORT_NO1)
 			value = String.valueOf(importNo);
-		} else if (tv == Constants.TV_EXTENSION) {
+		else if (tv == Constants.TV_EXTENSION) {
 			int q = filename.lastIndexOf('.');
 			if (q >= 0)
 				value = filename.substring(q + 1);
 		} else if (tv == Constants.TV_FILENAME) {
 			int q = filename.lastIndexOf('.');
-			if (q >= 0) {
-				value = filename.substring(0, q);
-			} else
-				value = filename;
-		} else if (tv == Constants.TV_USER) {
+			value = q >= 0 ? filename.substring(0, q) : filename;
+		} else if (tv == Constants.TV_USER)
 			value = removeBadChars(System.getProperty("user.name"), toFilename); //$NON-NLS-1$
-		} else if (tv == Constants.TV_OWNER) {
+		else if (tv == Constants.TV_OWNER)
 			value = removeBadChars(CoreActivator.getDefault().getDbManager().getMeta(true).getOwner(), toFilename);
-		} else if (tv == Constants.TV_CUE) {
+		else if (tv == Constants.TV_CUE)
 			value = cue == null ? "" : removeBadChars(cue, toFilename); //$NON-NLS-1$
-		}
 		sb.replace(p, p + tv.length(), value);
 	}
 
@@ -477,7 +489,7 @@ public class Utilities {
 		return sb.toString();
 	}
 
-	private static String leadingZeros(int v, int digits) {
+	public static String leadingZeros(int v, int digits) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(v);
 		while (sb.length() < digits)
@@ -558,7 +570,8 @@ public class Utilities {
 					break;
 				}
 			if (catGroup == null) {
-				catGroup = new GroupImpl(Messages.CoreActivator_Categories, false);
+				catGroup = new GroupImpl(Messages.CoreActivator_Categories, false, Constants.INHERIT_LABEL, null, 0,
+						null);
 				catGroup.setStringId(Constants.GROUP_ID_CATEGORIES);
 				toBeStored.add(catGroup);
 			}
@@ -577,9 +590,8 @@ public class Utilities {
 	private static SmartCollectionImpl addCategoryCollection(Category category, SmartCollectionImpl parentColl,
 			Group catGroup, Collection<Object> toBeStored) {
 		String label = category.getLabel();
-		SmartCollectionImpl coll = new SmartCollectionImpl(
-				label.isEmpty() ? Messages.Utilities_not_categorized : label, true, false, false, false, null, 0,
-				null, 0, null, null);
+		SmartCollectionImpl coll = new SmartCollectionImpl(label.isEmpty() ? Messages.Utilities_not_categorized : label,
+				true, false, false, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 		coll.setStringId(IDbManager.CATKEY + label);
 		Criterion crit = new CriterionImpl(QueryField.IPTC_CATEGORY.getKey(), null, label, QueryField.EQUALS, false);
 		coll.addCriterion(crit);
@@ -802,10 +814,8 @@ public class Utilities {
 
 	public static void deleteCollection(SmartCollection collection, boolean deep, Collection<Object> toBeDeleted) {
 		toBeDeleted.add(collection);
-		for (Criterion crit : collection.getCriterion()) {
+		for (Criterion crit : collection.getCriterion())
 			toBeDeleted.add(crit);
-			// addCustomType(crit.getValue(), toBeDeleted);
-		}
 		for (SortCriterion crit : collection.getSortCriterion())
 			toBeDeleted.add(crit);
 		PostProcessor postProcessor = collection.getPostProcessor();
@@ -816,21 +826,10 @@ public class Utilities {
 				deleteCollection(sub, deep, toBeDeleted);
 	}
 
-	// public static void addCustomType(Object value, Collection<Object>
-	// toBeDeleted) {
-	// if (value != null) {
-	// String name = value.getClass().getName();
-	// if (!name.startsWith("java.")) //$NON-NLS-1$
-	// toBeDeleted.add(value);
-	// }
-	// }
-
 	public static void storeCollection(SmartCollection collection, boolean deep, Collection<Object> toBeStored) {
 		toBeStored.add(collection);
-		for (Criterion crit : collection.getCriterion()) {
+		for (Criterion crit : collection.getCriterion())
 			toBeStored.add(crit);
-			// addCustomType(crit.getValue(), toBeStored);
-		}
 		for (SortCriterion crit : collection.getSortCriterion())
 			toBeStored.add(crit);
 		PostProcessor postProcessor = collection.getPostProcessor();
@@ -1008,25 +1007,16 @@ public class Utilities {
 	public static void initSystemCollections(IDbManager db) {
 		if (db.isReadOnly())
 			return;
-		GroupImpl user = new GroupImpl(Messages.CoreActivator_User_defined, false);
-		user.setStringId(Constants.GROUP_ID_USER);
-		db.store(user);
-		GroupImpl slideshows = new GroupImpl(Messages.CoreActivator_Slideshows, false);
-		slideshows.setStringId(Constants.GROUP_ID_SLIDESHOW);
-		db.store(slideshows);
-		GroupImpl exhibitions = new GroupImpl(Messages.CoreActivator_Exhibitions, false);
-		exhibitions.setStringId(Constants.GROUP_ID_EXHIBITION);
-		db.store(exhibitions);
-		GroupImpl webGalleries = new GroupImpl(Messages.CoreActivator_web_galleries, false);
-		webGalleries.setStringId(Constants.GROUP_ID_WEBGALLERY);
-		db.store(webGalleries);
-		GroupImpl rating = new GroupImpl(Messages.CoreActivator_Ratings, true);
-		rating.setStringId(Constants.GROUP_ID_RATING);
+		createSystemGroup(db, Constants.GROUP_ID_USER, Messages.CoreActivator_User_defined);
+		createSystemGroup(db, Constants.GROUP_ID_SLIDESHOW, Messages.CoreActivator_Slideshows);
+		createSystemGroup(db, Constants.GROUP_ID_EXHIBITION, Messages.CoreActivator_Exhibitions);
+		createSystemGroup(db, Constants.GROUP_ID_WEBGALLERY, Messages.CoreActivator_web_galleries);
+		GroupImpl rating = createSystemGroup(db, Constants.GROUP_ID_RATING, Messages.CoreActivator_Ratings);
 		String ratingKey = QueryField.RATING.getKey();
 		String prefix = ratingKey + '=';
 		for (int i = -1; i <= 5; i++) {
 			SmartCollectionImpl coll = new SmartCollectionImpl((i < 0) ? Messages.CoreActivator_Not_rated : STARS[i],
-					true, false, false, false, null, 0, null, 0, null, null);
+					true, false, false, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 			coll.setStringId(prefix + i);
 			CriterionImpl crit = new CriterionImpl(ratingKey, null, i, QueryField.EQUALS, false);
 			coll.addCriterion(crit);
@@ -1037,6 +1027,13 @@ public class Utilities {
 			db.store(coll);
 		}
 		db.store(rating);
+	}
+
+	private static GroupImpl createSystemGroup(IDbManager db, String id, String label) {
+		GroupImpl group = new GroupImpl(label, false, Constants.INHERIT_LABEL, null, 0, null);
+		group.setStringId(id);
+		db.store(group);
+		return group;
 	}
 
 	public static int parseHex(String s, int from, int to) {
@@ -1248,12 +1245,6 @@ public class Utilities {
 				return false;
 			for (SmartCollectionImpl sm : dbManager.obtainByIds(SmartCollectionImpl.class, group.getRootCollection()))
 				Utilities.deleteCollection(sm, true, toBeDeleted);
-			// for (SmartCollectionImpl sm :
-			// dbManager.obtainObjects(SmartCollectionImpl.class,
-			// "group_rootCollection_parent", Constants.GROUP_ID_IMPORTS,
-			// //$NON-NLS-1$
-			// QueryField.EQUALS))
-			// Utilities.deleteCollection(sm, true, toBeDeleted);
 			group.getRootCollection().clear();
 			toBeStored.add(group);
 			if (previousImport != null) {
@@ -1319,14 +1310,13 @@ public class Utilities {
 	// Cloning
 
 	/**
-	 * Copies the specified array, truncating or padding with nulls (if
-	 * necessary) so the copy has the specified length. For all indices that are
-	 * valid in both the original array and the copy, the two arrays will
-	 * contain identical values. For any indices that are valid in the copy but
-	 * not the original, the copy will contain <tt>null</tt>. Such indices will
-	 * exist if and only if the specified length is greater than that of the
-	 * original array. The resulting array is of exactly the same class as the
-	 * original array.
+	 * Copies the specified array, truncating or padding with nulls (if necessary)
+	 * so the copy has the specified length. For all indices that are valid in both
+	 * the original array and the copy, the two arrays will contain identical
+	 * values. For any indices that are valid in the copy but not the original, the
+	 * copy will contain <tt>null</tt>. Such indices will exist if and only if the
+	 * specified length is greater than that of the original array. The resulting
+	 * array is of exactly the same class as the original array.
 	 *
 	 * @param original
 	 *            the array to be copied
@@ -1346,13 +1336,13 @@ public class Utilities {
 	}
 
 	/**
-	 * Copies the specified array, truncating or padding with nulls (if
-	 * necessary) so the copy has the specified length. For all indices that are
-	 * valid in both the original array and the copy, the two arrays will
-	 * contain identical values. For any indices that are valid in the copy but
-	 * not the original, the copy will contain <tt>null</tt>. Such indices will
-	 * exist if and only if the specified length is greater than that of the
-	 * original array. The resulting array is of the class <tt>newType</tt>.
+	 * Copies the specified array, truncating or padding with nulls (if necessary)
+	 * so the copy has the specified length. For all indices that are valid in both
+	 * the original array and the copy, the two arrays will contain identical
+	 * values. For any indices that are valid in the copy but not the original, the
+	 * copy will contain <tt>null</tt>. Such indices will exist if and only if the
+	 * specified length is greater than that of the original array. The resulting
+	 * array is of the class <tt>newType</tt>.
 	 *
 	 * @param original
 	 *            the array to be copied
@@ -1367,9 +1357,8 @@ public class Utilities {
 	 * @throws NullPointerException
 	 *             if <tt>original</tt> is null
 	 * @throws ArrayStoreException
-	 *             if an element copied from <tt>original</tt> is not of a
-	 *             runtime type that can be stored in an array of class
-	 *             <tt>newType</tt>
+	 *             if an element copied from <tt>original</tt> is not of a runtime
+	 *             type that can be stored in an array of class <tt>newType</tt>
 	 * @since 1.6
 	 */
 	public static <T, U> T[] copyOf(U[] original, int newLength, Class<? extends T[]> newType) {
@@ -1381,13 +1370,12 @@ public class Utilities {
 	}
 
 	/**
-	 * Copies the specified array, truncating or padding with zeros (if
-	 * necessary) so the copy has the specified length. For all indices that are
-	 * valid in both the original array and the copy, the two arrays will
-	 * contain identical values. For any indices that are valid in the copy but
-	 * not the original, the copy will contain <tt>0</tt>. Such indices will
-	 * exist if and only if the specified length is greater than that of the
-	 * original array.
+	 * Copies the specified array, truncating or padding with zeros (if necessary)
+	 * so the copy has the specified length. For all indices that are valid in both
+	 * the original array and the copy, the two arrays will contain identical
+	 * values. For any indices that are valid in the copy but not the original, the
+	 * copy will contain <tt>0</tt>. Such indices will exist if and only if the
+	 * specified length is greater than that of the original array.
 	 *
 	 * @param original
 	 *            the array to be copied
@@ -1422,9 +1410,9 @@ public class Utilities {
 				toPattern(sb, backupLocation, p + 1, i);
 			} else
 				toPattern(sb, backupLocation, 0, i);
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
 			String remainder = backupLocation.substring(i + Constants.DATEVAR.length());
-			backupLocation = backupLocation.substring(0, i) + df.format(new Date()) + remainder;
+			backupLocation = backupLocation.substring(0, i) + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) //$NON-NLS-1$
+					+ remainder;
 			sb.append("20\\d\\d\\-(0[1-9]|1[0-2])\\-(0[1-9]|[1-2]\\d|3[0-1])"); //$NON-NLS-1$
 			toPattern(sb, remainder, 0, remainder.length());
 		} else {
@@ -1441,10 +1429,9 @@ public class Utilities {
 	private static void toPattern(StringBuilder sb, String s, int i, int j) {
 		for (int k = i; k < j; k++) {
 			char c = s.charAt(k);
-			if (Character.isLetterOrDigit(c))
-				sb.append(c);
-			else
-				sb.append('\\').append(c);
+			if (!Character.isLetterOrDigit(c))
+				sb.append('\\');
+			sb.append(c);
 		}
 	}
 
@@ -1518,7 +1505,7 @@ public class Utilities {
 		return false;
 	}
 
-	public static void extractKeywords(LocationImpl location, Collection<String> keywords) {
+	public static void extractKeywords(Location location, Collection<String> keywords) {
 		if (location != null) {
 			if (location.getWorldRegion() != null)
 				keywords.add(location.getWorldRegion());
@@ -1597,7 +1584,7 @@ public class Utilities {
 		for (String id : removals)
 			cats.remove(id);
 		for (Category subCat : cats.values()) {
-			AomMap<String, Category> subCategories = subCat.getSubCategory();
+			Map<String, Category> subCategories = subCat.getSubCategory();
 			if (subCategories != null && !subCategories.isEmpty())
 				changed |= ensureCatConsistency(subCategories, ids, removals);
 		}
@@ -1620,11 +1607,10 @@ public class Utilities {
 					return cat;
 				String[] synonyms = cat.getSynonyms();
 				if (synonyms != null)
-					for (String syn : synonyms) {
+					for (String syn : synonyms)
 						if (label.equals(syn))
 							return cat;
-					}
-				AomMap<String, Category> subCategories = cat.getSubCategory();
+				Map<String, Category> subCategories = cat.getSubCategory();
 				if (subCategories != null) {
 					Category found = findCategory(subCategories, label);
 					if (found != null)
@@ -1633,6 +1619,45 @@ public class Utilities {
 			}
 		}
 		return null;
+	}
+	
+	public static String csv(Object v, int type, String sep) {
+		if (v instanceof String)
+			return (String) v;
+		StringBuilder sb = new StringBuilder();
+		if (v != null) {
+			switch (type) {
+			case QueryField.T_INTEGER:
+			case QueryField.T_POSITIVEINTEGER: {
+				for (int i : (int[]) v) {
+					if (sb.length() > 0)
+						sb.append(sep);
+					sb.append(String.valueOf(i));
+				}
+				break;
+			}
+			case QueryField.T_POSITIVELONG:
+			case QueryField.T_LONG: {
+				for (long i : (long[]) v) {
+					if (sb.length() > 0)
+						sb.append(sep);
+					sb.append(String.valueOf(i));
+				}
+				break;
+			}
+			case QueryField.T_STRING: {
+				for (String s : (String[]) v) {
+					if (s != null) {
+						if (sb.length() > 0)
+							sb.append(sep);
+						sb.append(s);
+					}
+				}
+				break;
+			}
+			}
+		}
+		return sb.toString();
 	}
 
 }

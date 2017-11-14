@@ -38,7 +38,6 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
@@ -49,6 +48,7 @@ import org.eclipse.ui.PlatformUI;
 import com.bdaum.zoom.ai.internal.AiActivator;
 import com.bdaum.zoom.ai.internal.HelpContextIds;
 import com.bdaum.zoom.css.internal.CssActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
@@ -107,10 +107,7 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 		}
 		new Label(composite, SWT.NONE);
 		// Translator
-		CGroup eGroup = new CGroup(composite, SWT.NONE);
-		eGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		eGroup.setLayout(new GridLayout(3, false));
-		eGroup.setText(Messages.AiPreferencePage_0);
+		CGroup eGroup = UiUtilities.createGroup(composite, 3, Messages.AiPreferencePage_0);
 		new Label(eGroup, SWT.NONE).setText(Messages.AiPreferencePage_key1_or_key2);
 		keyField = new Text(eGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		keyField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));

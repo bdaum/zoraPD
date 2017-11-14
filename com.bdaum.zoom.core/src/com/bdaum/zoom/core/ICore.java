@@ -149,11 +149,6 @@ public interface ICore {
 	 */
 	void fireApplyRules(Collection<? extends Asset> assets, QueryField node);
 
-//	/**
-//	 * Notifies about catalog modifications (assets added or removed)
-//	 */
-//	void fireCatalogModified();
-
 	/**
 	 * Notifies about catalog structure modifications (e.g. collections added or
 	 * removed)

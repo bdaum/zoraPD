@@ -36,10 +36,14 @@ public class SmartCollection_typeImpl extends AomObject implements
 	 * @param lastAccessDate - Property
 	 * @param generation - Property
 	 * @param perspective - Property
+	 * @param showLabel - Property
+	 * @param labelTemplate - Property
+	 * @param fontSize - Property
 	 */
 	public SmartCollection_typeImpl(String name, boolean system, boolean album,
 			boolean adhoc, boolean network, String description, int colorCode,
-			Date lastAccessDate, int generation, String perspective) {
+			Date lastAccessDate, int generation, String perspective,
+			int showLabel, String labelTemplate, int fontSize) {
 		super();
 		this.name = name;
 		this.system = system;
@@ -51,6 +55,9 @@ public class SmartCollection_typeImpl extends AomObject implements
 		this.lastAccessDate = lastAccessDate;
 		this.generation = generation;
 		this.perspective = perspective;
+		this.showLabel = showLabel;
+		this.labelTemplate = labelTemplate;
+		this.fontSize = fontSize;
 
 	}
 
@@ -282,6 +289,72 @@ public class SmartCollection_typeImpl extends AomObject implements
 		return perspective;
 	}
 
+	/* *** Property showLabel *** */
+
+	private int showLabel;
+
+	/**
+	 * Set value of property showLabel
+	 *
+	 * @param _value - new field value
+	 */
+	public void setShowLabel(int _value) {
+		showLabel = _value;
+	}
+
+	/**
+	 * Get value of property showLabel
+	 *
+	 * @return - value of field showLabel
+	 */
+	public int getShowLabel() {
+		return showLabel;
+	}
+
+	/* *** Property labelTemplate *** */
+
+	private String labelTemplate;
+
+	/**
+	 * Set value of property labelTemplate
+	 *
+	 * @param _value - new field value
+	 */
+	public void setLabelTemplate(String _value) {
+		labelTemplate = _value;
+	}
+
+	/**
+	 * Get value of property labelTemplate
+	 *
+	 * @return - value of field labelTemplate
+	 */
+	public String getLabelTemplate() {
+		return labelTemplate;
+	}
+
+	/* *** Property fontSize *** */
+
+	private int fontSize;
+
+	/**
+	 * Set value of property fontSize
+	 *
+	 * @param _value - new field value
+	 */
+	public void setFontSize(int _value) {
+		fontSize = _value;
+	}
+
+	/**
+	 * Get value of property fontSize
+	 *
+	 * @return - value of field fontSize
+	 */
+	public int getFontSize() {
+		return fontSize;
+	}
+
 	/* ----- Equality ----- */
 
 	/**
@@ -320,6 +393,13 @@ public class SmartCollection_typeImpl extends AomObject implements
 
 				&& ((getPerspective() == null && other.getPerspective() == null) || (getPerspective() != null && getPerspective()
 						.equals(other.getPerspective())))
+
+				&& getShowLabel() == other.getShowLabel()
+
+				&& ((getLabelTemplate() == null && other.getLabelTemplate() == null) || (getLabelTemplate() != null && getLabelTemplate()
+						.equals(other.getLabelTemplate())))
+
+				&& getFontSize() == other.getFontSize()
 
 		;
 	}
@@ -361,6 +441,15 @@ public class SmartCollection_typeImpl extends AomObject implements
 		hashCode = 31
 				* hashCode
 				+ ((getPerspective() == null) ? 0 : getPerspective().hashCode());
+
+		hashCode = 31 * hashCode + getShowLabel();
+
+		hashCode = 31
+				* hashCode
+				+ ((getLabelTemplate() == null) ? 0 : getLabelTemplate()
+						.hashCode());
+
+		hashCode = 31 * hashCode + getFontSize();
 
 		return hashCode;
 	}

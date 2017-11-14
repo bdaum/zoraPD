@@ -163,7 +163,8 @@ public class Icons {
 	public static final Icon forwards = new Icon("icons/forward_nav.png"); //$NON-NLS-1$
 	public static final Icon backwards = new Icon("icons/backward_nav.png"); //$NON-NLS-1$
 	public static final Icon lastImport = new Icon("icons/lastimport.png"); //$NON-NLS-1$
-	public static final Icon group = new Icon("icons/group.gif"); //$NON-NLS-1$
+	public static final Icon group = new Icon("icons/group.png"); //$NON-NLS-1$
+	public static final Icon groupfiltered = new Icon("icons/group_filtered.png"); //$NON-NLS-1$
 	public static final Icon slideshow = new Icon("icons/slideshow.gif"); //$NON-NLS-1$
 	public static final Icon exhibition = new Icon("icons/exhibition.png"); //$NON-NLS-1$
 	public static final Icon webGallery = new Icon("icons/webGallery.gif"); //$NON-NLS-1$

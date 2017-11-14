@@ -91,7 +91,7 @@ public class SetStatusOperation extends DbOperation {
 			}
 			++i;
 		}
-		if (storeSafely(null, size, toBeStored))
+		if (storeSafely(null, size, toBeStored.toArray()))
 			fireAssetsModified(new BagChange<>(null, toBeStored, null, null), QueryField.STATUS);
 		return close(info);
 	}

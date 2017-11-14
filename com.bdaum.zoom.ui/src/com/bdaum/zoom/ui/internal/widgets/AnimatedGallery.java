@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -71,6 +71,7 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.Region;
 import com.bdaum.zoom.cat.model.asset.RegionImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
+import com.bdaum.zoom.cat.model.locationShown.LocationShownImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
@@ -221,10 +222,8 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 				switch (c) {
 				case 13:
 				case SWT.TAB:
-					int stateMask = event.isShiftDown() ? SWT.SHIFT : 0;
-					if (event.isControlDown())
-						stateMask |= SWT.CTRL;
-					fireKeyEvent(c, event.getKeyCode(), stateMask);
+					fireKeyEvent(c, event.getKeyCode(),
+							(event.isShiftDown() ? SWT.SHIFT : 0) | (event.isControlDown() ? SWT.CTRL : 0));
 					break;
 				case '+':
 					zoom(pswtCanvas, 1.05d);
@@ -331,9 +330,9 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 					if (event.isControlDown())
 						deselect(item, 1000);
 					else {
-						Point2D position = event.getPositionRelativeTo(item);
-						ImageRegion imageRegion = getBestFaceRegion((int) position.getX(), (int) position.getY(),
-								false);
+						Point2D position = event.getCanvasPosition();
+						ImageRegion imageRegion = getBestFaceRegion((int) position.getX(), (int) position.getY(), false,
+								item.slide);
 						if (imageRegion != null)
 							fireRegionEvent(0, imageRegion);
 						else
@@ -370,28 +369,29 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 	@SuppressWarnings("serial")
 	public static class PGalleryRegion extends PSWTPath {
 
-		private static final Ellipse2D.Float TEMP_RECTANGLE = new Ellipse2D.Float();
-		private static final Rectangle2D.Float TEMP_OVAL = new Rectangle2D.Float();
+		private static final Ellipse2D.Float TEMP_OVAL = new Ellipse2D.Float();
+		private static final Rectangle2D.Float TEMP_RECTANGLE = new Rectangle2D.Float();
 		private ImageRegion imageRegion;
+		private boolean tempPaintChange;
 
 		private PGalleryRegion(Shape shape) {
 			super(shape);
 		}
 
-		public static PGalleryRegion createRegion(int x, int y, int width, int height) {
-			PGalleryRegion result;
+		public static PGalleryRegion createRegion(int x, int y, int width, int height, java.awt.Paint regionColor) {
+			PGalleryRegion region;
 			if (height < 0) {
 				TEMP_OVAL.setFrame(x - width / 2, y - width / 2, width, width);
-				result = new PGalleryRegion(TEMP_OVAL);
+				region = new PGalleryRegion(TEMP_OVAL);
 			} else {
 				TEMP_RECTANGLE.setFrame(x, y, width, height);
-				result = new PGalleryRegion(TEMP_RECTANGLE);
+				region = new PGalleryRegion(TEMP_RECTANGLE);
 			}
-			result.setPaint(Color.white);
-			result.setPaint(Color.gray);
-			result.setPickable(false);
-			result.setVisible(false);
-			return result;
+			region.setStrokeColor(regionColor);
+			region.setPaint(null);
+			region.setPickable(false);
+			region.setVisible(true);
+			return region;
 		}
 
 		public void setImageRegion(ImageRegion imageRegion) {
@@ -400,6 +400,51 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 
 		public ImageRegion getImageRegion() {
 			return imageRegion;
+		}
+
+		/**
+		 * Force intersection test to return true inspite of paint being null
+		 * 
+		 * @param aBounds
+		 *            bounds being tested for intersection
+		 * @return true if path visibly crosses bounds
+		 */
+		public boolean intersects(final Rectangle2D aBounds) {
+			tempPaintChange = true;
+			try {
+				setPaint(Color.gray);
+				return super.intersects(aBounds);
+			} finally {
+				setPaint(null);
+				tempPaintChange = false;
+			}
+		}
+
+		/*
+		 * Don't invalidate for paint changes from intersects()
+		 */
+		@Override
+		public void invalidatePaint() {
+			if (!tempPaintChange)
+				super.invalidatePaint();
+		}
+
+		/*
+		 * Don't report for paint changes from intersects()
+		 */
+		@Override
+		protected void firePropertyChange(int propertyCode, String propertyName, Object oldValue, Object newValue) {
+			if (!tempPaintChange)
+				super.firePropertyChange(propertyCode, propertyName, oldValue, newValue);
+		}
+
+		public double getDistanceFromRegionCenter(int x, int y) {
+			Point2D pntSrc = new Point(x, y);
+			getParent().globalToLocal(pntSrc);
+			PBounds bounds = getBounds();
+			double dx = bounds.x + bounds.width / 2 - pntSrc.getX();
+			double dy = bounds.y + bounds.height / 2 - pntSrc.getY();
+			return dx * dx + dy * dy;
 		}
 	}
 
@@ -427,6 +472,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		private String captionText;
 		private ZPSWTImage mediaIcon;
 		private ZPSWTImage locationPin;
+		private int defaultFontSize = JFaceResources.getDefaultFont().getFontData()[0].getHeight();
 
 		public PGalleryItem(PSWTCanvas canvas, int index, final Asset asset) {
 			this.index = index;
@@ -449,7 +495,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 			addChild(slide);
 			// overlay region frames
 			if (asset != null) {
-				if (showRegions > 0 && deco != PreferenceConstants.DECONEVER) {
+				if (showRegions > 0) {
 					String[] regionIds = asset.getPerson();
 					if (regionIds != null && regionIds.length > 0) {
 						String fontFamily = "Arial"; //$NON-NLS-1$
@@ -470,16 +516,8 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 							if (frame != null && !UiUtilities.isDoubledRegion(rectangleList, frame)) {
 								rectangleList.add(frame);
 								String type = region.getType();
-								PSWTPath path = frame.height < 0
-										? PSWTPath.createEllipse(frame.x - frame.width / 2, frame.y - frame.width / 2,
-												frame.width, frame.width)
-										: PSWTPath.createRectangle(frame.x, frame.y, frame.width, frame.height);
-								path.setStrokeColor(regionColor);
-								path.setPaint(null);
-								path.setPickable(false);
-								slide.addChild(path);
 								PGalleryRegion frameFill = PGalleryRegion.createRegion(frame.x, frame.y, frame.width,
-										frame.height);
+										frame.height, regionColor);
 								slide.addChild(frameFill);
 								Color color = Color.RED;
 								String name = "?"; //$NON-NLS-1$
@@ -496,9 +534,10 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 									name = region.getAlbum();
 									color = Color.GREEN;
 								}
-								createFrameLabel(path, frame.x + 5, frame.y + 3, fontFamily, fontsize, Color.DARK_GRAY,
+								createFrameLabel(frameFill, frame.x + 5, frame.y + 3, fontFamily, fontsize,
+										Color.DARK_GRAY, name);
+								createFrameLabel(frameFill, frame.x + 4, frame.y + 2, fontFamily, fontsize, color,
 										name);
-								createFrameLabel(path, frame.x + 4, frame.y + 2, fontFamily, fontsize, color, name);
 								frameFill.setImageRegion(new ImageRegion(frame, regionid,
 										type == null ? Region.type_face : type, name, asset));
 							}
@@ -509,14 +548,12 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 			// Decoration
 			addMediaIcon(canvas, asset, x, y, width);
 			addCaption(canvas, asset, captionText, x, y, height);
-			if (deco != PreferenceConstants.DECONEVER) {
-				addRatingStar(canvas, asset, x, y, width);
-				addDoneMark(canvas, asset, x, y, width);
-				double x1 = addColorCode(canvas, asset);
-				addLocationPin(canvas, asset, x1, y);
-				addRotateButtons(canvas, asset, width, height);
-				addVoiceNote(canvas, asset, width, height);
-			}
+			addRatingStar(canvas, asset, x, y, width);
+			addDoneMark(canvas, asset, x, y, width);
+			double x1 = addColorCode(canvas, asset);
+			addLocationPin(canvas, asset, x1, y);
+			addRotateButtons(canvas, asset, width, height);
+			addVoiceNote(canvas, asset, width, height);
 			textEventHandler = new TextEventHandler(UiUtilities.getAwtBackground(canvas, selectionBackgroundColor),
 					this);
 		}
@@ -536,8 +573,11 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 
 		private void addCaption(PSWTCanvas pswtCanvas, final Asset anAsset, String text, double x, double y,
 				double height) {
-			boolean readOnly = anAsset.getFileState() != IVolumeManager.ONLINE;
-			caption = new TextField(text, SWT.DEFAULT, UiUtilities.getAwtFont(pswtCanvas, null, java.awt.Font.BOLD, -1),
+			boolean readOnly = anAsset.getFileState() != IVolumeManager.ONLINE || showLabel != Constants.TITLE_LABEL;
+			caption = new TextField(text, SWT.DEFAULT,
+					UiUtilities.getAwtFont(pswtCanvas, null, java.awt.Font.BOLD,
+							showLabel == Constants.CUSTOM_LABEL && labelFontSize != 0 ? labelFontSize
+									: defaultFontSize),
 					UiUtilities.getAwtForeground(pswtCanvas, null), null, true,
 					SWT.SINGLE | (readOnly ? SWT.READ_ONLY : SWT.NONE));
 			caption.setSelectedPenColor(UiUtilities.getAwtForeground(pswtCanvas, selectionForegroundColor));
@@ -634,6 +674,9 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		private void addLocationPin(PSWTCanvas pswtCanvas, Asset anAsset, double x, double y) {
 			if (showLocation && anAsset != null) {
 				boolean gps = !(Double.isNaN(asset.getGPSLatitude()) || Double.isNaN(asset.getGPSLatitude()));
+				if (!gps)
+					gps = !Core.getCore().getDbManager()
+							.obtainStructForAsset(LocationShownImpl.class, asset.getStringId(), false).isEmpty();
 				Image locationIcon = gps ? Icons.location.getImage() : Icons.nolocation.getImage();
 				locationPin = new ZPSWTImage(pswtCanvas, locationIcon);
 				locationPin.setOffset(x + UPPER_THUMBNAIL_HMARGINS, y + UPPER_THUMBNAIL_HMARGINS);
@@ -708,65 +751,49 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		}
 
 		private String computeCaption(Asset anAsset) {
-			return (anAsset != null) ? UiUtilities.computeImageCaption(anAsset, scoreFormatter, null, null) : ""; //$NON-NLS-1$
+			return (anAsset != null && showLabel != Constants.NO_LABEL) ? UiUtilities.computeImageCaption(anAsset,
+					scoreFormatter, null, null, showLabel == Constants.CUSTOM_LABEL ? labelTemplate : null) : ""; //$NON-NLS-1$
 		}
 
 		public void setSelectTransform() {
 			selectTransform = getTransform();
-			showDecoration();
+			showDecoration(true);
 		}
 
-		private void showDecoration() {
+		public void showDecoration(boolean isSelected) {
 			if (colorCodeRectangle != null)
-				colorCodeRectangle.setVisible(true);
+				colorCodeRectangle
+						.setVisible(isSelected || asset != null && asset.getColorCode() != Constants.COLOR_UNDEFINED);
 			if (locationPin != null)
-				locationPin.setVisible(true);
+				locationPin.setVisible(
+						isSelected || !(Double.isNaN(asset.getGPSLatitude()) || Double.isNaN(asset.getGPSLatitude())));
 			if (ratingStar != null)
-				ratingStar.setVisible(true);
-			if (mediaIcon != null)
-				mediaIcon.setVisible(true);
+				ratingStar.setVisible(isSelected || asset != null && asset.getRating() > 0);
 			if (rotate90Arrow != null)
-				rotate90Arrow.setVisible(true);
+				rotate90Arrow.setVisible(isSelected);
 			if (rotate270Arrow != null)
-				rotate270Arrow.setVisible(true);
-			if (speakerNode != null)
-				speakerNode.setVisible(true);
-			shadow.setVisible(true);
+				rotate270Arrow.setVisible(isSelected);
+			shadow.setVisible(isSelected);
+			if (frameLabels != null)
+				for (PSWTText label : frameLabels)
+					label.setVisible(isSelected);
+			caption.setVisible(isSelected);
 		}
 
 		public void setMultiTransform() {
 			multiTransform = getTransform();
-			showDecoration();
+			showDecoration(true);
 		}
 
 		public void setDeselectTransform() {
 			deselectTransform = getTransform();
-			hideDecoration();
-		}
-
-		private void hideDecoration() {
-			if (colorCodeRectangle != null && asset != null)
-				colorCodeRectangle.setVisible(asset.getColorCode() >= 0);
-			if (locationPin != null)
-				locationPin.setVisible(false);
-			if (ratingStar != null && asset != null)
-				ratingStar.setVisible(asset.getRating() > 0);
-			if (mediaIcon != null)
-				mediaIcon.setVisible(false);
-			if (rotate90Arrow != null)
-				rotate90Arrow.setVisible(false);
-			if (rotate270Arrow != null)
-				rotate270Arrow.setVisible(false);
-			if (speakerNode != null)
-				speakerNode.setVisible(false);
-			shadow.setVisible(false);
+			showDecoration(false);
 		}
 
 		public void deselect(int msec, boolean hideCover) {
 			PTransformActivity animateToTransform = animateToTransform(deselectTransform, msec);
-			if (hideCover) {
+			if (hideCover)
 				animateToTransform.setDelegate(new PActivity.PActivityDelegate() {
-
 					public void activityStepped(PActivity activity) {
 						// do nothing
 					}
@@ -783,12 +810,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 						}
 					}
 				});
-			}
-			caption.setVisible(false);
-			if (frameLabels != null)
-				for (PSWTText label : frameLabels)
-					label.setVisible(false);
-			hideDecoration();
+			showDecoration(false);
 		}
 
 		public void select(int msec, boolean cutTheTallPoppies) {
@@ -839,10 +861,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 						break;
 					}
 					caption.setVisible(true);
-					if (frameLabels != null)
-						for (PSWTText label : frameLabels)
-							label.setVisible(true);
-					showDecoration();
+					showDecoration(true);
 				}
 			});
 		}
@@ -1026,7 +1045,11 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 
 	private List<Rectangle> rectangleList = new ArrayList<>();
 
-	private int deco;
+	private int showLabel;
+
+	private String labelTemplate;
+
+	private int labelFontSize;
 
 	public AnimatedGallery(final PSWTCanvas canvas, int slideSize, int thumbSize, ImageStore imageSource) {
 		this.thumbSize = thumbSize;
@@ -1071,19 +1094,14 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		PBasicInputEventHandler eventHandler = new GalleryPBasicInputEventHandler(canvas);
 		canvas.getRoot().getDefaultInputManager().setKeyboardFocus(eventHandler);
 		canvas.addInputEventListener(eventHandler);
-
 		setEventHandlers();
-
 		canvas.addPaintListener(new PaintListener() {
-
 			public void paintControl(PaintEvent e) {
-				if (collection != null) {
+				if (collection != null)
 					fillSlidebar(collection);
-				}
 			}
 		});
 		titleVerifyListener = new VerifyListener() {
-
 			public void verifyText(VerifyEvent e) {
 				fireErrorEvent(e);
 			}
@@ -1093,15 +1111,12 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 	private void setEventHandlers() {
 		PNode[] workArea = new PNode[] { slideBar };
 		canvas.removeInputEventListener(canvas.getPanEventHandler());
-		panHandler = new GalleryPanEventHandler(this, workArea, surfaceBounds.x, surfaceBounds.y,
-				surfaceBounds.width + surfaceBounds.x, surfaceBounds.height + surfaceBounds.y,
-				GalleryPanEventHandler.BOTH, InputEvent.ALT_MASK | InputEvent.BUTTON1_MASK, -3);
-		canvas.addInputEventListener(panHandler);
+		canvas.addInputEventListener(panHandler = new GalleryPanEventHandler(this, workArea, surfaceBounds.x,
+				surfaceBounds.y, surfaceBounds.width + surfaceBounds.x, surfaceBounds.height + surfaceBounds.y,
+				GalleryPanEventHandler.BOTH, InputEvent.ALT_MASK | InputEvent.BUTTON1_MASK, -3));
 		canvas.removeInputEventListener(canvas.getZoomEventHandler());
-		zoomHandler = new GalleryZoomEventHandler(this, workArea, -10);
-		canvas.addInputEventListener(zoomHandler);
-		wheelListener = new InertiaMouseWheelListener();
-		canvas.addMouseWheelListener(wheelListener);
+		canvas.addInputEventListener(zoomHandler = new GalleryZoomEventHandler(this, workArea, -10));
+		canvas.addMouseWheelListener(wheelListener = new InertiaMouseWheelListener());
 	}
 
 	protected void select(PGalleryItem item1, PGalleryItem item2) {
@@ -1133,8 +1148,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 
 	protected void nav(int i, int j) {
 		if (focussedSlide != null) {
-			Asset a = focussedSlide.getAsset();
-			Integer index = galleryMap.get(a);
+			Integer index = galleryMap.get(focussedSlide.getAsset());
 			if (index != null) {
 				int ni = index.intValue();
 				ni += i + j * columns;
@@ -1142,8 +1156,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 					PGalleryItem slide = slides[ni];
 					if (slide == null)
 						slide = makeSlide(columns, ni, collection.get(ni));
-					goToSlide(slide);
-					lastSingleClick = slide;
+					goToSlide(lastSingleClick = slide);
 				}
 			}
 		}
@@ -1154,30 +1167,27 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		preferenceStore.addPropertyChangeListener(new IPropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent event) {
 				String property = event.getProperty();
-				if (PreferenceConstants.SHOWDECO.equals(property)
-						|| PreferenceConstants.SHOWROTATEBUTTONS.equals(property)
+				if (PreferenceConstants.SHOWROTATEBUTTONS.equals(property)
 						|| PreferenceConstants.SHOWCOLORCODE.equals(property)
 						|| PreferenceConstants.SHOWRATING.equals(property)
 						|| PreferenceConstants.SHOWLOCATION.equals(property)
 						|| PreferenceConstants.SHOWDONEMARK.equals(property)
 						|| PreferenceConstants.SHOWVOICENOTE.equals(property)
-						|| PreferenceConstants.MAXREGIONS.equals(property)) {
+						|| PreferenceConstants.MAXREGIONS.equals(property))
 					applyPreferences();
-				}
 			}
 		});
 	}
 
 	protected IPreferenceStore applyPreferences() {
 		final IPreferenceStore preferenceStore = UiActivator.getDefault().getPreferenceStore();
-		deco = preferenceStore.getInt(PreferenceConstants.SHOWDECO);
 		showRotateButtons = preferenceStore.getBoolean(PreferenceConstants.SHOWROTATEBUTTONS);
 		showColorCode = !PreferenceConstants.COLORCODE_NO
 				.equals(preferenceStore.getString(PreferenceConstants.SHOWCOLORCODE));
 		showLocation = preferenceStore.getBoolean(PreferenceConstants.SHOWLOCATION);
 		String rating = preferenceStore.getString(PreferenceConstants.SHOWRATING);
 		showRating = PreferenceConstants.SHOWRATING_NO.equals(rating) ? RATING_NO
-				: PreferenceConstants.SHOWRATING_SIZE.equals(rating) ? RATING_SIZE : RATING_COUNT;
+				: PreferenceConstants.SHOWRATING_COUNT.equals(rating) ? RATING_COUNT : RATING_SIZE;
 		showDoneMark = preferenceStore.getBoolean(PreferenceConstants.SHOWDONEMARK);
 		showVoicenoteButton = preferenceStore.getBoolean(PreferenceConstants.SHOWVOICENOTE);
 		showRegions = preferenceStore.getInt(PreferenceConstants.MAXREGIONS);
@@ -1266,6 +1276,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 	}
 
 	public void themeChanged() {
+		CssActivator.getDefault().applyStyles(canvas, true);
 		Color newPaint = UiUtilities.getAwtBackground(canvas, backgroundColor);
 		surface.setPaint(newPaint);
 		slideBar.setPaint(newPaint);
@@ -1303,9 +1314,9 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		clearSlidebar();
 		slides = new PGalleryItem[count];
 		PBounds bounds = slideBar.getBoundsReference();
-		if (count == 0) {
+		if (count == 0)
 			slideBar.setBounds(bounds.getX(), bounds.getY(), columns * slideSize, bounds.getHeight());
-		} else {
+		else {
 			int rows = (count + columns - 1) / columns;
 			slideBar.setBounds(bounds.getX(), bounds.getY(), columns * slideSize, rows * slideSize);
 		}
@@ -1609,6 +1620,13 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		return null;
 	}
 
+	/**
+	 * @param x
+	 *            - x-coordinate canvas
+	 * @param y
+	 *            - y-coordinate canvas
+	 * @return list of matching nodes
+	 */
 	private ArrayList<PNode> findMatchingNodes(int x, int y) {
 		PCamera camera = canvas.getCamera();
 		pntSrc.setLocation(x, y);
@@ -1618,14 +1636,22 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		return results;
 	}
 
-	public ImageRegion[] getRegions(int x, int y) {
+	/**
+	 * @param x
+	 *            - x-coordinate canvas
+	 * @param y
+	 *            - y-coordinate canvas
+	 * @param owner
+	 *            - owning thumbnail or null
+	 * @return list of matching regions
+	 */
+	public PGalleryRegion[] getRegions(int x, int y, PSWTAssetThumbnail owner) {
 		ArrayList<PNode> nodes = findMatchingNodes(x, y);
-		List<ImageRegion> result = new ArrayList<>(nodes.size());
-		for (PNode node : nodes) {
-			if (node instanceof PGalleryRegion)
-				result.add(((PGalleryRegion) node).getImageRegion());
-		}
-		return result.toArray(new ImageRegion[result.size()]);
+		List<PGalleryRegion> result = new ArrayList<>(nodes.size());
+		for (PNode node : nodes)
+			if (node instanceof PGalleryRegion && (owner == null || node.getParent() == owner))
+				result.add(((PGalleryRegion) node));
+		return result.toArray(new PGalleryRegion[result.size()]);
 	}
 
 	public int getSelectionCount() {
@@ -1773,16 +1799,46 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 			focussedSlide.setFocusTo(focussedSlide.caption, true);
 	}
 
-	public ImageRegion getBestFaceRegion(int x, int y, boolean all) {
-		ImageRegion[] regions = getRegions(x, y);
+	public ImageRegion getBestFaceRegion(int x, int y, boolean all, PSWTAssetThumbnail owner) {
+		PGalleryRegion[] regions = getRegions(x, y, owner);
 		if (regions != null) {
-			ImageRegion bestRegion = ImageRegion.getBestRegion(ImageRegion.extractMatchingRegions(regions, x, y),
-					Region.type_face, true, x, y);
-			if (bestRegion == null && all)
-				bestRegion = ImageRegion.getBestRegion(regions, Region.type_face, false, x, y);
-			return bestRegion;
+			ImageRegion bestRegion = getBestRegion(regions, Region.type_face, true, x, y);
+			return (bestRegion == null && all) ? getBestRegion(regions, Region.type_face, false, x, y) : bestRegion;
 		}
 		return null;
+	}
+
+	public ImageRegion getBestRegion(PGalleryRegion[] regions, String type, boolean all, int x, int y) {
+		ImageRegion foundRegion = null;
+		if (regions != null) {
+			double minD = Double.MAX_VALUE;
+			for (PGalleryRegion region : regions) {
+				ImageRegion imageRegion = region.getImageRegion();
+				if ((all || imageRegion.name == null || imageRegion.name.equals("?")) //$NON-NLS-1$
+						&& (type == null || type.equals(imageRegion.type))) {
+					double d = region.getDistanceFromRegionCenter(x, y);
+					if (d < minD) {
+						minD = d;
+						foundRegion = imageRegion;
+					}
+				}
+			}
+		}
+		return foundRegion;
+	}
+
+	public ImageRegion[] findAllRegions(org.eclipse.swt.events.MouseEvent event) {
+		PGalleryRegion[] regions = getRegions(event.x, event.y, null);
+		ImageRegion[] imageRegions = new ImageRegion[regions.length];
+		for (int i = 0; i < regions.length; i++)
+			imageRegions[i] = regions[i].getImageRegion();
+		return imageRegions;
+	}
+
+	public void setAppearance(int showLabel, String labelTemplate, int fontSize) {
+		this.showLabel = showLabel;
+		this.labelTemplate = labelTemplate;
+		this.labelFontSize = fontSize;
 	}
 
 }

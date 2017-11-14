@@ -1,3 +1,4 @@
+var apiKey = 'AgUeONf1WVotvtvwMsQsWD3SqMdlVRv2eT73rlCXYLRvRUApnb8PNG7JV7WPRVJ4';
 var minimapWidth = 200;
 var map;
 var draggedMarker;
@@ -5,38 +6,31 @@ var currentMarker;
 var pending = false;
 var dbl;
 var batch = [];
-var arrowBatch = [];
 var diagonal = 1;
 var camCount = 0;
 var lmarker;
 var cmarker;
 var dmarker;
+var smarker;
 var layer;
 var pinLayer;
-var infoOpen;
-
-function MyHandleCredentialsError() {
-	alert(keyInvalid);
-}
+var trackLayer;
+var popup;
+var selected;
 
 function StyleChangeHandler(event) {
 	window.location.href = 'http://www.bdaum.de/zoom/gmap/maptype?'
-			+ event.mapStyle;
+			+ event.newMapTypeId;
 }
 
-function ModeChangeHandler(event) {
-	sendMessage('mapmode', map.GetMapMode() == VEMapMode.Mode3D ? '3D' : '');
-}
-
-function ResizeHandler(event) {
-	showMiniMap();
-}
-
-function showMiniMap() {
-	var width = document.getElementById("map").offsetWidth - minimapWidth;
-	if (width < 0)
-		width = 0;
-	map.ShowMiniMap(width, 0, VEMiniMapSize.Small);
+function MapClickHandler(event) {
+	if (closePopup())
+		return;
+	if (selected) {
+		selected = null;
+		sendSelection();
+		setMarkers();
+	}
 }
 
 function ClickHandler(event) {
@@ -51,167 +45,163 @@ function ClickHandler(event) {
 }
 
 function closePopup() {
-	if (currentMarker) {
-		currentMarker.SetTitle(currentMarker.hiddenTitle);
-		currentMarker.SetDescription("");
-		currentMarker = null;
-		map.SetDefaultInfoBoxStyles();
+	pending = false;
+	currentMarker = null;
+	if (popup) {
+		pinLayer.remove(popup);
+		popup = null;
+		return true;
 	}
+	return false;
 }
 
 function clickCallback(event) {
-	if (!dbl && event.elementID) {
-		var pixel = new VEPixel(event.mapX, event.mapY);
-		var markerPoint = map.PixelToLatLong(pixel);
-		var z = map.GetZoomLevel();
-		map.SetCenterAndZoom(markerPoint, z < 13 ? z + 2 : z < 18 ? z + 1 : z);
-		sendPosition('pos', markerPoint, map.GetZoomLevel());
+	setSelection(event.target);
+	if (!dbl) {
+		var z = map.getZoom();
+		setCenter(event.location, z < 13 ? z + 2 : z < 18 ? z + 1 : z);
 	}
+}
+
+function setSelection(marker) {
+	var i = marker.metadata;
+	if (i < 0) {
+		selected = locShownImage[-i-1];
+	} else {
+		selected = locImage[i].join();
+	}
+	sendSelection();
+	setMarkers();
 }
 
 function DoubleClickHandler(event) {
 	dbl = true;
-	if (infoOpen) {
-		map.HideInfoBox();
-		infoOpen = false;
-	} else if (!pending) {
-		closePopup();
-		if (event.elementID) {
-			var shape = map.GetShapeByID(event.elementID);
-			if (!currentMarker) {
-				var imageAssetIds = shape.imageAssetIds;
-				if (imageAssetIds.length > 0) {
-					currentMarker = shape;
+	closePopup();
+	if (!pending) {
+		if (!currentMarker) {
+			var marker = event.target;
+			setSelection(marker);
+			var i = marker.metadata;
+			if (i < 0) {
+				if (locShownImage[-i-1] != "shown=") {
+					currentMarker = marker;
 					pending = true;
-					sendMessage('info', arrayToString(imageAssetIds));
+					sendMessage('info', locShownImage[-i-1] + "&json");
 				}
+			} else if (locImage[i].length > 0) {
+				currentMarker = marker;
+				pending = true;
+				sendMessage('info', locImage[i].join() + "&json");
 			}
-			return true;
 		}
+		return true;
 	}
-
 }
 
-function arrayToString(arr) {
-	var result = '';
-	for (var i = 0; i < arr.length; i++) {
-		if (i > 0)
-			result += ',';
-		result += arr[i];
-	}
-	return result;
-}
-
-function MoveHandler() {
-	sendPosition('moved', map.getCenter(), map.getZoomLevel(), 0);
-}
-
-// function KeyHandler(event) {
-// if (draggedMarker) {
-// var code = event.keyCode;
-// if (code == 27) {
-// if (lmarker === draggedMarker)
-// releaseLocation();
-// else if (cmarker === draggedMarker) {
-// releaseCamera();
-// } else if (dmarker === draggedMarker)
-// releaseDirection();
-// draggedMarker = null;
-// }
-// }
-// }
-
-function ChangeViewHandler(event) {
-	performDrawings(true);
-}
-
-function showInfo(html) {
+function showInfo(json) {
 	if (currentMarker && pending) {
-		currentMarker.hiddenTitle = currentMarker.GetTitle();
-		currentMarker.SetTitle("");
-		currentMarker.SetDescription(html);
-		map.ClearInfoBoxStyles();
-		map.ShowInfoBox(currentMarker);
 		pending = false;
-		infoOpen = true;
+		var objJSON = eval("(function(){return " + json + ";})()");
+		popup = new Microsoft.Maps.Pushpin(currentMarker.getLocation(), {
+			icon : objJSON.imageURL,
+			title : objJSON.title,
+			subTitle : objJSON.subTitle,
+			anchor : new Microsoft.Maps.Point(-10, 160)
+		});
+		Microsoft.Maps.Events
+				.addOne(popup, "click", function() {
+					closePopup();
+				});
+		pinLayer.add(popup);
 	}
 }
 
-// / Setup Map
+// Setup Map
 function setupMap() {
 	document.getElementById("map").innerHTML = mapIsLoading;
-	var center = initialPosition ? initialPosition : new VELatLong(49.785556,
-			9.038611);
-	if (!initialMapType)
-		initialMapType = VEMapStyle.Road;
-	map = new VEMap('map');
-	if (applicationKey) {
-		map.AttachEvent("oncredentialserror", MyHandleCredentialsError);
-		map.SetCredentials(applicationKey);
+	var center = initialPosition ? initialPosition
+			: new Microsoft.Maps.Location(49.785556, 9.038611);
+	if (!initialMapType || initialMapType == 'undefined')
+		initialMapType = Microsoft.Maps.MapTypeId.road;
+	try {
+		map = new Microsoft.Maps.Map('#map', {
+			credentials : apiKey,
+			center : center,
+			mapTypeId : initialMapType,
+			enableClickableLogo : false,
+			showBreadcrumb : true,
+			zoom : initialDetail
+		});
+	} catch (ex) {
+		map = new Microsoft.Maps.Map('#map', {
+			credentials : apiKey,
+			center : center,
+			zoom : initialDetail
+		});
 	}
-	map.LoadMap(center, initialDetail, initialMapType);
-	if (initialPosition)
-		sendPosition('pos', center, initialDetail, 0);
-	showMiniMap();
-	map.AttachEvent("onchangemapstyle", StyleChangeHandler);
-	map.AttachEvent("oninitmode", ModeChangeHandler);
-	map.AttachEvent("onclick", ClickHandler);
-	map.AttachEvent("ondoubleclick", DoubleClickHandler);
-	map.AttachEvent("onendpan", MoveHandler);
-	// map.AttachEvent("onkeyup", KeyHandler);
-	map.AttachEvent("onchangeview", ChangeViewHandler);
-	map.AttachEvent("onresize", ChangeViewHandler);
-	window.onresize = ResizeHandler;
-	map.SetScaleBarDistanceUnit(VEDistanceUnit.Kilometers);
-	layer = new VEShapeLayer();
-	layer.SetClusteringConfiguration(VEClusteringType.Grid);
-	map.AddShapeLayer(layer);
-	pinLayer = new VEShapeLayer();
-	map.AddShapeLayer(pinLayer);
-	performDrawings(false);
+	Microsoft.Maps.registerModule('HtmlPushpinLayerModule', 'HtmlPushpinLayerModule.js');
+	window.addEventListener("keyup", function (e) {
+    	if (draggedMarker) {
+			var code = (e.keyCode ? e.keyCode : e.which);
+			if (code == 27) {
+				if (lmarker === draggedMarker)
+					releaseLocation();
+				else if (cmarker === draggedMarker)
+					releaseCamera();
+				else if (dmarker === draggedMarker)
+					releaseDirection();
+				else if (smarker === draggedMarker)
+					releaseLocationShown();
+				endFollowing();
+			}
+		}
+    });
+	Microsoft.Maps.Events.addHandler(map, "maptypechanged", StyleChangeHandler);
+	Microsoft.Maps.Events.addHandler(map, "click", MapClickHandler);
+	Microsoft.Maps.loadModule('Microsoft.Maps.Clustering', function() {
+		layer = new Microsoft.Maps.ClusterLayer([], {
+			gridSize : 100
+		});
+		map.layers.insert(layer);
+		pinLayer = new Microsoft.Maps.Layer();
+		map.layers.insert(pinLayer);
+		trackLayer = new Microsoft.Maps.Layer();
+		map.layers.insert(trackLayer);
+		performDrawings(false);
+	});
 }
 
 function performDrawings(redraw) {
-	var bounds = map.GetMapView();
-	diagonal = distance(bounds.TopLeftLatLong, bounds.BottomRightLatLong);
+	var bounds = map.getBounds();
+	diagonal = distance(bounds.getNorthwest(), bounds.getSoutheast());
 	if (track.length > 0) {
 		setTrack();
 		if (!redraw && track.length > 0)
-			map.SetMapView(track);
+			map.setView({
+				bounds : track
+			});
 	} else {
 		setMarkers();
-		if (!redraw && locCreated.length > 0)
-			map.SetMapView(locCreated);
+		if (!redraw && (locCreated.length > 0 || locShown.length > 0)) {
+			var allPos = locCreated.concat(locShown);
+			if (allPos.length > 1)
+				map.setView({
+					bounds : allPos
+				});
+			else
+				setCenter(allPos[0], map.getZoom());
+		}
 	}
 }
 
 function distance(coord1, coord2) {
 	var degToRad = Math.PI / 180.0;
-	var phi1 = degToRad * coord1.Latitude;
-	var phi2 = degToRad * coord2.Latitude;
-	var lam1 = degToRad * coord1.Longitude;
-	var lam2 = degToRad * coord2.Longitude;
+	var phi1 = degToRad * coord1.latitude;
+	var phi2 = degToRad * coord2.latitude;
+	var lam1 = degToRad * coord1.longitude;
+	var lam2 = degToRad * coord2.longitude;
 	return 6371.01 * Math.acos(Math.sin(phi1) * Math.sin(phi2) + Math.cos(phi1)
 			* Math.cos(phi2) * Math.cos(lam2 - lam1));
-}
-
-function coord(latlng1, dist, bearing) {
-	var degToRad = Math.PI / 180.0;
-	var radToDeg = 180.0 / Math.PI;
-	var brg = degToRad * ((bearing + 360) % 360);
-	dist = dist / 6371.01;
-	var lat1 = degToRad * latlng1.Latitude;
-	var lon1 = degToRad * latlng1.Longitude;
-	var lat2 = Math.asin(Math.sin(lat1) * Math.cos(dist) + Math.cos(lat1)
-			* Math.sin(dist) * Math.cos(brg));
-	var lon2 = lon1
-			+ Math.atan2(Math.sin(brg) * Math.sin(dist) * Math.cos(lat1), Math
-					.cos(dist)
-					- Math.sin(lat1) * Math.sin(lat2));
-	lat2 = radToDeg * lat2;
-	lon2 = radToDeg * lon2;
-	lon2 = (lon2 + 540) % 360 - 180;
-	return new VELatLong(lat2, lon2);
 }
 
 function unloadMap() {
@@ -219,8 +209,9 @@ function unloadMap() {
 		map.Dispose();
 }
 
-function sendPosition(name, point, zoom, type) {
-	sendMessage(name, "(" + point + ")&" + zoom + "&" + type);
+function sendPosition(name, loc, zoom, type, uuid) {
+	sendMessage(name, loc.latitude + "," + loc.longitude + "&" + zoom
+			+ "&" + type + (uuid ? "&" + uuid : ""));
 }
 
 function sendMessage(name, data) {
@@ -232,104 +223,190 @@ function sendCamCount() {
 	sendMessage('camCount', camCount);
 }
 
+function sendSelection() {
+	 sendMessage('select', selected);
+ }
+
 function debug(data) {
 	sendMessage('debug', data);
 }
 
-// Set marker
 function setMarkers() {
 	clearMarkers();
-	for (var i = 0; i < locCreated.length; i++) {
-		var markerLocation = locCreated[i];
-		var bearing = imgDirection ? imgDirection[i] : NaN;
-		var shape = new VEShape(VEShapeType.Pushpin, markerLocation);
-		shape.SetTitle(locTitles[i]);
-//		shape.Draggable = true;
-//		shape.onstartdrag = StartDragHandler;
-//		shape.onenddrag = makeDragEndCallback(shape, locImage[i], bearing,
-//				arrowBatch.length);
-		shape.imageAssetIds = locImage[i];
-		layer.AddShape(shape);
-		// No click handler for markers!
-		batch.push(shape);
+	var pushPins = [];
+	var i, markerLocation, bearing, marker;
+	for (i = 0; i < locCreated.length; i++) {
+		markerLocation = locCreated[i];
+		bearing = imgDirection ? imgDirection[i] : NaN;
+		marker = new Microsoft.Maps.Pushpin(markerLocation, {
+			draggable : true,
+			icon : drawPushpin(24, 38, true, bearing, locTitles[i], selected == locImage[i].join()),
+			anchor : new Microsoft.Maps.Point(55, 69)
+		});
+		marker.metadata = i;
+		pushPins.push(marker);
+		Microsoft.Maps.Events.addHandler(marker, "click", ClickHandler);
+		Microsoft.Maps.Events.addHandler(marker, "dblclick", DoubleClickHandler);
+		Microsoft.Maps.Events.addHandler(marker, "dragstart", StartDragHandler);
+		Microsoft.Maps.Events.addHandler(marker, "dragend", EndDragHandler);
+		batch.push(marker);
 		++camCount;
 	}
-	for (var i = 0; i < locCreated.length; i++) {
-		var markerLocation = locCreated[i];
-		var bearing = imgDirection ? imgDirection[i] : NaN;
-		if (bearing !== bearing) {
-			// skip NaN
-		} else if (!isClustered(batch[i]))
-			arrowBatch.push(createArrow(markerLocation, bearing));
+	for (i = 0; i < locShown.length; i++) {
+		markerLocation = locShown[i];
+		marker = new Microsoft.Maps.Pushpin(markerLocation, {
+			draggable : true,
+			icon : drawPushpin(20, 32, false, NaN, locShownTitles[i], selected == locShownImage[i]),
+			anchor : new Microsoft.Maps.Point(55, 69)
+		});
+		marker.metadata = -i-1;
+		pushPins.push(marker);
+		Microsoft.Maps.Events.addHandler(marker, "click", ClickHandler);
+		Microsoft.Maps.Events.addHandler(marker, "dblclick", DoubleClickHandler);
+		Microsoft.Maps.Events.addHandler(marker, "dragstart", StartDragHandler);
+		Microsoft.Maps.Events.addHandler(marker, "dragend", EndDragHandler);
 	}
+	layer.setPushpins(pushPins);
 	sendCamCount();
 }
 
-function isClustered(marker) {
-	var clusterShapes = layer.GetClusteredShapes(VEClusteringType.Grid);
-	for (var i = 0; i < clusterShapes.length; i++) {
-		var shapes = clusterShapes[i].Shapes;
-		if (shapes.length > 1)
-			for (var j = 0; j < shapes.length; j++)
-				if (shapes[j] == marker)
-					return true;
+function drawPushpin(w, h, primary, bearing, title, sel) {
+	var c = document.getElementById('canvas');
+	var arlen = 55;
+	var ax = arlen;
+	var ay = 69;
+	c.width = 2 * arlen;
+	c.height = ay+arlen;
+	var ctx = c.getContext('2d');
+	if (bearing !== bearing) {
+		// skip NaN
+	} else {
+		var heady = 7;
+		var headx = 5;
+		ctx.beginPath();
+		ctx.translate(ax, ay);
+		var rot = bearing * Math.PI / 180;
+		ctx.rotate(rot);
+		ctx.moveTo(0, 0);
+		ctx.lineTo(0, -arlen);
+		ctx.lineTo(-headx, -(arlen - heady));
+		ctx.moveTo(0, -arlen);
+		ctx.lineTo(headx, -(arlen - heady));
+		ctx.rotate(-rot);
+		ctx.translate(-ax, -ay);
+		ctx.lineWidth = 2;
+		ctx.closePath();
+		ctx.stroke();
 	}
-	return false;
-}
-
-function createArrow(markerLocation, bearing) {
-	var dist = diagonal / 12.0;
-	var arrowLength = dist / 6.0;
-	var acoord = coord(markerLocation, dist, bearing);
-	var ah1 = coord(acoord, arrowLength, bearing - 150);
-	var ah2 = coord(acoord, arrowLength, bearing + 150);
-	var line = new VEShape(VEShapeType.Polyline, [ markerLocation, acoord, ah1,
-			acoord, ah2 ]);
-	line.HideIcon();
-	line.SetLineColor(new VEColor(0, 0, 0, 1));
-	layer.AddShape(line);
-	return line;
+	var w2 = w / 2;
+	var cy = arlen - w2;
+	ctx.fillStyle = primary ? "#FF0000" : "#FFAA00";
+	ctx.beginPath();
+	ctx.moveTo(ax, ay);
+	ctx.lineTo(ax - w2, cy);
+	ctx.arc(ax, cy, w2, Math.PI, 0);
+	ctx.moveTo(ax + w2, cy);
+	ctx.lineTo(ax, ay);
+	ctx.closePath();
+	ctx.stroke();
+	ctx.fill();
+	ctx.beginPath();
+	var pi2 =  2 * Math.PI;
+	if (primary) {
+		ctx.fillStyle = "#FFFFFF";
+		ctx.arc(ax, cy, 5, 0, pi2);
+		ctx.closePath();
+		ctx.fill();
+		ctx.fillStyle = "#000000";
+		ctx.beginPath();
+		ctx.arc(ax, cy, 3, 0, pi2);
+		ctx.closePath();
+		ctx.fill();
+		ctx.fillStyle = "#FFFFFF";
+		ctx.beginPath();
+		ctx.arc(ax, cy, 2, 0, pi2);
+	} else {
+		ctx.fillStyle = "#000000";
+		var ilen = w * 5 / 8;
+		var ih = w * 2 / 5;
+		var iy = cy + ih/2;
+		ctx.moveTo(ax - ilen / 2, iy);
+		ctx.lineTo(ax + ilen / 2, iy);
+		ctx.lineTo(ax + ilen / 4, iy-ih);
+		ctx.lineTo(ax, iy-ih / 4);
+		ctx.lineTo(ax - ilen / 4, iy-ih / 2);
+		ctx.moveTo(ax - ilen / 2, iy);
+	}
+	ctx.closePath();
+	ctx.fill();
+	if (sel) {
+		ctx.fillStyle = "#00CCFF";
+		ctx.beginPath();
+		ctx.arc(ax+w/4, cy-w/3, 3, 0, pi2);
+		ctx.closePath();
+		ctx.fill();
+	}
+	ctx.font = primary ? "bold 11px arial" : "bold 9px arial";
+	ctx.fillStyle = "#000000";
+	ctx.textAlign = "center";
+	ctx.fillText(title, ax, ay + 11);
+	return c.toDataURL();
 }
 
 function clearMarkers() {
 	camCount = 0;
-	for (var i = 0; i < batch.length; i++)
-		if (batch[i])
-			layer.DeleteShape(batch[i]);
+	layer.clear();
 	batch = [];
-	for (i = 0; i < arrowBatch.length; i++)
-		if (arrowBatch[i])
-			layer.DeleteShape(arrowBatch[i]);
-	arrowBatch = [];
+	trackLayer.clear();
 }
 
 function setTrack() {
-	var path = new VEShape(VEShapeType.Polyline, track);
-	path.HideIcon();
-	path.SetLineColor(new VEColor(255, 0, 0, 1));
-	layer.AddShape(path);
+	var path = new Microsoft.Maps.Polyline(track, {
+		strokeColor : 'red',
+		strokeThickness : 2
+	});
+	trackLayer.add(path);
 }
 
 function StartDragHandler(event) {
-	draggedMarker = event.Shape;
+	draggedMarker = event.target;
 }
 
 function EndDragHandler(event) {
-	if (draggedMarker) {
+	if (draggedMarker === event.target) {
 		try {
-			var markerPoint = event.LatLong;
-			if (draggedMarker == lmarker) {
-				sendPosition('drag', markerPoint, map.GetZoomLevel(), 0);
+			var markerPoint = event.location;
+			if (draggedMarker === lmarker) {
+				sendPosition('drag', markerPoint, map.getZoom(), 0);
 				camCount = 1;
 				sendCamCount();
-			} else if (draggedMarker == cmarker) {
-				sendPosition('drag', markerPoint, map.GetZoomLevel(), 1);
-				camCount = locCreated.length === 0 ? 1 : locCreated.length;
-				sendCamCount();
-//				freezeMarkers();
-			} else if (draggedMarker == dmarker) {
-				sendPosition('drag', markerPoint, map.GetZoomLevel(), 2);
-//				freezeMarkers();
+			} else if (draggedMarker === cmarker) {
+				sendPosition('drag', markerPoint, map.getZoom(), 1);
+				applyCameraSet(markerPoint);
+				releaseCamera();
+				setMarkers();
+			} else if (draggedMarker === dmarker) {
+				sendPosition('drag', markerPoint, map.getZoom(), 2);
+				applyDirectionSet(markerPoint);
+				releaseDirection();
+				setMarkers();
+			} else if (draggedMarker === smarker) {
+				var uuid = applyShownSet(markerPoint);
+				sendPosition('drag', markerPoint, map.getZoom(), 3, uuid);
+				releaseLocationShown();
+				setMarkers();
+			} else if (draggedMarker.metadata) {
+				var i = draggedMarker.metadata;
+				var ids;
+				if (i < 0) {
+					locShown[-i-1] = markerPoint;
+					ids = locShownImage[-i-1];
+				} else {
+					locCreated[i] = markerPoint;
+					ids = locImage[i].join();
+				}
+				sendPosition('modify', markerPoint, map.getZoom(),
+						ids);
 			}
 		} finally {
 			draggedMarker = null;
@@ -337,35 +414,8 @@ function EndDragHandler(event) {
 	}
 }
 
-//function makeDragEndCallback(marker, imageAssetIds, bearing, arrowIndex) {
-//	return function() {
-////		var propList = "";
-////		for ( var propName in event) {
-////			if (typeof (event[propName]) != "undefined") {
-////				propList += propName;
-////				propList += "=";
-////				propList += event[propName];
-////				propList += ", ";
-////			}
-////		}
-//		sendPosition('modify', marker.getPosition(), map.getZoom(),
-//				arrayToString(imageAssetIds));
-//		if (bearing !== bearing) {
-//			// skip NaN
-//		} else {
-//			layer.DeleteShape(arrowBatch[arrowIndex]);
-//			arrowBatch[arrowIndex] = createArrow(marker.getPosition(), bearing);
-//		}
-//	};
-//}
-
-//function freezeMarkers() {
-//	for (var i = 0; i < batch.length; i++)
-//		batch[i].Draggable = false;
-//}
-
-function location() {
-	if (map.GetMapMode() == VEMapMode.Mode3D || draggedMarker)
+function locationPin() {
+	if (draggedMarker)
 		return;
 	releaseLocation();
 	lmarker = createPin(pinUrl);
@@ -373,7 +423,7 @@ function location() {
 
 function releaseLocation() {
 	if (lmarker) {
-		pinLayer.DeleteShape(lmarker);
+		pinLayer.remove(lmarker);
 		lmarker = null;
 		draggedMarker = null;
 	}
@@ -381,32 +431,38 @@ function releaseLocation() {
 	sendCamCount();
 }
 
-function camera() {
-	if (map.GetMapMode() == VEMapMode.Mode3D || draggedMarker)
+function cameraPin() {
+	if (draggedMarker)
 		return;
 	releaseCamera();
 	cmarker = createPin(camPinUrl);
 }
 
 function createPin(url) {
-	var marker = new VEShape(VEShapeType.Pushpin, map.GetCenter());
-	marker.SetCustomIcon("<img src='" + url
-			+ "' style='margin: -21px 0px 0px -3px'/>");
-	// Allow the pushpin to be dragged
-	marker.Draggable = true;
-	// Assign the shape drag event handlers
-	marker.onstartdrag = StartDragHandler;
-	marker.onenddrag = EndDragHandler;
-	// Show an info box to indicate the pushpin can be dragged.
-	marker.SetTitle(newLocationTitle);
-	pinLayer.AddShape(marker);
-	map.ShowInfoBox(marker);
+	var marker = new Microsoft.Maps.Pushpin(map.getCenter(), {
+		icon : url,
+		title : newLocationTitle,
+		anchor : new Microsoft.Maps.Point(15, 48),
+		enableHoverStyle: true,
+		draggable : true
+	});
+	Microsoft.Maps.Events.addHandler(marker, "dragstart", StartDragHandler);
+	Microsoft.Maps.Events.addHandler(marker, "dragend", EndDragHandler);
+	Microsoft.Maps.Events.addHandler(marker, "click", ClickHandler);
+	Microsoft.Maps.Events.addHandler(marker, "dblclick", DoubleClickHandler);
+	pinLayer.add(marker);
+	setTimeout(function() {
+		marker.setOptions({ anchor: new Microsoft.Maps.Point(10, 60) });
+		setTimeout(function() {
+			marker.setOptions({ anchor: new Microsoft.Maps.Point(15, 48) });
+		}, 250);
+	}, 250);
 	return marker;
 }
 
 function releaseCamera() {
 	if (cmarker) {
-		pinLayer.DeleteShape(cmarker);
+		pinLayer.remove(cmarker);
 		cmarker = null;
 		draggedMarker = null;
 	}
@@ -415,26 +471,184 @@ function releaseCamera() {
 }
 
 function direction() {
-	if (map.GetMapMode() == VEMapMode.Mode3D || draggedMarker)
+	if (draggedMarker)
 		return;
 	releaseDirection();
 	dmarker = createPin(dirPinUrl);
 }
 
+function locationShown() {
+	if (draggedMarker)
+		return;
+	releaseLocationShown();
+	smarker = createPin(shownPinUrl);
+}
+
 function releaseDirection() {
 	if (dmarker) {
-		pinLayer.DeleteShape(dmarker);
+		pinLayer.remove(dmarker);
 		dmarker = null;
 		draggedMarker = null;
 	}
 }
 
-function setViewPort(bounds) {
-	map.SetMapView([ bounds.TopLeftLatLong, bounds.BottomRightLatLong ]);
-	sendPosition('pos', map.GetCenter(), map.GetZoomLevel(), 0);
+function releaseLocationShown() {
+	if (smarker) {
+		pinLayer.remove(smarker);
+		smarker = null;
+		draggedMarker = null;
+	}
 }
 
+ function setViewPort(bounds) {
+	 map.setView({
+		 bounds : bounds
+	 });
+	 sendMapPosition();
+ }
+
 function setCenter(pos, zoom) {
-	map.SetCenterAndZoom(pos, zoom);
-	sendPosition('pos', pos, zoom, 0);
+	map.setView({
+		center : pos,
+		zoom : zoom
+	});
+	sendMapPosition();
 }
+
+function sendMapPosition() {
+	var point = map.getCenter();
+	sendMessage('pos', point.latitude + ',' + point.latitude + "&" + map.getZoom() );
+}
+
+function applyCameraSet(pos) {
+	locCreated = [];
+	locCreated.push(pos);
+	var titles = concatTitles(locTitles);
+	locTitles = [];
+	locTitles.push(titles);
+	selected = flatten(locImage);
+	locImage = [];
+	locImage.push(selected);
+	imgDirection = [];
+	if (locShown && locShown.length > 0) {
+		imgDirection.push(bearing(pos, locShown[0]));
+	} else {
+		imgDirection.push(NaN);
+	}
+}
+
+function concatTitles(array) {
+	var l = array.length;
+	if (l == 0)
+		return "";
+	if (l == 1)
+		return array[0];
+	var newTitle = "";
+	for (var i = 0; i < array.length; i++) {
+		var titles = array[i].split(",");
+		for (var j=0; j < titles.length; j++) {
+			var t = titles[j];
+			if (newTitle != "" && newTitle.length + t.length > 40 || t == "...")
+				return newTitle + ",...";
+			if (newTitle != "")
+				newTitle += ",";
+			newTitle += t;
+		}
+	}
+	return newTitle;
+}
+
+function flatten(array) {
+	var result = [];
+	for (var i = 0; i < array.length; i++) {
+		var subArray = array[i];
+		for (var j = 0; j < subArray.length; j++) {
+			result.push(subArray[j]);
+		}
+	}
+	return result;
+}
+
+function bearing(from, to) {
+	var phi1 = from.latitude / 180.0 * Math.PI;
+	var phi2 = to.latitude / 180.0 * Math.PI;
+	var lam1 = from.longitude / 180.0 * Math.PI;
+	var lam2 = to.longitude / 180.0 * Math.PI;
+	var angle = Math.atan2(Math.sin(lam2 - lam1) * Math.cos(phi2), Math
+			.cos(phi1)
+			* Math.sin(phi2)
+			- Math.sin(phi1)
+			* Math.cos(phi2)
+			* Math.cos(lam2 - lam1));
+	return (angle * 180.0 / Math.PI + 360.0) % 360;
+}
+
+function applyShownSet(pos) {
+	locShown.push(pos);
+	if (locTitles.length > 0) {
+		locShownTitles.push(locTitles[0]);
+	} else {
+		locShownTitles.push("");
+	}
+	var uuid = generateQuickGuid();
+	selected = "shown="+uuid;
+	locShownImage.push(selected);
+	applyDirectionSet(pos);
+	return uuid;
+}
+
+function applyDirectionSet(pos) {
+	if (imgDirection.length > 0 && locCreated.length > 0) {
+		imgDirection[0] = bearing(locCreated[0], pos);
+	}
+}
+
+function generateQuickGuid() {
+    return Math.random().toString(36).substring(2, 15) +
+        Math.random().toString(36).substring(2, 15);
+}
+
+function deleteSelected() {
+	if (selected) {
+		var p  = findItem(locImage, selected);
+		if (p >= 0) {
+			batch = removeItem(batch,p);
+			locCreated = removeItem(locCreated,p);
+			locTitles = removeItem(locTitles,p);
+			locImage = removeItem(locImage,p);
+			if (imgDirection)
+				imgDirection = removeItem(imgDirection,p);
+			selected = null;
+			setMarkers();
+		} else {
+			p  = findItem(locShownImage,selected);
+			if (p >= 0) {
+				locShown = removeItem(locShown,p);
+				locShownTitles = removeItem(locShownTitles,p);
+				locShownImage = removeItem(locShownImage,p);
+				selected = null;
+				setMarkers();
+			}
+		}
+	}
+}
+
+function removeItem(array, index) {
+	var newArray = [];
+	for (var i=0; i < array.length; i++) {
+		if (i !== index) {
+			newArray.push(array[i]);
+		}
+	}
+	return newArray;
+}
+
+function findItem(array, item) {
+	for (var i=0; i < array.length; i++) {
+		if (item == array[i]) {
+			return i;
+		}
+	}
+	return -1;
+}
+

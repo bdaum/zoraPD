@@ -51,6 +51,7 @@ import com.bdaum.zoom.ai.clarifai.internal.ClarifaiActivator;
 import com.bdaum.zoom.ai.internal.preference.AiPreferencePage;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.Theme;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
@@ -91,10 +92,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		((GridLayout) composite.getLayout()).verticalSpacing = 0;
 		new Label(composite, SWT.NONE).setText(Messages.PagePart_manage_clarifai_account);
 		new Label(composite, SWT.NONE);
-		CGroup eGroup = new CGroup(composite, SWT.NONE);
-		eGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		eGroup.setLayout(new GridLayout(2, false));
-		eGroup.setText(Messages.PagePart_credentials);
+		CGroup eGroup = UiUtilities.createGroup(composite, 2, Messages.PagePart_credentials);
 		new Label(eGroup, SWT.NONE).setText(Messages.PagePart_client_id);
 		clientIdField = new Text(eGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		clientIdField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -332,7 +330,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 
 	@Override
 	public String getLabel() {
-		return "Clarifai"; //$NON-NLS-1$
+		return "&Clarifai"; //$NON-NLS-1$
 	}
 
 	@Override

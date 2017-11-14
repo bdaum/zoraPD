@@ -48,6 +48,7 @@ public class ImportFromDeviceData {
 	private Set<String> skippedFormats;
 	private final File[] dcims;
 	private WatchedFolder watchedFolder;
+	private int privacy;
 
 
 	public ImportFromDeviceData(File[] dcims, boolean media, WatchedFolder watchedFolder) {
@@ -182,6 +183,14 @@ public class ImportFromDeviceData {
 
 	public WatchedFolder getWatchedFolder() {
 		return watchedFolder;
+	}
+
+	public void setPrivacy(int privacy) {
+		this.privacy = privacy;
+	}
+
+	public int getPrivacy() {
+		return privacy;
 	}
 
 }

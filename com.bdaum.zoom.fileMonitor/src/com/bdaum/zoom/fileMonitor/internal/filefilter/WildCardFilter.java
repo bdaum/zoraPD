@@ -86,8 +86,8 @@ public class WildCardFilter {
 	 * @param wildString
 	 *            - filter expression (*,?) wildcards
 	 * @param prefixes
-	 *            - first character denotes reject, second character accept. Can
-	 *            be null.
+	 *            - first character denotes reject, second character accept. Can be
+	 *            null.
 	 */
 	public WildCardFilter(String wildString, String prefixes) {
 		this(wildString, prefixes, false);
@@ -99,14 +99,13 @@ public class WildCardFilter {
 	 * @param wildString
 	 *            - filter expression (*,?) wildcards
 	 * @param prefixes
-	 *            - first character denotes reject, second character accept. Can
-	 *            be null. If only one character is supplied, this character
-	 *            denotes accept.
+	 *            - first character denotes reject, second character accept. Can be
+	 *            null. If only one character is supplied, this character denotes
+	 *            accept.
 	 * @param includeDirs
 	 *            - true if directory patterns (pattern/) are allowed
 	 */
-	public WildCardFilter(String wildString, String prefixes,
-			boolean includeDirs) {
+	public WildCardFilter(String wildString, String prefixes, boolean includeDirs) {
 		wildPattern = wildString;
 		if (prefixes != null && !wildString.isEmpty()) {
 			char c = wildString.charAt(0);
@@ -138,8 +137,8 @@ public class WildCardFilter {
 	 * Creates a new wildcard filter for capturing
 	 *
 	 * @param wildString
-	 *            - filter expression (*,?) wildcards, / captures the next
-	 *            wildcard expression
+	 *            - filter expression (*,?) wildcards, / captures the next wildcard
+	 *            expression
 	 */
 	public WildCardFilter(String wildString) {
 		this(wildString, true);
@@ -149,8 +148,8 @@ public class WildCardFilter {
 	 * Creates a new wildcard filter for capturing
 	 *
 	 * @param wildString
-	 *            - filter expression (*,?) wildcards, / captures the next
-	 *            wildcard expression
+	 *            - filter expression (*,?) wildcards, / captures the next wildcard
+	 *            expression
 	 * @param ignoreCase
 	 *            - true for ignoring case
 	 */
@@ -171,8 +170,7 @@ public class WildCardFilter {
 				String wildPart = st.nextToken();
 				// parse the input string
 				List<String> commands = new ArrayList<String>();
-				StringTokenizer tokens = new StringTokenizer(wildPart,
-						"*?/", true); //$NON-NLS-1$
+				StringTokenizer tokens = new StringTokenizer(wildPart, "*?/", true); //$NON-NLS-1$
 				String token = null;
 				while (tokens.hasMoreTokens()) {
 					token = tokens.nextToken();
@@ -188,8 +186,7 @@ public class WildCardFilter {
 						} else
 							commands.add(ANYTHING);
 					} else {
-						if (!commands.isEmpty()
-								&& commands.get(commands.size() - 1) == CAPTURE) {
+						if (!commands.isEmpty() && commands.get(commands.size() - 1) == CAPTURE) {
 							commands.remove(commands.size() - 1);
 							token = '/' + token;
 						}
@@ -215,8 +212,7 @@ public class WildCardFilter {
 			// remove duplicate asterisks
 			i = wildString.indexOf("**"); //$NON-NLS-1$
 			while (i >= 0) {
-				wildString = wildString.substring(0, i + 1)
-						+ wildString.substring(i + 2);
+				wildString = wildString.substring(0, i + 1) + wildString.substring(i + 2);
 				i = wildString.indexOf("**"); //$NON-NLS-1$
 			}
 			// parse the input string
@@ -244,8 +240,7 @@ public class WildCardFilter {
 				commands.add(NOTHING);
 			}
 			String[] pattern = commands.toArray(new String[commands.size()]);
-			if (pattern.length == 4 && pattern[2] == EXPECT
-					&& pattern[3] == NOTHING && pattern[0] != CONSUME) {
+			if (pattern.length == 4 && pattern[2] == EXPECT && pattern[3] == NOTHING && pattern[0] != CONSUME) {
 				if (pattern[0] == FIND)
 					pattern[0] = ENDSWITH;
 				else
@@ -346,8 +341,7 @@ public class WildCardFilter {
 				continue lp;
 			}
 			if (pattern[0] == ENDSWITH) {
-				result[i] = lower.endsWith(pattern[1]) ? name.substring(0,
-						name.length() - pattern[1].length()) : name;
+				result[i] = lower.endsWith(pattern[1]) ? name.substring(0, name.length() - pattern[1].length()) : name;
 				continue lp;
 			}
 			// start processing the pattern vector
@@ -367,7 +361,7 @@ public class WildCardFilter {
 						if (capture) {
 							if (sb.length() > 0)
 								sb.append('/');
-							sb.append(name.substring(currPos));
+							sb.append(name, currPos, name.length());
 						}
 						result[i] = sb.toString();
 						continue lp;
@@ -384,7 +378,7 @@ public class WildCardFilter {
 					if (capture) {
 						if (sb.length() > 0)
 							sb.append('/');
-						sb.append(name.substring(currPos, nextPos));
+						sb.append(name, currPos, nextPos);
 						capture = false;
 					}
 					currPos = nextPos + param.length();
@@ -396,8 +390,7 @@ public class WildCardFilter {
 					if (param == NOTHING) {
 						// since we expect nothing else,
 						// we must finish here
-						result[i] = (currPos == name.length()) ? sb.toString()
-								: name;
+						result[i] = (currPos == name.length()) ? sb.toString() : name;
 						continue lp;
 					}
 					// otherwise, check if the expected string
@@ -507,8 +500,7 @@ public class WildCardFilter {
 				break;
 			case '*':
 				if (find) {
-					errorMessage = Messages
-							.getString("WildCardFilter.double_asterisk"); //$NON-NLS-1$
+					errorMessage = Messages.getString("WildCardFilter.double_asterisk"); //$NON-NLS-1$
 					break lp;
 				}
 				find = true;
@@ -517,8 +509,7 @@ public class WildCardFilter {
 				break;
 			case '?':
 				if (find) {
-					errorMessage = Messages
-							.getString("WildCardFilter.questionmark_asterisk"); //$NON-NLS-1$
+					errorMessage = Messages.getString("WildCardFilter.questionmark_asterisk"); //$NON-NLS-1$
 					break lp;
 				}
 				something |= capture;
@@ -532,8 +523,7 @@ public class WildCardFilter {
 			}
 		}
 		if (errorMessage == null && !something)
-			errorMessage = Messages
-					.getString("WildCardFilter.no_relevant_section"); //$NON-NLS-1$
+			errorMessage = Messages.getString("WildCardFilter.no_relevant_section"); //$NON-NLS-1$
 		return errorMessage;
 	}
 

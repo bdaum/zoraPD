@@ -12,8 +12,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.core.internal.Utilities;
 
+@SuppressWarnings("restriction")
 public class ListCellEditorDialog extends AbstractListCellEditorDialog {
 
 	private Text viewer;
@@ -36,7 +37,7 @@ public class ListCellEditorDialog extends AbstractListCellEditorDialog {
 		GridData layoutData = new GridData(GridData.FILL_BOTH);
 		layoutData.heightHint = 50;
 		viewer.setLayoutData(layoutData);
-		viewer.setText(UiUtilities.csv(value, qfield.getType(), "\n")); //$NON-NLS-1$
+		viewer.setText(Utilities.csv(value, qfield.getType(), "\n")); //$NON-NLS-1$
 		if (qfield.getType() == QueryField.T_INTEGER
 				|| qfield.getType() == QueryField.T_POSITIVEINTEGER)
 			viewer.addVerifyListener(new VerifyListener() {
@@ -75,10 +76,8 @@ public class ListCellEditorDialog extends AbstractListCellEditorDialog {
 			int cnt = st.countTokens();
 			String[] result = new String[cnt];
 			int i = 0;
-			while (st.hasMoreTokens()) {
-				String token = st.nextToken().trim();
-				result[i++] = token;
-			}
+			while (st.hasMoreTokens())
+				result[i++] = st.nextToken().trim();
 			value = result;
 		}
 		super.okPressed();

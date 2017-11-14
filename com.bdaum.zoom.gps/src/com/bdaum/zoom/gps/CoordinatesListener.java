@@ -20,6 +20,7 @@ public interface CoordinatesListener {
 	public static final int ADDLOC = 0;
 	public static final int CAMPOS = 1;
 	public static final int IMGDIR = 2;
+	public static final int SHOWNLOC = 3;
 
 	/**
 	 * New coordinates
@@ -28,7 +29,8 @@ public interface CoordinatesListener {
 	 * @param longitude - Longitude
 	 * @param zoomLevel - Zoom level
 	 * @param type - event type
+	 * @param uuid - proposed UUID for new location shown entries
 	 */
-	void setCoordinates(String[] assetIds, double latitude, double longitude, int zoomLevel, int type);
+	void setCoordinates(String[] assetIds, double latitude, double longitude, int zoomLevel, int type, String uuid);
 
 }

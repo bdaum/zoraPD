@@ -33,6 +33,7 @@ import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -87,7 +88,7 @@ public class ProximityAction extends Action {
 					mx = Math.max(mx, Core.distance(lat, lon, asset.getGPSLatitude(), asset.getGPSLongitude(), 'k'));
 			Double[] values = new Double[] { lat, lon, (distance + mx) };
 			SmartCollectionImpl coll = new SmartCollectionImpl(Messages.ProximityAction_proximity_search, false, false,
-					true, dialog.isNetworked(), null, 0, null, 0, null, null);
+					true, dialog.isNetworked(), null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 			CriterionImpl crit = new CriterionImpl(QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), null, values,
 					QueryField.NOTGREATER, false);
 			coll.addCriterion(crit);

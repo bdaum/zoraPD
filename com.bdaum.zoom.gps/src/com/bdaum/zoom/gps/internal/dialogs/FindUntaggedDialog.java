@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Shell;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
@@ -74,7 +75,7 @@ public class FindUntaggedDialog extends ZTitleAreaDialog {
 	protected void okPressed() {
 		coll = new SmartCollectionImpl(
 				Messages.FindUntaggedDialog_untagged_images, false, false,
-				false, true, null, 0, null, 0, null, null);
+				false, true, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 		coll.addCriterion(new CriterionImpl(QueryField.EXIF_GPSLATITUDE
 				.getKey(), null, Double.NaN, QueryField.UNDEFINED, false));
 		coll.addCriterion(new CriterionImpl(QueryField.EXIF_GPSLONGITUDE

@@ -12,6 +12,10 @@
 		<topic href="html/gettingstarted/newcat.html" label="Creating a new Catalog"/>
 		<topic href="html/reference/catProperties.html" label="Catalog properties"/>
 	</context>
+ <context id="group_dialog_context" title="Group edit dialog">
+    <description>group name, filters, and rules</description>
+    <topic href="html/reference/groupEdit.html" label="Group edit dialog"/>
+ </context>
  <context id="collectionEdit_dialog_context" title="Collection query dialog">
     <description>Edit a collection query</description>
     <topic href="html/reference/collectionEdit.html" label="Collection query dialog"/>
@@ -102,6 +106,10 @@
  <context id="audio_page_context" title="Audio preferences">
     <description>Configure sounds and audio</description>
     <topic href="html/reference/audioPrefs.html" label="Audio preferences"/>
+ </context>
+ <context id="auto_page_context" title="Automatic actions preferences">
+    <description>Configure automatic actions</description>
+    <topic href="html/reference/autoPrefs.html" label="Automatic actions preferences"/>
  </context>
  <context id="general_page_context" title="General Preferences">
     <description>General Preferences</description>

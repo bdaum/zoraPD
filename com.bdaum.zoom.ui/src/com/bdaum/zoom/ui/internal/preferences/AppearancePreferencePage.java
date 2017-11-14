@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -44,7 +44,9 @@ import org.eclipse.swt.widgets.Spinner;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
+import com.bdaum.zoom.ui.internal.widgets.LabelConfigGroup;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
@@ -61,7 +63,6 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 	};
 	private static final String CSS = ".css"; //$NON-NLS-1$
 	private ComboViewer colorViewer;
-	private ComboViewer showratingViewer;
 	private CheckboxButton rotateButton;
 	private CheckboxButton voiceNoteButton;
 	private CheckboxButton expandButton;
@@ -69,9 +70,11 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 	private CheckboxButton locationButton;
 	private Spinner regionField;
 	private CTabItem tabItem0;
-	private RadioButtonGroup decoGroup;
 	private String theme;
 	private Label comment;
+	private CTabItem tabItem1;
+	private RadioButtonGroup showRatingGroup;
+	private LabelConfigGroup labelConfigGroup;
 
 	public AppearancePreferencePage() {
 		setDescription(Messages.getString("AppearancePreferencePage.appearance_descr")); //$NON-NLS-1$
@@ -81,24 +84,20 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.APPEARANCE_PREFERENCE_PAGE);
 		createTabFolder(composite, "Appearance"); //$NON-NLS-1$
-		tabItem0 = createTabItem(tabFolder, Messages.getString("AppearancePreferencePage.color_scheme")); //$NON-NLS-1$
-		tabItem0.setControl(createThumbnailsGroup(tabFolder));
+		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.getString("AppearancePreferencePage.color_scheme")); //$NON-NLS-1$
+		tabItem0.setControl(createColorSchemeGroup(tabFolder));
+		tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.getString("AppearancePreferencePage.thumbnails")); //$NON-NLS-1$
+		tabItem1.setControl(createThumbnailsGroup(tabFolder));
 		initTabFolder(0);
 		createExtensions(tabFolder, "com.bdaum.zoom.ui.preferences.AppearancePreferencePage"); //$NON-NLS-1$
 		fillValues();
 	}
 
-	private Control createThumbnailsGroup(Composite parent) {
+	private Control createColorSchemeGroup(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(1, false));
-		createColorGroup(composite);
-		createThumbGroup(composite);
-		return composite;
-	}
-
-	private void createColorGroup(Composite composite) {
-		CGroup group = createGroup(composite, 2, Messages.getString("AppearancePreferencePage.bg_color")); //$NON-NLS-1$
+		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("AppearancePreferencePage.bg_color")); //$NON-NLS-1$
 		List<String> dropins = new ArrayList<String>();
 		String path = Platform.getInstallLocation().getURL().getPath();
 		File installFolder = new File(path);
@@ -143,6 +142,39 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 						PreferenceConstants.BACKGROUNDCOLOR_PLATFORM.equals(newTheme) && !newTheme.equals(theme));
 			}
 		});
+		return composite;
+	}
+
+	private Control createThumbnailsGroup(Composite parent) {
+		Composite composite = new Composite(parent, SWT.NONE);
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		composite.setLayout(new GridLayout(1, false));
+		labelConfigGroup = new LabelConfigGroup(composite, false);
+		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("AppearancePreferencePage.decoration")); // $NO //$NON-NLS-1$
+		new Label(group, SWT.NONE).setText(Messages.getString("AppearancePreferencePage.max_face_regions")); //$NON-NLS-1$
+		regionField = new Spinner(group, SWT.BORDER);
+		regionField.setMaximum(99);
+		Label lab = new Label(group, SWT.NONE);
+		lab.setText(Messages.getString("AppearancePreferencePage.color_code_options")); //$NON-NLS-1$
+		lab.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
+		locationButton = WidgetFactory.createCheckButton(group,
+				Messages.getString("AppearancePreferencePage.show_location"), //$NON-NLS-1$
+				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
+		expandButton = WidgetFactory.createCheckButton(group,
+				Messages.getString("AppearancePreferencePage.show_expand_collapse"), //$NON-NLS-1$
+				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
+		doneButton = WidgetFactory.createCheckButton(group,
+				Messages.getString("AppearancePreferencePage.show_status_mark"), //$NON-NLS-1$
+				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
+		showRatingGroup = new RadioButtonGroup(group, Messages.getString("AppearancePreferencePage.show_rating"), //$NON-NLS-1$
+				SWT.VERTICAL, ratingLabels);
+		rotateButton = WidgetFactory.createCheckButton(group,
+				Messages.getString("AppearancePreferencePage.show_rotate_buttons"), //$NON-NLS-1$
+				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
+		voiceNoteButton = WidgetFactory.createCheckButton(group,
+				Messages.getString("AppearancePreferencePage.show_voicenote"), //$NON-NLS-1$
+				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
+		return composite;
 	}
 
 	private static void scanCSSDropins(List<String> dropins, File file) {
@@ -167,42 +199,6 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		}
 	}
 
-	private void createThumbGroup(Composite composite) {
-		CGroup group = createGroup(composite, 2, Messages.getString("AppearancePreferencePage.thumbnails")); //$NON-NLS-1$
-		Label label = new Label(group, SWT.NONE);
-		label.setText(Messages.getString("AppearancePreferencePage.show_deco")); //$NON-NLS-1$
-		decoGroup = new RadioButtonGroup(group, null, SWT.HORIZONTAL,
-				new String[] { Messages.getString("AppearancePreferencePage.never"), //$NON-NLS-1$
-						Messages.getString("AppearancePreferencePage.selected"), //$NON-NLS-1$
-						Messages.getString("AppearancePreferencePage.always") }); //$NON-NLS-1$
-		Composite comp = new Composite(group, SWT.NONE);
-		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
-		layoutData.horizontalIndent = 10;
-		comp.setLayoutData(layoutData);
-		comp.setLayout(new GridLayout(2, false));
-
-		doneButton = WidgetFactory.createCheckButton(comp,
-				Messages.getString("AppearancePreferencePage.show_status_mark"), //$NON-NLS-1$
-				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
-		new Label(comp, SWT.NONE).setText(Messages.getString("AppearancePreferencePage.max_face_regions")); //$NON-NLS-1$
-		regionField = new Spinner(comp, SWT.BORDER);
-		regionField.setMaximum(99);
-		locationButton = WidgetFactory.createCheckButton(comp,
-				Messages.getString("AppearancePreferencePage.show_location"), //$NON-NLS-1$
-				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
-		showratingViewer = createComboViewer(comp, Messages.getString("AppearancePreferencePage.show_rating"), //$NON-NLS-1$
-				ratingOptions, ratingLabels, false);
-		rotateButton = WidgetFactory.createCheckButton(comp,
-				Messages.getString("AppearancePreferencePage.show_rotate_buttons"), //$NON-NLS-1$
-				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
-		voiceNoteButton = WidgetFactory.createCheckButton(comp,
-				Messages.getString("AppearancePreferencePage.show_voicenote"), //$NON-NLS-1$
-				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
-		expandButton = WidgetFactory.createCheckButton(comp,
-				Messages.getString("AppearancePreferencePage.show_expand_collapse"), //$NON-NLS-1$
-				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
-	}
-
 	@Override
 	protected void doFillValues() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
@@ -211,32 +207,31 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		locationButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.SHOWLOCATION));
 		doneButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.SHOWDONEMARK));
 		regionField.setSelection(preferenceStore.getInt(PreferenceConstants.MAXREGIONS));
-		showratingViewer
-				.setSelection(new StructuredSelection(preferenceStore.getString(PreferenceConstants.SHOWRATING)));
+		String rating = preferenceStore.getString(PreferenceConstants.SHOWRATING);
+		int r = 1;
+		for (int i = 0; i < ratingOptions.length; i++)
+			if (ratingOptions[i].equals(rating)) {
+				r = i;
+				break;
+			}
+		showRatingGroup.setSelection(r);
 		rotateButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.SHOWROTATEBUTTONS));
 		voiceNoteButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.SHOWVOICENOTE));
 		expandButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.SHOWEXPANDCOLLAPSE));
-		decoGroup.setSelection(preferenceStore.getInt(PreferenceConstants.SHOWDECO));
+		labelConfigGroup.setSelection(preferenceStore.getInt(PreferenceConstants.SHOWLABEL),
+				preferenceStore.getString(PreferenceConstants.THUMBNAILTEMPLATE),
+				preferenceStore.getInt(PreferenceConstants.LABELFONTSIZE));
 		updateButtons();
 	}
 
-	@Override
-	protected void doUpdateButtons() {
-		boolean enabled = decoGroup.getSelection() > 0;
-		locationButton.setEnabled(enabled);
-		doneButton.setEnabled(enabled);
-		regionField.setEnabled(enabled);
-		showratingViewer.getControl().setEnabled(enabled);
-		rotateButton.setEnabled(enabled);
-		voiceNoteButton.setEnabled(enabled);
-		expandButton.setEnabled(enabled);
-	}
 
 	@Override
 	protected void doPerformDefaults() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		preferenceStore.setValue(PreferenceConstants.SHOWDECO,
-				preferenceStore.getDefaultInt(PreferenceConstants.SHOWDECO));
+		preferenceStore.setValue(PreferenceConstants.SHOWLABEL,
+				preferenceStore.getDefaultInt(PreferenceConstants.SHOWLABEL));
+		preferenceStore.setValue(PreferenceConstants.THUMBNAILTEMPLATE,
+				preferenceStore.getDefaultString(PreferenceConstants.THUMBNAILTEMPLATE));
 		preferenceStore.setValue(PreferenceConstants.BACKGROUNDCOLOR,
 				preferenceStore.getDefaultString(PreferenceConstants.BACKGROUNDCOLOR));
 		preferenceStore.setValue(PreferenceConstants.SHOWLOCATION,
@@ -253,24 +248,26 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 				preferenceStore.getDefaultBoolean(PreferenceConstants.SHOWVOICENOTE));
 		preferenceStore.setValue(PreferenceConstants.SHOWEXPANDCOLLAPSE,
 				preferenceStore.getDefaultBoolean(PreferenceConstants.SHOWEXPANDCOLLAPSE));
-		updateButtons();
 	}
 
 	@Override
 	protected void doPerformOk() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		int deco = decoGroup.getSelection();
-		if (deco >= 0)
-			preferenceStore.setValue(PreferenceConstants.SHOWDECO, deco);
+		int showLabel = labelConfigGroup.getSelection();
+		if (showLabel >= 0) {
+			preferenceStore.setValue(PreferenceConstants.SHOWLABEL, showLabel);
+			if (showLabel == Constants.CUSTOM_LABEL)
+				preferenceStore.setValue(PreferenceConstants.THUMBNAILTEMPLATE, labelConfigGroup.getTemplate());
+		}
 		IStructuredSelection selection = (IStructuredSelection) colorViewer.getSelection();
 		if (!selection.isEmpty())
 			preferenceStore.setValue(PreferenceConstants.BACKGROUNDCOLOR, (String) selection.getFirstElement());
 		preferenceStore.setValue(PreferenceConstants.SHOWLOCATION, locationButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.MAXREGIONS, regionField.getSelection());
 		preferenceStore.setValue(PreferenceConstants.SHOWDONEMARK, doneButton.getSelection());
-		selection = (IStructuredSelection) showratingViewer.getSelection();
-		if (!selection.isEmpty())
-			preferenceStore.setValue(PreferenceConstants.SHOWRATING, (String) selection.getFirstElement());
+		int sel = showRatingGroup.getSelection();
+		if (sel >= 0)
+			preferenceStore.setValue(PreferenceConstants.SHOWRATING, ratingOptions[sel]);
 		preferenceStore.setValue(PreferenceConstants.SHOWROTATEBUTTONS, rotateButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.SHOWVOICENOTE, voiceNoteButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.SHOWEXPANDCOLLAPSE, expandButton.getSelection());

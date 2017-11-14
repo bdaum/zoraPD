@@ -66,8 +66,7 @@ public class FolderWatchJob extends SynchronizeCatJob {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.internal.job.SynchronizeCatJob#belongsTo(java.lang.
+	 * @see com.bdaum.zoom.ui.internal.job.SynchronizeCatJob#belongsTo(java.lang.
 	 * Object)
 	 */
 	@Override
@@ -143,7 +142,6 @@ public class FolderWatchJob extends SynchronizeCatJob {
 				int incr = work / members.length;
 				monitor.subTask(folder.getPath());
 				Map<String, File> xmpMap = null;
-				boolean xmp = false;
 				for (File member : members) {
 					if (monitor.isCanceled())
 						break;
@@ -163,14 +161,15 @@ public class FolderWatchJob extends SynchronizeCatJob {
 								continue;
 							if ((filterChain == null || filterChain.accept(member, false))) {
 								yield();
-								if (!xmp) {
-									xmp = true;
+								if (xmpMap == null) {
 									xmpMap = new HashMap<String, File>(members.length * 3 / 2);
-									for (File xmpMember : members) {
-										String xmpName = xmpMember.getName();
-										if (xmpName.toLowerCase().endsWith(XMPEXTENSION))
-											xmpMap.put(xmpName.substring(0, xmpName.length() - XMPEXTLEN), xmpMember);
-									}
+									for (File xmpCandidate : members)
+										if (xmpCandidate.isFile()) {
+											String xmpName = xmpCandidate.getName();
+											if (xmpName.toLowerCase().endsWith(XMPEXTENSION))
+												xmpMap.put(xmpName.substring(0, xmpName.length() - XMPEXTLEN),
+														xmpCandidate);
+										}
 								}
 								if (observedFolder.getTransfer())
 									newFiles.add(member);

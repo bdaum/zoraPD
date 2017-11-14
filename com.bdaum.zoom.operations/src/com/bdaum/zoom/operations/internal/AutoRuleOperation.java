@@ -48,17 +48,13 @@ import com.bdaum.zoom.operations.IProfiledOperation;
 @SuppressWarnings("restriction")
 public class AutoRuleOperation extends DbOperation {
 
-	private static NumberFormat af = NumberFormat.getInstance();
-
 	private final List<AutoRule> rules;
 	private Collection<? extends Asset> assets;
 	private boolean change = false;
 	private final QueryField node;
 
-	public AutoRuleOperation(List<AutoRule> rules,
-			Collection<? extends Asset> assets, QueryField node) {
-		super(Messages
-				.getString("AutoRuleOperation.automatic_collection_creation")); //$NON-NLS-1$
+	public AutoRuleOperation(List<AutoRule> rules, Collection<? extends Asset> assets, QueryField node) {
+		super(Messages.getString("AutoRuleOperation.automatic_collection_creation")); //$NON-NLS-1$
 		this.rules = rules;
 		this.assets = assets;
 		this.node = node;
@@ -73,8 +69,7 @@ public class AutoRuleOperation extends DbOperation {
 	}
 
 	@Override
-	public IStatus execute(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		if (rules != null) {
 			if (assets == null)
 				assets = dbManager.obtainAssets();
@@ -95,13 +90,12 @@ public class AutoRuleOperation extends DbOperation {
 		return !change;
 	}
 
-	private boolean processRules(Asset asset, List<AutoRule> rules,
-			QueryField node, IProgressMonitor monitor) {
+	private boolean processRules(Asset asset, List<AutoRule> rules, QueryField node, IProgressMonitor monitor) {
 		boolean change = false;
 		lpr: for (AutoRule autoRule : rules) {
 			QueryField qfield = autoRule.getQfield();
 			// Remove unwanted
-			if (node != null && qfield != node)
+			if (node != null && !accept(qfield, node))
 				break;
 			if (monitor.isCanceled())
 				break;
@@ -111,16 +105,12 @@ public class AutoRuleOperation extends DbOperation {
 			if (fieldValue instanceof Double) {
 				if (Double.isNaN((Double) fieldValue))
 					continue;
-				if (type == QueryField.T_POSITIVEFLOAT
-						&& ((Double) fieldValue) < 0)
+				if (type == QueryField.T_POSITIVEFLOAT && ((Double) fieldValue) < 0)
 					continue;
 			}
-			if (fieldValue instanceof Long && type == QueryField.T_POSITIVELONG
-					&& ((Long) fieldValue) < 0)
+			if (fieldValue instanceof Long && type == QueryField.T_POSITIVELONG && ((Long) fieldValue) < 0)
 				continue;
-			if (fieldValue instanceof Integer
-					&& type == QueryField.T_POSITIVEINTEGER
-					&& ((Integer) fieldValue) < 0)
+			if (fieldValue instanceof Integer && type == QueryField.T_POSITIVEINTEGER && ((Integer) fieldValue) < 0)
 				continue;
 			int autoPolicy = qfield.getAutoPolicy();
 			double[] intervals = autoRule.getIntervals();
@@ -130,8 +120,7 @@ public class AutoRuleOperation extends DbOperation {
 				if (fieldValue == null)
 					continue;
 				if (autoPolicy == QueryField.AUTO_DISCRETE
-						&& (qfield.getType() == QueryField.T_BOOLEAN || qfield
-								.getEnumeration() != null)) {
+						&& (qfield.getType() == QueryField.T_BOOLEAN || qfield.getEnumeration() != null)) {
 					Object[] enumeration = autoRule.getEnumeration();
 					boolean found = false;
 					lp1: for (Object d : enumeration)
@@ -178,8 +167,7 @@ public class AutoRuleOperation extends DbOperation {
 				found = false;
 				lp3: for (String s : values) {
 					if (AutoRule.VALUE_UNDEFINED.equals(s)) {
-						if (!(fieldValue instanceof String[])
-								|| ((String[]) fieldValue).length == 0) {
+						if (!(fieldValue instanceof String[]) || ((String[]) fieldValue).length == 0) {
 							found = true;
 							break;
 						}
@@ -207,21 +195,19 @@ public class AutoRuleOperation extends DbOperation {
 			StringBuilder name = new StringBuilder();
 			StringBuilder id = new StringBuilder();
 			Object value;
-			int card = fieldValue instanceof String[] ? ((String[]) fieldValue).length
-					: 1;
+			int card = fieldValue instanceof String[] ? ((String[]) fieldValue).length : 1;
 			if (card == 0 && autoPolicy == QueryField.AUTO_SELECT)
 				card = 1;
-			int nv = values != null
-					&& (autoPolicy == QueryField.AUTO_CONTAINS || autoPolicy == QueryField.AUTO_SELECT) ? values
-					.size() : 1;
+			int nv = values != null && (autoPolicy == QueryField.AUTO_CONTAINS || autoPolicy == QueryField.AUTO_SELECT)
+					? values.size()
+					: 1;
 			lpf: for (int i = 0; i < card; i++) {
 				for (int k = 0; k < nv; k++) {
 					value = null;
 					int rel = QueryField.EQUALS;
 					name.setLength(0);
 					id.setLength(0);
-					id.append(Constants.GROUP_ID_AUTOSUB)
-							.append(qfield.getId());
+					id.append(Constants.GROUP_ID_AUTOSUB).append(qfield.getId());
 					String groupId = id.toString();
 					switch (autoPolicy) {
 					case QueryField.AUTO_DISCRETE:
@@ -258,8 +244,7 @@ public class AutoRuleOperation extends DbOperation {
 							break;
 						}
 						s = null;
-						if (fieldValue instanceof String[]
-								&& ((String[]) fieldValue).length > i)
+						if (fieldValue instanceof String[] && ((String[]) fieldValue).length > i)
 							s = ((String[]) fieldValue)[i];
 						if (s == null)
 							continue lpf;
@@ -282,16 +267,13 @@ public class AutoRuleOperation extends DbOperation {
 								value = newFieldValue(fieldValue, intervals[0]);
 								rel = QueryField.SMALLER;
 							} else if (sample >= intervals[intervals.length - 1]) {
-								value = newFieldValue(fieldValue,
-										intervals[intervals.length - 1]);
+								value = newFieldValue(fieldValue, intervals[intervals.length - 1]);
 								rel = QueryField.NOTSMALLER;
 							} else {
 								for (int j = 0; j < intervals.length - 1; j++) {
 									if (sample >= intervals[j]) {
-										upperValue = newFieldValue(fieldValue,
-												intervals[j + 1]);
-										value = newFieldValue(fieldValue,
-												intervals[j]);
+										upperValue = newFieldValue(fieldValue, intervals[j + 1]);
+										value = newFieldValue(fieldValue, intervals[j]);
 										rel = QueryField.BETWEEN;
 										break;
 									}
@@ -304,8 +286,7 @@ public class AutoRuleOperation extends DbOperation {
 								lower = Math.floor(sample / interval);
 								upper = lower + interval;
 							} else {
-								double exp = Math.floor(Math.log(sample)
-										/ Math.log(interval));
+								double exp = Math.floor(Math.log(sample) / Math.log(interval));
 								lower = Math.pow(interval, exp);
 								upper = lower * interval;
 							}
@@ -317,13 +298,11 @@ public class AutoRuleOperation extends DbOperation {
 					}
 					switch (rel) {
 					case QueryField.CONTAINS:
-						name.append(NLS.bind(Messages
-								.getString("AutoRuleOperation.contains"), value)); //$NON-NLS-1$
+						name.append(NLS.bind(Messages.getString("AutoRuleOperation.contains"), value)); //$NON-NLS-1$
 						id.append('{').append(value).append('}');
 						break;
 					case QueryField.UNDEFINED:
-						name.append(Messages
-								.getString("AutoRuleOperation.undefined")); //$NON-NLS-1$
+						name.append(Messages.getString("AutoRuleOperation.undefined")); //$NON-NLS-1$
 						id.append('¬').append(value);
 						break;
 					case QueryField.NOTSMALLER:
@@ -339,68 +318,50 @@ public class AutoRuleOperation extends DbOperation {
 						id.append('=').append(value);
 						break;
 					case QueryField.BETWEEN:
-						name.append(NLS.bind(
-								Messages.getString("AutoRuleOperation.between"), nice(value), //$NON-NLS-1$
+						name.append(NLS.bind(Messages.getString("AutoRuleOperation.between"), nice(value), //$NON-NLS-1$
 								nice(upperValue)));
-						id.append('=').append(value).append('_')
-								.append(upperValue);
+						id.append('=').append(value).append('_').append(upperValue);
 						break;
 					}
 					String ids = id.toString();
-					SmartCollectionImpl sm = dbManager.obtainById(
-							SmartCollectionImpl.class, ids);
+					SmartCollectionImpl sm = dbManager.obtainById(SmartCollectionImpl.class, ids);
 					if (sm == null) {
 						change = true;
-						GroupImpl subgroup = dbManager.obtainById(
-								GroupImpl.class, groupId);
+						GroupImpl subgroup = dbManager.obtainById(GroupImpl.class, groupId);
 						if (subgroup == null) {
-							GroupImpl autogroup = dbManager.obtainById(
-									GroupImpl.class, Constants.GROUP_ID_AUTO);
+							GroupImpl autogroup = dbManager.obtainById(GroupImpl.class, Constants.GROUP_ID_AUTO);
 							if (autogroup == null) {
-								autogroup = new GroupImpl(
-										Messages.getString("AutoRuleOperation.automatic"), false); //$NON-NLS-1$
+								autogroup = new GroupImpl(Messages.getString("AutoRuleOperation.automatic"), false, //$NON-NLS-1$
+										Constants.INHERIT_LABEL, null, 0, null);
 								autogroup.setStringId(Constants.GROUP_ID_AUTO);
 								addInfo(NLS.bind(Messages.getString("AutoRuleOperation.group_created"), //$NON-NLS-1$
 										autogroup.getName()));
 							}
-							subgroup = new GroupImpl(qfield.getLabel(), false);
+							subgroup = new GroupImpl(qfield.getLabel(), false, Constants.INHERIT_LABEL, null, 0, null);
 							subgroup.setStringId(groupId);
 							autogroup.addSubgroup(subgroup);
 							subgroup.setGroup_subgroup_parent(autogroup);
 							store.add(autogroup);
-							addInfo(NLS.bind(
-									Messages.getString("AutoRuleOperation.subgroup_created"), //$NON-NLS-1$
+							addInfo(NLS.bind(Messages.getString("AutoRuleOperation.subgroup_created"), //$NON-NLS-1$
 									subgroup.getName(), autogroup.getName()));
 						}
 						store.add(subgroup);
-						sm = new SmartCollectionImpl(
-								name.toString(),
-								false,
-								false,
-								false,
-								false,
-								NLS.bind(
-										Messages.getString("AutoRuleOperation.automatically_created"), //$NON-NLS-1$
-										qfield.getLabel()), -1, null, 0, null, null);
+						sm = new SmartCollectionImpl(name.toString(), false, false, false, false,
+								NLS.bind(Messages.getString("AutoRuleOperation.automatically_created"), //$NON-NLS-1$
+										qfield.getLabel()),
+								-1, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 						sm.setStringId(ids);
-						sm.addCriterion(new CriterionImpl(
-								qfield.getId(),
-								null,
-								value,
-								rel == QueryField.BETWEEN ? QueryField.NOTSMALLER
-										: rel, true));
+						sm.addCriterion(new CriterionImpl(qfield.getId(), null, value,
+								rel == QueryField.BETWEEN ? QueryField.NOTSMALLER : rel, true));
 						if (rel == QueryField.BETWEEN)
-							sm.addCriterion(new CriterionImpl(qfield.getId(),
-									null, upperValue, QueryField.SMALLER, true));
-						SortCriterion sortCrit = new SortCriterionImpl(
-								QueryField.IPTC_DATECREATED.getId(), null, true);
+							sm.addCriterion(
+									new CriterionImpl(qfield.getId(), null, upperValue, QueryField.SMALLER, true));
+						SortCriterion sortCrit = new SortCriterionImpl(QueryField.IPTC_DATECREATED.getId(), null, true);
 						sm.addSortCriterion(sortCrit);
-						sm.setGroup_rootCollection_parent(subgroup
-								.getStringId());
+						sm.setGroup_rootCollection_parent(subgroup.getStringId());
 						subgroup.addRootCollection(sm.getStringId());
 						Utilities.storeCollection(sm, false, store);
-						addInfo(NLS.bind(
-								Messages.getString("AutoRuleOperation.collection_created"), //$NON-NLS-1$
+						addInfo(NLS.bind(Messages.getString("AutoRuleOperation.collection_created"), //$NON-NLS-1$
 								sm.getName(), subgroup.getName()));
 					}
 				}
@@ -411,8 +372,20 @@ public class AutoRuleOperation extends DbOperation {
 		return change;
 	}
 
+	private boolean accept(QueryField qfield, QueryField node) {
+		if (qfield == node)
+			return true;
+		QueryField[] children = qfield.getChildren();
+		if (children != null)
+			for (QueryField child : children)
+				if (accept(child, node))
+					return true;
+		return false;
+	}
+
 	private static Object nice(Object v) {
 		if (v instanceof Double) {
+			NumberFormat af = NumberFormat.getInstance();
 			af.setMinimumFractionDigits(0);
 			double d = (Double) v;
 			if (d >= 10d)
@@ -447,14 +420,12 @@ public class AutoRuleOperation extends DbOperation {
 	}
 
 	@Override
-	public IStatus redo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		return Status.OK_STATUS;
 	}
 
 	@Override
-	public IStatus undo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		return Status.OK_STATUS;
 	}
 

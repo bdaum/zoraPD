@@ -43,6 +43,12 @@
             name="%perspective.name.web_gallery">
       </perspective>
       <perspective
+            class="com.bdaum.zoom.rcp.internal.perspective.PresentationPerspective"
+            icon="icons/presentation.png"
+            id="com.bdaum.zoom.PresentationPerspective"
+            name="%perspective.presentation">
+      </perspective>
+      <perspective
             class="com.bdaum.zoom.rcp.internal.perspective.TablePerspective"
             icon="icons/table.png"
             id="com.bdaum.zoom.rcp.TablePerspective"
@@ -158,75 +164,8 @@
                id="com.bdaum.zoom.rcp.DataEntryPerspective">
          </perspectiveShortcut>
          <perspectiveShortcut
-               id="com.bdaum.zoom.SlidesPerspective">
+               id="com.bdaum.zoom.PresentationPerspective">
          </perspectiveShortcut>
-         <perspectiveShortcut
-               id="com.bdaum.zoom.ExhibitionPerspective">
-         </perspectiveShortcut>
-         <perspectiveShortcut
-               id="com.bdaum.zoom.WebGalleryPerspective">
-         </perspectiveShortcut>
-<!--         <viewShortcut
-               id="com.bdaum.zoom.ui.views.CatalogView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.LightboxView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.ZuiView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.TableView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.DataEntryView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.DuplicatesView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.SlideshowView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.ExhibitionView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.WebGalleryView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.VStripView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.HStripView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.PreviewView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.HistogramView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.MetadataView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.PropertiesView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.ExifView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.VideoView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.ui.views.IPTCView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.gps.GPSView">
-         </viewShortcut>
-         <viewShortcut
-               id="com.bdaum.zoom.gps.MapView">
-         </viewShortcut>
-         -->
       </perspectiveExtension>
    </extension>
 </plugin>

@@ -78,12 +78,21 @@
 	    	<topic href="html/tasks/tricks.html" />
 	    </entry>
 	</entry>
-		<entry keyword="Wartung">
-			<topic href="html/tasks/maintenance.html" />
-		</entry>
-	
+	<entry keyword="Wartung">
+		<topic href="html/tasks/maintenance.html" />
+	</entry>
 	<entry keyword="Kollektion">
 		<topic href="html/reference/collectionEdit.html"  label="Kollektionsdefinition bearbeiten"/>
+		<entry keyword="automatische Erstellung von ~en">
+			<topic href="html/reference/autoPrefs.html" />
+			<topic href="html/reference/autoRule.html" />
+		</entry>
+	</entry>
+	<entry keyword="Regeln">
+		<entry keyword="für die automatische Erstellung von Kollektionen">
+			<topic href="html/reference/autoPrefs.html" />
+			<topic href="html/reference/autoRule.html" />
+		</entry>
 	</entry>
 	<entry keyword="Kommandozeile">
 		<topic href="html/reference/commandline.html" />
@@ -111,6 +120,9 @@
 	</entry>
 	<entry keyword="Beziehungen">
 		<topic href="html/reference/hierarchy.html" />
+		<entry keyword="automatische Erstellung von ~">
+			<topic href="html/reference/autoPrefs.html" />
+		</entry>
 		<entry keyword="Beschreibung">
 			<topic href="html/reference/descriptionEdit.html" />
 		</entry>

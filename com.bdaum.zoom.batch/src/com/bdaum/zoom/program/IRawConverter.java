@@ -198,7 +198,7 @@ public interface IRawConverter extends IConverter, IRecipeProvider {
 
 	/**
 	 * Search for the executable in a folder hierarchy
-	 * @param parentFile - root folder
+	 * @param parentFile - root folder or null for unspecified root folder
 	 * @return - executable file or null
 	 */
 	File findModule(File parentFile);

@@ -31,6 +31,7 @@ import com.bdaum.zoom.core.internal.Utilities;
 /**
  * Base implementation for file filters that are based on file name extensions.
  */
+@SuppressWarnings("restriction")
 public abstract class ExtensionFileFilter implements FileFilter {
 
     /**
@@ -49,13 +50,10 @@ public abstract class ExtensionFileFilter implements FileFilter {
      * @param extensions file extensions to accept
      */
     protected ExtensionFileFilter(String[] extensions) {
-//        this.extensions = Arrays.copyOf(extensions, extensions.length);
         this.extensions = Utilities.copyOf(extensions, extensions.length);
         Arrays.sort(this.extensions);
-        // Make a hash-set for faster look-up
-        for(String extension : extensions) {
-            extensionsSet.add(extension);
-        }
+        for(String extension : extensions)
+			extensionsSet.add(extension);
     }
 
     /**
@@ -66,8 +64,6 @@ public abstract class ExtensionFileFilter implements FileFilter {
      * @return file extensions accepted by the filter
      */
     public String[] getExtensions() {
-        // The array is already sorted
-//        return Arrays.copyOf(extensions, extensions.length);
         return Utilities.copyOf(extensions, extensions.length);
     }
 

@@ -24,6 +24,9 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.gps.internal.dialogs.messages"; //$NON-NLS-1$
+	public static String DirPinDialog_direction;
+	public static String DirPinDialog_location;
+	public static String DirPinDialog_select;
 	public static String FindUntaggedDialog_find_untagged;
 	public static String FindUntaggedDialog_find_untagged_message;
 	public static String FindUntaggedDialog_untagged_images;

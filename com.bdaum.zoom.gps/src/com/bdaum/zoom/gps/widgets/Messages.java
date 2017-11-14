@@ -26,8 +26,10 @@ public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.gps.widgets.messages"; //$NON-NLS-1$
 	public static String AbstractMapComponent_add_dir_marker;
 	public static String AbstractMapComponent_add_marker;
+	public static String AbstractMapComponent_click_shown_loc;
 	public static String AbstractMapComponent_cluster;
 	public static String AbstractMapComponent_create_new_location;
+	public static String AbstractMapComponent_delete_pin;
 	public static String AbstractMapComponent_drag_me;
 	public static String AbstractMapComponent_embedded_map;
 	public static String AbstractMapComponent_enable_JS;
@@ -44,7 +46,6 @@ public class Messages extends NLS {
 	public static String AbstractMapComponent_multiple_images;
 	public static String AbstractMapComponent_next_page;
 	public static String AbstractMapComponent_no_images;
-	public static String AbstractMapComponent_no_tagging_possible;
 	public static String AbstractMapComponent_not_found;
 	public static String AbstractMapComponent_previous_page;
 	public static String AbstractMapComponent_resource_missing;

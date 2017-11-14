@@ -103,7 +103,7 @@ public class StructModifyOperation extends DbOperation {
 				}
 			}
 		}
-		storeSafely(null, 10000*work, toBeStored);
+		storeSafely(null, 10000*work, toBeStored.toArray());
 		return close(info, assetsToUpdate.toArray(new String[assetsToUpdate.size()]));
 	}
 
@@ -148,7 +148,7 @@ public class StructModifyOperation extends DbOperation {
 			monitor.worked(1);
 		}
 		Object[] toBeDeleted = newObjects == null ? null : newObjects.values().toArray();
-		storeSafely(toBeDeleted, work + (toBeDeleted == null ? 0 : toBeDeleted.length), toBeStored);
+		storeSafely(toBeDeleted, work + (toBeDeleted == null ? 0 : toBeDeleted.length), toBeStored.toArray());
 		backupMap.clear();
 		return close(info, assetsToUpdate.toArray(new String[assetsToUpdate.size()]));
 	}

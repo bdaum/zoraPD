@@ -640,7 +640,8 @@ public class SplitInputStream extends FilterInputStream {
         if(err != null)
             throw new RuntimeException(err);
 
-        int minBufSize = sub.minReadSize + sub.readCushion + 512;
+        @SuppressWarnings("null")
+		int minBufSize = sub.minReadSize + sub.readCushion + 512;
         if(minBufSize > bufSize)
         {
             if(q != null)
@@ -741,7 +742,8 @@ public class SplitInputStream extends FilterInputStream {
      * @exception IOException If the underlying stream throws an IOException or
      * if the nextRead() call of a subReader throws an IOException
      */
-    @Override
+    @SuppressWarnings("null")
+	@Override
 	public int read(byte b[], int off, int len) throws IOException
     {
         boolean isSkip = isSkipCall;

@@ -61,7 +61,8 @@ public class HtmlJob extends AbstractExportJob {
 	private final String weblink;
 
 	public HtmlJob(List<Asset> assets, int mode, PageLayout_typeImpl layout, File targetFile, FtpAccount account,
-			int quality, int jpegQuality, UnsharpMask unsharpMask, String collection, String weblink, IAdaptable adaptable) {
+			int quality, int jpegQuality, UnsharpMask unsharpMask, String collection, String weblink,
+			IAdaptable adaptable) {
 		super(Messages.HtmlJob_export_html, assets, mode, Constants.SCALE_FIXED, 1d, layout.getSize(), unsharpMask,
 				jpegQuality, null, false, null, QueryField.SAFETY_RESTRICTED, adaptable);
 		this.account = account;
@@ -251,7 +252,7 @@ public class HtmlJob extends AbstractExportJob {
 	}
 
 	private String generateCaption(int k, String caption) {
-		return PageProcessor.computeCaption(caption, assets.get(k), collection, k, k);
+		return PageProcessor.computeCaption(caption, Constants.PI_ALL, assets.get(k), collection, k, k);
 	}
 
 	private String generateDiv(String text, String clazz) {

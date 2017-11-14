@@ -1,7 +1,23 @@
+/*
+ * This file is part of the ZoRa project: http://www.photozora.org.
+ *
+ * ZoRa is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ZoRa is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ZoRa; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ */
 package com.bdaum.zoom.ui.internal.widgets;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -20,6 +36,7 @@ import org.eclipse.swt.widgets.Text;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.ui.internal.FieldDescriptor;
 import com.bdaum.zoom.ui.internal.dialogs.TemplateFieldSelectionDialog;
+import com.bdaum.zoom.ui.internal.dialogs.TemplateMessages;
 
 public class TextWithVariableGroup {
 
@@ -30,8 +47,7 @@ public class TextWithVariableGroup {
 		private String[] vlist;
 		private final String title;
 
-		public PrintVariablesDialog(Shell parentShell, String title,
-				String[] vlist) {
+		public PrintVariablesDialog(Shell parentShell, String title, String[] vlist) {
 			super(parentShell);
 			this.title = title;
 			this.vlist = vlist;
@@ -65,71 +81,42 @@ public class TextWithVariableGroup {
 					okPressed();
 				}
 			});
-			final GridData gd_list = new GridData(SWT.FILL, SWT.CENTER, true,
-					false);
+			final GridData gd_list = new GridData(SWT.FILL, SWT.CENTER, true, false);
 			gd_list.widthHint = 200;
 			gd_list.heightHint = 200;
 			list.setLayoutData(gd_list);
 			String[] compList = new String[vlist.length];
-			for (int i = 0; i < vlist.length; i++)
-				compList[i] = vlist[i] + " - " + textMap.get(vlist[i]); //$NON-NLS-1$
+			for (int i = 0; i < vlist.length; i++) {
+				String varName = vlist[i];
+				if (varName.startsWith("{") && varName.endsWith("}")) { //$NON-NLS-1$//$NON-NLS-2$
+					varName = varName.substring(1, varName.length() - 1);
+					compList[i] = vlist[i] + TemplateMessages.getString(TemplateMessages.PREFIX + varName);
+				}
+			}
 			list.setItems(compList);
 			return area;
 		}
 	}
 
 	private Text textField;
-	private static Map<String, String> textMap = new HashMap<String, String>();
+	private Button addVariableButton;
+	private Button addMetadataButon;
 
-	static {
-		textMap.put(Constants.PT_CATALOG,
-				Messages.TextWithVariableGroup_cat_name);
-		textMap.put(Constants.PT_TODAY,
-				Messages.TextWithVariableGroup_current_date);
-		textMap.put(Constants.PT_COUNT,
-				Messages.TextWithVariableGroup_number_of_images);
-		textMap.put(Constants.PT_PAGENO,
-				Messages.TextWithVariableGroup_page_number);
-		textMap.put(Constants.PT_COLLECTION,
-				Messages.TextWithVariableGroup_collection_name);
-		textMap.put(Constants.PT_USER,
-				Messages.TextWithVariableGroup_current_computer_user);
-		textMap.put(Constants.PT_OWNER,
-				Messages.TextWithVariableGroup_cat_owner);
-
-		textMap.put(Constants.PI_TITLE, Messages.TextWithVariableGroup_title);
-		textMap.put(Constants.PI_NAME, Messages.TextWithVariableGroup_file_name);
-		textMap.put(Constants.PI_DESCRIPTION,
-				Messages.TextWithVariableGroup_description);
-		textMap.put(Constants.PI_FORMAT,
-				Messages.TextWithVariableGroup_file_format);
-		textMap.put(Constants.PI_CREATIONDATE,
-				Messages.TextWithVariableGroup_creation_date);
-		textMap.put(Constants.PI_SIZE, Messages.TextWithVariableGroup_size);
-		textMap.put(Constants.PI_SEQUENCENO,
-				Messages.TextWithVariableGroup_sequence_number);
-		textMap.put(Constants.PI_PAGEITEM,
-				Messages.TextWithVariableGroup_page_item_no);
-
-	}
-
-	public TextWithVariableGroup(Composite composite, String lab,
-			final String title, final String[] variables, boolean metadata) {
+	public TextWithVariableGroup(Composite composite, String lab, final String title, final String[] variables,
+			boolean metadata) {
 		new Label(composite, SWT.NONE).setText(lab);
 		textField = new Text(composite, SWT.BORDER);
-		final GridData gd_titleField = new GridData(SWT.FILL, SWT.CENTER, true,
-				false);
+		final GridData gd_titleField = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		gd_titleField.widthHint = 300;
 		textField.setLayoutData(gd_titleField);
 
-		final Button addVariableButton = new Button(composite, SWT.PUSH);
+		addVariableButton = new Button(composite, SWT.PUSH);
 		addVariableButton.setText(Messages.TextWithVariableGroup_add_variable);
 		addVariableButton.addSelectionListener(new SelectionAdapter() {
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				PrintVariablesDialog dialog = new PrintVariablesDialog(
-						textField.getShell(), title, variables);
+				PrintVariablesDialog dialog = new PrintVariablesDialog(textField.getShell(), title, variables);
 				Point loc = textField.toDisplay(20, 10);
 				dialog.create();
 				dialog.getShell().setLocation(loc);
@@ -138,13 +125,12 @@ public class TextWithVariableGroup {
 			}
 		});
 		if (metadata) {
-			final Button addMetadataButon = new Button(composite, SWT.PUSH);
+			addMetadataButon = new Button(composite, SWT.PUSH);
 			addMetadataButon.setText(Messages.TextWithVariableGroup_add_metadata);
 			addMetadataButon.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					TemplateFieldSelectionDialog dialog = new TemplateFieldSelectionDialog(
-							addMetadataButon.getShell());
+					TemplateFieldSelectionDialog dialog = new TemplateFieldSelectionDialog(addMetadataButon.getShell());
 					Point loc = textField.toDisplay(20, 10);
 					dialog.create();
 					dialog.getShell().setLocation(loc);
@@ -166,6 +152,13 @@ public class TextWithVariableGroup {
 
 	public void setText(String text) {
 		textField.setText(text);
+	}
+
+	public void setEnabled(boolean enabled) {
+		textField.setEnabled(enabled);
+		addVariableButton.setEnabled(enabled);
+		if (addMetadataButon != null)
+			addMetadataButon.setEnabled(enabled);
 	}
 
 }

@@ -26,7 +26,7 @@ use strict;
 use vars qw($VERSION $AUTOLOAD %stdCase);
 use Image::ExifTool qw(:DataAccess :Utils);
 
-$VERSION = '1.40';
+$VERSION = '1.44';
 
 sub ProcessPNG_tEXt($$$);
 sub ProcessPNG_iTXt($$$);
@@ -41,7 +41,7 @@ sub GetLangInfo($$);
 sub BuildTextChunk($$$$$);
 
 # translate lower-case to actual case used for eXIf/zXIf chunks
-%stdCase = ( 'zxif' => 'zxIf', exif => 'exIf' );
+%stdCase = ( 'zxif' => 'zxIf', exif => 'eXIf' );
 
 my $noCompressLib;
 
@@ -258,10 +258,7 @@ $Image::ExifTool::PNG::colorType = -1;
     # eXIf
     $stdCase{exif} => {
         Name => $stdCase{exif},
-        Notes => q{
-            proposed but not yet registered.  This is where ExifTool will create new
-            EXIF without the Compress option
-        },
+        Notes => 'this is where ExifTool will create new EXIF',
         SubDirectory => {
             TagTable => 'Image::ExifTool::Exif::Main',
             DirName => 'EXIF', # (to write as a block)
@@ -271,10 +268,7 @@ $Image::ExifTool::PNG::colorType = -1;
     # zXIf
     $stdCase{zxif} => {
         Name => $stdCase{zxif},
-        Notes => q{
-            proposed but not yet registered.  This is where ExifTool will create new
-            EXIF with the Compress option
-        },
+        Notes => 'a once-proposed chunk for compressed EXIF',
         SubDirectory => {
             TagTable => 'Image::ExifTool::Exif::Main',
             DirName => 'EXIF', # (to write as a block)
@@ -460,6 +454,7 @@ my %unreg = ( Notes => 'unregistered' );
     Warning     => { Name => 'PNGWarning', },
     Source      => { },
     Comment     => { },
+    Collection  => { }, # (PNG extensions, 2004)
 #
 # The following tags are not part of the original PNG specification,
 # but are written by ImageMagick and other software
@@ -526,6 +521,7 @@ my %unreg = ( Notes => 'unregistered' );
    'Raw profile type exif' => {
         Name => 'EXIF_Profile',
         %unreg,
+        NonStandard => 1,
         SubDirectory => {
             TagTable => 'Image::ExifTool::Exif::Main',
             ProcessProc => \&ProcessProfile,
@@ -985,7 +981,7 @@ sub ProcessProfile($$$)
         }
     } elsif ($buff =~ /^(MM\0\x2a|II\x2a\0)/) {
         # TIFF information
-        return 1 if $outBuff and not $$editDirs{IFD0};  
+        return 1 if $outBuff and not $$editDirs{IFD0};
         if ($outBuff) {
             # delete non-standard EXIF if recreating from scratch
             if ($$et{DEL_GROUP}{EXIF} or $$et{DEL_GROUP}{IFD0}) {
@@ -1094,6 +1090,12 @@ sub ProcessPNG_eXIf($$$)
     my $del = $outBuff && ($$et{DEL_GROUP}{EXIF} or $$et{DEL_GROUP}{IFD0});
     my $type;
 
+    if ($$dataPt =~ /^Exif\0\0/) {
+        $et->Warn('Improper "Exif00" header in EXIF chunk');
+        $$dataPt = substr($$dataPt, 6);
+        $$dirInfo{DataLen} = length $$dataPt;
+        $$dirInfo{DirLen} -= 6 if $$dirInfo{DirLen};
+    }
     if ($$dataPt =~ /^(\0|II|MM)/) {
         $type = $1;
     } elsif ($del) {
@@ -1112,7 +1114,9 @@ sub ProcessPNG_eXIf($$$)
         return FoundPNG($et, $tagTablePtr, $$tagInfo{TagID}, \$buf, 2, $outBuff);
     } elsif (not $outBuff) {
         return $et->ProcessTIFF($dirInfo);
-    } elsif ($del and ($et->Options('Compress') xor lc($tag) eq 'zxif')) {
+    # (zxIf was not adopted)
+    #} elsif ($del and ($et->Options('Compress') xor lc($tag) eq 'zxif')) {
+    } elsif ($del and lc($tag) eq 'zxif') {
         $et->VPrint(0, "  Deleting $tag chunk");
         $$outBuff = '';
         ++$$et{CHANGED};

@@ -31,6 +31,76 @@ import com.bdaum.zoom.gps.geonames.Place;
 import com.bdaum.zoom.ui.gps.Trackpoint;
 
 public interface IMapComponent {
+	
+	/**
+	 * Instances of this class remember a step in the map navigation history
+	 */
+	static class HistoryItem {
+		private double latitude;
+
+		public void setLatitude(double latitude) {
+			this.latitude = latitude;
+		}
+
+		public void setLongitude(double longitude) {
+			this.longitude = longitude;
+		}
+
+		public void setDetail(double detail) {
+			this.detail = detail;
+		}
+
+		private double longitude;
+		private double detail;
+
+		/**
+		 * @param latitude
+		 *            - latitude of position
+		 * @param longitude
+		 *            - longitude of position
+		 * @param detail
+		 *            - detail of position (zoomlevel or view range)
+		 */
+		public HistoryItem(double latitude, double longitude, double detail) {
+			this.latitude = latitude;
+			this.longitude = longitude;
+			this.detail = detail;
+		}
+
+		/**
+		 * @return the latitude
+		 */
+		public double getLatitude() {
+			return latitude;
+		}
+
+		/**
+		 * @return the longitude
+		 */
+		public double getLongitude() {
+			return longitude;
+		}
+
+		/**
+		 * @return the detail
+		 */
+		public double getDetail() {
+			return detail;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (!(obj instanceof HistoryItem))
+				return false;
+			HistoryItem other = (HistoryItem) obj;
+			return this.latitude == other.latitude && this.longitude == other.longitude && this.detail == other.detail;
+		}
+
+		@Override
+		public int hashCode() {
+			throw new UnsupportedOperationException();
+		}
+	}
 
 	/**
 	 * Creates the map component
@@ -83,14 +153,16 @@ public interface IMapComponent {
 	 * @param initialZoomLevel
 	 *            - zoom level 1-14
 	 * @param markerPositions
-	 *            - marker positions
+	 *            - marker positions locations created
+	 * @param shownPositions
+	 *            - marker positions locations shown
 	 * @param trackpoints
 	 * 			  - trackpoints to display
 	 * @param mode
 	 *            - map mode
 	 */
 	void setInput(Place mapPosition, int initialZoomLevel,
-			Place[] markerPositions, Trackpoint[] trackpoints, int mode);
+			Place[] markerPositions, Place[] shownPositions, Trackpoint[] trackpoints, int mode);
 
 	/**
 	 * Add a progress listener
@@ -179,6 +251,8 @@ public interface IMapComponent {
 	 * Refreshes the map browser
 	 */
 	void refresh();
+
+	HistoryItem getLastHistoryItem();
 
 
 }

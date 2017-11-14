@@ -275,12 +275,12 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 	}
 
 	private void contributeToActionBars() {
+		undoContext = PlatformUI.getWorkbench().getOperationSupport().getUndoContext();
 		IViewSite viewSite = getViewSite();
 		IActionBars bars = viewSite.getActionBars();
 		fillLocalToolbar(bars.getToolBarManager());
 		fillLocalPullDown(bars.getMenuManager());
-		UndoRedoActionGroup undoRedoGroup = new UndoRedoActionGroup(viewSite,
-				PlatformUI.getWorkbench().getOperationSupport().getUndoContext(), true);
+		UndoRedoActionGroup undoRedoGroup = new UndoRedoActionGroup(viewSite, undoContext, true);
 		undoRedoGroup.fillActionBars(bars);
 	}
 
@@ -1245,8 +1245,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 					setControlEnabled(control, value != QueryField.VALUE_NOTHING);
 					String text = qfield.value2text(value, CLICK_TO_VIEW_DETAILS);
 					if (text != null && value != QueryField.VALUE_MIXED) {
-						if (!text.isEmpty() && value != QueryField.VALUE_NOTHING
-								&& text != Format.MISSINGENTRYSTRING) {
+						if (!text.isEmpty() && value != QueryField.VALUE_NOTHING && text != Format.MISSINGENTRYSTRING) {
 							if (widget instanceof ComboViewer)
 								((ComboViewer) widget).setSelection(new StructuredSelection(value));
 							else if (control instanceof Text)

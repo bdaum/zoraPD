@@ -219,7 +219,7 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider implem
 			Point textExtent = gc.textExtent(text);
 			if (iconHeight < 0)
 				iconHeight = event.height;
-			int x = event.x + iconWidth + 4;
+			int x = (int) (event.x + iconWidth * fac + 4);
 			int mxWidth = getColumnWidth() - x + getColumnXOrigin();
 			String shortened = shortenText(element, text, textExtent.x, gc, mxWidth);
 			if (shortened.length() < text.length())
@@ -289,8 +289,7 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider implem
 		int end = pivot + (charsToClip / 2) + 1;
 		StringBuilder sb = new StringBuilder();
 		while (start >= 0 && end < length) {
-			String s = sb.append(textValue.substring(0, start)).append(ELLIPSIS)
-					.append(textValue.substring(end, length)).toString();
+			String s = sb.append(textValue, 0, start).append(ELLIPSIS).append(textValue, end, length).toString();
 			if (gc.textExtent(s).x < maxWidth)
 				return s;
 			sb.setLength(0);

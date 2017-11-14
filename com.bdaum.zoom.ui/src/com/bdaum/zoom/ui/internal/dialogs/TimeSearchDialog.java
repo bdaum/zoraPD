@@ -41,6 +41,7 @@ import org.eclipse.swt.widgets.Shell;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.Range;
@@ -227,7 +228,7 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 		boolean network = findInNetworkGroup == null ? false
 				: findInNetworkGroup.getSelection();
 		coll = new SmartCollectionImpl(Messages.TimeSearchDialog_time_search,
-				false, false, true, network, null, 0, null, 0, null, null);
+				false, false, true, network, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 
 		int buttonpressed = 0;
 		Date from, to;

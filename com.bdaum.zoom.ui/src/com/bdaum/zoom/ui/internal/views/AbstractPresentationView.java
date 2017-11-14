@@ -35,7 +35,6 @@ import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IOperationHistoryListener;
 import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.core.commands.operations.OperationHistoryEvent;
-import org.eclipse.core.commands.operations.UndoContext;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -277,7 +276,6 @@ public abstract class AbstractPresentationView extends BasicView
 	protected IAction propertiesAction;
 	protected Point2D positionRelativeToCamera;
 	protected boolean synchronize;
-	protected UndoContext undoContext;
 	private IOperationHistory operationHistory;
 	private GalleryPanEventHandler panEventHandler;
 	private GalleryZoomEventHandler zoomEventHandler;
@@ -291,6 +289,7 @@ public abstract class AbstractPresentationView extends BasicView
 	private IAction rotateRightAction;
 	private IAction voiceNoteAction;
 	private Cursor cue;
+	protected Action exhibitPropertiesAction;
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -669,7 +668,7 @@ public abstract class AbstractPresentationView extends BasicView
 
 		@Override
 		public void catalogClosed(int mode) {
-			if (mode != CatalogListener.EMERGENCY)
+			if (mode != CatalogListener.EMERGENCY && mode != CatalogListener.SHUTDOWN)
 				setInput(null);
 		}
 	};
@@ -728,8 +727,7 @@ public abstract class AbstractPresentationView extends BasicView
 		IActionBars bars = viewSite.getActionBars();
 		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
-		UndoRedoActionGroup undoRedoGroup = new UndoRedoActionGroup(viewSite, undoContext, true);
-		undoRedoGroup.fillActionBars(bars);
+		new UndoRedoActionGroup(viewSite, undoContext, true).fillActionBars(bars);
 	}
 
 	protected void fillLocalToolBar(IToolBarManager manager) {
@@ -762,43 +760,53 @@ public abstract class AbstractPresentationView extends BasicView
 		PCamera camera = canvas.getCamera();
 		PBounds viewBounds = camera.getViewBounds();
 		int f = event.isControlDown() ? 5 : 1;
-		switch (event.getKeyCode()) {
-		case SWT.ARROW_RIGHT:
-			pan(camera, -30 * f, 0);
-			break;
-		case SWT.ARROW_LEFT:
-			pan(camera, 30 * f, 0);
-			break;
-		case SWT.ARROW_UP:
-			pan(camera, 0, 30 * f);
-			break;
-		case SWT.ARROW_DOWN:
-			pan(camera, 0, -30 * f);
-			break;
-		case SWT.END:
-			pan(camera, (int) (-viewBounds.getWidth() / 2) * f, 0);
-			break;
-		case SWT.HOME:
-			pan(camera, (int) (viewBounds.getWidth() / 2) * f, 0);
-			break;
-		case SWT.PAGE_UP:
-			pan(camera, 0, (int) (viewBounds.getHeight() / 2) * f);
-			break;
-		case SWT.PAGE_DOWN:
-			pan(camera, 0, (int) (-viewBounds.getHeight() / 2) * f);
-			break;
-		default:
-			switch (event.getKeyChar()) {
-			case '+':
-				zoom(canvas, 1.05d);
+		char keyChar = event.getKeyChar();
+		if (keyChar >= ' ')
+			handleKeyChar(camera, keyChar, f);
+		else {
+			int keyCode = event.getKeyCode();
+			switch (keyCode) {
+			case SWT.ARROW_RIGHT:
+				pan(camera, -30 * f, 0);
 				break;
-			case '-':
-				zoom(canvas, 0.95d);
+			case SWT.ARROW_LEFT:
+				pan(camera, 30 * f, 0);
 				break;
-			case '*':
-				camera.setViewTransform(new AffineTransform());
+			case SWT.ARROW_UP:
+				pan(camera, 0, 30 * f);
+				break;
+			case SWT.ARROW_DOWN:
+				pan(camera, 0, -30 * f);
+				break;
+			case SWT.END:
+				pan(camera, (int) (-viewBounds.getWidth() / 2) * f, 0);
+				break;
+			case SWT.HOME:
+				pan(camera, (int) (viewBounds.getWidth() / 2) * f, 0);
+				break;
+			case SWT.PAGE_UP:
+				pan(camera, 0, (int) (viewBounds.getHeight() / 2) * f);
+				break;
+			case SWT.PAGE_DOWN:
+				pan(camera, 0, (int) (-viewBounds.getHeight() / 2) * f);
+				break;
+			default:
+				handleKeyChar(camera, (char) (keyCode & 0xff), 5);
 				break;
 			}
+		}
+	}
+
+	protected void handleKeyChar(PCamera camera, char keyChar, int f) {
+		switch (keyChar) {
+		case '+':
+			zoom(canvas, 1d + 0.05d * f);
+			break;
+		case '-':
+			zoom(canvas, 1d - 0.05d * f);
+			break;
+		case '*':
+			camera.setViewTransform(new AffineTransform());
 			break;
 		}
 	}
@@ -966,7 +974,14 @@ public abstract class AbstractPresentationView extends BasicView
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Object getAdapter(Class adapter) {
-		if (adapter == AssetSelection.class) {
+		if (adapter == IPresentationItem.class) {
+			if (pickedNode != null) {
+				PNode par = pickedNode.getParent();
+				if (par instanceof IPresentationItem)
+					return par;
+			}
+			return null;
+		} else if (adapter == AssetSelection.class) {
 			if (pickedNode != null) {
 				PNode par = pickedNode.getParent();
 				if (par instanceof IPresentationItem) {
@@ -1087,6 +1102,10 @@ public abstract class AbstractPresentationView extends BasicView
 			modifyMenu.add(editWithAction);
 			modifyMenu.add(rotateLeftAction);
 			modifyMenu.add(rotateRightAction);
+			if (exhibitPropertiesAction != null) {
+				modifyMenu.add(new Separator());
+				modifyMenu.add(exhibitPropertiesAction);
+			}
 		}
 		manager.add(new Separator());
 		manager.add(showInFolderAction);
@@ -1129,6 +1148,8 @@ public abstract class AbstractPresentationView extends BasicView
 			editWithAction.setEnabled(localSelected);
 			showInFolderAction.setEnabled(localOne);
 			showInTimeLineAction.setEnabled(localOne && hasTimeLine());
+			if (exhibitPropertiesAction != null)
+				exhibitPropertiesAction.setEnabled(one);
 			voiceNoteAction.setEnabled(canPlayVoiceNote);
 			rotateLeftAction.setEnabled(localSelected && writable);
 			rotateRightAction.setEnabled(localSelected && writable);

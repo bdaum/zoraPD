@@ -42,19 +42,24 @@ public class PrivacyGroup {
 	private RadioButtonGroup privacyButtonGroup;
 
 	public PrivacyGroup(Composite parent, String lab, List<Asset> assets) {
-		for (Asset asset : assets) {
-			switch (asset.getSafety()) {
-			case QueryField.SAFETY_SAFE:
-				hasPublic = true;
-				break;
-			case QueryField.SAFETY_MODERATE:
-				hasModerate = true;
-				break;
-			case QueryField.SAFETY_RESTRICTED:
-				hasPrivate = true;
-				break;
+		if (assets == null) {
+			hasPublic = true;
+			hasModerate = true;
+			hasPrivate = true;
+		} else
+			for (Asset asset : assets) {
+				switch (asset.getSafety()) {
+				case QueryField.SAFETY_SAFE:
+					hasPublic = true;
+					break;
+				case QueryField.SAFETY_MODERATE:
+					hasModerate = true;
+					break;
+				case QueryField.SAFETY_RESTRICTED:
+					hasPrivate = true;
+					break;
+				}
 			}
-		}
 		int columns = -1;
 		Layout layout = parent.getLayout();
 		if (layout instanceof GridLayout)

@@ -35,11 +35,6 @@ public class CatalogAdapter implements CatalogListener {
 	 * com.bdaum.zoom.core.QueryField)
 	 */
 
-	// public void assetsModified(Collection<? extends Asset> assets,
-	// QueryField node) {
-	// // do nothing
-	// }
-	//
 	public void assetsModified(BagChange<Asset> changes, QueryField node) {
 		// do nothing
 	}

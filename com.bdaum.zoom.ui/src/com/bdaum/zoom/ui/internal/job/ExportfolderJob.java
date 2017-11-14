@@ -75,7 +75,6 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 public class ExportfolderJob extends AbstractExportJob {
 
 	private static final int[] p3x8 = new int[] { 8, 8, 8 };
-	private static NumberFormat nf = (NumberFormat.getNumberInstance());
 	private static final String[] EMPTYSTRINGARRAY = new String[0];
 	private File folder;
 	private final int target;
@@ -89,15 +88,12 @@ public class ExportfolderJob extends AbstractExportJob {
 	private Set<File> errands;
 	private Date now;
 
-	public ExportfolderJob(List<Asset> assets, int mode, int sizing, double scale,
-			int maxSize, UnsharpMask umask, int jpegQuality, int cropMode,
-			int target, FtpAccount acc, String folder, String subfolderOption,
-			Set<QueryField> xmpFilter, boolean createWatermark,
-			String copyright, int rating, boolean addToCat,
+	public ExportfolderJob(List<Asset> assets, int mode, int sizing, double scale, int maxSize, UnsharpMask umask,
+			int jpegQuality, int cropMode, int target, FtpAccount acc, String folder, String subfolderOption,
+			Set<QueryField> xmpFilter, boolean createWatermark, String copyright, int rating, boolean addToCat,
 			boolean addToWatched, IAdaptable adaptable) {
-		super(Messages.ExportfolderJob_exporting_to_folder, assets, mode, sizing,
-				scale, maxSize, umask, jpegQuality, xmpFilter, createWatermark,
-				copyright, rating, adaptable);
+		super(Messages.ExportfolderJob_exporting_to_folder, assets, mode, sizing, scale, maxSize, umask, jpegQuality,
+				xmpFilter, createWatermark, copyright, rating, adaptable);
 		this.cropMode = cropMode;
 		this.target = target;
 		this.acc = acc;
@@ -106,8 +102,7 @@ public class ExportfolderJob extends AbstractExportJob {
 		this.addToWatched = addToWatched;
 		this.folder = new File(folder);
 		now = new Date();
-		String timelinemode = Core.getCore().getDbManager().getMeta(true)
-				.getTimeline();
+		String timelinemode = Core.getCore().getDbManager().getMeta(true).getTimeline();
 		String mask = null;
 		if (Constants.BY_TIMELINE.equals(subfolderOption)) {
 			if (Meta_type.timeline_year.equals(timelinemode))
@@ -150,13 +145,10 @@ public class ExportfolderJob extends AbstractExportJob {
 	protected IStatus doRun(IProgressMonitor monitor) {
 		URI firstExport = null;
 		Date now = new Date();
-		MultiStatus status = new MultiStatus(UiActivator.PLUGIN_ID, 0,
-				Messages.ExportfolderJob_export_report, null);
-		int size = assets.size();
-		monitor.beginTask(Messages.ExportfolderJob_exporting_to_folder,
-				size + 1);
-		SubMonitor progress = SubMonitor.convert(monitor, (addToCat ? 1100
-				: 1000) * (size + 1));
+		MultiStatus status = new MultiStatus(UiActivator.PLUGIN_ID, 0, Messages.ExportfolderJob_export_report, null);
+		int work = assets.size() + 1;
+		monitor.beginTask(Messages.ExportfolderJob_exporting_to_folder, work);
+		SubMonitor progress = SubMonitor.convert(monitor, (addToCat ? 1100 : 1000) * work);
 		File targetFolder;
 		if (target == Constants.FTP) {
 			try {
@@ -180,9 +172,7 @@ public class ExportfolderJob extends AbstractExportJob {
 					try {
 						file = box.obtainFile(uri);
 					} catch (IOException e) {
-						addErrorStatus(status, NLS.bind(
-								Messages.ExportfolderJob_download_failed, uri),
-								e);
+						addErrorStatus(status, NLS.bind(Messages.ExportfolderJob_download_failed, uri), e);
 					}
 					if (file != null) {
 						File subfolder = createSubfolder(targetFolder, asset);
@@ -191,40 +181,30 @@ public class ExportfolderJob extends AbstractExportJob {
 							if (errands == null)
 								errands = new HashSet<File>();
 							if (errands.add(subfolder)) {
-								String shortened = path.substring(0, 20)
-										+ "..." //$NON-NLS-1$
-										+ path.substring(path.length() - 20);
-								status.add(new Status(
-										IStatus.ERROR,
-										UiActivator.PLUGIN_ID,
-										NLS.bind(
-												Messages.ExportfolderJob_path_too_long,
-												shortened), null));
+								StringBuilder sb = new StringBuilder();
+								sb.append(path, 0, 20).append("...").append(path, path.length() - 20, path.length()); //$NON-NLS-1$
+								status.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
+										NLS.bind(Messages.ExportfolderJob_path_too_long, sb.toString()), null));
 							}
 							continue;
 						}
-						File outfile = makeUniqueTargetFile(subfolder, uri,
-								mode);
+						File outfile = makeUniqueTargetFile(subfolder, uri, mode);
 						SourceAndTarget sourceAndTarget;
 						if (mode == Constants.FORMAT_ORIGINAL) {
-							sourceAndTarget = copyImage(status, asset, file,
-									outfile, monitor);
+							sourceAndTarget = copyImage(status, asset, file, outfile, monitor);
 							progress.worked(1000);
 						} else
-							sourceAndTarget = downScaleImage(status, progress,
-									asset, file, outfile, 1d, cropMode);
+							sourceAndTarget = downScaleImage(status, progress, asset, file, outfile, 1d, cropMode);
 						if (sourceAndTarget != null) {
 							todo.add(sourceAndTarget);
 							if (firstExport == null)
-								firstExport = sourceAndTarget.getOutfile()
-										.toURI();
+								firstExport = sourceAndTarget.getOutfile().toURI();
 						}
 						box.cleanup();
 					}
 				}
 				if (monitor.isCanceled()) {
-					status.add(new Status(IStatus.WARNING,
-							UiActivator.PLUGIN_ID,
+					status.add(new Status(IStatus.WARNING, UiActivator.PLUGIN_ID,
 							Messages.ExportfolderJob_export_was_cancelled));
 					return status;
 				}
@@ -233,24 +213,18 @@ public class ExportfolderJob extends AbstractExportJob {
 			box.endSession();
 		}
 		if (target == Constants.FTP) {
-			TransferJob transferJob = new TransferJob(targetFolder.listFiles(),
-					acc, true);
+			TransferJob transferJob = new TransferJob(targetFolder.listFiles(), acc, true);
 			transferJob.schedule();
 			if (acc.isTrackExport()) {
 				List<TrackRecord> track = new ArrayList<TrackRecord>();
 				for (SourceAndTarget sourceAndTarget : todo) {
 					String serviceId = "ftp." + acc.getHost(); //$NON-NLS-1$
-					TrackRecord record = new TrackRecordImpl(
-							TrackRecord_type.type_ftp, serviceId, serviceId,
-							acc.getName(), sourceAndTarget.getOutfile()
-									.getName(), new Date(), false,
-							acc.getWebUrl());
-					record.setAsset_track_parent(sourceAndTarget.getAsset()
-							.getStringId());
+					TrackRecord record = new TrackRecordImpl(TrackRecord_type.type_ftp, serviceId, serviceId,
+							acc.getName(), sourceAndTarget.getOutfile().getName(), new Date(), false, acc.getWebUrl());
+					record.setAsset_track_parent(sourceAndTarget.getAsset().getStringId());
 				}
 				if (!track.isEmpty())
-					OperationJob.executeOperation(new AddTrackRecordsOperation(
-							track), adaptable);
+					OperationJob.executeOperation(new AddTrackRecordsOperation(track), adaptable);
 			}
 		}
 		if (addToCat) {
@@ -258,11 +232,9 @@ public class ExportfolderJob extends AbstractExportJob {
 			boolean changed = false;
 			for (SourceAndTarget sourceAndTarget : todo) {
 				Asset asset = sourceAndTarget.getAsset();
-				AssetEnsemble ensemble = new AssetEnsemble(dbManager, asset,
-						null);
+				AssetEnsemble ensemble = new AssetEnsemble(dbManager, asset, null);
 				AssetImpl newAsset = new AssetImpl();
-				AssetEnsemble newEnsemble = new AssetEnsemble(dbManager,
-						newAsset, null);
+				AssetEnsemble newEnsemble = new AssetEnsemble(dbManager, newAsset, null);
 				ensemble.transferTo(newEnsemble);
 				Rectangle targetBounds = sourceAndTarget.getTargetBounds();
 				String recipe = Messages.ExportfolderJob_copied;
@@ -271,11 +243,10 @@ public class ExportfolderJob extends AbstractExportJob {
 					newAsset.setWidth(width);
 					newAsset.setHeight(targetBounds.height);
 					if (asset.getImageWidth() > 0) {
+						NumberFormat nf = (NumberFormat.getNumberInstance());
 						nf.setMaximumFractionDigits(3);
-						recipe = NLS
-								.bind(Messages.ExportfolderJob_downsampled,
-										nf.format((float) width
-												/ asset.getImageWidth()));
+						recipe = NLS.bind(Messages.ExportfolderJob_downsampled,
+								nf.format((float) width / asset.getImageWidth()));
 					}
 					newAsset.setMimeType(ImageConstants.IMAGE_JPEG);
 					newAsset.setFileSize(sourceAndTarget.getOutfile().length());
@@ -302,9 +273,8 @@ public class ExportfolderJob extends AbstractExportJob {
 				final List<Object> toBeStored = new ArrayList<Object>();
 				final Set<Object> toBeDeleted = new HashSet<Object>();
 				newEnsemble.store(toBeDeleted, toBeStored);
-				toBeStored.add(new DerivedByImpl(recipe, null, null, new Date(
-						lastModified), newAsset.getStringId(), asset
-						.getStringId()));
+				toBeStored.add(new DerivedByImpl(recipe, null, null, new Date(lastModified), newAsset.getStringId(),
+						asset.getStringId()));
 				dbManager.safeTransaction(toBeDeleted, toBeStored);
 				changed |= dbManager.createFolderHierarchy(newAsset);
 				progress.worked(100);
@@ -315,14 +285,11 @@ public class ExportfolderJob extends AbstractExportJob {
 				core.fireStructureModified();
 			if (addToWatched && target != Constants.FTP) {
 				Meta meta = dbManager.getMeta(true);
-				String volume = Core.getCore().getVolumeManager()
-						.getVolumeForFile(folder);
+				String volume = Core.getCore().getVolumeManager().getVolumeForFile(folder);
 				String id = Utilities.computeWatchedFolderId(folder, volume);
 				if (!meta.getWatchedFolder().contains(id)) {
-					WatchedFolderImpl wf = new WatchedFolderImpl(folder.toURI()
-							.toString(), volume, 0L, true, null, false, null,
-							false, 0, null, 2, null, null,
-							Constants.FILESOURCE_DIGITAL_CAMERA);
+					WatchedFolderImpl wf = new WatchedFolderImpl(folder.toURI().toString(), volume, 0L, true, null,
+							false, null, false, 0, null, 2, null, null, Constants.FILESOURCE_DIGITAL_CAMERA);
 					wf.setStringId(id);
 					CoreActivator activator = CoreActivator.getDefault();
 					activator.putObservedFolder(wf);
@@ -343,22 +310,18 @@ public class ExportfolderJob extends AbstractExportJob {
 		File subfolder = parent;
 		if (Constants.BY_CATEGORY.equals(subfolderOption))
 			subfolder = createCatSubfolder(parent, asset);
-		else if (Constants.BY_TIMELINE.equals(subfolderOption)
-				|| Constants.BY_NUM_TIMELINE.equals(subfolderOption))
+		else if (Constants.BY_TIMELINE.equals(subfolderOption) || Constants.BY_NUM_TIMELINE.equals(subfolderOption))
 			subfolder = createTimelineSubfolder(parent, asset);
 		else if (Constants.BY_RATING.equals(subfolderOption))
 			subfolder = createRatingSubfolder(parent, asset);
 		else if (Constants.BY_STATE.equals(subfolderOption))
 			subfolder = createGenericSubfolder(parent, asset, QueryField.STATUS);
-		else if (Constants.BY_DATE.equals(subfolderOption)
-				|| Constants.BY_TIME.equals(subfolderOption))
+		else if (Constants.BY_DATE.equals(subfolderOption) || Constants.BY_TIME.equals(subfolderOption))
 			subfolder = createDateSubfolder(parent, asset);
 		else if (Constants.BY_JOB.equals(subfolderOption))
-			subfolder = createGenericSubfolder(parent, asset,
-					QueryField.IPTC_JOBID);
+			subfolder = createGenericSubfolder(parent, asset, QueryField.IPTC_JOBID);
 		else if (Constants.BY_EVENT.equals(subfolderOption))
-			subfolder = createGenericSubfolder(parent, asset,
-					QueryField.IPTC_EVENT);
+			subfolder = createGenericSubfolder(parent, asset, QueryField.IPTC_EVENT);
 		if (subfolder == parent && !Constants.BY_NONE.equals(subfolderOption))
 			subfolder = new File(parent, Messages.ExportfolderJob_undefined);
 		subfolder.mkdirs();
@@ -375,8 +338,7 @@ public class ExportfolderJob extends AbstractExportJob {
 		if (value instanceof String && !((String) value).isEmpty()) {
 			StringTokenizer st = new StringTokenizer((String) value, "."); //$NON-NLS-1$
 			while (st.hasMoreTokens())
-				subFolder = new File(subFolder,
-						BatchUtilities.toValidFilename(st.nextToken()));
+				subFolder = new File(subFolder, BatchUtilities.toValidFilename(st.nextToken()));
 		}
 		return subFolder;
 	}
@@ -388,8 +350,7 @@ public class ExportfolderJob extends AbstractExportJob {
 			if (dateCreated == null)
 				dateCreated = asset.getDateTimeOriginal();
 		}
-		return dateCreated == null ? parent : new File(parent.getAbsolutePath()
-				+ df.format(dateCreated));
+		return dateCreated == null ? parent : new File(parent.getAbsolutePath() + df.format(dateCreated));
 	}
 
 	private static File createRatingSubfolder(File parent, Asset asset) {
@@ -402,10 +363,8 @@ public class ExportfolderJob extends AbstractExportJob {
 		return parent;
 	}
 
-	private static File createGenericSubfolder(File parent, Asset asset,
-			QueryField qfield) {
-		String text = qfield.formatScalarValue(qfield.obtainFieldValue(asset),
-				true, false, null);
+	private static File createGenericSubfolder(File parent, Asset asset, QueryField qfield) {
+		String text = qfield.formatScalarValue(qfield.obtainFieldValue(asset), true, false, null);
 		if (text != null && !text.isEmpty())
 			return new File(parent, BatchUtilities.toValidFilename(text));
 		return parent;

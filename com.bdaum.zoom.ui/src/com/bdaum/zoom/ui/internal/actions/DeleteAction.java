@@ -36,6 +36,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
@@ -72,6 +73,11 @@ public class DeleteAction extends Action {
 		super(label, image);
 		this.adaptable = adaptable;
 		shell = adaptable.getAdapter(Shell.class);
+		if (shell == null) {
+			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+			if (activeWorkbenchWindow != null)
+				shell = activeWorkbenchWindow.getShell();
+		}
 		setToolTipText(tooltip);
 	}
 

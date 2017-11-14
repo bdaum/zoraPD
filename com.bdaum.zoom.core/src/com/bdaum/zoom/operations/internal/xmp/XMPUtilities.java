@@ -336,13 +336,8 @@ public class XMPUtilities {
 					if (p >= 0) {
 						String group = path.substring(0, p);
 						path = path.substring(p + 1);
-						String fieldNs;
 						p = path.indexOf(':');
-						if (p >= 0) {
-							String prefix = path.substring(0, p);
-							fieldNs = XMPMetaFactory.getSchemaRegistry().getNamespaceURI(prefix);
-						} else
-							fieldNs = xmpNs;
+						String fieldNs = p >= 0 ? XMPMetaFactory.getSchemaRegistry().getNamespaceURI(path.substring(0, p)) : xmpNs;
 						xmpMeta.deleteStructField(xmpNs, group, fieldNs, path);
 						if (value != null && !value.equals(queryField.getDefaultValue()))
 							xmpMeta.setStructField(xmpNs, group, xmpNs, path, value.toString());
@@ -350,11 +345,6 @@ public class XMPUtilities {
 						xmpMeta.deleteProperty(xmpNs, path);
 					if (value != null && !value.equals(queryField.getDefaultValue()))
 						xmpMeta.setProperty(xmpNs, path, value);
-//					if (queryField == QueryField.EXIF_GPSDESTDIST) {
-//						xmpMeta.setProperty(QueryField.EXIF_GPSDESTDIST.getXmpNs().uri,
-//								QueryField.EXIF_GPSDESTDIST.getPath(),
-//								QueryField.EXIF_GPSDESTDIST.obtainPlainFieldValue(asset));
-//					} else
 					if (queryField == QueryField.COLORCODE) {
 						xmpMeta.deleteProperty(QueryField.NS_XMP.uri, queryField.getExifToolKey());
 						if (value != null) {

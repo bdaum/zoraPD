@@ -39,7 +39,7 @@ public class MapComponent extends AbstractMapComponent {
 
 	@Override
 	protected String createLatLngBounds(double swLat, double swLon, double neLat, double neLon) {
-		return NLS.bind("new google.maps.LatLngBounds({0},{1}", createLatLng(swLat, swLon), createLatLng(neLat, neLon)); //$NON-NLS-1$
+		return NLS.bind("new google.maps.LatLngBounds({0},{1})", createLatLng(swLat, swLon), createLatLng(neLat, neLon)); //$NON-NLS-1$
 	}
 
 	private URL findUrl(String path) {

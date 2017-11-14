@@ -45,6 +45,7 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -56,14 +57,18 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.meta.LastDeviceImport;
 import com.bdaum.zoom.cat.model.meta.LastDeviceImportImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.FileInput;
 import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
@@ -86,6 +91,49 @@ import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
 public class ImportFileSelectionPage extends ColoredWizardPage {
+
+	public class Digest {
+
+		private String originalFileName;
+		private Date dateTimeOriginal;
+
+		public Digest(String originalFileName, Date dateTimeOriginal) {
+			this.originalFileName = originalFileName;
+			this.dateTimeOriginal = dateTimeOriginal;
+		}
+
+		@Override
+		public int hashCode() {
+			return 31 * originalFileName.hashCode() * dateTimeOriginal.hashCode();
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof Digest) {
+				Digest other = (Digest) obj;
+				return originalFileName.equals(other.originalFileName)
+						&& dateTimeOriginal.equals(other.dateTimeOriginal);
+			}
+			return false;
+		}
+
+		public String getOriginalFileName() {
+			return originalFileName;
+		}
+
+		public void setOriginalFileName(String originalFileName) {
+			this.originalFileName = originalFileName;
+		}
+
+		public Date getDateTimeOriginal() {
+			return dateTimeOriginal;
+		}
+
+		public void setDateTimeOriginal(Date dateTimeOriginal) {
+			this.dateTimeOriginal = dateTimeOriginal;
+		}
+
+	}
 
 	public static final String[] SKIPPOLICIES = new String[] { Messages.ImportFileSelectionPage_none,
 			Messages.ImportFileSelectionPage_all_raw, Messages.ImportFileSelectionPage_raw_if_jpeg,
@@ -264,7 +312,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 		}
 	}
 
-	private static class ImportNode {
+	private class ImportNode {
 		String plural;
 		String singular;
 		List<ImportNode> children = new ArrayList<ImportNode>();
@@ -277,6 +325,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 		long minTime;
 		long maxTime;
 		private final File[] files;
+		public List<File> missing;
 
 		public ImportNode(ImportNode parent, String label, int type, int value, File folder, File[] files, int count,
 				String plural, String singular) {
@@ -289,6 +338,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 			this.count = count;
 			this.plural = plural;
 			this.singular = singular;
+			++nodeCount;
 		}
 
 		public void add(ImportNode child) {
@@ -299,9 +349,14 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 			return folder != null ? folder.listFiles() : files;
 		}
 
+		public File[] getMissing() {
+			return missing == null ? EMPTYFILES : missing.toArray(new File[missing.size()]);
+		}
+
 	}
 
 	private static final Object[] EMPTY = new Object[0];
+	private static final File[] EMPTYFILES = new File[0];
 	private static final String DETECTDUPLICATES = "detectDuplicates"; //$NON-NLS-1$
 	private static final String REMOVEMEDIA = "removeMedia"; //$NON-NLS-1$
 	private static final String SKIPPOLICY = "skipPolicy"; //$NON-NLS-1$
@@ -321,6 +376,11 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 	private Button manageMediaButton;
 	private Label volumeLabel;
 	private final boolean eject;
+	private Button diffButton;
+	private ProgressBar progressbar;
+	private int nodeCount = 0;
+	private ImportNode[] rootElements;
+	private int progress;
 
 	public ImportFileSelectionPage(String pageName, boolean media, boolean eject) {
 		super(pageName);
@@ -332,8 +392,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 	@Override
 	public void createControl(Composite parent) {
 		Composite comp = new Composite(parent, SWT.NONE);
-		// comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		comp.setLayout(new GridLayout(1, false));
+		comp.setLayout(new GridLayout());
 		final Composite viewerComp = new Composite(comp, SWT.NONE);
 		viewerComp.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 		viewerComp.setLayout(new GridLayout());
@@ -356,7 +415,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 		importViewer.setLabelProvider(new DcimLabelProvider());
 		importViewer.addCheckStateListener(new ICheckStateListener() {
 			public void checkStateChanged(CheckStateChangedEvent event) {
-				checkHierarchy(event.getElement(), event.getChecked());
+				checkHierarchy(event.getElement(), event.getChecked(), false);
 				validatePage();
 				if (lastImportButton != null)
 					lastImportButton.setEnabled(lastImportTimestamp >= 0);
@@ -369,7 +428,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 					ImportNode[] rootElements = (ImportNode[]) importViewer.getInput();
 					importViewer.setCheckedElements(rootElements);
 					for (ImportNode node : rootElements)
-						checkHierarchy(node, true);
+						checkHierarchy(node, true, false);
 				} else
 					importViewer.setCheckedElements(new ImportNode[0]);
 				validatePage();
@@ -381,6 +440,16 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 			File[] dcims = ((ImportFromDeviceWizard) getWizard()).getDcims();
 			lastImportButton = WidgetFactory.createPushButton(selectComp,
 					Messages.ImportFromDeviceWizard_all_since_last_import, SWT.BEGINNING);
+			diffButton = WidgetFactory.createPushButton(selectComp, Messages.ImportFileSelectionPage_Difference,
+					SWT.BEGINNING);
+			diffButton.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					progressbar.setVisible(true);
+					calculateDiff();
+					progressbar.setVisible(false);
+				}
+			});
 			Label label = new Label(selectComp, SWT.SEPARATOR | SWT.HORIZONTAL);
 			label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			manageMediaButton = WidgetFactory.createPushButton(selectComp,
@@ -467,6 +536,12 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 		if (eject)
 			removeMediaButton = WidgetFactory.createCheckButton(comp, Messages.ImportFromDeviceWizard_remove_media,
 					null);
+		if (media) {
+			progressbar = new ProgressBar(comp, SWT.HORIZONTAL);
+			progressbar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+			progressbar.setVisible(false);
+		}
+
 		setControl(comp);
 		setHelp(media ? HelpContextIds.IMPORT_FROM_DEVICE_WIZARD_FILE_SELECTION
 				: HelpContextIds.IMPORT_NEW_STRUCTURE_WIZARD_FILE_SELECTION);
@@ -481,6 +556,103 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 		} catch (InterruptedException e1) {
 			getWizard().getContainer().getShell().close();
 		}
+	}
+
+	protected void calculateDiff() {
+		IDbManager dbManager = Core.getCore().getDbManager();
+		List<AssetImpl> assets = dbManager.obtainAssets();
+		int size = assets.size();
+		int increment = nodeCount == 0 ? 1 : size / nodeCount;
+		int work = 3 * nodeCount;
+		progress = 0;
+		progressbar.setMaximum(work);
+		Set<Digest> cataloged = new HashSet<>(size * 3 / 2);
+		int k = 0;
+		for (Asset asset : assets) {
+			if (asset.getOriginalFileName() != null && asset.getDateTime() != null)
+				cataloged.add(new Digest(asset.getOriginalFileName(), asset.getDateTime()));
+			if (++k % increment == 0)
+				progressbar.setSelection(++progress);
+		}
+		Digest cand = new Digest(null, null);
+		calculateDiff(rootElements, cand, cataloged);
+		visualizeDiff(rootElements, importViewer);
+	}
+
+	private void visualizeDiff(ImportNode[] nodes, CheckboxTreeViewer viewer) {
+		for (ImportNode node : nodes) {
+			if (node.type == Calendar.DAY_OF_MONTH) {
+				File[] memberFiles = node.getMemberFiles();
+				if (memberFiles != null) {
+					int mCount = node.missing == null ? 0 : node.missing.size();
+					if (mCount == 0)
+						viewer.setGrayChecked(node, false);
+					else if (mCount != memberFiles.length)
+						viewer.setGrayChecked(node, true);
+					else {
+						viewer.setGrayed(node, false);
+						viewer.setChecked(node, true);
+					}
+				}
+			} else if (node.children != null && !node.children.isEmpty()) {
+				ImportNode[] children = node.children.toArray(new ImportNode[node.children.size()]);
+				visualizeDiff(children, viewer);
+				int checked = 0;
+				int grayed = 0;
+				for (ImportNode child : children)
+					if (viewer.getChecked(child)) {
+						++checked;
+						if (viewer.getGrayed(child))
+							++grayed;
+					}
+				if (checked == 0)
+					viewer.setGrayChecked(node, false);
+				else if (checked < children.length || grayed != 0)
+					viewer.setGrayChecked(node, true);
+				else {
+					viewer.setChecked(node, true);
+					viewer.setGrayed(node, false);
+				}
+			}
+			progressbar.setSelection(++progress);
+		}
+	}
+
+	private void calculateDiff(ImportNode[] nodes, Digest cand, Set<Digest> cataloged) {
+		for (ImportNode node : nodes) {
+			if (node.type == Calendar.DAY_OF_MONTH) {
+				File[] memberFiles = node.getMemberFiles();
+				if (memberFiles != null) {
+					if (node.missing != null)
+						node.missing.clear();
+					for (File file : memberFiles) {
+						cand.setOriginalFileName(computeRelativePath(file));
+						cand.setDateTimeOriginal(new Date(file.lastModified()));
+						if (!cataloged.contains(cand)) {
+							if (node.missing == null)
+								node.missing = new ArrayList<>();
+							node.missing.add(file);
+						}
+					}
+				}
+			} else if (node.children != null && !node.children.isEmpty())
+				calculateDiff(node.children.toArray(new ImportNode[node.children.size()]), cand, cataloged);
+			progressbar.setSelection(++progress);
+		}
+	}
+
+	private static String computeRelativePath(File file) {
+		StringBuilder sb = new StringBuilder();
+		while (file != null) {
+			String name = file.getName();
+			if ("dcim".equalsIgnoreCase(name)) //$NON-NLS-1$
+				break;
+			if (sb.length() != 0)
+				sb.insert(0, '/');
+			sb.insert(0, name);
+			file = file.getParentFile();
+		}
+		return sb.toString();
 	}
 
 	private void updateVolumeLabel(String key) {
@@ -523,7 +695,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 		}
 		importViewer.setCheckedElements(selectedElements.toArray());
 		for (ImportNode node : selectedElements)
-			checkHierarchy(node, true);
+			checkHierarchy(node, true, false);
 		if (firstNode != null)
 			importViewer.reveal(firstNode);
 		lastImportButton.setEnabled(false);
@@ -583,37 +755,41 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 		return false;
 	}
 
-	void checkHierarchy(Object element, boolean checked) {
-		importViewer.setGrayChecked(element, false);
+	void checkHierarchy(Object element, boolean checked, boolean gray) {
+		BusyIndicator.showWhile(importViewer.getControl().getDisplay(), () -> {
+			doCheckHierarchy(element, checked, gray);
+		});
+	}
+
+	private void doCheckHierarchy(Object element, boolean checked, boolean gray) {
+		boolean changed = importViewer.getChecked(element) != checked || importViewer.getGrayed(element) != gray;
+		importViewer.setGrayed(element, gray);
 		importViewer.setChecked(element, checked);
 		if (element instanceof ImportNode) {
-			List<ImportNode> children = ((ImportNode) element).children;
-			for (ImportNode child : children)
-				checkHierarchy(child, checked);
-			ImportNode parent = ((ImportNode) element).parent;
+			ImportNode node = (ImportNode) element;
+			if (!gray && changed) {
+				node.missing = null;
+				for (ImportNode child : node.children)
+					doCheckHierarchy(child, checked, gray);
+			}
+			ImportNode parent = node.parent;
 			while (parent != null) {
-				children = parent.children;
 				boolean allChecked = true;
 				boolean someChecked = false;
-				for (ImportNode child : children) {
-					if (importViewer.getGrayed(child)) {
+				for (ImportNode member : parent.children)
+					if (importViewer.getGrayed(member)) {
 						allChecked = false;
 						someChecked = true;
 					} else {
-						boolean childChecked = importViewer.getChecked(child);
+						boolean childChecked = importViewer.getChecked(member);
 						allChecked &= childChecked;
 						someChecked |= childChecked;
 					}
-				}
 				if (allChecked) {
-					importViewer.setGrayChecked(parent, false);
+					importViewer.setGrayed(parent, false);
 					importViewer.setChecked(parent, true);
-				} else if (someChecked) {
-					importViewer.setGrayChecked(parent, true);
-				} else {
-					importViewer.setGrayChecked(parent, false);
-					importViewer.setChecked(parent, false);
-				}
+				} else
+					importViewer.setGrayChecked(parent, someChecked);
 				parent = parent.parent;
 			}
 		}
@@ -622,7 +798,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 	private void fillValues() throws InvocationTargetException, InterruptedException {
 		ImportFromDeviceWizard wizard = (ImportFromDeviceWizard) getWizard();
 		IDialogSettings dialogSettings = wizard.getDialogSettings();
-		ImportNode[] rootElements = createInput(wizard.getFiles(), wizard.getDcims());
+		rootElements = createInput(wizard.getFiles(), wizard.getDcims());
 		importViewer.setInput(rootElements);
 		importViewer.expandAll();
 		if (lastImportButton != null && lastImportButton.isEnabled() && lastImportTimestamp >= 0)
@@ -654,6 +830,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 
 	private ImportNode[] createInput(final File[] files, final File[] dcims)
 			throws InvocationTargetException, InterruptedException {
+		nodeCount = 0;
 		final FileNameExtensionFilter imageFilter = new FileNameExtensionFilter(
 				ImageConstants.getSupportedImageFileExtensionsGroups(true), true);
 		final List<ImportNode> nodes = new ArrayList<ImportNode>();
@@ -730,6 +907,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 				if (monitor.isCanceled())
 					break;
 				if (child.isDirectory()) {
+					monitor.subTask(child.getName());
 					ImportNode childNode = new ImportNode(node, child.getName(), -1, 0, child, null, 0, node.plural,
 							node.singular);
 					int m = addChildren(childNode, child, null, imageFilter, monitor);
@@ -750,7 +928,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 					n += 1;
 				}
 			}
-			for (int i = 0; i < years.length; i++) {
+			for (int i = 0; i < years.length; i++)
 				if (years[i] > 0) {
 					ImportNode childNode = new ImportNode(node, String.valueOf(i + 1970), Calendar.YEAR, i + 1970,
 							folder, files, years[i], node.plural, node.singular);
@@ -761,7 +939,6 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 					if (monitor.isCanceled())
 						break;
 				}
-			}
 		} else
 			node.label += " - " //$NON-NLS-1$
 					+ Messages.ImportFromDeviceWizard_bad_connection;
@@ -830,13 +1007,12 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 			setErrorMessage(Messages.ImportFromDeviceWizard_please_select_files);
 			setPageComplete(false);
 		} else {
-			for (Object importNode : checkedElements) {
+			for (Object importNode : checkedElements)
 				if (((ImportNode) importNode).count > 0) {
 					setErrorMessage(null);
 					setPageComplete(true);
 					return;
 				}
-			}
 			setErrorMessage(Messages.ImportFileSelectionPage_no_images_to_import);
 			setPageComplete(false);
 		}
@@ -882,7 +1058,8 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 					int day = node.value;
 					int month = node.parent.value;
 					int year = node.parent.parent.value;
-					File[] listFiles = node.getMemberFiles();
+					boolean grayed = importViewer.getGrayed(checked);
+					File[] listFiles = grayed ? node.getMissing() : node.getMemberFiles();
 					if (listFiles != null)
 						for (File file : listFiles) {
 							long lastModified = file.lastModified();

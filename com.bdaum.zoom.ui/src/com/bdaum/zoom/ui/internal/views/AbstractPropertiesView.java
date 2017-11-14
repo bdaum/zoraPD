@@ -1018,7 +1018,8 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		if (text == null)
 			text = "?"; //$NON-NLS-1$
 		String rel = null;
-		SmartCollection coll = new SmartCollectionImpl("", true, false, false, true, null, 0, null, 0, null, null); //$NON-NLS-1$
+		SmartCollection coll = new SmartCollectionImpl("", true, false, false, true, null, 0, null, 0, null, //$NON-NLS-1$
+				Constants.INHERIT_LABEL, null, 0, null);
 		if (qfield.getCard() != 1) {
 			rel = ":"; //$NON-NLS-1$
 			if (fieldValue instanceof LocationImpl[]) {
@@ -1093,12 +1094,12 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 	protected abstract int getExpandLevel();
 
 	private void contributeToActionBars() {
+		undoContext = PlatformUI.getWorkbench().getOperationSupport().getUndoContext();
 		IViewSite viewSite = getViewSite();
 		IActionBars bars = viewSite.getActionBars();
 		fillLocalToolbar(bars.getToolBarManager());
 		fillLocalPullDown(bars.getMenuManager());
-		new UndoRedoActionGroup(viewSite, PlatformUI.getWorkbench().getOperationSupport().getUndoContext(), true)
-				.fillActionBars(bars);
+		new UndoRedoActionGroup(viewSite, undoContext, true).fillActionBars(bars);
 	}
 
 	private void fillLocalToolbar(IToolBarManager manager) {

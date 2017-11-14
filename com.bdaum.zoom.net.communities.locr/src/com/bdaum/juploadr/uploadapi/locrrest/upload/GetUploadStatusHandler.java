@@ -29,10 +29,6 @@ import com.bdaum.juploadr.uploadapi.locrrest.DefaultLocrHandler;
 
 public class GetUploadStatusHandler extends DefaultLocrHandler {
 
-	private static final SimpleDateFormat df = new SimpleDateFormat(
-			"yyyy-MM-dd HH:mm:ss"); //$NON-NLS-1$
-	private static final SimpleDateFormat df2 = new SimpleDateFormat(
-			"yyyy-MM-dd"); //$NON-NLS-1$
 	private GetUploadStatus parent;
 
 	public GetUploadStatusHandler(Object parent) {
@@ -40,10 +36,8 @@ public class GetUploadStatusHandler extends DefaultLocrHandler {
 		this.parent = (GetUploadStatus) parent;
 	}
 
-	
 	@Override
-	public void characters(char[] chars, int start, int end)
-			throws SAXException {
+	public void characters(char[] chars, int start, int end) throws SAXException {
 		String cdata = new String(chars, start, end).trim();
 		if (!cdata.trim().isEmpty()) {
 			if ("name".equals(lastTag)) { //$NON-NLS-1$
@@ -51,10 +45,10 @@ public class GetUploadStatusHandler extends DefaultLocrHandler {
 			} else if ("pro_account_expiration_date".equals(lastTag)) { //$NON-NLS-1$
 				Date expiration_date = null;
 				try {
-					expiration_date = df.parse(cdata);
+					expiration_date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(cdata); //$NON-NLS-1$
 				} catch (ParseException e) {
 					try {
-						expiration_date = df2.parse(cdata);
+						expiration_date = new SimpleDateFormat("yyyy-MM-dd").parse(cdata); //$NON-NLS-1$
 					} catch (ParseException e1) {
 						// ignore
 					}
@@ -64,8 +58,7 @@ public class GetUploadStatusHandler extends DefaultLocrHandler {
 			} else if ("upload_limit".equals(lastTag)) { //$NON-NLS-1$
 				parent.setMaxBandwidth(Long.parseLong(cdata));
 			} else if ("upload_remaining".equals(lastTag)) { //$NON-NLS-1$
-				parent.setUsedBandwidth(parent.getMaxBandwidth()
-						- Long.parseLong(cdata));
+				parent.setUsedBandwidth(parent.getMaxBandwidth() - Long.parseLong(cdata));
 			}
 			parent.setMaxFilesize(Long.MAX_VALUE);
 			parent.setMaxVideosize(Long.MAX_VALUE);

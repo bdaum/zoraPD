@@ -47,7 +47,7 @@ public class Format {
 	 * Representation of missing entries
 	 */
 	public static final String MISSINGENTRYSTRING = " - "; //$NON-NLS-1$
-	
+
 	public static final String EDITABLEINDICATOR = "»"; //$NON-NLS-1$
 
 	private static final class CurrencyExpressionFormatter implements IFormatter {
@@ -95,25 +95,21 @@ public class Format {
 			int degrees = (int) d;
 			int minutes = (int) ((d - degrees) * 60);
 			double seconds = ((d - degrees) * 60 - minutes) * 60;
-			NumberFormat af = NumberFormat.getNumberInstance();
-			af.setMaximumFractionDigits(2);
-			sb.append(degrees).append('°').append(minutes).append('\'').append(af.format(seconds)).append('"');
+			sb.append(degrees).append('°').append(minutes).append('\'').append(formatDecimal(seconds, 2)).append('"');
 			return sb.toString();
 		}
 
 		public Object fromString(String s) throws ParseException {
 			s = s.trim();
-			NumberFormat af = NumberFormat.getNumberInstance();
-			af.setMaximumFractionDigits(10);
+			NumberFormat af = getDecimalFormat(10);
 			try {
 				if (s.indexOf('°') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\'') >= 0 || s.indexOf(' ') >= 0) {
 					double sign = 1d;
 					if (s.startsWith(neg)) {
 						sign = -1d;
 						s = s.substring(1);
-					} else if (s.startsWith(pos)) {
+					} else if (s.startsWith(pos))
 						s = s.substring(1);
-					}
 					StringTokenizer st = new StringTokenizer(s + " ", "°'\" ", //$NON-NLS-1$ //$NON-NLS-2$
 							true);
 					String n = null;
@@ -167,6 +163,23 @@ public class Format {
 		}
 	}
 
+	public static NumberFormat getCurrencyNumberFormat() {
+		int digits = getCurrencyDigits();
+		NumberFormat nf = getDecimalFormat(digits);
+		nf.setMinimumFractionDigits(digits);
+		return nf;
+	}
+
+	public static String formatDecimal(double d, int digits) {
+		return getDecimalFormat(digits).format(d);
+	}
+
+	public static NumberFormat getDecimalFormat(int digits) {
+		NumberFormat nf = NumberFormat.getNumberInstance();
+		nf.setMaximumFractionDigits(digits);
+		return nf;
+	}
+
 	/**
 	 * Exposure time
 	 */
@@ -176,19 +189,15 @@ public class Format {
 			double d = ((Double) o).doubleValue();
 			if (Double.isNaN(d))
 				return MISSINGENTRYSTRING;
-			if (d > 0.5d || d <= 0) {
-				NumberFormat af = NumberFormat.getNumberInstance();
-				af.setMaximumFractionDigits(1);
-				return af.format(d);
-			}
+			if (d > 0.5d || d <= 0)
+				return formatDecimal(d, 1);
 			return "1/" + ((int) (1 / d)); //$NON-NLS-1$
 		}
 
 		public Object fromString(String s) throws ParseException {
 			s = s.trim();
 			try {
-				NumberFormat af = NumberFormat.getNumberInstance();
-				af.setMaximumFractionDigits(3);
+				NumberFormat af = getDecimalFormat(3);
 				return (s.startsWith("1/")) ? 1.0 / af.parse(s.substring(2)) //$NON-NLS-1$
 						.doubleValue() : af.parse(s).doubleValue();
 			} catch (ParseException e) {
@@ -205,17 +214,13 @@ public class Format {
 			double d = ((Double) o).doubleValue();
 			if (Double.isNaN(d) || Double.isInfinite(d))
 				return MISSINGENTRYSTRING;
-			NumberFormat af = NumberFormat.getNumberInstance();
-			af.setMaximumFractionDigits(1);
-			return af.format(Math.pow(2d, d / 2));
+			return formatDecimal(Math.pow(2d, d / 2), 1);
 		}
 
 		public Object fromString(String s) throws ParseException {
 			s = s.trim();
 			try {
-				NumberFormat af = NumberFormat.getNumberInstance();
-				af.setMaximumFractionDigits(10);
-				return 2d * Math.log(af.parse(s).doubleValue()) / Math.log(2);
+				return 2d * Math.log(getDecimalFormat(10).parse(s).doubleValue()) / Math.log(2);
 			} catch (Exception e) {
 				throw new ParseException(Messages.Format_bad_aperture, 0);
 			}
@@ -231,15 +236,11 @@ public class Format {
 			double d = ((Double) o).doubleValue();
 			if (Double.isNaN(d) || Double.isInfinite(d))
 				return MISSINGENTRYSTRING;
-			NumberFormat af = NumberFormat.getNumberInstance();
-			af.setMaximumFractionDigits(3);
-			return af.format(d);
+			return formatDecimal(d, 3);
 		}
 
 		public Object fromString(String s) throws ParseException {
-			NumberFormat af = NumberFormat.getNumberInstance();
-			af.setMaximumFractionDigits(10);
-			return af.parse(s.trim()).doubleValue();
+			return getDecimalFormat(10).parse(s.trim()).doubleValue();
 		}
 	};
 	/**
@@ -252,14 +253,54 @@ public class Format {
 	public final static IFormatter longitudeFormatter = new GpsFormatter("W", "E"); //$NON-NLS-1$ //$NON-NLS-2$
 
 	/**
+	 * Image direction
+	 */
+	public final static IFormatter directionFormatter = new IFormatter() {
+
+		public String toString(Object o) {
+			double d = ((Double) o).doubleValue();
+			if (Double.isNaN(d))
+				return MISSINGENTRYSTRING;
+			while (d > 180.0)
+				d -= 360.0;
+			while (d < 180.0)
+				d += 360.0;
+			return new StringBuilder().append(formatDecimal(Math.abs(d), 1)).append('°').append(d < 0 ? "W" : "E") //$NON-NLS-1$ //$NON-NLS-2$
+					.toString();
+		}
+
+		public Object fromString(String s) throws ParseException {
+			s = s.trim();
+			NumberFormat af = getDecimalFormat(10);
+			try {
+				double sign = 1d;
+				if (s.endsWith("E") || s.endsWith("e")) //$NON-NLS-1$//$NON-NLS-2$
+					s = s.substring(0, s.length() - 1).trim();
+				else if (s.endsWith("W") || s.endsWith("w")) { //$NON-NLS-1$//$NON-NLS-2$
+					s = s.substring(0, s.length() - 1).trim();
+					sign = -1d;
+				}
+				if (s.endsWith("°")) //$NON-NLS-1$
+					s = s.substring(0, s.length() - 1).trim();
+				double d = sign * af.parse(s).doubleValue();
+				while (d < 0)
+					d += 360.0;
+				while (d >= 360)
+					d -= 360.0;
+				return d;
+			} catch (ParseException e) {
+				throw new ParseException(Messages.Format_bad_bearing, 0);
+			}
+		}
+	};
+
+	/**
 	 * Altitude
 	 */
 	public final static IFormatter altitudeFormatter = new IFormatter() {
 
 		public Object fromString(String s) throws ParseException {
-			NumberFormat af = NumberFormat.getNumberInstance();
-			af.setMaximumFractionDigits(2);
-			return af.parse(s);
+			return getDecimalFormat(2).parse(s);
 		}
 
 		public String toString(Object o) {
@@ -280,7 +321,8 @@ public class Format {
 
 		public Object fromString(String s) {
 			return (s.equalsIgnoreCase(Messages.QueryField_yes) || s.equals("1")) //$NON-NLS-1$
-					? true : Boolean.parseBoolean(s);
+					? true
+					: Boolean.parseBoolean(s);
 		}
 	};
 
@@ -334,9 +376,9 @@ public class Format {
 				s = s.trim();
 				int offset = 0;
 				if (s.endsWith(AM))
-					s = s.substring(0, s.length()-AM.length()).trim();
+					s = s.substring(0, s.length() - AM.length()).trim();
 				else if (s.endsWith(PM)) {
-					s = s.substring(0, s.length()-PM.length()).trim();
+					s = s.substring(0, s.length() - PM.length()).trim();
 					offset = 720;
 				}
 				int p = s.indexOf(':');
@@ -357,16 +399,12 @@ public class Format {
 		public Object fromString(String s) throws ParseException {
 			s = s.trim();
 			try {
-				if (s.endsWith("GB")) { //$NON-NLS-1$
-					NumberFormat af = NumberFormat.getNumberInstance();
-					af.setMaximumFractionDigits(10);
-					return (long) (af.parse(s.substring(0, s.length() - 2).trim()).doubleValue() * 1000000000);
-				}
-				if (s.endsWith("MB")) { //$NON-NLS-1$
-					NumberFormat af = NumberFormat.getNumberInstance();
-					af.setMaximumFractionDigits(10);
-					return (long) (af.parse(s.substring(0, s.length() - 2).trim()).doubleValue() * 1000000);
-				}
+				if (s.endsWith("GB")) //$NON-NLS-1$
+					return (long) (getDecimalFormat(10).parse(s.substring(0, s.length() - 2).trim()).doubleValue()
+							* 1000000000);
+				if (s.endsWith("MB")) //$NON-NLS-1$
+					return (long) (getDecimalFormat(10).parse(s.substring(0, s.length() - 2).trim()).doubleValue()
+							* 1000000);
 				if (s.endsWith("kB") || s.endsWith("KB")) //$NON-NLS-1$ //$NON-NLS-2$
 					return (long) (NumberFormat.getNumberInstance().parse(s.substring(0, s.length() - 2).trim())
 							.doubleValue() * 1000);
@@ -377,15 +415,13 @@ public class Format {
 		}
 
 		public String toString(Object o) {
-			NumberFormat af = NumberFormat.getNumberInstance();
-			af.setMaximumFractionDigits(2);
 			long d = ((Long) o).longValue();
 			if (d >= 1000000000)
-				return af.format(d / 1000000000d) + " GB"; //$NON-NLS-1$
+				return formatDecimal(d / 1000000000d, 2) + " GB"; //$NON-NLS-1$
 			if (d >= 1000000)
-				return af.format(d / 1000000d) + " MB"; //$NON-NLS-1$
+				return formatDecimal(d / 1000000d, 2) + " MB"; //$NON-NLS-1$
 			if (d >= 1000)
-				return af.format(d / 1000d) + " kB"; //$NON-NLS-1$
+				return formatDecimal(d / 1000d, 2) + " kB"; //$NON-NLS-1$
 			return String.valueOf(d);
 		}
 
@@ -409,7 +445,6 @@ public class Format {
 	/**
 	 * Track entries
 	 */
-	public static final SimpleDateFormat trackdateFormat = new SimpleDateFormat(Messages.QueryField_track_date_format);
 	public final static IFormatter trackFormatter = new IFormatter() {
 
 		public Object fromString(String s) {
@@ -418,74 +453,26 @@ public class Format {
 
 		public String toString(Object o) {
 			if (o instanceof TrackRecord) {
+				SimpleDateFormat trackdateFormat = new SimpleDateFormat(Messages.QueryField_track_date_format);
 				TrackRecord record = (TrackRecord) o;
 				String date = trackdateFormat.format(record.getExportDate());
 				String postfix = record.getReplaced() ? Messages.QueryField_replacement : ""; //$NON-NLS-1$
 				String serviceName = record.getServiceName();
 				String target = record.getTarget();
-				if (TrackRecord_type.type_community.equals(record.getType())) {
+				if (TrackRecord_type.type_community.equals(record.getType()))
 					return NLS.bind(Messages.QueryField_uploaded_to_account,
 							new Object[] { serviceName, target, date, postfix });
-				} else if (TrackRecord_type.type_ftp.equals(record.getType())) {
+				if (TrackRecord_type.type_ftp.equals(record.getType()))
 					return NLS.bind(Messages.QueryField_uploaded_to_ftp,
 							new Object[] { target, serviceName, date, postfix });
-				} else if (TrackRecord_type.type_ftp.equals(record.getType())) {
+				if (TrackRecord_type.type_ftp.equals(record.getType()))
 					return NLS.bind(Messages.QueryField_send_via_email, date);
-				} else
-					return Messages.QueryField_unknown_track_record_type;
+				return Messages.QueryField_unknown_track_record_type;
 			}
 			return (String) o;
 		}
 
 	};
-
-	// /**
-	// * Regions
-	// */
-	// public static final IFormatter rectangleFormatter = new IFormatter() {
-	//
-	// public String toString(Object obj) {
-	// NumberFormat af = NumberFormat.getNumberInstance(Locale.US);
-	// af.setMaximumFractionDigits(6);
-	// String regionId = (String) obj;
-	// try {
-	// int leadingZeros = Math.max(0, 16 - regionId.length());
-	// double x1 = Utilities.parseHex(regionId, 0 - leadingZeros,
-	// 4 - leadingZeros) / 65535d;
-	// double y1 = Utilities.parseHex(regionId, 4 - leadingZeros,
-	// 8 - leadingZeros) / 65535d;
-	// double x2 = Utilities.parseHex(regionId, 8 - leadingZeros,
-	// 12 - leadingZeros) / 65535d;
-	// double y2 = Utilities.parseHex(regionId, 12 - leadingZeros,
-	// 16 - leadingZeros) / 65535d;
-	// return MessageFormat.format(
-	// "{0}, {1}, {2}, {3}", af.format(x1), af.format(y1), //$NON-NLS-1$
-	// af.format(x2 - x1), af.format(y2 - y1));
-	// } catch (NumberFormatException e) {
-	// return null;
-	// }
-	// }
-	//
-	// public Object fromString(String s) throws ParseException {
-	// StringBuilder sb = new StringBuilder(16);
-	// StringTokenizer st = new StringTokenizer(s, ", "); //$NON-NLS-1$
-	// try {
-	// double x = Double.parseDouble(st.nextToken());
-	// double y = Double.parseDouble(st.nextToken());
-	// double w = Double.parseDouble(st.nextToken());
-	// double h = Double.parseDouble(st.nextToken());
-	// Utilities.toHex(sb, (int) (x * 65535 + 0.5d));
-	// Utilities.toHex(sb, (int) (y * 65535 + 0.5d));
-	// Utilities.toHex(sb, (int) ((x + w) * 65535 + 0.5d));
-	// Utilities.toHex(sb, (int) ((y + h) * 65535 + 0.5d));
-	// return sb.toString();
-	// } catch (NoSuchElementException e) {
-	// return null;
-	// } catch (NumberFormatException e) {
-	// return null;
-	// }
-	// }
-	// };
 
 	public static final IFormatter currencyExpressionFormatter = new CurrencyExpressionFormatter();
 
@@ -497,18 +484,6 @@ public class Format {
 			// do nothing
 		}
 		return curr == null ? 2 : curr.getDefaultFractionDigits();
-	}
-
-	private static NumberFormat nf;
-
-	public static NumberFormat getCurrencyNumberFormat() {
-		if (nf == null) {
-			int digits = getCurrencyDigits();
-			nf = NumberFormat.getNumberInstance();
-			nf.setMaximumFractionDigits(digits);
-			nf.setMinimumFractionDigits(digits);
-		}
-		return nf;
 	}
 
 	public static double evaluateCurrencyExpression(String expression) throws ParseException {
@@ -525,7 +500,6 @@ public class Format {
 				total += sign * evaluateProduct(token);
 		}
 		return total;
-
 	}
 
 	private static double evaluateProduct(String s) throws ParseException {

@@ -66,21 +66,15 @@ public class ImportState {
 	public static final int SYNCALL = 6;
 	public static final int SYNCNEWER = 7;
 	public static final int ASK = 8;
-
 	public static final int MCUWidth = 16;
 
 	private static final URI[] EMPTYURIS = new URI[0];
-
 	private static final int FLASH_VALUE_FIRED = 0x1;
 	private static final int FLASH_VALUE_NO_FLASH_FUNCTION = 0x20;
 	private static final int RESOLUTION_UNIT_VALUE_CM = 3;
 	private static final int FOCAL_PLANE_RESOLUTION_UNIT_VALUE_CM = 3;
 	private static final int FOCAL_PLANE_RESOLUTION_UNIT_VALUE_MM = 4;
 	private static final int FOCAL_PLANE_RESOLUTION_UNIT_VALUE_UM = 5;
-	private static final SimpleDateFormat dfYear = new SimpleDateFormat("yyyy"); //$NON-NLS-1$
-	private static final SimpleDateFormat dfShort = new SimpleDateFormat("yyyy-MM"); //$NON-NLS-1$
-	private static final SimpleDateFormat dfLong = new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
-
 	private final GregorianCalendar cal = new GregorianCalendar();
 
 	public File skipFile;
@@ -169,14 +163,12 @@ public class ImportState {
 			setProperty(ensemble, QueryField.findExifProperty(entry.getKey()), entry.getValue(), file);
 		if (makerNotes != null) {
 			List<String> notes = new ArrayList<String>(makerNotes.size());
-			for (String key : makerNotes) {
-				QueryField qfield = QueryField.findExifProperty(key);
-				if (qfield == null) {
+			for (String key : makerNotes)
+				if (QueryField.findExifProperty(key) == null) {
 					String value = metaData.get(key);
 					if (!value.startsWith("<")) //$NON-NLS-1$
 						notes.add(new StringBuilder().append(key).append(": ").append(value).toString()); //$NON-NLS-1$
 				}
-			}
 			String[] n = notes.toArray(new String[notes.size()]);
 			Arrays.sort(n);
 			asset.setMakerNotes(n);
@@ -204,7 +196,7 @@ public class ImportState {
 			}
 		}
 		units = metaData.get("FocalPlaneResolutionUnit"); //$NON-NLS-1$
-		if (units != null) {
+		if (units != null)
 			try {
 				double f = 1d;
 				switch (BatchUtilities.parseInt(units)) {
@@ -223,7 +215,6 @@ public class ImportState {
 			} catch (NumberFormatException e) {
 				// ignore
 			}
-		}
 		if (!Double.isNaN(asset.getGPSDestDistance())) {
 			String distref = metaData.get("GPSDestDistanceRef"); //$NON-NLS-1$
 			if (distref != null)
@@ -248,17 +239,11 @@ public class ImportState {
 			asset.setWhiteBalance("Auto"); //$NON-NLS-1$
 		else if ("1".equals(whiteBalance)) //$NON-NLS-1$
 			asset.setWhiteBalance("Manual"); //$NON-NLS-1$
-		int colorSpace = asset.getColorSpace();
-		if (colorSpace == 65535) {
-			String interop = metaData.get("InteropIndex"); //$NON-NLS-1$
-			if ("R03".equals(interop)) //$NON-NLS-1$
-				asset.setColorSpace(2);
-		}
+		if (asset.getColorSpace() == 65535 && "R03".equals(metaData.get("InteropIndex"))) //$NON-NLS-1$//$NON-NLS-2$
+			asset.setColorSpace(2);
 		int[] isoSpeedRatings = asset.getIsoSpeedRatings();
-		if (isoSpeedRatings != null && isoSpeedRatings.length > 0)
-			asset.setScalarSpeedRatings(isoSpeedRatings[0]);
-		else
-			asset.setScalarSpeedRatings(CANCEL);
+		asset.setScalarSpeedRatings(
+				isoSpeedRatings != null && isoSpeedRatings.length > 0 ? isoSpeedRatings[0] : CANCEL);
 		if (importFromDeviceData != null) {
 			String artist = importFromDeviceData.getArtist();
 			if (artist != null && !artist.isEmpty()) {
@@ -269,16 +254,15 @@ public class ImportState {
 							artist = null;
 							break;
 						}
-				}
-				if (artist != null)
 					asset.setArtist(Utilities.addToStringArray(artist, artists, true));
+				}
 			}
-			String event = importFromDeviceData.getEvent();
-			if (event != null && !event.isEmpty() && (asset.getEvent() == null || asset.getEvent().isEmpty()))
-				asset.setEvent(event);
+			if (asset.getEvent() == null || asset.getEvent().isEmpty())
+				asset.setEvent(importFromDeviceData.getEvent());
 			String[] kw = importFromDeviceData.getKeywords();
 			if (kw != null && kw.length > 0)
 				QueryField.IPTC_KEYWORDS.setPlainFieldValue(asset, kw);
+			asset.setSafety(importFromDeviceData.getPrivacy());
 		}
 		meta.getKeywords().addAll(QueryField.getKeywordFilter().filter(asset.getKeyword()));
 		return true;
@@ -311,8 +295,7 @@ public class ImportState {
 			Date now) {
 		Asset asset = null;
 		if (ensemble != null) {
-			asset = ensemble.getAsset();
-			importedAssets.add(asset);
+			importedAssets.add(asset = ensemble.getAsset());
 			ensemble.xmpTimestamp = asset.getXmpModifiedAt();
 			ensemble.resetImageData(uri, getVolumeLabel(file), now, lastModified, file.length(), originalFileName,
 					reimport ? CANCEL : fileSource);
@@ -342,12 +325,15 @@ public class ImportState {
 	}
 
 	public static int computeThumbnailWidth(String res) {
-		if (res.equals(Meta_type.thumbnailResolution_high))
-			return 640;
-		if (res.equals(Meta_type.thumbnailResolution_veryHigh))
-			return 1280;
-		if (res.equals(Meta_type.thumbnailResolution_low))
-			return 160;
+		if (res != null && res.length() > 0) {
+			char c = res.charAt(0);
+			if (c == Meta_type.thumbnailResolution_high.charAt(0))
+				return 640;
+			if (c == Meta_type.thumbnailResolution_veryHigh.charAt(0))
+				return 1280;
+			if (c == Meta_type.thumbnailResolution_low.charAt(0))
+				return 160;
+		}
 		return 320;
 	}
 
@@ -399,21 +385,10 @@ public class ImportState {
 
 	public void readXMP(InputStream in, String file, AssetEnsemble ensemble) {
 		try {
-//			String distRef = null;
 			List<XMPField> fieldList = XMPUtilities.readXMP(in);
-			for (XMPField field : fieldList) {
-				QueryField qfield = field.getQfield();
-//				if (qfield == QueryField.EXIF_GPSDESTDISTREF)
-//					distRef = field.getProp().getValue();
-//				else
-				if (!overlayMap.containsKey(qfield.getExifToolKey()))
+			for (XMPField field : fieldList)
+				if (!overlayMap.containsKey(field.getQfield().getExifToolKey()))
 					assignValue(field, ensemble, file);
-			}
-//			if (distRef != null) {
-//				Asset asset = ensemble.getAsset();
-//				if (!Double.isNaN(asset.getGPSDestDistance()))
-//					convertDestDist(asset, distRef);
-//			}
 		} catch (XMPException e) {
 			operation.addError(NLS.bind(Messages.ImportState_Malformed_XMP, file), e);
 		}
@@ -527,15 +502,15 @@ public class ImportState {
 		File subFolder = new File(importFromDeviceData.getTargetDir());
 		int subfolderPolicy = importFromDeviceData.getSubfolderPolicy();
 		if (subfolderPolicy != ImportFromDeviceData.SUBFOLDERPOLICY_NO) {
-			subFolder = new File(subFolder, dfYear.format(cal.getTime()));
+			subFolder = new File(subFolder, new SimpleDateFormat("yyyy").format(cal.getTime())); //$NON-NLS-1$
 			subFolder.mkdir();
 			switch (subfolderPolicy) {
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARMONTH:
-				subFolder = new File(subFolder, dfShort.format(cal.getTime()));
+				subFolder = new File(subFolder, new SimpleDateFormat("yyyy-MM").format(cal.getTime())); //$NON-NLS-1$
 				subFolder.mkdir();
 				break;
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARMONTHDAY:
-				subFolder = new File(subFolder, dfLong.format(cal.getTime()));
+				subFolder = new File(subFolder, new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime())); //$NON-NLS-1$
 				subFolder.mkdir();
 				break;
 			}
@@ -544,18 +519,18 @@ public class ImportState {
 		String ext = (p >= 0) ? filename.substring(p) : ""; //$NON-NLS-1$
 		int maxLength = BatchConstants.MAXPATHLENGTH - subFolder.getAbsolutePath().length() - 1 - ext.length();
 		WatchedFolder watchedFolder = importFromDeviceData.getWatchedFolder();
-		String newFilename = Utilities.computeFileName(importFromDeviceData.getRenamingTemplate(), filename,
-				cal.getTime(), importNo, meta.getLastSequenceNo() + 1, meta.getLastYearSequenceNo() + 1,
-				importFromDeviceData.getCue(), null, maxLength, true, watchedFolder != null);
+		String newFilename = Utilities.evaluateTemplate(importFromDeviceData.getRenamingTemplate(),
+				watchedFolder != null ? Constants.TV_TRANSFER : Constants.TV_ALL, filename, cal, importNo,
+				meta.getLastSequenceNo() + 1, meta.getLastYearSequenceNo() + 1, importFromDeviceData.getCue(), null, "", //$NON-NLS-1$
+				maxLength, true);
 		File target = BatchUtilities.makeUniqueFile(subFolder, newFilename, ext);
 		try {
 			CoreActivator.getDefault().getFileWatchManager().copyFileSilently(file, target, lastModified,
 					operation.getOpId(), monitor);
-			if (!importFromDeviceData.isMedia()) {
+			if (!importFromDeviceData.isMedia())
 				// import folder into new structure
 				for (IRelationDetector detector : configuration.relationDetectors)
 					detector.transferFile(file, target, importNo == 1, info, operation.getOpId());
-			}
 		} catch (IOException e) {
 			operation.addError(NLS.bind("IO-error while importing file {0} from device", file), e); //$NON-NLS-1$
 		}

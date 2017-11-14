@@ -51,6 +51,7 @@ import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.Utilities;
+import com.bdaum.zoom.core.internal.operations.Backup;
 import com.bdaum.zoom.fileMonitor.internal.filefilter.FilterChain;
 import com.bdaum.zoom.operations.DbOperation;
 import com.bdaum.zoom.operations.IProfiledOperation;
@@ -69,11 +70,11 @@ public class MultiModifyAssetOperation extends DbOperation {
 		super(Messages.getString("MultiModifyAssetOperation.modify_values")); //$NON-NLS-1$
 		this.assets = assets;
 		if (value != null) {
-			valueMap = new HashMap<QueryField, Object>(2);
+			valueMap = new HashMap<QueryField, Object>(3);
 			valueMap.put(qfield, value);
 		}
 		if (oldValue != null) {
-			oldValueMap = new HashMap<QueryField, Object>(2);
+			oldValueMap = new HashMap<QueryField, Object>(3);
 			oldValueMap.put(qfield, oldValue);
 		}
 	}
@@ -93,7 +94,7 @@ public class MultiModifyAssetOperation extends DbOperation {
 			renameOperation = null;
 			oldKeywords = null;
 			oldCategories = null;
-			int assetCount = assets.size();
+			int assetCount = assets == null ? 0 : assets.size();
 			init(aMonitor, assetCount + 1);
 			List<Object> toBeStored = new ArrayList<Object>();
 			List<Object> toBeDeleted = new ArrayList<Object>();
@@ -147,11 +148,13 @@ public class MultiModifyAssetOperation extends DbOperation {
 								} else if (qfield.isStruct()) {
 									String id = (value instanceof String) ? (String) value
 											: (value instanceof IdentifiableObject)
-													? ((IdentifiableObject) value).getStringId() : null;
+													? ((IdentifiableObject) value).getStringId()
+													: null;
 									Object oldValue = oldValueMap == null ? null : oldValueMap.get(qfield);
 									String oldId = (oldValue instanceof String) ? (String) oldValue
 											: (oldValue instanceof IdentifiableObject)
-													? ((IdentifiableObject) oldValue).getStringId() : null;
+													? ((IdentifiableObject) oldValue).getStringId()
+													: null;
 									if (qfield == QueryField.IPTC_LOCATIONCREATED) {
 										if (oldId != null) {
 											List<LocationCreatedImpl> set = dbManager.obtainStruct(
@@ -173,21 +176,17 @@ public class MultiModifyAssetOperation extends DbOperation {
 											List<LocationCreatedImpl> set = dbManager.obtainObjects(
 													LocationCreatedImpl.class, "location", id, QueryField.EQUALS); //$NON-NLS-1$
 											LocationCreatedImpl rel;
-											if (set.isEmpty()) {
-												rel = new LocationCreatedImpl(id);
-												backup.addObject(rel.getStringId());
-												toBeStored.add(rel);
-											} else {
-												rel = set.get(0);
-												backup.addModification(key, rel.getStringId(), false);
-												toBeStored.add(rel);
-											}
+											if (set.isEmpty())
+												backup.addObject((rel = new LocationCreatedImpl(id)).getStringId());
+											else
+												backup.addModification(key, (rel = set.get(0)).getStringId(), false);
+											toBeStored.add(rel);
 											rel.addAsset(assetId);
 										}
 									} else if (qfield == QueryField.IPTC_LOCATIONSHOWN) {
 										if (oldId != null) {
 											List<LocationShownImpl> set = dbManager.obtainStruct(
-													LocationShownImpl.class, assetId, false, "location", id, //$NON-NLS-1$
+													LocationShownImpl.class, assetId, false, "location", oldId, //$NON-NLS-1$
 													false);
 											for (LocationShownImpl rel : set) {
 												backup.addDeleted(rel);
@@ -219,15 +218,12 @@ public class MultiModifyAssetOperation extends DbOperation {
 											List<IdentifiableObject> set = dbManager.obtainObjects(
 													CreatorsContactImpl.class, false, "contact", id, QueryField.EQUALS); //$NON-NLS-1$
 											CreatorsContactImpl rel;
-											if (set.isEmpty()) {
-												rel = new CreatorsContactImpl(id);
-												backup.addObject(rel.getStringId());
-												toBeStored.add(rel);
-											} else {
-												rel = (CreatorsContactImpl) set.get(0);
-												backup.addModification(key, rel.getStringId(), false);
-												toBeStored.add(rel);
-											}
+											if (set.isEmpty())
+												backup.addObject((rel = new CreatorsContactImpl(id)).getStringId());
+											else
+												backup.addModification(key,
+														(rel = (CreatorsContactImpl) set.get(0)).getStringId(), false);
+											toBeStored.add(rel);
 											rel.addAsset(assetId);
 										}
 									} else if (qfield == QueryField.IPTC_ARTWORK) {
@@ -367,8 +363,7 @@ public class MultiModifyAssetOperation extends DbOperation {
 				cat = new CategoryImpl(token);
 				parent.putSubCategory(cat);
 				// Add to cat view
-				changed |= Utilities.addCategoryCollection(dbManager, group, cat, toBeStored) != null;
-				parent = cat;
+				changed |= Utilities.addCategoryCollection(dbManager, group, parent = cat, toBeStored) != null;
 			}
 		}
 		return changed;
@@ -381,42 +376,42 @@ public class MultiModifyAssetOperation extends DbOperation {
 
 	@Override
 	public IStatus undo(IProgressMonitor aMonitor, IAdaptable info) throws ExecutionException {
-		initUndo(aMonitor, assets.size() + 2);
-		if (renameOperation != null)
-			renameOperation.undo(aMonitor, info);
-		aMonitor.worked(1);
-		List<Object> toBeStored = new ArrayList<Object>();
-		List<Object> toBeDeleted = new ArrayList<Object>();
-		boolean changed = false;
-		boolean assetsModified = false;
-		List<Backup> set = dbManager.getTrash(Backup.class, opId);
-		for (Backup backup : set) {
-			try {
-				changed |= backup.restore(toBeStored, toBeDeleted);
-				assetsModified |= dbManager.safeTransaction(toBeDeleted, toBeStored);
-				toBeDeleted.clear();
-				toBeStored.clear();
-				aMonitor.worked(1);
-			} catch (Exception e) {
-				addError(Messages.getString("MultiModifyAssetOperation.error_assigning_former_value"), //$NON-NLS-1$
-						e);
+		initUndo(aMonitor, assets == null ? 2 : assets.size() + 2);
+		if (assets != null) {
+			if (renameOperation != null)
+				renameOperation.undo(aMonitor, info);
+			aMonitor.worked(1);
+			List<Object> toBeStored = new ArrayList<Object>();
+			List<Object> toBeDeleted = new ArrayList<Object>();
+			boolean changed = false;
+			boolean assetsModified = false;
+			for (Backup backup : getBackupsFromTrash()) {
+				try {
+					changed |= backup.restore(toBeStored, toBeDeleted);
+					assetsModified |= dbManager.safeTransaction(toBeDeleted, toBeStored);
+					toBeDeleted.clear();
+					toBeStored.clear();
+					aMonitor.worked(1);
+				} catch (Exception e) {
+					addError(Messages.getString("MultiModifyAssetOperation.error_assigning_former_value"), //$NON-NLS-1$
+							e);
+				}
 			}
+			Meta meta = null;
+			if (oldKeywords != null)
+				(meta = dbManager.getMeta(true)).setKeywords(oldKeywords);
+			if (oldCategories != null) {
+				(meta = dbManager.getMeta(true)).setCategory(oldCategories);
+				changed = true;
+			}
+			if (meta != null)
+				dbManager.storeAndCommit(meta);
+			aMonitor.worked(1);
+			if (assetsModified)
+				fireAssetsModified(new BagChange<>(null, assets, null, null), null);
+			if (changed)
+				fireStructureModified();
 		}
-		if (oldKeywords != null) {
-			Meta meta = dbManager.getMeta(true);
-			meta.setKeywords(oldKeywords);
-			toBeStored.add(meta);
-		} else if (oldCategories != null) {
-			Meta meta = dbManager.getMeta(true);
-			meta.setCategory(oldCategories);
-			if (!toBeStored.contains(meta))
-				toBeStored.add(meta);
-			changed = true;
-		}
-		if (storeSafely(toBeDeleted.toArray(), 1, toBeStored.toArray()) || assetsModified)
-			fireAssetsModified(new BagChange<>(null, assets, null, null), null);
-		if (changed)
-			fireStructureModified();
 		return close(info, isFullTextSearch() ? assets : null);
 	}
 
@@ -434,7 +429,7 @@ public class MultiModifyAssetOperation extends DbOperation {
 	}
 
 	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
-		//do nothing
+		// do nothing
 	}
 
 }

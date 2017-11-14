@@ -1204,10 +1204,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 			}
 		});
 		imageCanvas.addKeyListener(this);
-		CGroup subImageArea = new CGroup(imageArea, SWT.NONE);
-		subImageArea.setText(Messages.CategorizeDialog_settings);
-		subImageArea.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-		subImageArea.setLayout(new GridLayout(2, false));
+		CGroup subImageArea = UiUtilities.createGroup(imageArea, 2, Messages.CategorizeDialog_settings);
 		if (aiService != null)
 			faceButton = WidgetFactory.createCheckButton(subImageArea, Messages.CategorizeDialog_use_new_faces,
 					new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));

@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
@@ -108,7 +109,7 @@ import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 @SuppressWarnings("restriction")
 public abstract class BasicView extends ViewPart
 		implements ISelectionProvider, EducatedSelectionListener, IThemeListener, ImageStore, KeyListener,
-		TraverseListener, IHoverSubject, UiConstants, IPartListener2, VolumeListener {
+		TraverseListener, IHoverSubject, UiConstants, IPartListener2, VolumeListener, IUndoHost {
 
 	private boolean isVisible = false; // true;
 	protected boolean isDirty = false;
@@ -123,6 +124,7 @@ public abstract class BasicView extends ViewPart
 	private IAction undoAction;
 	private IAction redoAction;
 	protected boolean viewActive;
+	protected IUndoContext undoContext;
 
 	public BasicView() {
 
@@ -563,6 +565,9 @@ public abstract class BasicView extends ViewPart
 			registerCommands();
 			viewActive = true;
 			setVisible(true);
+			String pn = getPartName();
+			if (!pn.endsWith("!")) //$NON-NLS-1$
+				setPartName(pn+"!"); //$NON-NLS-1$
 			show();
 		}
 	}
@@ -582,6 +587,9 @@ public abstract class BasicView extends ViewPart
 		if (partRef.getPart(false) == this) {
 			deregisterCommands();
 			viewActive = false;
+			String pn = getPartName();
+			if (pn.endsWith("!")) //$NON-NLS-1$
+				setPartName(pn.substring(0, pn.length()-1));
 		}
 	}
 
@@ -705,6 +713,11 @@ public abstract class BasicView extends ViewPart
 		undoAction = addAction(ActionFactory.UNDO.create(getSite().getWorkbenchWindow()));
 		redoAction = addAction(ActionFactory.REDO.create(getSite().getWorkbenchWindow()));
 		extraViewActions = UiActivator.getDefault().getExtraViewActions(getSite().getId());
+	}
+	
+	@Override
+	public IUndoContext getUndoContext() {
+		return undoContext;
 	}
 
 }

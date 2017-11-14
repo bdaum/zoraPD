@@ -28,11 +28,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.ui.internal.dialogs.AbstractListCellEditorDialog;
 import com.bdaum.zoom.ui.internal.dialogs.CodeCellEditorDialog;
 import com.bdaum.zoom.ui.internal.dialogs.ListCellEditorDialog;
 
+@SuppressWarnings("restriction")
 public class ListCellEditor extends DialogCellEditor {
 
 	private Object value;
@@ -50,8 +51,7 @@ public class ListCellEditor extends DialogCellEditor {
 
 	@Override
 	protected void doSetValue(Object v) {
-		this.value = v;
-		super.doSetValue(UiUtilities.csv(v, qfield.getType(), ", ")); //$NON-NLS-1$
+		super.doSetValue(Utilities.csv(value = v, qfield.getType(), ", ")); //$NON-NLS-1$
 	}
 
 
@@ -67,10 +67,8 @@ public class ListCellEditor extends DialogCellEditor {
 		location.x -= 25;
 		location.y += 30;
 		dialog.getShell().setLocation(location);
-		if (dialog.open() == Window.OK) {
-			value = dialog.getResult();
-			return value;
-		}
+		if (dialog.open() == Window.OK)
+			return value = dialog.getResult();
 		return null;
 	}
 

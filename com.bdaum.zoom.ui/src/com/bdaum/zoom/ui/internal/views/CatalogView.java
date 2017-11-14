@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -540,7 +540,8 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		protected IStatus run(IProgressMonitor monitor) {
 			IDbManager dbManager = Core.getCore().getDbManager();
 			List<IdentifiableObject> ex = lastExpansion != null
-					? dbManager.obtainByIds(IdentifiableObject.class, lastExpansion) : null;
+					? dbManager.obtainByIds(IdentifiableObject.class, lastExpansion)
+					: null;
 			if (monitor.isCanceled())
 				return Status.CANCEL_STATUS;
 			expansions = ex != null ? ex.toArray() : new Object[0];
@@ -714,7 +715,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				return Messages.getString("CatalogView.catalog_undo_context"); //$NON-NLS-1$
 			}
 		};
-		
+
 		viewer = new TreeViewer(parent, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL);
 		drillDownAdapter = new DrillDownAdapter((TreeViewer) viewer);
 		viewer.setContentProvider(new CatalogContentProvider());
@@ -903,7 +904,8 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		if (meta != null) {
 			String lastCollection = meta.getLastCollection();
 			final SmartCollectionImpl sc = lastCollection != null
-					? dbManager.obtainById(SmartCollectionImpl.class, lastCollection) : null;
+					? dbManager.obtainById(SmartCollectionImpl.class, lastCollection)
+					: null;
 			if (sc != null) {
 				restoring = true;
 				getNavigationHistory().fireSelection(null, new StructuredSelection(sc));
@@ -911,7 +913,8 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			}
 			String lastSelection = meta.getLastSelection();
 			final IdentifiableObject sm = lastSelection != null
-					? dbManager.obtainById(IdentifiableObject.class, lastSelection) : null;
+					? dbManager.obtainById(IdentifiableObject.class, lastSelection)
+					: null;
 			List<String> lastExpansion = meta.getLastExpansion();
 			if (sm != null || lastExpansion != null) {
 				if (sm != null) {
@@ -1163,7 +1166,10 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			public void run() {
 				GroupDialog dialog = new GroupDialog(getSite().getShell(), null, null);
 				if (dialog.open() == Window.OK) {
-					GroupImpl group = new GroupImpl(dialog.getValue(), false);
+					GroupImpl group = new GroupImpl(dialog.getName(), false, Constants.INHERIT_LABEL, null, 0, null);
+					group.setAnnotations(dialog.getAnnotations());
+					group.setShowLabel(dialog.getShowLabel());
+					group.setLabelTemplate(dialog.getLabelTemplate());
 					Core.getCore().getDbManager().safeTransaction(null, group);
 					setInput();
 					viewer.setSelection(new StructuredSelection(group), true);
@@ -1258,7 +1264,10 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 					Group parent = (Group) obj;
 					GroupDialog dialog = new GroupDialog(getSite().getShell(), null, parent);
 					if (dialog.open() == Window.OK) {
-						Group group = new GroupImpl(dialog.getValue(), false);
+						Group group = new GroupImpl(dialog.getName(), false, Constants.INHERIT_LABEL, null, 0, null);
+						group.setAnnotations(dialog.getAnnotations());
+						group.setShowLabel(dialog.getShowLabel());
+						group.setLabelTemplate(dialog.getLabelTemplate());
 						group.setGroup_subgroup_parent(parent);
 						List<Group> subgroups = parent.getSubgroup();
 						if (subgroups == null)
@@ -1461,7 +1470,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			private SmartCollectionImpl cloneCollection(SmartCollectionImpl oldSm) {
 				SmartCollectionImpl newSm = new SmartCollectionImpl(oldSm.getName(), false, oldSm.getAlbum(),
 						oldSm.getAdhoc(), oldSm.getNetwork(), null, oldSm.getColorCode(), oldSm.getLastAccessDate(), 0,
-						oldSm.getPerspective(), null);
+						oldSm.getPerspective(), oldSm.getShowLabel(), oldSm.getLabelTemplate(), oldSm.getFontSize(), null);
 				for (Criterion oldCrit : oldSm.getCriterion())
 					newSm.addCriterion(new CriterionImpl(oldCrit.getField(), oldCrit.getSubfield(), oldCrit.getValue(),
 							oldCrit.getRelation(), oldCrit.getAnd()));

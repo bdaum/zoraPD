@@ -65,7 +65,7 @@ public class MapDialog extends ZResizableDialog {
 			mapComponent.createComponent(area, true);
 			mapComponent.addCoordinatesListener(new CoordinatesListener() {
 
-				public void setCoordinates(String[] assetId, double latitude, double longitude, int zoom, int type) {
+				public void setCoordinates(String[] assetId, double latitude, double longitude, int zoom, int type, String uuid) {
 					if (result == null)
 						result = new LocationImpl();
 					result.setLatitude(latitude);
@@ -101,7 +101,7 @@ public class MapDialog extends ZResizableDialog {
 			}
 		} else
 			markerPositions = new Place[] { new Place(latitude, longitude) };
-		mapComponent.setInput(mapPosition, initialZoomLevel, markerPositions, null, IMapComponent.ADDLOCATION);
+		mapComponent.setInput(mapPosition, initialZoomLevel, markerPositions, null, null, IMapComponent.ADDLOCATION);
 	}
 
 	public Location getResult() {

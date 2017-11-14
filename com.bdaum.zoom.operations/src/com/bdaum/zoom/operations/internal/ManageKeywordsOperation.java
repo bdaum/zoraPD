@@ -124,7 +124,7 @@ public class ManageKeywordsOperation extends DbOperation {
 		Meta meta = dbManager.getMeta(true);
 		meta.getKeywords().removeAll(newMetaKeywords);
 		toBeStored.add(meta);
-		if (storeSafely(null, assets.size(), toBeStored))
+		if (storeSafely(null, assets.size(), toBeStored.toArray()))
 			fireAssetsModified(new BagChange<>(null, result, null, null), QueryField.IPTC_KEYWORDS);
 		return close(info, assets);
 	}

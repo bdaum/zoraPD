@@ -102,6 +102,7 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.group.Criterion;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
+import com.bdaum.zoom.cat.model.group.GroupImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.exhibition.Exhibit;
 import com.bdaum.zoom.cat.model.group.exhibition.ExhibitImpl;
@@ -309,8 +310,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	}
 
 	/**
-	 * Returns an image descriptor for the image file at the given plug-in
-	 * relative path
+	 * Returns an image descriptor for the image file at the given plug-in relative
+	 * path
 	 *
 	 * @param path
 	 *            the path
@@ -440,12 +441,19 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 				ImportState.ASK, isResetImage, isResetStatus, isResetExif, isResetIptc, isResetGps, isResetFaceData,
 				processSidecars, rawimport, this, dnguncompressed, dnglinear, deriverelations, autoDerive, applyXmp,
 				dngfolder.trim(), alarmonprompt, alarmonfinish, inBackground, makerNotes, archiveRecipes,
-				meta.getWebpCompression(), meta.getJpegQuality(), showImported, getEnabledRelationDetectors(), obtainAutoRules());
+				meta.getWebpCompression(), meta.getJpegQuality(), showImported, getEnabledRelationDetectors(),
+				obtainAutoRules());
 	}
 
 	public List<AutoRule> obtainAutoRules() {
-		return AutoRule.constructRules(
-				Platform.getPreferencesService().getString(PLUGIN_ID, PreferenceConstants.AUTORULES, "", null)); //$NON-NLS-1$
+		String raw = Platform.getPreferencesService().getString(PLUGIN_ID, PreferenceConstants.AUTORULES, "", null); //$NON-NLS-1$
+		GroupImpl group = Core.getCore().getDbManager().obtainById(GroupImpl.class, Constants.GROUP_ID_AUTO);
+		if (group != null) {
+			String annotations = group.getAnnotations();
+			if (annotations != null && annotations.startsWith("A")) //$NON-NLS-1$
+				raw = annotations.substring(1);
+		}
+		return AutoRule.constructRules(raw);
 	}
 
 	public Collection<IRelationDetector> getRelationDetectors() {
@@ -969,9 +977,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
 	public long getSoundfileLengthInMicroseconds(URL clipURL) {
 		try (AudioInputStream ais = AudioSystem.getAudioInputStream(clipURL)) {
-			Clip clip = (Clip) AudioSystem.getLine(new DataLine.Info(Clip.class, ais.getFormat()));
-			long musec = clip.getMicrosecondLength();
-			return musec;
+			return ((Clip) AudioSystem.getLine(new DataLine.Info(Clip.class, ais.getFormat()))).getMicrosecondLength();
 		} catch (Exception e) {
 			return 0L;
 		}
@@ -1259,8 +1265,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 					AcousticMessageDialog dialog = new AcousticMessageDialog(null,
 							NLS.bind(Messages.UiActivator_restart_required, Constants.APPLICATION_NAME), null,
 							Messages.UiActivator_restart_msg, MessageDialog.QUESTION,
-							new String[] { Messages.UiActivator_restart_now, Messages.UiActivator_restart_later },
-							0);
+							new String[] { Messages.UiActivator_restart_now, Messages.UiActivator_restart_later }, 0);
 					if (dialog.open() == 0)
 						PlatformUI.getWorkbench().restart();
 				}
@@ -1434,6 +1439,5 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	public boolean hasStarted() {
 		return started;
 	}
-
 
 }

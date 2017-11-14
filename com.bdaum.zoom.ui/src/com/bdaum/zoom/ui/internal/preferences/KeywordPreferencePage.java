@@ -20,21 +20,52 @@
 
 package com.bdaum.zoom.ui.internal.preferences;
 
-import com.bdaum.zoom.ui.internal.HelpContextIds;
-import com.bdaum.zoom.ui.preferences.AbstractFieldEditorPreferencePage;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+
+import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.widgets.PatternListEditor;
+import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
+import com.bdaum.zoom.ui.widgets.CGroup;
 
+public class KeywordPreferencePage extends AbstractPreferencePage {
 
-public class KeywordPreferencePage extends AbstractFieldEditorPreferencePage {
-
+	private PatternListEditor patternListEditor;
 
 	@Override
-	protected void createFieldEditors() {
-		setHelp(HelpContextIds.KEYWORD_PREFERENCE_PAGE);
-		addField(new ExplanationFieldEditor("", Messages.getString("KeywordPreferencePage.keyword_descr"), getFieldEditorParent())); //$NON-NLS-1$ //$NON-NLS-2$
-		addField(new PatternListEditor(PreferenceConstants.KEYWORDFILTER,
-				Messages.getString("KeywordPreferencePage._KeywordFilter"), Messages.getString("KeywordPreferencePage.keyword_filter"), Messages.getString("KeywordPreferencePage.keyword_pattern"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				"*", true, "\n", getFieldEditorParent(), 60)); //$NON-NLS-1$ //$NON-NLS-2$
+	protected void createPageContents(Composite composite) {
+		Label label = new Label(composite, SWT.NONE);
+		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+		label.setText( Messages.getString("KeywordPreferencePage.keyword_descr")); //$NON-NLS-1$
+		
+		CGroup group = UiUtilities.createGroup(composite, 1, Messages.getString("KeywordPreferencePage._KeywordFilter")); //$NON-NLS-1$
+		patternListEditor = new PatternListEditor(group, SWT.BORDER,
+				Messages.getString("KeywordPreferencePage.keyword_filter"), //$NON-NLS-1$
+				Messages.getString("KeywordPreferencePage.keyword_pattern"), "*", true, "\n"); //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+		fillValues();
+		updateButtons();
+	}
+
+	@Override
+	protected void doFillValues() {
+		patternListEditor.setInput(getPreferenceStore().getString(PreferenceConstants.KEYWORDFILTER));
+	}
+	
+	@Override
+	protected void doPerformDefaults() {
+		IPreferenceStore preferenceStore = getPreferenceStore();
+		preferenceStore.setValue(PreferenceConstants.KEYWORDFILTER,
+				preferenceStore
+						.getDefaultString(PreferenceConstants.KEYWORDFILTER));
+	}
+	
+	@Override
+	protected void doPerformOk() {
+		getPreferenceStore().setValue(PreferenceConstants.KEYWORDFILTER, patternListEditor.getResult());
 	}
 
 }

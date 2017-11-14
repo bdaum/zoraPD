@@ -39,9 +39,9 @@ public class RtActivator extends Plugin {
 
 	private static final String PROGRAM_FILES = "ProgramFiles"; //$NON-NLS-1$
 
-	private static final String CACHEDPROFILES = "/cache/profiles"; //$NON-NLS-1$
+	private static final String CACHEDPROFILES = "cache/profiles"; //$NON-NLS-1$
 
-	private static final String LINUXPROFILES = "/.config/RawTherapee" + CACHEDPROFILES; //$NON-NLS-1$
+	private static final String LINUXPROFILES = "/.config/RawTherapee/" + CACHEDPROFILES; //$NON-NLS-1$
 
 	private static final String HOME = "HOME"; //$NON-NLS-1$
 
@@ -51,14 +51,13 @@ public class RtActivator extends Plugin {
 	private static final String WINPROFILES2 = "/Raw Therapee" + CACHEDPROFILES; //$NON-NLS-1$
 
 	protected static final String PP2 = ".pp2"; //$NON-NLS-1$
-	private static char[] hexChars = new char[] { '0', '1', '2', '3', '4', '5',
-			'6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+	private static char[] hexChars = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
+			'e', 'f' };
 
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.recipes.rt"; //$NON-NLS-1$
 
-	private static final String[] LOCATERAWTHERAPEE = new String[] { LOCATE,
-			RAW_THERAPEE };
+	private static final String[] LOCATERAWTHERAPEE = new String[] { LOCATE, RAW_THERAPEE };
 
 	// The shared instance
 	private static RtActivator plugin;
@@ -70,8 +69,7 @@ public class RtActivator extends Plugin {
 	 * (non-Javadoc)
 	 *
 	 * @see
-	 * org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext
-	 * )
+	 * org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext )
 	 */
 	@Override
 	public void start(BundleContext bundleContext) throws Exception {
@@ -101,9 +99,8 @@ public class RtActivator extends Plugin {
 			try {
 				String result = null;
 				try {
-					result = BatchUtilities.executeCommand(LOCATERAWTHERAPEE,
-							null, Messages.RtActivator_locate_rt, IStatus.OK,
-							IStatus.WARNING, -1, 1000L, "UTF-8"); //$NON-NLS-1$
+					result = BatchUtilities.executeCommand(LOCATERAWTHERAPEE, null, Messages.RtActivator_locate_rt,
+							IStatus.OK, IStatus.WARNING, -1, 1000L, "UTF-8"); //$NON-NLS-1$
 				} catch (IOException e) {
 					// nothing found
 				}
@@ -115,11 +112,8 @@ public class RtActivator extends Plugin {
 						if (p >= 0) {
 							int q = line.indexOf('/', p + 10);
 							if (q < 0) {
-								File rtSharedProfiles = new File(line
-										+ CACHEDPROFILES);
-								if (rtSharedProfiles.exists()
-										&& !profileList
-												.contains(rtSharedProfiles))
+								File rtSharedProfiles = new File(line, CACHEDPROFILES);
+								if (rtSharedProfiles.exists() && !profileList.contains(rtSharedProfiles))
 									profileList.add(rtSharedProfiles);
 							}
 						}
@@ -172,10 +166,8 @@ public class RtActivator extends Plugin {
 		try {
 			File origFile = new File(new URI(uri));
 			File sidecar = getSidecarFile(origFile);
-			File cacheFile = getCacheFile(origFile,
-					computeHashForFile(origFile));
-			return (sidecar == null || cacheFile != null
-					&& RTDetector.METADATA_CACHE.equals(priority)) ? cacheFile
+			File cacheFile = getCacheFile(origFile, computeHashForFile(origFile));
+			return (sidecar == null || cacheFile != null && RTDetector.METADATA_CACHE.equals(priority)) ? cacheFile
 					: sidecar;
 		} catch (Exception e) {
 			// do nothing
@@ -184,14 +176,13 @@ public class RtActivator extends Plugin {
 	}
 
 	protected File getSidecarFile(File origFile) {
-		File sidecar = new File(new StringBuilder()
-				.append(origFile.getAbsolutePath()).append(PP2).toString());
+		File sidecar = new File(new StringBuilder().append(origFile.getAbsolutePath()).append(PP2).toString());
 		return sidecar.exists() ? sidecar : null;
 	}
 
 	protected File getCacheFile(File origFile, String hash) {
-		String metafilename = new StringBuilder().append(origFile.getName())
-				.append('.').append(hash).append(PP2).toString();
+		String metafilename = new StringBuilder().append(origFile.getName()).append('.').append(hash).append(PP2)
+				.toString();
 		for (File profileFolder : profiles) {
 			File metafile = new File(profileFolder, metafilename);
 			if (metafile.exists())
@@ -201,20 +192,17 @@ public class RtActivator extends Plugin {
 	}
 
 	public String computeHashForFile(File origFile) throws Exception {
-		return calculateHash(md5, new ByteArrayInputStream(
-				(origFile.getPath() + origFile.length()).getBytes()));
+		return calculateHash(md5, new ByteArrayInputStream((origFile.getPath() + origFile.length()).getBytes()));
 	}
 
-	public synchronized String calculateHash(MessageDigest algorithm,
-			InputStream in) throws Exception {
+	public synchronized String calculateHash(MessageDigest algorithm, InputStream in) throws Exception {
 		formatBuilder.setLength(0);
 		DigestInputStream dis = new DigestInputStream(in, algorithm);
 		while (dis.read() != -1) {
 			// do nothing
 		}
 		for (byte b : algorithm.digest())
-			formatBuilder.append(hexChars[((b >>> 4) & 0xf)]).append(
-					hexChars[(b & 0xf)]);
+			formatBuilder.append(hexChars[((b >>> 4) & 0xf)]).append(hexChars[(b & 0xf)]);
 		return formatBuilder.toString();
 	}
 

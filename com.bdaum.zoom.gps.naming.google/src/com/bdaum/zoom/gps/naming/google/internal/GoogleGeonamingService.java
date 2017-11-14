@@ -43,7 +43,7 @@ public class GoogleGeonamingService implements IGeonamingService {
 	}
 
 	private static Place fetchPlaceInfoFromGoogle(String[] parms, double lat, double lon)
-			throws IOException, SAXException, ParserConfigurationException, UnknownHostException {
+			throws IOException, SAXException, ParserConfigurationException, UnknownHostException, WebServiceException {
 		Place place = new Place();
 		place.setLat(lat);
 		place.setLon(lon);

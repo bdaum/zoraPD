@@ -53,14 +53,13 @@ public class Rt3Activator extends Plugin {
 	private static final String APPDATA = "APPDATA"; //$NON-NLS-1$
 
 	protected static final String PP3 = ".pp3"; //$NON-NLS-1$
-	private static char[] hexChars = new char[] { '0', '1', '2', '3', '4', '5',
-			'6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+	private static char[] hexChars = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
+			'e', 'f' };
 
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.recipes.rt3"; //$NON-NLS-1$
 
-	private static final String[] LOCATERAWTHERAPEE = new String[] { LOCATE,
-			RAW_THERAPEE };
+	private static final String[] LOCATERAWTHERAPEE = new String[] { LOCATE, RAW_THERAPEE };
 
 	// The shared instance
 	private static Rt3Activator plugin;
@@ -72,8 +71,7 @@ public class Rt3Activator extends Plugin {
 	 * (non-Javadoc)
 	 *
 	 * @see
-	 * org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext
-	 * )
+	 * org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext )
 	 */
 	@Override
 	public void start(BundleContext bundleContext) throws Exception {
@@ -93,9 +91,8 @@ public class Rt3Activator extends Plugin {
 			try {
 				String result = null;
 				try {
-					result = BatchUtilities.executeCommand(LOCATERAWTHERAPEE,
-							null, Messages.Rt3Activator_locate_rt, IStatus.OK,
-							IStatus.WARNING, -1, 1000L, "UTF-8"); //$NON-NLS-1$
+					result = BatchUtilities.executeCommand(LOCATERAWTHERAPEE, null, Messages.Rt3Activator_locate_rt,
+							IStatus.OK, IStatus.WARNING, -1, 1000L, "UTF-8"); //$NON-NLS-1$
 				} catch (IOException e) {
 					// not found
 				}
@@ -107,11 +104,8 @@ public class Rt3Activator extends Plugin {
 						if (p >= 0) {
 							int q = line.indexOf('/', p + 10);
 							if (q < 0) {
-								File rtSharedProfiles = new File(line
-										+ CACHEDPROFILES);
-								if (rtSharedProfiles.exists()
-										&& !profileList
-												.contains(rtSharedProfiles))
+								File rtSharedProfiles = new File(line, CACHEDPROFILES);
+								if (rtSharedProfiles.exists() && !profileList.contains(rtSharedProfiles))
 									profileList.add(rtSharedProfiles);
 							}
 						}
@@ -135,8 +129,7 @@ public class Rt3Activator extends Plugin {
 			File[] rtFiles = target.listFiles(new FileFilter() {
 				public boolean accept(File f) {
 					String name = f.getName();
-					return name.startsWith(RAW_THERAPEE)
-							|| name.startsWith(RAW_THERAPEE2);
+					return name.startsWith(RAW_THERAPEE) || name.startsWith(RAW_THERAPEE2);
 				}
 			});
 			for (File rtFile : rtFiles) {
@@ -184,10 +177,8 @@ public class Rt3Activator extends Plugin {
 		try {
 			File origFile = new File(new URI(uri));
 			File sidecar = getSidecarFile(origFile);
-			File cacheFile = getCacheFile(origFile,
-					computeHashForFile(origFile));
-			return (sidecar == null || cacheFile != null
-					&& RT3Detector.METADATA_CACHE.equals(priority)) ? cacheFile
+			File cacheFile = getCacheFile(origFile, computeHashForFile(origFile));
+			return (sidecar == null || cacheFile != null && RT3Detector.METADATA_CACHE.equals(priority)) ? cacheFile
 					: sidecar;
 		} catch (Exception e) {
 			// do nothing
@@ -196,14 +187,13 @@ public class Rt3Activator extends Plugin {
 	}
 
 	protected File getSidecarFile(File origFile) {
-		File sidecar = new File(new StringBuilder()
-				.append(origFile.getAbsolutePath()).append(PP3).toString());
+		File sidecar = new File(new StringBuilder().append(origFile.getAbsolutePath()).append(PP3).toString());
 		return sidecar.exists() ? sidecar : null;
 	}
 
 	protected File getCacheFile(File origFile, String hash) {
-		String metafilename = new StringBuilder().append(origFile.getName())
-				.append('.').append(hash).append(PP3).toString();
+		String metafilename = new StringBuilder().append(origFile.getName()).append('.').append(hash).append(PP3)
+				.toString();
 		for (File profileFolder : profiles) {
 			File metafile = new File(profileFolder, metafilename);
 			if (metafile.exists())
@@ -213,20 +203,17 @@ public class Rt3Activator extends Plugin {
 	}
 
 	public String computeHashForFile(File origFile) throws Exception {
-		return calculateHash(md5, new ByteArrayInputStream(
-				(origFile.getPath() + origFile.length()).getBytes()));
+		return calculateHash(md5, new ByteArrayInputStream((origFile.getPath() + origFile.length()).getBytes()));
 	}
 
-	public synchronized String calculateHash(MessageDigest algorithm,
-			InputStream in) throws Exception {
+	public synchronized String calculateHash(MessageDigest algorithm, InputStream in) throws Exception {
 		formatBuilder.setLength(0);
 		DigestInputStream dis = new DigestInputStream(in, algorithm);
 		while (dis.read() != -1) {
 			// do nothing
 		}
 		for (byte b : algorithm.digest())
-			formatBuilder.append(hexChars[((b >>> 4) & 0xf)]).append(
-					hexChars[(b & 0xf)]);
+			formatBuilder.append(hexChars[((b >>> 4) & 0xf)]).append(hexChars[(b & 0xf)]);
 		return formatBuilder.toString();
 	}
 

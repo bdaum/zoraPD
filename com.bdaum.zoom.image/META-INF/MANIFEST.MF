@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Image Plug-in
 Bundle-SymbolicName: com.bdaum.zoom.image;singleton:=true
-Bundle-Version: 3.1.0
+Bundle-Version: 3.2.0
 Bundle-Vendor: %Bundle-Vendor.bdaum
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: com.bdaum.zoom.image,
@@ -12,8 +12,8 @@ Export-Package: com.bdaum.zoom.image,
  com.mortennobel.imagescaling
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.7.0",
  org.eclipse.swt;bundle-version="3.7.1",
- com.bdaum.zoom.common;bundle-version="3.1.0";visibility:=reexport,
- mediautil;bundle-version="3.1.0";visibility:=reexport,
+ com.bdaum.zoom.common;bundle-version="3.2.0";visibility:=reexport,
+ mediautil;bundle-version="3.2.0";visibility:=reexport,
  jai;bundle-version="1.1.4";visibility:=reexport,
  ij;bundle-version="1.4.3";visibility:=reexport,
  jama;bundle-version="1.0.2"

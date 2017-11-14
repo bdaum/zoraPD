@@ -35,15 +35,15 @@ public class Constants {
 
 	public final static String APPLICATION_NAME = BatchConstants.APPLICATION_NAME;
 	public static final String APPNAME = BatchConstants.APPNAME;
-	public static final String REQUIRED_JAVA_VERSIONS = "1.8.0"; //$NON-NLS-1$ 
+	public static final String REQUIRED_JAVA_VERSIONS = "1.8.0"; //$NON-NLS-1$
 
 	public static final boolean WIN32 = BatchConstants.WIN32;
 	public static final boolean OSX = BatchConstants.OSX;
 	public static final boolean LINUX = BatchConstants.LINUX;
 	public final static String[] EXEEXTENSION = new String[] { WIN32 ? "*.exe;*.EXE" //$NON-NLS-1$
 			: "*.*" }; //$NON-NLS-1$
-	public final static String[] EXEFILTERNAMES = new String[] { WIN32 ? Messages.Constants_exeutables
-			: Messages.Constants_all_files };
+	public final static String[] EXEFILTERNAMES = new String[] {
+			WIN32 ? Messages.Constants_exeutables : Messages.Constants_all_files };
 
 	public static final String FILESCHEME = "file"; //$NON-NLS-1$
 
@@ -66,8 +66,8 @@ public class Constants {
 	public final static String OID = "stringId"; //$NON-NLS-1$
 
 	public static final String PRINTLAYOUT_ID = "printLayout"; //$NON-NLS-1$
-	public static final String SIMILARITYOPTIONS_ID = "similarityOptions"; //$NON-NLS-1$;
-	public static final String TEXTSEARCHOPTIONS_ID = "textSearchOptions"; //$NON-NLS-1$;
+	public static final String SIMILARITYOPTIONS_ID = "similarityOptions"; //$NON-NLS-1$ ;
+	public static final String TEXTSEARCHOPTIONS_ID = "textSearchOptions"; //$NON-NLS-1$ ;
 	public static final int TEXTSEARCHOPTIONS_DEFAULT_MAXCOUNT = 100;
 	public static final int TEXTSEARCHOPTIONS_DEFAULT_MIN_SCORE = 12;
 	public static final int TEXTSEARCHOPTIONS_DEFAULT_WEIGHT = 50;
@@ -92,17 +92,13 @@ public class Constants {
 	public static final String LAST_IMPORT_ID = "lastImport"; //$NON-NLS-1$
 	public static final DateFormat DFIMPORTDD = new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
 	public static final DateFormat DFIMPORTHH = new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
-	public static final DateFormat DFIMPORT = new SimpleDateFormat(
-			"yyyy-MM-dd HH:mm:ss"); //$NON-NLS-1$
+	public static final DateFormat DFIMPORT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); //$NON-NLS-1$
 
-	public final static SimpleDateFormat DFDT = new SimpleDateFormat(
-			Messages.Constants_ExtenalDateTimeFormat);
+	public final static SimpleDateFormat DFDT = new SimpleDateFormat(Messages.Constants_ExtenalDateTimeFormat);
 
-	public static final SimpleDateFormat IPTCDF = new SimpleDateFormat(
-			"yyyy-MM-dd"); //$NON-NLS-1$
+	public static final SimpleDateFormat IPTCDF = new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
 
-	public static final DateFormatSymbols DATEFORMATS = new DateFormatSymbols(
-			Locale.getDefault());
+	public static final DateFormatSymbols DATEFORMATS = new DateFormatSymbols(Locale.getDefault());
 
 	public static final long FOLDERWATCHINTERVAL = 15000L;
 
@@ -164,6 +160,13 @@ public class Constants {
 	public static final int SCALE_SCALED = 1;
 	public static final int SCALE_FIXED = 2;
 
+	public static final int SERIES_ALL = 0;
+	public static final int SERIES_EXP_BRACKET = 1;
+	public static final int SERIES_FOCUS_BRACKET = 2;
+	public static final int SERIES_ZOOM_BRACKET = 3;
+	public static final int SERIES_RAPID = 4;
+	public static final int SERIES_OTHER = 5;
+
 	public static final String PT_CATALOG = "{catalog}"; //$NON-NLS-1$
 	public static final String PT_TODAY = "{today}"; //$NON-NLS-1$
 	public static final String PT_COUNT = "{count}"; //$NON-NLS-1$
@@ -172,8 +175,8 @@ public class Constants {
 	public static final String PT_COLLECTION = "{collection}"; //$NON-NLS-1$
 	public static final String PT_USER = "{user}"; //$NON-NLS-1$
 	public static final String PT_OWNER = "{owner}"; //$NON-NLS-1$
-	public static final String[] PT_ALL = new String[] { PT_CATALOG, PT_TODAY,
-			PT_COUNT, PT_PAGENO, PT_PAGECOUNT, PT_COLLECTION, PT_USER, PT_OWNER };
+	public static final String[] PT_ALL = new String[] { PT_CATALOG, PT_TODAY, PT_COUNT, PT_PAGENO, PT_PAGECOUNT,
+			PT_COLLECTION, PT_USER, PT_OWNER };
 	public static final String PI_TITLE = "{title}"; //$NON-NLS-1$
 	public static final String PI_NAME = "{name}"; //$NON-NLS-1$
 	public static final String PI_DESCRIPTION = "{description}"; //$NON-NLS-1$
@@ -182,16 +185,6 @@ public class Constants {
 	public static final String PI_PAGEITEM = "{pageItem}"; //$NON-NLS-1$
 	public static final String PI_SIZE = "{size}"; //$NON-NLS-1$
 	public static final String PI_FORMAT = "{format}"; //$NON-NLS-1$
-	public static final String[] PI_ALL = new String[] { PI_TITLE, PI_NAME,
-			PI_DESCRIPTION, PI_CREATIONDATE, PT_COLLECTION, PI_SEQUENCENO,
-			PI_PAGEITEM, PI_SIZE, PI_FORMAT };
-
-	public static final int SERIES_ALL = 0;
-	public static final int SERIES_EXP_BRACKET = 1;
-	public static final int SERIES_FOCUS_BRACKET = 2;
-	public static final int SERIES_ZOOM_BRACKET = 3;
-	public static final int SERIES_RAPID = 4;
-	public static final int SERIES_OTHER = 5;
 
 	public static final String TV_SS = "{ss}"; //$NON-NLS-1$
 	public static final String TV_II = "{ii}"; //$NON-NLS-1$
@@ -224,23 +217,22 @@ public class Constants {
 	public static final String TV_OWNER = "{owner}"; //$NON-NLS-1$
 	public static final String TV_CUE = "{cue}"; //$NON-NLS-1$
 	public static final String TV_META = "{meta="; //$NON-NLS-1$
-	public static final String[] TV_ALL = new String[] { TV_SS, TV_II, TV_HH,
-			TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_MM, TV_YY, TV_YYYY,
-			TV_SEQUENCE_NO5, TV_SEQUENCE_NO4, TV_SEQUENCE_NO3, TV_SEQUENCE_NO2,
-			TV_SEQUENCE_NO1, TV_IMAGE_NO5, TV_IMAGE_NO4, TV_IMAGE_NO3,
-			TV_IMAGE_NO2, TV_IMAGE_NO1, TV_IMPORT_NO5, TV_IMPORT_NO4,
-			TV_IMPORT_NO3, TV_IMPORT_NO2, TV_IMPORT_NO1, TV_EXTENSION,
-			TV_FILENAME, TV_USER, TV_OWNER, TV_CUE };
-	public static final String[] TV_TRANSFER = new String[] { TV_SS, TV_II,
-			TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_MM, TV_YY, TV_YYYY,
-			TV_SEQUENCE_NO5, TV_SEQUENCE_NO4, TV_SEQUENCE_NO3, TV_SEQUENCE_NO2,
-			TV_SEQUENCE_NO1, TV_IMAGE_NO5, TV_IMAGE_NO4, TV_IMAGE_NO3,
-			TV_IMAGE_NO2, TV_IMAGE_NO1, TV_EXTENSION, TV_FILENAME, TV_USER,
+	public static final String[] TV_ALL = new String[] { TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_MM,
+			TV_YY, TV_YYYY, TV_SEQUENCE_NO5, TV_SEQUENCE_NO4, TV_SEQUENCE_NO3, TV_SEQUENCE_NO2, TV_SEQUENCE_NO1,
+			TV_IMAGE_NO5, TV_IMAGE_NO4, TV_IMAGE_NO3, TV_IMAGE_NO2, TV_IMAGE_NO1, TV_IMPORT_NO5, TV_IMPORT_NO4,
+			TV_IMPORT_NO3, TV_IMPORT_NO2, TV_IMPORT_NO1, TV_EXTENSION, TV_FILENAME, TV_USER, TV_OWNER, TV_CUE };
+	public static final String[] TV_TRANSFER = new String[] { TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW,
+			TV_MM, TV_YY, TV_YYYY, TV_SEQUENCE_NO5, TV_SEQUENCE_NO4, TV_SEQUENCE_NO3, TV_SEQUENCE_NO2, TV_SEQUENCE_NO1,
+			TV_IMAGE_NO5, TV_IMAGE_NO4, TV_IMAGE_NO3, TV_IMAGE_NO2, TV_IMAGE_NO1, TV_EXTENSION, TV_FILENAME, TV_USER,
 			TV_OWNER, TV_CUE };
-	public static final String[] TV_RENAME = new String[] { TV_SS, TV_II,
-			TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_MM, TV_YY, TV_YYYY,
-			TV_IMAGE_NO5, TV_IMAGE_NO4, TV_IMAGE_NO3, TV_IMAGE_NO2,
-			TV_IMAGE_NO1, TV_EXTENSION, TV_FILENAME, TV_USER, TV_OWNER, TV_CUE };
+	public static final String[] TV_RENAME = new String[] { TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_MM,
+			TV_YY, TV_YYYY, TV_IMAGE_NO5, TV_IMAGE_NO4, TV_IMAGE_NO3, TV_IMAGE_NO2, TV_IMAGE_NO1, TV_EXTENSION,
+			TV_FILENAME, TV_USER, TV_OWNER, TV_CUE };
+	public static final String[] PI_ALL = new String[] { PI_TITLE, PI_NAME, PI_DESCRIPTION, PI_CREATIONDATE,
+			PT_COLLECTION, PI_SEQUENCENO, PI_PAGEITEM, PI_SIZE, PI_FORMAT };
+	public static final String[] TH_ALL = new String[] { Constants.PI_TITLE, Constants.PI_NAME,
+			Constants.PI_FORMAT, Constants.PI_SIZE, Constants.PI_CREATIONDATE, TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_MM,
+			TV_YY, TV_YYYY };
 
 	public final static String RAWIMPORT_ONLYRAW = "raw"; //$NON-NLS-1$
 	public final static String RAWIMPORT_ONLYDNG = "dng"; //$NON-NLS-1$
@@ -278,8 +270,7 @@ public class Constants {
 	public final static int SLIDE_TRANSITION_BLEND_BOTTOMRIGHT = 16;
 	public final static int SLIDE_TRANSITION_RANDOM = 17;
 	public final static int SLIDE_TRANSITION_START = SLIDE_TRANSITION_EXPAND;
-	public final static int SLIDE_TRANSITION_N = SLIDE_TRANSITION_RANDOM
-			- SLIDE_TRANSITION_START;
+	public final static int SLIDE_TRANSITION_N = SLIDE_TRANSITION_RANDOM - SLIDE_TRANSITION_START;
 
 	public static final int SLIDE_TITLEONLY = 0;
 	public static final int SLIDE_SNOONLY = 1;
@@ -288,12 +279,10 @@ public class Constants {
 	public static final FileNameExtensionFilter SOUNDFILEFILTER = new FileNameExtensionFilter(
 			new String[] { "aif", "aifc", "au", "snd", "wav" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 
-	public static final String[] SupportedSoundFileExtensions = new String[] {
-			"*.aif;*.aifc;*.au;*.snd;*.wav", "*.*" }; //$NON-NLS-1$ //$NON-NLS-2$
+	public static final String[] SupportedSoundFileExtensions = new String[] { "*.aif;*.aifc;*.au;*.snd;*.wav", "*.*" }; //$NON-NLS-1$ //$NON-NLS-2$
 
 	public static final String[] SupportedSoundFileNames = new String[] {
-			Messages.Constants_supported_sound_files
-					+ " (*.aif,*.aifc,*.au,*.snd,*.wav)", //$NON-NLS-1$
+			Messages.Constants_supported_sound_files + " (*.aif,*.aifc,*.au,*.snd,*.wav)", //$NON-NLS-1$
 			Messages.Constants_all_files + " (*.*)" }; //$NON-NLS-1$
 
 	// Duplicates
@@ -365,6 +354,11 @@ public class Constants {
 
 	// Stacking
 	public static final String STACK = "STACK#"; //$NON-NLS-1$
+	// Labels
+	public static final int INHERIT_LABEL = 0;
+	public static final int TITLE_LABEL = 1;
+	public static final int NO_LABEL = 2;
+	public static final int CUSTOM_LABEL = 3;
 	// system properties
 	public static final String PROP_CATACCESS = "com.bdaum.zoom.cat.access"; //$NON-NLS-1$
 	public static final String PROP_CATACCESS_NONE = "none"; //$NON-NLS-1$

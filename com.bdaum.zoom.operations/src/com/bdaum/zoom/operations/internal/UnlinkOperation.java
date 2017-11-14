@@ -73,7 +73,7 @@ public class UnlinkOperation extends DbOperation {
 								"original", child, QueryField.EQUALS); //$NON-NLS-1$
 				if (!derived.isEmpty()) {
 					deleted = derived.get(0);
-					storeSafely(new Object[] { deleted }, 1, new Object[0]);
+					storeSafely(new Object[] { deleted }, 1);
 				}
 				break;
 			case Constants.COMPOSITES:
@@ -97,7 +97,7 @@ public class UnlinkOperation extends DbOperation {
 						storeSafely(null, 1, rel);
 					} else {
 						deleted = rel;
-						storeSafely(new Object[] { deleted }, 1, new Object[0]);
+						storeSafely(new Object[] { deleted }, 1);
 					}
 				}
 				break;

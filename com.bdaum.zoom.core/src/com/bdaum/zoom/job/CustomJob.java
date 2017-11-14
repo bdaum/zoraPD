@@ -27,7 +27,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TaskBar;
 import org.eclipse.swt.widgets.TaskItem;
@@ -137,22 +136,22 @@ public abstract class CustomJob extends Job {
 		IWorkbenchWindow[] windows = workbench.getWorkbenchWindows();
 		if (windows.length > 0) {
 			final Shell shell = windows[0].getShell();
-			final Display display = shell.getDisplay();
-			display.asyncExec(() -> {
-				if (!display.isDisposed()) {
-					TaskBar taskBar = display.getSystemTaskBar();
-					if (taskBar != null) {
-						TaskItem item = taskBar.getItem(shell);
-						if (item == null)
-							item = taskBar.getItem(null);
-						if (item != null) {
-							item.setProgressState(state);
-							if (percent >= 0)
-								item.setProgress(percent);
+			if (!shell.isDisposed())
+				shell.getDisplay().asyncExec(() -> {
+					if (!shell.isDisposed()) {
+						TaskBar taskBar = shell.getDisplay().getSystemTaskBar();
+						if (taskBar != null && !taskBar.isDisposed()) {
+							TaskItem item = taskBar.getItem(shell);
+							if (item == null)
+								item = taskBar.getItem(null);
+							if (item != null) {
+								item.setProgressState(state);
+								if (percent >= 0)
+									item.setProgress(percent);
+							}
 						}
 					}
-				}
-			});
+				});
 		}
 	}
 

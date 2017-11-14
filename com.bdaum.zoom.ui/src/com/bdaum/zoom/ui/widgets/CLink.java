@@ -34,6 +34,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 
+import com.bdaum.zoom.css.internal.CssActivator;
+
 /**
  * Implements a link similar to org.eclipse.swt.widgets.Link
  * Better behavior in regards to styling (link color can be changed)
@@ -60,6 +62,13 @@ public class CLink extends Composite implements MouseListener,
 		label.setCursor(parent.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		label.addMouseListener(this);
 		label.addMouseTrackListener(this);
+	}
+	
+	@Override
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		label.setData("id", enabled ? "clink" : "disabled"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		CssActivator.getDefault().setColors(label);
 	}
 	
 	/**

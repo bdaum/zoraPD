@@ -4,8 +4,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
+
+import org.eclipse.core.runtime.IStatus;
 
 import com.bdaum.zoom.batch.internal.Options;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.IRecipeDetector;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.image.IFileHandler;
@@ -14,6 +18,7 @@ import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.recipe.Recipe;
 import com.bdaum.zoom.program.AbstractRawConverter;
 import com.bdaum.zoom.program.BatchConstants;
+import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.IRawConverter;
 
 @SuppressWarnings("restriction")
@@ -23,6 +28,9 @@ public class RTRawConverter extends AbstractRawConverter {
 	private static final String SIDECAR = "sidecar"; //$NON-NLS-1$
 	private static final String HIGHRES = "highres"; //$NON-NLS-1$
 	private static final String USE_PP3 = "com.bdaum.zoom.rawtherapee.property.recipes"; //$NON-NLS-1$
+	private static final String LOCATE = "locate"; //$NON-NLS-1$
+	private static final String RAW_THERAPEE = "RawTherapee"; //$NON-NLS-1$
+	private static final String[] LOCATERAWTHERAPEE = new String[] { LOCATE, RAW_THERAPEE };
 	private File rt;
 	private File outFile;
 	private IRecipeDetector rt3Detector;
@@ -44,10 +52,7 @@ public class RTRawConverter extends AbstractRawConverter {
 		if (options != null) {
 			if (options.getBoolean(SIDECAR))
 				parms.add("-s"); //$NON-NLS-1$
-			if (options.getBoolean(HIGHRES))
-				parms.add("-b16"); //$NON-NLS-1$
-			else
-				parms.add("-b8"); //$NON-NLS-1$
+			parms.add(options.getBoolean(HIGHRES) ? "-b16" : "-b8"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		parms.add("-t"); //$NON-NLS-1$
 		parms.add("-Y"); //$NON-NLS-1$
@@ -68,8 +73,7 @@ public class RTRawConverter extends AbstractRawConverter {
 		int p = name.lastIndexOf('.');
 		if (p >= 0)
 			name = name.substring(0, p);
-		outFile = new File(name + ".tif"); //$NON-NLS-1$
-		return outFile;
+		return outFile = new File(name + ".tif"); //$NON-NLS-1$
 	}
 
 	public File getInputDirectory() {
@@ -85,11 +89,61 @@ public class RTRawConverter extends AbstractRawConverter {
 	}
 
 	public File findModule(File parentFile) {
+		if (Constants.WIN32) {
+			if (parentFile == null) {
+				String getenv = System.getenv("ProgramFiles"); //$NON-NLS-1$
+				if (getenv != null)
+					parentFile = new File(getenv, "RawTherapee"); //$NON-NLS-1$
+			}
+			if (parentFile != null) {
+				File[] members = parentFile.listFiles();
+				File newest = null;
+				if (members != null)
+					for (File file : members)
+						if (newest == null || file.getName().compareTo(newest.getName()) > 0)
+							newest = file;
+				if (newest != null) {
+					File module = new File(newest, "rawtherapee-cli.exe"); //$NON-NLS-1$
+					if (module.exists())
+						return module;
+					module = new File(newest, "rawtherapee.exe"); //$NON-NLS-1$
+					if (module.exists())
+						return module;
+				}
+			}
+		} else if (Constants.LINUX) {
+			if (parentFile == null) {
+				try {
+					String result = BatchUtilities.executeCommand(LOCATERAWTHERAPEE, null,
+							Messages.RTRawConverter_locate_rawtherapee, IStatus.OK, IStatus.WARNING, -1, 1000L,
+							"UTF-8"); //$NON-NLS-1$
+					if (result != null) {
+						StringTokenizer st = new StringTokenizer(result, "\n"); //$NON-NLS-1$
+						while (st.hasMoreTokens()) {
+							String line = st.nextToken().trim();
+							int p = line.lastIndexOf(RAW_THERAPEE);
+							if (p >= 0) {
+								int q = line.indexOf('/', p + 10);
+								if (q < 0) {
+									File module = new File(line, "rawtherapee-cli"); //$NON-NLS-1$
+									if (module.exists())
+										return module;
+									module = new File(line, "rawtherapee"); //$NON-NLS-1$
+									if (module.exists())
+										return module;
+								}
+							}
+						}
+					}
+				} catch (Exception e) {
+					// ignore
+				}
+			}
+		}
 		return null;
 	}
 
-	public long getLastRecipeModification(String uri, long lastMod,
-			String[] detectorIds) {
+	public long getLastRecipeModification(String uri, long lastMod, String[] detectorIds) {
 		return Math.max(lastMod, getLastRecipeModification(uri, detectorIds));
 	}
 
@@ -105,28 +159,42 @@ public class RTRawConverter extends AbstractRawConverter {
 
 	protected IRecipeDetector getDetector(String[] detectorIds) {
 		if (rt3Detector == null) {
-			List<IRecipeDetector> detectors = CoreActivator.getDefault()
-					.getDetectors(detectorIds);
+			List<IRecipeDetector> detectors = CoreActivator.getDefault().getDetectors(detectorIds);
 			if (detectors != null)
 				for (IRecipeDetector recipeDetector : detectors)
 					if (recipeDetector.getId().equals(RT3DETECTORID))
-						rt3Detector = recipeDetector;
+						return rt3Detector = recipeDetector;
 		}
 		return rt3Detector;
 	}
 
-	public Recipe getRecipe(String uri, boolean highres,
-			IFocalLengthProvider focalLengthProvider,
+	public Recipe getRecipe(String uri, boolean highres, IFocalLengthProvider focalLengthProvider,
 			Map<String, String> overlayMap, String[] detectorIds) {
-		return getLastRecipeModification(uri, detectorIds) > 0 ? Recipe.NULL
-				: null;
+		return getLastRecipeModification(uri, detectorIds) > 0 ? Recipe.NULL : null;
 	}
 
 	@Override
 	public boolean isValid() {
-		if (rt != null)
-			return true;
-		return super.isValid();
+		return rt != null ? true : super.isValid();
+	}
+
+	@Override
+	public String getVersionMessage() {
+		return com.bdaum.zoom.rawtherapee.internal.Messages.RTRawConverter_use_cli;
+	}
+
+	@Override
+	public String getPath() {
+		String path = super.getPath();
+		if (path != null && !path.contains("-cli")) { //$NON-NLS-1$
+			File file = new File(path);
+			File parentFile = file.getParentFile();
+			file = path.endsWith(".exe") ? new File(parentFile, "rawtherapee-cli.exe") //$NON-NLS-1$//$NON-NLS-2$
+					: new File(parentFile, "rawtherapee-cli"); //$NON-NLS-1$
+			if (file.exists())
+				return file.getAbsolutePath();
+		}
+		return path;
 	}
 
 }

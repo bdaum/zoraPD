@@ -174,6 +174,7 @@ public class ImageGalleryGenerator extends AbstractGalleryGenerator {
 		}
 		varmap.put("keywords", BatchUtilities.encodeHTML( //$NON-NLS-1$
 				Core.toStringList(show.getKeyword(), ", "), false)); //$NON-NLS-1$
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ"); //$NON-NLS-1$
 		Date now = new Date();
 		String s = df.format(now);
 		s = s.substring(0, s.length() - 2) + ':' + s.substring(s.length() - 2);

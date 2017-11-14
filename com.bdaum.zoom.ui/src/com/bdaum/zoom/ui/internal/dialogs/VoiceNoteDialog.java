@@ -151,9 +151,8 @@ public class VoiceNoteDialog extends ZTitleAreaDialog {
 			if (mixed) {
 				note.setHint(Messages.VoiceNoteDialog_mixed_contents);
 				cancelButton.setFocus();
-			} else {
+			} else
 				note.setText(noteText.substring(1));
-			}
 			stackLayout.topControl = noteComp;
 			stack.layout(true, true);
 			noteButton.setEnabled(false);

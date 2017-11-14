@@ -193,7 +193,8 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 				sm = new SmartCollectionImpl(
 						text + NLS.bind(Messages.QuickFindControl_maxmin, queryOptions.getMaxHits(),
 								queryOptions.getScore()),
-						false, false, true, queryOptions.isNetworked(), null, 0, null, 0, null, null);
+						false, false, true, queryOptions.isNetworked(), null, 0, null, 0, null, Constants.INHERIT_LABEL,
+						null, 0, null);
 				sm.addCriterion(new CriterionImpl(ICollectionProcessor.TEXTSEARCH, null,
 						new TextSearchOptions_typeImpl(text, queryOptions.getMaxHits(), queryOptions.getScore() / 100f),
 						Constants.TEXTSEARCHOPTIONS_DEFAULT_MIN_SCORE, false));
@@ -343,7 +344,8 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 									newOptions.setPngImage(asset.getJpegThumbnail());
 								SmartCollectionImpl collection = new SmartCollectionImpl(
 										NLS.bind(Messages.QuickFindControl_images_similar, asset.getName()), false,
-										false, true, queryOptions.isNetworked(), null, 0, null, 0, null, null);
+										false, true, queryOptions.isNetworked(), null, 0, null, 0, null,
+										Constants.INHERIT_LABEL, null, 0, null);
 								collection.addCriterion(new CriterionImpl(ICollectionProcessor.SIMILARITY, null,
 										newOptions, queryOptions.getScore(), false));
 								UiActivator.getDefault().getNavigationHistory(getWorkbenchWindow())

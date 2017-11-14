@@ -107,7 +107,6 @@ public class CriterionGroup extends AbstractCriterionGroup {
 			style &= ~SWT.READ_ONLY;
 			GridData layoutData = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
 			layoutData.widthHint = Constants.WIN32 | readOnly ? 180 : 300;
-			// layoutData.minimumWidth = 180;
 			setLayoutData(layoutData);
 			layout = new StackLayout();
 			setLayout(layout);

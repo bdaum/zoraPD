@@ -383,7 +383,7 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 		boolean network = findInNetworkGroup == null ? false
 				: findInNetworkGroup.getSelection();
 		collection = new SmartCollectionImpl(title, false, false, adhoc,
-				network, null, 0, null, 0, null, null);
+				network, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 		collection.addCriterion(new CriterionImpl(
 				ICollectionProcessor.SIMILARITY, null, newOptions,
 				searchResultGroup.getScore(), false));

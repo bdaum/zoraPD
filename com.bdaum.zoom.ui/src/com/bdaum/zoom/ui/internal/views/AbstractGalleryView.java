@@ -890,7 +890,8 @@ public abstract class AbstractGalleryView extends ImageView
 
 	@Override
 	public void selectAll() {
-		BusyIndicator.showWhile(getSite().getShell().getDisplay(), () -> setAssetSelection(new AssetSelection(getAssetProvider())));
+		BusyIndicator.showWhile(getSite().getShell().getDisplay(),
+				() -> setAssetSelection(new AssetSelection(getAssetProvider())));
 	}
 
 	@Override
@@ -902,20 +903,14 @@ public abstract class AbstractGalleryView extends ImageView
 
 	@Override
 	public void assetsModified(final BagChange<Asset> changes, final QueryField node) {
-		// if (node == null || node == QueryField.RATING || node ==
-		// QueryField.COLORCODE || node == QueryField.STATUS) {
 		Shell shell = getSite().getShell();
 		if (!shell.isDisposed())
 			shell.getDisplay().asyncExec(() -> {
 				if (!shell.isDisposed()) {
-					// if (changes == null || changes.hasStructuralChanges())
 					refresh();
-					// else
-					// redrawCollection(changes.getModified(), node);
 					updateActions();
 				}
 			});
-		// }
 	}
 
 	public boolean redrawCollection(Collection<? extends Asset> assets, QueryField node) {
@@ -1054,12 +1049,9 @@ public abstract class AbstractGalleryView extends ImageView
 			if (currentCollection.getAdhoc() && !currentCollection.getSystem())
 				canSave = true;
 			SmartCollection parent = currentCollection.getSmartCollection_subSelection_parent();
-			if (parent != null) {
-				if (parent.getAdhoc())
-					canSave = false;
-				if (parent.getCriterion().size() == 1 && parent.getCriterion(0).getField().startsWith("*")) //$NON-NLS-1$
-					canSave = false;
-			}
+			if (parent != null && (parent.getAdhoc()
+					|| parent.getCriterion().size() == 1 && parent.getCriterion(0).getField().startsWith("*"))) //$NON-NLS-1$
+				canSave = false;
 		}
 		saveQueryAction.setEnabled(canSave && writable);
 	}

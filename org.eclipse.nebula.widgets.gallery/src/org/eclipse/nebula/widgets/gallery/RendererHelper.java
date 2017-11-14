@@ -32,10 +32,10 @@ public class RendererHelper {
 	private static final String ELLIPSIS = "..."; //$NON-NLS-1$
 
 	/**
-	 * Shorten the given text <code>text</code> so that its length doesn't
-	 * exceed the given width. The default implementation replaces characters in
-	 * the center of the original string with an ellipsis ("..."). Override if
-	 * you need a different strategy.
+	 * Shorten the given text <code>text</code> so that its length doesn't exceed
+	 * the given width. The default implementation replaces characters in the center
+	 * of the original string with an ellipsis ("..."). Override if you need a
+	 * different strategy.
 	 * 
 	 * Note: Code originally from org.eclipse.cwt.CLabel
 	 * 
@@ -81,14 +81,7 @@ public class RendererHelper {
 					min = max;
 				}
 			}
-			if (mid == 0) {
-
-				return text;
-			}
-			String result = text.substring(0, mid) + ELLIPSIS
-					+ text.substring(l - mid, l);
-
-			return result;
+			return mid == 0 ? text : text.substring(0, mid) + ELLIPSIS + text.substring(l - mid, l);
 		}
 
 		return text;
@@ -104,22 +97,16 @@ public class RendererHelper {
 	 * @param maxY
 	 * @return
 	 */
-	public static Point getBestSize(int originalX, int originalY, int maxX,
-			int maxY) {
+	public static Point getBestSize(int originalX, int originalY, int maxX, int maxY) {
 		double widthRatio = (double) originalX / (double) maxX;
 		double heightRatio = (double) originalY / (double) maxY;
-
 		double bestRatio = widthRatio > heightRatio ? widthRatio : heightRatio;
-
-		int newWidth = (int) (originalX / bestRatio);
-		int newHeight = (int) (originalY / bestRatio);
-
-		return new Point(newWidth, newHeight);
+		return new Point((int) (originalX / bestRatio), (int) (originalY / bestRatio));
 	}
 
 	/**
-	 * Return both width and height offsets for an image to be centered in a
-	 * given area.
+	 * Return both width and height offsets for an image to be centered in a given
+	 * area.
 	 * 
 	 * @param imageWidth
 	 * @param imageHeight
@@ -127,10 +114,8 @@ public class RendererHelper {
 	 * @param areaHeight
 	 * @return
 	 */
-	public static Point getImageOffset(int imageWidth, int imageHeight,
-			int areaWidth, int areaHeight) {
-		return new Point(getShift(areaWidth, imageWidth), getShift(areaHeight,
-				imageHeight));
+	public static Point getImageOffset(int imageWidth, int imageHeight, int areaWidth, int areaHeight) {
+		return new Point(getShift(areaWidth, imageWidth), getShift(areaHeight, imageHeight));
 	}
 
 	/**
@@ -142,15 +127,12 @@ public class RendererHelper {
 	 */
 	public static int getShift(int totalSize, int size) {
 		int xShift = totalSize - size;
-		if (xShift < 0)
-			xShift = 0;
-		xShift = xShift >> 1;
-		return xShift;
+		return xShift < 0 ? 0 : xShift >> 1;
 	}
 
 	/**
-	 * Checks if two colors are equals by comparing their RGB values.
-	 * This method is null-proof.
+	 * Checks if two colors are equals by comparing their RGB values. This method is
+	 * null-proof.
 	 * 
 	 * @param galleryColor
 	 *            First color

@@ -185,10 +185,6 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	private static final String LUCENE_WRITE_LOCK = "write.lock"; //$NON-NLS-1$
 
-	public static final SimpleDateFormat df = new SimpleDateFormat(Messages.DbManager_date_mask_month);
-	public static final SimpleDateFormat dfw = new SimpleDateFormat(Messages.DbManager_date_mask_week);
-	public static final SimpleDateFormat dfdw = new SimpleDateFormat(Messages.DbManager_date_mask_day_of_week);
-
 	private static final List<LocationImpl> EMPTYLOCATIONS = new ArrayList<LocationImpl>(0);
 
 	private static final List<Trash> EMPTYTRASH = new ArrayList<Trash>(0);
@@ -305,7 +301,6 @@ public class DbManager implements IDbManager, IAdaptable {
 											// problems
 		common.callbacks(false);
 		common.activationDepth(Integer.MAX_VALUE);
-		// common.updateDepth(Integer.MAX_VALUE);
 		common.stringEncoding(StringEncodings.utf8());
 		ObjectClass trash = common.objectClass(Trash.class);
 		trash.objectField("opId").indexed(true); //$NON-NLS-1$
@@ -321,12 +316,11 @@ public class DbManager implements IDbManager, IAdaptable {
 	/*
 	 * Deleting complex objects
 	 *
-	 * 1. Objects without backpointer to a parent are handeled with
-	 * cascadeOnDelete. Example: GroupImpl 2. Objects with collections of
-	 * primitive datatypes (String counts as primitive) are handled in the
-	 * delete() method. Example: WallImpl 3. Objects with non-primitive members
-	 * and backpointers are handled through specific deleteXXXX() methods.
-	 * Example: deleteCollection()
+	 * 1. Objects without backpointer to a parent are handeled with cascadeOnDelete.
+	 * Example: GroupImpl 2. Objects with collections of primitive datatypes (String
+	 * counts as primitive) are handled in the delete() method. Example: WallImpl 3.
+	 * Objects with non-primitive members and backpointers are handled through
+	 * specific deleteXXXX() methods. Example: deleteCollection()
 	 */
 
 	protected EmbeddedConfiguration createDatabaseConfiguration(boolean allowUpgrade, String fName,
@@ -337,7 +331,6 @@ public class DbManager implements IDbManager, IAdaptable {
 		final CommonConfiguration common = config.common();
 		if (DIAGNOSE)
 			common.messageLevel(2);
-		// common.reflectWith(new JdkReflector(classLookUp));
 		common.allowVersionUpdates(allowUpgrade);
 		common.callConstructors(true);
 		common.testConstructors(false);
@@ -360,10 +353,9 @@ public class DbManager implements IDbManager, IAdaptable {
 		common.objectClass(SmartCollection_typeImpl.class).indexed(false);
 		// Criteria
 		ObjectClass crit = common.objectClass(CriterionImpl.class);
-		// crit.cascadeOnDelete(true);
-		// crit.cascadeOnUpdate(true);
 		crit.updateDepth(1);
 		common.objectClass(Criterion_typeImpl.class).indexed(false);
+		common.objectClass(Criterion_typeImpl.class).cascadeOnDelete(true);
 		// SortCriteria
 		ObjectClass sortcrit = common.objectClass(SortCriterionImpl.class);
 		sortcrit.updateDepth(1);
@@ -407,7 +399,6 @@ public class DbManager implements IDbManager, IAdaptable {
 		assetType.objectField(QueryField.MIMETYPE.getKey()).indexed(true);
 		lexFields.add(QueryField.MIMETYPE.getKey());
 		assetType.objectField(QueryField.RATING.getKey()).indexed(true);
-		// assetType.objectField(QueryField.EXIF_FOCALLENGTHIN35MMFILM.getKey()).indexed(false);
 		// Track and Ghost
 		common.objectClass(TrackRecordImpl.class).objectField("asset_track_parent") //$NON-NLS-1$
 				.indexed(true);
@@ -494,15 +485,13 @@ public class DbManager implements IDbManager, IAdaptable {
 				StoredClass[] storedClasses = container.ext().storedClasses();
 				for (StoredClass sc : storedClasses) {
 					try {
-						Class<?> c = Class.forName(sc.getName());
-						System.out.println(c.getName());
+						System.out.println(Class.forName(sc.getName()).getName());
 					} catch (ClassNotFoundException ex) {
 						System.err.println(ex);
 					}
 				}
 				DiagnosticConfiguration diagnostic = config.common().diagnostic();
 				diagnostic.addListener(new DiagnosticListener() {
-
 					public void onDiagnostic(Diagnostic d) {
 						System.out.println(d);
 					}
@@ -581,12 +570,12 @@ public class DbManager implements IDbManager, IAdaptable {
 			fName = fName.substring(0, fName.length() - BatchConstants.CATEXTENSION.length());
 		sb.append(Constants.LOCVAR).append("/backups/").append(fName).append('.').append(Constants.DATEVAR).append( //$NON-NLS-1$
 				'.' + Constants.BACKUPEXT);
-		return new MetaImpl(VERSION, factory.getLireServiceVersion(), creationDate, System.getProperty("user.name"), null, //$NON-NLS-1$
-				"", Messages.DbManager_User_field_1, //$NON-NLS-1$
-				Messages.DbManager_User_field_2, Meta_type.timeline_month, Meta_type.locationFolders_no, new Date(0L),
-				0, 0, creationDate, null, sb.toString(), creationDate, Meta_type.thumbnailResolution_medium, false,
-				null, null, false, 30, false, readOnly, false, ImageConstants.SHARPEN_MEDIUM, null, Platform.getOS(),
-				null, Constants.PICASASCANNERVERSION, false, false, 75, false, null);
+		return new MetaImpl(VERSION, factory.getLireServiceVersion(), creationDate, System.getProperty("user.name"), //$NON-NLS-1$
+				null, "", Messages.DbManager_User_field_1, Messages.DbManager_User_field_2, Meta_type.timeline_month, //$NON-NLS-1$
+				Meta_type.locationFolders_no, new Date(0L), 0, 0, creationDate, null, sb.toString(), creationDate,
+				Meta_type.thumbnailResolution_medium, false, null, null, false, 30, false, readOnly, false,
+				ImageConstants.SHARPEN_MEDIUM, null, Platform.getOS(), null, Constants.PICASASCANNERVERSION, false,
+				false, 75, false, null);
 	}
 
 	/*
@@ -665,8 +654,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.db.IDbManager#obtainStructByIds(java.lang.String,
+	 * @see com.bdaum.zoom.core.db.IDbManager#obtainStructByIds(java.lang.String,
 	 * java.lang.Class, java.util.Collection)
 	 */
 	public <T extends IIdentifiableObject> List<T> obtainStructByIds(String assetId, Class<T> clazz, String[] ids) {
@@ -712,11 +700,9 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 
 	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<T> clazz) {
-		while (db != null) {
+		while (db != null)
 			try {
-				Query query = db.query();
-				query.constrain(clazz);
-				ObjectSet<T> set = query.execute();
+				ObjectSet<T> set = db.query(clazz);
 				dbErrorCounter = 0;
 				return set;
 			} catch (DatabaseClosedException e) {
@@ -726,7 +712,6 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (Db4oException e) {
 				reconnectToDb(e);
 			}
-		}
 		return new ArrayList<T>(0);
 	}
 
@@ -989,8 +974,8 @@ public class DbManager implements IDbManager, IAdaptable {
 	 * (nicht-Javadoc)
 	 *
 	 * @see com.bdaum.zoom.core.db.IDbManager#obtainObjects(java.lang.Class,
-	 * java.lang.String, java.lang.Object, int, java.lang.String,
-	 * java.lang.Object, int, boolean)
+	 * java.lang.String, java.lang.Object, int, java.lang.String, java.lang.Object,
+	 * int, boolean)
 	 */
 	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<? extends IIdentifiableObject> clazz,
 			String field1, Object v1, int rel1, String field2, Object v2, int rel2, boolean or) {
@@ -1075,8 +1060,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IDbManager#findLocation(com.bdaum.zoom.cat.model.
+	 * @see com.bdaum.zoom.core.IDbManager#findLocation(com.bdaum.zoom.cat.model.
 	 * location.LocationImpl)
 	 */
 
@@ -1225,11 +1209,14 @@ public class DbManager implements IDbManager, IAdaptable {
 	public List<Trash> obtainTrashToDelete(boolean withFiles) {
 		while (trashCan != null) {
 			try {
-				Query query = trashCan.query();
-				query.constrain(Trash.class);
-				if (withFiles)
+				ObjectSet<Trash> trash;
+				if (withFiles) {
+					Query query = trashCan.query();
+					query.constrain(Trash.class);
 					query.descend("files").constrain(true); //$NON-NLS-1$
-				ObjectSet<Trash> trash = query.execute();
+					trash = query.execute();
+				} else
+					trash = trashCan.query(Trash.class);
 				dbErrorCounter = 0;
 				return trash;
 			} catch (DatabaseClosedException e) {
@@ -1503,7 +1490,8 @@ public class DbManager implements IDbManager, IAdaptable {
 		List<SmartCollectionImpl> set = obtainObjects(SmartCollectionImpl.class, Constants.OID, key, QueryField.EQUALS);
 		SmartCollectionImpl coll1 = null;
 		if (set.isEmpty()) {
-			coll1 = new SmartCollectionImpl(name, true, false, false, false, null, 0, null, 0, null, null);
+			coll1 = new SmartCollectionImpl(name, true, false, false, false, null, 0, null, 0, null,
+					Constants.INHERIT_LABEL, null, 0, null);
 			coll1.setStringId(key);
 			Criterion crit = new CriterionImpl(fieldname, null, fieldvalue, rel, false);
 			coll1.addCriterion(crit);
@@ -1565,15 +1553,8 @@ public class DbManager implements IDbManager, IAdaptable {
 	private void deleteCollection(SmartCollection collection) {
 		for (SmartCollection sub : collection.getSubSelection())
 			deleteCollection(sub);
-		for (Criterion crit : collection.getCriterion()) {
+		for (Criterion crit : collection.getCriterion())
 			delete(crit);
-			Object value = crit.getValue();
-			if (value != null) {
-				String name = value.getClass().getName();
-				if (!name.startsWith("java.")) //$NON-NLS-1$
-					delete(value);
-			}
-		}
 		for (SortCriterion crit : collection.getSortCriterion())
 			delete(crit);
 		PostProcessor postProcessor = collection.getPostProcessor();
@@ -1585,8 +1566,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.db.IDbManager#createLastImportCollection(java.util
+	 * @see com.bdaum.zoom.core.db.IDbManager#createLastImportCollection(java.util
 	 * .Date, boolean, java.lang.String)
 	 */
 	public Date createLastImportCollection(Date importDate, boolean cumulate, String description) {
@@ -1621,7 +1601,8 @@ public class DbManager implements IDbManager, IAdaptable {
 		}
 		SmartCollectionImpl newcoll = new SmartCollectionImpl(
 				cumulate ? Messages.DbManager_recent_bg_imports : Messages.DbManager_last_import, true, false, false,
-				false, description, 0, null, 0, null, null);
+				false, description, 0, null, 0, null, coll != null ? coll.getShowLabel() : null,
+				coll != null ? coll.getLabelTemplate() : null, 0, null);
 		newcoll.setStringId(Constants.LAST_IMPORT_ID);
 		Criterion criterion = new CriterionImpl(QueryField.IMPORTDATE.getKey(), null, "", //$NON-NLS-1$
 				cumulate ? QueryField.BETWEEN : QueryField.DATEEQUALS, false);
@@ -1649,7 +1630,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	private GroupImpl getRecentImportsSubgroup(GroupImpl group) {
 		GroupImpl subgroup = obtainById(GroupImpl.class, Constants.GROUP_ID_RECENTIMPORTS);
 		if (subgroup == null) {
-			subgroup = new GroupImpl(Messages.DbManager_recent_imports, true);
+			subgroup = new GroupImpl(Messages.DbManager_recent_imports, true, Constants.INHERIT_LABEL, null, 0, null);
 			subgroup.setStringId(Constants.GROUP_ID_RECENTIMPORTS);
 			subgroup.setGroup_subgroup_parent(group);
 			group.addSubgroup(subgroup);
@@ -1677,7 +1658,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	private GroupImpl getCollectionGroup(String id, String label, boolean system) {
 		GroupImpl group = obtainById(GroupImpl.class, id);
 		if (group == null) {
-			group = new GroupImpl(label, system);
+			group = new GroupImpl(label, system, Constants.INHERIT_LABEL, null, 0, null);
 			group.setStringId(id);
 		}
 		return group;
@@ -1686,8 +1667,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IDbManager#createTimeLine(com.bdaum.zoom.cat.model
+	 * @see com.bdaum.zoom.core.IDbManager#createTimeLine(com.bdaum.zoom.cat.model
 	 * .asset.Asset, java.lang.String)
 	 */
 
@@ -1709,8 +1689,8 @@ public class DbManager implements IDbManager, IAdaptable {
 		final boolean[] changeIndicator = new boolean[] { false };
 		safeTransaction(() -> {
 			try {
-				GroupImpl timeLineGroup = getCollectionGroup(Constants.GROUP_ID_TIMELINE,
-						Messages.DbManager_Timeline, true);
+				GroupImpl timeLineGroup = getCollectionGroup(Constants.GROUP_ID_TIMELINE, Messages.DbManager_Timeline,
+						true);
 				int year = cal.get(Calendar.YEAR);
 				StringBuilder ksb = new StringBuilder(DATETIMEKEY);
 				ksb.append(String.valueOf(year));
@@ -1720,8 +1700,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				store(timeLineGroup);
 				store(parentColl);
 				if (!timeline.equals(Meta_type.timeline_year)) {
-					if (timeline.equals(Meta_type.timeline_week)
-							|| timeline.equals(Meta_type.timeline_weekAndDay)) {
+					if (timeline.equals(Meta_type.timeline_week) || timeline.equals(Meta_type.timeline_weekAndDay)) {
 						int week = cal.get(Calendar.WEEK_OF_YEAR);
 						GregorianCalendar from1 = new GregorianCalendar(year, 0, 1);
 						from1.set(GregorianCalendar.WEEK_OF_YEAR, week);
@@ -1733,8 +1712,9 @@ public class DbManager implements IDbManager, IAdaptable {
 						to.set(Calendar.HOUR_OF_DAY, 23);
 						to.set(Calendar.MINUTE, 59);
 						to.set(Calendar.SECOND, 59);
-						parentColl = createTimelineCollection(dfw.format(from1.getTime()), parentColl, timeLineGroup,
-								ksb.toString(), from1, to, changeIndicator);
+						parentColl = createTimelineCollection(
+								new SimpleDateFormat(Messages.DbManager_date_mask_week).format(from1.getTime()),
+								parentColl, timeLineGroup, ksb.toString(), from1, to, changeIndicator);
 						if (!timeline.equals(Meta_type.timeline_week)) {
 							int day11 = cal.get(Calendar.DAY_OF_WEEK);
 							ksb.append('-').append(day11);
@@ -1747,22 +1727,25 @@ public class DbManager implements IDbManager, IAdaptable {
 							to.set(Calendar.HOUR_OF_DAY, 23);
 							to.set(Calendar.MINUTE, 59);
 							to.set(Calendar.SECOND, 59);
-							createTimelineCollection(dfdw.format(from1.getTime()), parentColl, timeLineGroup,
-									ksb.toString(), from1, to, changeIndicator);
+							createTimelineCollection(
+									new SimpleDateFormat(Messages.DbManager_date_mask_day_of_week)
+											.format(from1.getTime()),
+									parentColl, timeLineGroup, ksb.toString(), from1, to, changeIndicator);
 						}
 					} else {
 						int month = cal.get(Calendar.MONTH);
 						GregorianCalendar from2 = new GregorianCalendar(year, month, 1);
 						ksb.append('-').append(month);
-						parentColl = createTimelineCollection(df.format(from2.getTime()), parentColl, timeLineGroup,
-								ksb.toString(), from2, new GregorianCalendar(year, month,
+						parentColl = createTimelineCollection(
+								new SimpleDateFormat(Messages.DbManager_date_mask_month).format(from2.getTime()),
+								parentColl, timeLineGroup, ksb.toString(), from2, new GregorianCalendar(year, month,
 										from2.getActualMaximum(Calendar.DAY_OF_MONTH), 23, 59, 59),
 								changeIndicator);
 						if (!timeline.equals(Meta_type.timeline_month)) {
 							int day12 = cal.get(Calendar.DAY_OF_MONTH);
 							ksb.append('-').append(day12);
-							createTimelineCollection(String.valueOf(day12), parentColl, timeLineGroup,
-									ksb.toString(), new GregorianCalendar(year, month, day12),
+							createTimelineCollection(String.valueOf(day12), parentColl, timeLineGroup, ksb.toString(),
+									new GregorianCalendar(year, month, day12),
 									new GregorianCalendar(year, month, day12, 23, 59, 59), changeIndicator);
 						}
 					}
@@ -1778,7 +1761,8 @@ public class DbManager implements IDbManager, IAdaptable {
 			String id, GregorianCalendar from, GregorianCalendar to, boolean[] changeIndicator) {
 		SmartCollectionImpl coll = obtainById(SmartCollectionImpl.class, id);
 		if (coll == null) {
-			coll = new SmartCollectionImpl(name, true, false, false, false, null, 0, null, 0, null, null);
+			coll = new SmartCollectionImpl(name, true, false, false, false, null, 0, null, 0, null,
+					Constants.INHERIT_LABEL, null, 0, null);
 			coll.setStringId(id);
 			Range value = new Range(from.getTime(), to.getTime());
 			Criterion exifCrit = new CriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, value,
@@ -1805,8 +1789,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.db.IDbManager#createLocationFolders(com.bdaum.zoom
+	 * @see com.bdaum.zoom.core.db.IDbManager#createLocationFolders(com.bdaum.zoom
 	 * .cat.model.asset.Asset, java.lang.String)
 	 */
 	public boolean createLocationFolders(Asset asset, String locationOption) {
@@ -1824,8 +1807,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.db.IDbManager#createLocationFolders(com.bdaum.zoom
+	 * @see com.bdaum.zoom.core.db.IDbManager#createLocationFolders(com.bdaum.zoom
 	 * .cat.model.location.Location, java.lang.String)
 	 */
 	public boolean createLocationFolders(final Location location, final String locationOption) {
@@ -1846,16 +1828,15 @@ public class DbManager implements IDbManager, IAdaptable {
 		final boolean[] changeIndicator = new boolean[] { false };
 		safeTransaction(() -> {
 			try {
-				GroupImpl locationGroup = getCollectionGroup(Constants.GROUP_ID_LOCATIONS,
-						Messages.DbManager_locations, true);
+				GroupImpl locationGroup = getCollectionGroup(Constants.GROUP_ID_LOCATIONS, Messages.DbManager_locations,
+						true);
 				// Continent
 				ksb.append(regionCode);
 				String name = regionCode != null ? GeoMessages.getString(GeoMessages.PREFIX + regionCode)
 						: Messages.DbManager_unknown_world_region;
 				Criterion crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
 						QueryField.LOCATION_WORLDREGIONCODE.getKey(), regionCode,
-						regionCode == null || regionCode.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS,
-						true);
+						regionCode == null || regionCode.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS, true);
 				SmartCollectionImpl parentColl = createLocationCollection(name, null, locationGroup, ksb.toString(),
 						changeIndicator, crit);
 				store(locationGroup);
@@ -1867,10 +1848,8 @@ public class DbManager implements IDbManager, IAdaptable {
 					name = Messages.DbManager_unknown_country;
 				crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
 						QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode,
-						countryCode == null || countryCode.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS,
-						true);
-				parentColl = createLocationCollection(name, parentColl, null, ksb.toString(), changeIndicator,
-						crit);
+						countryCode == null || countryCode.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS, true);
+				parentColl = createLocationCollection(name, parentColl, null, ksb.toString(), changeIndicator, crit);
 				if (!locationOption.equals(Meta_type.locationFolders_country)) {
 					// State
 					ksb.append('|').append(state);
@@ -1882,11 +1861,10 @@ public class DbManager implements IDbManager, IAdaptable {
 							state == null || state.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS, true);
 					CriterionImpl crit2 = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
 							QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode,
-							countryCode == null || countryCode.isEmpty() ? QueryField.UNDEFINED
-									: QueryField.EQUALS,
+							countryCode == null || countryCode.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS,
 							true);
-					parentColl = createLocationCollection(name, parentColl, null, ksb.toString(), changeIndicator,
-							crit, crit2);
+					parentColl = createLocationCollection(name, parentColl, null, ksb.toString(), changeIndicator, crit,
+							crit2);
 					if (!locationOption.equals(Meta_type.locationFolders_state)) {
 						// City
 						name = city;
@@ -1894,17 +1872,14 @@ public class DbManager implements IDbManager, IAdaptable {
 							name = Messages.DbManager_unknown_city;
 						crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
 								QueryField.LOCATION_CITY.getKey(), city,
-								city == null || city.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS,
-								true);
+								city == null || city.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS, true);
 
 						crit2 = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
 								QueryField.LOCATION_STATE.getKey(), state,
-								state == null || state.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS,
-								true);
+								state == null || state.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS, true);
 						CriterionImpl crit3 = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
 								QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode,
-								countryCode == null || countryCode.isEmpty() ? QueryField.UNDEFINED
-										: QueryField.EQUALS,
+								countryCode == null || countryCode.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS,
 								true);
 						parentColl = createLocationCollection(name, parentColl, null, locationKey, changeIndicator,
 								crit, crit2, crit3);
@@ -1922,7 +1897,8 @@ public class DbManager implements IDbManager, IAdaptable {
 			GroupImpl locationGroup, String id, boolean[] changeIndicator, Criterion... criteria) {
 		SmartCollectionImpl coll = obtainById(SmartCollectionImpl.class, id);
 		if (coll == null) {
-			coll = new SmartCollectionImpl(name, true, false, false, false, null, 0, null, 0, null, null);
+			coll = new SmartCollectionImpl(name, true, false, false, false, null, 0, null, 0, null,
+					Constants.INHERIT_LABEL, null, 0, null);
 			coll.setStringId(id);
 			for (Criterion criterion : criteria)
 				coll.addCriterion(criterion);
@@ -2103,12 +2079,10 @@ public class DbManager implements IDbManager, IAdaptable {
 			}
 			int i = 0;
 			for (Class<?> clazz : typeMap.values()) {
-				Query query = sourceContainer.query();
-				query.constrain(clazz);
-				ObjectSet<Object> set = query.execute();
+				ObjectSet<?> set = sourceContainer.query(clazz);
 				for (Object object : set) {
 					if (object instanceof IIdentifiableObject) {
-						query = targetContainer.query();
+						Query query = targetContainer.query();
 						query.constrain(clazz);
 						query.descend(Constants.OID).constrain(((IIdentifiableObject) object).getStringId());
 						if (!query.<IIdentifiableObject>execute().isEmpty())
@@ -2162,8 +2136,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IDbManager#markSystemCollectionsForPurge(com.bdaum
+	 * @see com.bdaum.zoom.core.IDbManager#markSystemCollectionsForPurge(com.bdaum
 	 * .zoom.cat.model.asset.Asset)
 	 */
 
@@ -2371,8 +2344,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IDbManager#createCollectionProcessor(com.bdaum.zoom
+	 * @see com.bdaum.zoom.core.IDbManager#createCollectionProcessor(com.bdaum.zoom
 	 * .cat.model.group.SmartCollection, com.bdaum.zoom.core.IAssetFilter,
 	 * com.bdaum.zoom.cat.model.group.SortCriterion)
 	 */
@@ -2829,8 +2801,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IDbManager#createCollectionProcessor(com.bdaum.zoom
+	 * @see com.bdaum.zoom.core.IDbManager#createCollectionProcessor(com.bdaum.zoom
 	 * .cat.model.group.SmartCollection)
 	 */
 

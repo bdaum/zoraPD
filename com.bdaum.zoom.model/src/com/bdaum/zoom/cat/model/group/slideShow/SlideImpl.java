@@ -36,13 +36,14 @@ public class SlideImpl extends Slide_typeImpl implements Slide {
 	 * @param fadeOut - Property
 	 * @param effect - Property
 	 * @param noVoice - Property
+	 * @param safety - Property
 	 * @param asset - Arc
 	 */
 	public SlideImpl(String caption, int sequenceNo, String description,
 			int layout, int delay, int fadeIn, int duration, int fadeOut,
-			int effect, boolean noVoice, String asset) {
+			int effect, boolean noVoice, int safety, String asset) {
 		super(caption, sequenceNo, description, layout, delay, fadeIn,
-				duration, fadeOut, effect, noVoice);
+				duration, fadeOut, effect, noVoice, safety);
 		this.asset = asset;
 
 	}

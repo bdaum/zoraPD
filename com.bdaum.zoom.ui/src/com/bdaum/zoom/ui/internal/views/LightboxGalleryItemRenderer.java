@@ -33,6 +33,7 @@ package com.bdaum.zoom.ui.internal.views;
  * Contributors :
  *    Nicolas Richeton (nicolas.richeton@gmail.com) - initial API and implementation
  *    Richard Michalsky - bugs 195415,  195443
+ *    Berthold Daum - adapted to ZoRaPD
  *
  *******************************************************************************/
 
@@ -45,7 +46,6 @@ import org.eclipse.nebula.widgets.gallery.GalleryItem;
 import org.eclipse.nebula.widgets.gallery.RendererHelper;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -96,7 +96,7 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 	private boolean dropShadows = false;
 
 	int dropShadowsSize = 0;
-	
+
 	Color selectionForegroundColor;
 
 	Color selectionBackgroundColor;
@@ -123,6 +123,10 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 
 	private ArrayList<ImageRegion> regions;
 
+	private Color white;
+
+	private boolean showRegionNames;
+
 	/**
 	 * Returns current label state : enabled or disabled
 	 *
@@ -147,25 +151,22 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 
 	public LightboxGalleryItemRenderer(Gallery gallery) {
 		this.gallery = gallery;
-		// Set defaults
-		// foregroundColor = Display.getDefault().getSystemColor( // bd
-		// SWT.COLOR_LIST_FOREGROUND);
 		Display display = gallery.getDisplay();
 		backgroundColor = display.getSystemColor(SWT.COLOR_LIST_BACKGROUND);
 
 		selectionForegroundColor = display.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT);
 		selectionBackgroundColor = display.getSystemColor(SWT.COLOR_LIST_SELECTION);
+		
+		white = display.getSystemColor(SWT.COLOR_WHITE);
 
-		// Create drop shadows
+		// Create drop shadows colours
 		createColors();
 	}
-
 
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.nebula.widgets.gallery.AbstractGalleryItemRenderer#draw(org
+	 * @see org.eclipse.nebula.widgets.gallery.AbstractGalleryItemRenderer#draw(org
 	 * .eclipse.swt.graphics.GC, org.eclipse.nebula.widgets.gallery.GalleryItem,
 	 * int, int, int, int, int)
 	 */
@@ -247,24 +248,22 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 		}
 		Asset asset = (Asset) item.getData(UiConstants.ASSET);
 		// Draw image
-		if (itemImage != null && size != null) {
-			if (size.x > 0 && size.y > 0) {
-				int xs = x + xShift;
-				int ys = y + yShift;
-				Device device = gc.getDevice();
-				if (item.getData(UiConstants.CARD) != null) { // bd
-					gc.drawImage(itemImage, 0, 0, imageWidth, imageHeight, xs + 2, ys + 2, size.x, size.y);
-					gc.setForeground(device.getSystemColor(SWT.COLOR_WHITE));
-					gc.drawRectangle(xs + 2, ys + 2, size.x, size.y);
-					gc.drawImage(itemImage, 0, 0, imageWidth, imageHeight, xs - 2, ys - 2, size.x, size.y);
-					gc.drawRectangle(xs - 2, ys - 2, size.x, size.y);
-				} else
-					gc.drawImage(itemImage, 0, 0, imageWidth, imageHeight, xs, ys, size.x, size.y);
-				// overlay region frames // bd
-				regions = null;
-				if (showRegions > 0)
-					regions = UiUtilities.drawRegions(gc, asset, xs, ys, size.x, size.y, selected, showRegions, false, persId);
-			}
+		if (itemImage != null && size != null && size.x > 0 && size.y > 0) {
+			int xs = x + xShift;
+			int ys = y + yShift;
+			if (item.getData(UiConstants.CARD) != null) { // bd
+				gc.drawImage(itemImage, 0, 0, imageWidth, imageHeight, xs + 2, ys + 2, size.x, size.y);
+				gc.setForeground(white);
+				gc.drawRectangle(xs + 2, ys + 2, size.x, size.y);
+				gc.drawImage(itemImage, 0, 0, imageWidth, imageHeight, xs - 2, ys - 2, size.x, size.y);
+				gc.drawRectangle(xs - 2, ys - 2, size.x, size.y);
+			} else
+				gc.drawImage(itemImage, 0, 0, imageWidth, imageHeight, xs, ys, size.x, size.y);
+			// overlay region frames // bd
+			regions = null;
+			if (showRegions > 0)
+				regions = UiUtilities.drawRegions(gc, asset, xs, ys, size.x, size.y, showRegionNames, showRegions, false,
+						persId);
 		}
 
 		// Draw label
@@ -290,11 +289,7 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 			} else {
 				// Not selected, use item values or defaults.
 				// Background
-				if (itemBackgroundColor != null) {
-					gc.setBackground(itemBackgroundColor);
-				} else {
-					gc.setBackground(backgroundColor);
-				}
+				gc.setBackground(itemBackgroundColor != null ? itemBackgroundColor : backgroundColor);
 				switch (offlineStatus) { // bd
 				case IVolumeManager.REMOTE:
 				case IVolumeManager.PEER:
@@ -314,15 +309,10 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 			// Create label
 			String text = RendererHelper.createLabel(item.getText(), gc, width - 10);
 
-			// Center text
-			int textWidth = gc.textExtent(text).x;
-			int textxShift = RendererHelper.getShift(width, textWidth);
-
 			// Draw
-			gc.drawText(text, x + textxShift, y + height - fontHeight, true);
+			gc.drawText(text, x + RendererHelper.getShift(width, gc.textExtent(text).x), y + height - fontHeight, true);
 		}
 	}
-
 
 	public void setDropShadowsSize(int dropShadowsSize) {
 		this.dropShadowsSize = dropShadowsSize;
@@ -350,7 +340,7 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 			Iterator<Color> i = this.dropShadowsColors.iterator();
 			while (i.hasNext()) {
 				Color c = i.next();
-				if (c != null && !c.isDisposed())
+				if (c != null)
 					c.dispose();
 			}
 		}
@@ -369,8 +359,8 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 	}
 
 	/**
-	 * Returns the font used for drawing item label or <tt>null</tt> if system
-	 * font is used.
+	 * Returns the font used for drawing item label or <tt>null</tt> if system font
+	 * is used.
 	 *
 	 * @return the font
 	 * @deprecated Use {@link Gallery#getFont()}
@@ -418,8 +408,7 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.views.IExtendedColorModel2#setSelectionForegroundColor
+	 * @see com.bdaum.zoom.ui.views.IExtendedColorModel2#setSelectionForegroundColor
 	 * (org.eclipse.swt.graphics.Color)
 	 */
 	public void setSelectionForegroundColor(Color selectionForegroundColor) {
@@ -433,8 +422,7 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.views.IExtendedColorModel2#setSelectionBackgroundColor
+	 * @see com.bdaum.zoom.ui.views.IExtendedColorModel2#setSelectionBackgroundColor
 	 * (org.eclipse.swt.graphics.Color)
 	 */
 	public void setSelectionBackgroundColor(Color selectionBackgroundColor) {
@@ -466,8 +454,7 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.views.IExtendedColorModel2#setOfflineColor(org.eclipse
+	 * @see com.bdaum.zoom.ui.views.IExtendedColorModel2#setOfflineColor(org.eclipse
 	 * .swt.graphics.Color)
 	 */
 	public void setOfflineColor(Color offlineColor) {
@@ -477,8 +464,7 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.views.IExtendedColorModel2#setSelectedOfflineColor(
+	 * @see com.bdaum.zoom.ui.views.IExtendedColorModel2#setSelectedOfflineColor(
 	 * org.eclipse.swt.graphics.Color)
 	 */
 	public void setSelectedOfflineColor(Color selectedOfflineColor) {
@@ -488,8 +474,7 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.views.IExtendedColorModel2#setRemoteColor(org.eclipse
+	 * @see com.bdaum.zoom.ui.views.IExtendedColorModel2#setRemoteColor(org.eclipse
 	 * .swt.graphics.Color)
 	 */
 	public void setRemoteColor(Color remoteColor) {
@@ -499,16 +484,16 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.views.IExtendedColorModel2#setSelectedRemoteColor(org
+	 * @see com.bdaum.zoom.ui.views.IExtendedColorModel2#setSelectedRemoteColor(org
 	 * .eclipse.swt.graphics.Color)
 	 */
 	public void setSelectedRemoteColor(Color selectedRemoteColor) {
 		this.selectedRemoteColor = selectedRemoteColor;
 	}
 
-	public void setShowRegions(int showRegions) {
+	public void setShowRegions(int showRegions, boolean showRegionNames) {
 		this.showRegions = showRegions;
+		this.showRegionNames = showRegionNames;
 	}
 
 	public void setPersonFilter(String persId) {

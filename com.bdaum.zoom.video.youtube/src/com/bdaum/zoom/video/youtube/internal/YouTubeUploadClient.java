@@ -209,15 +209,13 @@ public class YouTubeUploadClient implements CommunityApi {
 				String receiveMessage = response.receiveMessage(3000);
 				if (receiveMessage != null) {
 					// <id>tag:youtube.com,2008:video:Zd_PLRmRNA0</id>
-					int p = receiveMessage.indexOf("<id>"); //$NON-NLS-1$
-					if (p >= 0) {
-						int q = receiveMessage.indexOf("</id>", p + 4); //$NON-NLS-1$
+					int p = receiveMessage.indexOf("<id>") + 4; //$NON-NLS-1$
+					if (p >= 4) {
+						int q = receiveMessage.indexOf("</id>", p); //$NON-NLS-1$
 						if (q > p) {
-							String idMsg = receiveMessage.substring(p + 4, q);
-							int r = idMsg.indexOf("video:"); //$NON-NLS-1$
-							if (r >= 0) {
-								videoId = idMsg.substring(r + 6).trim();
-							}
+							int r = receiveMessage.indexOf("video:", p); //$NON-NLS-1$
+							if (r >= p && r < q)
+								videoId = receiveMessage.substring(r + 6, q).trim();
 						}
 					}
 				}

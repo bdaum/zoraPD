@@ -207,8 +207,12 @@ public class MakerSupport {
 							while (st.hasMoreTokens()) {
 								if (i >= n)
 									break;
-								String token = st.nextToken();
-								int v = Integer.parseInt(token);
+								int v;
+								try {
+									v = Integer.parseInt(st.nextToken());
+								} catch (Exception e) {
+									break;
+								}
 								switch (j++) {
 								case 0:
 									x = v;

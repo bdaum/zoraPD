@@ -40,7 +40,7 @@ import org.eclipse.swt.widgets.Shell;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 
 public class VocabManager {
-	
+
 	public class VocabReader {
 
 		private VocabNode root = new VocabNode(null, ""); //$NON-NLS-1$
@@ -95,7 +95,7 @@ public class VocabManager {
 		}
 
 	}
-	
+
 	public static class VocabNode {
 
 		private static final Object[] EMPTY = new Object[0];
@@ -110,10 +110,8 @@ public class VocabManager {
 			if (parent != null)
 				parent.addChild(this);
 			if (line.startsWith("[") && line.endsWith("]")) { //$NON-NLS-1$ //$NON-NLS-2$
-				if (line.startsWith("[~")) //$NON-NLS-1$
-					label = line.substring(2, line.length() - 1).trim();
-				else
-					label = line.substring(1, line.length() - 1).trim();
+				label = line.startsWith("[~") ? line.substring(2, line.length() - 1).trim() //$NON-NLS-1$
+						: line.substring(1, line.length() - 1).trim();
 				category = true;
 			} else
 				label = line;
@@ -228,9 +226,8 @@ public class VocabManager {
 
 	}
 
-
 	private IAdaptable adaptable;
-	private HashMap<String,String> vocabMap;
+	private HashMap<String, String> vocabMap;
 	private VocabNode combinedVocabRoot;
 	private boolean treeReady;
 	private boolean mapReady;
@@ -240,7 +237,7 @@ public class VocabManager {
 		this.vocabularies = vocabularies;
 		this.adaptable = adaptable;
 	}
-	
+
 	public Map<String, String> getVocabMap() {
 		if (!mapReady) {
 			VocabNode root = getVocabTree();
@@ -252,7 +249,7 @@ public class VocabManager {
 		}
 		return vocabMap;
 	}
-	
+
 	public VocabNode getVocabTree() {
 		if (!treeReady) {
 			if (vocabularies != null)
@@ -266,7 +263,8 @@ public class VocabManager {
 						else
 							combinedVocabRoot.merge(r);
 					} catch (FileNotFoundException e) {
-						AcousticMessageDialog.openError(adaptable.getAdapter(Shell.class), NLS.bind(Messages.VocabManager_error_reading, f),
+						AcousticMessageDialog.openError(adaptable.getAdapter(Shell.class),
+								NLS.bind(Messages.VocabManager_error_reading, f),
 								NLS.bind(Messages.VocabManager_file_not_exist, f));
 					} catch (IOException e) {
 						AcousticMessageDialog.openError(adaptable.getAdapter(Shell.class),
@@ -292,7 +290,5 @@ public class VocabManager {
 		treeReady = false;
 		mapReady = false;
 	}
-
-
 
 }

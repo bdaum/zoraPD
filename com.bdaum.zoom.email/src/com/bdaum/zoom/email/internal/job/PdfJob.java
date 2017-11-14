@@ -130,13 +130,13 @@ public class PdfJob extends CustomJob {
 	private final UnsharpMask unsharpMask;
 	protected String opId = java.util.UUID.randomUUID().toString();
 	protected IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
-//	private final int scalingMethod;
+	// private final int scalingMethod;
 
 	public PdfJob(List<Asset> assets, PageLayout_typeImpl layout, File targetFile, int quality, int jpegQuality,
 			int cms, UnsharpMask unsharpMask, String collection) {
 		super(Messages.PdfJob_Create_x);
 		this.jpegQuality = jpegQuality;
-//		this.scalingMethod = scalingMethod;
+		// this.scalingMethod = scalingMethod;
 		this.assets = assets;
 		this.layout = layout;
 		this.targetFile = targetFile;
@@ -353,8 +353,8 @@ public class PdfJob extends CustomJob {
 								try {
 									ZImage hzimage = CoreActivator.getDefault().getHighresImageLoader().loadImage(null,
 											status, file, asset.getRotation(), asset.getFocalLengthIn35MmFilm(), null,
-											scale, Double.MAX_VALUE, true, ImageConstants.SRGB, null, unsharpMask,
-											null, fileWatcher, opId, null);
+											scale, Double.MAX_VALUE, true, ImageConstants.SRGB, null, unsharpMask, null,
+											fileWatcher, opId, null);
 									if (hzimage != null) {
 										zimage.dispose();
 										zimage = hzimage;
@@ -456,8 +456,8 @@ public class PdfJob extends CustomJob {
 				if (a >= assets.size())
 					cell = new PdfPCell();
 				else {
-					String cc = PageProcessor.computeCaption(caption, assets.get(a), collection, seqNo + j + 1,
-							pageItem + j + 1);
+					String cc = PageProcessor.computeCaption(caption, Constants.PI_ALL, assets.get(a), collection,
+							seqNo + j + 1, pageItem + j + 1);
 					Paragraph p = new Paragraph(cc,
 							FontFactory.getFont(FontFactory.HELVETICA, fontSize, Font.NORMAL, BaseColor.DARK_GRAY));
 					p.setSpacingBefore(0);

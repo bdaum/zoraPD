@@ -9,7 +9,7 @@
             id="com.bdaum.zoom.gps.mappingSystem.leaflet.mapnik"
             mapComponent="com.bdaum.zoom.gps.leaflet.internal.views.MapComponent:OpenStreetMap.Mapnik"
             name="OpenStreetMap"
-            query="http://www.openstreetmap.org/#map={2}/{0}/{1}">
+            query="http://www.openstreetmap.org/index.html?lat={0}&amp;lon={1}&amp;&amp;zoom={2}">
       </mappingSystem>
       <mappingSystem
             clientClustering="true"
@@ -17,7 +17,7 @@
             id="com.bdaum.zoom.gps.mappingSystem.leaflet.opentopomap"
             mapComponent="com.bdaum.zoom.gps.leaflet.internal.views.MapComponent:OpenTopoMap"
             name="OpenTopoMap"
-            query="http://www.opentopomap.org/#map={2}/{0}/{1}">
+            query="http://www.opentopomap.org/index.html?lat={0}&amp;lon={1}&amp;&amp;zoom={2}">
       </mappingSystem>
       <mappingSystem
             clientClustering="true"
@@ -25,21 +25,23 @@
             id="com.bdaum.zoom.gps.mappingSystem.leaflet.hikebike"
             mapComponent="com.bdaum.zoom.gps.leaflet.internal.views.MapComponent:HikeBike.HikeBike"
             name="HikeBike"
-            query="http://hikebikemap.org/">
+            query="http://hikebikemap.org/index.html?lat={0}&amp;lon={1}&amp;&amp;zoom={2}">
       </mappingSystem>
       <mappingSystem
             clientClustering="true"
             default="false"
             id="com.bdaum.zoom.gps.mappingSystem.leaflet.esri.ocean"
             mapComponent="com.bdaum.zoom.gps.leaflet.internal.views.MapComponent:Esri.OceanBasemap"
-            name="Esri OceanBasemap">
+            name="Esri OceanBasemap"
+            query="http://www.arcgis.com/home/webmap/viewer.html?webmap=5ae9e138a17842688b0b79283a4353f6&amp;center={1},{0}&amp;level={2}">
       </mappingSystem>
       <mappingSystem
             clientClustering="true"
             default="false"
             id="com.bdaum.zoom.gps.mappingSystem.leaflet.esri.physical"
             mapComponent="com.bdaum.zoom.gps.leaflet.internal.views.MapComponent:Esri.WorldPhysical"
-            name="Esri WorldPhysical">
+            name="Esri WorldPhysical"
+            query="http://www.arcgis.com/home/webmap/viewer.html?webmap=68a4f59815c745eeb2fa161f6ea0c112&amp;center={1},{0}&amp;level={2}">
       </mappingSystem>
    </extension>
    <extension

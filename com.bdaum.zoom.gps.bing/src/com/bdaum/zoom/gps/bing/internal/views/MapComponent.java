@@ -22,11 +22,10 @@ import com.bdaum.zoom.gps.widgets.AbstractMapComponent;
 public class MapComponent extends AbstractMapComponent {
 
 	private URL zoomMapUrl;
-	
+
 	private URL findUrl(String path) {
 		return super.findUrl(BingActivator.getDefault().getBundle(), path);
 	}
-
 
 	@Override
 	protected String getCountryCode(String input) {
@@ -39,67 +38,53 @@ public class MapComponent extends AbstractMapComponent {
 		return input;
 	}
 
-
 	@Override
 	protected String createLatLng(double lat, double lon) {
-		return NLS.bind("new VELatLong({0},{1})", usformat.format(lat),usformat.format(lon)); //$NON-NLS-1$
+		return NLS.bind("new Microsoft.Maps.Location({0},{1})", usformat.format(lat), usformat.format(lon)); //$NON-NLS-1$
 	}
 
 	@Override
 	protected String createLatLngBounds(double swLat, double swLon, double neLat, double neLon) {
-		double height = neLat - swLat;
-		double width = swLon >= neLon ? swLon-neLon : 360+neLon-swLon;
-		double cLat = (swLat+neLat)/2;
-		double cLon = swLon >= neLon ? (swLon+neLon)/2 : (swLon+neLon-360)/2;
-		if (cLon < 0)
-			cLon += 360;
-		return NLS.bind("new LocationRect({0},{1},{2})", new Object[] { createLatLng(cLat, cLon) ,width, height}); //$NON-NLS-1$
+		double height = Math.abs(neLat - swLat);
+		double width = Math.abs(neLon - swLon);
+		double cLat = (swLat + neLat) / 2;
+		double cLon = (swLon + neLon) / 2;
+		return NLS.bind("new Microsoft.Maps.LocationRect({0},{1},{2})", //$NON-NLS-1$
+				new Object[] { createLatLng(cLat, cLon), width, height });
 	}
-
-
 
 	@Override
 	protected void findResources() {
 		zoomMapUrl = findUrl("/gmap/zoomMap.js"); //$NON-NLS-1$
 	}
 
-
 	@Override
-	protected String createSetPosDetailScript(
-			com.bdaum.zoom.gps.widgets.AbstractMapComponent.HistoryItem item) {
+	protected String createSetPosDetailScript(com.bdaum.zoom.gps.widgets.AbstractMapComponent.HistoryItem item) {
 		int zoom = (int) item.getDetail();
-		return "map.SetZoomLevel(" + zoom + ");\n" //$NON-NLS-1$ //$NON-NLS-2$
-				+ "map.PanToLatLong(new VELatLong(" + item.getLatitude() + "," //$NON-NLS-1$ //$NON-NLS-2$
-				+ item.getLongitude() + "));"; //$NON-NLS-1$
+		return "map.setView({zoom: " + zoom + ", center: " + createLatLng(item.getLatitude(), item.getLongitude()) //$NON-NLS-1$ //$NON-NLS-2$
+				+ "});\n"; //$NON-NLS-1$
 	}
-
 
 	@Override
 	protected String createAdditionalVariables() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("var keyInvalid='").append(Messages.getString("MapComponent.map_key_invalid")).append("';\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		return sb.toString();
+		return null;
 	}
-
 
 	@Override
 	protected String createScriptEntries() {
-		return "<script type=\"text/javascript\" src=\"http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=6.3\"></script>\n" //$NON-NLS-1$
-			+ createScriptEntry(zoomMapUrl);
+		return new StringBuilder()
+				.append("<script type='text/javascript' src='http://www.bing.com/api/maps/mapcontrol'></script>\n") //$NON-NLS-1$
+				.append(createScriptEntry(zoomMapUrl)).toString();
 	}
-
-
-	@Override
-	protected String getAppKey() {
-		return BingActivator.getDefault().getMapKey();
-	}
-
 
 	@Override
 	protected String getMappingSystemName() {
 		return "Microsoft Bing"; //$NON-NLS-1$
 	}
 
-
+	@Override
+	protected String getAppKey() {
+		return null;
+	}
 
 }

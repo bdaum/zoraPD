@@ -96,7 +96,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 		((EnhancedGalleryGroupRenderer) groupRenderer).setMaxImageWidth(48);
 		groupRenderer.setMinMargin(3);
 		itemRenderer = new LightboxGalleryItemRenderer(gallery);
-		configureItemRenderer(gallery);
+		applyStyle(gallery);
 		gallery.setGroupRenderer(groupRenderer);
 		gallery.setVirtualGroups(true);
 		gallery.setVirtualGroupDefaultItemCount(2);

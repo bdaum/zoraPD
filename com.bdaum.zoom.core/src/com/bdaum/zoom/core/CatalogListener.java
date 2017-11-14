@@ -48,18 +48,6 @@ public interface CatalogListener {
 	 */
 	void catalogClosed(int mode);
 
-//	/**
-//	 * Invoked when the catalog content was modified (assets added or removed)
-//	 */
-//	void catalogModified();
-
-//	/**
-//	 * Invoked when assets in the catalog have changed
-//	 * @param assets - assets that have changed, null for unspecified
-//	 * @param node - asset node that has changed - null for all and/or thumbnail
-//	 */
-//	void assetsModified(Collection<? extends Asset> assets, QueryField node);
-
 	/**
 	 * Invoked when assets in the catalog have changed
 	 * @param changes - assets that have been modified, added or removed. Null for unspecified

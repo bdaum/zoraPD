@@ -28,6 +28,8 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -37,7 +39,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -60,14 +61,13 @@ import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.CollectionEditGroup;
 import com.bdaum.zoom.ui.internal.widgets.ISizeHandler;
+import com.bdaum.zoom.ui.internal.widgets.LabelConfigGroup;
 
 public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandler {
 
 	private SmartCollectionImpl result;
 
 	private SmartCollection current;
-
-	private Composite comp;
 
 	private Control nameField;
 
@@ -100,6 +100,16 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 	private Image face;
 
 	private String message;
+
+	private CTabFolder tabFolder;
+
+	private CTabItem tabItem0;
+
+	private CTabItem tabItem1;
+
+	private LabelConfigGroup labelConfigGroup;
+
+	private CTabItem tabItem2;
 
 	public CollectionEditDialog(Shell parentShell, SmartCollection current, String title, String message, boolean adhoc,
 			boolean album, boolean person, boolean networkPossible) {
@@ -135,29 +145,16 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-		comp = new Composite(area, SWT.NONE);
-		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		int numColumns = 2;
-		if (!adhoc) {
-			numColumns += 2;
-			if (current == null || !isSystem || current.getAlbum())
-				numColumns += 2;
-		}
-		if (networkPossible)
-			++numColumns;
-		comp.setLayout(new GridLayout(numColumns, false));
-		createHeaderGroup();
-		Composite critComp = new Composite(comp, SWT.NONE);
-		critComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, numColumns, 1));
-		critComp.setLayout(new GridLayout(1, false));
+		tabFolder = new CTabFolder(area, SWT.BORDER);
+		tabFolder.setLayoutData(new GridData(GridData.FILL_BOTH));
+		tabFolder.setSimple(false);
+		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_general);
+		tabItem0.setControl(createGeneralGroup(tabFolder));
+		tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_query);
+		tabItem1.setControl(createQueryGroup(tabFolder));
+		tabItem2 = UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_appearance);
+		tabItem2.setControl(createApperanceGroup(tabFolder));
 
-		collectionEditGroup = new CollectionEditGroup(critComp, current, album, readonly,
-				findInNetworkGroup != null && findInNetworkGroup.getSelection(), this);
-		collectionEditGroup.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				updateButtons();
-			}
-		});
 		Shell shell = getShell();
 		Point size = shell.getSize();
 		shell.setSize(size.x, size.y + 12);
@@ -165,22 +162,21 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		return area;
 	}
 
-	private void createHeaderGroup() {
+	private Control createGeneralGroup(Composite parent) {
+		Composite generalComp = new Composite(parent, SWT.NONE);
+		generalComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		if (!adhoc) {
+			generalComp.setLayout(new GridLayout(2, false));
 			if (isSystem) {
-				nameField = new Label(comp, SWT.NONE);
+				nameField = new Label(generalComp, SWT.NONE);
 				nameField.setFont(JFaceResources.getHeaderFont());
-				// nameField.setBounds(x, 13, 150, 15);
 				GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
 				data.widthHint = 150;
 				nameField.setLayoutData(data);
 				((Label) nameField).setText(current.getName());
-				nameField.pack();
 			} else {
-				Label nameLabel = new Label(comp, SWT.NONE);
-				nameLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-				nameLabel.setText(Messages.CollectionEditDialog_name);
-				nameField = new Text(comp, SWT.BORDER);
+				new Label(generalComp, SWT.NONE).setText(Messages.CollectionEditDialog_name);
+				nameField = new Text(generalComp, SWT.BORDER);
 				GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false);
 				data.widthHint = 150;
 				nameField.setLayoutData(data);
@@ -194,57 +190,44 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 				nameField.setEnabled(!readonly);
 			}
 			if (current == null || !isSystem || current.getAlbum()) {
+				boolean showDescription = current == null
+						|| current.getDescription() != null && !current.getDescription().isEmpty();
 				if (isSystem) {
-					if (album) {
-						descriptionField = new StyledText(comp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
-						((StyledText) descriptionField).setText(current.getDescription());
-						descriptionField.addMouseListener(new MouseAdapter() {
-							@Override
-							public void mouseDoubleClick(MouseEvent e) {
-								detectAndHandleHyperlink();
-							}
-						});
-					} else {
-						descriptionField = new Label(comp, SWT.WRAP);
-						((Label) descriptionField).setText(current.getDescription());
-						descriptionField.pack();
+					if (showDescription) {
+						if (album) {
+							descriptionField = new StyledText(generalComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
+							((StyledText) descriptionField).setText(current.getDescription());
+							descriptionField.addMouseListener(new MouseAdapter() {
+								@Override
+								public void mouseDoubleClick(MouseEvent e) {
+									detectAndHandleHyperlink();
+								}
+							});
+						} else
+							((Label) (descriptionField = new Label(generalComp, SWT.WRAP)))
+									.setText(current.getDescription());
 					}
-					GridData data = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1);
-					data.widthHint = 240;
-					descriptionField.setLayoutData(data);
 				} else {
-					Label descriptionLabel = new Label(comp, SWT.NONE);
-					descriptionLabel.setText(Messages.CollectionEditDialog_description);
-					descriptionLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-					if (album) {
-						descriptionLabel.pack();
-						Rectangle bounds = descriptionLabel.getBounds();
-						descriptionField = new CheckedText(comp, SWT.BORDER | SWT.MULTI | SWT.WRAP | SWT.V_SCROLL);
-						GridData data = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
-						data.widthHint = 240;
-						data.heightHint = bounds.height * 3;
-						data.verticalIndent = bounds.height;
-						descriptionField.setLayoutData(data);
-					} else {
-						descriptionField = new CheckedText(comp, SWT.BORDER);
-						GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false);
-						data.widthHint = 240;
-						descriptionField.setLayoutData(data);
+					if (!readonly || showDescription) {
+						new Label(generalComp, SWT.NONE).setText(Messages.CollectionEditDialog_description);
+						descriptionField = new CheckedText(generalComp,
+								SWT.BORDER | SWT.MULTI | SWT.WRAP | SWT.V_SCROLL);
+						if (current != null)
+							((CheckedText) descriptionField).setText(current.getDescription());
+						descriptionField.setEnabled(!readonly);
 					}
-					if (current != null)
-						((CheckedText) descriptionField).setText(current.getDescription());
-					descriptionField.setEnabled(!readonly);
+				}
+				if (descriptionField != null) {
+					GridData data = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
+					data.widthHint = 240;
+					data.heightHint = 50;
+					descriptionField.setLayoutData(data);
 				}
 			}
-			Label colorCodeLabel = new Label(comp, SWT.NONE);
-			colorCodeLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-			colorCodeLabel.setText(Messages.CollectionEditDialog_color_code);
-			colorCodeLabel.setAlignment(SWT.RIGHT);
-			colorCodeButton = new Button(comp, SWT.PUSH);
-			colorCodeButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+			new Label(generalComp, SWT.NONE).setText(Messages.CollectionEditDialog_color_code);
+			colorCodeButton = new Button(generalComp, SWT.PUSH);
 			if (current != null)
 				colorCode = current.getColorCode() - 1;
-			colorCodeButton.setToolTipText(Messages.CollectionEditDialog_color_code);
 			colorCodeButton.setImage(Icons.toSwtColors(colorCode));
 			colorCodeButton.addSelectionListener(new SelectionAdapter() {
 				@Override
@@ -258,17 +241,16 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 				}
 			});
 		} else {
-			Label label = new Label(comp, SWT.NONE);
-			label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-			Composite findComp = new Composite(comp, SWT.NONE);
-			findComp.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
-			findComp.setLayout(new GridLayout(1, false));
+			generalComp.setLayout(new GridLayout());
+			new Label(generalComp, SWT.NONE).setText(Messages.CollectionEditDialog_adhoc_hint);
+			Composite findComp = new Composite(generalComp, SWT.NONE);
+			findComp.setLayout(new GridLayout());
 			findWithinGroup = new FindWithinGroup(findComp);
 		}
 		if (networkPossible) {
-			Composite netComp = new Composite(comp, SWT.NONE);
-			netComp.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
-			netComp.setLayout(new GridLayout(1, false));
+			Composite netComp = new Composite(generalComp, SWT.NONE);
+			netComp.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+			netComp.setLayout(new GridLayout());
 			findInNetworkGroup = new FindInNetworkGroup(netComp);
 			if (current != null)
 				findInNetworkGroup.setSelection(current.getNetwork());
@@ -279,6 +261,41 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 				}
 			});
 		}
+		return generalComp;
+	}
+
+	private Control createApperanceGroup(Composite parent) {
+		Composite apperanceComp = new Composite(parent, SWT.NONE);
+		apperanceComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		apperanceComp.setLayout(new GridLayout(1, false));
+		labelConfigGroup = new LabelConfigGroup(apperanceComp, true);
+		labelConfigGroup.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				validate();
+			}
+		});
+		if (current != null)
+			labelConfigGroup.setSelection(current.getShowLabel(), current.getLabelTemplate(), current.getFontSize());
+		return apperanceComp;
+	}
+
+	private Control createQueryGroup(Composite parent) {
+		Composite queryComp = new Composite(parent, SWT.NONE);
+		queryComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		queryComp.setLayout(new GridLayout());
+		Composite critComp = new Composite(queryComp, SWT.NONE);
+		critComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		critComp.setLayout(new GridLayout(1, false));
+
+		collectionEditGroup = new CollectionEditGroup(critComp, current, album, readonly,
+				findInNetworkGroup != null && findInNetworkGroup.getSelection(), this);
+		collectionEditGroup.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				updateButtons();
+			}
+		});
+		return queryComp;
 	}
 
 	@Override
@@ -348,6 +365,8 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		}
 		if (errorMessage == null)
 			errorMessage = collectionEditGroup.validate();
+		if (errorMessage == null)
+			errorMessage = labelConfigGroup.validate();
 		if (errorMessage == null || !errorMessage.isEmpty())
 			setErrorMessage(errorMessage);
 		else
@@ -361,15 +380,15 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		String name = (nameField != null)
 				? (nameField instanceof Text) ? ((Text) nameField).getText() : ((Label) nameField).getText()
 				: Messages.CollectionEditDialog_adhoc_query;
-		boolean networked = findInNetworkGroup == null ? false : findInNetworkGroup.getSelection();
-		result = new SmartCollectionImpl(name, isSystem || person, album, adhoc, networked,
-				descriptionField != null
-						? (descriptionField instanceof CheckedText) ? ((CheckedText) descriptionField).getText()
-								: ((Label) descriptionField).getText()
-						: null,
+		result = new SmartCollectionImpl(name, isSystem || person, album, adhoc,
+				findInNetworkGroup == null ? false : findInNetworkGroup.getSelection(),
+				descriptionField == null ? null
+						: (descriptionField instanceof CheckedText) ? ((CheckedText) descriptionField).getText()
+								: (descriptionField instanceof StyledText) ? ((StyledText) descriptionField).getText()
+										: ((Label) descriptionField).getText(),
 				colorCode + 1, current != null ? current.getLastAccessDate() : null,
 				current != null ? current.getGeneration() + 1 : 0, current != null ? current.getPerspective() : null,
-				null);
+				labelConfigGroup.getSelection(), labelConfigGroup.getTemplate(), labelConfigGroup.getFontSize(), null);
 		if (isSystem || UiUtilities.isImport(current))
 			result.setStringId(current.getStringId());
 		collectionEditGroup.applyCriteria(result, name);
@@ -389,12 +408,10 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 				StringTokenizer st = new StringTokenizer(text.substring(offset), ";", true); //$NON-NLS-1$
 				while (st.hasMoreTokens()) {
 					String token = st.nextToken();
-					if (!";".equals(token)) { //$NON-NLS-1$
-						if (offset <= selection.x && offset + token.length() > selection.y) {
-							BusyIndicator.showWhile(getShell().getDisplay(),
-									() -> UiActivator.getDefault().sendMail(Collections.singletonList(token.trim())));
-							break;
-						}
+					if (!";".equals(token) && offset <= selection.x && offset + token.length() > selection.y) { //$NON-NLS-1$
+						BusyIndicator.showWhile(getShell().getDisplay(),
+								() -> UiActivator.getDefault().sendMail(Collections.singletonList(token.trim())));
+						break;
 					}
 					offset += token.length();
 				}
@@ -403,7 +420,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 	}
 
 	public void sizeChanged() {
-		Shell shell = comp.getShell();
+		Shell shell = getShell();
 		shell.pack();
 		shell.layout();
 	}

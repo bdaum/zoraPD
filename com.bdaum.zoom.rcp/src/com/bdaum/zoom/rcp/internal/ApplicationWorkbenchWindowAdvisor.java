@@ -198,7 +198,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 				off = p + 1;
 				if (crit != null) {
 					SmartCollectionImpl sm = new SmartCollectionImpl("autoColors", true, false, false, false, "", 0, //$NON-NLS-1$//$NON-NLS-2$
-							null, 0, null, null);
+							null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 					sm.addCriterion(crit);
 					processors[i] = Core.getCore().getDbFactory().createQueryPostProcessor(sm);
 				}

@@ -76,20 +76,20 @@ public final class EditorDescriptor implements Serializable {
 	private Program program;
 
 	/**
-	 * Create a new instance of an editor descriptor. Limited to internal
-	 * framework calls.
+	 * Create a new instance of an editor descriptor. Limited to internal framework
+	 * calls.
 	 *
 	 * @param id2
 	 */
-	/* package */EditorDescriptor(String id2) {
+	/* package */ EditorDescriptor(String id2) {
 		setID(id2);
 	}
 
 	/**
-	 * Create a new instance of an editor descriptor. Limited to internal
-	 * framework calls.
+	 * Create a new instance of an editor descriptor. Limited to internal framework
+	 * calls.
 	 */
-	/* package */EditorDescriptor() {
+	/* package */ EditorDescriptor() {
 		super();
 	}
 
@@ -110,17 +110,12 @@ public final class EditorDescriptor implements Serializable {
 
 		// Isolate the program name (no directory or extension)
 		int start = filename.lastIndexOf(File.separator);
-		String name;
-		if (start != -1) {
-			name = filename.substring(start + 1);
-		} else {
-			name = filename;
-		}
+		String name = start != -1 ? filename.substring(start + 1) : filename;
 		int end = name.lastIndexOf('.');
-		if (end != -1) {
-			name = name.substring(0, end);
-		}
-		editor.setName(name);
+		if (end != -1)
+			editor.setName(name.substring(0, end));
+		else
+			editor.setName(name);
 
 		editor.setImageDescriptor(Icons.file.getDescriptor());
 
@@ -141,7 +136,6 @@ public final class EditorDescriptor implements Serializable {
 		editor.setProgram(program);
 		return editor;
 	}
-
 
 	/**
 	 * Return the file name of the command to execute for this editor.
@@ -188,8 +182,8 @@ public final class EditorDescriptor implements Serializable {
 	}
 
 	/**
-	 * Verifies that the image descriptor generates an image. If not, the
-	 * descriptor is replaced with the default image.
+	 * Verifies that the image descriptor generates an image. If not, the descriptor
+	 * is replaced with the default image.
 	 *
 	 * @since 3.1
 	 */
@@ -277,9 +271,9 @@ public final class EditorDescriptor implements Serializable {
 	}
 
 	/**
-	 * Set the id of the editor. For internal editors this is the id as provided
-	 * in the extension point For external editors it is path and filename of
-	 * the editor
+	 * Set the id of the editor. For internal editors this is the id as provided in
+	 * the extension point For external editors it is path and filename of the
+	 * editor
 	 */
 	/* package */void setID(String anID) {
 		Assert.isNotNull(anID);
@@ -340,8 +334,7 @@ public final class EditorDescriptor implements Serializable {
 	public boolean equals(Object obj) {
 		if (obj instanceof EditorDescriptor) {
 			EditorDescriptor d2 = (EditorDescriptor) obj;
-			return getFileName().equals(d2.getFileName())
-					&& getId().equals(d2.getId());
+			return getFileName().equals(d2.getFileName()) && getId().equals(d2.getId());
 		}
 		return false;
 	}
@@ -363,8 +356,7 @@ public final class EditorDescriptor implements Serializable {
 			if (imageData != null)
 				return new Image(display, imageData);
 		}
-		Icon fileIcon = Core.getCore().getVolumeManager()
-				.getFileIcon(getFileName());
+		Icon fileIcon = Core.getCore().getVolumeManager().getFileIcon(getFileName());
 		if (fileIcon != null) {
 			BufferedImage icon2Image = icon2Image(fileIcon);
 			ImageData data = ImageUtilities.bufferedImage2swt(icon2Image);
@@ -375,8 +367,8 @@ public final class EditorDescriptor implements Serializable {
 	}
 
 	private static BufferedImage icon2Image(Icon icon) {
-		BufferedImage bufimg = new BufferedImage(icon.getIconWidth(),
-				icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+		BufferedImage bufimg = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(),
+				BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = bufimg.createGraphics();
 		icon.paintIcon(new Canvas(), g, 0, 0);
 		g.dispose();

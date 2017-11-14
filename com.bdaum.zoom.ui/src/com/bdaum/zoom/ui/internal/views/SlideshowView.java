@@ -88,6 +88,7 @@ import com.bdaum.zoom.ui.internal.operations.SlideshowPropertiesOperation;
 import com.bdaum.zoom.ui.internal.widgets.AbstractHandle;
 import com.bdaum.zoom.ui.internal.widgets.GalleryPanEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.GreekedPSWTText;
+import com.bdaum.zoom.ui.internal.widgets.IAugmentedTextField;
 import com.bdaum.zoom.ui.internal.widgets.PSWTAssetThumbnail;
 import com.bdaum.zoom.ui.internal.widgets.PSWTSectionBreak;
 import com.bdaum.zoom.ui.internal.widgets.PTextHandler;
@@ -117,10 +118,10 @@ public class SlideshowView extends AbstractPresentationView {
 
 		private final SlideImpl slide;
 		private final String text;
-		private final TextField textField;
+		private final IAugmentedTextField textField;
 		private String oldCaption;
 
-		public EditCaptionOperation(SlideImpl slide, String text, TextField textField) {
+		public EditCaptionOperation(SlideImpl slide, String text, IAugmentedTextField textField) {
 			super(Messages.getString("SlideshowView.edit_caption_undo")); //$NON-NLS-1$
 			this.slide = slide;
 			this.text = text;
@@ -584,10 +585,10 @@ public class SlideshowView extends AbstractPresentationView {
 				SlideImpl slide = replaced != null
 						? new SlideImpl(UiUtilities.createSlideTitle(asset), index, null, replaced.getLayout(),
 								replaced.getDelay(), replaced.getFadeIn(), replaced.getDuration(),
-								replaced.getFadeOut(), replaced.getEffect(), replaced.getNoVoice(), assetId)
+								replaced.getFadeOut(), replaced.getEffect(), replaced.getNoVoice(), asset.getSafety(), assetId)
 						: new SlideImpl(UiUtilities.createSlideTitle(asset), index, null, Constants.SLIDE_NO_THUMBNAILS,
 								show.getFading(), show.getFading(), show.getDuration(), show.getFading(), effect, false,
-								assetId);
+								asset.getSafety(), assetId);
 				cand = null;
 				if (index >= slides.size()) {
 					slides.add(slide);
@@ -1025,10 +1026,8 @@ public class SlideshowView extends AbstractPresentationView {
 				@Override
 				public void mouseReleased(PInputEvent event) {
 					setPickedNode(event.getPickedNode());
-					if (event.getClickCount() == 2) {
-						if (editLegend(PSlide.this))
-							canvas.redraw();
-					}
+					if (event.getClickCount() == 2 && editLegend(PSlide.this))
+						canvas.redraw();
 				}
 			});
 
@@ -1086,9 +1085,7 @@ public class SlideshowView extends AbstractPresentationView {
 			sb.append(Messages.getString("SlideshowView.delay")).append(af.format(slideImpl.getDelay() / 1000d)) //$NON-NLS-1$
 					.append(" sec").append('\n'); //$NON-NLS-1$
 			sb.append(Messages.getString("SlideshowView.duration")) //$NON-NLS-1$
-					.append(
-							af.format(slideImpl.getDuration() / 1000d))
-					.append(" sec") //$NON-NLS-1$
+					.append(af.format(slideImpl.getDuration() / 1000d)).append(" sec") //$NON-NLS-1$
 					.append('\n');
 			sb.append(Messages.getString("SlideshowView.fade_in")).append(af.format(slideImpl.getFadeIn() / 1000d)) //$NON-NLS-1$
 					.append(" sec").append('\n'); //$NON-NLS-1$
@@ -1146,7 +1143,7 @@ public class SlideshowView extends AbstractPresentationView {
 
 	}
 
-	public static final String SLIDES_PERSPECTIVE = "com.bdaum.zoom.SlidesPerspective"; //$NON-NLS-1$
+	public static final String SLIDES_PERSPECTIVE = "com.bdaum.zoom.PresentationPerspective"; //$NON-NLS-1$
 	public static final String ID = "com.bdaum.zoom.ui.SlideshowView"; //$NON-NLS-1$
 	private static final String LAST_SLIDESHOW = "com.bdaum.zoom.lastSlideshow"; //$NON-NLS-1$
 
@@ -1314,12 +1311,14 @@ public class SlideshowView extends AbstractPresentationView {
 	}
 
 	protected boolean editLegend(PSlide pslide) {
-		SlideImpl slide = pslide.slide;
-		SlideImpl backup = cloneSlide(slide);
-		EditSlideDialog dialog = new EditSlideDialog(getSite().getShell(), slide);
-		if (dialog.open() == Window.OK)
-			return performOperation(new EditSlideOperation(pslide, slide, backup, EditSlideOperation.EDIT_SLIDE))
-					.isOK();
+		if (pslide != null) {
+			SlideImpl slide = pslide.slide;
+			SlideImpl backup = cloneSlide(slide);
+			EditSlideDialog dialog = new EditSlideDialog(getSite().getShell(), slide);
+			if (dialog.open() == Window.OK)
+				return performOperation(new EditSlideOperation(pslide, slide, backup, EditSlideOperation.EDIT_SLIDE))
+						.isOK();
+		}
 		return false;
 	}
 
@@ -1415,6 +1414,7 @@ public class SlideshowView extends AbstractPresentationView {
 	public void updateActions() {
 		if (playAction == null)
 			return;
+		super.updateActions();
 		playAction.setEnabled(!slides.isEmpty());
 	}
 
@@ -1543,12 +1543,20 @@ public class SlideshowView extends AbstractPresentationView {
 
 		};
 		editBreakAction.setToolTipText(Messages.getString("SlideshowView.edit_section_break_tooltip")); //$NON-NLS-1$
+		exhibitPropertiesAction = new Action(Messages.getString("SlideshowView.slide_properties")) { //$NON-NLS-1$
+			@Override
+			public void run() {
+				editLegend((PSlide) getAdapter(IPresentationItem.class));
+			}
+		};
+		exhibitPropertiesAction.setToolTipText(Messages.getString("SlideshowView.properties_tooltip")); //$NON-NLS-1$
+
 	}
 
 	public static SlideImpl cloneSlide(SlideImpl slide) {
 		return new SlideImpl(slide.getCaption(), slide.getSequenceNo(), slide.getDescription(), slide.getLayout(),
 				slide.getDelay(), slide.getFadeIn(), slide.getDuration(), slide.getFadeOut(), slide.getEffect(),
-				slide.getNoVoice(), slide.getAsset());
+				slide.getNoVoice(), slide.getSafety(), slide.getAsset());
 	}
 
 	@Override
@@ -1670,7 +1678,7 @@ public class SlideshowView extends AbstractPresentationView {
 
 			@Override
 			protected void moveToFront(PNode object) {
-				// do nothing
+				updateActions();
 			}
 
 			@Override
@@ -1693,7 +1701,6 @@ public class SlideshowView extends AbstractPresentationView {
 					else
 						pslide.setOffset(oldOffset);
 				}
-
 			}
 
 			@Override

@@ -58,7 +58,7 @@ public class ColorCodeFilter extends AssetFilter implements IColorCodeFilter {
 			return code < 0;
 		if (code < 0 && processor != null && processor.accept(asset))
 			return true;
-		return code >= colorCode;
+		return code == colorCode;
 	}
 
 	/*
@@ -76,13 +76,13 @@ public class ColorCodeFilter extends AssetFilter implements IColorCodeFilter {
 			return query.descend(QueryField.COLORCODE.getKey()).constrain(0)
 					.smaller();
 		Constraint con3 = query.descend(QueryField.COLORCODE.getKey())
-				.constrain(colorCode).smaller().not();
+				.constrain(colorCode);
 		if (processor instanceof QueryPostProcessor) {
 			Constraint con2 = ((QueryPostProcessor) processor).getConstraint(
 					dbManager, query);
 			if (con2 != null) {
 				Constraint con1 = query.descend(QueryField.COLORCODE.getKey())
-						.constrain(0).smaller();
+						.constrain(0).not();
 				con1.and(con2);
 				con1.or(con3);
 				return con1;

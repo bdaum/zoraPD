@@ -189,6 +189,7 @@ public class Messages extends NLS {
 	public static String StartupDialog_creating_new;
 	public static String StartupDialog_No_active_cat;
 	public static String StartupDialog_Open_existing_cat;
+	public static String StartupDialog_open_x;
 	public static String StartupDialog_opening_existing;
 	public static String StartupDialog_quit;
 	public static String StartupDialog_restore;

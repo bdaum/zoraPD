@@ -43,7 +43,7 @@ public class BackwardControl extends AbstractHistoryControl {
 
 	@Override
 	public void historyChanged() {
-		if (label != null)
+		if (label != null && !label.isDisposed())
 			label.setEnabled(navigationHistory.canGoBack());
 	}
 

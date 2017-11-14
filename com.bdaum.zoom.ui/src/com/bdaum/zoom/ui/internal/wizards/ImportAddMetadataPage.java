@@ -25,6 +25,7 @@ import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.KeywordDialog;
+import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
@@ -46,6 +47,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 	private CGroup prefixComp;
 	private final boolean media;
 	private String presetAuthor;
+	private RadioButtonGroup privacyGroup;
 
 	public ImportAddMetadataPage(String pageName, boolean media) {
 		super(pageName);
@@ -67,20 +69,15 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 		ImportFromDeviceWizard wizard = (ImportFromDeviceWizard) getWizard();
 		IDialogSettings dialogSettings = wizard.getDialogSettings();
 
-		artistField = createHistoryCombo(metaComp,
-				Messages.ImportFromDeviceWizard_Artist, dialogSettings, ARTISTS);
+		artistField = createHistoryCombo(metaComp, Messages.ImportFromDeviceWizard_Artist, dialogSettings, ARTISTS);
 		String lastArtist = dialogSettings.get(LAST_ARTIST);
 		if (lastArtist != null)
 			artistField.setText(lastArtist);
 		presetAuthor = artistField.getText();
-		eventField = createHistoryCombo(metaComp,
-				Messages.ImportFromDeviceWizard_Event, dialogSettings, EVENTS);
-		Label label = new Label(metaComp, SWT.NONE);
-		label.setText(Messages.ImportFromDeviceWizard_Keywords);
-		keywordField = new Text(metaComp, SWT.READ_ONLY | SWT.BORDER
-				| SWT.V_SCROLL);
-		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true,
-				false, 3, 1);
+		eventField = createHistoryCombo(metaComp, Messages.ImportFromDeviceWizard_Event, dialogSettings, EVENTS);
+		new Label(metaComp, SWT.NONE).setText(Messages.ImportFromDeviceWizard_Keywords);
+		keywordField = new Text(metaComp, SWT.READ_ONLY | SWT.BORDER | SWT.V_SCROLL);
+		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 3, 1);
 		layoutData.heightHint = 50;
 		keywordField.setLayoutData(layoutData);
 		keywordField.addMouseListener(new MouseAdapter() {
@@ -89,23 +86,23 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 				openKeywordDialog();
 			}
 		});
+		new Label(metaComp, SWT.NONE).setText(Messages.ImportAddMetadataPage_Privacy);
+		privacyGroup = new RadioButtonGroup(metaComp, null, SWT.HORIZONTAL, Messages.ImportAddMetadataPage_Public,
+				Messages.ImportAddMetadataPage_Medium, Messages.ImportAddMetadataPage_Private);
+		privacyGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 3, 1));
 		if (media) {
 			prefixComp = new CGroup(comp, SWT.NONE);
-			prefixComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
-					false));
+			prefixComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 			prefixComp.setLayout(new GridLayout(4, false));
 			prefixComp.setText(Messages.ImportAddMetadataPage_advanced_options);
 			Label msg = new Label(prefixComp, SWT.NONE);
-			msg.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
-					false, 4, 1));
+			msg.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1));
 			msg.setText(Messages.ImportAddMetadataPage_metadata_options_chdk);
 
 			Label prefixLabel = new Label(prefixComp, SWT.NONE);
-			prefixLabel
-					.setText(Messages.ImportFromDeviceWizard_enabling_prefix);
+			prefixLabel.setText(Messages.ImportFromDeviceWizard_enabling_prefix);
 			prefixField = new Text(prefixComp, SWT.BORDER);
-			GridData data = new GridData(GridData.BEGINNING, GridData.CENTER,
-					false, false);
+			GridData data = new GridData(GridData.BEGINNING, GridData.CENTER, false, false);
 			data.widthHint = 50;
 			prefixField.setLayoutData(data);
 			prefixField.addMouseListener(new MouseAdapter() {
@@ -121,8 +118,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 			data.horizontalIndent = 15;
 			data.horizontalSpan = 3;
 			explanation.setLayoutData(data);
-			explanation
-					.setText(Messages.ImportFromDeviceWizard_exif_data_are_transferred);
+			explanation.setText(Messages.ImportFromDeviceWizard_exif_data_are_transferred);
 			new Label(prefixComp, SWT.NONE);
 		}
 		setControl(comp);
@@ -137,24 +133,21 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 	public void setVisible(boolean visible) {
 		super.setVisible(visible);
 		if (visible && prefixComp != null)
-			prefixComp.setVisible(((ImportFromDeviceWizard) getWizard())
-					.needsAdvancedOptions());
+			prefixComp.setVisible(((ImportFromDeviceWizard) getWizard()).needsAdvancedOptions());
 	}
 
 	private void openKeywordDialog() {
 		Meta meta = Core.getCore().getDbManager().getMeta(true);
 		Set<String> selectableKeywords = new HashSet<String>(meta.getKeywords());
-		KeywordDialog dialog = new KeywordDialog(getShell(),
-				Messages.ImportFromDeviceWizard_Add_keywords_for_import,
+		KeywordDialog dialog = new KeywordDialog(getShell(), Messages.ImportFromDeviceWizard_Add_keywords_for_import,
 				currentKeywords, selectableKeywords, null);
 		if (dialog.open() == Dialog.OK) {
-			Arrays.sort(currentKeywords = dialog.getResult().getDisplay(),Utilities.KEYWORDCOMPARATOR);
+			Arrays.sort(currentKeywords = dialog.getResult().getDisplay(), Utilities.KEYWORDCOMPARATOR);
 			keywordField.setText(Core.toStringList(currentKeywords, "\n")); //$NON-NLS-1$
 		}
 	}
 
-	private static Combo createHistoryCombo(Composite parent, String lab,
-			IDialogSettings settings, String key) {
+	private static Combo createHistoryCombo(Composite parent, String lab, IDialogSettings settings, String key) {
 		new Label(parent, SWT.NONE).setText(lab);
 		Combo combo = new Combo(parent, SWT.NONE);
 		String[] items = settings.getArray(key);
@@ -169,32 +162,29 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 	}
 
 	private static void saveComboHistory(Combo combo, IDialogSettings settings2) {
-		settings2
-				.put((String) combo.getData("key"), UiUtilities.updateComboHistory(combo)); //$NON-NLS-1$
+		settings2.put((String) combo.getData("key"), UiUtilities.updateComboHistory(combo)); //$NON-NLS-1$
 	}
 
 	private void fillValues() {
 		IDialogSettings dialogSettings = getWizard().getDialogSettings();
 		String[] keywords = dialogSettings.getArray(KEYWORDS);
 		if (keywords != null)
-			keywordField.setText(Core.toStringList(currentKeywords = keywords,
-					"\n")); //$NON-NLS-1$
+			keywordField.setText(Core.toStringList(currentKeywords = keywords, "\n")); //$NON-NLS-1$
 		if (prefixField != null) {
 			String prefix = dialogSettings.get(PREFIX);
 			if (prefix != null)
 				prefixField.setText(prefix);
 		}
 		updateAuthor();
+		privacyGroup.setSelection(0);
 	}
 
 	public void updateAuthor() {
 		if (artistField.getText().equals(presetAuthor)) {
 			File[] dcims = ((ImportFromDeviceWizard) getWizard()).getDcims();
 			if (dcims.length > 0) {
-				String key = Core.getCore().getVolumeManager()
-						.getVolumeForFile(dcims[0]);
-				LastDeviceImport lastImport = Core.getCore().getDbManager()
-						.getMeta(true).getLastDeviceImport(key);
+				String key = Core.getCore().getVolumeManager().getVolumeForFile(dcims[0]);
+				LastDeviceImport lastImport = Core.getCore().getDbManager().getMeta(true).getLastDeviceImport(key);
 				if (lastImport != null) {
 					String owner = lastImport.getOwner();
 					if (owner != null && !owner.isEmpty()) {
@@ -221,6 +211,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 		importData.setEvent(eventField.getText());
 		dialogSettings.put(KEYWORDS, currentKeywords);
 		importData.setKeywords(currentKeywords);
+		importData.setPrivacy(privacyGroup.getSelection()*3);
 		if (prefixField != null) {
 			String prefix = prefixField.getText();
 			importData.setExifTransferPrefix(prefix);

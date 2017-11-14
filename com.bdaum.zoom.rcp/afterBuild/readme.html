@@ -83,6 +83,45 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <meta http-equiv="Content-Language" content="en-us">
 <meta name="GENERATOR" content="Microsoft FrontPage 4.0">
 <meta name="ProgId" content="FrontPage.Editor.Document"><title>Readme</title>
@@ -105,14 +144,14 @@ body { font-family: arial, helvetica, geneva; font-size: 10pt; clip: rect( ); ma
 </tr>
 <tr>
 <td>
-<p>August 7, 2017</p>
+<p>November 8, 2017</p>
 <br>
 <h1 style="color: red;"><a class="mozTocH1" name="mozTocId462522"></a>ZoRa Photo Director</h1>
 <div style="margin-left: 40px;"><sub>Zo = <span style="font-weight: bold;">Zo</span>omable
 User Interface</sub><br>
 <sub>Ra = <span style="font-weight: bold;">Ra</span>w
 file support</sub></div>
-<h1><a class="mozTocH2" name="mozTocId943067"></a>Contents</h1><a href="#mozTocId943067"></a>
+<h1><a class="mozTocH2" name="mozTocId943067"></a>Contents<span style="text-decoration: underline;"></span></h1><a href="#mozTocId943067"></a>
       <ol>
 <li><a href="#mozTocId180886">Description</a></li><li><a href="#mozTocId725139">Features</a></li><li><a href="#mozTocId31540">
 Requirements</a></li><li><a href="#mozTocId493872">Installation</a><ol><li><a href="#mozTocId264756">Installation
@@ -121,7 +160,7 @@ under Windows</a></li><li><a href="#mozTocId688416">Installation under Linux
 on removable media</a></li><li><a href="#mozTocId983009">De-installation</a></li></ol></li><li><a href="#mozTocId767897">Known
 problems
 </a></li><li><a href="#mozTocId82845">License</a></li><li><a href="#mozTocId731789">Copyright</a></li><li><a href="#mozTocId902534">Source code</a></li><li><a href="#mozTocId961538">Change
-log</a><ol><li><a href="#mozTocId514211">Version 3.1.0</a></li><li><a href="#mozTocId527756">Version 3.0.1</a></li><li><a href="#mozTocId527756">Version 3.0.0</a></li><li><a href="#mozTocId342068">Version
+log</a><ol><li><a href="#mozTocId636428">Version 3.2.0</a></li><li><a href="#mozTocId514211">Version 3.1.0</a></li><li><a href="#mozTocId527756">Version 3.0.1</a></li><li><a href="#mozTocId527756">Version 3.0.0</a></li><li><a href="#mozTocId342068">Version
 2.5.0</a></li><li><a href="#mozTocId771503">Version
 2.4.0</a></li><li><a href="#mozTocId557735">Version
 2.3.0</a></li><li><a href="#mozTocId664656">Version
@@ -140,8 +179,7 @@ log</a><ol><li><a href="#mozTocId514211">Version 3.1.0</a></li><li><a href="#moz
 1.1.0</a></li></ol></li>
       </ol>
 
-      <ol><span style="text-decoration: underline;"></span></ol><a href="#mozTocId943067"></a>
-      <ol><span style="text-decoration: underline;"></span><!--mozToc h1 1 h2 2 h3 3 h4 4 h5 5 h6 6--></ol><a href="#mozTocId943067"></a>
+      <ol></ol>
       <ol>
         <span style="text-decoration: underline;"></span>
       </ol>
@@ -333,6 +371,106 @@ Visit <a href="http://www.photozora.org">http://www.photozora.org</a><br>
 <br>
 <h2><a class="mozTocH2" name="mozTocId961538"></a>Change
 log</h2><br>
+      <h3><a class="mozTocH3" name="mozTocId636428"></a>Version 3.2.0</h3>
+
+
+
+
+      
+      
+      
+      
+      <ul>
+<li>Fixed a bug in the Color Code filter</li>
+        <li>Fixed a bug with Leaflet based maps under Linux</li>
+        <li>Fixed a bug in connection with specifying file names</li>
+        <li>Fixed a bug with text editing in the presentation editors</li>
+        <li>Improved key handling in the presentation editors</li>
+        <li>Fixed a bug in the export of metadata</li>
+        <li>Improved context menu in presentation views</li>
+        <li>Added Undo behavior to text fields</li>
+        <li>Improved the display of details in the Statistics section of the Catalog properties</li>
+        <li>Fixed a bug with invoking actions in hierarchical structures in the Catalog properties</li>
+        <li>Fixed a bug in the mouse interaction of the internal image viewer</li>
+        <li>Added the key command "h" and "w" to the internal image viewer to zoom the image to the height or width of the monitor<br>
+        </li>
+
+        <li>Fixed a bug in the Undo logic of multi-view perspectives</li>
+        <li>Active views have now an exclamation mark in the view title</li>
+        <li>Fixed a bug in perspective change handling in the navigation history</li>
+        <li>The Slideshow, Exhibition, and WebGallery perspectives have
+been replaced by a new combined Presentations perspective. However, the
+former are still present for compatibility reasons</li>
+        <li>Fixed bugs in the Autorule preference page</li>
+        <li>It is now possible to apply a name for Autorules</li>
+        <li>Catalog specific Autorules can now be defined in group "Automatic"</li>
+        <li>The groups "Rating", "Recent imports", "Locations", and "Timeline" can now be equipped with filters</li>
+        <li>Moved the preferences for the automatic creation of relations from the "Import" page to the "Automatic actions" page</li>
+        <li>Added a "Difference" button to them "Import from Device" wizard</li>
+        <li>Fixed a bug in the Export folder/email wizard</li>
+        <li>Added privacy options to the import wizard and the adhoc slideshow</li>
+        <li>Improved 'missing catalog' dialog</li>
+        <li>Added RawTherapee version advice in the Import preference page</li>
+        <li>RawTherapee is now located automatically</li>
+        <li>Fixed a bug with remembering the raw converter path and parameters<br>
+        </li>
+
+        <li>Fixed a bug when restoring images from trash</li>
+        <li>Thumbnail labels can now be configured on global, group, and collection level<br>
+</li>
+        <li>Redesign of the group and collection dialogs</li>
+        <li>Fixed a bug in accessing subfields of structured values</li>
+        <li>Fixed a bug with deleting locations_shown entries</li>
+        <li>Fixed a bug in the display of regions</li>
+        <li>Simplified the options for thumbnail decorations</li>
+        <li>Fixed a problem with theme management in the Sleeves view</li>
+        <li>Fixed a bug with the localization of regions in the Sleeves view</li>
+        <li>Fixed a bug with large icons in table viewers</li>
+        <li>Minor improvements to the preference pages</li>
+        <li>Fixed several bugs in the Map view<br>
+        </li>
+
+        <li>Locations shown in images can now be marked in the Map view</li>
+        <li>Better output format for image direction</li>
+        <li>Improved manual geo-tagging in the Map view</li>
+        <li>It is now possible to delete markers in the Map view</li>
+        <li>Better handling of images with corrupt ICC profile<br>
+        </li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </ul>
+
       <h3><a class="mozTocH3" name="mozTocId514211"></a>Version 3.1.0</h3>
 
 

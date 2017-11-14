@@ -210,7 +210,7 @@ public class TextSearchDialog extends ZTitleAreaDialog {
 		result = new SmartCollectionImpl(s
 				+ NLS.bind(Messages.TextSearchDialog_maxmin, maxNumber, score),
 				false, false, adhoc, findInNetworkGroup == null ? false
-						: findInNetworkGroup.getSelection(), null, 0, null, 0, null, null);
+						: findInNetworkGroup.getSelection(), null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 		result.addCriterion(new CriterionImpl(ICollectionProcessor.TEXTSEARCH,
 				null, new TextSearchOptions_typeImpl(
 						s, maxNumber, score / 100f), score, false));

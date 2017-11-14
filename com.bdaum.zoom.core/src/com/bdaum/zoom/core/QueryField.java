@@ -403,14 +403,14 @@ public class QueryField {
 					String ext = q >= 0 ? captionText.substring(q + 1) : null;
 					int p = f.lastIndexOf('.');
 					if (p >= 0) {
-						if (!f.substring(p + 1).equals(ext))
+						if (!f.endsWith(ext) || p + 1 + ext.length() != f.length())
+//							 if (!f.substring(p + 1).equals(ext))
 							return Messages.QueryField_dont_modify_file_extensions;
 					} else if (ext != null)
 						f += '.' + ext;
 					if (!f.equals(captionText)) {
 						String u = asset.getUri();
 						try {
-
 							File file = new File(new java.net.URI(u));
 							File folder = file.getParentFile();
 							File targetFile = new File(folder, f);
@@ -552,8 +552,7 @@ public class QueryField {
 
 	public static final QueryField ROTATION = new QueryField(IMAGE_IMAGE, "rotation", //$NON-NLS-1$
 			null, null, null, Messages.QueryField_rotation, ACTION_QUERY, PHOTO | EDIT_NEVER | QUERY | AUTO_LINEAR,
-			CATEGORY_ASSET, T_POSITIVEINTEGER, 1, 1, new int[] { 0, 90, 180, 270 },
-			new String[] { "0°", "90°", //$NON-NLS-1$//$NON-NLS-2$
+			CATEGORY_ASSET, T_POSITIVEINTEGER, 1, 1, new int[] { 0, 90, 180, 270 }, new String[] { "0°", "90°", //$NON-NLS-1$//$NON-NLS-2$
 					"180°", "270°" }, //$NON-NLS-1$//$NON-NLS-2$
 			null, 5f, ISpellCheckingService.NOSPELLING) {
 
@@ -995,7 +994,8 @@ public class QueryField {
 		}
 
 		@Override
-		protected String doValueToText(Object value, boolean useEnums, boolean useFormatter, Locale inLocale) {
+		protected String doValueToText(Object value, boolean useEnums, boolean useFormatter, Locale inLocale,
+				boolean subField) {
 			String[] array = (String[]) value;
 			if (array.length == 1)
 				return Messages.QueryField_one_record;
@@ -1166,8 +1166,9 @@ public class QueryField {
 				if (v.startsWith("mirror ver")) //$NON-NLS-1$
 					return 4;
 				if (v.startsWith("mirror hor")) //$NON-NLS-1$
-					return v.indexOf("270") > 0 ? 5 : v.indexOf("90") > 0 ? 7 //$NON-NLS-1$ //$NON-NLS-2$
-							: 2;
+					return v.indexOf("270") > 0 ? 5 //$NON-NLS-1$
+							: v.indexOf("90") > 0 ? 7 //$NON-NLS-1$
+									: 2;
 				if (v.indexOf("180") > 0) //$NON-NLS-1$
 					return 3;
 				if (v.indexOf("90") > 6) //$NON-NLS-1$
@@ -1214,8 +1215,7 @@ public class QueryField {
 	public static final QueryField EXIF_COLORSPACE = new QueryField(EXIF_IMAGE, "colorSpace", "ColorSpace", NS_EXIF, //$NON-NLS-1$ //$NON-NLS-2$
 			"ColorSpace", Messages.QueryField_Color_space, ACTION_QUERY, //$NON-NLS-1$
 			PHOTO | EDIT_NEVER | ESSENTIAL | QUERY | TEXT | AUTO_DISCRETE | REPORT, CATEGORY_EXIF, T_INTEGER, 1, 1,
-			new int[] { -1, 1, 2, 65535 },
-			new String[] { Messages.QueryField_Undefined, "sRGB", //$NON-NLS-1$
+			new int[] { -1, 1, 2, 65535 }, new String[] { Messages.QueryField_Undefined, "sRGB", //$NON-NLS-1$
 					"AdobeRGB", Messages.QueryField_Uncalibrated }, //$NON-NLS-1$
 			null, 0f, ISpellCheckingService.NOSPELLING) {
 
@@ -1457,13 +1457,12 @@ public class QueryField {
 				return 10;
 			if (v.startsWith("hade")) //$NON-NLS-1$
 				return 11;
-			if (v.startsWith("standard")) { //$NON-NLS-1$
-				if (v.endsWith("a")) //$NON-NLS-1$
-					return 17;
-				if (v.endsWith("b")) //$NON-NLS-1$
-					return 18;
-				return 19;
-			}
+			if (v.startsWith("standard")) //$NON-NLS-1$
+				return v.endsWith("a") //$NON-NLS-1$
+						? 17
+						: v.endsWith("b") //$NON-NLS-1$
+								? 18
+								: 19;
 			if (v.equals("d55")) //$NON-NLS-1$
 				return 20;
 			if (v.equals("d65")) //$NON-NLS-1$
@@ -1808,8 +1807,7 @@ public class QueryField {
 	public static final QueryField EXIF_CONTRAST = new QueryField(EXIF_CAMERA, "contrast", "Contrast", NS_EXIF, //$NON-NLS-1$ //$NON-NLS-2$
 			"Contrast", //$NON-NLS-1$
 			Messages.QueryField_Contrast, ACTION_QUERY, PHOTO | EDIT_NEVER | QUERY | TEXT | AUTO_DISCRETE | REPORT,
-			CATEGORY_EXIF, T_INTEGER, 1, 1,
-			new int[] { 0, 1, 2 }, new String[] { Messages.QueryField_Normal_contrast,
+			CATEGORY_EXIF, T_INTEGER, 1, 1, new int[] { 0, 1, 2 }, new String[] { Messages.QueryField_Normal_contrast,
 					Messages.QueryField_Soft_contrast, Messages.QueryField_Hard_contrast },
 			null, 0f, ISpellCheckingService.NOSPELLING) {
 
@@ -1852,8 +1850,7 @@ public class QueryField {
 	public static final QueryField EXIF_SHARPNESS = new QueryField(EXIF_CAMERA, "sharpness", "Sharpness", NS_EXIF, //$NON-NLS-1$ //$NON-NLS-2$
 			"Sharpness", //$NON-NLS-1$
 			Messages.QueryField_Sharpness, ACTION_QUERY, PHOTO | EDIT_NEVER | QUERY | TEXT | AUTO_DISCRETE | REPORT,
-			CATEGORY_EXIF, T_INTEGER, 1, 1,
-			new int[] { 0, 1, 2 }, new String[] { Messages.QueryField_Normal_sharpness,
+			CATEGORY_EXIF, T_INTEGER, 1, 1, new int[] { 0, 1, 2 }, new String[] { Messages.QueryField_Normal_sharpness,
 					Messages.QueryField_Soft_sharpness, Messages.QueryField_Hard_sharpness },
 			null, 0f, ISpellCheckingService.NOSPELLING) {
 
@@ -1994,7 +1991,8 @@ public class QueryField {
 		}
 
 		@Override
-		protected String doValueToText(Object value, boolean useEnums, boolean useFormatter, Locale inLocale) {
+		protected String doValueToText(Object value, boolean useEnums, boolean useFormatter, Locale inLocale,
+				boolean subField) {
 			String[] array = (String[]) value;
 			if (array.length > 0)
 				return NLS.bind(Messages.QueryField_n_makernotes, array.length);
@@ -2028,7 +2026,7 @@ public class QueryField {
 		protected double getDouble(Asset asset) {
 			return asset.getGPSLongitude();
 		}
-		
+
 	};
 	public static final QueryField EXIF_GPSALTITUDE = new QueryField(EXIF_GPS, "gPSAltitude", //$NON-NLS-1$
 			"GPSAltitude", //$NON-NLS-1$
@@ -2079,7 +2077,7 @@ public class QueryField {
 			"GPSImgDirection", //$NON-NLS-1$
 			NS_EXIF, "GPSImgDirection", //$NON-NLS-1$
 			Messages.QueryField_img_dir, ACTION_QUERY, PHOTO | EDIT_ALWAYS | ESSENTIAL | QUERY | AUTO_LINEAR | REPORT,
-			CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 3, -1f, 360f, ISpellCheckingService.NOSPELLING) {
+			CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 3, Format.directionFormatter, -1f, 360f, ISpellCheckingService.NOSPELLING) {
 
 		@Override
 		protected double getDouble(Asset asset) {
@@ -2373,7 +2371,8 @@ public class QueryField {
 		 */
 
 		@Override
-		protected String doValueToText(Object value, boolean useEnums, boolean useFormatter, Locale inLocale) {
+		protected String doValueToText(Object value, boolean useEnums, boolean useFormatter, Locale inLocale,
+				boolean subField) {
 			StringBuilder sb = new StringBuilder();
 			String[] array = (String[]) value;
 			FilterChain filter = getKeywordFilter();
@@ -2381,7 +2380,7 @@ public class QueryField {
 				if (filter.accept(v)) {
 					String s = formatScalarValue(v, useEnums, useFormatter, inLocale);
 					if (s == null)
-						return null;
+						return Format.MISSINGENTRYSTRING;
 					if (sb.length() > 0)
 						sb.append(';');
 					sb.append(s);
@@ -2942,24 +2941,24 @@ public class QueryField {
 		return id == null ? null : fieldMap.get(id);
 	}
 
-//	protected static void updateDirDist(Asset asset) {
-//		double lat = asset.getGPSLatitude();
-//		double lon = asset.getGPSLongitude();
-//		if (Double.isNaN(lat) || Double.isNaN(lon)) {
-//			asset.setGPSImgDirection(Double.NaN);
-//			asset.setGPSDestDistance(Double.NaN);
-//		} else {
-//			double destLat = asset.getGPSDestLatitude();
-//			double destLon = asset.getGPSDestLongitude();
-//			if (Double.isNaN(destLat) || Double.isNaN(destLon)) {
-//				asset.setGPSDestDistance(Double.NaN);
-//			} else {
-//				asset.setGPSDestDistance(Core.distance(lat, lon, destLat, destLon, 'k'));
-//				asset.setGPSImgDirection(Core.bearing(lat, lon, destLat, destLon));
-//				asset.setGPSImgDirectionRef("T"); //$NON-NLS-1$
-//			}
-//		}
-//	}
+	// protected static void updateDirDist(Asset asset) {
+	// double lat = asset.getGPSLatitude();
+	// double lon = asset.getGPSLongitude();
+	// if (Double.isNaN(lat) || Double.isNaN(lon)) {
+	// asset.setGPSImgDirection(Double.NaN);
+	// asset.setGPSDestDistance(Double.NaN);
+	// } else {
+	// double destLat = asset.getGPSDestLatitude();
+	// double destLon = asset.getGPSDestLongitude();
+	// if (Double.isNaN(destLat) || Double.isNaN(destLon)) {
+	// asset.setGPSDestDistance(Double.NaN);
+	// } else {
+	// asset.setGPSDestDistance(Core.distance(lat, lon, destLat, destLon, 'k'));
+	// asset.setGPSImgDirection(Core.bearing(lat, lon, destLat, destLon));
+	// asset.setGPSImgDirectionRef("T"); //$NON-NLS-1$
+	// }
+	// }
+	// }
 
 	/**
 	 * Finds the QueryField instance belonging to an object sub field name
@@ -2987,14 +2986,18 @@ public class QueryField {
 	 */
 	public static QueryField[] findQuerySubField(String path) {
 		path = path.replace('&', ':');
-		QueryField subfield = findQueryField(path);
 		int p = path.indexOf(':');
+		QueryField subfield = findQueryField(path);
+		if (subfield == null) {
+			if (p <= 0)
+				return null;
+			QueryField qfield = findQueryField(path.substring(p + 1));
+			return qfield == null ? null : new QueryField[] { qfield, qfield };
+		}
 		if (p <= 0)
-			return (subfield == null) ? null : new QueryField[] { subfield, subfield };
-		QueryField qfield = findQueryField(path.substring(p + 1));
-		if (qfield == null)
-			return (subfield == null) ? null : new QueryField[] { subfield, subfield };
-		return (subfield == null) ? new QueryField[] { qfield, qfield } : new QueryField[] { qfield, subfield };
+			return new QueryField[] { subfield, subfield };
+		QueryField qfield = findQueryField(path.substring(0, p));
+		return qfield == null ? new QueryField[] { subfield, subfield } : new QueryField[] { qfield, subfield };
 	}
 
 	protected static Object normalizeHierarchy(String[] cats) {
@@ -3088,6 +3091,7 @@ public class QueryField {
 	private final float tolerance;
 	private final int spellingOptions;
 	private float maxValue = Float.NaN;
+	private boolean isSubfield;
 
 	/**
 	 * @param parent
@@ -3105,9 +3109,8 @@ public class QueryField {
 	 * @param action
 	 *            - action belonging to this field
 	 * @param flags
-	 *            - edit policy (EDIT_ALWAYS, EDIT_DIGITAL, EDIT_ANALOG,
-	 *            EDIT_NEVER, EDIT_HIDDEN) - other flags (QUERY, ESSENTIAL,
-	 *            HOVER, TEXT, VIDEO)
+	 *            - edit policy (EDIT_ALWAYS, EDIT_DIGITAL, EDIT_ANALOG, EDIT_NEVER,
+	 *            EDIT_HIDDEN) - other flags (QUERY, ESSENTIAL, HOVER, TEXT, VIDEO)
 	 * @param category
 	 *            - category to which this field belongs
 	 * @param type
@@ -3115,8 +3118,7 @@ public class QueryField {
 	 * @param card
 	 *            - cardinality (-1 for multiple unlimited)
 	 * @param maxlength
-	 *            - maximum length for strings, maximum fraction digits for
-	 *            float
+	 *            - maximum length for strings, maximum fraction digits for float
 	 * @param tolerance
 	 *            - default tolerance for queries (negative: absolute value,
 	 *            positive: percent)
@@ -3149,9 +3151,9 @@ public class QueryField {
 	 * @param action
 	 *            - action belonging to this field
 	 * @param flags
-	 *            - edit policy (EDIT_ALWAYS, EDIT_DIGITAL, EDIT_ANALOG,
-	 *            EDIT_NEVER, EDIT_HIDDEN) - other flags (QUERY, ESSENTIAL,
-	 *            HOVER, TEXT, VIDEO, PHOTO)
+	 *            - edit policy (EDIT_ALWAYS, EDIT_DIGITAL, EDIT_ANALOG, EDIT_NEVER,
+	 *            EDIT_HIDDEN) - other flags (QUERY, ESSENTIAL, HOVER, TEXT, VIDEO,
+	 *            PHOTO)
 	 * @param category
 	 *            - category to which this field belongs
 	 * @param type
@@ -3159,8 +3161,7 @@ public class QueryField {
 	 * @param card
 	 *            - cardinality (-1 for multiple unlimited)
 	 * @param maxlength
-	 *            - maximum length for strings, maximum fraction digits for
-	 *            float
+	 *            - maximum length for strings, maximum fraction digits for float
 	 * @param formatter
 	 *            - formatter used for formatting and parsing the field value
 	 * @param tolerance
@@ -3195,9 +3196,8 @@ public class QueryField {
 	 * @param action
 	 *            - action belonging to this field
 	 * @param flags
-	 *            - edit policy (EDIT_ALWAYS, EDIT_DIGITAL, EDIT_ANALOG,
-	 *            EDIT_NEVER, EDIT_HIDDEN) - other flags (QUERY, ESSENTIAL,
-	 *            HOVER, TEXT, VIDEO)
+	 *            - edit policy (EDIT_ALWAYS, EDIT_DIGITAL, EDIT_ANALOG, EDIT_NEVER,
+	 *            EDIT_HIDDEN) - other flags (QUERY, ESSENTIAL, HOVER, TEXT, VIDEO)
 	 * @param category
 	 *            - category to which this field belongs
 	 * @param type
@@ -3205,8 +3205,7 @@ public class QueryField {
 	 * @param card
 	 *            - cardinality (-1 for multiple unlimited)
 	 * @param maxlength
-	 *            - maximum length for strings, maximum fraction digits for
-	 *            float
+	 *            - maximum length for strings, maximum fraction digits for float
 	 * @param enumeration
 	 *            - enumeration values (field values)
 	 * @param enumLabels
@@ -3270,9 +3269,8 @@ public class QueryField {
 		if (path != null && type != T_NONE) {
 			if (xmpNs == NS_EXIF || xmpNs == NS_PHOTOSHOP || xmpNs == NS_IPTC4XMPCORE || xmpNs == NS_XMP)
 				exifToolMap.put(path, this);
-			else if (xmpNs == NS_DC || xmpNs == NS_LIGHTROOM) {
-				exifToolMap.put(path.substring(0, 1).toUpperCase() + path.substring(1), this);
-			}
+			else if ((xmpNs == NS_DC || xmpNs == NS_LIGHTROOM) && !path.isEmpty())
+				exifToolMap.put(Character.toUpperCase(path.charAt(0)) + path.substring(1), this);
 		}
 		if (parent == LOCATION_TYPE) {
 			fieldMap.put("iptc_location_created:" + getId(), this); //$NON-NLS-1$
@@ -3282,23 +3280,28 @@ public class QueryField {
 						this);
 				pathMap.put(IPTC_LOCATIONSHOWN.getXmpNs().uri + ':' + IPTC_LOCATIONSHOWN.getPath() + '/' + path, this);
 			}
+			isSubfield = true;
 		} else if (parent == ARTWORKOROBJECT_TYPE) {
 			fieldMap.put("iptc_artwork_shown:" + getId(), this); //$NON-NLS-1$
 			if (path != null)
 				pathMap.put(IPTC_ARTWORK.getXmpNs().uri + ':' + IPTC_ARTWORK.getPath() + '/' + path, this);
+			isSubfield = true;
 		} else if (parent == CONTACT_TYPE) {
 			fieldMap.put("iptc_creator_contact:" + getId(), this); //$NON-NLS-1$
 			if (path != null)
 				pathMap.put(IPTC_CONTACT.getXmpNs().uri + ':' + IPTC_CONTACT.getPath() + '/' + path, this);
+			isSubfield = true;
 		} else if (parent == REGION_TYPE) {
 			if (path != null) {
 				pathMap.put(FACESSHOWN.getXmpNs().uri + ":RegionInfo/Regions/" + path, this); //$NON-NLS-1$
 				fieldMap.put("region:" + getId(), this); //$NON-NLS-1$
+				isSubfield = true;
 			}
 		} else if (parent == MWG_REGION_TYPE) {
 			if (path != null) {
 				pathMap.put(MWG_FACESSHOWN.getXmpNs().uri + ":Regions/RegionList/" + path, this); //$NON-NLS-1$
 				fieldMap.put("region:" + getId(), this); //$NON-NLS-1$
+				isSubfield = true;
 			}
 		} else {
 			fieldMap.put(getId(), this);
@@ -3323,8 +3326,8 @@ public class QueryField {
 	}
 
 	/**
-	 * Tests if the field has a label. If not it is only for internal use and
-	 * not shown at the user interface.
+	 * Tests if the field has a label. If not it is only for internal use and not
+	 * shown at the user interface.
 	 *
 	 * @return true if field has a label
 	 */
@@ -3333,8 +3336,8 @@ public class QueryField {
 	}
 
 	/**
-	 * Tests if the field has a label and a key. If not it is only for internal
-	 * use or is a category node
+	 * Tests if the field has a label and a key. If not it is only for internal use
+	 * or is a category node
 	 *
 	 * @return true if field has a label and a key
 	 */
@@ -3343,8 +3346,8 @@ public class QueryField {
 	}
 
 	/**
-	 * Returns the field label. User field labels are replaced by their user
-	 * defined strings.
+	 * Returns the field label. User field labels are replaced by their user defined
+	 * strings.
 	 *
 	 * @return field label
 	 */
@@ -3470,8 +3473,8 @@ public class QueryField {
 	}
 
 	/**
-	 * Returns the max negative or positive value Can be Float.NaN for undefined
-	 * max value or Float.POSITVE_INFINITY for unlimited values
+	 * Returns the max negative or positive value Can be Float.NaN for undefined max
+	 * value or Float.POSITVE_INFINITY for unlimited values
 	 *
 	 * @return max string length or max fraction digits
 	 */
@@ -3609,8 +3612,8 @@ public class QueryField {
 	}
 
 	/**
-	 * Returns the cardinality of the field (-1 for unlimited list, -2 for
-	 * unlimited set)
+	 * Returns the cardinality of the field (-1 for unlimited list, -2 for unlimited
+	 * set)
 	 *
 	 * @return cardinality
 	 */
@@ -3846,8 +3849,8 @@ public class QueryField {
 	private static final Object[] NOARGS = new Object[0];
 
 	/**
-	 * Retrieves the field value from a given object The default implementation
-	 * uses reflection to do so, individual fields may override
+	 * Retrieves the field value from a given object The default implementation uses
+	 * reflection to do so, individual fields may override
 	 *
 	 * @param obj
 	 *            - Object containing the field value
@@ -3858,14 +3861,12 @@ public class QueryField {
 			if (key == null || key.startsWith("$")) //$NON-NLS-1$
 				return null;
 			try {
-				if (obj instanceof Asset) {
-					for (IMediaSupport support : getMediaSupport()) {
+				if (obj instanceof Asset)
+					for (IMediaSupport support : getMediaSupport())
 						if (support.handles(key)) {
 							MediaExtension ext = support.getMediaExtension((Asset) obj);
 							return (ext == null) ? getMissingValue() : support.getFieldValue(this, ext);
 						}
-					}
-				}
 				return obj.getClass().getMethod(getGetAccessor(), NOPARMS).invoke(obj, NOARGS);
 			} catch (Exception e) {
 				CoreActivator.getDefault().logError(NLS.bind(Messages.QueryField_internal_error_accessing_field, key),
@@ -3889,8 +3890,8 @@ public class QueryField {
 	}
 
 	/**
-	 * Sets the field value into a given object !! For BAG fields the field
-	 * values are merged into the old values !!
+	 * Sets the field value into a given object !! For BAG fields the field values
+	 * are merged into the old values !!
 	 *
 	 * @param obj
 	 *            - object to be modified
@@ -4357,10 +4358,22 @@ public class QueryField {
 			return Format.MISSINGENTRYSTRING;
 		if (isStruct())
 			return value instanceof IndexedMember[] ? QueryField.VALUE_NOTHING : serializeStruct(value, structDefault);
-		return doValueToText(value, useEnums, useFormatter, inLocale);
+		return doValueToText(value, useEnums, useFormatter, inLocale, false);
 	}
 
-	String doValueToText(Object value, boolean useEnums, boolean useFormatter, Locale inLocale) {
+	String doValueToText(Object value, boolean useEnums, boolean useFormatter, Locale inLocale, boolean recursion) {
+		if (isSubfield && !recursion && value instanceof Object[]) {
+			StringBuilder sb = new StringBuilder();
+			for (Object v : (Object[]) value) {
+				String s = doValueToText(v, useEnums, useFormatter, inLocale, true);
+				if (s != null && !s.isEmpty() && !Format.MISSINGENTRYSTRING.equals(s)) {
+					if (sb.length() > 0)
+						sb.append(';');
+					sb.append(s);
+				}
+			}
+			return sb.toString();
+		}
 		if (card != 1) {
 			StringBuilder sb = new StringBuilder();
 			if (value instanceof int[]) {
@@ -4532,7 +4545,7 @@ public class QueryField {
 		}
 		switch (getType()) {
 		case QueryField.T_BOOLEAN:
-			return ((Boolean) value).booleanValue() ? "1" //$NON-NLS-1$
+			return (Boolean) value ? "1" //$NON-NLS-1$
 					: "0"; //$NON-NLS-1$
 		case QueryField.T_POSITIVEINTEGER:
 			if (value instanceof Integer && ((Integer) value).intValue() < 0)
@@ -4545,23 +4558,29 @@ public class QueryField {
 		case QueryField.T_POSITIVEFLOAT:
 		case QueryField.T_FLOAT:
 		case QueryField.T_FLOATB:
-			NumberFormat nf = inLocale != null ? NumberFormat.getNumberInstance(inLocale)
-					: NumberFormat.getNumberInstance();
-			nf.setMaximumFractionDigits(getMaxlength());
 			if (value instanceof Double) {
 				Double d = (Double) value;
-				return d.isInfinite() ? Messages.QueryField_infinite
-						: d.isNaN() ? Format.MISSINGENTRYSTRING : nf.format(value);
+				if (d.isInfinite())
+					return Messages.QueryField_infinite;
+				if (d.isNaN())
+					return Format.MISSINGENTRYSTRING;
+				NumberFormat nf = inLocale != null ? NumberFormat.getNumberInstance(inLocale)
+						: NumberFormat.getNumberInstance();
+				nf.setMaximumFractionDigits(getMaxlength());
+				return nf.format(value);
 			}
 			break;
 		case QueryField.T_CURRENCY:
-			NumberFormat cf = inLocale != null ? NumberFormat.getCurrencyInstance(inLocale)
-					: NumberFormat.getCurrencyInstance();
-			int digits = cf.getCurrency().getDefaultFractionDigits();
-			cf.setMaximumFractionDigits(digits);
-			cf.setMinimumFractionDigits(digits);
-			if (value instanceof Double)
-				return ((Double) value).isNaN() ? Format.MISSINGENTRYSTRING : cf.format(value);
+			if (value instanceof Double) {
+				if (((Double) value).isNaN())
+					return Format.MISSINGENTRYSTRING;
+				NumberFormat cf = inLocale != null ? NumberFormat.getCurrencyInstance(inLocale)
+						: NumberFormat.getCurrencyInstance();
+				int digits = cf.getCurrency().getDefaultFractionDigits();
+				cf.setMaximumFractionDigits(digits);
+				cf.setMinimumFractionDigits(digits);
+				return cf.format(value);
+			}
 			break;
 		case QueryField.T_DATE:
 			if (value instanceof Date)
@@ -4691,9 +4710,6 @@ public class QueryField {
 		return (getEditable() & EDIT_HIDDEN) != 0;
 	}
 
-	private static final SimpleDateFormat exifDf = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss Z"); //$NON-NLS-1$
-	private static final SimpleDateFormat exifDf2 = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss"); //$NON-NLS-1$
-
 	/**
 	 * Parses and EXIF date string
 	 *
@@ -4705,10 +4721,10 @@ public class QueryField {
 	@SuppressWarnings("fallthrough")
 	public static Date parseDate(String v) throws XMPException {
 		try {
-			return exifDf.parse(v);
+			return new SimpleDateFormat("yyyy:MM:dd HH:mm:ss Z").parse(v); //$NON-NLS-1$
 		} catch (ParseException e) {
 			try {
-				return exifDf2.parse(v);
+				return new SimpleDateFormat("yyyy:MM:dd HH:mm:ss").parse(v); //$NON-NLS-1$
 			} catch (Exception e1) {
 				try {
 					return XMPUtils.convertToDate(v).getCalendar().getTime();
@@ -4834,165 +4850,6 @@ public class QueryField {
 		}
 	}
 
-	// private static final int START = 0;
-	// private static final int STRUCT = 1;
-	// private static final int LIST = 2;
-	// private static final int LISTSTRUCT = 3;
-	// private static final int STRUCTVALUE = 4;
-	// private static final int STRUCTLIST = 5;
-	// private static final int LISTSTRUCTVALUE = 6;
-	// private static final int LISTSTRUCTLIST = 7;
-	//
-	// private static final List<String> sublist = new ArrayList<String>();
-
-	// @SuppressWarnings("null")
-	// public static Object parseExif(String v) {
-	// ArrayList<Object> result = null;
-	// ArrayList<Object> substruct = null;
-	// int state = START;
-	// StringBuilder token = new StringBuilder();
-	// int mxIndex = v.length() - 1;
-	// for (int i = 0; i <= mxIndex; i++) {
-	// char c = v.charAt(i);
-	// if (c == '|' && i < mxIndex) {
-	// token.append(v.charAt(++i));
-	// continue;
-	// }
-	// switch (state) {
-	// case START:
-	// switch (c) {
-	// case '{':
-	// result = new ArrayList<Object>();
-	// state = STRUCT;
-	// break;
-	// case '[':
-	// result = new ArrayList<Object>();
-	// state = LIST;
-	// break;
-	// default:
-	// token.append(c);
-	// }
-	// break;
-	// case LIST:
-	// switch (c) {
-	// case '{':
-	// state = LISTSTRUCT;
-	// substruct = new ArrayList<Object>();
-	// result.add(substruct);
-	// break;
-	// case ',':
-	// result.add(token.toString());
-	// token.setLength(0);
-	// break;
-	// case ']':
-	// result.add(token.toString());
-	// return result;
-	// default:
-	// token.append(c);
-	// }
-	// break;
-	// case STRUCT:
-	// switch (c) {
-	// case '=':
-	// result.add(token.toString());
-	// token.setLength(0);
-	// state = STRUCTVALUE;
-	// break;
-	// default:
-	// token.append(c);
-	// }
-	// break;
-	// case STRUCTVALUE:
-	// switch (c) {
-	// case '[':
-	// state = STRUCTLIST;
-	// sublist.clear();
-	// break;
-	// case ',':
-	// result.add(token.toString());
-	// token.setLength(0);
-	// state = STRUCT;
-	// break;
-	// case '}':
-	// result.add(token.toString());
-	// return result;
-	// default:
-	// token.append(c);
-	// }
-	// break;
-	// case STRUCTLIST:
-	// switch (c) {
-	// case ',':
-	// sublist.add(token.toString());
-	// token.setLength(0);
-	// break;
-	// case ']':
-	// sublist.add(token.toString());
-	// token.setLength(0);
-	// result.add(sublist.toArray(new String[sublist.size()]));
-	// state = STRUCTVALUE;
-	// break;
-	// default:
-	// token.append(c);
-	// }
-	// break;
-	// case LISTSTRUCT:
-	// switch (c) {
-	// case '=':
-	// substruct.add(token.toString());
-	// token.setLength(0);
-	// state = LISTSTRUCTVALUE;
-	// break;
-	// default:
-	// token.append(c);
-	// }
-	// break;
-	// case LISTSTRUCTVALUE:
-	// switch (c) {
-	// case '[':
-	// state = LISTSTRUCTLIST;
-	// sublist.clear();
-	// break;
-	// case ',':
-	// substruct.add(token.toString());
-	// token.setLength(0);
-	// state = LISTSTRUCT;
-	// break;
-	// case '}':
-	// substruct.add(token.toString());
-	// token.setLength(0);
-	// state = LIST;
-	// break;
-	// default:
-	// token.append(c);
-	// }
-	// break;
-	// case LISTSTRUCTLIST:
-	// switch (c) {
-	// case ',':
-	// sublist.add(token.toString());
-	// token.setLength(0);
-	// break;
-	// case ']':
-	// sublist.add(token.toString());
-	// token.setLength(0);
-	// substruct.add(sublist.toArray(new String[sublist.size()]));
-	// state = LISTSTRUCTVALUE;
-	// break;
-	// default:
-	// token.append(c);
-	// }
-	// break;
-	// }
-	// }
-	// if (result != null) {
-	// if (token.length() > 0)
-	// result.add(token.toString());
-	// return result;
-	// }
-	// return token.toString();
-	// }
-
 	/**
 	 * Returns the list of registered field categories
 	 *
@@ -5005,8 +4862,8 @@ public class QueryField {
 	/**
 	 * Returns the list of registered field categories and associated subgroups
 	 *
-	 * @return - list of categories and subgroups containing Category and
-	 *         QueryField objects
+	 * @return - list of categories and subgroups containing Category and QueryField
+	 *         objects
 	 */
 	public static List<Object> getCategoriesAndSubgroups() {
 		if (categoriesAndSubgroups == null) {
@@ -5038,8 +4895,7 @@ public class QueryField {
 	}
 
 	/**
-	 * Flags the field, its children and its parents with the given property
-	 * flag
+	 * Flags the field, its children and its parents with the given property flag
 	 *
 	 * @param flag
 	 *            - flag to be set

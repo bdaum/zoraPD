@@ -196,8 +196,7 @@ public class RawConverter extends AbstractRawConverter {
 			if (resolution == HIGH) {
 				try {
 					if (RAWINTERPOLATION.equals(prop.id))
-						options.put(RAWINTERPOLATION,
-								Integer.parseInt(prop.value));
+						options.put(RAWINTERPOLATION, Integer.parseInt(prop.value));
 					else if (RAWITERATIONS.equals(prop.id))
 						options.put(RAWITERATIONS, Integer.parseInt(prop.value));
 				} catch (NumberFormatException e) {
@@ -220,11 +219,9 @@ public class RawConverter extends AbstractRawConverter {
 			if (resolution != THUMB) {
 				if (recipe.noiseReduction > 0)
 					options.put(IConverter.DENOISE, recipe.noiseReduction);
-				if (recipe.chromaticAberrationB != 1d
-						&& recipe.chromaticAberrationR != 1d)
-					options.put(IConverter.ABBERATION, new double[] {
-							recipe.chromaticAberrationR,
-							recipe.chromaticAberrationB });
+				if (recipe.chromaticAberrationB != 1d && recipe.chromaticAberrationR != 1d)
+					options.put(IConverter.ABBERATION,
+							new double[] { recipe.chromaticAberrationR, recipe.chromaticAberrationB });
 			}
 			if (recipe.highlightRecovery > 0)
 				options.put(RAWHIGHLIGHT, recipe.highlightRecovery);
@@ -240,45 +237,41 @@ public class RawConverter extends AbstractRawConverter {
 	}
 
 	public File findModule(File parentFile) {
-		File dcraw = new File(parentFile, Dcraw);
-		if (dcraw.exists())
-			return dcraw;
-		File[] members = parentFile.listFiles();
-		if (members != null)
-			for (File member : members)
-				if (member.isDirectory()) {
-					dcraw = findModule(member);
-					if (dcraw != null)
-						return dcraw;
-				}
+		if (parentFile != null) {
+			File dcraw = new File(parentFile, Dcraw);
+			if (dcraw.exists())
+				return dcraw;
+			File[] members = parentFile.listFiles();
+			if (members != null)
+				for (File member : members)
+					if (member.isDirectory()) {
+						dcraw = findModule(member);
+						if (dcraw != null)
+							return dcraw;
+					}
+		}
 		return null;
 	}
 
 	@Override
 	public String getVersionMessage() {
-		Bundle[] fragments = Platform.getFragments(Activator.getDefault()
-				.getBundle());
+		Bundle[] fragments = Platform.getFragments(Activator.getDefault().getBundle());
 		if (fragments != null && fragments.length > 0)
-			return NLS.bind(
-					Messages.getString("RawConverter.internal_version"), //$NON-NLS-1$
+			return NLS.bind(Messages.getString("RawConverter.internal_version"), //$NON-NLS-1$
 					fragments[0].getVersion());
 		return null;
 	}
 
-	public synchronized long getLastRecipeModification(String uri,
-			long lastMod, String[] detectorIds) {
+	public synchronized long getLastRecipeModification(String uri, long lastMod, String[] detectorIds) {
 		List<IRecipeDetector> detectors = CoreActivator.getDefault().getDetectors(detectorIds);
 		if (detectors != null)
 			for (IRecipeDetector recipeDetector : detectors)
 				if (recipeDetector.isRecipeXMPembbedded(uri) < 0)
-					lastMod = Math.max(
-							recipeDetector.getRecipeModificationTimestamp(uri),
-							lastMod);
+					lastMod = Math.max(recipeDetector.getRecipeModificationTimestamp(uri), lastMod);
 		return lastMod;
 	}
 
-	public synchronized Recipe getRecipe(final String uri, boolean highres,
-			IFocalLengthProvider focalLengthProvider,
+	public synchronized Recipe getRecipe(final String uri, boolean highres, IFocalLengthProvider focalLengthProvider,
 			Map<String, String> overlayMap, String[] detectorIds) {
 		List<IRecipeDetector> detectors = CoreActivator.getDefault().getDetectors(detectorIds);
 		if (detectors != null) {
@@ -298,15 +291,12 @@ public class RawConverter extends AbstractRawConverter {
 			});
 			for (IRecipeDetector detector : detectors) {
 				try {
-					Recipe recipe = detector.loadRecipeForImage(uri, highres,
-							focalLengthProvider, overlayMap);
+					Recipe recipe = detector.loadRecipeForImage(uri, highres, focalLengthProvider, overlayMap);
 					if (recipe != null)
 						return recipe;
 				} catch (Exception e) {
-					Activator.getDefault().logError(
-							NLS.bind(
-									Messages.getString("RawConverter.internal_error"), //$NON-NLS-1$
-									detector.getName()), e);
+					Activator.getDefault().logError(NLS.bind(Messages.getString("RawConverter.internal_error"), //$NON-NLS-1$
+							detector.getName()), e);
 				}
 			}
 		}
@@ -319,6 +309,5 @@ public class RawConverter extends AbstractRawConverter {
 			return true;
 		return super.isValid();
 	}
-
 
 }
