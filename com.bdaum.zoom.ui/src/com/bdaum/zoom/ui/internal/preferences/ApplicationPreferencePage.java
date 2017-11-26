@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Label;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
+import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
@@ -39,9 +40,8 @@ public class ApplicationPreferencePage extends AbstractPreferencePage {
 
 	private CheckboxButton menuButton;
 	private CheckboxButton statusButton;
-	private CheckboxButton trayButton;
 	private CheckboxButton trashButton;
-
+	private RadioButtonGroup trayButtonGroup;
 
 	@Override
 	protected void createPageContents(Composite composite) {
@@ -55,81 +55,73 @@ public class ApplicationPreferencePage extends AbstractPreferencePage {
 	@Override
 	protected void doFillValues() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		menuButton.setSelection(preferenceStore
-				.getBoolean(PreferenceConstants.HIDE_MENU_BAR));
-		statusButton.setSelection(preferenceStore
-				.getBoolean(PreferenceConstants.HIDE_STATUS_BAR));
-		trayButton.setSelection(preferenceStore
-				.getBoolean(PreferenceConstants.TRAY_MODE));
-		trashButton.setSelection(preferenceStore
-				.getBoolean(PreferenceConstants.FORCEDELETETRASH));
+		menuButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.HIDE_MENU_BAR));
+		statusButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.HIDE_STATUS_BAR));
+		String mode = preferenceStore.getString(PreferenceConstants.TRAY_MODE);
+		trayButtonGroup.setSelection(PreferenceConstants.TRAY_PROMPT.equals(mode) ? 2
+				: PreferenceConstants.TRAY_TRAY.equalsIgnoreCase(mode) ? 0 : 1); 
+		trashButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.FORCEDELETETRASH));
 	}
 
 	@Override
 	protected void doPerformDefaults() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		preferenceStore.setValue(PreferenceConstants.HIDE_MENU_BAR,
-				preferenceStore
-						.getDefaultBoolean(PreferenceConstants.HIDE_MENU_BAR));
-		preferenceStore
-				.setValue(PreferenceConstants.HIDE_STATUS_BAR, preferenceStore
-						.getDefaultBoolean(PreferenceConstants.HIDE_STATUS_BAR));
-		preferenceStore.setValue(PreferenceConstants.TRAY_MODE, preferenceStore
-				.getDefaultBoolean(PreferenceConstants.TRAY_MODE));
-		preferenceStore
-				.setValue(
-						PreferenceConstants.FORCEDELETETRASH,
-						preferenceStore
-								.getDefaultBoolean(PreferenceConstants.FORCEDELETETRASH));
+				preferenceStore.getDefaultBoolean(PreferenceConstants.HIDE_MENU_BAR));
+		preferenceStore.setValue(PreferenceConstants.HIDE_STATUS_BAR,
+				preferenceStore.getDefaultBoolean(PreferenceConstants.HIDE_STATUS_BAR));
+		preferenceStore.setValue(PreferenceConstants.TRAY_MODE,
+				preferenceStore.getDefaultString(PreferenceConstants.TRAY_MODE));
+		preferenceStore.setValue(PreferenceConstants.FORCEDELETETRASH,
+				preferenceStore.getDefaultBoolean(PreferenceConstants.FORCEDELETETRASH));
 	}
 
 	@Override
 	protected void doPerformOk() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		preferenceStore.setValue(PreferenceConstants.HIDE_MENU_BAR,
-				menuButton.getSelection());
-		preferenceStore.setValue(PreferenceConstants.HIDE_STATUS_BAR,
-				statusButton.getSelection());
-		preferenceStore.setValue(PreferenceConstants.TRAY_MODE,
-				trayButton.getSelection());
-		preferenceStore.setValue(PreferenceConstants.FORCEDELETETRASH,
-				trashButton.getSelection());
+		preferenceStore.setValue(PreferenceConstants.HIDE_MENU_BAR, menuButton.getSelection());
+		preferenceStore.setValue(PreferenceConstants.HIDE_STATUS_BAR, statusButton.getSelection());
+		String mode;
+		switch (trayButtonGroup.getSelection()) {
+		case 0:
+			mode = PreferenceConstants.TRAY_TRAY; 
+			break;
+		case 1:
+			mode = PreferenceConstants.TRAY_DESK;
+			break;
+		default:
+			mode = PreferenceConstants.TRAY_PROMPT;
+		}
+		preferenceStore.setValue(PreferenceConstants.TRAY_MODE, mode);
+		preferenceStore.setValue(PreferenceConstants.FORCEDELETETRASH, trashButton.getSelection());
 	}
 
 	private void createScreenGroup(Composite composite) {
 		CGroup group = UiUtilities.createGroup(composite, 1,
 				Messages.getString("ApplicationPreferencePage.fullscreen_mode")); //$NON-NLS-1$
 		Label explLabel = new Label(group, SWT.WRAP);
-		explLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true,
-				false));
-		explLabel.setText(Messages
-				.getString("ApplicationPreferencePage.full_screen_expl")); //$NON-NLS-1$
-		menuButton = WidgetFactory
-				.createCheckButton(group, Messages
-						.getString("ApplicationPreferencePage.hide_menu"), null); //$NON-NLS-1$
-		statusButton = WidgetFactory
-				.createCheckButton(
-						group,
-						Messages.getString("ApplicationPreferencePage.hide_status"), null); //$NON-NLS-1$
+		explLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
+		explLabel.setText(Messages.getString("ApplicationPreferencePage.full_screen_expl")); //$NON-NLS-1$
+		menuButton = WidgetFactory.createCheckButton(group, Messages.getString("ApplicationPreferencePage.hide_menu"), //$NON-NLS-1$
+				null);
+		statusButton = WidgetFactory.createCheckButton(group,
+				Messages.getString("ApplicationPreferencePage.hide_status"), null); //$NON-NLS-1$
 	}
 
+	@SuppressWarnings("unused")
 	private void createTaskGroup(Composite composite) {
-		CGroup group = UiUtilities.createGroup(composite, 1,
-				Messages.getString("ApplicationPreferencePage.tray_mode")); //$NON-NLS-1$
+		CGroup group = UiUtilities.createGroup(composite, 1, Messages.getString("ApplicationPreferencePage.tray_mode")); //$NON-NLS-1$
 		Label explLabel = new Label(group, SWT.WRAP);
-		explLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true,
-				false));
-		explLabel.setText(Messages
-				.getString("ApplicationPreferencePage.tray_mode_expl")); //$NON-NLS-1$
-		trayButton = WidgetFactory
-				.createCheckButton(
-						group,
-						Messages.getString("ApplicationPreferencePage.run_in_tray"), null); //$NON-NLS-1$
-		trashButton = WidgetFactory
-				.createCheckButton(
-						group,
-						Messages.getString("ApplicationPreferencePage.delete_trashcan"), null); //$NON-NLS-1$
-		trayButton.addSelectionListener(new SelectionAdapter() {
+		explLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
+		explLabel.setText(Messages.getString("ApplicationPreferencePage.tray_mode_expl")); //$NON-NLS-1$
+		new Label(group, SWT.NONE);
+		trayButtonGroup = new RadioButtonGroup(group, Messages.getString("ApplicationPreferencePage.start_app"), //$NON-NLS-1$
+				SWT.HORIZONTAL, Messages.getString("ApplicationPreferencePage.in_tray"), //$NON-NLS-1$
+				Messages.getString("ApplicationPreferencePage.on_desktop"), //$NON-NLS-1$
+				Messages.getString("ApplicationPreferencePage.with_prompt")); //$NON-NLS-1$
+		trashButton = WidgetFactory.createCheckButton(group,
+				Messages.getString("ApplicationPreferencePage.delete_trashcan"), null); //$NON-NLS-1$
+		trayButtonGroup.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				updateButtons();
@@ -139,7 +131,7 @@ public class ApplicationPreferencePage extends AbstractPreferencePage {
 
 	@Override
 	protected void updateButtons() {
-		trashButton.setEnabled(trayButton.getSelection());
+		trashButton.setEnabled(trayButtonGroup.getSelection() == 0);
 	}
 
 }

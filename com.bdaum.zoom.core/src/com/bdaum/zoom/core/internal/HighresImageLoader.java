@@ -158,6 +158,7 @@ public class HighresImageLoader {
 	 *            desired size, if null, factor applies
 	 * @param scalingFactor
 	 *            factor applies if bounds == null
+	 *            set to 0 for full resolution without subsampling
 	 * @param maxFactor
 	 *            maxFactor limits the scaling factor when bounds != null
 	 * @param advanced
@@ -232,7 +233,7 @@ public class HighresImageLoader {
 			}
 			Options options = new Options();
 			int resolution;
-			if (bounds != null || scalingFactor >= 0.5d
+			if (bounds != null || scalingFactor >= 0.5d || scalingFactor == 0
 					|| (rawRecipe != null && rawRecipe.getCropping() != null))
 				resolution = IRawConverter.HIGH;
 			else
@@ -241,7 +242,7 @@ public class HighresImageLoader {
 					resolution);
 			scalingFactor *= factor;
 			if (rawRecipe != null) {
-				rawRecipe.setScaling((float) scalingFactor);
+				rawRecipe.setScaling(scalingFactor > 0 ? (float) scalingFactor : 1f);
 				rawRecipe.setSampleFactor(factor);
 			}
 			if (cms == ImageConstants.ARGB)

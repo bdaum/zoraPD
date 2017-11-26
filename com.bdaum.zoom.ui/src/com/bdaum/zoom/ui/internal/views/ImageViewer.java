@@ -49,6 +49,8 @@ import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -104,54 +106,6 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	private static final int PAGEINCREMENT = 100;
 	protected static final int HOTSPOTSIZE = 48;
 	private static final Point pnt = new Point(0, 0);
-
-	private final class Fader {
-
-		private MultiStatus fadein(MultiStatus status, IProgressMonitor monitor, ZImage zimage, final FadingShell shell,
-				final Canvas canvas, final FadingShell formerShell) {
-			if (monitor.isCanceled()) {
-				status.add(Status.CANCEL_STATUS);
-				return status;
-			}
-			if (zimage != null) {
-				if (!canvas.isDisposed()) {
-					display.syncExec(() -> {
-						if (!canvas.isDisposed()) {
-							canvas.redraw();
-							shell.setActive();
-						}
-					});
-				}
-				for (int i = 0; i < 16; i++) {
-					if (shell.isDisposed())
-						break;
-					if (monitor.isCanceled())
-						break;
-					display.syncExec(() -> {
-						if (!shell.isDisposed())
-							shell.setAlpha(Math.min(255, shell.getAlpha() + 16));
-					});
-					try {
-						Thread.sleep(60);
-					} catch (InterruptedException e) {
-						// do nothing
-					}
-				}
-				if (!formerShell.isDisposed()) {
-					display.syncExec(() -> {
-						formerShell.close();
-						if (!shell.isDisposed()) {
-							shell.forceActive();
-							shell.forceFocus();
-							canvas.setFocus();
-						}
-					});
-				}
-			}
-			return status;
-		}
-
-	}
 
 	private final class InertiaMousePanListener implements MouseListener, MouseMoveListener {
 		double xSpeed, ySpeed;
@@ -284,19 +238,20 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 
 	}
 
-	public String loadFailed;
-
 	public class HighResJob extends Job {
 
 		private File imageFile;
 		private boolean adv;
 		private int cms1;
+		private boolean firstCall;
+		private ToolTip tooltip;
 
-		public HighResJob(File imageFile, boolean advanced, int cms) {
+		public HighResJob(File imageFile, boolean advanced, int cms, boolean subSampling) {
 			super("ImageLoading"); //$NON-NLS-1$
 			this.imageFile = imageFile;
 			this.adv = advanced;
 			this.cms1 = cms;
+			this.firstCall = subSampling;
 			setSystem(true);
 			setPriority(Job.INTERACTIVE);
 		}
@@ -309,15 +264,34 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 		@Override
 		protected IStatus run(final IProgressMonitor monitor) {
 			String opId = java.util.UUID.randomUUID().toString();
-			CoreActivator activator = CoreActivator.getDefault();
-			IFileWatcher fileWatcher = activator.getFileWatchManager();
+			IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
 			try {
 				MultiStatus status = new MultiStatus(UiActivator.PLUGIN_ID, 0,
 						Messages.getString("ImageViewer.Image_loading_report"), null); //$NON-NLS-1$
 				try {
-					image = activator.getHighresImageLoader().loadImage(null, status, imageFile, asset.getRotation(),
-							asset.getFocalLengthIn35MmFilm(), null, 1d, 1d, adv, cms1, bwmode, null,
-							cropmode == ZImage.ORIGINAL ? Recipe.NULL : null, fileWatcher, opId, null);
+					boolean secondCallPossible = false;
+					final MultiStatus status1 = status;
+					if (!firstCall) {
+						for (int i = 0; i < 16; i++) {
+							if (topShell.isDisposed())
+								break;
+							display.syncExec(() -> {
+								if (!topShell.isDisposed())
+									topShell.setAlpha(Math.max(0, topShell.getAlpha() - 16));
+							});
+							try {
+								Thread.sleep(40);
+							} catch (InterruptedException ex) {
+								// do nothing
+							}
+						}
+						image.dispose();
+						image = null;
+					}
+					image = CoreActivator.getDefault().getHighresImageLoader().loadImage(null, status1, imageFile,
+							asset.getRotation(), asset.getFocalLengthIn35MmFilm(), null, firstCall ? 1d : 0d, 1d, adv,
+							cms1, bwmode, null, cropmode == ZImage.ORIGINAL ? Recipe.NULL : null, fileWatcher, opId,
+							null);
 					if (image != null) {
 						display.syncExec(() -> {
 							if (!topCanvas.isDisposed()) {
@@ -325,11 +299,61 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 								image.develop(monitor, display, cropmode, area.width, area.height);
 							}
 						});
+						int superSamplingFactor = image.getSuperSamplingFactor();
 						ibounds = image.getBounds();
-						status = new Fader().fadein(status, monitor, image, topShell, topCanvas,
-								(previewShown) ? previewShell : bottomShell);
+						secondCallPossible = firstCall && superSamplingFactor > 1;
+						final FadingShell formerShell = (previewShown) ? previewShell : bottomShell;
+						fadein(status1, monitor, topShell, topCanvas, formerShell, !secondCallPossible);
 						highResVisible = true;
-						//TODO show subsampling hint
+						if (secondCallPossible) {
+							if (status1.isOK()) {
+								display.syncExec(() -> {
+									Shell sh = topShell.getShell();
+									Rectangle bounds = sh.getBounds();
+									tooltip = new ToolTip(sh, SWT.NONE);
+									tooltip.setLocation(bounds.x + bounds.width / 3, bounds.y);
+									tooltip.setText(NLS.bind(Messages.getString("ImageViewer.downsampled"), //$NON-NLS-1$
+											superSamplingFactor));
+									tooltip.setMessage(Messages.getString("ImageViewer.click_for_fullres")); //$NON-NLS-1$
+									tooltip.addSelectionListener(new SelectionAdapter() {
+										@Override
+										public void widgetSelected(SelectionEvent e) {
+											highResVisible = false;
+											viewTransform = null;
+											tooltip.setVisible(false);
+											highResJob = new HighResJob(file, advanced, cms, false);
+											highResJob.schedule();
+										}
+									});
+									tooltip.setVisible(true);
+								});
+								boolean[] ret = new boolean[1];
+								while (true) {
+									if (display.isDisposed())
+										break;
+									display.syncExec(() -> {
+										if (formerShell.isDisposed())
+											ret[0] = true;
+										else if (!tooltip.isVisible() && highResVisible) {
+											formerShell.close();
+											ret[0] = true;
+										}
+									});
+									if (ret[0] || monitor.isCanceled())
+										break;
+									try {
+										Thread.sleep(100);
+									} catch (InterruptedException e) {
+										break;
+									}
+								}
+							}
+						} else {
+							display.syncExec(() -> {
+								if (!formerShell.isDisposed())
+									formerShell.close();
+							});
+						}
 					}
 				} catch (UnsupportedOperationException e) {
 					loadFailed = e.getMessage();
@@ -375,7 +399,8 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 					previewImage.develop(monitor, display, ZImage.UNCROPPED, -1, -1);
 					previewImage.getSwtImage(display, false, ZImage.UNCROPPED, SWT.DEFAULT, SWT.DEFAULT);
 					previewShown = true;
-					return new Fader().fadein(status, monitor, previewImage, previewShell, previewCanvas, bottomShell);
+					fadein(status, monitor, previewShell, previewCanvas, bottomShell, true);
+					return status;
 				}
 			} catch (Exception e) {
 				// do nothing - ignore preview image
@@ -503,6 +528,47 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	protected int canvasXoffset;
 	protected int canvasYoffset;
 	private Shell shell;
+	public String loadFailed;
+
+	private void fadein(MultiStatus status, IProgressMonitor monitor, final FadingShell shell, final Canvas canvas,
+			final FadingShell formerShell, boolean closeFormer) {
+		if (monitor.isCanceled()) {
+			status.add(Status.CANCEL_STATUS);
+			return;
+		}
+		if (!canvas.isDisposed())
+			display.syncExec(() -> {
+				if (!canvas.isDisposed()) {
+					canvas.redraw();
+					shell.setActive();
+				}
+			});
+		for (int i = 0; i < 16; i++) {
+			if (shell.isDisposed())
+				break;
+			if (monitor.isCanceled())
+				break;
+			display.syncExec(() -> {
+				if (!shell.isDisposed())
+					shell.setAlpha(Math.min(255, shell.getAlpha() + 16));
+			});
+			try {
+				Thread.sleep(60);
+			} catch (InterruptedException e) {
+				// do nothing
+			}
+		}
+		if (!display.isDisposed())
+			display.syncExec(() -> {
+				if (closeFormer)
+					formerShell.close();
+				if (!shell.isDisposed()) {
+					shell.forceActive();
+					shell.forceFocus();
+					canvas.setFocus();
+				}
+			});
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -553,7 +619,8 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 
 	public void create() {
 		Rectangle mbounds = UiUtilities.getSecondaryMonitorBounds(shell);
-		bottomShell = new FadingShell(createKioskShell(Messages.getString("ImageViewer.lowres_viewer")), false, -1); //$NON-NLS-1$
+		bottomShell = new FadingShell(createKioskShell(Messages.getString("ImageViewer.lowres_viewer")), false, //$NON-NLS-1$
+				-1);
 		bottomCanvas = new Canvas(bottomShell.getShell(), SWT.DOUBLE_BUFFERED);
 		previewShell = new FadingShell(createKioskShell(Messages.getString("ImageViewer.preview_viewer")), true, //$NON-NLS-1$
 				Constants.SLIDE_TRANSITION_FADE);
@@ -625,18 +692,21 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 						im = previewImage.getSwtImage(display, false, ZImage.UNCROPPED, SWT.DEFAULT, SWT.DEFAULT);
 					else
 						im = bwmode != null ? getBwImage(asset, bwmode) : getImage(asset);
-					Rectangle ibnds = im.getBounds();
-					double factor = Math.min((double) sbnds.width / ibnds.width, (double) sbnds.height / ibnds.height);
-					if (!enlarge) {
-						double factor2 = Math.min((double) sbnds.width / asset.getWidth(),
-								(double) sbnds.height / asset.getHeight());
-						if (factor2 > 1d)
-							factor /= factor2;
+					if (im != null) {
+						Rectangle ibnds = im.getBounds();
+						double factor = Math.min((double) sbnds.width / ibnds.width,
+								(double) sbnds.height / ibnds.height);
+						if (!enlarge) {
+							double factor2 = Math.min((double) sbnds.width / asset.getWidth(),
+									(double) sbnds.height / asset.getHeight());
+							if (factor2 > 1d)
+								factor /= factor2;
+						}
+						int w = (int) (ibnds.width * factor);
+						int h = (int) (ibnds.height * factor);
+						gc.drawImage(im, 0, 0, ibnds.width, ibnds.height, (sbnds.width - w) / 2, (sbnds.height - h) / 2,
+								w, h);
 					}
-					int w = (int) (ibnds.width * factor);
-					int h = (int) (ibnds.height * factor);
-					gc.drawImage(im, 0, 0, ibnds.width, ibnds.height, (sbnds.width - w) / 2, (sbnds.height - h) / 2, w,
-							h);
 					String volume = asset.getVolume();
 					String text;
 					if (file == null)
@@ -675,29 +745,6 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 		};
 		bottomCanvas.addPaintListener(listener);
 		previewCanvas.addPaintListener(listener);
-		// TODO is this needed?
-		// topCanvas.addGestureListener(new GestureListener() {
-		//
-		// public void gesture(GestureEvent e) {
-		// if ((e.detail & SWT.GESTURE_BEGIN) != 0) {
-		// if (e.magnification == 1d) {
-		// previousMagnification = e.magnification;
-		// gesturePoint.x = e.x;
-		// gesturePoint.y = e.y;
-		// wheelListener.pause();
-		// }
-		// } else if ((e.detail & SWT.GESTURE_MAGNIFY) != 0) {
-		// zoomDelta(
-		// Math.sqrt(e.magnification / previousMagnification),
-		// gesturePoint.x, gesturePoint.y);
-		// previousMagnification = e.magnification;
-		// } else if ((e.detail & SWT.GESTURE_PAN) != 0)
-		// pan(e.xDirection, e.yDirection);
-		// else if ((e.detail & SWT.GESTURE_END) != 0)
-		// wheelListener.restart();
-		// }
-		// });
-
 		topCanvas.addPaintListener(new PaintListener() {
 			public void paintControl(PaintEvent e) {
 				if (image != null) {
@@ -733,7 +780,6 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 					if (advanced) {
 						gc.setAntialias(SWT.ON);
 						gc.setInterpolation(SWT.HIGH);
-						// gc.setAdvanced(true);
 					}
 					try {
 						image.draw(gc, cropXoffset, cropYoffset, cropWidth, cropHeight, canvasXoffset, canvasYoffset,
@@ -874,7 +920,7 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 				previewJob.schedule();
 			}
 			topShell.open();
-			highResJob = new HighResJob(file, advanced, cms);
+			highResJob = new HighResJob(file, advanced, cms, true);
 			highResJob.schedule();
 			while (topShell != null && !topShell.isDisposed())
 				if (!display.readAndDispatch())

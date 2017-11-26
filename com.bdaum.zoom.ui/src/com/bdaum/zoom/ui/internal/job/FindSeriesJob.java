@@ -72,7 +72,7 @@ public class FindSeriesJob extends CustomJob {
 
 	@Override
 	public boolean belongsTo(Object family) {
-		return Constants.DAEMONS == family;
+		return Constants.DAEMONS == family || Constants.DUPLICATES == family;
 	}
 
 
@@ -104,7 +104,7 @@ public class FindSeriesJob extends CustomJob {
 		duplicatesProvider.setIgnoreDerivates(ignoreDerivates);
 		duplicatesProvider.findDuplicates(monitor);
 		final AbstractDuplicatesProvider provider = duplicatesProvider;
-		if (!display.isDisposed() && !window.getShell().isDisposed())
+		if (!monitor.isCanceled() && !display.isDisposed() && !window.getShell().isDisposed())
 			display.syncExec(() -> {
 				try {
 					DuplicatesView view = (DuplicatesView) activePage

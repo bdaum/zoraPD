@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE.macosx_cocoa_x64"
       label="Macosx_cocoa_x86_64 Feature"
-      version="3.2.0"
+      version="3.2.1"
       provider-name="bdaum industrial communications"
       os="macosx"
       ws="cocoa"

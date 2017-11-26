@@ -31,4 +31,4 @@ Export-Package: com.bdaum.zoom.jai,
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.osgi;bundle-version="3.6.0",
- com.bdaum.zoom.logging;bundle-version="3.2.0"
+ com.bdaum.zoom.logging;bundle-version="3.2.1"

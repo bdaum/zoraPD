@@ -142,5 +142,8 @@ public interface PreferenceConstants {
 	String HIDE_STATUS_BAR = "hide_status_bar"; //$NON-NLS-1$
 	String TRAY_MODE = "tray_mode"; //$NON-NLS-1$
 	String FORCEDELETETRASH = "force_delete_trash"; //$NON-NLS-1$
+	String TRAY_PROMPT = "prompt"; //$NON-NLS-1$
+	String TRAY_TRAY = "true"; //$NON-NLS-1$
+	String TRAY_DESK = "false"; //$NON-NLS-1$
 
 }

@@ -2,10 +2,10 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.gps.leaflet;singleton:=true
-Bundle-Version: 3.2.0
+Bundle-Version: 3.2.1
 Bundle-Activator: com.bdaum.zoom.gps.leaflet.internal.LeafletActivator
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: com.bdaum.zoom.gps;bundle-version="3.2.0",
+Require-Bundle: com.bdaum.zoom.gps;bundle-version="3.2.1",
  org.eclipse.help
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

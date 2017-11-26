@@ -2,8 +2,8 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.net.communities.smugmug;singleton:=true
-Bundle-Version: 3.2.0
+Bundle-Version: 3.2.1
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: com.bdaum.zoom.net.communities;bundle-version="3.2.0"
+Require-Bundle: com.bdaum.zoom.net.communities;bundle-version="3.2.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

@@ -472,8 +472,8 @@ public class Core {
 	public static String getFileName(String uri, boolean withExtension) {
 		int p = uri.lastIndexOf('/') + 1;
 		if (!withExtension) {
-			int q = uri.lastIndexOf('.', p);
-			if (q >= 0)
+			int q = uri.lastIndexOf('.');
+			if (q > p)
 				return decodeUrl(uri.substring(p, q));
 		}
 		return decodeUrl(uri.substring(p));

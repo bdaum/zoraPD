@@ -69,10 +69,8 @@ public class FindDuplicatesJob extends CustomJob {
 
 	@Override
 	public boolean belongsTo(Object family) {
-		return Constants.DAEMONS == family;
+		return Constants.DAEMONS == family || Constants.DUPLICATES == family;
 	}
-
-
 
 	@Override
 	protected IStatus runJob(IProgressMonitor monitor) {
@@ -114,17 +112,15 @@ public class FindDuplicatesJob extends CustomJob {
 		duplicatesProvider.setIgnoreDerivates(ignoreDerivates);
 		duplicatesProvider.findDuplicates(monitor);
 		final AbstractDuplicatesProvider provider = duplicatesProvider;
-		if (!display.isDisposed() && !window.getShell().isDisposed())
-			display.syncExec(new Runnable() {
-				public void run() {
-					try {
-						DuplicatesView view = (DuplicatesView) activePage
-								.showView(DuplicatesView.ID);
-						view.showBusy(false);
-						view.setDuplicatesProvider(provider);
-					} catch (PartInitException e) {
-						// ignore
-					}
+		if (!monitor.isCanceled() && !display.isDisposed() && !window.getShell().isDisposed())
+			display.syncExec(() -> {
+				try {
+					DuplicatesView view = (DuplicatesView) activePage
+							.showView(DuplicatesView.ID);
+					view.showBusy(false);
+					view.setDuplicatesProvider(provider);
+				} catch (PartInitException e) {
+					// ignore
 				}
 			});
 		return Status.OK_STATUS;

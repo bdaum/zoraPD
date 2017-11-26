@@ -119,6 +119,7 @@ public class ZImage {
 	private int userRotation = 0;
 	private boolean thumbnail;
 	private ColorSpace colorSpace = ColorSpace.getInstance(ColorSpace.CS_sRGB);
+	private int superSamplingFactor = 1;
 
 	/**
 	 * Loads an image using a variety of loaders
@@ -167,6 +168,7 @@ public class ZImage {
 	 *            - preferred image bounds or null
 	 * @param scalingFactor
 	 *            - scaling factor to be used when bounds are specified as null
+	 *            Set to 0 for full resolution without subsampling
 	 * @param maxFactor
 	 *            - maximum scaling factor (limits the effects of the bounds
 	 *            parameter)
@@ -201,7 +203,7 @@ public class ZImage {
 				Runtime.getRuntime().gc();
 				long allocatedMemory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
 				long presumableFreeMemory = Runtime.getRuntime().maxMemory() - allocatedMemory;
-				image = loadViaImageIO(file, presumableFreeMemory >> 8);
+				image = loadViaImageIO(file, scalingFactor > 0 ? presumableFreeMemory >> 8 : Integer.MAX_VALUE);
 				if (image == null)
 					image = loadViaImageJ(file);
 				if (image == null)
@@ -219,7 +221,7 @@ public class ZImage {
 								Math.min((double) bounds.width / image.height, (double) bounds.height / image.width))
 						: Math.min(maxFactor,
 								Math.min((double) bounds.width / image.width, (double) bounds.height / image.height));
-			if (scalingFactor != 1d)
+			if (scalingFactor != 1d && scalingFactor > 0)
 				image.setScaling((int) (image.width * scalingFactor + 0.5d),
 						(int) (image.height * scalingFactor + 0.5d), advanced, 0, null); 
 			image.setRotation(rotation, 1f, 1f);
@@ -255,10 +257,9 @@ public class ZImage {
 						int h = reader.getHeight(0);
 						double pix = (double) w * h;
 						ImageReadParam param = reader.getDefaultReadParam();
+						int fac = 1;
 						if (pix > maxPix) {
-							//TODO make this optional?
-							int fac = (int) Math.sqrt(pix / maxPix);
-							//TODO make the subsamapling factor available to clients
+							fac = (int) Math.sqrt(pix / maxPix);
 							param.setSourceSubsampling(fac, fac, 0, 0);
 						}
 						BufferedImage bImage = reader.read(0, param);
@@ -266,6 +267,7 @@ public class ZImage {
 							ZImage zImage = new ZImage(bImage, file.getAbsolutePath());
 							zImage.sourceWidth = w;
 							zImage.sourceHeight = h;
+							zImage.superSamplingFactor = fac;
 							return zImage;
 						}
 					} finally {
@@ -1210,7 +1212,10 @@ public class ZImage {
 			loader.save(out, format);
 		}
 	}
-
+	
+	public int getSuperSamplingFactor() {
+		return superSamplingFactor;
+	}
 
 	public boolean isSRGB() {
 		int type = bufferedImage != null ? bufferedImage.getColorModel().getColorSpace().getType()

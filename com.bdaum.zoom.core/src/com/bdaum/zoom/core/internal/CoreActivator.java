@@ -427,7 +427,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 		newMeta.setLastBackupFolder(null);
 		String backupLocation = oldMeta.getBackupLocation();
 		if (backupLocation != null) {
-			int p = backupLocation.indexOf(BatchConstants.CATEXTENSION);
+			int p = backupLocation.lastIndexOf(BatchConstants.CATEXTENSION);
 			if (p >= 0) {
 				int q = backupLocation.lastIndexOf('/', p);
 				if (q < 0)

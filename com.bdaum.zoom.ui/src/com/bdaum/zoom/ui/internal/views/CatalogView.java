@@ -74,6 +74,8 @@ import org.eclipse.swt.dnd.DragSourceListener;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -688,6 +690,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			return true;
 		}
 	};
+	protected boolean cntrlDwn;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -729,6 +732,10 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), HelpContextIds.CATALOG_VIEW);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(final SelectionChangedEvent event) {
+				if (cntrlDwn) {
+					editItemAction.run();
+					cntrlDwn = false;
+				}
 				if (!settingSelection) {
 					Job.getJobManager().cancel(CatalogView.this);
 					new SelectionJob(viewer, event, !initialized || restoring).schedule();
@@ -742,6 +749,18 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 
 			public void treeCollapsed(TreeExpansionEvent event) {
 				Job.getJobManager().cancel(EXPANSIONJOB);
+			}
+		});
+		viewer.getControl().addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.keyCode == SWT.CTRL)
+					cntrlDwn = true;
+			}
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.keyCode == SWT.CTRL)
+					cntrlDwn = false;
 			}
 		});
 		viewer.addDropSupport(OPERATIONS, allTypes, new CatalogDropTargetListener(viewer.getControl()));
@@ -1470,7 +1489,8 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			private SmartCollectionImpl cloneCollection(SmartCollectionImpl oldSm) {
 				SmartCollectionImpl newSm = new SmartCollectionImpl(oldSm.getName(), false, oldSm.getAlbum(),
 						oldSm.getAdhoc(), oldSm.getNetwork(), null, oldSm.getColorCode(), oldSm.getLastAccessDate(), 0,
-						oldSm.getPerspective(), oldSm.getShowLabel(), oldSm.getLabelTemplate(), oldSm.getFontSize(), null);
+						oldSm.getPerspective(), oldSm.getShowLabel(), oldSm.getLabelTemplate(), oldSm.getFontSize(),
+						null);
 				for (Criterion oldCrit : oldSm.getCriterion())
 					newSm.addCriterion(new CriterionImpl(oldCrit.getField(), oldCrit.getSubfield(), oldCrit.getValue(),
 							oldCrit.getRelation(), oldCrit.getAnd()));
@@ -1620,7 +1640,13 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 	private void hookDoubleClickAction() {
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			public void doubleClick(DoubleClickEvent event) {
-				editItemAction.run();
+				Object item = ((IStructuredSelection) event.getSelection()).getFirstElement();
+				if (item != null && ((TreeViewer) viewer).isExpandable(item)) {
+					if (((TreeViewer) viewer).getExpandedState(item))
+						((TreeViewer) viewer).collapseToLevel(item, 1);
+					else
+						((TreeViewer) viewer).expandToLevel(item, 1);
+				}
 			}
 		});
 	}

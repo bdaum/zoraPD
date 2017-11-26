@@ -296,6 +296,7 @@ public class Constants {
 	public static final String CATALOG = "com.bdaum.zoom.catalog"; //$NON-NLS-1$
 	public static final String FOLDERWATCH = "com.bdaum.zoom.folderwatch"; //$NON-NLS-1$
 	public static final String SYNCPICASA = "com.bdaum.zoom.syncPicasa"; //$NON-NLS-1$
+	public static final String DUPLICATES = "com.bdaum.zoom.duplicates"; //$NON-NLS-1$
 	public static final String OPERATIONJOBFAMILY = "com.bdaum.zoom.operation"; //$NON-NLS-1$
 	public static final String UPLOADJOBFAMILY = "com.bdaum.zoom.upload"; //$NON-NLS-1$
 	public static final String SLIDESHOW = "com.bdaum.zoom.slideshow"; //$NON-NLS-1$

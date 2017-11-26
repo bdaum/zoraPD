@@ -115,7 +115,6 @@ import static com.twelvemonkeys.imageio.util.IIOUtil.lookupProviderByName;
  *
  * @author <a href="mailto:harald.kuhr@gmail.com">Harald Kuhr</a>
  * @author last modified by $Author: haraldk$
- * @author bd added OutOfMemoryError caused by bad ICC header
  * @version $Id: TIFFImageReader.java,v 1.0 08.05.12 15:14 haraldk Exp$
  */
 public final class TIFFImageReader extends ImageReaderBase {
@@ -1766,8 +1765,6 @@ public final class TIFFImageReader extends ImageReaderBase {
                         readFully(input, rowDataFloat);
 
                         if (row >= srcRegion.y) {
-                            // TODO: Allow param to decide tone mapping strategy, like in the HDRImageReader
-                            clamp(rowDataFloat);
                             normalizeColor(interpretation, rowDataFloat);
 
                             // Subsample horizontal
@@ -1789,8 +1786,11 @@ public final class TIFFImageReader extends ImageReaderBase {
 
     private void clamp(float[] rowDataFloat) {
         for (int i = 0; i < rowDataFloat.length; i++) {
-            if (rowDataFloat[i] > 1) {
-                rowDataFloat[i] = 1;
+            if (rowDataFloat[i] > 1f) {
+                rowDataFloat[i] = 1f;
+            }
+            else if (rowDataFloat[i] < 0f) {
+                rowDataFloat[i] = 0f;
             }
         }
     }
@@ -2006,8 +2006,18 @@ public final class TIFFImageReader extends ImageReaderBase {
     }
 
     private void normalizeColor(int photometricInterpretation, float[] data) {
+        // TODO: Allow param to decide tone mapping strategy, like in the HDRImageReader
+        clamp(data);
+
         switch (photometricInterpretation) {
             case TIFFBaseline.PHOTOMETRIC_WHITE_IS_ZERO:
+                // Inverse values
+                for (int i = 0; i < data.length; i++) {
+                    data[i] = 1f - data[i];
+                }
+
+                break;
+
             case TIFFExtension.PHOTOMETRIC_CIELAB:
             case TIFFExtension.PHOTOMETRIC_ICCLAB:
             case TIFFExtension.PHOTOMETRIC_ITULAB:
@@ -2206,21 +2216,26 @@ public final class TIFFImageReader extends ImageReaderBase {
         if (entry != null) {
             byte[] value = (byte[]) entry.getValue();
 
+            // Validate ICC profile size vs actual value size
+            int size = (value[0] & 0xff) << 24 | (value[1] & 0xff) << 16 | (value[2] & 0xff) << 8 | (value[3] & 0xff);
+            if (size < 0 || size > value.length) {
+                processWarningOccurred("Ignoring truncated ICC profile: Bad ICC profile size (" + size + ")");
+                return null;
+            }
+
             try {
                 // WEIRDNESS: Reading profile from InputStream is somehow more compatible
                 // than reading from byte array (chops off extra bytes + validates profile).
                 ICC_Profile profile = ICC_Profile.getInstance(new ByteArrayInputStream(value));
                 return ColorSpaces.validateProfile(profile);
             }
-            //TODO check of OutOfMemory also for other references to ICC_Profile.getInstance()
-            catch (CMMException | IllegalArgumentException | OutOfMemoryError ignore) { // bd added OutOfMemoryError caused by bad ICC header
+            catch (CMMException | IllegalArgumentException ignore) {
                 processWarningOccurred("Ignoring broken/incompatible ICC profile: " + ignore.getMessage());
             }
         }
 
         return null;
     }
-
     @Override
     public boolean canReadRaster() {
         return true;

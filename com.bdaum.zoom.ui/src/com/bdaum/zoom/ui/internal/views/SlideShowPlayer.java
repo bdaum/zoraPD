@@ -510,13 +510,11 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 									if (monitor.isCanceled())
 										break;
 									if (recipe != null && recipe != Recipe.NULL)
-										shell.getDisplay().syncExec(new Runnable() {
-											public void run() {
-												if (!text.getText().isEmpty()) {
-													text.setText(text.getText()
-															+ Messages.getString("SlideShowPlayer.developing")); //$NON-NLS-1$
-													bottomCanvas.redraw();
-												}
+										shell.getDisplay().syncExec(() -> {
+											if (!text.getText().isEmpty()) {
+												text.setText(text.getText()
+														+ Messages.getString("SlideShowPlayer.developing")); //$NON-NLS-1$
+												bottomCanvas.redraw();
 											}
 										});
 									try {
@@ -1414,11 +1412,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 						final int titleDur = Math.min(slideshow.getTitleDisplay(), dur) - startFrom;
 						if (titleDur > 0)
 							if (!fadingShell.isDisposed()) {
-								displ.syncExec(new Runnable() {
-									public void run() {
-										if (!fadingShell.isDisposed())
-											showTitle(titleDur);
-									}
+								displ.syncExec(() -> {
+									if (!fadingShell.isDisposed())
+										showTitle(titleDur);
 								});
 							}
 					}
@@ -1487,15 +1483,13 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				if (listener != null)
 					listener.fadeoutEnded();
 			} finally {
-				displ.syncExec(new Runnable() {
-					public void run() {
-						if (!fadingShell.isDisposed()) {
-							fadingShell.setAlpha(0);
-							fadingShell.close();
-						}
-						if (request.operation != RESTART)
-							request.dispose();
+				displ.syncExec(() -> {
+					if (!fadingShell.isDisposed()) {
+						fadingShell.setAlpha(0);
+						fadingShell.close();
 					}
+					if (request.operation != RESTART)
+						request.dispose();
 				});
 				if (finishedRequest != null) {
 					done.add(finishedRequest);
@@ -1556,31 +1550,25 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 					titleTime += TICK;
 					if (titleTime >= titleDur) {
 						if (titleShell != null && !titleShell.isDisposed())
-							displ.syncExec(new Runnable() {
-								public void run() {
-									titleTask.cancel(true);
-									if (!titleShell.isDisposed())
-										titleShell.close();
-								}
+							displ.syncExec(() -> {
+								titleTask.cancel(true);
+								if (!titleShell.isDisposed())
+									titleShell.close();
 							});
 					} else if (titleTime <= fade) {
 						if (titleShell != null && !titleShell.isDisposed())
-							displ.syncExec(new Runnable() {
-								public void run() {
-									if (!titleShell.isDisposed()) {
-										int alpha = titleShell.getAlpha();
-										titleShell.setAlpha(Math.min(255, alpha + (255 * TICK + fade - 1) / fade));
-									}
+							displ.syncExec(() -> {
+								if (!titleShell.isDisposed()) {
+									int alpha = titleShell.getAlpha();
+									titleShell.setAlpha(Math.min(255, alpha + (255 * TICK + fade - 1) / fade));
 								}
 							});
 					} else if (titleTime > titleDur - fade) {
 						if (titleShell != null && !titleShell.isDisposed())
-							displ.syncExec(new Runnable() {
-								public void run() {
-									if (!titleShell.isDisposed()) {
-										int alpha = titleShell.getAlpha();
-										titleShell.setAlpha(Math.max(0, alpha - ((255 * TICK + fade - 1) / fade)));
-									}
+							displ.syncExec(() -> {
+								if (!titleShell.isDisposed()) {
+									int alpha = titleShell.getAlpha();
+									titleShell.setAlpha(Math.max(0, alpha - ((255 * TICK + fade - 1) / fade)));
 								}
 							});
 					}
@@ -1625,11 +1613,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 
 		private void showControl() {
 			if (!fadingShell.isDisposed()) {
-				displ.syncExec(new Runnable() {
-					public void run() {
-						if (!fadingShell.isDisposed())
-							doShowControl();
-					}
+				displ.syncExec(() -> {
+					if (!fadingShell.isDisposed())
+						doShowControl();
 				});
 			}
 		}
@@ -1657,21 +1643,14 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			stopTimer();
 			if (!inhibitTimer) {
 				panelTask = UiActivator.getScheduledExecutorService().schedule(new Runnable() {
-
 					public void run() {
 						if (!displ.isDisposed())
-							displ.syncExec(new Runnable() {
-								public void run() {
-									closeControl();
-								}
-							});
+							displ.syncExec(() -> closeControl());
 						if (!displ.isDisposed())
-							displ.syncExec(new Runnable() {
-								public void run() {
-									if (imageCanvas != null && !imageCanvas.isDisposed()) {
-										imageCanvas.setCursor(transparentCursor);
-										imageCanvas.setFocus();
-									}
+							displ.syncExec(() -> {
+								if (imageCanvas != null && !imageCanvas.isDisposed()) {
+									imageCanvas.setCursor(transparentCursor);
+									imageCanvas.setFocus();
 								}
 							});
 						panelTask = null;
@@ -1686,11 +1665,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			buttonTask = UiActivator.getScheduledExecutorService().schedule(new Runnable() {
 				public void run() {
 					if (!displ.isDisposed())
-						displ.syncExec(new Runnable() {
-							public void run() {
-								gotoSlide(xoff, request, operation);
-							}
-						});
+						displ.syncExec(() -> gotoSlide(xoff, request, operation));
 				}
 			}, 700L, TimeUnit.MILLISECONDS);
 		}
@@ -2016,12 +1991,10 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 							break;
 						int d = 0;
 						if (answer != null && !shell.isDisposed()) {
-							shell.getDisplay().asyncExec(new Runnable() {
-								public void run() {
-									if (!shell.isDisposed()) {
-										text.setText(""); //$NON-NLS-1$
-										bottomCanvas.redraw();
-									}
+							shell.getDisplay().asyncExec(() -> {
+								if (!shell.isDisposed()) {
+									text.setText(""); //$NON-NLS-1$
+									bottomCanvas.redraw();
 								}
 							});
 							slide = answer.getSlide();
@@ -2108,13 +2081,11 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 							break;
 						if (currentSlide > requestList.size()) {
 							if (slide != null && !shell.isDisposed()) {
-								shell.getDisplay().asyncExec(new Runnable() {
-									public void run() {
-										if (!shell.isDisposed()) {
-											text.setText(Messages.getString("SlideShowPlayer.end_of_show")); //$NON-NLS-1$
-											CssActivator.getDefault().setColors(bottomShell);
-											bottomCanvas.redraw();
-										}
+								shell.getDisplay().asyncExec(() -> {
+									if (!shell.isDisposed()) {
+										text.setText(Messages.getString("SlideShowPlayer.end_of_show")); //$NON-NLS-1$
+										CssActivator.getDefault().setColors(bottomShell);
+										bottomCanvas.redraw();
 									}
 								});
 								int outsteps = computeSteps(slide.getFadeOut() + 500);
@@ -2131,11 +2102,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				if (!ignoreChanges)
 					new ApplyChangesJob(requestList).schedule();
 				if (adhoc && !display.isDisposed())
-					display.asyncExec(new Runnable() {
-						public void run() {
-							if (!display.isDisposed())
-								promptForSave(requestList);
-						}
+					display.asyncExec(() -> {
+						if (!display.isDisposed())
+							promptForSave(requestList);
 					});
 				return Status.OK_STATUS;
 			} catch (Exception e) {
@@ -2149,11 +2118,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				if (answer != null)
 					answer.dispose();
 				if (!shell.isDisposed())
-					shell.getDisplay().asyncExec(new Runnable() {
-						public void run() {
-							if (!shell.isDisposed())
-								close();
-						}
+					shell.getDisplay().asyncExec(() -> {
+						if (!shell.isDisposed())
+							close();
 					});
 			}
 		}
@@ -2681,11 +2648,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			}
 			bottomShell.open();
 			if (!display.isDisposed())
-				display.asyncExec(new Runnable() {
-					public void run() {
-						if (!display.isDisposed())
-							guiLoop();
-					}
+				display.asyncExec(() -> {
+					if (!display.isDisposed())
+						guiLoop();
 				});
 		} catch (Exception e) {
 			UiActivator.getDefault().setSlideShowRunning(false);

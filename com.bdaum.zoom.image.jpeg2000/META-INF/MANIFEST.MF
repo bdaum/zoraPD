@@ -5,4 +5,4 @@ Bundle-SymbolicName: com.bdaum.zoom.image.jpeg2000;singleton:=true
 Bundle-Version: 1.2.0
 Bundle-Vendor: bdaum industrial communications
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Require-Bundle: com.bdaum.zoom.image;bundle-version="3.2.0"
+Require-Bundle: com.bdaum.zoom.image;bundle-version="3.2.1"

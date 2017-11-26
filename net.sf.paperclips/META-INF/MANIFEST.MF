@@ -1,13 +1,17 @@
 Manifest-Version: 1.0
-Require-Bundle: org.eclipse.swt;bundle-version="[3.2.0,4.0.0)";visibility:=reexport
+Require-Bundle: org.eclipse.swt;bundle-version="[3.2.1,4.0.0)";visibility:=reexport
 Bundle-Vendor: Woodcraft Mill & Cabinet and others
 Bundle-ClassPath: .
-Bundle-Version: 1.0.4.200908120926
+Bundle-Version: 1.4.0
 Bundle-Name: PaperClips Core Plug-in
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: net.sf.paperclips;singleton:=true
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
-Export-Package: net.sf.paperclips,net.sf.paperclips.decorator
+Export-Package: org.eclipse.nebula.paperclips.core,
+ org.eclipse.nebula.paperclips.core.border,
+ org.eclipse.nebula.paperclips.core.grid,
+ org.eclipse.nebula.paperclips.core.page,
+ org.eclipse.nebula.paperclips.core.text
 
 

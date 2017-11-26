@@ -318,7 +318,7 @@ public class Icons {
 	public static final Icon note32= new Icon("icons/note32.png"); //$NON-NLS-1$
 	public static final Icon cancel32= new Icon("icons/cancel32.png"); //$NON-NLS-1$
 	public static final Icon neural= new Icon("icons/neural.png"); //$NON-NLS-1$
-
+	public static final Icon leave= new Icon("icons/leave.png"); //$NON-NLS-1$
 	public static Icon toColorIcon(int code) {
 		switch (code) {
 		case Constants.COLOR_BLACK:

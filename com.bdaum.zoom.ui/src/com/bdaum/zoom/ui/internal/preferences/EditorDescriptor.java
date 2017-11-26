@@ -236,10 +236,13 @@ public final class EditorDescriptor implements Serializable {
 	 * @return <code>true</code> if the values are valid, <code>false</code>
 	 *         otherwise
 	 */
-	protected boolean loadValues(IMemento memento, ProgramLookup lookup) {
+	protected void loadValues(IMemento memento, ProgramLookup lookup) {
 		String progr = memento.getString("program"); //$NON-NLS-1$
-		if (progr != null)
-			setProgram(lookup.getProgram(progr));
+		if (progr != null) {
+			Program p = lookup.getProgram(progr);
+			if (p != null)
+				setProgram(p);
+		}
 		editorName = memento.getString("label"); //$NON-NLS-1$
 		imageFilename = memento.getString("image"); //$NON-NLS-1$
 		launcherName = memento.getString("launcher"); //$NON-NLS-1$
@@ -247,7 +250,6 @@ public final class EditorDescriptor implements Serializable {
 		id = memento.getString("id"); //$NON-NLS-1$
 		if (id == null)
 			id = ""; //$NON-NLS-1$
-		return true;
 	}
 
 	/**

@@ -39,7 +39,7 @@ import java.util.StringTokenizer;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.content.IContentType;
-import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
@@ -482,7 +482,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		Writer writer = new StringWriter();
 		try {
 			root.save(writer);
-			BatchUtilities.putPreferences(DefaultScope.INSTANCE.getNode(UiActivator.PLUGIN_ID),
+			BatchUtilities.putPreferences(InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID),
 					PreferenceConstants.FILEASSOCIATION, writer.toString());
 		} catch (IOException e) {
 			// should never happen

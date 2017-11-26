@@ -176,12 +176,15 @@ public class Startup implements IStartup, IAdaptable {
 		if (Constants.REQUIRED_JAVA_VERSIONS.compareTo(version) > 0) {
 			if (shell != null) {
 				final String v = version;
-				shell.getDisplay().syncExec(() -> AcousticMessageDialog.openError(shell, Messages.Startup_wrong_java_version, NLS.bind(
-						Messages.Startup_wrong_java_version_expl,
-						new Object[] { System.getProperty("java.home"), Constants.REQUIRED_JAVA_VERSIONS, v }))); //$NON-NLS-1$
+				shell.getDisplay()
+						.syncExec(() -> AcousticMessageDialog.openError(shell, Messages.Startup_wrong_java_version,
+								NLS.bind(Messages.Startup_wrong_java_version_expl, new Object[] {
+										System.getProperty("java.home"), Constants.REQUIRED_JAVA_VERSIONS, v }))); //$NON-NLS-1$
 			}
 		}
-		if (ensureDbOpen(workbench)) {
+		String traymode = Platform.getPreferencesService().getString(UiActivator.PLUGIN_ID,
+				PreferenceConstants.TRAY_MODE, PreferenceConstants.TRAY_DESK, null); // $NON-NLS-1$
+		if (ensureDbOpen(workbench, PreferenceConstants.TRAY_PROMPT.equals(traymode))) {
 			IWorkbenchWindow[] workbenchWindows = workbench.getWorkbenchWindows();
 			workbench.getDisplay().syncExec(() -> {
 				for (IWorkbenchWindow window : workbenchWindows)
@@ -191,10 +194,7 @@ public class Startup implements IStartup, IAdaptable {
 
 			for (IWorkbenchWindow window : workbenchWindows)
 				Ui.getUi().getNavigationHistory(window);
-			boolean traymode = Platform.getPreferencesService().getBoolean(UiActivator.PLUGIN_ID,
-					PreferenceConstants.TRAY_MODE, false, null);
-
-			if (traymode && shell != null)
+			if (PreferenceConstants.TRAY_TRAY.equalsIgnoreCase(traymode) && shell != null) // $NON-NLS-1$
 				shell.getDisplay().syncExec(() -> shell.setVisible(false));
 			CoreActivator coreActivator = CoreActivator.getDefault();
 			try {
@@ -236,23 +236,11 @@ public class Startup implements IStartup, IAdaptable {
 		return null;
 	}
 
-	private boolean ensureDbOpen(final IWorkbench workbench) {
+	private boolean ensureDbOpen(final IWorkbench workbench, boolean withPrompt) {
 		final IWorkbenchWindow[] workbenchWindows = workbench.getWorkbenchWindows();
 		final CoreActivator coreActivator = CoreActivator.getDefault();
-		final File catFile = coreActivator.getCatFile();
-		if (catFile != null) {
-			CoreActivator.logDebug("Open file {0}", catFile); //$NON-NLS-1$
-			IDbManager db = coreActivator.openDatabase(catFile.getAbsolutePath());
-			CoreActivator.logDebug("Database created", null); //$NON-NLS-1$
-			String updatePolicy = Platform.getPreferencesService().getString(UiActivator.PLUGIN_ID,
-					PreferenceConstants.UPDATEPOLICY, PreferenceConstants.UPDATEPOLICY_WITHBACKUP, null);
-			if (PreferenceConstants.UPDATEPOLICY_ONSTART.equals(updatePolicy)
-					|| (PreferenceConstants.UPDATEPOLICY_WITHBACKUP.equals(updatePolicy) && db.isBackupScheduled()))
-				new CheckForUpdateJob(this, true).schedule(3000L);
-			coreActivator.fireCatalogOpened(false);
-		}
-		String previousCatUri = UiActivator.getDefault().getPreviousCatUri();
 		File previousCatFile = null;
+		String previousCatUri = UiActivator.getDefault().getPreviousCatUri();
 		if (previousCatUri != null) {
 			try {
 				previousCatFile = new File(new URI(previousCatUri));
@@ -260,11 +248,25 @@ public class Startup implements IStartup, IAdaptable {
 				// do nothing
 			}
 		}
-		//TODO Optionally show catalog selection prompt always on open
-		IDbManager dbManager = coreActivator.getDbManager();
-		if (dbManager.getFile() != null) {
-			workbench.getDisplay().syncExec(() -> OpenCatalogCommand.checkPausedFolderWatch(workbench.getDisplay().getActiveShell(), dbManager));
-			return true;
+		if (!withPrompt) {
+			File catFile = coreActivator.getCatFile();
+			if (catFile != null) {
+				CoreActivator.logDebug("Open file {0}", catFile); //$NON-NLS-1$
+				IDbManager db = coreActivator.openDatabase(catFile.getAbsolutePath());
+				CoreActivator.logDebug("Database created", null); //$NON-NLS-1$
+				String updatePolicy = Platform.getPreferencesService().getString(UiActivator.PLUGIN_ID,
+						PreferenceConstants.UPDATEPOLICY, PreferenceConstants.UPDATEPOLICY_WITHBACKUP, null);
+				if (PreferenceConstants.UPDATEPOLICY_ONSTART.equals(updatePolicy)
+						|| (PreferenceConstants.UPDATEPOLICY_WITHBACKUP.equals(updatePolicy) && db.isBackupScheduled()))
+					new CheckForUpdateJob(this, true).schedule(3000L);
+				coreActivator.fireCatalogOpened(false);
+			}
+			IDbManager dbManager = coreActivator.getDbManager();
+			if (dbManager.getFile() != null) {
+				workbench.getDisplay().syncExec(() -> OpenCatalogCommand
+						.checkPausedFolderWatch(workbench.getDisplay().getActiveShell(), dbManager));
+				return true;
+			}
 		}
 		final File file = previousCatFile;
 		int[] ret = new int[1];
@@ -272,8 +274,9 @@ public class Startup implements IStartup, IAdaptable {
 			workbench.getDisplay().syncExec(() -> {
 				try {
 					IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow() == null
-							? workbenchWindows[0] : workbench.getActiveWorkbenchWindow();
-					ret[0] = new StartupDialog(activeWorkbenchWindow, file).open();
+							? workbenchWindows[0]
+							: workbench.getActiveWorkbenchWindow();
+					ret[0] = new StartupDialog(activeWorkbenchWindow, file, withPrompt).open();
 				} catch (Exception e) {
 					// ignore initial E4 problems
 				}

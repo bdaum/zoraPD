@@ -53,11 +53,13 @@ public class StartupDialog extends ZDialog {
 	private final File catFile;
 	private int nb = 0;
 	private List<CatLocation> recents = new ArrayList<>(4);
+	private boolean withPrompt;
 
-	public StartupDialog(IWorkbenchWindow window, File catFile) {
+	public StartupDialog(IWorkbenchWindow window, File catFile, boolean withPrompt) {
 		super(window);
 		this.window = window;
 		this.catFile = catFile;
+		this.withPrompt = withPrompt;
 	}
 
 	@SuppressWarnings("unused")
@@ -67,7 +69,8 @@ public class StartupDialog extends ZDialog {
 		Composite composite = (Composite) super.createDialogArea(parent);
 		Label noActiveCatalogLabel = new Label(composite, SWT.WRAP);
 		noActiveCatalogLabel.setFont(JFaceResources.getHeaderFont());
-		noActiveCatalogLabel.setText(Messages.StartupDialog_No_active_cat);
+		noActiveCatalogLabel
+				.setText(withPrompt ? Messages.StartupDialog_please_select : Messages.StartupDialog_No_active_cat);
 		noActiveCatalogLabel.setLayoutData(new GridData(SWT.CENTER, SWT.BEGINNING, true, false));
 		new Label(composite, SWT.NONE);
 		return composite;
@@ -90,7 +93,8 @@ public class StartupDialog extends ZDialog {
 		for (CatLocation cat : recentCats)
 			if ((current == null || !current.equals(cat)) && cat.exists()) {
 				new Label(parent, SWT.NONE);
-				createButton(parent, ++nb, NLS.bind(Messages.StartupDialog_open_x, cat.getFile().getName()), false);
+				createButton(parent, ++nb, NLS.bind(Messages.StartupDialog_open_x, cat.getFile().getName()),
+						cat.getFile().equals(catFile));
 				recents.add(cat);
 				new Label(parent, SWT.NONE);
 				new Label(parent, SWT.NONE);

@@ -54,25 +54,24 @@ public class GalleryDecorateJob extends DecorateJob {
 	};
 	private Runnable assetRunnable = new Runnable() {
 		public void run() {
-			for (GalleryItem item : items) {
-				if (item != null && !item.isDisposed()) {
-					Asset asset = (AssetImpl) item.getData(UiConstants.ASSET);
-					if (asset == null) {
-						Trash trash = (Trash) item.getData(UiConstants.TRASH);
-						if (trash != null)
-							asset = trash.getAsset();
-					}
-					if (asset != null
-							&& asset.getFileState() != IVolumeManager.PEER) {
-						int newFileState = volumeManager
-								.determineFileState(asset);
-						if (asset.getFileState() != newFileState) {
-							asset.setFileState(newFileState);
-							gallery.redraw(item);
+			if (items != null)
+				for (GalleryItem item : items) {
+					if (item != null && !item.isDisposed()) {
+						Asset asset = (AssetImpl) item.getData(UiConstants.ASSET);
+						if (asset == null) {
+							Trash trash = (Trash) item.getData(UiConstants.TRASH);
+							if (trash != null)
+								asset = trash.getAsset();
+						}
+						if (asset != null && asset.getFileState() != IVolumeManager.PEER) {
+							int newFileState = volumeManager.determineFileState(asset);
+							if (asset.getFileState() != newFileState) {
+								asset.setFileState(newFileState);
+								gallery.redraw(item);
+							}
 						}
 					}
 				}
-			}
 			items = null;
 		}
 	};
@@ -99,8 +98,7 @@ public class GalleryDecorateJob extends DecorateJob {
 					group = groups[i];
 					if (!display.isDisposed())
 						display.syncExec(itemRunnable);
-					if (items != null && items.length > 0 && items[0] != null
-							&& !gallery.isDisposed() && mayRun()) {
+					if (items != null && items.length > 0 && items[0] != null && !gallery.isDisposed() && mayRun()) {
 						display.asyncExec(assetRunnable);
 						if (monitor.isCanceled())
 							break;

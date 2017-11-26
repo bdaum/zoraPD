@@ -27,9 +27,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.nebula.widgets.gallery.EnhancedGalleryGroupRenderer;
 import org.eclipse.nebula.widgets.gallery.Gallery;
@@ -55,16 +59,17 @@ import org.eclipse.ui.PlatformUI;
 import com.bdaum.zoom.batch.internal.Daemon;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.operations.internal.dup.AbstractDuplicatesProvider;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.INavigationHistory;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.Icons;
 
 @SuppressWarnings("restriction")
-public class DuplicatesView extends AbstractLightboxView implements Listener,
-		PaintListener {
+public class DuplicatesView extends AbstractLightboxView implements Listener, PaintListener {
 
 	public static final String ID = "com.bdaum.zoom.ui.views.DuplicatesView"; //$NON-NLS-1$
 	private AbstractDuplicatesProvider duplicatesProvider;
@@ -72,21 +77,19 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 	private int busyCounter;
 	private String itemType = Messages.getString("DuplicatesView.duplicates"); //$NON-NLS-1$
 	private Daemon busyJob;
+	private Action closeAction;
 
 	@Override
 	public void createPartControl(Composite parent) {
 		// Create gallery
 		setPreferences();
-		gallery = new Gallery(parent, SWT.H_SCROLL | SWT.V_SCROLL | SWT.VIRTUAL
-				| SWT.MULTI);
-		gallery.setBackground(parent.getDisplay().getSystemColor(
-				SWT.COLOR_WHITE));
+		gallery = new Gallery(parent, SWT.H_SCROLL | SWT.V_SCROLL | SWT.VIRTUAL | SWT.MULTI);
+		gallery.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_WHITE));
 		gallery.setHigherQualityDelay(300);
 		gallery.setLowQualityOnUserAction(true);
 		setHelp();
 		// Renderers
 		groupRenderer = new EnhancedGalleryGroupRenderer(new IImageProvider() {
-
 			public Image obtainImage(GalleryItem item) {
 				AssetImpl asset = (AssetImpl) item.getData(ASSET);
 				return asset == null ? null : getImage(asset);
@@ -115,8 +118,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 	@Override
 	public String getTooltip(int mx, int my) {
 		GalleryItem item = gallery.getGroup(new Point(mx, my));
-		return (item != null && !item.isExpanded()) ? NLS.bind(
-				Messages.getString("DuplicatesView.n_images"), //$NON-NLS-1$
+		return (item != null && !item.isExpanded()) ? NLS.bind(Messages.getString("DuplicatesView.n_images"), //$NON-NLS-1$
 				item.getItemCount()) : null;
 	}
 
@@ -127,17 +129,15 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 		if (!gallery.isDisposed()) {
 			if (busy) {
 				gallery.addPaintListener(this);
-				busyJob = new Daemon(
-						Messages.getString("DuplicatesView.update_duplicates"), 250L) { //$NON-NLS-1$
+				busyJob = new Daemon(Messages.getString("DuplicatesView.update_duplicates"), 250L) { //$NON-NLS-1$
 					@Override
 					protected void doRun(IProgressMonitor monitor) {
 						Shell shell = getSite().getShell();
-						if (shell != null && !shell.isDisposed()) {
+						if (shell != null && !shell.isDisposed())
 							shell.getDisplay().asyncExec(() -> {
 								if (!gallery.isDisposed())
 									gallery.redraw();
 							});
-						}
 					}
 				};
 				busyJob.schedule();
@@ -157,9 +157,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 
 	public void paintControl(PaintEvent e) {
 		Rectangle clientArea = gallery.getClientArea();
-		String text = NLS
-				.bind(Messages
-						.getString("DuplicatesView.collection_duplicates"), itemType); //$NON-NLS-1$
+		String text = NLS.bind(Messages.getString("DuplicatesView.collection_duplicates"), itemType); //$NON-NLS-1$
 		GC gc = e.gc;
 		gc.setBackground(gallery.getBackground());
 		gc.setForeground(gallery.getForeground());
@@ -167,18 +165,30 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 		if (busyCounter > 5)
 			busyCounter = 0;
 		text += ".....".substring(0, busyCounter); //$NON-NLS-1$
-		gc.drawText(text, (clientArea.width - textExtent.x) / 2,
-				(clientArea.height - textExtent.y) / 2);
+		gc.drawText(text, (clientArea.width - textExtent.x) / 2, (clientArea.height - textExtent.y) / 2);
 		++busyCounter;
 	}
 
 	protected void setHelp() {
-		PlatformUI.getWorkbench().getHelpSystem()
-				.setHelp(gallery, HelpContextIds.DUPLICATES_VIEW);
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(gallery, HelpContextIds.DUPLICATES_VIEW);
 	}
 
 	@Override
 	protected void makeActions(IActionBars bars) {
+		closeAction = new Action(Messages.getString("DuplicatesView.close"), Icons.leave.getDescriptor()) { //$NON-NLS-1$
+			@Override
+			public void run() {
+				IJobManager jobManager = Job.getJobManager();
+				jobManager.cancel(Constants.DUPLICATES);
+				try {
+					jobManager.join(Constants.DUPLICATES, null);
+					getSite().getPage().hideView(DuplicatesView.this);
+				} catch (OperationCanceledException | InterruptedException e) {
+					// do nothing
+				}
+			}
+		};
+		closeAction.setToolTipText(Messages.getString("DuplicatesView.close_tooltip")); //$NON-NLS-1$
 		createScaleContributionItem(MINTHUMBSIZE, MAXTHUMBSIZE);
 		super.makeActions(bars);
 	}
@@ -188,30 +198,31 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 		manager.add(scaleContributionItem);
 		manager.add(editAction);
 		manager.add(editWithAction);
+		manager.add(new Separator());
+		manager.add(closeAction);
 	}
 
 	@Override
 	protected void fillLocalPullDown(IMenuManager manager) {
 		manager.add(editAction);
 		manager.add(editWithAction);
+		manager.add(new Separator());
+		manager.add(closeAction);
 	}
 
 	@Override
 	public boolean assetsChanged() {
 		INavigationHistory navigationHistory = getNavigationHistory();
 		if (navigationHistory != null && !gallery.isDisposed()) {
-			AssetSelection selectedAssets = navigationHistory
-					.getSelectedAssets();
+			AssetSelection selectedAssets = navigationHistory.getSelectedAssets();
 			if (selectedAssets.isPicked()) {
-				List<GalleryItem> items = new ArrayList<GalleryItem>(
-						selectedAssets.size());
+				List<GalleryItem> items = new ArrayList<GalleryItem>(selectedAssets.size());
 				for (Asset asset : selectedAssets.getAssets()) {
 					GalleryItem item = getGalleryItem(asset);
 					if (item != null)
 						items.add(item);
 				}
-				GalleryItem[] selectedItems = items
-						.toArray(new GalleryItem[items.size()]);
+				GalleryItem[] selectedItems = items.toArray(new GalleryItem[items.size()]);
 				gallery.setSelection(selectedItems);
 				if (selectedItems.length > 0)
 					gallery.showItem(selectedItems[0]);
@@ -256,24 +267,19 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 	}
 
 	@Override
-	protected boolean doRedrawCollection(Collection<? extends Asset> assets,
-			QueryField node) {
+	protected boolean doRedrawCollection(Collection<? extends Asset> assets, QueryField node) {
 		if (gallery == null || gallery.isDisposed())
 			return false;
-		int size = duplicatesProvider == null ? 0 : duplicatesProvider
-				.getDuplicateSetCount();
+		int size = duplicatesProvider == null ? 0 : duplicatesProvider.getDuplicateSetCount();
 		gallery.setItemCount(size);
 		if (size >= 0) {
 			if (assets == null) {
 				gallery.clearAll();
 				gallery.redraw();
-				AssetSelection oldSelection = (AssetSelection) (selection == null ? AssetSelection.EMPTY
-						: selection);
+				AssetSelection oldSelection = (AssetSelection) (selection == null ? AssetSelection.EMPTY : selection);
 				if (oldSelection.isPicked()) {
-					List<Asset> selectedAssets = new ArrayList<Asset>(
-							oldSelection.size());
-					List<GalleryItem> items = new ArrayList<GalleryItem>(
-							oldSelection.size());
+					List<Asset> selectedAssets = new ArrayList<Asset>(oldSelection.size());
+					List<GalleryItem> items = new ArrayList<GalleryItem>(oldSelection.size());
 					for (Asset asset : oldSelection.getAssets()) {
 						GalleryItem item = getGalleryItem(asset);
 						if (item != null) {
@@ -281,8 +287,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 							selectedAssets.add(asset);
 						}
 					}
-					GalleryItem[] selectedItems = items
-							.toArray(new GalleryItem[items.size()]);
+					GalleryItem[] selectedItems = items.toArray(new GalleryItem[items.size()]);
 					galleryMap.clear();
 					gallery.setSelection(selectedItems);
 					selection = new AssetSelection(selectedAssets);
@@ -322,8 +327,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 					// It's a group
 					int index = event.index;
 					int assetCount = duplicatesProvider.getAssetCount(index);
-					gallery.setItemCount(duplicatesProvider
-							.getDuplicateSetCount());
+					gallery.setItemCount(duplicatesProvider.getDuplicateSetCount());
 					if (assetCount > 0) {
 						item.setItemCount(assetCount);
 						int deleted = 0;
@@ -334,40 +338,34 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 								if (!decorated) {
 									item.setData(ASSET, asset);
 									item.setText(asset.getName());
-									Image image = getImage(asset);
-									item.setImage(image);
+									item.setImage(getImage(asset));
 									decorated = false;
 								}
 							} else
 								deleted++;
 						}
 						if (deleted == assetCount)
-							item.setText(1, Messages
-									.getString("DuplicatesView.all_images_deleted")); //$NON-NLS-1$
+							item.setText(1, Messages.getString("DuplicatesView.all_images_deleted")); //$NON-NLS-1$
 						else if (deleted == 1)
 							item.setText(1, Messages.getString("DuplicatesView.one_image_deleted")); //$NON-NLS-1$
 						else if (deleted > 1)
-							item.setText(1, NLS.bind(Messages
-											.getString("DuplicatesView.some_images_deleted"), deleted)); //$NON-NLS-1$
+							item.setText(1,
+									NLS.bind(Messages.getString("DuplicatesView.some_images_deleted"), deleted)); //$NON-NLS-1$
 					} else {
 						item.setItemCount(0);
-						item.setText(NLS.bind(
-								Messages.getString("DuplicatesView.no_more_duplicates"), itemType)); //$NON-NLS-1$
+						item.setText(NLS.bind(Messages.getString("DuplicatesView.no_more_duplicates"), itemType)); //$NON-NLS-1$
 					}
 					item.setExpanded(false);
 				} else {
 					// It's an item
 					int parentIndex = gallery.indexOf(parentItem);
 					int index = event.index;
-					Asset asset = duplicatesProvider.getAsset(parentIndex,
-							index);
-					// item.setImage(getImage(asset));
+					Asset asset = duplicatesProvider.getAsset(parentIndex, index);
 					item.setImage(placeHolder);
 					if (asset != null) {
 						item.setData(ASSET, asset);
 						galleryMap.put(asset, new Point(parentIndex, index));
 					}
-					// setItemText(item, asset);
 				}
 			}
 		};
@@ -375,8 +373,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 	}
 
 	@Override
-	protected void setItemText(final GalleryItem item, Asset asset,
-			Integer cardinality) {
+	protected void setItemText(final GalleryItem item, Asset asset, Integer cardinality) {
 		if (asset != null) {
 			StringBuilder sb = new StringBuilder(asset.getUri());
 			int p = sb.lastIndexOf("/"); //$NON-NLS-1$
@@ -393,11 +390,9 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 		String title = duplicatesProvider.getLabel();
 		setPartName(title);
 		if (provider.getDuplicateSetCount() <= 0)
-			AcousticMessageDialog
-					.openInformation(
-							getSite().getShell(),
-							NLS.bind(
-									Messages.getString("DuplicatesView.find_duplicates"), itemType), NLS.bind(Messages.getString("DuplicatesView.no_duplicates_found"), itemType)); //$NON-NLS-1$ //$NON-NLS-2$
+			AcousticMessageDialog.openInformation(getSite().getShell(),
+					NLS.bind(Messages.getString("DuplicatesView.find_duplicates"), itemType), //$NON-NLS-1$
+					NLS.bind(Messages.getString("DuplicatesView.no_duplicates_found"), itemType)); //$NON-NLS-1$
 		else
 			redrawCollection(null, null);
 	}
@@ -419,10 +414,8 @@ public class DuplicatesView extends AbstractLightboxView implements Listener,
 		ScrollBar scrollBar = gallery.getVerticalBar();
 		if (scrollBar == null)
 			scrollBar = gallery.getHorizontalBar();
-		if (scrollBar != null) {
-			int pos = scrollBar.getSelection();
-			scrollBar.setSelection(dist + pos);
-		}
+		if (scrollBar != null)
+			scrollBar.setSelection(dist + scrollBar.getSelection());
 	}
 
 	@Override

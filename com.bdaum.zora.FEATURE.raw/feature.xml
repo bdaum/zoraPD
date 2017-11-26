@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE.raw"
       label="Foreign"
-      version="3.2.0"
+      version="3.2.1"
       provider-name="bdaum industrial communications">
 
    <description url="http://www.example.com/description">
