@@ -32,6 +32,7 @@ public class SlideShowImpl extends SlideShow_typeImpl implements SlideShow {
 	 * @param duration - Property
 	 * @param effect - Property
 	 * @param fading - Property
+	 * @param zoom - Property
 	 * @param titleDisplay - Property
 	 * @param titleContent - Property
 	 * @param adhoc - Property
@@ -41,10 +42,10 @@ public class SlideShowImpl extends SlideShow_typeImpl implements SlideShow {
 	 * @param perspective - Property
 	 */
 	public SlideShowImpl(String name, String description, boolean fromPreview,
-			int duration, int effect, int fading, int titleDisplay,
+			int duration, int effect, int fading, int zoom, int titleDisplay,
 			int titleContent, boolean adhoc, boolean skipDublettes,
 			boolean voiceNotes, Date lastAccessDate, String perspective) {
-		super(name, description, fromPreview, duration, effect, fading,
+		super(name, description, fromPreview, duration, effect, fading, zoom,
 				titleDisplay, titleContent, adhoc, skipDublettes, voiceNotes,
 				lastAccessDate, perspective);
 

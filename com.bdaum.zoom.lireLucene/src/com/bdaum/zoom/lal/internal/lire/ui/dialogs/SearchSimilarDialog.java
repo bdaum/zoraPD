@@ -215,12 +215,8 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 	}
 
 	private void createAlgoGroup(Composite composite) {
-		CGroup group = new CGroup(composite, SWT.NONE);
-		group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		group.setLayout(new GridLayout());
-		group.setText(Messages.SearchSimilarDialog_search_algorithm);
-		searchResultGroup = new SearchResultGroup(group, SWT.NONE, true, true,
-				false, getButton(OK), null);
+		searchResultGroup = new SearchResultGroup(composite, SWT.NONE, true, true,
+				false, getButton(OK), new GridData(SWT.FILL, SWT.FILL, true, true));
 		if (Core.getCore().isNetworked())
 			searchResultGroup
 					.addSelectionChangedListener(new ISelectionChangedListener() {

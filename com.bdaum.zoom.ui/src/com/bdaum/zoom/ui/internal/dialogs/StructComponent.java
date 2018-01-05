@@ -66,6 +66,7 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.fileMonitor.internal.filefilter.WildCardFilter;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.internal.widgets.FilterField;
 import com.bdaum.zoom.ui.internal.widgets.FlatGroup;
@@ -96,16 +97,13 @@ public class StructComponent implements DisposeListener {
 		protected IStatus run(IProgressMonitor monitor) {
 			switch (type) {
 			case QueryField.T_LOCATION:
-				objects = new ArrayList<Object>(
-						dbManager.obtainObjects(LocationImpl.class));
+				objects = new ArrayList<Object>(dbManager.obtainObjects(LocationImpl.class));
 				break;
 			case QueryField.T_CONTACT:
-				objects = new ArrayList<Object>(
-						dbManager.obtainObjects(ContactImpl.class));
+				objects = new ArrayList<Object>(dbManager.obtainObjects(ContactImpl.class));
 				break;
 			case QueryField.T_OBJECT:
-				objects = new ArrayList<Object>(
-						dbManager.obtainObjects(ArtworkOrObjectImpl.class));
+				objects = new ArrayList<Object>(dbManager.obtainObjects(ArtworkOrObjectImpl.class));
 				break;
 			}
 			final Control control = viewer.getControl();
@@ -114,8 +112,7 @@ public class StructComponent implements DisposeListener {
 					if (!control.isDisposed()) {
 						viewer.setInput(objects);
 						if (value != null)
-							viewer.setSelection(new StructuredSelection(
-									value), true);
+							viewer.setSelection(new StructuredSelection(value), true);
 						control.setFocus();
 					}
 				});
@@ -146,17 +143,12 @@ public class StructComponent implements DisposeListener {
 			if (chapters == null) {
 				chapters = new HashMap<Character, List<IIdentifiableObject>>();
 				for (IIdentifiableObject ob : shownObjects) {
-					String kw = ((LabelProvider) viewer.getLabelProvider())
-							.getText(ob);
+					String kw = ((LabelProvider) viewer.getLabelProvider()).getText(ob);
 					if (!kw.isEmpty()) {
-						Character chapterTitle = Character.toUpperCase(kw
-								.charAt(0));
-						List<IIdentifiableObject> elements = chapters
-								.get(chapterTitle);
-						if (elements == null) {
-							elements = new ArrayList<IIdentifiableObject>();
-							chapters.put(chapterTitle, elements);
-						}
+						Character chapterTitle = Character.toUpperCase(kw.charAt(0));
+						List<IIdentifiableObject> elements = chapters.get(chapterTitle);
+						if (elements == null)
+							chapters.put(chapterTitle, elements = new ArrayList<IIdentifiableObject>());
 						elements.add(ob);
 					}
 				}
@@ -166,8 +158,7 @@ public class StructComponent implements DisposeListener {
 
 		public Object[] getChildren(Object parentElement) {
 			if (parentElement instanceof Character) {
-				List<IIdentifiableObject> elements = chapters
-						.get(parentElement);
+				List<IIdentifiableObject> elements = chapters.get(parentElement);
 				if (elements != null)
 					return elements.toArray();
 			}
@@ -176,8 +167,7 @@ public class StructComponent implements DisposeListener {
 
 		public Object getParent(Object element) {
 			if (!radioGroup.isFlat()) {
-				String kw = ((LabelProvider) viewer.getLabelProvider())
-						.getText(element);
+				String kw = ((LabelProvider) viewer.getLabelProvider()).getText(element);
 				if (!kw.isEmpty()) {
 					char firstChar = Character.toUpperCase(kw.charAt(0));
 					for (Character title : chapters.keySet())
@@ -198,18 +188,15 @@ public class StructComponent implements DisposeListener {
 
 	private TreeViewer viewer;
 
-	private List<Object> objects = new ArrayList<Object>(
-			0);
+	private List<Object> objects = new ArrayList<Object>(0);
 
 	private final Map<String, Map<QueryField, Object>> structOverlayMap;
 
 	private final FlatGroup radioGroup;
 
 	@SuppressWarnings("unused")
-	public StructComponent(IDbManager dbManager, Composite comp,
-			AomObject value, int type, boolean linesVisible,
-			final Map<String, Map<QueryField, Object>> structOverlayMap,
-			FlatGroup radioGroup, int spareColumns) {
+	public StructComponent(IDbManager dbManager, Composite comp, AomObject value, int type, boolean linesVisible,
+			final Map<String, Map<QueryField, Object>> structOverlayMap, FlatGroup radioGroup, int spareColumns) {
 		comp.addDisposeListener(this);
 		this.structOverlayMap = structOverlayMap;
 		this.radioGroup = radioGroup;
@@ -239,19 +226,19 @@ public class StructComponent implements DisposeListener {
 			@Override
 			public String getText(Object element) {
 				String structText = getStructText(element, structOverlayMap);
-				return (structText != null) ? structText : super
-						.getText(element);
+				return (structText != null) ? structText : super.getText(element);
 			}
 		};
 		viewer.setLabelProvider(labelProvider);
 		viewer.setComparator(new ViewerComparator());
+		UiUtilities.installDoubleClickExpansion(viewer);
 		viewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
 			@Override
-			public boolean select(Viewer aViewer, Object parentElement,
-					Object element) {
+			public boolean select(Viewer aViewer, Object parentElement, Object element) {
+				if (element instanceof Character)
+					return true;
 				WildCardFilter filter = filterField.getFilter();
-				return filter == null || element instanceof Character
-						|| filter.accept(labelProvider.getText(element));
+				return filter == null || filter.accept(labelProvider.getText(element));
 			}
 		} });
 		layoutData = new GridData(GridData.FILL_BOTH);
@@ -262,47 +249,30 @@ public class StructComponent implements DisposeListener {
 		new FillJob(dbManager, type, value).schedule(100);
 	}
 
-	public static String getStructText(Object element,
-			Map<String, Map<QueryField, Object>> structOverlayMap) {
+	public static String getStructText(Object element, Map<String, Map<QueryField, Object>> structOverlayMap) {
 		StringBuilder sb = new StringBuilder();
 		if (element instanceof Location) {
 			Location loc = (Location) element;
-			String city = getUpdatedValue(loc, QueryField.LOCATION_CITY,
-					loc.getCity(), structOverlayMap);
+			String city = getUpdatedValue(loc, QueryField.LOCATION_CITY, loc.getCity(), structOverlayMap);
 			append(sb, city);
-			append(sb,
-					getUpdatedValue(loc, QueryField.LOCATION_DETAILS,
-							loc.getDetails(), structOverlayMap));
-			String sublocation = getUpdatedValue(loc,
-					QueryField.LOCATION_SUBLOCATION, loc.getSublocation(),
+			append(sb, getUpdatedValue(loc, QueryField.LOCATION_DETAILS, loc.getDetails(), structOverlayMap));
+			String sublocation = getUpdatedValue(loc, QueryField.LOCATION_SUBLOCATION, loc.getSublocation(),
 					structOverlayMap);
 			if (sublocation != null && !sublocation.equals(city))
 				append(sb, sublocation);
+			append(sb, getUpdatedValue(loc, QueryField.LOCATION_STATE, loc.getProvinceOrState(), structOverlayMap));
+			append(sb, getUpdatedValue(loc, QueryField.LOCATION_COUNTRYNAME, loc.getCountryName(), structOverlayMap));
 			append(sb,
-					getUpdatedValue(loc, QueryField.LOCATION_STATE,
-							loc.getProvinceOrState(), structOverlayMap));
-			append(sb,
-					getUpdatedValue(loc, QueryField.LOCATION_COUNTRYNAME,
-							loc.getCountryName(), structOverlayMap));
-			append(sb,
-					getUpdatedValue(loc, QueryField.LOCATION_COUNTRYCODE,
-							loc.getCountryISOCode(), structOverlayMap));
-			append(sb,
-					getUpdatedValue(loc, QueryField.LOCATION_WORLDREGION,
-							loc.getWorldRegion(), structOverlayMap));
-			Double latitude = getUpdatedValue(loc,
-					QueryField.LOCATION_LATITUDE, loc.getLatitude(),
-					structOverlayMap);
+					getUpdatedValue(loc, QueryField.LOCATION_COUNTRYCODE, loc.getCountryISOCode(), structOverlayMap));
+			append(sb, getUpdatedValue(loc, QueryField.LOCATION_WORLDREGION, loc.getWorldRegion(), structOverlayMap));
+			Double latitude = getUpdatedValue(loc, QueryField.LOCATION_LATITUDE, loc.getLatitude(), structOverlayMap);
 			if (latitude != null && !Double.isNaN(latitude))
 				append(sb, Format.latitudeFormatter.toString(latitude));
-			Double longitude = getUpdatedValue(loc,
-					QueryField.LOCATION_LONGITUDE, loc.getLongitude(),
+			Double longitude = getUpdatedValue(loc, QueryField.LOCATION_LONGITUDE, loc.getLongitude(),
 					structOverlayMap);
 			if (longitude != null && !Double.isNaN(longitude))
 				append(sb, Format.longitudeFormatter.toString(longitude));
-			Double altitude = getUpdatedValue(loc,
-					QueryField.LOCATION_ALTITUDE, loc.getAltitude(),
-					structOverlayMap);
+			Double altitude = getUpdatedValue(loc, QueryField.LOCATION_ALTITUDE, loc.getAltitude(), structOverlayMap);
 			if (altitude != null && !Double.isNaN(altitude))
 				append(sb, Format.altitudeFormatter.toString(altitude));
 			if (sb.length() == 0)
@@ -310,53 +280,30 @@ public class StructComponent implements DisposeListener {
 			return sb.toString();
 		} else if (element instanceof Contact) {
 			Contact contact = (Contact) element;
+			append(sb, getUpdatedValue(contact, QueryField.CONTACT_ADDRESS, contact.getAddress(), structOverlayMap));
+			append(sb, getUpdatedValue(contact, QueryField.CONTACT_CITY, contact.getCity(), structOverlayMap));
+			append(sb, getUpdatedValue(contact, QueryField.CONTACT_COUNTRY, contact.getCountry(), structOverlayMap));
 			append(sb,
-					getUpdatedValue(contact, QueryField.CONTACT_ADDRESS,
-							contact.getAddress(), structOverlayMap));
-			append(sb,
-					getUpdatedValue(contact, QueryField.CONTACT_CITY,
-							contact.getCity(), structOverlayMap));
-			append(sb,
-					getUpdatedValue(contact, QueryField.CONTACT_COUNTRY,
-							contact.getCountry(), structOverlayMap));
-			append(sb,
-					getUpdatedValue(contact, QueryField.CONTACT_POSTALCODE,
-							contact.getPostalCode(), structOverlayMap));
-			append(sb,
-					getUpdatedValue(contact, QueryField.CONTACT_EMAIL,
-							contact.getEmail(), structOverlayMap));
-			append(sb,
-					getUpdatedValue(contact, QueryField.CONTACT_PHONE,
-							contact.getPhone(), structOverlayMap));
-			append(sb,
-					getUpdatedValue(contact, QueryField.CONTACT_WEBURL,
-							contact.getWebUrl(), structOverlayMap));
+					getUpdatedValue(contact, QueryField.CONTACT_POSTALCODE, contact.getPostalCode(), structOverlayMap));
+			append(sb, getUpdatedValue(contact, QueryField.CONTACT_EMAIL, contact.getEmail(), structOverlayMap));
+			append(sb, getUpdatedValue(contact, QueryField.CONTACT_PHONE, contact.getPhone(), structOverlayMap));
+			append(sb, getUpdatedValue(contact, QueryField.CONTACT_WEBURL, contact.getWebUrl(), structOverlayMap));
 			if (sb.length() == 0)
 				sb.append(NO_DETAILS);
 			return sb.toString();
 		} else if (element instanceof ArtworkOrObject) {
 			ArtworkOrObject art = (ArtworkOrObject) element;
-			append(sb,
-					getUpdatedValue(art, QueryField.ARTWORKOROBJECT_TITLE,
-							art.getTitle(), structOverlayMap));
-			append(sb,
-					getUpdatedValue(art, QueryField.ARTWORKOROBJECT_CREATOR,
-							art.getCreator(), structOverlayMap));
-			Date dateCreated = getUpdatedValue(art,
-					QueryField.ARTWORKOROBJECT_DATECREATED,
-					art.getDateCreated(), structOverlayMap);
+			append(sb, getUpdatedValue(art, QueryField.ARTWORKOROBJECT_TITLE, art.getTitle(), structOverlayMap));
+			append(sb, getUpdatedValue(art, QueryField.ARTWORKOROBJECT_CREATOR, art.getCreator(), structOverlayMap));
+			Date dateCreated = getUpdatedValue(art, QueryField.ARTWORKOROBJECT_DATECREATED, art.getDateCreated(),
+					structOverlayMap);
 			if (dateCreated != null)
 				append(sb, Format.dayFormatter.toString(dateCreated));
-			append(sb,
-					getUpdatedValue(art, QueryField.ARTWORKOROBJECT_SOURCE,
-							art.getSource(), structOverlayMap));
-			append(sb,
-					getUpdatedValue(art,
-							QueryField.ARTWORKOROBJECT_INVENTORYNUMBER,
-							art.getSourceInventoryNumber(), structOverlayMap));
-			append(sb,
-					getUpdatedValue(art, QueryField.ARTWORKOROBJECT_COPYRIGHT,
-							art.getCopyrightNotice(), structOverlayMap));
+			append(sb, getUpdatedValue(art, QueryField.ARTWORKOROBJECT_SOURCE, art.getSource(), structOverlayMap));
+			append(sb, getUpdatedValue(art, QueryField.ARTWORKOROBJECT_INVENTORYNUMBER, art.getSourceInventoryNumber(),
+					structOverlayMap));
+			append(sb, getUpdatedValue(art, QueryField.ARTWORKOROBJECT_COPYRIGHT, art.getCopyrightNotice(),
+					structOverlayMap));
 			if (sb.length() == 0)
 				sb.append(NO_DETAILS);
 			return sb.toString();
@@ -365,12 +312,10 @@ public class StructComponent implements DisposeListener {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> T getUpdatedValue(IIdentifiableObject obj,
-			QueryField qf, T dflt,
+	private static <T> T getUpdatedValue(IIdentifiableObject obj, QueryField qf, T dflt,
 			Map<String, Map<QueryField, Object>> structOverlayMap) {
 		if (structOverlayMap != null) {
-			Map<QueryField, Object> fieldMap = structOverlayMap.get(obj
-					.getStringId());
+			Map<QueryField, Object> fieldMap = structOverlayMap.get(obj.getStringId());
 			if (fieldMap != null && fieldMap.containsKey(qf))
 				return (T) fieldMap.get(qf);
 		}
@@ -378,13 +323,12 @@ public class StructComponent implements DisposeListener {
 	}
 
 	private static void append(StringBuilder sb, String[] s) {
-		if (s != null && s.length > 0) {
+		if (s != null && s.length > 0)
 			for (int i = 0; i < s.length; i++) {
 				if (sb.length() > 0)
 					sb.append((i == 0) ? "; " : ','); //$NON-NLS-1$
 				sb.append(s[i]);
 			}
-		}
 	}
 
 	private static void append(StringBuilder sb, String s) {
@@ -403,16 +347,13 @@ public class StructComponent implements DisposeListener {
 		viewer.addSelectionChangedListener(listener);
 	}
 
-	public void removeSelectionChangedListener(
-			ISelectionChangedListener listener) {
+	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
 		viewer.removeSelectionChangedListener(listener);
 	}
 
 	public IIdentifiableObject getSelectedElement() {
-		Object firstElement = ((IStructuredSelection) viewer.getSelection())
-				.getFirstElement();
-		return firstElement instanceof IIdentifiableObject ? (IIdentifiableObject) firstElement
-				: null;
+		Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+		return firstElement instanceof IIdentifiableObject ? (IIdentifiableObject) firstElement : null;
 	}
 
 	public void addDoubleClickListener(IDoubleClickListener listener) {
@@ -451,14 +392,11 @@ public class StructComponent implements DisposeListener {
 		viewer.setSelection(selection);
 	}
 
-	private List<IIdentifiableObject> computeShownObjects(
-			List<IIdentifiableObject> objects) {
-		List<IIdentifiableObject> shownObjects = new ArrayList<IIdentifiableObject>(
-				objects.size());
+	private List<IIdentifiableObject> computeShownObjects(List<IIdentifiableObject> objects) {
+		List<IIdentifiableObject> shownObjects = new ArrayList<IIdentifiableObject>(objects.size());
 		for (IIdentifiableObject obj : objects) {
 			String id = obj.getStringId();
-			if (structOverlayMap == null || !structOverlayMap.containsKey(id)
-					|| structOverlayMap.get(id) != null)
+			if (structOverlayMap == null || !structOverlayMap.containsKey(id) || structOverlayMap.get(id) != null)
 				shownObjects.add(obj);
 		}
 		return shownObjects;

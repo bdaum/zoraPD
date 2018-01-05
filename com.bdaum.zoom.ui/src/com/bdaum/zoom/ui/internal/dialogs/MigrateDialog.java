@@ -176,7 +176,6 @@ public class MigrateDialog extends ZTitleAreaDialog {
 		});
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateButtons();
 			}

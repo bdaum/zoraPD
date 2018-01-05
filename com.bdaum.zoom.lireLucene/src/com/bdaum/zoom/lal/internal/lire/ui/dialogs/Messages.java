@@ -33,7 +33,6 @@ public class Messages extends NLS {
 	public static String SearchSimilarDialog_keywords;
 	public static String SearchSimilarDialog_no_peer_support_for_algo;
 	public static String SearchSimilarDialog_reference_image;
-	public static String SearchSimilarDialog_search_algorithm;
 	public static String SearchSimilarDialog_similarit_search_coll_title;
 	public static String SearchSimilarDialog_similarity_search;
 	public static String SearchSimilarDialog_similarity_search_message;

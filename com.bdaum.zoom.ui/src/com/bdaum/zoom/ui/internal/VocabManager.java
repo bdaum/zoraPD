@@ -73,8 +73,7 @@ public class VocabManager {
 						if (line.startsWith("{") && line.endsWith("}")) //$NON-NLS-1$ //$NON-NLS-2$
 							currentNode.addSynonym(line.substring(1, line.length() - 1));
 						else {
-							VocabNode child = new VocabNode(currentNode, line);
-							currentNode = child;
+							currentNode = new VocabNode(currentNode, line);
 							++currentLevel;
 						}
 					} else {
@@ -83,8 +82,7 @@ public class VocabManager {
 							parent = parent.getParent();
 							--currentLevel;
 						}
-						VocabNode child = new VocabNode(parent, line);
-						currentNode = child;
+						currentNode = new VocabNode(parent, line);
 					}
 				}
 			}
@@ -193,19 +191,17 @@ public class VocabManager {
 						continue lp;
 					}
 					if (child.synonyms != null)
-						for (String syn : child.synonyms) {
+						for (String syn : child.synonyms)
 							if (syn.equals(r.label)) {
 								child.merge(rchild);
 								continue lp;
 							}
-						}
 					if (rchild.synonyms != null)
-						for (String syn : rchild.synonyms) {
+						for (String syn : rchild.synonyms)
 							if (syn.equals(label)) {
 								child.merge(rchild);
 								continue lp;
 							}
-						}
 				}
 				children.add(rchild);
 				rchild.parent = this;
@@ -241,10 +237,8 @@ public class VocabManager {
 	public Map<String, String> getVocabMap() {
 		if (!mapReady) {
 			VocabNode root = getVocabTree();
-			if (root != null) {
-				vocabMap = new HashMap<>();
-				root.collect(vocabMap);
-			}
+			if (root != null)
+				root.collect(vocabMap = new HashMap<>());
 			mapReady = true;
 		}
 		return vocabMap;
@@ -256,8 +250,7 @@ public class VocabManager {
 				for (String file : vocabularies) {
 					File f = new File(file);
 					try {
-						VocabReader reader = new VocabReader(f);
-						VocabNode r = reader.read();
+						VocabNode r = new VocabReader(f).read();
 						if (combinedVocabRoot == null)
 							combinedVocabRoot = r;
 						else

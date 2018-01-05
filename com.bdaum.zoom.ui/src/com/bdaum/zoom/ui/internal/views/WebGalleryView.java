@@ -77,6 +77,14 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
+import org.piccolo2d.PCamera;
+import org.piccolo2d.PNode;
+import org.piccolo2d.event.PBasicInputEventHandler;
+import org.piccolo2d.event.PInputEvent;
+import org.piccolo2d.extras.swt.PSWTCanvas;
+import org.piccolo2d.extras.swt.PSWTImage;
+import org.piccolo2d.extras.swt.PSWTText;
+import org.piccolo2d.util.PBounds;
 
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
@@ -126,15 +134,6 @@ import com.bdaum.zoom.ui.internal.widgets.PTextHandler;
 import com.bdaum.zoom.ui.internal.widgets.TextEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.TextField;
 import com.bdaum.zoom.ui.internal.widgets.ZPSWTImage;
-
-import edu.umd.cs.piccolo.PCamera;
-import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
-import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
-import edu.umd.cs.piccolox.swt.PSWTImage;
-import edu.umd.cs.piccolox.swt.PSWTText;
 
 @SuppressWarnings("restriction")
 public class WebGalleryView extends AbstractPresentationView {
@@ -910,27 +909,25 @@ public class WebGalleryView extends AbstractPresentationView {
 			// position and bounds
 			setOffset(pos, y);
 			installHandleEventHandlers(pImage, false, false, this);
-			addInputEventListener(new PBasicInputEventHandler() {
+			PBasicInputEventHandler listener = new PBasicInputEventHandler() {
+				@Override
+				public void mousePressed(PInputEvent event) {
+					setPickedNode(event.getPickedNode());
+				}
+
 				@Override
 				public void mouseReleased(PInputEvent event) {
-					setPickedNode(event.getPickedNode());
-					if (getPickedNode() == propButton)
+					if (getPickedNode() == propButton || event.getClickCount() == 2)
 						editExhibitProperties();
 				}
-			});
-			pImage.addInputEventListener(new PBasicInputEventHandler() {
-				@Override
-				public void mouseReleased(PInputEvent event) {
-					setPickedNode(event.getPickedNode());
-					if (event.getClickCount() == 2)
-						editExhibitProperties();
-				}
-			});
+			};
+			addInputEventListener(listener);
+			pImage.addInputEventListener(listener);
 		}
 
 		@Override
-		public void moveToFront() {
-			super.moveToFront();
+		public void raiseToTop() {
+			super.raiseToTop();
 			if (exhibitAtFront != null)
 				exhibitAtFront.description.setPenColor((Color) pstoryboard.getStrokePaint());
 			exhibitAtFront = this;
@@ -938,8 +935,8 @@ public class WebGalleryView extends AbstractPresentationView {
 		}
 
 		@Override
-		public void moveToBack() {
-			super.moveToBack();
+		public void lowerToBottom() {
+			super.lowerToBottom();
 			if (exhibitAtFront == this)
 				exhibitAtFront = null;
 			description.setPenColor((Color) pstoryboard.getStrokePaint());
@@ -969,10 +966,8 @@ public class WebGalleryView extends AbstractPresentationView {
 			if (focus == caption) {
 				if (!text.equals(exhibit.getCaption()))
 					type = EditTextOperation.CAPTION;
-			} else if (focus == description) {
-				if (!text.equals(exhibit.getDescription()))
-					type = EditTextOperation.DESCRIPTION;
-			}
+			} else if (focus == description && !text.equals(exhibit.getDescription()))
+				type = EditTextOperation.DESCRIPTION;
 			if (type >= 0)
 				performOperation(new EditTextOperation(exhibit, text, focus, type));
 		}
@@ -986,7 +981,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			pImage = new ZPSWTImage(canvas, image);
 			addChild(0, pImage);
 			configureImage();
-			pImage.moveToBack();
+			pImage.lowerToBottom();
 			setCaptionAndDescription(exh);
 		}
 
@@ -1137,8 +1132,8 @@ public class WebGalleryView extends AbstractPresentationView {
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
 		super.init(site, memento);
 		if (memento != null) {
-			String lastSelection = memento.getString(LAST_GALLERY);
-			WebGalleryImpl obj = Core.getCore().getDbManager().obtainById(WebGalleryImpl.class, lastSelection);
+			WebGalleryImpl obj = Core.getCore().getDbManager().obtainById(WebGalleryImpl.class,
+					memento.getString(LAST_GALLERY));
 			if (obj != null)
 				setGallery(obj);
 		}
@@ -1174,7 +1169,6 @@ public class WebGalleryView extends AbstractPresentationView {
 		addWheelListener(0.1d, 10d);
 		textEventHandler = new TextEventHandler(selectionBackgroundColor);
 		PBasicInputEventHandler eventHandler = new PBasicInputEventHandler() {
-
 			@Override
 			public void keyPressed(PInputEvent event) {
 				if (textEventHandler.hasFocus())
@@ -1251,6 +1245,7 @@ public class WebGalleryView extends AbstractPresentationView {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
+		updateActions();
 		manager.add(gotoExhibitAction);
 		PNode pickedNode = getPickedNode();
 		if (pickedNode != null && pickedNode.getParent() instanceof PWebExhibit)
@@ -1394,7 +1389,6 @@ public class WebGalleryView extends AbstractPresentationView {
 		};
 		addStoryBoardAction.setToolTipText(Messages.getString("WebGalleryView.add_storyboard_tooltip")); //$NON-NLS-1$
 		generateAction = new Action(Messages.getString("WebGalleryView.generate"), Icons.play.getDescriptor()) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				generate(false);
@@ -1402,7 +1396,6 @@ public class WebGalleryView extends AbstractPresentationView {
 		};
 		generateAction.setToolTipText(Messages.getString("WebGalleryView.generate_tooltip")); //$NON-NLS-1$
 		saveAction = new Action(Messages.getString("WebGalleryView.save_design"), Icons.save.getDescriptor()) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				generate(true);
@@ -1458,7 +1451,6 @@ public class WebGalleryView extends AbstractPresentationView {
 
 		deleteStoryboardAction = new Action(Messages.getString("WebGalleryView.delete_storyboard"), //$NON-NLS-1$
 				Icons.delete.getDescriptor()) {
-
 			@Override
 			public void run() {
 				if (getPickedNode() instanceof PStoryboard && AcousticMessageDialog.openQuestion(getSite().getShell(),
@@ -1471,7 +1463,6 @@ public class WebGalleryView extends AbstractPresentationView {
 
 		editStoryboardAction = new Action(Messages.getString("WebGalleryView.edit_storyboard"), //$NON-NLS-1$
 				Icons.properties_blue.getDescriptor()) {
-
 			@Override
 			public void run() {
 				if (getPickedNode() instanceof PStoryboard) {
@@ -1651,13 +1642,12 @@ public class WebGalleryView extends AbstractPresentationView {
 		IExtension[] extensions = extensionPoint.getExtensions();
 		for (IExtension ext : extensions) {
 			IConfigurationElement[] configurationElements = ext.getConfigurationElements();
-			for (IConfigurationElement el : configurationElements) {
+			for (IConfigurationElement el : configurationElements)
 				if (el.getAttribute("id").equals(selectedEngine)) { //$NON-NLS-1$
 					if (createGenerator(show, el, outputFolder, isFtp, save))
 						return;
 					break;
 				}
-			}
 		}
 	}
 
@@ -1708,8 +1698,7 @@ public class WebGalleryView extends AbstractPresentationView {
 								Messages.getString("WebGalleryView.clear_folder"), //$NON-NLS-1$
 								IDialogConstants.CANCEL_LABEL },
 						0);
-				int ret = dialog.open();
-				switch (ret) {
+				switch (dialog.open()) {
 				case 2:
 					return true;
 				case 1:
@@ -1913,8 +1902,7 @@ public class WebGalleryView extends AbstractPresentationView {
 					Object next = it.next();
 					if (next instanceof PWebExhibit) {
 						PWebExhibit pExhibit = (PWebExhibit) next;
-						int sequenceNo = pExhibit.exhibit.getSequenceNo();
-						if (sequenceNo == rawIx)
+						if (pExhibit.exhibit.getSequenceNo() == rawIx)
 							return pExhibit;
 					}
 				}

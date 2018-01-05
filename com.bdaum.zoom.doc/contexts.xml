@@ -436,5 +436,8 @@
     <description>Categorizing multiple images in one go</description>
     <topic href="html/reference/categorize.html" label="Categorize images"/>
  </context>
-
+ <context id="vocab_page_context" title="Vocabulary">
+    <description>Maintain user defined vocabularies</description>
+    <topic href="html/reference/catPrefs.html" label="Vocabulary"/>
+ </context>
 </contexts>

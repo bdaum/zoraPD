@@ -25,7 +25,10 @@ public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.ui.internal.codes.messages"; //$NON-NLS-1$
 	public static String CodeParser_cat_not_found;
 	public static String CodeParser_code_catalog_not_found;
+	public static String CodeParser_custom_defined;
 	public static String CodeParser_error_creating_code_parser;
+	public static String CodeParser_genre;
+	public static String CodeParser_genre_expl;
 	public static String CodeParser_io_exception;
 	public static String CodeParser_revision;
 	public static String CodeParser_sax_parsing_exceptiion;
@@ -34,6 +37,7 @@ public class Messages extends NLS {
 	public static String CodeParser_subject_codes;
 	public static String CodeParser_subject_codes_msg;
 	public static String CodeParser_unknown;
+	public static String CodeParser_user_defined;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

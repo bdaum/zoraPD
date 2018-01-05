@@ -8,4 +8,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: webp-imageio.jar,
  .
 Export-Package: com.luciad.imageio.webp
-Require-Bundle: com.bdaum.zoom.image;bundle-version="3.2.1"
+Require-Bundle: com.bdaum.zoom.image;bundle-version="3.2.2"

@@ -25,14 +25,13 @@ import java.awt.Font;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
+import org.piccolo2d.event.PBasicInputEventHandler;
+import org.piccolo2d.event.PInputEvent;
+import org.piccolo2d.extras.swt.PSWTCanvas;
+import org.piccolo2d.extras.swt.PSWTPath;
 
 import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.ui.internal.Icons.Icon;
-
-import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
-import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
-import edu.umd.cs.piccolox.swt.PSWTPath;
 
 public abstract class PPanel extends PSWTPath implements PTextHandler {
 

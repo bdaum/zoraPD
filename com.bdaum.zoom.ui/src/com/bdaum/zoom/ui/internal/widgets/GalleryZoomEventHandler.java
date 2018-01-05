@@ -26,17 +26,17 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.piccolo2d.PNode;
+import org.piccolo2d.event.PInputEvent;
+import org.piccolo2d.event.PInputEventFilter;
+import org.piccolo2d.event.PInputEventListener;
 
 import com.bdaum.zoom.ui.internal.IPresentationHandler;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
-import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.event.PInputEventListener;
-
-public class GalleryZoomEventHandler extends ZZoomEventHandler implements
-		PInputEventListener, IPreferenceChangeListener {
+public class GalleryZoomEventHandler extends ZZoomEventHandler
+		implements PInputEventListener, IPreferenceChangeListener {
 	/**
 	 *
 	 */
@@ -48,32 +48,41 @@ public class GalleryZoomEventHandler extends ZZoomEventHandler implements
 	/**
 	 * @param animatedGallery
 	 */
-	public GalleryZoomEventHandler(IPresentationHandler presentationHandler,
-			PNode[] workarea, double speedOffset) {
+	public GalleryZoomEventHandler(IPresentationHandler presentationHandler, PNode[] workarea, double speedOffset) {
 		this.presentationHandler = presentationHandler;
 		this.workarea = workarea;
 		this.speedOffset = speedOffset;
 		setMouseSpeed();
 		setZoomkey();
-		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID)
-				.addPreferenceChangeListener(this);
+		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID).addPreferenceChangeListener(this);
 	}
 
 	private void setMouseSpeed() {
-		setSpeed(Platform.getPreferencesService().getInt(UiActivator.PLUGIN_ID,
-				PreferenceConstants.MOUSE_SPEED, 10, null) + speedOffset);
+		setSpeed(Platform.getPreferencesService().getInt(UiActivator.PLUGIN_ID, PreferenceConstants.MOUSE_SPEED, 10,
+				null) + speedOffset);
 	}
 
 	private void setZoomkey() {
-		int zoomKey = Platform.getPreferencesService().getInt(
-				UiActivator.PLUGIN_ID, PreferenceConstants.ZOOMKEY,
-				PreferenceConstants.ZOOMALT, null);
-		getEventFilter()
-				.setAndMask(
-						zoomKey == PreferenceConstants.ZOOMRIGHT ? InputEvent.BUTTON3_MASK
-								: InputEvent.BUTTON1_MASK
-										| (zoomKey == PreferenceConstants.ZOOMALT ? InputEvent.ALT_MASK
-												: InputEvent.SHIFT_MASK));
+		PInputEventFilter eventFilter = getEventFilter();
+		switch (Platform.getPreferencesService().getInt(UiActivator.PLUGIN_ID, PreferenceConstants.ZOOMKEY,
+				PreferenceConstants.ZOOMALT, null)) {
+		case PreferenceConstants.ZOOMRIGHT:
+			eventFilter.setAndMask(InputEvent.BUTTON3_MASK);
+			eventFilter.setNotMask(0);
+			break;
+		case PreferenceConstants.ZOOMALT:
+			eventFilter.setAndMask(InputEvent.ALT_MASK | InputEvent.BUTTON1_MASK);
+			eventFilter.setNotMask(0);
+			break;
+		case PreferenceConstants.ZOOMSHIFT:
+			eventFilter.setAndMask(InputEvent.SHIFT_MASK | InputEvent.BUTTON1_MASK);
+			eventFilter.setNotMask(0);
+			break;
+		default:
+			eventFilter.setAndMask(0);
+			eventFilter.setNotMask(PInputEventFilter.ALL_MODIFIERS_MASK);
+			break;
+		}
 	}
 
 	@Override
@@ -94,8 +103,7 @@ public class GalleryZoomEventHandler extends ZZoomEventHandler implements
 	@Override
 	protected void dragActivityStep(PInputEvent event) {
 		if (zoomPoint != null) {
-			double dx = event.getCanvasPosition().getX()
-					- getMousePressedCanvasPoint().getX();
+			double dx = event.getCanvasPosition().getX() - getMousePressedCanvasPoint().getX();
 			if (dx > 5 || dx < -5) {
 				super.dragActivityStep(event);
 				if (presentationHandler != null)
@@ -105,8 +113,7 @@ public class GalleryZoomEventHandler extends ZZoomEventHandler implements
 	}
 
 	public void dispose() {
-		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID)
-				.removePreferenceChangeListener(this);
+		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID).removePreferenceChangeListener(this);
 	}
 
 	public void preferenceChange(PreferenceChangeEvent event) {

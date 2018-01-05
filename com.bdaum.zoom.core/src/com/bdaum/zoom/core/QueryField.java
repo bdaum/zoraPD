@@ -332,6 +332,7 @@ public class QueryField {
 	// Codes
 	public static final int SUBJECTCODES = 0;
 	public static final int SCENECODES = 1;
+	public static final int GENRECODES = 2;
 	// Maps
 
 	private static Map<String, QueryField> fieldMap = new HashMap<String, QueryField>(100);
@@ -404,7 +405,6 @@ public class QueryField {
 					int p = f.lastIndexOf('.');
 					if (p >= 0) {
 						if (!f.endsWith(ext) || p + 1 + ext.length() != f.length())
-//							 if (!f.substring(p + 1).equals(ext))
 							return Messages.QueryField_dont_modify_file_extensions;
 					} else if (ext != null)
 						f += '.' + ext;
@@ -431,8 +431,8 @@ public class QueryField {
 
 		@Override
 		protected Object getValue(Asset asset) {
+			String u = asset.getUri();
 			if (asset.getFileState() == IVolumeManager.PEER) {
-				String u = asset.getUri();
 				if (u != null) {
 					IPeerService peerService = Core.getCore().getPeerService();
 					if (peerService != null) {
@@ -442,7 +442,7 @@ public class QueryField {
 					}
 				}
 			}
-			return asset.getUri();
+			return u;
 		}
 	};
 	public static final QueryField VOLUME = new QueryField(IMAGE_FILE, "volume", //$NON-NLS-1$
@@ -2152,17 +2152,6 @@ public class QueryField {
 		}
 	};
 
-	public static final QueryField IPTC_INTELLECTUAL_GENRE = new QueryField(IPTC_DESCRIPTION, "intellectualGenre", //$NON-NLS-1$
-			null, NS_IPTC4XMPCORE, "IntellectualGenre", //$NON-NLS-1$
-			Messages.QueryField_Intellectual_genre, ACTION_QUERY,
-			PHOTO | EDIT_ALWAYS | QUERY | TEXT | AUTO_CONTAINS | REPORT, CATEGORY_IPTC, T_STRING, 1, 64, 0f, Float.NaN,
-			ISpellCheckingService.DESCRIPTIONOPTIONS) {
-
-		@Override
-		protected Object getValue(Asset asset) {
-			return asset.getIntellectualGenre();
-		}
-	};
 	public static final QueryField IPTC_WRITEREDITOR = new QueryField(IPTC_DESCRIPTION, "writerEditor", //$NON-NLS-1$
 			"Writer-Editor", //$NON-NLS-1$
 			NS_PHOTOSHOP, "CaptionWriter", //$NON-NLS-1$
@@ -2668,7 +2657,19 @@ public class QueryField {
 			return asset.getSubjectCode();
 		}
 	};
+	
+	public static final QueryField IPTC_INTELLECTUAL_GENRE = new QueryField(IPTC_DESCRIPTION, "intellectualGenre", //$NON-NLS-1$
+			null, NS_IPTC4XMPCORE, "IntellectualGenre", //$NON-NLS-1$
+			Messages.QueryField_Intellectual_genre, ACTION_QUERY,
+			PHOTO | EDIT_ALWAYS | QUERY | TEXT | AUTO_CONTAINS | REPORT, CATEGORY_IPTC, T_STRING, 1, 64, GENRECODES, null, null, 0f,
+			ISpellCheckingService.DESCRIPTIONOPTIONS) {
 
+		@Override
+		protected Object getValue(Asset asset) {
+			return asset.getIntellectualGenre();
+		}
+	};
+	
 	private static final QueryField[] NOCHILDREN = new QueryField[0];
 
 	// Location

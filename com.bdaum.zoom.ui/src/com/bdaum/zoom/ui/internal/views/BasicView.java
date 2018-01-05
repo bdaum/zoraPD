@@ -382,6 +382,8 @@ public abstract class BasicView extends ViewPart
 					: new ListCellEditor(parent, qfield);
 		if (qfield.getType() == QueryField.T_DATE)
 			return new DateTimeCellEditor(parent, qfield);
+		if (qfield.getEnumeration() instanceof Integer)
+			return new TopicTextCellEditor(parent, qfield);
 		List<Asset> selectedAssets = getNavigationHistory().getSelectedAssets().getAssets();
 		Asset asset = selectedAssets.size() == 1 ? selectedAssets.get(0) : null;
 		if (qfield.getMaxlength() > maxTextLength && qfield.getType() == QueryField.T_STRING)

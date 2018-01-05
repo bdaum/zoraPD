@@ -23,7 +23,6 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.ui.widgets.messages"; //$NON-NLS-1$
-	public static String CodeGroup_select_code;
 	public static String FlatGroup_flat;
 	public static String FlatGroup_hierarchical;
 	public static String NumericControl_click_to_set;

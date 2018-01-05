@@ -82,6 +82,7 @@ import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.AllNoneGroup;
 import com.bdaum.zoom.ui.internal.dialogs.MediaDialog;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
@@ -109,11 +110,9 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 
 		@Override
 		public boolean equals(Object obj) {
-			if (obj instanceof Digest) {
-				Digest other = (Digest) obj;
-				return originalFileName.equals(other.originalFileName)
-						&& dateTimeOriginal.equals(other.dateTimeOriginal);
-			}
+			if (obj instanceof Digest)
+				return originalFileName.equals(((Digest) obj).originalFileName)
+						&& dateTimeOriginal.equals(((Digest) obj).dateTimeOriginal);
 			return false;
 		}
 
@@ -421,6 +420,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 					lastImportButton.setEnabled(lastImportTimestamp >= 0);
 			}
 		});
+		UiUtilities.installDoubleClickExpansion(importViewer);
 		AllNoneGroup selectComp = new AllNoneGroup(innerComp, new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -481,7 +481,6 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 			if (meta.getLastDeviceImport() != null && !meta.getLastDeviceImport().isEmpty() || key != null) {
 				final String k = key;
 				manageMediaButton.addSelectionListener(new SelectionAdapter() {
-
 					@Override
 					public void widgetSelected(SelectionEvent e) {
 						List<LastDeviceImport> mediaList = new ArrayList<LastDeviceImport>();

@@ -34,6 +34,8 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -64,6 +66,7 @@ public class AutoRuleComponent {
 	private Composite composite;
 	private Button removeAutoButton;
 	private Button addAutoButton;
+	protected boolean cntrlDwn;
 
 	public AutoRuleComponent(Composite parent, IAdaptable info) {
 		this.info = info;
@@ -76,10 +79,10 @@ public class AutoRuleComponent {
 		}
 		composite.setLayout(new GridLayout());
 		new Label(composite, SWT.NONE).setText(Messages.AutoRuleComponent_collections_expl);
-		CGroup autoGroup = UiUtilities.createGroup(composite, 2,Messages.AutoRuleComponent_title);
+		CGroup autoGroup = UiUtilities.createGroup(composite, 2, Messages.AutoRuleComponent_title);
 		ruleViewer = new TableViewer(autoGroup, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL);
 		TableViewerColumn col0 = new TableViewerColumn(ruleViewer, SWT.NONE);
-		col0.getColumn().setText(Messages.AutoRuleComponent_name); 
+		col0.getColumn().setText(Messages.AutoRuleComponent_name);
 		col0.getColumn().setWidth(100);
 		col0.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
@@ -90,7 +93,7 @@ public class AutoRuleComponent {
 			}
 		});
 		TableViewerColumn col1 = new TableViewerColumn(ruleViewer, SWT.NONE);
-		col1.getColumn().setText(Messages.AutoRuleComponent_group); 
+		col1.getColumn().setText(Messages.AutoRuleComponent_group);
 		col1.getColumn().setWidth(180);
 		col1.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
@@ -120,21 +123,21 @@ public class AutoRuleComponent {
 				if (element instanceof AutoRule) {
 					AutoRule rule = (AutoRule) element;
 					if (rule.hasCustomIntervals())
-						return Messages.AutoRuleComponent_custom; 
+						return Messages.AutoRuleComponent_custom;
 					QueryField qfield = rule.getQfield();
 					switch (qfield.getAutoPolicy()) {
 					case QueryField.AUTO_DISCRETE:
 						if (qfield.getEnumeration() != null)
-							return Messages.AutoRuleComponent_enum; 
+							return Messages.AutoRuleComponent_enum;
 						if (qfield.getType() == QueryField.T_BOOLEAN)
-							return Messages.AutoRuleComponent_bool; 
+							return Messages.AutoRuleComponent_bool;
 						return Messages.AutoRuleComponent_discrete;
 					case QueryField.AUTO_LINEAR:
 						return Messages.AutoRuleComponent_linear;
 					case QueryField.AUTO_LOG:
 						return Messages.AutoRuleComponent_exp;
 					case QueryField.AUTO_CONTAINS:
-						return Messages.AutoRuleComponent_arbitrary; 
+						return Messages.AutoRuleComponent_arbitrary;
 					case QueryField.AUTO_SELECT:
 						return Messages.AutoRuleComponent_multiple;
 					}
@@ -143,7 +146,7 @@ public class AutoRuleComponent {
 			}
 		});
 		TableViewerColumn col4 = new TableViewerColumn(ruleViewer, SWT.NONE);
-		col4.getColumn().setText(Messages.AutoRuleComponent_parms); 
+		col4.getColumn().setText(Messages.AutoRuleComponent_parms);
 		col4.getColumn().setWidth(220);
 		col4.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
@@ -175,15 +178,34 @@ public class AutoRuleComponent {
 		layoutData.heightHint = 300;
 		ruleViewer.getTable().setLayoutData(layoutData);
 		ruleViewer.setContentProvider(ArrayContentProvider.getInstance());
+		ruleViewer.getControl().addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.keyCode == SWT.CTRL)
+					cntrlDwn = true;
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.keyCode == SWT.CTRL)
+					cntrlDwn = false;
+			}
+		});
 		ruleViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateButtons();
+				if (cntrlDwn) {
+					if (editAutoButton.isEnabled())
+						editRule();
+					cntrlDwn = false;
+				}
 			}
 		});
 		ruleViewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event) {
-				editRule();
+				if (!cntrlDwn && editAutoButton.isEnabled())
+					editRule();
 			}
 		});
 		ruleViewer.setInput(autoRules);
@@ -208,7 +230,7 @@ public class AutoRuleComponent {
 		});
 		editAutoButton = new Button(autoButtonBar, SWT.PUSH);
 		editAutoButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		editAutoButton.setText(Messages.AutoRuleComponent_edit); 
+		editAutoButton.setText(Messages.AutoRuleComponent_edit);
 		editAutoButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -240,8 +262,8 @@ public class AutoRuleComponent {
 		sep.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		applyButton = new Button(autoButtonBar, SWT.PUSH);
 		applyButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-		applyButton.setText(Messages.AutoRuleComponent_apply); 
-		applyButton.setToolTipText(Messages.AutoRuleComponent_apply_tooltip); 
+		applyButton.setText(Messages.AutoRuleComponent_apply);
+		applyButton.setToolTipText(Messages.AutoRuleComponent_apply_tooltip);
 		applyButton.addSelectionListener(new SelectionAdapter() {
 			@SuppressWarnings("unchecked")
 			@Override

@@ -1,0 +1,635 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+IPTC - International Press Telecommunications Council
+Royal Albert House, Windsor, Berkshire SL4 1BE, England
+www.iptc.org
+
+Non-Exclusive License Agreement for International Press
+Telecommunications Council Specifications and Related Documentation
+
+IMPORTANT: International Press Telecommunications Council (IPTC)
+standard specifications for news (the Specifications) and supporting
+software, documentation, technical reports, web sites and other
+material related to the Specifications (the Materials) including the
+document accompanying this license (the Document), whether in a paper
+or electronic format, are made available to you subject to the terms
+stated below. By obtaining, using and/or copying the Specifications or
+Materials, you (the licensee) agree that you have read, understood,
+and will comply with the following terms and conditions.
+
+1. The Specifications and Materials are licensed for use only on the
+condition that you agree to be bound by the terms of this license.
+Subject to this and other licensing requirements contained herein, you
+may, on a non-exclusive basis, use the Specifications and Materials.
+
+2. The IPTC openly provides the Specifications and Materials for
+voluntary use by individuals, partnerships, companies, corporations,
+organizations and any other entity for use at the entity's own risk.
+This disclaimer, license and release is intended to apply to the IPTC,
+its officers, directors, agents, representatives, members,
+contributors, affiliates, contractors, or co-venturers acting jointly
+or severally.
+
+3. The Document and translations thereof may be copied and furnished
+to others, and derivative works that comment on or otherwise explain
+it or assist in its implementation may be prepared, copied, published
+and distributed, in whole or in part, without restriction of any kind,
+provided that the copyright and license notices and references to the
+IPTC appearing in the Document and the terms of this Specifications
+License Agreement are included on all such copies and derivative
+works. Further, upon the receipt of written permission from the IPTC,
+the Document may be modified for the purpose of developing
+applications that use IPTC Specifications or as required to translate
+the Document into languages other than English.
+
+4. Any use, duplication, distribution, or exploitation of the Document
+and Specifications and Materials in any manner is at your own risk.
+
+5. NO WARRANTY, EXPRESSED OR IMPLIED, IS MADE REGARDING THE ACCURACY,
+ADEQUACY, COMPLETENESS, LEGALITY, RELIABILITY OR USEFULNESS OF ANY
+INFORMATION CONTAINED IN THE DOCUMENT OR IN ANY SPECIFICATION OR OTHER
+PRODUCT OR SERVICE PRODUCED OR SPONSORED BY THE IPTC. THE DOCUMENT AND
+THE INFORMATION CONTAINED HEREIN AND INCLUDED IN ANY SPECIFICATION OR
+OTHER PRODUCT OR SERVICE OF THE IPTC IS PROVIDED ON AN "AS IS" BASIS.
+THE IPTC DISCLAIMS ALL WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING, BUT NOT LIMITED TO, ANY ACTUAL OR ASSERTED WARRANTY OF NON-
+INFRINGEMENT OF PROPRIETARY RIGHTS, MERCHANTABILITY, OR FITNESS FOR A
+PARTICULAR PURPOSE. NEITHER THE IPTC NOR ITS CONTRIBUTORS SHALL BE
+HELD LIABLE FOR ANY IMPROPER OR INCORRECT USE OF INFORMATION. NEITHER
+THE IPTC NOR ITS CONTRIBUTORS ASSUME ANY RESPONSIBILITY FOR ANYONE'S
+USE OF INFORMATION PROVIDED BY THE IPTC. IN NO EVENT SHALL THE IPTC OR
+ITS CONTRIBUTORS BE LIABLE TO ANYONE FOR DAMAGES OF ANY KIND,
+INCLUDING BUT NOT LIMITED TO, COMPENSATORY DAMAGES, LOST PROFITS, LOST
+DATA OR ANY FORM OF SPECIAL, INCIDENTAL, INDIRECT, CONSEQUENTIAL OR
+PUNITIVE DAMAGES OF ANY KIND WHETHER BASED ON BREACH OF CONTRACT OR
+WARRANTY, TORT, PRODUCT LIABILITY OR OTHERWISE.
+
+6. The IPTC takes no position regarding the validity or scope of any
+Intellectual Property or other rights that might be claimed to pertain
+to the implementation or use of the technology described in the
+Document or the extent to which any license under such rights might or
+might not be available. The IPTC does not represent that it has made
+any effort to identify any such rights. Copies of claims of rights
+made available for publication, assurances of licenses to be made
+available, or the result of an attempt made to obtain a general
+license or permission for the use of such proprietary rights by
+implementers or users of the Specifications and Materials, can be
+obtained from the Managing Director of the IPTC.
+
+7. By using the Specifications and Materials including the Document in
+any manner or for any purpose, you release the IPTC from all
+liabilities, claims, causes of action, allegations, losses, injuries,
+damages, or detriments of any nature arising from or relating to the
+use of the Specifications, Materials or any portion thereof. You
+further agree not to file a lawsuit, make a claim, or take any other
+formal or informal legal action against the IPTC, resulting from your
+acquisition, use, duplication, distribution, or exploitation of the
+Specifications, Materials or any portion thereof. Finally, you hereby
+agree that the IPTC is not liable for any direct, indirect, special or
+consequential damages arising from or relating to your acquisition,
+use, duplication, distribution, or exploitation of the Specifications,
+Materials or any portion thereof.
+
+8. Specifications and Materials may be downloaded or copied provided
+that ALL copies retain the ownership, copyright and license notices.
+
+9. Materials may not be edited, modified, or presented in a context
+that creates a misleading or false impression or statement as to the
+positions, actions, or statements of the IPTC.
+
+10. The name and trademarks of the IPTC may not be used in
+advertising, publicity, or in relation to products or services and
+their names without the specific, written prior permission of the
+IPTC. Any permitted use of the trademarks of the IPTC, whether
+registered or not, shall be accompanied by an appropriate mark and
+attribution, as agreed with the IPTC.
+
+11. Specifications may be extended by both members and non-members to
+provide additional functionality (Extended Specifications) provided
+that there is a clear recognition of the IPTC IP and its ownership in
+the Extended Specifications and the related documentation and provided
+that the extensions are clearly identified and provided that a
+perpetual license is granted by the creator of the Extended
+Specifications for other members and non-members to use the Extended
+Specifications and to continue extensions of the Extended
+Specifications. The IPTC does not waive any of its rights in the
+Specifications and Materials in this context. The Extended
+Specifications may be considered the intellectual property of their
+creator. The IPTC expressly disclaims any responsibility for damage
+caused by an extension to the Specifications.
+
+12. Specifications and Materials may be included in derivative work of
+both members and non-members provided that there is a clear
+recognition of the IPTC IP and its ownership in the derivative work
+and its related documentation. The IPTC does not waive any of its
+rights in the Specifications and Materials in this context. Derivative
+work in its entirety may be considered the intellectual property of
+the creator of the work .The IPTC expressly disclaims any
+responsibility for damage caused when its IP is used in a derivative
+context.
+
+13. This Specifications License Agreement is perpetual subject to your
+conformance to the terms of this Agreement. The IPTC may terminate
+this Specifications License Agreement immediately upon your breach of
+this Agreement and, upon such termination you will cease all use,
+duplication, distribution, and/or exploitation in any manner of the
+Specifications and Materials.
+
+14. This Specifications License Agreement reflects the entire
+agreement of the parties regarding the subject matter hereof and
+supersedes all prior agreements or representations regarding such
+matters, whether written or oral. To the extent any portion or
+provision of this Specifications License Agreement is found to be
+illegal or unenforceable, then the remaining provisions of this
+Specifications License Agreement will remain in full force and effect
+and the illegal or unenforceable provision will be construed to give
+it such effect as it may properly have that is consistent with the
+intentions of the parties.
+
+15. This Specifications License Agreement may only be modified in
+writing signed by an authorized representative of the IPTC.
+
+16. This Specifications License Agreement is governed by the law of
+United Kingdom, as such law is applied to contracts made and fully
+performed in the United Kingdom. Any disputes arising from or relating
+to this Specifications License Agreement will be resolved in the
+courts of the United Kingdom. You consent to the jurisdiction of such
+courts over you and covenant not to assert before such courts any
+objection to proceeding in such forums.
+
+IF YOU DO NOT AGREE TO THESE TERMS YOU MUST CEASE ALL USE OF THE
+SPECIFICATIONS AND MATERIALS NOW. IF YOU HAVE ANY QUESTIONS ABOUT
+THESE TERMS, PLEASE CONTACT THE MANAGING DIRECTOR OF THE INTERNATIONAL
+PRESS TELECOMMUNICATION COUNCIL. AS OF THE DATE OF THIS REVISION OF
+THIS SPECIFICATIONS LICENSE AGREEMENT YOU MAY CONTACT THE IPTC at
+http://www.iptc.org.
+
+License agreement version of: 30 January 2006
+-->
+<!DOCTYPE NewsML PUBLIC "urn:newsml:iptc.org:20001006:NewsMLv1.0.dtd:1" "..\NewsML\1.0\specification\NewsML_1.0.dtd">
+<NewsML>
+	<Catalog Href="http://www.iptc.org/IPTC/catalog/catalog.IptcMasterCatalog.xml"/>
+	<NewsEnvelope>
+		<DateAndTime>20060821T120000+0000</DateAndTime>
+	</NewsEnvelope>
+	<NewsItem>
+		<Identification>
+			<NewsIdentifier>
+				<ProviderId>iptc.org</ProviderId>
+				<DateId>20001006</DateId>
+				<NewsItemId>topicset.iptc-genre</NewsItemId>
+				<RevisionId PreviousRevision="7" Update="N">8</RevisionId>
+				<PublicIdentifier>urn:newsml:iptc.org:20001006:topicset.iptc-genre:8</PublicIdentifier>
+			</NewsIdentifier>
+		</Identification>
+		<NewsManagement>
+			<NewsItemType Scheme="IptcNewsItemType" FormalName="TopicSet"/>
+			<FirstCreated>20001006T120000+0000</FirstCreated>
+			<ThisRevisionCreated>20060821T120000+0000</ThisRevisionCreated>
+			<Status Scheme="IptcStatus" FormalName="Usable"/>
+		</NewsManagement>
+		<TopicSet Duid="iptc.genre" Scheme="IptcTopicType" FormalName="Genre">
+
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Current</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Current</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object content is about events taking place at the time of the report.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Analysis</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Analysis</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains data and conclusions drawn by a journalist who has researched the story in depth.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Archive material</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Archive material</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains material distributed previously that has been selected from the originator's archives.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Background</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Background</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object provides some scene setting and explanation for the event being reported.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Feature</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Feature</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object content is about a particular event or individual that may not be significant to the current breaking news.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Forecast</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Forecast</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains opinion as to the outcome of a future event.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">History</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">History</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object content is based on previous rather than current events.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Obituary</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Obituary</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a narrative about an individual's life and achievements for publication after his or her death.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Opinion</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Opinion</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains an editorial comment that reflects the views of the author.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Polls and Surveys</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Polls and Surveys</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains numeric or other information produced as a result of questionnaires or interviews.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Profile</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Profile</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a description of the life or activity of a news subject (often a living individual).</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Results Listings and Statistics</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Results Listings and Statistics</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains alphanumeric data suitable for presentation in tabular form.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Summary</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Summary</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a single item synopsis of a number of news stories (generally unrelated).</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Transcript and Verbatim</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Transcript and Verbatim</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a word for word report of a discussion or briefing without significant journalistic intervention.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Interview</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Interview</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a report of a dialogue with a news source that gives it significant voice (includes Q and A).</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">From the Scene</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">From the Scene</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a report from the scene of an event.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Retrospective</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Retrospective</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains material that looks back on a specific (generally long) period of time such as a season, quarter, year or decade.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Update</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Update</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains an intraday snapshot (as for electronic services) of a single news subject.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Wrapup</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Wrapup</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a recap of a running story (such as the end of the day).</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Press Release</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Press Release</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains promotional material or information provided to a news organisation.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Synopsis</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Synopsis</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a condensed version of a single news item.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Quote</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Quote</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a one or two sentence verbatim in direct quote.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Press-Digest</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Press-Digest</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains an editorial comment by another medium completely or in parts without significant journalistic changes.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Review</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Review</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a critique of a creative activity or service (for example a book, a film or a restaurant).</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Curtain Raiser</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Curtain Raiser</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains information about the staging and outcome of an immediately upcoming event.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Actuality</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Actuality</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains the recording of the event.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Question and Answer Session</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Question and Answer Session</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains the interviewer and subject questions and answers.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Music</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Music</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains music alone.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Response to a Question</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Response to a Question</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a reply to a question.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Raw Sound</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Raw Sound</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains unedited sounds.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Scener</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Scener</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a description of the event circumstances.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Text only</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Text only</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a transcription of text.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Voicer</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Voicer</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains only voice.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Fixture</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Fixture</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains data that occurs often and predictably.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Wrap</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Wrap</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a complete summary of the event.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">1</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Daybook</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Daybook</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">Items filed on a regular basis that are lists of upcoming events with time and place, designed to inform others of events for planning purposes.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">5</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">5</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Special Report</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Special Report</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">In-depth examination of a single subject requiring extensive research and usually presented at great length, either as a single item or as a series of items.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">5</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">5</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Advice</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Advice</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains advice, typically letters and answers about personal problems, that are publishable.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">5</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">5</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Program</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Program</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">A news item giving lists of intended events and time to be covered by the news provider. Each program covers a day, a week, a month or a year. The covered period is referenced as a keyword.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">5</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">5</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Exclusive</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Exclusive</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">Information content, in any form, that is unique to a specific information provider.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">5</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">5</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Anniversary</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Anniversary</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">Stories about the anniversary of some important event that took place in recent history, usually bringing a short review of the event itself.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">6</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">6</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">Side bar and supporting information</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Side bar and supporting information</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">The object contains a related story that provides additional insight into the news event being reported</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">7</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">7</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">horoscope</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Horoscope</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">Astrological forecasts</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">8</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">8</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+<Topic>
+		<TopicType Scheme="IptcTopicType" FormalName="Genre"/>
+		<FormalName Scheme="IptcGenre">almanac</FormalName>
+		<Description xml:lang="en-GB" Variant="Name">Almanac</Description>
+		<Description xml:lang="en-GB" Variant="Explanation">List of data, including birthdays of famous people and items of historical significance, for a given day.</Description>
+		<Description xml:lang="en-GB" Variant="ChangeComment">none</Description>
+		<Description xml:lang="en-GB" Variant="ChangeVersion">8</Description>
+		<Description xml:lang="en-GB" Variant="FirstVersion">8</Description>
+		<Description xml:lang="en-GB" Variant="DeprecatedVersion">0</Description>
+	</Topic>
+		</TopicSet>
+	</NewsItem>
+</NewsML>

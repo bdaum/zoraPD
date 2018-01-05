@@ -109,12 +109,11 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 			Asset asset = null;
 			if (ob instanceof Asset)
 				asset = (Asset) ob;
-			else if (ob instanceof List<?>) {
+			else if (ob instanceof List<?>)
 				for (Asset a : (List<Asset>) ob) {
 					asset = a;
 					break;
 				}
-			}
 			if (asset != null) {
 				ImageRegion[] foundRegions = null;
 				String[] regionIds = asset.getPerson();
@@ -126,6 +125,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		}
 	}
 
+	private static final int THRESHHOLD = 3;
 	protected IAction editAction;
 	protected IAction editWithAction;
 	protected IAction viewImageAction;
@@ -160,6 +160,9 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	private IAction slideshowAction;
 	private IAction copyAction;
 	private IAction pasteAction;
+	private boolean dragging;
+	private int ignoreTab;
+
 
 	public void rotate(Asset asset, int degrees) {
 		OperationJob.executeOperation(new RotateOperation(Collections.singletonList(asset), degrees), this);
@@ -479,10 +482,6 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		return (contents instanceof String[] && ((String[]) contents).length > 0);
 	}
 
-	private static final int THRESHHOLD = 3;
-	private boolean dragging;
-	// private PasteAction pasteHandler;
-	private int ignoreTab;
 
 	public boolean hasGps() {
 		int n = 0;

@@ -25,10 +25,9 @@ import java.awt.event.KeyEvent;
 import java.awt.geom.Point2D;
 
 import org.eclipse.swt.SWT;
-
-import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.util.PDimension;
+import org.piccolo2d.PNode;
+import org.piccolo2d.event.PInputEvent;
+import org.piccolo2d.util.PDimension;
 
 public class TextEventHandler {
 	private static final int MINDRAGEVENTS = 2;
@@ -126,7 +125,7 @@ public class TextEventHandler {
 
 	private static void toFront(PNode node) {
 		while (node != null) {
-			node.moveToFront();
+			node.raiseToTop();
 			node = node.getParent();
 		}
 	}

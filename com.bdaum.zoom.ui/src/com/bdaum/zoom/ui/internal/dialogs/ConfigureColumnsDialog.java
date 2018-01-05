@@ -49,6 +49,7 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.views.AbstractPropertiesView.ViewComparator;
 import com.bdaum.zoom.ui.internal.views.Messages;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
@@ -146,8 +147,8 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 		viewer.setLabelProvider(new MetadataLabelProvider());
 		viewer.setContentProvider(new MetadataContentProvider());
 		viewer.setComparator(new ViewComparator());
+		UiUtilities.installDoubleClickExpansion(viewer);
 		viewer.addFilter(new ViewerFilter() {
-
 			@Override
 			public boolean select(Viewer aViewer, Object parentElement,
 					Object element) {
@@ -163,7 +164,6 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 		viewer.setInput(QueryField.ALL);
 		viewer.expandToLevel(2);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateButtons();
 			}
@@ -207,7 +207,6 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 		viewer.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateButtons();
 			}

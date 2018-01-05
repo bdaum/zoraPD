@@ -62,6 +62,7 @@ public class Constants {
 	public final static String CATALOGEXTENSION = BatchConstants.CATEXTENSION;
 	public final static String KEYWORDFILEEXTENSION = ".zkf"; //$NON-NLS-1$
 	public final static String CATEGORYFILEEXTENSION = ".zcf"; //$NON-NLS-1$
+	public final static String VOCABFILEEXTENSION = ".zvo"; //$NON-NLS-1$
 	public final static String INDEXEXTENSION = ".zix"; //$NON-NLS-1$
 	public final static String OID = "stringId"; //$NON-NLS-1$
 

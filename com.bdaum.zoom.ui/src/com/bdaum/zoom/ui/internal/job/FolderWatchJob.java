@@ -40,6 +40,7 @@ import com.bdaum.zoom.cat.model.meta.WatchedFolderImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.IRecipeDetector;
 import com.bdaum.zoom.core.IVolumeManager;
+import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
 import com.bdaum.zoom.core.internal.FileWatchManager;
@@ -92,9 +93,12 @@ public class FolderWatchJob extends SynchronizeCatJob {
 
 	private void watchFolders(IProgressMonitor monitor, List<IRecipeDetector> activeRecipeDetectors,
 			FileWatchManager fileWatchManager) {
-		Meta meta = activator.getDbManager().getMeta(true);
+		IDbManager dbManager = activator.getDbManager();
+		Meta meta = dbManager.getMeta(true);
 		if (meta.getPauseFolderWatch())
 			return;
+		long lastScan = meta.getLastWatchedFolderScan();
+		long startTime = System.currentTimeMillis();
 		setYieldStart();
 		if (watchedFolders == null) {
 			List<String> folders = meta.getWatchedFolder();
@@ -120,20 +124,23 @@ public class FolderWatchJob extends SynchronizeCatJob {
 						filterChain.setBaseLength(folderFile.getAbsolutePath().length() + 1);
 					}
 					watchFolder(folderFile, monitor, 1000000, System.currentTimeMillis(), observedFolder, filterChain,
-							activeRecipeDetectors, fileWatchManager);
+							activeRecipeDetectors, fileWatchManager, lastScan);
 				}
 				if (monitor.isCanceled())
 					break;
 			}
 			monitor.done();
 		}
-		if (!monitor.isCanceled())
+		if (!monitor.isCanceled()) {
 			activator.purgeObsoleteWatchedFolderEntries();
+			meta.setLastWatchedFolderScan(startTime);
+			dbManager.storeAndCommit(meta);
+		}
 	}
 
 	private void watchFolder(File folder, IProgressMonitor monitor, int work, long timeOfUpdate,
 			WatchedFolder observedFolder, FilterChain filterChain, List<IRecipeDetector> activeRecipeDetectors,
-			FileWatchManager fileWatchManager) {
+			FileWatchManager fileWatchManager, long lastScan) {
 		try {
 			File[] members = folder.listFiles();
 			if (members != null && members.length > 0) {
@@ -152,31 +159,28 @@ public class FolderWatchJob extends SynchronizeCatJob {
 									.getObservedSubfolder(observedFolder, member);
 							if (observedMember != null)
 								watchFolder(member, monitor, incr, System.currentTimeMillis(), observedMember,
-										filterChain, activeRecipeDetectors, fileWatchManager);
+										filterChain, activeRecipeDetectors, fileWatchManager, lastScan);
 						}
 					} else {
 						monitor.worked(incr);
-						if (filter.accept(member)) {
-							if (fileWatchManager != null && fileWatchManager.isFileIgnored(member))
-								continue;
-							if ((filterChain == null || filterChain.accept(member, false))) {
-								yield();
-								if (xmpMap == null) {
-									xmpMap = new HashMap<String, File>(members.length * 3 / 2);
-									for (File xmpCandidate : members)
-										if (xmpCandidate.isFile()) {
-											String xmpName = xmpCandidate.getName();
-											if (xmpName.toLowerCase().endsWith(XMPEXTENSION))
-												xmpMap.put(xmpName.substring(0, xmpName.length() - XMPEXTLEN),
-														xmpCandidate);
-										}
-								}
-								if (observedFolder.getTransfer())
-									newFiles.add(member);
-								else
-									activator.classifyFile(member, newFiles, outdatedFiles, xmpMap,
-											activeRecipeDetectors);
+						if (filter.accept(member)
+								&& (fileWatchManager == null || !fileWatchManager.isFileIgnored(member))
+								&& (filterChain == null || filterChain.accept(member, false))) {
+							yield();
+							if (xmpMap == null) {
+								xmpMap = new HashMap<String, File>(members.length * 3 / 2);
+								for (File xmpCandidate : members)
+									if (xmpCandidate.isFile()) {
+										String xmpName = xmpCandidate.getName();
+										if (xmpName.toLowerCase().endsWith(XMPEXTENSION))
+											xmpMap.put(xmpName.substring(0, xmpName.length() - XMPEXTLEN),
+													xmpCandidate);
+									}
 							}
+							if (observedFolder.getTransfer())
+								newFiles.add(member);
+							else
+								activator.classifyFile(member, newFiles, outdatedFiles, xmpMap, activeRecipeDetectors, lastScan);
 						}
 					}
 					work -= incr;

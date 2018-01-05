@@ -159,7 +159,7 @@ import com.bdaum.zoom.ui.internal.preferences.FileEditorMapping;
 import com.bdaum.zoom.ui.internal.views.AssetDropTargetEffect;
 import com.bdaum.zoom.ui.internal.views.IDragHost;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
-import com.bdaum.zoom.ui.views.IImageViewer;
+import com.bdaum.zoom.ui.views.IMediaViewer;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -183,7 +183,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	// The shared instance
 	private static UiActivator plugin;
 
-	private HashMap<String, IImageViewer> viewerMap;
+	private HashMap<String, IMediaViewer> viewerMap;
 
 	private String inputFolderpath;
 
@@ -223,7 +223,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
 	private String[] updaterCommand;
 
-	private CodeParser[] codeParsers = new CodeParser[2];
+	private CodeParser[] codeParsers = new CodeParser[3];
 
 	private boolean repairCat;
 
@@ -909,32 +909,32 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 			clip.stop();
 	}
 
-	public IImageViewer[] getImageViewers() {
-		Map<String, IImageViewer> imageViewerMap = getImageViewerMap();
-		Set<IImageViewer> viewers = new HashSet<IImageViewer>(imageViewerMap.values());
-		IImageViewer[] a = viewers.toArray(new IImageViewer[viewers.size()]);
-		Arrays.sort(a, new Comparator<IImageViewer>() {
-			public int compare(IImageViewer o1, IImageViewer o2) {
+	public IMediaViewer[] getImageViewers() {
+		Map<String, IMediaViewer> imageViewerMap = getImageViewerMap();
+		Set<IMediaViewer> viewers = new HashSet<IMediaViewer>(imageViewerMap.values());
+		IMediaViewer[] a = viewers.toArray(new IMediaViewer[viewers.size()]);
+		Arrays.sort(a, new Comparator<IMediaViewer>() {
+			public int compare(IMediaViewer o1, IMediaViewer o2) {
 				return o1.getName().compareTo(o2.getName());
 			}
 		});
 		return a;
 	}
 
-	public IImageViewer getImageViewer(Asset asset) {
+	public IMediaViewer getMediaViewer(Asset asset) {
 		return getImageViewerMap().get(asset.getFormat());
 	}
 
-	private Map<String, IImageViewer> getImageViewerMap() {
+	private Map<String, IMediaViewer> getImageViewerMap() {
 		if (viewerMap == null) {
-			viewerMap = new HashMap<String, IImageViewer>();
+			viewerMap = new HashMap<String, IMediaViewer>();
 			IExtensionRegistry extensionRegistry = Platform.getExtensionRegistry();
 			IExtensionPoint extensionPoint = extensionRegistry.getExtensionPoint(PLUGIN_ID, "imageViewer"); //$NON-NLS-1$
 			for (IExtension extension : extensionPoint.getExtensions()) {
 				for (IConfigurationElement conf : extension.getConfigurationElements()) {
 					String name = conf.getAttribute("name"); //$NON-NLS-1$
 					try {
-						IImageViewer viewer = (IImageViewer) conf.createExecutableExtension("class"); //$NON-NLS-1$
+						IMediaViewer viewer = (IMediaViewer) conf.createExecutableExtension("class"); //$NON-NLS-1$
 						viewer.setName(name);
 						viewer.setId(conf.getAttribute("id")); //$NON-NLS-1$
 						StringTokenizer st = new StringTokenizer(conf.getAttribute("formats")); //$NON-NLS-1$

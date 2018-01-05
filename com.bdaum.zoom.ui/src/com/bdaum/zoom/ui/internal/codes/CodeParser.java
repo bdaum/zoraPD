@@ -24,9 +24,12 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,19 +44,20 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
+import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.preferences.PreferenceConstants;
+import com.ibm.icu.util.StringTokenizer;
 
+@SuppressWarnings("restriction")
 public class CodeParser {
 
 	private static final String DATE_AND_TIME = "DateAndTime"; //$NON-NLS-1$
-
 	private static final String SUBJECT_DETAIL = "SubjectDetail"; //$NON-NLS-1$
-
 	private static final String SUBJECT_MATTER = "SubjectMatter"; //$NON-NLS-1$
-
 	private static final String CODEFOLDER = "codes/XML/"; //$NON-NLS-1$
-
 	private static final String TOPIC = "Topic"; //$NON-NLS-1$
 	private static final String FORMALNAME = "FormalName"; //$NON-NLS-1$
 	private static final String DESCRIPTION = "Description"; //$NON-NLS-1$
@@ -63,8 +67,8 @@ public class CodeParser {
 	private static final String TOPICTYPE = "TopicType"; //$NON-NLS-1$
 	private static final String SUBJECT = "Subject"; //$NON-NLS-1$
 	private static final String SCENE = "Scene"; //$NON-NLS-1$
+	private static final String GENRE = "Genre"; //$NON-NLS-1$
 
-	private final StringBuilder text = new StringBuilder();
 	private SAXParser saxParser;
 	private String filename;
 	private File file;
@@ -73,53 +77,86 @@ public class CodeParser {
 	private String msg = ""; //$NON-NLS-1$
 	private Date dateAndTime;
 	private Map<String, Topic> topicMap;
-	private Set<Topic> recentTopics = new HashSet<Topic>();
+	private LinkedList<Topic> recentTopics = new LinkedList<Topic>();
 	private List<Topic> roots = new ArrayList<Topic>(100);
+	private Set<String> customTopics = new HashSet<>();
 	private Topic[] hierarchy;
 	private String[] topicType;
+	private boolean subtopics = false;
+	private boolean byName = false;
+	private boolean allowCustomCode = false;
+	private String id;
 
 	public CodeParser(int type) {
 		switch (type) {
 		case QueryField.SUBJECTCODES:
+			id = PreferenceConstants.V_SUBJECT;
 			filename = "topicset.iptc-subjectcode.xml"; //$NON-NLS-1$
 			title = Messages.CodeParser_subject_codes;
-			msg = Messages.CodeParser_subject_codes_msg + '\n' + Messages.CodeParser_revision;
+			msg = Messages.CodeParser_subject_codes_msg + '\n' + Messages.CodeParser_revision + '\n'
+					+ Messages.CodeParser_custom_defined;
 			topicMap = new HashMap<String, Topic>(2250);
 			topicType = new String[] { SUBJECT, SUBJECT_MATTER, SUBJECT_DETAIL };
 			hierarchy = new Topic[3];
+			allowCustomCode = true;
 			break;
 		case QueryField.SCENECODES:
+			id = PreferenceConstants.V_SCENE;
 			filename = "topicset.iptc-scene.xml"; //$NON-NLS-1$
 			title = Messages.CodeParser_scene_codes;
-			msg = Messages.CodeParser_scene_codes_msg + '\n' + Messages.CodeParser_revision;
+			msg = Messages.CodeParser_scene_codes_msg + '\n' + Messages.CodeParser_revision + '\n'
+					+ Messages.CodeParser_custom_defined;
 			topicMap = new HashMap<String, Topic>(150);
 			topicType = new String[] { SCENE };
 			hierarchy = new Topic[1];
+			allowCustomCode = true;
+			break;
+		case QueryField.GENRECODES:
+			id = PreferenceConstants.V_GENRE;
+			filename = "topicset.iptc-genre.xml"; //$NON-NLS-1$
+			title = Messages.CodeParser_genre;
+			msg = Messages.CodeParser_genre_expl + '\n' + Messages.CodeParser_revision + '\n'
+					+ Messages.CodeParser_custom_defined;
+			topicMap = new HashMap<String, Topic>(150);
+			topicType = new String[] { GENRE };
+			hierarchy = new Topic[1];
+			allowCustomCode = byName = true;
 			break;
 		}
-
-		File installFolder = new File(Platform.getInstallLocation().getURL().getPath());
-		file = new File(installFolder.getParent(), CODEFOLDER + filename);
-		if (!file.exists())
-			file = new File(installFolder, CODEFOLDER + filename);
-		if (file.exists()) {
-			SAXParserFactory factory = SAXParserFactory.newInstance();
-			factory.setValidating(false);
-			try {
-				saxParser = factory.newSAXParser();
-			} catch (Exception e) {
-				UiActivator.getDefault().logError(Messages.CodeParser_error_creating_code_parser, e);
+		if (id != null) {
+			String topics = UiActivator.getDefault().getPreferenceStore().getString(id);
+			if (topics != null) {
+				StringTokenizer st = new StringTokenizer(topics, "\n"); //$NON-NLS-1$
+				while (st.hasMoreTokens())
+					customTopics.add(st.nextToken());
 			}
-		} else
-			UiActivator.getDefault().logError(NLS.bind(Messages.CodeParser_code_catalog_not_found, filename), null);
-		if (saxParser == null) {
-			title = Messages.CodeParser_cat_not_found;
-			msg = NLS.bind(Messages.CodeParser_code_catalog_not_found, filename);
+			File installFolder = new File(Platform.getInstallLocation().getURL().getPath());
+			file = new File(installFolder.getParent(), CODEFOLDER + filename);
+			if (!file.exists())
+				file = new File(installFolder, CODEFOLDER + filename);
+			if (file.exists()) {
+				SAXParserFactory factory = SAXParserFactory.newInstance();
+				factory.setValidating(false);
+				try {
+					saxParser = factory.newSAXParser();
+				} catch (Exception e) {
+					UiActivator.getDefault().logError(Messages.CodeParser_error_creating_code_parser, e);
+				}
+			} else
+				UiActivator.getDefault().logError(NLS.bind(Messages.CodeParser_code_catalog_not_found, filename), null);
+			if (saxParser == null) {
+				title = Messages.CodeParser_cat_not_found;
+				msg = NLS.bind(Messages.CodeParser_code_catalog_not_found, filename);
+			}
 		}
 	}
 
 	public boolean canParse() {
 		return saxParser != null;
+	}
+
+	public boolean hasSubtopics() {
+		return subtopics;
 	}
 
 	public Topic[] loadCodes() {
@@ -147,7 +184,8 @@ public class CodeParser {
 			private boolean name = false;
 			private boolean explanation = false;
 			private Topic topic;
-
+			private final StringBuilder text = new StringBuilder(128);
+			
 			@Override
 			public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
 					throws SAXException {
@@ -168,8 +206,10 @@ public class CodeParser {
 								hierarchy[i] = topic;
 								if (i == 0)
 									roots.add(topic);
-								else
+								else {
 									hierarchy[i - 1].addSubTopic(topic);
+									subtopics = true;
+								}
 							}
 					}
 				}
@@ -230,16 +270,46 @@ public class CodeParser {
 		doLoad();
 		Topic topic = topicMap.get(code);
 		if (topic != null)
-			recentTopics.add(topic);
+			addRecentTopic(topic);
 		return topic;
 	}
 
-	public void addRecentTopic(Topic topic) {
-		recentTopics.add(topic);
+	private void addRecentTopic(Topic topic) {
+		Iterator<Topic> iterator = recentTopics.iterator();
+		while (iterator.hasNext())
+			if (iterator.next().equals(topic)) {
+				iterator.remove();
+				break;
+			}
+		recentTopics.add(0, topic);
 	}
 
 	public Topic[] getRecentTopics() {
 		return recentTopics.toArray(new Topic[recentTopics.size()]);
+	}
+
+	public boolean isByName() {
+		return byName;
+	}
+
+	public boolean hasRecentTopics() {
+		return !recentTopics.isEmpty();
+	}
+
+	public boolean isAllowCustomCode() {
+		return allowCustomCode;
+	}
+
+	public void addCustomTopic(String t) {
+		customTopics.add(t);
+		addRecentTopic(new Topic(t, t, Messages.CodeParser_user_defined));
+		UiActivator.getDefault().getPreferenceStore().putValue(id, Core.toStringList(getCustomTopics(), "\n")); //$NON-NLS-1$
+	}
+
+	public String[] getCustomTopics() {
+		String[] topics = customTopics.toArray(new String[customTopics.size()]);
+		Arrays.sort(topics, Utilities.KEYWORDCOMPARATOR);
+		return topics;
 	}
 
 }

@@ -162,8 +162,7 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 		buttonComp.setLayout(gridLayout);
 		final ISelectionChangedListener varListener = new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
-				selectedVar = (String) ((IStructuredSelection) event.getSelection()).getFirstElement();
-				templateField.insert(selectedVar);
+				templateField.insert(selectedVar = (String) ((IStructuredSelection) event.getSelection()).getFirstElement());
 				varViewer.getCombo().setVisible(false);
 			}
 		};

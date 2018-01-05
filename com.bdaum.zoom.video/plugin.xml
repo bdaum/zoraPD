@@ -18,7 +18,7 @@
          point="com.bdaum.zoom.ui.imageViewer">
       <imageViewer
             class="com.bdaum.zoom.video.internal.views.VideoViewer"
-            formats="AVI MOV MP4 AVCHD MTS M2TS WMV"
+            formats="AVCHD MTS AVI MP4 MOV 3GP 3GPP 3G2 3GPP2 ASF WMV WMA OGG OGV OGM MKV RM"
             id="com.bdaum.zoom.video"
             name="%imageViewer.name.video">
       </imageViewer>

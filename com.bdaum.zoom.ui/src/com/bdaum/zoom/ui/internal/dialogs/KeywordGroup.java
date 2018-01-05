@@ -43,6 +43,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
@@ -57,7 +58,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.location.LocationImpl;
@@ -67,6 +67,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.Utilities;
+import com.bdaum.zoom.fileMonitor.internal.filefilter.WildCardFilter;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -76,8 +77,10 @@ import com.bdaum.zoom.ui.internal.operations.ModifyMetaOperation;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
+import com.bdaum.zoom.ui.internal.widgets.FilterField;
 import com.bdaum.zoom.ui.internal.widgets.FlatGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
+import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
 public class KeywordGroup implements IAdaptable {
@@ -89,20 +92,18 @@ public class KeywordGroup implements IAdaptable {
 		private Map<Character, List<String>> chapters;
 		private String[] applieds;
 		private String[] availables;
-		private List<Character> titles;
 		private boolean isFlat;
 
 		public void dispose() {
 			chapters = null;
 			applieds = null;
 			availables = null;
-			titles = null;
 		}
 
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 			dispose();
-			applieds = appliedKeywords.toArray(new String[appliedKeywords.size()]);
-			Arrays.sort(applieds, UiUtilities.stringComparator);
+			Arrays.sort(applieds = appliedKeywords.toArray(new String[appliedKeywords.size()]),
+					UiUtilities.stringComparator);
 			isFlat = radioGroup.isFlat();
 		}
 
@@ -116,8 +117,7 @@ public class KeywordGroup implements IAdaptable {
 			if (parentElement == AVAILABLE) {
 				if (isFlat)
 					return getAvailables();
-				getChapters();
-				return titles.toArray();
+				return getChapters().keySet().toArray();
 			} else if (parentElement instanceof Character) {
 				List<String> elements = chapters.get(parentElement);
 				if (elements != null)
@@ -144,8 +144,7 @@ public class KeywordGroup implements IAdaptable {
 			if (parentElement == AVAILABLE) {
 				if (isFlat)
 					return getAvailables().length > 0;
-				getChapters();
-				return !titles.isEmpty();
+				return !getChapters().keySet().isEmpty();
 			} else if (parentElement instanceof Character) {
 				List<String> elements = getChapters().get(parentElement);
 				if (elements != null)
@@ -157,28 +156,21 @@ public class KeywordGroup implements IAdaptable {
 		protected Map<Character, List<String>> getChapters() {
 			if (chapters == null) {
 				chapters = new HashMap<Character, List<String>>(60);
-				titles = new ArrayList<>(40);
-				for (String kw : getAvailables()) {
+				for (String kw : getAvailables())
 					if (!kw.isEmpty()) {
 						Character chapterTitle = Character.toUpperCase(kw.charAt(0));
 						List<String> elements = chapters.get(chapterTitle);
-						if (elements == null) {
-							elements = new ArrayList<String>();
-							chapters.put(chapterTitle, elements);
-							titles.add(chapterTitle);
-						}
+						if (elements == null)
+							chapters.put(chapterTitle, elements = new ArrayList<String>());
 						elements.add(kw);
 					}
-				}
 			}
 			return chapters;
 		}
 
 		protected String[] getAvailables() {
-			if (availables == null) {
-				availables = filterKeywords(availableKeywords);
-				Arrays.sort(availables, UiUtilities.stringComparator);
-			}
+			if (availables == null)
+				Arrays.sort(availables = filterKeywords(availableKeywords), UiUtilities.stringComparator);
 			return availables;
 		}
 
@@ -223,15 +215,16 @@ public class KeywordGroup implements IAdaptable {
 			vocabManager = new VocabManager(Core.getCore().getDbManager().getMeta(true).getVocabularies(), this);
 		Composite composite = new Composite(area, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		composite.setLayout(new GridLayout(3, false));
+		composite.setLayout(new GridLayout());
 		if (recentKeywords != null) {
 			Set<String> recentSet = new HashSet<String>(recentKeywords);
 			recentSet.retainAll(predefinedKeywords);
 			if (!recentSet.isEmpty()) {
-				Label recentLabel = new Label(composite, SWT.NONE);
-				recentLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-				recentLabel.setText(tags ? Messages.KeywordGroup_recent_tags : Messages.KeywordGroup_recent_keywords);
-				recentViewer = CheckboxTableViewer.newCheckList(composite, SWT.NO_SCROLL | SWT.V_SCROLL | SWT.BORDER);
+				CGroup recentGroup = new CGroup(composite, SWT.NONE);
+				recentGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+				recentGroup.setText(tags ? Messages.KeywordGroup_recent_tags : Messages.KeywordGroup_recent_keywords);
+				recentGroup.setLayout(new GridLayout());
+				recentViewer = CheckboxTableViewer.newCheckList(recentGroup, SWT.NO_SCROLL | SWT.V_SCROLL);
 				GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1);
 				layoutData.heightHint = 100;
 				recentViewer.getControl().setLayoutData(layoutData);
@@ -260,32 +253,66 @@ public class KeywordGroup implements IAdaptable {
 				});
 			}
 		}
-		Label keywordsLabel = new Label(composite, SWT.NONE);
-		keywordsLabel.setText(tags ? Messages.KeywordGroup_all_tags : Messages.KeywordGroup_all_keywords);
-		radioGroup = new FlatGroup(composite, SWT.NONE, UiActivator.getDefault().getDialogSettings(SETTINGSID),
+		CGroup keywordsGroup = new CGroup(composite, SWT.NONE);
+		keywordsGroup.setText(tags ? Messages.KeywordGroup_all_tags : Messages.KeywordGroup_all_keywords);
+		keywordsGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		keywordsGroup.setLayout(new GridLayout(3, false));
+		radioGroup = new FlatGroup(keywordsGroup, SWT.NONE, UiActivator.getDefault().getDialogSettings(SETTINGSID),
 				"hierarchicalKeywords"); //$NON-NLS-1$
-		radioGroup.setLayoutData(new GridData(SWT.CENTER, SWT.BEGINNING, false, false));
+		radioGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
 		radioGroup.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				updateKeywordViewer(((IStructuredSelection) viewer.getSelection()).getFirstElement());
 			}
 		});
-		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(composite, SWT.NONE);
-		viewer = new CheckboxTreeViewer(composite, SWT.NO_SCROLL | SWT.V_SCROLL | SWT.BORDER | SWT.VIRTUAL);
+		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(keywordsGroup, SWT.NONE);
+		final FilterField filterField = new FilterField(keywordsGroup);
+		GridData layoutData = new GridData(SWT.BEGINNING, SWT.CENTER, true, false, tags ? 3 : 2, 1);
+		layoutData.widthHint = 300;
+		filterField.setLayoutData(layoutData);
+		filterField.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				viewer.setInput(viewer.getInput());
+				viewer.expandAll();
+			}
+		});
+		if (!tags) {
+			final CheckboxButton excludeButton = WidgetFactory.createCheckButton(keywordsGroup,
+					Messages.KeywordGroup_exclude_geographic, new GridData(SWT.END, SWT.CENTER, true, false));
+			excludeButton.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					excludeGeographic = excludeButton.getSelection();
+					updateKeywordViewer(null);
+				}
+			});
+		}
+		viewer = new CheckboxTreeViewer(keywordsGroup, SWT.NO_SCROLL | SWT.V_SCROLL | SWT.BORDER | SWT.VIRTUAL);
 		expandCollapseGroup.setViewer(viewer);
-		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1);
+		layoutData = new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1);
 		layoutData.heightHint = tags ? 200 : 300;
 		viewer.getControl().setLayoutData(layoutData);
 		viewer.setContentProvider(new KeywordContentProvider());
-		viewer.setLabelProvider(new KeywordLabelProvider(vocabManager, ROOT) {
+		KeywordLabelProvider labelProvider = new KeywordLabelProvider(vocabManager, ROOT) {
 			@Override
 			public Font getFont(Object element) {
 				if (externalKeywords != null && externalKeywords.contains(element))
 					return JFaceResources.getBannerFont();
 				return super.getFont(element);
 			}
-		});
+		};
+		viewer.setLabelProvider(labelProvider);
+		viewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
+			@Override
+			public boolean select(Viewer aViewer, Object parentElement, Object element) {
+				if (element == AVAILABLE || element == APPLIED || element instanceof Character)
+					return true;
+				WildCardFilter filter = filterField.getFilter();
+				return filter == null || filter.accept(labelProvider.getText(element));
+			}
+		} });
+		UiUtilities.installDoubleClickExpansion(viewer);
 		ColumnViewerToolTipSupport.enableFor(viewer);
 		availableKeywords = new HashSet<String>(predefinedKeywords);
 		if (selectedKeywords != null)
@@ -296,7 +323,7 @@ public class KeywordGroup implements IAdaptable {
 		keywordVerifyListener = new KeywordVerifyListener(viewer);
 		updateKeywordViewer(null);
 		if (externalKeywords != null) {
-			importButton = new Button(composite, SWT.PUSH);
+			importButton = new Button(keywordsGroup, SWT.PUSH);
 			importButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
 			importButton.setText(Messages.KeywordGroup_import_into_catalog);
 			if (!externalKeywords.isEmpty())
@@ -305,8 +332,8 @@ public class KeywordGroup implements IAdaptable {
 					public void widgetSelected(SelectionEvent e) {
 						Set<String> newKeywords = meta.getKeywords();
 						newKeywords.addAll(externalKeywords);
-						ModifyMetaOperation op = new ModifyMetaOperation(meta, false, null, null, null, null, null, null,
-								null, null, meta.getCumulateImports(), null, null, newKeywords, null, null,
+						ModifyMetaOperation op = new ModifyMetaOperation(meta, false, null, null, null, null, null,
+								null, null, null, meta.getCumulateImports(), null, null, newKeywords, null, null,
 								meta.getThumbnailFromPreview(), null, null, meta.getFolderWatchLatency(),
 								meta.getPauseFolderWatch(), meta.getReadonly(), meta.getAutoWatch(), meta.getSharpen(),
 								meta.getWebpCompression(), meta.getJpegQuality(), meta.getNoIndex(), meta.getLocale(),
@@ -322,32 +349,18 @@ public class KeywordGroup implements IAdaptable {
 			else
 				importButton.setEnabled(false);
 		}
-		Label newKeywordsLabel = new Label(composite, SWT.NONE);
-		newKeywordsLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, tags ? 3 : 2, 1));
-		newKeywordsLabel.setText(tags ? Messages.KeywordGroup_new_tags : Messages.KeywordGroup_new_keywords);
-		if (!tags) {
-			final CheckboxButton excludeButton = WidgetFactory.createCheckButton(composite,
-					Messages.KeywordGroup_exclude_geographic, new GridData(SWT.END, SWT.CENTER, true, false));
-			excludeButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					excludeGeographic = excludeButton.getSelection();
-					updateKeywordViewer(null);
-				}
-			});
-		}
-
+		CGroup newKeywordsGroup = new CGroup(composite, SWT.NONE);
+		newKeywordsGroup.setText(tags ? Messages.KeywordGroup_new_tags : Messages.KeywordGroup_new_keywords);
 		boolean hasVocab = vocabManager != null && vocabManager.getVocabTree() != null;
-		Composite newKwComposite = new Composite(composite, SWT.NONE);
-		newKwComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
-		newKwComposite.setLayout(new GridLayout(hasVocab ? 2 : 1, false));
+		newKeywordsGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
+		newKeywordsGroup.setLayout(new GridLayout(hasVocab ? 2 : 1, false));
 		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		data.heightHint = 50;
-		newKeywordField = new CheckedText(newKwComposite, SWT.BORDER | SWT.MULTI);
+		newKeywordField = new CheckedText(newKeywordsGroup, SWT.BORDER | SWT.MULTI);
 		newKeywordField.setLayoutData(data);
 		newKeywordField.setSpellingOptions(8, ISpellCheckingService.KEYWORDOPTIONS);
 		if (hasVocab) {
-			Button button = new Button(newKwComposite, SWT.PUSH);
+			Button button = new Button(newKeywordsGroup, SWT.PUSH);
 			button.setLayoutData(new GridData(SWT.END, SWT.FILL, false, false));
 			button.setText(Messages.KeywordGroup_vocab);
 			button.addSelectionListener(new SelectionAdapter() {
@@ -361,7 +374,7 @@ public class KeywordGroup implements IAdaptable {
 					}
 				}
 			});
-			vocabLabel = new CLabel(newKwComposite, SWT.NONE);
+			vocabLabel = new CLabel(newKeywordsGroup, SWT.NONE);
 			vocabLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			vocabLabel.addMouseListener(new MouseAdapter() {
 				@Override
@@ -394,7 +407,6 @@ public class KeywordGroup implements IAdaptable {
 			});
 		}
 		viewer.addCheckStateListener(new ICheckStateListener() {
-
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				Object e = event.getElement();
 				if (e instanceof String) {
@@ -407,14 +419,12 @@ public class KeywordGroup implements IAdaptable {
 							appliedKeywords.add(element);
 							availableKeywords.remove(element);
 						}
-					} else {
-						if (element == APPLIED) {
-							availableKeywords.addAll(appliedKeywords);
-							appliedKeywords.clear();
-						} else if (element != AVAILABLE) {
-							appliedKeywords.remove(element);
-							availableKeywords.add(element);
-						}
+					} else if (element == APPLIED) {
+						availableKeywords.addAll(appliedKeywords);
+						appliedKeywords.clear();
+					} else if (element != AVAILABLE) {
+						appliedKeywords.remove(element);
+						availableKeywords.add(element);
 					}
 					updateKeywordViewer(element);
 					if (recentViewer != null)

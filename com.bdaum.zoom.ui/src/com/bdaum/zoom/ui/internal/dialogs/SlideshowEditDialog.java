@@ -70,6 +70,7 @@ import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.PrivacyGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
+import com.bdaum.zoom.ui.widgets.NumericControl;
 
 public class SlideshowEditDialog extends ZTitleAreaDialog {
 
@@ -78,6 +79,8 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	public static final String DELAY = "delay"; //$NON-NLS-1$
 
 	public static final String FADING = "fading"; //$NON-NLS-1$
+
+	public static final String ZOOM = "zoom"; //$NON-NLS-1$
 
 	public static final String TITLEDISPLAY = "titleDisplay"; //$NON-NLS-1$
 
@@ -150,6 +153,10 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	private int privacy;
 
 	private PrivacyGroup privacyGroup;
+
+	private NumericControl zoomField;
+
+	private int zoom;
 
 	public SlideshowEditDialog(Shell parentShell, GroupImpl group, SlideShowImpl current, String title, boolean adhoc,
 			boolean canUndo) {
@@ -257,6 +264,11 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 		effectField.setItems(EFFECTS);
 		effectField.setVisibleItemCount(EFFECTS.length / 2);
 
+		new Label(parms, SWT.NONE).setText(Messages.SlideshowEditDialog_zoom_in);
+		zoomField = new NumericControl(parms, SWT.NONE);
+		zoomField.setMaximum(100);
+		zoomField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
+
 		new Label(parms, SWT.NONE).setText(Messages.SlideshowEditDialog_title_display);
 		titleDisplayField = new Text(parms, SWT.BORDER);
 		titleDisplayField.setLayoutData(new GridData(40, SWT.DEFAULT));
@@ -342,6 +354,11 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			effect = 0;
 		}
 		try {
+			zoom = settings.getInt(ZOOM);
+		} catch (NumberFormatException e) {
+			zoom = 0;
+		}
+		try {
 			fading = settings.getInt(FADING);
 		} catch (NumberFormatException e) {
 			// ignore
@@ -375,6 +392,8 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			}
 			duration = show.getDuration();
 			fading = show.getFading();
+			zoom = show.getZoom();
+			effect = show.getEffect();
 			titleDisplay = show.getTitleDisplay();
 			titleContent = show.getTitleContent();
 			fromPreview = show.getFromPreview();
@@ -383,6 +402,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 		af.setMaximumFractionDigits(1);
 		durationField.setText(af.format(duration / 1000d));
 		effectField.select(effect - Constants.SLIDE_TRANSITION_START);
+		zoomField.setSelection(zoom);
 		fadingField.setText(af.format(fading / 1000d));
 		titleDisplayField.setText(af.format(titleDisplay / 1000d));
 		titleContentField.select(titleContent);
@@ -431,10 +451,13 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			result.setDuration(duration);
 			settings.put(DELAY, duration);
 			effect = Math.max(0, effectField.getSelectionIndex()) + Constants.SLIDE_TRANSITION_START;
+			zoom = zoomField.getSelection();
+			result.setZoom(zoom);
 			settings.put(EFFECT, effect);
 			result.setEffect(effect);
 			fading = stringToMsec(fadingField);
 			result.setFading(fading);
+			settings.put(ZOOM, zoom);
 			settings.put(FADING, fading);
 			titleDisplay = stringToMsec(titleDisplayField);
 			result.setTitleDisplay(titleDisplay);
@@ -516,7 +539,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 				for (Wall wall : walls) {
 					SlideImpl newSlide = new SlideImpl(wall.getLocation(), seqNo++, "", Constants.SLIDE_NO_THUMBNAILS, //$NON-NLS-1$
 							show.getFading(), show.getFading(), show.getDuration(), show.getFading(), show.getEffect(),
-							true, QueryField.SAFETY_SAFE, null);
+							0, 0, 0, true, QueryField.SAFETY_SAFE, null);
 					dbManager.store(newSlide);
 					show.addEntry(newSlide.getStringId());
 					for (String exhibitId : wall.getExhibit()) {
@@ -528,7 +551,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 								continue;
 							newSlide = new SlideImpl(exhibit.getTitle(), seqNo++, exhibit.getDescription(),
 									Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(),
-									show.getDuration(), show.getFading(), show.getEffect(), false,
+									show.getDuration(), show.getFading(), show.getEffect(), show.getZoom(), 0, 0, false,
 									QueryField.SAFETY_SAFE, assetId);
 							dbManager.store(newSlide);
 							show.addEntry(newSlide.getStringId());
@@ -541,7 +564,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 				for (Storyboard storyboard : storyboards) {
 					SlideImpl newSlide = new SlideImpl(storyboard.getTitle(), seqNo++, storyboard.getDescription(),
 							Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(), show.getDuration(),
-							show.getFading(), show.getEffect(), true, QueryField.SAFETY_SAFE, null);
+							show.getFading(), show.getEffect(), 0, 0, 0, true, QueryField.SAFETY_SAFE, null);
 					dbManager.store(newSlide);
 					show.addEntry(newSlide.getStringId());
 					for (String exhibitId : storyboard.getExhibit()) {
@@ -553,7 +576,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 								continue;
 							newSlide = new SlideImpl(exhibit.getCaption(), seqNo++, exhibit.getDescription(),
 									Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(),
-									show.getDuration(), show.getFading(), show.getEffect(), false,
+									show.getDuration(), show.getFading(), show.getEffect(), show.getZoom(), 0, 0, false,
 									QueryField.SAFETY_SAFE, assetId);
 							dbManager.store(newSlide);
 							show.addEntry(newSlide.getStringId());
@@ -567,7 +590,8 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 						continue;
 					SlideImpl newSlide = new SlideImpl(UiUtilities.createSlideTitle(asset), seqNo++, null,
 							Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(), show.getDuration(),
-							show.getFading(), show.getEffect(), false, QueryField.SAFETY_SAFE, asset.getStringId());
+							show.getFading(), show.getEffect(), show.getZoom(), 0, 0, false, QueryField.SAFETY_SAFE,
+							asset.getStringId());
 					dbManager.store(newSlide);
 					show.addEntry(newSlide.getStringId());
 				}

@@ -21,6 +21,8 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -126,6 +128,7 @@ public class RenameGroup extends Composite {
 	private boolean transfer;
 	private int start = 1;
 	private NumericControl startField;
+	protected boolean cntrlDwn;
 
 	public RenameGroup(Composite parent, int style, Asset asset, boolean fieldSelection,
 			RenamingTemplate[] systemTemplates, boolean transfer) {
@@ -196,10 +199,28 @@ public class RenameGroup extends Composite {
 		templateViewer.getControl().setLayoutData(layoutData);
 		templateViewer.setContentProvider(ArrayContentProvider.getInstance());
 		templateViewer.setLabelProvider(new TemplateLabelProvider());
+		templateViewer.getControl().addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.keyCode == SWT.CTRL)
+					cntrlDwn = true;
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.keyCode == SWT.CTRL)
+					cntrlDwn = false;
+			}
+		});
 		templateViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
-				updateParameterFields();
 				updateButtons();
+				if (cntrlDwn) {
+					if (editButton.isEnabled())
+						editTemplate();
+					cntrlDwn = false;
+				}
+				updateParameterFields();
 				fireSelectionChanged(event);
 			}
 		});
@@ -220,11 +241,7 @@ public class RenameGroup extends Composite {
 		editButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				RenamingTemplate t = (RenamingTemplate) ((IStructuredSelection) templateViewer.getSelection())
-						.getFirstElement();
-				t = openEditDialog(getParent(), t);
-				if (t != null)
-					templateViewer.update(t, null);
+				editTemplate();
 			}
 		});
 		removeButton = WidgetFactory.createPushButton(buttonComp, Messages.RenameGroup_remove, SWT.FILL);
@@ -236,14 +253,17 @@ public class RenameGroup extends Composite {
 		});
 		templateViewer.addDoubleClickListener(new IDoubleClickListener() {
 			public void doubleClick(DoubleClickEvent event) {
-				RenamingTemplate t = (RenamingTemplate) ((IStructuredSelection) templateViewer.getSelection())
-						.getFirstElement();
-				t = openEditDialog(getParent(), t);
-				if (t != null)
-					templateViewer.update(t, null);
+				editTemplate();
 			}
 		});
+	}
 
+	private void editTemplate() {
+		RenamingTemplate t = (RenamingTemplate) ((IStructuredSelection) templateViewer.getSelection())
+				.getFirstElement();
+		t = openEditDialog(getParent(), t);
+		if (t != null)
+			templateViewer.update(t, null);
 	}
 
 	private NumericControl createNumericControl(Composite parent, String lab) {

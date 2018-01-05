@@ -92,6 +92,7 @@ import com.db4o.query.Query;
 public class CollectionProcessor implements ICollectionProcessor {
 
 	private static final int MAXIDS = 2048;
+	private static final int MAXALBUMASSETS = 200;
 
 	public static class GenericScoreFormatter implements IScoreFormatter {
 
@@ -159,7 +160,6 @@ public class CollectionProcessor implements ICollectionProcessor {
 				}
 			}
 			Collections.sort(result, new Comparator<Asset>() {
-
 				public int compare(Asset first, Asset second) {
 					double distance1 = Core.distance(latitude, longitude, first.getGPSLatitude(),
 							first.getGPSLongitude(), 'k');
@@ -204,10 +204,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 			double h = asset.getHeight();
 			double w = asset.getWidth();
 			double value;
-			if (asset.getRotation() % 180 == 0)
-				value = (h == 0) ? -1d : w / h;
-			else
-				value = (w == 0) ? -1d : h / w;
+			value = asset.getRotation() % 180 == 0 ? (h == 0) ? -1d : w / h : (w == 0) ? -1d : h / w;
 			if (value < 0)
 				candidate.include(false);
 			else
@@ -309,7 +306,6 @@ public class CollectionProcessor implements ICollectionProcessor {
 		}
 
 		public void evaluate(Candidate candidate) {
-
 			Asset asset = (Asset) candidate.getObject();
 			Date dateCreated = asset.getDateCreated();
 			if (dateCreated == null)
@@ -523,254 +519,257 @@ public class CollectionProcessor implements ICollectionProcessor {
 					Set<String> idSet = null;
 					while (true) {
 						Constraint disjunction = null;
-						for (Criterion crit : tempColl.getCriterion()) {
-							if (crit == null)
-								return EMPTY;
-							int relation = crit.getRelation();
-							String field = crit.getField();
-							String subfield = crit.getSubfield();
-							QueryField qfield = QueryField.findQueryField(field);
-							QueryField qsubfield = QueryField.findQuerySubField(field, subfield);
-							if (qsubfield == null && relation != QueryField.XREF)
-								return EMPTY;
-							Object value = crit.getValue();
-							Constraint constraint = null;
-							if (relation == QueryField.DATEEQUALS || relation == QueryField.DATENOTEQUAL) {
-								long t = ((Date) value).getTime() / 1000 * 1000;
-								value = new Range(new Date(t), new Date(t + 999));
-								relation = (relation == QueryField.DATEEQUALS) ? QueryField.BETWEEN
-										: QueryField.NOTBETWEEN;
-							} else if (relation == QueryField.SIMILAR) {
-								float tolerance = getTolerance(field);
-								if (tolerance != 0f) {
-									relation = QueryField.BETWEEN;
-									value = compileSimilarRange(value, tolerance);
-								} else
-									relation = QueryField.EQUALS;
-							}
-							Class<? extends MediaExtension> clazz = null;
-							String vField = null;
-							for (IMediaSupport support : CoreActivator.getDefault().getMediaSupport()) {
-								vField = support.getFieldName(field);
-								if (vField != null) {
-									clazz = support.getExtensionType();
-									break;
+						if (coll.getAlbum() && coll.getAsset().size() > MAXALBUMASSETS)
+							disjunction = query.descend("album").constrain(coll.getName()); //$NON-NLS-1$
+						else
+							for (Criterion crit : tempColl.getCriterion()) {
+								if (crit == null)
+									return EMPTY;
+								int relation = crit.getRelation();
+								String field = crit.getField();
+								String subfield = crit.getSubfield();
+								QueryField qfield = QueryField.findQueryField(field);
+								QueryField qsubfield = QueryField.findQuerySubField(field, subfield);
+								if (qsubfield == null && relation != QueryField.XREF)
+									return EMPTY;
+								Object value = crit.getValue();
+								Constraint constraint = null;
+								if (relation == QueryField.DATEEQUALS || relation == QueryField.DATENOTEQUAL) {
+									long t = ((Date) value).getTime() / 1000 * 1000;
+									value = new Range(new Date(t), new Date(t + 999));
+									relation = (relation == QueryField.DATEEQUALS) ? QueryField.BETWEEN
+											: QueryField.NOTBETWEEN;
+								} else if (relation == QueryField.SIMILAR) {
+									float tolerance = getTolerance(field);
+									if (tolerance != 0f) {
+										relation = QueryField.BETWEEN;
+										value = compileSimilarRange(value, tolerance);
+									} else
+										relation = QueryField.EQUALS;
 								}
-							}
-							if (clazz != null) {
-								Query vQuery = database.query();
-								Constraint vConstraint = null;
-								if (relation == QueryField.BETWEEN || relation == QueryField.NOTBETWEEN)
-									vConstraint = applyBetween(vQuery, field, vField, relation,
-											((Range) value).getFrom(), ((Range) value).getTo());
-								else if (relation != QueryField.EQUALS && relation != QueryField.NOTEQUAL
-										&& qsubfield.getCard() != 1 && qsubfield.getType() == QueryField.T_STRING)
-									query.constrain(new StringArrayEvaluation(qsubfield, relation, (String) value));
-								else if (relation == QueryField.WILDCARDS)
-									query.constrain(new WildcardEvaluation(qsubfield, (String) value, false));
-								else if (relation == QueryField.NOTWILDCARDS)
-									query.constrain(new WildcardEvaluation(qsubfield, (String) value, true));
-								else {
-									vConstraint = vQuery.descend(vField).constrain(value);
-									vConstraint = applyRelation(dbManager, tempColl.getSystem(), field, vField,
-											relation, value, vConstraint, vQuery);
+								Class<? extends MediaExtension> clazz = null;
+								String vField = null;
+								for (IMediaSupport support : CoreActivator.getDefault().getMediaSupport()) {
+									vField = support.getFieldName(field);
+									if (vField != null) {
+										clazz = support.getExtensionType();
+										break;
+									}
 								}
-								ObjectSet<? extends MediaExtension> vidSet = vQuery.execute();
-								if (idSet == null)
-									idSet = new HashSet<String>(vidSet.size() * 3 / 2);
-								for (MediaExtension video : vidSet) {
-									Asset parent = video.getAsset_parent();
-									if (parent != null)
-										idSet.add(parent.getStringId());
-								}
-							} else if (relation == QueryField.BETWEEN || relation == QueryField.NOTBETWEEN)
-								constraint = applyBetween(query, field, field, relation, ((Range) value).getFrom(),
-										((Range) value).getTo());
-							else {
-								if (qsubfield == QueryField.IPTC_CATEGORY) {
-									constraint = query.descend(field).constrain(value);
-									applyRelation(dbManager, true, field, field, crit.getRelation(), value, constraint,
-											query);
-									Category category = dbManager.getMeta(true).getCategory(value.toString());
-									if (category != null)
-										constraint = addSubcats(dbManager, query, constraint, category, crit);
-								} else if (qfield == QueryField.IPTC_LOCATIONSHOWN) {
-									dynamic = true;
-									List<LocationShownImpl> relations = obtainStructRelations(database,
-											LocationShownImpl.class, LocationImpl.class, "location", crit, //$NON-NLS-1$
-											value, qsubfield);
-									if (relations != null) {
-										if (idSet == null)
-											idSet = new HashSet<String>(relations.size() * 3 / 2);
-										for (LocationShownImpl loc : relations)
-											idSet.add(loc.getAsset());
-									} else
-										idSet = new HashSet<String>();
-								} else if (qfield == QueryField.IPTC_LOCATIONCREATED) {
-									dynamic = true;
-									List<LocationCreatedImpl> relations = obtainStructRelations(database,
-											LocationCreatedImpl.class, LocationImpl.class, "location", crit, //$NON-NLS-1$
-											value, qsubfield);
-									if (relations != null) {
-										if (idSet == null)
-											idSet = new HashSet<String>(relations.size() * 2);
-										for (LocationCreatedImpl loc : relations)
-											idSet.addAll(loc.getAsset());
-									} else
-										idSet = new HashSet<String>();
-								} else if (qfield == QueryField.IPTC_CONTACT) {
-									dynamic = true;
-									List<CreatorsContactImpl> relations = obtainStructRelations(database,
-											CreatorsContactImpl.class, ContactImpl.class, "contact", crit, //$NON-NLS-1$
-											value, qsubfield);
-									if (relations != null) {
-										if (idSet == null)
-											idSet = new HashSet<String>(relations.size() * 2);
-										for (CreatorsContactImpl contact : relations)
-											idSet.addAll(contact.getAsset());
-									} else
-										idSet = new HashSet<String>();
-								} else if (qfield == QueryField.IPTC_ARTWORK) {
-									dynamic = true;
-									List<ArtworkOrObjectShownImpl> relations = obtainStructRelations(database,
-											ArtworkOrObjectShownImpl.class, ArtworkOrObjectImpl.class,
-											"artworkOrObject", crit, //$NON-NLS-1$
-											value, qsubfield);
-									if (relations != null) {
-										if (idSet == null)
-											idSet = new HashSet<String>(relations.size() * 3 / 2);
-										for (ArtworkOrObjectShownImpl art : relations)
-											idSet.add(art.getAsset());
-									} else
-										idSet = new HashSet<String>();
-								} else if (relation == QueryField.XREF) {
-									dynamic = true;
-									List<String> assetIds = tempColl.getAsset();
-									if (assetIds != null)
-										idSet = new HashSet<String>(assetIds);
-								} else if (relation == QueryField.UNDEFINED && value instanceof Double) {
-									constraint = query.descend(field).constrain(Double.NEGATIVE_INFINITY).greater()
-											.equal().not();
-								} else if (relation == QueryField.UNDEFINED && value instanceof Date) {
-									constraint = query.descend(field).constrain(null);
-								} else {
-									if (qsubfield == QueryField.PHYSICALWIDTH)
-										constraint = query.descend(QueryField.WIDTH.getKey())
-												.constrain(((Double) value) * 300 / 2.54d);
-									else if (qsubfield == QueryField.PHYSICALHEIGHT)
-										constraint = query.descend(QueryField.HEIGHT.getKey())
-												.constrain(((Double) value) * 300 / 2.54d);
-									else if (qsubfield == QueryField.ASPECTRATIO)
-										query.constrain(new AspectEvaluation(((Double) value), Double.NaN, relation));
-									else if (qsubfield == QueryField.TIMEOFDAY)
-										query.constrain(new TimeOfDayEvaluation(((Integer) value), -1, relation));
-									else if (qsubfield == QueryField.DATE)
-										query.constrain(new DateEvaluation(((Date) value), null, relation));
+								if (clazz != null) {
+									Query vQuery = database.query();
+									vQuery.constrain(clazz);
+									if (relation == QueryField.BETWEEN || relation == QueryField.NOTBETWEEN)
+										applyBetween(vQuery, field, vField, relation, ((Range) value).getFrom(),
+												((Range) value).getTo());
 									else if (relation != QueryField.EQUALS && relation != QueryField.NOTEQUAL
 											&& qsubfield.getCard() != 1 && qsubfield.getType() == QueryField.T_STRING)
-										query.constrain(new StringArrayEvaluation(qsubfield, relation, (String) value));
-									else if (qsubfield == QueryField.MODIFIED_SINCE) {
-										long lower, upper;
-										int days = (Integer) crit.getValue();
-										switch (crit.getRelation()) {
-										case QueryField.EQUALS:
-											constraint = applyBetween(query, field, field, QueryField.BETWEEN, days,
-													days);
-											relation = -1;
-											break;
-										case QueryField.NOTEQUAL:
-											constraint = applyBetween(query, field, field, QueryField.NOTBETWEEN, days,
-													days);
-											relation = -1;
-											break;
-										case QueryField.GREATER:
-											Date now = new Date();
-											lower = Math.max(0, days * MSECINDAY - HALFDAY);
-											constraint = query.descend(QueryField.LASTMOD.getKey())
-													.constrain(new Date(Math.max(0, now.getTime() - lower)));
-											relation = QueryField.SMALLER;
-											break;
-										case QueryField.NOTSMALLER:
-											now = new Date();
-											lower = Math.max(0, days * MSECINDAY - HALFDAY);
-											constraint = query.descend(QueryField.LASTMOD.getKey())
-													.constrain(new Date(Math.max(0, now.getTime() - lower)));
-											relation = QueryField.NOTGREATER;
-											break;
-										case QueryField.SMALLER:
-											now = new Date();
-											upper = days * MSECINDAY + HALFDAY;
-											constraint = query.descend(QueryField.LASTMOD.getKey())
-													.constrain(new Date(Math.max(0, now.getTime() - upper)));
-											relation = QueryField.GREATER;
-											break;
-										case QueryField.NOTGREATER:
-											now = new Date();
-											upper = days * MSECINDAY + HALFDAY;
-											constraint = query.descend(QueryField.LASTMOD.getKey())
-													.constrain(new Date(Math.max(0, now.getTime() - upper)));
-											relation = QueryField.NOTSMALLER;
-											break;
-										}
-										relation = -1;
-									} else if (qsubfield == QueryField.EXIF_GPSLOCATIONDISTANCE) {
-										Double[] values = (Double[]) crit.getValue();
-										Point2D.Double p1 = locationFrom(values[0], values[1], values[2] * SQRT2, 45d,
-												'k');
-										double latmax = Math.min(90, p1.x);
-										double latmin = Math.max(-90, 2 * values[0] - p1.x);
-										double lonmax = p1.y;
-										double lonmin = 2 * values[1] - lonmax;
-										Constraint latConstraint = query.descend(QueryField.EXIF_GPSLATITUDE.getKey())
-												.constrain(latmin).smaller().not();
-										latConstraint = query.descend(QueryField.EXIF_GPSLATITUDE.getKey())
-												.constrain(latmax).greater().not().and(latConstraint);
-										Constraint lonConstraint = query.descend(QueryField.EXIF_GPSLONGITUDE.getKey())
-												.constrain(lonmin).smaller().not();
-										lonConstraint = query.descend(QueryField.EXIF_GPSLONGITUDE.getKey())
-												.constrain(lonmax).greater().not().and(lonConstraint);
-										if (lonmin < 0) {
-											Constraint auxConstraint = query
-													.descend(QueryField.EXIF_GPSLONGITUDE.getKey())
-													.constrain(lonmin + 360).smaller().not();
-											lonConstraint = lonConstraint.or(auxConstraint);
-										}
-										if (lonmax > 360) {
-											Constraint auxConstraint = query
-													.descend(QueryField.EXIF_GPSLONGITUDE.getKey())
-													.constrain(lonmax - 360).greater().not().and(lonConstraint);
-											lonConstraint = lonConstraint.or(auxConstraint);
-										}
-										constraint = latConstraint.and(lonConstraint);
-										relation = -1;
-										addPostProcessor(new GeographicPostProcessor(values[0], values[1], values[2]));
-									} else
-										constraint = query.descend(field).constrain(value);
-									if (constraint != null)
-										constraint = applyRelation(dbManager, tempColl.getSystem(), field, field,
-												relation, value, constraint, query);
-								} // end single criterion processing
-							}
-							if (idSet != null) {
-								if (idSetOr != null) {
-									if (crit.getAnd())
-										idSetOr.retainAll(idSet);
+										vQuery.constrain(
+												new StringArrayEvaluation(qsubfield, relation, (String) value));
+									else if (relation == QueryField.WILDCARDS)
+										vQuery.constrain(new WildcardEvaluation(qsubfield, (String) value, false));
+									else if (relation == QueryField.NOTWILDCARDS)
+										vQuery.constrain(new WildcardEvaluation(qsubfield, (String) value, true));
 									else
-										idSetOr.addAll(idSet);
-									idSet.clear();
-								} else {
-									idSetOr = idSet;
-									idSet = null;
+										applyRelation(dbManager, tempColl.getSystem(), field, vField, relation, value,
+												vQuery.descend(vField).constrain(value), vQuery);
+									ObjectSet<? extends MediaExtension> extensionSet = vQuery.execute();
+									if (idSet == null)
+										idSet = new HashSet<String>(extensionSet.size() * 3 / 2);
+									for (MediaExtension extension : extensionSet) {
+										Asset parent = extension.getAsset_parent();
+										if (parent != null)
+											idSet.add(parent.getStringId());
+									}
+								} else if (relation == QueryField.BETWEEN || relation == QueryField.NOTBETWEEN)
+									constraint = applyBetween(query, field, field, relation, ((Range) value).getFrom(),
+											((Range) value).getTo());
+								else {
+									if (qsubfield == QueryField.IPTC_CATEGORY) {
+										constraint = query.descend(field).constrain(value);
+										applyRelation(dbManager, true, field, field, crit.getRelation(), value,
+												constraint, query);
+										Category category = dbManager.getMeta(true).getCategory(value.toString());
+										if (category != null)
+											constraint = addSubcats(dbManager, query, constraint, category, crit);
+									} else if (qfield == QueryField.IPTC_LOCATIONSHOWN) {
+										dynamic = true;
+										List<LocationShownImpl> relations = obtainStructRelations(database,
+												LocationShownImpl.class, LocationImpl.class, "location", crit, //$NON-NLS-1$
+												value, qsubfield);
+										if (relations != null) {
+											if (idSet == null)
+												idSet = new HashSet<String>(relations.size() * 3 / 2);
+											for (LocationShownImpl loc : relations)
+												idSet.add(loc.getAsset());
+										} else
+											idSet = new HashSet<String>();
+									} else if (qfield == QueryField.IPTC_LOCATIONCREATED) {
+										dynamic = true;
+										List<LocationCreatedImpl> relations = obtainStructRelations(database,
+												LocationCreatedImpl.class, LocationImpl.class, "location", crit, //$NON-NLS-1$
+												value, qsubfield);
+										if (relations != null) {
+											if (idSet == null)
+												idSet = new HashSet<String>(relations.size() * 2);
+											for (LocationCreatedImpl loc : relations)
+												idSet.addAll(loc.getAsset());
+										} else
+											idSet = new HashSet<String>();
+									} else if (qfield == QueryField.IPTC_CONTACT) {
+										dynamic = true;
+										List<CreatorsContactImpl> relations = obtainStructRelations(database,
+												CreatorsContactImpl.class, ContactImpl.class, "contact", crit, //$NON-NLS-1$
+												value, qsubfield);
+										if (relations != null) {
+											if (idSet == null)
+												idSet = new HashSet<String>(relations.size() * 2);
+											for (CreatorsContactImpl contact : relations)
+												idSet.addAll(contact.getAsset());
+										} else
+											idSet = new HashSet<String>();
+									} else if (qfield == QueryField.IPTC_ARTWORK) {
+										dynamic = true;
+										List<ArtworkOrObjectShownImpl> relations = obtainStructRelations(database,
+												ArtworkOrObjectShownImpl.class, ArtworkOrObjectImpl.class,
+												"artworkOrObject", crit, //$NON-NLS-1$
+												value, qsubfield);
+										if (relations != null) {
+											if (idSet == null)
+												idSet = new HashSet<String>(relations.size() * 3 / 2);
+											for (ArtworkOrObjectShownImpl art : relations)
+												idSet.add(art.getAsset());
+										} else
+											idSet = new HashSet<String>();
+									} else if (relation == QueryField.XREF) {
+										dynamic = true;
+										List<String> assetIds = tempColl.getAsset();
+										if (assetIds != null)
+											idSet = new HashSet<String>(assetIds);
+									} else if (relation == QueryField.UNDEFINED && value instanceof Double) {
+										constraint = query.descend(field).constrain(Double.NEGATIVE_INFINITY).greater()
+												.equal().not();
+									} else if (relation == QueryField.UNDEFINED && value instanceof Date) {
+										constraint = query.descend(field).constrain(null);
+									} else {
+										if (qsubfield == QueryField.PHYSICALWIDTH)
+											constraint = query.descend(QueryField.WIDTH.getKey())
+													.constrain(((Double) value) * 300 / 2.54d);
+										else if (qsubfield == QueryField.PHYSICALHEIGHT)
+											constraint = query.descend(QueryField.HEIGHT.getKey())
+													.constrain(((Double) value) * 300 / 2.54d);
+										else if (qsubfield == QueryField.ASPECTRATIO)
+											query.constrain(
+													new AspectEvaluation(((Double) value), Double.NaN, relation));
+										else if (qsubfield == QueryField.TIMEOFDAY)
+											query.constrain(new TimeOfDayEvaluation(((Integer) value), -1, relation));
+										else if (qsubfield == QueryField.DATE)
+											query.constrain(new DateEvaluation(((Date) value), null, relation));
+										else if (relation != QueryField.EQUALS && relation != QueryField.NOTEQUAL
+												&& qsubfield.getCard() != 1
+												&& qsubfield.getType() == QueryField.T_STRING)
+											query.constrain(
+													new StringArrayEvaluation(qsubfield, relation, (String) value));
+										else if (qsubfield == QueryField.MODIFIED_SINCE) {
+											long lower, upper;
+											int days = (Integer) crit.getValue();
+											switch (crit.getRelation()) {
+											case QueryField.EQUALS:
+												constraint = applyBetween(query, field, field, QueryField.BETWEEN, days,
+														days);
+												relation = -1;
+												break;
+											case QueryField.NOTEQUAL:
+												constraint = applyBetween(query, field, field, QueryField.NOTBETWEEN,
+														days, days);
+												relation = -1;
+												break;
+											case QueryField.GREATER:
+												Date now = new Date();
+												lower = Math.max(0, days * MSECINDAY - HALFDAY);
+												constraint = query.descend(QueryField.LASTMOD.getKey())
+														.constrain(new Date(Math.max(0, now.getTime() - lower)));
+												relation = QueryField.SMALLER;
+												break;
+											case QueryField.NOTSMALLER:
+												now = new Date();
+												lower = Math.max(0, days * MSECINDAY - HALFDAY);
+												constraint = query.descend(QueryField.LASTMOD.getKey())
+														.constrain(new Date(Math.max(0, now.getTime() - lower)));
+												relation = QueryField.NOTGREATER;
+												break;
+											case QueryField.SMALLER:
+												now = new Date();
+												upper = days * MSECINDAY + HALFDAY;
+												constraint = query.descend(QueryField.LASTMOD.getKey())
+														.constrain(new Date(Math.max(0, now.getTime() - upper)));
+												relation = QueryField.GREATER;
+												break;
+											case QueryField.NOTGREATER:
+												now = new Date();
+												upper = days * MSECINDAY + HALFDAY;
+												constraint = query.descend(QueryField.LASTMOD.getKey())
+														.constrain(new Date(Math.max(0, now.getTime() - upper)));
+												relation = QueryField.NOTSMALLER;
+												break;
+											}
+											relation = -1;
+										} else if (qsubfield == QueryField.EXIF_GPSLOCATIONDISTANCE) {
+											Double[] values = (Double[]) crit.getValue();
+											Point2D.Double p1 = locationFrom(values[0], values[1], values[2] * SQRT2,
+													45d, 'k');
+											double latmax = Math.min(90, p1.x);
+											double latmin = Math.max(-90, 2 * values[0] - p1.x);
+											double lonmax = p1.y;
+											double lonmin = 2 * values[1] - lonmax;
+											Constraint latConstraint = query
+													.descend(QueryField.EXIF_GPSLATITUDE.getKey()).constrain(latmin)
+													.smaller().not();
+											latConstraint = query.descend(QueryField.EXIF_GPSLATITUDE.getKey())
+													.constrain(latmax).greater().not().and(latConstraint);
+											Constraint lonConstraint = query
+													.descend(QueryField.EXIF_GPSLONGITUDE.getKey()).constrain(lonmin)
+													.smaller().not();
+											lonConstraint = query.descend(QueryField.EXIF_GPSLONGITUDE.getKey())
+													.constrain(lonmax).greater().not().and(lonConstraint);
+											if (lonmin < 0)
+												lonConstraint = lonConstraint
+														.or(query.descend(QueryField.EXIF_GPSLONGITUDE.getKey())
+																.constrain(lonmin + 360).smaller().not());
+											if (lonmax > 360)
+												lonConstraint = lonConstraint.or(query
+														.descend(QueryField.EXIF_GPSLONGITUDE.getKey())
+														.constrain(lonmax - 360).greater().not().and(lonConstraint));
+											constraint = latConstraint.and(lonConstraint);
+											relation = -1;
+											addPostProcessor(
+													new GeographicPostProcessor(values[0], values[1], values[2]));
+										} else
+											constraint = query.descend(field).constrain(value);
+										if (constraint != null)
+											constraint = applyRelation(dbManager, tempColl.getSystem(), field, field,
+													relation, value, constraint, query);
+									} // end single criterion processing
 								}
-
-							}
-							if (constraint != null) {
-								if (disjunction != null)
-									constraint = (crit.getAnd()) ? disjunction.and(constraint)
-											: disjunction.or(constraint);
-								disjunction = constraint;
-							}
-						} // end criterion loop
+								if (idSet != null) {
+									if (idSetOr != null) {
+										if (crit.getAnd())
+											idSetOr.retainAll(idSet);
+										else
+											idSetOr.addAll(idSet);
+										idSet.clear();
+									} else {
+										idSetOr = idSet;
+										idSet = null;
+									}
+								}
+								if (constraint != null) {
+									if (disjunction != null)
+										constraint = (crit.getAnd()) ? disjunction.and(constraint)
+												: disjunction.or(constraint);
+									disjunction = constraint;
+								}
+							} // end criterion loop
 						if (disjunction != null)
 							conjunction = conjunction != null ? conjunction.and(disjunction) : disjunction;
 						if (idSetOr != null) {
@@ -939,11 +938,11 @@ public class CollectionProcessor implements ICollectionProcessor {
 			from = ((Double) from) * RESAT300;
 			to = ((Double) to) * RESAT300;
 		} else if (path == QueryField.MODIFIED_SINCE.getKey()) {
-			Date now = new Date();
+			long time = System.currentTimeMillis();
 			field = QueryField.LASTMOD.getKey();
 			int upper = (Integer) to;
-			to = new Date(Math.max(0, now.getTime() - Math.max(0, (Integer) from * MSECINDAY - HALFDAY)));
-			from = new Date(Math.max(0, now.getTime() - upper * MSECINDAY + HALFDAY));
+			to = new Date(Math.max(0, time - Math.max(0, (Integer) from * MSECINDAY - HALFDAY)));
+			from = new Date(Math.max(0, time - upper * MSECINDAY + HALFDAY));
 		}
 		return (relation == QueryField.BETWEEN)
 				? bq.descend(field).constrain(to).smaller().equal()
@@ -1036,9 +1035,9 @@ public class CollectionProcessor implements ICollectionProcessor {
 					String s = value.toString();
 					int index = s.length() - 1;
 					if (index >= 0) {
-						StringBuilder sb = new StringBuilder(s);
-						sb.setCharAt(index, (char) (sb.charAt(index) + 1));
-						s = sb.toString();
+						char[] chars = s.toCharArray();
+						chars[index] = (char) (chars[index] + 1);
+						s = new String(chars);
 					}
 					return constraint.greater().equal().and(aQuery.descend(field).constrain(s).smaller());
 				}
@@ -1107,11 +1106,15 @@ public class CollectionProcessor implements ICollectionProcessor {
 	}
 
 	protected static Constraint constrainToPositive(Query qe, String path, String field, Constraint constraint) {
-		int type = QueryField.findQueryField(path).getType();
-		return (type == QueryField.T_POSITIVEFLOAT || type == QueryField.T_CURRENCY
-				|| type == QueryField.T_POSITIVEINTEGER || type == QueryField.T_POSITIVELONG)
-						? constraint.and(qe.descend(field).constrain(0).greater())
-						: constraint;
+		switch (QueryField.findQueryField(path).getType()) {
+		case QueryField.T_POSITIVEFLOAT:
+		case QueryField.T_CURRENCY:
+		case QueryField.T_POSITIVEINTEGER:
+		case QueryField.T_POSITIVELONG:
+			return constraint.and(qe.descend(field).constrain(0).greater());
+		default:
+			return constraint;
+		}
 	}
 
 	/*
@@ -1377,13 +1380,12 @@ public class CollectionProcessor implements ICollectionProcessor {
 							i = 1;
 						if (i >= minNumberOfMatches) {
 							boolean accepted = true;
-							if (filters != null) {
+							if (filters != null)
 								for (IAssetFilter filter : filters)
 									if (!filter.accept(asset)) {
 										accepted = false;
 										break;
 									}
-							}
 							if (accepted) {
 								asset.setScore(keywordFactor * i / n);
 								kwAssets.put(asset.getStringId(), asset);
@@ -1442,13 +1444,12 @@ public class CollectionProcessor implements ICollectionProcessor {
 						Asset asset = dbManager.obtainAsset(id);
 						if (asset != null) {
 							boolean accepted = true;
-							if (filters != null) {
+							if (filters != null)
 								for (IAssetFilter filter : filters)
 									if (!filter.accept(asset)) {
 										accepted = false;
 										break;
 									}
-							}
 							if (accepted) {
 								asset.setScore(visualFactor * score);
 								result.add(asset);
@@ -1490,8 +1491,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 				reader = indexPath == null ? null : factory.getLuceneService().getIndexReader(indexPath);
 				if (reader == null)
 					return EMPTY;
-				String queryString = options.getQueryString();
-				ISearchHits hits = lucene.search(reader, queryString, options.getMaxResults());
+				ISearchHits hits = lucene.search(reader, options.getQueryString(), options.getMaxResults());
 				if (hits == null)
 					return EMPTY;
 				float maxScore = hits.getMaxScore();

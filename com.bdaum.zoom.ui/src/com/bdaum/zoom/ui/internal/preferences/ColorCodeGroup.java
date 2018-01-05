@@ -48,10 +48,10 @@ import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.codes.CodeParser;
 import com.bdaum.zoom.ui.internal.widgets.CriterionGroup.IdLabelTuple;
+import com.bdaum.zoom.ui.internal.widgets.CodeGroup;
 import com.bdaum.zoom.ui.internal.widgets.GroupComboCatFilter;
 import com.bdaum.zoom.ui.internal.widgets.GroupComboLabelProvider;
 import com.bdaum.zoom.ui.internal.widgets.ProposalListener;
-import com.bdaum.zoom.ui.widgets.CodeGroup;
 import com.bdaum.zoom.ui.widgets.DateInput;
 
 /*
@@ -79,12 +79,6 @@ public class ColorCodeGroup {
 
 	private ComboViewer critGroupCombo;
 
-	private Combo critFieldCombo;
-
-	private Combo critRelationCombo;
-
-	private StackLayout valueLayout;
-
 	private List<FieldDescriptor> fieldDescriptors = new ArrayList<FieldDescriptor>(150);
 
 	private FieldDescriptor fieldDescriptor;
@@ -93,51 +87,20 @@ public class ColorCodeGroup {
 
 	private Object enumKeys;
 
-	private Combo enumValueCombo;
+	private DateInput dateValueField, dateFromField, dateToField;
 
-	private Text textValueField;
+	private Text textFromField, textToField, textValueField;
 
-	private CodeGroup codeValueField;
-
-	private DateInput dateValueField;
-
-	private Composite dateRangeGroup;
-
-	private DateInput dateFromField;
-
-	private DateInput dateToField;
-
-	private Composite textRangeGroup;
-
-	private Text textFromField;
-
-	private Text textToField;
-
-	private Composite codeRangeGroup;
-
-	private CodeGroup codeFromField;
-
-	private CodeGroup codeToField;
+	private CodeGroup codeValueField, codeFromField, codeToField;
 
 	private Criterion crit;
 
-	private Composite valueComp;
+	private Composite valueComp, codeGroup, textGroup, enumGroup, dateGroup, undefinedGroup, enumRangeGroup,
+			dateRangeGroup, codeRangeGroup, textRangeGroup;
 
-	private Composite codeGroup;
+	private Combo enumValueCombo, enumFromField, enumToField, critRelationCombo, critFieldCombo;
 
-	private Composite textGroup;
-
-	private Composite enumGroup;
-
-	private Composite dateGroup;
-
-	private Composite undefinedGroup;
-
-	private Composite enumRangeGroup;
-
-	private Combo enumFromField;
-
-	private Combo enumToField;
+	private StackLayout valueLayout;
 
 	private final PreferencePage page;
 
@@ -226,7 +189,6 @@ public class ColorCodeGroup {
 			}
 		});
 		critGroupCombo.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
 				fillFieldCombo();
 				resetValues();
@@ -493,47 +455,48 @@ public class ColorCodeGroup {
 		fieldsToValidate.clear();
 		if (rel == QueryField.UNDEFINED)
 			valueLayout.topControl = undefinedGroup;
-		else if (range) {
-			if (enumeration)
-				valueLayout.topControl = enumRangeGroup;
-			else if (fd != null && fd.getDetailQueryField().getType() == QueryField.T_DATE)
-				valueLayout.topControl = dateRangeGroup;
-			else {
-				CodeParser parser = null;
-				if (fd != null && fd.getDetailQueryField().getEnumeration() instanceof Integer)
-					parser = UiActivator.getDefault()
-							.getCodeParser((Integer) fd.getDetailQueryField().getEnumeration());
-				if (parser != null && parser.canParse()) {
-					valueLayout.topControl = codeRangeGroup;
-					codeFromField.setParser(parser);
-					monitorField(codeFromField.getTextControl());
-					codeToField.setParser(parser);
-					monitorField(codeToField.getTextControl());
-				} else {
-					valueLayout.topControl = textRangeGroup;
-					monitorField(textFromField);
-					monitorField(textToField);
+		else {
+			QueryField detailQueryField = fd.getDetailQueryField();
+			if (range) {
+				if (enumeration)
+					valueLayout.topControl = enumRangeGroup;
+				else if (fd != null && detailQueryField.getType() == QueryField.T_DATE)
+					valueLayout.topControl = dateRangeGroup;
+				else {
+					CodeParser parser = null;
+					if (fd != null && detailQueryField.getEnumeration() instanceof Integer)
+						parser = UiActivator.getDefault().getCodeParser((Integer) detailQueryField.getEnumeration());
+					if (parser != null && parser.canParse()) {
+						valueLayout.topControl = codeRangeGroup;
+						codeFromField.setQueryField(detailQueryField);
+						monitorField(codeFromField.getTextControl());
+						codeToField.setQueryField(detailQueryField);
+						monitorField(codeToField.getTextControl());
+					} else {
+						valueLayout.topControl = textRangeGroup;
+						monitorField(textFromField);
+						monitorField(textToField);
+					}
 				}
-			}
-		} else {
-			if (valueProposals != null)
-				valueLayout.topControl = textGroup;
-			else if (enumeration)
-				valueLayout.topControl = enumGroup;
-			else if (fd != null && fd.getDetailQueryField().getType() == QueryField.T_DATE)
-				valueLayout.topControl = dateGroup;
-			else {
-				CodeParser parser = null;
-				if (fd != null && fd.getDetailQueryField().getEnumeration() instanceof Integer)
-					parser = UiActivator.getDefault()
-							.getCodeParser((Integer) fd.getDetailQueryField().getEnumeration());
-				if (parser != null && parser.canParse()) {
-					valueLayout.topControl = codeGroup;
-					codeValueField.setParser(parser);
-					monitorField(codeValueField.getTextControl());
-				} else {
+			} else {
+				if (valueProposals != null)
 					valueLayout.topControl = textGroup;
-					monitorField(textValueField);
+				else if (enumeration)
+					valueLayout.topControl = enumGroup;
+				else if (fd != null && detailQueryField.getType() == QueryField.T_DATE)
+					valueLayout.topControl = dateGroup;
+				else {
+					CodeParser parser = null;
+					if (fd != null && detailQueryField.getEnumeration() instanceof Integer)
+						parser = UiActivator.getDefault().getCodeParser((Integer) detailQueryField.getEnumeration());
+					if (parser != null && parser.canParse()) {
+						valueLayout.topControl = codeGroup;
+						codeValueField.setQueryField(detailQueryField);
+						monitorField(codeValueField.getTextControl());
+					} else {
+						valueLayout.topControl = textGroup;
+						monitorField(textValueField);
+					}
 				}
 			}
 		}
@@ -640,15 +603,11 @@ public class ColorCodeGroup {
 		crit = getCriterion();
 		if (crit == null)
 			return ""; //$NON-NLS-1$
-		String field = crit.getField();
-		int relation = crit.getRelation();
-		Object value = crit.getValue();
 		StringBuilder sb = new StringBuilder();
-		sb.append(field).append('\t').append(relation).append('\t');
+		sb.append(crit.getField()).append('\t').append(crit.getRelation()).append('\t');
 		try (ObjectOutput out = new ObjectOutputStream(new ByteArrayOutputStream())) {
-			out.writeObject(value);
-			byte[] byteArray = new ByteArrayOutputStream().toByteArray();
-			sb.append(Base64.encodeBytes(byteArray));
+			out.writeObject(crit.getValue());
+			sb.append(Base64.encodeBytes(new ByteArrayOutputStream().toByteArray()));
 			return sb.toString();
 		} catch (IOException e) {
 			// should never happen

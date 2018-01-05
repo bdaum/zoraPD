@@ -60,6 +60,7 @@ import com.bdaum.zoom.batch.internal.Daemon;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.operations.internal.dup.AbstractDuplicatesProvider;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -374,14 +375,8 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 
 	@Override
 	protected void setItemText(final GalleryItem item, Asset asset, Integer cardinality) {
-		if (asset != null) {
-			StringBuilder sb = new StringBuilder(asset.getUri());
-			int p = sb.lastIndexOf("/"); //$NON-NLS-1$
-			if (p >= 0)
-				sb.delete(0, p + 1);
-			item.setText(sb.toString());
-		} else
-			item.setText(Messages.getString("DuplicatesView.deleted")); //$NON-NLS-1$
+		item.setText(
+				asset != null ? Core.getFileName(asset.getUri(), true) : Messages.getString("DuplicatesView.deleted")); //$NON-NLS-1$
 	}
 
 	public void setDuplicatesProvider(AbstractDuplicatesProvider provider) {

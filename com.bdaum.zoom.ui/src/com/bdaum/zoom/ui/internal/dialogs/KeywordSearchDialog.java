@@ -127,16 +127,12 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 			getShell().setModified(valid);
 			okButton.setEnabled(valid);
 		}
-
 	}
 
 	private boolean validate() {
-		String errorMessage = null;
 		String text = combo.getText();
-		if (text.isEmpty())
-			errorMessage = Messages.KeywordSearchDialog_please_enter_keywords;
-		else
-			errorMessage = validate(text, keywords);
+		String errorMessage = text.isEmpty() ? Messages.KeywordSearchDialog_please_enter_keywords
+				: validate(text, keywords);
 		setErrorMessage(errorMessage);
 		return errorMessage == null;
 	}
@@ -212,9 +208,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 				}
 			});
 		}
-		final Label keywordsLabel = new Label(composite, SWT.NONE);
-		keywordsLabel.setText(Messages.KeywordSearchDialog_keywords);
-
+		new Label(composite, SWT.NONE).setText(Messages.KeywordSearchDialog_keywords);
 		combo = new Combo(composite, SWT.NONE);
 		String[] items = settings.getArray(HISTORY);
 		if (items == null)
@@ -244,12 +238,11 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 
 	@Override
 	protected void okPressed() {
-		String s = combo.getText();
-		boolean network = findInNetworkGroup == null ? false : findInNetworkGroup.getSelection();
 		settings.put(HISTORY, UiUtilities.updateComboHistory(combo));
+		boolean network = findInNetworkGroup == null ? false : findInNetworkGroup.getSelection();
 		if (findInNetworkGroup != null)
 			findInNetworkGroup.saveValues(settings);
-		result = computeQuery(s, network, findWithinGroup.getParentCollection());
+		result = computeQuery(combo.getText(), network, findWithinGroup.getParentCollection());
 		super.okPressed();
 	}
 
@@ -382,9 +375,8 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 				Ui.getUi().playSound("warning", null); //$NON-NLS-1$
 			}
 		} else {
-			if (lastProposal != null && text.toLowerCase().startsWith(lastProposal.toLowerCase())) {
+			if (lastProposal != null && text.toLowerCase().startsWith(lastProposal.toLowerCase()))
 				text = lastProposal + text.substring(lastProposal.length());
-			}
 			combo.removeVerifyListener(this);
 			combo.setText(text);
 			pnt.x = pnt.y = text.length();
@@ -471,19 +463,16 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 			if (e.keyCode == SWT.ARROW_RIGHT || e.keyCode == SWT.END) {
 				if (lastProposal != null && lastProposal.length() >= p.x) {
 					String text = combo.getText();
-					if (lastProposal != null && text.toLowerCase().startsWith(lastProposal.toLowerCase())) {
-						text = lastProposal + text.substring(lastProposal.length());
+					if (text.toLowerCase().startsWith(lastProposal.toLowerCase())) {
 						combo.removeVerifyListener(this);
-						combo.setText(text);
+						combo.setText(text = lastProposal + text.substring(lastProposal.length()));
 						p.x = p.y = text.length();
-						combo.setSelection(p);
 						combo.addVerifyListener(this);
-						return;
+					} else {
+						p.x = p.y = lastProposal.length();
+						lastProposal = null;
 					}
-					p.x = p.y = lastProposal.length();
 					combo.setSelection(p);
-					lastProposal = null;
-					return;
 				}
 			}
 		}

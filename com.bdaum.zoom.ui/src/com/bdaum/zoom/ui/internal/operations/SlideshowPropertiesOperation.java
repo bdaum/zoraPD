@@ -80,7 +80,7 @@ public class SlideshowPropertiesOperation extends AbstractOperation {
 	public static SlideShowImpl cloneSlideshow(SlideShowImpl show) {
 		return new SlideShowImpl(show.getName(), show.getDescription(),
 				show.getFromPreview(), show.getDuration(), show.getEffect(),
-				show.getFading(), show.getTitleDisplay(),
+				show.getFading(), show.getZoom(), show.getTitleDisplay(),
 				show.getTitleContent(), show.getAdhoc(),
 				show.getSkipDublettes(), show.getVoiceNotes(),
 				show.getLastAccessDate(), show.getPerspective());

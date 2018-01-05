@@ -24,6 +24,7 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.ui.internal.dialogs.messages"; //$NON-NLS-1$
+	public static String AddBookmarkDialog_show_bookmark_view;
 	public static String AlbumSelectionDialog_addToAlbum;
 	public static String AlbumSelectionDialog_addToAlbum_tooltip;
 	public static String AlbumSelectionDialog_assign_person;
@@ -167,6 +168,7 @@ public class Messages extends NLS {
 	public static String CodeCellEditorDialog_up;
 
 	public static String CodesDialog_code;
+	public static String CodesDialog_custom_code;
 	public static String CodesDialog_explanation;
 	public static String CodesDialog_matching_topics;
 	public static String CodesDialog_name;
@@ -292,6 +294,7 @@ public class Messages extends NLS {
 	public static String EditFtpDialog_track_exports;
 	public static String EditFtpDialog_web;
 	public static String EditFtpDialog_web_host;
+	public static String EditMetaDialog_0;
 	public static String EditMetaDialog_account_valid;
 	public static String EditMetaDialog_add;
 	public static String EditMetaDialog_add_category;
@@ -305,6 +308,7 @@ public class Messages extends NLS {
 	public static String EditMetaDialog_ai_enabled;
 	public static String EditMetaDialog_albums;
 	public static String EditMetaDialog_all;
+	public static String EditMetaDialog_all_files;
 	public static String EditMetaDialog_alt_texts;
 	public static String EditMetaDialog_artwork;
 	public static String EditMetaDialog_artworkquery;
@@ -542,6 +546,8 @@ public class Messages extends NLS {
 	public static String EditSlideDialog_value_is_not_a_number;
 	public static String EditSlideDialog_value_must_be_larger;
 	public static String EditSlideDialog_value_must_not_be_larger_than;
+	public static String EditSlideDialog_zoom_dir;
+	public static String EditSlideDialog_zoom_in;
 	public static String EditStoryBoardDialog_edit_storyboard_properties;
 	public static String EditStoryBoardDialog_enlarge_small_images;
 	public static String EditStoryBoardDialog_image_size;
@@ -1064,6 +1070,7 @@ public class Messages extends NLS {
 	public static String SlideshowEditDialog_value_must_be_larger_or_equal;
 	public static String SlideshowEditDialog_value_must_not_be_larger;
 	public static String SlideshowEditDialog_voicenotes;
+	public static String SlideshowEditDialog_zoom_in;
 	public static String SlideShowSaveDialog_a_slideshow_with_that_name_exists;
 	public static String SlideShowSaveDialog_group;
 	public static String SlideShowSaveDialog_group_already_exists;
@@ -1078,6 +1085,8 @@ public class Messages extends NLS {
 	public static String SortCriterionGroup_AND;
 	public static String SortCriterionGroup_descending;
 	public static String SortCriterionGroup_no_sort;
+	public static String SplitCatDialog_delete_exported;
+	public static String SplitCatDialog_delete_exported_msg;
 	public static String SplitCatDialog_enter_name_of_cat;
 	public static String SplitCatDialog_extract_the_current_collection;
 	public static String SplitCatDialog_extract_the_current_selection;

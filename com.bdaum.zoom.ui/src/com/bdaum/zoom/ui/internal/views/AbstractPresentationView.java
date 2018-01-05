@@ -72,6 +72,18 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.operations.UndoRedoActionGroup;
+import org.piccolo2d.PCamera;
+import org.piccolo2d.PNode;
+import org.piccolo2d.event.PDragSequenceEventHandler;
+import org.piccolo2d.event.PInputEvent;
+import org.piccolo2d.event.PInputEventFilter;
+import org.piccolo2d.event.PInputEventListener;
+import org.piccolo2d.extras.swt.PSWTCanvas;
+import org.piccolo2d.extras.swt.PSWTPath;
+import org.piccolo2d.extras.swt.PSWTText;
+import org.piccolo2d.util.PBounds;
+import org.piccolo2d.util.PDimension;
+import org.piccolo2d.util.PPaintContext;
 
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
@@ -109,19 +121,6 @@ import com.bdaum.zoom.ui.internal.widgets.TextField;
 import com.bdaum.zoom.ui.internal.widgets.ZPSWTCanvas;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
-import edu.umd.cs.piccolo.PCamera;
-import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PDragSequenceEventHandler;
-import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.event.PInputEventFilter;
-import edu.umd.cs.piccolo.event.PInputEventListener;
-import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolo.util.PDimension;
-import edu.umd.cs.piccolo.util.PPaintContext;
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
-import edu.umd.cs.piccolox.swt.PSWTPath;
-import edu.umd.cs.piccolox.swt.PSWTText;
-
 @SuppressWarnings("restriction")
 public abstract class AbstractPresentationView extends BasicView
 		implements IExtendedColorModel2, IPresentationHandler, UiConstants, IOperationHistoryListener {
@@ -129,7 +128,6 @@ public abstract class AbstractPresentationView extends BasicView
 	private static final int PROGRESS_THICKNESS = 5;
 	private static final int FORCE_PAN_MASK = InputEvent.SHIFT_MASK | InputEvent.ALT_MASK | InputEvent.CTRL_MASK
 			| InputEvent.BUTTON3_MASK;
-	// private static final String AssetSelection = null;
 
 	protected final class PPresentationPanel extends PSWTPath {
 
@@ -180,8 +178,8 @@ public abstract class AbstractPresentationView extends BasicView
 		}
 
 		protected void moveToFront(PNode object) {
-			presentationObject.moveToFront();
-			object.moveToFront();
+			presentationObject.raiseToTop();
+			object.raiseToTop();
 		}
 
 		@Override
@@ -351,9 +349,8 @@ public abstract class AbstractPresentationView extends BasicView
 					e.button = mouseButton;
 					setCursorForObject(e, mouseButton > 1 ? CURSOR_OPEN_HAND : CURSOR_GRABBING, CURSOR_MPLUS,
 							CURSOR_MMINUS);
-					return;
-				}
-				setCursorForObject(e, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND);
+				} else
+					setCursorForObject(e, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND);
 			}
 		});
 		progressBar = new ProgressIndicator(composite, SWT.BORDER);
@@ -364,7 +361,6 @@ public abstract class AbstractPresentationView extends BasicView
 		addKeyListener();
 		getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getOperationHistory()
 				.addOperationHistoryListener(new IOperationHistoryListener() {
-
 					public void historyNotification(OperationHistoryEvent event) {
 						refresh();
 					}
@@ -858,13 +854,12 @@ public abstract class AbstractPresentationView extends BasicView
 				int detail = event.detail;
 				event.detail = DND.DROP_NONE;
 				if (!dbIsReadonly())
-					for (int i = 0; i < event.dataTypes.length; i++) {
+					for (int i = 0; i < event.dataTypes.length; i++)
 						if (transfer.isSupportedType(event.dataTypes[i])) {
 							event.currentDataType = event.dataTypes[i];
 							event.detail = (detail & ops) == 0 ? DND.DROP_NONE : DND.DROP_COPY;
 							break;
 						}
-					}
 				super.dragEnter(event);
 			}
 
@@ -975,17 +970,15 @@ public abstract class AbstractPresentationView extends BasicView
 	@Override
 	public Object getAdapter(Class adapter) {
 		if (adapter == IPresentationItem.class) {
-			if (pickedNode != null) {
-				PNode par = pickedNode.getParent();
-				if (par instanceof IPresentationItem)
-					return par;
-			}
-			return null;
+			PNode par = pickedNode;
+			while (par != null && !(par instanceof IPresentationItem))
+				par = par.getParent();
+			return par;
 		} else if (adapter == AssetSelection.class) {
 			if (pickedNode != null) {
-				PNode par = pickedNode.getParent();
-				if (par instanceof IPresentationItem) {
-					String assetId = ((IPresentationItem) par).getAssetId();
+				IPresentationItem par = (IPresentationItem) getAdapter(IPresentationItem.class);
+				if (par != null) {
+					String assetId = par.getAssetId();
 					if (assetId != null) {
 						AssetImpl asset = Core.getCore().getDbManager().obtainAsset(assetId);
 						if (asset != null)

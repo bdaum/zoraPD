@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
  */
 
 package com.bdaum.zoom.core.internal;
@@ -123,7 +123,6 @@ public class AssetProvider implements IAssetProvider {
 	 */
 
 	public void selectAssets() {
-		count = -1;
 		if (currentCollection == null)
 			return;
 		if (currentProcessor == null || currentProcessor.getCollection() != currentCollection
@@ -133,12 +132,12 @@ public class AssetProvider implements IAssetProvider {
 			BusyIndicator.showWhile(null, () -> {
 				currentProcessor = dbManager.createCollectionProcessor(currentCollection, currentFilters, currentSort);
 				assets = currentProcessor.select(true);
+				count = -1;
 			});
 		} else if (invalid)
-			BusyIndicator.showWhile(null, new Runnable() {
-				public void run() {
-					assets = currentProcessor.select(true);
-				}
+			BusyIndicator.showWhile(null, () -> {
+				assets = currentProcessor.select(true);
+				count = -1;
 			});
 		invalid = false;
 	}
@@ -368,10 +367,8 @@ public class AssetProvider implements IAssetProvider {
 		if (cloneMap == null)
 			cloneMap = new HashMap<String, AssetProvider>(5);
 		AssetProvider clone = cloneMap.get(id);
-		if (clone == null) {
-			clone = new AssetProvider(dbManager);
-			cloneMap.put(id, clone);
-		}
+		if (clone == null)
+			cloneMap.put(id, clone = new AssetProvider(dbManager));
 		return clone;
 	}
 

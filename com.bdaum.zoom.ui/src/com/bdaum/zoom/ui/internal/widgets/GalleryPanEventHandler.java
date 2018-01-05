@@ -25,19 +25,18 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.piccolo2d.PCamera;
+import org.piccolo2d.PNode;
+import org.piccolo2d.event.PInputEvent;
+import org.piccolo2d.event.PInputEventListener;
+import org.piccolo2d.event.PPanEventHandler;
+import org.piccolo2d.extras.swt.PSWTText;
+import org.piccolo2d.util.PBounds;
+import org.piccolo2d.util.PDimension;
 
 import com.bdaum.zoom.ui.internal.IPresentationHandler;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
-
-import edu.umd.cs.piccolo.PCamera;
-import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.event.PInputEventListener;
-import edu.umd.cs.piccolo.event.PPanEventHandler;
-import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolo.util.PDimension;
-import edu.umd.cs.piccolox.swt.PSWTText;
 
 public class GalleryPanEventHandler extends PPanEventHandler implements
 		PInputEventListener, IPreferenceChangeListener {

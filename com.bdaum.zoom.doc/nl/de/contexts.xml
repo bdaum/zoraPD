@@ -438,5 +438,9 @@
     <description>Mehrere Bilder in einem Rutsch kategorisieren</description>
     <topic href="html/reference/categorize.html" label="Bilder kategorisieren"/>
  </context>
+ <context id="vocab_page_context" title="Wortschatz">
+    <description>Benutzerdefinierte Wortschätze pflegen</description>
+    <topic href="html/reference/catPrefs.html" label="Wortschatz"/>
+ </context>
 
 </contexts>

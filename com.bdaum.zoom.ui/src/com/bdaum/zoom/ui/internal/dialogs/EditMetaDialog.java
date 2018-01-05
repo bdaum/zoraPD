@@ -59,7 +59,6 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
-import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.ContentViewer;
@@ -89,6 +88,8 @@ import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
@@ -112,6 +113,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -859,23 +861,19 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			locTreeViewer.setContentProvider(new LocTreeContentProvider());
 			locTreeViewer.setComparator(new CategoryComparator());
 			locTreeViewer.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
+			UiUtilities.installDoubleClickExpansion(locTreeViewer);
+			locTreeViewer.getControl().addKeyListener(keyListener);
 			locTreeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 				public void selectionChanged(SelectionChangedEvent event) {
 					updateStructButtons();
-				}
-			});
-			locTreeViewer.addDoubleClickListener(new IDoubleClickListener() {
-				public void doubleClick(DoubleClickEvent event) {
-					LocationNode node = (LocationNode) ((IStructuredSelection) locTreeViewer.getSelection())
-							.getFirstElement();
-					if (node != null) {
-						if (node.getLocation() == null) {
-							if (locTreeViewer.getExpandedState(node))
-								locTreeViewer.collapseToLevel(node, 1);
-							else
-								locTreeViewer.expandToLevel(node, 1);
-						} else
-							editStruct(QueryField.T_LOCATION);
+					if (cntrlDwn) {
+						if (editButton.isEnabled()) {
+							LocationNode node = (LocationNode) ((IStructuredSelection) locTreeViewer.getSelection())
+									.getFirstElement();
+							if (node != null && node.getLocation() != null)
+								editStruct(QueryField.T_LOCATION);
+						}
+						cntrlDwn = false;
 					}
 				}
 			});
@@ -1294,7 +1292,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 	protected static final IInputValidator keywordValidator = new KeywordValidator();
 	static final String[] KEYWORDEXTENSIONS = new String[] { "*" //$NON-NLS-1$
 			+ Constants.KEYWORDFILEEXTENSION + ";*" //$NON-NLS-1$
-			+ Constants.KEYWORDFILEEXTENSION.toUpperCase() };
+			+ Constants.KEYWORDFILEEXTENSION.toUpperCase() , Messages.EditMetaDialog_0};
 	private Text fileName;
 	private Text creationDate;
 	private Text lastImport;
@@ -1309,17 +1307,11 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 	private Button categoryEditButton;
 	private Button categoryAddButton;
 	private Button categoryRefineButton;
-
 	private Button keywordLoadButton;
-
 	private Button keywordSaveButton;
-
 	private Button saveCatButton;
-
 	private Button loadCatButton;
-
 	private Map<String, Category> categories;
-
 	private ComboViewer timelineViewer;
 	private IWorkbenchPage workbenchPage;
 	private Label versionLabel;
@@ -1336,6 +1328,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 	protected final Object[] EMPTYOBJECTARRAY = new Object[0];
 	private static final long ONEDAY = 86400000L;
 	private static final String SETTINGSID = "com.bdaum.zoom.ui.editMetaDialog"; //$NON-NLS-1$
+	protected static final String[] VOCABEXTENSIONS = null;
 	private Label locationsField;
 	private Label contactsField;
 	private Label artworksField;
@@ -1359,7 +1352,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 	private Button keywordCollectButton;
 	private Button keywordShowButton;
 	private CTabFolder tabFolder;
-	private boolean[] visited = new boolean[WATCHEDFOLDERS + 1];
+	private boolean[] visited;
 	private ComboViewer languageCombo;
 	private NumericControl latencyField;
 	private Button keywordModifyButton;
@@ -1371,7 +1364,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 	private Button createLocationFoldersButton;
 	private CompressionGroup compressionGroup;
 	private CheckboxTableViewer simViewer;
-	private CheckboxTreeViewer textIndexViewer;
+	private ContainerCheckedTreeViewer textIndexViewer;
 	private CheckboxButton noIndexButton;
 	private CheckboxButton slideTitleButton;
 	private CheckboxButton slideDescrButton;
@@ -1418,6 +1411,20 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 	private boolean essentialAlgos = true;
 	private Set<String> cbirAlgorithms = new HashSet<String>(CoreActivator.getDefault().getCbirAlgorithms());
 	private Composite simComp;
+	private boolean cntrlDwn;
+	private KeyAdapter keyListener = new KeyAdapter() {
+		@Override
+		public void keyPressed(KeyEvent e) {
+			if (e.keyCode == SWT.CTRL)
+				cntrlDwn = true;
+		}
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+			if (e.keyCode == SWT.CTRL)
+				cntrlDwn = false;
+		}
+	};
 
 	public EditMetaDialog(Shell parentShell, IWorkbenchPage workbenchPage, IDbManager dbManager, boolean newDb,
 			Meta previousMeta) {
@@ -1483,7 +1490,8 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		createStatisticsGroup(tabFolder);
 		STATISTICS = pgCnt++;
 		createWatchedFolderGroup(tabFolder);
-		WATCHEDFOLDERS = pgCnt;
+		WATCHEDFOLDERS = pgCnt++;
+		visited = new boolean[pgCnt];
 		tabFolder.setSimple(false);
 		tabFolder.setSelection(initialPage);
 		initHeader();
@@ -1619,7 +1627,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		textGroup.setText(Messages.EditMetaDialog_fields_in_text_search);
 		textGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		textGroup.setLayout(new GridLayout());
-		textIndexViewer = new CheckboxTreeViewer(textGroup, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL);
+		textIndexViewer = new ContainerCheckedTreeViewer(textGroup, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL);
 		setViewerLayout(textIndexViewer, SWT.DEFAULT, 1);
 		textIndexViewer.setLabelProvider(new MetadataLabelProvider());
 		textIndexViewer.setContentProvider(new MetadataContentProvider());
@@ -1642,11 +1650,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			}
 		} });
 		textIndexViewer.setComparator(new ViewComparator());
-		textIndexViewer.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				UiUtilities.checkHierarchy(textIndexViewer, event.getElement(), event.getChecked(), true, true);
-			}
-		});
+		UiUtilities.installDoubleClickExpansion(textIndexViewer);
 		textIndexViewer.setInput(QueryField.ALL);
 		textIndexViewer.expandToLevel(1);
 		textIndexViewer.expandToLevel(QueryField.IMAGE_ALL, 1);
@@ -2263,14 +2267,21 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			}
 		});
 		watchedFolderViewer.setContentProvider(ArrayContentProvider.getInstance());
+		watchedFolderViewer.getControl().addKeyListener(keyListener);
 		watchedFolderViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateFolderButtons();
+				if (cntrlDwn) {
+					if (editFolderButton.isEnabled())
+						editWatchedFolder();
+					cntrlDwn = false;
+				}
 			}
 		});
 		watchedFolderViewer.addDoubleClickListener(new IDoubleClickListener() {
 			public void doubleClick(DoubleClickEvent event) {
-				editWatchedFolder();
+				if (!cntrlDwn && editFolderButton.isEnabled())
+					editWatchedFolder();
 			}
 		});
 		Composite buttonComp = new Composite(composite, SWT.NONE);
@@ -2515,6 +2526,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 						: super.compare(viewer, e1, e2);
 			}
 		});
+		UiUtilities.installDoubleClickExpansion(keywordViewer);
 		keywordViewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
 			@Override
 			public boolean select(Viewer aViewer, Object parentElement, Object element) {
@@ -2558,12 +2570,17 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				editKeyword();
 			}
 		});
-		keywordViewer.addDoubleClickListener(new IDoubleClickListener() {
-			public void doubleClick(DoubleClickEvent event) {
-				editKeyword();
+		keywordViewer.getControl().addKeyListener(keyListener);
+		keywordViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			public void selectionChanged(final SelectionChangedEvent event) {
+				updateButtons();
+				if (cntrlDwn) {
+					if (keywordModifyButton.isEnabled())
+						editKeyword();
+					cntrlDwn = false;
+				}
 			}
 		});
-
 		keywordReplaceButton = createPushButton(buttonGroup, Messages.EditMetaDialog_replace,
 				Messages.EditMetaDialog_replace_tooltip);
 		keywordReplaceButton.addSelectionListener(new SelectionAdapter() {
@@ -2661,13 +2678,12 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		keywordLoadButton = createPushButton(buttonGroup, Messages.EditMetaDialog_load,
 				NLS.bind(Messages.EditMetaDialog_load_keyword_tooltip, Constants.KEYWORDFILEEXTENSION));
 		keywordLoadButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent ev) {
 				FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
 				dialog.setFilterExtensions(KEYWORDEXTENSIONS);
 				dialog.setFilterNames(new String[] { Constants.APPNAME + Messages.EditMetaDialog_zoom_keyword_file
-						+ Constants.KEYWORDFILEEXTENSION + ")" }); //$NON-NLS-1$
+						+ Constants.KEYWORDFILEEXTENSION + ')' , Messages.EditMetaDialog_all_files});
 				String filename = dialog.open();
 				if (filename != null) {
 					try (InputStream in = new BufferedInputStream(new FileInputStream(filename))) {
@@ -2690,7 +2706,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				FileDialog dialog = new FileDialog(getShell(), SWT.SAVE);
 				dialog.setFilterExtensions(KEYWORDEXTENSIONS);
 				dialog.setFilterNames(new String[] { Constants.APPNAME + Messages.EditMetaDialog_zoom_keyword_file
-						+ Constants.KEYWORDFILEEXTENSION + ")" }); //$NON-NLS-1$
+						+ Constants.KEYWORDFILEEXTENSION + ")" , Messages.EditMetaDialog_all_files}); //$NON-NLS-1$
 				dialog.setFileName("*" + Constants.KEYWORDFILEEXTENSION); //$NON-NLS-1$
 				dialog.setOverwrite(true);
 				String filename = dialog.open();
@@ -2766,6 +2782,9 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 			public void widgetSelected(SelectionEvent e) {
 				FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
 				dialog.setText(Messages.EditMetaDialog_select_vocab);
+				dialog.setFilterExtensions(KEYWORDEXTENSIONS);
+				dialog.setFilterNames(new String[] { Constants.APPNAME + Messages.EditMetaDialog_zoom_keyword_file
+						+ Constants.KEYWORDFILEEXTENSION + ')' , Messages.EditMetaDialog_all_files});
 				String file = dialog.open();
 				if (file != null) {
 					boolean found = false;
@@ -2942,6 +2961,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		catTreeViewer.setContentProvider(new CategoryContentProvider());
 		catTreeViewer.setComparator(new CategoryComparator());
 		catTreeViewer.setLabelProvider(new CategoryLabelProvider());
+		UiUtilities.installDoubleClickExpansion(catTreeViewer);
 
 		final Composite buttonGroup = new Composite(catComposite, SWT.NONE);
 		buttonGroup.setLayout(new GridLayout());
@@ -2993,16 +3013,20 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				editCategory(parent);
 			}
 		});
-		catTreeViewer.addDoubleClickListener(new IDoubleClickListener() {
-
-			public void doubleClick(DoubleClickEvent event) {
-				editCategory(parent);
+		catTreeViewer.getControl().addKeyListener(keyListener);
+		catTreeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			public void selectionChanged(final SelectionChangedEvent event) {
+				updateButtons();
+				if (cntrlDwn) {
+					if (categoryEditButton.isEnabled())
+						editCategory(parent);
+					cntrlDwn = false;
+				}
 			}
 		});
 		categoryRemoveButton = createPushButton(buttonGroup, Messages.EditMetaDialog_remove,
 				Messages.EditMetaDialog_remove_category);
 		categoryRemoveButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				CategoryImpl firstElement = (CategoryImpl) ((IStructuredSelection) catTreeViewer.getSelection())
@@ -3014,7 +3038,6 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 					categories.remove(firstElement.getLabel());
 				catTreeViewer.remove(firstElement);
 			}
-
 		});
 
 		new Label(buttonGroup, SWT.HORIZONTAL | SWT.SEPARATOR).setText(Messages.EditMetaDialog_label);
@@ -3024,7 +3047,6 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		loadCatButton = createPushButton(buttonGroup, Messages.EditMetaDialog_load,
 				NLS.bind(Messages.EditMetaDialog_load_category, Constants.CATEGORYFILEEXTENSION));
 		loadCatButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
@@ -3056,12 +3078,6 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 				String filename = dialog.open();
 				if (filename != null)
 					Utilities.saveCategories(meta, new File(filename));
-			}
-		});
-		catTreeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
 			}
 		});
 	}
@@ -3210,7 +3226,6 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 					textIndexViewer.setChecked(qf, true);
 				}
 			}
-			UiUtilities.checkInitialHierarchy(textIndexViewer, fields);
 			slideTitleButton.setSelection(indexedTextFields.contains(ILuceneService.INDEX_SLIDE_TITLE));
 			slideDescrButton.setSelection(indexedTextFields.contains(ILuceneService.INDEX_SLIDE_DESCR));
 			exhibitionTitleButton.setSelection(indexedTextFields.contains(ILuceneService.INDEX_EXH_TITLE));
@@ -3564,6 +3579,7 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 	}
 
 	protected void tabChanged() {
+		cntrlDwn = false;
 		int tabIndex = tabFolder.getSelectionIndex();
 		if (newDb) {
 			if (initButtonGroup != null && initButtonGroup.getSelection() == 1 && initButtonGroup.isEnabled(1)) {

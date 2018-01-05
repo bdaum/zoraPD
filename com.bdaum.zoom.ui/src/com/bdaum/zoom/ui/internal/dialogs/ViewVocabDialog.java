@@ -46,6 +46,7 @@ import org.eclipse.swt.widgets.Shell;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.Icons;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.VocabManager.VocabNode;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 
@@ -155,7 +156,8 @@ public class ViewVocabDialog extends ZTitleAreaDialog {
 						okPressed();
 				}
 			});
-		}
+		} else
+			UiUtilities.installDoubleClickExpansion(viewer);
 		return area;
 	}
 

@@ -28,8 +28,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -45,6 +43,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
@@ -54,6 +53,7 @@ import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
@@ -103,11 +103,11 @@ public class FtpDirPage extends ColoredWizardPage {
 		super.createControl(parent);
 	}
 
-	private CheckboxTreeViewer createViewerGroup(Composite comp) {
+	private ContainerCheckedTreeViewer createViewerGroup(Composite comp) {
 		urlLabel = new Label(comp, SWT.NONE);
 		urlLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(comp, SWT.NONE);
-		final CheckboxTreeViewer cbViewer = new CheckboxTreeViewer(comp,
+		final ContainerCheckedTreeViewer cbViewer = new ContainerCheckedTreeViewer(comp,
 				SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
 		expandCollapseGroup.setViewer(cbViewer);
 		final Tree tree = cbViewer.getTree();
@@ -200,7 +200,6 @@ public class FtpDirPage extends ColoredWizardPage {
 			}
 		});
 		cbViewer.setComparator(new ViewerComparator() {
-
 			@Override
 			public int compare(Viewer v, Object e1, Object e2) {
 				if (e1 instanceof FTPFile && e2 instanceof FTPFile) {
@@ -214,64 +213,12 @@ public class FtpDirPage extends ColoredWizardPage {
 			}
 		});
 		cbViewer.addCheckStateListener(new ICheckStateListener() {
-
 			public void checkStateChanged(CheckStateChangedEvent event) {
-				boolean checked = event.getChecked();
-				Object element = event.getElement();
-				checkHierarchy(cbViewer, element, checked, true, true);
 				validatePage();
 			}
 		});
+		UiUtilities.installDoubleClickExpansion(cbViewer);
 		return cbViewer;
-	}
-
-	public void checkHierarchy(CheckboxTreeViewer v, Object element, boolean checked, boolean down, boolean up) {
-		v.setGrayChecked(element, false);
-		v.setChecked(element, checked);
-		if (element instanceof FTPFile) {
-			if (down) {
-				if (((FTPFile) element).isDirectory()) {
-					if (checked)
-						v.expandToLevel(element, 1);
-					Set<Entry<FTPFile, FTPFile>> entrySet = fileParents.entrySet();
-					@SuppressWarnings("unchecked")
-					Entry<FTPFile, FTPFile>[] entries = entrySet.toArray(new Entry[entrySet.size()]);
-					for (Map.Entry<FTPFile, FTPFile> entry : entries) {
-						if (entry.getValue() == element)
-							checkHierarchy(v, entry.getKey(), checked, true, false);
-					}
-				}
-			}
-			if (up) {
-				FTPFile parent = fileParents.get(element);
-				while (parent != null) {
-					boolean allChecked = true;
-					boolean someChecked = false;
-					for (Map.Entry<FTPFile, FTPFile> entry : fileParents.entrySet()) {
-						if (entry.getValue() == parent) {
-							if (v.getGrayed(entry.getKey())) {
-								allChecked = false;
-								someChecked = true;
-							} else {
-								boolean childChecked = v.getChecked(entry.getKey());
-								allChecked &= childChecked;
-								someChecked |= childChecked;
-							}
-						}
-					}
-					if (allChecked) {
-						v.setGrayChecked(parent, false);
-						v.setChecked(parent, true);
-					} else if (someChecked) {
-						v.setGrayChecked(parent, true);
-					} else {
-						v.setGrayChecked(parent, false);
-						v.setChecked(parent, false);
-					}
-					parent = fileParents.get(parent);
-				}
-			}
-		}
 	}
 
 	@Override

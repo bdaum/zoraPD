@@ -145,5 +145,9 @@ public interface PreferenceConstants {
 	String TRAY_PROMPT = "prompt"; //$NON-NLS-1$
 	String TRAY_TRAY = "true"; //$NON-NLS-1$
 	String TRAY_DESK = "false"; //$NON-NLS-1$
+	// Vocab
+	String V_GENRE = "com.bdaum.zoom.v_genre"; //$NON-NLS-1$
+	String V_SCENE = "com.bdaum.zoom.v_scene"; //$NON-NLS-1$
+	String V_SUBJECT = "com.bdaum.zoom.v_subject"; //$NON-NLS-1$
 
 }

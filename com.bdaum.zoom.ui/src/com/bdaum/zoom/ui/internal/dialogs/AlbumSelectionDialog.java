@@ -27,11 +27,11 @@ import java.util.Set;
 
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
-import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
-import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -39,6 +39,8 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
@@ -78,6 +80,7 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 	private boolean persons;
 	private List<Image> faces = new ArrayList<>();
 	private boolean deleteRegion = false;
+	protected boolean cntrlDwn;
 
 	public AlbumSelectionDialog(Shell parentShell, boolean persons, boolean small, List<String> assignedAlbums) {
 		super(parentShell);
@@ -99,8 +102,10 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 
 	private void validate() {
 		Object[] checkedElements = viewer.getCheckedElements();
-		String errorMessage = (checkedElements.length == 0) ? (persons ? Messages.AlbumSelectionDialog_select_one
-				: Messages.AlbumSelectionDialog_select_at_least_one) : null;
+		String errorMessage = (checkedElements.length == 0)
+				? (persons ? Messages.AlbumSelectionDialog_select_one
+						: Messages.AlbumSelectionDialog_select_at_least_one)
+				: null;
 		setErrorMessage(errorMessage);
 		getButton(OK).setEnabled(errorMessage == null);
 	}
@@ -138,10 +143,12 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 				}
 				return null;
 			}
-			
+
 			@Override
 			protected Rectangle getIconBounds() {
-				return Icons.person64.getImage().getBounds();
+				if (persons)
+					return Icons.person64.getImage().getBounds();
+				return null;
 			}
 
 		});
@@ -183,13 +190,12 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 			public Object[] getElements(Object inputElement) {
 				if (inputElement instanceof List) {
 					List<SmartCollection> rootalbums = new ArrayList<SmartCollection>();
-					for (Object obj : (List<?>) inputElement) {
+					for (Object obj : (List<?>) inputElement)
 						if (obj instanceof SmartCollection) {
 							SmartCollection album = (SmartCollection) obj;
 							if (album.getSmartCollection_subSelection_parent() == null)
 								rootalbums.add(album);
 						}
-					}
 					return rootalbums.toArray();
 				}
 				return null;
@@ -204,14 +210,12 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 		viewer.setComparator(new ViewerComparator() {
 			@Override
 			public int compare(Viewer viewer, Object e1, Object e2) {
-				if (e1 instanceof SmartCollection && e2 instanceof SmartCollection) {
-					String name1 = ((SmartCollection) e1).getName();
-					String name2 = ((SmartCollection) e2).getName();
-					return name1.compareTo(name2);
-				}
+				if (e1 instanceof SmartCollection && e2 instanceof SmartCollection)
+					return ((SmartCollection) e1).getName().compareTo(((SmartCollection) e2).getName());
 				return super.compare(viewer, e1, e2);
 			}
 		});
+		UiUtilities.installDoubleClickExpansion(viewer);
 		if (assignedAlbums != null && !assignedAlbums.isEmpty() && !persons) {
 			viewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
 				@Override
@@ -222,40 +226,52 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 		}
 		viewer.addCheckStateListener(new ICheckStateListener() {
 			public void checkStateChanged(CheckStateChangedEvent event) {
-				if (persons) {
-					if (event.getChecked()) {
-						Object element = event.getElement();
-						Object[] checkedElements = viewer.getCheckedElements();
-						for (Object object : checkedElements)
-							if (object != element)
-								viewer.setChecked(object, false);
-						viewer.setSelection(new StructuredSelection(element));
-					}
+				if (persons && event.getChecked()) {
+					Object element = event.getElement();
+					for (Object object : viewer.getCheckedElements())
+						if (object != element)
+							viewer.setChecked(object, false);
+					viewer.setSelection(new StructuredSelection(element));
 				}
 				validate();
 			}
 		});
-		viewer.addDoubleClickListener(new IDoubleClickListener() {
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				if (cntrlDwn) {
+					SmartCollectionImpl sm = (SmartCollectionImpl) ((IStructuredSelection) viewer.getSelection())
+							.getFirstElement();
+					if (sm != null) {
+						CollectionEditDialog dialog = new CollectionEditDialog(getShell(), sm,
+								Messages.AlbumSelectionDialog_edit_person, Messages.AlbumSelectionDialog_person_album_msg,
+								false, true, false, false);
+						if (dialog.open() == Window.OK) {
+							final SmartCollectionImpl album = dialog.getResult();
+							if (album != null) {
+								Set<Object> toBeDeleted = new HashSet<Object>();
+								List<Object> toBeStored = new ArrayList<Object>();
+								Utilities.updateCollection(dbManager, sm, album, toBeDeleted, toBeStored);
+								dbManager.safeTransaction(toBeDeleted, toBeStored);
+							}
+							viewer.update(sm, null);
+						}
+					}
+					cntrlDwn = false;
+				}
+			}
+		});
+		viewer.getControl().addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.keyCode == SWT.CTRL)
+					cntrlDwn = true;
+			}
 
 			@Override
-			public void doubleClick(DoubleClickEvent event) {
-				SmartCollectionImpl sm = (SmartCollectionImpl) ((IStructuredSelection) viewer.getSelection())
-						.getFirstElement();
-				if (sm != null) {
-					CollectionEditDialog dialog = new CollectionEditDialog(getShell(), sm,
-							Messages.AlbumSelectionDialog_edit_person, Messages.AlbumSelectionDialog_person_album_msg,
-							false, true, false, false);
-					if (dialog.open() == Window.OK) {
-						final SmartCollectionImpl album = dialog.getResult();
-						if (album != null) {
-							Set<Object> toBeDeleted = new HashSet<Object>();
-							List<Object> toBeStored = new ArrayList<Object>();
-							Utilities.updateCollection(dbManager, sm, album, toBeDeleted, toBeStored);
-							dbManager.safeTransaction(toBeDeleted, toBeStored);
-						}
-						viewer.update(sm, null);
-					}
-				}
+			public void keyReleased(KeyEvent e) {
+				if (e.keyCode == SWT.CTRL)
+					cntrlDwn = false;
 			}
 		});
 		if (!small) {
@@ -279,7 +295,7 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		if (persons)
-			createButton(parent, DELETEREGION,Messages.AlbumSelectionDialog_delete_region, false);
+			createButton(parent, DELETEREGION, Messages.AlbumSelectionDialog_delete_region, false);
 		if (Core.getCore().getDbManager().obtainById(GroupImpl.class, Constants.GROUP_ID_USER) != null)
 			createButton(parent, NEWALBUM, Messages.AlbumSelectionDialog_new_album, false);
 		super.createButtonsForButtonBar(parent);
@@ -366,10 +382,9 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 			face.dispose();
 		return super.close();
 	}
-	
+
 	public boolean isDeleteRegion() {
 		return deleteRegion;
 	}
-
 
 }

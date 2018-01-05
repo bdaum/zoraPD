@@ -21,11 +21,10 @@
 package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.swt.graphics.Image;
+import org.piccolo2d.extras.swt.PSWTCanvas;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.image.ImageStore;
-
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
 
 public class PSWTAssetThumbnail extends ZPSWTImage {
 

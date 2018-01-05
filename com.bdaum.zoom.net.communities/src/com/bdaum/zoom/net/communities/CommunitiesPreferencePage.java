@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
 import com.bdaum.zoom.net.communities.ui.EditCommunityAccountDialog;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePagePart;
@@ -59,8 +60,7 @@ public class CommunitiesPreferencePage extends AbstractPreferencePagePart {
 	private TreeViewer accountViewer;
 	private Button editButton;
 	private Button removeButton;
-	private Map<String, List<CommunityAccount>> accounts = new HashMap<String, List<CommunityAccount>>(
-			7);
+	private Map<String, List<CommunityAccount>> accounts = new HashMap<String, List<CommunityAccount>>(7);
 	private Set<String> changed = new HashSet<String>(7);
 	private Button newButton;
 
@@ -81,59 +81,50 @@ public class CommunitiesPreferencePage extends AbstractPreferencePagePart {
 		accountViewer.setContentProvider(new AccountContentProvider(accounts));
 		accountViewer.setLabelProvider(new AccountLabelProvider(accountViewer));
 		accountViewer.setComparator(new ViewerComparator());
+		UiUtilities.installDoubleClickExpansion(accountViewer);
 		Composite buttonGroup = new Composite(group, SWT.NONE);
 		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.FILL, false, true));
 		buttonGroup.setLayout(new GridLayout(1, false));
-		newButton = createPushButton(buttonGroup,
-				Messages.CommunitiesPreferencePage_new,
+		newButton = createPushButton(buttonGroup, Messages.CommunitiesPreferencePage_new,
 				Messages.CommunitiesPreferencePage_create_a_new_account);
 		newButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) accountViewer
-						.getSelection();
+				IStructuredSelection selection = (IStructuredSelection) accountViewer.getSelection();
 				Object firstElement = selection.getFirstElement();
 				if (firstElement instanceof IConfigurationElement) {
 					IConfigurationElement conf = (IConfigurationElement) firstElement;
-					CommunityApi communitiesApi = CommunitiesActivator
-							.getCommunitiesApi(conf);
+					CommunityApi communitiesApi = CommunitiesActivator.getCommunitiesApi(conf);
 					String id = conf.getAttribute("id"); //$NON-NLS-1$
 					List<CommunityAccount> list = accounts.get(id);
 					IConfigurationElement config = conf.getChildren()[0];
-					EditCommunityAccountDialog dialog = new EditCommunityAccountDialog(
-							parent.getShell(), new CommunityAccount(config),
-							communitiesApi);
+					EditCommunityAccountDialog dialog = new EditCommunityAccountDialog(parent.getShell(),
+							new CommunityAccount(config), communitiesApi);
 					if (dialog.open() == Window.OK) {
 						CommunityAccount result = dialog.getResult();
 						list.add(result);
 						setViewerInput();
-						accountViewer.setSelection(new StructuredSelection(
-								result));
+						accountViewer.setSelection(new StructuredSelection(result));
 					}
 				}
 			}
 		});
 
-		editButton = createPushButton(buttonGroup,
-				Messages.CommunitiesPreferencePage_edit,
+		editButton = createPushButton(buttonGroup, Messages.CommunitiesPreferencePage_edit,
 				Messages.CommunitiesPreferencePage_edit_selected_account);
 		editButton.addSelectionListener(new SelectionAdapter() {
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) accountViewer
-						.getSelection();
+				IStructuredSelection selection = (IStructuredSelection) accountViewer.getSelection();
 				Object firstElement = selection.getFirstElement();
 				if (firstElement instanceof CommunityAccount) {
 					final CommunityAccount account = (CommunityAccount) firstElement;
-					IConfigurationElement conf = (IConfigurationElement) account
-							.getConfiguration().getParent();
-					final CommunityApi communitiesApi = CommunitiesActivator
-							.getCommunitiesApi(conf);
+					IConfigurationElement conf = (IConfigurationElement) account.getConfiguration().getParent();
+					final CommunityApi communitiesApi = CommunitiesActivator.getCommunitiesApi(conf);
 					BusyIndicator.showWhile(e.display, () -> {
-						EditCommunityAccountDialog dialog = new EditCommunityAccountDialog(
-								parent.getShell(), account, communitiesApi);
+						EditCommunityAccountDialog dialog = new EditCommunityAccountDialog(parent.getShell(), account,
+								communitiesApi);
 						if (dialog.open() == Window.OK) {
 							CommunityAccount result = dialog.getResult();
 							accountViewer.update(result, null);
@@ -144,51 +135,43 @@ public class CommunitiesPreferencePage extends AbstractPreferencePagePart {
 			}
 		});
 		new Label(buttonGroup, SWT.SEPARATOR | SWT.HORIZONTAL);
-		removeButton = createPushButton(buttonGroup,
-				Messages.CommunitiesPreferencePage_remove,
+		removeButton = createPushButton(buttonGroup, Messages.CommunitiesPreferencePage_remove,
 				Messages.CommunitiesPreferencePage_remove_selected_account);
 		removeButton.addSelectionListener(new SelectionAdapter() {
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) accountViewer
-						.getSelection();
+				IStructuredSelection selection = (IStructuredSelection) accountViewer.getSelection();
 
 				Object firstElement = selection.getFirstElement();
 				if (firstElement instanceof CommunityAccount) {
 					CommunityAccount communityAccount = (CommunityAccount) firstElement;
-					List<CommunityAccount> acc = accounts.get(communityAccount
-							.getCommunityId());
+					List<CommunityAccount> acc = accounts.get(communityAccount.getCommunityId());
 					if (acc != null) {
 						int i = acc.indexOf(communityAccount);
-						CommunityAccount sibling = (i < acc.size() - 1) ? acc
-								.get(i + 1) : (i > 0) ? acc.get(i - 1) : null;
+						CommunityAccount sibling = (i < acc.size() - 1) ? acc.get(i + 1)
+								: (i > 0) ? acc.get(i - 1) : null;
 						acc.remove(i);
 						changed.add(communityAccount.getCommunityId());
 						setViewerInput();
 						if (sibling != null)
-							accountViewer.setSelection(new StructuredSelection(
-									sibling));
+							accountViewer.setSelection(new StructuredSelection(sibling));
 					}
 				}
 			}
 		});
-
-		accountViewer
-				.addSelectionChangedListener(new ISelectionChangedListener() {
-
-					public void selectionChanged(SelectionChangedEvent event) {
-						validate();
-					}
-				});
+		accountViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			public void selectionChanged(SelectionChangedEvent event) {
+				validate();
+			}
+		});
 		setViewerInput();
 		return composite;
 	}
 
 	@Override
 	public void updateButtons() {
-		IStructuredSelection selection = (IStructuredSelection) accountViewer
-				.getSelection();
+		IStructuredSelection selection = (IStructuredSelection) accountViewer.getSelection();
 		boolean enabled = (selection.getFirstElement() instanceof CommunityAccount);
 		editButton.setEnabled(enabled);
 		removeButton.setEnabled(enabled);
@@ -203,7 +186,6 @@ public class CommunitiesPreferencePage extends AbstractPreferencePagePart {
 		return button;
 	}
 
-
 	private void setViewerInput() {
 		IExtensionPoint extensionPoint = Platform.getExtensionRegistry()
 				.getExtensionPoint(CommunitiesActivator.PLUGIN_ID, "community"); //$NON-NLS-1$
@@ -213,11 +195,9 @@ public class CommunitiesPreferencePage extends AbstractPreferencePagePart {
 
 	@Override
 	public void performOk() {
-		for (Map.Entry<String, List<CommunityAccount>> entry : accounts
-				.entrySet()) {
+		for (Map.Entry<String, List<CommunityAccount>> entry : accounts.entrySet()) {
 			if (changed.contains(entry.getKey()))
-				CommunityAccount.saveAllAccounts(entry.getKey(),
-						entry.getValue());
+				CommunityAccount.saveAllAccounts(entry.getKey(), entry.getValue());
 		}
 	}
 

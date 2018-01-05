@@ -29,12 +29,11 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChange
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseWheelListener;
+import org.piccolo2d.PCamera;
+import org.piccolo2d.extras.swt.PSWTCanvas;
 
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
-
-import edu.umd.cs.piccolo.PCamera;
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
 
 public final class InertiaMouseWheelListener implements MouseWheelListener,
 		IPreferenceChangeListener {

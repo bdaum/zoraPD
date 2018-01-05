@@ -24,15 +24,33 @@ import org.eclipse.jface.viewers.IElementComparer;
 import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 
 public final class IdentifiedElementComparer implements IElementComparer {
+	
+	private static IdentifiedElementComparer INSTANCE;
+	
+	private IdentifiedElementComparer() {
+		super();
+	}
+	
+	public static IdentifiedElementComparer getInstance() {
+		if (INSTANCE == null)
+			INSTANCE = new IdentifiedElementComparer();
+		return INSTANCE;
+	}
+	
 	public int hashCode(Object element) {
-		if (element instanceof IIdentifiableObject)
-			return ((IIdentifiableObject) element).getStringId().hashCode();
-		return element.hashCode();
+		return element instanceof IIdentifiableObject ? ((IIdentifiableObject) element).getStringId().hashCode()
+				: element == null ? 0 : element.hashCode();
 	}
 
 	public boolean equals(Object a, Object b) {
-		if ((a instanceof IIdentifiableObject) && (b instanceof IIdentifiableObject))
-			return ((IIdentifiableObject) a).getStringId().equals(((IIdentifiableObject) b).getStringId());
+		if (a == b)
+			return true;
+		if (a == null || b == null)
+			return false;
+		if (a instanceof IIdentifiableObject)
+			a = ((IIdentifiableObject) a).getStringId();
+		if (b instanceof IIdentifiableObject)
+			b = ((IIdentifiableObject) b).getStringId();
 		return a.equals(b);
 	}
 }

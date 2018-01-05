@@ -68,7 +68,7 @@ These are the file types as provided by EXIFTOOL. The file extensions should be 
                   IImageViewer implementation
                </documentation>
                <appInfo>
-                  <meta.attribute kind="java" basedOn=":com.bdaum.zoom.ui.views.IImageViewer"/>
+                  <meta.attribute kind="java" basedOn=":com.bdaum.zoom.ui.views.IMediaViewer"/>
                </appInfo>
             </annotation>
          </attribute>

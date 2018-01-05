@@ -730,7 +730,6 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 			}
 		});
 		usedCatViewer.setLabelProvider(new ColumnLabelProvider() {
-
 			@Override
 			public String getText(Object element) {
 				if (element instanceof Category)
@@ -748,7 +747,6 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		});
 		usedCatViewer.setComparator(new ViewerComparator());
 		usedCatViewer.addCheckStateListener(new ICheckStateListener() {
-
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				Object element = event.getElement();
 				if (element instanceof Category && event.getChecked()) {
@@ -763,6 +761,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 				updateCatButtons();
 			}
 		});
+		UiUtilities.installDoubleClickExpansion(usedCatViewer);
 		usedCatViewer.setInput(usedCategories);
 		usedCatViewer.expandAll();
 		updateUsedCatButton = new Button(composite, SWT.PUSH);

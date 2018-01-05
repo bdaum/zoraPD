@@ -34,6 +34,7 @@ public class Messages extends NLS {
 	public static String AnimatedGallery_raw_recipe_applies;
 	public static String AnimatedGallery_rotate_left;
 	public static String AnimatedGallery_rotate_right;
+	public static String CodeGroup_select_code;
 	public static String DescriptionGroup_description;
 	public static String DescriptionGroup_existing_markup_will_be_deleted;
 	public static String DescriptionGroup_html_assist;

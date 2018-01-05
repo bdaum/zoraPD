@@ -79,7 +79,6 @@ import org.osgi.framework.ServiceReference;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.aoModeling.runtime.UUIDgenerator;
 import com.bdaum.zoom.batch.internal.BatchActivator;
-import com.bdaum.zoom.cat.model.Ghost_typeImpl;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.meta.LastDeviceImport;
@@ -202,8 +201,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.core.runtime.Plugins#start(org.osgi.framework.BundleContext)
+	 * @see org.eclipse.core.runtime.Plugins#start(org.osgi.framework.BundleContext)
 	 */
 
 	@Override
@@ -252,8 +250,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.core.runtime.Plugin#stop(org.osgi.framework.BundleContext)
+	 * @see org.eclipse.core.runtime.Plugin#stop(org.osgi.framework.BundleContext)
 	 */
 
 	@Override
@@ -881,8 +878,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.ICore#fireCatalogSelection(org.eclipse.jface.viewers
+	 * @see com.bdaum.zoom.core.ICore#fireCatalogSelection(org.eclipse.jface.viewers
 	 * .IStructuredSelection)
 	 */
 	public void fireCatalogSelection(IStructuredSelection selection, boolean forceUpdate) {
@@ -909,8 +905,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.ICore#performOperation(org.eclipse.core.commands.
+	 * @see com.bdaum.zoom.core.ICore#performOperation(org.eclipse.core.commands.
 	 * operations.IUndoableOperation, org.eclipse.core.runtime.IProgressMonitor,
 	 * org.eclipse.core.runtime.IAdaptable)
 	 */
@@ -1237,22 +1232,10 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	}
 
 	public void classifyFile(File member, List<File> newFiles, List<File> outdatedFiles, Map<String, File> xmpMap,
-			List<IRecipeDetector> activeRecipeDetectors) {
+			List<IRecipeDetector> activeRecipeDetectors, long lastScan) {
 		long filedate = member.lastModified();
 		if (filedate == 0L)
 			return;
-		URI uri = member.toURI();
-		List<AssetImpl> assets = dbManager.obtainAssetsForFile(uri);
-		Iterator<AssetImpl> ait = assets.iterator();
-		if (!ait.hasNext()) {
-			List<Trash> t = dbManager.obtainTrashForFile(uri);
-			if (t == null || t.isEmpty()) {
-				List<Ghost_typeImpl> ghosts = dbManager.obtainGhostsForFile(uri);
-				if (ghosts == null || ghosts.isEmpty())
-					newFiles.add(member);
-			}
-			return;
-		}
 		long xmpdate = Long.MIN_VALUE;
 		if (xmpMap != null) {
 			String filename = member.getName();
@@ -1263,37 +1246,31 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 			if (sidecar != null)
 				xmpdate = sidecar.lastModified();
 		}
-		long lastmod = -1;
-		AssetImpl asset = null;
-		if (ait.hasNext()) {
-			asset = ait.next();
-			Date lastModification = asset.getLastModification();
-			if (lastModification != null)
-				lastmod = lastModification.getTime();
+		if (filedate < lastScan && xmpdate < lastScan)
+			return;
+		URI uri = member.toURI();
+		List<AssetImpl> assets = dbManager.obtainAssetsForFile(uri);
+		Iterator<AssetImpl> ait = assets.iterator();
+		if (!ait.hasNext()) {
+			if (dbManager.obtainTrashForFile(uri).isEmpty() && dbManager.obtainGhostsForFile(uri).isEmpty())
+				newFiles.add(member);
+			return;
 		}
+		long lastmod = -1;
+		AssetImpl asset = ait.next();
+		Date lastModification = asset.getLastModification();
+		if (lastModification != null)
+			lastmod = lastModification.getTime();
 		if (lastmod < filedate) {
 			outdatedFiles.add(member);
 			return;
 		}
-		if (asset != null) {
-			Date xmpModifiedAt = asset.getXmpModifiedAt();
-			if (xmpModifiedAt == null && lastmod < xmpdate
-					|| xmpModifiedAt != null && xmpModifiedAt.getTime() < xmpdate) {
-				outdatedFiles.add(member);
-				return;
-			}
+		Date xmpModifiedAt = asset.getXmpModifiedAt();
+		if (xmpModifiedAt == null && lastmod < xmpdate || xmpModifiedAt != null && xmpModifiedAt.getTime() < xmpdate) {
+			outdatedFiles.add(member);
+			return;
 		}
 		if (activeRecipeDetectors != null) {
-			if (lastmod < 0) {
-				ait = assets.iterator();
-				if (asset == null && ait.hasNext())
-					asset = ait.next();
-				if (asset != null) {
-					Date lastModification = asset.getLastModification();
-					if (lastModification != null)
-						lastmod = lastModification.getTime();
-				}
-			}
 			long recipeModified = -1;
 			IRawConverter currentRawConverter = BatchActivator.getDefault().getCurrentRawConverter(false);
 			long timestamp = currentRawConverter == null ? 0L

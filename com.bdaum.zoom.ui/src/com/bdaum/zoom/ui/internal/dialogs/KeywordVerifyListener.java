@@ -41,8 +41,7 @@ public class KeywordVerifyListener implements VerifyListener {
 
 	private final CheckboxTreeViewer viewer;
 
-	public KeywordVerifyListener(
-			CheckboxTreeViewer viewer) {
+	public KeywordVerifyListener(CheckboxTreeViewer viewer) {
 		this.viewer = viewer;
 	}
 
@@ -68,12 +67,10 @@ public class KeywordVerifyListener implements VerifyListener {
 			e.doit = false;
 			return;
 		}
-		if (insert.isEmpty() & e.end - e.start == 1 && lastProposal != null
-				&& lastProposal.length() > e.start) {
+		if (insert.isEmpty() & e.end - e.start == 1 && lastProposal != null && lastProposal.length() > e.start) {
 			String text = field.getText();
 			text = (e.end == lastOrigLength) ? text.substring(0, e.start)
-					: text.substring(0, e.start)
-							+ text.substring(lastProposal.length());
+					: text.substring(0, e.start) + text.substring(lastProposal.length());
 			field.removeVerifyListener(this);
 			field.setText(text);
 			field.setSelection(e.start);
@@ -109,10 +106,8 @@ public class KeywordVerifyListener implements VerifyListener {
 		}
 		String insert = e.text;
 		String text = field.getText();
-		if (lastProposal != null && start < lastProposal.length()
-				&& start + insert.length() <= text.length()) {
-			text = text.substring(0, start) + insert
-					+ text.substring(start + insert.length());
+		if (lastProposal != null && start < lastProposal.length() && start + insert.length() <= text.length()) {
+			text = text.substring(0, start) + insert + text.substring(start + insert.length());
 		} else {
 			text = text.substring(0, start) + insert + text.substring(end);
 			lastProposal = null;
@@ -153,13 +148,9 @@ public class KeywordVerifyListener implements VerifyListener {
 		if (index >= 0)
 			return sortedKeywords[index];
 		int ins = -index - 1;
-		if (ins < sortedKeywords.length
-				&& sortedKeywords[ins].toString().toLowerCase().startsWith(
-						orig.toLowerCase()))
+		if (ins < sortedKeywords.length && sortedKeywords[ins].toString().toLowerCase().startsWith(orig.toLowerCase()))
 			return sortedKeywords[ins];
-		else if (ins > 0
-				&& sortedKeywords[ins - 1].toString().toLowerCase().startsWith(
-						orig.toLowerCase()))
+		else if (ins > 0 && sortedKeywords[ins - 1].toString().toLowerCase().startsWith(orig.toLowerCase()))
 			return sortedKeywords[ins - 1];
 		return null;
 	}

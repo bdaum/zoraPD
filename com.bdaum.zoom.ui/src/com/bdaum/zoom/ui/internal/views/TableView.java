@@ -78,6 +78,7 @@ import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.piccolo2d.extras.swt.PSWTCanvas;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
@@ -103,8 +104,6 @@ import com.bdaum.zoom.ui.internal.dialogs.ConfigureColumnsDialog;
 import com.bdaum.zoom.ui.internal.hover.IGalleryHover;
 import com.bdaum.zoom.ui.internal.job.DecorateJob;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
-
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
 
 @SuppressWarnings("restriction")
 public class TableView extends AbstractGalleryView implements IExtendedColorModel {

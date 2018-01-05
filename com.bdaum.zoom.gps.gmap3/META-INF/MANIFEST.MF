@@ -2,9 +2,9 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.gps.gmap3;singleton:=true
-Bundle-Version: 3.2.1
+Bundle-Version: 3.2.2
 Bundle-Vendor: %Bundle-Vendor
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Require-Bundle: com.bdaum.zoom.gps;bundle-version="3.2.1"
+Require-Bundle: com.bdaum.zoom.gps;bundle-version="3.2.2"
 Bundle-Activator: com.bdaum.zoom.gps.gmap3.internal.Gmap3Activator
 Bundle-ActivationPolicy: lazy

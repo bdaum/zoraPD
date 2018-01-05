@@ -190,7 +190,6 @@ public class FilterPage extends ColoredWizardPage {
 			}
 		});
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateButtons();
 			}

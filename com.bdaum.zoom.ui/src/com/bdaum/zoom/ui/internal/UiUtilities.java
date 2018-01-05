@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +38,10 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.jface.viewers.CheckboxTreeViewer;
-import org.eclipse.jface.viewers.ViewerFilter;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -149,13 +150,8 @@ public class UiUtilities {
 		String tit = asset.getTitle();
 		if (tit == null || tit.trim().isEmpty())
 			tit = asset.getHeadline();
-		if (tit == null || tit.trim().isEmpty()) {
-			String uri = asset.getUri();
-			int p = uri.lastIndexOf('/');
-			if (p >= 0)
-				uri = uri.substring(p + 1);
-			tit = Core.decodeUrl(uri);
-		}
+		if (tit == null || tit.trim().isEmpty())
+			tit = Core.getFileName(asset.getUri(), true);
 		return tit;
 	}
 
@@ -180,115 +176,6 @@ public class UiUtilities {
 			}
 		}
 		return text;
-	}
-
-	public static void checkHierarchy(CheckboxTreeViewer viewer, Object element, boolean checked, boolean down,
-			boolean up) {
-		viewer.setGrayChecked(element, false);
-		viewer.setChecked(element, checked);
-		ViewerFilter[] filters = viewer.getFilters();
-		if (filters != null && filters.length == 0)
-			filters = null;
-		if (element instanceof QueryField) {
-			QueryField parent = (QueryField) element;
-			if (down) {
-				QueryField[] children = parent.getChildren();
-				if (children.length > 0) {
-					if (checked)
-						viewer.expandToLevel(element, 1);
-					for (QueryField child : children) {
-						if (child.isUiField() && (filters == null || filter(viewer, parent, child, filters)))
-							checkHierarchy(viewer, child, checked, true, false);
-					}
-				}
-			}
-			if (up) {
-				parent = parent.getParent();
-				while (parent != null) {
-					boolean parentChecked = viewer.getChecked(parent);
-					boolean parentGrayed = viewer.getGrayed(parent);
-					if (parentChecked == checked && !parentGrayed)
-						break;
-					boolean allChecked = true;
-					boolean someChecked = false;
-					for (QueryField child : parent.getChildren())
-						if (child.isUiField() && (filters == null || filter(viewer, parent, child, filters))) {
-							if (viewer.getGrayed(child)) {
-								allChecked = false;
-								someChecked = true;
-							} else {
-								boolean childChecked = viewer.getChecked(child);
-								allChecked &= childChecked;
-								someChecked |= childChecked;
-							}
-						}
-					if (allChecked) {
-						if (!parentGrayed && parentChecked)
-							break;
-						if (parentGrayed)
-							viewer.setGrayed(parent, false);
-						if (!parentChecked)
-							viewer.setChecked(parent, true);
-					} else if (someChecked) {
-						if (parentGrayed && parentChecked)
-							break;
-						viewer.setGrayChecked(parent, true);
-					} else {
-						if (!parentGrayed && !parentChecked)
-							break;
-						viewer.setGrayChecked(parent, false);
-					}
-					parent = parent.getParent();
-				}
-			}
-		}
-	}
-
-	public static void checkInitialHierarchy(CheckboxTreeViewer viewer, List<QueryField> fields) {
-		ViewerFilter[] filters = viewer.getFilters();
-		if (filters != null && filters.length == 0)
-			filters = null;
-		LinkedHashSet<QueryField> checked = new LinkedHashSet<QueryField>(fields.size() * 2);
-		for (QueryField qfield : fields) {
-			if (qfield.isUiField() && (filters == null || filter(viewer, qfield.getParent(), qfield, filters)))
-				while (qfield != null) {
-					if (!checked.add(qfield))
-						break;
-					qfield = qfield.getParent();
-				}
-		}
-		Set<QueryField> grayed = new HashSet<QueryField>(checked.size() * 3 / 2);
-		for (QueryField qfield : checked) {
-			QueryField[] children = qfield.getChildren();
-			if (children.length > 0) {
-				int n = 0;
-				int all = 0;
-				for (QueryField child : children) {
-					if (child.isUiField() && (filters == null || filter(viewer, qfield, child, filters))) {
-						++all;
-						if (checked.contains(child))
-							++n;
-					}
-				}
-				if (n > 0 && n < all) {
-					while (qfield != null) {
-						if (!grayed.add(qfield))
-							break;
-						qfield = qfield.getParent();
-					}
-				}
-			}
-		}
-		viewer.setGrayedElements(grayed.toArray());
-		viewer.setCheckedElements(checked.toArray());
-	}
-
-	private static boolean filter(CheckboxTreeViewer viewer, QueryField parent, QueryField element,
-			ViewerFilter[] filters) {
-		for (ViewerFilter viewerFilter : filters)
-			if (!viewerFilter.select(viewer, parent, element))
-				return false;
-		return true;
 	}
 
 	public static void showFileIsOffline(Shell shell, Asset asset) {
@@ -1190,6 +1077,21 @@ public class UiUtilities {
 
 	public static boolean isInterPunction(char c) {
 		return "!.,:;?".indexOf(c) >= 0; //$NON-NLS-1$
+	}
+	
+	public static void installDoubleClickExpansion(TreeViewer viewer) {
+		viewer.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event) {
+				Object item = ((IStructuredSelection) event.getSelection()).getFirstElement();
+				if (item != null && viewer.isExpandable(item)) {
+					if (viewer.getExpandedState(item))
+						viewer.collapseToLevel(item, 1);
+					else
+						viewer.expandToLevel(item, 1);
+				}
+			}
+		});
 	}
 
 }

@@ -49,6 +49,7 @@ import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 
 public class PresentationSelectDialog extends ZTitleAreaDialog {
@@ -191,8 +192,8 @@ public class PresentationSelectDialog extends ZTitleAreaDialog {
 			}
 		});
 		viewer.setComparator(new ViewerComparator());
+		UiUtilities.installDoubleClickExpansion(viewer);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
 				IStructuredSelection selection = (IStructuredSelection) viewer
 						.getSelection();

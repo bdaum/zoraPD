@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -75,13 +75,13 @@ import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.ILocationDisplay;
 import com.bdaum.zoom.ui.INavigationHistory;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
-import com.bdaum.zoom.ui.dialogs.ZInputDialog;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.ColorCodeDialog;
 import com.bdaum.zoom.ui.internal.dialogs.PasteMetaDialog;
 import com.bdaum.zoom.ui.internal.dialogs.RatingDialog;
+import com.bdaum.zoom.ui.internal.dialogs.AddBookmarkDialog;
 import com.bdaum.zoom.ui.internal.views.BasicView;
 import com.bdaum.zoom.ui.internal.views.BookmarkView;
 import com.bdaum.zoom.ui.internal.views.CatalogView;
@@ -701,8 +701,8 @@ public abstract class ZoomActionFactory {
 							while (iterator.hasNext()) {
 								Asset asset = iterator.next();
 								String title = UiUtilities.createSlideTitle(asset);
-								ZInputDialog dialog = assetSelection.size() > 1 ? null
-										: new ZInputDialog(adaptable.getAdapter(Shell.class),
+								AddBookmarkDialog dialog = assetSelection.size() > 1 ? null
+										: new AddBookmarkDialog(adaptable.getAdapter(Shell.class),
 												Messages.ZoomActionFactory_add_bookmark_dialog,
 												Messages.ZoomActionFactory_add_bookmark_description, title, null, true);
 								if (dialog == null || dialog.open() == Window.OK) {

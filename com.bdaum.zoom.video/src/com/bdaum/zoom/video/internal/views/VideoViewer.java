@@ -1,3 +1,22 @@
+/*
+ * This file is part of the ZoRa project: http://www.photozora.org.
+ *
+ * ZoRa is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ZoRa is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ZoRa; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ */
 package com.bdaum.zoom.video.internal.views;
 
 import java.io.ByteArrayOutputStream;
@@ -59,7 +78,7 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.FadingShell;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
-import com.bdaum.zoom.ui.views.IImageViewer;
+import com.bdaum.zoom.ui.views.IMediaViewer;
 import com.bdaum.zoom.video.internal.Icons;
 import com.bdaum.zoom.video.internal.VideoActivator;
 import com.bdaum.zoom.video.internal.widgets.VideoControl;
@@ -67,7 +86,7 @@ import com.bdaum.zoom.video.internal.widgets.VideoControl;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 
 @SuppressWarnings("restriction")
-public class VideoViewer implements IImageViewer, PaintListener, KeyListener, IAdaptable, DisposeListener {
+public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IAdaptable, DisposeListener {
 
 	private static final String[] VLC_ARGS = { // "--intf", "dummy", /* no
 			// interface */

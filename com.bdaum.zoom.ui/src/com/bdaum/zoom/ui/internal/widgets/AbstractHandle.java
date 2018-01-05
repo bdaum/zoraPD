@@ -20,7 +20,7 @@
 
 package com.bdaum.zoom.ui.internal.widgets;
 
-import edu.umd.cs.piccolox.swt.PSWTHandle;
+import org.piccolo2d.extras.swt.PSWTHandle;
 
 public class AbstractHandle extends PSWTHandle {
 

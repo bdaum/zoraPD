@@ -86,7 +86,7 @@ public class SearchResultGroup {
 		group.setText(
 				methods ? Messages.SearchResultGroup_search_algorithm : Messages.SearchResultGroup_search_parameters);
 		group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		group.setLayout(new GridLayout(1, false));
+		group.setLayout(new GridLayout());
 		composite = new Composite(group, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 		if (layoutData != null)

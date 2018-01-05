@@ -82,7 +82,7 @@ import com.bdaum.zoom.ui.internal.widgets.FileEditor;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
-import com.bdaum.zoom.ui.views.IImageViewer;
+import com.bdaum.zoom.ui.views.IMediaViewer;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
@@ -124,7 +124,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 	private static final String[] Executable_Filters = BatchConstants.WIN32 ? new String[] { "*.exe", "*.bat", "*.*" } //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 			: new String[] { "*" }; //$NON-NLS-1$
 
-	private IImageViewer[] imageViewers;
+	private IMediaViewer[] imageViewers;
 
 	private Set<EditorDescriptor> addedEditors = new HashSet<EditorDescriptor>(5);
 
@@ -171,7 +171,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		eGroup.setText(Messages.getString("FileAssociationsPreferencePage.external_viewers")); //$NON-NLS-1$
 		createFileEditor(eGroup, Messages.getString("FileAssociationsPreferencePage.image_viewer"), ""); //$NON-NLS-1$ //$NON-NLS-2$
 		imageViewers = UiActivator.getDefault().getImageViewers();
-		for (IImageViewer imageViewer : imageViewers)
+		for (IMediaViewer imageViewer : imageViewers)
 			createFileEditor(eGroup, imageViewer.getName(), imageViewer.getId());
 		return comp;
 	}
@@ -189,7 +189,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		exportButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.AUTOEXPORT));
 		fileEditorMap.get("").setText(preferenceStore //$NON-NLS-1$
 				.getString(PreferenceConstants.EXTERNALVIEWER));
-		for (IImageViewer viewer : imageViewers)
+		for (IMediaViewer viewer : imageViewers)
 			fileEditorMap.get(viewer.getId())
 					.setText(preferenceStore.getString(PreferenceConstants.EXTERNALMEDIAVIEWER + viewer.getId()));
 		fillResourceTypeTable();
@@ -418,7 +418,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		preferenceStore.setValue(PreferenceConstants.AUTOEXPORT, exportButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.EXTERNALVIEWER, fileEditorMap.get("").getText()); //$NON-NLS-1$
-		for (IImageViewer viewer : imageViewers)
+		for (IMediaViewer viewer : imageViewers)
 			preferenceStore.setValue(PreferenceConstants.EXTERNALMEDIAVIEWER + viewer.getId(),
 					fileEditorMap.get(viewer.getId()).getText());
 		TableItem[] items = resourceTypeTable.getItems();

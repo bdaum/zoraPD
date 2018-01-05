@@ -66,6 +66,19 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
+import org.piccolo2d.PCamera;
+import org.piccolo2d.PNode;
+import org.piccolo2d.activities.PActivity;
+import org.piccolo2d.activities.PTransformActivity;
+import org.piccolo2d.event.PBasicInputEventHandler;
+import org.piccolo2d.event.PInputEvent;
+import org.piccolo2d.extras.swt.PSWTCanvas;
+import org.piccolo2d.extras.swt.PSWTImage;
+import org.piccolo2d.extras.swt.PSWTPath;
+import org.piccolo2d.extras.swt.PSWTText;
+import org.piccolo2d.util.PAffineTransform;
+import org.piccolo2d.util.PBounds;
+import org.piccolo2d.util.PPaintContext;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.Region;
@@ -97,20 +110,6 @@ import com.bdaum.zoom.ui.internal.dialogs.StatusDialog;
 import com.bdaum.zoom.ui.internal.views.AssetContainer;
 import com.bdaum.zoom.ui.internal.views.ImageRegion;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
-
-import edu.umd.cs.piccolo.PCamera;
-import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.activities.PActivity;
-import edu.umd.cs.piccolo.activities.PTransformActivity;
-import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
-import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.util.PAffineTransform;
-import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolo.util.PPaintContext;
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
-import edu.umd.cs.piccolox.swt.PSWTImage;
-import edu.umd.cs.piccolox.swt.PSWTPath;
-import edu.umd.cs.piccolox.swt.PSWTText;
 
 @SuppressWarnings("restriction")
 public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandler {
@@ -316,7 +315,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 
 			} else if (picked.getParent() == slideBar && picked instanceof PGalleryItem && !event.isHandled()
 					&& event.getButton() == MouseEvent.BUTTON1 && event.getClickCount() == 1 && !event.isAltDown()) {
-				picked.moveToFront();
+				picked.raiseToTop();
 				oldAssetSelection = null;
 				PGalleryItem item = (PGalleryItem) picked;
 				if (event.isShiftDown()) {
@@ -1227,7 +1226,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 				cover.setBounds(0d, 0d, bBounds.getWidth(), bBounds.getHeight());
 			}
 			selectedSlides.add(slide.getAsset());
-			slide.moveToFront();
+			slide.raiseToTop();
 			slide.select(msec, true);
 		}
 	}
@@ -1257,7 +1256,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 					slideBar.addChild(cover);
 					cover.setBounds(0d, 0d, bBounds.getWidth(), bBounds.getHeight());
 				}
-				slide.moveToFront();
+				slide.raiseToTop();
 				slide.select(1000, true);
 				focussedSlide = slide;
 			}
@@ -1337,7 +1336,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 						selected.add(selectedSlide);
 				}
 			for (PGalleryItem galleryItem : selected)
-				galleryItem.moveToFront();
+				galleryItem.raiseToTop();
 		}
 	}
 

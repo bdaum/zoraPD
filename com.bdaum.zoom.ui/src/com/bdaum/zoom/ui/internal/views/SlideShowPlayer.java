@@ -431,6 +431,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 						request = requests.take();
 						if (shell.isDisposed() || request == FINALREQUEST || monitor.isCanceled())
 							break;
+						int z = request.getSlide().getZoom();
+						int preferredWidth = (int) (bounds.width * (1f + z / 100f));
+						int preferredHeight = (int) (bounds.height * (1f + z / 100f));
 						ZImage image = null;
 						URI uri = request.getUri();
 						if (uri == null)
@@ -518,9 +521,10 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 											}
 										});
 									try {
+										Rectangle vbounds = new Rectangle(0, 0, preferredWidth, preferredHeight);
 										image = CoreActivator.getDefault().getHighresImageLoader().loadImage(null,
 												status, file, request.getRotation(),
-												request.getAsset().getFocalLengthIn35MmFilm(), bounds, 1d, 1d, adv,
+												request.getAsset().getFocalLengthIn35MmFilm(), vbounds, 1d, 1d, adv,
 												cms1, null, null, recipe, fileWatcher, opId, this);
 									} catch (Exception e) {
 										// ignore
@@ -533,7 +537,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 							}
 						}
 						if (image != null)
-							image.develop(monitor, display, ZImage.CROPPED, bounds.width, bounds.height);
+							image.develop(monitor, display, ZImage.CROPPED, preferredWidth, preferredHeight);
 						else
 							image = createIntermediatePlate(shell, request,
 									Messages.getString("SlideShowPlayer.image_unavail"), //$NON-NLS-1$
@@ -736,9 +740,6 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 
 		void fadeoutEnded();
 	}
-
-	public boolean ignoreMouseMovements;
-	public boolean ignoreChanges;
 
 	public class SingleSlideJob extends Job implements HelpListener {
 
@@ -1096,6 +1097,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 		private Point pnt = new Point(0, 0);
 		private Rectangle mbounds;
 		private boolean inhibitTimer;
+		private float zoom = 1f;
 
 		public SingleSlideJob(SlideRequest request, int startFrom, int startNext, Shell parent, Rectangle mbounds,
 				boolean pauseAt, FadingListener listener) {
@@ -1141,9 +1143,25 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 							gc.fillRectangle(sbounds);
 							if (image != null && !image.isDisposed()) {
 								Rectangle ibounds = image.getBounds();
-								image.draw(gc, (sbounds.width - ibounds.width) / 2,
-										(sbounds.height - ibounds.height) / 2, ZImage.CROPPED, sbounds.width,
-										sbounds.height);
+								if (slide.getZoom() == 0)
+									image.draw(gc, (sbounds.width - ibounds.width) / 2,
+											(sbounds.height - ibounds.height) / 2, ZImage.CROPPED, sbounds.width,
+											sbounds.height);
+								else {
+									double f = Math.min((double) sbounds.width / ibounds.width,
+											(double) sbounds.height / ibounds.height);
+									int iwidth = (int) (ibounds.width * f + 0.5d);
+									int iheight = (int) (ibounds.height * f + 0.5d);
+									int w = (int) (ibounds.width * zoom + 0.5f);
+									int h = (int) (ibounds.height * zoom + 0.5f);
+									int offx = Math.max(0, Math.min(ibounds.width - w,
+											ibounds.width * (slide.getZoomX() + 100) / 200 - w / 2));
+									int offy = Math.max(0, Math.min(ibounds.height - h,
+											ibounds.height * (slide.getZoomY() + 100) / 200 - h / 2));
+									image.draw(gc, offx, offy, w, h, (sbounds.width - iwidth) / 2,
+											(sbounds.height - iheight) / 2, iwidth, iheight, ZImage.CROPPED,
+											sbounds.width, sbounds.height, true);
+								}
 								if (request.isRemoveFromShow()) {
 									String txt = Messages.getString("SlideShowPlayer.deleted"); //$NON-NLS-1$
 									gc.setFont(bannerFont);
@@ -1256,10 +1274,8 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 					imageCanvas.addKeyListener(keyListener);
 					imageCanvas.addHelpListener(SingleSlideJob.this);
 					shell.setFullScreen(true);
-					// Rectangle bounds = parent.getBounds();
 					shell.setBackground(parent.getBackground());
 					shell.setForeground(parent.getForeground());
-					// shell.setBounds(0, 0, bounds.width, bounds.height);
 					shell.setBounds(mbounds);
 					fadingShell.layout();
 					fadingShell.open();
@@ -1294,66 +1310,60 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				}
 				Runnable runnable = new Runnable() {
 					public void run() {
-						if (!fadingShell.isDisposed())
+						if (!fadingShell.isDisposed()) {
+							Rectangle bounds = fadingShell.getShell().getParent().getBounds();
 							switch (effect) {
 							case Constants.SLIDE_TRANSITION_MOVE_LEFT:
-								Rectangle bounds = fadingShell.getBounds();
 								double d = 1 - transitionValue;
-								fadingShell.setLocation((int) (bounds.width * d + 0.5d), bounds.y);
+								fadingShell.setLocation((int) (bounds.x + bounds.width * d + 0.5d), bounds.y);
 								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
 								break;
 							case Constants.SLIDE_TRANSITION_MOVE_RIGHT:
-								bounds = fadingShell.getBounds();
 								d = transitionValue - 1;
-								fadingShell.setLocation((int) (bounds.width * d + 0.5d), bounds.y);
+								fadingShell.setLocation((int) (bounds.x + bounds.width * d + 0.5d), bounds.y);
 								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
 								break;
 							case Constants.SLIDE_TRANSITION_MOVE_UP:
-								bounds = fadingShell.getBounds();
 								d = 1 - transitionValue;
-								fadingShell.setLocation(bounds.x, (int) (bounds.height * d + 0.5d));
+								fadingShell.setLocation(bounds.x, (int) (bounds.y + bounds.height * d + 0.5d));
 								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
 								break;
 							case Constants.SLIDE_TRANSITION_MOVE_DOWN:
-								bounds = fadingShell.getBounds();
 								d = transitionValue - 1;
-								fadingShell.setLocation(bounds.x, (int) (bounds.height * d + 0.5d));
+								fadingShell.setLocation(bounds.x, (int) (bounds.y + bounds.height * d + 0.5d));
 								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
 								break;
 							case Constants.SLIDE_TRANSITION_MOVE_TOPLEFT:
-								bounds = fadingShell.getBounds();
 								d = 1 - transitionValue;
-								fadingShell.setLocation((int) (bounds.width * d + 0.5d),
-										(int) (bounds.width * d + 0.5d));
+								fadingShell.setLocation((int) (bounds.x + bounds.width * d + 0.5d),
+										(int) (bounds.y + bounds.height * d + 0.5d));
 								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
 								break;
 							case Constants.SLIDE_TRANSITION_MOVE_TOPRIGHT:
-								bounds = fadingShell.getBounds();
 								double dx = transitionValue - 1;
 								double dy = 1 - transitionValue;
-								fadingShell.setLocation((int) (bounds.width * dx + 0.5d),
-										(int) (bounds.width * dy + 0.5d));
+								fadingShell.setLocation((int) (bounds.x + bounds.width * dx + 0.5d),
+										(int) (bounds.y + bounds.height * dy + 0.5d));
 								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
 								break;
 							case Constants.SLIDE_TRANSITION_MOVE_BOTTOMLEFT:
-								bounds = fadingShell.getBounds();
 								dx = 1 - transitionValue;
 								dy = transitionValue - 1;
-								fadingShell.setLocation((int) (bounds.width * dx + 0.5d),
-										(int) (bounds.width * dy + 0.5d));
+								fadingShell.setLocation((int) (bounds.x + bounds.width * dx + 0.5d),
+										(int) (bounds.y + bounds.height * dy + 0.5d));
 								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
 								break;
 							case Constants.SLIDE_TRANSITION_MOVE_BOTTOMRIGHT:
-								bounds = fadingShell.getBounds();
 								d = transitionValue - 1;
-								fadingShell.setLocation((int) (bounds.width * d + 0.5d),
-										(int) (bounds.height * d + 0.5d));
+								fadingShell.setLocation((int) (bounds.x + bounds.width * d + 0.5d),
+										(int) (bounds.y + bounds.height * d + 0.5d));
 								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
 								break;
 							default:
 								fadingShell.setAlpha((int) (255 * transitionValue + 0.5d));
 								break;
 							}
+						}
 					}
 				};
 				if (listener != null)
@@ -1431,6 +1441,13 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 								startFrom -= ((dursteps - i) * TICK);
 								break durLoop;
 							}
+						}
+						if (slide.getZoom() > 0) {
+							zoom = 1 - ((float) i / dursteps) * slide.getZoom() / 200;
+							displ.syncExec(() -> {
+								if (!fadingShell.isDisposed())
+									imageCanvas.redraw();
+							});
 						}
 						startFrom -= TICK;
 						if (i * TICK >= startNext && !next) {
@@ -2461,6 +2478,8 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 	private long startTime;
 	private ExifTool exifTool;
 	public Job transferJob;
+	public boolean ignoreMouseMovements;
+	public boolean ignoreChanges;
 
 	// State
 

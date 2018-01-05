@@ -21,7 +21,6 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ColumnViewer;
-import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -31,9 +30,11 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchCommandConstants;
@@ -80,11 +81,9 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 
 		private final ColumnViewer viewer;
 		private final SelectionChangedEvent event;
-		private final boolean atStart;
 
-		protected SelectionJob(ColumnViewer viewer, SelectionChangedEvent event, boolean atStart) {
+		protected SelectionJob(ColumnViewer viewer, SelectionChangedEvent event) {
 			super(Messages.getString("CatalogView.show_selection")); //$NON-NLS-1$
-			this.atStart = atStart;
 			setSystem(true);
 			setPriority(Job.INTERACTIVE);
 			setRule(rule);
@@ -118,13 +117,10 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 						}
 						updateActions(selection);
 						fireSelection(event);
-						if (atStart)
-							fireStartListeners(true);
 					}
 				});
 			return Status.OK_STATUS;
 		}
-
 	}
 
 	protected IAction selectAllAction;
@@ -133,12 +129,7 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 	private IAction splitCatAction;
 	protected ColumnViewer viewer;
 	protected IOperationHistory operationHistory;
-
-	protected static final IElementComparer elementComparer = new IdentifiedElementComparer();
-
-	protected void setComparer() {
-		viewer.setComparer(elementComparer);
-	}
+	protected boolean cntrlDwn;
 
 	protected void updateActions(IStructuredSelection selection) {
 		boolean empty = selection.isEmpty();
@@ -147,12 +138,7 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 			playSlideshowAction.setEnabled(false);
 		else {
 			Object obj = selection.getFirstElement();
-			if ((obj instanceof GroupImpl))
-				playSlideshowAction.setEnabled(false);
-			else if (obj instanceof SmartCollection)
-				playSlideshowAction.setEnabled(true);
-			else
-				playSlideshowAction.setEnabled(obj instanceof SlideShow);
+			playSlideshowAction.setEnabled(obj instanceof SlideShow || obj instanceof SmartCollection);
 		}
 		updateActions();
 	}
@@ -162,10 +148,6 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 		if (viewActive)
 			splitCatAction.setEnabled(true);
 		updateActions(-1, -1);
-	}
-
-	protected void fireStartListeners(boolean selected) {
-		// by default do nothing
 	}
 
 	protected static final ISchedulingRule rule = new ISchedulingRule() {
@@ -231,8 +213,7 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 				AbstractCatalogView.this.fillContextMenu(manager);
 			}
 		});
-		Menu menu = menuMgr.createContextMenu(viewer.getControl());
-		viewer.getControl().setMenu(menu);
+		viewer.getControl().setMenu(menuMgr.createContextMenu(viewer.getControl()));
 		getSite().registerContextMenu(menuMgr, viewer);
 	}
 
@@ -245,8 +226,7 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 				Icons.selectAll.getDescriptor()) {
 			@Override
 			public void run() {
-				IViewReference[] viewReferences = getSite().getPage().getViewReferences();
-				for (IViewReference ref : viewReferences) {
+				for (IViewReference ref : getSite().getPage().getViewReferences()) {
 					IWorkbenchPart part = ref.getPart(false);
 					if (part instanceof SelectAllActionProvider) {
 						IAction action = ((SelectAllActionProvider) part).getSelectAllAction();
@@ -316,11 +296,10 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 					ExhibitionImpl show = ExhibitionEditDialog.open(getSite().getShell(), null, current,
 							Messages.getString("CatalogView.edit_exhibition"), true, null); //$NON-NLS-1$
 					if (show != null) {
-						ExhibitionImpl result = show;
-						performOperation(new ExhibitionPropertiesOperation(backup, result));
+						performOperation(new ExhibitionPropertiesOperation(backup, show));
 						viewer.refresh(parent);
-						viewer.setSelection(new StructuredSelection(result), true);
-						openExhibitionEditor(result, true);
+						viewer.setSelection(new StructuredSelection(show), true);
+						openExhibitionEditor(show, true);
 					}
 				} else if (obj instanceof WebGalleryImpl) {
 					WebGalleryImpl current = (WebGalleryImpl) obj;
@@ -429,6 +408,22 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 	protected void addEnabled(IMenuManager manager, IAction action) {
 		if (action.isEnabled())
 			manager.add(action);
+	}
+	
+	protected void addCtrlKeyListener() {
+		getControl().addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.keyCode == SWT.CTRL)
+					cntrlDwn = true;
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.keyCode == SWT.CTRL)
+					cntrlDwn = false;
+			}
+		});
 	}
 
 	protected IStatus performOperation(IUndoableOperation op) {

@@ -1122,6 +1122,11 @@
                id="com.bdaum.zoom.ui.keyword.thumbnail">
          </keywordReference>
       </page>
+      <page
+            class="com.bdaum.zoom.ui.internal.preferences.VocabPreferencePage"
+            id="com.bdaum.zoom.ui.preferences.VocabPreferencePage"
+            name="%page.name.vocab">
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

@@ -16,6 +16,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.fieldassist.ControlDecoration;
 import org.eclipse.jface.fieldassist.FieldDecoration;
 import org.eclipse.jface.fieldassist.FieldDecorationRegistry;
@@ -87,6 +88,7 @@ import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.dialogs.AbstractListCellEditorDialog;
 import com.bdaum.zoom.ui.internal.dialogs.CategoryDialog;
 import com.bdaum.zoom.ui.internal.dialogs.CodeCellEditorDialog;
+import com.bdaum.zoom.ui.internal.dialogs.CodesDialog;
 import com.bdaum.zoom.ui.internal.dialogs.IndexedMemberDialog;
 import com.bdaum.zoom.ui.internal.dialogs.KeywordDialog;
 import com.bdaum.zoom.ui.internal.dialogs.LargeTextCellEditorDialog;
@@ -298,7 +300,6 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 		MenuManager menuMgr = new MenuManager("#PopupMenu"); //$NON-NLS-1$
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-
 			public void menuAboutToShow(IMenuManager manager) {
 				DataEntryView.this.fillContextMenu(manager);
 			}
@@ -349,21 +350,16 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 				analog &= asset.getFileSource() != Constants.FILESOURCE_DIGITAL_CAMERA
 						&& asset.getFileSource() != Constants.FILESOURCE_SIGMA_DIGITAL_CAMERA;
 				IMediaSupport ms = CoreActivator.getDefault().getMediaSupport(asset.getFormat());
-				if (ms != mediaSupport) {
-					if (mediaSupport == null)
-						mediaSupport = ms;
-					else
-						mediaSupport = QueryField.VALUE_MIXED;
-				}
+				if (ms != mediaSupport)
+					mediaSupport = mediaSupport == null ? ms : QueryField.VALUE_MIXED;
 			}
 		}
 		TabItem analogItem = tabFolder.getItem(2);
 		if (mediaSupport instanceof IMediaSupport)
 			analogItem.setText(((IMediaSupport) mediaSupport).getName());
-		else if (analog)
-			analogItem.setText(Messages.getString("DataEntryView.analog")); //$NON-NLS-1$
 		else
-			analogItem.setText(Messages.getString("DataEntryView.n_a")); //$NON-NLS-1$
+			analogItem.setText(
+					analog ? Messages.getString("DataEntryView.analog") : Messages.getString("DataEntryView.n_a")); //$NON-NLS-1$ //$NON-NLS-2$
 		for (QueryField qfield : widgetMap.keySet())
 			updateValue(qfield);
 	}
@@ -375,8 +371,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 	@SuppressWarnings("unused")
 	private void createTabFolder(Composite parent) {
 		tabFolder = new TabFolder(parent, SWT.NONE);
-		GridData gd_tabFolder = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
-		tabFolder.setLayoutData(gd_tabFolder);
+		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
 		Composite composite_1 = createTabItem(tabFolder, QueryField.IMAGE_ALL.getLabel(),
 				Messages.getString("DataEntryView.general"), //$NON-NLS-1$
@@ -578,7 +573,9 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 		createField(descriptionGroup, QueryField.IPTC_TITLE, SWT.NONE, 2, SWT.DEFAULT);
 		createField(descriptionGroup, QueryField.IPTC_HEADLINE, SWT.NONE, 2, SWT.DEFAULT);
 		createField(descriptionGroup, QueryField.IPTC_JOBID, SWT.NONE, 2, SWT.DEFAULT);
-		createField(descriptionGroup, QueryField.IPTC_INTELLECTUAL_GENRE, SWT.NONE, 2, SWT.DEFAULT);
+		// createField(descriptionGroup, QueryField.IPTC_INTELLECTUAL_GENRE, SWT.NONE,
+		// 2, SWT.DEFAULT);
+		createField(descriptionGroup, QueryField.IPTC_INTELLECTUAL_GENRE, SWT.NONE, -1, SWT.DEFAULT);
 		createField(descriptionGroup, QueryField.IPTC_WRITEREDITOR, SWT.NONE, 2, SWT.DEFAULT);
 		createField(descriptionGroup, QueryField.IPTC_SPECIALINSTRUCTIONS, SWT.NONE, 2, SWT.DEFAULT);
 
@@ -757,8 +754,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 							Object text = textField.getText();
 							if (!QueryField.VALUE_MIXED.equals(text)) {
 								try {
-									text = qfield.getFormatter().fromString((String) text);
-									putValue(qfield, text);
+									putValue(qfield, text = qfield.getFormatter().fromString((String) text));
 									hideFieldDeco(textField);
 								} catch (ParseException e) {
 									showError(textField, e.getMessage());
@@ -852,9 +848,8 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 				comboViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 					public void selectionChanged(SelectionChangedEvent event) {
 						if (!comboViewer.getControl().isDisposed() && !updateSet.contains(qfield)
-								&& !QueryField.VALUE_MIXED.equals(comboViewer.getCombo().getText())) {
+								&& !QueryField.VALUE_MIXED.equals(comboViewer.getCombo().getText()))
 							putValue(qfield, ((IStructuredSelection) comboViewer.getSelection()).getFirstElement());
-						}
 					}
 				});
 				widgetMap.put(qfield, comboViewer);
@@ -900,7 +895,6 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 				comboViewer.setLabelProvider(new StringArrayLabelProvider(qfield));
 				comboViewer.setInput(qfield.getEnumeration());
 				comboViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
 					public void selectionChanged(SelectionChangedEvent event) {
 						if (!updateSet.contains(qfield)
 								&& !QueryField.VALUE_MIXED.equals(comboViewer.getCombo().getText()))
@@ -972,7 +966,6 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 				layoutData.heightHint = 50;
 			checkedTextField.setLayoutData(layoutData);
 			checkedTextField.addModifyListener(new ModifyListener() {
-
 				public void modifyText(ModifyEvent e) {
 					if (!updateSet.contains(qfield)) {
 						String text = checkedTextField.getText();
@@ -997,19 +990,11 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			if (value instanceof IndexedMember[]) {
 				IndexedMemberDialog dialog = new IndexedMemberDialog(parent.getShell(), (IndexedMember[]) value,
 						qfield);
-				dialog.create();
-				Point location = dialog.getShell().getLocation();
-				location.x -= 25;
-				location.y += 30;
-				dialog.getShell().setLocation(location);
+				setDialogLocation(dialog);
 				return (dialog.open() == Window.OK) ? dialog.getResult() : null;
 			}
 			StructEditDialog dialog = new StructEditDialog(parent.getShell(), (AomObject) value, qfield);
-			dialog.create();
-			Point location = dialog.getShell().getLocation();
-			location.x -= 25;
-			location.y += 30;
-			dialog.getShell().setLocation(location);
+			setDialogLocation(dialog);
 			return (dialog.open() == Window.OK) ? dialog.getResult() : null;
 		}
 		List<Asset> assets = getNavigationHistory().getSelectedAssets().getAssets();
@@ -1032,8 +1017,8 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 					override != null ? override : getCommonItems(qfield), multiple);
 			return (dialog.open() == Window.OK) ? dialog.getResult() : null;
 		}
+		Object enumeration = qfield.getEnumeration();
 		if (qfield.getCard() != 1) {
-			Object enumeration = qfield.getEnumeration();
 			AbstractListCellEditorDialog dialog = enumeration instanceof Integer
 					? new CodeCellEditorDialog(parent.getShell(), override != null ? override : getFieldValue(qfield),
 							qfield)
@@ -1042,11 +1027,11 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 									override != null ? override : getCommonItems(qfield), qfield, multiple)
 							: new ListCellEditorDialog(parent.getShell(),
 									override != null ? override : getFieldValue(qfield), qfield);
-			dialog.create();
-			Point location = dialog.getShell().getLocation();
-			location.x -= 25;
-			location.y += 30;
-			dialog.getShell().setLocation(location);
+			setDialogLocation(dialog);
+			return (dialog.open() == Window.OK) ? dialog.getResult() : null;
+		} else if (enumeration instanceof Integer) {
+			CodesDialog dialog = new CodesDialog(parent.getShell(), qfield,
+					(String) (override != null ? override : getFieldValue(qfield)), null);
 			return (dialog.open() == Window.OK) ? dialog.getResult() : null;
 		}
 		List<Asset> selectedAssets = getNavigationHistory().getSelectedAssets().getAssets();
@@ -1056,10 +1041,17 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 		return (dialog.open() == Window.OK) ? dialog.getResult() : null;
 	}
 
+	protected void setDialogLocation(Dialog dialog) {
+		dialog.create();
+		Point location = dialog.getShell().getLocation();
+		location.x -= 25;
+		location.y += 30;
+		dialog.getShell().setLocation(location);
+	}
+
 	private void putCurrencyValue(final QueryField qfield, final SpinnerComponent spinner) {
-		if (!updateSet.contains(qfield)) {
+		if (!updateSet.contains(qfield))
 			putValue(qfield, spinner.getSelection() / (Math.pow(10, Format.getCurrencyDigits())));
-		}
 	}
 
 	private void putIntegerValue(final QueryField qfield, final SpinnerComponent spinner) {

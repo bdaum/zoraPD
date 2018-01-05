@@ -68,7 +68,6 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.browser.IWebBrowser;
 
 import com.bdaum.zoom.batch.internal.BatchActivator;
 import com.bdaum.zoom.core.Constants;
@@ -335,7 +334,6 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 				true, Constants.EXEEXTENSION, Constants.EXEFILTERNAMES, null, null, false);
 		dngpathEditor.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		dngpathEditor.addModifyListener(new ModifyListener() {
-
 			public void modifyText(ModifyEvent e) {
 				validate();
 			}
@@ -348,8 +346,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 			public void widgetSelected(SelectionEvent e) {
 				String vlcDownload = System.getProperty(Messages.getString("ImportPreferencePage.dng_key")); //$NON-NLS-1$
 				try {
-					IWebBrowser externalBrowser = PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser();
-					externalBrowser.openURL(new URL(vlcDownload));
+					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));
 				} catch (PartInitException e1) {
 					// do nothing
 				} catch (MalformedURLException e1) {

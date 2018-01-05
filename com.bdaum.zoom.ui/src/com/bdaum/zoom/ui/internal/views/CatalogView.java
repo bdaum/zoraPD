@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  (berthold.daum@bdaum.de)
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -32,9 +32,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.eclipse.core.commands.operations.UndoContext;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
@@ -46,16 +43,12 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.ITreeViewerListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TreeExpansionEvent;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
@@ -74,8 +67,6 @@ import org.eclipse.swt.dnd.DragSourceListener;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -171,10 +162,10 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 
 	public final class CatalogDragSourceListener implements DragSourceListener {
 		public void dragStart(DragSourceEvent event) {
-			boolean canDrag = false;
 			ISelection selection = viewer.getSelection();
 			Object firstElement = ((IStructuredSelection) selection).getFirstElement();
 			if (firstElement != null) {
+				boolean canDrag = false;
 				IDbManager dbManager = Core.getCore().getDbManager();
 				if (firstElement instanceof SmartCollection) {
 					String groupId = ((SmartCollection) firstElement).getGroup_rootCollection_parent();
@@ -521,45 +512,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		}
 	}
 
-	public class ExpansionJob extends Job {
-
-		private final List<String> lastExpansion;
-
-		public ExpansionJob(List<String> lastExpansion) {
-			super(Messages.getString("CatalogView.expand_cat_items")); //$NON-NLS-1$
-			setSystem(true);
-			setPriority(Job.DECORATE);
-			setRule(rule);
-			this.lastExpansion = lastExpansion;
-		}
-
-		@Override
-		public boolean belongsTo(Object family) {
-			return family == Constants.DAEMONS || family == EXPANSIONJOB;
-		}
-
-		@Override
-		protected IStatus run(IProgressMonitor monitor) {
-			IDbManager dbManager = Core.getCore().getDbManager();
-			List<IdentifiableObject> ex = lastExpansion != null
-					? dbManager.obtainByIds(IdentifiableObject.class, lastExpansion)
-					: null;
-			if (monitor.isCanceled())
-				return Status.CANCEL_STATUS;
-			expansions = ex != null ? ex.toArray() : new Object[0];
-			Shell shell = getSite().getShell();
-			if (!shell.isDisposed())
-				shell.getDisplay().asyncExec(() -> {
-					if (!shell.isDisposed()) {
-						refresh();
-						fireStartListeners(false);
-					}
-				});
-			return Status.OK_STATUS;
-		}
-
-	}
-
 	private static final int OPERATIONS = DND.DROP_MOVE | DND.DROP_COPY;
 
 	public static class CatalogComparator extends ViewerComparator {
@@ -590,16 +542,11 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 	}
 
 	public static final String ID = "com.bdaum.zoom.ui.views.CatalogView"; //$NON-NLS-1$
-	private static final String EXPANSIONJOB = "expansionJob"; //$NON-NLS-1$
 	private static final FileTransfer fileTransfer = FileTransfer.getInstance();
 	private static final LocalSelectionTransfer selectionTransfer = LocalSelectionTransfer.getTransfer();
 	private static final Transfer[] allTypes = new Transfer[] { fileTransfer, selectionTransfer };
 	private static final Transfer[] selectionTypes = new Transfer[] { selectionTransfer };
-
-	protected static final List<Asset> EMPTYASSETS = new ArrayList<Asset>(0);
-
 	private static final String CATFILTERS = "catFilters"; //$NON-NLS-1$
-
 	private static final String PERSONALBUMS = "persons"; //$NON-NLS-1$
 	private static final String EMPTYPERSONALBUMS = "emptyPersons"; //$NON-NLS-1$
 	private static final String RATINGS = "ratings"; //$NON-NLS-1$
@@ -609,43 +556,27 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 	private static final String LOCATIONS = "locations"; //$NON-NLS-1$
 	private static final String PASTIMPORTS = "pastImports"; //$NON-NLS-1$
 
-	protected static final String[] ALLCATITEMS = new String[] { EMPTYPERSONALBUMS, PERSONALBUMS, CATEGORIES, RATINGS,
+	private static final String[] ALLCATITEMS = new String[] { EMPTYPERSONALBUMS, PERSONALBUMS, CATEGORIES, RATINGS,
 			DIRECTORIES, TIMELINE, LOCATIONS, PASTIMPORTS };
 
-	protected static final String[] CATITEMLABELS = new String[] {
-			Messages.getString("CatalogView.empty_person_albums"), Messages.getString("CatalogView.person_albums"), //$NON-NLS-1$ //$NON-NLS-2$
+	private static final String[] CATITEMLABELS = new String[] { Messages.getString("CatalogView.empty_person_albums"), //$NON-NLS-1$
+			Messages.getString("CatalogView.person_albums"), //$NON-NLS-1$
 			Messages.getString("CatalogView.categories"), Messages.getString("CatalogView.ratings"), //$NON-NLS-1$ //$NON-NLS-2$
 			Messages.getString("CatalogView.directories"), Messages.getString("CatalogView.timeline"), //$NON-NLS-1$ //$NON-NLS-2$
 			Messages.getString("CatalogView.locations"), Messages.getString("CatalogView.past_imports"), }; //$NON-NLS-1$ //$NON-NLS-2$
 
 	private DrillDownAdapter drillDownAdapter;
-	private Action createCollectionAction;
-	private Action addSubCollectionAction;
-	private Action deleteAction;
-	private Action cutCollection;
-	private Action copyCollection;
-	private Action pasteCollection;
-	private Action createGroup;
-	private Action createSlideShowAction;
-	private Action collapseAction;
-	private Action propertiesAction;
-	private Action createExhibitionAction;
-	private Action createAlbumAction;
-	private Action createWebGalleryAction;
-	private boolean settingSelection;
-	private Action filterAction;
+	private Action createCollectionAction, addSubCollectionAction, deleteAction, cutCollection, copyCollection,
+			pasteCollection, createGroup, createSlideShowAction, collapseAction, propertiesAction,
+			createExhibitionAction, createAlbumAction, createWebGalleryAction, filterAction, addSubAlbumAction,
+			addSubGroupAction, expandAction;
 	private Set<String> hiddenCatItems;
-	private Action addSubAlbumAction;
-	private Action addSubGroupAction;
-
 	private Clipboard clipboard;
 	private boolean restoring;
 	private Object[] expansions;
+	private boolean settingSelection;
 	private ISelection initialSelection;
 	private boolean initialized;
-
-	private Action expandAction;
-
 	private int colorCode = -1;
 
 	private ViewerFilter userFilter = new ViewerFilter() {
@@ -690,7 +621,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			return true;
 		}
 	};
-	protected boolean cntrlDwn;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -725,54 +655,32 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		viewer.setLabelProvider(new CatalogLabelProvider(this));
 		viewer.setFilters(new ViewerFilter[] { colorCodeFilter, userFilter });
 		viewer.setComparator(new CatalogComparator());
-		setComparer();
+		viewer.setComparer(IdentifiedElementComparer.getInstance());
+		UiUtilities.installDoubleClickExpansion((TreeViewer) viewer);
 		ColumnViewerToolTipSupport.enableFor(viewer);
 		setInput();
-		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), HelpContextIds.CATALOG_VIEW);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(final SelectionChangedEvent event) {
-				if (cntrlDwn) {
+				if (!settingSelection) {
+					Job.getJobManager().cancel(CatalogView.this);
+					new SelectionJob(viewer, event).schedule();
+				}
+				if (cntrlDwn && editItemAction.isEnabled()) {
 					editItemAction.run();
 					cntrlDwn = false;
 				}
-				if (!settingSelection) {
-					Job.getJobManager().cancel(CatalogView.this);
-					new SelectionJob(viewer, event, !initialized || restoring).schedule();
-				}
 			}
 		});
-		((TreeViewer) viewer).addTreeListener(new ITreeViewerListener() {
-			public void treeExpanded(TreeExpansionEvent event) {
-				Job.getJobManager().cancel(EXPANSIONJOB);
-			}
-
-			public void treeCollapsed(TreeExpansionEvent event) {
-				Job.getJobManager().cancel(EXPANSIONJOB);
-			}
-		});
-		viewer.getControl().addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == SWT.CTRL)
-					cntrlDwn = true;
-			}
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.keyCode == SWT.CTRL)
-					cntrlDwn = false;
-			}
-		});
+		addCtrlKeyListener();
 		viewer.addDropSupport(OPERATIONS, allTypes, new CatalogDropTargetListener(viewer.getControl()));
 		viewer.addDragSupport(DND.DROP_MOVE, new Transfer[] { selectionTransfer }, new CatalogDragSourceListener());
 		addKeyListener();
 		Tree tree = ((TreeViewer) viewer).getTree();
 		addGestureListener(tree);
-		// installHoveringController();
 		makeActions();
 		installListeners(parent);
 		hookContextMenu(viewer);
-		hookDoubleClickAction();
 		contributeToActionBars();
 		addDragDropClipboard(tree);
 		getSite().getWorkbenchWindow().addPerspectiveListener(this);
@@ -947,7 +855,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 					}
 				}
 				if (lastExpansion != null)
-					new ExpansionJob(lastExpansion).schedule(300);
+					expansions = lastExpansion.toArray();
 			}
 		}
 		// System.out.println("restore: " + (System.currentTimeMillis() -
@@ -961,8 +869,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		super.updateActions(selection);
 		boolean writable = !dbIsReadonly();
 		createGroup.setEnabled(writable);
-		boolean empty = selection.isEmpty();
-		if (empty) {
+		if (selection.isEmpty()) {
 			if (viewActive) {
 				deleteAction.setEnabled(false);
 				cutCollection.setEnabled(false);
@@ -979,8 +886,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			playSlideshowAction.setEnabled(false);
 		} else {
 			Object obj = selection.getFirstElement();
-			boolean root = (obj instanceof GroupImpl);
-			if (root) {
+			if ((obj instanceof GroupImpl)) {
 				GroupImpl group = (GroupImpl) obj;
 				boolean exhibition = !group.getExhibition().isEmpty();
 				boolean slideshow = !group.getSlideshow().isEmpty();
@@ -1017,9 +923,21 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				if (obj instanceof SmartCollection) {
 					SmartCollection coll = (SmartCollection) obj;
 					if (viewActive) {
-						deleteAction.setEnabled(!coll.getSystem() && writable);
-						cutCollection.setEnabled(!coll.getSystem() && writable);
-						copyCollection.setEnabled(!coll.getSystem() && writable);
+						boolean enabled = !coll.getSystem() && writable;
+						boolean deleteEnabled = enabled;
+						if (!enabled) {
+							String collId = coll.getStringId();
+							String key = QueryField.URI.getKey() + '=';
+							if (collId.startsWith(key))
+								try {
+									deleteEnabled = !new File(new URI(collId.substring(key.length()))).exists();
+								} catch (URISyntaxException e) {
+									deleteEnabled = true;
+								}
+						}
+						deleteAction.setEnabled(deleteEnabled);
+						cutCollection.setEnabled(enabled);
+						copyCollection.setEnabled(enabled);
 					}
 					boolean isFinal = (coll.getCriterion().size() == 1
 							&& coll.getCriterion(0).getField().startsWith("*")); //$NON-NLS-1$
@@ -1198,7 +1116,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		createGroup.setToolTipText(Messages.getString("CatalogView.creates_a_group_for_collections")); //$NON-NLS-1$
 		createSlideShowAction = new Action(Messages.getString("CatalogView.create_new_slide_show"), //$NON-NLS-1$
 				Icons.newSlideshow.getDescriptor()) {
-
 			@Override
 			public void run() {
 				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
@@ -1219,7 +1136,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 
 		createExhibitionAction = new Action(Messages.getString("CatalogView.create_new_exhibition"), //$NON-NLS-1$
 				Icons.exhibition.getDescriptor()) {
-
 			@Override
 			public void run() {
 				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
@@ -1238,7 +1154,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		createExhibitionAction.setToolTipText(Messages.getString("CatalogView.creates_a_new_exhibition")); //$NON-NLS-1$
 		createWebGalleryAction = new Action(Messages.getString("CatalogView.create_web_gallery"), //$NON-NLS-1$
 				Icons.webGallery.getDescriptor()) {
-
 			@Override
 			public void run() {
 				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
@@ -1257,7 +1172,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 
 		createAlbumAction = new Action(Messages.getString("CatalogView.create_new_album"), //$NON-NLS-1$
 				Icons.addAlbum.getDescriptor()) {
-
 			@Override
 			public void run() {
 				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
@@ -1275,7 +1189,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 
 		addSubGroupAction = new Action(Messages.getString("CatalogView.add_subroup"), //$NON-NLS-1$
 				Icons.newGroup.getDescriptor()) {
-
 			@Override
 			public void run() {
 				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
@@ -1303,11 +1216,10 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				}
 			}
 		};
-		addSubGroupAction.setToolTipText(Messages.getString("CatalogView.add_sub_album_tooltip")); //$NON-NLS-1$
+		addSubGroupAction.setToolTipText(Messages.getString("CatalogView.add_subgroup_tooltip"));  //$NON-NLS-1$
 
 		addSubAlbumAction = new Action(Messages.getString("CatalogView.add_sub_album"), //$NON-NLS-1$
 				Icons.addAlbum.getDescriptor()) {
-
 			@Override
 			public void run() {
 				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
@@ -1329,7 +1241,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 
 		createCollectionAction = new Action(Messages.getString("CatalogView.create_new_collection"), //$NON-NLS-1$
 				Icons.folder_add.getDescriptor()) {
-
 			@Override
 			public void run() {
 				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
@@ -1347,7 +1258,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 
 		addSubCollectionAction = new Action(Messages.getString("CatalogView.add_subselection"), //$NON-NLS-1$
 				Icons.addSubselection.getDescriptor()) {
-
 			@Override
 			public void run() {
 				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
@@ -1365,7 +1275,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		addSubCollectionAction.setToolTipText(Messages.getString("CatalogView.narrow_down_selection")); //$NON-NLS-1$
 
 		deleteAction = new Action(Messages.getString("CatalogView.delete"), Icons.folder_delete.getDescriptor()) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
@@ -1378,7 +1287,10 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 								current.getAlbum() ? Messages.getString("CatalogView.really_delete_album") //$NON-NLS-1$
 										: Messages.getString("CatalogView.really_delete_collection"))) //$NON-NLS-1$
 							deleteCollection(current);
-					}
+					} else if (AcousticMessageDialog.openQuestion(getSite().getShell(),
+							Messages.getString("CatalogView.delete_system_coll"), //$NON-NLS-1$
+							Messages.getString("CatalogView.delete_system_coll_msg")))  //$NON-NLS-1$
+						deleteCollection(current);
 				} else if (obj instanceof SlideShowImpl) {
 					SlideShowImpl current = (SlideShowImpl) obj;
 					if (AcousticMessageDialog.openQuestion(getSite().getShell(),
@@ -1397,7 +1309,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 							Messages.getString("CatalogView.delete_web_gallery"), //$NON-NLS-1$
 							Messages.getString("CatalogView.do_you_really_want_to_delete"))) //$NON-NLS-1$
 						deleteWebGallery(current);
-
 				} else if (obj instanceof GroupImpl) {
 					final GroupImpl current = (GroupImpl) obj;
 					if (!current.getSystem()) {
@@ -1430,7 +1341,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		cutCollection.setToolTipText(Messages.getString("CatalogView.cut_selected_item")); //$NON-NLS-1$
 
 		copyCollection = new Action(Messages.getString("CatalogView.copy"), Icons.copy.getDescriptor()) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
@@ -1456,16 +1366,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 						if (o instanceof SmartCollectionImpl)
 							insertCollection(cloneCollection((SmartCollectionImpl) o), (GroupImpl) obj);
 						else if (o instanceof SlideShowImpl) {
-							// SlideShowImpl oldSm = (SlideShowImpl) o;
 							SlideShowImpl newSm = SlideshowPropertiesOperation.cloneSlideshow((SlideShowImpl) o);
-							// SlideShowImpl newSm = new SlideShowImpl(
-							// oldSm.getName(), oldSm.getDescription(),
-							// false, 5000,
-							// Constants.SLIDE_TRANSITION_FADE, 1000,
-							// Constants.SLIDE_TITLEONLY, 2000,
-							// oldSm.getAdhoc(), oldSm.getSkipDublettes(),
-							// oldSm.getVoiceNotes(),
-							// oldSm.getLastAccessDate());
 							final GroupImpl group = (GroupImpl) obj;
 							group.addSlideshow(newSm.getStringId());
 							newSm.setGroup_slideshow_parent(group.getStringId());
@@ -1635,20 +1536,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 
 	protected void addDragDropClipboard(Control control) {
 		clipboard = new Clipboard(control.getDisplay());
-	}
-
-	private void hookDoubleClickAction() {
-		viewer.addDoubleClickListener(new IDoubleClickListener() {
-			public void doubleClick(DoubleClickEvent event) {
-				Object item = ((IStructuredSelection) event.getSelection()).getFirstElement();
-				if (item != null && ((TreeViewer) viewer).isExpandable(item)) {
-					if (((TreeViewer) viewer).getExpandedState(item))
-						((TreeViewer) viewer).collapseToLevel(item, 1);
-					else
-						((TreeViewer) viewer).expandToLevel(item, 1);
-				}
-			}
-		});
 	}
 
 	/**

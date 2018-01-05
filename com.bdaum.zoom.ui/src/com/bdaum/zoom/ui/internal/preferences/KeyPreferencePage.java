@@ -272,7 +272,6 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 			}
 		});
 		bindingViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateDetails();
 			}
@@ -285,7 +284,6 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		column.getColumn().setText(lab);
 		column.getColumn().setWidth(w);
 		column.getColumn().addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				switchSort(viewer.getTable(), column.getColumn());

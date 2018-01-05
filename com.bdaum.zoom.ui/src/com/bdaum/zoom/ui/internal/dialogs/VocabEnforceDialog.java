@@ -29,6 +29,8 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -59,12 +61,13 @@ public class VocabEnforceDialog extends ZTitleAreaDialog {
 		setMessage(Messages.VocabEnforceDialog_unmark_changes);
 	}
 
+	@SuppressWarnings("unused")
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite composite = new Composite(area, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		composite.setLayout(new GridLayout(1, false));
+		composite.setLayout(new GridLayout(2, false));
 		viewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.heightHint = 400;
@@ -93,8 +96,14 @@ public class VocabEnforceDialog extends ZTitleAreaDialog {
 		});
 		viewer.setInput(changes);
 		viewer.setAllChecked(true);
+		new AllNoneGroup(composite, new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				viewer.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
+			}
+		});
 		buttonGroup = new RadioButtonGroup(composite, null, SWT.HORIZONTAL, Messages.VocabEnforceDialog_apply_to_images, Messages.VocabEnforceDialog_apply_to_catalog);
-		buttonGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		buttonGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 		buttonGroup.setSelection(0);
 		return area;
 	}

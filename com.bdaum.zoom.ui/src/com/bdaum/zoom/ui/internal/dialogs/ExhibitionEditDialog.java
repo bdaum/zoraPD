@@ -1095,10 +1095,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		});
 		updateFloorplanDetails();
 		itemViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
-				IStructuredSelection selection = (IStructuredSelection) event.getSelection();
-				selectedItem = selection.getFirstElement();
+				selectedItem = ((IStructuredSelection) event.getSelection()).getFirstElement();
 				updateFloorplanDetails();
 				floorplan.redraw();
 			}
@@ -1221,6 +1219,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				return super.compare(aViewer, e1, e2);
 			}
 		});
+		UiUtilities.installDoubleClickExpansion(viewer);
 		return viewer;
 	}
 

@@ -54,6 +54,7 @@ import com.bdaum.zoom.cat.model.report.Report;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.report.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.AllNoneGroup;
 import com.bdaum.zoom.ui.internal.views.AbstractPropertiesView.ViewComparator;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
@@ -169,6 +170,7 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 			});
 			viewer.setContentProvider(new MetadataContentProvider());
 			viewer.setComparator(new ViewComparator());
+			UiUtilities.installDoubleClickExpansion(viewer);
 			viewerFilter = new ViewerFilter() {
 				@Override
 				public boolean select(Viewer viewer, Object parentElement, Object element) {
@@ -199,7 +201,6 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 
 		public void addSelectionChangedListener(ISelectionChangedListener selectionChangedListener) {
 			viewer.addSelectionChangedListener(selectionChangedListener);
-
 		}
 
 		public boolean hasChildren(Object element) {

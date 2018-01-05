@@ -26,7 +26,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.jobs.Job;
 
-import com.bdaum.aoModeling.runtime.AomObject;
+import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 import com.bdaum.zoom.cat.model.composedTo.ComposedToImpl;
 import com.bdaum.zoom.cat.model.derivedBy.DerivedByImpl;
 import com.bdaum.zoom.operations.DbOperation;
@@ -34,12 +34,12 @@ import com.bdaum.zoom.operations.IProfiledOperation;
 
 public class ModifyRelationLegendOperation extends DbOperation {
 
-	private AomObject rel;
+	private IIdentifiableObject rel;
 	private RelationDescription newValues;
 	private String[] oldValues = new String[4];
 	private byte[] oldArchivedRecipe;
 
-	public ModifyRelationLegendOperation(AomObject rel,
+	public ModifyRelationLegendOperation(IIdentifiableObject rel,
 			RelationDescription newValues) {
 		super(Messages.getString("ModifyRelationLegendOperation.Modify_legend")); //$NON-NLS-1$
 		this.rel = rel;

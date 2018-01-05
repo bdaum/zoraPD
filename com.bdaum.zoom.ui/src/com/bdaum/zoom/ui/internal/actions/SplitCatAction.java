@@ -47,6 +47,7 @@ public class SplitCatAction extends AbstractSelectionAction {
 
 	private IAdaptable adaptable;
 	private IStatus status;
+	private List<Asset> selectedAssets;
 
 	public SplitCatAction(IWorkbenchWindow window, String label, String tooltip, ImageDescriptor image,
 			IAdaptable adaptable) {
@@ -58,7 +59,9 @@ public class SplitCatAction extends AbstractSelectionAction {
 	@Override
 	public void run() {
 		final Shell shell = adaptable.getAdapter(Shell.class);
-		final List<Asset> selectedAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
+		selectedAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
+		if (selectedAssets == null || selectedAssets.isEmpty())
+			selectedAssets = Core.getCore().getAssetProvider().getLocalAssets();
 		final int na = selectedAssets.size();
 		if (na == 0) {
 			AcousticMessageDialog.openInformation(shell, Messages.SplitCatActionDelegate_split_cat,
@@ -83,19 +86,14 @@ public class SplitCatAction extends AbstractSelectionAction {
 					IDbFactory dbFactory = Core.getCore().getDbFactory();
 					final IDbManager newDbManager = dbFactory.createDbManager(file, true, false, false);
 					boolean delete = dialog.getDelete();
-					if (delete && !AcousticMessageDialog.openConfirm(shell,
-							Messages.SplitCatActionDelegate_delete_exported_images,
-							Messages.SplitCatActionDelegate_do_you_really_want_to_delete))
-						delete = false;
 					final String description = dialog.getDescription();
 					final String timeline = dialog.getTimeline();
 					final String locations = dialog.getLocationOption();
-
 					IRunnableWithProgress runnable1 = new IRunnableWithProgress() {
-
 						public void run(IProgressMonitor monitor)
 								throws InvocationTargetException, InterruptedException {
-							CoreActivator.getDefault().getFileWatchManager().setPaused(true, this.getClass().toString());
+							CoreActivator.getDefault().getFileWatchManager().setPaused(true,
+									this.getClass().toString());
 							Job.getJobManager().cancel(Constants.FOLDERWATCH);
 							Job.getJobManager().cancel(Constants.SYNCPICASA);
 							Core.waitOnJobCanceled(Constants.FOLDERWATCH, Constants.SYNCPICASA);
@@ -122,6 +120,7 @@ public class SplitCatAction extends AbstractSelectionAction {
 										NLS.bind(Messages.SplitCatActionDelegate_finished_with_warnings,
 												status.toString()));
 							if (status.getSeverity() == IStatus.ERROR || status.getSeverity() == IStatus.CANCEL) {
+								newDbManager.close(CatalogListener.NORMAL);
 								catFile.delete();
 								return;
 							}

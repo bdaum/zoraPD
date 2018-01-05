@@ -68,6 +68,7 @@ import com.bdaum.zoom.ui.internal.dialogs.EditMetaDialog.LocationNode;
 import com.bdaum.zoom.ui.internal.views.DateTimeCellEditor;
 import com.bdaum.zoom.ui.internal.views.LargeTextCellEditor;
 import com.bdaum.zoom.ui.internal.views.ListCellEditor;
+import com.bdaum.zoom.ui.internal.views.TopicTextCellEditor;
 import com.bdaum.zoom.ui.internal.views.ViewTextCellEditor;
 
 @SuppressWarnings("restriction")
@@ -225,6 +226,8 @@ public class EditStructDialog extends ZTitleAreaDialog implements IAdaptable {
 					editor.setInput(qf);
 					return editor;
 				}
+				if (qf.getEnumeration() instanceof Integer)
+					return new TopicTextCellEditor(table, qf);
 				if (qf.getMaxlength() > 60)
 					return new LargeTextCellEditor(table, qf, null);
 				return new ViewTextCellEditor(table, qf, null);

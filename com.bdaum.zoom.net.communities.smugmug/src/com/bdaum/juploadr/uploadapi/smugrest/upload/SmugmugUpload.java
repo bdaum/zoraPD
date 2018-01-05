@@ -200,11 +200,7 @@ public class SmugmugUpload extends SmugmugMethod {
 		else
 			map.put("X-Smug-AlbumID", album.getId()); //$NON-NLS-1$
 		Asset asset = image.getAsset();
-		String name = asset.getUri();
-		int p = name.lastIndexOf('/');
-		if (p >= 0)
-			name = name.substring(p + 1);
-		map.put(X_SMUG_FILE_NAME, Core.decodeUrl(name));
+		map.put(X_SMUG_FILE_NAME, Core.getFileName(asset.getUri(), true));
 		map.put("X-Smug-Caption", image.getTitle()); //$NON-NLS-1$
 		String keywords = ((ImageUploadApi) session.getApi()).getTagParser().toRequestString(
 				image.getTags());

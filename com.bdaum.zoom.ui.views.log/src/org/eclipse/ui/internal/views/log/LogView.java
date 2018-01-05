@@ -120,6 +120,7 @@ import org.osgi.service.prefs.Preferences;
 
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.ibm.icu.text.DateFormat;
 import com.ibm.icu.text.SimpleDateFormat;
@@ -586,6 +587,7 @@ public class LogView extends ViewPart implements ILogListener {
 		viewer.setContentProvider(new LogViewContentProvider(this));
 		ViewerComparator comparator = getViewerComparator(DATE);
 		viewer.setComparator(comparator);
+		UiUtilities.installDoubleClickExpansion(viewer);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent e) {
 				handleSelectionChanged(e.getSelection());

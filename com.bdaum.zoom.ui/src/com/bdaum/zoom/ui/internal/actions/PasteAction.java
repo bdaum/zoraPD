@@ -68,7 +68,7 @@ public class PasteAction extends RetargetAction implements IAdaptable {
 	@Override
 	public void dispose() {
 		Shell shell = window.getShell();
-		if (!shell.isDisposed())
+		if (shell != null && !shell.isDisposed())
 			shell.getDisplay().removeFilter(SWT.FocusIn, focusListener);
 		super.dispose();
 	}

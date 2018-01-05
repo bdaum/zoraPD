@@ -80,6 +80,19 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
+import org.piccolo2d.PCamera;
+import org.piccolo2d.PNode;
+import org.piccolo2d.event.PBasicInputEventHandler;
+import org.piccolo2d.event.PInputEvent;
+import org.piccolo2d.extras.swt.PSWTCanvas;
+import org.piccolo2d.extras.swt.PSWTHandle;
+import org.piccolo2d.extras.swt.PSWTImage;
+import org.piccolo2d.extras.swt.PSWTPath;
+import org.piccolo2d.extras.swt.PSWTText;
+import org.piccolo2d.extras.util.PLocator;
+import org.piccolo2d.util.PBounds;
+import org.piccolo2d.util.PDimension;
+import org.piccolo2d.util.PPaintContext;
 
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.Rgb_type;
@@ -121,20 +134,6 @@ import com.bdaum.zoom.ui.internal.widgets.PTextHandler;
 import com.bdaum.zoom.ui.internal.widgets.TextEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.TextField;
 import com.bdaum.zoom.vr.internal.ExhibitionJob;
-
-import edu.umd.cs.piccolo.PCamera;
-import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
-import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolo.util.PDimension;
-import edu.umd.cs.piccolo.util.PPaintContext;
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
-import edu.umd.cs.piccolox.swt.PSWTHandle;
-import edu.umd.cs.piccolox.swt.PSWTImage;
-import edu.umd.cs.piccolox.swt.PSWTPath;
-import edu.umd.cs.piccolox.swt.PSWTText;
-import edu.umd.cs.piccolox.util.PLocator;
 
 @SuppressWarnings("restriction")
 public class ExhibitionView extends AbstractPresentationView {
@@ -362,9 +361,8 @@ public class ExhibitionView extends AbstractPresentationView {
 					Object obj = it.next();
 					if (obj instanceof PWall) {
 						PWall w = (PWall) obj;
-						if (w.getOffset().getY() > offset.getY()) {
+						if (w.getOffset().getY() > offset.getY())
 							w.offset(0, -ydiff);
-						}
 					}
 				}
 				walls.remove(added);
@@ -785,7 +783,6 @@ public class ExhibitionView extends AbstractPresentationView {
 			double x = offset.getX() - wallPanel.getOffset().getX();
 			double pos = 0;
 			int index = 0;
-			// List<PExhibit> trail = new ArrayList<PExhibit>(exhibits.size());
 			ListIterator<?> it = wallPanel.getChildrenIterator();
 			while (it.hasNext()) {
 				Object next = it.next();
@@ -794,8 +791,6 @@ public class ExhibitionView extends AbstractPresentationView {
 					PBounds eBounds = pExhibit.getFullBoundsReference();
 					double p = eBounds.getX();
 					if (p < x) {
-						// trail.add(pExhibit);
-						// } else {
 						p += eBounds.getWidth();
 						if (p > pos)
 							pos = p;
@@ -803,7 +798,6 @@ public class ExhibitionView extends AbstractPresentationView {
 					}
 				}
 			}
-			// double oldPos = pos;
 			int globalIndex = index;
 			for (Wall w : exhibition.getWall()) {
 				if (w == wall)
@@ -818,14 +812,6 @@ public class ExhibitionView extends AbstractPresentationView {
 				wall.addExhibit(exhibit.getStringId());
 			else
 				wall.getExhibit().add(index, exhibit.getStringId());
-			// exhibit.setWall_exhibit_parent(wall.getStringId());
-			// pos += horizontalGap;
-			// deleted = makeExhibit(wallPanel, (int) pos, exhibit);
-			// PBounds eBounds = deleted.getFullBoundsReference();
-			// pos = eBounds.getX() + eBounds.getWidth();
-			// double iWidth = (pos - oldPos);
-			// for (PExhibit element : trail)
-			// element.offset(iWidth, 0);
 			wallPanel.addChild(deleted);
 			deleted.setOffset(offset);
 			List<Object> toBeStored = new ArrayList<Object>(2);
@@ -1084,12 +1070,8 @@ public class ExhibitionView extends AbstractPresentationView {
 			double wallY2 = wallY1 + sin * wallW;
 			boolean door = false;
 			if (sx >= Math.min(wallX1, wallX2) - 50 && sx <= Math.max(wallX1, wallX2) + 50
-					&& sy >= Math.min(wallY1, wallY2) - 50 && sy <= Math.max(wallY1, wallY2) + 50) {
-				if (Math.abs(cos) > 0.01d)
-					door = Math.abs(wallY1 - sy + (sx - wallX1) * sin / cos) < 50;
-				else
-					door = true;
-			}
+					&& sy >= Math.min(wallY1, wallY2) - 50 && sy <= Math.max(wallY1, wallY2) + 50)
+				door = Math.abs(cos) > 0.01d ? Math.abs(wallY1 - sy + (sx - wallX1) * sin / cos) < 50 : true;
 			if (door) {
 				float doorX1 = (float) (sin * (sy - wallY1) + cos * (sx - wallX1)) - DOORWIDTH / 2;
 				float doorX2 = doorX1 + DOORWIDTH;
@@ -1196,10 +1178,8 @@ public class ExhibitionView extends AbstractPresentationView {
 			ListIterator<?> it = getChildrenIterator();
 			while (it.hasNext()) {
 				Object obj = it.next();
-				if (obj instanceof PExhibit) {
-					PExhibit pexhibit = (PExhibit) obj;
-					pexhibit.offset(xdiff, ydiff);
-				}
+				if (obj instanceof PExhibit)
+					((PExhibit) obj).offset(xdiff, ydiff);
 			}
 
 		}
@@ -1286,7 +1266,7 @@ public class ExhibitionView extends AbstractPresentationView {
 				shiftX = 0;
 				shiftY = 0;
 				oldScale = pImage.getScale();
-				PExhibit.this.moveToFront();
+				PExhibit.this.raiseToTop();
 			}
 
 			@Override
@@ -1331,19 +1311,17 @@ public class ExhibitionView extends AbstractPresentationView {
 				gc.drawRectangle(bounds.x, bounds.y, bounds.width - 1, bounds.height - 1);
 				dimFormat.setMaximumFractionDigits(1);
 				dimFormat.setMinimumFractionDigits(1);
-				String text = new StringBuilder().append(dimFormat.format(exhibit.getWidth() / 10d)).append(" x ") //$NON-NLS-1$
-						.append(dimFormat.format(exhibit.getHeight() / 10d)).append(" cm").toString(); //$NON-NLS-1$
 				TextLayout layout = new TextLayout(display);
 				layout.setAlignment(SWT.CENTER);
 				layout.setWidth(bounds.width - 6);
-				layout.setText(text);
+				layout.setText(new StringBuilder().append(dimFormat.format(exhibit.getWidth() / 10d)).append(" x ") //$NON-NLS-1$
+						.append(dimFormat.format(exhibit.getHeight() / 10d)).append(" cm").toString()); //$NON-NLS-1$
 				Rectangle tbounds = layout.getBounds();
 				layout.draw(gc, (bounds.width - tbounds.width) / 2, (bounds.height - tbounds.height) / 2);
 				layout.dispose();
 				gc.dispose();
-				Cursor cue = new Cursor(display, image.getImageData(), 0, 0);
+				setCue(new Cursor(display, image.getImageData(), 0, 0));
 				image.dispose();
-				setCue(cue);
 			}
 
 			@Override
@@ -1411,23 +1389,19 @@ public class ExhibitionView extends AbstractPresentationView {
 				frameColor = new Rgb_typeImpl(8, 8, 8);
 			PBasicInputEventHandler inputEventHandler = new PBasicInputEventHandler() {
 				@Override
-				public void mouseReleased(PInputEvent event) {
+				public void mousePressed(PInputEvent event) {
 					setPickedNode(event.getPickedNode());
 				}
 			};
 			// Frame and Mat
-			if (frameWidth != 0) {
-				pFrame = new PPresentationPanel(0, 0, (float) (imageWidth + 2 * (frameWidth + matWidth)),
+			if (frameWidth != 0)
+				addChild(pFrame = new PPresentationPanel(0, 0, (float) (imageWidth + 2 * (frameWidth + matWidth)),
 						(float) (imageHeight + 2 * (frameWidth + matWidth)),
-						new Color(frameColor.getR(), frameColor.getG(), frameColor.getB()), null, inputEventHandler);
-				addChild(pFrame);
-			}
-			if (matWidth != 0) {
-				pMat = new PPresentationPanel(frameWidth, frameWidth, (float) (imageWidth + 2 * matWidth),
+						new Color(frameColor.getR(), frameColor.getG(), frameColor.getB()), null, inputEventHandler));
+			if (matWidth != 0)
+				addChild(pMat = new PPresentationPanel(frameWidth, frameWidth, (float) (imageWidth + 2 * matWidth),
 						(float) (imageHeight + 2 * matWidth),
-						new Color(matColor.getR(), matColor.getG(), matColor.getB()), null, inputEventHandler);
-				addChild(pMat);
-			}
+						new Color(matColor.getR(), matColor.getG(), matColor.getB()), null, inputEventHandler));
 			// Image
 			AssetImpl asset = Core.getCore().getDbManager().obtainAsset(exhibit.getAsset());
 			pImage = new PSWTAssetThumbnail(canvas, ExhibitionView.this, asset);
@@ -1850,10 +1824,8 @@ public class ExhibitionView extends AbstractPresentationView {
 
 	@Override
 	public void saveState(IMemento memento) {
-		if (memento != null) {
-			if (exhibition != null)
-				memento.putString(LAST_EXHIBITION, exhibition.getStringId());
-		}
+		if (memento != null && exhibition != null)
+			memento.putString(LAST_EXHIBITION, exhibition.getStringId());
 		super.saveState(memento);
 	}
 
@@ -1862,7 +1834,6 @@ public class ExhibitionView extends AbstractPresentationView {
 		super.createPartControl(parent);
 		canvas.setData("id", "exhibition"); //$NON-NLS-1$ //$NON-NLS-2$
 		undoContext = new UndoContext() {
-
 			@Override
 			public String getLabel() {
 				return Messages.getString("ExhibitionView.exh_undo_context"); //$NON-NLS-1$
@@ -1872,7 +1843,6 @@ public class ExhibitionView extends AbstractPresentationView {
 		addWheelListener(0.1d, 100d);
 		textEventHandler = new TextEventHandler(selectionBackgroundColor);
 		PBasicInputEventHandler eventHandler = new PBasicInputEventHandler() {
-
 			@Override
 			public void keyPressed(PInputEvent event) {
 				if (textEventHandler.hasFocus())
@@ -1899,10 +1869,10 @@ public class ExhibitionView extends AbstractPresentationView {
 					PCamera camera = event.getCamera();
 					if (oldTransform == null) {
 						oldTransform = camera.getViewTransform();
-						if (picked instanceof PExhibit) {
+						if (picked instanceof PExhibit)
 							camera.scaleViewAboutPoint(15d / camera.getViewScale(), event.getPosition().getX(),
 									event.getPosition().getY());
-						} else {
+						else {
 							if (picked instanceof PWall) {
 								PWall pwall = (PWall) picked;
 								PSWTPath infoPlate = pwall.getpInfoPlate();
@@ -1957,7 +1927,6 @@ public class ExhibitionView extends AbstractPresentationView {
 		super.makeActions();
 		propertiesAction = new Action(Messages.getString("ExhibitionView.properties"), //$NON-NLS-1$
 				Icons.exhibition.getDescriptor()) {
-
 			@Override
 			public void run() {
 				ExhibitionImpl show = getExhibition();
@@ -1966,15 +1935,13 @@ public class ExhibitionView extends AbstractPresentationView {
 				ExhibitionImpl backup = ExhibitionPropertiesOperation.cloneExhibition(show);
 				show = ExhibitionEditDialog.open(getSite().getShell(), null, show, show.getName(), true, null);
 				if (show != null) {
-					exhibition = show;
-					performOperation(new ExhibitionPropertiesOperation(backup, exhibition));
+					performOperation(new ExhibitionPropertiesOperation(backup, exhibition = show));
 					setInput(exhibition);
 				}
 			}
 		};
 		propertiesAction.setToolTipText(Messages.getString("ExhibitionView.edit_exhibition_properties")); //$NON-NLS-1$
 		addWallAction = new Action(Messages.getString("ExhibitionView.add_wall"), Icons.add_obj.getDescriptor()) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				ExhibitionImpl show = getExhibition();
@@ -1993,24 +1960,20 @@ public class ExhibitionView extends AbstractPresentationView {
 		addWallAction.setToolTipText(Messages.getString("ExhibitionView.add_a_new_wall")); //$NON-NLS-1$
 		deleteWallAction = new Action(Messages.getString("ExhibitionView.delete_wall_action"), //$NON-NLS-1$
 				Icons.delete.getDescriptor()) {
-
 			@Override
 			public void run() {
 				PNode node = getPickedNode();
 				while (node != null && !(node instanceof PWall))
 					node = node.getParent();
-				if (node != null) {
-					if (AcousticMessageDialog.openQuestion(getSite().getShell(),
-							Messages.getString("ExhibitionView.remove_wall"), //$NON-NLS-1$
-							Messages.getString("ExhibitionView.do_you_really_want_to_remove"))) //$NON-NLS-1$
-						performOperation(new DeleteWallOperation((PWall) node));
-				}
+				if (node != null && AcousticMessageDialog.openQuestion(getSite().getShell(),
+						Messages.getString("ExhibitionView.remove_wall"), //$NON-NLS-1$
+						Messages.getString("ExhibitionView.do_you_really_want_to_remove"))) //$NON-NLS-1$
+					performOperation(new DeleteWallOperation((PWall) node));
 			}
 		};
 		deleteWallAction.setToolTipText(Messages.getString("ExhibitionView.delete_wall_tooltip")); //$NON-NLS-1$
 		editWallAction = new Action(Messages.getString("ExhibitionView.edit_wall_action"), //$NON-NLS-1$
 				Icons.properties_blue.getDescriptor()) {
-
 			@Override
 			public void run() {
 				if (getPickedNode() instanceof PWall)
@@ -2019,7 +1982,6 @@ public class ExhibitionView extends AbstractPresentationView {
 		};
 		editWallAction.setToolTipText(Messages.getString("ExhibitionView.edit_wall_tooltip")); //$NON-NLS-1$
 		generateAction = new Action(Messages.getString("ExhibitionView.generate"), Icons.play.getDescriptor()) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				generate();
@@ -2028,7 +1990,6 @@ public class ExhibitionView extends AbstractPresentationView {
 		generateAction.setToolTipText(Messages.getString("ExhibitionView.generate_exhibition")); //$NON-NLS-1$
 
 		gotoExhibitAction = new Action(Messages.getString("ExhibitionView.goto_exhibit")) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				List<ExhibitImpl> list = new ArrayList<ExhibitImpl>(300);
@@ -2103,13 +2064,9 @@ public class ExhibitionView extends AbstractPresentationView {
 	}
 
 	private PExhibit getPickedExhibit() {
-		PNode pickedNode = getPickedNode();
-		if (pickedNode != null) {
-			if (pickedNode instanceof PExhibit)
-				return (PExhibit) pickedNode;
-			else if (pickedNode.getParent() instanceof PExhibit)
-				return (PExhibit) pickedNode.getParent();
-		}
+		Object item = getAdapter(IPresentationItem.class);
+		if (item instanceof PExhibit)
+			return (PExhibit) item;
 		return null;
 	}
 
@@ -2140,6 +2097,7 @@ public class ExhibitionView extends AbstractPresentationView {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
+		updateActions();
 		manager.add(gotoExhibitAction);
 		PNode pickedNode = getPickedNode();
 		if (pickedNode instanceof PExhibit) {
@@ -2250,9 +2208,8 @@ public class ExhibitionView extends AbstractPresentationView {
 
 	protected void setColor(PSWTPath path, Wall wall) {
 		Rgb_type bgColor = wall.getColor();
-		Color wallPaint = (bgColor == null) ? new Color(255, 255, 250)
-				: new Color(bgColor.getR(), bgColor.getG(), bgColor.getB());
-		path.setPaint(wallPaint);
+		path.setPaint((bgColor == null) ? new Color(255, 255, 250)
+				: new Color(bgColor.getR(), bgColor.getG(), bgColor.getB()));
 	}
 
 	@Override
@@ -2485,12 +2442,9 @@ public class ExhibitionView extends AbstractPresentationView {
 		double lMidX = lBounds.width / 2 + lBounds.x;
 		double lMidY = lBounds.height / 2 + lBounds.y;
 		double degrees;
-		if (lMidX == iMidX) {
-			if (lMidY > iMidY)
-				degrees = 0;
-			else
-				degrees = 180;
-		} else {
+		if (lMidX == iMidX)
+			degrees = lMidY > iMidY ? 0 : 180;
+		else {
 			double angle = Math.atan((lMidY - iMidY) * aspect / (lMidX - iMidX));
 			degrees = 90 - Math.toDegrees(angle);
 			if (lMidX < iMidX)
@@ -2687,7 +2641,7 @@ public class ExhibitionView extends AbstractPresentationView {
 									IDialogConstants.CANCEL_LABEL },
 							0);
 				}
-			} else {
+			} else
 				dialog = new AcousticMessageDialog(getSite().getShell(),
 						Messages.getString("ExhibitionView.overwriteTitle"), //$NON-NLS-1$
 						null, NLS.bind(Messages.getString("ExhibitionView.not_empty"), file), //$NON-NLS-1$
@@ -2695,7 +2649,6 @@ public class ExhibitionView extends AbstractPresentationView {
 								Messages.getString("ExhibitionView.clear_folder"), //$NON-NLS-1$
 								IDialogConstants.CANCEL_LABEL },
 						0);
-			}
 			int ret = dialog.open();
 			switch (ret) {
 			case 2:
@@ -2740,24 +2693,6 @@ public class ExhibitionView extends AbstractPresentationView {
 		});
 		job.schedule();
 	}
-
-	// private ExhibitionImpl openExhibitionEditDialog(final Shell shell,
-	// final GroupImpl group, final ExhibitionImpl gallery,
-	// final String title, final boolean canUndo) {
-	// final ExhibitionImpl[] box = new ExhibitionImpl[1];
-	// BusyIndicator.showWhile(shell.getDisplay(), new Runnable() {
-	// public void run() {
-	// ExhibitionEditDialog dialog = new ExhibitionEditDialog(shell,
-	// group, gallery, title, canUndo);
-	// dialog.create();
-	// dialog.selectOutputPage(Messages
-	// .getString("ExhibitionView.please_specify_target")); //$NON-NLS-1$
-	// if (dialog.open() == Window.OK)
-	// box[0] = dialog.getResult();
-	// }
-	// });
-	// return box[0];
-	// }
 
 	private void showExhibition(final File start) {
 		final Display display = getSite().getShell().getDisplay();

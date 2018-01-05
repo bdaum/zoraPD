@@ -50,9 +50,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewer;
-import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.EditingSupport;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -723,7 +721,6 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		viewer.setContentProvider(new MetadataContentProvider());
 		viewer.setComparator(new ViewComparator());
 		viewer.setFilters(new ViewerFilter[] { new DetailsViewerFilter(), new ContentTypeViewerFilter() });
-		// ColumnViewerToolTipSupport.enableFor(viewer);
 		viewer.setInput(getRootElement());
 		parent.getDisplay().asyncExec(() -> {
 			if (!parent.isDisposed()) {
@@ -752,18 +749,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 				updateActions();
 			}
 		});
-		viewer.addDoubleClickListener(new IDoubleClickListener() {
-			public void doubleClick(DoubleClickEvent event) {
-				ISelection selection = event.getSelection();
-				if (selection instanceof IStructuredSelection) {
-					Object element = ((IStructuredSelection) selection).getFirstElement();
-					if (viewer.getExpandedState(element))
-						viewer.collapseToLevel(element, TreeViewer.ALL_LEVELS);
-					else
-						viewer.expandToLevel(element, TreeViewer.ALL_LEVELS);
-				}
-			}
-		});
+		UiUtilities.installDoubleClickExpansion(viewer);
 		tree.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseUp(MouseEvent e) {

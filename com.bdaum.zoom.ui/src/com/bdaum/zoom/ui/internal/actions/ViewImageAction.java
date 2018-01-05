@@ -59,7 +59,7 @@ import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.views.AssetContainer;
 import com.bdaum.zoom.ui.internal.views.ImageViewer;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
-import com.bdaum.zoom.ui.views.IImageViewer;
+import com.bdaum.zoom.ui.views.IMediaViewer;
 
 @SuppressWarnings("restriction")
 public class ViewImageAction extends Action {
@@ -98,7 +98,7 @@ public class ViewImageAction extends Action {
 	}
 
 	protected void launchViewer(Asset asset, boolean shift, boolean alt, boolean ctrl, final IWorkbenchWindow window) {
-		IImageViewer imageViewer = UiActivator.getDefault().getImageViewer(asset);
+		IMediaViewer imageViewer = UiActivator.getDefault().getMediaViewer(asset);
 		URI uri = Core.getCore().getVolumeManager().findExistingFile(asset, false);
 		boolean isFile = uri == null || Constants.FILESCHEME.equals(uri.getScheme());
 		boolean isFtp = uri == null || IFTPService.FTPSCHEME.equals(uri.getScheme());
@@ -179,7 +179,7 @@ public class ViewImageAction extends Action {
 						NLS.bind(Messages.ViewImageAction_configured_external_viewer, viewerPath));
 			}
 		}
-		IImageViewer viewer = UiActivator.getDefault().getImageViewer(asset);
+		IMediaViewer viewer = UiActivator.getDefault().getMediaViewer(asset);
 		if (viewer == null)
 			viewer = new ImageViewer();
 		viewer.init(window, alt ? filter : null, ctrl ? (shift ? ZImage.ORIGINAL : ZImage.CROPPED) : ZImage.CROPMASK);

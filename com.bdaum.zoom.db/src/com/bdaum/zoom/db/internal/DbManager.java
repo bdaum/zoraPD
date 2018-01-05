@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  (berthold.daum@bdaum.de)
  */
 package com.bdaum.zoom.db.internal;
 
@@ -178,7 +178,6 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	private static final boolean DIAGNOSE = false;
 
-	// Semaphores
 	private static final int TIMEOUT = 30000;
 
 	private static final String SAFE_TRANSACTION = "transaction"; //$NON-NLS-1$
@@ -189,9 +188,17 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	private static final List<Trash> EMPTYTRASH = new ArrayList<Trash>(0);
 
-	private static List<String> lexFields = new ArrayList<String>(5);
-
 	private static final long ONEDAY = 24 * 60 * 60 * 1000L;
+	
+	private static List<String> lexFields = new ArrayList<String>(5);
+	
+	static {
+		lexFields.add(QueryField.URI.getKey());
+		lexFields.add(QueryField.VOLUME.getKey());
+		lexFields.add(QueryField.NAME.getKey());
+		lexFields.add(QueryField.EXIF_ORIGINALFILENAME.getKey());
+		lexFields.add(QueryField.MIMETYPE.getKey());
+	}
 
 	private ObjectContainer db;
 
@@ -379,25 +386,20 @@ public class DbManager implements IDbManager, IAdaptable {
 		ObjectClass assetType = common.objectClass(Asset_typeImpl.class);
 		assetType.indexed(false);
 		assetType.objectField(QueryField.URI.getKey()).indexed(true);
-		lexFields.add(QueryField.URI.getKey());
 		assetType.objectField(QueryField.VOLUME.getKey()).indexed(true);
-		lexFields.add(QueryField.VOLUME.getKey());
 		assetType.objectField(QueryField.ALBUM.getKey()).indexed(true);
 		assetType.objectField(QueryField.NAME.getKey()).indexed(true);
-		lexFields.add(QueryField.NAME.getKey());
 		assetType.objectField(QueryField.EXIF_DATETIMEORIGINAL.getKey()).indexed(true);
 		assetType.objectField(QueryField.IPTC_KEYWORDS.getKey()).indexed(true);
 		assetType.objectField(QueryField.IPTC_CATEGORY.getKey()).indexed(true);
 		assetType.objectField(QueryField.IPTC_DATECREATED.getKey()).indexed(true);
 		assetType.objectField(QueryField.LASTMOD.getKey()).indexed(true);
 		assetType.objectField(QueryField.EXIF_ORIGINALFILENAME.getKey()).indexed(true);
-		lexFields.add(QueryField.EXIF_ORIGINALFILENAME.getKey());
 		assetType.objectField(QueryField.IMPORTDATE.getKey()).indexed(true);
 		assetType.objectField(QueryField.EXIF_GPSLATITUDE.getKey()).indexed(true);
 		assetType.objectField(QueryField.EXIF_GPSLONGITUDE.getKey()).indexed(true);
 		assetType.objectField(QueryField.FORMAT.getKey()).indexed(true);
 		assetType.objectField(QueryField.MIMETYPE.getKey()).indexed(true);
-		lexFields.add(QueryField.MIMETYPE.getKey());
 		assetType.objectField(QueryField.RATING.getKey()).indexed(true);
 		// Track and Ghost
 		common.objectClass(TrackRecordImpl.class).objectField("asset_track_parent") //$NON-NLS-1$
@@ -575,7 +577,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				Meta_type.locationFolders_no, new Date(0L), 0, 0, creationDate, null, sb.toString(), creationDate,
 				Meta_type.thumbnailResolution_medium, false, null, null, false, 30, false, readOnly, false,
 				ImageConstants.SHARPEN_MEDIUM, null, Platform.getOS(), null, Constants.PICASASCANNERVERSION, false,
-				false, 75, false, null);
+				false, 75, false, null, 0L);
 	}
 
 	/*
@@ -1534,7 +1536,8 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	private void transferChildren(SmartCollection source, SmartCollection target) {
 		SmartCollection found = null;
-		for (SmartCollection subcol : source.getSubSelection()) {
+		for (Iterator<SmartCollection> iterator = source.getSubSelection().iterator(); iterator.hasNext();) {
+			SmartCollection subcol = iterator.next();
 			String id = subcol.getStringId();
 			for (SmartCollection cand : target.getSubSelection())
 				if (cand.getStringId().equals(id)) {
@@ -1545,7 +1548,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				transferChildren(subcol, found);
 			else {
 				target.addSubSelection(subcol);
-				source.removeSubSelection(subcol);
+				iterator.remove();
 			}
 		}
 	}
@@ -1573,6 +1576,8 @@ public class DbManager implements IDbManager, IAdaptable {
 		Date previousImport = null;
 		GroupImpl group = getImportGroup();
 		GroupImpl subgroup = null;
+		int showLabel = Constants.INHERIT_LABEL;
+		String labelTemplate = null;
 		SmartCollectionImpl coll = obtainById(SmartCollectionImpl.class, Constants.LAST_IMPORT_ID);
 		if (coll != null) {
 			Criterion criterion = coll.getCriterion().isEmpty() ? null : coll.getCriterion(0);
@@ -1598,11 +1603,12 @@ public class DbManager implements IDbManager, IAdaptable {
 				group.removeRootCollection(Constants.LAST_IMPORT_ID);
 				delete(coll);
 			}
+			showLabel = coll.getShowLabel();
+			labelTemplate = coll.getLabelTemplate();
 		}
 		SmartCollectionImpl newcoll = new SmartCollectionImpl(
 				cumulate ? Messages.DbManager_recent_bg_imports : Messages.DbManager_last_import, true, false, false,
-				false, description, 0, null, 0, null, coll != null ? coll.getShowLabel() : null,
-				coll != null ? coll.getLabelTemplate() : null, 0, null);
+				false, description, 0, null, 0, null, showLabel, labelTemplate, 0, null);
 		newcoll.setStringId(Constants.LAST_IMPORT_ID);
 		Criterion criterion = new CriterionImpl(QueryField.IMPORTDATE.getKey(), null, "", //$NON-NLS-1$
 				cumulate ? QueryField.BETWEEN : QueryField.DATEEQUALS, false);
@@ -2688,20 +2694,17 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	public synchronized boolean beginSafeTransaction() {
 		if (db != null)
-			for (int i = 0; i < TIMEOUT; i += 90) {
+			for (int i = 0; i < TIMEOUT; i += 90)
 				try {
 					if (db.ext().setSemaphore(SAFE_TRANSACTION, TIMEOUT))
 						return true;
+					Thread.sleep(100);
 				} catch (DatabaseClosedException e1) {
 					connectionLostWarning();
 					return false;
-				}
-				try {
-					Thread.sleep(100);
 				} catch (InterruptedException e) {
 					// ignore
 				}
-			}
 		return false;
 	}
 

@@ -39,6 +39,16 @@ public class Topic {
 	public String getCode() {
 		return code;
 	}
+	
+	public Topic() {
+		super();
+	}
+	
+	public Topic(String code, String name, String description) {
+		this.code = code;
+		this.name = name;
+		this.description = description;
+	}
 
 	/**
 	 * @return the name
@@ -115,12 +125,11 @@ public class Topic {
 			Set<String> exclusions) {
 		if (filter == null && exclusions == null)
 			return true;
-		if (subTopics != null && deep) {
+		if (subTopics != null && deep)
 			for (Topic subTopic : subTopics)
 				if (subTopic.isShown(filter, deep, exclusions))
 					return true;
-		}
 		return (exclusions != null && exclusions.contains(code)) ? false
-				: filter == null || filter.accept(name);
+				: filter == null || filter.accept(name) || filter.accept(code);
 	}
 }

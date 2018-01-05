@@ -84,7 +84,7 @@ public class NullDbManager implements IDbManager {
 				Meta_type.locationFolders_no, new Date(0L), 0, 0, creationDate, null, "", creationDate, //$NON-NLS-1$
 				Meta_type.thumbnailResolution_medium, false, null, null, true, 30, false, true, false,
 				ImageConstants.SHARPEN_MEDIUM, null, Platform.getOS(), null, Constants.PICASASCANNERVERSION, false, false, 75,
-				true, null);
+				true, null, 0L);
 	}
 
 	/*

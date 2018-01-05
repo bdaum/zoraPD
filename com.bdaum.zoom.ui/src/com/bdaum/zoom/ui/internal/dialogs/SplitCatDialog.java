@@ -29,6 +29,8 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -38,6 +40,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.Meta_type;
 import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -61,8 +64,7 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 	private String locationOption;
 	private ComboViewer locationViewer;
 
-	public SplitCatDialog(Shell parentShell, String timeline, int number,
-			boolean selected) {
+	public SplitCatDialog(Shell parentShell, String timeline, int number, boolean selected) {
 		super(parentShell, HelpContextIds.SPLITCAT);
 		this.timeline = timeline;
 		this.number = number;
@@ -73,10 +75,8 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 	public void create() {
 		super.create();
 		setTitle(Messages.SplitCatDialog_split_catalog);
-		setMessage(NLS
-				.bind(selected ? Messages.SplitCatDialog_extract_the_current_selection
-						: Messages.SplitCatDialog_extract_the_current_collection,
-						number));
+		setMessage(NLS.bind(selected ? Messages.SplitCatDialog_extract_the_current_selection
+				: Messages.SplitCatDialog_extract_the_current_collection, number));
 		updateButtons();
 	}
 
@@ -97,17 +97,14 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 
 	private boolean validate() {
 		boolean valid = fileEditor.getText() != null;
-		setErrorMessage(valid ? null
-				: Messages.SplitCatDialog_enter_name_of_cat);
+		setErrorMessage(valid ? null : Messages.SplitCatDialog_enter_name_of_cat);
 		return valid;
 	}
 
 	private void createHeaderGroup(Composite comp) {
 		UiActivator activator = UiActivator.getDefault();
-		fileEditor = new FileEditor(comp, SWT.SAVE | SWT.READ_ONLY,
-				Messages.EditMetaDialog_file_name, true,
-				activator.getCatFileExtensions(),
-				activator.getSupportedCatFileNames(), null,
+		fileEditor = new FileEditor(comp, SWT.SAVE | SWT.READ_ONLY, Messages.EditMetaDialog_file_name, true,
+				activator.getCatFileExtensions(), activator.getSupportedCatFileNames(), null,
 				'*' + Constants.CATALOGEXTENSION, true);
 		fileEditor.addModifyListener(new ModifyListener() {
 
@@ -122,20 +119,16 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 		final Label descriptionLabel = new Label(header, SWT.NONE);
 		descriptionLabel.setText(Messages.EditMetaDialog_description);
 
-		final GridData gd_description = new GridData(SWT.FILL, SWT.FILL, true,
-				true, 2, 1);
+		final GridData gd_description = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
 		gd_description.heightHint = 100;
 		gd_description.widthHint = 400;
-		descriptionField = new CheckedText(header, SWT.V_SCROLL | SWT.BORDER
-				| SWT.MULTI | SWT.WRAP);
+		descriptionField = new CheckedText(header, SWT.V_SCROLL | SWT.BORDER | SWT.MULTI | SWT.WRAP);
 		descriptionField.setLayoutData(gd_description);
 		// timeline
-		new Label(header, SWT.NONE)
-				.setText(Messages.EditMetaDialog_create_timeline);
+		new Label(header, SWT.NONE).setText(Messages.EditMetaDialog_create_timeline);
 
 		timelineViewer = new ComboViewer(header);
-		timelineViewer.getControl().setLayoutData(
-				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		timelineViewer.getControl().setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		timelineViewer.setContentProvider(ArrayContentProvider.getInstance());
 		timelineViewer.setLabelProvider(new LabelProvider() {
 
@@ -151,16 +144,13 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 			}
 		});
 		timelineViewer.setInput(Meta_type.timelineALLVALUES);
-		timelineViewer.setSelection(new StructuredSelection(
-				timeline == null ? Meta_type.timeline_no : timeline), true);
+		timelineViewer.setSelection(new StructuredSelection(timeline == null ? Meta_type.timeline_no : timeline), true);
 
 		// locations
-		new Label(header, SWT.NONE)
-				.setText(Messages.EditMetaDialog_create_loc_folders);
+		new Label(header, SWT.NONE).setText(Messages.EditMetaDialog_create_loc_folders);
 
 		locationViewer = new ComboViewer(header);
-		locationViewer.getControl().setLayoutData(
-				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		locationViewer.getControl().setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		locationViewer.setContentProvider(ArrayContentProvider.getInstance());
 		locationViewer.setLabelProvider(new LabelProvider() {
 
@@ -176,21 +166,26 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 			}
 		});
 		locationViewer.setInput(Meta_type.locationFoldersALLVALUES);
-		locationViewer.setSelection(new StructuredSelection(
-				locationOption == null ? Meta_type.locationFolders_no
-						: locationOption), true);
+		locationViewer.setSelection(
+				new StructuredSelection(locationOption == null ? Meta_type.locationFolders_no : locationOption), true);
 
-		deleteButton = WidgetFactory.createCheckButton(header,
-				Messages.SplitCatDialog_remove_extracted_entries, new GridData(
-						SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
+		deleteButton = WidgetFactory.createCheckButton(header, Messages.SplitCatDialog_remove_extracted_entries,
+				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
+		deleteButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (deleteButton.getSelection() && !AcousticMessageDialog.openQuestion(getShell(), Messages.SplitCatDialog_delete_exported,
+						Messages.SplitCatDialog_delete_exported_msg))
+					deleteButton.setSelection(false);
+			}
+		});
 	}
 
 	@Override
 	protected void okPressed() {
 		filename = fileEditor.getText();
 		description = descriptionField.getText();
-		IStructuredSelection selection = (IStructuredSelection) timelineViewer
-				.getSelection();
+		IStructuredSelection selection = (IStructuredSelection) timelineViewer.getSelection();
 		timeline = (String) selection.getFirstElement();
 		if (timeline == null)
 			timeline = Meta_type.timeline_no;

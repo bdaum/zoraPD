@@ -44,6 +44,7 @@ import com.bdaum.zoom.cat.model.meta.Category;
 import com.bdaum.zoom.cat.model.meta.CategoryImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 
 public class CategoryGroup {
@@ -71,6 +72,7 @@ public class CategoryGroup {
 		treeViewer.setContentProvider(new CategoryContentProvider());
 		treeViewer.setComparator(new CategoryComparator());
 		treeViewer.setLabelProvider(new CategoryLabelProvider());
+		UiUtilities.installDoubleClickExpansion(treeViewer);
 		final Composite buttonGroup = new Composite(comp, SWT.NONE);
 		buttonGroup.setLayout(new GridLayout());
 		buttonGroup.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
@@ -122,15 +124,15 @@ public class CategoryGroup {
 			if (category != null)
 				setCheckMarks(categories, (String) category);
 			treeViewer.addCheckStateListener(new ICheckStateListener() {
-
 				public void checkStateChanged(CheckStateChangedEvent event) {
-					Object element = event.getElement();
-					Object[] checkedElements = treeViewer.getCheckedElements();
-					for (Object object : checkedElements) {
-						if (object != element)
-							treeViewer.setChecked(object, false);
+					if (event.getChecked()) {
+						Object element = event.getElement();
+						Object[] checkedElements = treeViewer.getCheckedElements();
+						for (Object object : checkedElements) {
+							if (object != element)
+								treeViewer.setChecked(object, false);
+						}
 					}
-
 				}
 			});
 		}
@@ -147,9 +149,8 @@ public class CategoryGroup {
 			else
 				break;
 		}
-		if (cat != null) {
+		if (cat != null)
 			treeViewer.setChecked(cat, true);
-		}
 	}
 
 	public void commit() {

@@ -44,6 +44,7 @@ import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
+import com.bdaum.zoom.ui.widgets.NumericControl;
 
 public class EditSlideDialog extends ZTitleAreaDialog {
 
@@ -54,13 +55,11 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 	private Combo effectField;
 	private Text fadoutField;
 	private Text delayField;
+	private NumericControl zoomField;
 
-	public static final String[] EFFECTS = new String[] {
-			Messages.SlideshowEditDialog_Fade,
-			Messages.SlideshowEditDialog_move_left,
-			Messages.SlideshowEditDialog_move_right,
-			Messages.SlideshowEditDialog_move_up,
-			Messages.SlideshowEditDialog_move_down };
+	public static final String[] EFFECTS = new String[] { Messages.SlideshowEditDialog_Fade,
+			Messages.SlideshowEditDialog_move_left, Messages.SlideshowEditDialog_move_right,
+			Messages.SlideshowEditDialog_move_up, Messages.SlideshowEditDialog_move_down };
 
 	private static NumberFormat af = (NumberFormat.getNumberInstance());
 
@@ -73,90 +72,89 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 	public void create() {
 		super.create();
 		setTitle(Messages.EditSlideDialog_slide_properties);
-		setMessage(NLS.bind(
-				Messages.EditSlideDialog_please_specify_inidividual,
-				slide.getCaption()));
+		setMessage(NLS.bind(Messages.EditSlideDialog_please_specify_inidividual, slide.getCaption()));
 		updateButtons();
 	}
 
 	private final ModifyListener modifyListener = new ModifyListener() {
-
 		public void modifyText(ModifyEvent e) {
 			updateButtons();
 		}
 	};
 	private Text imageField;
 	private CheckboxButton voiceButton;
+	private NumericControl zoomXField;
+	private NumericControl zoomYField;
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
 		final Composite comp = new Composite(area, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		comp.setLayout(new GridLayout(2, false));
-		final Label titleLabel = new Label(comp, SWT.NONE);
-		titleLabel.setText(Messages.EditSlideDialog_title);
-
+		comp.setLayout(new GridLayout(5, false));
+		new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_title);
 		titleField = new Text(comp, SWT.BORDER);
-		titleField
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		titleField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 4, 1));
 		titleField.addModifyListener(modifyListener);
-
-		final Label imageLabel = new Label(comp, SWT.NONE);
-		imageLabel.setText(Messages.EditSlideDialog_image);
-
+		new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_image);
 		imageField = new Text(comp, SWT.BORDER | SWT.READ_ONLY);
-		imageField
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-		final Label delayLabel = new Label(comp, SWT.NONE);
-		delayLabel.setText(Messages.EditSlideDialog_delay);
-
+		imageField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 4, 1));
+		new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_delay);
 		delayField = new Text(comp, SWT.BORDER);
 		delayField.addModifyListener(modifyListener);
-		GridData data = new GridData(40, SWT.DEFAULT);
+		GridData data = new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1);
+		data.widthHint = 40;
 		delayField.setLayoutData(data);
-
-		final Label fadinsecLabel = new Label(comp, SWT.NONE);
-		fadinsecLabel.setText(Messages.EditSlideDialog_fadein);
-
+		new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_fadein);
 		fadinField = new Text(comp, SWT.BORDER);
 		fadinField.addModifyListener(modifyListener);
-		data = new GridData(40, SWT.DEFAULT);
+		data = new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1);
+		data.widthHint = 40;
 		fadinField.setLayoutData(data);
-
-		final Label effectLabel = new Label(comp, SWT.NONE);
-		effectLabel.setText(Messages.SlideshowEditDialog_transition_effect);
+		new Label(comp, SWT.NONE).setText(Messages.SlideshowEditDialog_transition_effect);
 		effectField = new Combo(comp, SWT.DROP_DOWN);
-		data = new GridData(70, SWT.DEFAULT);
+		data = new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1);
+		data.widthHint = 170;
 		effectField.setLayoutData(data);
 		effectField.setItems(EFFECTS);
-
-		final Label durationLabel = new Label(comp, SWT.NONE);
-		durationLabel.setText(Messages.EditSlideDialog_duration);
-
+		new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_zoom_in);
+		zoomField = new NumericControl(comp, SWT.NONE);
+		zoomField.setMaximum(100);
+		Label lab = new Label(comp, SWT.NONE);
+		lab.setText(Messages.EditSlideDialog_zoom_dir);
+		data = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
+		data.horizontalIndent = 20;
+		lab.setLayoutData(data);
+		zoomXField = new NumericControl(comp, SWT.NONE);
+		zoomXField.setMaximum(100);
+		zoomXField.setMinimum(-100);
+		zoomYField = new NumericControl(comp, SWT.NONE);
+		zoomYField.setMaximum(100);
+		zoomYField.setMinimum(-100);
+		new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_duration);
 		durationField = new Text(comp, SWT.BORDER);
-		durationField.setLayoutData(new GridData(40, SWT.DEFAULT));
+		data = new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1);
+		data.widthHint = 40;
+		durationField.setLayoutData(data);
 		durationField.addModifyListener(modifyListener);
-
-		final Label fadeoutLabel = new Label(comp, SWT.NONE);
-		fadeoutLabel.setText(Messages.EditSlideDialog_fadeout);
-
+		new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_fadeout);
 		fadoutField = new Text(comp, SWT.BORDER);
 		fadoutField.addModifyListener(modifyListener);
-		data = new GridData(40, SWT.DEFAULT);
+		data = new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1);
+		data.widthHint = 40;
 		fadoutField.setLayoutData(data);
 		voiceButton = WidgetFactory.createCheckButton(comp, Messages.EditSlideDialog_suppress_voicenote, null);
 		fillValues();
-
 		return area;
 	}
 
 	private void fillValues() {
-		titleField
-				.setText(slide.getCaption() == null ? "" : slide.getCaption()); //$NON-NLS-1$
+		titleField.setText(slide.getCaption() == null ? "" : slide.getCaption()); //$NON-NLS-1$
 		durationField.setText(af.format(slide.getDuration() / 1000d));
 		effectField.select(slide.getEffect());
+		zoomField.setSelection(slide.getZoom());
+		zoomXField.setSelection(slide.getZoomX());
+		zoomYField.setSelection(slide.getZoomY());
 		delayField.setText(af.format(slide.getDelay() / 1000d));
 		fadinField.setText(af.format(slide.getFadeIn() / 1000d));
 		fadoutField.setText(af.format(slide.getFadeOut() / 1000d));
@@ -166,12 +164,8 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 		if (assetID == null)
 			imageName = " - "; //$NON-NLS-1$
 		else {
-			AssetImpl asset = Core.getCore().getDbManager()
-					.obtainAsset(assetID);
-			if (asset != null)
-				imageName = asset.getName();
-			else
-				imageName = Messages.EditSlideDialog_deleted;
+			AssetImpl asset = Core.getCore().getDbManager().obtainAsset(assetID);
+			imageName = asset != null ? asset.getName() : Messages.EditSlideDialog_deleted;
 		}
 		imageField.setText(imageName);
 	}
@@ -186,17 +180,13 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 	}
 
 	private boolean validate() {
-		if (!validDouble(durationField, Messages.EditSlideDialog_duration_err,
-				0d, 3600d))
+		if (!validDouble(durationField, Messages.EditSlideDialog_duration_err, 0d, 3600d))
 			return false;
-		if (!validDouble(fadinField, Messages.EditSlideDialog_fadein_err, 0d,
-				30d))
+		if (!validDouble(fadinField, Messages.EditSlideDialog_fadein_err, 0d, 30d))
 			return false;
-		if (!validDouble(fadoutField, Messages.EditSlideDialog_fadeout_err, 0d,
-				30d))
+		if (!validDouble(fadoutField, Messages.EditSlideDialog_fadeout_err, 0d, 30d))
 			return false;
-		if (!validDouble(delayField, Messages.EditSlideDialog_delay_err, 0d,
-				30d))
+		if (!validDouble(delayField, Messages.EditSlideDialog_delay_err, 0d, 30d))
 			return false;
 		setErrorMessage(null);
 		return true;
@@ -206,17 +196,13 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 		String s = field.getText();
 		try {
 			double v = af.parse(s).doubleValue();
-			if (v > max) {
-				setErrorMessage(NLS.bind(
-						Messages.EditSlideDialog_value_must_not_be_larger_than,
-						label, min));
-			} else if (v >= min)
+			if (v > max)
+				setErrorMessage(NLS.bind(Messages.EditSlideDialog_value_must_not_be_larger_than, label, min));
+			else if (v >= min)
 				return true;
-			setErrorMessage(NLS.bind(
-					Messages.EditSlideDialog_value_must_be_larger, label, min));
+			setErrorMessage(NLS.bind(Messages.EditSlideDialog_value_must_be_larger, label, min));
 		} catch (ParseException e) {
-			setErrorMessage(NLS.bind(
-					Messages.EditSlideDialog_value_is_not_a_number, label));
+			setErrorMessage(NLS.bind(Messages.EditSlideDialog_value_is_not_a_number, label));
 		}
 		return false;
 	}
@@ -229,6 +215,9 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 		slide.setFadeIn(stringToMsec(fadinField));
 		slide.setFadeOut(stringToMsec(fadoutField));
 		slide.setEffect(Math.max(0, effectField.getSelectionIndex()));
+		slide.setZoom(zoomField.getSelection());
+		slide.setZoomX(zoomXField.getSelection());
+		slide.setZoomY(zoomYField.getSelection());
 		slide.setNoVoice(voiceButton.getSelection());
 		Core.getCore().getDbManager().safeTransaction(null, slide);
 		super.okPressed();

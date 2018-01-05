@@ -31,10 +31,10 @@ package com.bdaum.zoom.ui.internal.widgets;
 import java.awt.event.InputEvent;
 import java.awt.geom.Point2D;
 
-import edu.umd.cs.piccolo.PCamera;
-import edu.umd.cs.piccolo.event.PDragSequenceEventHandler;
-import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.event.PInputEventFilter;
+import org.piccolo2d.PCamera;
+import org.piccolo2d.event.PDragSequenceEventHandler;
+import org.piccolo2d.event.PInputEvent;
+import org.piccolo2d.event.PInputEventFilter;
 
 /**
  * <b>ZoomEventhandler</b> provides event handlers for basic zooming of the
@@ -97,9 +97,9 @@ public class ZZoomEventHandler extends PDragSequenceEventHandler {
 	}
 
 	/**
-	 * Sets the minimum view magnification factor that this event handler is
-	 * bound by. The camera is left at its current scale even if
-	 * <code>minScale</code> is larger than the current scale.
+	 * Sets the minimum view magnification factor that this event handler is bound
+	 * by. The camera is left at its current scale even if <code>minScale</code> is
+	 * larger than the current scale.
 	 *
 	 * @param minScale
 	 *            the minimum scale, must not be negative.
@@ -120,17 +120,19 @@ public class ZZoomEventHandler extends PDragSequenceEventHandler {
 
 	/**
 	 * Sets the speed for zooming
-	 * @param speed -10 ... 0 ... +10
+	 * 
+	 * @param speed
+	 *            -10 ... 0 ... +10
 	 */
 	public void setSpeed(double speed) {
 		this.speed = ZOOM_SENSITIVITY * Math.pow(2d, speed / 3d);
 	}
 
 	/**
-	 * Sets the maximum view magnification factor that this event handler is
-	 * bound by. The camera is left at its current scale even if
-	 * <code>maxScale</code> is smaller than the current scale. Use
-	 * Double.MAX_VALUE to specify the largest possible scale.
+	 * Sets the maximum view magnification factor that this event handler is bound
+	 * by. The camera is left at its current scale even if <code>maxScale</code> is
+	 * smaller than the current scale. Use Double.MAX_VALUE to specify the largest
+	 * possible scale.
 	 *
 	 * @param maxScale
 	 *            the maximum scale, must not be negative.
@@ -140,8 +142,8 @@ public class ZZoomEventHandler extends PDragSequenceEventHandler {
 	}
 
 	/**
-	 * Records the start point of the zoom. Used when calculating the delta for
-	 * zoom speed.
+	 * Records the start point of the zoom. Used when calculating the delta for zoom
+	 * speed.
 	 *
 	 * @param event
 	 *            event responsible for starting the zoom interaction
@@ -154,8 +156,8 @@ public class ZZoomEventHandler extends PDragSequenceEventHandler {
 	}
 
 	/**
-	 * Updates the current zoom periodically, regardless of whether the mouse
-	 * has moved recently.
+	 * Updates the current zoom periodically, regardless of whether the mouse has
+	 * moved recently.
 	 *
 	 * @param event
 	 *            contains information about the current state of the mouse
@@ -167,20 +169,15 @@ public class ZZoomEventHandler extends PDragSequenceEventHandler {
 			return;
 		lastActivityTime = when;
 		final PCamera camera = event.getCamera();
-		final double dx = event.getCanvasPosition().getX()
-				- getMousePressedCanvasPoint().getX();
-		double scaleDelta = 1.0 + speed * dx;
-
+		Point2D lastMousePoint = getMousePressedCanvasPoint();
+		double scaleDelta = 1.0 + speed * (event.getCanvasPosition().getX() - lastMousePoint.getX());
+		lastMousePoint.setLocation(event.getCanvasPosition());
 		final double currentScale = camera.getViewScale();
 		final double newScale = currentScale * scaleDelta;
-
-		if (newScale < minScale) {
+		if (newScale < minScale)
 			scaleDelta = minScale / currentScale;
-		}
-		if (maxScale > 0 && newScale > maxScale) {
+		if (maxScale > 0 && newScale > maxScale)
 			scaleDelta = maxScale / currentScale;
-		}
-		camera.scaleViewAboutPoint(scaleDelta, viewZoomPoint.getX(),
-				viewZoomPoint.getY());
+		camera.scaleViewAboutPoint(scaleDelta, viewZoomPoint.getX(), viewZoomPoint.getY());
 	}
 }

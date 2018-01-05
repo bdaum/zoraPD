@@ -31,11 +31,9 @@ import java.util.StringTokenizer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellEditor;
-import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.ICellEditorValidator;
-import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
@@ -51,6 +49,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
@@ -70,8 +69,7 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 
 	private static final Object[] EMPTY = new Object[0];
 	private final static NumberFormat af = (NumberFormat.getNumberInstance());
-	private static final String SEC = Messages
-			.getString("MetadataPreferencePage.sec"); //$NON-NLS-1$
+	private static final String SEC = Messages.getString("MetadataPreferencePage.sec"); //$NON-NLS-1$
 
 	public class ToleranceLabelProvider extends ZColumnLabelProvider {
 
@@ -98,9 +96,7 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 							af.setMaximumFractionDigits(qfield.getMaxlength());
 							return af.format(tolerance);
 						case QueryField.T_DATE:
-							return String
-									.valueOf((int) tolerance.floatValue() / 1000)
-									+ SEC;
+							return String.valueOf((int) tolerance.floatValue() / 1000) + SEC;
 						}
 					}
 				}
@@ -134,8 +130,7 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 	@Override
 	protected void createPageContents(Composite comp) {
 		setHelp(HelpContextIds.METADATA_PREFERENCE_PAGE);
-		new Label(comp, SWT.WRAP).setText(Messages
-				.getString("MetadataPreferencePage.what_to_do")); //$NON-NLS-1$
+		new Label(comp, SWT.WRAP).setText(Messages.getString("MetadataPreferencePage.what_to_do")); //$NON-NLS-1$
 		new Label(comp, SWT.NONE);
 		createTabFolder(comp, "Meta"); //$NON-NLS-1$
 
@@ -169,34 +164,23 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 		viewerGroup.setLayout(new GridLayout(2, false));
 		exportViewer = createViewerGroup(viewerGroup);
 		jpegGroup = new JpegMetaGroup(composite_3, SWT.NONE);
-		fillViewer(
-				essentialsViewer,
-				getPreferenceStore().getString(
-						PreferenceConstants.ESSENTIALMETADATA), 2, true);
-		jpegGroup.setSelection(getPreferenceStore().getBoolean(
-				PreferenceConstants.JPEGMETADATA));
+		fillViewer(essentialsViewer, getPreferenceStore().getString(PreferenceConstants.ESSENTIALMETADATA), 2, true);
+		jpegGroup.setSelection(getPreferenceStore().getBoolean(PreferenceConstants.JPEGMETADATA));
 		initTabFolder(0);
 		tabFolder.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				switch (tabFolder.getSelectionIndex()) {
 				case 1:
-					fillViewer(
-							hoverViewer,
-							getPreferenceStore().getString(
-									PreferenceConstants.HOVERMETADATA), 2,
+					fillViewer(hoverViewer, getPreferenceStore().getString(PreferenceConstants.HOVERMETADATA), 2,
 							false);
 					break;
 				case 2:
-					fillViewer(tolerancesViewer, getPreferenceStore()
-							.getString(PreferenceConstants.METADATATOLERANCES),
+					fillViewer(tolerancesViewer, getPreferenceStore().getString(PreferenceConstants.METADATATOLERANCES),
 							2, false);
 					break;
 				case 3:
-					fillViewer(
-							exportViewer,
-							getPreferenceStore().getString(
-									PreferenceConstants.EXPORTMETADATA), 1,
+					fillViewer(exportViewer, getPreferenceStore().getString(PreferenceConstants.EXPORTMETADATA), 1,
 							false);
 					break;
 				}
@@ -205,12 +189,10 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 	}
 
 	private TreeViewer createTolerancesViewer(Composite comp) {
-		ExpandCollapseGroup toleranceExpandCollapseGroup = new ExpandCollapseGroup(
-				comp, SWT.NONE);
-		final TreeViewer viewer = new TreeViewer(comp, SWT.SINGLE
-				| SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER | SWT.FULL_SELECTION);
-		viewer.getControl().setLayoutData(
-				new GridData(SWT.FILL, SWT.FILL, true, true));
+		ExpandCollapseGroup toleranceExpandCollapseGroup = new ExpandCollapseGroup(comp, SWT.NONE);
+		final TreeViewer viewer = new TreeViewer(comp,
+				SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER | SWT.FULL_SELECTION);
+		viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		toleranceExpandCollapseGroup.setViewer(viewer);
 		viewer.getTree().setLinesVisible(true);
 		TreeViewerColumn col1 = new TreeViewerColumn(viewer, SWT.NONE);
@@ -230,8 +212,7 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 					String s = String.valueOf(value);
 					float v;
 					if (s.endsWith("%")) //$NON-NLS-1$
-						v = Integer.parseInt(s.substring(0, s.length() - 1)
-								.trim());
+						v = Integer.parseInt(s.substring(0, s.length() - 1).trim());
 					else
 						try {
 							af.setMaximumFractionDigits(8);
@@ -265,53 +246,40 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 							String s = String.valueOf(value);
 							if (s.endsWith("%")) { //$NON-NLS-1$
 								try {
-									if (Integer.parseInt(s.substring(0,
-											s.length() - 1).trim()) < 0)
-										return Messages
-												.getString("MetadataPreferencePage.must_not_be_negative"); //$NON-NLS-1$
+									if (Integer.parseInt(s.substring(0, s.length() - 1).trim()) < 0)
+										return Messages.getString("MetadataPreferencePage.must_not_be_negative"); //$NON-NLS-1$
 									if (type == QueryField.T_DATE)
 										return Messages
 												.getString("MetadataPreferencePage.percent_not_allowed_for_date"); //$NON-NLS-1$
 									return null;
 								} catch (NumberFormatException e) {
-									return Messages
-											.getString("MetadataPreferencePage.bad_integer"); //$NON-NLS-1$
+									return Messages.getString("MetadataPreferencePage.bad_integer"); //$NON-NLS-1$
 								}
 							}
-							if (type == QueryField.T_POSITIVEINTEGER
-									|| type == QueryField.T_INTEGER) {
+							if (type == QueryField.T_POSITIVEINTEGER || type == QueryField.T_INTEGER) {
 								try {
-									if (Integer.parseInt(s.substring(0,
-											s.length() - 1).trim()) < 0)
-										return Messages
-												.getString("MetadataPreferencePage.must_not_be_negative"); //$NON-NLS-1$
+									if (Integer.parseInt(s.substring(0, s.length() - 1).trim()) < 0)
+										return Messages.getString("MetadataPreferencePage.must_not_be_negative"); //$NON-NLS-1$
 									return null;
 								} catch (NumberFormatException e) {
-									return Messages
-											.getString("MetadataPreferencePage.bad_integer"); //$NON-NLS-1$
+									return Messages.getString("MetadataPreferencePage.bad_integer"); //$NON-NLS-1$
 								}
-							} else if (type == QueryField.T_POSITIVELONG
-									|| type == QueryField.T_LONG) {
+							} else if (type == QueryField.T_POSITIVELONG || type == QueryField.T_LONG) {
 								try {
-									if (Long.parseLong(s.substring(0,
-											s.length() - 1).trim()) < 0)
-										return Messages
-												.getString("MetadataPreferencePage.must_not_be_negative"); //$NON-NLS-1$
+									if (Long.parseLong(s.substring(0, s.length() - 1).trim()) < 0)
+										return Messages.getString("MetadataPreferencePage.must_not_be_negative"); //$NON-NLS-1$
 									return null;
 								} catch (NumberFormatException e) {
-									return Messages
-											.getString("MetadataPreferencePage.bad_integer"); //$NON-NLS-1$
+									return Messages.getString("MetadataPreferencePage.bad_integer"); //$NON-NLS-1$
 								}
 							}
 							try {
 								af.setMaximumFractionDigits(8);
 								if (af.parse(s.trim()).floatValue() < 0)
-									return Messages
-											.getString("MetadataPreferencePage.must_not_be_negative"); //$NON-NLS-1$
+									return Messages.getString("MetadataPreferencePage.must_not_be_negative"); //$NON-NLS-1$
 								return null;
 							} catch (ParseException e) {
-								return Messages
-										.getString("MetadataPreferencePage.bad_floating_point"); //$NON-NLS-1$
+								return Messages.getString("MetadataPreferencePage.bad_floating_point"); //$NON-NLS-1$
 							}
 						}
 					});
@@ -329,15 +297,14 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 		});
 		viewer.setContentProvider(new MetadataContentProvider());
 		viewer.setComparator(new ViewComparator());
+		UiUtilities.installDoubleClickExpansion(viewer);
 		viewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
 
 			@Override
-			public boolean select(Viewer aViewer, Object parentElement,
-					Object element) {
+			public boolean select(Viewer aViewer, Object parentElement, Object element) {
 				if (element instanceof QueryField) {
 					QueryField qfield = (QueryField) element;
-					return (qfield.hasChildren() || qfield.isUiField())
-							&& hostsToleranceValue((QueryField) element);
+					return (qfield.hasChildren() || qfield.isUiField()) && hostsToleranceValue((QueryField) element);
 				}
 				return false;
 			}
@@ -355,21 +322,18 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 	}
 
 	@SuppressWarnings("unused")
-	private static CheckboxTreeViewer createViewerGroup(Composite comp) {
-		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(comp,
-				SWT.NONE);
+	private static ContainerCheckedTreeViewer createViewerGroup(Composite comp) {
+		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(comp, SWT.NONE);
 		new Label(comp, SWT.NONE);
-		final CheckboxTreeViewer viewer = new CheckboxTreeViewer(comp,
+		final ContainerCheckedTreeViewer viewer = new ContainerCheckedTreeViewer(comp,
 				SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
-		viewer.getControl().setLayoutData(
-				new GridData(SWT.FILL, SWT.FILL, true, true));
+		viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		expandCollapseGroup.setViewer(viewer);
 		viewer.setLabelProvider(new MetadataLabelProvider());
 		viewer.setContentProvider(new MetadataContentProvider());
 		viewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
 			@Override
-			public boolean select(Viewer aViewer, Object parentElement,
-					Object element) {
+			public boolean select(Viewer aViewer, Object parentElement, Object element) {
 				if (element instanceof QueryField) {
 					QueryField qfield = (QueryField) element;
 					return qfield.hasChildren() || qfield.isUiField();
@@ -378,19 +342,13 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 			}
 		} });
 		viewer.setComparator(new ViewComparator());
-		viewer.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				UiUtilities.checkHierarchy(viewer, event.getElement(),
-						event.getChecked(), true, true);
-			}
-		});
+		UiUtilities.installDoubleClickExpansion(viewer);
 		new AllNoneGroup(comp, new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (e.widget.getData() == AllNoneGroup.ALL) {
 					viewer.setGrayedElements(EMPTY);
-					viewer.setCheckedElements(QueryField.getQueryFields()
-							.toArray());
+					viewer.setCheckedElements(QueryField.getQueryFields().toArray());
 				} else
 					viewer.setCheckedElements(EMPTY);
 			}
@@ -398,53 +356,43 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 		return viewer;
 	}
 
-	private void fillViewer(final TreeViewer viewer, final String ess,
-			final int level, boolean force) {
+	private void fillViewer(final TreeViewer viewer, final String ess, final int level, boolean force) {
 		if (viewer.getInput() == null || force)
-			BusyIndicator.showWhile(viewer.getControl().getDisplay(),
-					() -> {
-						if (viewer.getInput() == null) {
-							viewer.setInput(QueryField.ALL);
-							if (level >= 0)
-								viewer.expandToLevel(level);
-						}
-						StringTokenizer st = new StringTokenizer(ess, "\n"); //$NON-NLS-1$
-						if (viewer instanceof CheckboxTreeViewer) {
-							List<QueryField> fields = new ArrayList<QueryField>();
-							while (st.hasMoreTokens()) {
-								QueryField qfield = QueryField
-										.findQueryField(st.nextToken());
-								if (qfield != null)
-									fields.add(qfield);
-							}
-							UiUtilities.checkInitialHierarchy(
-									(CheckboxTreeViewer) viewer, fields);
-						} else {
-							while (st.hasMoreTokens()) {
-								String id = st.nextToken();
-								int p = id.lastIndexOf("="); //$NON-NLS-1$
-								if (p > 0) {
-									try {
-										toleranceMap.put(
-												id.substring(0, p),
-												Float.parseFloat(id
-														.substring(p + 1)));
-									} catch (NumberFormatException e) {
-										// ignore
-									}
-								}
+			BusyIndicator.showWhile(viewer.getControl().getDisplay(), () -> {
+				if (viewer.getInput() == null) {
+					viewer.setInput(QueryField.ALL);
+					if (level >= 0)
+						viewer.expandToLevel(level);
+				}
+				StringTokenizer st = new StringTokenizer(ess, "\n"); //$NON-NLS-1$
+				if (viewer instanceof CheckboxTreeViewer) {
+					List<QueryField> fields = new ArrayList<QueryField>();
+					while (st.hasMoreTokens()) {
+						QueryField qfield = QueryField.findQueryField(st.nextToken());
+						if (qfield != null)
+							fields.add(qfield);
+					}
+				} else {
+					while (st.hasMoreTokens()) {
+						String id = st.nextToken();
+						int p = id.lastIndexOf("="); //$NON-NLS-1$
+						if (p > 0) {
+							try {
+								toleranceMap.put(id.substring(0, p), Float.parseFloat(id.substring(p + 1)));
+							} catch (NumberFormatException e) {
+								// ignore
 							}
 						}
-					});
+					}
+				}
+			});
 	}
 
 	@Override
 	public void init(IWorkbench wb) {
 		super.init(wb);
-		setTitle(Messages
-				.getString("MetadataPreferencePage.metadata_configuration")); //$NON-NLS-1$
-		setMessage(Messages
-				.getString("MetadataPreferencePage.select_essential_and_hover")); //$NON-NLS-1$
+		setTitle(Messages.getString("MetadataPreferencePage.metadata_configuration")); //$NON-NLS-1$
+		setMessage(Messages.getString("MetadataPreferencePage.select_essential_and_hover")); //$NON-NLS-1$
 	}
 
 	@Override
@@ -461,10 +409,8 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 		tolerancesViewer.setInput(QueryField.ALL);
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		preferenceStore.setValue(PreferenceConstants.JPEGMETADATA,
-				preferenceStore
-						.getDefaultBoolean(PreferenceConstants.JPEGMETADATA));
-		jpegGroup.setSelection(getPreferenceStore().getBoolean(
-				PreferenceConstants.JPEGMETADATA));
+				preferenceStore.getDefaultBoolean(PreferenceConstants.JPEGMETADATA));
+		jpegGroup.setSelection(getPreferenceStore().getBoolean(PreferenceConstants.JPEGMETADATA));
 	}
 
 	private void setDefaults(TreeViewer viewer, String key) {
@@ -482,16 +428,14 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 		saveValues(hoverViewer, PreferenceConstants.HOVERMETADATA);
 		saveValues(exportViewer, PreferenceConstants.EXPORTMETADATA);
 		saveValues(tolerancesViewer, PreferenceConstants.METADATATOLERANCES);
-		getPreferenceStore().setValue(PreferenceConstants.JPEGMETADATA,
-				jpegGroup.getSelection());
+		getPreferenceStore().setValue(PreferenceConstants.JPEGMETADATA, jpegGroup.getSelection());
 	}
 
 	private void saveValues(TreeViewer viewer, String pkey) {
 		if (viewer.getInput() != null) {
 			StringBuilder sb = new StringBuilder();
 			if (viewer instanceof CheckboxTreeViewer) {
-				Object[] checkedElements = ((CheckboxTreeViewer) viewer)
-						.getCheckedElements();
+				Object[] checkedElements = ((CheckboxTreeViewer) viewer).getCheckedElements();
 				for (Object object : checkedElements) {
 					if (object instanceof QueryField) {
 						QueryField queryField = (QueryField) object;

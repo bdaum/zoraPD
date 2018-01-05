@@ -144,20 +144,15 @@ public class AutoRuleDialog extends ZTitleAreaDialog implements ModifyListener {
 			} });
 		fieldCombo.setComparator(new ViewerComparator());
 		fieldCombo.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
-				qfield = (QueryField) ((IStructuredSelection) event.getSelection()).getFirstElement();
-				fillExplanation(qfield);
+				fillExplanation(qfield = (QueryField) ((IStructuredSelection) event.getSelection()).getFirstElement());
 				intervalField.setText(""); //$NON-NLS-1$
 				updateStack();
 				validate();
 			}
 		});
-		Label space = new Label(comp, SWT.NONE);
-		space.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1));
-
+		new Label(comp, SWT.NONE).setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1));
 		explanation = new Label(comp, SWT.WRAP);
-
 		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 4, 1);
 		layoutData.heightHint = 46;
 		layoutData.widthHint = 500;

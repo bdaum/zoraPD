@@ -297,12 +297,10 @@ public class Utilities {
 	}
 
 	public static void saveKeywords(Collection<String> keywords, File keywordFile) {
-		FileOutputStream out = null;
 		keywordFile.delete();
 		try {
 			keywordFile.createNewFile();
-			out = new FileOutputStream(keywordFile);
-			saveKeywords(keywords, out);
+			saveKeywords(keywords, new FileOutputStream(keywordFile));
 		} catch (IOException e) {
 			CoreActivator.getDefault().logError(Messages.Utilities_io_error_creating_keywords, e);
 		}
@@ -1450,7 +1448,8 @@ public class Utilities {
 	public static void copyMeta(Meta oldMeta, Meta newMeta) {
 		newMeta.setBackupLocation(oldMeta.getBackupLocation());
 		newMeta.setOwner(oldMeta.getOwner());
-		newMeta.setThemeID(oldMeta.getThemeID());
+		if (oldMeta.getThemeID() != null)
+			newMeta.setThemeID(oldMeta.getThemeID());
 		newMeta.setDescription(oldMeta.getDescription());
 		newMeta.setUserFieldLabel1(oldMeta.getUserFieldLabel1());
 		newMeta.setUserFieldLabel2(oldMeta.getUserFieldLabel2());
@@ -1620,7 +1619,7 @@ public class Utilities {
 		}
 		return null;
 	}
-	
+
 	public static String csv(Object v, int type, String sep) {
 		if (v instanceof String)
 			return (String) v;

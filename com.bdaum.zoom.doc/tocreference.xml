@@ -88,20 +88,22 @@
   </topic>
   <topic href="html/reference/audioPrefs.html" label="Audio">
   </topic>
+  <topic href="html/reference/catPrefs.html" label="Catalog">
+  </topic>
   <topic href="html/reference/fileAssociations.html" label="External programs">
   </topic>
 		<topic label="General" href="html/reference/generalPrefs.html" />
   <topic href="html/reference/importPrefs.html" label="Import">
   </topic>
-  <topic href="html/reference/catPrefs.html" label="Catalog">
+  <topic href="html/reference/vocabPrefs.html" label="Wortschatz">
   </topic>
   <topic href="html/reference/keyPrefs.html" label="Key shortcuts">
   </topic>
-  <topic href="html/reference/keywordPrefs.html" label="Keywords">
+  <topic href="html/reference/metadataPrefs.html" label="Metadata">
   </topic>
   <topic href="html/reference/mousePrefs.html" label="Mouse">
   </topic>
-  <topic href="html/reference/metadataPrefs.html" label="Metadata">
+  <topic href="html/reference/keywordPrefs.html" label="Keywords">
   </topic>
   <topic href="html/reference/perspectivePrefs.html" label="Perspectives">
   </topic>

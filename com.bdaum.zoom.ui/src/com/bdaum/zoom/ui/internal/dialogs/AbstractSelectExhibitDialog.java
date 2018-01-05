@@ -51,7 +51,6 @@ import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.ICore;
-import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.widgets.ZDialog;
@@ -124,8 +123,7 @@ public abstract class AbstractSelectExhibitDialog extends ZDialog {
 				Image image = thMap.get(assetID);
 				if (image == null) {
 					ICore core = Core.getCore();
-					IDbManager dbManager = core.getDbManager();
-					AssetImpl asset = dbManager.obtainAsset(assetID);
+					AssetImpl asset = core.getDbManager().obtainAsset(assetID);
 					if (asset != null) {
 						image = core.getImageCache().getImage(asset);
 						if (image != null) {
@@ -167,14 +165,11 @@ public abstract class AbstractSelectExhibitDialog extends ZDialog {
 		viewer.setInput(exhibits);
 		viewer.setItemCount(exhibits.size());
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
-
 			public void doubleClick(DoubleClickEvent event) {
 				processSelection();
 			}
-
 		});
 		viewer.getControl().addKeyListener(new KeyAdapter() {
-
 			@Override
 			public void keyReleased(KeyEvent e) {
 				if (e.character == '\r')
@@ -182,7 +177,6 @@ public abstract class AbstractSelectExhibitDialog extends ZDialog {
 			}
 		});
 		viewer.getControl().addFocusListener(new FocusListener() {
-
 			@Override
 			public void focusLost(FocusEvent e) {
 				if (focusGained)

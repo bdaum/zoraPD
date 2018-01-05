@@ -144,7 +144,7 @@ public class Startup implements IStartup, IAdaptable {
 			if (file != null) {
 				filesCreated.clear();
 				filesModified.clear();
-				CoreActivator.getDefault().classifyFile(file, filesCreated, filesModified, null, null);
+				CoreActivator.getDefault().classifyFile(file, filesCreated, filesModified, null, null, 0L);
 				recentCreations.addAll(filesCreated);
 				while (recentCreations.size() > MAXRECENTCREATIONS)
 					recentCreations.pollFirst();

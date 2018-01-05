@@ -28,11 +28,10 @@ import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.graphics.TextStyle;
 import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.widgets.Display;
+import org.piccolo2d.extras.swt.PSWTCanvas;
 
 import com.bdaum.zoom.cat.model.group.slideShow.SlideImpl;
 import com.bdaum.zoom.core.Constants;
-
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
 
 public class PSWTSectionBreak extends ZPSWTImage {
 	/**

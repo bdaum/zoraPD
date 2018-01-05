@@ -22,8 +22,7 @@
 
 
 import org.eclipse.swt.graphics.Image;
-
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
+import org.piccolo2d.extras.swt.PSWTCanvas;
 
 public class PSWTButton extends ZPSWTImage {
 

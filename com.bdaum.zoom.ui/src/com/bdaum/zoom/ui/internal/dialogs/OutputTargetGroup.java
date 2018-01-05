@@ -71,8 +71,8 @@ public class OutputTargetGroup {
 	private String subfolderoption;
 
 	@SuppressWarnings("unused")
-	public OutputTargetGroup(final Composite parent, GridData gridData,
-			final ModifyListener listener, boolean subfolders, boolean ftp) {
+	public OutputTargetGroup(final Composite parent, GridData gridData, final ModifyListener listener,
+			boolean subfolders, boolean ftp) {
 		ftpAccounts = FtpAccount.getAllAccounts();
 		ftpAccounts.add(0, new FtpAccount());
 		group = new CGroup(parent, SWT.NONE);
@@ -93,8 +93,7 @@ public class OutputTargetGroup {
 		final Label folderLabel = new Label(group, SWT.NONE);
 		folderLabel.setText(Messages.OutputTargetGroup_local_folder);
 		folderField = new Combo(group, SWT.BORDER | SWT.READ_ONLY);
-		folderField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true,
-				false));
+		folderField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		if (listener != null)
 			folderField.addModifyListener(listener);
 		browseButton = new Button(group, SWT.PUSH);
@@ -102,8 +101,7 @@ public class OutputTargetGroup {
 		browseButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				DirectoryDialog dialog = new DirectoryDialog(parent.getShell(),
-						SWT.OPEN);
+				DirectoryDialog dialog = new DirectoryDialog(parent.getShell(), SWT.OPEN);
 				dialog.setText(Messages.OutputTargetGroup_output_folder);
 				dialog.setMessage(Messages.OutputTargetGroup_select_output_folder);
 				String path = folderField.getText();
@@ -132,8 +130,7 @@ public class OutputTargetGroup {
 			final Label ftpLabel = new Label(group, SWT.NONE);
 			ftpLabel.setText(Messages.OutputTargetGroup_ftp_directory);
 			ftpViewer = new ComboViewer(group, SWT.BORDER | SWT.READ_ONLY);
-			ftpViewer.getControl().setLayoutData(
-					new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+			ftpViewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 			ftpViewer.setContentProvider(ArrayContentProvider.getInstance());
 			ftpViewer.setLabelProvider(new LabelProvider() {
 
@@ -155,20 +152,17 @@ public class OutputTargetGroup {
 
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					Object el = ((IStructuredSelection) ftpViewer
-							.getSelection()).getFirstElement();
+					Object el = ((IStructuredSelection) ftpViewer.getSelection()).getFirstElement();
 					if (el instanceof FtpAccount) {
 						FtpAccount account = (FtpAccount) el;
 						boolean createNew = account.getName() == null;
-						EditFtpDialog dialog = new EditFtpDialog(editButton
-								.getShell(), account, false, null);
+						EditFtpDialog dialog = new EditFtpDialog(editButton.getShell(), account, false, null);
 						if (dialog.open() == Window.OK) {
 							FtpAccount result = dialog.getResult();
 							if (createNew) {
 								ftpAccounts.add(0, new FtpAccount());
 								ftpViewer.setInput(ftpAccounts);
-								ftpViewer.setSelection(new StructuredSelection(
-										result));
+								ftpViewer.setSelection(new StructuredSelection(result));
 							} else
 								ftpViewer.update(result, null);
 							FtpAccount.saveAccounts(ftpAccounts);
@@ -178,54 +172,38 @@ public class OutputTargetGroup {
 			});
 			ftpViewer.setInput(ftpAccounts);
 			if (ftpAccounts.size() == 1)
-				ftpViewer.setSelection(new StructuredSelection(ftpAccounts
-						.get(0)));
-			ftpViewer
-					.addSelectionChangedListener(new ISelectionChangedListener() {
-						public void selectionChanged(SelectionChangedEvent event) {
-							updateFields();
-							notifyModifyListener(listener);
-						}
-					});
+				ftpViewer.setSelection(new StructuredSelection(ftpAccounts.get(0)));
+			ftpViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+				public void selectionChanged(SelectionChangedEvent event) {
+					updateFields();
+					notifyModifyListener(listener);
+				}
+			});
 		}
 		if (subfolders) {
 			Meta meta = Core.getCore().getDbManager().getMeta(true);
 			String timelinemode = meta.getTimeline();
-			final String[] subfolderoptions = Meta.timeline_no
-					.equals(timelinemode) ? new String[] { Constants.BY_NONE,
-					Constants.BY_RATING, Constants.BY_CATEGORY,
-					Constants.BY_STATE, Constants.BY_JOB, Constants.BY_EVENT,
-					Constants.BY_DATE, Constants.BY_TIME } : new String[] {
-					Constants.BY_NONE, Constants.BY_TIMELINE,
-					Constants.BY_NUM_TIMELINE, Constants.BY_RATING,
-					Constants.BY_CATEGORY, Constants.BY_STATE,
-					Constants.BY_JOB, Constants.BY_EVENT, Constants.BY_DATE,
-					Constants.BY_TIME };
-			final String[] OPTIONLABELS = Meta.timeline_no.equals(timelinemode) ? new String[] {
-					Messages.OutputTargetGroup_none,
-					Messages.OutputTargetGroup_rating,
-					Messages.OutputTargetGroup_category,
-					Messages.OutputTargetGroup_state,
-					Messages.OutputTargetGroup_job_id,
-					Messages.OutputTargetGroup_event,
-					Messages.OutputTargetGroup_export_date,
-					Messages.OutputTargetGroup_export_time }
-					: new String[] { Messages.OutputTargetGroup_none,
-							Messages.OutputTargetGroup_timeline,
-							Messages.OutputTargetGroup_timeline_num,
-							Messages.OutputTargetGroup_rating,
-							Messages.OutputTargetGroup_category,
-							Messages.OutputTargetGroup_state,
-							Messages.OutputTargetGroup_job_id,
-							Messages.OutputTargetGroup_event,
-							Messages.OutputTargetGroup_export_date,
-							Messages.OutputTargetGroup_export_time };
+			final String[] subfolderoptions = Meta.timeline_no.equals(timelinemode)
+					? new String[] { Constants.BY_NONE, Constants.BY_RATING, Constants.BY_CATEGORY, Constants.BY_STATE,
+							Constants.BY_JOB, Constants.BY_EVENT, Constants.BY_DATE, Constants.BY_TIME }
+					: new String[] { Constants.BY_NONE, Constants.BY_TIMELINE, Constants.BY_NUM_TIMELINE,
+							Constants.BY_RATING, Constants.BY_CATEGORY, Constants.BY_STATE, Constants.BY_JOB,
+							Constants.BY_EVENT, Constants.BY_DATE, Constants.BY_TIME };
+			final String[] OPTIONLABELS = Meta.timeline_no.equals(timelinemode)
+					? new String[] { Messages.OutputTargetGroup_none, Messages.OutputTargetGroup_rating,
+							Messages.OutputTargetGroup_category, Messages.OutputTargetGroup_state,
+							Messages.OutputTargetGroup_job_id, Messages.OutputTargetGroup_event,
+							Messages.OutputTargetGroup_export_date, Messages.OutputTargetGroup_export_time }
+					: new String[] { Messages.OutputTargetGroup_none, Messages.OutputTargetGroup_timeline,
+							Messages.OutputTargetGroup_timeline_num, Messages.OutputTargetGroup_rating,
+							Messages.OutputTargetGroup_category, Messages.OutputTargetGroup_state,
+							Messages.OutputTargetGroup_job_id, Messages.OutputTargetGroup_event,
+							Messages.OutputTargetGroup_export_date, Messages.OutputTargetGroup_export_time };
 			new Label(group, SWT.NONE);
 			Label label = new Label(group, SWT.NONE);
 			label.setText(Messages.OutputTargetGroup_group_by);
 			subfolderViewer = new ComboViewer(group);
-			subfolderViewer.setContentProvider(ArrayContentProvider
-					.getInstance());
+			subfolderViewer.setContentProvider(ArrayContentProvider.getInstance());
 			subfolderViewer.setLabelProvider(new LabelProvider() {
 				@Override
 				public String getText(Object element) {
@@ -235,13 +213,11 @@ public class OutputTargetGroup {
 					return super.getText(element);
 				}
 			});
-			subfolderViewer
-					.addSelectionChangedListener(new ISelectionChangedListener() {
-						public void selectionChanged(SelectionChangedEvent event) {
-							subfolderoption = ((String) ((IStructuredSelection) event
-									.getSelection()).getFirstElement());
-						}
-					});
+			subfolderViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+				public void selectionChanged(SelectionChangedEvent event) {
+					subfolderoption = ((String) ((IStructuredSelection) event.getSelection()).getFirstElement());
+				}
+			});
 			subfolderViewer.setInput(subfolderoptions);
 		}
 	}
@@ -263,8 +239,7 @@ public class OutputTargetGroup {
 
 	public void setLocalFolder(String outputFolder) {
 		if (outputFolder != null) {
-			folderField.setItems(addToHistoryList(folderField.getItems(),
-					outputFolder));
+			folderField.setItems(addToHistoryList(folderField.getItems(), outputFolder));
 			folderField.setText(outputFolder);
 		}
 	}
@@ -296,8 +271,7 @@ public class OutputTargetGroup {
 
 	public String validate() {
 		if (ftpButton != null && ftpButton.getSelection()) {
-			IStructuredSelection selection = (IStructuredSelection) ftpViewer
-					.getSelection();
+			IStructuredSelection selection = (IStructuredSelection) ftpViewer.getSelection();
 			FtpAccount acc = (FtpAccount) selection.getFirstElement();
 			if (acc == null || acc.getName() == null)
 				return Messages.OutputTargetGroup_select_ftp_dir;
@@ -316,15 +290,13 @@ public class OutputTargetGroup {
 	}
 
 	public int getTarget() {
-		return (ftpButton != null && ftpButton.getSelection()) ? Constants.FTP
-				: Constants.FILE;
+		return (ftpButton != null && ftpButton.getSelection()) ? Constants.FTP : Constants.FILE;
 	}
 
 	public FtpAccount getFtpDir() {
 		if (ftpViewer == null)
 			return null;
-		IStructuredSelection selection = (IStructuredSelection) ftpViewer
-				.getSelection();
+		IStructuredSelection selection = (IStructuredSelection) ftpViewer.getSelection();
 		return (FtpAccount) selection.getFirstElement();
 	}
 
@@ -360,8 +332,7 @@ public class OutputTargetGroup {
 				}
 		if (subfolderViewer != null) {
 			String option = settings.get(SUBFOLDERS);
-			subfolderViewer.setSelection(new StructuredSelection(
-					option != null ? option : Constants.BY_NONE));
+			subfolderViewer.setSelection(new StructuredSelection(option != null ? option : Constants.BY_NONE));
 		}
 	}
 
@@ -370,11 +341,9 @@ public class OutputTargetGroup {
 		String text = folderField.getText();
 		settings.put(LOCAL_FOLDERS, folderField.getItems());
 		settings.put(LOCAL_FOLDER, text);
-		Object firstElement = ((IStructuredSelection) ftpViewer.getSelection())
-				.getFirstElement();
+		Object firstElement = ((IStructuredSelection) ftpViewer.getSelection()).getFirstElement();
 		if (firstElement instanceof FtpAccount)
-			settings.put(SELECTED_ACCOUNT,
-					((FtpAccount) firstElement).getName());
+			settings.put(SELECTED_ACCOUNT, ((FtpAccount) firstElement).getName());
 		if (subfolderoption != null)
 			settings.put(SUBFOLDERS, subfolderoption);
 	}

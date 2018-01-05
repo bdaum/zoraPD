@@ -27,7 +27,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 
-public interface IImageViewer {
+public interface IMediaViewer {
 
 	/**
 	 * Initializes and configures the viewer

@@ -104,6 +104,20 @@ public interface SlideShow_type extends AomValueChangedNotifier,
 	public int getFading();
 
 	/**
+	 * Set value of property zoom
+	 *
+	 * @param _value - new element value
+	 */
+	public void setZoom(int _value);
+
+	/**
+	 * Get value of property zoom
+	 *
+	 * @return - value of field zoom
+	 */
+	public int getZoom();
+
+	/**
 	 * Set value of property titleDisplay
 	 *
 	 * @param _value - new element value

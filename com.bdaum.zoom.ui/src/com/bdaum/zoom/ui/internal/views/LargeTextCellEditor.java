@@ -56,10 +56,8 @@ public class LargeTextCellEditor extends DialogCellEditor {
 	protected Object openDialogBox(Control cellEditorWindow) {
 		LargeTextCellEditorDialog dialog = new LargeTextCellEditorDialog(
 				cellEditorWindow.getShell(), value, qfield, asset);
-		if (dialog.open() == Window.OK) {
-			value = dialog.getResult();
-			return value;
-		}
+		if (dialog.open() == Window.OK)
+			return value = dialog.getResult();
 		return null;
 	}
 

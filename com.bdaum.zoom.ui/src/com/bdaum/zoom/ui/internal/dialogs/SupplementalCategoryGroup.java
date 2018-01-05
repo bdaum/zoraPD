@@ -51,6 +51,7 @@ import com.bdaum.zoom.cat.model.meta.CategoryImpl;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 
 public class SupplementalCategoryGroup {
@@ -128,6 +129,7 @@ public class SupplementalCategoryGroup {
 				return element.toString();
 			}
 		});
+		UiUtilities.installDoubleClickExpansion(treeViewer);
 		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateButtons();

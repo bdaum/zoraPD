@@ -19,9 +19,9 @@
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
-import edu.umd.cs.piccolo.util.PPaintContext;
-import edu.umd.cs.piccolox.swt.PSWTPath;
-import edu.umd.cs.piccolox.swt.SWTGraphics2D;
+import org.piccolo2d.extras.swt.PSWTPath;
+import org.piccolo2d.extras.swt.SWTGraphics2D;
+import org.piccolo2d.util.PPaintContext;
 
 /**
  * 
@@ -42,7 +42,6 @@ public class ZPSWTPath extends PSWTPath {
 	protected void paint(PPaintContext paintContext) {
 		final SWTGraphics2D g2 = (SWTGraphics2D) paintContext.getGraphics();
 		g2.setLineWidth(lineWidth);
-		g2.setTransparency(getTransparency());
 		super.paint(paintContext);
 	}
 }

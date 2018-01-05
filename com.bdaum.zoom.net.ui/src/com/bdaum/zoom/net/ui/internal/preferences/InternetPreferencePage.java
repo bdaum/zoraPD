@@ -176,7 +176,6 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 		});
 
 		ftpViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateButtons();
 			}

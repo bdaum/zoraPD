@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -57,6 +56,7 @@ import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.report.internal.HelpContextIds;
 import com.bdaum.zoom.ui.dialogs.ZListDialog;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.views.CatalogLabelProvider;
 import com.bdaum.zoom.ui.internal.views.CatalogView.CatalogComparator;
 import com.bdaum.zoom.ui.internal.views.IdentifiedElementComparer;
@@ -127,7 +127,6 @@ public class SourcePage extends ColoredWizardPage implements SelectionListener {
 
 	}
 
-	protected static final IElementComparer elementComparer = new IdentifiedElementComparer();
 	private TreeViewer collViewer;
 	private static final ViewerFilter collectionFilter = new ViewerFilter() {
 		@Override
@@ -205,6 +204,7 @@ public class SourcePage extends ColoredWizardPage implements SelectionListener {
 		collViewer.setLabelProvider(new CatalogLabelProvider(this));
 		collViewer.setFilters(new ViewerFilter[] { collectionFilter });
 		collViewer.setComparator(new CatalogComparator());
+		UiUtilities.installDoubleClickExpansion(collViewer);
 		setComparer();
 		layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.widthHint = 300;
@@ -233,7 +233,7 @@ public class SourcePage extends ColoredWizardPage implements SelectionListener {
 	}
 
 	protected void setComparer() {
-		collViewer.setComparer(elementComparer);
+		collViewer.setComparer(IdentifiedElementComparer.getInstance());
 	}
 
 	private void updateFields() {

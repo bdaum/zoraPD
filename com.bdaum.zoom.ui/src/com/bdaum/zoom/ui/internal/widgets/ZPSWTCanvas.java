@@ -22,8 +22,7 @@ package com.bdaum.zoom.ui.internal.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
-
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
+import org.piccolo2d.extras.swt.PSWTCanvas;
 
 /**
  * An antialiased version of PSWTCanvas

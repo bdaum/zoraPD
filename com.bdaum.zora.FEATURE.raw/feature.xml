@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE.raw"
       label="Foreign"
-      version="3.2.1"
+      version="3.2.2"
       provider-name="bdaum industrial communications">
 
    <description url="http://www.example.com/description">
@@ -100,6 +100,7 @@ your option) any later version.
 
    <plugin
          id="com.bdaum.zoom.recipes.acr"
+         os="macosx,win32"
          download-size="0"
          install-size="0"
          version="0.0.0"
@@ -114,6 +115,7 @@ your option) any later version.
 
    <plugin
          id="com.bdaum.zoom.recipes.c1"
+         os="macosx,win32"
          download-size="0"
          install-size="0"
          version="0.0.0"

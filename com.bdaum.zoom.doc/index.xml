@@ -22,7 +22,7 @@
 			<topic href="html/reference/internalViewer.html" />
 		</entry>
 		<entry keyword="Rating">
-			<topic href="html/reference/galleries.html#imagebuttons" label="Galleries - Image buttons"/>
+			<topic href="html/reference/galleries.html#imagebuttons" label="Galleries - Image buttons" />
 		</entry>
 	</entry>
 	<entry keyword="Bookmarks">
@@ -34,7 +34,7 @@
 	<entry keyword="Catalog">
 		<topic href="html/reference/catalog.html" />
 		<entry keyword="Properties">
-			<topic href="html/reference/catProperties.html" label="Catalog Properties"/>
+			<topic href="html/reference/catProperties.html" label="Catalog Properties" />
 		</entry>
 		<entry keyword="merge ~">
 			<topic href="html/reference/mergeCat.html" />
@@ -52,34 +52,34 @@
 			<topic href="html/tasks/maintenance.html" />
 		</entry>
 		<entry keyword="Maintenance">
-			<topic href="html/tasks/maintenance.html" label="Catalog maintenance funtions"/>
-			<topic href="html/reference/catProperties.html"  label="Defragmentation" />
+			<topic href="html/tasks/maintenance.html" label="Catalog maintenance funtions" />
+			<topic href="html/reference/catProperties.html" label="Defragmentation" />
 		</entry>
 		<entry keyword="Defragmentation">
-			<topic href="html/reference/catProperties.html"/>
+			<topic href="html/reference/catProperties.html" />
 		</entry>
 		<entry keyword="~ Theme">
-			<topic href="html/reference/catProperties.html" label="Catalog Properties"/>
+			<topic href="html/reference/catProperties.html" label="Catalog Properties" />
 		</entry>
 	</entry>
 	<entry keyword="Theme">
 		<entry keyword="Catalog ~">
-			<topic href="html/reference/catProperties.html" label="Catalog Properties"/>
+			<topic href="html/reference/catProperties.html" label="Catalog Properties" />
 		</entry>
 	</entry>
 	<entry keyword="Restore catalog">
 		<entry keyword="from backup">
 			<topic href="html/tasks/maintenance.html" />
-		 </entry>
+		</entry>
 		<entry keyword="manually">
-	    	<topic href="html/tasks/tricks.html" />
-	    </entry>
+			<topic href="html/tasks/tricks.html" />
+		</entry>
 	</entry>
 	<entry keyword="Maintenance">
 		<topic href="html/tasks/maintenance.html" />
 	</entry>
 	<entry keyword="Collection">
-		<topic href="html/reference/collectionEdit.html"  label="Edit collection definition"/>
+		<topic href="html/reference/collectionEdit.html" label="Edit collection definition" />
 		<entry keyword="automatic creation of ~">
 			<topic href="html/reference/autoPrefs.html" />
 			<topic href="html/reference/autoRule.html" />
@@ -90,7 +90,8 @@
 			<topic href="html/reference/autoPrefs.html" />
 			<topic href="html/reference/autoRule.html" />
 		</entry>
-	</entry>	<entry keyword="Commandline">
+	</entry>
+	<entry keyword="Commandline">
 		<topic href="html/reference/commandline.html" />
 	</entry>
 	<entry keyword="Web Community">
@@ -100,7 +101,7 @@
 		<topic href="html/reference/community.html" />
 	</entry>
 	<entry keyword="Table View">
-		<topic href="html/reference/tableView.htm"  label="Table view"/>
+		<topic href="html/reference/tableView.htm" label="Table view" />
 		<entry keyword="configure ~">
 			<topic href="html/reference/configureColumns.html" />
 		</entry>
@@ -200,24 +201,27 @@
 			<topic href="html/reference/templates.html" />
 		</entry>
 		<entry keyword="in the background">
-			<topic href="html/reference/catProperties.html#watchedFolders" label="Show background imports"/>
+			<topic href="html/reference/catProperties.html#watchedFolders"
+				label="Show background imports" />
 		</entry>
 	</entry>
 	<entry keyword="Watched Folders">
-		<topic href="html/reference/catProperties.html#watchedFolders" label="Configure"/>
+		<topic href="html/reference/catProperties.html#watchedFolders"
+			label="Configure" />
 	</entry>
 	<entry keyword="Background">
 		<entry keyword="Activities">
 			<topic href="html/reference/progress.html" />
 		</entry>
 		<entry keyword="Imports">
-			<topic href="html/reference/catProperties.html#watchedFolders" label="Show background imports"/>
+			<topic href="html/reference/catProperties.html#watchedFolders"
+				label="Show background imports" />
 		</entry>
 	</entry>
 	<entry keyword="Search">
 		<topic href="html/tasks/imageRetrieval.html" />
 		<entry keyword="Keywords">
-			<topic href="html/reference/keywordSearch.html" label="Keyword search"/>
+			<topic href="html/reference/keywordSearch.html" label="Keyword search" />
 			<topic href="html/tasks/keywords.html" />
 		</entry>
 		<entry keyword="Series">
@@ -232,57 +236,61 @@
 	</entry>
 	<entry keyword="Keywords">
 		<entry keyword="search for ~">
-			<topic href="html/reference/keywordSearch.html" label = "Keyword search"/>
+			<topic href="html/reference/keywordSearch.html" label="Keyword search" />
 			<topic href="html/tasks/keywords.html" />
 		</entry>
 		<entry keyword="Preferences">
 			<topic href="html/reference/keywordPrefs.html" />
 		</entry>
 		<entry keyword="Overview">
-			<topic href="html/reference/catProperties.html#keywords" label="Catalog properties - Keywords"/>
+			<topic href="html/reference/catProperties.html#keywords" label="Catalog properties - Keywords" />
 		</entry>
 		<entry keyword="Vocabularies and ~">
-				<topic href="html/reference/catProperties.html" label="Managing vocabularies" />
-				<topic href="html/reference/keyworddef.html" label="Select ~ fron vocabularies" />
-				<topic href="html/concepts/keywords.html" label="~ and vocabularies - basics" />
+			<topic href="html/reference/catProperties.html" label="Managing vocabularies" />
+			<topic href="html/reference/keyworddef.html" label="Select ~ fron vocabularies" />
+			<topic href="html/concepts/keywords.html" label="~ and vocabularies - basics" />
 		</entry>
 	</entry>
 	<entry keyword="Vocabularies">
-			<topic href="html/reference/catProperties.html#keywords" label="Managing ~" />
-			<topic href="html/reference/keyworddef.html" label="Select keyword from ~" />
-			<topic href="html/concepts/keywords.html" label="Keywords and ~ - basics" />
+		<topic href="html/reference/catProperties.html#keywords" label="Managing ~" />
+		<topic href="html/reference/keyworddef.html" label="Select keyword from ~" />
+		<topic href="html/concepts/keywords.html" label="Keywords and ~ - basics" />
+		<topic href="html/reference/catPrefs.html" label="User defined ~" />
 	</entry>
 	<entry keyword="Categories">
 		<entry keyword="Overview">
-			<topic href="html/reference/catProperties.html#categories" label="Catalog properties - Categories"/>
+			<topic href="html/reference/catProperties.html#categories"
+				label="Catalog properties - Categories" />
 		</entry>
 		<entry keyword="Assigning ~ to images">
-			<topic href="html/reference/categorize.html" label="Categorizing images"/>
+			<topic href="html/reference/categorize.html" label="Categorizing images" />
 		</entry>
 		<entry keyword="~ and keywords">
-			<topic href="html/concepts/keywords.html"/>
+			<topic href="html/concepts/keywords.html" />
 		</entry>
 	</entry>
 	<entry keyword="Locations">
 		<entry keyword="Overview">
-			<topic href="html/reference/catProperties.html#locations" label="Catalog properties - Locations"/>
+			<topic href="html/reference/catProperties.html#locations"
+				label="Catalog properties - Locations" />
 		</entry>
 		<entry keyword="Collections">
-			<topic href="html/reference/catProperties.html#general" label="Catalog properties - General"/>
+			<topic href="html/reference/catProperties.html#general" label="Catalog properties - General" />
 		</entry>
 	</entry>
 	<entry keyword="Artwork">
 		<entry keyword="Overview">
-			<topic href="html/reference/catProperties.html#artwork" label="Catalog properties - Artwork"/>
+			<topic href="html/reference/catProperties.html#artwork" label="Catalog properties - Artwork" />
 		</entry>
 	</entry>
 	<entry keyword="Contacts">
 		<entry keyword="Overview">
-			<topic href="html/reference/catProperties.html#contacts" label="Catalog properties - Contacts"/>
+			<topic href="html/reference/catProperties.html#contacts" label="Catalog properties - Contacts" />
 		</entry>
 	</entry>
 	<entry keyword="Statistics">
-			<topic href="html/reference/catProperties.html#statistics" label="Catalog properties - Statistics"/>
+		<topic href="html/reference/catProperties.html#statistics"
+			label="Catalog properties - Statistics" />
 	</entry>
 	<entry keyword="Time search">
 		<topic href="html/reference/timeSearch.html" />
@@ -386,12 +394,12 @@
 		</entry>
 	</entry>
 	<entry keyword="Renaming">
-		<topic href="html/reference/templates.html" label="~ during import"/>
-		<topic href="html/reference/galleries.html#rename"  label="Direct ~"/>
-		<topic href="html/reference/bulkRename.html"  label="Bulk ~"/>
+		<topic href="html/reference/templates.html" label="~ during import" />
+		<topic href="html/reference/galleries.html#rename" label="Direct ~" />
+		<topic href="html/reference/bulkRename.html" label="Bulk ~" />
 	</entry>
 	<entry keyword="Template">
-		<topic href="html/reference/templateDef.html"/>
+		<topic href="html/reference/templateDef.html" />
 	</entry>
 	<entry keyword="Trashcan">
 		<topic href="html/reference/trashcan.html" />
@@ -402,7 +410,7 @@
 	<entry keyword="View">
 		<topic href="html/reference/views.html" />
 		<entry keyword="Table">
-			<topic href="html/reference/tableView.htm"  label="Table view"/>
+			<topic href="html/reference/tableView.htm" label="Table view" />
 		</entry>
 		<entry keyword="Sleeves">
 			<topic href="html/reference/sleeves.htm" />
@@ -468,10 +476,11 @@
 	<entry keyword="Thumbnail">
 		<entry keyword="Preferences">
 			<topic href="html/reference/appearancePrefs.html" />
-			<topic href="html/reference/catProperties.html#thumbnails" label="Catalog Properties - Thumbnails"/>
+			<topic href="html/reference/catProperties.html#thumbnails"
+				label="Catalog Properties - Thumbnails" />
 		</entry>
 		<entry keyword="Color Code">
-	    	<topic href="html/reference/appearancePrefs.html" />
+			<topic href="html/reference/appearancePrefs.html" />
 		</entry>
 		<entry keyword="Operations">
 			<topic href="html/reference/galleries.html" />
@@ -497,7 +506,7 @@
 			<topic href="html/reference/catFilter.html" />
 		</entry>
 		<entry keyword="Configuring ~">
-			<topic href="html/reference/catProperties.html"   label="Catalog Properties"/>
+			<topic href="html/reference/catProperties.html" label="Catalog Properties" />
 		</entry>
 		<entry keyword="Show in ~">
 			<topic href="html/reference/exhibition.html" />
@@ -533,7 +542,7 @@
 	<entry keyword="File filter">
 		<topic href="html/reference/fileFilter.html" />
 	</entry>
-		<entry keyword="Catalog filter">
+	<entry keyword="Catalog filter">
 		<topic href="html/reference/catFilter.html" />
 	</entry>
 	<entry keyword="Filter">
@@ -552,10 +561,10 @@
 		</entry>
 		<entry keyword="Catalog">
 			<topic href="html/reference/catFilter.html" />
-	    </entry>
-	    <entry keyword="BW ~">
+		</entry>
+		<entry keyword="BW ~">
 			<topic href="html/reference/preview.html" />
-   		</entry>
+		</entry>
 	</entry>
 	<entry keyword="File format">
 		<entry keyword="~ association">
@@ -567,10 +576,10 @@
 	</entry>
 	<entry keyword="BW filter">
 		<topic href="html/reference/preview.html" />
-    </entry>
+	</entry>
 	<entry keyword="Grayscale">
 		<topic href="html/reference/preview.html" />
-    </entry>
+	</entry>
 	<entry keyword="RAW">
 		<topic href="html/reference/importPrefs.html" />
 		<topic href="html/tasks/import.html" />
@@ -613,10 +622,10 @@
 	<entry keyword="TWAIN">
 		<topic href="html/tasks/scanners.html" />
 	</entry>
-		<entry keyword="latency">
-		<topic href="html/reference/catProperties.html"   label="Catalog Properties"/>
+	<entry keyword="latency">
+		<topic href="html/reference/catProperties.html" label="Catalog Properties" />
 	</entry>
-		<entry keyword="fullscreen">
+	<entry keyword="fullscreen">
 		<topic href="html/reference/applicationPrefs.html" />
 	</entry>
 	<entry keyword="Installation">
@@ -674,90 +683,90 @@
 			<topic href="html/reference/metadataPrefs.html" />
 		</entry>
 	</entry>
-		<entry keyword="Window">
+	<entry keyword="Window">
 		<entry keyword="multiple">
 			<topic href="html/reference/views.html" />
 		</entry>
 	</entry>
 	<entry keyword="Rating">
-	    <entry keyword="assign ~">
+		<entry keyword="assign ~">
 			<topic href="html/reference/galleries.html#imagebuttons" label="Galleries - Image buttons" />
 		</entry>
-	    <entry keyword="~ filter">
+		<entry keyword="~ filter">
 			<topic href="html/reference/galleries.html#rating" label="Galleries - Rating filter" />
 		</entry>
 	</entry>
 	<entry keyword="Data Entry">
-	    <topic href="html/reference/dataEntry.html" />
+		<topic href="html/reference/dataEntry.html" />
 	</entry>
 	<entry keyword="Tuning">
-	    <topic href="html/tasks/tuning.html"  label="General Tuning Tips" />
-	    <topic href="html/reference/catProperties.html"  label="Defragmentation" />
+		<topic href="html/tasks/tuning.html" label="General Tuning Tips" />
+		<topic href="html/reference/catProperties.html" label="Defragmentation" />
 	</entry>
 	<entry keyword="Performance">
-	    <topic href="html/tasks/tuning.html"  label="General Tuning Tips" />
-	    <topic href="html/reference/catProperties.html"  label="Defragmentation" />
+		<topic href="html/tasks/tuning.html" label="General Tuning Tips" />
+		<topic href="html/reference/catProperties.html" label="Defragmentation" />
 	</entry>
 	<entry keyword="HTML">
-	    <entry keyword="editing">
-	    	<topic href="html/reference/htmlEditing.html" />
+		<entry keyword="editing">
+			<topic href="html/reference/htmlEditing.html" />
 		</entry>
 	</entry>
 	<entry keyword="Retarget">
-	    <topic href="html/reference/galleries.html" />
-	    <topic href="html/reference/retarget.html" label="Retargeting"/>
+		<topic href="html/reference/galleries.html" />
+		<topic href="html/reference/retarget.html" label="Retargeting" />
 	</entry>
 	<entry keyword="Orphans">
-	    <entry keyword="Retargeting ~">
-	    	<topic href="html/reference/galleries.html" />
-	    	<topic href="html/reference/retarget.html" label="Retargeting"/>
+		<entry keyword="Retargeting ~">
+			<topic href="html/reference/galleries.html" />
+			<topic href="html/reference/retarget.html" label="Retargeting" />
 		</entry>
-	    <entry keyword="Removing ~">
-	    	<topic href="html/reference/refresh.htm" />
+		<entry keyword="Removing ~">
+			<topic href="html/reference/refresh.htm" />
 		</entry>
-	    <entry keyword="Searching ~">
-	    	<topic href="html/tasks/imageRetrieval.html" />
+		<entry keyword="Searching ~">
+			<topic href="html/tasks/imageRetrieval.html" />
 		</entry>
 	</entry>
 	<entry keyword="Touchpad">
-	    <topic href="html/reference/mousePrefs.html" />
+		<topic href="html/reference/mousePrefs.html" />
 	</entry>
 	<entry keyword="DCRAW">
-	    <topic href="html/reference/importPrefs.html#raw" label="RAW import preferences"/>
-	    <topic href="html/tasks/tuning.html" />
-	    <topic href="html/tasks/firstAid.html" />
-	    <topic href="html/reference/dcraw.html" label="DCRAW integration"/>
+		<topic href="html/reference/importPrefs.html#raw" label="RAW import preferences" />
+		<topic href="html/tasks/tuning.html" />
+		<topic href="html/tasks/firstAid.html" />
+		<topic href="html/reference/dcraw.html" label="DCRAW integration" />
 	</entry>
-		<entry keyword="Sorting">
-	    <topic href="html/reference/collectionEdit.html"  label="Edit collection definition"/>
-	     <topic href="html/reference/tableView.html"  label="Table view"/>
+	<entry keyword="Sorting">
+		<topic href="html/reference/collectionEdit.html" label="Edit collection definition" />
+		<topic href="html/reference/tableView.html" label="Table view" />
 	</entry>
 	<entry keyword="3D">
-	    <topic href="html/reference/exhibition.html" />
+		<topic href="html/reference/exhibition.html" />
 	</entry>
 	<entry keyword="HTML5">
-	    <topic href="html/reference/exhibition.html" />
+		<topic href="html/reference/exhibition.html" />
 	</entry>
 	<entry keyword="Virtual exhibition">
-	    <topic href="html/reference/exhibition.html" />
+		<topic href="html/reference/exhibition.html" />
 	</entry>
 	<entry keyword="Frame">
 		<entry keyword="virtual exhibition">
-	    	<topic href="html/reference/exhibition.html" />
-	    </entry>
+			<topic href="html/reference/exhibition.html" />
+		</entry>
 	</entry>
 	<entry keyword="Mat">
 		<entry keyword="virtual exhibition">
-	    	<topic href="html/reference/exhibition.html" />
-	    </entry>
+			<topic href="html/reference/exhibition.html" />
+		</entry>
 	</entry>
 	<entry keyword="Color Code">
 		<entry keyword="manual">
-	    	<topic href="html/reference/galleries.html" />
-	    </entry>
+			<topic href="html/reference/galleries.html" />
+		</entry>
 		<entry keyword="automatic">
-	    	<topic href="html/reference/appearancePrefs.html" />
-	    </entry>
+			<topic href="html/reference/appearancePrefs.html" />
+		</entry>
 		<entry keyword="assign ~">
 			<topic href="html/reference/galleries.html#imagebuttons" label="Galleries - Image buttons" />
 		</entry>
@@ -768,93 +777,93 @@
 	</entry>
 	<entry keyword="Lucene">
 		<entry keyword="Refresh index">
-	    	<topic href="html/tasks/firstAid.html" />
-	    </entry>
+			<topic href="html/tasks/firstAid.html" />
+		</entry>
 	</entry>
 	<entry keyword="License">
-	    <topic href="html/gettingstarted/licence.htm" />
+		<topic href="html/gettingstarted/licence.htm" />
 	</entry>
 	<entry keyword="Back-up">
 		<entry keyword="configure">
-	    	<topic href="html/reference/catProperties.html"  label="Catalog properties"/>
-	    </entry>
+			<topic href="html/reference/catProperties.html" label="Catalog properties" />
+		</entry>
 		<entry keyword="Restore catalog from ~ ">
-	    	<topic href="html/tasks/maintenance.html" />
-	    </entry>
+			<topic href="html/tasks/maintenance.html" />
+		</entry>
 		<entry keyword="Restore catalog manually">
-	    	<topic href="html/tasks/tricks.html" />
-	    </entry>
+			<topic href="html/tasks/tricks.html" />
+		</entry>
 	</entry>
 	<entry keyword="JPEG quality">
 		<entry keyword="Thumbnails">
-	    	<topic href="html/reference/catProperties.html"  label="Catalog Properties"/>
-	    </entry>
+			<topic href="html/reference/catProperties.html" label="Catalog Properties" />
+		</entry>
 		<entry keyword="Export into folder">
-	    	<topic href="html/reference/exportFolder.html" />
-	    </entry>
+			<topic href="html/reference/exportFolder.html" />
+		</entry>
 	</entry>
 	<entry keyword="Indexing">
-	    <topic href="html/reference/catProperties.html#indexing"   label="Catalog Properties - Indexing"/>
+		<topic href="html/reference/catProperties.html#indexing" label="Catalog Properties - Indexing" />
 	</entry>
 	<entry keyword="Output quality">
-	    <topic href="html/reference/outputQuality.html" />
+		<topic href="html/reference/outputQuality.html" />
 	</entry>
 	<entry keyword="Quality">
-    	<entry keyword="Output ~">
-		    <topic href="html/reference/outputQuality.html" />
+		<entry keyword="Output ~">
+			<topic href="html/reference/outputQuality.html" />
 		</entry>
 	</entry>
 	<entry keyword="Troubleshooting">
-    	<topic href="html/tasks/firstAid.html" />
+		<topic href="html/tasks/firstAid.html" />
 	</entry>
 	<entry keyword="Collapse">
-    	<topic href="html/reference/lightbox.html" label="Collapsing images"/>
-    	<topic href="html/reference/collapsePattern.html" label="Configure Collapsing"/>
+		<topic href="html/reference/lightbox.html" label="Collapsing images" />
+		<topic href="html/reference/collapsePattern.html" label="Configure Collapsing" />
 	</entry>
 	<entry keyword="Cue">
-    	<topic href="html/reference/preview.html" label="Cue mode"/>
+		<topic href="html/reference/preview.html" label="Cue mode" />
 	</entry>
 	<entry keyword="Wildcards">
 		<entry keyword="~ in search criteria">
-    		<topic href="html/reference/collectionEdit.html"/>
-    	</entry>
+			<topic href="html/reference/collectionEdit.html" />
+		</entry>
 		<entry keyword="~ in file filters">
-    		<topic href="html/reference/fileFilter.html"/>
-    	</entry>
+			<topic href="html/reference/fileFilter.html" />
+		</entry>
 	</entry>
 	<entry keyword="Subgroup">
-    	<topic href="html/reference/catalog.html"/>
-    </entry>
+		<topic href="html/reference/catalog.html" />
+	</entry>
 	<entry keyword="path pattern">
-    	<topic href="html/reference/fileFilter.html"/>
-    </entry>
-    <entry keyword="Stack">
-    	<topic href="html/reference/galleries.html#stack"  label="Declaring a named stack"/>
-    	<topic href="html/reference/collapsePattern.html"  label="Collapsing a named stack"/>
-    </entry>
+		<topic href="html/reference/fileFilter.html" />
+	</entry>
+	<entry keyword="Stack">
+		<topic href="html/reference/galleries.html#stack" label="Declaring a named stack" />
+		<topic href="html/reference/collapsePattern.html" label="Collapsing a named stack" />
+	</entry>
 	<entry keyword="Location pin">
-    	<topic href="html/reference/galleries.html#imagebuttons"  label="Using the location pin"/>
-    </entry>
+		<topic href="html/reference/galleries.html#imagebuttons" label="Using the location pin" />
+	</entry>
 	<entry keyword="Voice notes">
-    	<topic href="html/reference/galleries.html"  label="Replay voice notes"/>
-    	<topic href="html/reference/galleries.html"  label="Attach voice notes"/>
-     	<topic href="html/reference/galleries.html"  label="Remove voice notes"/>
-    	<topic href="html/reference/slideshow.html#properties"  label="Replay voice notes in slide show"/>
-    	<topic href="html/reference/slideshow.html"  label="Record voice notes in slide show"/>
-     	<topic href="html/reference/slide.html"  label="Suppress voice notes for individual slides"/>
-    </entry>
-    <entry keyword="Regular expression">
-    	<topic href="html/reference/regex.html"  label="Regular expression syntax"/>
-    </entry>
+		<topic href="html/reference/galleries.html" label="Replay voice notes" />
+		<topic href="html/reference/galleries.html" label="Attach voice notes" />
+		<topic href="html/reference/galleries.html" label="Remove voice notes" />
+		<topic href="html/reference/slideshow.html#properties" label="Replay voice notes in slide show" />
+		<topic href="html/reference/slideshow.html" label="Record voice notes in slide show" />
+		<topic href="html/reference/slide.html" label="Suppress voice notes for individual slides" />
+	</entry>
+	<entry keyword="Regular expression">
+		<topic href="html/reference/regex.html" label="Regular expression syntax" />
+	</entry>
 	<entry keyword="migrate">
- 		<entry keyword="~ catalog">
-    		<topic href="html/reference/migrate.html"/>
-    	</entry>
-    </entry>
+		<entry keyword="~ catalog">
+			<topic href="html/reference/migrate.html" />
+		</entry>
+	</entry>
 	<entry keyword="JPEG 2000">
-    	<topic href="html/concepts/images.html"/>
-    </entry>
-    <entry keyword="WebP">
-    	<topic href="html/concepts/images.html"/>
-    </entry>
+		<topic href="html/concepts/images.html" />
+	</entry>
+	<entry keyword="WebP">
+		<topic href="html/concepts/images.html" />
+	</entry>
 </index>

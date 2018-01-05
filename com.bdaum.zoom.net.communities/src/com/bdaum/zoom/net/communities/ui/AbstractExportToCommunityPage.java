@@ -42,9 +42,8 @@ public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
 	protected String msg;
 	protected Button editButton;
 
-	public AbstractExportToCommunityPage(IConfigurationElement configElement,
-			List<Asset> assets, String id, String title,
-			ImageDescriptor titleImage) {
+	public AbstractExportToCommunityPage(IConfigurationElement configElement, List<Asset> assets, String id,
+			String title, ImageDescriptor titleImage) {
 		super("main", title, titleImage); //$NON-NLS-1$
 		this.configElement = configElement;
 		this.assets = assets;
@@ -63,16 +62,14 @@ public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
 		final Label accountLabel = new Label(group, SWT.NONE);
 		accountLabel.setText(Messages.ExportToCommunityPage_account);
 		accountViewer = new ComboViewer(group, SWT.BORDER | SWT.READ_ONLY);
-		accountViewer.getControl().setLayoutData(
-				new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		accountViewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		accountViewer.setContentProvider(ArrayContentProvider.getInstance());
 		accountViewer.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof CommunityAccount) {
 					String name = ((CommunityAccount) element).getName();
-					return name == null ? Messages.ExportToCommunityPage_create_new_account
-							: name;
+					return name == null ? Messages.ExportToCommunityPage_create_new_account : name;
 				}
 				return element.toString();
 			}
@@ -82,29 +79,22 @@ public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
 		editButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				Object el = ((IStructuredSelection) accountViewer
-						.getSelection()).getFirstElement();
+				Object el = ((IStructuredSelection) accountViewer.getSelection()).getFirstElement();
 				if (el instanceof CommunityAccount) {
-					final CommunityApi api = ((AbstractCommunityExportWizard) getWizard())
-							.getApi();
+					final CommunityApi api = ((AbstractCommunityExportWizard) getWizard()).getApi();
 					final CommunityAccount account = (CommunityAccount) el;
 					BusyIndicator.showWhile(e.display, () -> {
-						EditCommunityAccountDialog dialog = new EditCommunityAccountDialog(
-								editButton.getShell(), account, api);
+						EditCommunityAccountDialog dialog = new EditCommunityAccountDialog(editButton.getShell(),
+								account, api);
 						if (dialog.open() == Window.OK) {
 							CommunityAccount result = dialog.getResult();
 							if (account.isNullAccount()) {
-								communityAccounts
-										.add(0, new CommunityAccount(
-												accountConfig));
+								communityAccounts.add(0, new CommunityAccount(accountConfig));
 								accountViewer.setInput(communityAccounts);
-								accountViewer
-										.setSelection(new StructuredSelection(
-												result));
+								accountViewer.setSelection(new StructuredSelection(result));
 							} else
 								accountViewer.update(result, null);
-							CommunityAccount.saveAllAccounts(id,
-									communityAccounts);
+							CommunityAccount.saveAllAccounts(id, communityAccounts);
 						}
 					});
 					validatePage();
@@ -113,20 +103,18 @@ public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
 		});
 		accountViewer.setInput(communityAccounts);
 		if (communityAccounts.size() == 1)
-			accountViewer.setSelection(new StructuredSelection(
-					communityAccounts.get(0)));
-		accountViewer
-				.addSelectionChangedListener(new ISelectionChangedListener() {
-					public void selectionChanged(SelectionChangedEvent event) {
-						updateFields();
-						validatePage();
-					}
-				});
+			accountViewer.setSelection(new StructuredSelection(communityAccounts.get(0)));
+		accountViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			public void selectionChanged(SelectionChangedEvent event) {
+				updateFields();
+				validatePage();
+			}
+		});
 	}
 
 	protected String checkAccount() {
-		CommunityAccount acc = (CommunityAccount) ((IStructuredSelection) accountViewer
-				.getSelection()).getFirstElement();
+		CommunityAccount acc = (CommunityAccount) ((IStructuredSelection) accountViewer.getSelection())
+				.getFirstElement();
 		if (acc == null || acc.getName() == null)
 			return Messages.ExportToCommunityPage_please_select_an_account;
 		return null;
@@ -143,8 +131,7 @@ public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
 			if (accName != null)
 				for (CommunityAccount acc : communityAccounts)
 					if (accName.equals(acc.getName())) {
-						accountViewer
-								.setSelection(new StructuredSelection(acc));
+						accountViewer.setSelection(new StructuredSelection(acc));
 						break;
 					}
 
@@ -153,23 +140,19 @@ public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
 
 	protected void saveSettings() {
 		IDialogSettings settings = getDialogSettings();
-		Object firstElement = ((IStructuredSelection) accountViewer
-				.getSelection()).getFirstElement();
+		Object firstElement = ((IStructuredSelection) accountViewer.getSelection()).getFirstElement();
 		if (firstElement instanceof CommunityAccount && settings != null)
-			settings.put(SELECTED_ACCOUNT,
-					((CommunityAccount) firstElement).getName());
+			settings.put(SELECTED_ACCOUNT, ((CommunityAccount) firstElement).getName());
 	}
 
 	public boolean finish() throws CommunicationException, AuthException {
 		saveSettings();
-		Object firstElement = ((IStructuredSelection) accountViewer
-				.getSelection()).getFirstElement();
+		Object firstElement = ((IStructuredSelection) accountViewer.getSelection()).getFirstElement();
 		if (firstElement instanceof CommunityAccount)
 			return doFinish((CommunityAccount) firstElement);
 		return true;
 	}
 
-	protected abstract boolean doFinish(CommunityAccount acc)
-			throws CommunicationException, AuthException;
+	protected abstract boolean doFinish(CommunityAccount acc) throws CommunicationException, AuthException;
 
 }

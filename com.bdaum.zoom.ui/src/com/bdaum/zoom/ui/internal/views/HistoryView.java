@@ -285,9 +285,7 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 			monitor.worked(1);
 			Collections.sort(history, new Comparator<Object>() {
 				public int compare(Object o1, Object o2) {
-					Date d1 = getDate(o1);
-					Date d2 = getDate(o2);
-					return d2.compareTo(d1);
+					return getDate(o2).compareTo(getDate(o1));
 				}
 
 				private Date getDate(Object o) {
@@ -347,7 +345,6 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 		private int type;
 
 		public HistoryTitle(String name, Date titleDate, int type) {
-			super();
 			this.name = name;
 			this.titleDate = titleDate;
 			this.type = type;
@@ -433,30 +430,33 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 		viewer = new TableViewer(parent, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL);
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
 		viewer.setLabelProvider(new HistoryLabelProvider(this));
-		setComparer();
+		viewer.setComparer(IdentifiedElementComparer.getInstance());
 		ColumnViewerToolTipSupport.enableFor(viewer);
 		setInput();
 		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), HelpContextIds.HISTORY_VIEW);
+		addCtrlKeyListener();
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(final SelectionChangedEvent event) {
 				if (settingSelection <= 0) {
 					cancelJobs();
-					new SelectionJob(viewer, event, false).schedule();
+					new SelectionJob(viewer, event).schedule();
+				}
+				if (cntrlDwn && editItemAction.isEnabled()) {
+					editItemAction.run();
+					cntrlDwn = false;
 				}
 			}
 		});
 
 		addKeyListener();
 		addGestureListener(((TableViewer) viewer).getTable());
-		// installHoveringController();
 		makeActions();
 		installListeners(parent);
 		hookContextMenu(viewer);
 		hookDoubleClickAction();
 		contributeToActionBars();
 		Core.getCore().addCatalogListener(new CatalogAdapter() {
-
 			@Override
 			public void assetsModified(BagChange<Asset> changes, QueryField node) {
 				if (changes == null || changes.hasChanges())
@@ -597,7 +597,8 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 	private void hookDoubleClickAction() {
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			public void doubleClick(DoubleClickEvent event) {
-				editItemAction.run();
+				if (!cntrlDwn)
+					editItemAction.run();
 			}
 		});
 	}
@@ -723,10 +724,7 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 		do {
 			if (sb.length() > 0)
 				sb.insert(0, '>');
-			if (sm.getAdhoc())
-				sb.insert(0, UiUtilities.composeContentDescription(sm, " - ", true)); //$NON-NLS-1$
-			else
-				sb.insert(0, sm.getName());
+			sb.insert(0, sm.getAdhoc() ? UiUtilities.composeContentDescription(sm, " - ", true) : sm.getName()); //$NON-NLS-1$
 			sm = sm.getSmartCollection_subSelection_parent();
 		} while (sm != null);
 		return sb.toString();

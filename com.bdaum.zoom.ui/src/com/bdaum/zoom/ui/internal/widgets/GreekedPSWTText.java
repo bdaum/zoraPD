@@ -30,10 +30,9 @@ import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
-
-import edu.umd.cs.piccolo.util.PPaintContext;
-import edu.umd.cs.piccolox.swt.PSWTText;
-import edu.umd.cs.piccolox.swt.SWTGraphics2D;
+import org.piccolo2d.extras.swt.PSWTText;
+import org.piccolo2d.extras.swt.SWTGraphics2D;
+import org.piccolo2d.util.PPaintContext;
 
 public class GreekedPSWTText extends PSWTText {
 

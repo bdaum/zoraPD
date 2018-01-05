@@ -34,12 +34,16 @@ public class Slide_typeImpl extends AomObject implements Slide_type {
 	 * @param duration - Property
 	 * @param fadeOut - Property
 	 * @param effect - Property
+	 * @param zoom - Property
+	 * @param zoomX - Property
+	 * @param zoomY - Property
 	 * @param noVoice - Property
 	 * @param safety - Property
 	 */
 	public Slide_typeImpl(String caption, int sequenceNo, String description,
 			int layout, int delay, int fadeIn, int duration, int fadeOut,
-			int effect, boolean noVoice, int safety) {
+			int effect, int zoom, int zoomX, int zoomY, boolean noVoice,
+			int safety) {
 		super();
 		this.caption = caption;
 		this.sequenceNo = sequenceNo;
@@ -50,6 +54,9 @@ public class Slide_typeImpl extends AomObject implements Slide_type {
 		this.duration = duration;
 		this.fadeOut = fadeOut;
 		this.effect = effect;
+		this.zoom = zoom;
+		this.zoomX = zoomX;
+		this.zoomY = zoomY;
 		this.noVoice = noVoice;
 		this.safety = safety;
 
@@ -256,6 +263,72 @@ public class Slide_typeImpl extends AomObject implements Slide_type {
 	 */
 	public int getEffect() {
 		return effect;
+	}
+
+	/* *** Property zoom *** */
+
+	private int zoom;
+
+	/**
+	 * Set value of property zoom
+	 *
+	 * @param _value - new field value
+	 */
+	public void setZoom(int _value) {
+		zoom = _value;
+	}
+
+	/**
+	 * Get value of property zoom
+	 *
+	 * @return - value of field zoom
+	 */
+	public int getZoom() {
+		return zoom;
+	}
+
+	/* *** Property zoomX *** */
+
+	private int zoomX;
+
+	/**
+	 * Set value of property zoomX
+	 *
+	 * @param _value - new field value
+	 */
+	public void setZoomX(int _value) {
+		zoomX = _value;
+	}
+
+	/**
+	 * Get value of property zoomX
+	 *
+	 * @return - value of field zoomX
+	 */
+	public int getZoomX() {
+		return zoomX;
+	}
+
+	/* *** Property zoomY *** */
+
+	private int zoomY;
+
+	/**
+	 * Set value of property zoomY
+	 *
+	 * @param _value - new field value
+	 */
+	public void setZoomY(int _value) {
+		zoomY = _value;
+	}
+
+	/**
+	 * Get value of property zoomY
+	 *
+	 * @return - value of field zoomY
+	 */
+	public int getZoomY() {
+		return zoomY;
 	}
 
 	/* *** Property noVoice *** */

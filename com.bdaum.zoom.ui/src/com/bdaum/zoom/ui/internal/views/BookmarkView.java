@@ -78,14 +78,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IPartListener2;
-import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.PlatformUI;
@@ -136,8 +134,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 			final DropTarget target = new DropTarget(getControl(), ops);
 			fileTransfer = FileTransfer.getInstance();
 			selectionTransfer = LocalSelectionTransfer.getTransfer();
-			Transfer[] types = new Transfer[] { fileTransfer, selectionTransfer };
-			target.setTransfer(types);
+			target.setTransfer(new Transfer[] { fileTransfer, selectionTransfer });
 			target.addDropListener(this);
 		}
 
@@ -146,7 +143,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 			int detail = event.detail;
 			event.detail = DND.DROP_NONE;
 			if (!isDragging() && !Core.getCore().getDbManager().isReadOnly())
-				for (int i = 0; i < event.dataTypes.length; i++) {
+				for (int i = 0; i < event.dataTypes.length; i++)
 					if (fileTransfer.isSupportedType(event.dataTypes[i])) {
 						event.currentDataType = event.dataTypes[i];
 						if ((detail & ops) != 0) {
@@ -161,7 +158,6 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 						event.detail = (detail & ops) == 0 ? DND.DROP_NONE : DND.DROP_COPY;
 						break;
 					}
-				}
 			super.dragEnter(event);
 		}
 
@@ -200,13 +196,10 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 
 	private static class BookmarkToolTipSupport extends DefaultToolTip {
 		private final SimpleDateFormat sf = new SimpleDateFormat(Messages.getString("BookmarkView.date_format")); //$NON-NLS-1$
-
 		private final ColumnViewer viewer;
-
 		private Image image;
-
 		private Color bgColor;
-		
+
 		protected BookmarkToolTipSupport(ColumnViewer viewer, int style, boolean manualActivation) {
 			super(viewer.getControl(), style, manualActivation);
 			this.viewer = viewer;
@@ -236,9 +229,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 					path.append(sm.getName());
 					SmartCollection parColl = sm.getSmartCollection_subSelection_parent();
 					while (parColl != null) {
-						String name = parColl.getName();
-						path.insert(0, '/');
-						path.insert(0, name);
+						path.insert(0, '/').insert(0, parColl.getName());
 						parColl = parColl.getSmartCollection_subSelection_parent();
 					}
 					sb.append(Messages.getString("BookmarkView.collection_label")) //$NON-NLS-1$
@@ -270,10 +261,8 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 			}
 			Image thumbnail = ImageUtilities.loadThumbnail(parent.getDisplay(), b.getJpegImage(),
 					Ui.getUi().getDisplayCMS(), SWT.IMAGE_JPEG, true);
-			if (thumbnail != null) {
-				image = ImageUtilities.scaleSWT(thumbnail, 160, 160, true, 0, true, null);
-				imageLabel.setImage(image);
-			}
+			if (thumbnail != null)
+				imageLabel.setImage(image = ImageUtilities.scaleSWT(thumbnail, 160, 160, true, 0, true, null));
 			Composite rightArea = new Composite(area, SWT.NONE);
 			rightArea.setBackground(bgColor);
 			rightArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -422,7 +411,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 			assets = (List<Asset>) obj;
 		if (assets != null) {
 			String uri = sound.toURI().toString();
-			OperationJob.executeOperation(new VoiceNoteOperation(assets, uri, uri,null), this);
+			OperationJob.executeOperation(new VoiceNoteOperation(assets, uri, uri, null), this);
 		}
 	}
 
@@ -452,9 +441,8 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 					String label = bookmark.getLabel();
 					String peer = bookmark.getPeer();
 					String catFile = bookmark.getCatFile();
-					return catFile != null && !catFile.isEmpty() ? (peer != null)
-							? NLS.bind("{0} ({1}, {2})", //$NON-NLS-1$
-									new Object[] { label, peer, new File(catFile).getName() })
+					return catFile != null && !catFile.isEmpty() ? (peer != null) ? NLS.bind("{0} ({1}, {2})", //$NON-NLS-1$
+							new Object[] { label, peer, new File(catFile).getName() })
 							: NLS.bind("{0} ({1})", label, //$NON-NLS-1$
 									new File(catFile).getName())
 							: label;
@@ -481,7 +469,6 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 		};
 		col1.setLabelProvider(assetLabelProvider);
 		col1.setEditingSupport(new EditingSupport(viewer) {
-
 			@Override
 			protected void setValue(Object element, Object value) {
 				if (element instanceof Bookmark && value instanceof String) {
@@ -516,8 +503,8 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 			@Override
 			public String getText(Object element) {
 				if (element instanceof Bookmark) {
-					String collId = ((Bookmark) element).getCollectionId();
-					SmartCollectionImpl sm = core.getDbManager().obtainById(SmartCollectionImpl.class, collId);
+					SmartCollectionImpl sm = core.getDbManager().obtainById(SmartCollectionImpl.class,
+							((Bookmark) element).getCollectionId());
 					return sm == null ? "" : sm.getName(); //$NON-NLS-1$
 				}
 				return super.getText(element);
@@ -543,7 +530,6 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
 		viewer.setContentProvider(new IStructuredContentProvider() {
-
 			public void inputChanged(Viewer aViewer, Object oldInput, Object newInput) {
 				// do nothing
 			}
@@ -571,7 +557,6 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 			}
 		});
 		viewer.setComparator(new ViewerComparator() {
-
 			@Override
 			public int compare(Viewer aViewer, Object e1, Object e2) {
 				if (sortColumn == col3.getColumn()) {
@@ -614,7 +599,6 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 		column.getColumn().setText(lab);
 		column.getColumn().setWidth(w);
 		column.getColumn().addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				switchSort(tViewer.getTable(), column.getColumn());
@@ -654,7 +638,6 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 		gotoBookmarkAction = new GotoBookmarkAction(null, this);
 		deleteAction = new Action(Messages.getString("BookmarkView.delete_bookmark"), Icons.delete //$NON-NLS-1$
 				.getDescriptor()) {
-
 			@Override
 			public void run() {
 				IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
@@ -686,13 +669,11 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 		MenuManager menuMgr = new MenuManager("#PopupMenu"); //$NON-NLS-1$
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
-
 			public void menuAboutToShow(IMenuManager manager) {
 				BookmarkView.this.fillContextMenu(manager);
 			}
 		});
-		Menu menu = menuMgr.createContextMenu(viewer.getControl());
-		viewer.getControl().setMenu(menu);
+		getControl().setMenu(menuMgr.createContextMenu(getControl()));
 		getSite().registerContextMenu(menuMgr, viewer);
 	}
 
@@ -704,12 +685,10 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 
 	private void hookDoubleClickAction() {
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
-
 			public void doubleClick(DoubleClickEvent event) {
 				IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 				if (!selection.isEmpty()) {
-					Bookmark bookmark = (Bookmark) selection.getFirstElement();
-					gotoBookmarkAction.setBookmark(bookmark);
+					gotoBookmarkAction.setBookmark((Bookmark) selection.getFirstElement());
 					gotoBookmarkAction.run();
 				}
 			}
@@ -717,8 +696,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 	}
 
 	protected void contributeToActionBars() {
-		IViewSite viewSite = getViewSite();
-		IActionBars bars = viewSite.getActionBars();
+		IActionBars bars = getViewSite().getActionBars();
 		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
 	}

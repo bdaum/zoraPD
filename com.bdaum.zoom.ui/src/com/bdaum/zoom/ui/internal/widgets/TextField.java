@@ -51,6 +51,12 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.operations.IWorkbenchOperationSupport;
+import org.piccolo2d.PNode;
+import org.piccolo2d.event.PInputEvent;
+import org.piccolo2d.extras.swt.PSWTCanvas;
+import org.piccolo2d.extras.swt.PSWTPath;
+import org.piccolo2d.util.PBounds;
+import org.piccolo2d.util.PPickPath;
 
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.ISpellCheckingService;
@@ -60,12 +66,6 @@ import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.job.SpellCheckingJob;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
-import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolo.util.PPickPath;
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
-import edu.umd.cs.piccolox.swt.PSWTPath;
 import jdk.nashorn.tools.Shell;
 
 public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable, IAugmentedTextField {
@@ -411,7 +411,7 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 		highlight.setPickable(false);
 		highlight.setVisible(false);
 		addChild(highlight);
-		highlight.moveInBackOf(textfield);
+		highlight.lowerBelow(textfield);
 		caret = new ZPSWTPath();
 		if ((style & SWT.READ_ONLY) == 0) {
 			float d = lead / 5f;

@@ -27,9 +27,7 @@ import java.util.StringTokenizer;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
-import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
@@ -38,7 +36,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Core;
@@ -103,14 +101,13 @@ public class PasteMetaDialog extends ZTitleAreaDialog {
 		return area;
 	}
 
-	private CheckboxTreeViewer createViewerGroup(Composite comp) {
+	private ContainerCheckedTreeViewer createViewerGroup(Composite comp) {
 		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(comp,
 				SWT.NONE);
-		final CheckboxTreeViewer treeViewer = new CheckboxTreeViewer(comp,
+		final ContainerCheckedTreeViewer treeViewer = new ContainerCheckedTreeViewer(comp,
 				SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
 		expandCollapseGroup.setViewer(treeViewer);
-		Tree tree = treeViewer.getTree();
-		tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		treeViewer.getTree().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		treeViewer.setLabelProvider(new MetadataLabelProvider());
 		treeViewer.setContentProvider(new MetadataContentProvider());
 		treeViewer.setComparator(new ViewComparator());
@@ -118,22 +115,13 @@ public class PasteMetaDialog extends ZTitleAreaDialog {
 			@Override
 			public boolean select(Viewer aViewer, Object parentElement,
 					Object element) {
-				if (element instanceof QueryField) {
+				if (element instanceof QueryField)
 					return filter.contains(element);
-				}
 				return true;
 			}
 		} });
 		treeViewer.setInput(QueryField.ALL);
-		treeViewer.addCheckStateListener(new ICheckStateListener() {
-
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				boolean checked = event.getChecked();
-				Object element = event.getElement();
-				UiUtilities.checkHierarchy(treeViewer, element, checked, true,
-						true);
-			}
-		});
+		UiUtilities.installDoubleClickExpansion(treeViewer);
 		return treeViewer;
 	}
 

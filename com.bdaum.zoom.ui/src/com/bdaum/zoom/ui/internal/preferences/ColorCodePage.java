@@ -41,13 +41,10 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 
 public class ColorCodePage extends AbstractPreferencePagePart {
 
-	private static final String[] colorCodeOptions = new String[] {
-			PreferenceConstants.COLORCODE_NO,
-			PreferenceConstants.COLORCODE_AUTO,
-			PreferenceConstants.COLORCODE_MANUAL };
+	private static final String[] colorCodeOptions = new String[] { PreferenceConstants.COLORCODE_NO,
+			PreferenceConstants.COLORCODE_AUTO, PreferenceConstants.COLORCODE_MANUAL };
 
-	private static final String[] colorCodeLabels = new String[] {
-			Messages.getString("AppearancePreferencePage.no"), //$NON-NLS-1$
+	private static final String[] colorCodeLabels = new String[] { Messages.getString("AppearancePreferencePage.no"), //$NON-NLS-1$
 			Messages.getString("AppearancePreferencePage.auto"), //$NON-NLS-1$
 			Messages.getString("AppearancePreferencePage.manual") //$NON-NLS-1$
 	};
@@ -65,8 +62,7 @@ public class ColorCodePage extends AbstractPreferencePagePart {
 		return Messages.getString("ColorCodePage.color_codes"); //$NON-NLS-1$
 	}
 
-	public Control createPageContents(Composite parent,
-			AbstractPreferencePage parentPage) {
+	public Control createPageContents(Composite parent, AbstractPreferencePage parentPage) {
 		this.parentPage = parentPage;
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -79,12 +75,11 @@ public class ColorCodePage extends AbstractPreferencePagePart {
 	@Override
 	public void fillValues() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		colorCodeViewer.setSelection(new StructuredSelection(preferenceStore
-				.getString(PreferenceConstants.SHOWCOLORCODE)));
+		colorCodeViewer
+				.setSelection(new StructuredSelection(preferenceStore.getString(PreferenceConstants.SHOWCOLORCODE)));
 		updateAutoGroup();
 		String[] tokens = new String[colorCodeGroups.length];
-		String s = preferenceStore
-				.getString(PreferenceConstants.AUTOCOLORCODECRIT);
+		String s = preferenceStore.getString(PreferenceConstants.AUTOCOLORCODECRIT);
 		if (s != null) {
 			int i = 0;
 			int off = 0;
@@ -108,67 +103,51 @@ public class ColorCodePage extends AbstractPreferencePagePart {
 	public void performDefaults() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		preferenceStore.setValue(PreferenceConstants.BACKGROUNDCOLOR,
-				preferenceStore
-						.getDefaultString(PreferenceConstants.BACKGROUNDCOLOR));
-		preferenceStore
-				.setValue(
-						PreferenceConstants.AUTOCOLORCODECRIT,
-						preferenceStore
-								.getDefaultString(PreferenceConstants.AUTOCOLORCODECRIT));
+				preferenceStore.getDefaultString(PreferenceConstants.BACKGROUNDCOLOR));
+		preferenceStore.setValue(PreferenceConstants.AUTOCOLORCODECRIT,
+				preferenceStore.getDefaultString(PreferenceConstants.AUTOCOLORCODECRIT));
 	}
 
 	@Override
 	public void performOk() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		IStructuredSelection selection = (IStructuredSelection) colorCodeViewer
-				.getSelection();
+		IStructuredSelection selection = (IStructuredSelection) colorCodeViewer.getSelection();
 		if (!selection.isEmpty())
-			preferenceStore.setValue(PreferenceConstants.SHOWCOLORCODE,
-					(String) selection.getFirstElement());
+			preferenceStore.setValue(PreferenceConstants.SHOWCOLORCODE, (String) selection.getFirstElement());
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < colorCodeGroups.length; i++)
 			sb.append(colorCodeGroups[i].encodeCriterion()).append("\n"); //$NON-NLS-1$
-		preferenceStore.setValue(PreferenceConstants.AUTOCOLORCODECRIT,
-				sb.toString());
+		preferenceStore.setValue(PreferenceConstants.AUTOCOLORCODECRIT, sb.toString());
 	}
 
 	private void createThumbGroup(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
-		composite.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true,
-				false));
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		composite.setLayout(new GridLayout(2, false));
-		colorCodeViewer = createComboViewer(
-				composite,
-				Messages.getString("AppearancePreferencePage.show_colorcode"), colorCodeOptions, colorCodeLabels, false); //$NON-NLS-1$
-		colorCodeViewer
-				.addSelectionChangedListener(new ISelectionChangedListener() {
-					public void selectionChanged(SelectionChangedEvent event) {
-						updateAutoGroup();
-					}
-				});
+		colorCodeViewer = createComboViewer(composite, Messages.getString("AppearancePreferencePage.show_colorcode"), //$NON-NLS-1$
+				colorCodeOptions, colorCodeLabels, false);
+		colorCodeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			public void selectionChanged(SelectionChangedEvent event) {
+				updateAutoGroup();
+			}
+		});
 	}
 
 	protected void updateAutoGroup() {
 		autoGroup.setVisible(PreferenceConstants.COLORCODE_AUTO
-				.equals(((IStructuredSelection) colorCodeViewer.getSelection())
-						.getFirstElement()));
+				.equals(((IStructuredSelection) colorCodeViewer.getSelection()).getFirstElement()));
 	}
 
 	@SuppressWarnings("unused")
 	private void createAutoColorGroup(Composite composite) {
-		autoGroup = createGroup(composite, 7,
-				Messages.getString("AppearancePreferencePage.autocoding")); //$NON-NLS-1$
+		autoGroup = createGroup(composite, 7, Messages.getString("AppearancePreferencePage.autocoding")); //$NON-NLS-1$
 		((GridLayout) autoGroup.getLayout()).verticalSpacing = 0;
 		new Label(autoGroup, SWT.NONE);
 		new Label(autoGroup, SWT.NONE).setText("   "); //$NON-NLS-1$
-		new Label(autoGroup, SWT.NONE).setText(Messages
-				.getString("AppearancePreferencePage.group")); //$NON-NLS-1$
-		new Label(autoGroup, SWT.NONE).setText(Messages
-				.getString("AppearancePreferencePage.field")); //$NON-NLS-1$
-		new Label(autoGroup, SWT.NONE).setText(Messages
-				.getString("AppearancePreferencePage.relation")); //$NON-NLS-1$
-		new Label(autoGroup, SWT.NONE).setText(Messages
-				.getString("AppearancePreferencePage.value")); //$NON-NLS-1$
+		new Label(autoGroup, SWT.NONE).setText(Messages.getString("AppearancePreferencePage.group")); //$NON-NLS-1$
+		new Label(autoGroup, SWT.NONE).setText(Messages.getString("AppearancePreferencePage.field")); //$NON-NLS-1$
+		new Label(autoGroup, SWT.NONE).setText(Messages.getString("AppearancePreferencePage.relation")); //$NON-NLS-1$
+		new Label(autoGroup, SWT.NONE).setText(Messages.getString("AppearancePreferencePage.value")); //$NON-NLS-1$
 		new Label(autoGroup, SWT.NONE);
 		for (int i = 0; i < colorCodeGroups.length; i++)
 			colorCodeGroups[i] = new ColorCodeGroup(autoGroup, i, parentPage);

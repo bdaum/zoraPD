@@ -92,7 +92,6 @@ public class ModifyMetaOperation extends DbOperation {
 	private final boolean cumulateImports;
 	private final String locationOption;
 	private boolean noIndex;
-	// private Boolean importFaces;
 	private Boolean addToKeywords;
 	private final Map<String, Map<QueryField, Object>> structOverlayMap;
 	private StructModifyOperation structOp;
@@ -302,6 +301,7 @@ public class ModifyMetaOperation extends DbOperation {
 					activator.putObservedFolder(folder);
 					fileWatchManager.addImageFolder(folder);
 				}
+			meta.setLastWatchedFolderScan(0L);
 		}
 		if (pauseStarts) {
 			Job.getJobManager().cancel(Constants.FOLDERWATCH);

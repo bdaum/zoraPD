@@ -656,6 +656,7 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 				return EMPTY;
 			}
 		});
+		UiUtilities.installDoubleClickExpansion(catViewer);
 		Composite buttonGroup = new Composite(innerComp, SWT.NONE);
 		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, true));
 		buttonGroup.setLayout(new GridLayout());

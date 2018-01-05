@@ -27,9 +27,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.viewers.CheckStateChangedEvent;
-import org.eclipse.jface.viewers.CheckboxTreeViewer;
-import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -40,6 +37,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.QueryField;
@@ -59,7 +57,7 @@ public class MetaSelectionPage extends ColoredWizardPage {
 
 	private static final Object[] EMPTY = new Object[0];
 	private static final String JPEGMETA = "jpegmeta"; //$NON-NLS-1$
-	private CheckboxTreeViewer viewer;
+	private ContainerCheckedTreeViewer viewer;
 	private final Object rootElements;
 	private MetadataOptionGroup metadataOptionGroup;
 	private final boolean options;
@@ -111,7 +109,7 @@ public class MetaSelectionPage extends ColoredWizardPage {
 		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(comp,
 				SWT.NONE);
 		new Label(comp, SWT.NONE);
-		viewer = new CheckboxTreeViewer(comp, SWT.SINGLE | SWT.H_SCROLL
+		viewer = new ContainerCheckedTreeViewer(comp, SWT.SINGLE | SWT.H_SCROLL
 				| SWT.V_SCROLL | SWT.BORDER);
 		expandCollapseGroup.setViewer(viewer);
 		Tree tree = viewer.getTree();
@@ -122,14 +120,7 @@ public class MetaSelectionPage extends ColoredWizardPage {
 		viewer.setComparator(new ViewComparator());
 		viewer.setInput(rootElements);
 		viewer.expandToLevel(2);
-		viewer.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				boolean checked = event.getChecked();
-				Object element = event.getElement();
-				UiUtilities
-						.checkHierarchy(viewer, element, checked, true, true);
-			}
-		});
+		UiUtilities.installDoubleClickExpansion(viewer);
 		Composite buttonBar = new Composite(comp, SWT.NONE);
 		buttonBar.setLayoutData(new GridData(SWT.END, SWT.FILL, false, true));
 		buttonBar.setLayout(new GridLayout(1, false));
@@ -168,7 +159,6 @@ public class MetaSelectionPage extends ColoredWizardPage {
 					if (qfield != null)
 						fields.add(qfield);
 				}
-				UiUtilities.checkInitialHierarchy(viewer, fields);
 			}
 		}
 	}

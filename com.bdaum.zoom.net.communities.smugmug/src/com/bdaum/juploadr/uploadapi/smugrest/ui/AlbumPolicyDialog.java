@@ -89,9 +89,7 @@ public class AlbumPolicyDialog extends ZTitleAreaDialog {
 		viewerGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewerGroup.setLayout(new GridLayout(2, false));
 
-		Label label = new Label(viewerGroup, SWT.NONE);
-		label.setText(Messages.AlbumPolicyDialog_default_album);
-
+		new Label(viewerGroup, SWT.NONE).setText(Messages.AlbumPolicyDialog_default_album);
 		viewer = new ComboViewer(viewerGroup, SWT.READ_ONLY);
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
 		viewer.setLabelProvider(new ZColumnLabelProvider() {
@@ -104,7 +102,6 @@ public class AlbumPolicyDialog extends ZTitleAreaDialog {
 		});
 		viewer.setComparator(new ViewerComparator());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateButtons();
 			}

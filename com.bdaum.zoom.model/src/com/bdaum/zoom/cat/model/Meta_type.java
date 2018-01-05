@@ -919,6 +919,20 @@ public interface Meta_type extends AomValueChangedNotifier, IIdentifiableObject 
 	 */
 	public String getVocabularies(int _i);
 
+	/**
+	 * Set value of property lastWatchedFolderScan
+	 *
+	 * @param _value - new element value
+	 */
+	public void setLastWatchedFolderScan(long _value);
+
+	/**
+	 * Get value of property lastWatchedFolderScan
+	 *
+	 * @return - value of field lastWatchedFolderScan
+	 */
+	public long getLastWatchedFolderScan();
+
 	/* ----- Validation ----- */
 
 	/**

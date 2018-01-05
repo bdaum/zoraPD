@@ -31,6 +31,7 @@ public class SlideShow_typeImpl extends AomObject implements SlideShow_type {
 	 * @param duration - Property
 	 * @param effect - Property
 	 * @param fading - Property
+	 * @param zoom - Property
 	 * @param titleDisplay - Property
 	 * @param titleContent - Property
 	 * @param adhoc - Property
@@ -41,7 +42,7 @@ public class SlideShow_typeImpl extends AomObject implements SlideShow_type {
 	 */
 	public SlideShow_typeImpl(String name, String description,
 			boolean fromPreview, int duration, int effect, int fading,
-			int titleDisplay, int titleContent, boolean adhoc,
+			int zoom, int titleDisplay, int titleContent, boolean adhoc,
 			boolean skipDublettes, boolean voiceNotes, Date lastAccessDate,
 			String perspective) {
 		super();
@@ -51,6 +52,7 @@ public class SlideShow_typeImpl extends AomObject implements SlideShow_type {
 		this.duration = duration;
 		this.effect = effect;
 		this.fading = fading;
+		this.zoom = zoom;
 		this.titleDisplay = titleDisplay;
 		this.titleContent = titleContent;
 		this.adhoc = adhoc;
@@ -199,6 +201,28 @@ public class SlideShow_typeImpl extends AomObject implements SlideShow_type {
 	 */
 	public int getFading() {
 		return fading;
+	}
+
+	/* *** Property zoom *** */
+
+	private int zoom;
+
+	/**
+	 * Set value of property zoom
+	 *
+	 * @param _value - new field value
+	 */
+	public void setZoom(int _value) {
+		zoom = _value;
+	}
+
+	/**
+	 * Get value of property zoom
+	 *
+	 * @return - value of field zoom
+	 */
+	public int getZoom() {
+		return zoom;
 	}
 
 	/* *** Property titleDisplay *** */
@@ -387,6 +411,8 @@ public class SlideShow_typeImpl extends AomObject implements SlideShow_type {
 
 				&& getFading() == other.getFading()
 
+				&& getZoom() == other.getZoom()
+
 				&& getTitleDisplay() == other.getTitleDisplay()
 
 				&& getTitleContent() == other.getTitleContent()
@@ -430,6 +456,8 @@ public class SlideShow_typeImpl extends AomObject implements SlideShow_type {
 		hashCode = 31 * hashCode + getEffect();
 
 		hashCode = 31 * hashCode + getFading();
+
+		hashCode = 31 * hashCode + getZoom();
 
 		hashCode = 31 * hashCode + getTitleDisplay();
 

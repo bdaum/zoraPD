@@ -63,7 +63,6 @@ import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.codes.CodeParser;
 import com.bdaum.zoom.ui.internal.dialogs.Messages;
-import com.bdaum.zoom.ui.widgets.CodeGroup;
 import com.bdaum.zoom.ui.widgets.DateInput;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
@@ -104,9 +103,10 @@ public class CriterionGroup extends AbstractCriterionGroup {
 		public ValueStack(Composite parent, int style) {
 			super(parent, SWT.NONE);
 			this.readOnly = (style & SWT.READ_ONLY) != 0;
-			style &= ~SWT.READ_ONLY;
+			boolean single = (style & SWT.SINGLE) != 0;
+			style &= ~(SWT.READ_ONLY | SWT.SINGLE);
 			GridData layoutData = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
-			layoutData.widthHint = Constants.WIN32 | readOnly ? 180 : 300;
+			layoutData.widthHint = !Constants.WIN32 && !readOnly || single ? 300 : 180;
 			setLayoutData(layoutData);
 			layout = new StackLayout();
 			setLayout(layout);
@@ -205,7 +205,11 @@ public class CriterionGroup extends AbstractCriterionGroup {
 					} else if (detailQfield != null && detailQfield.getEnumeration() instanceof Integer) {
 						CodeParser parser = UiActivator.getDefault()
 								.getCodeParser((Integer) fd.getDetailQueryField().getEnumeration());
-						layout.topControl = parser.canParse() ? codeComposite : textComposite;
+						if (parser.canParse()) {
+							layout.topControl = codeComposite;
+							codeField.setQueryField(detailQfield);
+						} else
+							layout.topControl = textComposite;
 					} else
 						layout.topControl = textComposite;
 				}
@@ -222,10 +226,8 @@ public class CriterionGroup extends AbstractCriterionGroup {
 							errorMessage = proposalListener.validate(textField.getText());
 						return errorMessage;
 					}
-				} else if (layout.topControl == codeComposite) {
-					if (codeField.isEnabled())
-						return UiUtilities.verifyText(fieldDescriptor, codeField.getText(), rel);
-				}
+				} else if (layout.topControl == codeComposite && codeField.isEnabled())
+					return UiUtilities.verifyText(fieldDescriptor, codeField.getText(), rel);
 			}
 			return null;
 		}
@@ -283,8 +285,7 @@ public class CriterionGroup extends AbstractCriterionGroup {
 			int v = (int) (maxValue + 0.5f);
 			field.setMaximum(v);
 			field.setMinimum(qfield.getType() == QueryField.T_INTEGER ? -v : 0);
-			boolean log = Float.isInfinite(maxValue) || (qfield.getAutoPolicy() & QueryField.AUTO_LOG) != 0;
-			field.setLogrithmic(log);
+			field.setLogrithmic(Float.isInfinite(maxValue) || (qfield.getAutoPolicy() & QueryField.AUTO_LOG) != 0);
 		}
 
 		public Object getValue(FieldDescriptor des) {
@@ -372,30 +373,24 @@ public class CriterionGroup extends AbstractCriterionGroup {
 								enumCombo.select(j);
 							break;
 						}
-				} else if (enumKeys instanceof String[]) {
-					String[] sKeys = (String[]) enumKeys;
-					for (int j = 0; j < sKeys.length; j++)
-						if (sKeys[j].equals(value)) {
-							if (readOnly)
-								setValue(null, items[j]);
-							else
-								enumCombo.select(j);
-							break;
-						}
-				} else {
-					String[] sKeys = enumCombo.getItems();
-					for (int j = 0; j < sKeys.length; j++)
-						if (sKeys[j].equals(value)) {
-							if (readOnly)
-								setValue(null, items[j]);
-							else
-								enumCombo.select(j);
-							break;
-						}
-				}
+				} else if (enumKeys instanceof String[])
+					select(value, (String[]) enumKeys);
+				else
+					select(value, enumCombo.getItems());
 			} catch (Exception e) {
 				// Don't select on bad data
 			}
+		}
+
+		private void select(Object value, String[] sKeys) {
+			for (int j = 0; j < sKeys.length; j++)
+				if (sKeys[j].equals(value)) {
+					if (readOnly)
+						setValue(null, items[j]);
+					else
+						enumCombo.select(j);
+					break;
+				}
 		}
 
 		private void resetValues() {
@@ -441,12 +436,14 @@ public class CriterionGroup extends AbstractCriterionGroup {
 		this.crit = crit;
 		this.networked = networked;
 		relationKeys = new int[QueryField.ALLRELATIONS.length];
+		int rel = -1;
 		if (crit != null) {
 			fieldDescriptor = new FieldDescriptor(crit);
 			initGroup(fieldDescriptor.qfield);
+			rel = crit.getRelation();
 		} else
 			initGroup(null);
-		if (groupCombo != null) {
+		if (groupCombo != null)
 			groupCombo.addSelectionChangedListener(new ISelectionChangedListener() {
 				public void selectionChanged(SelectionChangedEvent event) {
 					fillFieldCombo(crit);
@@ -456,18 +453,18 @@ public class CriterionGroup extends AbstractCriterionGroup {
 					signalModification();
 				}
 			});
-		}
 		if (relationCombo != null)
 			relationCombo.setVisibleItemCount(8);
-		fromStack = new ValueStack(parent, enabled ? borderStyle : borderStyle | SWT.READ_ONLY);
-		addChild(fromStack);
-		betweenLabel = new Label(parent, SWT.NONE);
-		betweenLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-		betweenLabel.setText(Messages.CriterionGroup_and_between);
-
-		toStack = new ValueStack(parent, enabled ? borderStyle : borderStyle | SWT.READ_ONLY);
-		addChild(toStack);
-		toStack.addFieldListeners(modifyListener, selectionListener);
+		boolean ranged = enabled && (rel == QueryField.BETWEEN || rel == QueryField.NOTBETWEEN);
+		addChild(fromStack = new ValueStack(parent,
+				enabled ? borderStyle : borderStyle | SWT.READ_ONLY | (ranged ? SWT.DEFAULT : SWT.SINGLE)));
+		if (ranged) {
+			betweenLabel = new Label(parent, SWT.NONE);
+			betweenLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+			betweenLabel.setText(Messages.CriterionGroup_and_between);
+			addChild(toStack = new ValueStack(parent, enabled ? borderStyle : borderStyle | SWT.READ_ONLY));
+			toStack.addFieldListeners(modifyListener, selectionListener);
+		}
 		updateStacks(false, null, false, null, 0);
 		createButtons(parent);
 		if (fieldCombo != null)
@@ -476,7 +473,8 @@ public class CriterionGroup extends AbstractCriterionGroup {
 				public void widgetSelected(SelectionEvent e) {
 					fillRelationCombo(crit);
 					fromStack.resetValues();
-					toStack.resetValues();
+					if (toStack != null)
+						toStack.resetValues();
 					validate();
 					signalModification();
 				}
@@ -498,14 +496,17 @@ public class CriterionGroup extends AbstractCriterionGroup {
 			int rel) {
 		if (rel == QueryField.UNDEFINED) {
 			fromStack.setVisible(false);
-			toStack.setVisible(false);
+			if (toStack != null)
+				toStack.setVisible(false);
 		} else {
 			fromStack.setVisible(true);
 			fromStack.update(valueProposals, enumeration, fd);
-			if (range)
-				toStack.update(valueProposals, enumeration, fd);
-			toStack.setVisible(range);
-			betweenLabel.setVisible(range);
+			if (toStack != null) {
+				if (range)
+					toStack.update(valueProposals, enumeration, fd);
+				toStack.setVisible(range);
+				betweenLabel.setVisible(range);
+			}
 		}
 	}
 
@@ -557,7 +558,7 @@ public class CriterionGroup extends AbstractCriterionGroup {
 		int rel = getRelationValue();
 		if (rel != QueryField.UNDEFINED) {
 			errorMessage = fromStack.validate(fieldDescriptor, rel);
-			if (errorMessage == null && toStack.isVisible()) {
+			if (errorMessage == null && toStack != null && toStack.isVisible()) {
 				errorMessage = toStack.validate(fieldDescriptor, rel);
 				Object fromValue = fromStack.getValue(fieldDescriptor);
 				Object toValue = toStack.getValue(fieldDescriptor);
@@ -581,7 +582,7 @@ public class CriterionGroup extends AbstractCriterionGroup {
 			fieldDescriptor = des;
 			if (update) {
 				oldFrom = fromStack.getValue(fieldDescriptor);
-				if (toStack.isVisible())
+				if (toStack != null && toStack.isVisible())
 					oldTo = toStack.getValue(fieldDescriptor);
 			}
 			String[] enumLabels = fieldDescriptor.getDetailQueryField().getEnumLabels();
@@ -638,7 +639,7 @@ public class CriterionGroup extends AbstractCriterionGroup {
 								fromStack.setValue(null, crit.getValue().toString());
 							fromStack.addProposalListener(new ProposalListener(valueProposals));
 						} else if (enumLabels != null) {
-							if (toStack.isVisible())
+							if (toStack != null && toStack.isVisible())
 								toStack.setEnumerationData(enumKeys, enumLabels, null, 10);
 							fromStack.setEnumerationData(enumKeys, enumLabels, crit != null ? crit.getValue() : null,
 									10);
@@ -649,30 +650,30 @@ public class CriterionGroup extends AbstractCriterionGroup {
 							if (range) {
 								Range r = (Range) value;
 								fromStack.select(r.getFrom());
-								toStack.select(r.getTo());
+								if (toStack != null)
+									toStack.select(r.getTo());
 							} else
 								fromStack.select(value);
 						}
 					} else if (range) {
 						updateStacks(false, null, true, fieldDescriptor, rel);
 						boolean set = oldFrom != null && fromStack.setValue(fieldDescriptor, oldFrom);
-						set &= oldTo != null && toStack.setValue(fieldDescriptor, oldTo);
+						set &= oldTo != null && toStack != null && toStack.setValue(fieldDescriptor, oldTo);
 						if (!set && crit != null) {
 							Object value = crit.getValue();
 							if (value instanceof Range) {
 								Range vrange = (Range) value;
 								fromStack.setValue(fieldDescriptor, vrange.getFrom());
-								toStack.setValue(fieldDescriptor, vrange.getTo());
+								if (toStack != null)
+									toStack.setValue(fieldDescriptor, vrange.getTo());
 							} else
 								fromStack.setValue(fieldDescriptor, value);
 						}
 					} else {
 						updateStacks(false, null, false, fieldDescriptor, rel);
-						if (rel != QueryField.UNDEFINED) {
-							boolean set = oldFrom != null && fromStack.setValue(fieldDescriptor, oldFrom);
-							if (!set && crit != null)
-								fromStack.setValue(fieldDescriptor, crit.getValue());
-						}
+						if (rel != QueryField.UNDEFINED
+								&& (oldFrom == null || !fromStack.setValue(fieldDescriptor, oldFrom)) && crit != null)
+							fromStack.setValue(fieldDescriptor, crit.getValue());
 					}
 				}
 			}
@@ -686,16 +687,15 @@ public class CriterionGroup extends AbstractCriterionGroup {
 			fieldDescriptor = des;
 			int relation = fieldDescriptor.getDetailQueryField().getRelations();
 			List<String> relationLabels = new ArrayList<String>();
-			int j = 0;
-			for (int k = 0; k < QueryField.ALLRELATIONS.length; k++) {
+			for (int k = 0, j = 0; k < QueryField.ALLRELATIONS.length; k++) {
 				int rel = QueryField.ALLRELATIONS[k];
 				if ((rel & relation) != 0) {
 					relationKeys[j++] = rel;
 					relationLabels.add(QueryField.ALLRELATIONLABELS[k]);
 				}
 			}
-			String[] items = relationLabels.toArray(new String[relationLabels.size()]);
-			setRelationValue(crit == null ? 0 : crit.getRelation(), relationKeys, items);
+			setRelationValue(crit == null ? 0 : crit.getRelation(), relationKeys,
+					relationLabels.toArray(new String[relationLabels.size()]));
 		}
 		updateValueFields(crit, false);
 	}
@@ -716,7 +716,7 @@ public class CriterionGroup extends AbstractCriterionGroup {
 		if (fromValue == null)
 			return null;
 		Object toValue = null;
-		if (toStack.isVisible()) {
+		if (toStack != null && toStack.isVisible()) {
 			toValue = toStack.getValue(des);
 			if (toValue == null)
 				return null;

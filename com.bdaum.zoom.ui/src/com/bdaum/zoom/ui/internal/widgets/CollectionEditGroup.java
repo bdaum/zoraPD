@@ -106,7 +106,7 @@ public class CollectionEditGroup {
 	protected static final QueryField[] EXPLORABLES = new QueryField[] { QueryField.EMULSION, QueryField.USERFIELD1,
 			QueryField.USERFIELD2, QueryField.IMPORTEDBY, QueryField.EXIF_COPYRIGHT, QueryField.EXIF_LENS,
 			QueryField.EXIF_MAKE, QueryField.EXIF_MODEL, QueryField.EXIF_SOFTWARE, QueryField.IPTC_BYLINE,
-			QueryField.IPTC_EVENT, QueryField.IPTC_INTELLECTUAL_GENRE, QueryField.IPTC_NAMEOFORG, QueryField.IPTC_OWNER,
+			QueryField.IPTC_EVENT, QueryField.IPTC_NAMEOFORG, QueryField.IPTC_OWNER,
 			QueryField.IPTC_USAGE, QueryField.IPTC_WRITEREDITOR };
 
 	private Composite sortComp;

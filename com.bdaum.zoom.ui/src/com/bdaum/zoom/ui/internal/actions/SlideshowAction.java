@@ -76,6 +76,7 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 			IDialogSettings settings = UiActivator.getDefault().getDialogSettings(SlideshowEditDialog.SETTINGSID);
 			int duration = 7000;
 			int effect = Constants.SLIDE_TRANSITION_RANDOM;
+			int zoom = 0;
 			int fading = 1000;
 			int titleDisplay = 1500;
 			int titleContent = Constants.SLIDE_TITLEONLY;
@@ -87,6 +88,11 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 			}
 			try {
 				effect = settings.getInt(SlideshowEditDialog.EFFECT);
+			} catch (NumberFormatException e) {
+				// ignore
+			}
+			try {
+				zoom = settings.getInt(SlideshowEditDialog.ZOOM);
 			} catch (NumberFormatException e) {
 				// ignore
 			}
@@ -112,7 +118,7 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 			}
 
 			SlideShowImpl show = new SlideShowImpl("", "", fromPreview, duration, //$NON-NLS-1$ //$NON-NLS-2$
-					effect, fading, titleDisplay, titleContent, true, true, false, new Date(), null);
+					effect, fading, zoom, titleDisplay, titleContent, true, true, false, new Date(), null);
 			SlideshowEditDialog dialog = new SlideshowEditDialog(window.getShell(), null, show,
 					Messages.SlideshowActionDelegate_adhoc_slideshow, true, false);
 			List<SlideImpl> slides = createSlides(selectedAssets, show);
@@ -139,6 +145,7 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 		int duration = show.getDuration();
 		int lag = Math.min(fading / 3, duration / 2);
 		int effect = show.getEffect();
+		int zoom = show.getZoom();
 		Iterator<SlideImpl> it = slides.iterator();
 		while (it.hasNext()) {
 			SlideImpl slide = it.next();
@@ -152,6 +159,7 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 				slide.setDuration(duration);
 				slide.setFadeOut(fading + lag);
 				slide.setEffect(effect);
+				slide.setZoom(zoom);
 			}
 		}
 		return filtered;
@@ -165,10 +173,7 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 		String id = show.getStringId();
 		Set<String> done = new HashSet<String>(slides.size() * 3 / 2);
 		for (Asset asset : selectedAssets) {
-			String fileName = asset.getUri();
-			int p = fileName.lastIndexOf('/');
-			if (p >= 0)
-				fileName = fileName.substring(p + 1);
+			String fileName = Core.getFileName(asset.getUri(), true);
 			if (filter.accept(fileName)) {
 				String tit = asset.getTitle();
 				if (tit == null || tit.isEmpty()) {
@@ -185,10 +190,11 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 				int duration = show.getDuration();
 				int lag = Math.min(fading / 3, duration / 2);
 				int effect = show.getEffect();
+				int zoom = show.getZoom();
 				if (effect == Constants.SLIDE_TRANSITION_RANDOM)
 					effect = (int) (Math.random() * Constants.SLIDE_TRANSITION_N);
 				SlideImpl slide = new SlideImpl(tit, index, null, Constants.SLIDE_NO_THUMBNAILS, fading, fading,
-						duration, fading + lag, effect, false, asset.getSafety(), asset.getStringId());
+						duration, fading + lag, effect, zoom, 0, 0, false, asset.getSafety(), asset.getStringId());
 				slides.add(slide);
 				show.addEntry(slide.getStringId());
 				slide.setSlideShow_entry_parent(id);

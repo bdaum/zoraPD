@@ -48,7 +48,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import com.bdaum.aoModeling.runtime.AomObject;
+import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.composedTo.ComposedToImpl;
@@ -70,7 +70,7 @@ import com.bdaum.zoom.ui.widgets.DateInput;
 @SuppressWarnings("restriction")
 public class DescriptionDialog extends ZTitleAreaDialog {
 
-	private AomObject description;
+	private IIdentifiableObject description;
 	private RelationDescription result;
 	private Combo kindCombo;
 	private Text toolField;
@@ -82,7 +82,7 @@ public class DescriptionDialog extends ZTitleAreaDialog {
 	private final Asset asset;
 	private Text adjustmentField;
 
-	public DescriptionDialog(Shell parentShell, AomObject rel, Asset asset) {
+	public DescriptionDialog(Shell parentShell, IIdentifiableObject rel, Asset asset) {
 		super(parentShell, HelpContextIds.DESCRIPTION_DIALOG);
 		this.description = rel;
 		this.asset = asset;
@@ -153,7 +153,6 @@ public class DescriptionDialog extends ZTitleAreaDialog {
 		browseButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		browseButton.setText(Messages.DescriptionDialog_browse);
 		browseButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
@@ -186,7 +185,8 @@ public class DescriptionDialog extends ZTitleAreaDialog {
 					restoreRecipe();
 				}
 			});
-			if (getParmFile(((DerivedByImpl) description).getParameterFile()) != null) {
+			String parameterFile = ((DerivedByImpl) description).getParameterFile();
+			if (parameterFile != null && getParmFile(parameterFile) != null) {
 				new Label(comp, SWT.NONE);
 				adjustmentField = new Text(comp,
 						SWT.MULTI | SWT.LEAD | SWT.BORDER | SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL);

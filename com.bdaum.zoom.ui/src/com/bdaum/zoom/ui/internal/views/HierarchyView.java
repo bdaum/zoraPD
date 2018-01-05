@@ -58,6 +58,8 @@ import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
@@ -66,10 +68,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -77,6 +76,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.aoModeling.runtime.AomObject;
+import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.composedTo.ComposedToImpl;
@@ -145,7 +145,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 	public class Node {
 
 		private Asset asset;
-		private AomObject description;
+		private IIdentifiableObject description;
 		private List<Node> children;
 		private Node parent;
 		private int typ;
@@ -158,7 +158,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 			this.typ = type;
 		}
 
-		public AomObject getDescription() {
+		public IIdentifiableObject getDescription() {
 			return description;
 		}
 
@@ -178,9 +178,8 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 				List<AomObject> descriptions = new ArrayList<AomObject>();
 				switch (typ) {
 				case Constants.DERIVATIVES:
-					List<DerivedByImpl> derived = dbManager.obtainObjects(DerivedByImpl.class, "original", assetId, //$NON-NLS-1$
-							QueryField.EQUALS);
-					for (DerivedByImpl rel : derived) {
+					for (DerivedByImpl rel : dbManager.obtainObjects(DerivedByImpl.class, "original", assetId, //$NON-NLS-1$
+							QueryField.EQUALS)) {
 						String derivative = rel.getDerivative();
 						if (derivative.indexOf(':') < 0) {
 							list.add(derivative);
@@ -189,8 +188,8 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 					}
 					break;
 				case Constants.ORIGINALS:
-					derived = dbManager.obtainObjects(DerivedByImpl.class, "derivative", assetId, QueryField.EQUALS); //$NON-NLS-1$
-					for (DerivedByImpl rel : derived) {
+					for (DerivedByImpl rel : dbManager.obtainObjects(DerivedByImpl.class, "derivative", assetId, //$NON-NLS-1$
+							QueryField.EQUALS)) {
 						String original = rel.getOriginal();
 						if (original.indexOf(':') < 0) {
 							list.add(original);
@@ -199,22 +198,19 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 					}
 					break;
 				case Constants.COMPOSITES:
-					List<ComposedToImpl> composed = dbManager.obtainObjects(ComposedToImpl.class, "component", assetId, //$NON-NLS-1$
-							QueryField.CONTAINS);
-					for (ComposedToImpl rel : composed) {
+					for (ComposedToImpl rel : dbManager.obtainObjects(ComposedToImpl.class, "component", assetId, //$NON-NLS-1$
+							QueryField.CONTAINS)) {
 						list.add(rel.getComposite());
 						descriptions.add(rel);
 					}
 					break;
 				case Constants.COMPONENTS:
-					composed = dbManager.obtainObjects(ComposedToImpl.class, "composite", assetId, //$NON-NLS-1$
-							QueryField.EQUALS);
-					for (ComposedToImpl rel : composed) {
+					for (ComposedToImpl rel : dbManager.obtainObjects(ComposedToImpl.class, "composite", assetId, //$NON-NLS-1$
+							QueryField.EQUALS))
 						for (String id : rel.getComponent()) {
 							list.add(id);
 							descriptions.add(rel);
 						}
-					}
 					break;
 				}
 				children = new ArrayList<Node>(list.size());
@@ -243,12 +239,10 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 				Image thumbnail = getImage(asset);
 				Rectangle bounds = thumbnail.getBounds();
 				double f = (double) THUMBSIZE / Math.max(bounds.width, bounds.height);
-				int width = (int) (bounds.width * f);
-				int height = (int) (bounds.height * f);
-				boolean advanced = Platform.getPreferencesService().getBoolean(UiActivator.PLUGIN_ID,
-						PreferenceConstants.ADVANCEDGRAPHICS, false, null);
-				image = ImageUtilities.scaleSWT(thumbnail, width, height, advanced, 1, false,
-						thumbnail.getDevice().getSystemColor(SWT.COLOR_GRAY));
+				image = ImageUtilities.scaleSWT(thumbnail, (int) (bounds.width * f), (int) (bounds.height * f),
+						Platform.getPreferencesService().getBoolean(UiActivator.PLUGIN_ID,
+								PreferenceConstants.ADVANCEDGRAPHICS, false, null),
+						1, false, thumbnail.getDevice().getSystemColor(SWT.COLOR_GRAY));
 			}
 			return image;
 		}
@@ -356,7 +350,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 					sb.append(Messages.getString("HierarchyView.modified")).append(df.format(lastModification)); //$NON-NLS-1$
 				}
 				styles.add(new StyleRange(0, uriLength, viewer.getControl().getForeground(), null, SWT.BOLD));
-				AomObject description = node.getDescription();
+				IIdentifiableObject description = node.getDescription();
 				if (description != null) {
 					sb.append('\n').append(createDescription(description, indent + 3));
 					Color fg = isDescriptionValid(description) ? getSite().getShell().getForeground()
@@ -375,7 +369,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 			return null;
 		}
 
-		private String createDescription(AomObject obj, int ind) {
+		private String createDescription(IIdentifiableObject obj, int ind) {
 			StringBuilder sb = new StringBuilder();
 			String kind = null;
 			String tool = null;
@@ -476,6 +470,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 	private IAction showPossibleOriginalsAction;
 	private IAction showPossibleDerivativesAction;
 	private IAction showAssetAction;
+	protected boolean cntrlDwn;
 
 	public void insertIndent(StringBuilder sb, int indent) {
 		if (sb.length() > 0)
@@ -484,7 +479,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 			sb.append(' ');
 	}
 
-	public boolean isDescriptionValid(AomObject description) {
+	public boolean isDescriptionValid(IIdentifiableObject description) {
 		String parmFile = null;
 		if (description instanceof ComposedToImpl)
 			parmFile = ((ComposedToImpl) description).getParameterFile();
@@ -518,12 +513,25 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		viewer = new TreeViewer(parent, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL);
 		viewer.setContentProvider(new ViewContentProvider());
 		viewer.setLabelProvider(new ViewLabelProvider());
+		UiUtilities.installDoubleClickExpansion(viewer);
+		getControl().addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.keyCode == SWT.CTRL)
+					cntrlDwn = true;
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.keyCode == SWT.CTRL)
+					cntrlDwn = false;
+			}
+		});
 		viewer.addSelectionChangedListener(this);
 		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), HelpContextIds.HIERARCHY_VIEW);
 		// Drag & Drop
 		viewer.addDropSupport(OPERATIONS, transferTypes, new ViewerDropAdapter(viewer) {
-
 			@Override
 			public void dragEnter(DropTargetEvent event) {
 				super.dragEnter(event);
@@ -578,7 +586,6 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		installListeners(parent);
 		hookContextMenu();
 		contributeToActionBars();
-		hookDoubleClickAction();
 		// Hover
 		installHoveringController();
 		// Action state
@@ -587,20 +594,6 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 
 	protected void addClipboard(Control control) {
 		clipboard = new Clipboard(control.getDisplay());
-	}
-
-	protected void hookDoubleClickAction() {
-		viewer.getTree().addListener(SWT.MouseDoubleClick, new Listener() {
-
-			public void handleEvent(Event event) {
-				TreeItem item = viewer.getTree().getItem(new Point(event.x, event.y));
-				Object data = item.getData();
-				if (data instanceof Node) {
-					descriptionAction.run();
-				}
-			}
-		});
-
 	}
 
 	@Override
@@ -681,11 +674,8 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 
 	protected void addPartListener() {
 		getSite().getWorkbenchWindow().getPartService().addPartListener(new IPartListener() {
-
 			public void partOpened(IWorkbenchPart part) {
-				if (part == HierarchyView.this) {
-					updateView();
-				}
+				updateView();
 			}
 
 			public void partDeactivated(IWorkbenchPart part) {
@@ -693,15 +683,11 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 			}
 
 			public void partClosed(IWorkbenchPart part) {
-				if (part == HierarchyView.this) {
-					updateView();
-				}
+				updateView();
 			}
 
 			public void partBroughtToTop(IWorkbenchPart part) {
-				if (part == HierarchyView.this) {
-					updateView();
-				}
+				updateView();
 			}
 
 			public void partActivated(IWorkbenchPart part) {
@@ -714,40 +700,30 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 	protected void makeActions(IActionBars bars) {
 		super.makeActions(bars);
 		showPossibleOriginalsAction = new Action(Messages.getString("HierarchyView.show_candiates_for_originals")) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
-				IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
-				Object firstElement = sel.getFirstElement();
-				if (firstElement instanceof Node) {
-					Node node = (Node) firstElement;
-					showCandidates(node, true);
-				}
+				Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				if (firstElement instanceof Node)
+					showCandidates((Node) firstElement, true);
 			}
 		};
 		showPossibleOriginalsAction
 				.setToolTipText(Messages.getString("HierarchyView.show_candidates_originals_tooltip")); //$NON-NLS-1$
 		showPossibleDerivativesAction = new Action(
 				Messages.getString("HierarchyView.show_candidates_for_derivatives")) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
-				IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
-				Object firstElement = sel.getFirstElement();
-				if (firstElement instanceof Node) {
-					Node node = (Node) firstElement;
-					showCandidates(node, false);
-				}
+				Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				if (firstElement instanceof Node)
+					showCandidates((Node) firstElement, false);
 			}
 		};
 		showPossibleDerivativesAction
 				.setToolTipText(Messages.getString("HierarchyView.show_candidates_derivatives_tooltip")); //$NON-NLS-1$
 		showAssetAction = new Action(Messages.getString("HierarchyView.show_hierarchy_for_selected_asset")) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
-				Asset asset = getNavigationHistory().getSelectedAssets().get(0);
-				setInput(asset);
+				setInput(getNavigationHistory().getSelectedAssets().get(0));
 			}
 		};
 		showAssetAction.setToolTipText(Messages.getString("HierarchyView.show_hierarchy_tooltip")); //$NON-NLS-1$
@@ -756,11 +732,9 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		showCompositesAction = ZoomActionFactory.SHOWCOMPOSITES.create(bars, this);
 		showComponentsAction = addAction(ZoomActionFactory.SHOWCOMPONENTS.create(bars, this));
 		unlinkAction = new Action(Messages.getString("HierarchyView.unlink"), Icons.unlink.getDescriptor()) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
-				IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
-				Object firstElement = sel.getFirstElement();
+				Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
 				if (firstElement instanceof Node) {
 					Node node = (Node) firstElement;
 					Node parent = node.getParent();
@@ -777,14 +751,12 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		unlinkAction.setToolTipText(Messages.getString("HierarchyView.remove_from_hierarchy")); //$NON-NLS-1$
 		descriptionAction = new Action(Messages.getString("HierarchyView.edit_description"), //$NON-NLS-1$
 				Icons.descriptionEdit.getDescriptor()) {
-
 			@Override
 			public void run() {
-				IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
-				Object firstElement = sel.getFirstElement();
+				Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
 				if (firstElement instanceof Node) {
 					Node node = (Node) firstElement;
-					AomObject description = node.getDescription();
+					IIdentifiableObject description = node.getDescription();
 					DescriptionDialog dialog = new DescriptionDialog(getSite().getShell(), description,
 							node.getAsset());
 					if (dialog.open() == Window.OK) {
@@ -822,11 +794,9 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 									|| parmFile.equals(newValues.parameterFile) || createdAt == null
 									|| createdAt.equals(newValues.createdAt);
 						}
-						if (changed) {
-							ModifyRelationLegendOperation op = new ModifyRelationLegendOperation(description,
-									newValues);
-							OperationJob.executeOperation(op, HierarchyView.this);
-						}
+						if (changed)
+							OperationJob.executeOperation(new ModifyRelationLegendOperation(description, newValues),
+									HierarchyView.this);
 					}
 				}
 			}
@@ -879,10 +849,9 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		if (!shell.isDisposed())
 			shell.getDisplay().asyncExec(() -> {
 				if (!shell.isDisposed()) {
-					if (rootNode != null) {
+					if (rootNode != null)
 						for (Node node : rootNode)
 							node.dispose();
-					}
 					if (!viewer.getControl().isDisposed()) {
 						rootNode = new Node[] { new Node(null, asset, type) };
 						viewer.setInput(rootNode);
@@ -893,10 +862,15 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 	}
 
 	public void selectionChanged(SelectionChangedEvent event) {
-		IStructuredSelection selection = (IStructuredSelection) event.getSelection();
-		AssetSelection assetSelection = nodeToAssetSelection(selection);
-		fireSelectionChanged(new SelectionChangedEvent(this, assetSelection));
 		updateActions();
+		IStructuredSelection selection = (IStructuredSelection) event.getSelection();
+		if (cntrlDwn) {
+			Object item = selection.getFirstElement();
+			if (item instanceof Node && descriptionAction.isEnabled())
+				descriptionAction.run();
+			cntrlDwn = false;
+		}
+		fireSelectionChanged(new SelectionChangedEvent(this, nodeToAssetSelection(selection)));
 	}
 
 	private static AssetSelection nodeToAssetSelection(IStructuredSelection selection) {
@@ -921,8 +895,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		super.updateActions();
 		boolean enabled = false;
 		boolean selected = false;
-		IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
-		Object firstElement = sel.getFirstElement();
+		Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
 		if (firstElement instanceof Node) {
 			selected = true;
 			enabled = (((Node) firstElement).getParent() != null);

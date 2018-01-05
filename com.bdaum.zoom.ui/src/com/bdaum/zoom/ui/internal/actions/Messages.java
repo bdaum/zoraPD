@@ -171,8 +171,6 @@ public class Messages extends NLS {
 	public static String SearchSimilarAction_similarity_search;
 	public static String SlideshowActionDelegate_adhoc_slideshow;
 	public static String SplitCatActionDelegate_cannot_split;
-	public static String SplitCatActionDelegate_delete_exported_images;
-	public static String SplitCatActionDelegate_do_you_really_want_to_delete;
 	public static String SplitCatActionDelegate_error_when_splitting;
 	public static String SplitCatActionDelegate_failed_with_problems;
 	public static String SplitCatActionDelegate_finished_with_warnings;

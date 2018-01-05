@@ -20,9 +20,8 @@
 package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.swt.graphics.Image;
-
-import edu.umd.cs.piccolox.swt.PSWTCanvas;
-import edu.umd.cs.piccolox.swt.PSWTImage;
+import org.piccolo2d.extras.swt.PSWTCanvas;
+import org.piccolo2d.extras.swt.PSWTImage;
 
 /**
  * A PSWTImage version that does not dispose received images but leaves that to

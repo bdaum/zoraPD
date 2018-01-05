@@ -77,6 +77,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
@@ -685,7 +686,6 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 				if (qfield != null)
 					fields.add(qfield);
 			}
-			UiUtilities.checkInitialHierarchy(metaViewer, fields);
 		}
 		if (bgColor == null)
 			bgColor = new Rgb_typeImpl(240, 240, 240);
@@ -974,10 +974,10 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		unsupportedFieldMap.put("showmetadata", showMetaButton); //$NON-NLS-1$
 	}
 
-	private static CheckboxTreeViewer createViewerGroup(Composite comp) {
+	private static ContainerCheckedTreeViewer createViewerGroup(Composite comp) {
 		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(comp, SWT.NONE);
 		expandCollapseGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, true, false, 2, 1));
-		final CheckboxTreeViewer viewer = new CheckboxTreeViewer(comp,
+		final ContainerCheckedTreeViewer viewer = new ContainerCheckedTreeViewer(comp,
 				SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
 		expandCollapseGroup.setViewer(viewer);
 		viewer.getTree().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
@@ -987,8 +987,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		viewer.setComparator(new ViewComparator());
 		viewer.setInput(new QueryField[] { QueryField.EXIF_ALL, QueryField.IPTC_ALL });
 		viewer.expandToLevel(2);
-		viewer.addCheckStateListener(
-				(event) -> UiUtilities.checkHierarchy(viewer, event.getElement(), event.getChecked(), true, true));
+		UiUtilities.installDoubleClickExpansion(viewer);
 		return viewer;
 	}
 

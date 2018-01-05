@@ -61,6 +61,7 @@ public class Meta_typeImpl extends AomObject implements Meta_type {
 	 * @param jpegQuality - Property
 	 * @param noIndex - Property
 	 * @param personsToKeywords - Property
+	 * @param lastWatchedFolderScan - Property
 	 */
 	public Meta_typeImpl(int version, int relevantLireVersion,
 			Date creationDate, String owner, String themeID,
@@ -75,7 +76,8 @@ public class Meta_typeImpl extends AomObject implements Meta_type {
 			boolean autoWatch, int sharpen, String locale, String platform,
 			Date lastPicasaScan, int picasaScannerVersion,
 			boolean cumulateImports, boolean webpCompression, int jpegQuality,
-			boolean noIndex, Boolean personsToKeywords) {
+			boolean noIndex, Boolean personsToKeywords,
+			long lastWatchedFolderScan) {
 		super();
 		this.version = version;
 		this.relevantLireVersion = relevantLireVersion;
@@ -113,6 +115,7 @@ public class Meta_typeImpl extends AomObject implements Meta_type {
 		this.jpegQuality = jpegQuality;
 		this.noIndex = noIndex;
 		this.personsToKeywords = personsToKeywords;
+		this.lastWatchedFolderScan = lastWatchedFolderScan;
 
 	}
 
@@ -1657,6 +1660,28 @@ public class Meta_typeImpl extends AomObject implements Meta_type {
 		return vocabularies.get(_i);
 	}
 
+	/* *** Property lastWatchedFolderScan *** */
+
+	private long lastWatchedFolderScan;
+
+	/**
+	 * Set value of property lastWatchedFolderScan
+	 *
+	 * @param _value - new field value
+	 */
+	public void setLastWatchedFolderScan(long _value) {
+		lastWatchedFolderScan = _value;
+	}
+
+	/**
+	 * Get value of property lastWatchedFolderScan
+	 *
+	 * @return - value of field lastWatchedFolderScan
+	 */
+	public long getLastWatchedFolderScan() {
+		return lastWatchedFolderScan;
+	}
+
 	/* ----- Equality ----- */
 
 	/**
@@ -1791,6 +1816,9 @@ public class Meta_typeImpl extends AomObject implements Meta_type {
 
 				&& ((getVocabularies() == null && other.getVocabularies() == null) || (getVocabularies() != null && getVocabularies()
 						.equals(other.getVocabularies())))
+
+				&& getLastWatchedFolderScan() == other
+						.getLastWatchedFolderScan()
 
 		;
 	}
@@ -1956,6 +1984,10 @@ public class Meta_typeImpl extends AomObject implements Meta_type {
 				* hashCode
 				+ ((getVocabularies() == null) ? 0 : getVocabularies()
 						.hashCode());
+
+		hashCode = 31
+				* hashCode
+				+ (int) (getLastWatchedFolderScan() ^ (getLastWatchedFolderScan() >>> 32));
 
 		return hashCode;
 	}

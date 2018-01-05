@@ -85,9 +85,9 @@
 		<topic label="Allgemein" href="html/reference/generalPrefs.html" />
   <topic href="html/reference/applicationPrefs.html" label="Anwendung">
   </topic>
-  <topic href="html/reference/appearancePrefs.html" label="Darstellung">
-  </topic>
   <topic href="html/reference/audioPrefs.html" label="Audio">
+  </topic>
+  <topic href="html/reference/appearancePrefs.html" label="Darstellung">
   </topic>
   <topic href="html/reference/fileAssociations.html" label="Externe Programme">
   </topic>
@@ -95,15 +95,17 @@
   </topic>
   <topic href="html/reference/catPrefs.html" label="Katalog">
   </topic>
-  <topic href="html/reference/mousePrefs.html" label="Maus">
-  </topic>
   <topic href="html/reference/metadataPrefs.html" label="Metadaten">
   </topic>
-  <topic href="html/reference/keywordPrefs.html" label="Schlagworte">
+  <topic href="html/reference/mousePrefs.html" label="Maus">
   </topic>
   <topic href="html/reference/perspectivePrefs.html" label="Perspektiven">
   </topic>
+  <topic href="html/reference/keywordPrefs.html" label="Schlagworte">
+  </topic>
   <topic href="html/reference/keyPrefs.html" label="Tastenkürzel">
+  </topic>
+  <topic href="html/reference/vocabPrefs.html" label="Vocabulary">
   </topic>
   <anchor id="preferences"/>
  </topic>

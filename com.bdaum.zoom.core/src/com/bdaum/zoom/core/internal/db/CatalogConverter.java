@@ -79,16 +79,13 @@ public class CatalogConverter {
 				String format = asset.getFormat();
 				if (format == null || format.isEmpty()) {
 					String uri = asset.getUri();
-					int p = uri.lastIndexOf('.');
-					if (p > 0) {
-						String ext = uri.substring(p + 1).toLowerCase();
-						String f = ImageConstants.getRawFormatDescription(ext);
-						if (f != null) {
-							asset.setFormat(f);
-							asset.setMimeType("image/x-raw"); //$NON-NLS-1$
-							asset.setDigitalZoomRatio(Double.NaN);
-							update = true;
-						}
+					String ext = Core.getFileExtension(uri);
+					String f = ImageConstants.getRawFormatDescription(ext);
+					if (f != null) {
+						asset.setFormat(f);
+						asset.setMimeType("image/x-raw"); //$NON-NLS-1$
+						asset.setDigitalZoomRatio(Double.NaN);
+						update = true;
 					}
 				}
 				if (update) {

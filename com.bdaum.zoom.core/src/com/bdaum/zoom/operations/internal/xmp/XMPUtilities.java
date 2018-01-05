@@ -167,9 +167,8 @@ public class XMPUtilities {
 						} else {
 							PropertyOptions options = prop.getOptions();
 							if (options.isArray() || options.isArrayAlternate() || options.isArrayAltText()
-									|| options.isArrayOrdered()) {
+									|| options.isArrayOrdered())
 								arrayNameSpace = namespace;
-							}
 						}
 					}
 				}
@@ -277,14 +276,14 @@ public class XMPUtilities {
 										if (qchild.getCard() != 1 && structValue instanceof String[]) {
 											xmpMeta.setStructField(xmpNs, structPath, childNs.uri, childPath, null,
 													optionsArray);
-											String qChildPath = structPath + "/" //$NON-NLS-1$
-													+ childNs.defaultPrefix + childPath;
+											String qChildPath = new StringBuilder().append(structPath).append('/')
+													.append(childNs.defaultPrefix).append(':').append(childPath)
+													.toString();
 											String[] array = (String[]) structValue;
-											for (int i = 0; i < array.length; i++) {
+											for (int i = 0; i < array.length; i++)
 												if (array[i] != null && !array[i].isEmpty())
 													xmpMeta.appendArrayItem(xmpNs, qChildPath, optionsArray, array[i],
 															null);
-											}
 										} else if (!structValue.equals(qchild.getDefaultValue())) {
 											if (structValue instanceof MWGRegion)
 												writeMwgRegion(xmpMeta, asset, xmpNs, path, si == 1, structPath,
@@ -304,11 +303,10 @@ public class XMPUtilities {
 					xmpMeta.deleteProperty(xmpNs, path);
 					if (fieldValue instanceof int[]) {
 						int[] array = (int[]) fieldValue;
-						for (int i = 0; i < array.length; i++) {
+						for (int i = 0; i < array.length; i++)
 							if (array[i] != 0)
 								xmpMeta.appendArrayItem(xmpNs, path, new PropertyOptions(PropertyOptions.ARRAY_ORDERED),
 										String.valueOf(array[i]), null);
-						}
 					} else if (fieldValue instanceof boolean[]) {
 						boolean[] array = (boolean[]) fieldValue;
 						for (int i = 0; i < array.length; i++) {
@@ -337,7 +335,9 @@ public class XMPUtilities {
 						String group = path.substring(0, p);
 						path = path.substring(p + 1);
 						p = path.indexOf(':');
-						String fieldNs = p >= 0 ? XMPMetaFactory.getSchemaRegistry().getNamespaceURI(path.substring(0, p)) : xmpNs;
+						String fieldNs = p >= 0
+								? XMPMetaFactory.getSchemaRegistry().getNamespaceURI(path.substring(0, p))
+								: xmpNs;
 						xmpMeta.deleteStructField(xmpNs, group, fieldNs, path);
 						if (value != null && !value.equals(queryField.getDefaultValue()))
 							xmpMeta.setStructField(xmpNs, group, xmpNs, path, value.toString());
@@ -418,12 +418,10 @@ public class XMPUtilities {
 						&& v < 0)
 					return null;
 			} else if (obj instanceof Integer) {
-				int v = (Integer) obj;
-				if (qfield.getType() == QueryField.T_POSITIVEINTEGER && v < 0)
+				if (qfield.getType() == QueryField.T_POSITIVEINTEGER && (Integer) obj < 0)
 					return null;
 			} else if (obj instanceof Long) {
-				long v = (Long) obj;
-				if (qfield.getType() == QueryField.T_POSITIVELONG && v < 0)
+				if (qfield.getType() == QueryField.T_POSITIVELONG && (Long) obj < 0)
 					return null;
 			} else if (obj instanceof Date) {
 				GregorianCalendar cal = new GregorianCalendar();
@@ -498,9 +496,7 @@ public class XMPUtilities {
 	}
 
 	private static int readWord(byte[] buf, int i) {
-		int high = buf[i] & 0x000000ff;
-		int low = buf[i + 1] & 0x000000ff;
-		return (high << 8) + low;
+		return ((buf[i] & 0x000000ff) << 8) + (buf[i + 1] & 0x000000ff);
 	}
 
 	private static void writeWord(byte[] buf, int i, int v) {

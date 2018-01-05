@@ -87,8 +87,10 @@ public class SplitCatOperation extends AbstractCloneCatOperation {
 	@Override
 	public IStatus execute(IProgressMonitor aMonitor, IAdaptable info) throws ExecutionException {
 		Collection<ICatalogContributor> contributors = CoreActivator.getDefault().getCatalogContributors();
+		List<SmartCollectionImpl> collections = dbManager.obtainObjects(SmartCollectionImpl.class);
+		final int nb = collections.size();
 		final int na = selectedAssets.size();
-		init(aMonitor, na * 2000 + 2000 + 1000 * contributors.size());
+		init(aMonitor, na * 2000 + nb * 1000 + 2000 + 1000 * contributors.size());
 		aMonitor.subTask(Messages.getString("SplitCatOperation.preparing_cat")); //$NON-NLS-1$
 		final Meta oldMeta = dbManager.getMeta(true);
 		Meta newMeta = newDbManager.getMeta(true);
@@ -174,8 +176,9 @@ public class SplitCatOperation extends AbstractCloneCatOperation {
 			}
 		}
 		aMonitor.subTask(Messages.getString("SplitCatOperation.transfering_collections")); //$NON-NLS-1$
-		lp: for (SmartCollectionImpl coll : dbManager.obtainObjects(SmartCollectionImpl.class)) {
+		lp: for (SmartCollectionImpl coll : collections) {
 			if (!coll.getSystem() || coll.getAlbum()) {
+				aMonitor.subTask(NLS.bind(Messages.getString("SplitCatOperation.transferring_collection"), coll.getName()));  //$NON-NLS-1$
 				SmartCollection parent = coll;
 				while (parent != null) {
 					if (parent.getSmartCollection_subSelection_parent() != null)
@@ -188,11 +191,14 @@ public class SplitCatOperation extends AbstractCloneCatOperation {
 						for (Object object : toBeStored)
 							newDbManager.store(object);
 						newDbManager.commit();
+						toBeStored.clear();
 						if (aMonitor.isCanceled())
 							return abort();
+						break;
 					}
 				}
 			}
+			aMonitor.worked(1000);
 		}
 		if (aMonitor.isCanceled())
 			return abort();
@@ -323,5 +329,5 @@ public class SplitCatOperation extends AbstractCloneCatOperation {
 	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
 		// do nothing
 	}
-
+	
 }

@@ -146,6 +146,48 @@ public interface Slide_type extends AomValueChangedNotifier,
 	public int getEffect();
 
 	/**
+	 * Set value of property zoom
+	 *
+	 * @param _value - new element value
+	 */
+	public void setZoom(int _value);
+
+	/**
+	 * Get value of property zoom
+	 *
+	 * @return - value of field zoom
+	 */
+	public int getZoom();
+
+	/**
+	 * Set value of property zoomX
+	 *
+	 * @param _value - new element value
+	 */
+	public void setZoomX(int _value);
+
+	/**
+	 * Get value of property zoomX
+	 *
+	 * @return - value of field zoomX
+	 */
+	public int getZoomX();
+
+	/**
+	 * Set value of property zoomY
+	 *
+	 * @param _value - new element value
+	 */
+	public void setZoomY(int _value);
+
+	/**
+	 * Get value of property zoomY
+	 *
+	 * @return - value of field zoomY
+	 */
+	public int getZoomY();
+
+	/**
 	 * Set value of property noVoice
 	 *
 	 * @param _value - new element value

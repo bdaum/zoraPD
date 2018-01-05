@@ -68,6 +68,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.piccolo2d.util.PAffineTransform;
+import org.piccolo2d.util.PAffineTransformException;
 
 import com.bdaum.zoom.batch.internal.ExifTool;
 import com.bdaum.zoom.batch.internal.IFileWatcher;
@@ -89,23 +91,18 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.hover.HoverInfo;
-import com.bdaum.zoom.ui.internal.hover.IHoverInfo;
 import com.bdaum.zoom.ui.internal.widgets.FadingShell;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
-import com.bdaum.zoom.ui.views.IImageViewer;
-
-import edu.umd.cs.piccolo.util.PAffineTransform;
-import edu.umd.cs.piccolo.util.PAffineTransformException;
+import com.bdaum.zoom.ui.views.IMediaViewer;
 
 @SuppressWarnings("restriction")
-public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiConstants, DisposeListener {
+public class ImageViewer implements KeyListener, IMediaViewer, HelpListener, UiConstants, DisposeListener {
 
 	private static final long USEPREVIEWTHRESHOLD = 4000000L;
 	private static final double MAXZOOM = 4d;
 	private static final int INCREMENT = 10;
 	private static final int PAGEINCREMENT = 100;
 	protected static final int HOTSPOTSIZE = 48;
-	private static final Point pnt = new Point(0, 0);
 
 	private final class InertiaMousePanListener implements MouseListener, MouseMoveListener {
 		double xSpeed, ySpeed;
@@ -687,11 +684,9 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 				gc.setBackground(shell.getBackground());
 				gc.fillRectangle(sbnds);
 				if (!highResVisible) {
-					Image im;
-					if (previewImage != null)
-						im = previewImage.getSwtImage(display, false, ZImage.UNCROPPED, SWT.DEFAULT, SWT.DEFAULT);
-					else
-						im = bwmode != null ? getBwImage(asset, bwmode) : getImage(asset);
+					Image im = previewImage != null
+							? previewImage.getSwtImage(display, false, ZImage.UNCROPPED, SWT.DEFAULT, SWT.DEFAULT)
+							: bwmode != null ? getBwImage(asset, bwmode) : getImage(asset);
 					if (im != null) {
 						Rectangle ibnds = im.getBounds();
 						double factor = Math.min((double) sbnds.width / ibnds.width,
@@ -773,10 +768,8 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 					viewTransform.inverseTransform(rectSrc, rectDst);
 					int cropWidth = Math.min((int) (rectDst.getWidth()), ibounds.width);
 					int cropHeight = Math.min((int) (rectDst.getHeight()), ibounds.height);
-					int maxX = ibounds.width - cropWidth;
-					int maxY = ibounds.height - cropHeight;
-					int cropXoffset = Math.max(0, Math.min(maxX, (int) (rectDst.getX())));
-					int cropYoffset = Math.max(0, Math.min(maxY, (int) (rectDst.getY())));
+					int cropXoffset = Math.max(0, Math.min(ibounds.width - cropWidth, (int) (rectDst.getX())));
+					int cropYoffset = Math.max(0, Math.min(ibounds.height - cropHeight, (int) (rectDst.getY())));
 					if (advanced) {
 						gc.setAntialias(SWT.ON);
 						gc.setInterpolation(SWT.HIGH);
@@ -788,7 +781,6 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 						UiActivator.getDefault().logError(Messages.getString("ImageViewer.error_when_resizing"), //$NON-NLS-1$
 								e1);
 					}
-
 					gc.setBackground(topShell.getShell().getBackground());
 					if (canvasXoffset > 0)
 						gc.fillRectangle(0, 0, canvasXoffset, sbounds.height);
@@ -800,7 +792,6 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 					if (canvasYoffset + canvasHeight < sbounds.height)
 						gc.fillRectangle(0, canvasYoffset + canvasHeight, sbounds.width,
 								sbounds.height - (canvasYoffset + canvasHeight));
-
 				}
 
 			}
@@ -950,15 +941,11 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 			return;
 		oldTime = time;
 		oldKeyCode = e.keyCode;
-		if (e.character == Messages.getString("ImageViewer.w").charAt(0)) { //$NON-NLS-1$
-			Rectangle sbounds = topShell.getBounds();
-			double factor = (double) ibounds.width / sbounds.width;
-			fix(factor, mousePoint.x, mousePoint.y);
-		} else if (e.character == Messages.getString("ImageViewer.h").charAt(0)) { //$NON-NLS-1$
-			Rectangle sbounds = topShell.getBounds();
-			double factor = (double) ibounds.height / sbounds.height;
-			fix(factor, mousePoint.x, mousePoint.y);
-		} else
+		if (e.character == Messages.getString("ImageViewer.w").charAt(0)) //$NON-NLS-1$
+			fix((double) ibounds.width / topShell.getBounds().width, mousePoint.x, mousePoint.y);
+		else if (e.character == Messages.getString("ImageViewer.h").charAt(0)) //$NON-NLS-1$
+			fix((double) ibounds.height / topShell.getBounds().height, mousePoint.x, mousePoint.y);
+		else
 			switch (e.character) {
 			case SWT.TAB:
 				if (highResVisible)
@@ -1109,9 +1096,7 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	}
 
 	private void zoom(double factor, double x, double y) {
-		double vx = viewTransform.getTranslateX();
-		double vy = viewTransform.getTranslateY();
-		zoomDelta(1d + factor * 0.01d, x - vx, y - vy);
+		zoomDelta(1d + factor * 0.01d, x - viewTransform.getTranslateX(), y - viewTransform.getTranslateY());
 	}
 
 	private void fix(double ratio, double x, double y) {
@@ -1170,24 +1155,20 @@ public class ImageViewer implements KeyListener, IImageViewer, HelpListener, UiC
 	public void helpRequested(HelpEvent e) {
 		ToolTip toolTip = new ToolTip(topShell.getShell(), SWT.BALLOON);
 		toolTip.setAutoHide(true);
-		pnt.x = pnt.y = 0;
-		toolTip.setLocation(pnt);
+		Rectangle mbounds = UiUtilities.getSecondaryMonitorBounds(shell);
+		toolTip.setLocation(mbounds.x, mbounds.y);
 		toolTip.setText(Messages.getString("ImageViewer.image_viewer")); //$NON-NLS-1$
 		toolTip.setMessage(getKeyboardHelp(true));
 		toolTip.setVisible(true);
 	}
 
 	private void metadataRequested(Asset asset) {
-		Shell shell = topShell.getShell();
-		ToolTip toolTip = new ToolTip(shell, SWT.BALLOON);
+		ToolTip toolTip = new ToolTip(topShell.getShell(), SWT.BALLOON);
 		toolTip.setAutoHide(true);
-		Rectangle bounds = shell.getDisplay().getPrimaryMonitor().getBounds();
-		pnt.x = bounds.width / 2;
-		pnt.y = bounds.height / 2;
-		toolTip.setLocation(pnt);
+		Rectangle mbounds = UiUtilities.getSecondaryMonitorBounds(shell);
+		toolTip.setLocation(mbounds.x + mbounds.width / 2, mbounds.y + mbounds.height / 2);
 		toolTip.setText(NLS.bind(Messages.getString("SlideShowPlayer.metadata"), asset.getName())); //$NON-NLS-1$
-		IHoverInfo hover = new HoverInfo(asset, null, UiActivator.getDefault().getHoverNodes());
-		toolTip.setMessage(hover.getText());
+		toolTip.setMessage(new HoverInfo(asset, null, UiActivator.getDefault().getHoverNodes()).getText());
 		toolTip.setVisible(true);
 	}
 

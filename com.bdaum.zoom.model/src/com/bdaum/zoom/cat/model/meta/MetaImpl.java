@@ -62,6 +62,7 @@ public class MetaImpl extends Meta_typeImpl implements Meta {
 	 * @param jpegQuality - Property
 	 * @param noIndex - Property
 	 * @param personsToKeywords - Property
+	 * @param lastWatchedFolderScan - Property
 	 */
 	public MetaImpl(int version, int relevantLireVersion, Date creationDate,
 			String owner, String themeID, String description,
@@ -75,7 +76,8 @@ public class MetaImpl extends Meta_typeImpl implements Meta {
 			boolean readonly, boolean autoWatch, int sharpen, String locale,
 			String platform, Date lastPicasaScan, int picasaScannerVersion,
 			boolean cumulateImports, boolean webpCompression, int jpegQuality,
-			boolean noIndex, Boolean personsToKeywords) {
+			boolean noIndex, Boolean personsToKeywords,
+			long lastWatchedFolderScan) {
 		super(version, relevantLireVersion, creationDate, owner, themeID,
 				description, userFieldLabel1, userFieldLabel2, timeline,
 				locationFolders, lastImport, lastSequenceNo,
@@ -85,7 +87,7 @@ public class MetaImpl extends Meta_typeImpl implements Meta {
 				pauseFolderWatch, folderWatchLatency, cleaned, readonly,
 				autoWatch, sharpen, locale, platform, lastPicasaScan,
 				picasaScannerVersion, cumulateImports, webpCompression,
-				jpegQuality, noIndex, personsToKeywords);
+				jpegQuality, noIndex, personsToKeywords, lastWatchedFolderScan);
 
 	}
 

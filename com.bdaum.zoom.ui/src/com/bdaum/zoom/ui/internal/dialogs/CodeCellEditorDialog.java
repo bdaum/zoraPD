@@ -32,12 +32,12 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 	private Button removeButton;
 	private Button upButton;
 	private Button downButton;
+	private QueryField qfield;
 
-	public CodeCellEditorDialog(Shell parentShell, Object value,
-			QueryField qfield) {
+	public CodeCellEditorDialog(Shell parentShell, Object value, QueryField qfield) {
 		super(parentShell, value, qfield);
-		this.codeParser = UiActivator.getDefault().getCodeParser(
-				(Integer) qfield.getEnumeration());
+		this.qfield = qfield;
+		this.codeParser = UiActivator.getDefault().getCodeParser((Integer) qfield.getEnumeration());
 	}
 
 	@Override
@@ -56,8 +56,7 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 		} else {
 			removeButton.setEnabled(true);
 			String[] old = (String[]) value;
-			String element = (String) ((IStructuredSelection) selection)
-					.getFirstElement();
+			String element = (String) ((IStructuredSelection) selection).getFirstElement();
 			for (int i = 0; i < old.length; i++)
 				if (element.equals(old[i])) {
 					upButton.setEnabled(i > 0);
@@ -73,8 +72,7 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 		Composite composite = new Composite(area, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(2, false));
-		viewer = new ListViewer(composite, SWT.V_SCROLL | SWT.SINGLE
-				| SWT.BORDER);
+		viewer = new ListViewer(composite, SWT.V_SCROLL | SWT.SINGLE | SWT.BORDER);
 		viewer.getControl().setLayoutData(new GridData(GridData.FILL_BOTH));
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
 		viewer.setLabelProvider(new ZColumnLabelProvider() {
@@ -84,8 +82,7 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 					if (codeParser.canParse()) {
 						Topic topic = codeParser.findTopic((String) element);
 						if (topic != null)
-							return new StringBuilder((String) element)
-									.append(" (").append(topic.getName()) //$NON-NLS-1$
+							return new StringBuilder((String) element).append(" (").append(topic.getName()) //$NON-NLS-1$
 									.append(')').toString();
 					}
 				}
@@ -99,48 +96,40 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 			}
 		});
 		Composite buttonGroup = new Composite(composite, SWT.NONE);
-		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false,
-				false));
+		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, false));
 		buttonGroup.setLayout(new GridLayout());
 		Button addButton = new Button(buttonGroup, SWT.PUSH);
-		addButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING,
-				false, false));
+		addButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		addButton.setText(Messages.CodeCellEditorDialog_add);
 		addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				String[] old = (String[]) value;
-				CodesDialog dialog = new CodesDialog(getShell(), codeParser,
-						null, old);
+				CodesDialog dialog = new CodesDialog(getShell(), qfield, null, old);
 				if (dialog.open() == OK) {
 					String newCode = dialog.getResult();
-					value = Utilities.addToStringArray(newCode, old, false);
-					viewer.setInput(value);
+					viewer.setInput(value = Utilities.addToStringArray(newCode, old, false));
 					viewer.setSelection(new StructuredSelection(newCode));
 					updateButtons();
 				}
 			}
 		});
 		removeButton = new Button(buttonGroup, SWT.PUSH);
-		removeButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING,
-				false, false));
+		removeButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		removeButton.setText(Messages.CodeCellEditorDialog_remove);
 		removeButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ISelection selection = viewer.getSelection();
 				if (!selection.isEmpty()) {
-					String element = (String) ((IStructuredSelection) selection)
-							.getFirstElement();
+					String element = (String) ((IStructuredSelection) selection).getFirstElement();
 					String[] old = (String[]) value;
 					for (int i = 0; i < old.length; i++) {
 						if (element.equals(old[i])) {
 							String[] newValue = new String[old.length - 1];
 							System.arraycopy(old, 0, newValue, 0, i);
-							System.arraycopy(old, i + 1, newValue, i,
-									newValue.length - i);
-							value = newValue;
-							viewer.setInput(value);
+							System.arraycopy(old, i + 1, newValue, i, newValue.length - i);
+							viewer.setInput(value = newValue);
 							updateButtons();
 							break;
 						}
@@ -149,16 +138,14 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 			}
 		});
 		upButton = new Button(buttonGroup, SWT.PUSH);
-		upButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING,
-				false, false));
+		upButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		upButton.setText(Messages.CodeCellEditorDialog_up);
 		upButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ISelection selection = viewer.getSelection();
 				if (!selection.isEmpty()) {
-					String element = (String) ((IStructuredSelection) selection)
-							.getFirstElement();
+					String element = (String) ((IStructuredSelection) selection).getFirstElement();
 					String[] old = (String[]) value;
 					for (int i = 0; i < old.length; i++) {
 						if (element.equals(old[i])) {
@@ -166,8 +153,7 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 								String replaced = old[i - 1];
 								old[i - 1] = old[i];
 								old[i] = replaced;
-								value = old;
-								viewer.setInput(value);
+								viewer.setInput(value = old);
 								viewer.setSelection(selection);
 								updateButtons();
 							}
@@ -178,16 +164,14 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 			}
 		});
 		downButton = new Button(buttonGroup, SWT.PUSH);
-		downButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING,
-				false, false));
+		downButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		downButton.setText(Messages.CodeCellEditorDialog_down);
 		downButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ISelection selection = viewer.getSelection();
 				if (!selection.isEmpty()) {
-					String element = (String) ((IStructuredSelection) selection)
-							.getFirstElement();
+					String element = (String) ((IStructuredSelection) selection).getFirstElement();
 					String[] old = (String[]) value;
 					for (int i = 0; i < old.length; i++) {
 						if (element.equals(old[i])) {
@@ -195,8 +179,7 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 								String replaced = old[i + 1];
 								old[i + 1] = old[i];
 								old[i] = replaced;
-								value = old;
-								viewer.setInput(value);
+								viewer.setInput(value = old);
 								viewer.setSelection(selection);
 								updateButtons();
 							}

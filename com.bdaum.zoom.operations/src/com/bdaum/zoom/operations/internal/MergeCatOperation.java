@@ -538,6 +538,7 @@ public class MergeCatOperation extends AbstractCloneCatOperation {
 		}
 		externalDb.close(CatalogListener.NORMAL);
 		fireStructureModified();
+		fireAssetsModified(null, null);
 		return close(info, assetsToIndex);
 	}
 

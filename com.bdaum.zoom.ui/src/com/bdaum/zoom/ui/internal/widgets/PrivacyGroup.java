@@ -60,14 +60,12 @@ public class PrivacyGroup {
 					break;
 				}
 			}
-		int columns = -1;
-		Layout layout = parent.getLayout();
-		if (layout instanceof GridLayout)
-			columns = ((GridLayout) layout).numColumns;
 		privacyButtonGroup = new RadioButtonGroup(parent, lab, SWT.HORIZONTAL, Messages.PrivacyGroup_public,
 				Messages.PrivacyGroup_publicMedium, Messages.PrivacyGroup_all);
-		if (columns >= 0)
-			privacyButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, columns, 1));
+		Layout layout = parent.getLayout();
+		if (layout instanceof GridLayout)
+			privacyButtonGroup.setLayoutData(
+					new GridData(SWT.FILL, SWT.BEGINNING, true, false, ((GridLayout) layout).numColumns, 1));
 		updateButtons();
 	}
 
@@ -99,12 +97,14 @@ public class PrivacyGroup {
 	}
 
 	public int getSelection() {
-		int selection = privacyButtonGroup.getSelection();
-		if (selection == 0)
+		switch (privacyButtonGroup.getSelection()) {
+		case 0:
 			return QueryField.SAFETY_SAFE;
-		if (selection == 1)
+		case 1:
 			return QueryField.SAFETY_MODERATE;
-		return QueryField.SAFETY_RESTRICTED;
+		default:
+			return QueryField.SAFETY_RESTRICTED;
+		}
 	}
 
 	public void setEnabled(boolean enabled) {

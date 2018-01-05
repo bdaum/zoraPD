@@ -35,15 +35,19 @@ public class SlideImpl extends Slide_typeImpl implements Slide {
 	 * @param duration - Property
 	 * @param fadeOut - Property
 	 * @param effect - Property
+	 * @param zoom - Property
+	 * @param zoomX - Property
+	 * @param zoomY - Property
 	 * @param noVoice - Property
 	 * @param safety - Property
 	 * @param asset - Arc
 	 */
 	public SlideImpl(String caption, int sequenceNo, String description,
 			int layout, int delay, int fadeIn, int duration, int fadeOut,
-			int effect, boolean noVoice, int safety, String asset) {
+			int effect, int zoom, int zoomX, int zoomY, boolean noVoice,
+			int safety, String asset) {
 		super(caption, sequenceNo, description, layout, delay, fadeIn,
-				duration, fadeOut, effect, noVoice, safety);
+				duration, fadeOut, effect, zoom, zoomX, zoomY, noVoice, safety);
 		this.asset = asset;
 
 	}
