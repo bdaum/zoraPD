@@ -44,11 +44,10 @@ import com.bdaum.zoom.image.recipe.UnsharpMask;
 
 public class ImageActivator extends Plugin {
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.image"; //$NON-NLS-1$
 
-	// The shared instance
 	private static ImageActivator plugin;
+
 	private ICC_ProfileRGB SRGB_ICC;
 	private ICC_ProfileRGB ARGB_ICC;
 	private ColorConvertOp COLORCONVERTOP_SRGB2ARGB;
@@ -60,22 +59,19 @@ public class ImageActivator extends Plugin {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.core.runtime.Plugins#start(org.osgi.framework.BundleContext)
+	 * @see org.eclipse.core.runtime.Plugins#start(org.osgi.framework.BundleContext)
 	 */
 
 	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
-		registerImageIOPlugins();
 	}
 
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.core.runtime.Plugin#stop(org.osgi.framework.BundleContext)
+	 * @see org.eclipse.core.runtime.Plugin#stop(org.osgi.framework.BundleContext)
 	 */
 
 	@Override
@@ -167,8 +163,7 @@ public class ImageActivator extends Plugin {
 				for (IConfigurationElement conf : extension.getConfigurationElements())
 					try {
 						IImportFilterFactory filter = (IImportFilterFactory) conf.createExecutableExtension("class"); //$NON-NLS-1$
-						String extensions = conf.getAttribute("extensions"); //$NON-NLS-1$
-						StringTokenizer st = new StringTokenizer(extensions);
+						StringTokenizer st = new StringTokenizer(conf.getAttribute("extensions")); //$NON-NLS-1$
 						while (st.hasMoreTokens())
 							importFilters.put(st.nextToken().toLowerCase(), filter);
 					} catch (CoreException e) {
@@ -193,9 +188,9 @@ public class ImageActivator extends Plugin {
 	}
 
 	public List<String> getImportedNames() {
-		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "importFilter"); //$NON-NLS-1$
 		List<String> result = new ArrayList<>();
-		for (IExtension extension : extensionPoint.getExtensions())
+		for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "importFilter") //$NON-NLS-1$
+				.getExtensions())
 			for (IConfigurationElement conf : extension.getConfigurationElements()) {
 				StringBuffer sb = new StringBuffer();
 				sb.append(conf.getAttribute("name")).append(" ("); //$NON-NLS-1$ //$NON-NLS-2$
@@ -205,8 +200,7 @@ public class ImageActivator extends Plugin {
 					if (st.hasMoreTokens())
 						sb.append(", "); //$NON-NLS-1$
 				}
-				sb.append(')');
-				result.add(sb.toString());
+				result.add(sb.append(')').toString());
 			}
 		return result;
 	}
@@ -219,10 +213,8 @@ public class ImageActivator extends Plugin {
 
 	private File getTempFolder() {
 		if (tempFolder == null || !tempFolder.exists()) {
-			StringBuilder sb = new StringBuilder();
-			sb.append(System.getProperty("java.io.tmpdir")).append('/') //$NON-NLS-1$
-					.append(ImageConstants.APPNAME).append('_').append(System.getProperty("user.name")); //$NON-NLS-1$
-			tempFolder = new File(sb.toString());
+			tempFolder = new File(new StringBuilder().append(System.getProperty("java.io.tmpdir")).append('/') //$NON-NLS-1$
+					.append(ImageConstants.APPNAME).append('_').append(System.getProperty("user.name")).toString()); //$NON-NLS-1$
 			tempFolder.mkdirs();
 			tempFolder.deleteOnExit();
 		}
@@ -248,7 +240,7 @@ public class ImageActivator extends Plugin {
 		}
 	}
 
-	private void registerImageIOPlugins() {
+	public void registerImageIOPlugins() {
 		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "imageIOplugins"); //$NON-NLS-1$
 		IIORegistry registry = IIORegistry.getDefaultInstance();
 		for (IExtension extension : extensionPoint.getExtensions())
@@ -256,7 +248,8 @@ public class ImageActivator extends Plugin {
 				try {
 					registry.registerServiceProvider(conf.createExecutableExtension("class")); //$NON-NLS-1$
 				} catch (CoreException e) {
-					logError(NLS.bind(Messages.ImageActivator_cannot_intantiate_imageio_provider, conf.getAttribute("name")), e); //$NON-NLS-1$
+					logError(NLS.bind(Messages.ImageActivator_cannot_intantiate_imageio_provider,
+							conf.getAttribute("name")), e); //$NON-NLS-1$
 				}
 	}
 

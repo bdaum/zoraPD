@@ -28,20 +28,20 @@ import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.cat.model.meta.WatchedFolder;
 import com.bdaum.zoom.cat.model.meta.WatchedFolderImpl;
+import com.bdaum.zoom.common.internal.IniReader;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
-import com.bdaum.zoom.core.internal.IniReader;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.fileMonitor.internal.filefilter.FilterChain;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
-import com.bdaum.zoom.ui.job.UiDaemon;
+import com.bdaum.zoom.ui.job.AbstractUiDaemon;
 
 @SuppressWarnings("restriction")
-public class SyncPicasaJob extends UiDaemon {
+public class SyncPicasaJob extends AbstractUiDaemon {
 
 	private static final String EMAIL = "email"; //$NON-NLS-1$
 
@@ -114,7 +114,7 @@ public class SyncPicasaJob extends UiDaemon {
 						if (monitor.isCanceled())
 							return;
 						monitor.worked(1);
-						if (watchedFolders != null && watchedFolders.length > 0) {
+						if (watchedFolders != null && watchedFolders.length > 0)
 							for (WatchedFolder wf : watchedFolders) {
 								File folderFile = volumeManager.findExistingFile(wf.getUri(), wf.getVolume());
 								if (folderFile != null) {
@@ -127,7 +127,6 @@ public class SyncPicasaJob extends UiDaemon {
 									monitor.worked(1);
 								}
 							}
-						}
 					} else
 						monitor.beginTask(Messages.SyncPicasaJob_scanning_face_data, 1);
 					meta.setLastPicasaScan(now);

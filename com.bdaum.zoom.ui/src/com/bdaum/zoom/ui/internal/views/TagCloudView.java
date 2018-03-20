@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014-2917 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2014-2917 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.views;
 
@@ -131,8 +131,7 @@ public class TagCloudView extends ViewPart implements IDbListener {
 
 		@Override
 		public void run() {
-			occurrences = size;
-			viewer.setMaxWords(occurrences);
+			viewer.setMaxWords(occurrences = size);
 			refresh(true);
 		}
 
@@ -179,7 +178,6 @@ public class TagCloudView extends ViewPart implements IDbListener {
 	private SizeAction s50Action;
 	private SizeAction s100Action;
 	private SizeAction s200Action;
-	// private Action fontAction;
 	private Color[] colors;
 	private FontData[][] dialogFontDatas = new FontData[][] { JFaceResources.getBannerFont().getFontData(),
 			JFaceResources.getDefaultFont().getFontData(), JFaceResources.getDialogFont().getFontData(),
@@ -431,8 +429,7 @@ public class TagCloudView extends ViewPart implements IDbListener {
 					word));
 			boolean selected = false;
 			StringBuilder sb = new StringBuilder();
-			Iterator<?> iterator = selection.iterator();
-			while (iterator.hasNext()) {
+			for (Iterator<?> iterator = selection.iterator(); iterator.hasNext();) {
 				if (sb.length() > 0)
 					sb.append(" AND "); //$NON-NLS-1$
 				ScoredString ss = (ScoredString) iterator.next();
@@ -455,8 +452,7 @@ public class TagCloudView extends ViewPart implements IDbListener {
 	}
 
 	private void contributeToActionBars() {
-		IViewSite viewSite = getViewSite();
-		IActionBars bars = viewSite.getActionBars();
+		IActionBars bars = getViewSite().getActionBars();
 		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
 	}
@@ -464,20 +460,14 @@ public class TagCloudView extends ViewPart implements IDbListener {
 	private void hookDoubleClickAction() {
 		cloud.addListener(SWT.MouseDoubleClick, new Listener() {
 			public void handleEvent(Event event) {
-				if ((stateMask & SWT.CTRL) != 0)
-					searchAllAction.run();
-				else
-					searchOneAction.run();
+				((stateMask & SWT.CTRL) != 0 ? searchAllAction : searchOneAction).run();
 			}
 		});
 	}
 
 	protected void fillContextMenu(IMenuManager manager) {
 		if (mouseData != null) {
-			if (selection.toList().contains(mouseData))
-				manager.add(deselectAction);
-			else
-				manager.add(selectAction);
+			manager.add(selection.toList().contains(mouseData) ? deselectAction : selectAction);
 			manager.add(new Separator());
 			manager.add(searchOneAction);
 			if (!selection.isEmpty() && !(selection.size() == 1 && selection.getFirstElement().equals(mouseData)))
@@ -495,7 +485,7 @@ public class TagCloudView extends ViewPart implements IDbListener {
 			contextMenuMgr.setRemoveAllWhenShown(true);
 			contextMenuMgr.addMenuListener(new IMenuListener() {
 				public void menuAboutToShow(IMenuManager manager) {
-					TagCloudView.this.fillContextMenu(manager);
+					fillContextMenu(manager);
 					manager.updateAll(true);
 				}
 			});
@@ -626,8 +616,7 @@ public class TagCloudView extends ViewPart implements IDbListener {
 					@SuppressWarnings("unchecked")
 					List<ScoredString> list = new ArrayList<ScoredString>(selection.toList());
 					list.add(mouseData);
-					selection = new StructuredSelection(list);
-					viewer.setSelection(selection);
+					viewer.setSelection(selection = new StructuredSelection(list));
 					updateActions();
 				}
 			}
@@ -640,8 +629,7 @@ public class TagCloudView extends ViewPart implements IDbListener {
 					@SuppressWarnings("unchecked")
 					List<ScoredString> list = new ArrayList<ScoredString>(selection.toList());
 					list.remove(mouseData);
-					selection = new StructuredSelection(list);
-					viewer.setSelection(selection);
+					viewer.setSelection(selection = new StructuredSelection(list));
 					updateActions();
 				}
 			}

@@ -34,7 +34,7 @@ use Image::ExifTool::Nikon;
 use Image::ExifTool::Validate;
 use Image::ExifTool::MacOS;
 
-$VERSION = '3.12';
+$VERSION = '3.15';
 @ISA = qw(Exporter);
 
 sub NumbersFirst($$);
@@ -99,6 +99,7 @@ my %tweakOrder = (
    'MWG::Regions' => 'MWG::Composite',
    'MWG::Keywords' => 'MWG::Regions',
    'MWG::Collections' => 'MWG::Keywords',
+   'GoPro::fdsc' => 'GoPro::KBAT',
 );
 
 # list of all recognized Format strings
@@ -200,8 +201,10 @@ explicitly (ie. not when wildcards or "all" are used), and care should be
 taken when editing them manually since they may affect the way an image is
 rendered.  An asterisk (C<*>) indicates a I<Protected> tag which is not
 writable directly, but is written automatically by ExifTool (often when a
-corresponding Composite or Extra tag is written). A colon (C<:>) indicates a
-I<Mandatory> tag which may be added automatically when writing.
+corresponding L<Composite|Image::ExifTool::TagNames/Composite Tags> or
+L<Extra|Image::ExifTool::TagNames/Extra Tags> tag is written). A colon
+(C<:>) indicates a I<Mandatory> tag which may be added automatically when
+writing.
 
 The HTML version of these tables also lists possible B<Values> for
 discrete-valued tags, as well as B<Notes> for some tags.  The B<Values> are
@@ -497,9 +500,10 @@ password-protected PDF files.
 
 ExifTool may be used to write native PDF and XMP metadata to PDF files. It
 uses an incremental update technique that has the advantages of being both
-fast and reversible.  The original PDF can be easily recovered by deleting
-the C<PDF-update> pseudo-group (with C<-PDF-update:all=> on the command
-line).  However, there are two main disadvantages to this technique:
+fast and reversible.  If ExifTool was used to modify a PDF file, the
+original may be recovered by deleting the C<PDF-update> pseudo-group (with
+C<-PDF-update:all=> on the command line).  However, there are two main
+disadvantages to this technique:
 
 1) A linearized PDF file is no longer linearized after the update, so it
 must be subsequently re-linearized if this is required.
@@ -585,7 +589,7 @@ L<Image::ExifTool::BuildTagLookup|Image::ExifTool::BuildTagLookup>.
 
 ~head1 AUTHOR
 
-Copyright 2003-2017, Phil Harvey (phil at owl.phy.queensu.ca)
+Copyright 2003-2018, Phil Harvey (phil at owl.phy.queensu.ca)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
@@ -817,7 +821,7 @@ TagID:  foreach $tagID (@keys) {
                     # single-character subdirectory names are allowed
                     (not $$tagInfo{SubDirectory} or $name !~ /^[_A-Za-z]$/))
                 {
-                    warn "Warning: Invalid tag name $short '$name'\n";
+                    warn "Warning: Invalid tag name $short '${name}'\n";
                 }
                 # validate list type
                 if ($$tagInfo{List} and $$tagInfo{List} !~ /^(1|Alt|Bag|Seq|array|string)$/) {
@@ -878,8 +882,14 @@ TagID:  foreach $tagID (@keys) {
                     $writable = $$table{WRITABLE};
                 }
                 # validate some characteristics of obvious date/time tags
+                my @g = $et->GetGroup($tagInfo);
+                if ($$tagInfo{List} and $g[2] eq 'Time' and $writable and not $$tagInfo{Protected} and
+                    not $$tagInfo{PrintConvInv})
+                {
+                    # (this is a problem because shifting Time:All would create a new list entry)
+                    warn "Writable List-type Time tag $g[1]:$name has no PrintConvInv and is not Protected!\n";
+                }
                 if ($$tagInfo{PrintConv} and $$tagInfo{PrintConv} eq '$self->ConvertDateTime($val)') {
-                    my @g = $et->GetGroup($tagInfo);
                     warn "$short $name should be in 'Time' group!\n" unless $g[2] eq 'Time';
                     if ($writable and not defined $$tagInfo{Shift} and $short ne 'PostScript') {
                         warn "$short $name is not shiftable!\n";
@@ -953,7 +963,6 @@ TagID:  foreach $tagID (@keys) {
                 }
                 my $writeGroup;
                 if ($short eq 'Extra') {
-                    my @g = $et->GetGroup($tagInfo);
                     $writeGroup = $$tagInfo{WriteOnly} ? '-' : $g[1];
                 } else {
                     $writeGroup = $$tagInfo{WriteGroup};
@@ -1107,7 +1116,7 @@ TagID:  foreach $tagID (@keys) {
                                     if ($index =~ s/([\x00-\x1f\x80-\xff])/sprintf("\\x%.2x",ord $1)/eg) {
                                         $index = qq{"$index"};
                                     } else {
-                                        $index = qq{'$index'};
+                                        $index = qq{'${index}'};
                                     }
                                 }
                                 push @values, "$index = " . $$printConv{$_};
@@ -1330,7 +1339,7 @@ TagID:  foreach $tagID (@keys) {
                     next if $tagID eq 'jP\x1a\x1a'; # ignore abnormal JP2 signature tag
                     $tagIDstr = qq{"$tagID"};
                 } else {
-                    $tagIDstr = "'$tagID'";
+                    $tagIDstr = "'${tagID}'";
                 }
             }
             my $len = length $tagIDstr;
@@ -1452,7 +1461,7 @@ sub WriteTagLookup($$)
     my $num = 0;
     foreach $tableName (@tableNames) {
         if ($$tableWritable{$tableName}) {
-            print OUTFILE "\t'$tableName',\n";
+            print OUTFILE "\t'${tableName}',\n";
             $wrNum{$count} = $num++;
         }
         $count++;
@@ -1465,11 +1474,11 @@ sub WriteTagLookup($$)
     foreach $tag (qw{filename directory}) {
         next unless $$tagLookup{$tag};
         my $n = scalar keys %{$$tagLookup{$tag}};
-        warn "Warning: $n writable '$tag' tags!\n" if $n > 1;
+        warn "Warning: $n writable '${tag}' tags!\n" if $n > 1;
     }
     print OUTFILE ");\n\n# lookup for all writable tags\nmy \%tagLookup = (\n";
     foreach $tag (sort keys %$tagLookup) {
-        print OUTFILE "\t'$tag' => { ";
+        print OUTFILE "\t'${tag}' => { ";
         my @tableNums = sort { $a <=> $b } keys %{$$tagLookup{$tag}};
         my (@entries, $tableNum);
         foreach $tableNum (@tableNums) {
@@ -1491,12 +1500,12 @@ sub WriteTagLookup($$)
                 }
                 # reference to root structure ID must come first in lookup
                 # (so we can generate the flattened tags just before we need them)
-                unshift @tagIDs, "\\'$rootID'" if $rootID;
+                unshift @tagIDs, "\\'${rootID}'" if $rootID;
                 $entry = '[' . join(',', @tagIDs) . ']';
             } elsif ($tagID =~ /^\d+$/) {
                 $entry = sprintf('0x%x',$tagID);
             } else {
-                $entry = "'$tagID'";
+                $entry = "'${tagID}'";
             }
             my $wrNum = $wrNum{$tableNum};
             push @entries, "$wrNum => $entry";
@@ -1511,7 +1520,7 @@ sub WriteTagLookup($$)
     print OUTFILE "my \%tagExists = (\n";
     foreach $tag (sort keys %$tagExists) {
         next if $$tagLookup{$tag};
-        print OUTFILE "\t'$tag' => 1,\n";
+        print OUTFILE "\t'${tag}' => 1,\n";
     }
 #
 # write module lookup for writable composite tags
@@ -1520,7 +1529,7 @@ sub WriteTagLookup($$)
     print OUTFILE ");\n\n# module names for writable Composite tags\n";
     print OUTFILE "my \%compositeModules = (\n";
     foreach (sort keys %$compositeModules) {
-        print OUTFILE "\t'$_' => '$$compositeModules{$_}',\n";
+        print OUTFILE "\t'${_}' => '$$compositeModules{$_}',\n";
     }
     print OUTFILE ");\n\n";
 #
@@ -1844,7 +1853,7 @@ sub OpenHtmlFile($;$$)
             $top = " class=top";
         }
     }
-    $head = "<a name='$url'>$head</a>" if $url;
+    $head = "<a name='${url}'>$head</a>" if $url;
     print HTMLFILE "<h2$top>$head</h2>\n" or return 0;
     print HTMLFILE '<p>',Doc2Html($docs{$category}),"</p>\n" if $docs{$category};
     $createdFiles{$htmlFile} = 1;
@@ -1996,7 +2005,7 @@ sub WriteTagNames($$)
         $short = $$shortName{$tableName};
         $short = $tableName unless $short;
         $url = "$short.html";
-        print HTMLFILE "<a href='$url'>$short</a>";
+        print HTMLFILE "<a href='${url}'>$short</a>";
         ++$count;
     }
     print HTMLFILE "\n</td></tr></table></td></tr></table></blockquote>\n";
@@ -2465,7 +2474,7 @@ sub WriteTagNames($$)
                         }
                         $url = (shift @names) . '.html';
                         @names and $url .= '#' . join '_', @names;
-                        push @values, "--&gt; <a href='$url'>$_$suffix</a>";
+                        push @values, "--&gt; <a href='${url}'>$_$suffix</a>";
                     }
                     # put small note last
                     $smallNote and push @values, shift @values;
@@ -2576,7 +2585,7 @@ List of writable pseudo tags.
 
 =head1 AUTHOR
 
-Copyright 2003-2017, Phil Harvey (phil at owl.phy.queensu.ca)
+Copyright 2003-2018, Phil Harvey (phil at owl.phy.queensu.ca)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2014 Berthold Daum  
  */
 package com.bdaum.zoom.lal.internal.lucene;
 
@@ -166,10 +166,9 @@ public class Lucene implements ILuceneService {
 		IndexWriter indexWriter = writerMap.get(writerToken);
 		if (indexWriter != null) {
 			DocumentBuilder documentBuilder = builderMap.get(writerToken);
-			if (documentBuilder == null) {
-				documentBuilder = LireActivator.getDefault().constructFullDocumentBuilder();
-				builderMap.put(writerToken, documentBuilder);
-			}
+			if (documentBuilder == null)
+				builderMap.put(writerToken,
+						documentBuilder = LireActivator.getDefault().constructFullDocumentBuilder());
 			indexWriter.addDocument(documentBuilder.createDocument(image, assetid));
 		}
 	}
@@ -193,10 +192,9 @@ public class Lucene implements ILuceneService {
 			return null;
 		TermsEnum termEnum = terms.iterator();
 		BytesRef bytesRef;
-		while ((bytesRef = termEnum.next()) != null) {
-			int freq = indexReader.docFreq(new Term(LireActivator.FIELD_NAME_FULL_TEXT, bytesRef));
-			result.add(new ScoredString(bytesRef.utf8ToString(), freq));
-		}
+		while ((bytesRef = termEnum.next()) != null)
+			result.add(new ScoredString(bytesRef.utf8ToString(),
+					indexReader.docFreq(new Term(LireActivator.FIELD_NAME_FULL_TEXT, bytesRef))));
 		Collections.sort(result);
 		return (result.size() > maxItems) ? result.subList(0, maxItems) : result;
 	}
@@ -233,14 +231,11 @@ public class Lucene implements ILuceneService {
 		final IndexReader indexReader = readerMap.get(readerToken);
 		if (indexReader != null) {
 			IndexSearcher searcher = searcherMap.get(readerToken);
-			if (searcher == null) {
-				searcher = new IndexSearcher(indexReader);
-				searcherMap.put(readerToken, searcher);
-			}
+			if (searcher == null)
+				searcherMap.put(readerToken, searcher = new IndexSearcher(indexReader));
 			final TopFieldDocs hits = performSearch(searcher, LireActivator.getDefault().parseQuery(queryString),
 					maxResults, Sort.RELEVANCE, true, true);
 			return new ISearchHits() {
-
 				public float score(int position) {
 					return hits.scoreDocs[position].score;
 				}

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -117,42 +117,38 @@ public class FindSeriesDialog extends ZTitleAreaDialog {
 			}
 		});
 		new Label(comp, SWT.NONE).setText(Messages.FindSeriesDialog_maximum_interval);
-		intervalField = new NumericControl(comp, SWT.NONE);
+		intervalField = new NumericControl(comp, NumericControl.LOGARITHMIC);
 		intervalField.setMinimum(0);
 		intervalField.setMaximum(1000);
 		new Label(comp, SWT.NONE).setText(Messages.FindSeriesDialog_minimum_length);
-		sizeField = new NumericControl(comp, SWT.NONE);
+		sizeField = new NumericControl(comp, NumericControl.LOGARITHMIC);
 		sizeField.setMinimum(2);
 		sizeField.setMaximum(1000);
 		formatField = WidgetFactory.createCheckButton(comp,
 				Messages.FindSeriesDialog_separate_by_format, new GridData(
 						SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		GridData layoutData = new GridData(SWT.BEGINNING, SWT.CENTER, false,
-				false, 2, 1);
 		ignoreDerivedButton = WidgetFactory.createCheckButton(comp,
-				Messages.FindDuplicatesDialog_ignore_derived, layoutData);
+				Messages.FindDuplicatesDialog_ignore_derived, new GridData(SWT.BEGINNING, SWT.CENTER, false,
+						false, 2, 1));
 		findWithinGroup = new FindWithinGroup(area);
 		fillValues();
 		return area;
 	}
 
 	private void fillValues() {
-		settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		try {
-			int iv = settings.getInt(INTERVAL);
-			intervalField.setSelection(iv);
+			intervalField.setSelection(settings.getInt(INTERVAL));
 		} catch (NumberFormatException e) {
 			intervalField.setSelection(1);
 		}
 		try {
-			int iv = settings.getInt(SIZE);
-			sizeField.setSelection(iv);
+			sizeField.setSelection(settings.getInt(SIZE));
 		} catch (NumberFormatException e) {
 			sizeField.setSelection(5);
 		}
 		try {
-			int iv = settings.getInt(TYPE);
-			typeField.select(iv);
+			typeField.select(settings.getInt(TYPE));
 		} catch (NumberFormatException e) {
 			typeField.select(0);
 		}

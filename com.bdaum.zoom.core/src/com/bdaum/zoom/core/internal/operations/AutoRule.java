@@ -23,8 +23,9 @@ public class AutoRule {
 		this.enumeration = enumeration;
 		this.values = values;
 	}
-
+	
 	public AutoRule() {
+		super();
 	}
 
 	public static List<AutoRule> constructRules(String text) {
@@ -49,8 +50,7 @@ public class AutoRule {
 					p = token.indexOf(':');
 					if (p > 0) {
 						qfield = QueryField.findQueryField(token.substring(0, p));
-						String para = token.substring(p + 1);
-						List<String> list = Core.fromStringList(para, ";"); //$NON-NLS-1$
+						List<String> list = Core.fromStringList(token.substring(p + 1), ";"); //$NON-NLS-1$
 						int i = 0;
 						switch (qfield.getAutoPolicy()) {
 						case QueryField.AUTO_CONTAINS:
@@ -64,11 +64,11 @@ public class AutoRule {
 						case QueryField.AUTO_DISCRETE:
 							if (qfield.getEnumeration() != null) {
 								enumeration = new Object[list.size()];
-								int type = qfield.getType();
-								for (String s : list) {
-									if (type == QueryField.T_STRING)
+								if (qfield.getType() == QueryField.T_STRING)
+									for (String s : list)
 										enumeration[i++] = s;
-									else {
+								else
+									for (String s : list) {
 										try {
 											enumeration[i] = Integer.parseInt(s);
 										} catch (NumberFormatException e) {
@@ -76,7 +76,6 @@ public class AutoRule {
 										}
 										++i;
 									}
-								}
 								break;
 							}
 							if (qfield.getType() == QueryField.T_BOOLEAN) {
@@ -90,8 +89,14 @@ public class AutoRule {
 							//$FALL-THROUGH$
 						default:
 							parms = new double[list.size()];
-							for (String s : list)
-								parms[i++] = Double.parseDouble(s);
+							for (String s : list) {
+								try {
+									parms[i] = Double.parseDouble(s);
+								} catch (NumberFormatException e) {
+									parms[i] = Double.NaN;
+								}
+								++i;
+							}
 							break;
 						}
 					} else

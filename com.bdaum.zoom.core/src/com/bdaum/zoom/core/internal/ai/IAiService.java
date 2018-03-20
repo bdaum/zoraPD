@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.core.internal.ai;
 
@@ -23,11 +23,18 @@ import java.awt.image.BufferedImage;
 
 import org.eclipse.swt.widgets.Shell;
 
+import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
 
 public interface IAiService {
 
 	Prediction predict(byte[] jpeg, String serviceId);
+	
+	int rate(Asset asset, String opId, int maxRating, String modelId, String serviceId);
+	
+	String[] getRatingModelIds(String serviceId);
+
+	String[] getRatingModelLabels(String serviceId);
 
 	String[] getProviderIds();
 
@@ -62,4 +69,8 @@ public interface IAiService {
 	Algorithm[] getLireAlgorithms();
 
 	Class<?> getFeature(String providerId);
+
+	String[] getRatingProviderIds();
+
+	String[] getRatingProviderNames();
 }

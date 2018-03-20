@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2011 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.gps;
@@ -26,27 +26,6 @@ package com.bdaum.zoom.ui.gps;
  */
 
 public class Waypoint {
-
-	// <wpt lat="49.835830" lon="9.159422">
-	// <ele>-0.11</ele>
-	// <name>Autohaus Bieger Gmbh</name>
-	// <desc>Am Stachus 1 63820 Elsenfeld, Milten</desc>
-	// <sym>Waypoint</sym>
-	// <extensions>
-	// <gpxx:WaypointExtension>
-	// <gpxx:Categories>
-	// <gpxx:Category>Autoservices</gpxx:Category>
-	// </gpxx:Categories>
-	// <gpxx:Address>
-	// <gpxx:StreetAddress>Am Stachus 1</gpxx:StreetAddress>
-	// <gpxx:City>Elsenfeld</gpxx:City>
-	// <gpxx:State>Miltenberg</gpxx:State>
-	// <gpxx:PostalCode>63820</gpxx:PostalCode>
-	// </gpxx:Address>
-	// <gpxx:PhoneNumber>+49 6022 26360</gpxx:PhoneNumber>
-	// </gpxx:WaypointExtension>
-	// </extensions>
-	// </wpt>
 
 	protected double lat = Double.NaN;
 	protected double lon = Double.NaN;

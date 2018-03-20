@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -36,8 +36,7 @@ public class ViewTextCellEditor extends TextCellEditor {
 	public ViewTextCellEditor() {
 	}
 
-	public ViewTextCellEditor(Composite parent, final QueryField qfield,
-			final Asset asset) {
+	public ViewTextCellEditor(Composite parent, final QueryField qfield, final Asset asset) {
 		super(parent);
 		setValidator(new ICellEditorValidator() {
 			public String isValid(Object value) {
@@ -53,10 +52,8 @@ public class ViewTextCellEditor extends TextCellEditor {
 					}
 					int maxLen = qfield.getMaxlength();
 					if (value.toString().length() > maxLen)
-						return NLS
-								.bind(Messages
-										.getString("ViewTextCellEditor.string_too_long"), //$NON-NLS-1$
-										maxLen);
+						return NLS.bind(Messages.getString("ViewTextCellEditor.string_too_long"), //$NON-NLS-1$
+								maxLen);
 					return qfield.isValid(value, asset);
 				}
 				return null;

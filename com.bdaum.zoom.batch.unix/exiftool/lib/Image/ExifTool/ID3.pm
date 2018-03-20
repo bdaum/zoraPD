@@ -16,7 +16,7 @@ use strict;
 use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 
-$VERSION = '1.48';
+$VERSION = '1.49';
 
 sub ProcessID3v2($$$);
 sub ProcessPrivate($$$);
@@ -1037,8 +1037,8 @@ sub ProcessID3v2($$$)
     my $verbose = $et->Options('Verbose');
     my $len;    # frame data length
 
-    $verbose and $et->VerboseDir($tagTablePtr->{GROUPS}->{1}, 0, $size);
-    Image::ExifTool::HexDump($dataPt, $size, Start => $offset) if $verbose > 2;
+    $et->VerboseDir($tagTablePtr->{GROUPS}->{1}, 0, $size);
+    $et->VerboseDump($dataPt, Len => $size, Start => $offset);
 
     for (;;$offset+=$len) {
         my ($id, $flags, $hi);
@@ -1081,7 +1081,7 @@ sub ProcessID3v2($$$)
             my $otherTable = $otherTable{$tagTablePtr};
             $tagInfo = $et->GetTagInfo($otherTable, $id) if $otherTable;
             if ($tagInfo) {
-                $et->WarnOnce("Frame '$id' is not valid for this ID3 version", 1);
+                $et->WarnOnce("Frame '${id}' is not valid for this ID3 version", 1);
             } else {
                 next unless $verbose or $et->Options('Unknown');
                 $id =~ tr/-A-Za-z0-9_//dc;
@@ -1549,7 +1549,7 @@ other types of audio files.
 
 =head1 AUTHOR
 
-Copyright 2003-2017, Phil Harvey (phil at owl.phy.queensu.ca)
+Copyright 2003-2018, Phil Harvey (phil at owl.phy.queensu.ca)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

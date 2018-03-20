@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2014 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui;
@@ -41,8 +41,7 @@ import com.bdaum.zoom.core.internal.IMediaSupport;
  *
  */
 @SuppressWarnings("restriction")
-public class AssetSelection extends StructuredSelection implements
-		Iterable<Asset> {
+public class AssetSelection extends StructuredSelection implements Iterable<Asset> {
 
 	private static final Object[] DUMMY = new Object[] { AssetSelection.class };
 
@@ -110,8 +109,7 @@ public class AssetSelection extends StructuredSelection implements
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.jface.viewers.StructuredSelection#equals(java.lang.Object)
+	 * @see org.eclipse.jface.viewers.StructuredSelection#equals(java.lang.Object)
 	 */
 
 	@Override
@@ -156,9 +154,10 @@ public class AssetSelection extends StructuredSelection implements
 			return false;
 		if (!picked)
 			return true;
-		if (assets.isEmpty())
+		int size = size();
+		if (size == 0)
 			return false;
-		if (assets.size() == 1)
+		if (size == 1)
 			return candidates.contains(assets.get(0));
 		if (assetSet != null || candidates.size() > 1) {
 			HashSet<Asset> set = getAssetSet();
@@ -167,8 +166,8 @@ public class AssetSelection extends StructuredSelection implements
 					return true;
 			return false;
 		}
-		for (Asset a : assets)
-			if (candidates.contains(a))
+		for (int i = 0; i < size; i++)
+			if (candidates.contains(assets.get(i)))
 				return true;
 		return false;
 	}
@@ -205,10 +204,13 @@ public class AssetSelection extends StructuredSelection implements
 		if (Core.getCore().isNetworked()) {
 			if (!picked)
 				return assetProvider.getLocalAssets();
-			List<Asset> localAssets = new ArrayList<Asset>(assets.size());
-			for (Asset a : assets)
+			int size = size();
+			List<Asset> localAssets = new ArrayList<Asset>(size);
+			for (int i = 0; i < size; i++) {
+				Asset a = assets.get(i);
 				if (a.getFileState() != IVolumeManager.PEER)
 					localAssets.add(a);
+			}
 			return localAssets;
 		}
 		return getAssets();
@@ -220,11 +222,10 @@ public class AssetSelection extends StructuredSelection implements
 	 * @return IDs of selected assets
 	 */
 	public String[] getAssetIds() {
-		getAssets();
-		int i = 0;
-		String[] ids = new String[size()];
-		for (Asset asset : assets)
-			ids[i++] = asset.getStringId();
+		int size = size();
+		String[] ids = new String[size];
+		for (int i = 0; i < size; i++)
+			ids[i] = assets.get(i).getStringId();
 		return ids;
 	}
 
@@ -272,7 +273,6 @@ public class AssetSelection extends StructuredSelection implements
 		if (assets != null)
 			return assets.isEmpty();
 		return assetProvider.isEmpty();
-//		return size() == 0;
 	}
 
 	/**
@@ -283,9 +283,10 @@ public class AssetSelection extends StructuredSelection implements
 	public Asset getFirstLocalAsset() {
 		if (assets == null)
 			return assetProvider.getFirstLocalAsset();
-		for (Asset a : assets)
-			if (a.getFileState() != IVolumeManager.PEER)
-				return a;
+		int size = size();
+		for (int i = 0; i < size; i++)
+			if (assets.get(i).getFileState() != IVolumeManager.PEER)
+				return assets.get(i);
 		return null;
 	}
 
@@ -400,9 +401,9 @@ public class AssetSelection extends StructuredSelection implements
 	public int getMediaFlags() {
 		if (mediaFlags == 0) {
 			CoreActivator activator = CoreActivator.getDefault();
-			for (Asset asset : getAssets()) {
-				IMediaSupport mediaSupport = activator.getMediaSupport(asset
-						.getFormat());
+			int size = size();
+			for (int i = 0; i < size; i++) {
+				IMediaSupport mediaSupport = activator.getMediaSupport(assets.get(i).getFormat());
 				if (mediaSupport != null)
 					mediaFlags |= mediaSupport.getPropertyFlags();
 			}

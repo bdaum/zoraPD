@@ -41,6 +41,18 @@
             id="com.bdaum.zoom.ai.provider.clarifai"
             latency="1000"
             name="Clarifai">
+         <ratingModel
+               id="bec14810deb94c40a05f1f0eb3c91403"
+               label="%ratingModel.label.landscape">
+         </ratingModel>
+         <ratingModel
+               id="de9bd05cfdbf4534af151beb2a5d0953"
+               label="%ratingModel.label.portrait">
+         </ratingModel>
+         <ratingModel
+               id="c2cf7cecd8a6427da375b9f35fcd2381"
+               label="%ratingModel.label.focus">
+         </ratingModel>
       </provider>
    </extension>
    <extension

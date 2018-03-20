@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -33,7 +33,6 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -47,6 +46,7 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.VocabManager.VocabNode;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 
@@ -95,9 +95,7 @@ public class ViewVocabDialog extends ZTitleAreaDialog {
 		viewer.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				if (element instanceof VocabNode)
-					return element.toString();
-				return null;
+				return element.toString();
 			}
 
 			@Override
@@ -134,11 +132,12 @@ public class ViewVocabDialog extends ZTitleAreaDialog {
 				return null;
 			}
 		});
-		viewer.setComparator(new ViewerComparator() {
+		viewer.setComparator(new ZViewerComparator() {
 			@Override
 			public int compare(Viewer viewer, Object e1, Object e2) {
 				if (e1 instanceof VocabNode && e2 instanceof VocabNode)
-					((VocabNode) e1).getLabel().compareTo(((VocabNode) e2).getLabel());
+					return UiUtilities.stringComparator.compare(((VocabNode) e1).getLabel(),
+							((VocabNode) e2).getLabel());
 				return super.compare(viewer, e1, e2);
 			}
 		});
@@ -172,16 +171,14 @@ public class ViewVocabDialog extends ZTitleAreaDialog {
 	@Override
 	protected void okPressed() {
 		List<String> list = new ArrayList<>();
-		Iterator<?> iterator = ((IStructuredSelection) viewer.getSelection()).iterator();
-		while (iterator.hasNext())
+		for (Iterator<?> iterator = ((IStructuredSelection) viewer.getSelection()).iterator(); iterator.hasNext();)
 			list.add(((VocabNode) iterator.next()).getLabel());
 		result = list.toArray(new String[list.size()]);
 		super.okPressed();
 	}
 
 	private void updateButtons() {
-		boolean enabled = !viewer.getSelection().isEmpty();
-		getButton(OK).setEnabled(enabled);
+		getButton(OK).setEnabled(!viewer.getSelection().isEmpty());
 	}
 
 	public String[] getResult() {

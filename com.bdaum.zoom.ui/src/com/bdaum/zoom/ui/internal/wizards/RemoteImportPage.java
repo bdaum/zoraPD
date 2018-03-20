@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.wizards;
@@ -48,14 +48,12 @@ public class RemoteImportPage extends ColoredWizardPage {
 		super("main", Messages.RemoteImportPage_import_remote_images, null); //$NON-NLS-1$
 	}
 
-
 	@Override
 	public void createControl(Composite parent) {
 		Composite composite = createComposite(parent, 3);
 		setControl(composite);
 		setHelp(HelpContextIds.IMPORTREMOTE);
-		Label label = new Label(composite, SWT.NONE);
-		label.setText(Messages.RemoteImportPage_URL);
+		new Label(composite, SWT.NONE).setText(Messages.RemoteImportPage_URL);
 		combo = new Combo(composite, SWT.NONE);
 		String[] items = getDialogSettings().getArray(HISTORY_ITEMS);
 		if (items != null) {
@@ -64,8 +62,6 @@ public class RemoteImportPage extends ColoredWizardPage {
 				combo.setText(combo.getItem(0));
 		}
 		combo.addModifyListener(new ModifyListener() {
-
-
 			public void modifyText(ModifyEvent e) {
 				validatePage();
 			}
@@ -77,7 +73,6 @@ public class RemoteImportPage extends ColoredWizardPage {
 		Button browseButton = new Button(composite, SWT.PUSH);
 		browseButton.setText(Messages.RemoteImportPage_browse);
 		browseButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				FtpAccountSelectionDialog dialog = new FtpAccountSelectionDialog(getShell());

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -87,9 +87,9 @@ public class GalleryZoomEventHandler extends ZZoomEventHandler
 
 	@Override
 	protected void startDrag(PInputEvent event) {
-		PNode pickedNode = event.getPickedNode();
+		PNode pickedParent = event.getPickedNode().getParent();
 		for (PNode node : workarea)
-			if (pickedNode.getParent() == node)
+			if (pickedParent.getParent() == node)
 				return;
 		super.startDrag(event);
 	}

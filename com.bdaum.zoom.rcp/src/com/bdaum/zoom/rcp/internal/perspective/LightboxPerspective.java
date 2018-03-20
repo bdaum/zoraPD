@@ -43,11 +43,11 @@ public class LightboxPerspective extends AbstractPerspective {
 		layout.addView(PropertiesView.ID, IPageLayout.BOTTOM, 0.8f, LIGHTBOX_FOLDER);
 		layout.addView(ExifView.ID, IPageLayout.RIGHT, 0.33f, PropertiesView.ID);
 		layout.addView(IPTCView.ID, IPageLayout.RIGHT, 0.5f, ExifView.ID);
-		IFolderLayout hfolder = layout.createFolder(HISTOGRAM_FOLDER, IPageLayout.BOTTOM, 0.7f, CATALOG_FOLDER);
+		IFolderLayout hfolder = layout.createFolder(HISTOGRAM_FOLDER, IPageLayout.BOTTOM, 0.65f, CATALOG_FOLDER);
 		hfolder.addView(PreviewView.ID);
 		hfolder.addView(HistogramView.ID);
 		addCheatSheets(layout, LIGHTBOX_FOLDER);
-		addFastViews(layout, IPageLayout.LEFT, 0.7f, CATALOG_FOLDER);
+		addFastViews(layout, IPageLayout.RIGHT, 0.7f, LIGHTBOX_FOLDER);
 		layout.setEditorAreaVisible(false);
 	}
 

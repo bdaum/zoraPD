@@ -45,10 +45,9 @@ public class SupplyPropertyJob extends Job {
 		final boolean applicable = qfield.isApplicable(selectedAssets);
 		if (!updater.isDisposed()) {
 			updater.getDisplay().asyncExec(() -> {
-				if (!updater.isDisposed()) {
+				if (!updater.isDisposed())
 					updater.updateField(qfield, new FieldEntry(value,
 							editable, applicable));
-				}
 			});
 		}
 		return Status.OK_STATUS;

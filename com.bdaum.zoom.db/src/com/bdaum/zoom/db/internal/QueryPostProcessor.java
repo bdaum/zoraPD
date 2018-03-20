@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2012 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2012 Berthold Daum  
  */
 package com.bdaum.zoom.db.internal;
 
@@ -79,7 +79,7 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 						switch (type) {
 						case QueryField.T_INTEGER:
 						case QueryField.T_POSITIVEINTEGER: {
-							int v = ((Integer) value).intValue();
+							int v = (Integer) value;
 							for (int element : (int[]) fieldValue)
 								if (element == v) {
 									result = true;
@@ -91,7 +91,7 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 							break;
 						case QueryField.T_POSITIVEFLOAT:
 						case QueryField.T_FLOAT: {
-							double v = ((Double) value).doubleValue();
+							double v = (Double) value;
 							for (double element : (double[]) fieldValue) {
 								if (element == v)
 									result = true;
@@ -186,7 +186,7 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 						switch (type) {
 						case QueryField.T_INTEGER:
 						case QueryField.T_POSITIVEINTEGER: {
-							int v1 = ((Integer) fieldValue).intValue();
+							int v1 = (Integer) fieldValue;
 							int from = 0, to = 0;
 							switch (relation) {
 							case QueryField.SIMILAR: {
@@ -194,7 +194,7 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 								if (tolerance == 0)
 									relation = QueryField.EQUALS;
 								else {
-									int v2 = ((Integer) value).intValue();
+									int v2 = ((Integer) value);
 									if (tolerance < 0) {
 										from = v2 + (int) tolerance;
 										to = v2 - (int) tolerance;
@@ -208,30 +208,29 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 								break;
 							case QueryField.BETWEEN:
 							case QueryField.NOTBETWEEN: {
-								Range range = (Range) value;
-								from = ((Integer) range.getFrom()).intValue();
-								to = ((Integer) range.getTo()).intValue();
+								from = (Integer) ((Range) value).getFrom();
+								to = (Integer) ((Range) value).getTo();
 								break;
 							}
 							}
 							switch (relation) {
 							case QueryField.EQUALS:
-								result = v1 == ((Integer) value).intValue();
+								result = v1 == (Integer) value;
 								break;
 							case QueryField.NOTEQUAL:
-								result = v1 != ((Integer) value).intValue();
+								result = v1 != (Integer) value;
 								break;
 							case QueryField.GREATER:
-								result = v1 > ((Integer) value).intValue();
+								result = v1 > (Integer) value;
 								break;
 							case QueryField.SMALLER:
-								result = v1 < ((Integer) value).intValue();
+								result = v1 < (Integer) value;
 								break;
 							case QueryField.NOTGREATER:
-								result = v1 <= ((Integer) value).intValue();
+								result = v1 <= (Integer) value;
 								break;
 							case QueryField.NOTSMALLER:
-								result = v1 >= ((Integer) value).intValue();
+								result = v1 >= (Integer) value;
 								break;
 							case QueryField.BETWEEN:
 								result = v1 >= from && v1 <= to;
@@ -245,34 +244,32 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 							break;
 						case QueryField.T_LONG:
 						case QueryField.T_POSITIVELONG: {
-							long v1 = ((Long) fieldValue).longValue();
+							long v1 = (Long) fieldValue;
 							switch (relation) {
 							case QueryField.SIMILAR:
 							case QueryField.EQUALS:
-								result = v1 == ((Long) value).longValue();
+								result = v1 == (Long) value;
 								break;
 							case QueryField.NOTEQUAL:
-								result = v1 != ((Long) value).longValue();
+								result = v1 != (Long) value;
 								break;
 							case QueryField.GREATER:
-								result = v1 > ((Long) value).longValue();
+								result = v1 > (Long) value;
 								break;
 							case QueryField.SMALLER:
-								result = v1 < ((Long) value).longValue();
+								result = v1 < (Long) value;
 								break;
 							case QueryField.NOTGREATER:
-								result = v1 <= ((Long) value).longValue();
+								result = v1 <= (Long) value;
 								break;
 							case QueryField.NOTSMALLER:
-								result = v1 >= ((Long) value).longValue();
+								result = v1 >= (Long) value;
 								break;
 							case QueryField.BETWEEN:
-								Range range = (Range) value;
-								result = v1 >= ((Long) range.getFrom()) && v1 <= ((Long) range.getTo());
+								result = v1 >= (Long) ((Range) value).getFrom() && v1 <= (Long) ((Range) value).getTo();
 								break;
 							case QueryField.NOTBETWEEN:
-								range = (Range) value;
-								result = v1 < ((Long) range.getFrom()) || v1 > ((Long) range.getTo());
+								result = v1 < (Long) ((Range) value).getFrom() || v1 > (Long) ((Range) value).getTo();
 								break;
 							}
 						}
@@ -287,7 +284,7 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 								if (tolerance == 0)
 									relation = QueryField.EQUALS;
 								else {
-									double v2 = ((Double) value).doubleValue();
+									double v2 = (Double) value;
 									if (tolerance < 0) {
 										from = v2 + tolerance;
 										to = v2 - tolerance;
@@ -301,31 +298,30 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 								break;
 							case QueryField.BETWEEN:
 							case QueryField.NOTBETWEEN: {
-								Range range = (Range) value;
-								from = ((Double) range.getFrom()).doubleValue();
-								to = ((Double) range.getTo()).doubleValue();
+								from = (Double) ((Range) value).getFrom();
+								to = (Double) ((Range) value).getTo();
 								break;
 							}
 							}
-							double v1 = ((Double) fieldValue).doubleValue();
+							double v1 = (Double) fieldValue;
 							switch (relation) {
 							case QueryField.EQUALS:
-								result = v1 == ((Double) value).doubleValue();
+								result = v1 == (Double) value;
 								break;
 							case QueryField.NOTEQUAL:
-								result = v1 != ((Double) value).doubleValue();
+								result = v1 != (Double) value;
 								break;
 							case QueryField.GREATER:
-								result = v1 > ((Double) value).doubleValue();
+								result = v1 > (Double) value;
 								break;
 							case QueryField.SMALLER:
-								result = v1 < ((Double) value).doubleValue();
+								result = v1 < (Double) value;
 								break;
 							case QueryField.NOTGREATER:
-								result = v1 <= ((Double) value).doubleValue();
+								result = v1 <= (Double) value;
 								break;
 							case QueryField.NOTSMALLER:
-								result = v1 >= ((Double) value).doubleValue();
+								result = v1 >= (Double) value;
 								break;
 							case QueryField.BETWEEN:
 								result = v1 >= from && v1 <= to;
@@ -369,9 +365,8 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 								break;
 							case QueryField.BETWEEN:
 							case QueryField.NOTBETWEEN: {
-								Range range = (Range) value;
-								from = (Date) range.getFrom();
-								to = (Date) range.getTo();
+								from = (Date) ((Range) value).getFrom();
+								to = (Date) ((Range) value).getTo();
 								break;
 							}
 							}
@@ -492,30 +487,27 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 				query.constrain(new WildcardEvaluation(qfield, (String) value, false));
 			else if (relation == QueryField.NOTWILDCARDS)
 				query.constrain(new WildcardEvaluation(qfield, (String) value, true));
+			else if (qfield == QueryField.IPTC_CATEGORY) {
+				constraint = query.descend(field).constrain(value);
+				CollectionProcessor.applyRelation(dbManager, field, field, crit.getRelation(), value, constraint,
+						query);
+				Category category = dbManager.getMeta(false).getCategory(value.toString());
+				if (category != null)
+					constraint = CollectionProcessor.addSubcats(dbManager, query, constraint, category, crit);
+			} else if (relation == QueryField.UNDEFINED && value instanceof Double)
+				constraint = query.descend(field).constrain(Double.NEGATIVE_INFINITY).greater().equal().not();
+			else if (relation == QueryField.UNDEFINED && value instanceof Date)
+				constraint = query.descend(field).constrain(null);
 			else {
-				if (qfield == QueryField.IPTC_CATEGORY) {
-					constraint = query.descend(field).constrain(value);
-					CollectionProcessor.applyRelation(dbManager, true, field, field, crit.getRelation(), value,
-							constraint, query);
-					Category category = dbManager.getMeta(false).getCategory(value.toString());
-					if (category != null)
-						constraint = CollectionProcessor.addSubcats(dbManager, query, constraint, category, crit);
-				} else if (relation == QueryField.UNDEFINED && value instanceof Double)
-					constraint = query.descend(field).constrain(Double.NEGATIVE_INFINITY).greater().equal().not();
-				else if (relation == QueryField.UNDEFINED && value instanceof Date)
-					constraint = query.descend(field).constrain(null);
-				else {
-					constraint = query.descend(field).constrain(value);
-					if (constraint != null)
-						constraint = CollectionProcessor.applyRelation(dbManager, tempColl.getSystem(), field, field,
-								crit.getRelation(), value, constraint, query);
-				} // end single criterion processing
-			}
-			if (constraint != null) {
-				if (disjunction != null)
-					constraint = (crit.getAnd()) ? disjunction.and(constraint) : disjunction.or(constraint);
-				disjunction = constraint;
-			}
+				constraint = query.descend(field).constrain(value);
+				if (constraint != null)
+					constraint = CollectionProcessor.applyRelation(tempColl.getSystem() ? dbManager : null, field,
+							field, crit.getRelation(), value, constraint, query);
+			} // end single criterion processing
+			if (constraint != null)
+				disjunction = disjunction != null
+						? (crit.getAnd()) ? disjunction.and(constraint) : disjunction.or(constraint)
+						: constraint;
 		}
 		return disjunction;
 	}

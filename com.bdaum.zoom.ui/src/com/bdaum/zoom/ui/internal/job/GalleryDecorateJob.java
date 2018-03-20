@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.job;
@@ -55,7 +55,7 @@ public class GalleryDecorateJob extends DecorateJob {
 	private Runnable assetRunnable = new Runnable() {
 		public void run() {
 			if (items != null)
-				for (GalleryItem item : items) {
+				for (GalleryItem item : items)
 					if (item != null && !item.isDisposed()) {
 						Asset asset = (AssetImpl) item.getData(UiConstants.ASSET);
 						if (asset == null) {
@@ -71,7 +71,6 @@ public class GalleryDecorateJob extends DecorateJob {
 							}
 						}
 					}
-				}
 			items = null;
 		}
 	};
@@ -108,5 +107,4 @@ public class GalleryDecorateJob extends DecorateJob {
 			}
 		}
 	}
-
 }

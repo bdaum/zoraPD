@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -80,11 +80,10 @@ public class CopyAction extends AbstractSelectionAction {
 			} catch (SWTError ex) {
 				if (ex.code != DND.ERROR_CANNOT_SET_CLIPBOARD)
 					core.logError(Messages.CopyAction_Error_when_copying, ex);
-				else {
+				else
 					AcousticMessageDialog.openWarning(shell,
 							Messages.CopyAction_Problem_copying,
 							Messages.CopyAction_Problem_accessing);
-				}
 			}
 			if (!errands.isEmpty())
 				UiUtilities.showFilesAreOffline(shell, errands,

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.preferences;
@@ -47,6 +47,8 @@ public interface PreferenceConstants {
 	String SHOWLABEL = "com.bdaum.zoom.showLabel"; //$NON-NLS-1$
 	String THUMBNAILTEMPLATE  = "com.bdaum.zoom.thumbnailTemplate"; //$NON-NLS-1$
 	String LABELFONTSIZE ="com.bdaum.zoom.labelFontSize"; //$NON-NLS-1$
+	String DISTANCEUNIT = "com.bdaum.zoom.distanceUnit"; //$NON-NLS-1$
+	String DIMUNIT = "com.bdaum.zoom.dimUnit"; //$NON-NLS-1$
 
 	// Mouse
 	String MOUSE_SPEED = "com.bdaum.zoom.mouseSpeed"; //$NON-NLS-1$
@@ -108,6 +110,7 @@ public interface PreferenceConstants {
 	// Metadata
 	String ESSENTIALMETADATA = "com.bdaum.zoom.essentialMetadata"; //$NON-NLS-1$
 	String HOVERMETADATA = "com.bdaum.zoom.hoverMetadata"; //$NON-NLS-1$
+	String METADATATUNING = "com.bdaum.zoom.metaDataTuning"; //$NON-NLS-1$
 	String METADATATOLERANCES = "com.bdaum.zoom.metaDataTolerances"; //$NON-NLS-1$
 	String EXPORTMETADATA = "com.bdaum.zoom.metaDataExport"; //$NON-NLS-1$
 	String JPEGMETADATA = "com.bdaum.zoom.jpegMetaExport"; //$NON-NLS-1$

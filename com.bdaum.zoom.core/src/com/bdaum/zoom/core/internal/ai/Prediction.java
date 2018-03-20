@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.internal.ai;
@@ -32,11 +32,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.graphics.Rectangle;
 
 public class Prediction {
-
-	// private static NumberFormat nf = NumberFormat.getNumberInstance();
-	// static {
-	// nf.setMaximumFractionDigits(1);
-	// }
 
 	public static class Token {
 
@@ -128,10 +123,9 @@ public class Prediction {
 			return null;
 		Map<String, Token> map = new HashMap<>(tokens.length * 3 / 2);
 		for (Token token : tokens) {
-			String label = token.label;
-			Token alias = map.get(label);
+			Token alias = map.get(token.label);
 			if (alias == null || token.score > alias.score)
-				map.put(label, token);
+				map.put(token.label, token);
 		}
 		Collection<Token> values = map.values();
 		return values.toArray(new Token[values.size()]);

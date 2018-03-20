@@ -15,11 +15,12 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.gps.internal.operations;
 
+import java.io.EOFException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -241,6 +242,8 @@ public class GeoshownOperation extends GeotagOperation {
 		} catch (UnknownHostException e) {
 			addError(Messages.getString("GeotagOperation.webservice_not_reached"), //$NON-NLS-1$
 					e);
+		} catch (EOFException e) {
+			addError(Messages.getString("GeoshownOperation.geonaming_aborted"), null); //$NON-NLS-1$
 		}
 	}
 

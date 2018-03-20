@@ -15,19 +15,22 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.db.internal;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.eclipse.core.runtime.ListenerList;
 
 import com.bdaum.zoom.cat.model.group.SmartCollection;
+import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IPostProcessor2;
 import com.bdaum.zoom.core.db.IColorCodeFilter;
 import com.bdaum.zoom.core.db.IDbErrorHandler;
@@ -44,9 +47,7 @@ import com.bdaum.zoom.core.internal.peer.IPeerService;
 @SuppressWarnings("restriction")
 public class DbFactory implements IDbFactory, IDbListener {
 
-
-	private static Map<String, Float> toleranceMap = new HashMap<String, Float>(
-			50);
+	private static Map<String, Float> toleranceMap = new HashMap<String, Float>(50);
 
 	private IDbErrorHandler errorHandler;
 	private int maxImports;
@@ -54,11 +55,11 @@ public class DbFactory implements IDbFactory, IDbListener {
 	private boolean peerServiceInitialized;
 	private ListenerList<IDbListener> dbListeners = new ListenerList<IDbListener>();
 	private IPostProcessor2[] autoColoringPostProcessors;
-
 	private ILireService lireService;
-
 	private ILuceneService luceneService;
-
+	private List<String> indexedFields = new ArrayList<String>();
+	private char distanceUnit = 'k';
+	private char dimUnit = 'c';
 
 	public void activate() {
 		DbActivator.getDefault().logInfo(Messages.DbFactory_db_service_started);
@@ -80,8 +81,8 @@ public class DbFactory implements IDbFactory, IDbListener {
 		dbListeners.remove(listener);
 	}
 
-	public Object[] getListeners() {
-		return dbListeners.getListeners();
+	public ListenerList<IDbListener> getListeners() {
+		return dbListeners;
 	}
 
 	/*
@@ -90,20 +91,18 @@ public class DbFactory implements IDbFactory, IDbListener {
 	 * @see com.bdaum.zoom.core.db.IDbFactory#createDbManager(java.lang.String,
 	 * boolean, boolean)
 	 */
-	public IDbManager createDbManager(String fileName, boolean newDb,
-			boolean readOnly, boolean primary) {
+	public IDbManager createDbManager(String fileName, boolean newDb, boolean readOnly, boolean primary) {
 		if (!newDb)
-			for (Object listener : dbListeners.getListeners()) {
-				IDbManager foreignDb = ((IDbListener) listener)
-						.databaseAboutToOpen(fileName, primary);
+			for (IDbListener listener : dbListeners) {
+				IDbManager foreignDb = listener.databaseAboutToOpen(fileName, primary);
 				if (foreignDb != null) {
 					foreignDb.setReadOnly(foreignDb.isReadOnly() && readOnly);
 					return foreignDb;
 				}
 			}
 		IDbManager db = new DbManager(this, fileName, newDb, readOnly);
-		for (Object listener : dbListeners.getListeners())
-			((IDbListener) listener).databaseOpened(db, primary);
+		for (IDbListener listener : dbListeners)
+			listener.databaseOpened(db, primary);
 		return db;
 	}
 
@@ -125,7 +124,6 @@ public class DbFactory implements IDbFactory, IDbListener {
 			luceneService.invalidateAllReaders(indexPath);
 	}
 
-
 	/*
 	 * (non-Javadoc)
 	 *
@@ -139,8 +137,7 @@ public class DbFactory implements IDbFactory, IDbListener {
 			int p = token.lastIndexOf("="); //$NON-NLS-1$
 			if (p > 0) {
 				try {
-					toleranceMap.put(token.substring(0, p),
-							Float.parseFloat(token.substring(p + 1)));
+					toleranceMap.put(token.substring(0, p), Float.parseFloat(token.substring(p + 1)));
 				} catch (NumberFormatException e) {
 					// ignore
 				}
@@ -161,8 +158,7 @@ public class DbFactory implements IDbFactory, IDbListener {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.db.IDbFactory#setErrorHandler(com.bdaum.zoom.core
+	 * @see com.bdaum.zoom.core.db.IDbFactory#setErrorHandler(com.bdaum.zoom.core
 	 * .db.IDbErrorHandler)
 	 */
 	public void setErrorHandler(IDbErrorHandler errorHandler) {
@@ -199,13 +195,11 @@ public class DbFactory implements IDbFactory, IDbListener {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see com.bdaum.zoom.core.db.IDbFactory#createTypeAndRatingFilter(int,
-	 * int)
+	 * @see com.bdaum.zoom.core.db.IDbFactory#createTypeAndRatingFilter(int, int)
 	 */
 	public ITypeFilter createTypeFilter(int formats) {
 		return new TypeFilter(formats);
 	}
-
 
 	/*
 	 * (non-Javadoc)
@@ -242,8 +236,10 @@ public class DbFactory implements IDbFactory, IDbListener {
 	public int getLireServiceVersion() {
 		return DbActivator.getDefault().getLireServiceVersion();
 	}
-	
-	/* (nicht-Javadoc)
+
+	/*
+	 * (nicht-Javadoc)
+	 * 
 	 * @see com.bdaum.zoom.core.db.IDbFactory#getLireService()
 	 */
 	public ILireService getLireService(boolean activate) {
@@ -254,7 +250,9 @@ public class DbFactory implements IDbFactory, IDbListener {
 		return lireService;
 	}
 
-	/* (nicht-Javadoc)
+	/*
+	 * (nicht-Javadoc)
+	 * 
 	 * @see com.bdaum.zoom.core.db.IDbFactory#getLireService()
 	 */
 	public ILuceneService getLuceneService() {
@@ -266,16 +264,13 @@ public class DbFactory implements IDbFactory, IDbListener {
 		return luceneService;
 	}
 
-
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.db.IDbFactory#setAutoColoringProcessors(com.bdaum
+	 * @see com.bdaum.zoom.core.db.IDbFactory#setAutoColoringProcessors(com.bdaum
 	 * .zoom.core.IPostProcessor2[])
 	 */
-	public void setAutoColoringProcessors(
-			IPostProcessor2[] autoColoringPostProcessors) {
+	public void setAutoColoringProcessors(IPostProcessor2[] autoColoringPostProcessors) {
 		this.autoColoringPostProcessors = autoColoringPostProcessors;
 	}
 
@@ -294,5 +289,48 @@ public class DbFactory implements IDbFactory, IDbListener {
 		return processor;
 	}
 
+	@Override
+	public List<String> getIndexedFields() {
+		return indexedFields;
+	}
+
+	@Override
+	public void setIndexedFields(String fields) {
+		indexedFields.clear();
+		for (String key :  Core.fromStringList(fields, "\n")) { //$NON-NLS-1$
+			String[] basedOn = VirtualQueryComputer.getBasedOn(key);
+			if (basedOn != null)
+				for (String k : basedOn)
+					indexedFields.add(k);
+			else
+				indexedFields.add(key);
+		}
+	}
+
+	@Override
+	public char getDistanceUnit() {
+		return distanceUnit;
+	}
+
+	@Override
+	public void setDistanceUnit(String unit) {
+		if (unit != null && !unit.isEmpty() && unit.charAt(0) != distanceUnit) {
+			distanceUnit = unit.charAt(0);
+			Core.getCore().fireAssetsModified(null, null);
+		}
+	}
+
+	@Override
+	public char getDimUnit() {
+		return dimUnit;
+	}
+
+	@Override
+	public void setDimUnit(String unit) {
+		if (unit != null && !unit.isEmpty() && unit.charAt(0) != dimUnit) {
+			dimUnit = unit.charAt(0);
+			Core.getCore().fireAssetsModified(null, null);
+		}
+	}
 
 }

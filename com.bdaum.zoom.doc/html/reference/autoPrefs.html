@@ -7,6 +7,8 @@
 
 
 
+
+
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Automatic Actions Preferences</title>
 
 
@@ -18,11 +20,12 @@
 
 <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
 <h2>Automatic Actions Preferences</h2><h4>Image relations<br>
-</h4><ul style="font-weight: normal;"><li><span style="font-weight: bold;"></span><span style="font-weight: bold;"></span></li>
+</h4><ul style="font-weight: normal;">
   <li><span style="font-weight: bold;">Automatically derive relationships between raw and developed image</span>.
 When importing both RAW and converted DNG files, it is possible to
 connect both with a relationship (Original &lt;-&gt; Derivative) which can be
 viewed in the <a href="hierarchy.html"><span style="font-style: italic;">Hierarchy view</span></a>.<font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"> Both the original and the derivate must have the same file name (without extension).<span style="font-weight: bold;"> </span>You can restrict this detection to images contained in the same folder or allow detection across folder boundaries.<br>
+
     <br>
 </font></li>
   <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">Automatically detect derived images by EXIF data.&nbsp;</span>This
@@ -36,11 +39,23 @@ a relationship.<br>
 This option allows applying the XMP data of the original image to the
 derivate image if the derivate image does not have an own XMP file.</font></li>
 </ul><h4>Automatic creation of collections</h4>
-<p style="margin-left: 40px;"> By adding rules to this page you can automatically create
-collections to the catalog when importing images. For each image the
-metadata is analyzed. When a rule matches, a collection that will
-contain that image (and others with corresponding metadata) will be
-created, provided such a collection does not already exist.</p><p style="margin-left: 40px;">This
-page shows an overview of all rules defined. You can edit or remove
-rules, or add new rules. For details on rule definition see <a href="autoRule.html">here</a>.</p><p></p><p></p>
+<ul>
+  <li><span id="result_box" class="" tabindex="-1" lang="en"><span title="*  Regeln für die automatische Erzeugung von Kollektionen."><span style="font-weight: bold;">Rules for the automatic generation of collections.</span> </span><span title="Durch Hinzufügen von Regeln zu dieser Tabelle können Sie Kollektionen im Katalog automatisch erstellen, wenn Sie Bilder importieren.">By adding rules to this table, you can automatically create collections in the catalog when you import images. </span><span title="Für jedes Bild werden die Metadaten analysiert.">For each image, the metadata is analyzed. </span><span title="Wenn eine Regel zutrifft, wird eine Kollektion erstellt, welche das importierte Bild (und andere mit übereinstimmenden Metadaten) enthalten wird - sofern eine solche Kollektion noch nicht vorhanden ist.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;">If a rule applies, a collection will be created that will 
+contain the imported image (and others with matching metadata) - if such
+ a collection does not yet exist.<br>
+</span></span><span title="Wenn eine Regel zutrifft, wird eine Kollektion erstellt, welche das importierte Bild (und andere mit übereinstimmenden Metadaten) enthalten wird - sofern eine solche Kollektion noch nicht vorhanden ist.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"></span><span title="Diese Tabelle zeigt eine Übersicht über alle definierten Regeln.">This table shows an overview of all defined rules. </span><span title="Sie können die Regeln bearbeiten oder entfernen oder neue Regeln hinzufügen.">You can edit or remove the rules or add new rules. </span>Details about the rule definition can be found <a href="autorule.html">here</a>.<br>
+    <br>
+  </li>
+  <li><span title="Details zur Regel-Definition finden Sie hier.
+&nbsp;&nbsp;&nbsp;&nbsp;"></span><span title="* Beschleunigungskandidaten."><span style="font-weight: bold;">Acceleration candidates.</span> </span><span title="Es ist sinnvoll, die in den Regeln genannten Felder durch den Aufbau eines Indexes in der Katalogdatenbank zu beschleunigen.">It makes sense to speed up the fields specified in the rules by setting up an index in the catalog database. </span><span title="Die Datenbankindexierung (nicht zu Verwecheln mit der Text- und Ähnlichkeitsindexierung) beschleunigt die Abfragen für diese Felder erheblich, während Speicher- und Löschvorgänge etwas verlangsamt und die Kataloggröße erhöht wird.">Database
+ indexing (not to be mistaken as text and similarity indexing) significantly speeds up 
+queries on these fields, while slightly slowing down storage and deletion and 
+increasing catalog size. </span>Changes in this table become effective after reopening of the catalog.<br>
+  </li>
+</ul>
+<p style="margin-left: 40px;"><span id="result_box" class="" tabindex="-1" lang="en"><span title="Änderungen in dieser Tabelle erzwingen die Neueröffnung des Katalogs.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span title="Um ein Feld in der Datenbank zu indizieren, markieren Sie es in der Tabelle.">To index a field in the database, check it in the table.</span></span></p>
+<p></p><p></p>
 </body></html>

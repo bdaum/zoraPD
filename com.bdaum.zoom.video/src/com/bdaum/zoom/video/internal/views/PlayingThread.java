@@ -25,22 +25,18 @@ public class PlayingThread extends Thread {
 		private int[] rgbBuffer;
 		private ImageData data;
 
-		public void display(DirectMediaPlayer mediaPlayer,
-				Memory[] nativeBuffer, BufferFormat bufferFormat) {
-
+		public void display(DirectMediaPlayer mediaPlayer, Memory[] nativeBuffer, BufferFormat bufferFormat) {
 			int w = bufferFormat.getWidth();
 			int h = bufferFormat.getHeight();
+			int size = w * h;
 			if (rgbBuffer == null)
-				rgbBuffer = new int[w * h];
-			nativeBuffer[0].getByteBuffer(0L, nativeBuffer[0].size())
-					.asIntBuffer().get(rgbBuffer, 0, h * w);
+				rgbBuffer = new int[size];
+			nativeBuffer[0].getByteBuffer(0L, nativeBuffer[0].size()).asIntBuffer().get(rgbBuffer, 0, size);
 			if (data == null)
-				data = new ImageData(w, h, 24, new PaletteData(0xFF0000,
-						0xFF00, 0xFF));
-			data.setPixels(0, 0, w * h, rgbBuffer, 0);
-			long length = mediaPlayer.getLength();
+				data = new ImageData(w, h, 24, new PaletteData(0xFF0000, 0xFF00, 0xFF));
+			data.setPixels(0, 0, size, rgbBuffer, 0);
 			float position = mediaPlayer.getPosition();
-			currentPosition = (long) ((double) position * length);
+			currentPosition = (long) ((double) position * mediaPlayer.getLength());
 			if (position >= 1f) {
 				pause = true;
 				notifier.applyPause();
@@ -51,7 +47,6 @@ public class PlayingThread extends Thread {
 	}
 
 	public class TestBufferFormatCallback implements BufferFormatCallback {
-
 		public BufferFormat getBufferFormat(int sourceWidth, int sourceHeight) {
 			return new BufferFormat("RV32", sourceWidth, sourceHeight, //$NON-NLS-1$
 					new int[] { sourceWidth * 4 }, new int[] { sourceHeight });
@@ -59,16 +54,11 @@ public class PlayingThread extends Thread {
 
 	}
 
-
 	private final ThreadUINotifier notifier;
-
 	private volatile boolean pause = false;
 	private volatile long currentPosition;
-
 	private final URI uri;
-
 	private MediaPlayerFactory factory;
-
 	private DirectMediaPlayer mediaPlayer;
 
 	public PlayingThread(URI uri, MediaPlayerFactory factory, ThreadUINotifier notifier) {
@@ -100,9 +90,7 @@ public class PlayingThread extends Thread {
 	}
 
 	public void seek(long milli) {
-		long length = mediaPlayer.getLength();
-		double pos = (double) milli / length;
-		mediaPlayer.setPosition((float) pos);
+		mediaPlayer.setPosition((float) ((double) milli / mediaPlayer.getLength()));
 	}
 
 	public long getDuration() {
@@ -132,12 +120,10 @@ public class PlayingThread extends Thread {
 		try {
 			if (uri == null)
 				return false;
-			mediaPlayer = factory.newDirectMediaPlayer(
-					new TestBufferFormatCallback(), new TestRenderCallback());
+			mediaPlayer = factory.newDirectMediaPlayer(new TestBufferFormatCallback(), new TestRenderCallback());
 			return true;
 		} catch (RuntimeException ex) {
-			notifier.showError(NLS.bind(
-					Messages.VlcPlayingThread_error_initializing, uri, ex));
+			notifier.showError(NLS.bind(Messages.VlcPlayingThread_error_initializing, uri, ex));
 		}
 		return false;
 	}
@@ -145,13 +131,10 @@ public class PlayingThread extends Thread {
 	@Override
 	public void run() {
 		try {
-			if (Constants.FILESCHEME.equals(uri.getScheme()))
-				mediaPlayer.playMedia(new File(uri).getAbsolutePath());
-			else
-				mediaPlayer.playMedia(uri.toString());
+			mediaPlayer.playMedia(
+					Constants.FILESCHEME.equals(uri.getScheme()) ? new File(uri).getAbsolutePath() : uri.toString());
 		} catch (Exception ex) {
-			notifier.showError(NLS.bind(
-					Messages.VlcPlayingThread_error_playing, uri, ex));
+			notifier.showError(NLS.bind(Messages.VlcPlayingThread_error_playing, uri, ex));
 		}
 	}
 

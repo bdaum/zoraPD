@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.video.youtube.internal.wizard;
 
@@ -32,11 +32,9 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.scohen.juploadr.uploadapi.CommunicationException;
@@ -48,6 +46,7 @@ import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.net.communities.CommunityAccount;
 import com.bdaum.zoom.net.communities.ui.AbstractCommunityExportWizard;
 import com.bdaum.zoom.net.communities.ui.AbstractExportToCommunityPage;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
@@ -89,10 +88,7 @@ public class ExportToYouTubePage extends AbstractExportToCommunityPage {
 		Composite composite = createComposite(parent, 1);
 		new Label(composite, SWT.NONE);
 		createAccountGroup(composite);
-		CGroup group = new CGroup(composite, SWT.NONE);
-		group.setText(Messages.ExportToYouTubePage_settings);
-		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-		group.setLayout(new GridLayout(2, false));
+		CGroup group = CGroup.create(composite, 1, Messages.ExportToYouTubePage_settings);
 		new Label(group, SWT.NONE).setText(Messages.ExportToYouTubePage_youtube_category);
 		catViewer = new ComboViewer(group);
 		catViewer.setContentProvider(new IStructuredContentProvider() {
@@ -120,7 +116,7 @@ public class ExportToYouTubePage extends AbstractExportToCommunityPage {
 				return (label != null) ? label : super.getText(element);
 			}
 		});
-		catViewer.setComparator(new ViewerComparator());
+		catViewer.setComparator(ZViewerComparator.INSTANCE);
 		YouTubeUploadClient api = (YouTubeUploadClient) ((AbstractCommunityExportWizard) getWizard())
 				.getApi();
 		try {

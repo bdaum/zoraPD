@@ -50,7 +50,7 @@ public class RawConverter extends AbstractRawConverter {
 	private static final String SHOW_INFO = "com.bdaum.zoom.dcraw.property.showInfo"; //$NON-NLS-1$
 
 	private final static String Dcraw = BatchConstants.WIN32 ? "dcraw.exe" : "dcraw"; //$NON-NLS-1$//$NON-NLS-2$
-	final static NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+	private final static NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
 
 	private File dcraw;
 	private boolean external = false;
@@ -116,8 +116,7 @@ public class RawConverter extends AbstractRawConverter {
 			Object abb = options.get(ABBERATION);
 			if (abb instanceof double[]) {
 				parms.add("-C"); //$NON-NLS-1$
-				double[] factors = (double[]) abb;
-				for (double f : factors)
+				for (double f : (double[]) abb)
 					parms.add(nf.format(f));
 			}
 		} else

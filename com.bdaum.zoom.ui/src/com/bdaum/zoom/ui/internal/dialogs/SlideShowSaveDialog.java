@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -81,16 +81,14 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements ModifyListe
 		Composite composite = new Composite(area, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(2, false));
-		Label label = new Label(composite, SWT.NONE);
-		label.setText(Messages.SlideShowSaveDialog_name);
+		new Label(composite, SWT.NONE).setText(Messages.SlideShowSaveDialog_name);
 		nameField = new Text(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		layoutData.verticalIndent = 10;
 		nameField.setLayoutData(layoutData);
 		nameField.setText(Messages.SlideShowSaveDialog_slideshow + Constants.DFDT.format(new Date()));
 		nameField.addModifyListener(this);
-		Label glabel = new Label(composite, SWT.NONE);
-		glabel.setText(Messages.SlideShowSaveDialog_group);
+		new Label(composite, SWT.NONE).setText(Messages.SlideShowSaveDialog_group);
 		groupField = new Combo(composite, SWT.DROP_DOWN);
 		groupField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		List<GroupImpl> set = Core.getCore().getDbManager().obtainObjects(GroupImpl.class);

@@ -15,16 +15,19 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017-2018 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -46,13 +49,18 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
 
+import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.operations.AutoRule;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.AutoRuleOperation;
+import com.bdaum.zoom.ui.internal.SortColumnManager;
+import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
+import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
@@ -67,8 +75,11 @@ public class AutoRuleComponent {
 	private Button removeAutoButton;
 	private Button addAutoButton;
 	protected boolean cntrlDwn;
+	private CheckboxTableViewer accelViewer;
+	private List<String> accelerated;
 
-	public AutoRuleComponent(Composite parent, IAdaptable info) {
+	@SuppressWarnings("unused")
+	public AutoRuleComponent(Composite parent, int style, IAdaptable info) {
 		this.info = info;
 		composite = new Composite(parent, SWT.NONE);
 		Layout layout = parent.getLayout();
@@ -175,9 +186,11 @@ public class AutoRuleComponent {
 		ruleViewer.getTable().setHeaderVisible(true);
 		ruleViewer.getTable().setLinesVisible(true);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
-		layoutData.heightHint = 300;
+		layoutData.heightHint = (style & SWT.SHORT) != 0 ? 150 : 300;
 		ruleViewer.getTable().setLayoutData(layoutData);
 		ruleViewer.setContentProvider(ArrayContentProvider.getInstance());
+		new SortColumnManager(ruleViewer, new int[] {SWT.UP, SWT.UP, SWT.UP, SWT.NONE, SWT.NONE}, 0);
+		ruleViewer.setComparator(ZViewerComparator.INSTANCE);
 		ruleViewer.getControl().addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
@@ -224,6 +237,7 @@ public class AutoRuleComponent {
 					autoRules.add(rule);
 					ruleViewer.add(rule);
 					ruleViewer.setSelection(new StructuredSelection(rule));
+					fillAccelViewer();
 					updateButtons();
 				}
 			}
@@ -255,11 +269,12 @@ public class AutoRuleComponent {
 					if (index >= 0)
 						ruleViewer.setSelection(new StructuredSelection(autoRules.get(index)));
 				}
+				fillAccelViewer();
 				updateButtons();
 			}
 		});
-		Label sep = new Label(autoButtonBar, SWT.SEPARATOR | SWT.HORIZONTAL);
-		sep.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		new Label(autoButtonBar, SWT.SEPARATOR | SWT.HORIZONTAL)
+				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		applyButton = new Button(autoButtonBar, SWT.PUSH);
 		applyButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		applyButton.setText(Messages.AutoRuleComponent_apply);
@@ -271,9 +286,23 @@ public class AutoRuleComponent {
 				IStructuredSelection sel = (IStructuredSelection) ruleViewer.getSelection();
 				if (!sel.isEmpty())
 					OperationJob.executeSlaveOperation(
-							new AutoRuleOperation(new ArrayList<AutoRule>(sel.toList()), null, null), info);
+							new AutoRuleOperation(new ArrayList<AutoRule>(sel.toList()), null, null), info, false);
 			}
 		});
+		CGroup accelGroup = UiUtilities.createGroup(composite, 1, Messages.AutoRuleComponent_accel_candidates);
+		new Label(accelGroup, SWT.WRAP).setText(Messages.AutoRuleComponent_accel_msg);
+		accelViewer = CheckboxTableViewer.newCheckList(accelGroup, SWT.V_SCROLL | SWT.BORDER);
+		accelViewer.getTable().setLayoutData(new GridData(400, (style & SWT.SHORT) != 0 ? 50 : 80));
+		accelViewer.setContentProvider(ArrayContentProvider.getInstance());
+		accelViewer.setLabelProvider(new ZColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				if (element instanceof QueryField)
+					return ((QueryField) element).getLabel();
+				return element.toString();
+			}
+		});
+		accelViewer.setComparator(ZViewerComparator.INSTANCE);
 		updateButtons();
 	}
 
@@ -299,12 +328,28 @@ public class AutoRuleComponent {
 		AutoRuleDialog dialog = new AutoRuleDialog(composite.getShell(), rule, otherRules);
 		if (dialog.open() == AutoRuleDialog.OK)
 			ruleViewer.update(rule, null);
+		fillAccelViewer();
 		updateButtons();
 	}
 
 	public void fillValues(String serialized) {
+		accelerated = Core.fromStringList(
+				UiActivator.getDefault().getPreferenceStore().getString(PreferenceConstants.METADATATUNING), "\n"); //$NON-NLS-1$
 		autoRules = AutoRule.constructRules(serialized);
 		ruleViewer.setInput(autoRules);
+		fillAccelViewer();
+	}
+
+	private void fillAccelViewer() {
+		Set<QueryField> candidates = new HashSet<>();
+		for (AutoRule autoRule : autoRules) {
+			QueryField qfield = autoRule.getQfield();
+			if (qfield.isUiField() && !qfield.isStruct() && qfield.isQuery() && !accelerated.contains(qfield.getKey()))
+				candidates.add(qfield);
+		}
+		Object[] checkedElements = accelViewer.getCheckedElements();
+		accelViewer.setInput(candidates);
+		accelViewer.setCheckedElements(checkedElements);
 	}
 
 	public String getResult() {
@@ -323,7 +368,19 @@ public class AutoRuleComponent {
 
 	public void setEnabled(boolean enabled) {
 		ruleViewer.getControl().setEnabled(enabled);
+		accelViewer.getControl().setEnabled(enabled);
 		updateButtons();
+	}
+
+	public void accelerate() {
+		Object[] checkedElements = accelViewer.getCheckedElements();
+		if (checkedElements.length > 0) {
+			for (Object element : checkedElements)
+				if (element instanceof QueryField)
+					accelerated.add(((QueryField) element).getKey());
+			UiActivator.getDefault().getPreferenceStore().putValue(PreferenceConstants.METADATATUNING,
+					Core.toStringList(accelerated, 'n'));
+		}
 	}
 
 }

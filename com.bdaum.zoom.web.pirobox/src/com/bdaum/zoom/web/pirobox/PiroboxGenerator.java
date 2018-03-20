@@ -15,14 +15,12 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.web.pirobox;
 
 import java.io.File;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -74,8 +72,7 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 	protected int getThumbnailSizeInPixel(int i) {
 		if (i < 0 || i >= THUMBSIZE.length * 2)
 			i = 0;
-		return i >= THUMBSIZE.length ? -THUMBSIZE[i - THUMBSIZE.length]
-				: THUMBSIZE[i];
+		return i >= THUMBSIZE.length ? -THUMBSIZE[i - THUMBSIZE.length] : THUMBSIZE[i];
 	}
 
 	@Override
@@ -84,9 +81,8 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 	}
 
 	@Override
-	protected Map<String, String> getImageSnippetVars(WebExhibit exhibit,
-			AssetImpl asset, Storyboard storyboard, String thumbnail,
-			String image, String bigImage, String original, int i) {
+	protected Map<String, String> getImageSnippetVars(WebExhibit exhibit, AssetImpl asset, Storyboard storyboard,
+			String thumbnail, String image, String bigImage, String original, int i) {
 		Map<String, String> varmap = new HashMap<String, String>();
 		varmap.put("resources", getDeployResourceFolder().getName()); //$NON-NLS-1$
 		varmap.put("image", encodeURL(image)); //$NON-NLS-1$
@@ -104,30 +100,21 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 				if (storyboard.getShowDescriptions()) {
 					String description = exhibit.getDescription();
 					if (description != null && !description.isEmpty()) {
-						if (exhibit.getHtmlDescription()) {
+						if (exhibit.getHtmlDescription())
 							sb.append("<br/>").append(description); //$NON-NLS-1$
-						} else {
-							StringTokenizer st = new StringTokenizer(
-									description, "\n\r"); //$NON-NLS-1$
-							while (st.hasMoreTokens()) {
+						else {
+							StringTokenizer st = new StringTokenizer(description, "\n\r"); //$NON-NLS-1$
+							while (st.hasMoreTokens())
 								sb.append("<br/><small>").append( //$NON-NLS-1$
-												BatchUtilities.encodeHTML(
-														st.nextToken(), false))
-										.append("</small>"); //$NON-NLS-1$
-							}
+										BatchUtilities.encodeHTML(st.nextToken(), false)).append("</small>"); //$NON-NLS-1$
 						}
 					}
 				}
 				WebGalleryImpl show = getShow();
-				if (exhibit.getDownloadable() && original != null
-						&& !show.getHideDownload()) {
-					String downloadText = show.getDownloadText();
-					if (downloadText != null && !downloadText.isEmpty()) {
-						sb.append("<div class='download'><a href='").append(encodeURL(original)) //$NON-NLS-1$
-								.append("'>").append(BatchUtilities.encodeHTML(downloadText, false)) //$NON-NLS-1$
-								.append("</a></div>"); //$NON-NLS-1$
-					}
-				}
+				if (exhibit.getDownloadable() && original != null && needsOriginals())
+					sb.append("<div class='download'><a href='").append(encodeURL(original)) //$NON-NLS-1$
+							.append("'>").append(BatchUtilities.encodeHTML(show.getDownloadText(), false)) //$NON-NLS-1$
+							.append("</a></div>"); //$NON-NLS-1$
 				String exifDiv = getExifDiv(storyboard, exhibit, asset, "meta"); //$NON-NLS-1$
 				if (exifDiv != null)
 					sb.append(exifDiv);
@@ -155,10 +142,8 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 	}
 
 	private File getFolder(String name) {
-		WebParameter parameter = getShow().getParameter(
-				Activator.PLUGIN_ID + ".design"); //$NON-NLS-1$
-		return getFolder(Activator.getDefault().getBundle(), name
-				+ "/" + (String) parameter.getValue()); //$NON-NLS-1$
+		WebParameter parameter = getShow().getParameter(Activator.PLUGIN_ID + ".design"); //$NON-NLS-1$
+		return getFolder(Activator.getDefault().getBundle(), name + "/" + (String) parameter.getValue()); //$NON-NLS-1$
 	}
 
 	@Override
@@ -172,131 +157,45 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 		varmap.put("images", generateImageList(false, false)); //$NON-NLS-1$
 		WebGalleryImpl show = getShow();
 		int navwidth = setPaddingAndMargins(show, varmap, null);
-		File plate = getNameplate();
-		if (plate != null)
-			varmap.put("nameplatediv", generateNameplate(show, plate)); //$NON-NLS-1$
-		File bgImage = getBgImage();
-		if (bgImage != null)
-			varmap.put("bgimage", generateBg(show, bgImage)); //$NON-NLS-1$
-		String f = generateFooter(show,
-				"<a href=\"http://www.pirolab.it/pirobox/\" target=\"_blank\">Pirobox</a>"); //$NON-NLS-1$
-		varmap.put("footer", f); //$NON-NLS-1$
-		if (!show.getHideHeader()) {
-			varmap.put("name", BatchUtilities.encodeHTML(show.getName(), false)); //$NON-NLS-1$
-			String description = show.getDescription();
-			if (description != null && !description.isEmpty()) {
-				String d = show.getHtmlDescription() ? description
-						: BatchUtilities.encodeHTML(description, true);
-				varmap.put("description", d); //$NON-NLS-1$
-				varmap.put(
-						"descriptiondiv", //$NON-NLS-1$
-						"<div id=\"description\" class=\"emboxd\">" + d + "</div>"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		}
-		WebParameter webParameter = show.getParameter(Activator.PLUGIN_ID
-				+ ".pirobox_next"); //$NON-NLS-1$
-		String navpos = "piro_next"; //$NON-NLS-1$
-		if (webParameter != null) {
-			Object value = webParameter.getValue();
-			if (((Boolean) value).booleanValue()) {
-				navpos = "piro_next_out"; //$NON-NLS-1$
-			}
-		}
-		varmap.put("next", navpos); //$NON-NLS-1$
-		webParameter = show.getParameter(Activator.PLUGIN_ID
-				+ ".pirobox_previous"); //$NON-NLS-1$
-		navpos = "piro_prev"; //$NON-NLS-1$
-		if (webParameter != null) {
-			Object value = webParameter.getValue();
-			if ((((Boolean) value).booleanValue())) {
-				navpos = "piro_prev_out"; //$NON-NLS-1$
-			}
-		}
-		varmap.put("prev", navpos); //$NON-NLS-1$
-		webParameter = show.getParameter(Activator.PLUGIN_ID + ".close_all"); //$NON-NLS-1$
-		navpos = ".piro_close"; //$NON-NLS-1$
-		if (webParameter != null) {
-			Object value = webParameter.getValue();
-			if ((((Boolean) value).booleanValue())) {
-				navpos = ".piro_close,.piro_overlay"; //$NON-NLS-1$
-			}
-		}
-		varmap.put("close", navpos); //$NON-NLS-1$
-		webParameter = show.getParameter(Activator.PLUGIN_ID + ".slideshow"); //$NON-NLS-1$
-		navpos = "slideshow"; //$NON-NLS-1$
-		if (webParameter != null) {
-			Object value = webParameter.getValue();
-			if (!(((Boolean) value).booleanValue())) {
-				navpos = ""; //$NON-NLS-1$
-			}
-		}
-		varmap.put("sshow", navpos); //$NON-NLS-1$
+		varmap.put("next", getParamBoolean(show.getParameter(Activator.PLUGIN_ID + ".pirobox_next")) ? "piro_next_out" //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+				: "piro_next"); //$NON-NLS-1$
+		varmap.put("prev", //$NON-NLS-1$
+				getParamBoolean(show.getParameter(Activator.PLUGIN_ID + ".pirobox_previous")) ? "piro_prev_out" //$NON-NLS-1$//$NON-NLS-2$
+						: "piro_prev"); //$NON-NLS-1$
+		varmap.put("close", //$NON-NLS-1$
+				getParamBoolean(show.getParameter(Activator.PLUGIN_ID + ".close_all")) ? ".piro_close,.piro_overlay" //$NON-NLS-1$//$NON-NLS-2$
+						: ".piro_close"); //$NON-NLS-1$
+		varmap.put("sshow", getParamBoolean(show.getParameter(Activator.PLUGIN_ID + ".slideshow")) ? "slideshow" : ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		lp: for (Storyboard storyboard : show.getStoryboard()) {
-			for (WebExhibitImpl exhibit : Core.getCore().getDbManager().obtainByIds(
-				WebExhibitImpl.class, storyboard.getExhibit())) {
-				if (exhibit.getDownloadable()
-						&& show.getDownloadText() != null
-						&& !show.getDownloadText().isEmpty()
+			for (WebExhibitImpl exhibit : Core.getCore().getDbManager().obtainByIds(WebExhibitImpl.class,
+					storyboard.getExhibit())) {
+				if (exhibit.getDownloadable() && show.getDownloadText() != null && !show.getDownloadText().isEmpty()
 						&& !show.getHideDownload()
-						|| exhibit.getCaption() != null
-						&& !exhibit.getCaption().isEmpty()
-						&& storyboard.getShowCaptions()
-						|| exhibit.getDescription() != null
-						&& !exhibit.getDescription().isEmpty()
-						&& storyboard.getShowDescriptions()) {
+						|| exhibit.getCaption() != null && !exhibit.getCaption().isEmpty()
+								&& storyboard.getShowCaptions()
+						|| exhibit.getDescription() != null && !exhibit.getDescription().isEmpty()
+								&& storyboard.getShowDescriptions()) {
 					varmap.put("captiondiv", //$NON-NLS-1$
 							"<div id=\"caption\" class=\"embox\"></div>"); //$NON-NLS-1$
 					break lp;
 				}
 			}
 		}
-
-		varmap.put("keywords", BatchUtilities.encodeHTML( //$NON-NLS-1$
-				Core.toStringList(show.getKeyword(), ", "), false)); //$NON-NLS-1$
 		NumberFormat nf = (NumberFormat.getNumberInstance(Locale.US));
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ"); //$NON-NLS-1$
-		Date now = new Date();
-		String s = df.format(now);
-		s = s.substring(0, s.length() - 2) + ':' + s.substring(s.length() - 2);
-		varmap.put("date", s); //$NON-NLS-1$
 		nf.setMaximumFractionDigits(2);
 		varmap.put("opacity", nf.format(show.getOpacity() / 100d)); //$NON-NLS-1$
-
-		WebParameter parameter = show.getParameter(Activator.PLUGIN_ID
-				+ ".floatThumbs"); //$NON-NLS-1$
-		String floatThumbs = parameter == null ? null : (String) parameter
-				.getValue();
-		if (floatThumbs == null)
-			floatThumbs = "none"; //$NON-NLS-1$
-		varmap.put("floatThumbs", floatThumbs); //$NON-NLS-1$
+		varmap.put("floatThumbs", getParamString(show.getParameter(Activator.PLUGIN_ID + ".floatThumbs"), "none")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		varmap.put("jquery", getDeployResourceFolder().getName() //$NON-NLS-1$
 				+ "/jquery.packed.js"); //$NON-NLS-1$
 		varmap.put("pirobox", getDeployResourceFolder().getName() //$NON-NLS-1$
 				+ "/piroBox.1_2_min.js"); //$NON-NLS-1$
 		int bodywidth = 300;
 		for (Storyboard storyboard : show.getStoryboard())
-			bodywidth = Math.max(bodywidth,
-					getImageSizeInPixels(storyboard.getImageSize()));
+			bodywidth = Math.max(bodywidth, getImageSizeInPixels(storyboard.getImageSize()));
 		varmap.put("bodywidth", String.valueOf(bodywidth)); //$NON-NLS-1$
 		varmap.put("navwidth", String.valueOf(navwidth)); //$NON-NLS-1$
-		setFontsAndColors(varmap, show);
+		setFontsAndColors(varmap);
 		return varmap;
-	}
-
-	@Override
-	protected String[] getTargetNames() {
-		String pageName = getShow().getPageName();
-		File[] templates = getTemplates();
-		String[] names = new String[templates.length];
-		for (int i = 0; i < templates.length; i++) {
-			String name = templates[i].getName();
-			if (name.equals("index.html") && pageName != null //$NON-NLS-1$
-					&& !pageName.isEmpty()) {
-				name = pageName;
-			}
-			names[i] = name;
-		}
-		return names;
 	}
 
 	@Override
@@ -310,16 +209,13 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 	}
 
 	@Override
-	protected Map<String, String> getSectionSnippetVars(
-			StoryboardImpl storyboard, int i) {
+	protected Map<String, String> getSectionSnippetVars(StoryboardImpl storyboard, int i) {
 		Map<String, String> varmap = new HashMap<String, String>();
 		varmap.put("resources", getDeployResourceFolder().getName()); //$NON-NLS-1$
-		varmap.put(
-				"title", BatchUtilities.encodeHTML(storyboard.getTitle(), true)); //$NON-NLS-1$
+		varmap.put("title", BatchUtilities.encodeHTML(storyboard.getTitle(), true)); //$NON-NLS-1$
 		String description = storyboard.getDescription();
 		if (description != null && !description.isEmpty()) {
-			String d = storyboard.getHtmlDescription() ? description
-					: BatchUtilities.encodeHTML(description, true);
+			String d = storyboard.getHtmlDescription() ? description : BatchUtilities.encodeHTML(description, true);
 			varmap.put("descriptiondiv", //$NON-NLS-1$
 					"<div id=\"description\" class=\"emboxd\">" + d + "</div>"); //$NON-NLS-1$ //$NON-NLS-2$
 		}

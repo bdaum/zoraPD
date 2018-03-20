@@ -29,24 +29,19 @@ public class ImportRenamingPage extends ColoredWizardPage {
 
 	@Override
 	public void createControl(final Composite parent) {
-		renameGroup = new RenameGroup(parent, SWT.NONE, null, false, new RenamingTemplate[]{
-				 new RenamingTemplate(
-						Messages.ImportRenamingPage_date_filename, "_" + Constants.TV_YYYY //$NON-NLS-1$
+		renameGroup = new RenameGroup(parent, SWT.NONE, null, false,
+				new RenamingTemplate[] {
+						new RenamingTemplate(Messages.ImportRenamingPage_date_filename, "_" + Constants.TV_YYYY //$NON-NLS-1$
 								+ Constants.TV_MM + Constants.TV_DD + "-" //$NON-NLS-1$
 								+ Constants.TV_FILENAME, true),
-				new RenamingTemplate(
-						Messages.ImportRenamingPage_user_year_seq, Constants.TV_USER
-								+ Constants.TV_YYYY + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
-				new RenamingTemplate(
-						Messages.ImportRenamingPage_cue_year_seq,
-						Constants.TV_CUE
-								+ "_" + Constants.TV_YYYY + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$ //$NON-NLS-2$
-				new RenamingTemplate(
-						Messages.ImportRenamingPage_filename_seq, Constants.TV_FILENAME
-								+ "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
-				new RenamingTemplate(
-						Messages.ImportRenamingPage_orig_filename, Constants.TV_FILENAME, true)
-		}, false);
+						new RenamingTemplate(Messages.ImportRenamingPage_user_year_seq,
+								Constants.TV_USER + Constants.TV_YYYY + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
+						new RenamingTemplate(Messages.ImportRenamingPage_cue_year_seq,
+								Constants.TV_CUE + "_" + Constants.TV_YYYY + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$ //$NON-NLS-2$
+						new RenamingTemplate(Messages.ImportRenamingPage_filename_seq,
+								Constants.TV_FILENAME + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
+						new RenamingTemplate(Messages.ImportRenamingPage_orig_filename, Constants.TV_FILENAME, true) },
+				false);
 		renameGroup.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -58,12 +53,11 @@ public class ImportRenamingPage extends ColoredWizardPage {
 				validatePage();
 			}
 		});
-		renameGroup
-				.addSelectionChangedListener(new ISelectionChangedListener() {
-					public void selectionChanged(SelectionChangedEvent event) {
-						validatePage();
-					}
-				});
+		renameGroup.addSelectionChangedListener(new ISelectionChangedListener() {
+			public void selectionChanged(SelectionChangedEvent event) {
+				validatePage();
+			}
+		});
 		setControl(renameGroup);
 		setHelp(media ? HelpContextIds.IMPORT_FROM_DEVICE_WIZARD_RENAMING
 				: HelpContextIds.IMPORT_NEW_STRUCTURE_WIZARD_RENAMING);

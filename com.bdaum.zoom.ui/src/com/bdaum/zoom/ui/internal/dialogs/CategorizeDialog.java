@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -128,6 +128,22 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 				return ((Token) element).getMatch() != 0 ? Messages.CategorizeDialog_match : null;
 			return element.toString();
 		}
+
+		@Override
+		protected Color getForeground(Object element) {
+			if (element instanceof Token) {
+				switch (((Token) element).getMatch()) {
+				case CHECKED:
+				case PROPOSED:
+					return catCanvas.getDisplay().getSystemColor(SWT.COLOR_RED);
+				case SUPPLEMENTAL:
+				case SUPPROPOSED:
+					return catCanvas.getDisplay().getSystemColor(SWT.COLOR_YELLOW);
+				}
+			}
+			return super.getForeground(element);
+		}
+
 	}
 
 	private final class CategoryLabelProvider extends ZColumnLabelProvider {
@@ -136,7 +152,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		public CategoryLabelProvider(VocabManager vManager) {
 			this.vManager = vManager;
 		}
-		
+
 		@Override
 		public String getToolTipText(Object element) {
 			if (element instanceof Token) {
@@ -158,14 +174,13 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 				if (mapped == null)
 					warning = Messages.CategorizeDialog_not_contained_in_vocab;
 				else if (!mapped.equals(label))
-					warning = NLS.bind(Messages.CategorizeDialog_will_be_replaced,
-							mapped);
+					warning = NLS.bind(Messages.CategorizeDialog_will_be_replaced, mapped);
 				return NLS.bind(Messages.CategorizeDialog_proposal_hover, new Object[] { label, title,
 						predictions.get(currentAsset.getStringId()).getServiceName(), warning });
 			}
 			return null;
 		}
-		
+
 		@Override
 		public Image getToolTipImage(Object element) {
 			return getImage(element);
@@ -955,16 +970,14 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		});
 		Label keyLabel = new Label(splitComp, SWT.NONE);
 		keyLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, true, 2, 1));
-		catLabel.setFont(JFaceResources.getBannerFont());
+		keyLabel.setFont(JFaceResources.getBannerFont());
 		keyLabel.setText(Messages.CategorizeDialog_proposed_as_keywords);
 		proposalViewer2 = CheckboxTableViewer.newCheckList(splitComp, SWT.V_SCROLL);
 		layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.widthHint = 200;
 		layoutData.heightHint = 300;
 		proposalViewer2.getTable().setLayoutData(layoutData);
-		col1 = new TableViewerColumn(proposalViewer2, SWT.NONE);
-		col1.getColumn().setWidth(220);
-		col1.setLabelProvider(new ColumnLabelProvider());
+		proposalViewer2.setLabelProvider(new ColumnLabelProvider());
 		proposalViewer2.setContentProvider(ArrayContentProvider.getInstance());
 		proposalViewer2.addSelectionChangedListener(selectionChangedListener);
 

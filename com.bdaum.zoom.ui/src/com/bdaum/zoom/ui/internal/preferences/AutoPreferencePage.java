@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2917 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2918 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.preferences;
 
@@ -73,12 +73,12 @@ public class AutoPreferencePage extends AbstractPreferencePage {
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.AUTO_PREFERENCE_PAGE);
 		createTabFolder(composite, "Auto"); //$NON-NLS-1$
-		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.getString("AutoPreferencePage.relations")); //$NON-NLS-1$
+		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.getString("AutoPreferencePage.relations"), Messages.getString("AutoPreferencePage.relationships_tooltip")); //$NON-NLS-1$ //$NON-NLS-2$
 		Composite comp0 = createRelationsPage(tabFolder);
 		tabItem0.setControl(comp0);
 		tabItem1 = UiUtilities.createTabItem(tabFolder,
-				Messages.getString("AutoPreferencePage.automatic_collection_creation")); //$NON-NLS-1$
-		ruleComponent = new AutoRuleComponent(tabFolder, this);
+				Messages.getString("AutoPreferencePage.automatic_collection_creation"), Messages.getString("AutoPreferencePage.autorules_tooltip")); //$NON-NLS-1$ //$NON-NLS-2$
+		ruleComponent = new AutoRuleComponent(tabFolder, SWT.NONE, this);
 		tabItem1.setControl(ruleComponent.getControl());
 		initTabFolder(0);
 		createExtensions(tabFolder, "com.bdaum.zoom.ui.preferences.AutoPreferencePage"); //$NON-NLS-1$
@@ -151,6 +151,7 @@ public class AutoPreferencePage extends AbstractPreferencePage {
 			if (!selection.isEmpty())
 				preferenceStore.setValue(PreferenceConstants.DERIVERELATIONS, (String) selection.getFirstElement());
 		}
+		ruleComponent.accelerate();
 	}
 
 	@Override

@@ -98,28 +98,34 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 
 		@Override
 		protected IStatus run(final IProgressMonitor monitor) {
-			final Control control = viewer.getControl();
-			if (!control.isDisposed())
-				control.getDisplay().asyncExec(() -> {
-					if (!control.isDisposed() && !monitor.isCanceled()) {
-						IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
-						Object firstElement = selection.getFirstElement();
-						if (firstElement instanceof SlideShowImpl || firstElement instanceof ExhibitionImpl
-								|| firstElement instanceof WebGalleryImpl) {
-							openSlideShowEditor(
-									firstElement instanceof SlideShowImpl ? (SlideShowImpl) firstElement : null, false);
-							openExhibitionEditor(
-									firstElement instanceof ExhibitionImpl ? (ExhibitionImpl) firstElement : null,
-									false);
-							openWebGalleryEditor(
-									firstElement instanceof WebGalleryImpl ? (WebGalleryImpl) firstElement : null,
-									false);
+			selectionJobRunning = true;
+			try {
+				final Control control = viewer.getControl();
+				if (!control.isDisposed())
+					control.getDisplay().asyncExec(() -> {
+						if (!control.isDisposed() && !monitor.isCanceled()) {
+							IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+							Object firstElement = selection.getFirstElement();
+							if (firstElement instanceof SlideShowImpl || firstElement instanceof ExhibitionImpl
+									|| firstElement instanceof WebGalleryImpl) {
+								openSlideShowEditor(
+										firstElement instanceof SlideShowImpl ? (SlideShowImpl) firstElement : null,
+										false);
+								openExhibitionEditor(
+										firstElement instanceof ExhibitionImpl ? (ExhibitionImpl) firstElement : null,
+										false);
+								openWebGalleryEditor(
+										firstElement instanceof WebGalleryImpl ? (WebGalleryImpl) firstElement : null,
+										false);
+							}
+							updateActions(selection, false);
+							fireSelection(event);
 						}
-						updateActions(selection);
-						fireSelection(event);
-					}
-				});
-			return Status.OK_STATUS;
+					});
+				return Status.OK_STATUS;
+			} finally {
+				selectionJobRunning = false;
+			}
 		}
 	}
 
@@ -130,24 +136,28 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 	protected ColumnViewer viewer;
 	protected IOperationHistory operationHistory;
 	protected boolean cntrlDwn;
-
-	protected void updateActions(IStructuredSelection selection) {
-		boolean empty = selection.isEmpty();
-		editItemAction.setEnabled(!empty);
-		if (empty)
-			playSlideshowAction.setEnabled(false);
-		else {
-			Object obj = selection.getFirstElement();
-			playSlideshowAction.setEnabled(obj instanceof SlideShow || obj instanceof SmartCollection);
+	private boolean selectionJobRunning;
+	
+	protected void updateActions(IStructuredSelection selection, boolean force) {
+		if (viewActive || force) {
+			if (selection.isEmpty()) {
+				editItemAction.setEnabled(false);
+				playSlideshowAction.setEnabled(false);
+			} else {
+				editItemAction.setEnabled(true);
+				Object obj = selection.getFirstElement();
+				playSlideshowAction.setEnabled(obj instanceof SlideShow || obj instanceof SmartCollection);
+			}
+			updateActions(force);
 		}
-		updateActions();
 	}
 
 	@Override
-	public void updateActions() {
-		if (viewActive)
+	public void updateActions(boolean force) {
+		if (viewActive || force) {
 			splitCatAction.setEnabled(true);
-		updateActions(-1, -1);
+			updateActions(-1, -1);
+		}
 	}
 
 	protected static final ISchedulingRule rule = new ISchedulingRule() {
@@ -205,6 +215,12 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 			fireSelection();
 	}
 
+	@Override
+	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
+		if (!selectionJobRunning)
+			super.selectionChanged(part, selection);
+	}
+
 	protected void hookContextMenu(Viewer viewer) {
 		MenuManager menuMgr = new MenuManager("#PopupMenu"); //$NON-NLS-1$
 		menuMgr.setRemoveAllWhenShown(true);
@@ -241,7 +257,6 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 		selectAllAction.setToolTipText(Messages.getString("CatalogView.select_all_tooltip")); //$NON-NLS-1$
 
 		editItemAction = new Action(Messages.getString("CatalogView.edit"), Icons.folder_edit.getDescriptor()) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				final IDbManager dbManager = Core.getCore().getDbManager();
@@ -258,12 +273,10 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 								List<Object> toBeStored = new ArrayList<Object>();
 								Utilities.updateCollection(dbManager, current, result, toBeDeleted, toBeStored);
 								if (result.getAlbum()) {
-									String oldName = current.getName();
-									String newName = result.getName();
 									AomList<String> assetIds = current.getAsset();
 									if (assetIds != null) {
 										result.setAsset(assetIds);
-										Utilities.updateAlbumAssets(dbManager, oldName, newName,
+										Utilities.updateAlbumAssets(dbManager, current.getName(), result.getName(),
 												assetIds.toArray(new String[assetIds.size()]), null, toBeStored, null);
 									}
 								}
@@ -370,7 +383,6 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 		editItemAction.setToolTipText(Messages.getString("CatalogView.edit_selected_item")); //$NON-NLS-1$
 
 		playSlideshowAction = new Action(Messages.getString("CatalogView.play_slideshow"), Icons.play.getDescriptor()) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
@@ -409,7 +421,7 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 		if (action.isEnabled())
 			manager.add(action);
 	}
-	
+
 	protected void addCtrlKeyListener() {
 		getControl().addKeyListener(new KeyAdapter() {
 			@Override

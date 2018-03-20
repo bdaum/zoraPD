@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.db.internal;
 
@@ -33,8 +33,12 @@ public class RatingFilter extends AssetFilter implements IRatingFilter {
 		this.rating = rating;
 	}
 
-	/* (nicht-Javadoc)
-	 * @see com.bdaum.zoom.db.internal.AssetFilter#accept(com.bdaum.zoom.cat.model.asset.Asset)
+	/*
+	 * (nicht-Javadoc)
+	 * 
+	 * @see
+	 * com.bdaum.zoom.db.internal.AssetFilter#accept(com.bdaum.zoom.cat.model.asset.
+	 * Asset)
 	 */
 	@Override
 	public boolean accept(Asset asset) {
@@ -45,21 +49,24 @@ public class RatingFilter extends AssetFilter implements IRatingFilter {
 		return asset.getRating() >= rating;
 	}
 
-	/* (nicht-Javadoc)
-	 * @see com.bdaum.zoom.db.internal.AssetFilter#getConstraint(com.db4o.query.Query)
+	/*
+	 * (nicht-Javadoc)
+	 * 
+	 * @see
+	 * com.bdaum.zoom.db.internal.AssetFilter#getConstraint(com.db4o.query.Query)
 	 */
 	@Override
 	public Constraint getConstraint(DbManager dbManager, Query query) {
 		if (rating == QueryField.SELECTALL)
 			return null;
 		if (rating == QueryField.SELECTUNDEF)
-			return query.descend(QueryField.RATING.getKey()).constrain(0)
-					.smaller();
-		return query.descend(QueryField.RATING.getKey()).constrain(rating)
-				.smaller().not();
+			return query.descend(QueryField.RATING.getKey()).constrain(0).smaller();
+		return query.descend(QueryField.RATING.getKey()).constrain(rating).smaller().not();
 	}
 
-	/* (nicht-Javadoc)
+	/*
+	 * (nicht-Javadoc)
+	 * 
 	 * @see com.bdaum.zoom.core.db.IRatingFilter#getRating()
 	 */
 	public int getRating() {
@@ -68,9 +75,7 @@ public class RatingFilter extends AssetFilter implements IRatingFilter {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof IRatingFilter)
-			return rating == ((IRatingFilter) obj).getRating() ;
-		return false;
+		return obj instanceof IRatingFilter ? rating == ((IRatingFilter) obj).getRating() : false;
 	}
 
 	@Override

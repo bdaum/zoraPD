@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.wizards;
@@ -97,11 +97,8 @@ public class ExportModeGroup {
 	private Composite dimComp;
 
 	public ExportModeGroup(Composite parent, int style) {
-		modeGroup = new CGroup(parent, SWT.NONE);
 		GridLayout layout = (GridLayout) parent.getLayout();
-		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false, layout.numColumns, 1);
-		modeGroup.setLayoutData(layoutData);
-		modeGroup.setText(Messages.ExportFolderPage_image);
+		modeGroup = CGroup.create(parent, layout.numColumns, Messages.ExportFolderPage_image);
 		modeGroup.setLayout(new GridLayout(2, false));
 		modeButtonGroup = new RadioButtonGroup(modeGroup, null, SWT.NONE);
 		modeButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -166,11 +163,10 @@ public class ExportModeGroup {
 				dimComp.setLayout(new GridLayout(2, false));
 				Label dimLabel = new Label(dimComp, SWT.NONE);
 				dimLabel.setText(Messages.ExportModeGroup_size);
-				dimField = new NumericControl(dimComp, SWT.NONE);
+				dimField = new NumericControl(dimComp, NumericControl.LOGARITHMIC);
 				dimField.setMinimum(16);
 				dimField.setIncrement(10);
 				dimField.setMaximum(32000);
-				dimField.setLogrithmic(true);
 				dimField.addModifyListener(new ModifyListener() {
 					public void modifyText(ModifyEvent e) {
 						fireModifyChanged(e);
@@ -191,13 +187,13 @@ public class ExportModeGroup {
 	}
 
 	protected void fireSelectionChanged(SelectionEvent e) {
-		for (Object listener : selectionListeners.getListeners())
-			((SelectionListener) listener).widgetSelected(e);
+		for (SelectionListener listener : selectionListeners)
+			listener.widgetSelected(e);
 	}
 
 	protected void fireModifyChanged(ModifyEvent e) {
-		for (Object listener : modifyListeners.getListeners())
-			((ModifyListener) listener).modifyText(e);
+		for (ModifyListener listener : modifyListeners)
+			listener.modifyText(e);
 	}
 
 	public void updateScale() {

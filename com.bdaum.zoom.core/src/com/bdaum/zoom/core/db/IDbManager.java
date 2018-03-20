@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.core.db;
 
@@ -35,7 +35,6 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.group.GroupImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
-import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterion;
 import com.bdaum.zoom.cat.model.location.Location;
 import com.bdaum.zoom.cat.model.location.LocationImpl;
@@ -82,12 +81,12 @@ public interface IDbManager {
 	boolean isEmbedded();
 
 	/**
-	 * Returns an instance of the catalog properties. Optionally Creates a
-	 * default set of properties if none exist
+	 * Returns an instance of the catalog properties. Optionally Creates a default
+	 * set of properties if none exist
 	 *
 	 * @param create
-	 *            - true if a default set of properties should be created if
-	 *            none exists
+	 *            - true if a default set of properties should be created if none
+	 *            exists
 	 *
 	 * @return - catalog properties
 	 */
@@ -105,8 +104,8 @@ public interface IDbManager {
 	<T extends IIdentifiableObject> T obtainById(Class<T> clazz, String id);
 
 	/**
-	 * Convenience method for obtainById(clazz, id) != null
-	 * but does not activate objects
+	 * Convenience method for obtainById(clazz, id) != null but does not activate
+	 * objects
 	 *
 	 * @param clazz
 	 *            - type of object to be read
@@ -194,14 +193,14 @@ public interface IDbManager {
 	 * @param rel2
 	 *            - second constraint relation as defined in QueryField
 	 * @param or
-	 *            - true if both constraints should be connected by OR instead
-	 *            of AND
+	 *            - true if both constraints should be connected by OR instead of
+	 *            AND
 	 * @return the list of objects found
 	 * @deprecated - use obtainObjects(clazz, or, namesValuesRelations)
 	 */
 	@Deprecated
-	<T extends IIdentifiableObject> List<T> obtainObjects(Class<? extends IIdentifiableObject> clazz, String field1,
-			Object v1, int rel1, String field2, Object v2, int rel2, boolean or);
+	<T extends IIdentifiableObject> List<T> obtainObjects(Class<T> clazz, String field1, Object v1, int rel1,
+			String field2, Object v2, int rel2, boolean or);
 
 	/**
 	 * Finds objects with specified criteria
@@ -250,19 +249,16 @@ public interface IDbManager {
 	 * @param clazz
 	 *            - type of objects to be read
 	 * @param or
-	 *            - true if both constraints should be connected by OR instead
-	 *            of AND
+	 *            - true if both constraints should be connected by OR instead of
+	 *            AND
 	 * @param namesValuesRelations
-	 *            - an array of alternating field names, field values, and
-	 *            relations
+	 *            - an array of alternating field names, field values, and relations
 	 * @return the list of objects that matches the search criteria
 	 */
-	<T extends IIdentifiableObject> List<T> obtainObjects(Class<? extends IIdentifiableObject> clazz, boolean or,
-			Object... namesValuesRelations);
+	<T extends IIdentifiableObject> List<T> obtainObjects(Class<T> clazz, boolean or, Object... namesValuesRelations);
 
 	/**
-	 * Finds structured components of assets such as Locations, Contacts, or
-	 * Artwork
+	 * Finds structured components of assets such as Locations, Contacts, or Artwork
 	 *
 	 * @param clazz
 	 *            - type of objects to be read
@@ -281,6 +277,18 @@ public interface IDbManager {
 	<T extends IIdentifiableObject> List<T> obtainStruct(Class<T> clazz, String assetId, boolean multipleAsset,
 			String field, Object v, boolean multipleField);
 
+	/**
+	 * Finds structured components of assets (including remote assets) such as
+	 * Locations, Contacts, or Artwork
+	 * 
+	 * @param clazz
+	 *            - type of objects to be read
+	 * @param id
+	 *            - ID of asset to which these components relate
+	 * @param multiple
+	 *            - true if a component can belong to multiple assets
+	 * @return the list of objects found
+	 */
 	<T extends IIdentifiableObject> List<T> obtainStructForAsset(Class<T> clazz, String id, boolean multiple);
 
 	/**
@@ -393,8 +401,8 @@ public interface IDbManager {
 			SortCriterion customSort);
 
 	/**
-	 * Convenience method for createCollectionProcessor(SmartCollection sm,
-	 * null, null)
+	 * Convenience method for createCollectionProcessor(SmartCollection sm, null,
+	 * null)
 	 *
 	 * @param sm
 	 *            - collection to be processed
@@ -499,8 +507,7 @@ public interface IDbManager {
 	void close(int mode);
 
 	/**
-	 * Finds trash objects of the specified class with the specified operation
-	 * ID
+	 * Finds trash objects of the specified class with the specified operation ID
 	 *
 	 * @param clazz
 	 *            - type of trash object
@@ -548,8 +555,7 @@ public interface IDbManager {
 	 * @param delay
 	 *            - delay in msec before back-up job is started
 	 * @param interval
-	 *            - interval between backups in msec, -1 to force immediate
-	 *            backup
+	 *            - interval between backups in msec, -1 to force immediate backup
 	 * @return - scheduled backup job
 	 */
 	Job performBackup(long delay, long interval);
@@ -560,8 +566,7 @@ public interface IDbManager {
 	 * @param delay
 	 *            - delay in msec before back-up job is started
 	 * @param interval
-	 *            - interval between backups in msec, -1 to force immediate
-	 *            backup
+	 *            - interval between backups in msec, -1 to force immediate backup
 	 * @param block
 	 *            - true if method should wait for job finishing
 	 * @return - scheduled backup job
@@ -574,8 +579,7 @@ public interface IDbManager {
 	 * @param delay
 	 *            - delay in msec before back-up job is started
 	 * @param interval
-	 *            - interval between backups in msec, -1 to force immediate
-	 *            backup
+	 *            - interval between backups in msec, -1 to force immediate backup
 	 * @param block
 	 *            - true if method should wait for job finishing
 	 * @param generations
@@ -638,8 +642,7 @@ public interface IDbManager {
 	 * @param date
 	 *            - date stamp
 	 * @param cumulate
-	 *            - true if import collection cumulates several background
-	 *            imports
+	 *            - true if import collection cumulates several background imports
 	 * @param description
 	 *            - description text of the new collection
 	 * @return - date stamp of previous recent imports collection or null
@@ -653,11 +656,11 @@ public interface IDbManager {
 	 *            - collection to be checked and removed
 	 * @return - true if the collection was removed
 	 */
-	boolean pruneSystemCollection(SmartCollectionImpl sm);
+	boolean pruneSystemCollection(SmartCollection sm);
 
 	/**
-	 * Removes all empty system defined collections Handles progress management
-	 * by itself
+	 * Removes all empty and dirty system defined collections Handles progress management by
+	 * itself
 	 */
 	void pruneEmptySystemCollections();
 
@@ -666,8 +669,10 @@ public interface IDbManager {
 	 *
 	 * @param monitor
 	 *            - progress monitor
+	 * @param all
+	 *            - true if all and not only dirty collections are to be pruned
 	 */
-	void pruneEmptySystemCollections(IProgressMonitor monitor);
+	void pruneEmptySystemCollections(IProgressMonitor monitor, boolean all);
 
 	/**
 	 * Performs backups and defragmentation if necessary
@@ -706,8 +711,8 @@ public interface IDbManager {
 	void markSystemCollectionsForPurge(Asset asset);
 
 	/**
-	 * Marks system collections as purge candidates when a location is deleted
-	 * or modified
+	 * Marks system collections as purge candidates when a location is deleted or
+	 * modified
 	 *
 	 * @param loc
 	 *            - location object

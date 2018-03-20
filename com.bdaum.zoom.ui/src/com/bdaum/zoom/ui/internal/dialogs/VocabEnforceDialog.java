@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -26,7 +26,6 @@ import java.util.List;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -39,6 +38,8 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 
 public class VocabEnforceDialog extends ZTitleAreaDialog {
@@ -86,11 +87,11 @@ public class VocabEnforceDialog extends ZTitleAreaDialog {
 				return null;
 			}
 		});
-		viewer.setComparator(new ViewerComparator() {
+		viewer.setComparator(new ZViewerComparator() {
 			@Override
 			public int compare(Viewer viewer, Object o1, Object o2) {
 				if (o1 instanceof String[] && o2 instanceof String[])
-					return ((String[])o1)[0].compareTo(((String[])o2)[0]);
+					return UiUtilities.stringComparator.compare(((String[])o1)[0], ((String[])o2)[0]);
 				return super.compare(viewer, o1, o2);
 			}
 		});

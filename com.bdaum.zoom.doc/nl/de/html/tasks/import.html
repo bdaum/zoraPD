@@ -1,16 +1,16 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="de"><head>
+
   
-  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type">
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Importieren von Bildern</title>
   
 
   
   
-  <title>Importieren von Bildern</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css">
+  <link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css">
 
   
-  <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head>
-<body>
+  <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
 <h2>Importieren
 von Bildern
 </h2>
@@ -26,19 +26,22 @@ Bilder </span>importieren<span style="font-weight: bold;"></span><span style="fo
 Sie
 (<acronym>Datei &gt;Import...&gt;Datei...</acronym>) auf und wählen Sie
 eine oder mehrere
-Dateien. Die
-Dateien bleiben an ihrem ursprünglichen Speicherort. Alternativ
+Dateien. Alternativ
 können Sie Bilddateien&nbsp;<span style="font-weight: bold;"></span>in
 einen Galerie-Bereich wie das <span style="font-style: italic;">
 Leuchtkasten</span>-
 oder das <span style="font-style: italic;"> Hüllen</span>-Sichtfenster
-    <span style="font-weight: bold;">ziehen</span>.</li>
+    <span style="font-weight: bold;">ziehen</span>. Anschließend können Sie auswählen, ob die Bilder am ursprünglichen
+Speicherort bleiben oder in eine neue Ordnerstruktur gebracht werden.
+Im letzteren Fall werden
+die Bilder aus dem Quellordner in den Zielordner kopiert. Es
+ist möglich, die importierten <span style="font-weight: bold;"></span>Bilder
+während
+dieses Prozesses <span style="font-weight: bold;">umzubenennen</span>.</li>
   <li><span style="font-weight: bold;">ganze Ordner </span>importieren.&nbsp;Rufen
 Sie
 (<acronym>Datei &gt;Import...&gt;Ordner..</acronym>)
-und wählen Sie einen Ordner. Der
-Ordner und sein Inhalt bleiben an ihrem ursprünglichen
-Speicherort. Alternativ
+und wählen Sie einen Ordner. Alternativ
 können Sie&nbsp;<span style="font-weight: bold;"></span>
 einen Ordner in einen
 Galerie-Bereich wie das <span style="font-style: italic;">
@@ -70,7 +73,7 @@ während dieses Prozesses <span style="font-weight: bold;">umzubenennen</span>.<
 &gt;Import...&gt;Analoge Bilder...</acronym>).
 Diese Funktion unterstützt den Import von Bildern, die eingescannt
 wurden. Meist enthalten diese Bilder keine Metadaten (EXIF, IPTC).
-Deshalb erhalten Sie in einem speziellen Dialog die Möglichkeit,
+Deshalb erhalten Sie die Möglichkeit,
 wichtige Metadaten per Hand einzugeben.</li>
 </ul>
 
@@ -106,7 +109,7 @@ arbeiten.
 Allerdings
 erfordern
 einige&nbsp;Operationen wie das Bearbeiten, die hochauflösende
-Anzeige, die Diashow oder der Export, dass die Bilder online sind.<br>
+Anzeige, die Diashow oder der Export, dass diese Wechselmedien montiert sind.<br>
 
 <h3>Nicht-lokale Bilder</h3>
 
@@ -138,26 +141,31 @@ Am
 besten probieren Sie aus, welche Variante am besten für Sie geeignet
 ist. (<a href="../reference/importPrefs.html"><acronym>Fenster&gt;Benutzervorgaben&gt;Import<sup>*</sup></acronym></a>).<br>
 
-<br>
+<br>Für die RAW-Konvertierung werden aktuell zwei Konverter unterstützt: DCRAW und <span style="font-style: italic;">RawTherapee</span>. <br>
+<ul>
+  <li>DCRAW ist ein Programm, das normalerweise von der Kommandozeile gestartet wird. <span style="font-style: italic;">ZoRa Photo Director</span> integriert DCRAW und ruft es bei Bedarf mit den entsprechenden Parametern auf.<br>
+  </li>
+</ul>
 
-Dike RAW-Konvertierung erfolgt mit der Hilfe des Programms&nbsp;DCRAW:
 <ul style="font-weight: normal;">
 
-  <li>Windows-
+  
+  <ul>
+    <li>Windows-
 and MacOS-Distributionen von ZoRa Photo Director enthalten bereits DCRAW.
-Neuere Versionen können einfach in den Unterordner <code>dropins/ </code>im
-Installationsverzeichnis gebracht werden.
-Neuere&nbsp;DCRAW-Binärversionen für Windows und Mac finden Sie
-unter&nbsp; <a href="http://www.insflug.org/raw/">www.insflug.org/raw/</a>, mehrprozessorfähige Binärversionen auch auf&nbsp;<a href="http://www.heliconsoft.com/dcraw.html">http://www.heliconsoft.com/dcraw.html</a>.</li>
-  <li>Auf
+      <a href="../reference/dcraw.html">Neuere DCRAW-Versionen</a> können einfach in den Unterordner <code>dropins/ </code>im
+Installationsverzeichnis gebracht werden..</li>
+    <li>Auf
 Linux-Plattformen installieren Sie&nbsp;DCRAW am besten in den Ordner<code>
 /usr/bin</code>. Alternative können Sie auch&nbsp;in den Unterordner <code>dropins/
-    </code>des Installationsverzeichnisses installieren oder
-den&nbsp;DCRAW-Installationsort unter&nbsp;<a href="../reference/importPrefs.html"><acronym>Fenster&gt;Benutzervorgaben&gt;Import&gt;RAW-Konvertierung<sup>*</sup></acronym></a>
+    </code>des Installationsverzeichnisses installieren oder den&nbsp;DCRAW-Installationsort unter&nbsp;<a href="../reference/importPrefs.html"><acronym>Fenster&gt;Benutzervorgaben&gt;Import&gt;RAW-Konvertierung</acronym></a>
 angeben. Neuere&nbsp;DCRAW-Versionen für Ihr Linux-System finden Sie
 z.B. unter&nbsp;<a href="http://linuxappfinder.com/package/dcraw">http://linuxappfinder.com/package/dcraw</a>.</li>
-</ul><br>Alternativ können Sie auch <span style="font-style: italic;">RawTherapee</span> für die Raw-Konvertierung verwenden. Dies Programm muss separat installiert werden und der Speicherort des <span style="font-style: italic;">RawTherapee</span>-Ausführungsmoduls muss unter <a href="../../../../html/reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion<sup>*</sup></acronym></a> angegeben werden.
+  </ul>
+  <li>Alternativ können Sie auch <span style="font-weight: bold;">RawTherapee</span> für die Raw-Konvertierung verwenden. Dies Programm muss separat installiert werden und der Speicherort des <span style="font-style: italic;">RawTherapee</span>-Ausführungsmoduls muss unter <a href="../../../../html/reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion<sup>*</sup></acronym></a> angegeben werden.</li>
 
+  
+</ul>Weitere Information über die RAW-Verarbeitung finden Sie <a href="../concepts/raw.html">hier</a>.<br>
 <h4>DNG</h4>
 
 DNG-Dateien
@@ -210,7 +218,7 @@ diese Rezepte zu speichern.<br>
 <br>
 
 Der <span style="font-style: italic;">ZoRa Photo Director</span> kann
-die Metadateien einiger RAW-Konverter (die Liste wächst mit der Zeit)
+die Metadateien einiger RAW-Konverter
 entdecken und erneut auf zu importierende oder anzuzeigende RAW-Bilder
 anwenden. Sie sollten allerdings dabei keine perfekte Übereinstimmung
 mit den Ergebnissen der originalen RAW-Konverter erwarten. Unser Ziel
@@ -226,7 +234,7 @@ konfiguriert werden.<br>
 
 <br>
 
-Werden für ein Bild Rezeptw gefunden, so hat das Einfluss auf den
+Werden für ein Bild Rezepte gefunden, so hat das Einfluss auf den
 Status des Bildes:<br>
 
 <br>

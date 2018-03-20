@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2013 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui;
@@ -28,7 +28,6 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChang
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.ui.IWorkbenchWindow;
 
-import com.bdaum.aoModeling.runtime.AomObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.ui.gps.IGpsParser;
 import com.bdaum.zoom.ui.gps.IWaypointCollector;
@@ -138,7 +137,7 @@ public interface IUi {
 	 * Returns a list of presentation items
 	 * @return presentation items
 	 */
-	List<AomObject> getPresentationItems();
+	List<Object> getPresentationItems();
 
 	/**
 	 * Extracts assets from presentation items
@@ -146,7 +145,7 @@ public interface IUi {
 	 * @param pruneNonAssets - if true, items not containing an asset are removed from the input collection
 	 * @return - list of extracted assets
 	 */
-	List<Asset> getAssetsFromPresentationItems(Collection<AomObject> presentationItems,
+	List<Asset> getAssetsFromPresentationItems(Collection<Object> presentationItems,
 			boolean pruneNonAssets);
 
 	/**

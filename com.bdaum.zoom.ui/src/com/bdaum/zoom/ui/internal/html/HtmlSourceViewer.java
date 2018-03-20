@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.html;
@@ -39,11 +39,6 @@ import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-/**
- * @author Berthold Daum
- *
- *         (c) 2002 Berthold Daum
- */
 public class HtmlSourceViewer extends SourceViewer implements
 		ITextOperationTarget {
 
@@ -57,28 +52,22 @@ public class HtmlSourceViewer extends SourceViewer implements
 				contentAssistant, undoManager));
 		Control styleTextWidget = getControl();
 		appendVerifyKeyListener(new VerifyKeyListener() {
-			/**
-			 * @see org.eclipse.swt.custom.VerifyKeyListener#verifyKey(VerifyEvent)
-			 */
 			public void verifyKey(VerifyEvent event) {
-				if (event.stateMask == SWT.CTRL || event.character == 13) {
+				if (event.stateMask == SWT.CTRL || event.character == 13)
 					event.doit = false;
-				}
 			}
 		});
 		styleTextWidget.addKeyListener(new KeyListener() {
-
 			public void keyPressed(KeyEvent event) {
 				if (event.character == 13) {
 					ITextSelection selection = (ITextSelection) getSelection();
-					if (selection != null) {
+					if (selection != null)
 						try {
 							getDocument().replace(selection.getOffset(), 0, "<br/>"); //$NON-NLS-1$
 							setSelectedRange(selection.getOffset()+5, 0);
 						} catch (BadLocationException e) {
 							// should never happen
 						}
-					}
 					return;
 				}
 				if (event.stateMask != SWT.CTRL)

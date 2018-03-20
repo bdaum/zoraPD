@@ -20,26 +20,13 @@ import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
-/**
- * The activator class controls the plug-in life cycle
- */
 @SuppressWarnings("restriction")
 public class RcpActivator extends ZUiPlugin {
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.rcp"; //$NON-NLS-1$
-	// The shared instance
 	private static RcpActivator plugin;
 	private boolean isNew;
 	private boolean[] expansionState;
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext
-	 * )
-	 */
 
 	@Override
 	public void start(BundleContext context) throws Exception {
@@ -49,25 +36,12 @@ public class RcpActivator extends ZUiPlugin {
 			ImageActivator.getDefault().deleteTempFolderAfterShutdown();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext
-	 * )
-	 */
-
 	@Override
 	public void stop(BundleContext context) throws Exception {
 		plugin = null;
 		super.stop(context);
 	}
 
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
 	public static RcpActivator getDefault() {
 		return plugin;
 	}

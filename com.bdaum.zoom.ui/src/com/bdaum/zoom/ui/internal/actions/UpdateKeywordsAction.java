@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -25,16 +25,15 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.ManageKeywordsOperation;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -45,21 +44,22 @@ import com.bdaum.zoom.ui.internal.dialogs.KeywordDialog;
  *
  */
 @SuppressWarnings("restriction")
-public class UpdateKeywordsAction extends AbstractMultiMediaAction {
+public class UpdateKeywordsAction extends Action {
 
 	private IAdaptable adaptable;
+	private IWorkbenchWindow window;
 
 	public UpdateKeywordsAction(IWorkbenchWindow window, String label, String tooltip, ImageDescriptor image,
 			IAdaptable adaptable) {
-		super(window, label, image, QueryField.PHOTO | IMediaSupport.VIDEO);
+		super(label, image);
+		this.window = window;
 		this.adaptable = adaptable;
 		setToolTipText(tooltip);
 	}
 
 	@Override
 	public void run() {
-		Meta meta = Core.getCore().getDbManager().getMeta(true);
-		Set<String> selectableKeywords = new HashSet<String>(meta.getKeywords());
+		Set<String> selectableKeywords = new HashSet<String>(Core.getCore().getDbManager().getMeta(true).getKeywords());
 		List<Asset> selectedAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
 		KeywordDialog dialog = new KeywordDialog(window.getShell(), Messages.KeywordDefinitionAction_add_keywords,
 				QueryField.IPTC_KEYWORDS.getCommonItems(selectedAssets), selectableKeywords, selectedAssets);

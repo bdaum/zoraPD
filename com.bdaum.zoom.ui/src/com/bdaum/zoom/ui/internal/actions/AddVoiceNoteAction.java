@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -23,12 +23,11 @@ package com.bdaum.zoom.ui.internal.actions;
 import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.VoiceNoteOperation;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -36,13 +35,15 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.dialogs.VoiceNoteDialog;
 
 @SuppressWarnings("restriction")
-public class AddVoiceNoteAction extends AbstractMultiMediaAction {
+public class AddVoiceNoteAction extends Action {
 
 	private IAdaptable adaptable;
+	private IWorkbenchWindow window;
 
 	public AddVoiceNoteAction(IWorkbenchWindow window, String label, String tooltip, ImageDescriptor image,
 			IAdaptable adaptable) {
-		super(window, label, image, QueryField.PHOTO | IMediaSupport.VIDEO);
+		super(label, image);
+		this.window = window;
 		this.adaptable = adaptable;
 		setToolTipText(tooltip);
 	}
@@ -51,17 +52,15 @@ public class AddVoiceNoteAction extends AbstractMultiMediaAction {
 	public void run() {
 		List<Asset> localAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
 		if (!localAssets.isEmpty()) {
-			if (!localAssets.isEmpty()) {
-				UiActivator.getDefault().stopAudio();
-				VoiceNoteDialog dialog = new VoiceNoteDialog(window.getShell(), localAssets, true);
-				if (dialog.open() == VoiceNoteDialog.OK) {
-					String noteText = dialog.getNoteText();
-					String sourceURI = dialog.getSourceUri();
-					String targetURI = dialog.getTargetUri();
-					if (sourceURI != null && targetURI != null || noteText != null || dialog.isDeleteVoiceNote())
-						OperationJob.executeOperation(
-								new VoiceNoteOperation(localAssets, sourceURI, targetURI, noteText), adaptable);
-				}
+			UiActivator.getDefault().stopAudio();
+			VoiceNoteDialog dialog = new VoiceNoteDialog(window.getShell(), localAssets, true);
+			if (dialog.open() == VoiceNoteDialog.OK) {
+				String noteText = dialog.getNoteText();
+				String sourceURI = dialog.getSourceUri();
+				String targetURI = dialog.getTargetUri();
+				if (sourceURI != null && targetURI != null || noteText != null || dialog.isDeleteVoiceNote())
+					OperationJob.executeOperation(new VoiceNoteOperation(localAssets, sourceURI, targetURI, noteText),
+							adaptable);
 			}
 		}
 	}

@@ -15,12 +15,14 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ai.internal;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
@@ -130,12 +132,21 @@ public class AiActivator extends ZUiPlugin {
 					String id = config.getAttribute("id"); //$NON-NLS-1$
 					String name = config.getAttribute("name"); //$NON-NLS-1$
 					try {
-						IAiServiceProvider provider = (IAiServiceProvider) config.createExecutableExtension("class"); //$NON-NLS-1$
+						AbstractAiServiceProvider provider = (AbstractAiServiceProvider) config
+								.createExecutableExtension("class"); //$NON-NLS-1$
 						provider.setId(id);
 						provider.setName(name);
 						provider.setLatency(getInt(config, "latency", 3000)); //$NON-NLS-1$
 						provider.setFeatureId(getInt(config, "featureId", -1)); //$NON-NLS-1$
 						providerMap.put(id, provider);
+						List<String> modelIds = new ArrayList<>(5);
+						List<String> modelLabels = new ArrayList<>(5);
+						for (IConfigurationElement ratingModel : config.getChildren("ratingModel")) { //$NON-NLS-1$
+							modelIds.add(ratingModel.getAttribute("id")); //$NON-NLS-1$
+							modelLabels.add(ratingModel.getAttribute("label")); //$NON-NLS-1$
+						}
+						provider.setRatingModelIds(modelIds.toArray(new String[modelIds.size()]));
+						provider.setRatingModelLabels(modelLabels.toArray(new String[modelIds.size()]));
 					} catch (CoreException e) {
 						logError(NLS.bind(Messages.AiActivator_error_loading_provider, name), e);
 					}

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.html;
@@ -58,9 +58,8 @@ public class XMLViewerConfiguration extends SourceViewerConfiguration {
 	@Override
 	public IPresentationReconciler getPresentationReconciler(
             ISourceViewer viewer) {
-        if (codeScanner == null) {
-            return super.getPresentationReconciler(sourceViewer);
-        }
+        if (codeScanner == null)
+			return super.getPresentationReconciler(sourceViewer);
         PresentationReconciler reconciler = new PresentationReconciler();
         DefaultDamagerRepairer dr = new DefaultDamagerRepairer(codeScanner);
         reconciler.setDamager(dr, IDocument.DEFAULT_CONTENT_TYPE);
@@ -70,9 +69,8 @@ public class XMLViewerConfiguration extends SourceViewerConfiguration {
     
 	@Override
 	public IContentAssistant getContentAssistant(ISourceViewer viewer) {
-        if (contentAssistant == null) {
-            return super.getContentAssistant(viewer);
-        }
+        if (contentAssistant == null)
+			return super.getContentAssistant(viewer);
         ContentAssistant assistant = new ContentAssistant();
         assistant.setContentAssistProcessor(contentAssistant,
                 IDocument.DEFAULT_CONTENT_TYPE);

@@ -8,24 +8,22 @@
             default="true"
             description="%geonamingService.description"
             id="Google"
+            link="https://developers.google.com/maps/documentation/geocoding"
             name="%geonamingService.name">
-      </geonamingService>
-   </extension>
-   <extension
-         point="com.bdaum.zoom.gps.premiumService">
-      <premiumService
-            description="%premiumService.description"
-            id="com.bdaum.zoom.gps.naming.google.premiumService"
-            name="%premiumService.name">
-         <key
-               id="com.bdaum.zoom.gps.googleClientId"
-               name="%key.name.id">
-         </key>
-         <key
+        <parameter
+              hint="%parameter.hint.id"
+              id="com.bdaum.zoom.gps.googleClientId"
+              label="%parameter.label.id"
+              reqMsg="%parameter.reqMsg"
+              tooltip="%parameter.tooltip.id">
+         </parameter>
+         <parameter
+               hint="%parameter.hint.privatekey"
                id="com.bdaum.zoom.gps.googlePrivateKey"
-               name="%key.name.privateKey">
-         </key>
-      </premiumService>
+               label="%parameter.label.privateKey"
+               tooltip="%parameter.tooltip.privatekey">
+         </parameter>
+       </geonamingService>
    </extension>
    <extension
          point="org.eclipse.help.contexts">

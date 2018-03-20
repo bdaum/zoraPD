@@ -6,7 +6,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -23,7 +22,6 @@ public class WatchedFolderTargetPage extends ColoredWizardPage {
 
 	private Text targetDirField;
 	private Combo subfolderCombo;
-	private Label copyLabel;
 	private final WatchedFolderImpl watchedFolder;
 
 	public WatchedFolderTargetPage(String pageName, WatchedFolderImpl watchedFolder) {
@@ -34,23 +32,16 @@ public class WatchedFolderTargetPage extends ColoredWizardPage {
 	@SuppressWarnings("unused")
 	@Override
 	public void createControl(final Composite parent) {
-		Composite targetComp = new Composite(parent, SWT.NONE);
-		targetComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		targetComp.setLayout(new GridLayout(3, false));
-		copyLabel = new Label(targetComp, SWT.NONE);
-		copyLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
-		Label transferToLabel = new Label(targetComp, SWT.NONE);
-		transferToLabel.setText(Messages.ImportFromDeviceWizard_transfer_to);
-
+		Composite targetComp = createComposite(parent, 3);
+		new Label(targetComp, SWT.NONE).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+		new Label(targetComp, SWT.NONE).setText(Messages.ImportFromDeviceWizard_transfer_to);
 		targetDirField = new Text(targetComp, SWT.READ_ONLY | SWT.BORDER);
 		final GridData gd_text = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		gd_text.widthHint = 200;
 		targetDirField.setLayoutData(gd_text);
-
 		final Button browseButton = WidgetFactory.createPushButton(targetComp, Messages.ImportFromDeviceWizard_browse,
 				SWT.BEGINNING);
 		browseButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				DirectoryDialog dialog = new DirectoryDialog(parent.getShell());
@@ -69,7 +60,6 @@ public class WatchedFolderTargetPage extends ColoredWizardPage {
 		});
 
 		new Label(targetComp, SWT.NONE).setText(Messages.ImportFromDeviceWizard_create_subfolder);
-
 		subfolderCombo = new Combo(targetComp, SWT.READ_ONLY);
 		subfolderCombo.setItems(new String[] { Messages.ImportFromDeviceWizard_no,
 				Messages.ImportFromDeviceWizard_by_year, Messages.ImportFromDeviceWizard_by_year_month,

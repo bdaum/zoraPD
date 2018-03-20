@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -51,7 +51,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.nebula.paperclips.core.PaperClips;
 import org.eclipse.nebula.paperclips.core.Print;
@@ -105,8 +104,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 
-import com.bdaum.aoModeling.runtime.AomList;
-import com.bdaum.aoModeling.runtime.IdentifiableObject;
+import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 import com.bdaum.zoom.cat.model.Rgb_typeImpl;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
@@ -134,6 +132,7 @@ import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.views.ExhibitionView;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
@@ -162,7 +161,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 public class ExhibitionEditDialog extends ZTitleAreaDialog {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.exhibitionProperties"; //$NON-NLS-1$
-
+	private static final double DPI300 = 25.4d / 300d;
 	private static final String GROUND_COLOR = "groundColor"; //$NON-NLS-1$
 	private static final String HORIZON_COLOR = "horizonColor"; //$NON-NLS-1$
 	private static final String CEILING_COLOR = "ceilingColor"; //$NON-NLS-1$
@@ -186,45 +185,65 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	private static final String INFOPLATEPOS = "infoPlatePos"; //$NON-NLS-1$
 	private static final String HIDECREDITS = "hideCredits"; //$NON-NLS-1$
 	private static final String DEFAULTINFO = "defaultInfo"; //$NON-NLS-1$
-
 	private static final int ENTRANCEDIAMETER = 13;
 	private static final int DOORWIDTH = 1000;
 	private static final int INFOWIDTH = 1000;
 	private static final double D1000 = 1000d;
 	private static final double D05 = 0.5d;
 	private static final int TOLERANCE = 5;
-
 	private static final Object[] EKPTY = new Object[0];
-
 	private static final int PDFBUTTON = 998;
 	private static final int PRINTBUTTON = 999;
-
 	private static NumberFormat af = NumberFormat.getNumberInstance();
+	private static final SimpleDateFormat EDF = new SimpleDateFormat("yyyy"); //$NON-NLS-1$
+	private static String[] SEQUENCEITEMS = new String[] { Messages.ExhibitionEditDialog_capt_des_cred,
+			Messages.ExhibitionEditDialog_capt_cred_des, Messages.ExhibitionEditDialog_cred_capt_des };
 
+	private final ModifyListener modifyListener = new ModifyListener() {
+		public void modifyText(ModifyEvent e) {
+			updateButtons();
+		}
+	};
+
+	private final boolean canUndo;
+	private ComboViewer itemViewer;
+	private Label alabel;
+	private CTabFolder tabFolder, detailTabfolder;
+	private PrinterData printerData;
+	private CTabItem detailsTabItem;
+	private LabelLayoutGroup labelLayoutGroup;
 	private ExhibitionImpl current;
 	private String title;
 	private ExhibitionImpl result;
-	private Text nameField;
-	private CheckedText descriptionField;
 	private Font selectedFont;
-	// Floorplan
-	private Object selectedItem;
+	private Canvas floorplan;
 	private double scale;
-	private int xoff;
-	private int yoff;
-	private int[] wxs;
-	private int[] wys;
-	private int[] wx2s;
-	private int[] wy2s;
-	private Object hotObject;
+	private int xoff, yoff;
+	private int[] wxs, wys, wx2s, wy2s;
 	private int hotIndex;
-
 	private GroupImpl group;
 	private IDialogSettings settings;
-
 	private Cursor rotCursor;
-
-	private final boolean canUndo;
+	private char unit = Core.getCore().getDbFactory().getDimUnit();
+	private TreeViewer imageDetailViewer;
+	private ImportGalleryGroup importGroup;
+	private NumericControl xspinner, yspinner, aspinner, viewingHeightField, gridSizeField, varianceField,
+			matWidthField, frameWidthField;
+	private CheckboxButton showGridButton, snapToGridField, watermarkButton, showCreditsButton;
+	private Button fontButton;
+	private WebColorGroup matColorGroup, frameColorGroup, horizonColorGroup, groundColorGroup, ceilingColorGroup;
+	private Text copyrightField, contactField, emailField, weburlField, linkField, keywordField, nameField;
+	private CheckedText infoField, descriptionField, labelTextField;
+	private Combo sequenceCombo, infoPosField;
+	private FileEditor audioField;
+	private OutputTargetGroup outputTargetGroup;
+	private FileEditor logoField;
+	protected int dragHandle;
+	protected Object draggedObject, recentlyDraggedObject, hotObject, selectedItem;
+	protected Point dragStart;
+	protected Point origin = new Point(0, 0);
+	private QualityGroup qualityGroup;
+	private TreeViewer frameDetailViewer;
 
 	public static ExhibitionImpl open(final Shell shell, final GroupImpl group, final ExhibitionImpl gallery,
 			final String title, final boolean canUndo, final String errorMsg) {
@@ -249,6 +268,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		selectedItem = current;
 		this.title = title;
 		this.canUndo = canUndo;
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 	}
 
 	@Override
@@ -271,65 +291,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			nameField.setFocus();
 	}
 
-	private final ModifyListener modifyListener = new ModifyListener() {
-
-		public void modifyText(ModifyEvent e) {
-			updateButtons();
-		}
-	};
-
-	private NumericControl viewingHeightField;
-
-	private TreeViewer imageDetailViewer;
-
-	private NumericControl gridSizeField;
-
-	private Button showGridButton;
-
-	private Button snapToGridField;
-
-	private Button fontButton;
-
-	private ImportGalleryGroup importGroup;
-	private NumericControl varianceField;
-	private NumericControl matWidthField;
-	private NumericControl frameWidthField;
-	private WebColorGroup matColorGroup;
-	private WebColorGroup frameColorGroup;
-	private WebColorGroup horizonColorGroup;
-	private WebColorGroup groundColorGroup;
-	private WebColorGroup ceilingColorGroup;
-	private FileEditor audioField;
-	private OutputTargetGroup outputTargetGroup;
-	private CheckboxButton watermarkButton;
-	private Text copyrightField;
-	private Text contactField;
-	private Text emailField;
-	private Text weburlField;
-	private FileEditor logoField;
-	private Text linkField;
-	private Text keywordField;
-	protected int dragHandle;
-	protected Object draggedObject;
-	protected Point dragStart;
-	protected Point origin = new Point(0, 0);
-	protected Object recentlyDraggedObject;
-
-	private CheckedText infoField;
-
-	private Combo sequenceCombo;
-
-	private String[] SEQUENCEITEMS = new String[] { Messages.ExhibitionEditDialog_capt_des_cred,
-			Messages.ExhibitionEditDialog_capt_cred_des, Messages.ExhibitionEditDialog_cred_capt_des };
-
-	private CheckboxButton showCreditsButton;
-
-	private CheckedText labelTextField;
-
-	private QualityGroup qualityGroup;
-
-	private TreeViewer frameDetailViewer;
-
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
@@ -340,68 +301,28 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			importGroup = new ImportGalleryGroup(composite, new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1),
 					Messages.ExhibitionEditDialog_web_gallery);
 			importGroup.addChangeListener(new ISelectionChangedListener() {
-
 				public void selectionChanged(SelectionChangedEvent event) {
-					IdentifiableObject fromItem = importGroup.getFromItem();
+					IIdentifiableObject fromItem = importGroup.getFromItem();
 					if (fromItem instanceof ExhibitionImpl)
 						fillValues((ExhibitionImpl) fromItem, true);
 					infoField.setText(importGroup.getDescription());
 				}
 			});
 		}
-
 		tabFolder = new CTabFolder(composite, SWT.BORDER);
 		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-		final CTabItem overviewTabItem = UiUtilities.createTabItem(detailTabfolder,
-				Messages.ExhibitionEditDialog_overview);
-
-		final Composite comp = new Composite(tabFolder, SWT.NONE);
-		overviewTabItem.setControl(comp);
-		createOverview(comp);
-
-		final CTabItem layoutTabItem = UiUtilities.createTabItem(detailTabfolder, Messages.ExhibitionEditDialog_layout);
-
-		final Composite layoutComp = new Composite(tabFolder, SWT.NONE);
-		layoutTabItem.setControl(layoutComp);
-		createLayoutGroup(layoutComp);
-
-		final CTabItem gridTabItem = UiUtilities.createTabItem(detailTabfolder, Messages.ExhibitionEditDialog_grid);
-
-		final Composite gridComp = new Composite(tabFolder, SWT.NONE);
-		gridTabItem.setControl(gridComp);
-		createGridGroup(gridComp);
-
+		createOverview(UiUtilities.createTabPage(tabFolder, Messages.ExhibitionEditDialog_overview, null));
+		createLayoutGroup(UiUtilities.createTabPage(tabFolder, Messages.ExhibitionEditDialog_layout, null));
+		createGridGroup(UiUtilities.createTabPage(tabFolder, Messages.ExhibitionEditDialog_grid, null));
 		if (current != null) {
-			detailsTabItem = new CTabItem(tabFolder, SWT.NONE);
-			detailsTabItem.setText(Messages.ExhibitionEditDialog_details);
-
-			final Composite detailsComp = new Composite(tabFolder, SWT.NONE);
-			detailsComp.setLayout(new GridLayout());
+			detailsTabItem = UiUtilities.createTabItem(tabFolder, Messages.ExhibitionEditDialog_details, null);
+			Composite detailsComp = new Composite(tabFolder, SWT.NONE);
 			detailsTabItem.setControl(detailsComp);
 			createDetails(detailsComp);
-			final CTabItem floorTabItem = new CTabItem(tabFolder, SWT.NONE);
-			floorTabItem.setText(Messages.ExhibitionEditDialog_floorplan);
-
-			final Composite floorComp = new Composite(tabFolder, SWT.NONE);
-			floorComp.setLayout(new GridLayout());
-			floorTabItem.setControl(floorComp);
-			createFloorplan(floorComp);
+			createFloorplan(UiUtilities.createTabPage(tabFolder, Messages.ExhibitionEditDialog_floorplan, null));
 		}
-		final CTabItem webTabItem = new CTabItem(tabFolder, SWT.NONE);
-		webTabItem.setText(Messages.ExhibitionEditDialog_web);
-
-		final Composite webComp = new Composite(tabFolder, SWT.NONE);
-		webTabItem.setControl(webComp);
-		createWebGroup(webComp);
-
-		final CTabItem outputTabItem = new CTabItem(tabFolder, SWT.NONE);
-		outputTabItem.setText(Messages.ExhibitionEditDialog_output);
-
-		final Composite outputComp = new Composite(tabFolder, SWT.NONE);
-		outputTabItem.setControl(outputComp);
-		createOutputGroup(outputComp);
-
+		createWebGroup(UiUtilities.createTabPage(tabFolder, Messages.ExhibitionEditDialog_web, null));
+		createOutputGroup(UiUtilities.createTabPage(tabFolder, Messages.ExhibitionEditDialog_output, null));
 		tabFolder.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -410,7 +331,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				updateButtons();
 			}
 		});
-
 		tabFolder.setSimple(false);
 		tabFolder.setSelection(0);
 		fillValues(current, false);
@@ -418,15 +338,9 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	}
 
 	private void createOutputGroup(Composite parent) {
-		final GridLayout gridLayout = new GridLayout();
-		gridLayout.numColumns = 3;
-		parent.setLayout(gridLayout);
+		parent.setLayout(new GridLayout(3, false));
 		outputTargetGroup = new OutputTargetGroup(parent,
-				new GridData(GridData.FILL, GridData.BEGINNING, true, false, 3, 1), new ModifyListener() {
-					public void modifyText(ModifyEvent e) {
-						updateButtons();
-					}
-				}, false, true);
+				new GridData(GridData.FILL, GridData.BEGINNING, true, false, 3, 1), modifyListener, false, true);
 		// Link
 		new Label(parent, SWT.NONE).setText(Messages.ExhibitionEditDialog_web_link);
 		linkField = new Text(parent, SWT.BORDER);
@@ -447,7 +361,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		keywordButton.setText(Messages.WebGalleryEditDialog_add_image_keywords);
 		keywordButton.setEnabled(hasImages());
 		keywordButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				addImageKeywords();
@@ -499,7 +412,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				keywords.add(st.nextToken());
 			for (Wall wall : walls) {
 				List<String> exhibit = wall.getExhibit();
-				if (exhibit != null) {
+				if (exhibit != null)
 					for (String exhibitId : exhibit) {
 						WebExhibitImpl obj = dbManager.obtainById(WebExhibitImpl.class, exhibitId);
 						if (obj != null) {
@@ -513,7 +426,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 							}
 						}
 					}
-				}
 			}
 			String[] kws = keywords.toArray(new String[keywords.size()]);
 			Arrays.sort(kws, Utilities.KEYWORDCOMPARATOR);
@@ -536,49 +448,40 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	}
 
 	private void createWebGroup(Composite comp) {
-		final GridLayout gridLayout = new GridLayout();
-		gridLayout.numColumns = 2;
-		comp.setLayout(gridLayout);
-
-		groundColorGroup = new WebColorGroup(comp, Messages.ExhibitionEditDialog_ground_color);
-		horizonColorGroup = new WebColorGroup(comp, Messages.ExhibitionEditDialog_horizon_color);
-		ceilingColorGroup = new WebColorGroup(comp, Messages.ExhibitionEditDialog_ceiling_color);
-		new Label(comp, SWT.NONE).setText(Messages.ExhibitionEditDialog_sound_track);
-		audioField = new FileEditor(comp, SWT.OPEN, Messages.ExhibitionEditDialog_sound_file, false,
+		comp.setLayout(new GridLayout());
+		CGroup colorGroup = CGroup.create(comp, 1, Messages.ExhibitionEditDialog_colors);
+		groundColorGroup = new WebColorGroup(colorGroup, Messages.ExhibitionEditDialog_ground_color);
+		horizonColorGroup = new WebColorGroup(colorGroup, Messages.ExhibitionEditDialog_horizon_color);
+		ceilingColorGroup = new WebColorGroup(colorGroup, Messages.ExhibitionEditDialog_ceiling_color);
+		CGroup mediaGroup = CGroup.create(comp, 1, Messages.ExhibitionEditDialog_media);
+		new Label(mediaGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_sound_track);
+		audioField = new FileEditor(mediaGroup, SWT.OPEN, Messages.ExhibitionEditDialog_sound_file, false,
 				new String[] { "*.mid;*.midi;*.rm;*.ram;*.mp3;*.mpga;*.wav;*.wma" }, //$NON-NLS-1$
-				new String[] { Messages.ExhibitionEditDialog_audio_files }, null, null, false);
-		new Label(comp, SWT.NONE).setText(Messages.WebGalleryEditDialog_name_plate);
-		logoField = new FileEditor(comp, SWT.OPEN, Messages.ExhibitionEditDialog_select_nameplate_file, false,
+				new String[] { Messages.ExhibitionEditDialog_audio_files }, null, null, false, settings);
+		new Label(mediaGroup, SWT.NONE).setText(Messages.WebGalleryEditDialog_name_plate);
+		logoField = new FileEditor(mediaGroup, SWT.OPEN, Messages.ExhibitionEditDialog_select_nameplate_file, false,
 				new String[] { "*.gif;*.GIF;*.jpg;*.JPG;*.png;*.PNG" }, //$NON-NLS-1$
-				new String[] { Messages.ExhibitionEditDialog_valid_image_files }, null, null, false);
+				new String[] { Messages.ExhibitionEditDialog_valid_image_files }, null, null, false, settings);
 		logoField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 	}
 
 	private void createGridGroup(Composite comp) {
-		final GridLayout gridLayout = new GridLayout();
-		gridLayout.numColumns = 2;
-		comp.setLayout(gridLayout);
-		new Label(comp, SWT.NONE).setText(Messages.ExhibitionEditDialog_show_grid);
-
-		showGridButton = new Button(comp, SWT.CHECK);
+		comp.setLayout(new GridLayout(2, false));
+		showGridButton = WidgetFactory.createCheckButton(comp, Messages.ExhibitionEditDialog_show_grid,
+				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		showGridButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				updateButtons();
 			}
 		});
 		new Label(comp, SWT.NONE).setText(Messages.ExhibitionEditDialog_grid_size);
-
 		gridSizeField = new NumericControl(comp, SWT.NONE);
 		gridSizeField.setPageIncrement(5);
 		gridSizeField.setMinimum(5);
 		gridSizeField.setMaximum(50);
-
-		new Label(comp, SWT.NONE).setText(Messages.ExhibitionEditDialog_snap_to_grid);
-
-		snapToGridField = new Button(comp, SWT.CHECK);
-
+		snapToGridField = WidgetFactory.createCheckButton(comp, Messages.ExhibitionEditDialog_snap_to_grid,
+				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 	}
 
 	private void createLayoutGroup(Composite comp) {
@@ -588,16 +491,16 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		GridLayout layout = new GridLayout(4, false);
 		layout.marginWidth = 0;
 		heightGroup.setLayout(layout);
-
-		new Label(heightGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_default_viewing_height);
+		new Label(heightGroup, SWT.NONE)
+				.setText(Messages.ExhibitionEditDialog_default_viewing_height + captionUnitmft());
 		viewingHeightField = new NumericControl(heightGroup, SWT.NONE);
 		viewingHeightField.setDigits(2);
-		viewingHeightField.setMaximum(500);
+		viewingHeightField.setMaximum(unit == 'i' ? 1500 : 500);
 		final Label varianceLabel = new Label(heightGroup, SWT.NONE);
 		GridData layoutData = new GridData();
 		layoutData.horizontalIndent = 10;
 		varianceLabel.setLayoutData(layoutData);
-		varianceLabel.setText(Messages.ExhibitionEditDialog_variance);
+		varianceLabel.setText(Messages.ExhibitionEditDialog_variance + captionUnitmft());
 		varianceField = new NumericControl(heightGroup, SWT.NONE);
 		varianceField.setDigits(2);
 		varianceField.setMaximum(999);
@@ -607,34 +510,30 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				varianceField.setMaximum(2 * viewingHeightField.getSelection() - 1);
 			}
 		});
-		CGroup frameGroup = createCGroup(comp, 1, Messages.ExhibitionEditDialog_mat_and_fram);
-		new Label(frameGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_matWidth);
+		CGroup frameGroup = CGroup.create(comp, 1, Messages.ExhibitionEditDialog_mat_and_fram);
+		new Label(frameGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_matWidth + captionUnitcmin());
 		matWidthField = new NumericControl(frameGroup, SWT.NONE);
-		matWidthField.setMaximum(1000);
-		matWidthField.addSelectionListener(new SelectionAdapter() {
+		matWidthField.setMaximum(unit == 'i' ? 400 : 1000);
+		matWidthField.setDigits(1);
+		SelectionAdapter colorSelectionListener = new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				updateColorGroups();
 			}
-		});
-		matColorGroup = new WebColorGroup(frameGroup, Messages.ExhibitionEditDialog_matColor);
+		};
+		matWidthField.addSelectionListener(colorSelectionListener);
+		matColorGroup = new WebColorGroup(frameGroup, Messages.ExhibitionEditDialog_matColor + captionUnitcmin());
 		new Label(frameGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_frameWidth);
 		frameWidthField = new NumericControl(frameGroup, SWT.NONE);
-		frameWidthField.setMaximum(100);
-		frameWidthField.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateColorGroups();
-			}
-		});
+		frameWidthField.setMaximum(unit == 'i' ? 40 : 100);
+		frameWidthField.setDigits(1);
+		frameWidthField.addSelectionListener(colorSelectionListener);
 		frameColorGroup = new WebColorGroup(frameGroup, Messages.ExhibitionEditDialog_frameColor);
-		CGroup labelGroup = createCGroup(comp, 1, Messages.ExhibitionEditDialog_label);
+		CGroup labelGroup = CGroup.create(comp, 1, Messages.ExhibitionEditDialog_label);
 		new Label(labelGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_label_font);
-
-		fontButton = new Button(labelGroup, SWT.NONE);
+		fontButton = new Button(labelGroup, SWT.PUSH);
 		fontButton.setText(Messages.ExhibitionEditDialog_font);
 		fontButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				FontDialog dialog = new FontDialog(getShell());
@@ -645,8 +544,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				if (fontdata != null) {
 					if (selectedFont != null)
 						selectedFont.dispose();
-					selectedFont = new Font(e.display, fontdata);
-					fontButton.setFont(selectedFont);
+					fontButton.setFont(selectedFont = new Font(e.display, fontdata));
 				}
 			}
 		});
@@ -670,20 +568,13 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		});
 	}
 
-	private static CGroup createCGroup(Composite parent, int cols, String text) {
-		CGroup labelGroup = new CGroup(parent, SWT.NONE);
-		labelGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, cols, 1));
-		labelGroup.setLayout(new GridLayout(2, false));
-		labelGroup.setText(text);
-		return labelGroup;
-	}
-
 	private void updateColorGroups() {
 		matColorGroup.setEnabled(matWidthField.getSelection() != 0);
 		frameColorGroup.setEnabled(frameWidthField.getSelection() != 0);
 	}
 
 	private void createFloorplan(Composite parent) {
+		parent.setLayout(new GridLayout());
 		Composite comp = new Composite(parent, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new GridLayout(2, false));
@@ -708,31 +599,29 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		items.addAll(current.getWall());
 		itemViewer.setInput(items);
 		Label xlabel = new Label(detailGroup, SWT.NONE);
-		xlabel.setText(Messages.ExhibitionEditDialog_ground_xpos);
-		xspinner = new NumericControl(detailGroup, SWT.NONE);
+		xlabel.setText(Messages.ExhibitionEditDialog_ground_xpos + captionUnitmft());
+		xspinner = new NumericControl(detailGroup, NumericControl.LOGARITHMIC);
 		xspinner.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-		xspinner.setMaximum(500000);
-		xspinner.setIncrement(10);
+		xspinner.setMaximum(unit == 'i' ? 1500000 : 500000);
+		xspinner.setIncrement(unit == 'i' ? 30 : 10);
 		xspinner.setDigits(2);
-		xspinner.setLogrithmic(true);
 		xspinner.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				updateItems(xspinner.getSelection() * 10, -1, Double.NaN);
+				updateItems(toMm(xspinner.getSelection()), -1, Double.NaN);
 			}
 		});
 		Label ylabel = new Label(detailGroup, SWT.NONE);
-		ylabel.setText(Messages.ExhibitionEditDialog_ground_ypos);
-		yspinner = new NumericControl(detailGroup, SWT.NONE);
+		ylabel.setText(Messages.ExhibitionEditDialog_ground_ypos + captionUnitmft());
+		yspinner = new NumericControl(detailGroup, NumericControl.LOGARITHMIC);
 		yspinner.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-		yspinner.setMaximum(500000);
-		yspinner.setIncrement(10);
+		yspinner.setMaximum(unit == 'i' ? 1500000 : 500000);
+		yspinner.setIncrement(unit == 'i' ? 30 : 10);
 		yspinner.setDigits(2);
-		xspinner.setLogrithmic(true);
 		yspinner.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				updateItems(-1, yspinner.getSelection() * 10, Double.NaN);
+				updateItems(-1, toMm(yspinner.getSelection()), Double.NaN);
 			}
 		});
 		alabel = new Label(detailGroup, SWT.NONE);
@@ -755,7 +644,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		data.heightHint = 300;
 		floorplan.setLayoutData(data);
 		floorplan.addPaintListener(new PaintListener() {
-
 			public void paintControl(PaintEvent e) {
 				Rectangle area = floorplan.getClientArea();
 				GC gc = e.gc;
@@ -949,7 +837,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			}
 		});
 		floorplan.addMouseMoveListener(new MouseMoveListener() {
-
 			public void mouseMove(MouseEvent e) {
 				if (draggedObject != null) {
 					int dx = e.x - dragStart.x;
@@ -1078,12 +965,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 							double ddx = gx - gx2 - dx;
 							double ddy = gy - gy2 - dy;
 							double angle = ddx == 0 ? 90 : Math.toDegrees(Math.atan(ddy / ddx));
-							if (ddx > 0) {
-								if (ddy < 0)
-									angle = 180 + angle;
-								else
-									angle = angle - 180;
-							}
+							if (ddx > 0)
+								angle = ddy < 0 ? 180 + angle : angle - 180;
 							wall.setGAngle(angle);
 						}
 					}
@@ -1103,6 +986,18 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		});
 		itemViewer.setSelection(new StructuredSelection(current));
 
+	}
+
+	private String captionUnitmft() {
+		return unit == 'i' ? " (ft)" : " (m)"; //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	private String captionUnitcmin() {
+		return unit == 'i' ? " (in)" : " (cm)"; //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	protected int toMm(int x) {
+		return unit == 'i' ? (int) (x * 3.048d + 0.5d) : x * 10;
 	}
 
 	protected void updateItems(int x, int y, double a) {
@@ -1127,21 +1022,26 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		Object firstElement = selection.getFirstElement();
 		if (firstElement instanceof Wall) {
 			Wall wall = (Wall) firstElement;
-			xspinner.setSelection((wall.getGX() + 5) / 10);
-			yspinner.setSelection((wall.getGY() + 5) / 10);
+			xspinner.setSelection(fromMm(wall.getGX()));
+			yspinner.setSelection(fromMm(wall.getGY()));
 			aspinner.setSelection((int) (wall.getGAngle() * 10 + 0.5d));
 			aspinner.setVisible(true);
 			alabel.setVisible(true);
 		} else if (current != null) {
-			xspinner.setSelection((current.getStartX() + 5) / 10);
-			yspinner.setSelection((current.getStartY() + 5) / 10);
+			xspinner.setSelection(fromMm(current.getStartX()));
+			yspinner.setSelection(fromMm(current.getStartY()));
 			alabel.setVisible(false);
 			aspinner.setVisible(false);
 		}
 	}
 
-	private void createDetails(Composite comp) {
-		detailTabfolder = new CTabFolder(comp, SWT.BOTTOM | SWT.BORDER);
+	private int fromMm(int x) {
+		return unit == 'i' ? (int) (x / 3.048d + 0.5d) : (x + 5) / 10;
+	}
+
+	private void createDetails(Composite parent) {
+		parent.setLayout(new GridLayout());
+		detailTabfolder = new CTabFolder(parent, SWT.BOTTOM | SWT.BORDER);
 		imageDetailViewer = createDetailViewer(createTabItem(detailTabfolder, Messages.ExhibitionEditDialog_Image),
 				false);
 		frameDetailViewer = createDetailViewer(createTabItem(detailTabfolder, Messages.ExhibitionEditDialog_Frame),
@@ -1194,7 +1094,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 
 			public Object[] getChildren(Object parentElement) {
 				if (parentElement instanceof Wall) {
-					AomList<String> ids = ((Wall) parentElement).getExhibit();
+					List<String> ids = ((Wall) parentElement).getExhibit();
 					List<ExhibitImpl> list = new ArrayList<ExhibitImpl>(ids.size());
 					for (String id : ids) {
 						ExhibitImpl obj = dbManager.obtainById(ExhibitImpl.class, id);
@@ -1206,11 +1106,11 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				return EKPTY;
 			}
 		});
-		viewer.setComparator(new ViewerComparator() {
+		viewer.setComparator(new ZViewerComparator() {
 			@Override
 			public int compare(Viewer aViewer, Object e1, Object e2) {
 				if (e1 instanceof Wall && e2 instanceof Wall) {
-					return ((Wall) e1).getLocation().compareToIgnoreCase(((Wall) e2).getLocation());
+					return UiUtilities.stringComparator.compare(((Wall) e1).getLocation(), ((Wall) e2).getLocation());
 				} else if (e1 instanceof Exhibit && e2 instanceof Exhibit) {
 					int x1 = ((Exhibit) e1).getX();
 					int x2 = ((Exhibit) e2).getX();
@@ -1224,11 +1124,9 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	}
 
 	private static Composite createTabItem(CTabFolder folder, String label) {
-		CTabItem item = UiUtilities.createTabItem(folder, label);
-		Composite composite = new Composite(folder, SWT.NONE);
+		Composite composite = UiUtilities.createTabPage(folder, label, null);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(1, false));
-		item.setControl(composite);
 		return composite;
 	}
 
@@ -1251,43 +1149,29 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 						return ((Wall) element).getLocation();
 					if (element instanceof Exhibit)
 						return ((Exhibit) element).getTitle();
-
 					break;
 				case 1:
-					if (element instanceof Exhibit) {
-						af.setMaximumFractionDigits(2);
-						af.setMinimumFractionDigits(2);
-						return af.format((((Exhibit) element).getX() - tara) / 1000d) + " m"; //$NON-NLS-1$
-					}
+					if (element instanceof Exhibit)
+						return printDistance(((Exhibit) element).getX(), tara);
 					break;
 				case 2:
-					if (element instanceof Exhibit) {
-						af.setMaximumFractionDigits(2);
-						af.setMinimumFractionDigits(2);
-						return af.format((((Exhibit) element).getY() + tara) / 1000d) + " m"; //$NON-NLS-1$
-					}
+					if (element instanceof Exhibit)
+						return printDistance(((Exhibit) element).getY(), tara);
 					break;
 				case 3:
-					if (element instanceof Exhibit) {
-						af.setMaximumFractionDigits(1);
-						af.setMinimumFractionDigits(1);
-						return af.format((((Exhibit) element).getWidth() + 2 * tara) / 10d) + " cm"; //$NON-NLS-1$
-					}
+					if (element instanceof Exhibit)
+						return printDimension(((Exhibit) element).getWidth(), tara);
 					break;
 				case 4:
-					if (element instanceof Exhibit) {
-						af.setMaximumFractionDigits(1);
-						af.setMinimumFractionDigits(1);
-						return af.format((((Exhibit) element).getHeight() + 2 * tara) / 10d) + " cm"; //$NON-NLS-1$
-					}
+					if (element instanceof Exhibit)
+						return printDimension(((Exhibit) element).getHeight(), tara);
 					break;
 				case 5:
 					if (element instanceof Exhibit) {
 						Exhibit exhibit = (Exhibit) element;
 						AssetImpl asset = dbManager.obtainAsset(exhibit.getAsset());
-						if (asset != null) {
+						if (asset != null)
 							return String.valueOf((int) (asset.getWidth() * 25.4d / exhibit.getWidth()));
-						}
 					}
 					break;
 				case 6:
@@ -1297,28 +1181,42 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				}
 				return ""; //$NON-NLS-1$
 			}
+
+			protected String printDistance(int dist, int tara) {
+				af.setMaximumFractionDigits(2);
+				af.setMinimumFractionDigits(2);
+				if (unit == 'i')
+					return af.format((dist + 2 * tara) / 304.8d) + " ft"; //$NON-NLS-1$
+				return af.format((dist + tara) / 1000d) + " m"; //$NON-NLS-1$
+			}
+
+			protected String printDimension(int dim, int tara) {
+				af.setMaximumFractionDigits(1);
+				af.setMinimumFractionDigits(1);
+				if (unit == 'i')
+					return af.format((dim + 2 * tara) / 25.4d) + " in"; //$NON-NLS-1$
+				return af.format((dim + 2 * tara) / 10d) + " cm"; //$NON-NLS-1$
+			}
 		});
 	}
 
 	@SuppressWarnings("unused")
 	private void createOverview(final Composite comp) {
-		final GridLayout gridLayout = new GridLayout();
-		gridLayout.numColumns = 2;
-		comp.setLayout(gridLayout);
-		new Label(comp, SWT.NONE).setText(Messages.ExhibitionEditDialog_name);
-
-		nameField = new Text(comp, SWT.BORDER);
+		comp.setLayout(new GridLayout());
+		CGroup exhGroup = CGroup.create(comp, 1, Messages.ExhibitionEditDialog_exhibition);
+		new Label(exhGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_name);
+		nameField = new Text(exhGroup, SWT.BORDER);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		nameField.addModifyListener(modifyListener);
-		final Label descriptionLabel = new Label(comp, SWT.NONE);
+		final Label descriptionLabel = new Label(exhGroup, SWT.NONE);
 		descriptionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
 		descriptionLabel.setText(Messages.ExhibitionEditDialog_description);
 		final GridData gd_descriptionField = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gd_descriptionField.widthHint = 250;
-		gd_descriptionField.heightHint = 70;
-		descriptionField = new CheckedText(comp, SWT.WRAP | SWT.V_SCROLL | SWT.MULTI | SWT.BORDER);
+		gd_descriptionField.heightHint = 120;
+		descriptionField = new CheckedText(exhGroup, SWT.WRAP | SWT.V_SCROLL | SWT.MULTI | SWT.BORDER);
 		descriptionField.setLayoutData(gd_descriptionField);
-		CGroup infoGroup = createCGroup(comp, 2, Messages.ExhibitionEditDialog_info_plate);
+		CGroup infoGroup = CGroup.create(comp, 1, Messages.ExhibitionEditDialog_info_plate);
 		new Label(infoGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_info_plate_position);
 		infoPosField = new Combo(infoGroup, SWT.DROP_DOWN | SWT.READ_ONLY);
 		infoPosField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -1383,11 +1281,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				return false;
 			}
 		}
-		String errorMessage = labelLayoutGroup.validate();
-		if (errorMessage != null) {
-			setErrorMessage(errorMessage);
-			return false;
-		}
 		setErrorMessage(null);
 		return true;
 	}
@@ -1402,8 +1295,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			infoField.setText(show.getInfo() == null ? "" : show.getInfo()); //$NON-NLS-1$
 			infoPosField.select(show.getInfoPlatePosition() + 1);
 			showCreditsButton.setSelection(!show.getHideCredits());
-			viewingHeightField.setSelection(show.getDefaultViewingHeight() / 10);
-			varianceField.setSelection(show.getVariance() / 10);
+			viewingHeightField.setSelection(fromMm(show.getDefaultViewingHeight()));
+			varianceField.setSelection(fromMm(show.getVariance()));
 			showGridButton.setSelection(show.getShowGrid());
 			gridSizeField.setSelection(show.getGridSize() / 10);
 			snapToGridField.setSelection(show.getSnapToGrid());
@@ -1424,8 +1317,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			labelLayoutGroup.fillValues(show.getHideLabel(), a == null ? Constants.DEFAULTLABELALIGNMENT : a.intValue(),
 					d == null ? Constants.DEFAULTLABELDISTANCE : d.intValue(),
 					i == null ? Constants.DEFAULTLABELINDENT : i.intValue());
-			matWidthField.setSelection(show.getMatWidth());
-			frameWidthField.setSelection(show.getFrameWidth());
+			matWidthField.setSelection(fromMmi(show.getMatWidth()));
+			frameWidthField.setSelection(fromMmi(show.getFrameWidth()));
 			matColorGroup.setRGB(show.getMatColor());
 			frameColorGroup.setRGB(show.getFrameColor());
 			groundColorGroup.setRGB(show.getGroundColor());
@@ -1458,6 +1351,10 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		updateButtons();
 	}
 
+	private int fromMmi(int x) {
+		return unit == 'i' ? (int) (x / 2.54d + 0.5d) : x;
+	}
+
 	private void updateDetailViewers(ExhibitionImpl show) {
 		if (imageDetailViewer != null) {
 			imageDetailViewer.setInput(show);
@@ -1470,8 +1367,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	}
 
 	private void initValues() {
-		if (settings == null)
-			settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
 		outputTargetGroup.initValues(settings);
 		try {
 			infoPosField.select(settings.getInt(INFOPLATEPOS) + 1);
@@ -1485,10 +1380,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		setCondText(linkField, link);
 		setCondText(logoField, settings.get(LOGO));
 		String copyright = settings.get(COPYRIGHT);
-		if (copyright == null || copyright.isEmpty()) {
-			GregorianCalendar cal = new GregorianCalendar();
-			copyright = cal.get(Calendar.YEAR) + " "; //$NON-NLS-1$
-		}
+		if (copyright == null || copyright.isEmpty())
+			copyright = new GregorianCalendar().get(Calendar.YEAR) + " "; //$NON-NLS-1$
 		String audioTrack = settings.get(AUDIO);
 		setCondText(audioField, audioTrack);
 		setCondText(copyrightField, copyright);
@@ -1502,19 +1395,33 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		ceilingColorGroup.fillValues(settings, CEILING_COLOR, 148, 146, 123);
 		horizonColorGroup.fillValues(settings, HORIZON_COLOR, 0, 0, 0);
 		groundColorGroup.fillValues(settings, GROUND_COLOR, 201, 199, 176);
-		initNumericControl(viewingHeightField, VIEWING_HEIGHT, 170);
-		initNumericControl(frameWidthField, FRAME_WIDTH, 0);
-		initNumericControl(matWidthField, MAT_WIDTH, 0);
-		initNumericControl(varianceField, VARIANCE, 20);
+		try {
+			viewingHeightField.setSelection(fromMm(settings.getInt(VIEWING_HEIGHT)));
+		} catch (NumberFormatException e1) {
+			viewingHeightField.setSelection(fromMm(1700));
+		}
+		try {
+			frameWidthField.setSelection(fromMmi(settings.getInt(FRAME_WIDTH)));
+		} catch (NumberFormatException e2) {
+			frameWidthField.setSelection(0);
+		}
+		try {
+			matWidthField.setSelection(fromMmi(settings.getInt(MAT_WIDTH)));
+		} catch (NumberFormatException e2) {
+			matWidthField.setSelection(0);
+		}
+		try {
+			varianceField.setSelection(fromMm(settings.getInt(VARIANCE)));
+		} catch (NumberFormatException e1) {
+			varianceField.setSelection(fromMm(200));
+		}
 		if (selectedFont != null)
 			selectedFont.dispose();
 		String family = settings.get(FONTFAMILY);
 		try {
 			int size = settings.getInt(FONTSIZE);
-			if (family != null && size > 0) {
-				selectedFont = new Font(getShell().getDisplay(), family, size, SWT.NORMAL);
-				fontButton.setFont(selectedFont);
-			}
+			if (family != null && size > 0)
+				fontButton.setFont(selectedFont = new Font(getShell().getDisplay(), family, size, SWT.NORMAL));
 		} catch (NumberFormatException e) {
 			// ignore
 		}
@@ -1524,18 +1431,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			sequenceCombo.select(Constants.EXHLABEL_TIT_DES_CRED);
 		}
 		String dfi = settings.get(DEFAULTINFO);
-		if (dfi != null)
-			labelTextField.setText(dfi);
-		else
-			labelTextField.setText(Messages.ExhibitionEditDialog_inkjet_print);
-	}
-
-	private void initNumericControl(NumericControl control, String key, int dflt) {
-		try {
-			control.setSelection(settings.getInt(key));
-		} catch (NumberFormatException e) {
-			control.setSelection(dflt);
-		}
+		labelTextField.setText(dfi != null ? dfi : Messages.ExhibitionEditDialog_inkjet_print);
 	}
 
 	@Override
@@ -1636,7 +1532,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			List<Wall> walls = current.getWall();
 			Wall[] sortedWalls = walls.toArray(new Wall[walls.size()]);
 			Arrays.sort(sortedWalls, new Comparator<Wall>() {
-
 				public int compare(Wall o1, Wall o2) {
 					return o1.getLocation().compareToIgnoreCase(o2.getLocation());
 				}
@@ -1668,7 +1563,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 						exhibits.add(exhibit);
 				}
 				Collections.sort(exhibits, new Comparator<ExhibitImpl>() {
-
 					public int compare(ExhibitImpl e1, ExhibitImpl e2) {
 						int x1 = ((Exhibit) e1).getX();
 						int x2 = ((Exhibit) e2).getX();
@@ -1704,7 +1598,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				}
 				document.add(table);
 			}
-
 			document.close();
 		} catch (DocumentException e) {
 			UiActivator.getDefault().logError(Messages.ExhibitionEditDialog_internal_error_writing_pdf, e);
@@ -1751,8 +1644,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 
 	private static Print createHeader(Print body, String fontName) {
 		PageNumberPageDecoration deco = new PageNumberPageDecoration();
-		FontData footerFont = new FontData(fontName, 8, SWT.NORMAL);
-		deco.setFontData(footerFont);
+		deco.setFontData(new FontData(fontName, 8, SWT.NORMAL));
 		deco.setRGB(new RGB(128, 128, 128));
 		deco.setAlign(SWT.RIGHT);
 		return new PagePrint(deco, 5, body);
@@ -1837,14 +1729,18 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			if (frameWidth != null)
 				tara += frameWidth;
 			else
-				tara += frameWidthField.getSelection();
+				tara += toMmi(frameWidthField.getSelection());
 			Integer matWidth = exhibit.getMatWidth();
 			if (matWidth != null)
 				tara += matWidth;
 			else
-				tara += matWidthField.getSelection();
+				tara += toMmi(matWidthField.getSelection());
 		}
 		return tara;
+	}
+
+	private int toMmi(int x) {
+		return unit == 'i' ? (int) (x * 2.54d + 0.5d) : x;
 	}
 
 	@Override
@@ -1866,19 +1762,16 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				}
 			}
 			result.setName(nameField.getText());
-			if (itemViewer != null) {
-				IStructuredSelection selection = (IStructuredSelection) itemViewer.getSelection();
-				Object firstElement = selection.getFirstElement();
-				if (!(firstElement instanceof Wall)) {
-					result.setStartX(xspinner.getSelection() * 10);
-					result.setStartY(yspinner.getSelection() * 10);
-				}
+			if (itemViewer != null
+					&& !(((IStructuredSelection) itemViewer.getSelection()).getFirstElement() instanceof Wall)) {
+				result.setStartX(toMm(xspinner.getSelection()));
+				result.setStartY(toMm(yspinner.getSelection()));
 			}
 			result.setDescription(descriptionField.getText());
 			result.setInfo(infoField.getText());
 			result.setInfoPlatePosition(Math.max(-1, infoPosField.getSelectionIndex() - 1));
 			result.setHideCredits(!showCreditsButton.getSelection());
-			result.setDefaultViewingHeight(viewingHeightField.getSelection() * 10);
+			result.setDefaultViewingHeight(toMm(viewingHeightField.getSelection()));
 			result.setVariance(varianceField.getSelection() * 10);
 			result.setShowGrid(showGridButton.getSelection());
 			result.setSnapToGrid(snapToGridField.getSelection());
@@ -1894,9 +1787,9 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			result.setLabelAlignment(labelLayoutGroup.getAlign());
 			result.setLabelDistance(labelLayoutGroup.getDist());
 			result.setLabelIndent(labelLayoutGroup.getIndent());
-			result.setMatWidth(matWidthField.getSelection());
+			result.setMatWidth(toMmi(matWidthField.getSelection()));
 			result.setMatColor(matColorGroup.getRGB());
-			result.setFrameWidth(frameWidthField.getSelection());
+			result.setFrameWidth(toMmi(frameWidthField.getSelection()));
 			result.setFrameColor(frameColorGroup.getRGB());
 			result.setGroundColor(groundColorGroup.getRGB());
 			result.setHorizonColor(horizonColorGroup.getRGB());
@@ -1914,18 +1807,15 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			result.setRadius(qualityGroup.getRadius());
 			result.setThreshold(qualityGroup.getThreshold());
 			result.setJpegQuality(qualityGroup.getJpegQuality());
-			// result.setScalingMethod(qualityGroup.getScalingMethod());
 			result.setAddWatermark(watermarkButton.getSelection());
 			result.setOutputFolder(outputTargetGroup.getLocalFolder());
 			FtpAccount ftpDir = outputTargetGroup.getFtpDir();
 			result.setFtpDir(ftpDir != null ? ftpDir.getName() : null);
 			if (!canUndo)
 				dbManager.safeTransaction(new Runnable() {
-
 					public void run() {
-						if (importGroup != null) {
+						if (importGroup != null)
 							importIntoGallery(result, importGroup.getFromItem());
-						}
 						if (group == null) {
 							String groupId = (current != null) ? current.getGroup_exhibition_parent()
 									: Constants.GROUP_ID_EXHIBITION;
@@ -1971,8 +1861,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		groundColorGroup.saveSettings(settings, GROUND_COLOR);
 		settings.put(MAT_WIDTH, gallery.getMatWidth());
 		settings.put(FRAME_WIDTH, gallery.getFrameWidth());
-		settings.put(VIEWING_HEIGHT, viewingHeightField.getSelection());
-		settings.put(VARIANCE, varianceField.getSelection());
+		settings.put(VIEWING_HEIGHT, toMm(viewingHeightField.getSelection()));
+		settings.put(VARIANCE, toMm(varianceField.getSelection()));
 		if (selectedFont != null) {
 			FontData fontData = selectedFont.getFontData()[0];
 			settings.put(FONTFAMILY, fontData.getName());
@@ -1986,39 +1876,15 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		String audio = gallery.getAudio();
 		if (audio != null)
 			settings.put(AUDIO, audio);
+		audioField.saveValues();
+		logoField.saveValues();
 	}
 
-	protected static final SimpleDateFormat EDF = new SimpleDateFormat("yyyy"); //$NON-NLS-1$
-
-	private Canvas floorplan;
-
-	private NumericControl xspinner;
-
-	private NumericControl yspinner;
-
-	private NumericControl aspinner;
-
-	private ComboViewer itemViewer;
-
-	private Label alabel;
-
-	private CTabFolder tabFolder;
-
-	private Combo infoPosField;
-
-	private PrinterData printerData;
-
-	private CTabFolder detailTabfolder;
-
-	private CTabItem detailsTabItem;
-
-	private LabelLayoutGroup labelLayoutGroup;
-
-	private void importIntoGallery(ExhibitionImpl show, IdentifiableObject obj) {
+	private void importIntoGallery(ExhibitionImpl show, IIdentifiableObject obj) {
 		int pos = 100 + show.getFrameWidth() + show.getMatWidth();
 		if (obj instanceof SlideShowImpl) {
 			int seqNo = 0;
-			double resfac = 25.4d / 300d;
+			double resfac = DPI300;
 			WallImpl newWall = null;
 			int defaultViewingHeight = show.getDefaultViewingHeight();
 			int variance = show.getVariance();
@@ -2069,8 +1935,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				show.addWall(newWall);
 			}
 		} else if (obj instanceof ExhibitionImpl) {
-			AomList<Wall> walls = ((ExhibitionImpl) obj).getWall();
-			for (Wall wall : walls) {
+			for (Wall wall : ((ExhibitionImpl) obj).getWall()) {
 				Wall newWall = new WallImpl(wall.getLocation(), wall.getX(), wall.getY(), wall.getWidth(),
 						wall.getHeight(), wall.getGX(), wall.getGY(), wall.getGAngle(), wall.getColor());
 				for (String exhibitId : wall.getExhibit()) {
@@ -2130,8 +1995,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		Date dateCreated = asset.getDateTimeOriginal();
 		if (dateCreated == null)
 			dateCreated = asset.getDateTime();
-		int h = (int) (asset.getHeight() * 25.4d / 300);
-		int w = (int) (asset.getWidth() * 25.4d / 300);
+		int h = (int) (asset.getHeight() * DPI300);
+		int w = (int) (asset.getWidth() * DPI300);
 		int y = show.getDefaultViewingHeight() + h / 2;
 		ExhibitImpl newExhibit = new ExhibitImpl(caption, description, Core.toStringList(asset.getArtist(), " "), //$NON-NLS-1$
 				(dateCreated == null) ? "" //$NON-NLS-1$

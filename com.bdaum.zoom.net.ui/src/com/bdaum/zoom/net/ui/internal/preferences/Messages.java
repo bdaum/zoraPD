@@ -24,6 +24,7 @@ public class Messages extends NLS {
 	public static String InternetPreferencePage_ftp_accounts;
 	public static String InternetPreferencePage_http_ftp;
 	public static String InternetPreferencePage_http_proxy;
+	public static String InternetPreferencePage_http_tooltip;
 	public static String InternetPreferencePage_HTTP_Proxy;
 	public static String InternetPreferencePage_Manual_config;
 	public static String InternetPreferencePage_new;

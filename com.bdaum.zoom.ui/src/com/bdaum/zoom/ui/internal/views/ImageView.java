@@ -15,13 +15,12 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2016 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -46,11 +45,11 @@ import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -59,7 +58,6 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.RetargetAction;
-import org.eclipse.ui.operations.IWorkbenchOperationSupport;
 import org.eclipse.ui.operations.UndoRedoActionGroup;
 
 import com.bdaum.zoom.cat.model.BookmarkImpl;
@@ -72,6 +70,7 @@ import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IGeoService;
+import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.peer.AssetOrigin;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
 import com.bdaum.zoom.job.OperationJob;
@@ -163,15 +162,12 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	private boolean dragging;
 	private int ignoreTab;
 
-
 	public void rotate(Asset asset, int degrees) {
 		OperationJob.executeOperation(new RotateOperation(Collections.singletonList(asset), degrees), this);
 	}
 
 	public void colorCode(Asset asset, int code) {
-		List<Asset> assets = new ArrayList<Asset>(1);
-		assets.add(asset);
-		OperationJob.executeOperation(new ColorCodeOperation(assets, code), this);
+		OperationJob.executeOperation(new ColorCodeOperation(Collections.singletonList(asset), code), this);
 	}
 
 	public void showLocation(Asset asset, boolean external) {
@@ -181,9 +177,8 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	}
 
 	public void setStatus(Asset asset, int status) {
-		if (status >= 0 && status != asset.getStatus()) {
+		if (status >= 0 && status != asset.getStatus())
 			OperationJob.executeOperation(new SetStatusOperation(Collections.singletonList(asset), status), this);
-		}
 	}
 
 	public void assetsModified(Collection<? extends Asset> assets, QueryField node) {
@@ -232,8 +227,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 					manager.updateAll(true);
 				}
 			});
-			Menu menu = contextMenuMgr.createContextMenu(getControl());
-			getControl().setMenu(menu);
+			getControl().setMenu(contextMenuMgr.createContextMenu(getControl()));
 			getSite().registerContextMenu(contextMenuMgr, this);
 		}
 	}
@@ -273,15 +267,12 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		IActionBars bars = viewSite.getActionBars();
 		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
-		IWorkbenchOperationSupport operationSupport = PlatformUI.getWorkbench().getOperationSupport();
-		undoContext = operationSupport.getUndoContext();
-		UndoRedoActionGroup undoRedoGroup = new UndoRedoActionGroup(viewSite, undoContext, true);
-		undoRedoGroup.fillActionBars(bars);
-		IWorkbenchWindow workbenchWindow = viewSite.getWorkbenchWindow();
+		new UndoRedoActionGroup(viewSite,
+				undoContext = PlatformUI.getWorkbench().getOperationSupport().getUndoContext(), true)
+						.fillActionBars(bars);
 		bars.setGlobalActionHandler(ActionFactory.COPY.getId(), copyAction);
-		String pasteId = ActionFactory.PASTE.getId();
-		bars.setGlobalActionHandler(pasteId, pasteAction);
-		bars.setGlobalActionHandler(ActionFactory.PRINT.getId(), new PrintAction(workbenchWindow));
+		bars.setGlobalActionHandler(ActionFactory.PASTE.getId(), pasteAction);
+		bars.setGlobalActionHandler(ActionFactory.PRINT.getId(), new PrintAction(viewSite.getWorkbenchWindow()));
 		if (selectAllAction != null)
 			bars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(), selectAllAction);
 	}
@@ -348,11 +339,6 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 								command.setCatFile(catFile);
 								command.init(workbenchWindow);
 								command.run();
-								// OpenCatAction openCatAction = new
-								// OpenCatAction();
-								// openCatAction.setFile(catFile);
-								// openCatAction.init(getSite().getWorkbenchWindow());
-								// openCatAction.run(this);
 								new GotoBookmarkAction(new BookmarkImpl("", //$NON-NLS-1$
 										asset.getStringId(), null, new Date(), null, null), ImageView.this).run();
 							}
@@ -407,29 +393,31 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	protected abstract void selectNone();
 
 	@Override
-	public void updateActions() {
-		int count = getSelectionCount(false);
-		int localCount = getSelectionCount(true);
-		if (viewActive) {
+	public void updateActions(boolean force) {
+		if (viewActive || force) {
+			int count = getSelectionCount(false);
+			int localCount = getSelectionCount(true);
 			boolean writable = !dbIsReadonly();
 			boolean one = count == 1;
 			boolean localOne = localCount == 1;
 			boolean selected = count > 0;
 			boolean localSelected = localCount > 0;
-			boolean multi = localSelected && writable;
+			boolean multiwrite = localSelected && writable;
+			AssetSelection assetSelection = getAssetSelection();
 			proximitySearchAction.setEnabled(selected && hasGps());
-			deleteAction.setEnabled(multi);
-			refreshAction.setEnabled(multi || collectionSelected());
+			deleteAction.setEnabled(multiwrite);
+			refreshAction.setEnabled(multiwrite || collectionSelected());
 			showInFolderAction.setEnabled(localOne);
 			editAction.setEnabled(localSelected);
 			editWithAction.setEnabled(localSelected);
-			rotateLeftAction.setEnabled(localSelected && writable);
-			rotateRightAction.setEnabled(localSelected && writable);
-			keyDefAction.setEnabled(localSelected && writable);
+			rotateLeftAction.setEnabled(localSelected && writable && isMedia(assetSelection, QueryField.PHOTO, true));
+			rotateRightAction.setEnabled(localSelected && writable && isMedia(assetSelection, QueryField.PHOTO, true));
+			keyDefAction.setEnabled(
+					localSelected && writable && isMedia(assetSelection, QueryField.PHOTO | IMediaSupport.VIDEO, true));
 			timeShiftAction.setEnabled(localSelected && writable);
 			ratingAction.setEnabled(localSelected && writable);
 			colorCodeAction.setEnabled(localSelected && writable);
-			playVoiceNoteAction.setEnabled(one && hasVoiceNote(getAssetSelection()));
+			playVoiceNoteAction.setEnabled(localOne && hasVoiceNote(assetSelection));
 			addVoiceNoteAction.setEnabled(localOne && writable);
 			searchSimilarAction.setEnabled(count <= 1);
 			timeSearchAction.setEnabled(true);
@@ -439,28 +427,25 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 			showDerivativesAction.setEnabled(localOne);
 			showOriginalAction.setEnabled(localOne);
 			copyMetadataAction.setEnabled(one);
-			pasteMetadataAction.setEnabled(multi && testClipboardForMetadata());
+			pasteMetadataAction.setEnabled(multiwrite && testClipboardForMetadata());
 			addToAlbumAction.setEnabled(localSelected);
 			categorizeAction.setEnabled(localSelected);
 			moveAction.setEnabled(selected);
-			slideshowAction.setEnabled(true);
+			slideshowAction.setEnabled(selected && isMedia(assetSelection, QueryField.PHOTO, false));
 			showInTimeLineAction.setEnabled(localOne && hasTimeLine());
 			copyAction.setEnabled(localSelected);
 			pasteAction.setEnabled(writable && testClipboardForImages());
 			addBookmarkAction.setEnabled(one && writable);
+			updateActions(count, localCount);
 		}
-		updateActions(count, localCount);
 	}
 
 	private boolean collectionSelected() {
 		CatalogView catView = (CatalogView) getSite().getPage().findView(CatalogView.ID);
-		if (catView != null) {
-			Iterator<?> iterator = ((IStructuredSelection) catView.getSelection()).iterator();
-			while (iterator.hasNext()) {
+		if (catView != null)
+			for (Iterator<?> iterator = ((IStructuredSelection) catView.getSelection()).iterator(); iterator.hasNext();)
 				if (iterator.next() instanceof SmartCollection)
 					return true;
-			}
-		}
 		return false;
 	}
 
@@ -481,7 +466,6 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 				.getContents(FileTransfer.getInstance());
 		return (contents instanceof String[] && ((String[]) contents).length > 0);
 	}
-
 
 	public boolean hasGps() {
 		int n = 0;
@@ -535,10 +519,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 			}
 			return;
 		case 13:
-			if ((e.stateMask & SWT.SHIFT) != 0)
-				editWithAction.run();
-			else
-				editAction.run();
+			((e.stateMask & SWT.SHIFT) != 0 ? editWithAction : editAction).run();
 			return;
 		case SWT.DEL:
 			ZoomActionFactory.rate(getAssetSelection().getAssets(), this, RatingDialog.DELETE);
@@ -550,7 +531,9 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		case '4':
 		case '5':
 			ZoomActionFactory.rate(getAssetSelection().getAssets(), this, e.character - '0');
-			// break;
+			return;
+		case '*':
+			ZoomActionFactory.rate(getAssetSelection().getAssets(), this, RatingDialog.BYSERVICE);
 		}
 	}
 
@@ -566,21 +549,17 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	}
 
 	protected void fillMetaData(IMenuManager manager, boolean readOnly) {
-		if (!readOnly) {
-			manager.add(copyMetadataAction);
+		manager.add(copyMetadataAction);
+		if (!readOnly)
 			manager.add(pasteMetadataAction);
-		} else
-			manager.add(copyMetadataAction);
 		manager.add(new Separator(IZoomActionConstants.MB_META));
 
 	}
 
 	protected void fillVoiceNote(IMenuManager manager, boolean readOnly) {
-		if (!readOnly) {
+		if (!readOnly)
 			manager.add(addVoiceNoteAction);
-			manager.add(playVoiceNoteAction);
-		} else
-			manager.add(playVoiceNoteAction);
+		manager.add(playVoiceNoteAction);
 		manager.add(new Separator(IZoomActionConstants.MB_VOICE));
 	}
 
@@ -620,11 +599,10 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		return null;
 	}
 
-	protected void addExplanationListener() {
+	protected void addExplanationListener(boolean elaborate) {
 		Control control = getControl();
 		if (control != null && !control.isDisposed()) {
 			control.addKeyListener(new KeyListener() {
-
 				public void keyPressed(KeyEvent e) {
 					if (!getSelection().isEmpty()
 							&& (e.keyCode == SWT.SHIFT || e.keyCode == SWT.CTRL || e.keyCode == SWT.ALT))
@@ -634,12 +612,9 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 				private void computeMode(int state) {
 					if (getSelectionCount(false) == 1) {
 						String message = Messages.getString("ImageView.internal_viewer_selected"); //$NON-NLS-1$
-						if ((state & SWT.CTRL) != 0) {
-							if ((state & SWT.SHIFT) != 0)
-								message += Messages.getString("ImageView.raw_original_mode"); //$NON-NLS-1$
-							else
-								message += Messages.getString("ImageView.crop_mode"); //$NON-NLS-1$
-						}
+						if ((state & SWT.CTRL) != 0)
+							message += ((state & SWT.SHIFT) != 0 ? Messages.getString("ImageView.raw_original_mode") : //$NON-NLS-1$
+							Messages.getString("ImageView.crop_mode")); //$NON-NLS-1$
 						message += (((state & SWT.ALT) != 0) != (getBWmode() != null))
 								? Messages.getString("ImageView.bw_mode") //$NON-NLS-1$
 								: Messages.getString("ImageView.color_mode"); //$NON-NLS-1$
@@ -650,11 +625,20 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 				public void keyReleased(KeyEvent e) {
 					if (e.keyCode == SWT.SHIFT || e.keyCode == SWT.CTRL || e.keyCode == SWT.ALT) {
 						int state = e.stateMask - e.keyCode;
-						if ((state & (SWT.SHIFT | SWT.CTRL | SWT.ALT)) == 0)
-							updateStatusLine();
-						else
+						if ((state & (SWT.SHIFT | SWT.CTRL | SWT.ALT)) == 0) {
+							if (elaborate)
+								setStatusMessage(Messages.getString("ImageView.external_viewer"), false); //$NON-NLS-1$
+							else
+								updateStatusLine();
+						} else
 							computeMode(state);
 					}
+				}
+			});
+			control.addMouseTrackListener(new MouseTrackAdapter() {
+				@Override
+				public void mouseExit(MouseEvent e) {
+					setStatusMessage("", false); //$NON-NLS-1$
 				}
 			});
 		}

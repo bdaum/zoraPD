@@ -78,17 +78,8 @@ function setupMap() {
 	google.maps.event.addDomListener(document, 'keyup', function(e) {
 		if (draggedMarker) {
 			var code = (e.keyCode ? e.keyCode : e.which);
-			if (code == 27) {
-				if (lmarker === draggedMarker)
-					releaseLocation();
-				else if (cmarker === draggedMarker)
-					releaseCamera();
-				else if (dmarker === draggedMarker)
-					releaseDirection();
-				else if (smarker === draggedMarker)
-					releaseLocationShown();
-				endFollowing();
-			}
+			if (code == 27) 
+				releaseDragged();
 		}
 	});
 	google.maps.event.addListener(map, 'bounds_changed', function() {
@@ -97,12 +88,26 @@ function setupMap() {
 	});
 }
 
+function releaseDragged() {
+	if (lmarker === draggedMarker)
+		releaseLocation();
+	else if (cmarker === draggedMarker)
+		releaseCamera();
+	else if (dmarker === draggedMarker)
+		releaseDirection();
+	else if (smarker === draggedMarker)
+		releaseLocationShown();
+	draggedMarker = null;
+	endFollowing();
+}
+
 function MapClickHandler(event) {
 	if (closeInfoWindow())
 		return;
 	if (selected) {
 		selected = null;
 		sendSelection();
+		releaseDragged();
 		setMarkers();
 	}
 }
@@ -116,9 +121,8 @@ function performDrawing(redraw) {
 			setBoundsForShape(track);
 	} else {
 		setMarkers();
-		if (!redraw && (locCreated.length > 0 || locShown.length > 0)) {
+		if (!redraw && (locCreated.length > 0 || locShown.length > 0)) 
 			setBoundsForShape(locCreated.concat(locShown));
-		}
 	}
 }
 
@@ -156,7 +160,6 @@ function setMarkers() {
 	var bearing, marker, markerLocation;
 	for (var i = 0; i < locCreated.length; i++) {
 		bearing = imgDirection ? imgDirection[i] : NaN;
-
 		marker = new google.maps.Marker({
 			position : locCreated[i],
 			map : map,
@@ -417,7 +420,7 @@ function locationPin() {
 									sendPosition('click',
 											lmarker.getPosition(), map
 													.getZoom(), 0);
-									endFollowing();
+									releaseDragged();
 								}
 							});
 				}
@@ -465,9 +468,8 @@ function cameraPin() {
 									sendPosition('click',
 											cmarker.getPosition(), map
 													.getZoom(), 1);
-									endFollowing();
 									applyCameraSet(cmarker.getPosition());
-									releaseCamera();
+									releaseDragged();
 									setMarkers();
 								}
 							});
@@ -545,8 +547,7 @@ function locationShown() {
 									sendPosition('click',
 											smarker.getPosition(), map
 													.getZoom(), 3, uuid);
-									endFollowing();
-									releaseLocationShown();
+									releaseDragged();
 									setMarkers();
 								}
 							});
@@ -578,7 +579,6 @@ function releaseLocation() {
 		}
 		lmarker.setMap(null);
 		lmarker = null;
-		draggedMarker = null;
 	}
 	camCount = locCreated.length;
 	sendCamCount();
@@ -592,7 +592,6 @@ function releaseCamera() {
 		}
 		cmarker.setMap(null);
 		cmarker = null;
-		draggedMarker = null;
 	}
 	camCount = locCreated.length;
 	sendCamCount();
@@ -606,7 +605,6 @@ function releaseDirection() {
 		}
 		dmarker.setMap(null);
 		dmarker = null;
-		draggedMarker = null;
 	}
 }
 

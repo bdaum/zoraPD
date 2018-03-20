@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.gps.widgets;
@@ -28,6 +28,7 @@ public class Messages extends NLS {
 	public static String AbstractMapComponent_add_marker;
 	public static String AbstractMapComponent_click_shown_loc;
 	public static String AbstractMapComponent_cluster;
+	public static String AbstractMapComponent_configure;
 	public static String AbstractMapComponent_create_new_location;
 	public static String AbstractMapComponent_delete_pin;
 	public static String AbstractMapComponent_drag_me;
@@ -40,6 +41,7 @@ public class Messages extends NLS {
 	public static String AbstractMapComponent_geotagging_disabled;
 	public static String AbstractMapComponent_Init_failed;
 	public static String AbstractMapComponent_io_error_loading;
+	public static String AbstractMapComponent_loc_search_config;
 	public static String AbstractMapComponent_location_not_found;
 	public static String AbstractMapComponent_location_search;
 	public static String AbstractMapComponent_map_is_loading;
@@ -47,9 +49,13 @@ public class Messages extends NLS {
 	public static String AbstractMapComponent_next_page;
 	public static String AbstractMapComponent_no_images;
 	public static String AbstractMapComponent_not_found;
+	public static String AbstractMapComponent_parameters;
 	public static String AbstractMapComponent_previous_page;
 	public static String AbstractMapComponent_resource_missing;
 	public static String AbstractMapComponent_search;
+	public static String AbstractMapComponent_search_with;
+	public static String AbstractMapComponent_select_service_provider;
+	public static String AbstractMapComponent_service;
 	public static String AbstractMapComponent_single_image;
 	public static String AbstractMapComponent_web_service_error_search;
 	static {

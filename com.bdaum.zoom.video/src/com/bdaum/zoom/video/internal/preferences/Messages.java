@@ -5,6 +5,7 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.video.internal.preferences.messages"; //$NON-NLS-1$
 	public static String PagePart_video;
+	public static String PagePart_video_tooltip;
 	public static String VideoPreferencePage_download;
 	public static String VideoPreferencePage_ex_location;
 	public static String VideoPreferencePage_no_executable;

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2011 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -50,8 +50,7 @@ public class SelectSlideDialog extends AbstractSelectExhibitDialog {
 
 	@Override
 	public Font getFont(Object element) {
-		SlideImpl slide = (SlideImpl) element;
-		return (slide.getAsset() == null) ? JFaceResources.getBannerFont()
+		return getAssetId(element) == null ? JFaceResources.getBannerFont()
 				: null;
 	}
 

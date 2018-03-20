@@ -30,7 +30,7 @@ import com.bdaum.zoom.ui.internal.UiUtilities;
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  
  */
 public class ProposalListener implements VerifyListener, KeyListener {
 	private String lastProposal;
@@ -72,12 +72,14 @@ public class ProposalListener implements VerifyListener, KeyListener {
 			lastProposal = null;
 			return;
 		}
-		if (lastProposal != null && start < lastProposal.length() && start + insert.length() <= text.length())
-			text = text.substring(0, start) + insert;
-		else {
-			text = text.substring(0, start) + insert + text.substring(end);
+		StringBuilder sb = new StringBuilder(text);
+		sb.setLength(start);
+		sb.append(insert);
+		if (lastProposal == null || start >= lastProposal.length() || start + insert.length() > text.length()) {
+			sb.append(text.substring(end));
 			lastProposal = null;
 		}
+		text = sb.toString();
 		int kwstart = getWordStart(start + insert.length(), text);
 		String orig = text.substring(kwstart, start + insert.length());
 		if (!orig.isEmpty()) {
@@ -87,10 +89,8 @@ public class ProposalListener implements VerifyListener, KeyListener {
 				textField.removeVerifyListener(this);
 				lastProposal = text.substring(0, kwstart) + keyword;
 				keyword = orig + keyword.substring(orig.length());
-				String proposal = text.substring(0, kwstart) + keyword;
-				textField.setText(proposal);
-				int pos = start + insert.length();
-				pnt.x = pnt.y = pos;
+				textField.setText(text.substring(0, kwstart) + keyword);
+				pnt.x = pnt.y = start + insert.length();
 				textField.setSelection(pnt);
 				textField.addVerifyListener(this);
 			} else {

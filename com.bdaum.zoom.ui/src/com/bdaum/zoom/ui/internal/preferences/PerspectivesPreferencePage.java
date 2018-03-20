@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -24,13 +24,11 @@ import java.util.ArrayList;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -48,8 +46,10 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 
+import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
@@ -106,27 +106,27 @@ public class PerspectivesPreferencePage extends AbstractPreferencePage {
 		});
 		viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
-		viewer.setComparator(new ViewerComparator());
+		viewer.setComparator(ZViewerComparator.INSTANCE);
 		TableViewerColumn col1 = new TableViewerColumn(viewer, SWT.NONE);
 		col1.getColumn().setWidth(180);
-		col1.setLabelProvider(new ColumnLabelProvider() {
+		col1.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof IPerspectiveDescriptor)
 					return ((IPerspectiveDescriptor) element).getLabel();
-				return super.getText(element);
+				return element.toString();
 			}
 		});
 		TableViewerColumn col2 = new TableViewerColumn(viewer, SWT.NONE);
 		col2.getColumn().setWidth(120);
-		col2.setLabelProvider(new ColumnLabelProvider() {
+		col2.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof IPerspectiveDescriptor)
 					return isPredefined((IPerspectiveDescriptor) element)
 							? Messages.getString("PerspectivesPreferencePage.predefined") //$NON-NLS-1$
 							: Messages.getString("PerspectivesPreferencePage.user_defined"); //$NON-NLS-1$
-				return super.getText(element);
+				return element.toString();
 			}
 		});
 		IPerspectiveDescriptor[] persps = perspectiveRegistry.getPerspectives();
@@ -217,10 +217,7 @@ public class PerspectivesPreferencePage extends AbstractPreferencePage {
 	@Override
 	protected void doUpdateButtons() {
 		IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
-		if (!sel.isEmpty())
-			deleteButton.setEnabled(!isPredefined((IPerspectiveDescriptor) sel.getFirstElement()));
-		else
-			deleteButton.setEnabled(false);
+		deleteButton.setEnabled(!sel.isEmpty() && !isPredefined((IPerspectiveDescriptor) sel.getFirstElement()));
 	}
 
 	private static boolean isPredefined(IPerspectiveDescriptor desc) {

@@ -13,9 +13,7 @@ import java.util.ListIterator;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
@@ -63,7 +61,6 @@ import com.bdaum.zoom.core.CatalogAdapter;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
-import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.css.ITitle;
 import com.bdaum.zoom.ui.HistoryListener;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
@@ -113,22 +110,6 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 
 	private class HistoryUpdateJob extends Daemon {
 
-		public Runnable historyRunnable = new Runnable() {
-			public void run() {
-				if (delete != null) {
-					((TableViewer) viewer).remove(delete);
-					history.remove(delete);
-				}
-				if (add != null) {
-					@SuppressWarnings("unchecked")
-					List<Object> input = (List<Object>) viewer.getInput();
-					if (input != null && input.size() > 1) {
-						history.add(1, add);
-						((TableViewer) viewer).insert(add, 1);
-					}
-				}
-			}
-		};
 		private final IdentifiableObject delete;
 		private final IdentifiableObject add;
 
@@ -143,7 +124,22 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 		protected void doRun(IProgressMonitor monitor) {
 			Control control = viewer.getControl();
 			if (!control.isDisposed())
-				control.getDisplay().asyncExec(historyRunnable);
+				control.getDisplay().asyncExec(() -> {
+					if (!control.isDisposed()) {
+						if (delete != null) {
+							((TableViewer) viewer).remove(delete);
+							history.remove(delete);
+						}
+						if (add != null) {
+							@SuppressWarnings("unchecked")
+							List<Object> input = (List<Object>) viewer.getInput();
+							if (input != null && input.size() > 1) {
+								history.add(1, add);
+								((TableViewer) viewer).insert(add, 1);
+							}
+						}
+					}
+				});
 		}
 	}
 
@@ -186,6 +182,11 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 						control.setCursor(control.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
 				});
 		}
+		
+		@Override
+		public boolean belongsTo(Object family) {
+			return family == HistoryView.this || super.belongsTo(family);
+		}
 
 		@Override
 		protected void doRun(IProgressMonitor monitor) {
@@ -216,30 +217,24 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 				if (diff <= 2) {
 					covered += 7;
 					history.add(new HistoryTitle(Messages.getString("HistoryView.last_week"), cal.getTime(), WEEK)); //$NON-NLS-1$
-					cal.add(GregorianCalendar.DAY_OF_MONTH, -7); // First day of
-					// last week
+					cal.add(GregorianCalendar.DAY_OF_MONTH, -7); // First day of last week
 				}
 			} else {
 				history.add(new HistoryTitle(Messages.getString("HistoryView.last_week"), cal.getTime(), WEEK)); //$NON-NLS-1$
-				cal.add(GregorianCalendar.DAY_OF_MONTH, -7); // First day of
-																// last week
+				cal.add(GregorianCalendar.DAY_OF_MONTH, -7); // First day of last week
 				covered = 7;
 			}
 			if (dayOfMonth - 1 <= covered) {
 				history.add(new HistoryTitle(Messages.getString("HistoryView.last_month"), cal.getTime(), MONTH)); //$NON-NLS-1$
-				cal.add(GregorianCalendar.DAY_OF_MONTH, -1); // Last day of last
-																// month
-				cal.set(GregorianCalendar.DAY_OF_MONTH, 1); // First day of last
-															// month
+				cal.add(GregorianCalendar.DAY_OF_MONTH, -1); // Last day of last month
+				cal.set(GregorianCalendar.DAY_OF_MONTH, 1); // First day of last month
 			} else {
 				history.add(new HistoryTitle(Messages.getString("HistoryView.start_of_month"), cal.getTime(), //$NON-NLS-1$
 						MONTH));
-				cal.set(GregorianCalendar.DAY_OF_MONTH, 1); // First day of this
-															// month
+				cal.set(GregorianCalendar.DAY_OF_MONTH, 1); // First day of this month
 				if (dayOfMonth <= 7) {
 					history.add(new HistoryTitle(Messages.getString("HistoryView.last_month"), cal.getTime(), MONTH)); //$NON-NLS-1$
-					cal.add(GregorianCalendar.MONTH, -1); // First day of last
-															// month
+					cal.add(GregorianCalendar.MONTH, -1); // First day of last month
 				}
 			}
 			history.add(new HistoryTitle(Messages.getString("HistoryView.older"), cal.getTime(), OLDER)); //$NON-NLS-1$
@@ -350,9 +345,6 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 			this.type = type;
 		}
 
-		/**
-		 * @return titleDate
-		 */
 		public Date getTitleDate() {
 			return titleDate;
 		}
@@ -362,13 +354,9 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 			return name;
 		}
 
-		/**
-		 * @return type
-		 */
 		public int getType() {
 			return type;
 		}
-
 	}
 
 	private class HistoryLabelProvider extends CatalogLabelProvider {
@@ -383,7 +371,6 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 				return composeLabel((SmartCollection) element);
 			return element.toString();
 		}
-
 	}
 
 	public static final String ID = "com.bdaum.zoom.ui.views.HistoryView"; //$NON-NLS-1$
@@ -432,14 +419,13 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 		viewer.setLabelProvider(new HistoryLabelProvider(this));
 		viewer.setComparer(IdentifiedElementComparer.getInstance());
 		ColumnViewerToolTipSupport.enableFor(viewer);
-		setInput();
-		// Create the help context id for the viewer's control
+//		setInput();
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), HelpContextIds.HISTORY_VIEW);
 		addCtrlKeyListener();
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(final SelectionChangedEvent event) {
 				if (settingSelection <= 0) {
-					cancelJobs();
+					cancelJobs(HistoryView.this);
 					new SelectionJob(viewer, event).schedule();
 				}
 				if (cntrlDwn && editItemAction.isEnabled()) {
@@ -487,22 +473,24 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 
 			@Override
 			public void catalogOpened(boolean newDb) {
+				cancelJobs(HistoryView.this);
 				Shell shell = getSite().getShell();
 				if (shell != null && !shell.isDisposed()) {
 					Display display = shell.getDisplay();
 					display.asyncExec(() -> {
 						if (!shell.isDisposed())
-							BusyIndicator.showWhile(display, new Runnable() {
-								public void run() {
-									structureModified();
-								}
-							});
+							BusyIndicator.showWhile(display, () -> structureModified());
 					});
 				}
+				new HistoryJob().schedule(3000L);
 			}
-
+			
+			@Override
+			public void catalogClosed(int mode) {
+				cancelJobs(HistoryView.this);
+			}
 		});
-		updateActions((IStructuredSelection) viewer.getSelection());
+		updateActions((IStructuredSelection) viewer.getSelection(), true);
 		getNavigationHistory().addHistoryListener(this);
 		switch (historyLimit) {
 		case ONEMONTH:
@@ -518,19 +506,6 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 			oneYearAction.setChecked(true);
 			break;
 		}
-		CoreActivator.getDefault().addCatalogListener(new CatalogAdapter() {
-			@Override
-			public void catalogOpened(boolean newDb) {
-				cancelJobs();
-				new HistoryJob().schedule(3000L);
-			}
-
-			@Override
-			public void catalogClosed(int mode) {
-				cancelJobs();
-			}
-		});
-
 	}
 
 	@Override
@@ -635,7 +610,7 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 		try {
 			if (selection instanceof IStructuredSelection) {
 				viewer.setSelection(selection, true);
-				updateActions((IStructuredSelection) selection);
+				updateActions((IStructuredSelection) selection, false);
 			}
 		} finally {
 			--settingSelection;
@@ -664,7 +639,7 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 	@Override
 	public void refresh() {
 		if (isVisible()) {
-			cancelJobs();
+			cancelJobs(this);
 			new HistoryJob().schedule();
 		}
 	}
@@ -676,7 +651,7 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
-		updateActions((IStructuredSelection) getSelection());
+		updateActions((IStructuredSelection) getSelection(), false);
 		addEnabled(manager, playSlideshowAction);
 		boolean selectall = false;
 		IViewReference[] viewReferences = getSite().getPage().getViewReferences();
@@ -707,16 +682,6 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 
 	public void removeItem(IdentifiableObject obj) {
 		new HistoryUpdateJob(obj, null).schedule();
-	}
-
-	protected void cancelJobs() {
-		IJobManager jobManager = Job.getJobManager();
-		jobManager.cancel(this);
-		try {
-			jobManager.join(this, null);
-		} catch (OperationCanceledException | InterruptedException e) {
-			// ignore
-		}
 	}
 
 	private static String composeLabel(SmartCollection sm) {

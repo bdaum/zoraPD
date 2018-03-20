@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal;
@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -215,14 +216,16 @@ public class MultiModifyAssetOperation extends DbOperation {
 											}
 										}
 										if (id != null) {
-											List<IdentifiableObject> set = dbManager.obtainObjects(
-													CreatorsContactImpl.class, false, "contact", id, QueryField.EQUALS); //$NON-NLS-1$
+											Iterator<CreatorsContactImpl> it = dbManager
+													.obtainObjects(CreatorsContactImpl.class, false, "contact", id, //$NON-NLS-1$
+															QueryField.EQUALS)
+													.iterator();
 											CreatorsContactImpl rel;
-											if (set.isEmpty())
-												backup.addObject((rel = new CreatorsContactImpl(id)).getStringId());
-											else
+											if (it.hasNext())
 												backup.addModification(key,
-														(rel = (CreatorsContactImpl) set.get(0)).getStringId(), false);
+														(rel = it.next()).getStringId(), false);
+											else
+												backup.addObject((rel = new CreatorsContactImpl(id)).getStringId());
 											toBeStored.add(rel);
 											rel.addAsset(assetId);
 										}

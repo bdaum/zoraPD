@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.wizards;
@@ -34,8 +34,7 @@ import com.bdaum.zoom.ui.internal.ExportXmpViewerFilter;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
-public class ExportFolderWizard extends AbstractAssetSelectionWizard implements
-		IExportWizard {
+public class ExportFolderWizard extends AbstractAssetSelectionWizard implements IExportWizard {
 
 	protected static final double COMPRESSION = 25d;
 	private static final String SETTINGSID = "com.bdaum.zoom.exportFolderProperties"; //$NON-NLS-1$
@@ -51,13 +50,12 @@ public class ExportFolderWizard extends AbstractAssetSelectionWizard implements
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-		setDialogSettings(UiActivator.getDefault(),SETTINGSID);
+		setDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		setAssets(workbench, selection, false);
 		int size = assets.size();
 		setWindowTitle(assets.isEmpty() ? Messages.ExportFolderWizard_nothing_selected
 				: size == 1 ? Messages.ExportFolderWizard_export_one_image
-						: NLS.bind(Messages.ExportFolderWizard_export_n_images,
-								size));
+						: NLS.bind(Messages.ExportFolderWizard_export_n_images, size));
 	}
 
 	/*
@@ -71,8 +69,8 @@ public class ExportFolderWizard extends AbstractAssetSelectionWizard implements
 		mainPage = new ExportFolderPage(assets);
 		mainPage.setImageDescriptor(imageDescriptor);
 		addPage(mainPage);
-		metaPage = new MetaSelectionPage(new QueryField[] {
-				QueryField.EXIF_ALL, QueryField.IPTC_ALL }, false, ExportXmpViewerFilter.INSTANCE, false);
+		metaPage = new MetaSelectionPage(new QueryField[] { QueryField.EXIF_ALL, QueryField.IPTC_ALL }, false,
+				ExportXmpViewerFilter.INSTANCE, false);
 		metaPage.setImageDescriptor(imageDescriptor);
 		addPage(metaPage);
 	}
@@ -86,10 +84,7 @@ public class ExportFolderWizard extends AbstractAssetSelectionWizard implements
 
 	@Override
 	public boolean canFinish() {
-		if (assets.isEmpty())
-			return false;
-		IWizardPage currentPage = getContainer().getCurrentPage();
-		if (currentPage == mainPage && mainPage.getIncludeMeta())
+		if (assets.isEmpty() || getContainer().getCurrentPage() == mainPage && mainPage.getIncludeMeta())
 			return false;
 		return super.canFinish();
 	}

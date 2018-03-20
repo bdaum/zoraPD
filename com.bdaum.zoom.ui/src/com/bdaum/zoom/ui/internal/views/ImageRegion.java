@@ -6,6 +6,7 @@ import java.util.List;
 import org.eclipse.swt.graphics.Rectangle;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.cat.model.asset.Region;
 
 public class ImageRegion {
 
@@ -29,7 +30,7 @@ public class ImageRegion {
 			int minD = Integer.MAX_VALUE;
 			for (ImageRegion imageRegion : regions) {
 				if ((all || imageRegion.name == null || imageRegion.name.equals("?")) //$NON-NLS-1$
-						&& (type == null || type.equals(imageRegion.type))) {
+						&& (type == null  || type == Region.type_face && imageRegion.type == null || type.equals(imageRegion.type))) {
 					int d = imageRegion.getDistanceFromRegionCenter(x, y);
 					if (d < minD) {
 						minD = d;

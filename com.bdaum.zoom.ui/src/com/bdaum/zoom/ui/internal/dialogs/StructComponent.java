@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2013 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -25,34 +25,34 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
-import com.bdaum.aoModeling.runtime.AomObject;
 import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.artworkOrObjectShown.ArtworkOrObject;
@@ -67,6 +67,7 @@ import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.fileMonitor.internal.filefilter.WildCardFilter;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.internal.widgets.FilterField;
 import com.bdaum.zoom.ui.internal.widgets.FlatGroup;
@@ -97,13 +98,13 @@ public class StructComponent implements DisposeListener {
 		protected IStatus run(IProgressMonitor monitor) {
 			switch (type) {
 			case QueryField.T_LOCATION:
-				objects = new ArrayList<Object>(dbManager.obtainObjects(LocationImpl.class));
+				objects = new ArrayList<IIdentifiableObject>(dbManager.obtainObjects(LocationImpl.class));
 				break;
 			case QueryField.T_CONTACT:
-				objects = new ArrayList<Object>(dbManager.obtainObjects(ContactImpl.class));
+				objects = new ArrayList<IIdentifiableObject>(dbManager.obtainObjects(ContactImpl.class));
 				break;
 			case QueryField.T_OBJECT:
-				objects = new ArrayList<Object>(dbManager.obtainObjects(ArtworkOrObjectImpl.class));
+				objects = new ArrayList<IIdentifiableObject>(dbManager.obtainObjects(ArtworkOrObjectImpl.class));
 				break;
 			}
 			final Control control = viewer.getControl();
@@ -111,6 +112,14 @@ public class StructComponent implements DisposeListener {
 				control.getDisplay().asyncExec(() -> {
 					if (!control.isDisposed()) {
 						viewer.setInput(objects);
+						String expansions = settings.get(FLATEXPANSION+type);
+						if (expansions != null) {
+							Character[] chapters = new Character[expansions.length()];
+							for (int i = 0; i < chapters.length; i++)
+								chapters[i] = expansions.charAt(i);
+							viewer.setExpandedElements(chapters);
+						} else
+							viewer.expandAll();
 						if (value != null)
 							viewer.setSelection(new StructuredSelection(value), true);
 						control.setFocus();
@@ -118,32 +127,29 @@ public class StructComponent implements DisposeListener {
 				});
 			return Status.OK_STATUS;
 		}
-
 	}
 
 	public class StructContentProvider implements ITreeContentProvider {
 
 		private Map<Character, List<IIdentifiableObject>> chapters;
-		private TreeViewer viewer;
 
 		public void dispose() {
 			chapters = null;
 		}
 
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-			this.viewer = (TreeViewer) viewer;
 			chapters = null;
 		}
 
 		public Object[] getElements(Object inputElement) {
 			@SuppressWarnings("unchecked")
 			List<IIdentifiableObject> shownObjects = computeShownObjects((List<IIdentifiableObject>) inputElement);
-			if (radioGroup.isFlat())
+			if (isFlat())
 				return shownObjects.toArray();
 			if (chapters == null) {
 				chapters = new HashMap<Character, List<IIdentifiableObject>>();
 				for (IIdentifiableObject ob : shownObjects) {
-					String kw = ((LabelProvider) viewer.getLabelProvider()).getText(ob);
+					String kw = labelProvider.getText(ob);
 					if (!kw.isEmpty()) {
 						Character chapterTitle = Character.toUpperCase(kw.charAt(0));
 						List<IIdentifiableObject> elements = chapters.get(chapterTitle);
@@ -166,8 +172,8 @@ public class StructComponent implements DisposeListener {
 		}
 
 		public Object getParent(Object element) {
-			if (!radioGroup.isFlat()) {
-				String kw = ((LabelProvider) viewer.getLabelProvider()).getText(element);
+			if (!isFlat()) {
+				String kw = labelProvider.getText(element);
 				if (!kw.isEmpty()) {
 					char firstChar = Character.toUpperCase(kw.charAt(0));
 					for (Character title : chapters.keySet())
@@ -181,22 +187,31 @@ public class StructComponent implements DisposeListener {
 		public boolean hasChildren(Object element) {
 			return getChildren(element).length > 0;
 		}
-
 	}
 
 	private static final Object[] EMPTY = new Object[0];
+	protected static final Object NO_DETAILS = Messages.StructComponent_no_details;
+	private static final String FLATEXPANSION = "flatExpansion"; //$NON-NLS-1$
 
+	private ExpandCollapseGroup expandCollapseGroup;
+	private ZColumnLabelProvider labelProvider;
 	private TreeViewer viewer;
-
-	private List<Object> objects = new ArrayList<Object>(0);
-
+	private List<IIdentifiableObject> objects = new ArrayList<IIdentifiableObject>(0);
 	private final Map<String, Map<QueryField, Object>> structOverlayMap;
-
 	private final FlatGroup radioGroup;
+	private int type;
+	private Object value;
+	private IDbManager dbManager;
+	private IDialogSettings settings;
 
 	@SuppressWarnings("unused")
-	public StructComponent(IDbManager dbManager, Composite comp, AomObject value, int type, boolean linesVisible,
-			final Map<String, Map<QueryField, Object>> structOverlayMap, FlatGroup radioGroup, int spareColumns) {
+	public StructComponent(IDbManager dbManager, Composite comp, Object value, int type, boolean linesVisible,
+			final Map<String, Map<QueryField, Object>> structOverlayMap, FlatGroup radioGroup, Set<String> usedObjects,
+			int spareColumns, IDialogSettings settings) {
+		this.dbManager = dbManager;
+		this.value = value;
+		this.type = type;
+		this.settings = settings;
 		comp.addDisposeListener(this);
 		this.structOverlayMap = structOverlayMap;
 		this.radioGroup = radioGroup;
@@ -214,23 +229,33 @@ public class StructComponent implements DisposeListener {
 		filterField.setLayoutData(new GridData(300, SWT.DEFAULT));
 		filterField.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
-				viewer.setInput(viewer.getInput());
+				update();
 			}
 		});
 		expandCollapseGroup = new ExpandCollapseGroup(headerGroup, SWT.NONE);
 		viewer = new TreeViewer(comp, SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
 		expandCollapseGroup.setViewer(viewer);
-		expandCollapseGroup.setVisible(!radioGroup.isFlat());
+		expandCollapseGroup.setVisible(!isFlat());
 		viewer.setContentProvider(new StructContentProvider());
-		final ZColumnLabelProvider labelProvider = new ZColumnLabelProvider() {
+		labelProvider = new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
+				if (element instanceof Character)
+					return element.toString();
 				String structText = getStructText(element, structOverlayMap);
-				return (structText != null) ? structText : super.getText(element);
+				return (structText != null) ? structText : element.toString();
+			}
+
+			@Override
+			protected Color getForeground(Object element) {
+				if (element instanceof IIdentifiableObject && usedObjects != null
+						&& !usedObjects.contains(((IIdentifiableObject) element).getStringId()))
+					return viewer.getControl().getDisplay().getSystemColor(SWT.COLOR_RED);
+				return super.getForeground(element);
 			}
 		};
 		viewer.setLabelProvider(labelProvider);
-		viewer.setComparator(new ViewerComparator());
+		viewer.setComparator(ZViewerComparator.INSTANCE);
 		UiUtilities.installDoubleClickExpansion(viewer);
 		viewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
 			@Override
@@ -246,7 +271,14 @@ public class StructComponent implements DisposeListener {
 		layoutData.horizontalSpan = span;
 		viewer.getControl().setLayoutData(layoutData);
 		viewer.getTree().setLinesVisible(linesVisible);
-		new FillJob(dbManager, type, value).schedule(100);
+	}
+	
+	public void fillValues() {
+		new FillJob(dbManager, type, value).schedule();
+	}
+
+	private boolean isFlat() {
+		return (type == QueryField.T_LOCATION) ? false : radioGroup.isFlat();
 	}
 
 	public static String getStructText(Object element, Map<String, Map<QueryField, Object>> structOverlayMap) {
@@ -275,6 +307,7 @@ public class StructComponent implements DisposeListener {
 			Double altitude = getUpdatedValue(loc, QueryField.LOCATION_ALTITUDE, loc.getAltitude(), structOverlayMap);
 			if (altitude != null && !Double.isNaN(altitude))
 				append(sb, Format.altitudeFormatter.toString(altitude));
+			append(sb, getUpdatedValue(loc, QueryField.LOCATION_PLUSCODE, loc.getPlusCode(), structOverlayMap));
 			if (sb.length() == 0)
 				sb.append(NO_DETAILS);
 			return sb.toString();
@@ -339,10 +372,6 @@ public class StructComponent implements DisposeListener {
 		}
 	}
 
-	protected static final Object NO_DETAILS = Messages.StructComponent_no_details;
-
-	private ExpandCollapseGroup expandCollapseGroup;
-
 	public void addSelectionChangedListener(ISelectionChangedListener listener) {
 		viewer.addSelectionChangedListener(listener);
 	}
@@ -360,32 +389,37 @@ public class StructComponent implements DisposeListener {
 		viewer.addDoubleClickListener(listener);
 	}
 
-	public void add(Object element) {
+	public void add(IIdentifiableObject element) {
 		objects.add(element);
-		if (radioGroup.isFlat())
+		update();
+		viewer.setSelection(new StructuredSelection(element), true);
+	}
+
+	protected void update() {
+		ISelection selection = viewer.getSelection();
+		if (isFlat())
 			viewer.setInput(objects);
 		else {
 			Object[] expandedElements = viewer.getExpandedElements();
 			viewer.setInput(objects);
 			viewer.setExpandedElements(expandedElements);
 		}
-		viewer.setSelection(new StructuredSelection(element), true);
+		viewer.setSelection(selection, true);
+		expandCollapseGroup.setVisible(!isFlat());
 	}
 
-	public void update() {
-		ISelection selection = viewer.getSelection();
-		viewer.setInput(objects);
-		viewer.expandAll();
-		viewer.setSelection(selection, true);
-		expandCollapseGroup.setVisible(!radioGroup.isFlat());
+	public void remove(IdentifiableObject element) {
+		objects.remove(element);
+		viewer.remove(element);
+	}
+
+	public void removeAll(List<IIdentifiableObject> removals) {
+		objects.removeAll(removals);
+		update();
 	}
 
 	public void update(Object element, String[] properties) {
 		viewer.update(element, properties);
-	}
-
-	public void remove(IdentifiableObject element) {
-		viewer.remove(element);
 	}
 
 	public void setSelection(StructuredSelection selection) {
@@ -404,6 +438,19 @@ public class StructComponent implements DisposeListener {
 
 	public void widgetDisposed(DisposeEvent e) {
 		Job.getJobManager().cancel(this);
+	}
+
+	public List<IIdentifiableObject> getObjects() {
+		return objects;
+	}
+
+	public void saveSettings() {
+		if (!isFlat()) {
+			StringBuilder sb = new StringBuilder();
+			for (Object obj : viewer.getExpandedElements())
+				sb.append(obj.toString());
+			settings.put(FLATEXPANSION + type, sb.toString());
+		}
 	}
 
 }

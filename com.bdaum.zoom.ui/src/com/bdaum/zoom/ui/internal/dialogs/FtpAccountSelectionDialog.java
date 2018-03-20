@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -28,7 +28,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -39,6 +38,7 @@ import org.eclipse.swt.widgets.Shell;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 
 public class FtpAccountSelectionDialog extends ZTitleAreaDialog {
 
@@ -79,7 +79,7 @@ public class FtpAccountSelectionDialog extends ZTitleAreaDialog {
 				return element.toString();
 			}
 		});
-		ftpViewer.setComparator(new ViewerComparator());
+		ftpViewer.setComparator(ZViewerComparator.INSTANCE);
 		ftpViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateButtons();
@@ -93,8 +93,7 @@ public class FtpAccountSelectionDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		IStructuredSelection selection = (IStructuredSelection) ftpViewer.getSelection();
-		account = (FtpAccount) selection.getFirstElement();
+		account = (FtpAccount) ((IStructuredSelection) ftpViewer.getSelection()).getFirstElement();
 		super.okPressed();
 	}
 

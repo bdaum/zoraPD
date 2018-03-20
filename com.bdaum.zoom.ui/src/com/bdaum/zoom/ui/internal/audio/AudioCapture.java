@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.audio;
@@ -37,8 +37,7 @@ public class AudioCapture extends Thread {
 	private File generatedFile;
 
 	public AudioCapture(TargetDataLine line, AudioFileFormat.Type requiredFileType, File file) {
-		dataLine = line;
-		incomingStream = new AudioInputStream(line);
+		incomingStream = new AudioInputStream(dataLine = line);
 		audioFileType = requiredFileType;
 		generatedFile = file;
 	}

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.commands;
 
@@ -53,7 +53,7 @@ public class ImportDeviceCommand extends AbstractCommandHandler {
 				return;
 		}
 		ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(null, dcims.toArray(new File[dcims.size()]), true,
-				true);
+				true, true, null, false);
 		WizardDialog wizardDialog = new WizardDialog(getShell(), wizard);
 		wizard.init(null, null);
 		wizardDialog.open();

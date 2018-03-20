@@ -94,8 +94,7 @@ public class RetargetOperation extends DbOperation {
 			if (voiceNote) {
 				vAssets = dbManager.obtainObjects(AssetImpl.class, "voiceFileURI", oldFolderUriSlash, //$NON-NLS-1$
 						QueryField.STARTSWITH);
-				vsize = vAssets.size();
-				vAssetIds = new String[vsize];
+				vAssetIds = new String[vsize = vAssets.size()];
 			}
 			init(aMonitor, size + vsize + 1);
 			assetIds = new String[size];
@@ -103,8 +102,7 @@ public class RetargetOperation extends DbOperation {
 			int n = 0;
 			int interval = 25;
 			for (AssetImpl a : assets) {
-				URI existingFile = volumeManager.findExistingFile(a, false);
-				if (existingFile == null) {
+				if (volumeManager.findExistingFile(a, false) == null) {
 					String newAssetUri = newFolderUri + a.getUri().substring(oldFolderUri.length());
 					try {
 						File nFile = new File(new URI(newAssetUri));
@@ -164,8 +162,8 @@ public class RetargetOperation extends DbOperation {
 				}
 			}
 		}
-		if (prune | changed) {
-			dbManager.pruneEmptySystemCollections(new NullProgressMonitor());
+		if (prune || changed) {
+			dbManager.pruneEmptySystemCollections(new NullProgressMonitor(), false);
 			fireStructureModified();
 		}
 		return close(info);
@@ -212,7 +210,7 @@ public class RetargetOperation extends DbOperation {
 					aMonitor.worked(1);
 				}
 			}
-			if (voiceNote) {
+			if (voiceNote)
 				for (int i = 0; i < vAssetIds.length; i++) {
 					String assetId = vAssetIds[i];
 					if (assetId != null) {
@@ -228,7 +226,6 @@ public class RetargetOperation extends DbOperation {
 						aMonitor.worked(1);
 					}
 				}
-			}
 		}
 		fireAssetsModified(null, null);
 		if (changed)

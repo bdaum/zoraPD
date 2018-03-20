@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -82,6 +82,7 @@ import com.bdaum.zoom.ui.internal.dialogs.ColorCodeDialog;
 import com.bdaum.zoom.ui.internal.dialogs.PasteMetaDialog;
 import com.bdaum.zoom.ui.internal.dialogs.RatingDialog;
 import com.bdaum.zoom.ui.internal.dialogs.AddBookmarkDialog;
+import com.bdaum.zoom.ui.internal.dialogs.AutomatedRatingDialog;
 import com.bdaum.zoom.ui.internal.views.BasicView;
 import com.bdaum.zoom.ui.internal.views.BookmarkView;
 import com.bdaum.zoom.ui.internal.views.CatalogView;
@@ -125,7 +126,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory PROXIMITY = new ZoomActionFactory(Messages.ZoomActionFactory_proximity_search,
 			Messages.ZoomActionFactory_search_images_in_vincinity, "com.bdaum.zoom.gps.actions.ProximityAction", //$NON-NLS-1$
 			Icons.proximity) {
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			ProximityAction action = new ProximityAction(getLabel(), getTooltip(), getImage(), adaptable);
@@ -137,7 +137,6 @@ public abstract class ZoomActionFactory {
 
 	public static final ZoomActionFactory DELETE = new ZoomActionFactory(Messages.ZoomActionFactory_delete,
 			Messages.ZoomActionFactory_delete_selected_images, "com.bdaum.zoom.ui.actions.DeleteAction", Icons.delete) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			DeleteAction action = new DeleteAction(getLabel(), getTooltip(), getImage(), adaptable);
@@ -149,7 +148,6 @@ public abstract class ZoomActionFactory {
 
 	public static final ZoomActionFactory REFRESH = new ZoomActionFactory(Messages.ZoomActionFactory_refresh,
 			Messages.ZoomActionFactory_refresh_tooltip, "com.bdaum.zoom.ui.actions.RefreshAction", Icons.refresh) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			RefreshAction action = new RefreshAction(getLabel(), getTooltip(), getImage(), adaptable);
@@ -162,7 +160,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory SHOWINFOLDER = new ZoomActionFactory(
 			Messages.ZoomActionFactory_show_in_folder, Messages.ZoomActionFactory_show_in_folder_tooltip,
 			"com.bdaum.zoom.ui.actions.ShowInFolderAction", Icons.folder_find) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			Action action = new Action(getLabel(), getImage()) {
@@ -231,11 +228,9 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory SHOWINTIMELINE = new ZoomActionFactory(
 			Messages.ZoomActionFactory_show_in_timeline, Messages.ZoomActionFactory_show_in_timeline_tooltip,
 			"com.bdaum.zoom.ui.actions.ShowInTimeLineAction", Icons.timeline_find) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			Action action = new Action(getLabel(), getImage()) {
-
 				@Override
 				public void run() {
 					final Asset asset = getFirstLocalAsset(adaptable);
@@ -255,7 +250,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory SHOWINMAP = new ZoomActionFactory(Messages.ZoomActionFactory_show_in_map,
 			Messages.ZoomActionFactory_show_in_map_tooltip, "com.bdaum.zoom.ui.actions.ShowInMapAction", //$NON-NLS-1$
 			Icons.map_find) {
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			ILocationDisplay display = UiActivator.getDefault().getLocationDisplay();
@@ -281,7 +275,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory EDIT = new ZoomActionFactory(Messages.ZoomActionFactory_edit,
 			Messages.ZoomActionFactory_edit_images_with_default, "com.bdaum.zoom.ui.actions.EditImageAction", //$NON-NLS-1$
 			Icons.image_edit) {
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			EditImageAction action = new EditImageAction(getLabel(), getTooltip(), getImage(), adaptable);
@@ -294,7 +287,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory EDITWITH = new ZoomActionFactory(Messages.ZoomActionFactory_edit_with,
 			Messages.ZoomActionFactory_edit_images_with_selected_editor, "com.bdaum.zoom.ui.actions.EditWithAction", //$NON-NLS-1$
 			Icons.image_edit_with) {
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			EditWithAction action = new EditWithAction(getLabel(), getTooltip(), getImage(), adaptable);
@@ -307,7 +299,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory ROTATELEFT = new ZoomActionFactory(
 			Messages.ZoomActionFactory_rotate_anti_clockwise, Messages.ZoomActionFactory_rotate_anti_clockwise_90,
 			"com.bdaum.zoom.ui.actions.RotateLeftAction", Icons.rotate270s) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			RotateAction action = new RotateAction(adaptable.getAdapter(IWorkbenchWindow.class), getLabel(),
@@ -321,7 +312,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory ROTATERIGHT = new ZoomActionFactory(
 			Messages.ZoomActionFactory_rotate_clockwise, Messages.ZoomActionFactory_rotate_clockwise_90,
 			"com.bdaum.zoom.ui.actions.RotateRightAction", Icons.rotate90s) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			RotateAction action = new RotateAction(adaptable.getAdapter(IWorkbenchWindow.class), getLabel(),
@@ -334,7 +324,6 @@ public abstract class ZoomActionFactory {
 
 	public static final ZoomActionFactory RATING = new ZoomActionFactory(Messages.ZoomActionFactory_rating,
 			Messages.ZoomActionFactory_rate_this_image, "com.bdaum.zoom.ui.actions.RatingAction", Icons.rating) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			IAction action = new Action(getLabel(), getImage()) {
@@ -343,7 +332,7 @@ public abstract class ZoomActionFactory {
 					List<Asset> localAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
 					if (localAssets != null && !localAssets.isEmpty()) {
 						RatingDialog dialog = new RatingDialog(adaptable.getAdapter(Shell.class),
-								localAssets.get(0).getRating(), 0.7d, true);
+								localAssets.get(0).getRating(), 0.7d, true, true);
 						dialog.create();
 						dialog.getShell().setLocation(adaptable.getAdapter(Control.class).toDisplay(0, 0));
 						rate(localAssets, adaptable, dialog.open());
@@ -358,7 +347,12 @@ public abstract class ZoomActionFactory {
 	};
 
 	public static void rate(final List<Asset> assets, final IAdaptable adaptable, int rate) {
-		if (rate == RatingDialog.DELETE) {
+		if (rate == RatingDialog.BYSERVICE) {
+			AutomatedRatingDialog dialog = new AutomatedRatingDialog(adaptable.getAdapter(Shell.class), assets);
+			dialog.create();
+			dialog.getShell().setLocation(adaptable.getAdapter(Control.class).toDisplay(20, 20));
+			dialog.open();
+		} else if (rate == RatingDialog.DELETE) {
 			DeleteAction action = new DeleteAction(DELETE.getLabel(), DELETE.getTooltip(), DELETE.getImage(),
 					new IAdaptable() {
 						@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -376,7 +370,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory COLORCODE = new ZoomActionFactory(Messages.ZoomActionFactory_color_code,
 			Messages.ZoomActionFactory_color_code_this_image, "com.bdaum.zoom.ui.actions.ColorCodeAction", //$NON-NLS-1$
 			Icons.colorCode) {
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			IAction action = new Action(getLabel(), getImage()) {
@@ -402,9 +395,8 @@ public abstract class ZoomActionFactory {
 		}
 	};
 
-	public static final ZoomActionFactory MOVE = new ZoomActionFactory(Messages.ZoomActionFactory_move, Messages.ZoomActionFactory_move_tooltip,
-			"com.bdaum.zoom.ui.MoveAction", Icons.move) { //$NON-NLS-1$
-
+	public static final ZoomActionFactory MOVE = new ZoomActionFactory(Messages.ZoomActionFactory_move,
+			Messages.ZoomActionFactory_move_tooltip, "com.bdaum.zoom.ui.MoveAction", Icons.move) { //$NON-NLS-1$
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			MoveAction action = new MoveAction(adaptable.getAdapter(IWorkbenchWindow.class), getLabel(), getTooltip(),
@@ -418,7 +410,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory PLAYVOICENOTE = new ZoomActionFactory(
 			Messages.ZoomActionFactory_play_voicenote, Messages.ZoomActionFactory_play_tooltip,
 			"com.bdaum.zoom.ui.PlayVoiceNoteAction", Icons.sound) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			PlayVoiceNoteAction action = new PlayVoiceNoteAction(adaptable.getAdapter(IWorkbenchWindow.class),
@@ -433,7 +424,6 @@ public abstract class ZoomActionFactory {
 			Messages.ZoomActionFactory_attach_remove_voicenote,
 			Messages.ZoomActionFactory_attach_remove_voicenote_tooltip, "com.bdaum.zoom.ui.AddVoiceNoteAction", //$NON-NLS-1$
 			Icons.sound_add) {
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			AddVoiceNoteAction action = new AddVoiceNoteAction(adaptable.getAdapter(IWorkbenchWindow.class), getLabel(),
@@ -447,7 +437,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory UPDATEKEYWORDS = new ZoomActionFactory(
 			Messages.ZoomActionFactory_update_keywords, Messages.ZoomActionFactory_update_keywords_tooltip,
 			"com.bdaum.zoom.ui.actions.UpdateKeywordAction", Icons.keydef) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			UpdateKeywordsAction action = new UpdateKeywordsAction(adaptable.getAdapter(IWorkbenchWindow.class),
@@ -461,7 +450,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory SEARCHSIMILAR = new ZoomActionFactory(
 			Messages.ZoomActionFactory_search_similar, Messages.ZoomActionFactory_search_similar_tooltip,
 			"com.bdaum.zoom.ui.actions.SearchSimilarAction", Icons.similar) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			SearchSimilarAction action = new SearchSimilarAction(getId(), getLabel(), getTooltip(), getImage(),
@@ -474,7 +462,6 @@ public abstract class ZoomActionFactory {
 
 	public static final ZoomActionFactory TIMESEARCH = new ZoomActionFactory(Messages.ZoomActionFactory_timer_search,
 			Messages.ZoomActionFactory_time_search_tooltip, "com.bdaum.zoom.ui.actions.TimeSearch", Icons.time) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			TimeSearchAction action = new TimeSearchAction(getLabel(), getTooltip(), getImage(), adaptable);
@@ -486,7 +473,6 @@ public abstract class ZoomActionFactory {
 
 	public static final ZoomActionFactory BULKRENAME = new ZoomActionFactory(Messages.ZoomActionFactory_rename,
 			Messages.ZoomActionFactory_rename_tooltip, "com.bdaum.zoom.ui.actions.BulkRename", Icons.rename) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			BulkRenameAction action = new BulkRenameAction(getLabel(), getTooltip(), getImage(), adaptable);
@@ -497,9 +483,7 @@ public abstract class ZoomActionFactory {
 	};
 
 	public static final ZoomActionFactory SLIDESHOW = new ZoomActionFactory(Messages.ZoomActionFactory_slideshow,
-			Messages.ZoomActionFactory_slideshow_tooltip,
-			"com.bdaum.zoom.ui.actions.Slideshow", Icons.slideshow) { //$NON-NLS-1$
-
+			Messages.ZoomActionFactory_slideshow_tooltip, "com.bdaum.zoom.ui.actions.Slideshow", Icons.slideshow) { //$NON-NLS-1$
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			SlideshowAction action = new SlideshowAction(adaptable.getAdapter(IWorkbenchWindow.class), getLabel(),
@@ -509,23 +493,21 @@ public abstract class ZoomActionFactory {
 			return action;
 		}
 	};
-	
+
 	public static final ZoomActionFactory SPLITCATALOG = new ZoomActionFactory(Messages.ZoomActionFactory_split_cat,
 			Messages.ZoomActionFactory_split_cat_tooltip, "com.bdaum.zoom.ui.actions.SplitCatalog", Icons.splitcat) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
-			SplitCatAction action = new SplitCatAction(adaptable.getAdapter(IWorkbenchWindow.class), getLabel(), getTooltip(), getImage(), adaptable);
+			SplitCatAction action = new SplitCatAction(adaptable.getAdapter(IWorkbenchWindow.class), getLabel(),
+					getTooltip(), getImage(), adaptable);
 			if (bars != null)
 				bars.setGlobalActionHandler(getId(), action);
 			return action;
 		}
 	};
 
-
 	public static final ZoomActionFactory STACK = new ZoomActionFactory(Messages.ZoomActionFactory_named_stack,
 			Messages.ZoomActionFactory_named_stack_tooltip, "com.bdaum.zoom.ui.actions.Stack", Icons.stack) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			StackAction action = new StackAction(getLabel(), getTooltip(), getImage(), adaptable);
@@ -538,7 +520,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory TIMESHIFT = new ZoomActionFactory(Messages.ZoomActionFactory_apply_time_shift,
 			Messages.ZoomActionFactory_correct_time_stamps, "com.bdaum.zoom.ui.actions.TimeShiftAction", //$NON-NLS-1$
 			Icons.timeShift) {
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			TimeShiftAction action = new TimeShiftAction(getLabel(), getTooltip(), getImage(), adaptable);
@@ -551,7 +532,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory VIEWIMAGE = new ZoomActionFactory(Messages.ZoomActionFactory_full_screen,
 			Messages.ZoomActionFactory_open_image_full_screen, "com.bdaum.zoom.ui.actions.ViewImageAction", //$NON-NLS-1$
 			Icons.square) {
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			ViewImageAction action = new ViewImageAction(getLabel(), getTooltip(), getImage(), adaptable);
@@ -564,10 +544,8 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory ADDTOALBUM = new ZoomActionFactory(Messages.ZoomActionFactory_add_to_albums,
 			Messages.ZoomActionFactory_add_to_albums_tooltip, "com.bdaum.zoom.ui.actions.AddToAlbumAction", //$NON-NLS-1$
 			Icons.addAlbum) {
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
-
 			IAction action = new AddToAlbumAction(getLabel(), getImage(), adaptable);
 			action.setToolTipText(getTooltip());
 			if (bars != null)
@@ -583,7 +561,6 @@ public abstract class ZoomActionFactory {
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			IAction action = new Action(getLabel(), getImage()) {
-
 				@Override
 				public void run() {
 					List<Asset> localAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
@@ -629,7 +606,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory SHOWDERIVATIVES = new ZoomActionFactory(
 			Messages.ZoomActionFactory_show_derivatives, Messages.ZoomActionFactory_show_all_images_derived,
 			"com.bdaum.zoom.ui.actions.ShowDerivatives", Icons.derivative) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			IAction action = new ShowAssetAction(Constants.DERIVATIVES, getLabel(), getImage(), getTooltip(),
@@ -643,7 +619,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory SHOWORIGINALS = new ZoomActionFactory(
 			Messages.ZoomActionFactory_show_originals, Messages.ZoomActionFactory_show_images_from_which_derived,
 			"com.bdaum.zoom.ui.actions.ShowOriginals", Icons.original) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			IAction action = new ShowAssetAction(Constants.ORIGINALS, getLabel(), getImage(), getTooltip(), adaptable);
@@ -656,7 +631,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory SHOWCOMPOSITES = new ZoomActionFactory(
 			Messages.ZoomActionFactory_show_composites, Messages.ZoomActionFactory_images_composed_from,
 			"com.bdaum.zoom.ui.actions.ShowComposites", Icons.composite) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			IAction action = new ShowAssetAction(Constants.COMPOSITES, getLabel(), getImage(), getTooltip(), adaptable);
@@ -669,7 +643,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory SHOWCOMPONENTS = new ZoomActionFactory(
 			Messages.ZoomActionFactory_show_components, Messages.ZoomActionFactory_show_images_contributing,
 			"com.bdaum.zoom.ui.actions.ShowComponents", Icons.component) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			IAction action = new ShowAssetAction(Constants.COMPONENTS, getLabel(), getImage(), getTooltip(), adaptable);
@@ -682,15 +655,12 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory ADDBOOKMARK = new ZoomActionFactory(Messages.ZoomActionFactory_add_bookmark,
 			Messages.ZoomActionFactory_add_bookmark_tooltip, "com.bdaum.zoom.ui.actions.AddBookmark", //$NON-NLS-1$
 			Icons.addBookmark) {
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			IAction action = new Action(getLabel(), getImage()) {
-
 				@Override
 				public void run() {
 					AssetSelection assetSelection = adaptable.getAdapter(AssetSelection.class);
-
 					if (!assetSelection.isEmpty()) {
 						CoreActivator activator = CoreActivator.getDefault();
 						final IDbManager dbManager = activator.getDbManager();
@@ -748,11 +718,9 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory PASTEMETADATA = new ZoomActionFactory(
 			Messages.ZoomActionFactory_paste_metadata, Messages.ZoomActionFactory_paste_metadata_tooltip,
 			"com.bdaum.zoom.ui.actions.PasteMetadataAction", Icons.pasteMetadata) { //$NON-NLS-1$
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			IAction action = new Action(getLabel(), getImage()) {
-
 				@Override
 				public void run() {
 					List<Asset> localAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
@@ -760,11 +728,10 @@ public abstract class ZoomActionFactory {
 						Shell shell = adaptable.getAdapter(Shell.class);
 						Object contents = UiActivator.getDefault().getClipboard(shell.getDisplay())
 								.getContents(TextTransfer.getInstance());
-						if (contents instanceof String) {
-							String text = (String) contents;
+						if (contents instanceof String)
 							try {
 								new PasteMetaDialog(shell, localAssets,
-										XMPUtilities.readXMP(new ByteArrayInputStream(text.getBytes("UTF-8"))), //$NON-NLS-1$
+										XMPUtilities.readXMP(new ByteArrayInputStream(((String) contents).getBytes("UTF-8"))), //$NON-NLS-1$
 										adaptable).open();
 							} catch (UnsupportedEncodingException e) {
 								// should never happen
@@ -772,7 +739,6 @@ public abstract class ZoomActionFactory {
 								UiActivator.getDefault()
 										.logError(Messages.PasteMetadataAction_xmp_error_reading_from_clipboard, e);
 							}
-						}
 					}
 
 				}
@@ -786,11 +752,9 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory COPYMETADATA = new ZoomActionFactory(Messages.ZoomActionFactory_copy_metadata,
 			Messages.ZoomActionFactory_copy_metadata_tooltip, "com.bdaum.zoom.ui.actions.CopyMetadataAction", //$NON-NLS-1$
 			Icons.copyMetadata) {
-
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			IAction action = new Action(getLabel(), getImage()) {
-
 				@Override
 				public void run() {
 					Asset asset = getSingleAsset(adaptable);
@@ -841,7 +805,6 @@ public abstract class ZoomActionFactory {
 	public static final ZoomActionFactory CATEGORIZE = new ZoomActionFactory(Messages.ZoomActionFactory_categorize,
 			Messages.ZoomActionFactory_add_images_to_categories, "com.bdaum.zoom.ui.actions.CategorizeAction", //$NON-NLS-1$
 			Icons.categorize) {
-
 		@Override
 		public IAction create(IActionBars bars, IAdaptable adaptable) {
 			CategorizeAction action = new CategorizeAction(getLabel(), getTooltip(), getImage(), adaptable);

@@ -1,13 +1,15 @@
 package com.bdaum.zoom.ui.internal.wizards;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.layout.GridData;
@@ -17,15 +19,23 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.meta.LastDeviceImport;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.QueryField;
+import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.ImportFromDeviceData;
 import com.bdaum.zoom.core.internal.Utilities;
+import com.bdaum.zoom.core.internal.ai.IAiService;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.KeywordDialog;
+import com.bdaum.zoom.ui.internal.widgets.AutoRatingGroup;
+import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
+import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
@@ -48,34 +58,37 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 	private final boolean media;
 	private String presetAuthor;
 	private RadioButtonGroup privacyGroup;
+	private IAiService aiService;
+	private IDialogSettings dialogSettings;
+	private SmartCollectionImpl collection;
+	private CheckboxButton albumButton;
+	private boolean newStruct;
+	private AutoRatingGroup autoGroup;
 
-	public ImportAddMetadataPage(String pageName, boolean media) {
+	public ImportAddMetadataPage(String pageName, boolean media, SmartCollectionImpl collection, boolean newStruct) {
 		super(pageName);
 		this.media = media;
+		this.collection = collection;
+		this.newStruct = newStruct;
+		aiService = CoreActivator.getDefault().getAiService();
 	}
 
 	@SuppressWarnings("unused")
 	@Override
 	public void createControl(Composite parent) {
+		dialogSettings = getWizard().getDialogSettings();
 		Composite comp = new Composite(parent, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new GridLayout());
-
-		CGroup metaComp = new CGroup(comp, SWT.NONE);
-		metaComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		metaComp.setLayout(new GridLayout(4, false));
-		metaComp.setText(Messages.ImportAddMetadataPage_add_metadata);
-
-		ImportFromDeviceWizard wizard = (ImportFromDeviceWizard) getWizard();
-		IDialogSettings dialogSettings = wizard.getDialogSettings();
-
-		artistField = createHistoryCombo(metaComp, Messages.ImportFromDeviceWizard_Artist, dialogSettings, ARTISTS);
+		CGroup metaComp = CGroup.create(comp, 1, Messages.ImportAddMetadataPage_add_metadata);
+		((GridLayout) metaComp.getLayout()).numColumns = 4;
+		artistField = createHistoryCombo(metaComp, QueryField.EXIF_ARTIST.getLabel(), dialogSettings, ARTISTS);
 		String lastArtist = dialogSettings.get(LAST_ARTIST);
 		if (lastArtist != null)
 			artistField.setText(lastArtist);
 		presetAuthor = artistField.getText();
-		eventField = createHistoryCombo(metaComp, Messages.ImportFromDeviceWizard_Event, dialogSettings, EVENTS);
-		new Label(metaComp, SWT.NONE).setText(Messages.ImportFromDeviceWizard_Keywords);
+		eventField = createHistoryCombo(metaComp, QueryField.IPTC_EVENT.getLabel(), dialogSettings, EVENTS);
+		new Label(metaComp, SWT.NONE).setText(QueryField.IPTC_KEYWORDS.getLabel());
 		keywordField = new Text(metaComp, SWT.READ_ONLY | SWT.BORDER | SWT.V_SCROLL);
 		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 3, 1);
 		layoutData.heightHint = 50;
@@ -86,15 +99,30 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 				openKeywordDialog();
 			}
 		});
-		new Label(metaComp, SWT.NONE).setText(Messages.ImportAddMetadataPage_Privacy);
-		privacyGroup = new RadioButtonGroup(metaComp, null, SWT.HORIZONTAL, Messages.ImportAddMetadataPage_Public,
-				Messages.ImportAddMetadataPage_Medium, Messages.ImportAddMetadataPage_Private);
+		new Label(metaComp, SWT.NONE).setText(QueryField.SAFETY.getLabel());
+		privacyGroup = new RadioButtonGroup(metaComp, null, SWT.HORIZONTAL, QueryField.SAFETY.getEnumLabels());
 		privacyGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 3, 1));
+		if (collection != null && collection.getAlbum() && !collection.getSystem()) {
+			albumButton = WidgetFactory.createCheckButton(metaComp,
+					NLS.bind(Messages.ImportAddMetadataPage_add_to_album, collection.getName()),
+					new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1));
+			albumButton.setSelection(true);
+		}
+		// Auto rating
+		if (aiService != null && aiService.isEnabled() && aiService.getRatingProviderIds().length > 0) {
+			autoGroup = new AutoRatingGroup(comp, aiService, dialogSettings);
+			autoGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+			autoGroup.addModifyListener(new ModifyListener() {
+				@Override
+				public void modifyText(ModifyEvent e) {
+					validatePage();
+				}
+			});
+		}
+		// CHDK
 		if (media) {
-			prefixComp = new CGroup(comp, SWT.NONE);
-			prefixComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-			prefixComp.setLayout(new GridLayout(4, false));
-			prefixComp.setText(Messages.ImportAddMetadataPage_advanced_options);
+			prefixComp = CGroup.create(comp, 1, Messages.ImportAddMetadataPage_advanced_options);
+			((GridLayout) prefixComp.getLayout()).numColumns = 4;
 			Label msg = new Label(prefixComp, SWT.NONE);
 			msg.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1));
 			msg.setText(Messages.ImportAddMetadataPage_metadata_options_chdk);
@@ -122,7 +150,10 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 			new Label(prefixComp, SWT.NONE);
 		}
 		setControl(comp);
-		setHelp(HelpContextIds.IMPORT_FROM_DEVICE_WIZARD_METADATA);
+		setHelp(media ? HelpContextIds.IMPORT_FROM_DEVICE_WIZARD_METADATA
+				: newStruct ? HelpContextIds.IMPORT_NEW_STRUCTURE_WIZARD_METADATA
+						: HelpContextIds.IMPORT_FOLDER_WIZARD_METADATA);
+
 		setTitle(Messages.ImportAddMetadataPage_add_metadata);
 		setMessage(Messages.ImportAddMetadataPage_specify_metadata);
 		super.createControl(parent);
@@ -156,17 +187,16 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 			combo.setVisibleItemCount(8);
 		} else
 			combo.setItems(EMPTYSTRINGS);
-		combo.setData("key", key); //$NON-NLS-1$
+		combo.setData(UiConstants.KEY, key); 
 		combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		return combo;
 	}
 
-	private static void saveComboHistory(Combo combo, IDialogSettings settings2) {
-		settings2.put((String) combo.getData("key"), UiUtilities.updateComboHistory(combo)); //$NON-NLS-1$
+	private static void saveComboHistory(Combo combo, IDialogSettings settings) {
+		settings.put((String) combo.getData(UiConstants.KEY), UiUtilities.updateComboHistory(combo)); 
 	}
 
 	private void fillValues() {
-		IDialogSettings dialogSettings = getWizard().getDialogSettings();
 		String[] keywords = dialogSettings.getArray(KEYWORDS);
 		if (keywords != null)
 			keywordField.setText(Core.toStringList(currentKeywords = keywords, "\n")); //$NON-NLS-1$
@@ -177,32 +207,34 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 		}
 		updateAuthor();
 		privacyGroup.setSelection(0);
+		if (autoGroup != null)
+			autoGroup.fillValues();
+		validatePage();
 	}
 
 	public void updateAuthor() {
 		if (artistField.getText().equals(presetAuthor)) {
-			File[] dcims = ((ImportFromDeviceWizard) getWizard()).getDcims();
-			if (dcims.length > 0) {
-				String key = Core.getCore().getVolumeManager().getVolumeForFile(dcims[0]);
-				LastDeviceImport lastImport = Core.getCore().getDbManager().getMeta(true).getLastDeviceImport(key);
+			String volume = ((ImportFromDeviceWizard) getWizard()).getVolume();
+			if (volume != null) {
+				LastDeviceImport lastImport = Core.getCore().getDbManager().getMeta(true).getLastDeviceImport(volume);
 				if (lastImport != null) {
 					String owner = lastImport.getOwner();
-					if (owner != null && !owner.isEmpty()) {
-						artistField.setText(owner);
-						presetAuthor = owner;
-					}
+					if (owner != null && !owner.isEmpty())
+						artistField.setText(presetAuthor = owner);
 				}
 			}
 		}
 	}
 
+
 	@Override
 	protected void validatePage() {
-		// do nothing
+		String errorMessage = autoGroup != null ? autoGroup.validate() : null;
+		setErrorMessage(errorMessage);
+		setPageComplete(errorMessage == null);
 	}
 
 	public void performFinish(ImportFromDeviceData importData) {
-		IDialogSettings dialogSettings = getWizard().getDialogSettings();
 		saveComboHistory(artistField, dialogSettings);
 		String artist = artistField.getText();
 		importData.setArtist(artist);
@@ -211,12 +243,34 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 		importData.setEvent(eventField.getText());
 		dialogSettings.put(KEYWORDS, currentKeywords);
 		importData.setKeywords(currentKeywords);
-		importData.setPrivacy(privacyGroup.getSelection()*3);
+		importData.setPrivacy(privacyGroup.getSelection() * 3);
 		if (prefixField != null) {
 			String prefix = prefixField.getText();
 			importData.setExifTransferPrefix(prefix);
 			dialogSettings.put(PREFIX, prefix);
 		}
+		if (autoGroup != null)
+			autoGroup.saveValues();
+	}
+
+	public boolean addToAlbum() {
+		return albumButton != null && albumButton.getSelection();
+	}
+
+	public String getProviderId() {
+		return autoGroup != null  ? autoGroup.getProviderId() : null;
+	}
+
+	public String getModelId() {
+		return autoGroup != null  ? autoGroup.getModelId() : null;
+	}
+
+	public boolean getOverwrite() {
+		return autoGroup != null  ? autoGroup.getOverwrite() : false;
+	}
+
+	public int getMaxRating() {
+		return autoGroup != null  ? autoGroup.getMaxRating() : 3;
 	}
 
 }

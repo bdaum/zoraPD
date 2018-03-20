@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2013 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal;
@@ -56,8 +56,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.ListenerList;
@@ -87,15 +85,11 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-import com.bdaum.aoModeling.runtime.AomList;
-import com.bdaum.aoModeling.runtime.AomObject;
 import com.bdaum.jna.ext.ShellFunctions;
 import com.bdaum.zoom.batch.internal.BatchActivator;
 import com.bdaum.zoom.cat.model.asset.Asset;
@@ -167,7 +161,6 @@ import com.bdaum.zoom.ui.views.IMediaViewer;
 @SuppressWarnings("restriction")
 public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.ui"; //$NON-NLS-1$
 
 	private static final String CONTACTFILE = "contacts/contacts.xml"; //$NON-NLS-1$
@@ -180,7 +173,6 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
 	private static final String DB3FILE = "db3"; //$NON-NLS-1$
 
-	// The shared instance
 	private static UiActivator plugin;
 
 	private HashMap<String, IMediaViewer> viewerMap;
@@ -197,7 +189,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	private static final String[] CatFileNames = new String[] {
 			Constants.APPNAME + Messages.UiActivator_ZoomCatalog + Constants.CATALOGEXTENSION + ")", }; //$NON-NLS-1$
 
-	private static final List<AomObject> EMPTYOBJECTS = new ArrayList<AomObject>(0);
+	private static final List<Object> EMPTYOBJECTS = new ArrayList<Object>(0);
 
 	private Map<String, FileEditorMapping> fileEditorMappings;
 
@@ -262,6 +254,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	private ILocationDisplay locationDisplay;
 
 	private boolean locationDisplayIntialized;
+
+	private String[] galleryperspectiveIds;
 
 	/*
 	 * (non-Javadoc)
@@ -373,9 +367,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 					fileEditorMappings.put(ext.toLowerCase(), mapping);
 			addPreferenceChangeListener(new IPreferenceChangeListener() {
 				public void preferenceChange(PreferenceChangeEvent event) {
-					if (PreferenceConstants.FILEASSOCIATION.equals(event.getKey())) {
+					if (PreferenceConstants.FILEASSOCIATION.equals(event.getKey()))
 						fileEditorMappings = null;
-					}
 				}
 			});
 
@@ -387,7 +380,6 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		if (s != null) {
 			String field = null;
 			int relation = 0;
-			Object value = null;
 			int p = s.indexOf('\t');
 			if (p >= 0) {
 				field = s.substring(0, p);
@@ -397,8 +389,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 					relation = Integer.parseInt(s.substring(off, p));
 					try (ObjectInputStream in = new ObjectInputStream(
 							new ByteArrayInputStream(Base64.decode(s.substring(p + 1))))) {
-						value = in.readObject();
-						return new CriterionImpl(field, null, value, relation, true);
+						return new CriterionImpl(field, null, in.readObject(), relation, true);
 					} catch (ClassNotFoundException e) {
 						// do nothing
 					} catch (IOException e) {
@@ -459,10 +450,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	public Collection<IRelationDetector> getRelationDetectors() {
 		if (relationDetectors == null) {
 			relationDetectors = new HashMap<String, IRelationDetector>(5);
-			IExtension[] extensions = Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "relationDetector") //$NON-NLS-1$
-					.getExtensions();
-
-			for (IExtension ext : extensions) {
+			for (IExtension ext : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "relationDetector") //$NON-NLS-1$
+					.getExtensions())
 				for (IConfigurationElement config : ext.getConfigurationElements()) {
 					String name = config.getAttribute("name"); //$NON-NLS-1$
 					try {
@@ -476,7 +465,6 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 						logError(NLS.bind(Messages.UiActivator_cannot_create_relation_detector, name), e);
 					}
 				}
-			}
 		}
 		return relationDetectors.values();
 	}
@@ -531,8 +519,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		if (cursor == null) {
 			ImageData cursorData = UiActivator.getImageDescriptor("icons/cursors/" + key + ".BMP").getImageData(100); //$NON-NLS-1$//$NON-NLS-2$
 			cursorData.transparentPixel = 1;
-			cursor = new Cursor(display, cursorData, cursorData.width / 2, cursorData.height / 2);
-			cursorShapes.put(key, cursor);
+			cursorShapes.put(key,
+					cursor = new Cursor(display, cursorData, cursorData.width / 2, cursorData.height / 2));
 		}
 		return cursor;
 	}
@@ -616,10 +604,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		if (window == null)
 			return null;
 		NavigationHistory history = navMap.get(window);
-		if (history == null) {
-			history = new NavigationHistory(window);
-			navMap.put(window, history);
-		}
+		if (history == null)
+			navMap.put(window, history = new NavigationHistory(window));
 		return history;
 	}
 
@@ -640,16 +626,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		if (mode != CatalogListener.EMERGENCY) {
 			IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
 			if (criticalJobsRunning()) {
-				if (activeWorkbenchWindow != null) {
-					IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-					if (activePage != null) {
-						try {
-							activePage.showView("org.eclipse.ui.views.ProgressView"); //$NON-NLS-1$
-						} catch (PartInitException e) {
-							// ignore
-						}
-					}
-				}
+				UiUtilities.showView("org.eclipse.ui.views.ProgressView"); //$NON-NLS-1$
 				IInputValidator validator = new IInputValidator() {
 					public String isValid(String newText) {
 						return criticalJobsRunning() ? "Jobs running" : null; //$NON-NLS-1$
@@ -661,7 +638,6 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 						0, 1, 200L);
 				if (!display.isDisposed())
 					display.syncExec(() -> dialog.open());
-
 				int returnCode = dialog.getReturnCode();
 				if (hideShell && returnCode == 0 && activeWorkbenchWindow != null)
 					activeWorkbenchWindow.getShell().setVisible(true);
@@ -681,8 +657,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	public void performClosingTasks(final int mode) {
 		Runnable runnable = new Runnable() {
 			public void run() {
-				for (Object listener : lifeCycleListeners.getListeners())
-					((LifeCycleListener) listener).sessionClosed(mode);
+				for (LifeCycleListener listener : lifeCycleListeners)
+					listener.sessionClosed(mode);
 				IJobManager jobManager = Job.getJobManager();
 				if (mode != CatalogListener.TASKBAR) {
 					jobManager.cancel(Constants.SLIDESHOW);
@@ -725,20 +701,17 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 							activator.saveFolderStates();
 							if (mode != CatalogListener.TUNE)
 								activator.deleteTrashCan();
-							Core.waitOnJobCanceled(Constants.INDEXING);
 						} else if (getPreferenceStore().getBoolean(PreferenceConstants.FORCEDELETETRASH))
 							activator.deleteTrashCan();
 						if (!BatchActivator.isFastExit() && dbManager.isEmbedded()) {
 							if (mode == CatalogListener.TUNE)
 								dbManager.checkDbSanity(true);
-							else {
-								boolean hasBackups = meta == null
-										|| meta.getBackupLocation() != null && !meta.getBackupLocation().isEmpty();
-								long interval = activator.getBackupInterval() * ONEDAY;
-								if (!hasBackups) {
+							else if (meta != null) {
+								if (meta.getBackupLocation() == null || meta.getBackupLocation().isEmpty()) {
 									if (mode != CatalogListener.TASKBAR)
 										dbManager.checkDbSanity(false);
-								} else if (meta != null) {
+								} else {
+									long interval = activator.getBackupInterval() * ONEDAY;
 									Date lastSessionEnd = meta.getLastSessionEnd();
 									long lastBackup = meta.getLastBackup().getTime();
 									long lastSession = lastSessionEnd == null ? Long.MAX_VALUE
@@ -777,37 +750,34 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	public List<String> getGpsFileExtensions() {
 		List<String> extList = new ArrayList<String>(5);
 		for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "gpsParser") //$NON-NLS-1$
-				.getExtensions()) {
+				.getExtensions())
 			for (IConfigurationElement conf : extension.getConfigurationElements()) {
 				StringTokenizer st = new StringTokenizer(conf.getAttribute("extensions")); //$NON-NLS-1$
 				while (st.hasMoreTokens())
 					extList.add(st.nextToken());
 			}
-		}
 		return extList;
 	}
 
 	public List<String> getGpsFileTypes() {
 		List<String> extList = new ArrayList<String>(5);
 		for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "gpsParser") //$NON-NLS-1$
-				.getExtensions()) {
+				.getExtensions())
 			for (IConfigurationElement conf : extension.getConfigurationElements())
 				for (IConfigurationElement sub : conf.getChildren("type")) //$NON-NLS-1$
 					extList.add(sub.getAttribute("name")); //$NON-NLS-1$
-		}
 		return extList;
 	}
 
 	public FileNameExtensionFilter createGpsFileFormatFilter() {
 		List<String> extList = new ArrayList<String>(5);
 		for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "gpsParser") //$NON-NLS-1$
-				.getExtensions()) {
+				.getExtensions())
 			for (IConfigurationElement conf : extension.getConfigurationElements()) {
 				StringTokenizer st = new StringTokenizer(conf.getAttribute("extensions"), " ;"); //$NON-NLS-1$ //$NON-NLS-2$
 				while (st.hasMoreTokens())
 					extList.add(st.nextToken());
 			}
-		}
 		return new FileNameExtensionFilter(extList.toArray(new String[extList.size()]));
 	}
 
@@ -819,11 +789,11 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		String filename = file.getName();
 		int p = filename.lastIndexOf('.');
 		String ext = (p >= 0) ? filename.substring(p + 1) : ""; //$NON-NLS-1$
-		IExtensionRegistry extensionRegistry = Platform.getExtensionRegistry();
-		for (IExtension extension : extensionRegistry.getExtensionPoint(PLUGIN_ID, "gpsParser").getExtensions()) { //$NON-NLS-1$
+		for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "gpsParser") //$NON-NLS-1$
+				.getExtensions())
 			for (IConfigurationElement conf : extension.getConfigurationElements()) {
 				StringTokenizer st = new StringTokenizer(conf.getAttribute("extensions")); //$NON-NLS-1$
-				while (st.hasMoreTokens()) {
+				while (st.hasMoreTokens())
 					if (ext.equalsIgnoreCase(st.nextToken())) {
 						if (!required && conf.getAttribute(att) == null)
 							return null;
@@ -834,9 +804,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 							return null;
 						}
 					}
-				}
 			}
-		}
 		return null;
 	}
 
@@ -883,10 +851,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 						tempFile.deleteOnExit();
 						FileInfo voiceInfo = peerService.getFileInfo(assetOrigin,
 								voiceOrigURI != null ? voiceOrigURI.toString() : voiceFileURI, asset.getVolume());
-						if (peerService.transferRemoteFile(new NullProgressMonitor(), assetOrigin, voiceInfo,
-								tempFile)) {
+						if (peerService.transferRemoteFile(new NullProgressMonitor(), assetOrigin, voiceInfo, tempFile))
 							playSoundfile(tempFile.toURI().toURL(), null);
-						}
 					}
 				} catch (URISyntaxException e) {
 					// ignore
@@ -928,9 +894,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	private Map<String, IMediaViewer> getImageViewerMap() {
 		if (viewerMap == null) {
 			viewerMap = new HashMap<String, IMediaViewer>();
-			IExtensionRegistry extensionRegistry = Platform.getExtensionRegistry();
-			IExtensionPoint extensionPoint = extensionRegistry.getExtensionPoint(PLUGIN_ID, "imageViewer"); //$NON-NLS-1$
-			for (IExtension extension : extensionPoint.getExtensions()) {
+			for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "imageViewer") //$NON-NLS-1$
+					.getExtensions())
 				for (IConfigurationElement conf : extension.getConfigurationElements()) {
 					String name = conf.getAttribute("name"); //$NON-NLS-1$
 					try {
@@ -944,7 +909,6 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 						getDefault().logError(NLS.bind(Messages.UiActivator_cannot_instantiate_image_viewer, name), e);
 					}
 				}
-			}
 		}
 		return viewerMap;
 	}
@@ -954,8 +918,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 			BundleContext context = getBundle().getBundleContext();
 			ServiceReference<?> ref = context.getServiceReference(IEmailService.class.getName());
 			if (ref != null) {
-				IEmailService service = (IEmailService) context.getService(ref);
-				IStatus status = service.sendMail(to, null, null, null, null, null);
+				IStatus status = ((IEmailService) context.getService(ref)).sendMail(to, null, null, null, null, null);
 				context.ungetService(ref);
 				if (!status.isOK())
 					getLog().log(status);
@@ -1079,7 +1042,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	 *
 	 * @see com.bdaum.zoom.ui.IUi#getPresentationItems()
 	 */
-	public List<AomObject> getPresentationItems() {
+	public List<Object> getPresentationItems() {
 		IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		if (activeWorkbenchWindow != null) {
 			IDbManager dbManager = Core.getCore().getDbManager();
@@ -1087,8 +1050,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 			if (sel != null) {
 				Object first = sel.getFirstElement();
 				if (first instanceof SlideShowImpl) {
-					AomList<String> entries = ((SlideShowImpl) first).getEntry();
-					List<AomObject> list = new ArrayList<AomObject>(entries.size());
+					List<String> entries = ((SlideShowImpl) first).getEntry();
+					List<Object> list = new ArrayList<>(entries.size());
 					for (String slideId : entries) {
 						SlideImpl slide = dbManager.obtainById(SlideImpl.class, slideId);
 						if (slide != null)
@@ -1096,26 +1059,22 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 					}
 					return list;
 				} else if (first instanceof ExhibitionImpl) {
-					List<AomObject> list = new ArrayList<AomObject>();
-					for (Wall wall : ((ExhibitionImpl) first).getWall()) {
-						AomList<String> exhibits = wall.getExhibit();
-						for (String exhibitId : exhibits) {
+					List<Object> list = new ArrayList<>();
+					for (Wall wall : ((ExhibitionImpl) first).getWall())
+						for (String exhibitId : wall.getExhibit()) {
 							ExhibitImpl exhibit = dbManager.obtainById(ExhibitImpl.class, exhibitId);
 							if (exhibit != null)
 								list.add(exhibit);
 						}
-					}
 					return list;
 				} else if (first instanceof WebGalleryImpl) {
-					List<AomObject> list = new ArrayList<AomObject>();
-					for (Storyboard storyboard : ((WebGalleryImpl) first).getStoryboard()) {
-						AomList<String> exhibits = storyboard.getExhibit();
-						for (String exhibitId : exhibits) {
+					List<Object> list = new ArrayList<>();
+					for (Storyboard storyboard : ((WebGalleryImpl) first).getStoryboard())
+						for (String exhibitId : storyboard.getExhibit()) {
 							WebExhibitImpl exhibit = dbManager.obtainById(WebExhibitImpl.class, exhibitId);
 							if (exhibit != null)
 								list.add(exhibit);
 						}
-					}
 					return list;
 				}
 			}
@@ -1137,12 +1096,12 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	 * @param pruneNonAssets
 	 * @return
 	 */
-	public List<Asset> getAssetsFromPresentationItems(Collection<AomObject> presentationItems, boolean pruneNonAssets) {
+	public List<Asset> getAssetsFromPresentationItems(Collection<Object> presentationItems, boolean pruneNonAssets) {
 		IDbManager dbManager = Core.getCore().getDbManager();
 		List<Asset> assets = new ArrayList<Asset>(presentationItems.size());
-		Iterator<AomObject> it = presentationItems.iterator();
+		Iterator<Object> it = presentationItems.iterator();
 		while (it.hasNext()) {
-			AomObject item = it.next();
+			Object item = it.next();
 			if (item instanceof Slide) {
 				String assetId = ((Slide) item).getAsset();
 				if (assetId != null) {
@@ -1205,8 +1164,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 			Set<QueryField> filter = new HashSet<QueryField>();
 			StringTokenizer st = new StringTokenizer(ess, "\n"); //$NON-NLS-1$
 			while (st.hasMoreTokens()) {
-				String id = st.nextToken();
-				QueryField qfield = QueryField.findQueryField(id);
+				QueryField qfield = QueryField.findQueryField(st.nextToken());
 				if (qfield != null)
 					filter.add(qfield);
 			}
@@ -1266,7 +1224,9 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 							NLS.bind(Messages.UiActivator_restart_required, Constants.APPLICATION_NAME), null,
 							Messages.UiActivator_restart_msg, MessageDialog.QUESTION,
 							new String[] { Messages.UiActivator_restart_now, Messages.UiActivator_restart_later }, 0);
-					if (dialog.open() == 0)
+					if (dialog.open() == 0 && preCatClose(CatalogListener.SHUTDOWN, Messages.UiActivator_restart,
+							Messages.UiActivator_restart_question,
+							false))
 						PlatformUI.getWorkbench().restart();
 				}
 			});
@@ -1337,8 +1297,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
 	public void fireStartListeners() {
 		hasStarted = true;
-		for (Object listener : startListeners.getListeners())
-			((StartListener) listener).hasStarted();
+		for (StartListener listener : startListeners)
+			listener.hasStarted();
 		startListeners.clear();
 	}
 
@@ -1380,8 +1340,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
 	public List<IViewAction> getExtraViewActions(String id) {
 		List<IViewAction> actions = new ArrayList<>(5);
-		IExtensionRegistry extensionRegistry = Platform.getExtensionRegistry();
-		for (IExtension extension : extensionRegistry.getExtensionPoint(PLUGIN_ID, "viewAction").getExtensions()) { //$NON-NLS-1$
+		for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "viewAction") //$NON-NLS-1$
+				.getExtensions())
 			for (IConfigurationElement conf : extension.getConfigurationElements()) {
 				String appliesTo = conf.getAttribute("appliesTo"); //$NON-NLS-1$
 				if (appliesTo == null || appliesTo.isEmpty() || findId(id, appliesTo)) {
@@ -1404,7 +1364,6 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 					}
 				}
 			}
-		}
 		return actions;
 	}
 
@@ -1438,6 +1397,17 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
 	public boolean hasStarted() {
 		return started;
+	}
+
+	public boolean isPresentationPerspective(String id) {
+		for (String perspectivId : galleryperspectiveIds)
+			if (perspectivId.equals(id))
+				return true;
+		return false;
+	}
+
+	public void setGalleryPerspectiveIds(String[] galleryperspectiveIds) {
+		this.galleryperspectiveIds = galleryperspectiveIds;
 	}
 
 }

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -51,6 +51,7 @@ import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -70,8 +71,6 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Cursor;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -134,6 +133,7 @@ import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.AlbumSelectionDialog;
 import com.bdaum.zoom.ui.internal.dialogs.RatingDialog;
@@ -316,10 +316,8 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 								albumList.remove(asset);
 							for (SmartCollectionImpl album : albums) {
 								List<Asset> albumList = addedToAlbum.get(album);
-								if (albumList == null) {
-									albumList = new ArrayList<Asset>();
-									addedToAlbum.put(album, albumList);
-								}
+								if (albumList == null)
+									addedToAlbum.put(album, albumList = new ArrayList<Asset>());
 								albumList.add(asset);
 							}
 						}
@@ -340,7 +338,6 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 						if (!shell.isDisposed())
 							UiActivator.getDefault().getNavigationHistory(parentWindow).postSelection(assetSelection);
 					});
-
 				}
 			}
 			if (!removeFromShow.isEmpty() && !slideshow.getAdhoc()) {
@@ -424,8 +421,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			IFileWatcher fileWatcher = activator.getFileWatchManager();
 			status = new MultiStatus(UiActivator.PLUGIN_ID, 0,
 					Messages.getString("SlideShowPlayer.image_loading_report"), null); //$NON-NLS-1$
-			Ticketbox box = new Ticketbox();
-			try {
+			try (Ticketbox box = new Ticketbox()) {
 				while (!monitor.isCanceled()) {
 					try {
 						request = requests.take();
@@ -455,7 +451,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 											// should not happen
 										}
 								}
-							} else {
+							} else
 								try {
 									shell.getDisplay().syncExec(() -> {
 										if (!text.getText().isEmpty()) {
@@ -464,15 +460,13 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 											bottomCanvas.redraw();
 										}
 									});
-									file = box.download(uri);
-									tempFile = file;
+									tempFile = file = box.download(uri);
 								} catch (IOException e) {
 									status.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
 											NLS.bind(Messages.getString("SlideShowPlayer.download_failed"), //$NON-NLS-1$
 													uri),
 											e));
 								}
-							}
 							if (file != null) {
 								Recipe recipe = null;
 								boolean isRawOrDng = ImageConstants.isRaw(file.getName(), true);
@@ -521,11 +515,11 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 											}
 										});
 									try {
-										Rectangle vbounds = new Rectangle(0, 0, preferredWidth, preferredHeight);
 										image = CoreActivator.getDefault().getHighresImageLoader().loadImage(null,
 												status, file, request.getRotation(),
-												request.getAsset().getFocalLengthIn35MmFilm(), vbounds, 1d, 1d, adv,
-												cms1, null, null, recipe, fileWatcher, opId, this);
+												request.getAsset().getFocalLengthIn35MmFilm(),
+												new Rectangle(0, 0, preferredWidth, preferredHeight), 1d, 1d, adv, cms1,
+												null, null, recipe, fileWatcher, opId, this);
 									} catch (Exception e) {
 										// ignore
 									}
@@ -554,7 +548,6 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				}
 			} finally {
 				fileWatcher.stopIgnoring(opId);
-				box.endSession();
 			}
 			return status;
 		}
@@ -633,8 +626,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 					break;
 				}
 				layout.setText(sb.toString());
-				layout.setFont(titlefont);
-				layout.setStyle(new TextStyle(bannerFont, null, null), 0, boldLength);
+				layout.setFont(JFaceResources.getFont(UiConstants.VIEWERTITLEFONT));
+				layout.setStyle(new TextStyle(JFaceResources.getFont(UiConstants.VIEWERBANNERFONT), null, null), 0,
+						boldLength);
 				layout.setWidth(tw);
 				Rectangle b = layout.getBounds();
 				float f = Math.max(0.1f, (float) Math.sqrt((float) b.height / th));
@@ -662,11 +656,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 						int maxh = (int) ((h * (1d - 2 * MARGINHEIGHT)) / rows);
 						int xoff = (int) (w * MARGINWIDTH);
 						int yoff = (int) (h * MARGINHEIGHT);
-						for (int i = 0; i < assets.length; i++) {
-							int x = i % cols;
-							int y = i / cols;
-							drawThumbnail(gc, assets[i], maxw, maxh, x * maxw + xoff, y * maxh + yoff);
-						}
+						for (int i = 0; i < assets.length; i++)
+							drawThumbnail(gc, assets[i], maxw, maxh, (i % cols) * maxw + xoff,
+									(i / cols) * maxh + yoff);
 						break;
 					case Constants.SLIDE_THUMBNAILS_RIGHT:
 						cols = Math.min(3, (int) Math.sqrt(l));
@@ -675,11 +667,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 						maxh = (int) ((h * (1d - 2 * MARGINHEIGHT)) / rows);
 						xoff = w / 2;
 						yoff = (int) (h * MARGINHEIGHT);
-						for (int i = 0; i < assets.length; i++) {
-							int x = i % cols;
-							int y = i / cols;
-							drawThumbnail(gc, assets[i], maxw, maxh, x * maxw + xoff, y * maxh + yoff);
-						}
+						for (int i = 0; i < assets.length; i++)
+							drawThumbnail(gc, assets[i], maxw, maxh, (i % cols) * maxw + xoff,
+									(i / cols) * maxh + yoff);
 						break;
 					case Constants.SLIDE_THUMBNAILS_TOP:
 						rows = Math.min(2, (int) Math.sqrt(l));
@@ -688,11 +678,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 						maxh = (int) ((h * (0.5d - MARGINHEIGHT)) / rows);
 						xoff = (int) (w * MARGINWIDTH);
 						yoff = (int) (h * MARGINHEIGHT);
-						for (int i = 0; i < assets.length; i++) {
-							int x = i % cols;
-							int y = i / cols;
-							drawThumbnail(gc, assets[i], maxw, maxh, x * maxw + xoff, y * maxh + yoff);
-						}
+						for (int i = 0; i < assets.length; i++)
+							drawThumbnail(gc, assets[i], maxw, maxh, (i % cols) * maxw + xoff,
+									(i / cols) * maxh + yoff);
 						break;
 					case Constants.SLIDE_THUMBNAILS_BOTTOM:
 						rows = Math.min(2, (int) Math.sqrt(l));
@@ -701,11 +689,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 						maxh = (int) ((h * (0.5d - MARGINHEIGHT)) / rows);
 						xoff = (int) (w * MARGINWIDTH);
 						yoff = h / 2;
-						for (int i = 0; i < assets.length; i++) {
-							int x = i % cols;
-							int y = i / cols;
-							drawThumbnail(gc, assets[i], maxw, maxh, x * maxw + xoff, y * maxh + yoff);
-						}
+						for (int i = 0; i < assets.length; i++)
+							drawThumbnail(gc, assets[i], maxw, maxh, (i % cols) * maxw + xoff,
+									(i / cols) * maxh + yoff);
 						break;
 					}
 				}
@@ -811,8 +797,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				final int w = (int) (iBounds.width * factor);
 				buttonWidth = w / 12;
 				final int h = (int) (iBounds.height * factor);
-				scaledPanel = new Image(displ, w, h);
-				GC gc = new GC(scaledPanel);
+				GC gc = new GC(scaledPanel = new Image(displ, w, h));
 				gc.drawImage(controlPanel, 0, 0, iBounds.width, iBounds.height, 0, 0, w, h);
 				gc.dispose();
 				final Shell shell = new Shell(parentShell.getShell(), SWT.TOOL);
@@ -873,23 +858,19 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 								rotateClockwise(270);
 								break;
 							case C_DELETE:
-								ZImage image = request.getImage();
-								if (image != null)
+								if (request.getImage() != null)
 									processDelete(bottomShell, controlShell.getShell().getBounds());
 								break;
 							case C_RATE:
-								image = request.getImage();
-								if (image != null)
+								if (request.getImage() != null)
 									rateSlide(controlShell.getShell(), e, RatingDialog.ABORT);
 								break;
 							case C_ALBUM:
-								image = request.getImage();
-								if (image != null)
+								if (request.getImage() != null)
 									addToAlbums(controlShell.getShell(), e);
 								break;
 							case C_SELECTION:
-								image = request.getImage();
-								if (image != null)
+								if (request.getImage() != null)
 									addToSelection(request);
 								break;
 							case C_VOICE:
@@ -930,8 +911,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 						case '3':
 						case '4':
 						case '5':
-							ZImage image = request.getImage();
-							if (image != null)
+							if (request.getImage() != null)
 								rateSlide(controlShell.getShell(), null, e.character - '0');
 							break;
 						case 'r':
@@ -1021,8 +1001,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				if (controlShell != null && !controlShell.isDisposed()) {
 					int alpha = controlShell.getAlpha();
 					while (alpha > 15) {
-						alpha -= 15;
-						controlShell.setAlpha(alpha);
+						controlShell.setAlpha(alpha -= 15);
 						sleepTick();
 					}
 					controlShell.close();
@@ -1164,7 +1143,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 								}
 								if (request.isRemoveFromShow()) {
 									String txt = Messages.getString("SlideShowPlayer.deleted"); //$NON-NLS-1$
-									gc.setFont(bannerFont);
+									gc.setFont(JFaceResources.getFont(UiConstants.VIEWERBANNERFONT));
 									int x = gc.textExtent(txt).x;
 									gc.setForeground(displ.getSystemColor(SWT.COLOR_WHITE));
 									gc.drawText(txt, sbounds.width - x - 5, 5, true);
@@ -1268,7 +1247,6 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 								}
 								break;
 							}
-
 						}
 					};
 					imageCanvas.addKeyListener(keyListener);
@@ -1530,7 +1508,6 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				title = NLS.bind("{0}/{1}", slide.getSequenceNo(), slideshow //$NON-NLS-1$
 						.getEntry().size());
 				break;
-
 			default:
 				title = slide.getCaption();
 				break;
@@ -1540,12 +1517,12 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			final int margins = 2;
 			final Canvas titleCanvas = new Canvas(shell, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
 			GC gc = new GC(titleCanvas);
-			gc.setFont(titlefont);
+			gc.setFont(JFaceResources.getFont(UiConstants.VIEWERTITLEFONT));
 			Point tx = gc.textExtent(title);
 			gc.dispose();
 			titleCanvas.addPaintListener(new PaintListener() {
 				public void paintControl(PaintEvent e) {
-					e.gc.setFont(titlefont);
+					e.gc.setFont(JFaceResources.getFont(UiConstants.VIEWERTITLEFONT));
 					e.gc.drawText(title, margins, margins);
 				}
 			});
@@ -1560,9 +1537,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			imageCanvas.setFocus();
 			titleTime = 0;
 			final int fade = Math.min(500, titleDur / 4);
-
 			titleTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(new Runnable() {
-
 				public void run() {
 					titleTime += TICK;
 					if (titleTime >= titleDur) {
@@ -1575,18 +1550,16 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 					} else if (titleTime <= fade) {
 						if (titleShell != null && !titleShell.isDisposed())
 							displ.syncExec(() -> {
-								if (!titleShell.isDisposed()) {
-									int alpha = titleShell.getAlpha();
-									titleShell.setAlpha(Math.min(255, alpha + (255 * TICK + fade - 1) / fade));
-								}
+								if (!titleShell.isDisposed())
+									titleShell.setAlpha(
+											Math.min(255, titleShell.getAlpha() + (255 * TICK + fade - 1) / fade));
 							});
 					} else if (titleTime > titleDur - fade) {
 						if (titleShell != null && !titleShell.isDisposed())
 							displ.syncExec(() -> {
-								if (!titleShell.isDisposed()) {
-									int alpha = titleShell.getAlpha();
-									titleShell.setAlpha(Math.max(0, alpha - ((255 * TICK + fade - 1) / fade)));
-								}
+								if (!titleShell.isDisposed())
+									titleShell.setAlpha(
+											Math.max(0, titleShell.getAlpha() - ((255 * TICK + fade - 1) / fade)));
 							});
 					}
 				}
@@ -1780,8 +1753,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			pnt.y = bounds.height / 2;
 			toolTip.setLocation(pnt);
 			toolTip.setText(NLS.bind(Messages.getString("SlideShowPlayer.metadata"), asset.getName())); //$NON-NLS-1$
-			IHoverInfo hover = new HoverInfo(asset, null, UiActivator.getDefault().getHoverNodes());
-			toolTip.setMessage(hover.getText());
+			toolTip.setMessage(new HoverInfo(asset, null, UiActivator.getDefault().getHoverNodes()).getText());
 			toolTip.setVisible(true);
 		}
 
@@ -1789,7 +1761,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			stopTimer();
 			Shell shell = control instanceof Shell ? (Shell) control : control.getShell();
 			RatingDialog ratingDialog = new RatingDialog(shell, rating != RatingDialog.ABORT ? rating
-					: request.isRemoveFromShow() ? RatingDialog.DELETE : request.getRating(), 1d, false);
+					: request.isRemoveFromShow() ? RatingDialog.DELETE : request.getRating(), 1d, false, false);
 			ratingDialog.create();
 			if (event != null)
 				ratingDialog.getShell().setLocation(control.toDisplay(event.x, event.y));
@@ -1846,7 +1818,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				if (asset != null)
 					albums = asset.getAlbum();
 			}
-			AlbumSelectionDialog addAlbumDialog = new AlbumSelectionDialog(shell, false, true,
+			AlbumSelectionDialog addAlbumDialog = new AlbumSelectionDialog(shell, true,
 					(albums != null) ? Arrays.asList(albums) : null);
 			addAlbumDialog.create();
 			if (event != null) {
@@ -2105,8 +2077,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 										bottomCanvas.redraw();
 									}
 								});
-								int outsteps = computeSteps(slide.getFadeOut() + 500);
-								for (int i = outsteps - 1; i >= 0; i--) {
+								for (int i = computeSteps(slide.getFadeOut() + 500) - 1; i >= 0; i--) {
 									sleepTick();
 									if (checkStatus(request, monitor))
 										break;
@@ -2456,10 +2427,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 	private Display display;
 	private Shell bottomShell;
 	private Canvas bottomCanvas;
-	private Font font;
 	private TextLayout text;
-	private Font titlefont;
-	private Font bannerFont;
 	private List<SlideImpl> slides;
 	private boolean advanced;
 	private Rectangle mbounds;
@@ -2573,15 +2541,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 		bottomCanvas.addMouseListener(this);
 		text = new TextLayout(display);
 		text.setAlignment(SWT.CENTER);
-		FontData fontData = display.getSystemFont().getFontData()[0];
-		fontData.setHeight(18);
-		font = new Font(display, fontData);
-		fontData.setHeight(24);
-		fontData.setStyle(SWT.BOLD);
-		titlefont = new Font(display, fontData);
-		fontData.setHeight(36);
-		bannerFont = new Font(display, fontData);
-		text.setFont(font);
+		text.setFont(JFaceResources.getFont(UiConstants.VIEWERFONT));
 		createTransparentCursor();
 		bottomCanvas.setCursor(transparentCursor);
 		bottomCanvas.addPaintListener(new PaintListener() {
@@ -2707,10 +2667,11 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			sb.append('\n').append(Messages.getString("SlideShowPlayer.all_images_are_offline")); //$NON-NLS-1$
 		else {
 			if (offline > 0) {
+				sb.append('\n');
 				if (offline == 1)
-					sb.append('\n').append(Messages.getString("SlideShowPlayer.one_image_is_offline")); //$NON-NLS-1$
+					sb.append(Messages.getString("SlideShowPlayer.one_image_is_offline")); //$NON-NLS-1$
 				else
-					sb.append('\n').append(NLS.bind(Messages.getString("SlideShowPlayer.n_images_are_offline"), //$NON-NLS-1$
+					sb.append(NLS.bind(Messages.getString("SlideShowPlayer.n_images_are_offline"), //$NON-NLS-1$
 							offline));
 			}
 			sb.append('\n').append(NLS.bind(Messages.getString("SlideShowPlayer.total_duration"), //$NON-NLS-1$
@@ -2723,7 +2684,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 		if (firstSlide >= 0)
 			sb.append('\n').append(Messages.getString("SlideShowPlayer.move_mouse_to_obtain_control_panel")); //$NON-NLS-1$
 		text.setText(sb.toString());
-		text.setStyle(new TextStyle(titlefont, null, null), 0, name.length());
+		text.setStyle(new TextStyle(JFaceResources.getFont(UiConstants.VIEWERTITLEFONT), null, null), 0, name.length());
 		bottomCanvas.redraw();
 	}
 
@@ -2738,12 +2699,6 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			text.dispose();
 		if (!bottomShell.isDisposed())
 			bottomShell.close();
-		if (font != null)
-			font.dispose();
-		if (titlefont != null)
-			titlefont.dispose();
-		if (bannerFont != null)
-			bannerFont.dispose();
 	}
 
 	public void mouseDoubleClick(MouseEvent e) {

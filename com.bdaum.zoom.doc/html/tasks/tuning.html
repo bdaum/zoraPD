@@ -7,6 +7,7 @@
 
 
 
+
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Tuning</title>
 
 
@@ -95,18 +96,27 @@ images - provided the image folder belongs to the watched folders.<br>
 <ul style="font-weight: normal;">
 <li><span style="font-weight: bold;">Relationships</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Automatically derive relationships between raw and developed image</span>. <font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21">Switch this option off if you are not interested in relationships between images.</font><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"></font></li></ul>
 </ul>
-<h3>Indexing</h3>Indexing is alway performed as a background process.
-It provides the data for similarity search and text search. Speeding up
-this process will improve general performance.<br>
-<br>
-<br>
+<h3>Indexing</h3>There are two areas where indexing takes place:<br>
+<ul>
+  <li><span style="font-weight: bold;">Metadata indexing</span>. Some metadata fields are indexed in the catalog database (<span style="font-style: italic;">Db4o</span>).
+Indexing speeds up the query process considerably: A query for a
+non-indexed metadata field will scan through all images, while a query
+for an indexed metadata field will find matching images rather quickly.
+Of course, maintaining an index will take some time, so imports and
+deletions will be slower when many metadata fields are indexed. Also
+the catalog becomes larger. You can configure metadata indexing under <a href="../reference/metadataPrefs.html"><acronym>Window&gt;Preferences&gt;Metadata&gt;Tuning</acronym></a><sup>*)</sup>.</li>
+  <li><span style="font-weight: bold;">Text search and similarity</span>. For text and similarity searches a separate indexing process is used (<span style="font-style: italic;">Lucene</span>). This indexing is always performed in the background. Speeding up
+this process will improve general performance. You can configure this indexing process under <a href="../reference/facePrefs.html"><acronym>Catalog&gt;Properties&gt;Indexing</acronym></a><span style="font-style: italic;">. </span>You
+may want to reduce the number of selected
+similarity algorithms to a minimum because each algorithm requires
+extra steps
+when constructing the index. On low level platforms you may want to
+switch indexing off, altogether, or even exclude the indexing module
+during installation.<br>
+  </li>
+</ul>
 
-
-<a href="../reference/facePrefs.html"><acronym>Catalog&gt;Properties&gt;Indexing</acronym></a><span style="font-style: italic;">.<br>
-<br>
-</span> Reduce the number of selected
-similarity algorithms to a minimum because each algorithm requires extra steps
-when constructing the index. On low level platforms you may want to switch indexing off, altogether.<br>
+<span style="font-style: italic;"></span>
 <span style="font-style: italic;"><br>
 </span>
 <h3>General operation</h3>

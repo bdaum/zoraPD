@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -60,11 +60,11 @@ public class AddToCatGroup {
 	}
 
 	public boolean getAddSelection() {
-		return addButton.getSelection();
+		return addButton.isEnabled() && addButton.getSelection();
 	}
 
 	public boolean getWatchSelection() {
-		return watchButton.getSelection();
+		return watchButton.isEnabled() && watchButton.getSelection();
 	}
 
 

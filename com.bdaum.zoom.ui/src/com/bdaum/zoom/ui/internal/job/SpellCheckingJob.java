@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.job;
@@ -60,8 +60,7 @@ public class SpellCheckingJob extends Job {
 
 	private final String text;
 
-	public SpellCheckingJob(ISpellCheckingTarget target,
-			String text, int options, int nmax) {
+	public SpellCheckingJob(ISpellCheckingTarget target, String text, int options, int nmax) {
 		super(Messages.SpellCheckingJob_check_spelling);
 		this.text = text;
 		setRule(SCHEDULINGRULE);
@@ -79,15 +78,11 @@ public class SpellCheckingJob extends Job {
 
 	@Override
 	protected IStatus run(final IProgressMonitor monitor) {
-		final BundleContext bundleContext = UiActivator.getDefault()
-				.getBundle().getBundleContext();
-		final ServiceReference<?> ref = bundleContext
-				.getServiceReference(ISpellCheckingService.class.getName());
+		final BundleContext bundleContext = UiActivator.getDefault().getBundle().getBundleContext();
+		final ServiceReference<?> ref = bundleContext.getServiceReference(ISpellCheckingService.class.getName());
 		if (ref != null) {
-			((ISpellCheckingService) bundleContext
-					.getService(ref)).checkSpelling(text,
+			((ISpellCheckingService) bundleContext.getService(ref)).checkSpelling(text,
 					new ISpellCheckingService.IncendentListener() {
-
 						public boolean handleIncident(ISpellIncident incident) {
 							incidents.add(incident);
 							return monitor.isCanceled();

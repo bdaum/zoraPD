@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.core;
@@ -58,7 +58,6 @@ import com.bdaum.zoom.cat.model.location.Location;
 import com.bdaum.zoom.cat.model.location.LocationImpl;
 import com.bdaum.zoom.cat.model.locationCreated.LocationCreatedImpl;
 import com.bdaum.zoom.cat.model.locationShown.LocationShownImpl;
-import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
@@ -77,6 +76,8 @@ public class QueryField {
 	private static final String[] REFVALUES = new String[] { "T", "M" }; //$NON-NLS-1$ //$NON-NLS-2$
 	private static FilterChain keywordFilter;
 	private static IMediaSupport[] mediaSupport;
+	private static final long MSECINDAY = 1000L * 3600 * 24;
+	private static final long HALFDAY = MSECINDAY / 2;
 
 	private static IMediaSupport[] getMediaSupport() {
 		if (mediaSupport == null)
@@ -250,7 +251,7 @@ public class QueryField {
 	public static final int TEXT = 1 << 7;
 	public static final int REPORT = 1 << 8;
 	public static final int PHOTO = IMediaSupport.PHOTO;
-
+	public static final int ALLMEDIA = IMediaSupport.ALLMEDIA;
 	// Relations
 	public static final int EQUALS = 1 << 0;
 	public static final int NOTEQUAL = 1 << 1;
@@ -357,6 +358,10 @@ public class QueryField {
 			Messages.QueryField_region, ACTION_NONE, EDIT_NEVER, CATEGORY_ASSET, T_NONE, 1, T_NONE, 0f, Float.NaN,
 			ISpellCheckingService.NOSPELLING);
 
+	// Dummy for album updates
+	public static final QueryField ALBUMASSETS = new QueryField(null, null, null, null, null, "{albumassets}", //$NON-NLS-1$
+			ACTION_NONE, EDIT_NEVER | ESSENTIAL, CATEGORY_ALL, T_NONE, 1, T_NONE, 0f, Float.NaN,
+			ISpellCheckingService.NOSPELLING);
 	// All fields
 	public static final QueryField ALL = new QueryField(null, null, null, null, null, Messages.QueryField_All,
 			ACTION_NONE, EDIT_NEVER | ESSENTIAL, CATEGORY_ALL, T_NONE, 1, T_NONE, 0f, Float.NaN,
@@ -387,9 +392,7 @@ public class QueryField {
 
 		@Override
 		public boolean isEditable(java.util.List<? extends Asset> assets) {
-			if (assets.size() != 1)
-				return false;
-			return isEditable(assets.get(0));
+			return assets.size() != 1 ? false : isEditable(assets.get(0));
 		}
 
 		@Override
@@ -411,9 +414,7 @@ public class QueryField {
 					if (!f.equals(captionText)) {
 						String u = asset.getUri();
 						try {
-							File file = new File(new java.net.URI(u));
-							File folder = file.getParentFile();
-							File targetFile = new File(folder, f);
+							File targetFile = new File(new File(new java.net.URI(u)).getParentFile(), f);
 							if (targetFile.exists())
 								return NLS.bind(Messages.QueryField_target_file_already_exists, targetFile);
 						} catch (URISyntaxException e) {
@@ -432,14 +433,12 @@ public class QueryField {
 		@Override
 		protected Object getValue(Asset asset) {
 			String u = asset.getUri();
-			if (asset.getFileState() == IVolumeManager.PEER) {
-				if (u != null) {
-					IPeerService peerService = Core.getCore().getPeerService();
-					if (peerService != null) {
-						AssetOrigin assetOrigin = peerService.getAssetOrigin(asset.getStringId());
-						if (assetOrigin != null)
-							return Utilities.getPeerUri(u, assetOrigin.getLocation());
-					}
+			if (u != null && asset.getFileState() == IVolumeManager.PEER) {
+				IPeerService peerService = Core.getCore().getPeerService();
+				if (peerService != null) {
+					AssetOrigin assetOrigin = peerService.getAssetOrigin(asset.getStringId());
+					if (assetOrigin != null)
+						return Utilities.getPeerUri(u, assetOrigin.getLocation());
 				}
 			}
 			return u;
@@ -507,8 +506,11 @@ public class QueryField {
 			ISpellCheckingService.NOSPELLING) {
 
 		@Override
-		protected Object getValue(Asset asset) {
-			return asset.getLastModification();
+		protected int getInt(Asset asset) {
+			Date lastModification = asset.getLastModification();
+			if (lastModification != null)
+				return (int) ((System.currentTimeMillis() - lastModification.getTime() + HALFDAY) / MSECINDAY);
+			return -1;
 		}
 	};
 	// Image Image fields
@@ -535,7 +537,16 @@ public class QueryField {
 		@Override
 		protected double getDouble(Asset asset) {
 			int h = asset.getHeight();
-			return (h <= 0) ? -1 : h * 2.54d / 300d;
+			if (h <= 0)
+				return -1;
+			char unit = Core.getCore().getDbFactory().getDimUnit();
+			return unit == 'i' ? h / 300d : h * 2.54d / 300d;
+		}
+
+		@Override
+		public String getUnit() {
+			char unit = Core.getCore().getDbFactory().getDimUnit();
+			return unit == 'i' ? "in" : "cm"; //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	};
 	public static final QueryField PHYSICALWIDTH = new QueryField(IMAGE_IMAGE, "$physicalWidth", //$NON-NLS-1$
@@ -546,8 +557,18 @@ public class QueryField {
 		@Override
 		protected double getDouble(Asset asset) {
 			int w = asset.getWidth();
-			return (w <= 0) ? -1 : w * 2.54d / 300d;
+			if (w <= 0)
+				return -1;
+			char unit = Core.getCore().getDbFactory().getDimUnit();
+			return unit == 'i' ? w / 300d : w * 2.54d / 300d;
 		}
+
+		@Override
+		public String getUnit() {
+			char unit = Core.getCore().getDbFactory().getDimUnit();
+			return unit == 'i' ? "in" : "cm"; //$NON-NLS-1$ //$NON-NLS-2$
+		}
+
 	};
 
 	public static final QueryField ROTATION = new QueryField(IMAGE_IMAGE, "rotation", //$NON-NLS-1$
@@ -587,6 +608,11 @@ public class QueryField {
 		protected int getInt(Asset asset) {
 			return asset.getHeight();
 		}
+
+		@Override
+		public String getUnit() {
+			return "pixel"; //$NON-NLS-1$
+		}
 	};
 	public static final QueryField WIDTH = new QueryField(IMAGE_IMAGE, "width", //$NON-NLS-1$
 			"ImageWidth", //$NON-NLS-1$
@@ -597,6 +623,11 @@ public class QueryField {
 		@Override
 		protected int getInt(Asset asset) {
 			return asset.getWidth();
+		}
+
+		@Override
+		public String getUnit() {
+			return "pixel"; //$NON-NLS-1$
 		}
 	};
 	public static final QueryField ORIENTATION = new QueryField(IMAGE_IMAGE, "ori", null, null, null, //$NON-NLS-1$
@@ -951,23 +982,34 @@ public class QueryField {
 
 	public static final QueryField USERFIELD1 = new QueryField(IMAGE_ZOOM, "userfield1", //$NON-NLS-1$
 			null, NS_ZORA, "Userfield1", //$NON-NLS-1$
-			Constants.USERFIELD1, ACTION_QUERY, PHOTO | EDIT_ALWAYS | ESSENTIAL | QUERY | TEXT | AUTO_CONTAINS,
+			"Userfield1", ACTION_QUERY, PHOTO | EDIT_ALWAYS | ESSENTIAL | QUERY | TEXT | AUTO_CONTAINS, //$NON-NLS-1$
 			CATEGORY_ASSET, T_STRING, 1, 32, 0f, Float.NaN, ISpellCheckingService.DESCRIPTIONOPTIONS) {
 
 		@Override
 		protected Object getValue(Asset asset) {
 			return asset.getUserfield1();
 		}
+
+		@Override
+		public String getLabel() {
+			return Core.getCore().getDbManager().getMeta(true).getUserFieldLabel1();
+		}
 	};
 	public static final QueryField USERFIELD2 = new QueryField(IMAGE_ZOOM, "userfield2", //$NON-NLS-1$
 			null, NS_ZORA, "Userfield2", //$NON-NLS-1$
-			Constants.USERFIELD2, ACTION_QUERY, PHOTO | EDIT_ALWAYS | QUERY | TEXT | AUTO_CONTAINS, CATEGORY_ASSET,
+			"Userfield2", ACTION_QUERY, PHOTO | EDIT_ALWAYS | QUERY | TEXT | AUTO_CONTAINS, CATEGORY_ASSET, //$NON-NLS-1$
 			T_STRING, 1, 1024, 0f, Float.NaN, ISpellCheckingService.DESCRIPTIONOPTIONS) {
 
 		@Override
 		protected Object getValue(Asset asset) {
 			return asset.getUserfield2();
 		}
+
+		@Override
+		public String getLabel() {
+			return Core.getCore().getDbManager().getMeta(true).getUserFieldLabel2();
+		}
+
 	};
 	public static final QueryField TRACK = new QueryField(IMAGE_ZOOM, "track", //$NON-NLS-1$
 			null, null, null, Messages.QueryField_track, ACTION_TRACK, PHOTO | EDIT_NEVER, CATEGORY_ASSET, T_STRING,
@@ -1025,6 +1067,11 @@ public class QueryField {
 		protected int getInt(Asset asset) {
 			return asset.getImageLength();
 		}
+
+		@Override
+		public String getUnit() {
+			return "pixel"; //$NON-NLS-1$
+		}
 	};
 	public static final QueryField EXIF_IMAGEWIDTH = new QueryField(EXIF_IMAGE, "imageWidth", //$NON-NLS-1$
 			"ImageWidth", //$NON-NLS-1$
@@ -1035,6 +1082,11 @@ public class QueryField {
 		@Override
 		protected int getInt(Asset asset) {
 			return asset.getImageWidth();
+		}
+
+		@Override
+		public String getUnit() {
+			return "pixel"; //$NON-NLS-1$
 		}
 	};
 	public static final QueryField BITSPERSAMPLE = new QueryField(EXIF_IMAGE, "bitsPerSample", //$NON-NLS-1$
@@ -1078,6 +1130,11 @@ public class QueryField {
 		protected double getDouble(Asset asset) {
 			return asset.getXResolution();
 		}
+
+		@Override
+		public String getUnit() {
+			return "ppi"; //$NON-NLS-1$
+		}
 	};
 	public static final QueryField EXIF_YRES = new QueryField(EXIF_IMAGE, "YResolution", //$NON-NLS-1$
 			"YResolution", //$NON-NLS-1$
@@ -1088,6 +1145,11 @@ public class QueryField {
 		@Override
 		protected double getDouble(Asset asset) {
 			return asset.getYResolution();
+		}
+
+		@Override
+		public String getUnit() {
+			return "ppi"; //$NON-NLS-1$
 		}
 	};
 	public static final QueryField EXIF_DATETIME = new QueryField(EXIF_IMAGE, "dateTime", //$NON-NLS-1$
@@ -1371,6 +1433,11 @@ public class QueryField {
 		protected double getDouble(Asset asset) {
 			return asset.getSubjectDistance();
 		}
+
+		@Override
+		public String getUnit() {
+			return "m"; //$NON-NLS-1$
+		}
 	};
 	public static final QueryField EXIF_METERINGMODE = new QueryField(EXIF_CAMERA, "meteringMode", "MeteringMode", //$NON-NLS-1$ //$NON-NLS-2$
 			NS_EXIF, "MeteringMode", Messages.QueryField_Metering_Mode, ACTION_QUERY, //$NON-NLS-1$
@@ -1552,6 +1619,11 @@ public class QueryField {
 		protected double getDouble(Asset asset) {
 			return asset.getFocalLength();
 		}
+
+		@Override
+		public String getUnit() {
+			return "mm"; //$NON-NLS-1$
+		}
 	};
 	public static final QueryField EXIF_FLASHENERGY = new QueryField(EXIF_FLASH, "flashEnergy", //$NON-NLS-1$
 			"FlashEnergy", //$NON-NLS-1$
@@ -1562,6 +1634,11 @@ public class QueryField {
 		@Override
 		protected double getDouble(Asset asset) {
 			return asset.getFlashEnergy();
+		}
+
+		@Override
+		public String getUnit() {
+			return "bcps"; //$NON-NLS-1$
 		}
 	};
 	public static final QueryField EXIF_FLASHEXPOSURECOMP = new QueryField(EXIF_FLASH, "flashExposureComp", //$NON-NLS-1$
@@ -1586,6 +1663,11 @@ public class QueryField {
 		protected double getDouble(Asset asset) {
 			return asset.getFocalPlaneXResolution();
 		}
+
+		@Override
+		public String getUnit() {
+			return "ppi"; //$NON-NLS-1$
+		}
 	};
 	public static final QueryField EXIF_FOCALPLANEYRESOLUTION = new QueryField(EXIF_CAMERA, "focalPlaneYResolution", //$NON-NLS-1$
 			"FocalPlaneYResolution", //$NON-NLS-1$
@@ -1596,6 +1678,11 @@ public class QueryField {
 		@Override
 		protected double getDouble(Asset asset) {
 			return asset.getFocalPlaneYResolution();
+		}
+
+		@Override
+		public String getUnit() {
+			return "ppi"; //$NON-NLS-1$
 		}
 	};
 	public static final QueryField EXIF_EXPOSUREINDEX = new QueryField(EXIF_CAMERA, "exposureIndex", //$NON-NLS-1$
@@ -1693,6 +1780,11 @@ public class QueryField {
 		protected int getInt(Asset asset) {
 			return asset.getFocalLengthIn35MmFilm();
 		}
+
+		@Override
+		public String getUnit() {
+			return "mm"; //$NON-NLS-1$
+		}
 	};
 	public static final QueryField EXIF_FOCALLENGTHFACTOR = new QueryField(EXIF_CAMERA, "focalLengthFactor", //$NON-NLS-1$
 			"ScaleFactor35efl", //$NON-NLS-1$
@@ -1715,6 +1807,11 @@ public class QueryField {
 		protected double getDouble(Asset asset) {
 			return asset.getCircleOfConfusion();
 		}
+
+		@Override
+		public String getUnit() {
+			return "mm"; //$NON-NLS-1$
+		}
 	};
 	public static final QueryField EXIF_HYPERFOCALDISTANCE = new QueryField(EXIF_CAMERA, "hyperfocalDistance", //$NON-NLS-1$
 			"HyperfocalDistance", //$NON-NLS-1$
@@ -1726,6 +1823,11 @@ public class QueryField {
 		protected double getDouble(Asset asset) {
 			return asset.getHyperfocalDistance();
 		}
+
+		@Override
+		public String getUnit() {
+			return "m"; //$NON-NLS-1$
+		}
 	};
 	public static final QueryField EXIF_DOF = new QueryField(EXIF_CAMERA, "dof", //$NON-NLS-1$
 			"DOF", //$NON-NLS-1$
@@ -1735,6 +1837,11 @@ public class QueryField {
 		@Override
 		protected Object getValue(Asset asset) {
 			return asset.getDof();
+		}
+
+		@Override
+		public String getUnit() {
+			return "m"; //$NON-NLS-1$
 		}
 	};
 	public static final QueryField EXIF_LV = new QueryField(EXIF_CAMERA, "lv", //$NON-NLS-1$
@@ -2038,6 +2145,11 @@ public class QueryField {
 		protected double getDouble(Asset asset) {
 			return asset.getGPSAltitude();
 		}
+
+		@Override
+		public String getUnit() {
+			return "m"; //$NON-NLS-1$
+		}
 	};
 	public static final QueryField EXIF_GPSSPEED = new QueryField(EXIF_GPS, "gPSSpeed", //$NON-NLS-1$
 			"GPSSpeed", //$NON-NLS-1$
@@ -2048,6 +2160,11 @@ public class QueryField {
 		@Override
 		protected double getDouble(Asset asset) {
 			return asset.getGPSSpeed();
+		}
+
+		@Override
+		public String getUnit() {
+			return "km/h"; //$NON-NLS-1$
 		}
 	};
 	public static final QueryField EXIF_GPSTRACK = new QueryField(EXIF_GPS, "gPSTrack", //$NON-NLS-1$
@@ -2077,7 +2194,8 @@ public class QueryField {
 			"GPSImgDirection", //$NON-NLS-1$
 			NS_EXIF, "GPSImgDirection", //$NON-NLS-1$
 			Messages.QueryField_img_dir, ACTION_QUERY, PHOTO | EDIT_ALWAYS | ESSENTIAL | QUERY | AUTO_LINEAR | REPORT,
-			CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 3, Format.directionFormatter, -1f, 360f, ISpellCheckingService.NOSPELLING) {
+			CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 3, Format.directionFormatter, -1f, 360f,
+			ISpellCheckingService.NOSPELLING) {
 
 		@Override
 		protected double getDouble(Asset asset) {
@@ -2102,12 +2220,7 @@ public class QueryField {
 
 		@Override
 		protected double getDouble(Asset asset) {
-			// TODO kann das weg?
-			double gpsLatitude = asset.getGPSLatitude();
-			if (Double.isNaN(gpsLatitude))
-				return Double.NaN;
-			double gpsLongitude = asset.getGPSLongitude();
-			if (Double.isNaN(gpsLongitude))
+			if (Double.isNaN(asset.getGPSLatitude()) || Double.isNaN(asset.getGPSLongitude()))
 				return Double.NaN;
 			Object loc = IPTC_LOCATIONCREATED.obtainFieldValue(asset);
 			if (loc == null)
@@ -2116,8 +2229,16 @@ public class QueryField {
 			if (location.getLatitude() == null || Double.isNaN(location.getLatitude())
 					|| location.getLongitude() == null || Double.isNaN(location.getLongitude()))
 				return Double.NaN;
-			return Core.distance(gpsLatitude, gpsLongitude, location.getLatitude(), location.getLongitude(), 'K');
+			return Core.distance(asset.getGPSLatitude(), asset.getGPSLongitude(), location.getLatitude(),
+					location.getLongitude(), Core.getCore().getDbFactory().getDistanceUnit());
 		}
+
+		@Override
+		public String getUnit() {
+			char unit = Core.getCore().getDbFactory().getDistanceUnit();
+			return unit == 'm' ? "mi" : unit == 'n' ? "NM" : "km"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		}
+
 	};
 
 	// IPTC fields
@@ -2222,12 +2343,6 @@ public class QueryField {
 				group[i++] = rel.getArtworkOrObject();
 			return group;
 		}
-
-		@Override
-		public Object getStructRelationIds(Asset asset) {
-			List<String> rels = asset.getArtworkOrObjectShown_parent();
-			return rels.toArray(new String[rels.size()]);
-		}
 	};
 	public static final QueryField IPTC_CODEOFORG = new QueryField(IPTC_DESCRIPTION, "codeOfOrg", //$NON-NLS-1$
 			null, NS_IPTC4XMPEXT, "OrganisationInImageCode", //$NON-NLS-1$
@@ -2299,12 +2414,6 @@ public class QueryField {
 					.obtainStructForAsset(LocationCreatedImpl.class, asset.getStringId(), true).iterator();
 			return it.hasNext() ? it.next().getLocation() : null;
 		}
-
-		@Override
-		public Object getStructRelationIds(Asset asset) {
-			return asset.getLocationCreated_parent();
-		}
-
 	};
 	public static final QueryField IPTC_MAXAVAILHEIGHT = new QueryField(IPTC_ADMIN, "maxAvailHeight", //$NON-NLS-1$
 			null, NS_IPTC4XMPEXT, "MaxAvailHeight", //$NON-NLS-1$
@@ -2315,6 +2424,11 @@ public class QueryField {
 		protected int getInt(Asset asset) {
 			return asset.getMaxAvailHeight();
 		}
+
+		@Override
+		public String getUnit() {
+			return "pixel"; //$NON-NLS-1$
+		}
 	};
 	public static final QueryField IPTC_MAXAVAILWIDTH = new QueryField(IPTC_ADMIN, "maxAvailWidth", //$NON-NLS-1$
 			null, NS_IPTC4XMPEXT, "MaxAvailWidth", //$NON-NLS-1$
@@ -2324,6 +2438,11 @@ public class QueryField {
 		@Override
 		protected int getInt(Asset asset) {
 			return asset.getMaxAvailWidth();
+		}
+
+		@Override
+		public String getUnit() {
+			return "pixel"; //$NON-NLS-1$
 		}
 	};
 
@@ -2545,12 +2664,6 @@ public class QueryField {
 				return creatorsContact.getContact();
 			return null;
 		}
-
-		@Override
-		public Object getStructRelationIds(Asset asset) {
-			return asset.getCreatorsContact_parent();
-		}
-
 	};
 	public static final QueryField IPTC_USAGE = new QueryField(IPTC_RIGHTS, "usageTerms", //$NON-NLS-1$
 			null, NS_XMPRIGHTS, "UsageTerms", //$NON-NLS-1$
@@ -2603,13 +2716,6 @@ public class QueryField {
 				group[i++] = rel.getLocation();
 			return group;
 		}
-
-		@Override
-		public Object getStructRelationIds(Asset asset) {
-			List<String> rels = asset.getLocationShown_parent();
-			return rels.toArray(new String[rels.size()]);
-		}
-
 	};
 	// Legacy IPTC
 	public static final QueryField IPTC_CITY = new QueryField(null, "city", "City", NS_PHOTOSHOP, "City", null, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -2657,19 +2763,19 @@ public class QueryField {
 			return asset.getSubjectCode();
 		}
 	};
-	
+
 	public static final QueryField IPTC_INTELLECTUAL_GENRE = new QueryField(IPTC_DESCRIPTION, "intellectualGenre", //$NON-NLS-1$
 			null, NS_IPTC4XMPCORE, "IntellectualGenre", //$NON-NLS-1$
 			Messages.QueryField_Intellectual_genre, ACTION_QUERY,
-			PHOTO | EDIT_ALWAYS | QUERY | TEXT | AUTO_CONTAINS | REPORT, CATEGORY_IPTC, T_STRING, 1, 64, GENRECODES, null, null, 0f,
-			ISpellCheckingService.DESCRIPTIONOPTIONS) {
+			PHOTO | EDIT_ALWAYS | QUERY | TEXT | AUTO_CONTAINS | REPORT, CATEGORY_IPTC, T_STRING, 1, 64, GENRECODES,
+			null, null, 0f, ISpellCheckingService.DESCRIPTIONOPTIONS) {
 
 		@Override
 		protected Object getValue(Asset asset) {
 			return asset.getIntellectualGenre();
 		}
 	};
-	
+
 	private static final QueryField[] NOCHILDREN = new QueryField[0];
 
 	// Location
@@ -2713,7 +2819,15 @@ public class QueryField {
 	public static final QueryField LOCATION_ALTITUDE = new QueryField(LOCATION_TYPE, "altitude", null, NS_ZORA, //$NON-NLS-1$
 			"LocationAltitude", Messages.QueryField_GPS_altitude_loc, //$NON-NLS-1$
 			ACTION_NONE, EDIT_ALWAYS, CATEGORY_FOREIGN, T_FLOATB, 1, 2, Format.altitudeFormatter, 0f, Float.NaN,
-			ISpellCheckingService.NOSPELLING);
+			ISpellCheckingService.NOSPELLING) {
+		@Override
+		public String getUnit() {
+			return "m"; //$NON-NLS-1$
+		}
+	};
+	public static final QueryField LOCATION_PLUSCODE = new QueryField(LOCATION_TYPE, "plusCode", null, //$NON-NLS-1$
+			null, null, Messages.QueryField_plus_code, ACTION_QUERY, EDIT_NEVER, CATEGORY_FOREIGN,
+			T_STRING, 1, 12,  0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 
 	// Artwork
 	public static final QueryField ARTWORKOROBJECT_TITLE = new QueryField(ARTWORKOROBJECT_TYPE, "title", null, //$NON-NLS-1$
@@ -2771,17 +2885,15 @@ public class QueryField {
 
 	// Region Microsoft
 	public static final QueryField REGION_MP = new QueryField(null, null, "RegionInfoMP", //$NON-NLS-1$
-			null, null, null, ACTION_NONE, EDIT_NEVER, CATEGORY_LOCAL, T_STRUCT, 1, 16, null, 0f, Float.NaN,
+			null, null, null, ACTION_NONE, EDIT_HIDDEN, CATEGORY_LOCAL, T_STRUCT, 1, 16, null, 0f, Float.NaN,
 			ISpellCheckingService.NOSPELLING);
 	public static final QueryField REGION_MP_LIST = new QueryField(null, null, "Regions", //$NON-NLS-1$
-			null, null, null, ACTION_NONE, EDIT_NEVER, CATEGORY_LOCAL, T_STRUCT, 1, 16, null, 0f, Float.NaN,
+			null, null, null, ACTION_NONE, EDIT_HIDDEN, CATEGORY_LOCAL, T_STRUCT, 1, 16, null, 0f, Float.NaN,
 			ISpellCheckingService.NOSPELLING);
-	public static final QueryField REGION_RECTANGLE = new QueryField(
-			// REGION_TYPE, Constants.OID,
-			REGION_TYPE, "$rectangle", //$NON-NLS-1$
+	public static final QueryField REGION_RECTANGLE = new QueryField(REGION_TYPE, "$rectangle", //$NON-NLS-1$
 			"Rectangle", //$NON-NLS-1$
 			NS_MSPHOTO_MPREG, "Rectangle", //$NON-NLS-1$
-			Messages.QueryField_rectangle, ACTION_NONE, EDIT_NEVER, CATEGORY_LOCAL, T_STRING, 1, 16, null, 0f,
+			Messages.QueryField_rectangle, ACTION_NONE, EDIT_HIDDEN, CATEGORY_LOCAL, T_STRING, 1, 16, null, 0f,
 			Float.NaN, ISpellCheckingService.NOSPELLING) {
 		@Override
 		public void setFieldValue(Object obj, Object newValue) {
@@ -2800,32 +2912,30 @@ public class QueryField {
 	};
 	public static final QueryField REGION_PERSONEMAILDIGEST = new QueryField(REGION_TYPE, "personEmailDigest", //$NON-NLS-1$
 			"PersonEmailDigest", //$NON-NLS-1$
-			NS_MSPHOTO_MPREG, "PersonEmailDigest", Messages.QueryField_live_email, ACTION_NONE, EDIT_NEVER, //$NON-NLS-1$
+			NS_MSPHOTO_MPREG, "PersonEmailDigest", Messages.QueryField_live_email, ACTION_NONE, EDIT_HIDDEN, //$NON-NLS-1$
 			CATEGORY_LOCAL, T_STRING, 1, 64, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 	public static final QueryField REGION_PERSONLIVECIDE = new QueryField(REGION_TYPE, "personLiveCID", //$NON-NLS-1$
 			"PersonLiveIdCID", //$NON-NLS-1$
-			NS_MSPHOTO_MPREG, "PersonLiveCID", Messages.QueryField_live_cid, ACTION_NONE, EDIT_NEVER, //$NON-NLS-1$
+			NS_MSPHOTO_MPREG, "PersonLiveCID", Messages.QueryField_live_cid, ACTION_NONE, EDIT_HIDDEN, //$NON-NLS-1$
 			CATEGORY_LOCAL, T_LONG, 1, 16, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 	public static final QueryField REGION_ALBUM = new QueryField(REGION_TYPE, "name", "PersonDisplayName", //$NON-NLS-1$ //$NON-NLS-2$
-			NS_MSPHOTO_MPREG, "PersonDisplayName", Messages.QueryField_person_display_name, ACTION_NONE, EDIT_NEVER, //$NON-NLS-1$
+			NS_MSPHOTO_MPREG, "PersonDisplayName", Messages.QueryField_person_display_name, ACTION_NONE, EDIT_HIDDEN, //$NON-NLS-1$
 			CATEGORY_FOREIGN, T_STRING, 1, 255, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 
 	// Region MWG
 	public static final QueryField MWG_REGION_INFO = new QueryField(null, null, "RegionInfo", //$NON-NLS-1$
-			null, null, null, ACTION_NONE, EDIT_NEVER, CATEGORY_LOCAL, T_STRUCT, 1, 16, null, 0f, Float.NaN,
+			null, null, null, ACTION_NONE, EDIT_HIDDEN, CATEGORY_LOCAL, T_STRUCT, 1, 16, null, 0f, Float.NaN,
 			ISpellCheckingService.NOSPELLING);
 	public static final QueryField MWG_APPLIEDTODIM = new QueryField(null, null, "AppliedToDimensions", //$NON-NLS-1$
-			NS_MWG_REGIONS, "AppliedToDimensions", null, ACTION_NONE, EDIT_NEVER, CATEGORY_LOCAL, //$NON-NLS-1$
+			NS_MWG_REGIONS, "AppliedToDimensions", null, ACTION_NONE, EDIT_HIDDEN, CATEGORY_LOCAL, //$NON-NLS-1$
 			T_STRUCT, 1, 16, null, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 	public static final QueryField MWG_REGION_LIST = new QueryField(null, null, "RegionList", //$NON-NLS-1$
-			NS_MWG_REGIONS, "RegionList", null, ACTION_NONE, EDIT_NEVER, CATEGORY_LOCAL, //$NON-NLS-1$
+			NS_MWG_REGIONS, "RegionList", null, ACTION_NONE, EDIT_HIDDEN, CATEGORY_LOCAL, //$NON-NLS-1$
 			T_STRUCT, 1, 16, null, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
-	public static final QueryField MWG_REGION_RECTANGLE = new QueryField(MWG_REGION_TYPE,
-			// Constants.OID,
-			"$area", //$NON-NLS-1$
+	public static final QueryField MWG_REGION_RECTANGLE = new QueryField(MWG_REGION_TYPE, "$area", //$NON-NLS-1$
 			"Area", //$NON-NLS-1$
 			NS_MWG_REGIONS, "Area", //$NON-NLS-1$
-			Messages.QueryField_rectangle, ACTION_NONE, EDIT_NEVER, CATEGORY_LOCAL, T_REGION, 1, 16, null, 0f,
+			Messages.QueryField_rectangle, ACTION_NONE, EDIT_HIDDEN, CATEGORY_LOCAL, T_REGION, 1, 16, null, 0f,
 			Float.NaN, ISpellCheckingService.NOSPELLING) {
 		@Override
 		public void setFieldValue(Object obj, Object newValue) {
@@ -2845,7 +2955,7 @@ public class QueryField {
 	};
 	public static final QueryField MWG_AREA_X = new QueryField(MWG_REGION_RECTANGLE, "x", //$NON-NLS-1$
 			null, NS_MWG_AREA, "Regions/RegionList/Area/x", //$NON-NLS-1$
-			null, ACTION_NONE, EDIT_NEVER, CATEGORY_LOCAL, T_FLOAT, 1, 16, null, 0f, Float.NaN,
+			null, ACTION_NONE, EDIT_HIDDEN, CATEGORY_LOCAL, T_FLOAT, 1, 16, null, 0f, Float.NaN,
 			ISpellCheckingService.NOSPELLING) {
 		@Override
 		public void setFieldValue(Object obj, Object newValue) {
@@ -2855,7 +2965,7 @@ public class QueryField {
 	};
 	public static final QueryField MWG_AREA_Y = new QueryField(MWG_REGION_RECTANGLE, "y", //$NON-NLS-1$
 			null, NS_MWG_AREA, "Regions/RegionList/Area/y", //$NON-NLS-1$
-			null, ACTION_NONE, EDIT_NEVER, CATEGORY_LOCAL, T_FLOAT, 1, 16, null, 0f, Float.NaN,
+			null, ACTION_NONE, EDIT_HIDDEN, CATEGORY_LOCAL, T_FLOAT, 1, 16, null, 0f, Float.NaN,
 			ISpellCheckingService.NOSPELLING) {
 		@Override
 		public void setFieldValue(Object obj, Object newValue) {
@@ -2865,7 +2975,7 @@ public class QueryField {
 	};
 	public static final QueryField MWG_AREA_W = new QueryField(MWG_REGION_RECTANGLE, "w", //$NON-NLS-1$
 			null, NS_MWG_AREA, "Regions/RegionList/Area/w", //$NON-NLS-1$
-			null, ACTION_NONE, EDIT_NEVER, CATEGORY_LOCAL, T_FLOAT, 1, 16, null, 0f, Float.NaN,
+			null, ACTION_NONE, EDIT_HIDDEN, CATEGORY_LOCAL, T_FLOAT, 1, 16, null, 0f, Float.NaN,
 			ISpellCheckingService.NOSPELLING) {
 		@Override
 		public void setFieldValue(Object obj, Object newValue) {
@@ -2875,7 +2985,7 @@ public class QueryField {
 	};
 	public static final QueryField MWG_AREA_H = new QueryField(MWG_REGION_RECTANGLE, "h", //$NON-NLS-1$
 			null, NS_MWG_AREA, "Regions/RegionList/Area/h", //$NON-NLS-1$
-			null, ACTION_NONE, EDIT_NEVER, CATEGORY_LOCAL, T_FLOAT, 1, 16, null, 0f, Float.NaN,
+			null, ACTION_NONE, EDIT_HIDDEN, CATEGORY_LOCAL, T_FLOAT, 1, 16, null, 0f, Float.NaN,
 			ISpellCheckingService.NOSPELLING) {
 		@Override
 		public void setFieldValue(Object obj, Object newValue) {
@@ -2885,36 +2995,36 @@ public class QueryField {
 	};
 
 	public static final QueryField MWG_REGION_ALBUM = new QueryField(MWG_REGION_TYPE, "name", "Name", //$NON-NLS-1$ //$NON-NLS-2$
-			NS_MWG_REGIONS, "Name", Messages.QueryField_person_display_name, ACTION_NONE, EDIT_NEVER, //$NON-NLS-1$
+			NS_MWG_REGIONS, "Name", Messages.QueryField_person_display_name, ACTION_NONE, EDIT_HIDDEN, //$NON-NLS-1$
 			CATEGORY_FOREIGN, T_STRING, 1, 255, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 	public static final QueryField MWG_REGION_VALUE = new QueryField(MWG_REGION_TYPE, "value", "BarCodeValue", //$NON-NLS-1$ //$NON-NLS-2$
-			NS_MWG_REGIONS, "BarCodeValue", Messages.QueryField_bar_code_value, ACTION_NONE, EDIT_NEVER, //$NON-NLS-1$
+			NS_MWG_REGIONS, "BarCodeValue", Messages.QueryField_bar_code_value, ACTION_NONE, EDIT_HIDDEN, //$NON-NLS-1$
 			CATEGORY_FOREIGN, T_STRING, 1, 255, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 	public static final QueryField MWG_REGION_DESCRIPTION = new QueryField(MWG_REGION_TYPE, "description", //$NON-NLS-1$
 			"Description", //$NON-NLS-1$
-			NS_MWG_REGIONS, "Description", Messages.QueryField_region_description, ACTION_NONE, EDIT_NEVER, //$NON-NLS-1$
+			NS_MWG_REGIONS, "Description", Messages.QueryField_region_description, ACTION_NONE, EDIT_HIDDEN, //$NON-NLS-1$
 			CATEGORY_FOREIGN, T_STRING, 1, 255, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 	public static final QueryField MWG_REGION_KIND = new QueryField(MWG_REGION_TYPE, "type", //$NON-NLS-1$
 			"Type", //$NON-NLS-1$
-			NS_MWG_REGIONS, "Type", Messages.QueryField_region_type, ACTION_NONE, EDIT_NEVER, //$NON-NLS-1$
+			NS_MWG_REGIONS, "Type", Messages.QueryField_region_type, ACTION_NONE, EDIT_HIDDEN, //$NON-NLS-1$
 			CATEGORY_LOCAL, T_STRING, 1, 64, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 
 	// Internal fields
 	public static final QueryField LOCATIONCREATED_ID = new QueryField(null, "", null, //$NON-NLS-1$
 			IPTC_LOCATIONCREATED.getXmpNs(), IPTC_LOCATIONCREATED.getPath() + "/ZoRaId", null, ACTION_QUERY, //$NON-NLS-1$
-			EDIT_NEVER, CATEGORY_NONE, T_STRING, 1, 255, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
+			EDIT_HIDDEN, CATEGORY_NONE, T_STRING, 1, 255, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 	public static final QueryField LOCATIONSHOWN_ID = new QueryField(null, "", null, //$NON-NLS-1$
 			IPTC_LOCATIONSHOWN.getXmpNs(), IPTC_LOCATIONSHOWN.getPath() + "/ZoRaId", null, ACTION_QUERY, //$NON-NLS-1$
-			EDIT_NEVER, CATEGORY_NONE, T_STRING, 1, 255, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
+			EDIT_HIDDEN, CATEGORY_NONE, T_STRING, 1, 255, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 	public static final QueryField CONTACT_ID = new QueryField(null, "", null, //$NON-NLS-1$
 			IPTC_CONTACT.getXmpNs(), IPTC_CONTACT.getPath() + "/ZoRaId", null, ACTION_QUERY, //$NON-NLS-1$
-			EDIT_NEVER, CATEGORY_NONE, T_STRING, 1, 255, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
+			EDIT_HIDDEN, CATEGORY_NONE, T_STRING, 1, 255, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 	public static final QueryField ARTWORK_ID = new QueryField(null, "", null, //$NON-NLS-1$
 			IPTC_ARTWORK.getXmpNs(), IPTC_ARTWORK.getPath() + "/ZoRaId", null, ACTION_QUERY, //$NON-NLS-1$
-			EDIT_NEVER, CATEGORY_NONE, T_STRING, 1, 255, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
+			EDIT_HIDDEN, CATEGORY_NONE, T_STRING, 1, 255, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 
 	public static final QueryField SCORE = new QueryField(null, "score", //$NON-NLS-1$
-			null, null, null, null, ACTION_NONE, EDIT_NEVER, CATEGORY_NONE, T_FLOAT, 1, 2, 0f, Float.NaN,
+			null, null, null, null, ACTION_NONE, EDIT_HIDDEN, CATEGORY_NONE, T_FLOAT, 1, 2, 0f, Float.NaN,
 			ISpellCheckingService.NOSPELLING) {
 
 		@Override
@@ -2941,25 +3051,6 @@ public class QueryField {
 	public static QueryField findQueryField(String id) {
 		return id == null ? null : fieldMap.get(id);
 	}
-
-	// protected static void updateDirDist(Asset asset) {
-	// double lat = asset.getGPSLatitude();
-	// double lon = asset.getGPSLongitude();
-	// if (Double.isNaN(lat) || Double.isNaN(lon)) {
-	// asset.setGPSImgDirection(Double.NaN);
-	// asset.setGPSDestDistance(Double.NaN);
-	// } else {
-	// double destLat = asset.getGPSDestLatitude();
-	// double destLon = asset.getGPSDestLongitude();
-	// if (Double.isNaN(destLat) || Double.isNaN(destLon)) {
-	// asset.setGPSDestDistance(Double.NaN);
-	// } else {
-	// asset.setGPSDestDistance(Core.distance(lat, lon, destLat, destLon, 'k'));
-	// asset.setGPSImgDirection(Core.bearing(lat, lon, destLat, destLon));
-	// asset.setGPSImgDirectionRef("T"); //$NON-NLS-1$
-	// }
-	// }
-	// }
 
 	/**
 	 * Finds the QueryField instance belonging to an object sub field name
@@ -3074,7 +3165,6 @@ public class QueryField {
 
 	private String key;
 	private String label;
-	private String unit;
 	private Category category;
 	private int type;
 	private Object enumeration;
@@ -3250,15 +3340,7 @@ public class QueryField {
 		this.enumLabels = enumLabels;
 		this.formatter = formatter;
 		this.maxlength = maxLength;
-		if (label != null) {
-			int p = label.lastIndexOf('(');
-			int q = label.lastIndexOf(')');
-			if (p > 0 && q > p) {
-				this.unit = label.substring(p + 1, q).trim();
-				this.label = label.substring(0, p).trim();
-			} else
-				this.label = label;
-		}
+		this.label = label;
 		if (exifToolKey instanceof String) {
 			if (xmpNs == NS_MWG_REGIONS)
 				regionPropertyMap.put((String) exifToolKey, this);
@@ -3353,16 +3435,6 @@ public class QueryField {
 	 * @return field label
 	 */
 	public String getLabel() {
-		if (hasLabel() && label.charAt(0) == '{') {
-			ICore core = Core.getCore();
-			if (core != null) {
-				Meta meta = core.getDbManager().getMeta(true);
-				if (Constants.USERFIELD1.equals(label))
-					return meta.getUserFieldLabel1();
-				if (Constants.USERFIELD2.equals(label))
-					return meta.getUserFieldLabel2();
-			}
-		}
 		return label;
 	}
 
@@ -3372,7 +3444,12 @@ public class QueryField {
 	 * @return label suffixed with unit
 	 */
 	public String getLabelWithUnit() {
-		return hasLabel() ? ((unit == null) ? getLabel() : label + " (" + unit + ')') : null; //$NON-NLS-1$
+		if (hasLabel()) {
+			String unit = getUnit();
+			return ((unit == null) ? getLabel()
+					: new StringBuilder().append(getLabel()).append(" (").append(unit).append(')').toString()); //$NON-NLS-1$
+		}
+		return null;
 	}
 
 	/**
@@ -3858,9 +3935,7 @@ public class QueryField {
 	 * @return - the boxed field value
 	 */
 	public Object obtainPlainFieldValue(Object obj) {
-		if (!isStruct()) {
-			if (key == null || key.startsWith("$")) //$NON-NLS-1$
-				return null;
+		if (!isStruct() && !isVirtual())
 			try {
 				if (obj instanceof Asset)
 					for (IMediaSupport support : getMediaSupport())
@@ -3873,7 +3948,6 @@ public class QueryField {
 				CoreActivator.getDefault().logError(NLS.bind(Messages.QueryField_internal_error_accessing_field, key),
 						e);
 			}
-		}
 		return null;
 	}
 
@@ -3900,7 +3974,7 @@ public class QueryField {
 	 *            - new field value
 	 */
 	public void setFieldValue(Object obj, Object newValue) {
-		if (key != null && !key.startsWith("$")) //$NON-NLS-1$
+		if (!isStruct() && !isVirtual())
 			try {
 				if (card == CARD_BAG || card == CARD_MODIFIABLEBAG)
 					newValue = mergeVectoredValue(obj, newValue);
@@ -3922,20 +3996,17 @@ public class QueryField {
 	 *            - object to be modified
 	 */
 	public void resetBag(Object obj) {
-		if (key == null || key.startsWith("$")) //$NON-NLS-1$
-			return;
-		if (card != CARD_BAG && card != CARD_MODIFIABLEBAG)
-			return;
-		try {
-			if (obj instanceof Asset) {
-				for (IMediaSupport support : getMediaSupport())
-					if (support.resetBag(this, (Asset) obj))
-						return;
+		if (!isVirtual() && (card == CARD_BAG || card == CARD_MODIFIABLEBAG))
+			try {
+				if (obj instanceof Asset)
+					for (IMediaSupport support : getMediaSupport())
+						if (support.resetBag(this, (Asset) obj))
+							return;
+				obj.getClass().getMethod(getSetAccessor(), getJavaType()).invoke(obj, new Object[] { null });
+			} catch (Exception e) {
+				CoreActivator.getDefault().logError(NLS.bind(Messages.QueryField_internal_error_accessing_field, key),
+						e);
 			}
-			obj.getClass().getMethod(getSetAccessor(), getJavaType()).invoke(obj, new Object[] { null });
-		} catch (Exception e) {
-			CoreActivator.getDefault().logError(NLS.bind(Messages.QueryField_internal_error_accessing_field, key), e);
-		}
 	}
 
 	public String getSetAccessor(String fname) {
@@ -4289,41 +4360,6 @@ public class QueryField {
 	}
 
 	/**
-	 * Retrieves structured field relation ids for a given asset
-	 *
-	 * @param asset
-	 *            - given asset
-	 * @return - structured field relation IDs
-	 */
-	public Object getStructRelationIds(Asset asset) {
-		return null;
-	}
-
-	public Object getStructRelationIds(Collection<Asset> asset) {
-		boolean first = true;
-		Object result = null;
-		for (Asset a : asset) {
-			Object o = getStructRelationIds(a);
-			if (first) {
-				result = o instanceof String[] ? new HashSet<String>(Arrays.asList((String[]) o)) : o;
-				first = false;
-			} else {
-				if (result == null) {
-					if (o != null)
-						return VALUE_MIXED;
-				} else if (result instanceof String) {
-					if (!result.equals(o))
-						return VALUE_MIXED;
-				} else if (result instanceof Set) {
-					if (!(o instanceof String[]) || !result.equals(new HashSet<String>(Arrays.asList((String[]) o))))
-						return VALUE_MIXED;
-				}
-			}
-		}
-		return result;
-	}
-
-	/**
 	 * Converts a field value into its text representation
 	 *
 	 * @param value
@@ -4446,6 +4482,7 @@ public class QueryField {
 		if (value instanceof Location) {
 			Location loc = (Location) value;
 			append(sb, loc.getDetails());
+			append(sb, loc.getPlusCode());
 			append(sb, loc.getSublocation());
 			append(sb, loc.getCity());
 			append(sb, loc.getCountryISOCode());
@@ -4683,7 +4720,7 @@ public class QueryField {
 	 * @return unit of measurement or null
 	 */
 	public String getUnit() {
-		return unit;
+		return null;
 	}
 
 	/**
@@ -4955,6 +4992,15 @@ public class QueryField {
 			p = p.getParent();
 		}
 		return false;
+	}
+
+	/**
+	 * Determines if a field is physically present in the database
+	 * 
+	 * @return - true if field is not in database
+	 */
+	public boolean isVirtual() {
+		return key == null || key.startsWith("$"); //$NON-NLS-1$
 	}
 
 }

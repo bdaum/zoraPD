@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -24,14 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -48,8 +46,10 @@ import com.bdaum.zoom.cat.model.group.slideShow.SlideShowImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.QueryField;
+import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 
 public class PresentationSelectDialog extends ZTitleAreaDialog {
@@ -60,10 +60,9 @@ public class PresentationSelectDialog extends ZTitleAreaDialog {
 	private static final String ALBUMS = Messages.PresentationSelectDialog_albums;
 	private static final String PERSONS = Messages.PresentationSelectDialog_persons;
 	private static final String USERDEFINED = Messages.PresentationSelectDialog_user_defined;
-	private static final String[] ALL = new String[] { SLIDESHOWS, EXHIBITIONS,
-			WEBGALLERIES, ALBUMS, PERSONS, USERDEFINED };
-	protected static final List<IdentifiableObject> EMPTYOBJECTS = new ArrayList<IdentifiableObject>(
-			0);
+	private static final String[] ALL = new String[] { SLIDESHOWS, EXHIBITIONS, WEBGALLERIES, ALBUMS, PERSONS,
+			USERDEFINED };
+	protected static final List<IdentifiableObject> EMPTYOBJECTS = new ArrayList<IdentifiableObject>(0);
 	private String targetType;
 	private TreeViewer viewer;
 	private IdentifiableObject selectedItem;
@@ -77,9 +76,7 @@ public class PresentationSelectDialog extends ZTitleAreaDialog {
 	public void create() {
 		super.create();
 		setTitle(Messages.PresentationSelectDialog_presentation_import);
-		setMessage(NLS.bind(
-				Messages.PresentationSelectDialog_please_select_a_presentation,
-				targetType));
+		setMessage(NLS.bind(Messages.PresentationSelectDialog_please_select_a_presentation, targetType));
 		updateButtons();
 	}
 
@@ -93,18 +90,15 @@ public class PresentationSelectDialog extends ZTitleAreaDialog {
 		Composite comp = new Composite(area, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new GridLayout());
-		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(comp,
-				SWT.NONE);
-		viewer = new TreeViewer(comp, SWT.BORDER | SWT.SINGLE | SWT.H_SCROLL
-				| SWT.V_SCROLL);
+		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(comp, SWT.NONE);
+		viewer = new TreeViewer(comp, SWT.BORDER | SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL);
 		expandCollapseGroup.setViewer(viewer);
 		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, true);
 		layoutData.widthHint = 500;
 		viewer.getControl().setLayoutData(layoutData);
 		viewer.setContentProvider(new ITreeContentProvider() {
 
-			public void inputChanged(Viewer aViewer, Object oldInput,
-					Object newInput) {
+			public void inputChanged(Viewer aViewer, Object oldInput, Object newInput) {
 				// do nothing
 			}
 
@@ -129,12 +123,12 @@ public class PresentationSelectDialog extends ZTitleAreaDialog {
 					return EXHIBITIONS;
 				if (element instanceof WebGalleryImpl)
 					return WEBGALLERIES;
-				if (element instanceof SmartCollectionImpl)
+				if (element instanceof SmartCollectionImpl) {
 					if (((SmartCollectionImpl) element).getAlbum())
-						return ((SmartCollectionImpl) element).getSystem() ? PERSONS
-								: ALBUMS;
-					else if (((SmartCollectionImpl) element).getSystem())
+						return ((SmartCollectionImpl) element).getSystem() ? PERSONS : ALBUMS;
+					if (((SmartCollectionImpl) element).getSystem())
 						return USERDEFINED;
+				}
 				return null;
 			}
 
@@ -144,32 +138,25 @@ public class PresentationSelectDialog extends ZTitleAreaDialog {
 				return null;
 			}
 
-			private List<IIdentifiableObject> obtainChildren(
-					Object parentElement) {
+			private List<IIdentifiableObject> obtainChildren(Object parentElement) {
 				List<IIdentifiableObject> children = new ArrayList<IIdentifiableObject>();
 				if (parentElement == SLIDESHOWS)
-					children.addAll(dbManager
-							.obtainObjects(SlideShowImpl.class));
+					children.addAll(dbManager.obtainObjects(SlideShowImpl.class));
 				else if (parentElement == EXHIBITIONS)
-					children.addAll(dbManager
-							.obtainObjects(ExhibitionImpl.class));
+					children.addAll(dbManager.obtainObjects(ExhibitionImpl.class));
 				else if (parentElement == WEBGALLERIES)
-					children.addAll(dbManager.obtainObjects(
-							WebGalleryImpl.class,
-							"template", false, QueryField.EQUALS)); //$NON-NLS-1$
+					children.addAll(
+							dbManager.obtainObjects(WebGalleryImpl.class, "template", false, QueryField.EQUALS)); //$NON-NLS-1$
 				else if (parentElement == ALBUMS)
-					children.addAll(dbManager.obtainObjects(
-							SmartCollectionImpl.class, false, "album", true, //$NON-NLS-1$
+					children.addAll(dbManager.obtainObjects(SmartCollectionImpl.class, false, "album", true, //$NON-NLS-1$
 							QueryField.EQUALS, "system", false, //$NON-NLS-1$
 							QueryField.EQUALS));
 				else if (parentElement == PERSONS)
-					children.addAll(dbManager.obtainObjects(
-							SmartCollectionImpl.class, false, "album", true, //$NON-NLS-1$
+					children.addAll(dbManager.obtainObjects(SmartCollectionImpl.class, false, "album", true, //$NON-NLS-1$
 							QueryField.EQUALS, "system", true, //$NON-NLS-1$
 							QueryField.EQUALS));
 				else if (parentElement == USERDEFINED) {
-					children.addAll(dbManager.obtainObjects(
-							SmartCollectionImpl.class, false, "album", false, //$NON-NLS-1$
+					children.addAll(dbManager.obtainObjects(SmartCollectionImpl.class, false, "album", false, //$NON-NLS-1$
 							QueryField.EQUALS, "system", false, //$NON-NLS-1$
 							QueryField.EQUALS, "group_rootCollection_parent", //$NON-NLS-1$
 							Constants.GROUP_ID_IMPORTS, QueryField.NOTEQUAL));
@@ -177,7 +164,7 @@ public class PresentationSelectDialog extends ZTitleAreaDialog {
 				return children;
 			}
 		});
-		viewer.setLabelProvider(new ColumnLabelProvider() {
+		viewer.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof SlideShowImpl)
@@ -188,18 +175,16 @@ public class PresentationSelectDialog extends ZTitleAreaDialog {
 					return ((WebGalleryImpl) element).getName();
 				if (element instanceof SmartCollectionImpl)
 					return ((SmartCollectionImpl) element).getName();
-				return super.getText(element);
+				return element.toString();
 			}
 		});
-		viewer.setComparator(new ViewerComparator());
+		viewer.setComparator(ZViewerComparator.INSTANCE);
 		UiUtilities.installDoubleClickExpansion(viewer);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
-				IStructuredSelection selection = (IStructuredSelection) viewer
-						.getSelection();
-				if (selection.getFirstElement() instanceof IdentifiableObject)
-					selectedItem = (IdentifiableObject) selection
-							.getFirstElement();
+				Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				if (firstElement instanceof IdentifiableObject)
+					selectedItem = (IdentifiableObject) firstElement;
 				updateButtons();
 			}
 		});

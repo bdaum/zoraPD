@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -33,7 +33,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -52,6 +51,7 @@ import org.eclipse.ui.PlatformUI;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.dialogs.EditMetaDialog;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.CLink;
@@ -117,7 +117,7 @@ public class SearchResultGroup {
 			algoViewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			algoViewer.setContentProvider(ArrayContentProvider.getInstance());
 			algoViewer.setLabelProvider(new LabelProvider());
-			algoViewer.setComparator(new ViewerComparator());
+			algoViewer.setComparator(ZViewerComparator.INSTANCE);
 			fillAlgoViewer();
 			algoViewer.getCombo().setVisibleItemCount(opts.size());
 			algoExplanation = new Label(composite, SWT.WRAP);
@@ -161,12 +161,10 @@ public class SearchResultGroup {
 		if (scoreAndHits) {
 			Label numberlabel = new Label(composite, SWT.NONE);
 			numberlabel.setText(com.bdaum.zoom.ui.internal.widgets.Messages.SearchResultGroup_maxNumber);
-			numberField = new NumericControl(composite, SWT.NONE);
+			numberField = new NumericControl(composite, NumericControl.LOGARITHMIC);
 			numberField.setMaximum(1000);
 			numberField.setMinimum(3);
-			numberField.setLogrithmic(true);
-			Label scorelabel = new Label(composite, SWT.NONE);
-			scorelabel.setText(com.bdaum.zoom.ui.internal.widgets.Messages.SearchResultGroup_minScore);
+			new Label(composite, SWT.NONE).setText(com.bdaum.zoom.ui.internal.widgets.Messages.SearchResultGroup_minScore);
 			scoreField = new NumericControl(composite, SWT.NONE);
 			scoreField.setMaximum(99);
 			scoreField.setMinimum(1);

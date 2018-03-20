@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.wizards;
@@ -71,13 +71,19 @@ public class Messages extends NLS {
 	public static String FtpDirPage_nothing_selected;
 	public static String FtpDirPage_select_images;
 	public static String ImportAddMetadataPage_add_metadata;
+	public static String ImportAddMetadataPage_add_to_album;
 	public static String ImportAddMetadataPage_advanced_options;
-	public static String ImportAddMetadataPage_Medium;
+	public static String ImportAddMetadataPage_automated_rating;
 	public static String ImportAddMetadataPage_metadata_options_chdk;
-	public static String ImportAddMetadataPage_Privacy;
-	public static String ImportAddMetadataPage_Private;
-	public static String ImportAddMetadataPage_Public;
 	public static String ImportAddMetadataPage_specify_metadata;
+	public static String ImportAnalogPropertiesPage_analog_props;
+	public static String ImportAnalogPropertiesPage_camera;
+	public static String ImportAnalogPropertiesPage_exposure;
+	public static String ImportAnalogPropertiesPage_lens;
+	public static String ImportAnalogPropertiesPage_lv_format;
+	public static String ImportAnalogPropertiesPage_lv_range;
+	public static String ImportAnalogPropertiesPage_medium;
+	public static String ImportAnalogPropertiesPage_rights;
 	public static String ImportFileSelectionPage_all_jpeg;
 	public static String ImportFileSelectionPage_all_raw;
 	public static String ImportFileSelectionPage_analyzing_folder_contents;
@@ -111,6 +117,7 @@ public class Messages extends NLS {
 	public static String ImportFileSelectionPage_skipped_file_types;
 	public static String ImportFileSelectionPage_skipped_files;
 	public static String ImportFromDeviceWizard_all_since_last_import;
+	public static String ImportFromDeviceWizard_analog_props;
 	public static String ImportFromDeviceWizard_Add_keywords_for_import;
 	public static String ImportFromDeviceWizard_Artist;
 	public static String ImportFromDeviceWizard_bad_connection;
@@ -126,6 +133,7 @@ public class Messages extends NLS {
 	public static String ImportFromDeviceWizard_exif_data_are_transferred;
 	public static String ImportFromDeviceWizard_file_ren;
 	public static String ImportFromDeviceWizard_file_sel;
+	public static String ImportFromDeviceWizard_import_analog;
 	public static String ImportFromDeviceWizard_Import_error;
 	public static String ImportFromDeviceWizard_Keywords;
 	public static String ImportFromDeviceWizard_meta;
@@ -146,14 +154,20 @@ public class Messages extends NLS {
 	public static String ImportRenamingPage_orig_filename;
 	public static String ImportRenamingPage_user_year_seq;
 
+	public static String ImportTargetPage_by_year_week;
+	public static String ImportTargetPage_by_year_wek_day;
+	public static String ImportTargetPage_generate_preview;
 	public static String ImportTargetPage_medium_offline;
 	public static String ImportTargetPage_n_images;
 	public static String ImportTargetPage_no_files;
 	public static String ImportTargetPage_one_image;
+	public static String ImportTargetPage_preview;
 	public static String ImportTargetPage_select_folder;
 	public static String ImportTargetPage_select_the_target_folder;
 	public static String ImportTargetPage_target_folder;
 	public static String ImportTargetPage_target_selection;
+	public static String ImportTargetPage_three_levels;
+	public static String ImportTargetPage_two_levels;
 	public static String FtpDirPage_title;
 	public static String MergeCatPage_cat_cannot_be_opened;
 	public static String MergeCatPage_current_cat_is_not_open;

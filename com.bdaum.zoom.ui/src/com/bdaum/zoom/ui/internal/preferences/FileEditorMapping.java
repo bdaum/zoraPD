@@ -66,16 +66,14 @@ public class FileEditorMapping implements Cloneable {
 	 */
 	public FileEditorMapping(String name, String[] extensions) {
 		super();
-		if (name == null || name.length() < 1) {
+		if (name == null || name.length() < 1)
 			setName(STAR);
-		} else {
+		else
 			setName(name);
-		}
-		if (extensions == null) {
+		if (extensions == null)
 			setExtensions(EMPTYSTRINGARRAY);
-		} else {
+		else
 			setExtensions(extensions);
-		}
 	}
 
 	/**
@@ -115,9 +113,8 @@ public class FileEditorMapping implements Cloneable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) {
+		if (this == obj)
 			return true;
-		}
 		if (!(obj instanceof FileEditorMapping))
 			return false;
 		FileEditorMapping mapping = (FileEditorMapping) obj;
@@ -125,10 +122,9 @@ public class FileEditorMapping implements Cloneable {
 			return false;
 		if (this.extensions.length != mapping.extensions.length)
 			return false;
-		for (int i = 0; i < this.extensions.length; i++) {
+		for (int i = 0; i < this.extensions.length; i++)
 			if (!this.extensions[i].equals(mapping.extensions[i]))
 				return false;
-		}
 		return compareList(this.editors, mapping.editors);
 	}
 
@@ -145,18 +141,15 @@ public class FileEditorMapping implements Cloneable {
 	 * Compare the editor ids from both lists and return true if they are equals.
 	 */
 	private static boolean compareList(List<EditorDescriptor> l1, List<EditorDescriptor> l2) {
-		if (l1.size() != l2.size()) {
+		if (l1.size() != l2.size())
 			return false;
-		}
-
 		Iterator<EditorDescriptor> i1 = l1.iterator();
 		Iterator<EditorDescriptor> i2 = l2.iterator();
 		while (i1.hasNext() && i2.hasNext()) {
 			Object o1 = i1.next();
 			Object o2 = i2.next();
-			if (!(o1 == null ? o2 == null : o1.equals(o2))) {
+			if (!(o1 == null ? o2 == null : o1.equals(o2)))
 				return false;
-			}
 		}
 		return true;
 	}
@@ -260,8 +253,7 @@ public class FileEditorMapping implements Cloneable {
 	 *            the new list of associated editors
 	 */
 	public void setEditorsList(List<EditorDescriptor> newEditors) {
-		editors = newEditors;
-		declaredDefaultEditors.retainAll(newEditors);
+		declaredDefaultEditors.retainAll(editors = newEditors);
 	}
 
 	/**
@@ -328,15 +320,11 @@ public class FileEditorMapping implements Cloneable {
 		memento.putString("name", getName()); //$NON-NLS-1$
 		memento.putBoolean("remember", rememberLast); //$NON-NLS-1$
 		IMemento child = memento.createChild("editors"); //$NON-NLS-1$
-		for (EditorDescriptor editor : getEditors()) {
-			IMemento grandChild = child.createChild("editor"); //$NON-NLS-1$
-			editor.saveValues(grandChild);
-		}
+		for (EditorDescriptor editor : getEditors())
+			editor.saveValues(child.createChild("editor")); //$NON-NLS-1$
 		child = memento.createChild("defaultEditors"); //$NON-NLS-1$
-		for (EditorDescriptor editor : getDeclaredDefaultEditors()) {
-			IMemento grandChild = child.createChild("editor"); //$NON-NLS-1$
-			editor.saveValues(grandChild);
-		}
+		for (EditorDescriptor editor : getDeclaredDefaultEditors())
+			editor.saveValues(child.createChild("editor"));  //$NON-NLS-1$
 	}
 
 	/**

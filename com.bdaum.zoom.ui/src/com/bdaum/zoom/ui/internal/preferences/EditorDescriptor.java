@@ -49,7 +49,6 @@ public final class EditorDescriptor implements Serializable {
 					return p;
 			return null;
 		}
-
 	}
 
 	/**
@@ -59,17 +58,11 @@ public final class EditorDescriptor implements Serializable {
 	 */
 	private static final long serialVersionUID = 3905241225668998961L;
 
-	private String editorName;
-
-	private String imageFilename;
+	private String editorName, imageFilename, launcherName, fileName;
 
 	private transient ImageDescriptor imageDesc;
 
 	private boolean testImage = true;
-
-	private String launcherName;
-
-	private String fileName;
 
 	private String id = ""; //$NON-NLS-1$
 
@@ -192,12 +185,11 @@ public final class EditorDescriptor implements Serializable {
 			imageDesc = Icons.file.getDescriptor();
 		} else {
 			Image img = imageDesc.createImage(false);
-			if (img == null) {
+			if (img == null)
 				// @issue what should be the default image?
 				imageDesc = Icons.file.getDescriptor();
-			} else {
+			else
 				img.dispose();
-			}
 		}
 	}
 

@@ -15,21 +15,29 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 package com.bdaum.zoom.ai.internal;
 
 import java.awt.image.BufferedImage;
 
 import com.bdaum.zoom.ai.internal.services.IAiServiceProvider;
+import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
 
-public abstract class AbstractAiServiceProvider  implements IAiServiceProvider {
+public abstract class AbstractAiServiceProvider implements IAiServiceProvider {
 
 	private String id;
 	private String name;
 	private int latency;
 	private int featureId;
+	private String[] ratingModelIds;
+	private String[] ratingModelLabels;
+
+	@Override
+	public int rate(Asset asset, String opId, int maxRating, String modelId) {
+		return -1;
+	}
 
 	@Override
 	public void setId(String id) {
@@ -59,7 +67,7 @@ public abstract class AbstractAiServiceProvider  implements IAiServiceProvider {
 	public int getLatency() {
 		return latency;
 	}
-	
+
 	@Override
 	public boolean checkAdultContent() {
 		return false;
@@ -68,7 +76,7 @@ public abstract class AbstractAiServiceProvider  implements IAiServiceProvider {
 	public boolean checkCelebrities() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean generateDescription() {
 		return false;
@@ -79,7 +87,6 @@ public abstract class AbstractAiServiceProvider  implements IAiServiceProvider {
 		return false;
 	}
 
-
 	@Override
 	public boolean checkSharpness() {
 		return false;
@@ -89,13 +96,12 @@ public abstract class AbstractAiServiceProvider  implements IAiServiceProvider {
 	public boolean checkColor() {
 		return false;
 	}
-	
 
 	@Override
 	public float[] getFeatureVector(BufferedImage image) {
 		return null;
 	}
-	
+
 	@Override
 	public Algorithm getAlgorithm() {
 		return null;
@@ -110,9 +116,28 @@ public abstract class AbstractAiServiceProvider  implements IAiServiceProvider {
 	public int getFeatureId() {
 		return featureId;
 	}
+
 	@Override
 	public void setFeatureId(int featureId) {
 		this.featureId = featureId;
+	}
+
+	public void setRatingModelIds(String[] ratingModelIds) {
+		this.ratingModelIds = ratingModelIds;
+	}
+
+	public void setRatingModelLabels(String[] ratingModelLabels) {
+		this.ratingModelLabels = ratingModelLabels;
+	}
+
+	@Override
+	public String[] getRatingModelIds() {
+		return ratingModelIds;
+	}
+
+	@Override
+	public String[] getRatingModelLabels() {
+		return ratingModelLabels;
 	}
 
 }

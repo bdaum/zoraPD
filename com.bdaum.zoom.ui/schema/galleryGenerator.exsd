@@ -57,8 +57,11 @@
          </documentation>
       </annotation>
       <complexType>
-         <sequence>
-            <element ref="parameter" minOccurs="0" maxOccurs="unbounded"/>
+         <sequence minOccurs="0" maxOccurs="unbounded">
+            <choice>
+               <element ref="group"/>
+               <element ref="parameter"/>
+            </choice>
          </sequence>
          <attribute name="id" type="string" use="required">
             <annotation>
@@ -134,6 +137,22 @@ navfont
             <annotation>
                <documentation>
                   The maximum number (integer value) of images within a gallery. If this parameter is omitted, the maximum number is unlimited
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="aspectRatio" type="string">
+            <annotation>
+               <documentation>
+                  1. Test for similar aspect ratios between images: specify the maximum tolerance in percent, eg. &quot;5%&quot;
+2. Test for a fixed aspect ratio: Specify the aspect ratio (width / height) followed by the tolerance:, e.g &quot;1.5 5%&quot;.
+3. Omitt this attribute for no checks
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="url" type="string">
+            <annotation>
+               <documentation>
+                  
                </documentation>
             </annotation>
          </attribute>
@@ -213,11 +232,8 @@ navfont
          <attribute name="default" type="string">
             <annotation>
                <documentation>
-                  Default value for optional parameters
+                  Default value for optional parameters. For numeric values the position of the decimal point determines the maximum number of fractional digits.
                </documentation>
-               <appInfo>
-                  <meta.attribute translatable="true"/>
-               </appInfo>
             </annotation>
          </attribute>
          <attribute name="max" type="string">
@@ -244,7 +260,19 @@ navfont
          <attribute name="linkTo" type="string">
             <annotation>
                <documentation>
-                  Links the values of this parameter to specific values of the target parameter. The target parameter must be a string enumeration.
+                  Links a value set of this parameter to each value of the target parameter. The target parameter must be a string enumeration.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="enabledIf" type="string">
+            <annotation>
+               <documentation>
+                  Specify an expression to determine the enablement of the current parameter. Revers polish notation is used. 
+- Operators: !  &amp;  |
+- Operands: the ids of other boolean parameters or the results of comparison operations
+- A comparison operation consists of a text or numeric parameter name followed by a quoted comparison string. Numeric values are specified without the decimal point.
+
+Example: fullscreen! navControls &amp; navigation &quot;numbers&quot; &amp;
                </documentation>
             </annotation>
          </attribute>
@@ -272,6 +300,21 @@ navfont
             <annotation>
                <documentation>
                   Translatable label of enumeration value
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="group">
+      <complexType>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
                </documentation>
                <appInfo>
                   <meta.attribute translatable="true"/>

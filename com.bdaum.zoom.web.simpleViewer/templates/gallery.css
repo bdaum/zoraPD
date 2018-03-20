@@ -1,0 +1,34 @@
+/* ------------------------------------------
+  Your main styles
+---------------------------------------------*/
+	html {
+		height: 100%;
+		overflow: hidden;
+		text-align: center;
+	}
+	
+	body {
+		height: 100%;
+		margin: 0;
+		padding: 0;
+		background-color: #${shadecolor};
+		${titlefont}
+		${bgimage}
+	}
+	
+	div#sv-container {
+		margin:${topmargin}px ${rightmargin}px ${bottommargin}px ${leftmargin}px;
+		color: #303030;
+	}
+	
+	div#footer {
+		clear: both;
+		${footerfont}
+		margin: 0 auto;
+		padding: 40px 0 40px;
+		text-align: center;
+	}
+	
+	a {	
+		${linkcolor};
+	}

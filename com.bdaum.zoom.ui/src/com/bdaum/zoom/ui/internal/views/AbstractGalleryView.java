@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2016 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -114,6 +114,7 @@ import com.bdaum.zoom.ui.internal.dialogs.FileFormatDialog;
 import com.bdaum.zoom.ui.internal.dialogs.RatingDialog;
 import com.bdaum.zoom.ui.internal.dialogs.RetargetDialog;
 import com.bdaum.zoom.ui.internal.dialogs.SelectTargetDialog;
+import com.bdaum.zoom.ui.internal.dialogs.SetPersonDialog;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
@@ -424,7 +425,6 @@ public abstract class AbstractGalleryView extends ImageView
 		super.makeActions(bars);
 		saveQueryAction = new Action(Messages.getString("AbstractGalleryView.save_query_as_collection"), //$NON-NLS-1$
 				Icons.tableSave.getDescriptor()) {
-
 			@Override
 			public void run() {
 				IAssetProvider assetProvider = getAssetProvider();
@@ -468,7 +468,7 @@ public abstract class AbstractGalleryView extends ImageView
 						} catch (PartInitException e) {
 							// should never happen
 						}
-						updateActions();
+						updateActions(false);
 					}
 				}
 			}
@@ -770,6 +770,7 @@ public abstract class AbstractGalleryView extends ImageView
 			manager.add(configureCollapseAction);
 		manager.add(selectAllAction);
 		manager.add(new Separator());
+		manager.add(addBookmarkAction);
 		manager.add(saveQueryAction);
 	}
 
@@ -808,13 +809,10 @@ public abstract class AbstractGalleryView extends ImageView
 				manager.add(removeFromAlbumAction);
 			ISelection sel = getSelection();
 			if (sel instanceof AssetSelection && !sel.isEmpty()) {
-				if (((AssetSelection) sel).size() == 1) {
-					if (Core.getCore().getVolumeManager().findExistingFile(((AssetSelection) sel).getAssets().get(0),
-							false) == null)
-						manager.add(retargetAction);
-					else
-						manager.add(refreshAction);
-				} else
+				if (((AssetSelection) sel).size() == 1 && Core.getCore().getVolumeManager()
+						.findExistingFile(((AssetSelection) sel).getAssets().get(0), false) == null)
+					manager.add(retargetAction);
+				else
 					manager.add(refreshAction);
 			}
 			manager.add(renameAction);
@@ -825,7 +823,6 @@ public abstract class AbstractGalleryView extends ImageView
 
 	@Override
 	protected void fillLocalToolBar(IToolBarManager manager) {
-		boolean readOnly = dbIsReadonly();
 		if (collapseAction != null)
 			manager.add(collapseAction);
 		if (scaleContributionItem != null)
@@ -839,11 +836,9 @@ public abstract class AbstractGalleryView extends ImageView
 		manager.add(editAction);
 		manager.add(editWithAction);
 		manager.add(new Separator());
-		if (!readOnly) {
-			manager.add(addBookmarkAction);
-			manager.add(saveQueryAction);
-			manager.add(new Separator());
-		}
+		manager.add(addBookmarkAction);
+		manager.add(saveQueryAction);
+		manager.add(new Separator());
 	}
 
 	public ISelection getSelection() {
@@ -882,12 +877,6 @@ public abstract class AbstractGalleryView extends ImageView
 		return super.getContent();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.bdaum.zoom.ui.views.SelectAllHandler#selectAll()
-	 */
-
 	@Override
 	public void selectAll() {
 		BusyIndicator.showWhile(getSite().getShell().getDisplay(),
@@ -908,7 +897,7 @@ public abstract class AbstractGalleryView extends ImageView
 			shell.getDisplay().asyncExec(() -> {
 				if (!shell.isDisposed()) {
 					refresh();
-					updateActions();
+					updateActions(false);
 				}
 			});
 	}
@@ -956,7 +945,7 @@ public abstract class AbstractGalleryView extends ImageView
 			setDefaultPartName();
 			setContentDescription(""); //$NON-NLS-1$
 		}
-		updateActions();
+		updateActions(false);
 		updateStatusLine();
 		return assetProvider.canProvideAssets();
 	}
@@ -1030,40 +1019,38 @@ public abstract class AbstractGalleryView extends ImageView
 	}
 
 	@Override
-	public void updateActions() {
-		if (removeFromAlbumAction == null)
-			return;
-		super.updateActions();
-		boolean writable = !dbIsReadonly();
-		int localCount = getSelectionCount(true);
-		removeFromAlbumAction.setEnabled(localCount > 0 && writable);
-		renameAction.setEnabled(localCount > 0 && writable);
-		stackAction.setEnabled(localCount > 1 && writable);
-		splitCatAction.setEnabled(true);
-		IAssetProvider assetProvider = getAssetProvider();
-		if (selectAllAction != null)
-			selectAllAction.setEnabled(assetProvider != null);
-		SmartCollectionImpl currentCollection = assetProvider == null ? null : assetProvider.getCurrentCollection();
-		boolean canSave = false;
-		if (currentCollection != null) {
-			if (currentCollection.getAdhoc() && !currentCollection.getSystem())
-				canSave = true;
-			SmartCollection parent = currentCollection.getSmartCollection_subSelection_parent();
-			if (parent != null && (parent.getAdhoc()
-					|| parent.getCriterion().size() == 1 && parent.getCriterion(0).getField().startsWith("*"))) //$NON-NLS-1$
-				canSave = false;
+	public void updateActions(boolean force) {
+		if (removeFromAlbumAction != null && (viewActive || force)) {
+			super.updateActions(force);
+			boolean writable = !dbIsReadonly();
+			int localCount = getSelectionCount(true);
+			removeFromAlbumAction.setEnabled(localCount > 0 && writable);
+			renameAction.setEnabled(localCount > 0 && writable);
+			stackAction.setEnabled(localCount > 1 && writable);
+			splitCatAction.setEnabled(true);
+			IAssetProvider assetProvider = getAssetProvider();
+			if (selectAllAction != null)
+				selectAllAction.setEnabled(assetProvider != null);
+			SmartCollectionImpl currentCollection = assetProvider == null ? null : assetProvider.getCurrentCollection();
+			boolean canSave = false;
+			if (currentCollection != null) {
+				if (currentCollection.getAdhoc() && !currentCollection.getSystem())
+					canSave = true;
+				SmartCollection parent = currentCollection.getSmartCollection_subSelection_parent();
+				if (parent != null && (parent.getAdhoc()
+						|| parent.getCriterion().size() == 1 && parent.getCriterion(0).getField().startsWith("*"))) //$NON-NLS-1$
+					canSave = false;
+			}
+			saveQueryAction.setEnabled(canSave && writable);
 		}
-		saveQueryAction.setEnabled(canSave && writable);
 	}
 
 	protected void addMouseWheelListener(Composite composite) {
-		mouseWheelListener = new GalleryMouseWheelListener();
-		composite.addMouseWheelListener(mouseWheelListener);
+		composite.addMouseWheelListener(mouseWheelListener = new GalleryMouseWheelListener());
 	}
 
 	protected void addCueListener() {
 		getControl().addMouseMoveListener(new MouseMoveListener() {
-
 			private Object cue;
 
 			public void mouseMove(MouseEvent e) {
@@ -1120,19 +1107,19 @@ public abstract class AbstractGalleryView extends ImageView
 		List<RegionImpl> set = dbManager.obtainObjects(RegionImpl.class, false, Constants.OID, regionId,
 				QueryField.EQUALS, "asset_person_parent", //$NON-NLS-1$
 				asset.getStringId(), QueryField.EQUALS);
-		List<String> assignedAlbums = null;
+		String assignedAlbums = null;
 		RegionImpl region;
 		if (!set.isEmpty()) {
 			region = set.get(0);
 			String albumId = region.getAlbum();
 			if (dbManager.exists(SmartCollectionImpl.class, albumId))
-				assignedAlbums = Collections.singletonList(albumId);
+				assignedAlbums = albumId;
 		} else {
 			region = new RegionImpl(false, null, null, "", Region.type_face, null); //$NON-NLS-1$
 			region.setStringId(regionId);
 			region.setAsset_person_parent(asset.getStringId());
 		}
-		AlbumSelectionDialog dialog = new AlbumSelectionDialog(getSite().getShell(), true, false, assignedAlbums);
+		SetPersonDialog dialog = new SetPersonDialog(getSite().getShell(), assignedAlbums);
 		if (dialog.open() == AlbumSelectionDialog.OK)
 			OperationJob.executeOperation(new AddAlbumOperation(dialog.getResult(), Collections.singletonList(asset),
 					region, dialog.isDeleteRegion()), this);

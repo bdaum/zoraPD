@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.gps.internal.dialogs;
@@ -65,7 +65,8 @@ public class MapDialog extends ZResizableDialog {
 			mapComponent.createComponent(area, true);
 			mapComponent.addCoordinatesListener(new CoordinatesListener() {
 
-				public void setCoordinates(String[] assetId, double latitude, double longitude, int zoom, int type, String uuid) {
+				public void setCoordinates(String[] assetId, double latitude, double longitude, int zoom, int type,
+						String uuid) {
 					if (result == null)
 						result = new LocationImpl();
 					result.setLatitude(latitude);
@@ -95,6 +96,11 @@ public class MapDialog extends ZResizableDialog {
 				mapPosition.setName(loc.getCity());
 				mapPosition.setState(loc.getProvinceOrState());
 				mapPosition.setStreet(loc.getSublocation());
+				if (loc.getCity() == null) {
+					initialZoomLevel = 8;
+					if (loc.getProvinceOrState() == null)
+						initialZoomLevel = 6;
+				}
 			} else {
 				mapPosition.setCountryCode(Locale.getDefault().getCountry());
 				initialZoomLevel = 6;

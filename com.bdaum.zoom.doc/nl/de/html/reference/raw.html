@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+
+
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Working with Raw images</title>
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Working with Raw images<br>
+ </h2>The RAW image format is popular for many serious photographers.
+The reason is, that other than the limited and lossy JPeG format, RAW
+files contain all data captured by the cameras sensor.<br>
+<br>
+RAW images cannot directly be used for display or print purposes.
+Instead, they need to be developed into a traditional image format such
+as TIFF or JPeG using a <span style="font-style: italic;">Raw Converter</span>, for example <span style="font-style: italic;">Adobe Camera Raw</span>, <span style="font-style: italic;">Adobe Lightroom</span>, <span style="font-style: italic;">Capture One</span>, <span style="font-style: italic;">Raw Therapee</span>, <span style="font-style: italic;">Bibble</span>, <span style="font-style: italic;">LightZone</span> and others.<br>
+<br>
+Unfortunately, each camera manufacturer maintains its own RAW format.
+In an attempt to standardize the RAW image format, Adobe has created
+the DNG format (<span style="font-style: italic;">Digital Negative</span>).
+A few camera manufacturers support this camera format directly, but in
+most cases the the images delivered by the camera must be converted using
+Adobe's <span style="font-style: italic;">DNG Converter</span>. Still,
+these DNG images must be processed with a RAW converter to obtain
+displayable images. However, not all RAW converters can convert DNG
+files obtained with Adobe's <span style="font-style: italic;">DNG Converter</span>. So, our advice is to store RAW images both in the RAW format and in the DNG format.<br>
+<br>
+<h4>Basic RAW support</h4>
+<br>
+<span style="font-style: italic;">ZoRa Photo Director</span> can
+directly import RAW and DNG images. In the process it can optionally
+convert RAW images to DNG by integrating the Adobe DNG converter.
+(Note, that <span style="font-style: italic;">Adobe DNG Converter</span> is not distributed with <span style="font-style: italic;">ZoRa Photo Director</span> but must be downloaded from Adobe and installed separately.)<br>
+<br>
+By default <span style="font-style: italic;">ZoRa Photo Director</span> uses internally the popular module <span style="font-style: italic;">dcraw</span> to convert RAW images into a viewable format (see also <a href="../tasks/import.html#raw">Importing images</a>).
+This is done every time when a thumbnail is produced from an image,
+when images are viewed or exported. Typically, the conversion process
+takes a few seconds. Because new digital cameras are released
+frequently, <span style="font-style: italic;">dcraw</span> versions change frequently - more often than ZoRa PD versions. To support the latest digital cameras, <a href="../reference/dcraw.html">new <span style="font-style: italic;">dcraw</span> versions</a> can therefore simply be dropped into the sub folder <code>dropins/ </code>in the <span style="font-style: italic;">ZoRa Photo Director</span> installation folder. <br><br>Alternatively, <span style="font-style: italic;">ZoRa Photo Director</span> can use the <span style="font-style: italic;">RawTherapee</span> raw converter in batch mode instead of&nbsp;<span style="font-style: italic;">dcraw</span>. The quality should be better than with dcraw, and if you dominantly use <span style="font-style: italic;">RawTherapee</span> to convert your raw images, integrating it with <span style="font-style: italic;">ZoRa Photo Director</span> is a good way to keep your image base consistent. Also, on OS X platforms the availability of <span style="font-style: italic;">RawTherapee</span> is better than the availability of <span style="font-style: italic;">dcraw</span>. In addition, <span style="font-style: italic;">RawTherapee</span> offers the possibilty for adding support to new cameras - look <a href="http://rawpedia.rawtherapee.com/Adding_Support_for_New_Raw_Formats">here</a>!<br>
+<br>
+To set up RAW and DNG conversion go to <a href="../reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion*</acronym></a><span style="font-style: italic;">.</span> <br>
+<br>
+<span style="font-style: italic;">ZoRa Photo Director</span> can
+automatically track the relationships between RAW images and their
+derived images. You can visualize these relationships through the <a href="../reference/hierarchy.html">Hierarchy view</a>.<br>
+<br>
+<h4><a name="3R"></a>Raw Recipe Reflection (3R)<br>
+</h4>
+When developing RAW images, Raw Converters do not modify the original
+image. Instead they apply certain transformations to the original image
+and store the result in a conventional image format such as TIFF or
+JPeG. These transformations (<span style="font-style: italic;">recipes</span>)
+are usually stored in separate files, for example in XMP sidecars or in
+separate folders, so that later these transformations can be reapplied
+or modified without effort.<br>
+<br>
+<span style="font-style: italic;">ZoRa Photo Director</span> is able to
+read these recipes and to apply them to the image whenever the image is
+converted into a viewable format. This is optional and can be
+configured under <a href="../reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion*</acronym></a><span style="font-style: italic;">. </span>In case that one image has several recipes created with different Raw Converters, <span style="font-style: italic;">ZoRa Photo Director</span> will alway use the newest recipe. In the rare case that two Raw Converters share the same recipe file (as is the case between <span style="font-style: italic;">Adobe Camera Raw/Adobe Lightroom</span> and <span style="font-style: italic;">BIbble</span>), the priority defined under&nbsp;<acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion*</acronym> decides which recipe will be used.<br>
+<br>
+RAW recipes that were used for deriving other images (such as TIFF or
+JPeG images) can automatically be archived within the catalog (<acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion*</acronym>). This allows you at a later time, to restore the original recipe. To do so, open the <a href="../reference/hierarchy.html">Hierarchy view</a> on the RAW image (<acronym>Relations&gt;Show Derivatives</acronym>) and double click the derivative. In the following dialog click <abbr>Restore</abbr>.<br><br>Note, however, that the above applies only when using <span style="font-style: italic;">dcraw</span> as raw converter. If you use <span style="font-style: italic;">RawTherapee</span> you have only the options to apply <code>.pp3</code> sidecar recipes or the standard processing profile setup in <span style="font-style: italic;">RawTherapee</span>. Recipes from other raw converters are ignored. The advandage is that the recipe is processed by <span style="font-style: italic;">RawTherapee</span> itself and therefore is 100% identical with <span style="font-style: italic;">RawTherapee</span> conversion results.<br>
+<br>
+<h4>Advanced Features: CHDK support</h4>
+The CHDK is a tool that can be loaded onto an memory card and enables most <span style="font-style: italic;">Canon</span>
+consumer cameras - among other things - to deliver RAW and DNG files.
+Unfortunately, this RAW format does not contain EXIF data, and the DNG
+files only contain an incomplete set of EXIF data. Fortunatly, the
+camera also produces an associated JPeG file with a complete set of
+EXIF data.<br>
+<br>
+To obtain the most complete set of metadata with these files, we recommend to work in the following way:<br>
+<ul>
+  <li>Set up the camera to deliver DNG images (CHDK menu). This allow
+you to process these images with most RAW converters (the RAW converter
+support for the CHDK propietary RAW format is very limited, indeed.)<br>
+  </li>
+  <li>Set up the camera (CHDK menu) to prefix image names with <code>IMG_</code>.</li>
+  <li>When importing those images from the memory card with the <span style="font-style: italic;">ZoRA Photo Director</span>, check the option <span style="font-weight: bold;">Enabling prefix for EXIF transfer </span>under<span style="font-weight: bold;"> </span><span style="font-weight: bold;">Advanced Options</span> (see also<span style="font-weight: bold;"> </span><a href="../reference/importFromDevice.html">Import from device dialog</a>). <span style="font-style: italic;">ZoRa Photo Director</span> will then import the image from the DNG file but the EXIF data from the associated JPeG file. <span style="font-weight: bold;"></span></li>
+</ul>
+<br>
+
+
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa Photo Director&gt;Preferences&gt;...</acronym><br>
+<br>
+<br>
+<ul style="font-weight: normal;"></ul>
+</body></html>

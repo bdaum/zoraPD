@@ -15,6 +15,7 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.image.messages"; //$NON-NLS-1$
 	public static String ImageConstants_raw_files;
+	public static String ImageConstants_x_format;
 	public static String Utilities_IO_Error_rotating;
 	public static String Utilities_LLJTran_Error_rotating;
 	public static String Utilities_No_thumbnail_image;

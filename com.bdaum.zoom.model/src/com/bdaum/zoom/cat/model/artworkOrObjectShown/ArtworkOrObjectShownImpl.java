@@ -12,6 +12,8 @@ import com.bdaum.aoModeling.runtime.*;
 
 /* !! This class is not intended to be modified manually !! */
 
+//Modified manually: no backpointers and other overhead
+
 @SuppressWarnings({ "unused" })
 public class ArtworkOrObjectShownImpl extends ArtworkOrObjectShown_typeImpl
 		implements ArtworkOrObjectShown {
@@ -35,25 +37,6 @@ public class ArtworkOrObjectShownImpl extends ArtworkOrObjectShown_typeImpl
 		this.artworkOrObject = artworkOrObject;
 		this.asset = asset;
 
-	}
-
-	/* ----- Initialisation ----- */
-
-	private static List<Instrumentation> _instrumentation = new ArrayList<Instrumentation>();
-
-	public static void attachInstrumentation(int point, Aspect aspect,
-			Object extension) {
-		attachInstrumentation(_instrumentation, point, aspect, extension);
-	}
-
-	public static void attachInstrumentation(int point, Aspect aspect) {
-		attachInstrumentation(_instrumentation, point, aspect);
-	}
-
-	public static void attachInstrumentation(Properties properties,
-			Aspect aspect) {
-		attachInstrumentation(_instrumentation, ArtworkOrObjectShownImpl.class,
-				properties, aspect);
 	}
 
 	/* ----- Fields ----- */
@@ -185,32 +168,10 @@ public class ArtworkOrObjectShownImpl extends ArtworkOrObjectShown_typeImpl
 		throw new CloneNotSupportedException();
 	}
 
-	/* ----- Validation ----- */
-
-	/**
-	 * Tests if all non-null properties and arcs have been supplied with values
-	 * @throws com.bdaum.aoModeling.runtime.ConstraintException
-	 */
-	public void validateCompleteness() throws ConstraintException {
-
-		if (artworkOrObject == null)
-			throw new ConstraintException(ModelMessages.getString(
-					ErrorMessages.ARGUMENT_NOT_NULL, "artworkOrObject"));
-
-		if (asset == null)
-			throw new ConstraintException(ModelMessages.getString(
-					ErrorMessages.ARGUMENT_NOT_NULL, "asset"));
-
-		super.validateCompleteness();
-	}
-
-	/**
-	 * Performs constraint validation
-	 * @throws com.bdaum.aoModeling.runtime.ConstraintException
-	 * @see com.bdaum.aoModeling.runtime.IAsset#validate
-	 */
+	@Override
 	public void validate() throws ConstraintException {
-		validateCompleteness();
+		// do nothing
 	}
+
 
 }

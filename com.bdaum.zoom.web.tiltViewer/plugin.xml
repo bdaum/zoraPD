@@ -7,28 +7,14 @@
             class="com.bdaum.zoom.web.tiltviewer.TiltViewerGalleryGenerator"
             description="html/preview1.html"
             id="com.bdaum.zoom.web.tiltViewer.generator1"
-            name="%generator.name"
+            name="TiltViewer"
             sections="false"
             slideshows="false"
-            unsupported="description descriptionfont download thumbnailsize opacity padding sectionfont navfont padding">
-         <parameter
-               default="64 64 64"
-               description="%parameter.description.innerColor"
-               encodeForHtml="false"
-               id="bkgndInnerColor"
-               label="%parameter.label.innerColor"
-               required="false"
-               type="color">
-         </parameter>
-         <parameter
-               default="32 32 32"
-               description="%parameter.description.outerColor"
-               encodeForHtml="false"
-               id="bkgndOuterColor"
-               label="%parameter.label.outerColor"
-               required="false"
-               type="color">
-         </parameter>
+            unsupported="description descriptionfont download thumbnailsize opacity padding sectionfont navfont padding"
+            url="https://www.simpleviewer.net/tiltviewer/">
+         <group
+               name="%group.name.layout">
+         </group>
          <parameter
                default="5"
                description="%parameter.description.columns"
@@ -51,6 +37,27 @@
                required="false"
                type="int">
          </parameter>
+         <group
+               name="%group.name.colors">
+         </group>
+         <parameter
+               default="64 64 64"
+               description="%parameter.description.innerColor"
+               encodeForHtml="false"
+               id="bkgndInnerColor"
+               label="%parameter.label.innerColor"
+               required="false"
+               type="color">
+         </parameter>
+         <parameter
+               default="32 32 32"
+               description="%parameter.description.outerColor"
+               encodeForHtml="false"
+               id="bkgndOuterColor"
+               label="%parameter.label.outerColor"
+               required="false"
+               type="color">
+         </parameter>
          <parameter
                default="128 128 128"
                description="%parameter.description.backColor"
@@ -60,6 +67,9 @@
                required="true"
                type="color">
          </parameter>
+         <group
+               name="%group.name.lettering">
+         </group>
          <parameter
                default="%parameter.default.gofull"
                description="%parameter.description.gofull"

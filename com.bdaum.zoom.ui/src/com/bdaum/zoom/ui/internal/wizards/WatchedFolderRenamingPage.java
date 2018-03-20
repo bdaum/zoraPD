@@ -21,41 +21,26 @@ public class WatchedFolderRenamingPage extends ColoredWizardPage {
 	private RenameGroup renameGroup;
 	private final WatchedFolderImpl watchedFolder;
 
-	public WatchedFolderRenamingPage(String pageName,
-			WatchedFolderImpl watchedFolder) {
+	public WatchedFolderRenamingPage(String pageName, WatchedFolderImpl watchedFolder) {
 		super(pageName);
 		this.watchedFolder = watchedFolder;
 	}
 
 	@Override
 	public void createControl(final Composite parent) {
-		renameGroup = new RenameGroup(
-				parent,
-				SWT.NONE,
-				null,
-				false,
+		renameGroup = new RenameGroup(parent, SWT.NONE, null, false,
 				new RenamingTemplate[] {
-						new RenamingTemplate(
-								Messages.ImportRenamingPage_date_filename,
-								"_"		+ Constants.TV_YYYY //$NON-NLS-1$
-										+ Constants.TV_MM + Constants.TV_DD
-										+ "-" //$NON-NLS-1$
-										+ Constants.TV_FILENAME, true),
-						new RenamingTemplate(
-								Messages.ImportRenamingPage_user_year_seq,
-								Constants.TV_USER + Constants.TV_YYYY
-										+ "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
-						new RenamingTemplate(
-								Messages.ImportRenamingPage_cue_year_seq,
-								Constants.TV_CUE
-										+ "_" + Constants.TV_YYYY + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$ //$NON-NLS-2$
-						new RenamingTemplate(
-								Messages.ImportRenamingPage_filename_seq,
-								Constants.TV_FILENAME
-										+ "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
-						new RenamingTemplate(
-								Messages.ImportRenamingPage_orig_filename,
-								Constants.TV_FILENAME, true) }, true);
+						new RenamingTemplate(Messages.ImportRenamingPage_date_filename, "_" + Constants.TV_YYYY //$NON-NLS-1$
+								+ Constants.TV_MM + Constants.TV_DD + "-" //$NON-NLS-1$
+								+ Constants.TV_FILENAME, true),
+						new RenamingTemplate(Messages.ImportRenamingPage_user_year_seq,
+								Constants.TV_USER + Constants.TV_YYYY + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
+						new RenamingTemplate(Messages.ImportRenamingPage_cue_year_seq,
+								Constants.TV_CUE + "_" + Constants.TV_YYYY + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$ //$NON-NLS-2$
+						new RenamingTemplate(Messages.ImportRenamingPage_filename_seq,
+								Constants.TV_FILENAME + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
+						new RenamingTemplate(Messages.ImportRenamingPage_orig_filename, Constants.TV_FILENAME, true) },
+				true);
 		renameGroup.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -67,12 +52,11 @@ public class WatchedFolderRenamingPage extends ColoredWizardPage {
 				validatePage();
 			}
 		});
-		renameGroup
-				.addSelectionChangedListener(new ISelectionChangedListener() {
-					public void selectionChanged(SelectionChangedEvent event) {
-						validatePage();
-					}
-				});
+		renameGroup.addSelectionChangedListener(new ISelectionChangedListener() {
+			public void selectionChanged(SelectionChangedEvent event) {
+				validatePage();
+			}
+		});
 		setControl(renameGroup);
 		setHelp(HelpContextIds.IMPORT_NEW_STRUCTURE_WIZARD_RENAMING);
 		setTitle(getName());
@@ -82,8 +66,8 @@ public class WatchedFolderRenamingPage extends ColoredWizardPage {
 	}
 
 	private void fillValues() {
-		renameGroup.fillValues(getWizard().getDialogSettings(),
-				watchedFolder.getSelectedTemplate(), watchedFolder.getCue());
+		renameGroup.fillValues(getWizard().getDialogSettings(), watchedFolder.getSelectedTemplate(),
+				watchedFolder.getCue());
 	}
 
 	@Override

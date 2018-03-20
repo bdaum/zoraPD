@@ -15,10 +15,12 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.db;
+
+import java.util.List;
 
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.core.IPostProcessor2;
@@ -102,77 +104,13 @@ public interface IDbFactory {
 	 */
 	float getTolerance(String field);
 
-//	/**
-//	 * Creates a text document builder for creating a free text index
-//	 *
-//	 * @return - the document builder
-//	 */
-//	DocumentBuilder getLuceneTextDocumentBuilder();
-//
-//	/**
-//	 * Creates a Query parser for checking the correctness of free text queries
-//	 *
-//	 * @return - query parser
-//	 */
-////	QueryParser getLuceneQueryParser();
-//
-//	/**
-//	 * Parses a Lucene query string
-//	 * @param query - query string
-//	 * @return - translated Lucene query
-//	 * @throws ParseException in case of syntax error
-//	 */
-//	Query parseLuceneQuery(String query) throws ParseException;
-//
-//	/**
-//	 * Creates a new Lucene Analyzer
-//	 *
-//	 * @return - Lucene analyzer
-//	 */
-////	StandardAnalyzer getLuceneAnalyzer();
-//
-//	/**
-//	 * Creates a searcher for content based image retrieval
-//	 *
-//	 * @param method
-//	 *            - algorithm index (see
-//	 *            Constants.SupportedSimilarityAlgorithms)
-//	 * @param maxResults
-//	 *            - maximum results allowed
-//	 * @return - image searcher or null
-//	 */
-//	ImageSearcher getContentSearcher(int method, int maxResults);
-//
-//	/**
-//	 * Declares the CBIR algorithms used for indexing
-//	 *
-//	 * @param algorithms
-//	 *            - algorithm IDs
-//	 */
-//	void configureCBIR(Set<String> algorithms);
-//
-//	/**
-//	 * Declares the text fields used for indexing
-//	 *
-//	 * @param fields
-//	 *            - text field (QueryField ids and Constant.INDEX_...)
-//	 */
-//	void configureTextIndex(Set<String> fields);
-//
-//	/**
-//	 * Creates and returns a DocumentBuilder, which contains all available
-//	 * features.
-//	 *
-//	 * @return a combination of all available features.
-//	 */
-//	DocumentBuilder constructFullDocumentBuilder();
-//
-//	/**
-//	 * Sets the maximum size of the import list
-//	 *
-//	 * @param mx
-//	 *            - maximum size of import list
-//	 */
+
+	/**
+	 * Sets the maximum size of the import list
+	 *
+	 * @param mx
+	 *            - maximum size of import list
+	 */
 	void setMaxImports(int mx);
 
 	/**
@@ -181,115 +119,6 @@ public interface IDbFactory {
 	 * @return maximum size of the import list
 	 */
 	public int getMaxImports();
-
-//	/**
-//	 * Returns a Lucene Index Writer Throws an IllegalStateException if an index
-//	 * writer is currently in use Make sure to call a closeIndexWriter() in a
-//	 * finally clause
-//	 *
-//	 * @param dir
-//	 *            - directory of index
-//	 * @param create
-//	 *            - true if a new index shall be created
-//	 * @return Lucene Index Writer
-//	 * @throws CorruptIndexException
-//	 * @throws LockObtainFailedException
-//	 * @throws IOException
-//	 * @throws IllegalStateException
-//	 * @deprecated - use getIndexWriter(File)
-//	 */
-//	@Deprecated
-//	IndexWriter getIndexWriter(Directory dir, boolean create)
-//			throws CorruptIndexException, LockObtainFailedException,
-//			IOException, IllegalStateException;
-//
-//	/**
-//	 * Returns a Lucene Index Writer Throws an IllegalStateException if an index
-//	 * writer is currently in use Make sure to call a releaseIndexWriter() in a
-//	 * finally clause
-//	 *
-//	 * @param indexPath
-//	 *            - path of index folder
-//	 * @return - Lucene Index Writer
-//	 * @throws CorruptIndexException
-//	 * @throws LockObtainFailedException
-//	 * @throws IOException
-//	 */
-//	IndexWriter getIndexWriter(File indexPath) throws CorruptIndexException,
-//			LockObtainFailedException, IOException;
-//
-//	/**
-//	 * Closes the index writer. Repeated invocation of this method has no
-//	 * effect.
-//	 *
-//	 * @throws CorruptIndexException
-//	 * @throws IOException
-//	 * @deprecated - use releaseIndexWriter()
-//	 */
-//	@Deprecated
-//	void closeIndexWriter() throws CorruptIndexException, IOException;
-//
-//	/**
-//	 * Releases the index writer.
-//	 *
-//	 * @param indexPath
-//	 *            - index path to which the writer belongs
-//	 * @throws CorruptIndexException
-//	 * @throws IOException
-//	 */
-//	void releaseIndexWriter(File indexPath) throws CorruptIndexException,
-//			IOException;
-//
-//	/**
-//	 * Commits all index writer changes
-//	 *
-//	 * @return current index writer
-//	 * @throws CorruptIndexException
-//	 * @throws IOException
-//	 * @deprecated - use flushIndexWriter(File)
-//	 */
-//	@Deprecated
-//	IndexWriter flushIndexWriter() throws CorruptIndexException, IOException;
-//
-//	/**
-//	 * Commits all index writer changes
-//	 *
-//	 * @param indexPath
-//	 *            - index path to which the writer belongs
-//	 * @return current index writer
-//	 * @throws CorruptIndexException
-//	 * @throws IOException
-//	 */
-//	IndexWriter flushIndexWriter(File indexPath) throws CorruptIndexException,
-//			IOException;
-//
-//	/**
-//	 * Allocates and returns an index reader for the given index path Make sure
-//	 * to call a corresponding releaseIndexReader() in a finally clause.
-//	 *
-//	 * @param indexPath
-//	 * @return
-//	 * @throws CorruptIndexException
-//	 * @throws IOException
-//	 */
-//	IndexReader getIndexReader(File indexPath) throws CorruptIndexException,
-//			IOException;
-//
-//	/**
-//	 * Releases the specified index reader
-//	 *
-//	 * @param indexPath
-//	 *            - index path to which the reader is belonging
-//	 * @param reader
-//	 *            - index reader to release
-//	 */
-//	void releaseIndexReader(File indexPath, IndexReader reader);
-//
-//	/**
-//	 * Releases all index readers and writers
-//	 */
-//	void releaseAllIndexReadersAndWriters();
-
 
 	/**
 	 * Returns the peer service if the application runs in networked mode
@@ -347,7 +176,47 @@ public interface IDbFactory {
 	 */
 	IPostProcessor2 createQueryPostProcessor(SmartCollection sm);
 
+	/**
+	 * Returns the version of the Lire service
+	 * @return - Lire service version
+	 */
 	int getLireServiceVersion();
 
+	/**
+	 * Sets the indexed fields to be used by the database manager
+	 * @param fields - A string containing the keys of the indexed QueryFields separated by newline character
+	 */
+	void setIndexedFields(String fields);
+
+	/**
+	 * Returns the set of indexed fields
+	 * @return set of indexed field keys
+	 */
+	List<String> getIndexedFields();
+
+	/**
+	 * returns the unit for distances
+	 * @return 'k' for kilometers, 'm' for miles, 'n' for nautical miles
+	 */
+	char getDistanceUnit();
+
+	/**
+	 * sets the unit for distances
+	 * @param unit - "k" for kilometers, "m" for miles, "n" for nautical miles
+	 */
+	void setDistanceUnit(String unit);
+	
+	/**
+	 * returns the unit for dimensions
+	 * @return 'c' for centimeters, 'i' for inches
+	 */
+	char getDimUnit();
+
+	/**
+	 * sets the unit for dimensions
+	 * @param unit - "c" for centimeters, "i" for inches
+	 */
+
+	void setDimUnit(String unit);
 
 }

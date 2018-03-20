@@ -15,13 +15,12 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.net.communities.jobs;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -54,11 +53,10 @@ import org.scohen.juploadr.uploadapi.Session;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.TrackRecord;
 import com.bdaum.zoom.cat.model.asset.TrackRecordImpl;
+import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.job.OperationJob;
@@ -153,72 +151,54 @@ public class ExportToCommunityJob extends AbstractExportJob implements IErrorHan
 					NLS.bind(Messages.ExportToCommunityJob_error_when_exporting, communityName), e));
 			return status;
 		}
-		IVolumeManager vm = Core.getCore().getVolumeManager();
 		progress.worked(100);
-		Ticketbox box = new Ticketbox();
-		try {
+		try (Assetbox box = new Assetbox(null, status, false)) {
 			ImageUploadApi imageUploadApi = getImageUploadApi();
 			imageUploadApi.preProcessAllUploads(assets, session, this);
 			if (monitor.isCanceled())
 				return status;
-			try {
-				for (int i = 0; i < size; i++) {
-					Asset asset = assets.get(i);
-					AlbumDescriptor album = (associatedAlbums == null) ? null : associatedAlbums[i];
-					String title = (titles == null) ? null : titles[i];
-					String description = (descriptions == null) ? null : descriptions[i];
-					URI uri = vm.findExistingFile(asset, false);
-					if (uri != null) {
-						File file = null;
-						try {
-							file = box.obtainFile(uri);
-						} catch (IOException e) {
-							status.add(new Status(IStatus.ERROR, CommunitiesActivator.PLUGIN_ID,
-									NLS.bind(Messages.ExportToCommunityJob_download_failed, uri), e));
+			for (int i = 0; i < size; i++) {
+				Asset asset = assets.get(i);
+				AlbumDescriptor album = (associatedAlbums == null) ? null : associatedAlbums[i];
+				String title = (titles == null) ? null : titles[i];
+				String description = (descriptions == null) ? null : descriptions[i];
+				File file = box.obtainFile(asset);
+				if (file != null) {
+					File outfile = makeUniqueTargetFile(targetFolder, box.getUri(), mode);
+					if (mode == Constants.FORMAT_ORIGINAL) {
+						ImageAttributes imageAttributes = new ImageAttributes(session, asset, album, file, false);
+						imageAttributes.setTitle(title);
+						if (showDescription)
+							imageAttributes.setDescription(description);
+						else
+							imageAttributes.setDescription(""); //$NON-NLS-1$
+						imagesTransferred.add(imageAttributes);
+						upload(imageAttributes, monitor, false);
+						if (monitor.isCanceled())
+							break;
+					} else {
+						if (downScaleImage(status, progress, asset, file, outfile, 1d, cropMode) != null) {
+							if (monitor.isCanceled())
+								break;
+							ImageAttributes imageAttributes = new ImageAttributes(session, asset, album, outfile, true);
+							imageAttributes.setTitle(title);
+							if (showDescription)
+								imageAttributes.setDescription(description);
+							else
+								imageAttributes.setDescription(""); //$NON-NLS-1$
+							imagesTransferred.add(imageAttributes);
+							upload(imageAttributes, monitor, true);
+							if (monitor.isCanceled())
+								break;
 						}
-						if (file != null) {
-							File outfile = makeUniqueTargetFile(targetFolder, uri, mode);
-							if (mode == Constants.FORMAT_ORIGINAL) {
-								ImageAttributes imageAttributes = new ImageAttributes(session, asset, album, file,
-										false);
-								imageAttributes.setTitle(title);
-								if (showDescription)
-									imageAttributes.setDescription(description);
-								else
-									imageAttributes.setDescription(""); //$NON-NLS-1$
-								imagesTransferred.add(imageAttributes);
-								upload(imageAttributes, monitor, false);
-								if (monitor.isCanceled())
-									break;
-							} else {
-								if (downScaleImage(status, progress, asset, file, outfile, 1d, cropMode) != null) {
-									if (monitor.isCanceled())
-										break;
-									ImageAttributes imageAttributes = new ImageAttributes(session, asset, album,
-											outfile, true);
-									imageAttributes.setTitle(title);
-									if (showDescription)
-										imageAttributes.setDescription(description);
-									else
-										imageAttributes.setDescription(""); //$NON-NLS-1$
-									imagesTransferred.add(imageAttributes);
-									upload(imageAttributes, monitor, true);
-									if (monitor.isCanceled())
-										break;
-								}
-								progress.worked(200);
-							}
-							box.cleanup();
-						}
-					}
-					if (monitor.isCanceled()) {
-						status.add(new Status(IStatus.WARNING, CommunitiesActivator.PLUGIN_ID,
-								NLS.bind(Messages.ExportToCommunityJob_export_was_canceled, communityName)));
-						return status;
+						progress.worked(200);
 					}
 				}
-			} finally {
-				box.endSession();
+				if (monitor.isCanceled()) {
+					status.add(new Status(IStatus.WARNING, CommunitiesActivator.PLUGIN_ID,
+							NLS.bind(Messages.ExportToCommunityJob_export_was_canceled, communityName)));
+					return status;
+				}
 			}
 			imageUploadApi.postProcessAllUploads(imagesTransferred, session, this);
 			try {

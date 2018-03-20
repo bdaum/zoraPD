@@ -39,8 +39,7 @@ public class GotoBookmarkAction extends Action {
 	private final IAdaptable adaptable;
 
 	public GotoBookmarkAction(Bookmark bookmark, IAdaptable adaptable) {
-		super(Messages.GotoBookmarkAction_goto_bookmark_title,
-				Icons.gotoBookmark.getDescriptor());
+		super(Messages.GotoBookmarkAction_goto_bookmark_title, Icons.gotoBookmark.getDescriptor());
 		this.bookmark = bookmark;
 		this.adaptable = adaptable;
 		setToolTipText(Messages.GotoBookmarkAction_goto_bookmark_tooltip);
@@ -52,49 +51,37 @@ public class GotoBookmarkAction extends Action {
 			Asset asset = null;
 			IDbManager dbManager = Core.getCore().getDbManager();
 			String assetId = bookmark.getAssetId();
-			if (bookmark.getCatFile() != null
-					&& !bookmark.getCatFile().isEmpty()) {
+			if (bookmark.getCatFile() != null && !bookmark.getCatFile().isEmpty()) {
 				IPeerService peerService = Core.getCore().getPeerService();
 				if (peerService != null) {
 					try {
-						asset = peerService.obtainAsset(bookmark.getPeer(),
-								new File(bookmark.getCatFile()),
+						asset = peerService.obtainAsset(bookmark.getPeer(), new File(bookmark.getCatFile()),
 								bookmark.getAssetId());
 					} catch (ConnectionLostException e) {
-						AcousticMessageDialog
-								.openInformation(
-										adaptable
-												.getAdapter(Shell.class),
-										Messages.GotoBookmarkAction_goto_bookmark_title,
-										e.getLocalizedMessage());
+						AcousticMessageDialog.openInformation(adaptable.getAdapter(Shell.class),
+								Messages.GotoBookmarkAction_goto_bookmark_title, e.getLocalizedMessage());
 						return;
 					} catch (SecurityException e) {
-						AcousticMessageDialog
-								.openInformation(
-										adaptable
-												.getAdapter(Shell.class),
-										Messages.GotoBookmarkAction_goto_bookmark_title,
-										Messages.GotoBookmarkAction_unsufficient_rights);
+						AcousticMessageDialog.openInformation(adaptable.getAdapter(Shell.class),
+								Messages.GotoBookmarkAction_goto_bookmark_title,
+								Messages.GotoBookmarkAction_unsufficient_rights);
 						return;
 					}
 				}
 			} else
 				asset = dbManager.obtainAsset(bookmark.getAssetId());
 			if (asset != null) {
-				IWorkbenchPage page = adaptable
-						.getAdapter(IWorkbenchPage.class);
+				IWorkbenchPage page = adaptable.getAdapter(IWorkbenchPage.class);
 				INavigationHistory navigationHistory = UiActivator.getDefault()
 						.getNavigationHistory(page.getWorkbenchWindow());
 				AbstractGalleryView aView = null;
 				SmartCollection localCollection = null;
 				boolean shown = false;
-				lp: for (AbstractGalleryView gallery : navigationHistory
-						.getOpenGalleries()) {
+				lp: for (AbstractGalleryView gallery : navigationHistory.getOpenGalleries()) {
 					if (aView == null)
 						aView = gallery;
 					IAssetProvider assetProvider = gallery.getAssetProvider();
-					SmartCollectionImpl currentCollection = assetProvider
-							.getCurrentCollection();
+					SmartCollectionImpl currentCollection = assetProvider.getCurrentCollection();
 					if (currentCollection != null) {
 						if (currentCollection.getNetwork()) {
 							if (assetProvider.indexOf(assetId) >= 0) {
@@ -108,43 +95,34 @@ public class GotoBookmarkAction extends Action {
 				SmartCollection sm = null;
 				String collectionId = bookmark.getCollectionId();
 				if (collectionId != null)
-					sm = dbManager.obtainById(SmartCollectionImpl.class,
-							collectionId);
+					sm = dbManager.obtainById(SmartCollectionImpl.class, collectionId);
 				if (sm == null) {
 					if (bookmark.getCatFile() != null) {
 						if (!shown) {
 							SmartCollectionImpl newColl = new SmartCollectionImpl(
-									Messages.GotoBookmarkAction_bookmarked,
-									false, false, true, true, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
-							newColl.addCriterion(new CriterionImpl(
-									Constants.OID, null, assetId,
-									QueryField.EQUALS, false));
-							navigationHistory
-									.postSelection(new StructuredSelection(
-											newColl));
+									Messages.GotoBookmarkAction_bookmarked, false, false, true, true, null, 0, null, 0,
+									null, Constants.INHERIT_LABEL, null, 0, null);
+							newColl.addCriterion(
+									new CriterionImpl(Constants.OID, null, assetId, QueryField.EQUALS, false));
+							navigationHistory.postSelection(new StructuredSelection(newColl));
 						}
 					} else
 						sm = localCollection != null ? localCollection
-								: Utilities.obtainFolderCollection(dbManager,
-										asset.getUri(), asset.getVolume());
+								: Utilities.obtainFolderCollection(dbManager, asset.getUri(), asset.getVolume());
 				}
-				if (sm != null) {
+				if (sm != null)
 					try {
-						((CatalogView) page.showView(CatalogView.ID))
-								.setSelection(new StructuredSelection(sm), true);
+						((CatalogView) page.showView(CatalogView.ID)).setSelection(new StructuredSelection(sm), true);
 					} catch (PartInitException e) {
 						// should never happen
 					}
-				}
 				navigationHistory.postSelection(AssetSelection.EMPTY);
 				if (asset != null)
 					navigationHistory.postSelection(new AssetSelection(asset));
 				page.activate(aView);
 			} else
-				AcousticMessageDialog.openInformation(
-						adaptable.getAdapter(Shell.class),
-						Messages.GotoBookmarkAction_goto_bookmark_title,
-						Messages.GotoBookmarkAction_outdated_bookmark);
+				AcousticMessageDialog.openInformation(adaptable.getAdapter(Shell.class),
+						Messages.GotoBookmarkAction_goto_bookmark_title, Messages.GotoBookmarkAction_outdated_bookmark);
 		}
 	}
 

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.job;
@@ -117,7 +117,7 @@ public class UpdateJob extends AbstractUpdateJob {
 	private File download(String pack, IProgressMonitor monitor) {
 		if (sha1 == null)
 			try {
-				sha1 = MessageDigest.getInstance(ALGORITHM); 
+				sha1 = MessageDigest.getInstance(ALGORITHM);
 			} catch (NoSuchAlgorithmException e) {
 				// should never happen
 			}
@@ -138,13 +138,14 @@ public class UpdateJob extends AbstractUpdateJob {
 					continue;
 				if (monitor.isCanceled())
 					break;
-				InputStream bin = new BufferedInputStream(uc.getInputStream());
-				int len = Core.copyBytesToFile(bin, file, monitor);
-				if (len <= 0 || len != contentLength) {
-					UiActivator.getDefault().logError(
-							NLS.bind(Messages.Updater_download_failed, new Object[] { file, contentLength, len }),
-							null);
-					continue;
+				try (InputStream bin = new BufferedInputStream(uc.getInputStream())) {
+					int len = Core.copyBytesToFile(bin, file, monitor);
+					if (len <= 0 || len != contentLength) {
+						UiActivator.getDefault().logError(
+								NLS.bind(Messages.Updater_download_failed, new Object[] { file, contentLength, len }),
+								null);
+						continue;
+					}
 				}
 				if (monitor.isCanceled())
 					break;

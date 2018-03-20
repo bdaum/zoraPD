@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Berthold Daum.
+ * Copyright (c) 2009-2018 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,18 +26,18 @@ public class GeoPerspective extends AbstractPerspective {
 
 	public void createInitialLayout(IPageLayout layout) {
 		super.createInitialLayout(layout);
-		layout.addView(VSTRIP_VIEW, IPageLayout.LEFT, 0.3f,
+		layout.addView(VSTRIP_VIEW, IPageLayout.LEFT, 0.25f,
 				IPageLayout.ID_EDITOR_AREA);
-		createCatalogFolder(layout, IPageLayout.LEFT, 0.9f, VSTRIP_VIEW);
+		createCatalogFolder(layout, IPageLayout.LEFT, 0.65f, VSTRIP_VIEW);
 		IFolderLayout geofolder = layout.createFolder(GEO_FOLDER,
 				IPageLayout.BOTTOM, 0.75f, CATALOG_FOLDER);
 		geofolder.addView(PreviewView.ID);
 		geofolder.addView(GPS_VIEW);
 		IFolderLayout folder = layout.createFolder(MAP_FOLDER,
-				IPageLayout.RIGHT, 1f, IPageLayout.ID_EDITOR_AREA);
+				IPageLayout.RIGHT, 0.9f, IPageLayout.ID_EDITOR_AREA);
 		fillMainFolder(folder, MAP_VIEW);
 		addCheatSheets(layout, MAP_FOLDER);
-		addFastViews(layout, IPageLayout.LEFT, 0.7f, CATALOG_FOLDER);
+		addFastViews(layout, IPageLayout.RIGHT, 0.7f, MAP_FOLDER);
 		layout.setEditorAreaVisible(false);
 	}
 

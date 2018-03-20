@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -50,7 +50,7 @@ import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
-import com.bdaum.zoom.ui.internal.views.AbstractPropertiesView.ViewComparator;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.views.Messages;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
@@ -146,7 +146,7 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 				new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewer.setLabelProvider(new MetadataLabelProvider());
 		viewer.setContentProvider(new MetadataContentProvider());
-		viewer.setComparator(new ViewComparator());
+		viewer.setComparator(ZViewerComparator.INSTANCE);
 		UiUtilities.installDoubleClickExpansion(viewer);
 		viewer.addFilter(new ViewerFilter() {
 			@Override

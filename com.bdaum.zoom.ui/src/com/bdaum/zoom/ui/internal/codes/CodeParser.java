@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2011 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.codes;
 
@@ -227,9 +227,9 @@ public class CodeParser {
 					if (TOPIC.equals(qName)) {
 						topicMap.put(topic.getCode(), topic);
 						topc = false;
-					} else if (FORMALNAME.equals(qName)) {
+					} else if (FORMALNAME.equals(qName))
 						topic.setCode(text.toString());
-					} else if (DESCRIPTION.equals(qName)) {
+					else if (DESCRIPTION.equals(qName))
 						if (name) {
 							topic.setName(text.toString());
 							name = false;
@@ -237,14 +237,12 @@ public class CodeParser {
 							topic.setDescription(text.toString());
 							explanation = false;
 						}
-					}
-				} else if (DATE_AND_TIME.equals(qName)) {
+				} else if (DATE_AND_TIME.equals(qName))
 					try {
 						dateAndTime = new SimpleDateFormat("yyyyMMdd'T'HHmmssZ").parse(text.toString()); //$NON-NLS-1$
 					} catch (ParseException e) {
 						// do nothing
 					}
-				}
 			}
 		};
 		return handler;

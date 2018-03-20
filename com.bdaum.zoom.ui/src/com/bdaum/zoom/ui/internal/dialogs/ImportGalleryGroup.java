@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -67,7 +67,6 @@ public class ImportGalleryGroup {
 				false, false));
 		clearButton.setText(Messages.ImportGalleryGroup_clear);
 		clearButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				fromField.setText(""); //$NON-NLS-1$
@@ -80,7 +79,6 @@ public class ImportGalleryGroup {
 				false, false));
 		browseButton.setText(Messages.ImportGalleryGroup_browse);
 		browseButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				PresentationSelectDialog dialog = new PresentationSelectDialog(
@@ -101,9 +99,8 @@ public class ImportGalleryGroup {
 	}
 
 	protected void fireSelectionChanged() {
-		for (Object l : listeners.getListeners()) {
-			((ISelectionChangedListener) l).selectionChanged(null);
-		}
+		for (ISelectionChangedListener l : listeners)
+			l.selectionChanged(null);
 	}
 
 	protected String getName() {

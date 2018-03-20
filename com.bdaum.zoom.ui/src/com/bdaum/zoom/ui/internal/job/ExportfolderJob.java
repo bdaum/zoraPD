@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.job;
 
@@ -49,12 +49,12 @@ import com.bdaum.zoom.cat.model.asset.TrackRecordImpl;
 import com.bdaum.zoom.cat.model.derivedBy.DerivedByImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.cat.model.meta.WatchedFolderImpl;
+import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.Utilities;
@@ -150,7 +150,7 @@ public class ExportfolderJob extends AbstractExportJob {
 		monitor.beginTask(Messages.ExportfolderJob_exporting_to_folder, work);
 		SubMonitor progress = SubMonitor.convert(monitor, (addToCat ? 1100 : 1000) * work);
 		File targetFolder;
-		if (target == Constants.FTP) {
+		if (target == Constants.FTP)
 			try {
 				targetFolder = Core.createTempDirectory("FtpTransfer"); //$NON-NLS-1$
 			} catch (IOException e) {
@@ -158,49 +158,39 @@ public class ExportfolderJob extends AbstractExportJob {
 						Messages.ExportfolderJob_error_when_exporting_to_ftp, e));
 				return status;
 			}
-		} else {
+		else {
 			folder.mkdirs();
 			targetFolder = folder;
 		}
 		IVolumeManager vm = Core.getCore().getVolumeManager();
-		Ticketbox box = new Ticketbox();
-		try {
-			for (Asset asset : assets) {
-				URI uri = vm.findExistingFile(asset, false);
-				if (uri != null) {
-					File file = null;
-					try {
-						file = box.obtainFile(uri);
-					} catch (IOException e) {
-						addErrorStatus(status, NLS.bind(Messages.ExportfolderJob_download_failed, uri), e);
+		try (Assetbox box = new Assetbox(assets, status, false)) {
+			for (File file : box) {
+				if (file != null) {
+					Asset asset = box.getAsset();
+					File subfolder = createSubfolder(targetFolder, asset);
+					String path = subfolder.getAbsolutePath();
+					if (path.length() > BatchConstants.MAXPATHLENGTH - 13) {
+						if (errands == null)
+							errands = new HashSet<File>();
+						if (errands.add(subfolder)) {
+							StringBuilder sb = new StringBuilder();
+							sb.append(path, 0, 20).append("...").append(path, path.length() - 20, path.length()); //$NON-NLS-1$
+							status.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
+									NLS.bind(Messages.ExportfolderJob_path_too_long, sb.toString()), null));
+						}
+						continue;
 					}
-					if (file != null) {
-						File subfolder = createSubfolder(targetFolder, asset);
-						String path = subfolder.getAbsolutePath();
-						if (path.length() > BatchConstants.MAXPATHLENGTH - 13) {
-							if (errands == null)
-								errands = new HashSet<File>();
-							if (errands.add(subfolder)) {
-								StringBuilder sb = new StringBuilder();
-								sb.append(path, 0, 20).append("...").append(path, path.length() - 20, path.length()); //$NON-NLS-1$
-								status.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
-										NLS.bind(Messages.ExportfolderJob_path_too_long, sb.toString()), null));
-							}
-							continue;
-						}
-						File outfile = makeUniqueTargetFile(subfolder, uri, mode);
-						SourceAndTarget sourceAndTarget;
-						if (mode == Constants.FORMAT_ORIGINAL) {
-							sourceAndTarget = copyImage(status, asset, file, outfile, monitor);
-							progress.worked(1000);
-						} else
-							sourceAndTarget = downScaleImage(status, progress, asset, file, outfile, 1d, cropMode);
-						if (sourceAndTarget != null) {
-							todo.add(sourceAndTarget);
-							if (firstExport == null)
-								firstExport = sourceAndTarget.getOutfile().toURI();
-						}
-						box.cleanup();
+					File outfile = makeUniqueTargetFile(subfolder, box.getUri(), mode);
+					SourceAndTarget sourceAndTarget;
+					if (mode == Constants.FORMAT_ORIGINAL) {
+						sourceAndTarget = copyImage(status, asset, file, outfile, monitor);
+						progress.worked(1000);
+					} else
+						sourceAndTarget = downScaleImage(status, progress, asset, file, outfile, 1d, cropMode);
+					if (sourceAndTarget != null) {
+						todo.add(sourceAndTarget);
+						if (firstExport == null)
+							firstExport = sourceAndTarget.getOutfile().toURI();
 					}
 				}
 				if (monitor.isCanceled()) {
@@ -209,8 +199,6 @@ public class ExportfolderJob extends AbstractExportJob {
 					return status;
 				}
 			}
-		} finally {
-			box.endSession();
 		}
 		if (target == Constants.FTP) {
 			TransferJob transferJob = new TransferJob(targetFolder.listFiles(), acc, true);

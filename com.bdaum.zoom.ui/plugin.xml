@@ -51,7 +51,7 @@
             allowMultiple="false"
             category="com.bdaum.zoom.viewing"
             class="com.bdaum.zoom.ui.internal.views.LightboxView:grid"
-            icon="icons/lightbox.gif"
+            icon="icons/lightbox.png"
             id="com.bdaum.zoom.ui.views.LightboxView"
             name="%view.name.lightbox"
             restorable="true">
@@ -60,7 +60,7 @@
             allowMultiple="false"
             category="com.bdaum.zoom.viewing"
             class="com.bdaum.zoom.ui.internal.views.ZuiView"
-            icon="icons/sleeves.gif"
+            icon="icons/sleeves.png"
             id="com.bdaum.zoom.ui.views.ZuiView"
             name="%view.name.sleeves"
             restorable="true">
@@ -68,7 +68,7 @@
       <view
             category="com.bdaum.zoom.viewing"
             class="com.bdaum.zoom.ui.internal.views.PreviewView"
-            icon="icons/preview.gif"
+            icon="icons/preview.png"
             id="com.bdaum.zoom.ui.views.PreviewView"
             name="%view.name.preview">
       </view>
@@ -76,7 +76,7 @@
             allowMultiple="false"
             category="com.bdaum.zoom.viewing"
             class="com.bdaum.zoom.ui.internal.views.LightboxView:vstrip"
-            icon="icons/vstrip.gif"
+            icon="icons/vstrip.png"
             id="com.bdaum.zoom.ui.views.VStripView"
             name="%view.name.vstrip"
             restorable="true">
@@ -85,7 +85,7 @@
             allowMultiple="false"
             category="com.bdaum.zoom.viewing"
             class="com.bdaum.zoom.ui.internal.views.LightboxView:hstrip"
-            icon="icons/hstrip.gif"
+            icon="icons/hstrip.png"
             id="com.bdaum.zoom.ui.views.HStripView"
             name="%view.name.hstrip"
             restorable="true">
@@ -93,7 +93,7 @@
       <view
             category="com.bdaum.zoom.hierarchy"
             class="com.bdaum.zoom.ui.internal.views.HierarchyView:derivatives"
-            icon="icons/derivative.gif"
+            icon="icons/derivative.png"
             id="com.bdaum.zoom.ui.views.HierarchyViewDerivatives"
             name="%view.name.derivatives"
             restorable="true">
@@ -101,7 +101,7 @@
       <view
             category="com.bdaum.zoom.hierarchy"
             class="com.bdaum.zoom.ui.internal.views.HierarchyView:originals"
-            icon="icons/original.gif"
+            icon="icons/original.png"
             id="com.bdaum.zoom.ui.views.HierarchyViewOriginals"
             name="%view.name.originals"
             restorable="true">
@@ -109,7 +109,7 @@
       <view
             category="com.bdaum.zoom.hierarchy"
             class="com.bdaum.zoom.ui.internal.views.HierarchyView:composites"
-            icon="icons/composites.gif"
+            icon="icons/composites.png"
             id="com.bdaum.zoom.ui.views.HierarchyViewComposites"
             name="%view.name.composites"
             restorable="true">
@@ -117,7 +117,7 @@
       <view
             category="com.bdaum.zoom.hierarchy"
             class="com.bdaum.zoom.ui.internal.views.HierarchyView:components"
-            icon="icons/components.gif"
+            icon="icons/components.png"
             id="com.bdaum.zoom.ui.views.HierarchyViewComponents"
             name="%view.name.components"
             restorable="true">
@@ -125,7 +125,7 @@
       <view
             category="com.bdaum.zoom.meta"
             class="com.bdaum.zoom.ui.internal.views.MetadataView"
-            icon="icons/meta.gif"
+            icon="icons/meta.png"
             id="com.bdaum.zoom.ui.views.MetadataView"
             name="%view.name.metadata"
             restorable="true">
@@ -133,28 +133,28 @@
       <view
             category="com.bdaum.zoom.meta"
             class="com.bdaum.zoom.ui.internal.views.PropertiesView"
-            icon="icons/prop_ps.gif"
+            icon="icons/prop_ps.png"
             id="com.bdaum.zoom.ui.views.PropertiesView"
             name="%view.name.properties">
       </view>
       <view
             category="com.bdaum.zoom.meta"
             class="com.bdaum.zoom.ui.internal.views.ExifView"
-            icon="icons/exif.gif"
+            icon="icons/exif.png"
             id="com.bdaum.zoom.ui.views.ExifView"
             name="%view.name.exif">
       </view>
       <view
             category="com.bdaum.zoom.meta"
             class="com.bdaum.zoom.ui.internal.views.IPTCView"
-            icon="icons/iptc.gif"
+            icon="icons/iptc.png"
             id="com.bdaum.zoom.ui.views.IPTCView"
             name="%view.name.iptc">
       </view>
       <view
             category="org.eclipse.ui"
             class="org.eclipse.ui.internal.progress.ProgressView"
-            icon="icons/pview.gif"
+            icon="icons/pview.png"
             id="org.eclipse.ui.views.ProgressView"
             name="%view.name.progress"
             restorable="true">
@@ -163,14 +163,14 @@
             category="com.bdaum.zoom.mamagement"
             class="com.bdaum.zoom.ui.internal.views.TrashcanView"
             fastViewWidthRatio="0.5d"
-            icon="icons/trash.gif"
+            icon="icons/trash.png"
             id="com.bdaum.zoom.ui.views.TrashcanView"
             name="%view.name.trashcan">
       </view>
       <view
             category="com.bdaum.zoom.presentation"
             class="com.bdaum.zoom.ui.internal.views.SlideshowView"
-            icon="icons/slideshow.gif"
+            icon="icons/slideshow.png"
             id="com.bdaum.zoom.ui.SlideshowView"
             name="%view.name.slideshow"
             restorable="true">
@@ -186,14 +186,14 @@
       <view
             category="com.bdaum.zoom.viewing"
             class="com.bdaum.zoom.ui.internal.views.HistogramView"
-            icon="icons/histo.gif"
+            icon="icons/histo.png"
             id="com.bdaum.zoom.ui.views.HistogramView"
             name="%view.name.histogram">
       </view>
       <view
             category="com.bdaum.zoom.presentation"
             class="com.bdaum.zoom.ui.internal.views.WebGalleryView"
-            icon="icons/webGallery.gif"
+            icon="icons/webGallery.png"
             id="com.bdaum.zoom.ui.WebGalleryView"
             name="%web_gallery"
             restorable="true">
@@ -243,683 +243,6 @@
             restorable="true">
       </view>
    </extension>
-         <!--
-   <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            description="%actionSet.description.catalog_management"
-            id="com.bdaum.zoom.ui.actionSet.cat"
-            label="%actionSet.label.catalog"
-            visible="true">
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.RenameCatActionDelegate"
-               definitionId="com.bdaum.zoom.ui.RenameCatalogCommand"
-               id="com.bdaum.zoom.ui.actions.RenameCatAction"
-               label="%action.label.renameCat"
-               menubarPath="catalog/catStart"
-               style="push"
-               tooltip="%action.tooltip.renameCat">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.OpenCatAction"
-               definitionId="com.bdaum.zoom.ui.OpenCatalogCommand"
-               icon="icons/book_open.png"
-               id="com.bdaum.zoom.ui.actions.OpenCatAction"
-               label="%action.label.open_catalog"
-               menubarPath="catalog/catStart"
-               tooltip="%action.tooltip.open_cataolgo">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.NewCatAction"
-               definitionId="com.bdaum.zoom.ui.NewCatalogCommand"
-               icon="icons/book_add.png"
-               id="com.bdaum.zoom.ui.actions.NewCatAction"
-               label="%action.label.new_catalog"
-               menubarPath="catalog/catStart"
-               style="push"
-               tooltip="%action.tooltip.new_catalog">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.EditMetaAction"
-               definitionId="com.bdaum.zoom.ui.PropertiesCommand"
-               icon="icons/props_orange.png"
-               id="com.bdaum.zoom.ui.actions.EditMetaAction"
-               label="%action.label.properties"
-               menubarPath="catalog/catExt1"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.cat/props.ext"
-               tooltip="%action.tooltip.edit_catolog_props">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.MigrateCatActionDelegate"
-               definitionId="com.bdaum.zoom.ui.MigrateCommand"
-               id="com.bdaum.zoom.ui.actions.MigrateCatActionDelegate"
-               label="%action.label.migrate"
-               menubarPath="catalog/maintenance/maintenanceStart"
-               style="push"
-               tooltip="%action.tooltip.migrate">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.RestoreCatActionDelegate"
-               definitionId="com.bdaum.zoom.ui.RestoreCatCommand"
-               id="com.bdaum.zoom.ui.actions.RestoreCatActionDelegate"
-               label="%action.label.restore"
-               menubarPath="catalog/maintenance/maintenanceStart"
-               style="push"
-               tooltip="%action.tooltip.restore">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.RefreshIndexActionDelegate"
-               definitionId="com.bdaum.zoom.ui.RefreshIndexCommand"
-               id="com.bdaum.zoom.ui.actions.RefreshIndexActionDelegate"
-               label="%action.label.refreshIndex"
-               menubarPath="catalog/maintenance/maintenanceStart"
-               style="push"
-               tooltip="%action.tooltip.refreshIndex">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.SplitCatActionDelegate"
-               definitionId="com.bdaum.zoom.ui.SplitCatalogCommand"
-               icon="icons/book_go.png"
-               id="com.bdaum.zoom.ui.actions.SplitCatActionDelegate"
-               label="%action.label.split"
-               menubarPath="catalog/maintenance/maintenanceStart"
-               style="push"
-               tooltip="%action.tooltip.split">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.MergeCatActionDelegate"
-               definitionId="com.bdaum.zoom.ui.MergeCatalogCommand"
-               icon="icons/book_merge.png"
-               id="com.bdaum.zoom.ui.actions.MergeCatActionDelegate"
-               label="%action.label.merge"
-               menubarPath="catalog/maintenance/maintenanceStart"
-               style="push"
-               tooltip="%action.tooltip.merge">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.ArchiveAction"
-               definitionId="com.bdaum.zoom.ui.Archive"
-               icon="icons/archive.png"
-               id="com.bdaum.zoom.ui.actions.Archive"
-               label="%action.label.archive"
-               menubarPath="catalog/catExt3"
-               style="push"
-               tooltip="%action.tooltip.archive">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.BackupAction"
-               definitionId="com.bdaum.zoom.ui.BackupNowCommand"
-               icon="icons/backupNow.gif"
-               id="com.bdaum.zoom.ui.actions.Backup"
-               label="%action.label.backup_now"
-               menubarPath="catalog/catExt3"
-               style="push"
-               tooltip="%action.tooltip.write_backup_copy">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.FindOrphansActionDelegate"
-               definitionId="com.bdaum.zoom.ui.FindOrphans"
-               icon="icons/orphan.gif"
-               id="com.bdaum.zoom.ui.actions.FindOrphansAction"
-               label="%action.label.Find_Orphans"
-               menubarPath="catalog/find/findStart"
-               style="push"
-               tooltip="%action.tooltip.Find_Orphans_tooltip">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.FindDuplicatesActionDelegate"
-               definitionId="com.bdaum.zoom.ui.FindDuplicates"
-               icon="icons/images.png"
-               id="com.bdaum.zoom.ui.actions.FindDuplicatesAction"
-               label="%action.label.find_duplicates"
-               menubarPath="catalog/find/findStart"
-               style="push"
-               tooltip="%action.tooltip.find_duplicates">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.FindSeriesActionDelegate"
-               definitionId="com.bdaum.zoom.ui.FindSeries"
-               icon="icons/pictures.png"
-               id="com.bdaum.zoom.ui.actions.FindSeriesAction"
-               label="%action.label.find_series"
-               menubarPath="catalog/find/findStart"
-               style="push"
-               tooltip="%action.tooltip.find_series">
-         </action>
-      </actionSet>
-      <actionSet
-            description="%actionSet.description.image"
-            id="com.bdaum.zoom.ui.actionSet.image"
-            label="%actionSet.label.image"
-            visible="true">
-         <action
-               definitionId="com.bdaum.zoom.ui.EditWithCommand"
-               icon="icons/image_edit_with.png"
-               id="com.bdaum.zoom.ui.actions.EditWithAction"
-               label="%action.label.edit_with"
-               menubarPath="image/imageStart"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.edit_with">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.EditCommand"
-               icon="icons/image_edit.png"
-               id="com.bdaum.zoom.ui.actions.EditImageAction"
-               label="%action.label.edit"
-               menubarPath="image/imageStart"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.edit">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.command.viewImage"
-               icon="icons/shape_square.png"
-               id="com.bdaum.zoom.ui.actions.ViewImageAction"
-               label="%action.label.full_sreen"
-               menubarPath="image/imageStart"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.full_sreen">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.command.colorCode"
-               icon="icons/colorCode.gif"
-               id="com.bdaum.zoom.ui.actions.ColorCodeAction"
-               label="%action.label.color_code"
-               menubarPath="image/imageStart"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.color_code">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.command.rate"
-               icon="icons/rating.gif"
-               id="com.bdaum.zoom.ui.actions.RatingAction"
-               label="%action.label.rating"
-               menubarPath="image/imageStart"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.rating">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.command.timeShift"
-               icon="icons/timeShift.gif"
-               id="com.bdaum.zoom.ui.actions.TimeShiftAction"
-               label="%action.label.timeShift"
-               menubarPath="image/imageExt1"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.timeShift">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.RotateAntiClockwiseCommand"
-               icon="icons/rotate270s.png"
-               id="com.bdaum.zoom.ui.actions.RotateLeftAction"
-               label="%action.label.rotate_anti_clockwise"
-               menubarPath="image/imageExt1"
-               retarget="true"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.image/image.rotate"
-               tooltip="%action.tooltip.rotate_anti_clockwise">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.RotateClockwiseCommand"
-               icon="icons/rotate90s.png"
-               id="com.bdaum.zoom.ui.actions.RotateRightAction"
-               label="%action.label.rotate_clockwise"
-               menubarPath="image/imageExt1"
-               retarget="true"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.image/image.rotate"
-               tooltip="%action.tooltip.rotate_clockwise">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.SlideshowActionDelegate"
-               definitionId="com.bdaum.zoom.ui.AdhocSlideshowCommand"
-               icon="icons/slideshow.gif"
-               id="com.bdaum.zoom.ui.actions.SlideshowAction"
-               label="%action.label.adhoc_slideshow"
-               menubarPath="image/imageExt3"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.image/image.edit"
-               tooltip="%action.tooltip.adhoc_slideshow">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.DeleteCommand"
-               icon="icons/trash.gif"
-               id="com.bdaum.zoom.ui.actions.DeleteAction"
-               label="%action.label.delete"
-               menubarPath="image/imageEnd"
-               retarget="true"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.image/image.move"
-               tooltip="%action.tooltip.delete">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.command.removeFromAlbum"
-               icon="icons/album_remove.gif"
-               id="com.bdaum.zoom.ui.actions.RemoveFromAlbumAction"
-               label="%action.label.remove_from_album"
-               menubarPath="image/imageEnd"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.remove_from_album">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.command.addToAlbum"
-               icon="icons/add_album.png"
-               id="com.bdaum.zoom.ui.actions.AddToAlbumAction"
-               label="%action.label.addAlbum"
-               menubarPath="image/imageEnd"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.addAlbum">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.SearchSimilarCommand"
-               icon="icons/similar.gif"
-               id="com.bdaum.zoom.ui.actions.SearchSimilarAction"
-               label="%action.label.search_similar"
-               menubarPath="image/imageExt2"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.search_similar">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.TimeSearchCommand"
-               icon="icons/time.png"
-               id="com.bdaum.zoom.ui.actions.TimeSearch"
-               label="%action.label.time_search"
-               menubarPath="image/imageExt2"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.time_search_tooltip">
-         </action>
-      </actionSet>
-      <actionSet
-            description="%actionSet.description.metadata"
-            id="com.bdaum.zoom.ui.actionSet.meta"
-            label="%actionSet.label.metadata"
-            visible="true">
-        <action
-              definitionId="com.bdaum.zoom.ui.ProximityCommand"
-              icon="icons/proximity.gif"
-              id="com.bdaum.zoom.gps.actions.ProximityAction"
-              label="%action.label.proximitySearch"
-              menubarPath="meta/metaExt1"
-              retarget="true"
-              style="push"
-              toolbarPath="com.bdaum.zoom.workbench.image/gps.gps"
-              tooltip="%action.tooltip.proximitySearch">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.AdhocAction"
-               definitionId="com.bdaum.zoom.ui.AdhocQueryCommand"
-               icon="icons/user_magnify.png"
-               id="com.bdaum.zoom.ui.actions.AdhocAction"
-               label="%action.label.adhoc_query"
-               menubarPath="meta/metaExt1"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.image/image.query"
-               tooltip="%action.tooltip.adhoc_query">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.KeywordQueryAction"
-               definitionId="com.bdaum.zoom.ui.KeywordQueryCommand"
-               icon="icons/goggles.gif"
-               id="com.bdaum.zoom.ui.actions.KeywordQueryAction"
-               label="%action.label.keyword_query"
-               menubarPath="meta/metaExt1"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.image/image.query"
-               tooltip="%action.tooltip.keyword_query">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.command.categorize"
-               icon="icons/categorize.png"
-               id="com.bdaum.zoom.ui.actions.CategorizeAction"
-               label="%action.label.categorize"
-               menubarPath="meta/metaStart"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.categorize">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.KeywordDefinitionAction"
-               definitionId="com.bdaum.zoom.ui.AddKeywordsCommand"
-               icon="icons/keydef.gif"
-               id="com.bdaum.zoom.ui.actions.KeywordDefinitionAction"
-               label="%action.label.add_keywords"
-               menubarPath="meta/metaStart"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.image/edit.ext"
-               tooltip="%action.tooltip.add_keywords">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.CopyMetadataCommand"
-               icon="icons/copy_edit.png"
-               id="com.bdaum.zoom.ui.actions.CopyMetadataAction"
-               label="%action.label.copymeta"
-               menubarPath="meta/metaExt2"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.copymeta">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.PasteMetadataCommand"
-               icon="icons/paste_edit.png"
-               id="com.bdaum.zoom.ui.actions.PasteMetadataAction"
-               label="%action.label.pastemeta"
-               menubarPath="meta/metaExt2"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.pasteFromClipboard">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.TextQueryAction"
-               definitionId="com.bdaum.zoom.ui.TextQueryCommand"
-               icon="icons/textsearch.png"
-               id="com.bdaum.zoom.ui.actions.TextQueryAction"
-               label="%action.label.textQuery"
-               menubarPath="meta/metaExt1"
-               style="push"
-               tooltip="%action.tooltip.textQuery">
-         </action>
-      </actionSet>
-
-      <actionSet
-            description="%actionSet.description.help"
-            id="com.bdaum.zoom.ui.actionSet.help"
-            label="%actionSet.label.help"
-            visible="true">
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.ShowHoverAction"
-               definitionId="com.bdaum.zoom.ui.command.toggleHover"
-               icon="icons/comments.png"
-               id="com.bdaum.zoom.ui.actions.ShowHoverAction"
-               label="%action.label.show_hover"
-               menubarPath="help/helpExt"
-               state="true"
-               style="toggle"
-               toolbarPath="org.eclipse.ui.workbench.help/help.ext">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.KeyAssistAction"
-               definitionId="org.eclipse.ui.window.showKeyAssist"
-               icon="icons/keyboard.png"
-               id="com.bdaum.zoom.ui.actions.KeyAssistAction"
-               label="%action.label.key_assist"
-               menubarPath="help/helpExt"
-               style="push"
-               tooltip="%action.tooltip.key_assist">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.CheckUpdatesAction"
-               definitionId="com.bdaum.zoom.ui.command.checkUpdates"
-               id="com.bdaum.zoom.ui.actions.CheckUpdates"
-               label="%action.label.checkUpdates"
-               menubarPath="help/helpUpdate"
-               style="push"
-               tooltip="%action.tooltip.checkUpdates">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.ReportProblemAction"
-               definitionId="com.bdaum.zoom.ui.command.reportProblem"
-               id="com.bdaum.zoom.ui.actions.ReportProblem"
-               label="%action.label.report_problem"
-               menubarPath="help/helpUpdate"
-               style="push"
-               tooltip="%action.tooltip.report_problem">
-         </action>
-      </actionSet>
-      <actionSet
-            description="%actionSet.description.navigation"
-            id="com.bdaum.zoom.ui.actionSet.navigate"
-            label="%actionSet.label.navigate_action_set"
-            visible="true">
-        <action
-              class="com.bdaum.zoom.ui.internal.actions.ShowTrashcanActionDelegate"
-              definitionId="com.bdaum.zoom.ui.command.showTrashcan"
-              enablesFor="*"
-              icon="icons/trash.gif"
-              id="com.bdaum.zoom.ui.actions.ShowTrashcan"
-              label="%action.label.show_trash"
-              menubarPath="navigate/navStart"
-              style="push"
-              tooltip="%action.tooltip.show_trash">
-        </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.LastImportActionDelegate"
-               definitionId="com.bdaum.zoom.ui.LastImportCommand"
-               icon="icons/lastimport.png"
-               id="com.bdaum.zoom.ui.actions.LastImport"
-               label="%action.label.last_import"
-               menubarPath="navigate/navStart"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.nav/nav.ext"
-               tooltip="%action.tooltip.show_last_import">
-         </action>
-        <action
-              class="com.bdaum.zoom.ui.internal.actions.ShowBookmarksActionDelegate"
-              definitionId="com.bdaum.zoom.ui.command.showBookmarks"
-              enablesFor="*"
-              icon="icons/bookmarks.png"
-              id="com.bdaum.zoom.ui.actions.ShowBookmarks"
-              label="%action.label.showBookmarks"
-              menubarPath="navigate/navStart"
-              retarget="false"
-              style="push"
-              tooltip="%action.tooltip.showBookmarks">
-        </action>
-         <action
-               definitionId="org.eclipse.ui.edit.addBookmark"
-               icon="icons/add_bookmark.png"
-               id="com.bdaum.zoom.ui.actions.AddBookmark"
-               label="%action.label.add_bookmark"
-               menubarPath="navigate/navStart"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.add_bookmark">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.ForwardAction"
-               definitionId="com.bdaum.zoom.ui.ForwardCommand"
-               icon="icons/forward_nav.png"
-               id="com.bdaum.zoom.ui.actions.ForwardAction"
-               label="%action.label.forward"
-               menubarPath="navigate/navEnd"
-               style="pulldown"
-               toolbarPath="com.bdaum.zoom.workbench.nav/nav.ext"
-               tooltip="%action.tooltip.show_next_query_result">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.BackwardAction"
-               definitionId="com.bdaum.zoom.ui.BackCommand"
-               icon="icons/backward_nav.png"
-               id="com.bdaum.zoom.ui.actions.BackwardAction"
-               label="%action.label.back"
-               menubarPath="navigate/navEnd"
-               style="pulldown"
-               toolbarPath="com.bdaum.zoom.workbench.nav/nav.ext"
-               tooltip="%action.tooltip.show_previous_query_result">
-         </action>
-         <action
-               allowLabelUpdate="false"
-               class="com.bdaum.zoom.ui.internal.actions.FullScreenAction"
-               definitionId="com.bdaum.zoom.ui.command.fullScreen"
-               id="com.bdaum.zoom.ui.actions.FullScreenAction"
-               label="%action.label.fullScreen"
-               menubarPath="window/windowStart"
-               retarget="false"
-               state="false"
-               style="toggle">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.command.showInFolder"
-               icon="icons/folder_find.png"
-               id="com.bdaum.zoom.ui.actions.ShowInFolderAction"
-               label="%action.label.show_folder"
-               menubarPath="navigate/navExt2"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.show_folder">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.command.showDerivatives"
-               icon="icons/derivative.gif"
-               id="com.bdaum.zoom.ui.actions.ShowDerivatives"
-               label="%action.label.show_derivatives"
-               menubarPath="navigate/hierarchy/hierarchyStart"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.show_derivatives">
-         </action>
-        <action
-               definitionId="com.bdaum.zoom.ui.command.showOriginals"
-               icon="icons/original.gif"
-               id="com.bdaum.zoom.ui.actions.ShowOriginals"
-               label="%action.label.show_originals"
-               menubarPath="navigate/hierarchy/hierarchyStart"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.show_originals">
-         </action>
-        <action
-               definitionId="com.bdaum.zoom.ui.command.showComposites"
-               icon="icons/composites.gif"
-               id="com.bdaum.zoom.ui.actions.ShowComposites"
-               label="%action.label.show_composites"
-               menubarPath="navigate/hierarchy/hierarchyExt"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.show_composites">
-         </action>
-        <action
-               definitionId="com.bdaum.zoom.ui.command.showComponents"
-               icon="icons/components.gif"
-               id="com.bdaum.zoom.ui.actions.ShowComponents"
-               label="%action.label.show_components"
-               menubarPath="navigate/hierarchy/hierarchyExt"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.show_components">
-         </action>
-         </actionSet>
-         <actionSet
-               description="%actionSet.description.file"
-               id="com.bdaum.zoom.ui.actionSet.file"
-               label="%actionSet.label.file"
-               visible="true">
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.ImportPreferencesAction"
-               definitionId="com.bdaum.zoom.ui.ImportPreferencesCommand"
-               icon="icons/exportpref.png"
-               id="com.bdaum.zoom.ui.actions.ImportPreferencesAction"
-               label="%action.label.export_preferences"
-               menubarPath="file/import/importStart"
-               style="push"
-               tooltip="%action.tooltip.export_preferences">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.ImportRemoteFileAction"
-               definitionId="com.bdaum.zoom.ui.ImportRemoteFileCommand"
-               icon="icons/import_remote.gif"
-               id="com.bdaum.zoom.ui.actions.ImportRemoteFileAction"
-               label="%action.label.importRemate"
-               menubarPath="file/import/importStart"
-               style="push"
-               tooltip="%action.tooltip.importRemate">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.ImportFromDeviceAction"
-               definitionId="com.bdaum.zoom.ui.ImportFromDeviceCommand"
-               icon="icons/folder_camera.png"
-               id="com.bdaum.zoom.ui.actions.ImportFromDeviceAction"
-               label="%action.label.import_from_device"
-               menubarPath="file/import/importStart"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.cat/cat.import"
-               tooltip="%action.tooltip.import_from_device">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.ImportAnalogAction"
-               definitionId="com.bdaum.zoom.ui.ImportAnalogCommand"
-               icon="icons/folder_film.png"
-               id="com.bdaum.zoom.ui.actions.ImportAnalogAction"
-               label="%action.label.import_analog"
-               menubarPath="file/import/importStart"
-               style="push"
-               tooltip="%action.tooltip.import_analog">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.ImportFolderAction"
-               definitionId="com.bdaum.zoom.ui.ImportFolderCommand"
-               icon="icons/import_fldr_wiz.gif"
-               id="com.bdaum.zoom.ui.actions.ImportFolderAction"
-               label="%action.label.import_folder"
-               menubarPath="file/import/importStart"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.cat/cat.import"
-               tooltip="%action.tooltip.import_folder">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.ImportFileAction"
-               definitionId="com.bdaum.zoom.ui.ImportFileCommand"
-               icon="icons/import_wiz.gif"
-               id="com.bdaum.zoom.ui.actions.ImportFileAction"
-               label="%action.label.import_file"
-               menubarPath="file/import/importStart"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.cat/cat.import"
-               tooltip="%action.tooltip.import_file">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.RefreshCommand"
-               icon="icons/refresh.gif"
-               id="com.bdaum.zoom.ui.actions.RefreshAction"
-               label="%action.label.refresh"
-               menubarPath="file/fileExt2"
-               retarget="true"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.cat/cat.manage"
-               tooltip="%action.tooltip.refresh">
-         </action>
-         <action
-               class="com.bdaum.zoom.ui.internal.actions.MoveFilesAction"
-               definitionId="com.bdaum.zoom.ui.MoveCommand"
-               icon="icons/lorry_flatbed.png"
-               id="com.bdaum.zoom.ui.actions.MoveFilesAction"
-               label="%action.label.move"
-               menubarPath="file/fileExt2"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.cat/cat.manage"
-               tooltip="%action.tooltip.move">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.command.playVoiceNote"
-               icon="icons/sound.png"
-               id="com.bdaum.zoom.ui.PlayVoiceNoteAction"
-               label="%action.label.play_voice_note"
-               menubarPath="file/voice/voiceStart"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.play_voice_note">
-         </action>
-         <action
-               definitionId="com.bdaum.zoom.ui.command.addVoiceNote"
-               icon="icons/sound_add.png"
-               id="com.bdaum.zoom.ui.AddVoiceNoteAction"
-               label="%action.label.add_voice_note"
-               menubarPath="file/voice/voiceStart"
-               retarget="true"
-               style="push"
-               tooltip="%action.tooltip.add_voice_note">
-         </action>
-      </actionSet>
-    </extension>
-            -->
    <extension
          point="org.eclipse.ui.startup">
       <startup
@@ -2761,7 +2084,7 @@
                locationURI="menu:image?after=imageExt3">
             <command
                   commandId="com.bdaum.zoom.ui.AdhocSlideshowCommand"
-                  icon="icons/slideshow.gif"
+                  icon="icons/slideshow.png"
                   label="%command.label.37"
                   mnemonic="%command.mnemonic.33"
                   style="push"
@@ -2803,7 +2126,7 @@
              </command>
             <command
                   commandId="com.bdaum.zoom.ui.DeleteCommand"
-                  icon="icons/trash.gif"
+                  icon="icons/trash.png"
                   label="%command.label.40"
                   style="push"
                   tooltip="%command.tooltip.38">
@@ -3094,7 +2417,7 @@
                  label="%toolbar.label.2">
               <command
                     commandId="com.bdaum.zoom.ui.DeleteCommand"
-                    icon="icons/trash.gif"
+                    icon="icons/trash.png"
                     label="%command.label.59"
                     style="push"
                     tooltip="%command.tooltip.57">
@@ -3108,7 +2431,7 @@
               </command>
               <command
                     commandId="com.bdaum.zoom.ui.AdhocSlideshowCommand"
-                    icon="icons/slideshow.gif"
+                    icon="icons/slideshow.png"
                     label="%command.label.63"
                     style="push"
                     tooltip="%command.tooltip.61">

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.spell.internal;
@@ -166,9 +166,8 @@ public class SpellCheckingEngine {
 							}
 
 						};
-						Object[] list = listeners.getListeners();
-						for (Object object : list)
-							if (((IncendentListener) object).handleIncident(incident))
+						for (IncendentListener listener : listeners)
+							if (listener.handleIncident(incident))
 								break loop;
 					}
 				}

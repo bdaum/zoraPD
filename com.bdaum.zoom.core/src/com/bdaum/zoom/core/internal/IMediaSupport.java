@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2012 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2012 Berthold Daum  
  */
 package com.bdaum.zoom.core.internal;
 
@@ -48,6 +48,7 @@ public interface IMediaSupport {
 	 */
 	int AUDIO = 1 << 11;
 	/*** Other media types: 1<<12 ... 1<<20 ***/
+	int ALLMEDIA = 0b0111111111111000000000;
 	/**
 	 * Media can appear in exhibitions
 	 */

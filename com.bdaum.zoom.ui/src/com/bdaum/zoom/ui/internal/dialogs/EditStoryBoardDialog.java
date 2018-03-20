@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -70,8 +70,7 @@ public class EditStoryBoardDialog extends ZTitleAreaDialog {
 	private IDialogSettings settings;
 	private DescriptionGroup descriptionGroup;
 
-	public EditStoryBoardDialog(Shell parentShell, WebGallery webGallery,
-			StoryboardImpl current, String title) {
+	public EditStoryBoardDialog(Shell parentShell, WebGallery webGallery, StoryboardImpl current, String title) {
 		super(parentShell, HelpContextIds.EDITSTORYBOARD_DIALOG);
 		this.gallery = webGallery;
 		this.current = current;
@@ -86,71 +85,65 @@ public class EditStoryBoardDialog extends ZTitleAreaDialog {
 		updateButtons();
 	}
 
+	@SuppressWarnings("unused")
 	@Override
 	protected Control createDialogArea(final Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite comp = new Composite(area, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new GridLayout(2, false));
-		final Label titleLabel = new Label(comp, SWT.NONE);
-		titleLabel.setText(Messages.EditStoryBoardDialog_section_title);
-
+		new Label(comp, SWT.NONE).setText(Messages.EditStoryBoardDialog_section_title);
 		titleField = new Text(comp, SWT.BORDER);
-		titleField
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		titleField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		titleField.addModifyListener(modifyListener);
+		new Label(comp, SWT.NONE);
+		showCaptionButton = WidgetFactory.createCheckButton(comp, Messages.EditStoryBoardDialog_show_captions, null);
 		descriptionGroup = new DescriptionGroup(comp, SWT.NONE);
-		showCaptionButton = WidgetFactory.createCheckButton(comp,
-				Messages.EditStoryBoardDialog_show_captions, new GridData(
-						SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
-		showDescriptionButton = WidgetFactory.createCheckButton(comp,
-				Messages.EditStoryBoardDialog_show_descriptions, new GridData(
-						SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
-		showExifButton = WidgetFactory.createCheckButton(comp,
-				Messages.EditStoryBoardDialog_show_exif_data, new GridData(
-						SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
+		new Label(comp, SWT.NONE);
+		showDescriptionButton = WidgetFactory.createCheckButton(comp, Messages.EditStoryBoardDialog_show_descriptions,
+				null);
+		new Label(comp, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		Composite sizeGroup = new Composite(comp, SWT.NONE);
+		sizeGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
+		GridLayout layout = new GridLayout(4, false);
+		layout.marginWidth = layout.marginHeight = 0;
+		sizeGroup.setLayout(layout);
+		new Label(sizeGroup, SWT.NONE).setText(Messages.EditStoryBoardDialog_image_size);
+		imagesizeField = new Combo(sizeGroup, SWT.READ_ONLY);
+		imagesizeField.setItems(new String[] { Messages.EditStoryBoardDialog_medium,
+				Messages.EditStoryBoardDialog_large, Messages.EditStoryBoardDialog_vary_large,
+				Messages.EditStoryBoardDialog_small, Messages.EditStoryBoardDialog_very_small });
+		GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		data.horizontalIndent = 15;
+		enlargeButton = WidgetFactory.createCheckButton(sizeGroup, Messages.EditStoryBoardDialog_enlarge_small_images,
+				data);
+		showExifButton = WidgetFactory.createCheckButton(sizeGroup, Messages.EditStoryBoardDialog_show_exif_data,
+				new GridData(SWT.END, SWT.CENTER, false, false));
 		showExifButton.setEnabled(gallery.getShowMeta());
-		final Label imagesizeLabel = new Label(comp, SWT.NONE);
-		imagesizeLabel.setText(Messages.EditStoryBoardDialog_image_size);
-		imagesizeField = new Combo(comp, SWT.READ_ONLY);
-		imagesizeField.setItems(new String[] {
-				Messages.EditStoryBoardDialog_medium,
-				Messages.EditStoryBoardDialog_large,
-				Messages.EditStoryBoardDialog_vary_large,
-				Messages.EditStoryBoardDialog_small,
-				Messages.EditStoryBoardDialog_very_small });
-		enlargeButton = WidgetFactory.createCheckButton(comp,
-				Messages.EditStoryBoardDialog_enlarge_small_images,
-				new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
 		fillValues();
 		return area;
 	}
 
 	private void fillValues() {
-		settings = getDialogSettings(UiActivator.getDefault(),SETTINGSID);
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		if (current != null) {
 			setText(titleField, current.getTitle());
 			descriptionGroup.setText(current.getDescription(), current.getHtmlDescription());
 			showCaptionButton.setSelection(current.getShowCaptions());
 			showDescriptionButton.setSelection(current.getShowDescriptions());
 			showExifButton.setSelection(current.getShowExif());
-			int imageSize = Math.max(
-					0,
-					Math.min(imagesizeField.getItemCount() - 1,
-							current.getImageSize()));
+			int imageSize = Math.max(0, Math.min(imagesizeField.getItemCount() - 1, current.getImageSize()));
 			imagesizeField.select(imageSize);
 			imagesizeField.setText(imagesizeField.getItem(imageSize));
 			enlargeButton.setSelection(current.getEnlargeSmall());
 		} else {
 			titleField.setText(title);
 			showCaptionButton.setSelection(!settings.getBoolean(HIDE_CAPTION));
-			showDescriptionButton.setSelection(!settings
-					.getBoolean(HIDE_DESCRIPTION));
+			showDescriptionButton.setSelection(!settings.getBoolean(HIDE_DESCRIPTION));
 			showExifButton.setSelection(gallery.getShowMeta());
 			try {
 				int imageSize = settings.getInt(IMAGE_SIZE);
-				imageSize = Math.min(imagesizeField.getItemCount() - 1,
-						Math.max(0, imageSize));
+				imageSize = Math.min(imagesizeField.getItemCount() - 1, Math.max(0, imageSize));
 				imagesizeField.select(imageSize);
 				imagesizeField.setText(imagesizeField.getItem(imageSize));
 			} catch (NumberFormatException e) {

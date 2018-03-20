@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2012 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2012 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal;
 
@@ -54,9 +54,7 @@ public class FieldDescriptor {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (!(obj instanceof FieldDescriptor))
-			return false;
-		if (qfield != ((FieldDescriptor) obj).qfield)
+		if (!(obj instanceof FieldDescriptor) || qfield != ((FieldDescriptor) obj).qfield)
 			return false;
 		if (qfield == null)
 			return label.equals(((FieldDescriptor) obj).label);
@@ -67,10 +65,9 @@ public class FieldDescriptor {
 		if (subfield != null && qfield != null) {
 			QueryField parent = QueryField.getStructParent(qfield.getType());
 			if (parent != null && parent.getChildren() != null)
-				for (QueryField q : parent.getChildren()) {
+				for (QueryField q : parent.getChildren())
 					if (subfield.equals(q.getKey()))
 						return q;
-				}
 		}
 		return null;
 	}

@@ -7,8 +7,9 @@
 	<meta name="date" content="${date}">
 	<title>${name}</title>
 ${headhtml}
+<link href="gallery.css" type="text/css" media="all" rel="stylesheet">
 </head>
-<body bgcolor="${shadecolor}" ${bgimage}>${tophtml}
+<body ${tophtml}>
 ${nameplatediv}
 	<!--START SIMPLEVIEWER EMBED.-->
 	<script type="text/javascript" src="${simpleviewer}"></script>
@@ -17,7 +18,7 @@ ${nameplatediv}
 		simpleviewer.load('sv-container', '100%', '${viewerHeight}%', '${backgroundcolor}', true);
 	});
 	</script>
-	<div style="margin:${topmargin}px ${rightmargin}px ${bottommargin}px ${leftmargin}px;" id="sv-container"></div>
+	<div id="sv-container"></div>
 	<!-- END SIMPLEVIEWER EMBED -->
 <div id="footer" align="center">${footer}</div>
 ${footerhtml}

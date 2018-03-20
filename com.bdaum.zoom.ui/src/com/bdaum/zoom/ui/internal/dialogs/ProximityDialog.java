@@ -15,12 +15,13 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -81,8 +82,9 @@ public class ProximityDialog extends ZTitleAreaDialog {
 		if (Core.getCore().isNetworked())
 			findInNetworkGroup = new FindInNetworkGroup(comp);
 		final Label distancekmLabel = new Label(comp, SWT.NONE);
-		distancekmLabel.setText(Messages.ProximityDialog_distance);
-
+		char unit = Core.getCore().getDbFactory().getDistanceUnit();
+		distancekmLabel
+				.setText(NLS.bind(Messages.ProximityDialog_distance, unit == 'm' ? "mi" : unit == 'n' ? "NM" : "km")); //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
 		distanceField = new NumericControl(comp, SWT.NONE);
 		distanceField.setDigits(3);
 		distanceField.setIncrement(100);
@@ -110,7 +112,7 @@ public class ProximityDialog extends ZTitleAreaDialog {
 	}
 
 	private void fillValues() {
-		settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		try {
 			distance = settings.getDouble(DISTANCE);
 		} catch (NumberFormatException e) {

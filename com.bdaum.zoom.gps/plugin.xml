@@ -3,7 +3,6 @@
 <plugin>
    <extension-point id="mappingSystem" name="%extension-point.name.mapingsystem" schema="schema/mappingSystem.exsd"/>
    <extension-point id="geonamingService" name="%extension-point.name" schema="schema/geonamingService.exsd"/>
-   <extension-point id="premiumService" name="%extension-point.name.0" schema="schema/premiumService.exsd"/>
    <extension
          point="org.eclipse.ui.views">
       <category
@@ -14,7 +13,7 @@
             category="com.bdaum.zoom.gps"
             class="com.bdaum.zoom.gps.internal.views.MapView"
             fastViewWidthRatio="0.5"
-            icon="icons/gps.gif"
+            icon="icons/gps.png"
             id="com.bdaum.zoom.gps.MapView"
             name="%view.name.map"
             restorable="true">
@@ -23,54 +22,12 @@
             category="com.bdaum.zoom.gps"
             class="com.bdaum.zoom.gps.internal.views.GPSView"
             fastViewWidthRatio="0.2"
-            icon="icons/gpsdata.gif"
+            icon="icons/gpsdata.png"
             id="com.bdaum.zoom.gps.GPSView"
             name="GPS"
             restorable="true">
       </view>
    </extension>
-<!--
-   <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            description="%actionSet.description.geo"
-            id="com.bdaum.zoom.ui.actionSet.gps"
-            label="GPS"
-            visible="true">
-         <action
-               class="com.bdaum.zoom.gps.internal.actions.FindUntaggedAction"
-               definitionId="com.bdaum.zoom.gps.UntaggedCommand"
-               icon="icons/untagged.gif"
-               id="com.bdaum.zoom.gps.actions.FindUntaggedAction"
-               label="%action.label.findUntagged"
-               menubarPath="meta/metaExt1"
-               style="push"
-               tooltip="%action.tooltip.findUntagged">
-         </action>
-         <action
-               class="com.bdaum.zoom.gps.internal.actions.GeotagAction"
-               definitionId="com.bdaum.zoom.gps.GeotagCommand"
-               icon="icons/gps.gif"
-               id="com.bdaum.zoom.ui.actions.GeotagAction"
-               label="%action.label.geotag_images"
-               menubarPath="meta/metaStart"
-               style="push"
-               toolbarPath="com.bdaum.zoom.workbench.image/edit.ext"
-               tooltip="%action.tooltip.geotag_files">
-         </action>
-         <action
-               class="com.bdaum.zoom.gps.internal.actions.GeoNamingAction"
-               definitionId="com.bdaum.zoom.gps.GeonameCommand"
-               icon="icons/geoname.gif"
-               id="com.bdaum.zoom.gps.actions.GeoNamingAction"
-               label="%action.label.geoname_images"
-               menubarPath="meta/metaStart"
-               style="push"
-               tooltip="%action.tooltip.geoname_geotagged_files">
-         </action>
-       </actionSet>
-   </extension>
--->
    <extension
          point="org.eclipse.core.runtime.preferences">
       <initializer
@@ -102,12 +59,6 @@
                id="com.bdaum.zoom.ui.keyword.tolerance">
          </keywordReference>
       </page>
-      <!--<page
-            category="com.bdaum.zoom.gps.preferences.GpsPreferencePage"
-            class="com.bdaum.zoom.gps.internal.preferences.EventTaggingPage"
-            id="com.bdaum.zoom.gps.preferences.EventTaggingPage"
-            name="Event Tagging">
-      </page>-->
    </extension>
    <extension
          point="com.bdaum.zoom.ui.dropinHandler">
@@ -264,7 +215,7 @@
             locationURI="menu:meta?after=metaExt1">
          <command
                commandId="com.bdaum.zoom.gps.GeotagCommand"
-               icon="icons/gps.gif"
+               icon="icons/gps.png"
                label="%command.label"
                mnemonic="%command.mnemonic"
                style="push"
@@ -306,7 +257,7 @@
                locationURI="toolbar:com.bdaum.zoom.workbench.image?after=image.edit">
             <command
                   commandId="com.bdaum.zoom.gps.GeotagCommand"
-                  icon="icons/gps.gif"
+                  icon="icons/gps.png"
                   label="%command.label.2"
                   style="push"
                   tooltip="%command.tooltip.2">
@@ -352,7 +303,7 @@
          point="org.eclipse.ui.perspectives">
       <perspective
             class="com.bdaum.zoom.gps.internal.perspectives.GeoPerspective"
-            icon="icons/gps.gif"
+            icon="icons/gps.png"
             id="com.bdaum.zoom.gps.perspective"
             name="%perspective.name">
       </perspective>

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2013 Berthold Daum  
  */
 package com.bdaum.zoom.video.internal;
 
@@ -48,11 +48,9 @@ import com.bdaum.zoom.batch.internal.ExifToolSubstitute;
 import com.bdaum.zoom.cat.model.Ghost_typeImpl;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.MediaExtension;
-import com.bdaum.zoom.cat.model.group.Criterion;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
 import com.bdaum.zoom.cat.model.group.GroupImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
-import com.bdaum.zoom.cat.model.group.SortCriterion;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Constants;
@@ -90,9 +88,7 @@ import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggingHandler {
 
 	private static final String BAK = ".bak"; //$NON-NLS-1$
-
 	private static final Class<?>[] NOPARMS = new Class[0];
-
 	private static final Object[] NOARGS = new Object[0];
 
 	public static final IFormatter durationFormatter = new IFormatter() {
@@ -467,10 +463,8 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 						ensemble = (existing != null && !existing.isEmpty()) ? existing.remove(0) : null;
 						importState.reimport = true;
 						importState.canUndo = false;
-					} else {
-						int ret = importState.promptForOverride(file, asset);
-						configuration = importState.getConfiguration();
-						switch (ret) {
+					} else
+						switch (importState.promptForOverride(file, asset)) {
 						case ImportState.CANCEL:
 							aMonitor.setCanceled(true);
 							return 0;
@@ -493,7 +487,6 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 						default:
 							return 0;
 						}
-					}
 				}
 			}
 			final Shell shell = importState.info.getAdapter(Shell.class);
@@ -516,19 +509,15 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 			if (asset != null) {
 				ZImage image = null;
 				File exifFile = file;
-				IExifLoader etool;
-				if (fromImportFilter)
-					etool = new ExifToolSubstitute(file);
-				else
-					etool = importState.getExifTool(exifFile, false);
+				IExifLoader etool = fromImportFilter ? new ExifToolSubstitute(file)
+						: importState.getExifTool(exifFile, false);
 				if (oldThumbnail == null) {
 					if (fromImportFilter) {
 						int twidth = importState.computeThumbnailWidth();
 						image = ((ExifToolSubstitute) etool).loadThumbnail(twidth, twidth / 4 * 3, ImportState.MCUWidth,
 								0f);
 					} else {
-						URI videoUri = file.toURI();
-						decodeAndCaptureFrames(new File(videoUri), factory);
+						decodeAndCaptureFrames(file, factory);
 						if (thumbnail != null) {
 							image = new ZImage(thumbnail, file.getAbsolutePath());
 							thumbnail = null;
@@ -566,11 +555,9 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 				SmartCollectionImpl coll = new SmartCollectionImpl(Messages.VideoSupport_Videos, true, false, false,
 						false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 				coll.setStringId(collectionID);
-				Criterion crit = new CriterionImpl(QueryField.MIMETYPE.getKey(), null, "video/", QueryField.STARTSWITH, //$NON-NLS-1$
-						false);
-				coll.addCriterion(crit);
-				SortCriterion sortCrit = new SortCriterionImpl(QueryField.NAME.getKey(), null, false);
-				coll.addSortCriterion(sortCrit);
+				coll.addCriterion(new CriterionImpl(QueryField.MIMETYPE.getKey(), null, "video/", QueryField.STARTSWITH, //$NON-NLS-1$
+						false));
+				coll.addSortCriterion(new SortCriterionImpl(QueryField.NAME.getKey(), null, false));
 				coll.setGroup_rootCollection_parent(group.getStringId());
 				group.addRootCollection(collectionID);
 				toBeStored.add(group);
@@ -580,7 +567,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 					importState.importNo);
 			if (configuration.rules != null)
 				OperationJob.executeSlaveOperation(new AutoRuleOperation(configuration.rules, assetsToIndex, null),
-						importState.getConfiguration().info);
+						configuration.info, configuration.silent);
 			--work;
 			changed |= importState.operation.updateFolderHierarchies(asset, true, configuration.timeline,
 					configuration.locations, false);
@@ -658,14 +645,11 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 				((EclipseLogger) logger).setLoggingHandler(this);
 			}
 			MediaPlayer mediaPlayer = factory.newHeadlessMediaPlayer();
-
 			try {
 
 				final CountDownLatch inPositionLatch = new CountDownLatch(1);
 				final CountDownLatch snapshotTakenLatch = new CountDownLatch(1);
-
 				mediaPlayer.addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
-
 					@Override
 					public void positionChanged(MediaPlayer mediaPlayer, float newPosition) {
 						if (newPosition >= VLC_THUMBNAIL_POSITION * 0.9f) { /*
@@ -691,13 +675,12 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 																	// forever
 																	// if
 																	// error
-						int width = importState.computeThumbnailWidth();
-						thumbnail = mediaPlayer.getSnapshot(width, 0);
+						thumbnail = mediaPlayer.getSnapshot(importState.computeThumbnailWidth(), 0);
 						snapshotTakenLatch.await(5, TimeUnit.SECONDS); // Might
 																		// wait
 																		// forever
 																		// if
-						// error
+																		// error
 					} catch (InterruptedException e) {
 						showError(NLS.bind(Messages.VlcVideoSupport_timeout, file));
 					} finally {
@@ -710,7 +693,6 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 			} finally {
 				mediaPlayer.release();
 			}
-
 		} finally {
 			if (logger instanceof EclipseLogger)
 				((EclipseLogger) logger).setLoggingHandler(null);
@@ -808,9 +790,9 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 				if (ext instanceof Video) {
 					MediaExtension[] targetExtensions = targetAsset.getMediaExtension();
 					MediaExtension[] newExtensions;
-					if (targetExtensions == null) {
+					if (targetExtensions == null)
 						newExtensions = new MediaExtension[1];
-					} else {
+					else {
 						for (int i = 0; i < targetExtensions.length; i++)
 							if (targetExtensions[i] instanceof Video) {
 								transfer((Video) ext, (Video) targetExtensions[i]);

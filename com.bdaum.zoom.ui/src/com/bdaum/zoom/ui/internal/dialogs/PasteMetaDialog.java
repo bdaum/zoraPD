@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -48,7 +48,7 @@ import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
-import com.bdaum.zoom.ui.internal.views.AbstractPropertiesView.ViewComparator;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 
 @SuppressWarnings("restriction")
@@ -110,7 +110,7 @@ public class PasteMetaDialog extends ZTitleAreaDialog {
 		treeViewer.getTree().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		treeViewer.setLabelProvider(new MetadataLabelProvider());
 		treeViewer.setContentProvider(new MetadataContentProvider());
-		treeViewer.setComparator(new ViewComparator());
+		treeViewer.setComparator(ZViewerComparator.INSTANCE);
 		treeViewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
 			@Override
 			public boolean select(Viewer aViewer, Object parentElement,
@@ -150,7 +150,7 @@ public class PasteMetaDialog extends ZTitleAreaDialog {
 	}
 
 	private void fillValues() {
-		settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		metadataOptionGroup.fillValues(settings);
 		String selection = settings.get(SELECTION);
 		if (selection != null) {

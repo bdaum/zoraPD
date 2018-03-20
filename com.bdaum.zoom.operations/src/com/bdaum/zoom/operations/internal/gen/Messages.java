@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal.gen;
@@ -25,7 +25,6 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.operations.internal.gen.messages"; //$NON-NLS-1$
 	public static String AbstractGalleryGenerator_disk_full;
-	public static String AbstractGalleryGenerator_download_failed;
 	public static String AbstractGalleryGenerator_generating_web_gallery;
 	public static String AbstractGalleryGenerator_io_error_copying_original;
 	public static String AbstractGalleryGenerator_io_error_for_image_n;

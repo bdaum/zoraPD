@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.internal.operations;
@@ -57,21 +57,15 @@ public class UpdateTextIndexOperation extends DbOperation {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public IStatus execute(IProgressMonitor aMonitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus execute(IProgressMonitor aMonitor, IAdaptable info) throws ExecutionException {
 		init(aMonitor, IProgressMonitor.UNKNOWN);
 		if (textObjects instanceof String[]) {
-			Job job = Core.getCore().getDbFactory().getLireService(true)
-					.createIndexingJob((String[]) textObjects);
+			Job job = Core.getCore().getDbFactory().getLireService(true).createIndexingJob((String[]) textObjects);
 			if (job != null)
 				job.schedule(20L);
 		} else if (textObjects instanceof Collection<?>) {
-			Job job = Core
-					.getCore()
-					.getDbFactory()
-					.getLireService(true)
-					.createIndexingJob((Collection<Asset>) textObjects, true,
-							-1, 0, true);
+			Job job = Core.getCore().getDbFactory().getLireService(true)
+					.createIndexingJob((Collection<Asset>) textObjects, true, -1, 0, true);
 			if (job != null)
 				job.schedule(20L);
 		}
@@ -85,8 +79,7 @@ public class UpdateTextIndexOperation extends DbOperation {
 	}
 
 	@Override
-	public IStatus redo(IProgressMonitor aMonitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus redo(IProgressMonitor aMonitor, IAdaptable info) throws ExecutionException {
 		return null;
 	}
 
@@ -96,13 +89,11 @@ public class UpdateTextIndexOperation extends DbOperation {
 	}
 
 	@Override
-	public IStatus undo(IProgressMonitor aMonitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus undo(IProgressMonitor aMonitor, IAdaptable info) throws ExecutionException {
 		return null;
 	}
 
 	public int getExecuteProfile() {
-		// return IProfiledOperation.INDEX;
 		return IProfiledOperation.NONE;
 	}
 

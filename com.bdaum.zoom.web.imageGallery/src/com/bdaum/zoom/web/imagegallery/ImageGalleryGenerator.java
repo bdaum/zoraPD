@@ -30,7 +30,6 @@ import com.bdaum.zoom.cat.model.group.webGallery.Storyboard;
 import com.bdaum.zoom.cat.model.group.webGallery.StoryboardImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebExhibit;
 import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
-import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.operations.internal.gen.AbstractGalleryGenerator;
 import com.bdaum.zoom.program.BatchUtilities;
 
@@ -152,14 +151,6 @@ public class ImageGalleryGenerator extends AbstractGalleryGenerator {
 		varmap.put("imagefolder", getDeployImageFolder().getName()); //$NON-NLS-1$
 		varmap.put("images", generateImageList(true, false)); //$NON-NLS-1$
 		WebGalleryImpl show = getShow();
-		File plate = getNameplate();
-		if (plate != null)
-			varmap.put("nameplatediv", generateNameplate(show, plate)); //$NON-NLS-1$
-		File bgImage = getBgImage();
-		if (bgImage != null)
-			varmap.put("bgimage", generateBg(show, bgImage)); //$NON-NLS-1$
-		String f = generateFooter(show, "ImageGallery"); //$NON-NLS-1$
-		varmap.put("footer", f); //$NON-NLS-1$
 		if (!show.getHideHeader()) {
 			varmap.put("name", BatchUtilities.encodeHTML(show.getName(), false)); //$NON-NLS-1$
 			String description = show.getDescription();
@@ -172,13 +163,6 @@ public class ImageGalleryGenerator extends AbstractGalleryGenerator {
 						"<div id=\"description\" class=\"emboxd\">" + d + "</div>"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
-		varmap.put("keywords", BatchUtilities.encodeHTML( //$NON-NLS-1$
-				Core.toStringList(show.getKeyword(), ", "), false)); //$NON-NLS-1$
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ"); //$NON-NLS-1$
-		Date now = new Date();
-		String s = df.format(now);
-		s = s.substring(0, s.length() - 2) + ':' + s.substring(s.length() - 2);
-		varmap.put("date", s); //$NON-NLS-1$
 		varmap.put("id", getShow().getStringId()); //$NON-NLS-1$
 		varmap.put("galleryswf", getDeployResourceFolder().getName() //$NON-NLS-1$
 				+ "/gallery.swf"); //$NON-NLS-1$
@@ -196,23 +180,13 @@ public class ImageGalleryGenerator extends AbstractGalleryGenerator {
 		varmap.put("pagewidth", String //$NON-NLS-1$
 				.valueOf(bodywidth + 2 * CONTAINERPADDING));
 		varmap.put("pageheight", String.valueOf(containerheight)); //$NON-NLS-1$
-		setFontsAndColors(varmap, show);
+		setFontsAndColors(varmap);
 		return varmap;
 	}
-
+	
 	@Override
-	protected String[] getTargetNames() {
-		String pageName = getShow().getPageName();
-		File[] templates = getTemplates();
-		String[] names = new String[templates.length];
-		for (int i = 0; i < templates.length; i++) {
-			String name = templates[i].getName();
-			if (name.equals("gallery.html") && pageName != null //$NON-NLS-1$
-					&& !pageName.isEmpty())
-				name = pageName;
-			names[i] = name;
-		}
-		return names;
+	protected String getHtmlTemplateName() {
+		return "gallery.html"; //$NON-NLS-1$
 	}
 
 }

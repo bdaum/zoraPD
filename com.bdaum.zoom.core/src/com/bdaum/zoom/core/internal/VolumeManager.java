@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2015 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.internal;
@@ -85,25 +85,20 @@ public class VolumeManager implements IVolumeManager {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IVolumeManager#findFile(com.bdaum.zoom.cat.model.
+	 * @see com.bdaum.zoom.core.IVolumeManager#findFile(com.bdaum.zoom.cat.model.
 	 * asset.Asset)
 	 */
 
 	public URI findFile(Asset asset) {
-		if (asset != null) {
+		if (asset != null)
 			synchronized (this) {
 				return findFile(asset, asset.getUri());
 			}
-		}
 		return null;
 	}
 
 	private URI findFile(Asset asset, String uri) {
-		if (uri.startsWith(FILE)) {
-			return findFile(uri, asset.getVolume());
-		}
-		return null;
+		return uri.startsWith(FILE) ? findFile(uri, asset.getVolume()) : null;
 	}
 
 	/*
@@ -132,17 +127,15 @@ public class VolumeManager implements IVolumeManager {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IVolumeManager#findExistingFile(com.bdaum.zoom.cat
+	 * @see com.bdaum.zoom.core.IVolumeManager#findExistingFile(com.bdaum.zoom.cat
 	 * .model.asset.Asset, boolean)
 	 */
 
 	public URI findExistingFile(Asset asset, boolean local) {
-		if (asset != null) {
+		if (asset != null)
 			synchronized (this) {
 				return findExistingFile(asset, asset.getUri(), local);
 			}
-		}
 		return null;
 	}
 
@@ -165,8 +158,7 @@ public class VolumeManager implements IVolumeManager {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IVolumeManager#findExistingFile(java.lang.String,
+	 * @see com.bdaum.zoom.core.IVolumeManager#findExistingFile(java.lang.String,
 	 * java.lang.String)
 	 */
 
@@ -236,10 +228,9 @@ public class VolumeManager implements IVolumeManager {
 						volumes[i] = obtainVolumeLabel(roots[i]);
 					}
 				}
-			if (changed) {
-				for (Object o : volumeListeners.getListeners())
-					((VolumeListener) o).volumesChanged(roots);
-			}
+			if (changed)
+				for (VolumeListener listener : volumeListeners)
+					listener.volumesChanged(roots);
 		}
 		if (!deviceProcessing && !deviceListeners.isEmpty())
 			try {
@@ -248,8 +239,8 @@ public class VolumeManager implements IVolumeManager {
 				for (File file : newDcims)
 					if (dcims == null || !dcims.contains(file)) {
 						dcims = newDcims;
-						for (Object o : deviceListeners.getListeners())
-							((DeviceInsertionListener) o).deviceInserted();
+						for (DeviceInsertionListener listener : deviceListeners)
+							listener.deviceInserted();
 						break;
 					}
 				dcims = newDcims;
@@ -261,8 +252,7 @@ public class VolumeManager implements IVolumeManager {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.IVolumeManager#getBaseVolumeForFile(java.io.File)
+	 * @see com.bdaum.zoom.core.IVolumeManager#getBaseVolumeForFile(java.io.File)
 	 */
 	public String getVolumeForFile(File file) {
 		IPath path = new Path(file.getAbsolutePath());
@@ -386,7 +376,7 @@ public class VolumeManager implements IVolumeManager {
 			String name = getFileSystemView().getSystemDisplayName(dir);
 			if (name != null) {
 				name = name.trim();
-				if (name != null && !name.isEmpty()) {
+				if (!name.isEmpty()) {
 					int index = name.lastIndexOf(" ("); //$NON-NLS-1$
 					if (index > 0)
 						return name.substring(0, index);
@@ -438,9 +428,7 @@ public class VolumeManager implements IVolumeManager {
 
 	public Icon getFileIcon(String path) {
 		File f = new File(path);
-		if (f.exists())
-			return getFileSystemView().getSystemIcon(f);
-		return null;
+		return f.exists() ? getFileSystemView().getSystemIcon(f) : null;
 	}
 
 	public void addDeviceInsertionListener(DeviceInsertionListener listener) {

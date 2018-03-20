@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal.xmp;
@@ -40,8 +40,7 @@ import com.bdaum.zoom.core.internal.db.AssetEnsemble.MWGRegion;
 
 public class XMPField {
 
-	private static final String LOCATIONSHOWNPREFIX = QueryField.IPTC_LOCATIONSHOWN
-			.getXmpNs() + ":LocationShown"; //$NON-NLS-1$
+	private static final String LOCATIONSHOWNPREFIX = QueryField.IPTC_LOCATIONSHOWN.getXmpNs() + ":LocationShown"; //$NON-NLS-1$
 	private static final int RESOLUTION_UNIT_VALUE_CM = 3;
 	private static final int FOCAL_PLANE_RESOLUTION_UNIT_VALUE_CM = 3;
 	private static final int FOCAL_PLANE_RESOLUTION_UNIT_VALUE_MM = 4;
@@ -55,8 +54,8 @@ public class XMPField {
 	private final QueryField qfield;
 	private final String attribute;
 
-	public XMPField(XMPMeta xmpMeta, QueryField qfield, XMPPropertyInfo prop,
-			String path, int index1, int index2, String attribute) {
+	public XMPField(XMPMeta xmpMeta, QueryField qfield, XMPPropertyInfo prop, String path, int index1, int index2,
+			String attribute) {
 		this.xmpMeta = xmpMeta;
 		this.qfield = qfield;
 		this.prop = prop;
@@ -104,8 +103,7 @@ public class XMPField {
 		return qfield;
 	}
 
-	public Object fetchStoredValue(AssetEnsemble ensemble)
-			throws SecurityException, IllegalArgumentException {
+	public Object fetchStoredValue(AssetEnsemble ensemble) throws SecurityException, IllegalArgumentException {
 		Object ref = null;
 		int type = qfield.getType();
 		Object target = ensemble.getAsset();
@@ -113,8 +111,7 @@ public class XMPField {
 		// Legacy
 		switch (type) {
 		case QueryField.T_LOCATION:
-			ref = QueryField.IPTC_LOCATIONCREATED
-					.getStruct(ensemble.getAsset());
+			ref = QueryField.IPTC_LOCATIONCREATED.getStruct(ensemble.getAsset());
 			break;
 		case QueryField.T_CONTACT:
 			ref = QueryField.IPTC_CONTACT.getStruct(ensemble.getAsset());
@@ -125,43 +122,36 @@ public class XMPField {
 		default:
 			// New standard
 			if (qfield == QueryField.LOCATIONSHOWN_ID) {
-				Object obtainFieldValue = QueryField.IPTC_LOCATIONSHOWN
-						.obtainFieldValue(ensemble.getAsset());
+				Object obtainFieldValue = QueryField.IPTC_LOCATIONSHOWN.obtainFieldValue(ensemble.getAsset());
 				ref = obtainFieldValue;
 			} else if (qfield == QueryField.LOCATIONCREATED_ID)
-				ref = QueryField.IPTC_LOCATIONCREATED.getStruct(ensemble
-						.getAsset());
+				ref = QueryField.IPTC_LOCATIONCREATED.getStruct(ensemble.getAsset());
 			else if (qfield == QueryField.CONTACT_ID)
 				ref = QueryField.IPTC_CONTACT.getStruct(ensemble.getAsset());
 			else if (qfield == QueryField.ARTWORK_ID)
 				ref = QueryField.IPTC_ARTWORK.getStruct(ensemble.getAsset());
 			else if (category == QueryField.LOCATION_TYPE)
-				ref = path.startsWith(LOCATIONSHOWNPREFIX) ? QueryField.IPTC_LOCATIONSHOWN
-						.getStruct(ensemble.getAsset())
-						: QueryField.IPTC_LOCATIONCREATED.getStruct(ensemble
-								.getAsset());
+				ref = path.startsWith(LOCATIONSHOWNPREFIX)
+						? QueryField.IPTC_LOCATIONSHOWN.getStruct(ensemble.getAsset())
+						: QueryField.IPTC_LOCATIONCREATED.getStruct(ensemble.getAsset());
 			else if (category == QueryField.CONTACT_TYPE)
 				ref = QueryField.IPTC_CONTACT.getStruct(ensemble.getAsset());
 			else if (category == QueryField.ARTWORKOROBJECT_TYPE)
 				ref = QueryField.IPTC_ARTWORK.getStruct(ensemble.getAsset());
-			else if (category == QueryField.REGION_TYPE
-					|| category == QueryField.MWG_REGION_TYPE) { // TODO handle
-																	// MWG
+			else if (category == QueryField.REGION_TYPE || category == QueryField.MWG_REGION_TYPE) {
 				Asset asset = ensemble.getAsset();
 				String[] regionIds = asset.getPerson();
 				if (index1 >= 0 && index1 < regionIds.length) {
 					IDbManager dbManager = Core.getCore().getDbManager();
 					Iterator<RegionImpl> it = dbManager
-							.<RegionImpl> obtainObjects(RegionImpl.class,
-									false, Constants.OID, regionIds[index1],
-									QueryField.EQUALS,
-									"asset_person_parent", asset.getStringId(), //$NON-NLS-1$
-									QueryField.EQUALS).iterator();
+							.<RegionImpl>obtainObjects(RegionImpl.class, false, Constants.OID, regionIds[index1],
+									QueryField.EQUALS, "asset_person_parent", asset.getStringId(), //$NON-NLS-1$
+									QueryField.EQUALS)
+							.iterator();
 					if (it.hasNext()) {
 						MWGRegion mwgRegion = new AssetEnsemble.MWGRegion();
 						try {
-							AssetEnsemble.transferRegionData(dbManager,
-									it.next(), mwgRegion);
+							AssetEnsemble.transferRegionData(dbManager, it.next(), mwgRegion);
 							return qfield.obtainPlainFieldValue(mwgRegion);
 						} catch (NumberFormatException e) {
 							// ignore
@@ -175,24 +165,19 @@ public class XMPField {
 		if (ref instanceof String[]) {
 			String[] ids = (String[]) ref;
 			if (index1 >= 0 && index1 < ids.length) {
-				target = Core.getCore().getDbManager()
-						.obtainById(IdentifiableObject.class, ids[index1]);
-				return (target != null) ? qfield.obtainPlainFieldValue(target)
-						: null;
+				target = Core.getCore().getDbManager().obtainById(IdentifiableObject.class, ids[index1]);
+				return (target != null) ? qfield.obtainPlainFieldValue(target) : null;
 			}
 			return null;
 		} else if (ref instanceof String) {
-			target = Core.getCore().getDbManager()
-					.obtainById(IdentifiableObject.class, (String) ref);
-			return (target != null) ? qfield.obtainPlainFieldValue(target)
-					: null;
+			target = Core.getCore().getDbManager().obtainById(IdentifiableObject.class, (String) ref);
+			return (target != null) ? qfield.obtainPlainFieldValue(target) : null;
 		}
 		return qfield.obtainPlainFieldValue(target);
 	}
 
 	public void assignValue(AssetEnsemble ensemble, Object backup)
-			throws XMPException, SecurityException, IllegalArgumentException,
-			ParseException {
+			throws XMPException, SecurityException, IllegalArgumentException, ParseException {
 		boolean useFormatter = false;
 		int type = qfield.getType();
 		Object value = null;
@@ -212,17 +197,16 @@ public class XMPField {
 		default:
 			// New standard
 			if (category == QueryField.LOCATION_TYPE)
-				target = path.startsWith(LOCATIONSHOWNPREFIX) ? ensemble
-						.getLocationShown(index1) : ensemble
-						.getLocationCreated();
+				target = path.startsWith(LOCATIONSHOWNPREFIX) ? ensemble.getLocationShown(index1)
+						: ensemble.getLocationCreated();
 			else if (category == QueryField.CONTACT_TYPE)
 				target = ensemble.getCreatorContact();
 			else if (category == QueryField.ARTWORKOROBJECT_TYPE)
 				target = ensemble.getArtworkOrObject(index1);
 			else if (category == QueryField.REGION_TYPE)
 				target = ensemble.getRegion(AssetEnsemble.MP, index2);
-			else if (category == QueryField.MWG_REGION_TYPE || category != null
-					&& category.getParent() == QueryField.MWG_REGION_TYPE)
+			else if (category == QueryField.MWG_REGION_TYPE
+					|| category != null && category.getParent() == QueryField.MWG_REGION_TYPE)
 				target = ensemble.getRegion(AssetEnsemble.MWG, index2);
 			useFormatter = true;
 		}
@@ -266,33 +250,23 @@ public class XMPField {
 							if (minutes.endsWith("W") //$NON-NLS-1$
 									|| minutes.endsWith("S")) { //$NON-NLS-1$
 								s = -1;
-								minutes = minutes.substring(0,
-										minutes.length() - 1);
+								minutes = minutes.substring(0, minutes.length() - 1);
 							} else if (minutes.endsWith("E") //$NON-NLS-1$
-									|| minutes.endsWith("N")) { //$NON-NLS-1$
-								minutes = minutes.substring(0,
-										minutes.length() - 1);
-							}
-							value = (Integer.parseInt(degrees) + XMPUtils
-									.convertToDouble(minutes) / 60d) * s;
+									|| minutes.endsWith("N")) //$NON-NLS-1$
+								minutes = minutes.substring(0, minutes.length() - 1);
+							value = (Integer.parseInt(degrees) + XMPUtils.convertToDouble(minutes) / 60d) * s;
 						} else
 							value = XMPUtils.convertToDouble(v);
 					}
-					if (category == QueryField.EXIF_XRES
-							|| category == QueryField.EXIF_YRES) {
-						XMPProperty property = xmpMeta.getProperty(
-								QueryField.NS_TIFF.uri, "ResolutionUnit"); //$NON-NLS-1$
-						int unit = XMPUtils.convertToInteger(property
-								.getValue().toString());
+					if (category == QueryField.EXIF_XRES || category == QueryField.EXIF_YRES) {
+						XMPProperty property = xmpMeta.getProperty(QueryField.NS_TIFF.uri, "ResolutionUnit"); //$NON-NLS-1$
+						int unit = XMPUtils.convertToInteger(property.getValue().toString());
 						if (unit == RESOLUTION_UNIT_VALUE_CM)
 							value = ((Double) value).doubleValue() * 2.54d;
 					} else if (category == QueryField.EXIF_FOCALPLANEXRESOLUTION
 							|| category == QueryField.EXIF_FOCALPLANEYRESOLUTION) {
-						XMPProperty property = xmpMeta.getProperty(
-								QueryField.NS_EXIF.uri,
-								"FocalPlaneResolutionUnit"); //$NON-NLS-1$
-						int unit = XMPUtils.convertToInteger(property
-								.getValue().toString());
+						XMPProperty property = xmpMeta.getProperty(QueryField.NS_EXIF.uri, "FocalPlaneResolutionUnit"); //$NON-NLS-1$
+						int unit = XMPUtils.convertToInteger(property.getValue().toString());
 						switch (unit) {
 						case FOCAL_PLANE_RESOLUTION_UNIT_VALUE_CM:
 							value = ((Double) value).doubleValue() * 2.54d;
@@ -315,40 +289,33 @@ public class XMPField {
 						if (s == null || s.isEmpty())
 							return;
 						value = s;
-					} else {
+					} else
 						value = new String[] { attribute, s };
-					}
 					break;
 				default:
 					value = prop.getValue();
 					break;
 				}
 			}
-			if (useFormatter && qfield.getFormatter() != null
-					&& value instanceof String)
+			if (useFormatter && qfield.getFormatter() != null && value instanceof String)
 				value = qfield.getFormatter().fromString((String) value);
 		} else {
 			value = backup != null ? backup : prop.getValue();
-			if (backup == null && value != null
-					&& !value.toString().isEmpty()) {
-				if (card == QueryField.CARD_BAG
-						|| card == QueryField.CARD_MODIFIABLEBAG) {
+			if (backup == null && value != null && !value.toString().isEmpty()) {
+				if (card == QueryField.CARD_BAG || card == QueryField.CARD_MODIFIABLEBAG)
 					value = new String[] { value.toString() };
-				} else {
+				else {
 					Object oldArray = qfield.obtainPlainFieldValue(target);
 					if (oldArray instanceof int[]) {
 						int[] oldInt = (int[]) oldArray;
 						if (index2 <= oldInt.length) {
-							oldInt[index2 - 1] = Integer.parseInt(value
-									.toString());
+							oldInt[index2 - 1] = Integer.parseInt(value.toString());
 							value = oldInt;
 						} else {
 							int newLength = oldInt.length + 1;
 							int[] newInt = new int[newLength];
-							System.arraycopy(oldInt, 0, newInt, 0,
-									Math.min(oldInt.length, newLength));
-							newInt[oldInt.length] = Integer.parseInt(value
-									.toString());
+							System.arraycopy(oldInt, 0, newInt, 0, Math.min(oldInt.length, newLength));
+							newInt[oldInt.length] = Integer.parseInt(value.toString());
 							value = newInt;
 						}
 					} else {
@@ -358,8 +325,7 @@ public class XMPField {
 							value = oldString;
 						} else {
 							String[] newString = new String[oldString.length + 1];
-							System.arraycopy(oldString, 0, newString, 0,
-									oldString.length);
+							System.arraycopy(oldString, 0, newString, 0, oldString.length);
 							newString[oldString.length] = (String) value;
 							value = newString;
 						}
@@ -367,8 +333,7 @@ public class XMPField {
 				}
 			}
 		}
-		qfield.setFieldValue(target,
-				value != null ? value : qfield.getDefaultValue());
+		qfield.setFieldValue(target, value != null ? value : qfield.getDefaultValue());
 	}
 
 	@Override
@@ -387,8 +352,7 @@ public class XMPField {
 
 	@Override
 	public int hashCode() {
-		return (((path == null) ? 0 : path.hashCode()) * 31 + index1) * 31
-				+ index2;
+		return (((path == null) ? 0 : path.hashCode()) * 31 + index1) * 31 + index2;
 	}
 
 	public XMPPropertyInfo getProp() {
@@ -415,9 +379,6 @@ public class XMPField {
 		return qfield;
 	}
 
-	/**
-	 * @return attribute
-	 */
 	public String getAttribute() {
 		return attribute;
 	}

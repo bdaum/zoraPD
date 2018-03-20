@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2011 Berthold Daum  
  */
 
 package com.bdaum.zoom.gps.naming.geonaming.internal;
@@ -75,7 +75,7 @@ public abstract class AbstractGeonamesParser extends AbstractParser {
 		nf.setMaximumFractionDigits(5);
 	}
 
-	protected void checkStatus(String tag, Attributes atts)
+	protected static void checkStatus(String tag, Attributes atts)
 			throws WebServiceException {
 		if (STATUS.equals(tag)) {
 			String ecode = atts.getValue("", VALUE); //$NON-NLS-1$

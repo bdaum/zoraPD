@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -54,7 +54,6 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 		nf.setMaximumFractionDigits(digits);
 		nf.setMinimumFractionDigits(digits);
 		setValidator(new ICellEditorValidator() {
-
 			public String isValid(Object value) {
 				if (value != null) {
 					try {
@@ -70,14 +69,13 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 
 	@Override
 	protected void doSetValue(Object value) {
-		if (value instanceof String) {
+		if (value instanceof String)
 			try {
 				if (Integer.parseInt((String) value) > maximum)
 					value = nf.format(maximum);
 			} catch (NumberFormatException e) {
 				// do nothing
 			}
-		}
 		super.doSetValue(value);
 	}
 
@@ -105,7 +103,6 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 		});
 		minusButton = new Button(composite, SWT.ARROW | SWT.DOWN);
 		minusButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				incrementValue(txt, -increment);
@@ -113,7 +110,6 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 		});
 		plusButton = new Button(composite, SWT.ARROW | SWT.UP);
 		plusButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				incrementValue(txt, increment);
@@ -138,8 +134,7 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 
 	private void incrementValue(final Text txt, int incr) {
 		try {
-			Number number = nf.parse(txt.getText());
-			double v = number.doubleValue();
+			double v = nf.parse(txt.getText()).doubleValue();
 			v += incr;
 			if (v < 0)
 				v = 0;
@@ -164,7 +159,6 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 			super.keyReleaseOccured(keyEvent);
 			break;
 		}
-
 	}
 
 	public void setMaximum(int maximum) {

@@ -139,7 +139,6 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 		layoutData.heightHint = startImage.getBounds().height;
 		buttonCanvas.setLayoutData(layoutData);
 		buttonCanvas.addPaintListener(new PaintListener() {
-
 			public void paintControl(PaintEvent e) {
 				Rectangle area = buttonCanvas.getClientArea();
 				Rectangle ibounds = startImage.getBounds();
@@ -175,7 +174,6 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 			}
 		});
 		buttonCanvas.addMouseMoveListener(new MouseMoveListener() {
-
 			public void mouseMove(MouseEvent e) {
 				buttonCanvas.setCursor(
 						e.display.getSystemCursor(testButton(e.x, e.y) >= 0 ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW));
@@ -222,8 +220,9 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 	}
 
 	private void createHelpSection(FormToolkit toolkit, Composite parent, int style) {
-		createSection(toolkit, parent, Messages.Intro_help_title, Messages.Intro_help_tooltip, NLS
-				.bind(Messages.Intro_help_text, Constants.APPLICATION_NAME, System.getProperty("com.bdaum.zoom.forum")), //$NON-NLS-1$
+		createSection(toolkit, parent, Messages.Intro_help_title, Messages.Intro_help_tooltip,
+				NLS.bind(Messages.Intro_help_text, Constants.APPLICATION_NAME,
+						System.getProperty("com.bdaum.zoom.forum")), //$NON-NLS-1$
 				style);
 
 	}
@@ -250,9 +249,8 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 				NLS.bind(Messages.Intro_config_tooltip, Constants.APPLICATION_NAME),
 				NLS.bind(Messages.Intro_config_text,
 						new Object[] { Constants.APPLICATION_NAME, dict == null ? "" : dict.getPath(), //$NON-NLS-1$
-								System.getProperty("com.bdaum.zoom.dictionaries") }), //$NON-NLS-1$
+								System.getProperty(Messages.Intro_dictionaries_key) }),
 				style);
-
 	}
 
 	private void createFeatureSection(FormToolkit toolkit, Composite parent, int style) {
@@ -319,16 +317,16 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 		sectionGroupLayout.minNumColumns = sb ? 1 : 2;
 		sectionGroupLayout.maxNumColumns = sb ? 1 : 4;
 		sectionGroupLayout.bottomMargin = sectionGroupLayout.leftMargin = sectionGroupLayout.topMargin = sectionGroupLayout.rightMargin = sb
-				? 3 : 10;
+				? 3
+				: 10;
 		buttonCanvas.setVisible(!sb);
 		boolean firstOpen = false;
 		for (Section section : sections) {
-			if (sb && section.isExpanded()) {
+			if (sb && section.isExpanded())
 				if (firstOpen)
 					section.setExpanded(false);
 				else
 					firstOpen = true;
-			}
 			((ColumnLayoutData) section.getLayoutData()).widthHint = sb ? 250 : 400;
 			((FormText) section.getClient())
 					.setFont(sb ? JFaceResources.getDefaultFont() : JFaceResources.getDialogFont());

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -34,6 +34,14 @@ public class Messages extends NLS {
 	public static String AnimatedGallery_raw_recipe_applies;
 	public static String AnimatedGallery_rotate_left;
 	public static String AnimatedGallery_rotate_right;
+	public static String AutoRatingGroup_auto_rating;
+	public static String AutoRatingGroup_enable;
+	public static String AutoRatingGroup_overwrite;
+	public static String AutoRatingGroup_provider;
+	public static String AutoRatingGroup_rating;
+	public static String AutoRatingGroup_select_provider;
+	public static String AutoRatingGroup_select_theme;
+	public static String AutoRatingGroup_theme;
 	public static String CodeGroup_select_code;
 	public static String DescriptionGroup_description;
 	public static String DescriptionGroup_existing_markup_will_be_deleted;
@@ -43,6 +51,8 @@ public class Messages extends NLS {
 	public static String FileEditor_browse;
 	public static String FileEditor_browse_tooltip;
 	public static String FileEditor_clear_tooltip;
+	public static String FileEditor_file_exists;
+	public static String FileEditor_overwrite;
 	public static String FilterField_enter_filter_expr;
 	public static String FilterField_expressions_entered;
 	public static String JpegMetaGroup_insert_into_jpeg;
@@ -76,6 +86,7 @@ public class Messages extends NLS {
 	public static String TextOperation_edit_text;
 	public static String TextWithVariableGroup_add_metadata;
 	public static String TextWithVariableGroup_add_variable;
+	public static String TextWithVariableGroup_select_template;
 	public static String WatermarkGroup_create_watermark;
 	public static String WatermarkGroup_does_not_exist;
 	public static String WatermarkGroup_select_file;
@@ -95,7 +106,6 @@ public class Messages extends NLS {
 	public static String LabelConfigGroup_template;
 	public static String LabelConfigGroup_title;
 	public static String LabelConfigGroup_tumbnail_labels;
-	public static String LabelConfigGroup_variables;
 	public static String SharpeningGroup_apply_sharpening;
 	public static String SharpeningGroup_radius;
 	public static String SharpeningGroup_amount;

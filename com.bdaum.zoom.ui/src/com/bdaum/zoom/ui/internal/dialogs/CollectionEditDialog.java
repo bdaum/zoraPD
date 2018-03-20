@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -29,7 +29,6 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -103,13 +102,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 
 	private CTabFolder tabFolder;
 
-	private CTabItem tabItem0;
-
-	private CTabItem tabItem1;
-
 	private LabelConfigGroup labelConfigGroup;
-
-	private CTabItem tabItem2;
 
 	public CollectionEditDialog(Shell parentShell, SmartCollection current, String title, String message, boolean adhoc,
 			boolean album, boolean person, boolean networkPossible) {
@@ -148,13 +141,9 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		tabFolder = new CTabFolder(area, SWT.BORDER);
 		tabFolder.setLayoutData(new GridData(GridData.FILL_BOTH));
 		tabFolder.setSimple(false);
-		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_general);
-		tabItem0.setControl(createGeneralGroup(tabFolder));
-		tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_query);
-		tabItem1.setControl(createQueryGroup(tabFolder));
-		tabItem2 = UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_appearance);
-		tabItem2.setControl(createApperanceGroup(tabFolder));
-
+		UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_general, null).setControl(createGeneralGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_query, null).setControl(createQueryGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_appearance, null).setControl(createApperanceGroup(tabFolder));
 		Shell shell = getShell();
 		Point size = shell.getSize();
 		shell.setSize(size.x, size.y + 12);

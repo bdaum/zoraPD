@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.widgets;
@@ -423,8 +423,8 @@ public class RangeControl extends Composite
 	}
 
 	private void fireSelectionChanged(SelectionEvent e) {
-		for (Object l : selectionListeners.getListeners())
-			((SelectionListener) l).widgetSelected(e);
+		for (SelectionListener l : selectionListeners)
+			l.widgetSelected(e);
 	}
 
 	/*
@@ -434,8 +434,8 @@ public class RangeControl extends Composite
 	 * eclipse.swt.events.SelectionEvent)
 	 */
 	public void widgetDefaultSelected(SelectionEvent e) {
-		for (Object l : selectionListeners.getListeners())
-			((SelectionListener) l).widgetDefaultSelected(e);
+		for (SelectionListener l : selectionListeners)
+			l.widgetDefaultSelected(e);
 	}
 
 	/*
@@ -461,13 +461,13 @@ public class RangeControl extends Composite
 	}
 
 	private void fireFocusGained(FocusEvent e) {
-		for (Object l : focusListeners.getListeners())
-			((FocusListener) l).focusGained(e);
+		for (FocusListener l : focusListeners)
+			l.focusGained(e);
 	}
 
 	private void fireFocusLost(FocusEvent e) {
-		for (Object l : focusListeners.getListeners())
-			((FocusListener) l).focusLost(e);
+		for (FocusListener l : focusListeners)
+			l.focusLost(e);
 	}
 
 	/*

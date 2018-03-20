@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2013 Berthold Daum  
  */
 package com.bdaum.zoom.peer.internal;
 
@@ -45,7 +45,6 @@ import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.ecf.core.ContainerCreateException;
 import org.eclipse.ecf.core.IContainer;
-import org.eclipse.ecf.core.IContainerFactory;
 import org.eclipse.ecf.core.IContainerManager;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.BundleContext;
@@ -74,14 +73,12 @@ import com.bdaum.zoom.ui.internal.ZUiPlugin;
 public class PeerActivator extends ZUiPlugin
 		implements IPreferenceChangeListener, IDbListener, ServiceTrackerCustomizer<Object, Object> {
 
-	private static final String DEFAULT_CONTAINER_TYPE = "ecf.r_osgi.peer"; //$NON-NLS-1$
-
-	private String containerType = DEFAULT_CONTAINER_TYPE;
-
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.peer"; //$NON-NLS-1$
 
-	// The shared instance
+	private static final String DEFAULT_CONTAINER_TYPE = "ecf.r_osgi.peer"; //$NON-NLS-1$
+
+	private static String containerType = DEFAULT_CONTAINER_TYPE;
+
 	private static PeerActivator plugin;
 
 	private BundleContext context;
@@ -122,7 +119,7 @@ public class PeerActivator extends ZUiPlugin
 		super.start(context);
 		this.context = context;
 		plugin = this;
-		 // cut out internal platform events
+		// cut out internal platform events
 		System.setProperty("ch.ethz.iks.r_osgi.topic.filter", "org/eclipse/*"); //$NON-NLS-1$ //$NON-NLS-2$
 		IEclipsePreferences node = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
 		StringTokenizer st = new StringTokenizer(node.get(PreferenceConstants.RECEIVERS, ""), "\n"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -143,22 +140,20 @@ public class PeerActivator extends ZUiPlugin
 			}
 		}
 		node.addPreferenceChangeListener(this);
-		definedPort = getPreferenceStore().getInt(PreferenceConstants.PORT);
-		System.setProperty("ch.ethz.iks.r_osgi.port", String.valueOf(definedPort)); //$NON-NLS-1$
+		System.setProperty("ch.ethz.iks.r_osgi.port", //$NON-NLS-1$
+				String.valueOf(definedPort = getPreferenceStore().getInt(PreferenceConstants.PORT)));
 		connectJob = new Daemon(Messages.PeerActivator_connect_osgi, -1) {
 			@Override
 			public boolean belongsTo(Object family) {
 				return family == PeerActivator.this || super.belongsTo(family);
 			}
-			
+
 			@Override
 			protected void doRun(IProgressMonitor monitor) {
 				rosgiManager = new ROSGiManager(PeerActivator.this, context, getHostOrHostname());
 				rosgiManager.registerPeerProvider();
 				try {
-					IContainerManager containerManager = getContainerManagerService();
-					IContainerFactory containerFactory = containerManager.getContainerFactory();
-					container = containerFactory.createContainer(containerType);
+					container = getContainerManagerService().getContainerFactory().createContainer(containerType);
 					peerProviderServiceTracker = new ServiceTracker(context, IPeerProvider.class, PeerActivator.this);
 					peerProviderServiceTracker.open();
 					logInfo(Messages.PeerActivator_peer_service_connected);
@@ -245,15 +240,8 @@ public class PeerActivator extends ZUiPlugin
 	}
 
 	public void writeBlockedNodes() {
-		if (blockedNodes != null) {
-			StringBuilder sb = new StringBuilder();
-			for (String node : blockedNodes) {
-				if (sb.length() > 0)
-					sb.append('\n');
-				sb.append(node);
-			}
-			getPreferenceStore().putValue(PreferenceConstants.BLOCKEDNODES, sb.toString());
-		}
+		if (blockedNodes != null)
+			getPreferenceStore().putValue(PreferenceConstants.BLOCKEDNODES, Core.toStringList(blockedNodes, '\n'));
 	}
 
 	/**

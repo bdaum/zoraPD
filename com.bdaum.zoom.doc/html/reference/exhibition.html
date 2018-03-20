@@ -17,8 +17,9 @@
 
 
 
-<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head>
-<body>
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
 <h2> Exhibition designer view </h2>
 <p>The purpose of the <span style="font-style: italic;">Exhibition designer view</span>
 is the design of physical photographic exhibitions. The sequence and
@@ -55,21 +56,47 @@ double click on a wall background zooms out so that all walls are
 visible. A double click on an image label zooms to that label, so that
 it can be edited conviniently. Another double click restores the former view.</p>
 
-<h4>Exhibition properties</h4><ul style="font-weight: normal;"><li style="font-weight: bold;">Overview</li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Name</span>. The name of the exhibition.<br>
-</li><li><span style="font-weight: bold;">Description</span>. Short description of the exhibition (Location, Time schedule, etc.).&nbsp;</li><li><span style="font-weight: bold;">Info plate</span></li><ul><li><span style="font-weight: bold;">Text.</span> Information text to be displayed on an info plate within the exhibition.</li><li><span style="font-weight: bold;">Position</span>.
+<h4><a name="properties"></a>Exhibition properties</h4><ul style="font-weight: normal;"><li style="font-weight: bold;">Overview</li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Exhibition</span><br>
+<span style="font-weight: bold;"></span></li>
+    <ul>
+      <li><span style="font-weight: bold;">Name</span>. The name of the exhibition.<br>
+      </li>
+      <li><span style="font-weight: bold;">Description</span>. Short description of the exhibition (Location, Time schedule, etc.).&nbsp;</li>
+    </ul>
+<li><span style="font-weight: bold;">Info plate</span></li><ul><li><span style="font-weight: bold;">Text.</span> Information text to be displayed on an info plate within the exhibition.</li><li><span style="font-weight: bold;">Position</span>.
 Determines where the info text is shown: left or right of the door, or
 not at all. The info plate also contains the name and the names of the
 artist(s).</li><li><span style="font-weight: bold;">Show credits</span>. Mark this field to show credits derived from the images on the info plate</li></ul></ul><li><span style="font-weight: bold;">Layout.</span>&nbsp;<br>Here
 you can define layout default values that apply to all exhibits of the
 exhibition. Some of these values can be overridden individually for
 each <a href="exhibitLayout.html">exhibit</a>.</li><ul><li><span style="font-weight: bold;">Default viewing height.</span> Where the image is placed when you drag it onto a wall.</li><li><span style="font-weight: bold;">Variance.</span> A value by which the default viewing height is varied randomly when dropping image onto a wall.</li><li><span style="font-weight: bold;">Mat and frame</span><span style="font-weight: bold;"></span></li><ul><li><span style="font-weight: bold;">Mat color.</span> The color of the mat, if any.</li><li><span style="font-weight: bold;">Mat width.</span> The mat with from image border to frame. Set to zero if the image is not mounted on a mat.</li><li><span style="font-weight: bold;">Frame color.</span> The color of the frame, if any.</li><li><span style="font-weight: bold;">Frame width.</span> The width of the frame. Set to zero for unframed images.</li></ul><li><span style="font-weight: bold;">Label</span><span style="font-weight: bold;"></span></li><ul><li><span style="font-weight: bold;">Font.</span> The label size will adjust automatically to the chosen font.</li><li><span style="font-weight: bold;">Sequence.</span> Select the sequence of title, description, and credits.</li><li><span style="font-weight: bold;">Default text.</span> This text will be filled into the label of each new exhibit.</li><li><span style="font-weight: bold;">Hide.</span> By default all labels are hidden if this option is checked.</li><li><span style="font-weight: bold;">Alignment.</span> Defines the spatial relationship of the label to the image.&nbsp;</li><li><span style="font-weight: bold;">Distance.</span> The distance of the label from the border of the image.</li><li><span style="font-weight: bold;">Indent.</span> How much the label is shifted along the border of the image.</li></ul></ul><li><span style="font-weight: bold;">Grid.</span>&nbsp;</li><ul><li><span style="font-weight: bold;">Show grid</span>. Shows a grid on each wall.</li><li><span style="font-weight: bold;">Grid size.</span> Distance between grid lines.</li><li><span style="font-weight: bold;">Snap to grid.</span> Images will automatically adjust to the grid if they are placed near grid lines.</li></ul><li><span style="font-weight: bold;">Details.</span>
-This section displays image data for each wall including image position
-and size and the resolution in dpi. They can be printed or outputted to
-a PDF.</li>
+This section displays image and frame data for each wall including position
+and size and the resolution in dpi. These values can be printed or outputted to PDF.</li>
   <li><span style="font-weight: bold;">Floorplan.</span> Here you can
 define the spacial layout of the exhibition walls. Select a wall or the
 entrance (circle) and enter the coordinates and - in case of a
-wall - the angle. You may also click on the ends of the walls and drag them with the mouse or nudge them with the arrow keys.</li><li><span style="font-weight: bold;">Web Design.</span><br>This section is only relevant for generated virtual exhibitions.</li><ul><li><span style="font-weight: bold;">Ground color.</span> The color of the floor.</li><li><span style="font-weight: bold;">Horizon color.</span> The color of the horizon</li><li><span style="font-weight: bold;">Ceiling color.</span> The color of the ceiling</li><li><span style="font-weight: bold;">Audio track.</span> An audio track to be played with the exhibition<br><span style="font-weight: bold; color: rgb(204, 0, 0);">Note</span><span style="color: rgb(204, 0, 0);">: Current Firefox versions cannot handle MP3 audio tracks.</span></li><li><span style="font-weight: bold;">Name plate</span>. This can be a GIF-, JPEG-, or PNG-image that will be placed at the very top of the page.</li></ul><li><span style="font-weight: bold;">Output.</span><br>This section is only relevant for generated virtual exhibitions.</li><ul><li><span style="font-weight: bold;">Local folder</span>. Please select an output folder for the generated web gallery if the output is to be created locally.</li><li><span style="font-weight: bold;">FTP directory</span>. Please select an existing <a href="ftpAccount.html">FTP account</a> or create a new one if you want to upload the output via FTP.</li><li><span style="font-weight: bold;">Web Link</span>. This is the name of the&nbsp;entry web page into the generated web gallery. The default is "index.html".</li><li><span style="font-weight: bold;">Keywords</span>. Specify keywords to be inserted into the header of the generated entry web page.</li><li><span style="font-weight: bold;">Sharpening</span>. Specify the parameters for an <span style="font-style: italic;">unsharp filter</span> to be applied to the output images.</li><li><span style="font-weight: bold;">Create watermarks</span>.
+wall - the angle. You may also click on the ends of the walls and drag them with the mouse or nudge them with the arrow keys.</li><li><span style="font-weight: bold;">Web Design.</span><br>This section is only relevant for generated virtual exhibitions.</li><ul><li><span style="font-weight: bold;">Colors</span><br>
+<span style="font-weight: bold;"></span></li>
+    <ul>
+      <li><span style="font-weight: bold;">Ground.</span> The color of the floor.</li>
+      <li><span style="font-weight: bold;">Horizon.</span> The color of the horizon</li>
+      <li><span style="font-weight: bold;">Ceiling.</span> The color of the ceiling</li>
+    </ul>
+<li><span style="font-weight: bold;">Media</span><br>
+<span style="font-weight: bold;"></span></li>
+    <ul>
+      <li><span style="font-weight: bold;">Audio track.</span> An audio track to be played with the exhibition<br><span style="font-weight: bold; color: rgb(204, 0, 0);">Note</span><span style="color: rgb(204, 0, 0);">: Current Firefox versions cannot handle MP3 audio tracks.</span></li>
+      <li><span style="font-weight: bold;">Name plate</span>. This can be a GIF-, JPEG-, or PNG-image that will be placed at the very top of the page.</li>
+    </ul>
+</ul><li><span style="font-weight: bold;">Output.</span><br>This section is only relevant for generated virtual exhibitions.</li><ul><li><span style="font-weight: bold;">Output Target</span><br>
+<span style="font-weight: bold;"></span></li>
+    <ul>
+      <li><span style="font-weight: bold;">Local folder</span>. Please select an output folder for the generated web gallery if the output is to be created locally.</li>
+      <li><span style="font-weight: bold;">FTP directory</span>. Please select an existing <a href="ftpAccount.html">FTP account</a> or create a new one if you want to upload the output via FTP.</li>
+    </ul>
+<li><span style="font-weight: bold;">Web Link</span>. This is the name of the&nbsp;entry web page into the generated web gallery. The default is "index.html".</li><li><span style="font-weight: bold;">Keywords</span>. Specify keywords to be inserted into the header of the generated entry web page.</li>
+    <li><span style="font-weight: bold;">Output quality. </span>You can influence the<span style="font-weight: bold;"> Output Quality </span>with <a href="outputQuality.html">these</a> setttings.</li>
+<li><span style="font-weight: bold;">Create watermarks</span>.
 Adds a copyright notice to each single picture in form of a watermark.
 The copyright property of the image will be used for the watermark. If
 the image does not specify an own copyright, the exhibition copyright (below) is used instead.&nbsp;</li><li><span style="font-weight: bold;">Copyright</span>.
@@ -78,8 +105,8 @@ the complete exhibition, not to the single images). The copyright remark will
 be inserted into the footer of the generated web page.</li><li><span style="font-weight: bold;">Contact</span>. A contact name that will be displayed in the footer of the generated web page.</li><li><span style="font-weight: bold;">Email</span>. An email address for&nbsp;contact. The contact name will be equipped with an email link to that address.</li><li><span style="font-weight: bold;">Web URL</span>.
 A web URL that will be displayed in the footer of the generated plate.
 If specified, also the name plate will be equipped with a link to that
-page.</li><li>You can influence the<span style="font-weight: bold;"> Output Quality </span>with <a href="outputQuality.html">these</a> setttings.</li></ul>
-</ul><h4>Wall properties</h4><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Location</span>. Describe where the wall is located.</li><li><span style="font-weight: bold;">Dimensions</span>. Width and height of the wall in meters.</li><li><span style="font-weight: bold;">Wall color</span>. Select a background color for the wall.</li></ul>
+page.</li></ul>
+</ul><h4><a name="wall"></a>Wall properties</h4><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Location</span>. Describe where the wall is located.</li><li><span style="font-weight: bold;">Dimensions</span>. Width and height of the wall in meters.</li><li><span style="font-weight: bold;">Wall color</span>. Select a background color for the wall.</li></ul>
 <h4><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7">Context menu<br>
 </font></h4>
 

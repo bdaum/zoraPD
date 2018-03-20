@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal;
@@ -38,8 +38,10 @@ public class Messages extends NLS {
 	public static String UiActivator_io_error_playing_remote;
 	public static String UiActivator_please_wait;
 	public static String UiActivator_restart_later;
+	public static String UiActivator_restart;
 	public static String UiActivator_restart_msg;
 	public static String UiActivator_restart_now;
+	public static String UiActivator_restart_question;
 	public static String UiActivator_restart_required;
 	public static String UiActivator_return_to_workbench;
 	public static String UiActivator_unsufficient_right_voice_note;

@@ -39,7 +39,7 @@ public class SleevesPerspective extends AbstractPerspective {
 		layout.addView(MetadataView.ID, IPageLayout.RIGHT, 0.76f,
 				SLEEVES_FOLDER);
 		addCheatSheets(layout, MetadataView.ID);
-		addFastViews(layout, IPageLayout.LEFT, 0.7f, CATALOG_FOLDER);
+		addFastViews(layout, IPageLayout.RIGHT, 0.7f, SLEEVES_FOLDER);
 		layout.setEditorAreaVisible(false);
 	}
 

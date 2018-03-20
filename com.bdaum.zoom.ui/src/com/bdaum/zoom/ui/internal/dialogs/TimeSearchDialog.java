@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -32,7 +32,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
@@ -48,19 +47,26 @@ import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.DateInput;
 
 public class TimeSearchDialog extends ZTitleAreaDialog {
 
-	private static final SimpleDateFormat df = new SimpleDateFormat(
-			Messages.TimeSearchDialog_dateFormat);
+	private static final SimpleDateFormat df = new SimpleDateFormat(Messages.TimeSearchDialog_dateFormat);
 	private static final String SETTINGSID = "com.bdaum.zoom.timeSearchDialog"; //$NON-NLS-1$
 
 	private static final long ONEHOUR = 3600000L;
 	private static final String INTERVAL = "interval"; //$NON-NLS-1$
 	private Date date1;
 	private Date date2;
+	private SmartCollectionImpl coll;
+	private IDialogSettings settings;
+	private FindWithinGroup findWithinGroup;
+	private DateInput fromField;
+	private DateInput toField;
+	private FindInNetworkGroup findInNetworkGroup;
+	private RadioButtonGroup intervalRadioGroup;
 
 	public TimeSearchDialog(Shell parentShell, Date date1, Date date2) {
 		super(parentShell, HelpContextIds.TIMESEARCH_DIALOG);
@@ -72,26 +78,10 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 	public void create() {
 		super.create();
 		setTitle(Messages.TimeSearchDialog_time_search);
-		setMessage(date1.equals(date2) ? NLS.bind(
-				Messages.TimeSearchDialog_search_for_all, df.format(date1))
-				: NLS.bind(
-						Messages.TimeSearchDialog_search_for_all_images_between,
-						df.format(date1), df.format(date2)));
+		setMessage(date1.equals(date2) ? NLS.bind(Messages.TimeSearchDialog_search_for_all, df.format(date1))
+				: NLS.bind(Messages.TimeSearchDialog_search_for_all_images_between, df.format(date1),
+						df.format(date2)));
 	}
-
-	private Button sameButton;
-	private Button hourButton;
-	private Button fourHourButton;
-	private Button dayButton;
-	private Button weekButton;
-	private Button monthButton;
-	private Button yearButton;
-	private SmartCollectionImpl coll;
-	private IDialogSettings settings;
-	private FindWithinGroup findWithinGroup;
-	private DateInput fromField;
-	private DateInput toField;
-	private FindInNetworkGroup findInNetworkGroup;
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
@@ -100,119 +90,58 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 		final Composite comp = new Composite(area, SWT.NONE);
 		final GridLayout gridLayout = new GridLayout();
 		comp.setLayout(gridLayout);
-
 		CGroup timeGroup = new CGroup(comp, SWT.NONE);
 		timeGroup.setText(Messages.TimeSearchDialog_base_interval);
 		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, true);
 		layoutData.widthHint = 200;
 		timeGroup.setLayoutData(layoutData);
 		timeGroup.setLayout(new GridLayout(2, false));
-		Label fromLabel = new Label(timeGroup, SWT.NONE);
-		fromLabel.setText(Messages.TimeSearchDialog_from);
-		fromField = new DateInput(timeGroup, SWT.DATE | SWT.TIME
-				| SWT.DROP_DOWN | SWT.BORDER);
-		fromField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, false,
-				false));
+		new Label(timeGroup, SWT.NONE).setText(Messages.TimeSearchDialog_from);
+		fromField = new DateInput(timeGroup, SWT.DATE | SWT.TIME | SWT.DROP_DOWN | SWT.BORDER);
+		fromField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, false, false));
 		fromField.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				Date from = fromField.getDate();
 				Date to = toField.getDate();
-				if (from.compareTo(to) > 0)
+				if (fromField.getDate().compareTo(to) > 0)
 					fromField.setDate(new Date(to.getTime()));
 			}
 		});
-		Label toLabel = new Label(timeGroup, SWT.NONE);
-		toLabel.setText(Messages.TimeSearchDialog_to);
-		toField = new DateInput(timeGroup, SWT.DATE | SWT.TIME | SWT.DROP_DOWN
-				| SWT.BORDER);
-		toField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, false,
-				false));
+		new Label(timeGroup, SWT.NONE).setText(Messages.TimeSearchDialog_to);
+		toField = new DateInput(timeGroup, SWT.DATE | SWT.TIME | SWT.DROP_DOWN | SWT.BORDER);
+		toField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, false, false));
 		toField.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				Date from = fromField.getDate();
-				Date to = toField.getDate();
-				if (from.compareTo(to) > 0)
+				if (from.compareTo(toField.getDate()) > 0)
 					toField.setDate(new Date(from.getTime()));
 			}
 		});
 		findWithinGroup = new FindWithinGroup(comp);
 		if (Core.getCore().isNetworked())
 			findInNetworkGroup = new FindInNetworkGroup(comp);
-
 		final CGroup intervalComp = new CGroup(comp, SWT.NONE);
 		layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, true);
 		layoutData.widthHint = 200;
 		intervalComp.setLayoutData(layoutData);
 		intervalComp.setText(Messages.TimeSearchDialog_derived_interval);
 		intervalComp.setLayout(new GridLayout(2, false));
-
-		sameButton = new Button(intervalComp, SWT.RADIO);
-		final Label sameTimeLabel = new Label(intervalComp, SWT.NONE);
-		sameTimeLabel.setText(Messages.TimeSearchDialog_exactly_same_time);
-
-		hourButton = new Button(intervalComp, SWT.RADIO);
-		final Label witinSameHourLabel = new Label(intervalComp, SWT.NONE);
-		witinSameHourLabel.setText(Messages.TimeSearchDialog_within_same_hour);
-
-		fourHourButton = new Button(intervalComp, SWT.RADIO);
-		final Label within4HoursLabel = new Label(intervalComp, SWT.NONE);
-		within4HoursLabel.setText(Messages.TimeSearchDialog_within_4_hours);
-
-		dayButton = new Button(intervalComp, SWT.RADIO);
-		final Label sameDayLabel = new Label(intervalComp, SWT.NONE);
-		sameDayLabel.setText(Messages.TimeSearchDialog_same_day);
-
-		weekButton = new Button(intervalComp, SWT.RADIO);
-		final Label sameWeekLabel = new Label(intervalComp, SWT.NONE);
-		sameWeekLabel.setText(Messages.TimeSearchDialog_same_week);
-
-		monthButton = new Button(intervalComp, SWT.RADIO);
-		final Label sameMonthLabel = new Label(intervalComp, SWT.NONE);
-		sameMonthLabel.setText(Messages.TimeSearchDialog_same_month);
-
-		yearButton = new Button(intervalComp, SWT.RADIO);
-		final Label sameYearLabel = new Label(intervalComp, SWT.NONE);
-		sameYearLabel.setText(Messages.TimeSearchDialog_same_year);
+		intervalRadioGroup = new RadioButtonGroup(intervalComp, null, SWT.VERTICAL,
+				Messages.TimeSearchDialog_exactly_same_time, Messages.TimeSearchDialog_within_same_hour,
+				Messages.TimeSearchDialog_within_4_hours, Messages.TimeSearchDialog_same_day,
+				Messages.TimeSearchDialog_same_week, Messages.TimeSearchDialog_same_month,
+				Messages.TimeSearchDialog_same_year);
 		fillValues();
 		return area;
 	}
 
 	private void fillValues() {
-		settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		try {
-			int buttonpressed = settings.getInt(INTERVAL);
-			switch (buttonpressed) {
-			case 0:
-				sameButton.setSelection(true);
-				break;
-			case 1:
-				hourButton.setSelection(true);
-				break;
-			case 2:
-				fourHourButton.setSelection(true);
-				break;
-			// case 3:
-			// dayButton.setSelection(true);
-			// break;
-			case 4:
-				weekButton.setSelection(true);
-				break;
-			case 5:
-				monthButton.setSelection(true);
-				break;
-			case 6:
-				yearButton.setSelection(true);
-				break;
-			default:
-				dayButton.setSelection(true);
-				break;
-			}
+			intervalRadioGroup.setSelection(settings.getInt(INTERVAL));
 		} catch (NumberFormatException e) {
-			dayButton.setSelection(true);
+			intervalRadioGroup.setSelection(3);
 		}
 		findWithinGroup.fillValues(settings);
 		if (findInNetworkGroup != null)
@@ -225,22 +154,21 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 	protected void okPressed() {
 		date1 = fromField.getDate();
 		date2 = toField.getDate();
-		boolean network = findInNetworkGroup == null ? false
-				: findInNetworkGroup.getSelection();
-		coll = new SmartCollectionImpl(Messages.TimeSearchDialog_time_search,
-				false, false, true, network, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
-
-		int buttonpressed = 0;
+		boolean network = findInNetworkGroup == null ? false : findInNetworkGroup.getSelection();
+		coll = new SmartCollectionImpl(Messages.TimeSearchDialog_time_search, false, false, true, network, null, 0,
+				null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 		Date from, to;
-		if (hourButton.getSelection()) {
+		int buttonpressed = intervalRadioGroup.getSelection();
+		switch (buttonpressed) {
+		case 1:
 			from = new Date(date1.getTime() - ONEHOUR);
 			to = new Date(date2.getTime() + ONEHOUR);
-			buttonpressed = 1;
-		} else if (fourHourButton.getSelection()) {
+			break;
+		case 2:
 			from = new Date(date1.getTime() - 4 * ONEHOUR);
 			to = new Date(date2.getTime() + 4 * ONEHOUR);
-			buttonpressed = 2;
-		} else if (dayButton.getSelection()) {
+			break;
+		case 3:
 			GregorianCalendar cal = new GregorianCalendar();
 			cal.setTime(date1);
 			cal.set(Calendar.HOUR, 0);
@@ -256,9 +184,9 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 			cal.add(Calendar.DAY_OF_MONTH, 1);
 			cal.add(Calendar.MILLISECOND, -1);
 			to = cal.getTime();
-			buttonpressed = 3;
-		} else if (weekButton.getSelection()) {
-			GregorianCalendar cal = new GregorianCalendar();
+			break;
+		case 4:
+			cal = new GregorianCalendar();
 			cal.setTime(date1);
 			cal.set(Calendar.HOUR, 0);
 			cal.set(Calendar.MINUTE, 0);
@@ -284,9 +212,9 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 			cal.add(Calendar.DAY_OF_MONTH, 7);
 			cal.add(Calendar.MILLISECOND, -1);
 			to = cal.getTime();
-			buttonpressed = 4;
-		} else if (monthButton.getSelection()) {
-			GregorianCalendar cal = new GregorianCalendar();
+			break;
+		case 5:
+			cal = new GregorianCalendar();
 			cal.setTime(date1);
 			cal.set(Calendar.HOUR, 0);
 			cal.set(Calendar.MINUTE, 0);
@@ -303,9 +231,9 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 			cal.add(Calendar.MONTH, 1);
 			cal.add(Calendar.MILLISECOND, -1);
 			to = cal.getTime();
-			buttonpressed = 5;
-		} else if (yearButton.getSelection()) {
-			GregorianCalendar cal = new GregorianCalendar();
+			break;
+		case 6:
+			cal = new GregorianCalendar();
 			cal.setTime(date1);
 			cal.set(Calendar.HOUR, 0);
 			cal.set(Calendar.MINUTE, 0);
@@ -324,8 +252,8 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 			cal.add(Calendar.YEAR, 1);
 			cal.add(Calendar.MILLISECOND, -1);
 			to = cal.getTime();
-			buttonpressed = 6;
-		} else {
+			break;
+		default:
 			from = date1;
 			to = date2;
 		}
@@ -338,12 +266,9 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 			value = new Range(from, to);
 			rel = QueryField.BETWEEN;
 		}
-		coll.addCriterion(new CriterionImpl(QueryField.IPTC_DATECREATED
-				.getKey(), null, value, rel, false));
-		coll.addSortCriterion(new SortCriterionImpl(QueryField.IPTC_DATECREATED
-				.getKey(),  null, false));
-		coll.setSmartCollection_subSelection_parent(findWithinGroup
-				.getParentCollection());
+		coll.addCriterion(new CriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, value, rel, false));
+		coll.addSortCriterion(new SortCriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, false));
+		coll.setSmartCollection_subSelection_parent(findWithinGroup.getParentCollection());
 		settings.put(INTERVAL, buttonpressed);
 		findWithinGroup.saveValues(settings);
 		if (findInNetworkGroup != null)

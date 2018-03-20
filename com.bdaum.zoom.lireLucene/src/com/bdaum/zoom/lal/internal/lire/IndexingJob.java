@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.lal.internal.lire;
@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -80,7 +79,6 @@ public class IndexingJob extends Job {
 	private String[] assetIds;
 	private boolean reimport;
 	private IDbManager dbManager;
-	private Set<String> postponed = new HashSet<String>(511);
 	private ThreadMXBean threadMXBean;
 	private int totalWork = -1;
 	private int worked = 0;
@@ -89,6 +87,7 @@ public class IndexingJob extends Job {
 	private Date lastBackup;
 	private boolean noIndex = false;
 	private long startTime;
+	private Set<String> postponed;
 
 	/**
 	 * Constructor
@@ -104,11 +103,14 @@ public class IndexingJob extends Job {
 	 * @param system
 	 *            - true if job should run as system job (unused, runs always as
 	 *            system job)
+	 * @param postponed
 	 */
-	public IndexingJob(Collection<Asset> assets, boolean reimport, int totalWork, int worked, boolean system) {
+	protected IndexingJob(Collection<Asset> assets, boolean reimport, int totalWork, int worked, boolean system,
+			Set<String> postponed) {
 		super(Messages.IndexingJob_Indexing);
 		this.assets = assets;
 		this.reimport = reimport;
+		this.postponed = postponed;
 		this.totalWork = totalWork >= 0 ? totalWork : assets.size();
 		this.worked = worked;
 		setSystem(true);
@@ -123,10 +125,12 @@ public class IndexingJob extends Job {
 	 * @param assetIds
 	 *            - assets to be index or null. If null is supplied the index is
 	 *            reset and then all assets in the catalog will be indexed
+	 * @param postponedIndexing
 	 */
-	public IndexingJob(String[] assetIds) {
+	protected IndexingJob(String[] assetIds, Set<String> postponed) {
 		super(Messages.IndexingJob_Indexing);
 		this.assetIds = assetIds;
+		this.postponed = postponed;
 		init();
 		if (assetIds == null) {
 			reset = true;
@@ -136,6 +140,26 @@ public class IndexingJob extends Job {
 			reimport = true;
 			postponed.addAll(Arrays.asList(assetIds));
 		}
+	}
+
+	/**
+	 * Constructor
+	 *
+	 * This constructor is used only for the special purpose of restoring a crashed
+	 * Lucene index from a previous backup
+	 *
+	 * @param indexBackup
+	 *            - location of old Lucene index folder (backup)
+	 * @param lastBackup
+	 *            - Date of last backup
+	 * @param postponed
+	 */
+	protected IndexingJob(File indexBackup, Date lastBackup, Set<String> postponed) {
+		super(Messages.IndexingJob_Indexing);
+		this.indexBackup = indexBackup;
+		this.lastBackup = lastBackup;
+		this.postponed = postponed;
+		init();
 	}
 
 	private void init() {
@@ -150,24 +174,6 @@ public class IndexingJob extends Job {
 		} catch (Exception e) {
 			// do nothing
 		}
-	}
-
-	/**
-	 * Constructor
-	 *
-	 * This constructor is used only for the special purpose of restoring a
-	 * crashed Lucene index from a previous backup
-	 *
-	 * @param indexBackup
-	 *            - location of old Lucene index folder (backup)
-	 * @param lastBackup
-	 *            - Date of last backup
-	 */
-	public IndexingJob(File indexBackup, Date lastBackup) {
-		super(Messages.IndexingJob_Indexing);
-		this.indexBackup = indexBackup;
-		this.lastBackup = lastBackup;
-		init();
 	}
 
 	@Override
@@ -290,8 +296,7 @@ public class IndexingJob extends Job {
 				long delay;
 				if (threadMXBean != null) {
 					cpu = threadMXBean.getCurrentThreadCpuTime() - cpu;
-					long u = cpu / (dur / 100);
-					double fac = Math.min(FACTOR, Math.max(0f, (86f - u) / 9f));
+					double fac = Math.min(FACTOR, Math.max(0f, (86f - (cpu / (dur / 100))) / 9f));
 					delay = Math.max(MINDELAY, Math.min(MAXDELAY, (long) (dur * fac / 1000000)));
 				} else
 					delay = Math.max(MINDELAY, Math.min(MAXDELAY, (dur * FACTOR / 2000000)));
@@ -380,10 +385,6 @@ public class IndexingJob extends Job {
 
 	protected void addErrorStatus(String message, Throwable t) {
 		status.add(new Status(IStatus.ERROR, CoreActivator.PLUGIN_ID, message, t));
-	}
-
-	public Set<String> getPostponed() {
-		return postponed;
 	}
 
 }

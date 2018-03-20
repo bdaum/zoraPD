@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2011 Berthold Daum  
  */
 package com.bdaum.zoom.job;
 
@@ -88,18 +88,15 @@ public abstract class CustomJob extends Job {
 				}
 
 				public void beginTask(String name, int totalWork) {
-					twork = totalWork;
-					monitor.beginTask(name, totalWork);
+					monitor.beginTask(name, twork = totalWork);
 					addToTaskBar();
 				}
 			};
-			IStatus status;
 			try {
-				status = runJob(monitorWrapper);
+				return runJob(monitorWrapper);
 			} finally {
 				removeFromTaskBar();
 			}
-			return status;
 		}
 		return runJob(monitor);
 	}

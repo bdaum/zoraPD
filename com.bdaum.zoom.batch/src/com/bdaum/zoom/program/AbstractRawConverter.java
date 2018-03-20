@@ -52,37 +52,22 @@ public abstract class AbstractRawConverter implements IRawConverter {
 		this.isDefault = isDefault;
 	}
 
-	/**
-	 * @return id
-	 */
 	public String getId() {
 		return id;
 	}
 
-	/**
-	 * @return name
-	 */
 	public String getName() {
 		return name;
 	}
 
-	/**
-	 * @return executable
-	 */
 	public String getExecutable() {
 		return executable;
 	}
 
-	/**
-	 * @return detectors
-	 */
 	public boolean isDetectors() {
 		return detectors;
 	}
 
-	/**
-	 * @return isDefault
-	 */
 	public boolean isDefault() {
 		return isDefault;
 	}
@@ -121,9 +106,7 @@ public abstract class AbstractRawConverter implements IRawConverter {
 
 	public boolean isValid() {
 		String p = getPath();
-		if (p == null || p.isEmpty())
-			return false;
-		return new File(p).exists();
+		return p != null && !p.isEmpty() && new File(p).exists();
 	}
 
 }

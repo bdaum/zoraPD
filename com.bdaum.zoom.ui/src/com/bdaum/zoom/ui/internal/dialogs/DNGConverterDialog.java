@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -24,6 +24,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -49,13 +50,16 @@ import com.bdaum.zoom.ui.widgets.CLink;
 public class DNGConverterDialog extends ZTitleAreaDialog {
 
 	private static final int WITHOUTDNG = 9999;
+	private static final String SETTINGSID = "com.bdaum.zoom.dngConverterDialog"; //$NON-NLS-1$
 	private File dngLocation;
 	private Image dngImage;
 	private FileEditor fileEditor;
+	private IDialogSettings dialogSettings;
 
 	public DNGConverterDialog(Shell parentShell, File dngLocation) {
 		super(parentShell);
 		this.dngLocation = dngLocation;
+		dialogSettings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 	}
 
 	@Override
@@ -89,10 +93,9 @@ public class DNGConverterDialog extends ZTitleAreaDialog {
 				Messages.DNGConverterDialog_location, true,
 				Constants.EXEEXTENSION, Constants.EXEFILTERNAMES, null,
 				dngLocation == null ? "" : dngLocation.getAbsolutePath(), //$NON-NLS-1$
-				false, false);
+				false, false, dialogSettings);
 
 		fileEditor.addModifyListener(new ModifyListener() {
-
 			public void modifyText(final ModifyEvent e) {
 				updateButtons();
 			}
@@ -133,6 +136,12 @@ public class DNGConverterDialog extends ZTitleAreaDialog {
 			super.buttonPressed(IDialogConstants.OK_ID);
 		}
 		super.buttonPressed(buttonId);
+	}
+	
+	@Override
+	protected void okPressed() {
+		fileEditor.saveValues();
+		super.okPressed();
 	}
 
 	protected void updateButtons() {

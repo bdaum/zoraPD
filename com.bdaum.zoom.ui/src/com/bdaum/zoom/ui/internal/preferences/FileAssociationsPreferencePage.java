@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -44,7 +44,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
@@ -97,32 +96,21 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 
 	private static final String DATA_FROM_CONTENT_TYPE = "type"; //$NON-NLS-1$
 
-	protected Table resourceTypeTable;
+	protected Button addResourceTypeButton, removeResourceTypeButton, addEditorButton, removeEditorButton,
+			defaultEditorButton, editResourceTypeButton;
 
-	protected Button addResourceTypeButton;
-
-	protected Button removeResourceTypeButton;
-
-	protected Table editorTable;
-
-	protected Button addEditorButton;
-
-	protected Button removeEditorButton;
-
-	protected Button defaultEditorButton;
+	protected Table editorTable, resourceTypeTable;
 
 	protected Map<EditorDescriptor, Image> editorsToImages;
 
-	private Button editResourceTypeButton;
-
-	private CheckboxButton rememberLastButton;
-
-	private CheckboxButton exportButton;
+	private CheckboxButton rememberLastButton, exportButton;
 
 	private Map<String, FileEditor> fileEditorMap = new HashMap<String, FileEditor>(5);
 
 	private static final String[] Executable_Filters = BatchConstants.WIN32 ? new String[] { "*.exe", "*.bat", "*.*" } //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 			: new String[] { "*" }; //$NON-NLS-1$
+
+	private static final String SETTINGSID = "com.bdaum.zoom.fileAssociationsPreferencePage"; //$NON-NLS-1$
 
 	private IMediaViewer[] imageViewers;
 
@@ -136,16 +124,16 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 
 	@Override
 	protected void createPageContents(Composite parent) {
-		// define container & its gridding
 		Composite composite = new Composite(parent, SWT.NULL);
 		composite.setLayoutData(new GridData(GridData.FILL_BOTH));
 		GridLayout layout = new GridLayout();
 		composite.setLayout(layout);
 		createTabFolder(composite, "Asso"); //$NON-NLS-1$
-		CTabItem tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.getString("FileAssociationsPreferencePage.general")); //$NON-NLS-1$
-		tabItem0.setControl(createGeneralGroup(tabFolder));
-		CTabItem tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.getString("FileAssociationsPreferencePage.file_assos")); //$NON-NLS-1$
-		tabItem1.setControl(createAssociationGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.getString("FileAssociationsPreferencePage.general"), null) //$NON-NLS-1$
+				.setControl(createGeneralGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.getString("FileAssociationsPreferencePage.file_assos"), //$NON-NLS-1$
+				Messages.getString("FileAssociationsPreferencePage.file_asso_tooltip")) //$NON-NLS-1$
+				.setControl(createAssociationGroup(tabFolder));
 		initTabFolder(0);
 		setHelp(HelpContextIds.FILE_ASSOCIATIONS_PREFERENCE_PAGE);
 		fillValues();
@@ -161,7 +149,6 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		layout.marginHeight = 20;
 		innerComp.setLayout(layout);
 		innerComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-
 		exportButton = WidgetFactory.createCheckButton(innerComp,
 				Messages.getString("GeneralPreferencePage.Export_metadata"), //$NON-NLS-1$
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
@@ -178,7 +165,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 
 	private void createFileEditor(Composite parent, String label, String id) {
 		FileEditor fileEditor = new FileEditor(parent, SWT.OPEN | SWT.READ_ONLY, label, true, Constants.EXEEXTENSION,
-				Constants.EXEFILTERNAMES, null, null, false, true);
+				Constants.EXEFILTERNAMES, null, null, false, true, UiActivator.getDefault().getDialogSettings(SETTINGSID));
 		fileEditor.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		fileEditorMap.put(id, fileEditor);
 	}
@@ -205,7 +192,6 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		Composite comp = new Composite(parent, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new GridLayout(1, false));
-		// define container & its gridding
 		Composite innerComp = new Composite(comp, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.marginWidth = 0;
@@ -214,13 +200,14 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		innerComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		// layout the top table & its buttons
-		CGroup resGroup = UiUtilities.createGroup(innerComp, 2, Messages.getString("FileAssociationsPreferencePage.File_types")); //$NON-NLS-1$
+		CGroup resGroup = UiUtilities.createGroup(innerComp, 2,
+				Messages.getString("FileAssociationsPreferencePage.File_types")); //$NON-NLS-1$
 
 		resourceTypeTable = new Table(resGroup,
 				SWT.SINGLE | SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL);
 		resourceTypeTable.addListener(SWT.Selection, this);
 		resourceTypeTable.addListener(SWT.DefaultSelection, this);
-		
+
 		int fontHeight = (innerComp.getFont().getFontData())[0].getHeight();
 		int displayHeight = innerComp.getDisplay().getPrimaryMonitor().getClientArea().height;
 
@@ -256,23 +243,8 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		removeResourceTypeButton.setText(Messages.getString("FileAssociationsPreferencePage.Remove")); //$NON-NLS-1$
 		removeResourceTypeButton.addListener(SWT.Selection, this);
 		setButtonLayoutData(removeResourceTypeButton);
-
-		// Spacer
-//		new Label(innerComp, SWT.LEFT);
-//		data = new GridData();
-//		data.horizontalAlignment = GridData.FILL;
-//		data.horizontalSpan = 2;
-//		label.setLayoutData(data);
-		
-		editorGroup = UiUtilities.createGroup(innerComp, 2, Messages.getString("FileAssociationsPreferencePage.editors")); //$NON-NLS-1$
-
-//		// layout the bottom table & its buttons
-//		editorLabel = new Label(innerComp, SWT.LEFT);
-//		data = new GridData();
-//		data.horizontalAlignment = GridData.FILL;
-//		data.horizontalSpan = 2;
-//		editorLabel.setLayoutData(data);
-
+		editorGroup = UiUtilities.createGroup(innerComp, 2,
+				Messages.getString("FileAssociationsPreferencePage.editors")); //$NON-NLS-1$
 		editorTable = new Table(editorGroup, SWT.SINGLE | SWT.BORDER);
 		editorTable.addListener(SWT.Selection, this);
 		editorTable.addListener(SWT.DefaultSelection, this);
@@ -328,8 +300,9 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 				}
 			}
 		});
-		
-		CGroup optionsGroup = UiUtilities.createGroup(innerComp, 1, Messages.getString("FileAssociationsPreferencePage.options")); //$NON-NLS-1$
+
+		CGroup optionsGroup = UiUtilities.createGroup(innerComp, 1,
+				Messages.getString("FileAssociationsPreferencePage.options")); //$NON-NLS-1$
 
 		rememberLastButton = WidgetFactory.createCheckButton(optionsGroup,
 				Messages.getString("FileAssociationsPreferencePage.remember_last"), null); //$NON-NLS-1$
@@ -347,7 +320,6 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 	 * Place the existing resource types in the table
 	 */
 	protected void fillResourceTypeTable() {
-		// Populate the table with the items
 		for (TableItem item : resourceTypeTable.getItems())
 			item.dispose();
 		FileEditorMapping[] array = loadFileEditorMappings();
@@ -406,12 +378,6 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 			list.add(new FileEditorMapping(mediaSupport.getFileExtensions()));
 		return list.toArray(new FileEditorMapping[list.size()]);
 	}
-
-	/**
-	 * This is a hook for subclasses to do special things when the ok button is
-	 * pressed. For example reimplement this method if you want to save the
-	 * page's data into the preference bundle.
-	 */
 
 	@Override
 	protected void doPerformOk() {
@@ -568,7 +534,6 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		}
 	}
 
-
 	/**
 	 * Prompt for resource type.
 	 *
@@ -583,8 +548,8 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 	}
 
 	/**
-	 * Add a new resource type to the collection shown in the top of the page.
-	 * This is typically called after the extension dialog is shown to the user.
+	 * Add a new resource type to the collection shown in the top of the page. This
+	 * is typically called after the extension dialog is shown to the user.
 	 *
 	 * @param newName
 	 *            the new name
@@ -648,24 +613,21 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 	}
 
 	public void handleEvent(Event event) {
-		if (event.widget == addResourceTypeButton) {
+		if (event.widget == addResourceTypeButton)
 			promptForResourceType(-1);
-		} else if (event.widget == editResourceTypeButton) {
+		else if (event.widget == editResourceTypeButton)
 			promptForResourceType(resourceTypeTable.getSelectionIndex());
-		} else if (event.widget == removeResourceTypeButton) {
+		else if (event.widget == removeResourceTypeButton)
 			removeSelectedResourceType();
-		} else if (event.widget == addEditorButton) {
+		else if (event.widget == addEditorButton)
 			promptForEditor();
-		} else if (event.widget == removeEditorButton) {
+		else if (event.widget == removeEditorButton)
 			removeSelectedEditor();
-		} else if (event.widget == defaultEditorButton) {
+		else if (event.widget == defaultEditorButton)
 			setSelectedEditorAsDefault();
-		} else if (event.widget == resourceTypeTable) {
+		else if (event.widget == resourceTypeTable)
 			fillEditorTable();
-		}
-
 		updateEnabledState();
-
 	}
 
 	/**
@@ -698,8 +660,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 	public void removeSelectedResourceType() {
 		TableItem[] items = resourceTypeTable.getSelection();
 		if (items.length > 0)
-			items[0].dispose(); // Table is single selection
-		// Clear out the editors too
+			items[0].dispose();
 		editorTable.removeAll();
 	}
 

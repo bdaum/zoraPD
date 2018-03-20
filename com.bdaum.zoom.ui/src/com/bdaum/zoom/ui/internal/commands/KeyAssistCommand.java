@@ -15,12 +15,11 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.commands;
 
-import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.keys.IBindingService;
 
@@ -32,9 +31,7 @@ public class KeyAssistCommand extends AbstractCommandHandler {
 
 	@Override
 	public void run() {
-		final IWorkbench workbench = PlatformUI.getWorkbench();
-		final IBindingService bindingService = workbench.getService(IBindingService.class);
-		bindingService.openKeyAssistDialog();
+		PlatformUI.getWorkbench().getService(IBindingService.class).openKeyAssistDialog();
 	}
 
 }

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -34,6 +34,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
@@ -44,12 +45,15 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
@@ -61,9 +65,11 @@ import org.eclipse.ui.PlatformUI;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.CatalogListener;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
+import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -71,12 +77,18 @@ import com.bdaum.zoom.ui.IZoomActionConstants;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.dialogs.ConfigureCaptionDialog;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
+@SuppressWarnings("restriction")
 public class PreviewView extends ImageView implements PaintListener {
 
 	public static final String ID = "com.bdaum.zoom.ui.views.PreviewView"; //$NON-NLS-1$
 	private static final String CUE = "cue"; //$NON-NLS-1$
+	private static final String TEMPLATE = "template"; //$NON-NLS-1$
+	private static final String ALIGNMENT = "alignment"; //$NON-NLS-1$
+	private static final String BW = "bs"; //$NON-NLS-1$
+
 	private Canvas canvas;
 	private Asset currentItem;
 	private Action bwToggleAction;
@@ -87,6 +99,11 @@ public class PreviewView extends ImageView implements PaintListener {
 	private Action setFilterAction;
 	protected boolean cue;
 	private Asset selectedItem;
+	private Label caption;
+	private String template;
+	private Action configureAction;
+	private int alignment;
+	private AssetSelection assetSelection = AssetSelection.EMPTY;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -94,6 +111,13 @@ public class PreviewView extends ImageView implements PaintListener {
 		if (memento != null) {
 			Boolean b = memento.getBoolean(CUE);
 			cue = b != null && b;
+			b = memento.getBoolean(BW);
+			bw = b != null && b;
+			template = memento.getString(TEMPLATE);
+			if (template == null)
+				template = DEFAULTTEMPLATE;
+			Integer integer = memento.getInteger(ALIGNMENT);
+			alignment = integer != null ? integer : SWT.LEFT;
 		}
 	}
 
@@ -101,29 +125,43 @@ public class PreviewView extends ImageView implements PaintListener {
 	public void saveState(IMemento memento) {
 		super.saveState(memento);
 		memento.putBoolean(CUE, cue);
+		memento.putBoolean(BW, bw);
+		if (template != null)
+			memento.putString(TEMPLATE, template);
+		memento.putInteger(ALIGNMENT, alignment);
 	}
 
 	@Override
 	public void createPartControl(Composite parent) {
 		filter = StringConverter.asRGB(Platform.getPreferencesService().getString(UiActivator.PLUGIN_ID,
 				PreferenceConstants.BWFILTER, null, null), new RGB(64, 128, 64));
-		// Create the help context id for the viewer's control
-		canvas = new Canvas(parent, SWT.NONE);
+		Composite composite = new Composite(parent, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = layout.marginWidth = 0;
+		composite.setLayout(layout);
+		canvas = new Canvas(composite, SWT.NONE);
+		canvas.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		caption = new Label(composite, SWT.NONE);
+		caption.setLayoutData(new GridData(SWT.FILL, SWT.END, true, false));
+		caption.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) {
+				configureAction.run();
+			}
+		});
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(canvas, HelpContextIds.PREVIEW_VIEW);
 		canvas.addPaintListener(this);
 		canvas.redraw();
 		addKeyListener();
-		addExplanationListener();
+		addExplanationListener(true);
 		makeActions(getViewSite().getActionBars());
 		installListeners(parent);
 		hookContextMenu();
 		hookDoubleClickAction();
 		contributeToActionBars();
 		addDragDropSupport(false, false, true);
-		// Hover
 		installHoveringController();
-		// Event processing
-		updateActions();
+		updateActions(true);
 	}
 
 	@Override
@@ -169,11 +207,25 @@ public class PreviewView extends ImageView implements PaintListener {
 		};
 		setFilterButtonColor();
 		setFilterAction.setToolTipText(Messages.getString("PreviewView.set_bw_filter_tooltip")); //$NON-NLS-1$
+
+		configureAction = new Action(Messages.getString("PreviewView.configure_caption")) { //$NON-NLS-1$
+			@Override
+			public void run() {
+				ConfigureCaptionDialog dialog = new ConfigureCaptionDialog(getSite().getShell(), template, alignment,
+						currentItem);
+				if (dialog.open() == ConfigureCaptionDialog.OK) {
+					template = dialog.getTemplate();
+					alignment = dialog.getAlignment();
+					updateCaption();
+				}
+			}
+		};
+		configureAction.setToolTipText(Messages.getString("PreviewView.configure_caption_tooltip")); //$NON-NLS-1$
+
 	}
 
 	private void setFilterButtonColor() {
 		setFilterAction.setImageDescriptor(new ImageDescriptor() {
-
 			@Override
 			public ImageData getImageData() {
 				Display display = getSite().getShell().getDisplay();
@@ -205,7 +257,6 @@ public class PreviewView extends ImageView implements PaintListener {
 
 	@Override
 	protected void fillLocalPullDown(IMenuManager manager) {
-		boolean readOnly = dbIsReadonly();
 		manager.add(cueToggleAction);
 		manager.add(bwToggleAction);
 		manager.add(setFilterAction);
@@ -214,26 +265,23 @@ public class PreviewView extends ImageView implements PaintListener {
 		manager.add(editAction);
 		manager.add(editWithAction);
 		manager.add(new Separator());
-		if (!readOnly)
-			manager.add(addVoiceNoteAction);
+		manager.add(addVoiceNoteAction);
 		manager.add(playVoiceNoteAction);
-		if (!readOnly) {
-			manager.add(new Separator());
-			manager.add(rotateRightAction);
-			manager.add(rotateLeftAction);
-			manager.add(new Separator());
-			manager.add(ratingAction);
-			manager.add(colorCodeAction);
-		}
+		manager.add(new Separator());
+		manager.add(rotateRightAction);
+		manager.add(rotateLeftAction);
+		manager.add(new Separator());
+		manager.add(ratingAction);
+		manager.add(colorCodeAction);
 		manager.add(new Separator());
 		manager.add(showInFolderAction);
 		manager.add(showInTimeLineAction);
-		if (!readOnly) {
-			manager.add(new Separator());
-			manager.add(addBookmarkAction);
-			manager.add(refreshAction);
-			manager.add(deleteAction);
-		}
+		manager.add(new Separator());
+		manager.add(addBookmarkAction);
+		manager.add(refreshAction);
+		manager.add(deleteAction);
+		manager.add(new Separator());
+		manager.add(configureAction);
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
@@ -266,7 +314,6 @@ public class PreviewView extends ImageView implements PaintListener {
 
 	private void hookDoubleClickAction() {
 		canvas.addListener(SWT.MouseDoubleClick, new Listener() {
-
 			public void handleEvent(Event event) {
 				fireSelectionChanged();
 				event.data = PreviewView.this;
@@ -276,19 +323,21 @@ public class PreviewView extends ImageView implements PaintListener {
 	}
 
 	@Override
-	public void updateActions() {
-		boolean enabled = selectedItem != null;
-		bwToggleAction.setEnabled(enabled);
-		cueToggleAction.setEnabled(enabled);
-		setFilterAction.setEnabled(enabled);
-		super.updateActions();
+	public void updateActions(boolean force) {
+		if (viewActive || force) {
+			boolean enabled = selectedItem != null;
+			bwToggleAction.setEnabled(enabled);
+			cueToggleAction.setEnabled(enabled);
+			setFilterAction.setEnabled(enabled);
+			super.updateActions(force);
+		}
 	}
 
 	protected void fireSelectionChanged() {
 		SelectionChangedEvent selectionChangedEvent = new SelectionChangedEvent(this, getSelection());
 		for (Object object : listeners.getListeners())
 			((ISelectionChangedListener) object).selectionChanged(selectionChangedEvent);
-		updateActions();
+		updateActions(false);
 	}
 
 	/**
@@ -315,13 +364,11 @@ public class PreviewView extends ImageView implements PaintListener {
 			double scale = Math.min(xscale, yscale);
 			int targetWidth = (int) (bounds.width * scale + 0.5d);
 			int targetHeight = (int) (bounds.height * scale + 0.5d);
-			boolean advanced = Platform.getPreferencesService().getBoolean(UiActivator.PLUGIN_ID,
-					PreferenceConstants.ADVANCEDGRAPHICS, false, null);
-			if (advanced) {
+			if (Platform.getPreferencesService().getBoolean(UiActivator.PLUGIN_ID, PreferenceConstants.ADVANCEDGRAPHICS,
+					false, null)) {
 				gc.setAntialias(SWT.ON);
 				gc.setInterpolation(SWT.HIGH);
 			}
-//			gc.setAdvanced(advanced);
 			gc.drawImage(image, 0, 0, bounds.width, bounds.height, (clientArea.width - targetWidth) / 2,
 					(clientArea.height - targetHeight) / 2, targetWidth, targetHeight);
 		}
@@ -364,7 +411,7 @@ public class PreviewView extends ImageView implements PaintListener {
 	public void refresh() {
 		disposeBwImage();
 		canvas.redraw();
-		updateActions();
+		updateActions(false);
 	}
 
 	private void disposeBwImage() {
@@ -383,7 +430,9 @@ public class PreviewView extends ImageView implements PaintListener {
 	public AssetSelection getAssetSelection() {
 		if (currentItem == null)
 			return AssetSelection.EMPTY;
-		return new AssetSelection(currentItem);
+		if (assetSelection.getFirstElement() != currentItem)
+			assetSelection = new AssetSelection(currentItem);
+		return assetSelection;
 	}
 
 	@Override
@@ -414,8 +463,19 @@ public class PreviewView extends ImageView implements PaintListener {
 	@Override
 	public boolean assetsChanged() {
 		Asset previous = currentItem;
-		selectedItem = currentItem = getNavigationHistory().getSelectedAssets().getFirstElement();
-		return previous != currentItem;
+		assetSelection = getNavigationHistory().getSelectedAssets();
+		selectedItem = currentItem = assetSelection.getFirstElement();
+		boolean changed = previous != currentItem;
+		if (changed)
+			updateCaption();
+		return changed;
+	}
+
+	protected void updateCaption() {
+		caption.setText(currentItem == null || template == null ? "" //$NON-NLS-1$
+				: Utilities.evaluateTemplate(template, Constants.TH_ALL, "", null, -1, -1, -1, null, currentItem, //$NON-NLS-1$
+						"", Integer.MAX_VALUE, false)); //$NON-NLS-1$
+		caption.setAlignment(alignment);
 	}
 
 	@Override

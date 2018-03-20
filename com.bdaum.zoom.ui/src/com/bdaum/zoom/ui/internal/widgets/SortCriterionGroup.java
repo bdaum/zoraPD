@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -84,7 +84,7 @@ public class SortCriterionGroup extends AbstractCriterionGroup {
 		andButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				SortCriterionGroup.this.collectionEditGroup.addSortGroup(parent, SortCriterionGroup.this, null);
+				collectionEditGroup.addSortGroup(parent, SortCriterionGroup.this, null);
 				signalModification();
 			}
 		});
@@ -95,7 +95,7 @@ public class SortCriterionGroup extends AbstractCriterionGroup {
 				if (groupNo == 0)
 					reset();
 				else {
-					SortCriterionGroup.this.collectionEditGroup.removeSortGroup(SortCriterionGroup.this);
+					collectionEditGroup.removeSortGroup(SortCriterionGroup.this);
 					signalModification();
 				}
 			}

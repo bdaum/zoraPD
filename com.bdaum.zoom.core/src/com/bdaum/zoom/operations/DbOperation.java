@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations;
@@ -279,7 +279,7 @@ public abstract class DbOperation extends AbstractOperation implements IProfiled
 	 */
 	protected IStatus close(IAdaptable info, String[] assetsToIndex) {
 		if (assetsToIndex != null && assetsToIndex.length > 0 && !dbManager.getMeta(true).getNoIndex())
-			OperationJob.executeSlaveOperation(new UpdateTextIndexOperation(assetsToIndex), info);
+			OperationJob.executeSlaveOperation(new UpdateTextIndexOperation(assetsToIndex), info, isSilent());
 		return close(info);
 	}
 
@@ -296,7 +296,7 @@ public abstract class DbOperation extends AbstractOperation implements IProfiled
 	 */
 	protected IStatus close(IAdaptable info, Collection<? extends Asset> assetsToIndex) {
 		if (assetsToIndex != null && !assetsToIndex.isEmpty() && !dbManager.getMeta(true).getNoIndex())
-			OperationJob.executeSlaveOperation(new UpdateTextIndexOperation(assetsToIndex), info);
+			OperationJob.executeSlaveOperation(new UpdateTextIndexOperation(assetsToIndex), info, isSilent());
 		return close(info);
 	}
 

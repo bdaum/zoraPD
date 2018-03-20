@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -45,6 +45,7 @@ import com.bdaum.zoom.cat.model.meta.CategoryImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 
 public class CategoryGroup {
@@ -70,7 +71,7 @@ public class CategoryGroup {
 		expandCollapseGroup.setViewer(treeViewer);
 		treeViewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		treeViewer.setContentProvider(new CategoryContentProvider());
-		treeViewer.setComparator(new CategoryComparator());
+		treeViewer.setComparator(ZViewerComparator.INSTANCE);
 		treeViewer.setLabelProvider(new CategoryLabelProvider());
 		UiUtilities.installDoubleClickExpansion(treeViewer);
 		final Composite buttonGroup = new Composite(comp, SWT.NONE);

@@ -15,11 +15,10 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2011 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
-
 
 import org.eclipse.jface.viewers.DialogCellEditor;
 import org.eclipse.jface.window.Window;
@@ -54,14 +53,11 @@ public class ListCellEditor extends DialogCellEditor {
 		super.doSetValue(Utilities.csv(value = v, qfield.getType(), ", ")); //$NON-NLS-1$
 	}
 
-
 	@Override
 	protected Object openDialogBox(Control cellEditorWindow) {
-		Object enumeration = qfield.getEnumeration();
-		AbstractListCellEditorDialog dialog = enumeration instanceof Integer ? new CodeCellEditorDialog(
-				cellEditorWindow.getShell(), value, qfield)
-				: new ListCellEditorDialog(cellEditorWindow.getShell(), value,
-						qfield);
+		AbstractListCellEditorDialog dialog = qfield.getEnumeration() instanceof Integer
+				? new CodeCellEditorDialog(cellEditorWindow.getShell(), value, qfield)
+				: new ListCellEditorDialog(cellEditorWindow.getShell(), value, qfield);
 		dialog.create();
 		Point location = dialog.getShell().getLocation();
 		location.x -= 25;

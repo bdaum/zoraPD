@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -125,11 +125,18 @@ public class Messages extends NLS {
 	public static String GotoBookmarkAction_unsufficient_rights;
 
 	public static String ImportAnalogAction_import_analog;
+	public static String ImportAnalogCommand_analog_import;
+	public static String ImportAnalogCommand_checking_files;
+	public static String ImportAnalogCommand_digital_detected;
+	public static String ImportAnalogCommand_digital_files;
+	public static String ImportAnalogCommand_n_more;
 	public static String ImportFileAction_all_supported_files;
 	public static String ImportFileAction_Import_file;
 	public static String ImportFileAction_supported_file_types;
 	public static String ImportFolderAction_Import_source;
 	public static String ImportFolderAction_import_folder_message;
+	public static String ImportFolderCommand_folder_empty;
+	public static String ImportFolderCommand_import_folder;
 	public static String ImportFromDeviceAction_Import_from_device;
 	public static String ImportFromDeviceAction_there_seems_no_suitable_device;
 	public static String ImportPreferencesAction_do_you_really_want_to_overwrite;
@@ -212,6 +219,7 @@ public class Messages extends NLS {
 	public static String ViewImageAction_error_launching;
 	public static String ViewImageAction_error_launching_internal_viewer;
 	public static String ViewImageAction_error_viewing_remote_image;
+	public static String ViewImageAction_run_viewer;
 	public static String ViewImageAction_viewer_missing;
 	public static String ZoomActionFactory_search_images_in_vincinity;
 	public static String ZoomActionFactory_delete;

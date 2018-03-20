@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2014 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.wizards;
@@ -26,7 +26,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 
-import com.bdaum.aoModeling.runtime.AomObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.IUi;
@@ -35,7 +34,7 @@ import com.bdaum.zoom.ui.Ui;
 public abstract class AbstractAssetSelectionWizard extends ZWizard {
 
 	protected List<Asset> assets;
-	protected List<AomObject> setAssets(IWorkbench workbench, IStructuredSelection selection, boolean prune) {
+	protected List<Object> setAssets(IWorkbench workbench, IStructuredSelection selection, boolean prune) {
 		IWorkbenchWindow activeWorkbenchWindow = workbench
 				.getActiveWorkbenchWindow();
 		AssetSelection assetSelection;
@@ -49,7 +48,7 @@ public abstract class AbstractAssetSelectionWizard extends ZWizard {
 					: AssetSelection.EMPTY;
 		assets = assetSelection.getAssets();
 		if (assets.isEmpty()) {
-			List<AomObject> presentationItems = ui.getPresentationItems();
+			List<Object> presentationItems = ui.getPresentationItems();
 			assets = ui.getAssetsFromPresentationItems(presentationItems, prune);
 			return presentationItems;
 		}

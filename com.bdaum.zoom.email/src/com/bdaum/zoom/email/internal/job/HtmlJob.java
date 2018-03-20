@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.List;
@@ -17,19 +16,16 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.browser.IWebBrowser;
 
 import com.bdaum.zoom.cat.model.PageLayout_typeImpl;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.common.internal.FileLocator;
+import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.email.internal.Activator;
 import com.bdaum.zoom.image.ZImage;
@@ -87,7 +83,7 @@ public class HtmlJob extends AbstractExportJob {
 		MultiStatus status = new MultiStatus(Activator.PLUGIN_ID, 0, Messages.PdfJob_pdf_report, null);
 		setup();
 		File targetFolder;
-		if (ftp) {
+		if (ftp)
 			try {
 				targetFolder = Core.createTempDirectory("FtpTransfer"); //$NON-NLS-1$
 				tempFolder = targetFolder;
@@ -95,7 +91,7 @@ public class HtmlJob extends AbstractExportJob {
 				status.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.HtmlJob_error_exporting_to_ftp, e));
 				return status;
 			}
-		} else {
+		else {
 			targetFile.mkdirs();
 			targetFolder = targetFile;
 		}
@@ -115,9 +111,8 @@ public class HtmlJob extends AbstractExportJob {
 			}
 			monitor.worked(1);
 			fillImageFolder(monitor, status);
-			File css = FileLocator.findFile(Activator.getDefault().getBundle(), STYLES_CSS);
-			File out = new File(targetFolder, STYLES_CSS);
-			BatchUtilities.copyFile(css, out, null);
+			BatchUtilities.copyFile(FileLocator.findFile(Activator.getDefault().getBundle(), STYLES_CSS),
+					new File(targetFolder, STYLES_CSS), null);
 		} catch (IOException e) {
 			status.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.HtmlJob_io_error_generating_html, e));
 			return status;
@@ -131,8 +126,7 @@ public class HtmlJob extends AbstractExportJob {
 		cleanUp();
 		OperationJob.signalJobEnd(startTime);
 		try {
-			IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser();
-			browser.openURL(htmlFile.toURI().toURL());
+			PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(htmlFile.toURI().toURL());
 		} catch (Exception e) {
 			// do nothing
 		}
@@ -140,35 +134,19 @@ public class HtmlJob extends AbstractExportJob {
 	}
 
 	private void fillImageFolder(IProgressMonitor monitor, MultiStatus status) {
-		int size = assets.size();
-		SubMonitor progress = SubMonitor.convert(monitor, 1000 * (size + 1));
-		IVolumeManager vm = Core.getCore().getVolumeManager();
-		Ticketbox box = new Ticketbox();
-		try {
-			int k = 0;
-			for (Asset asset : assets) {
-				URI uri = vm.findExistingFile(asset, false);
-				if (uri != null) {
-					File file = null;
-					try {
-						file = box.obtainFile(uri);
-					} catch (IOException e) {
-						addErrorStatus(status, NLS.bind(Messages.HtmlJob_download_failed, uri), e);
-					}
-					if (file != null) {
-						File outfile = new File(imageFolder, k + (mode == Constants.FORMAT_WEBP ? ".webp" : ".jpg")); //$NON-NLS-1$ //$NON-NLS-2$
-						downScaleImage(status, progress, asset, file, outfile, 1d, ZImage.CROPPED);
-						box.cleanup();
-					}
+		SubMonitor progress = SubMonitor.convert(monitor, 1000 * (assets.size() + 1));
+		try (Assetbox box = new Assetbox(assets, status, false)) {
+			for (File file : box) {
+				if (file != null) {
+					File outfile = new File(imageFolder,
+							box.getIndex() + (mode == Constants.FORMAT_WEBP ? ".webp" : ".jpg")); //$NON-NLS-1$ //$NON-NLS-2$
+					downScaleImage(status, progress, box.getAsset(), file, outfile, 1d, ZImage.CROPPED);
 				}
-				++k;
 				if (monitor.isCanceled()) {
 					status.add(new Status(IStatus.WARNING, UiActivator.PLUGIN_ID, Messages.HtmlJob_export_cancelled));
 					return;
 				}
 			}
-		} finally {
-			box.endSession();
 		}
 	}
 

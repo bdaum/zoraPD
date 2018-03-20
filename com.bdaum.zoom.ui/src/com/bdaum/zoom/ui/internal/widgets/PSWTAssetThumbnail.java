@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -28,9 +28,6 @@ import com.bdaum.zoom.image.ImageStore;
 
 public class PSWTAssetThumbnail extends ZPSWTImage {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -5539327360971870974L;
 	private final ImageStore imageSource;
 	private final Asset asset;
@@ -46,10 +43,8 @@ public class PSWTAssetThumbnail extends ZPSWTImage {
 	@Override
 	public Image getImage() {
 		Image image = super.getImage();
-		if (image.isDisposed()) {
-			image = imageSource.getImage(getAsset());
-			setImage(image);
-		}
+		if (image.isDisposed())
+			setImage(image = imageSource.getImage(getAsset()));
 		return image;
 	}
 

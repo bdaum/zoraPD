@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.commands;
 
@@ -66,7 +66,6 @@ public class OrphansCommand extends AbstractCommandHandler {
 		isCanceled = false;
 		ZProgressMonitorDialog dialog = new ZProgressMonitorDialog(getShell());
 		IRunnableWithProgress runnable = new IRunnableWithProgress() {
-
 			public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 				ICore core = Core.getCore();
 				IVolumeManager volumeManager = core.getVolumeManager();

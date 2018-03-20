@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2014 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.views;
 
@@ -61,8 +61,8 @@ public class ColumnLayoutManager extends ControlAdapter {
 		if (verticalBar != null && verticalBar.isVisible())
 			available -= verticalBar.getSize().x;
 		int w = 0;
-		for (int i : columnWidths)
-			w += i;
+		for (int cw : columnWidths)
+			w += cw;
 		double fac = (double) available / w;
 		int[] widths = new int[columnWidths.length];
 		int remainder = 0;
@@ -80,7 +80,7 @@ public class ColumnLayoutManager extends ControlAdapter {
 			fac = (double) remainder / w2;
 			int remainder2 = 0;
 			w2 = 0;
-			for (int i = 0; i < widths.length; i++) {
+			for (int i = 0; i < widths.length; i++)
 				if (columnMaxWidths == null || widths[i] < columnMaxWidths[i]) {
 					int cw = (int) (columnWidths[i] * fac);
 					if (columnMaxWidths != null && cw > columnMaxWidths[i]) {
@@ -90,7 +90,6 @@ public class ColumnLayoutManager extends ControlAdapter {
 						w2 += columnWidths[i];
 					widths[i] += cw;
 				}
-			}
 			if (remainder2 == remainder)
 				break;
 			remainder = remainder2;

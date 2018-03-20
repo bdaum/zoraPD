@@ -10,7 +10,11 @@
             name="Image Gallery"
             sections="true"
             slideshows="true"
-            unsupported="download showmetadata thumbnailsize opacity padding sectionfont captionfont navfont margins">
+            unsupported="download showmetadata thumbnailsize opacity padding sectionfont captionfont navfont margins"
+            url="http://tonyyoo.com">
+         <group
+               name="%group.name.animation">
+         </group>
          <parameter
                default="true"
                description="%random_image_description"

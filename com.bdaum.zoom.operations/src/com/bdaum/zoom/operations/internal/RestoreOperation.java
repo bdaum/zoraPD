@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal;
@@ -31,6 +31,7 @@ import org.eclipse.core.runtime.jobs.Job;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.BagChange;
+import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.operations.ImportConfiguration;
 import com.bdaum.zoom.core.trash.Trash;
 import com.bdaum.zoom.operations.DbOperation;
@@ -39,11 +40,11 @@ import com.bdaum.zoom.operations.IProfiledOperation;
 @SuppressWarnings("restriction")
 public class RestoreOperation extends DbOperation {
 
-	private Object[] selection;
+	private Trash[] selection;
 	private ImportConfiguration configuration;
 	protected Asset asset;
 
-	public RestoreOperation(Object[] selection, ImportConfiguration configuration) {
+	public RestoreOperation(Trash[] selection, ImportConfiguration configuration) {
 		super(Messages.getString("RestoreOperation.Restore")); //$NON-NLS-1$
 		this.selection = selection;
 		this.configuration = configuration;
@@ -57,8 +58,7 @@ public class RestoreOperation extends DbOperation {
 		Set<Asset> restoredAssets = new HashSet<>(selection.length * 3 / 2);
 		int i = 0;
 		try {
-			for (Object obj : selection) {
-				final Trash t = (Trash) obj;
+			for (Trash t : selection) {
 				if (!storeSafely(() -> {
 					asset = t.restore(dbManager, iw, status);
 					restoredAssets.add(asset);
@@ -79,7 +79,7 @@ public class RestoreOperation extends DbOperation {
 		} finally {
 			closeIndex();
 			if (i > 0)
-				fireAssetsModified(new BagChange<>(restoredAssets, null, null, null), null);
+				fireAssetsModified(new BagChange<>(restoredAssets, null, null, null), QueryField.ALL);
 			if (changed)
 				fireStructureModified();
 		}

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2011 Berthold Daum  
  */
 package com.bdaum.zoom.gps.internal.gpx;
 
@@ -54,9 +54,6 @@ public class WaypointCollector implements IWaypointCollector {
 	private static final String CITY = "City"; //$NON-NLS-1$
 	private static final String POSTCODE = "PostalCode"; //$NON-NLS-1$
 	private static final String PHONE = "PhoneNumber"; //$NON-NLS-1$
-
-	public WaypointCollector() {
-	}
 
 	public void collect(InputStream in,
 			final Map<RasterCoordinate, Waypoint> waypoints)

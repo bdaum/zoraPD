@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -48,6 +48,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 	public void initializeDefaultPreferences() {
 		IEclipsePreferences defaultNode = DefaultScope.INSTANCE.getNode(UiActivator.PLUGIN_ID);
 		defaultNode.put(PreferenceConstants.BACKGROUNDCOLOR, PreferenceConstants.BACKGROUNDCOLOR_DARKGREY);
+		defaultNode.put(PreferenceConstants.DISTANCEUNIT, "k"); //$NON-NLS-1$
+		defaultNode.put(PreferenceConstants.DIMUNIT, "c"); //$NON-NLS-1$
 		defaultNode.putBoolean(PreferenceConstants.AUTOEXPORT, true);
 		defaultNode.put(PreferenceConstants.DERIVERELATIONS, Constants.DERIVE_ALL);
 		defaultNode.put(PreferenceConstants.SHOWRATING, PreferenceConstants.SHOWRATING_SIZE);
@@ -58,7 +60,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.put(PreferenceConstants.SHOWCOLORCODE, PreferenceConstants.COLORCODE_MANUAL);
 		defaultNode.putBoolean(PreferenceConstants.SHOWDONEMARK, true);
 		defaultNode.put(PreferenceConstants.THUMBNAILTEMPLATE, "{creationDate} {meta=exposureTime} {meta=fNumber}"); //$NON-NLS-1$
-		defaultNode.putInt(PreferenceConstants.LABELFONTSIZE, JFaceResources.getDefaultFont().getFontData()[0].getHeight());
+		defaultNode.putInt(PreferenceConstants.LABELFONTSIZE,
+				JFaceResources.getDefaultFont().getFontData()[0].getHeight());
 		defaultNode.putInt(PreferenceConstants.SHOWLABEL, Constants.TITLE_LABEL);
 		defaultNode.put(PreferenceConstants.WATCHFILTER, DEFAULTWATCHFILTER);
 		defaultNode.put(PreferenceConstants.KEYWORDFILTER, DEFAULTKEYWORDFILTER);
@@ -81,7 +84,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		StringBuilder sbh = new StringBuilder();
 		StringBuilder sbt = new StringBuilder();
 		StringBuilder sbe = new StringBuilder();
-		for (QueryField qfield : QueryField.getQueryFields()) {
+		for (QueryField qfield : QueryField.getQueryFields())
 			if (qfield.hasLabel() && qfield.getChildren().length == 0) {
 				String id = qfield.getId();
 				sbe.append(id).append('\n');
@@ -92,11 +95,22 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 				if (qfield.getTolerance() != 0f)
 					sbt.append(id).append("=").append(qfield.getTolerance()).append('\n'); //$NON-NLS-1$
 			}
-		}
 		defaultNode.put(PreferenceConstants.ESSENTIALMETADATA, sb.toString());
 		defaultNode.put(PreferenceConstants.HOVERMETADATA, sbh.toString());
 		defaultNode.put(PreferenceConstants.METADATATOLERANCES, sbt.toString());
 		defaultNode.put(PreferenceConstants.EXPORTMETADATA, sbe.toString());
+		sb.setLength(0);
+		sb.append(QueryField.NAME.getKey()).append('\n').append(QueryField.EXIF_ORIGINALFILENAME.getKey()).append('\n')
+				.append(QueryField.URI.getKey()).append('\n').append(QueryField.VOLUME.getKey()).append('\n')
+				.append(QueryField.LASTMOD.getKey()).append('\n').append(QueryField.EXIF_DATETIMEORIGINAL.getKey())
+				.append('\n').append(QueryField.IPTC_DATECREATED.getKey()).append('\n')
+				.append(QueryField.IMPORTDATE.getKey()).append('\n').append(QueryField.ALBUM.getKey()).append('\n')
+				.append(QueryField.IPTC_KEYWORDS.getKey()).append('\n').append(QueryField.IPTC_CATEGORY.getKey())
+				.append('\n').append(QueryField.EXIF_GPSLATITUDE.getKey()).append('\n')
+				.append(QueryField.EXIF_GPSLONGITUDE.getKey()).append('\n').append(QueryField.FORMAT.getKey())
+				.append('\n').append(QueryField.MIMETYPE.getKey()).append('\n').append(QueryField.RATING.getKey())
+				.append('\n');
+		defaultNode.put(PreferenceConstants.METADATATUNING, sb.toString());
 		sb.setLength(0);
 		sb.append(QueryField.NAME.getKey()).append('\n').append(QueryField.FORMAT.getKey()).append('\n')
 				.append(QueryField.EXIF_DATETIMEORIGINAL.getKey()).append('\n').append(QueryField.IPTC_TITLE.getKey())

@@ -173,6 +173,20 @@ public interface Location_type extends AomValueChangedNotifier,
 	 */
 	public Double getAltitude();
 
+	/**
+	 * Set value of property plusCode
+	 *
+	 * @param _value - new element value
+	 */
+	public void setPlusCode(String _value);
+
+	/**
+	 * Get value of property plusCode
+	 *
+	 * @return - value of field plusCode
+	 */
+	public String getPlusCode();
+
 	/* ----- Validation ----- */
 
 	/**

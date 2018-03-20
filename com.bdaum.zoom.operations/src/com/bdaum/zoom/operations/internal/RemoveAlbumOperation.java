@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal;
@@ -64,7 +64,7 @@ public class RemoveAlbumOperation extends DbOperation {
 		saveOldAlbums();
 		aMonitor.worked(1);
 		if (setAlbums())
-			fireAssetsModified(null, null);
+			fireAssetsModified(null, QueryField.ALBUMASSETS);
 		return close(info);
 	}
 
@@ -107,15 +107,18 @@ public class RemoveAlbumOperation extends DbOperation {
 								it.remove();
 						}
 					}
-					if (album.getAlbum() && album.getSystem() && asset.getPerson() != null) {
+					if (album.getAlbum() && album.getSystem()) {
 						String albumId = album.getStringId();
-						List<RegionImpl> regions = dbManager.obtainObjects(RegionImpl.class, false,
-								"asset_person_parent", //$NON-NLS-1$
-								assetId, QueryField.EQUALS, "album", albumId, QueryField.EQUALS); //$NON-NLS-1$
-						for (RegionImpl region : regions) {
-							oldRegionAlbums.put(region, albumId);
-							region.setAlbum(null);
-							toBeStored.add(region);
+						dbManager.addDirtyCollection(albumId);
+						if (asset.getPerson() != null) {
+							List<RegionImpl> regions = dbManager.obtainObjects(RegionImpl.class, false,
+									"asset_person_parent", //$NON-NLS-1$
+									assetId, QueryField.EQUALS, "album", albumId, QueryField.EQUALS); //$NON-NLS-1$
+							for (RegionImpl region : regions) {
+								oldRegionAlbums.put(region, albumId);
+								region.setAlbum(null);
+								toBeStored.add(region);
+							}
 						}
 					}
 				}

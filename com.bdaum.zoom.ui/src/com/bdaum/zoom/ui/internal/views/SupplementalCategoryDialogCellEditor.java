@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 
@@ -29,7 +29,6 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.ui.internal.dialogs.SupplementalCategoryDialog;
 
 public class SupplementalCategoryDialogCellEditor extends AbstractMixedBagDialogCellEditor {
-
 
 	public SupplementalCategoryDialogCellEditor(Composite parent) {
 		super(parent);
@@ -50,6 +49,4 @@ public class SupplementalCategoryDialogCellEditor extends AbstractMixedBagDialog
 			value = Core.toStringList((String[]) value, ";"); //$NON-NLS-1$
 		super.updateContents(value);
 	}
-
-
 }

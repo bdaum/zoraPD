@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2011-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2011-2017 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -40,7 +40,6 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
@@ -57,8 +56,10 @@ import org.eclipse.swt.widgets.Shell;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.SortColumnManager;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.codes.CodeParser;
 import com.bdaum.zoom.ui.internal.codes.Topic;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
@@ -171,15 +172,6 @@ public class CodesDialog extends ZTitleAreaDialog {
 		}
 	};
 
-	private ViewerComparator topicComparator = new ViewerComparator() {
-		@Override
-		public int compare(Viewer viewer, Object e1, Object e2) {
-			if (e1 instanceof Topic && e2 instanceof Topic)
-				return ((Topic) e1).getName().compareTo(((Topic) e2).getName());
-			return super.compare(viewer, e1, e2);
-		}
-	};
-
 	public CodesDialog(Shell parentShell, QueryField qfield, String dflt, String[] exclusions) {
 		super(parentShell);
 		this.parser = UiActivator.getDefault().getCodeParser((Integer) qfield.getEnumeration());
@@ -250,6 +242,7 @@ public class CodesDialog extends ZTitleAreaDialog {
 		topicViewer.setSelection(selection);
 	}
 
+	@SuppressWarnings("unused")
 	private void createRecentViewer(Composite composite) {
 		recentViewer = new TableViewer(composite, SWT.SINGLE | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
@@ -262,7 +255,11 @@ public class CodesDialog extends ZTitleAreaDialog {
 		createTableColumn(recentViewer, 150, Messages.CodesDialog_name, 1);
 		createTableColumn(recentViewer, 300, Messages.CodesDialog_explanation, 2);
 		recentViewer.setContentProvider(ArrayContentProvider.getInstance());
-		recentViewer.setComparator(topicComparator);
+		if (parser.isByName())
+			new SortColumnManager(recentViewer, new int[] { SWT.UP, SWT.UP }, 0);
+		else
+			new SortColumnManager(recentViewer, new int[] { SWT.UP, SWT.UP, SWT.UP }, 1);
+		recentViewer.setComparator(ZViewerComparator.INSTANCE);
 		recentViewer.setFilters(new ViewerFilter[] { new TopicFilter(false, exclusions) });
 		recentViewer.addSelectionChangedListener(selectionChangedListener);
 		recentViewer.addDoubleClickListener(doubleClickListener);
@@ -302,7 +299,11 @@ public class CodesDialog extends ZTitleAreaDialog {
 		layoutData.heightHint = 300;
 		topicViewer.getControl().setLayoutData(layoutData);
 		topicViewer.setContentProvider(new TopicContentProvider());
-		topicViewer.setComparator(topicComparator);
+		if (parser.isByName())
+			new SortColumnManager(recentViewer, new int[] { SWT.UP, SWT.UP }, 0);
+		else
+			new SortColumnManager(recentViewer, new int[] { SWT.UP, SWT.UP, SWT.UP }, 1);
+		topicViewer.setComparator(ZViewerComparator.INSTANCE);
 		topicViewer.setFilters(new ViewerFilter[] { new TopicFilter(true, exclusions) });
 		topicViewer.addSelectionChangedListener(selectionChangedListener);
 		ColumnViewerToolTipSupport.enableFor(topicViewer);

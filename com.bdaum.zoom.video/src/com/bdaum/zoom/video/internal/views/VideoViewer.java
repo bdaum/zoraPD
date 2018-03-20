@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.video.internal.views;
 
@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -43,8 +44,6 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Cursor;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -75,6 +74,7 @@ import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.UpdateThumbnailOperation;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.FadingShell;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
@@ -110,7 +110,6 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 	private Image image;
 	private boolean keyDown;
 	private TextLayout tlayout;
-	private Font font;
 	private String message;
 	private String errorMessage;
 	private Cursor transparentCursor;
@@ -297,10 +296,6 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 			tlayout.dispose();
 			tlayout = null;
 		}
-		if (font != null) {
-			font.dispose();
-			font = null;
-		}
 		if (transparentCursor != null) {
 			transparentCursor.dispose();
 			transparentCursor = null;
@@ -340,12 +335,7 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 				tlayout = new TextLayout(display);
 				tlayout.setAlignment(SWT.CENTER);
 				tlayout.setWidth(area.width);
-				if (font == null) {
-					FontData fontData = display.getSystemFont().getFontData()[0];
-					fontData.setHeight(18);
-					font = new Font(display, fontData);
-				}
-				tlayout.setFont(font);
+				tlayout.setFont(JFaceResources.getFont(UiConstants.VIEWERFONT));
 			}
 			tlayout.setText(errorMessage != null ? errorMessage : message);
 			Rectangle tbounds = tlayout.getBounds();
@@ -371,10 +361,8 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 	private void releaseKey(KeyEvent e) {
 		switch (e.character) {
 		case ' ':
-			if (playingThread != null) {
-				if (playingThread.isPaused())
-					playingThread.resumePlaying();
-			}
+			if (playingThread != null && playingThread.isPaused())
+				playingThread.resumePlaying();
 			closeControl();
 			break;
 		default:
@@ -411,10 +399,8 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 			updateInfo(videoControl, currentPosition, duration);
 		}
 		videoControl.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-
 				switch (e.detail & VideoControl.EVENTTYPES) {
 				case VideoControl.PLAY:
 					closeControl();
@@ -509,22 +495,15 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 		}
 		int minutes = (int) (time / 60000L);
 		if (hours != 0 || minutes != 0) {
-			if (hours != 0)
-				sb.append(String.valueOf(minutes + 100).substring(1)).append(':');
-			else
-				sb.append(minutes).append(':');
+			sb.append(hours != 0 ? String.valueOf(minutes + 100).substring(1) : minutes).append(':');
 			time -= minutes * 60000L;
 		}
 		int seconds = (int) (time / 1000L);
 		if (hours != 0 || minutes != 0 || seconds != 0) {
-			if (hours != 0 || minutes != 0)
-				sb.append(String.valueOf(seconds + 100).substring(1)).append(':');
-			else
-				sb.append(seconds).append(':');
+			sb.append(hours != 0 || minutes != 0 ? String.valueOf(seconds + 100).substring(1) : seconds).append(':');
 			time -= seconds * 1000L;
 		}
-		sb.append('.').append(String.valueOf(time + 1000).substring(1));
-		return sb.toString();
+		return sb.append('.').append(String.valueOf(time + 1000).substring(1)).toString();
 	}
 
 	void sleepTick() {

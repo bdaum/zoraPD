@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -42,7 +42,6 @@ import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -72,6 +71,7 @@ import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.VocabManager;
 import com.bdaum.zoom.ui.internal.operations.ModifyMetaOperation;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
@@ -229,7 +229,7 @@ public class KeywordGroup implements IAdaptable {
 				layoutData.heightHint = 100;
 				recentViewer.getControl().setLayoutData(layoutData);
 				recentViewer.setContentProvider(ArrayContentProvider.getInstance());
-				recentViewer.setComparator(new ViewerComparator());
+				recentViewer.setComparator(ZViewerComparator.INSTANCE);
 				recentViewer.setLabelProvider(new KeywordLabelProvider(vocabManager, null));
 				ColumnViewerToolTipSupport.enableFor(recentViewer);
 				recentViewer.setInput(recentSet);

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -53,6 +53,7 @@ import com.bdaum.zoom.core.trash.Trash;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.EmptyTrashOperation;
 import com.bdaum.zoom.operations.internal.RestoreOperation;
+import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -76,16 +77,10 @@ public class TrashcanView extends LightboxView {
 				return;
 			if (item.getImage().isDisposed())
 				item.setImage(getImage(trash.getAsset()));
-
 			boolean isSelected = false;
-			if (selection != null) {
-				Iterator<?> iterator = selection.iterator();
-				while (iterator.hasNext())
-					if (iterator.next() == trash) {
-						isSelected = true;
-						break;
-					}
-			}
+			if (selection != null)
+				for (Iterator<?> iterator = selection.iterator(); !isSelected && iterator.hasNext();)
+					isSelected = iterator.next() == trash;
 			ir.setSelected(isSelected);
 			ir.draw(e.gc, item, e.index, e.x, e.y, e.width, e.height);
 		}
@@ -99,9 +94,8 @@ public class TrashcanView extends LightboxView {
 	private IAction sortModeAction;
 	protected boolean sortMode;
 
-	/**
-	 * The constructor.
-	 */
+	private Action removeAction;
+
 	public TrashcanView() {
 		thumbsize = 96;
 		folding = false;
@@ -119,7 +113,6 @@ public class TrashcanView extends LightboxView {
 
 	@Override
 	protected void setHelp(int orientation) {
-		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(gallery, HelpContextIds.TRASHCAN_VIEW);
 	}
 
@@ -162,7 +155,7 @@ public class TrashcanView extends LightboxView {
 			shell.getDisplay().asyncExec(() -> {
 				if (!shell.isDisposed()) {
 					refresh();
-					updateActions();
+					updateActions(false);
 				}
 			});
 	}
@@ -184,7 +177,6 @@ public class TrashcanView extends LightboxView {
 		createSelectallAction();
 
 		sortModeAction = new Action(Messages.getString("TrashcanView.sort_by_name"), IAction.AS_CHECK_BOX) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				sortMode = isChecked();
@@ -203,23 +195,28 @@ public class TrashcanView extends LightboxView {
 
 		restoreAction = new Action(Messages.getString("TrashcanView.restore"), //$NON-NLS-1$
 				Icons.trashrestoreSmall.getDescriptor()) {
-
 			@Override
 			public void run() {
-				if (selection != null && selection.getFirstElement() instanceof HistoryItem) {
-					HistoryItem[] hist = new HistoryItem[selection.size()];
-					Iterator<?> it = selection.iterator();
-					int i = 0;
-					while (it.hasNext())
-						hist[i++] = (HistoryItem) it.next();
+				if (selection != null && selection.getFirstElement() instanceof HistoryItem)
 					OperationJob.executeOperation(
-							new RestoreOperation(hist,
+							new RestoreOperation(selection2Trash(),
 									UiActivator.getDefault().createImportConfiguration(TrashcanView.this)),
 							TrashcanView.this);
-				}
 			}
 		};
 		restoreAction.setToolTipText(Messages.getString("TrashcanView.restore_selected_items")); //$NON-NLS-1$
+		removeAction = new Action(Messages.getString("TrashcanView.remove"), Icons.delete.getDescriptor()) { //$NON-NLS-1$
+			@Override
+			public void run() {
+				if (selection != null && selection.getFirstElement() instanceof HistoryItem)
+					if (AcousticMessageDialog.openQuestion(getViewSite().getShell(),
+							Messages.getString("TrashcanView.remove_trash"), //$NON-NLS-1$
+							Messages.getString("TrashcanView.really_remove"))) //$NON-NLS-1$
+						OperationJob.executeOperation(new EmptyTrashOperation(selection2Trash()), TrashcanView.this);
+			}
+
+		};
+		removeAction.setToolTipText(Messages.getString("TrashcanView.remove_tooltip")); //$NON-NLS-1$
 
 		emptyTrashcanAction = new Action(Messages.getString("TrashcanView.empty_trashcan"), Icons.cleartrash //$NON-NLS-1$
 				.getDescriptor()) {
@@ -231,12 +228,20 @@ public class TrashcanView extends LightboxView {
 		emptyTrashcanAction.setToolTipText(Messages.getString("TrashcanView.clear_trashcan_and_delete_all")); //$NON-NLS-1$
 	}
 
+	protected Trash[] selection2Trash() {
+		Trash[] hist = new Trash[selection.size()];
+		int i = 0;
+		for (Iterator<?> it = selection.iterator(); it.hasNext();)
+			hist[i++] = (Trash) it.next();
+		return hist;
+	}
+
 	@Override
-	public void updateActions() {
-		if (restoreAction == null)
-			return;
-		restoreAction.setEnabled(gallery.getSelection().length > 0 && !dbIsReadonly());
-		emptyTrashcanAction.setEnabled(trashSet != null && !trashSet.isEmpty());
+	public void updateActions(boolean force) {
+		if (restoreAction != null && (viewActive || force)) {
+			restoreAction.setEnabled(gallery.getSelection().length > 0 && !dbIsReadonly());
+			emptyTrashcanAction.setEnabled(trashSet != null && !trashSet.isEmpty());
+		}
 	}
 
 	@Override
@@ -260,8 +265,10 @@ public class TrashcanView extends LightboxView {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
-		if (!dbIsReadonly())
+		if (!dbIsReadonly()) {
 			manager.add(restoreAction);
+			manager.add(removeAction);
+		}
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
@@ -310,8 +317,7 @@ public class TrashcanView extends LightboxView {
 			item.setItemCount(trashSet == null ? 0 : trashSet.size());
 		else {
 			// It's an item
-			GalleryItem parentItem = item.getParentItem();
-			int index = parentItem.indexOf(item);
+			int index = item.getParentItem().indexOf(item);
 			Trash trashItem = trashSet.get(index);
 			item.setImage(getImage(trashItem.getAsset()));
 			item.setText(trashItem.getName());

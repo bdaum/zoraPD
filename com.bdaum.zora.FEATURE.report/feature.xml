@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE.report"
       label="Reporting Feature"
-      version="3.2.2"
+      version="3.3.0"
       provider-name="bdaum industrial communications">
 
    <description url="http://www.example.com/description">

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2013 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -78,8 +78,8 @@ public class FilterField {
 	}
 
 	protected void fireModifyText(ModifyEvent e) {
-		for (Object l : listeners.getListeners())
-			((ModifyListener) l).modifyText(e);
+		for (ModifyListener l : listeners)
+			l.modifyText(e);
 	}
 
 	public void addModifyListener(ModifyListener listener) {

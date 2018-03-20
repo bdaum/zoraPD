@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.jface.viewers.AbstractTreeViewer;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
@@ -32,10 +33,8 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -43,8 +42,6 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -63,8 +60,8 @@ import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
-import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 
 @SuppressWarnings("restriction")
 public class AlbumSelectionDialog extends ZTitleAreaDialog {
@@ -77,14 +74,11 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 	private CheckboxTreeViewer viewer;
 	private boolean small;
 	private List<String> assignedAlbums;
-	private boolean persons;
-	private List<Image> faces = new ArrayList<>();
 	private boolean deleteRegion = false;
 	protected boolean cntrlDwn;
 
-	public AlbumSelectionDialog(Shell parentShell, boolean persons, boolean small, List<String> assignedAlbums) {
+	public AlbumSelectionDialog(Shell parentShell, boolean small, List<String> assignedAlbums) {
 		super(parentShell);
-		this.persons = persons;
 		this.small = small;
 		this.assignedAlbums = assignedAlbums;
 	}
@@ -93,19 +87,17 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 	public void create() {
 		super.create();
 		getShell().setText(Constants.APPLICATION_NAME);
-		setTitle(persons ? Messages.AlbumSelectionDialog_assign_person : Messages.AlbumSelectionDialog_addToAlbum);
-		setMessage(persons ? Messages.AlbumSelectionDialog_select_person
-				: Messages.AlbumSelectionDialog_addToAlbum_tooltip);
+		setTitle(Messages.AlbumSelectionDialog_addToAlbum);
+		setMessage(Messages.AlbumSelectionDialog_addToAlbum_tooltip);
 		fillValues(false);
 		validate();
 	}
 
 	private void validate() {
+		String errorMessage = null;
 		Object[] checkedElements = viewer.getCheckedElements();
-		String errorMessage = (checkedElements.length == 0)
-				? (persons ? Messages.AlbumSelectionDialog_select_one
-						: Messages.AlbumSelectionDialog_select_at_least_one)
-				: null;
+		if (checkedElements.length == 0)
+			errorMessage = Messages.AlbumSelectionDialog_select_at_least_one;
 		setErrorMessage(errorMessage);
 		getButton(OK).setEnabled(errorMessage == null);
 	}
@@ -118,11 +110,7 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout());
 		composite.setLayout(new GridLayout(2, false));
-
 		viewer = new CheckboxTreeViewer(composite, SWT.BORDER | SWT.V_SCROLL | SWT.FULL_SELECTION);
-		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
-		layoutData.heightHint = small ? 150 : persons ? 500 : 400;
-		viewer.getControl().setLayoutData(layoutData);
 		TreeViewerColumn col1 = new TreeViewerColumn(viewer, SWT.NONE);
 		col1.getColumn().setWidth(200);
 		col1.getColumn().setText(Messages.AlbumSelectionDialog_name);
@@ -133,24 +121,6 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 					return ((SmartCollectionImpl) element).getName();
 				return element.toString();
 			}
-
-			public Image getImage(Object element) {
-				if (persons && element instanceof SmartCollectionImpl) {
-					Image face = UiUtilities.getFace(getShell().getDisplay(), (SmartCollectionImpl) element, 24, 4,
-							parent.getBackground());
-					faces.add(face);
-					return face;
-				}
-				return null;
-			}
-
-			@Override
-			protected Rectangle getIconBounds() {
-				if (persons)
-					return Icons.person64.getImage().getBounds();
-				return null;
-			}
-
 		});
 		if (!small) {
 			TreeViewerColumn col2 = new TreeViewerColumn(viewer, SWT.NONE);
@@ -164,9 +134,9 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 					return element.toString();
 				}
 			});
+			viewer.getTree().setHeaderVisible(true);
 		}
 		viewer.setContentProvider(new ITreeContentProvider() {
-
 			public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 				// do nothing
 			}
@@ -207,35 +177,23 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 				return EMPTY;
 			}
 		});
-		viewer.setComparator(new ViewerComparator() {
-			@Override
-			public int compare(Viewer viewer, Object e1, Object e2) {
-				if (e1 instanceof SmartCollection && e2 instanceof SmartCollection)
-					return ((SmartCollection) e1).getName().compareTo(((SmartCollection) e2).getName());
-				return super.compare(viewer, e1, e2);
+		UiUtilities.installDoubleClickExpansion(viewer);
+		viewer.addCheckStateListener(new ICheckStateListener() {
+			public void checkStateChanged(CheckStateChangedEvent event) {
+				validate();
 			}
 		});
-		UiUtilities.installDoubleClickExpansion(viewer);
-		if (assignedAlbums != null && !assignedAlbums.isEmpty() && !persons) {
+		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
+		layoutData.heightHint = small ? 150 : 400;
+		viewer.getControl().setLayoutData(layoutData);
+		viewer.setComparator(ZViewerComparator.INSTANCE);
+		if (assignedAlbums != null && !assignedAlbums.isEmpty())
 			viewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
 				@Override
 				public boolean select(Viewer v, Object parentElement, Object element) {
 					return !assignedAlbums.contains(((SmartCollectionImpl) element).getName());
 				}
 			} });
-		}
-		viewer.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				if (persons && event.getChecked()) {
-					Object element = event.getElement();
-					for (Object object : viewer.getCheckedElements())
-						if (object != element)
-							viewer.setChecked(object, false);
-					viewer.setSelection(new StructuredSelection(element));
-				}
-				validate();
-			}
-		});
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -244,8 +202,8 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 							.getFirstElement();
 					if (sm != null) {
 						CollectionEditDialog dialog = new CollectionEditDialog(getShell(), sm,
-								Messages.AlbumSelectionDialog_edit_person, Messages.AlbumSelectionDialog_person_album_msg,
-								false, true, false, false);
+								Messages.AlbumSelectionDialog_edit_person,
+								Messages.AlbumSelectionDialog_person_album_msg, false, true, false, false);
 						if (dialog.open() == Window.OK) {
 							final SmartCollectionImpl album = dialog.getResult();
 							if (album != null) {
@@ -259,6 +217,7 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 					}
 					cntrlDwn = false;
 				}
+				validate();
 			}
 		});
 		viewer.getControl().addKeyListener(new KeyAdapter() {
@@ -274,28 +233,23 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 					cntrlDwn = false;
 			}
 		});
-		if (!small) {
-			viewer.getTree().setHeaderVisible(true);
-			if (!persons)
-				new AllNoneGroup(composite, new SelectionAdapter() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						if (e.widget.getData() == AllNoneGroup.ALL) {
-							viewer.expandAll();
-							viewer.setCheckedElements(albums.toArray());
-						} else
-							viewer.setCheckedElements(EMPTY);
-						validate();
-					}
-				});
-		}
+		if (!small)
+			new AllNoneGroup(composite, new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					if (e.widget.getData() == AllNoneGroup.ALL) {
+						viewer.expandAll();
+						viewer.setCheckedElements(albums.toArray());
+					} else
+						viewer.setCheckedElements(EMPTY);
+					validate();
+				}
+			});
 		return area;
 	}
 
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
-		if (persons)
-			createButton(parent, DELETEREGION, Messages.AlbumSelectionDialog_delete_region, false);
 		if (Core.getCore().getDbManager().obtainById(GroupImpl.class, Constants.GROUP_ID_USER) != null)
 			createButton(parent, NEWALBUM, Messages.AlbumSelectionDialog_new_album, false);
 		super.createButtonsForButtonBar(parent);
@@ -310,10 +264,8 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 		}
 		if (buttonId == NEWALBUM) {
 			CollectionEditDialog dialog = new CollectionEditDialog(getShell(), null,
-					persons ? Messages.AlbumSelectionDialog_create_person : Messages.AlbumSelectionDialog_create_album,
-					persons ? Messages.AlbumSelectionDialog_specify_person_name
-							: Messages.AlbumSelectionDialog_specify_name,
-					false, true, persons, false);
+					Messages.AlbumSelectionDialog_create_album, Messages.AlbumSelectionDialog_specify_name, false, true,
+					false, false);
 			if (dialog.open() == Window.OK) {
 				final SmartCollectionImpl album = dialog.getResult();
 				if (album != null) {
@@ -321,8 +273,7 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 					album.addSortCriterion(new SortCriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, true));
 					group.addRootCollection(album.getStringId());
 					album.setGroup_rootCollection_parent(group.getStringId());
-					List<Object> toBeStored = new ArrayList<Object>();
-					Utilities.storeCollection(album, true, toBeStored);
+					Collection<Object> toBeStored = Utilities.storeCollection(album, true, null);
 					toBeStored.add(group);
 					dbManager.safeTransaction(null, toBeStored);
 					fillValues(true);
@@ -347,40 +298,20 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 	private void fillValues(boolean keep) {
 		albums = new ArrayList<SmartCollectionImpl>(
 				dbManager.<SmartCollectionImpl>obtainObjects(SmartCollectionImpl.class, false, "album", true, //$NON-NLS-1$
-						QueryField.EQUALS, "system", persons, //$NON-NLS-1$
+						QueryField.EQUALS, "system", false, //$NON-NLS-1$
 						QueryField.EQUALS));
 		IAssetProvider assetProvider = Core.getCore().getAssetProvider();
 		if (assetProvider != null)
 			albums.remove(assetProvider.getCurrentCollection());
 		Object[] checkedElements = viewer.getCheckedElements();
 		viewer.setInput(albums);
-		viewer.expandAll();
+		((AbstractTreeViewer) viewer).expandAll();
 		if (keep)
 			viewer.setCheckedElements(checkedElements);
-		else {
-			if (persons && assignedAlbums != null && !assignedAlbums.isEmpty()) {
-				String albumId = assignedAlbums.get(0);
-				for (SmartCollectionImpl sm : albums) {
-					if (sm.getStringId().equals(albumId)) {
-						viewer.setChecked(sm, true);
-						viewer.setSelection(new StructuredSelection(sm));
-						viewer.reveal(sm);
-						break;
-					}
-				}
-			}
-		}
 	}
 
 	public Collection<SmartCollectionImpl> getResult() {
 		return selectedAlbums;
-	}
-
-	@Override
-	public boolean close() {
-		for (Image face : faces)
-			face.dispose();
-		return super.close();
 	}
 
 	public boolean isDeleteRegion() {

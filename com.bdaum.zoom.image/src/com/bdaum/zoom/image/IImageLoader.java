@@ -20,7 +20,10 @@ public interface IImageLoader {
 
 	/**
 	 * @param width - width restriction or -1
+	 *                to restrict only width, set height negative
 	 * @param height - height restriction or -1
+	 *                to restrict only height, set width negative
+	 *          Note that the absolute values of width and heigth are also used to determine the orientation
 	 * @param raster - pixel raster size (for lossles JPEG rotation) or 0
 	 * @param exposure - exposure factor for high dynamic range
 	 * @param maxFactor -  scaling limit

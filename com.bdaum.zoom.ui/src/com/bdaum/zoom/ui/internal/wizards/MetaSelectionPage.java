@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.wizards;
@@ -44,10 +44,10 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.dialogs.MetadataContentProvider;
 import com.bdaum.zoom.ui.internal.dialogs.MetadataLabelProvider;
 import com.bdaum.zoom.ui.internal.dialogs.MetadataOptionGroup;
-import com.bdaum.zoom.ui.internal.views.AbstractPropertiesView.ViewComparator;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.internal.widgets.JpegMetaGroup;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
@@ -88,10 +88,9 @@ public class MetaSelectionPage extends ColoredWizardPage {
 			jpegGroup = new JpegMetaGroup(composite, SWT.NONE);
 			IDialogSettings dialogSettings = getDialogSettings();
 			String s = dialogSettings.get(JPEGMETA);
-			boolean jpegmeta = s != null ? Boolean.parseBoolean(s)
+			jpegGroup.setSelection(s != null ? Boolean.parseBoolean(s)
 					: UiActivator.getDefault().getPreferenceStore()
-							.getBoolean(PreferenceConstants.JPEGMETADATA);
-			jpegGroup.setSelection(jpegmeta);
+							.getBoolean(PreferenceConstants.JPEGMETADATA));
 		}
 		new Label(composite, SWT.NONE);
 		setControl(composite);
@@ -117,7 +116,7 @@ public class MetaSelectionPage extends ColoredWizardPage {
 		viewer.setLabelProvider(new MetadataLabelProvider());
 		viewer.setContentProvider(new MetadataContentProvider());
 		viewer.setFilters(new ViewerFilter[] { filter });
-		viewer.setComparator(new ViewComparator());
+		viewer.setComparator(ZViewerComparator.INSTANCE);
 		viewer.setInput(rootElements);
 		viewer.expandToLevel(2);
 		UiUtilities.installDoubleClickExpansion(viewer);
@@ -166,7 +165,7 @@ public class MetaSelectionPage extends ColoredWizardPage {
 	private void saveSettings(Set<QueryField> filt) {
 		StringBuilder sb = new StringBuilder();
 		Object[] checkedElements = viewer.getCheckedElements();
-		for (Object object : checkedElements) {
+		for (Object object : checkedElements)
 			if (object instanceof QueryField) {
 				QueryField queryField = (QueryField) object;
 				String id = queryField.getId();
@@ -177,7 +176,6 @@ public class MetaSelectionPage extends ColoredWizardPage {
 					filt.add(queryField);
 				}
 			}
-		}
 		IDialogSettings settings = getDialogSettings();
 		settings.put(ExportFolderWizard.SELECTEDFIELDS, sb.toString());
 		if (metadataOptionGroup != null)

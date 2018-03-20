@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -104,7 +104,6 @@ public class PatternEditDialog extends ZDialog {
 		errorMsg.setForeground(errorMsg.getDisplay().getSystemColor(SWT.COLOR_RED));
 		if (forbiddenChars != null)
 			text.addVerifyListener(new VerifyListener() {
-
 				public void verifyText(VerifyEvent e) {
 					if (forbiddenChars.indexOf(e.character) >= 0) {
 						e.doit = false;
@@ -119,11 +118,9 @@ public class PatternEditDialog extends ZDialog {
 		text.setText(result);
 
 		text.addModifyListener(new ModifyListener() {
-
 			public void modifyText(ModifyEvent e) {
 				result = text.getText();
 			}
-
 		});
 		text.setFocus();
 		text.selectAll();

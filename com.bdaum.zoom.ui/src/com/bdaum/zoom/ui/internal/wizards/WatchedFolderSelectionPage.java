@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.wizards;
 
@@ -27,7 +27,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
@@ -57,22 +56,16 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 
 	@Override
 	public void createControl(final Composite parent) {
-		Composite comp = new Composite(parent, SWT.NONE);
-		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		comp.setLayout(new GridLayout(3, false));
-		Label copyLabel = new Label(comp, SWT.NONE);
-		copyLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+		Composite comp = createComposite(parent, 3);
+		new Label(comp, SWT.NONE).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		new Label(comp, SWT.NONE).setText(Messages.WatchedFolderSelectionPage_folder_path);
-
 		folderField = new Text(comp, SWT.READ_ONLY | SWT.BORDER);
 		final GridData gd_text = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		gd_text.widthHint = 200;
 		folderField.setLayoutData(gd_text);
-
 		final Button browseButton = WidgetFactory.createPushButton(comp, Messages.ImportFromDeviceWizard_browse,
 				SWT.BEGINNING);
 		browseButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				DirectoryDialog dialog = new DirectoryDialog(parent.getShell());
@@ -94,7 +87,6 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 		typeButtonGroup = new RadioButtonGroup(comp, Messages.WatchedFolderSelectionPage_folder_type, SWT.HORIZONTAL,
 				Messages.WatchedFolderSelectionPage_storage, Messages.WatchedFolderSelectionPage_transfer);
 		typeButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
-
 		setControl(comp);
 		setHelp(HelpContextIds.WATCHED_FOLDER_FILE_SELECTION);
 		setTitle(getName());
@@ -106,10 +98,8 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 	private void fillValues() {
 		try {
 			String uri = watchedFolder.getUri();
-			if (uri != null) {
-				File file = new File(new URI(uri));
-				folderField.setText(file.getAbsolutePath());
-			}
+			if (uri != null)
+				folderField.setText(new File(new URI(uri)).getAbsolutePath());
 		} catch (URISyntaxException e1) {
 			// do nothing
 		}

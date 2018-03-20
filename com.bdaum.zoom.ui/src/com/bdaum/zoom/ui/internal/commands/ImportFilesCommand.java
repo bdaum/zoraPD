@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.commands;
 
@@ -23,17 +23,19 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
 
+import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.internal.CoreActivator;
-import com.bdaum.zoom.core.internal.FileInput;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.image.ImageConstants;
-import com.bdaum.zoom.job.OperationJob;
-import com.bdaum.zoom.operations.internal.ImportOperation;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.actions.Messages;
+import com.bdaum.zoom.ui.internal.dialogs.ImportModeDialog;
+import com.bdaum.zoom.ui.internal.wizards.ImportFromDeviceWizard;
 
 @SuppressWarnings("restriction")
 public class ImportFilesCommand extends AbstractCommandHandler {
@@ -104,8 +106,28 @@ public class ImportFilesCommand extends AbstractCommandHandler {
 				List<File> files = new ArrayList<File>(fileNames.length);
 				for (String fileName : fileNames)
 					files.add(new File(filterPath, fileName));
-				OperationJob.executeOperation(new ImportOperation(new FileInput(files, false),
-						activator.createImportConfiguration(this), null, null), this);
+				File parent = files.get(0).getParentFile();
+				ICore core = Core.getCore();
+				File catRootFile = core.getVolumeManager().getRootFile(core.getDbManager().getFile());
+				boolean foreignFolders = catRootFile == null
+						|| !catRootFile.equals(core.getVolumeManager().getRootFile(parent));
+				boolean device = false;
+				while (parent != null) {
+					String name = parent.getName();
+					if ("DCIM".equals(name)) { //$NON-NLS-1$
+						device = true;
+						break;
+					}
+					parent = parent.getParentFile();
+				}
+				ImportModeDialog imDialog = new ImportModeDialog(getShell(), device || foreignFolders);
+				if (imDialog.open() == ImportModeDialog.OK) {
+					ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(files.toArray(new File[files.size()]),
+							null, device && foreignFolders, false, imDialog.isNewStructure(), null, false);
+					WizardDialog wizardDialog = new WizardDialog(getShell(), wizard);
+					wizard.init(null, null);
+					wizardDialog.open();
+				}
 			}
 		}
 	}

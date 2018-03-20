@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.email.internal;
@@ -49,9 +49,7 @@ public class PDFWizard extends AbstractAssetSelectionWizard implements IExportWi
 	private static final String HTMLSETTINGSID = "com.bdaum.zoom.htmlProperties"; //$NON-NLS-1$
 
 	private CreatePDFPage layoutPage;
-
 	private PDFTargetFilePage filePage;
-
 	private String settingsId;
 	private String type;
 
@@ -72,8 +70,7 @@ public class PDFWizard extends AbstractAssetSelectionWizard implements IExportWi
 		setAssets(workbench, selection, false);
 		Iterator<Asset> it = assets.iterator();
 		while (it.hasNext()) {
-			Asset a = it.next();
-			IMediaSupport mediaSupport = coreActivator.getMediaSupport(a
+			IMediaSupport mediaSupport = coreActivator.getMediaSupport(it.next()
 					.getFormat());
 			if (mediaSupport != null
 					&& !mediaSupport.testProperty(IMediaSupport.PDF))
@@ -169,10 +166,6 @@ public class PDFWizard extends AbstractAssetSelectionWizard implements IExportWi
 	public int getJpegQuality() {
 		return filePage.getJpegQuality();
 	}
-
-//	public int getScalingMethod() {
-//		return filePage.getScalingMethod();
-//	}
 
 	public int getMode() {
 		return filePage.getMode();

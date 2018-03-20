@@ -18,9 +18,9 @@ public class Options {
 	private Object[] options;
 
 	public Object put(String key, Object value) {
-		if (options == null) {
+		if (options == null)
 			options = new Object[] { key, value };
-		} else {
+		else {
 			int len = options.length;
 			int fnd = len;
 			for (int i = 0; i < len; i += 2) {

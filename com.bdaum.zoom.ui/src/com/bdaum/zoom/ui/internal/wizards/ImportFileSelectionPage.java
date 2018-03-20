@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.wizards;
 
@@ -211,8 +211,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 		}
 
 		protected void updateButtons() {
-			boolean valid = validate();
-			getButton(OK).setEnabled(valid);
+			getButton(OK).setEnabled(validate());
 		}
 
 		private boolean validate() {
@@ -390,8 +389,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 	@SuppressWarnings("unused")
 	@Override
 	public void createControl(Composite parent) {
-		Composite comp = new Composite(parent, SWT.NONE);
-		comp.setLayout(new GridLayout());
+		Composite comp = createComposite(parent, 1);
 		final Composite viewerComp = new Composite(comp, SWT.NONE);
 		viewerComp.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 		viewerComp.setLayout(new GridLayout());
@@ -982,12 +980,11 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 				break;
 			if (dates[dm] > 0) {
 				String label = (type == Calendar.MONTH) ? Constants.DATEFORMATS.getMonths()[dm] : String.valueOf(dm);
-				if (type == Calendar.DAY_OF_MONTH) {
-					int m = parent.value;
-					int y = parent.parent.value;
-					label = Constants.DATEFORMATS.getWeekdays()[new GregorianCalendar(y, m, dm)
-							.get(Calendar.DAY_OF_WEEK)].substring(0, 3) + ", " + label; //$NON-NLS-1$
-				}
+				if (type == Calendar.DAY_OF_MONTH)
+					label = Constants.DATEFORMATS
+							.getWeekdays()[new GregorianCalendar(parent.parent.value, parent.value, dm)
+									.get(Calendar.DAY_OF_WEEK)].substring(0, 3)
+							+ ", " + label; //$NON-NLS-1$
 				ImportNode childNode = new ImportNode(parent, label, type, dm, folder, files, dates[dm], parent.plural,
 						parent.singular);
 				childNode.minTime = mins[dm];
@@ -1022,17 +1019,14 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 		boolean detectDuplicates = duplicatesButton.getSelection();
 		importData.setDetectDuplicates(detectDuplicates);
 		dialogSettings.put(DETECTDUPLICATES, detectDuplicates);
-		if (removeMediaButton != null) {
-			removeMedia = removeMediaButton.getSelection();
-			importData.setRemoveMedia(removeMedia);
-		} else
+		if (removeMediaButton != null)
+			importData.setRemoveMedia(removeMedia = removeMediaButton.getSelection());
+		else
 			importData.setRemoveMedia(false);
 		dialogSettings.put(REMOVEMEDIA, removeMedia);
 		int policy = 0;
-		if (skipCombo != null) {
-			policy = Math.max(0, skipCombo.getSelectionIndex());
-			dialogSettings.put(SKIPPOLICY, policy);
-		}
+		if (skipCombo != null)
+			dialogSettings.put(SKIPPOLICY, policy = Math.max(0, skipCombo.getSelectionIndex()));
 		importData.setSkipPolicy(policy);
 		if (skipFormatsField != null) {
 			String[] formats = skippedFormats.toArray(new String[skippedFormats.size()]);
@@ -1059,16 +1053,14 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 					int year = node.parent.parent.value;
 					boolean grayed = importViewer.getGrayed(checked);
 					File[] listFiles = grayed ? node.getMissing() : node.getMemberFiles();
-					if (listFiles != null)
-						for (File file : listFiles) {
-							long lastModified = file.lastModified();
-							calendar.setTimeInMillis(lastModified);
-							if (calendar.get(Calendar.DAY_OF_MONTH) == day && calendar.get(Calendar.MONTH) == month
-									&& calendar.get(Calendar.YEAR) == year)
-								selectedFiles.add(file);
-						}
-					else
+					if (listFiles == null)
 						return null;
+					for (File file : listFiles) {
+						calendar.setTimeInMillis(file.lastModified());
+						if (calendar.get(Calendar.DAY_OF_MONTH) == day && calendar.get(Calendar.MONTH) == month
+								&& calendar.get(Calendar.YEAR) == year)
+							selectedFiles.add(file);
+					}
 				}
 			}
 		return selectedFiles;

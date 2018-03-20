@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal;
@@ -61,6 +61,7 @@ import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.HistoryListener;
 import com.bdaum.zoom.ui.INavigationHistory;
 import com.bdaum.zoom.ui.internal.views.AbstractGalleryView;
+import com.bdaum.zoom.ui.internal.views.AbstractPresentationView;
 import com.bdaum.zoom.ui.internal.views.BasicView;
 import com.bdaum.zoom.ui.internal.views.EducatedSelectionListener;
 import com.bdaum.zoom.ui.internal.views.SelectAllHandler;
@@ -68,12 +69,13 @@ import com.bdaum.zoom.ui.internal.views.SelectAllHandler;
 @SuppressWarnings("restriction")
 public class NavigationHistory implements IPerspectiveListener, ISelectionChangedListener, INavigationHistory {
 
+	private static final String PRESENTATIONPERSPECTIVEID = "com.bdaum.zoom.PresentationPerspective"; //$NON-NLS-1$
+
 	public static class HistoryItem {
 		private Object query; // String id if in database
 		private String perspectiveId;
 		private String[] selectedAssets;
-		private String partId;
-		private String secondaryId;
+		private String partId, secondaryId;
 		private IAssetFilter[] filters;
 		private SortCriterion sort;
 		private final int generation;
@@ -127,17 +129,10 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 		public int hashCode() {
 			int hashCode = super.hashCode() * 31 + generation;
 			hashCode = 31 * hashCode + (perspectiveId == null ? 0 : perspectiveId.hashCode());
-
 			hashCode = 31 * hashCode + (secondaryId == null ? 0 : secondaryId.hashCode());
-
 			hashCode = 31 * hashCode + (query == null ? 0 : query.hashCode());
-
 			hashCode = 31 * hashCode + (sort == null ? 0 : sort.hashCode());
-
-			hashCode = 31 * hashCode + (filters == null ? 0 : Arrays.hashCode(filters));
-
-			return hashCode;
-
+			return 31 * hashCode + (filters == null ? 0 : Arrays.hashCode(filters));
 		}
 
 		public Object getQuery() {
@@ -190,9 +185,6 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 			return sort;
 		}
 
-		/**
-		 * @return generation
-		 */
 		public int getGeneration() {
 			return generation;
 		}
@@ -215,6 +207,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	private boolean forceSelection;
 	private ISelection lastSelection;
 	private IWorkbenchPart lastPart;
+	private String lastPresentationView;
 
 	public NavigationHistory(IWorkbenchWindow window) {
 		this.window = window;
@@ -235,8 +228,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.INavigationHistory#deregisterSelectionProvicder(org
+	 * @see com.bdaum.zoom.ui.INavigationHistory#deregisterSelectionProvicder(org
 	 * .eclipse.jface.viewers.ISelectionProvider)
 	 */
 
@@ -252,8 +244,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.INavigationHistory#postSelection(org.eclipse.jface.
+	 * @see com.bdaum.zoom.ui.INavigationHistory#postSelection(org.eclipse.jface.
 	 * viewers.ISelection)
 	 */
 
@@ -266,8 +257,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.INavigationHistory#filterChanged(com.bdaum.zoom.core
+	 * @see com.bdaum.zoom.ui.INavigationHistory#filterChanged(com.bdaum.zoom.core
 	 * .IAssetFilter)
 	 */
 
@@ -294,7 +284,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 				changed = true;
 			} else {
 				boolean found = false;
-				for (int i = 0; i < filters.length; i++) {
+				for (int i = 0; i < filters.length; i++)
 					if (filters[i].getClass().equals(add.getClass())) {
 						found = true;
 						if (!filters[i].equals(add)) {
@@ -303,7 +293,6 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 						}
 						break;
 					}
-				}
 				if (!found) {
 					IAssetFilter[] newFilters = new IAssetFilter[filters.length + 1];
 					System.arraycopy(filters, 0, newFilters, 0, filters.length);
@@ -314,17 +303,13 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 			}
 		}
 		updateHistory(filters);
-		if (changed) {
-			Object[] array = selectionListeners.getListeners();
-			for (int i = 0; i < array.length; i++) {
-				final EducatedSelectionListener l = (EducatedSelectionListener) array[i];
+		if (changed)
+			for (EducatedSelectionListener listener : selectionListeners)
 				try {
-					l.filterChanged();
+					listener.filterChanged();
 				} catch (Exception e) {
 					UiActivator.getDefault().logError(Messages.NavigationHistory_internal_error, e);
 				}
-			}
-		}
 	}
 
 	/*
@@ -340,17 +325,13 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 				|| (sortCrit != null && !sortCrit.equals(this.customSort));
 		this.customSort = sortCrit;
 		updateHistory(sortCrit);
-		if (changed) {
-			Object[] array = selectionListeners.getListeners();
-			for (int i = 0; i < array.length; i++) {
-				final EducatedSelectionListener l = (EducatedSelectionListener) array[i];
+		if (changed)
+			for (EducatedSelectionListener listener : selectionListeners)
 				try {
-					l.sortChanged();
+					listener.sortChanged();
 				} catch (Exception e) {
 					UiActivator.getDefault().logError(Messages.NavigationHistory_internal_error, e);
 				}
-			}
-		}
 	}
 
 	/*
@@ -405,8 +386,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 				}
 			}
 		}
-		for (Object listener : selectionListeners.getListeners()) {
-			final EducatedSelectionListener l = (EducatedSelectionListener) listener;
+		for (EducatedSelectionListener l : selectionListeners) {
 			try {
 				if (collectionChanged)
 					l.collectionChanged(part, (IStructuredSelection) sel);
@@ -423,8 +403,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.INavigationHistory#addSelectionListener(com.bdaum.zoom
+	 * @see com.bdaum.zoom.ui.INavigationHistory#addSelectionListener(com.bdaum.zoom
 	 * .ui.internal.views.EducatedSelectionListener)
 	 */
 
@@ -439,8 +418,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.INavigationHistory#removeSelectionListener(com.bdaum
+	 * @see com.bdaum.zoom.ui.INavigationHistory#removeSelectionListener(com.bdaum
 	 * .zoom.ui.internal.views.EducatedSelectionListener)
 	 */
 
@@ -470,6 +448,9 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 
 			public void partActivated(IWorkbenchPart part) {
 				activePart = part;
+				if (part instanceof AbstractPresentationView && !previousStack.isEmpty()
+						&& PRESENTATIONPERSPECTIVEID.equals(previousStack.peek().getPerspectiveId())) // $NON-NLS-1$
+					lastPresentationView = ((AbstractPresentationView) part).getId();
 			}
 		});
 		IWorkbenchPage activePage = aWindow.getActivePage();
@@ -527,18 +508,16 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 		if (restoring)
 			return false;
 		if (selection instanceof AssetSelection) {
-			if (!selection.isEmpty()) {
-				if (!previousStack.isEmpty()) {
-					AssetSelection assetSelection = (AssetSelection) selection;
-					HistoryItem item = previousStack.peek();
-					if (assetSelection.isPicked())
-						item.setSelectedAssets(assetSelection.getAssets());
-					else
-						item.setSelectedAssets(null);
-					if (part instanceof AbstractGalleryView) {
-						item.setActivePart(((BasicView) part).getViewSite().getId());
-						item.setSecondaryId(((BasicView) part).getViewSite().getSecondaryId());
-					}
+			if (!selection.isEmpty() && !previousStack.isEmpty()) {
+				AssetSelection assetSelection = (AssetSelection) selection;
+				HistoryItem item = previousStack.peek();
+				if (assetSelection.isPicked())
+					item.setSelectedAssets(assetSelection.getAssets());
+				else
+					item.setSelectedAssets(null);
+				if (part instanceof AbstractGalleryView) {
+					item.setActivePart(((BasicView) part).getViewSite().getId());
+					item.setSecondaryId(((BasicView) part).getViewSite().getSecondaryId());
 				}
 			}
 			return true;
@@ -571,11 +550,9 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 				if (o != null) {
 					boolean readOnly = dbManager.isReadOnly();
 					dbManager.setReadOnly(false);
-					if (obj instanceof SmartCollectionImpl && ((SmartCollectionImpl) obj).getAdhoc()) {
-						List<Object> toBeStored = new ArrayList<Object>(5);
-						Utilities.storeCollection((SmartCollection) obj, false, toBeStored);
-						dbManager.safeTransaction(null, toBeStored);
-					} else
+					if (obj instanceof SmartCollectionImpl && ((SmartCollectionImpl) obj).getAdhoc())
+						dbManager.safeTransaction(null, Utilities.storeCollection((SmartCollection) obj, false, null));
+					else
 						dbManager.storeAndCommit(obj);
 					dbManager.setReadOnly(readOnly);
 					fireQueryHistoryChanged(obj);
@@ -658,13 +635,13 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	}
 
 	private void fireHistoryChanged() {
-		for (Object object : historyListeners.getListeners())
-			((HistoryListener) object).historyChanged();
+		for (HistoryListener listener : historyListeners)
+			listener.historyChanged();
 	}
 
 	private void fireQueryHistoryChanged(IdentifiableObject obj) {
-		for (Object object : historyListeners.getListeners())
-			((HistoryListener) object).queryHistoryChanged(obj);
+		for (HistoryListener listener : historyListeners)
+			listener.queryHistoryChanged(obj);
 	}
 
 	/*
@@ -735,10 +712,9 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 					if (partId != null) {
 						try {
 							String secondaryId = current.getSecondaryId();
-							if (secondaryId != null)
-								view = activePage.showView(partId, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-							else
-								view = activePage.showView(partId);
+							view = secondaryId != null
+									? activePage.showView(partId, secondaryId, IWorkbenchPage.VIEW_ACTIVATE)
+									: activePage.showView(partId);
 						} catch (PartInitException e) {
 							// ignore
 						}
@@ -752,9 +728,8 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 								assets.add(a);
 						}
 						postSelection(new AssetSelection(assets));
-					} else if (view instanceof SelectAllHandler) {
+					} else if (view instanceof SelectAllHandler)
 						((SelectAllHandler) view).selectAll();
-					}
 				}
 			}
 		} finally {
@@ -765,8 +740,8 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	public void perspectiveActivated(IWorkbenchPage page, IPerspectiveDescriptor perspective) {
 		if (!previousStack.isEmpty()) {
 			HistoryItem current = previousStack.peek();
-			push(new HistoryItem(current.getQuery(), current.getGeneration(), perspective.getId(),
-					current.getFilters(), current.getSort()));
+			push(new HistoryItem(current.getQuery(), current.getGeneration(), perspective.getId(), current.getFilters(),
+					current.getSort()));
 		}
 	}
 
@@ -787,8 +762,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.INavigationHistory#setSelectedCollection(com.bdaum.
+	 * @see com.bdaum.zoom.ui.INavigationHistory#setSelectedCollection(com.bdaum.
 	 * zoom.cat.model.group.SmartCollectionImpl)
 	 */
 
@@ -809,8 +783,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.INavigationHistory#setSelectedAssets(com.bdaum.zoom
+	 * @see com.bdaum.zoom.ui.INavigationHistory#setSelectedAssets(com.bdaum.zoom
 	 * .ui.AssetSelection)
 	 */
 
@@ -831,8 +804,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.INavigationHistory#setOtherSelection(org.eclipse.jface
+	 * @see com.bdaum.zoom.ui.INavigationHistory#setOtherSelection(org.eclipse.jface
 	 * .viewers.IStructuredSelection)
 	 */
 
@@ -847,8 +819,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.INavigationHistory#addHistoryListener(com.bdaum.zoom
+	 * @see com.bdaum.zoom.ui.INavigationHistory#addHistoryListener(com.bdaum.zoom
 	 * .ui.HistoryListener)
 	 */
 
@@ -902,6 +873,11 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 
 	public Stack<HistoryItem> getForwardList() {
 		return nextStack;
+	}
+
+	@Override
+	public String getLastPresentationView() {
+		return lastPresentationView;
 	}
 
 }

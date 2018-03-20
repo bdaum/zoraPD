@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -51,6 +51,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 
 public class SplitCatDialog extends ZTitleAreaDialog {
 
+	private static final String SETTINGSID = "com.bdaum.zoom.splitCatDialog"; //$NON-NLS-1$
 	private String timeline;
 	private CheckedText descriptionField;
 	private ComboViewer timelineViewer;
@@ -105,9 +106,8 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 		UiActivator activator = UiActivator.getDefault();
 		fileEditor = new FileEditor(comp, SWT.SAVE | SWT.READ_ONLY, Messages.EditMetaDialog_file_name, true,
 				activator.getCatFileExtensions(), activator.getSupportedCatFileNames(), null,
-				'*' + Constants.CATALOGEXTENSION, true);
+				'*' + Constants.CATALOGEXTENSION, true, getDialogSettings(UiActivator.getDefault(), SETTINGSID));
 		fileEditor.addModifyListener(new ModifyListener() {
-
 			public void modifyText(ModifyEvent e) {
 				updateButtons();
 			}
@@ -115,10 +115,7 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 		Composite header = new Composite(comp, SWT.NONE);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		header.setLayout(new GridLayout(2, false));
-
-		final Label descriptionLabel = new Label(header, SWT.NONE);
-		descriptionLabel.setText(Messages.EditMetaDialog_description);
-
+		new Label(header, SWT.NONE).setText(Messages.EditMetaDialog_description);
 		final GridData gd_description = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
 		gd_description.heightHint = 100;
 		gd_description.widthHint = 400;
@@ -126,12 +123,10 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 		descriptionField.setLayoutData(gd_description);
 		// timeline
 		new Label(header, SWT.NONE).setText(Messages.EditMetaDialog_create_timeline);
-
 		timelineViewer = new ComboViewer(header);
 		timelineViewer.getControl().setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		timelineViewer.setContentProvider(ArrayContentProvider.getInstance());
 		timelineViewer.setLabelProvider(new LabelProvider() {
-
 			@Override
 			public String getText(Object element) {
 				if (Meta_type.timeline_year.equals(element))
@@ -145,15 +140,12 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 		});
 		timelineViewer.setInput(Meta_type.timelineALLVALUES);
 		timelineViewer.setSelection(new StructuredSelection(timeline == null ? Meta_type.timeline_no : timeline), true);
-
 		// locations
 		new Label(header, SWT.NONE).setText(Messages.EditMetaDialog_create_loc_folders);
-
 		locationViewer = new ComboViewer(header);
 		locationViewer.getControl().setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		locationViewer.setContentProvider(ArrayContentProvider.getInstance());
 		locationViewer.setLabelProvider(new LabelProvider() {
-
 			@Override
 			public String getText(Object element) {
 				if (Meta_type.locationFolders_country.equals(element))
@@ -168,14 +160,13 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 		locationViewer.setInput(Meta_type.locationFoldersALLVALUES);
 		locationViewer.setSelection(
 				new StructuredSelection(locationOption == null ? Meta_type.locationFolders_no : locationOption), true);
-
 		deleteButton = WidgetFactory.createCheckButton(header, Messages.SplitCatDialog_remove_extracted_entries,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 		deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				if (deleteButton.getSelection() && !AcousticMessageDialog.openQuestion(getShell(), Messages.SplitCatDialog_delete_exported,
-						Messages.SplitCatDialog_delete_exported_msg))
+				if (deleteButton.getSelection() && !AcousticMessageDialog.openQuestion(getShell(),
+						Messages.SplitCatDialog_delete_exported, Messages.SplitCatDialog_delete_exported_msg))
 					deleteButton.setSelection(false);
 			}
 		});
@@ -185,12 +176,10 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 	protected void okPressed() {
 		filename = fileEditor.getText();
 		description = descriptionField.getText();
-		IStructuredSelection selection = (IStructuredSelection) timelineViewer.getSelection();
-		timeline = (String) selection.getFirstElement();
+		timeline = (String) ((IStructuredSelection) timelineViewer.getSelection()).getFirstElement();
 		if (timeline == null)
 			timeline = Meta_type.timeline_no;
-		selection = (IStructuredSelection) locationViewer.getSelection();
-		locationOption = (String) selection.getFirstElement();
+		locationOption = (String) ((IStructuredSelection) locationViewer.getSelection()).getFirstElement();
 		if (locationOption == null)
 			locationOption = Meta_type.locationFolders_no;
 		delete = deleteButton.getSelection();

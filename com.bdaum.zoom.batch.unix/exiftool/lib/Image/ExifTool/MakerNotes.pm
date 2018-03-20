@@ -21,7 +21,7 @@ sub ProcessKodakPatch($$$);
 sub WriteUnknownOrPreview($$$);
 sub FixLeicaBase($$;$);
 
-$VERSION = '2.00';
+$VERSION = '2.01';
 
 my $debug;          # set to 1 to enable debugging code
 
@@ -793,6 +793,14 @@ my $debug;          # set to 1 to enable debugging code
         },
         SubDirectory => {
             TagTable => 'Image::ExifTool::Reconyx::Main',
+            ByteOrder => 'Little-endian',
+        },
+    },
+    {
+        Name => 'MakerNoteReconyx2',
+        Condition => '$$valPt =~ /^RECONYXUF\0/',
+        SubDirectory => {
+            TagTable => 'Image::ExifTool::Reconyx::Type2',
             ByteOrder => 'Little-endian',
         },
     },
@@ -1732,7 +1740,7 @@ maker notes in EXIF information.
 
 =head1 AUTHOR
 
-Copyright 2003-2017, Phil Harvey (phil at owl.phy.queensu.ca)
+Copyright 2003-2018, Phil Harvey (phil at owl.phy.queensu.ca)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

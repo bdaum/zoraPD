@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2012 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2012 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal;
@@ -60,6 +60,7 @@ import com.bdaum.zoom.cat.model.asset.MediaExtension;
 import com.bdaum.zoom.cat.model.asset.RegionImpl;
 import com.bdaum.zoom.cat.model.derivedBy.DerivedByImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
+import com.bdaum.zoom.common.internal.IniReader;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IRelationDetector;
@@ -71,13 +72,13 @@ import com.bdaum.zoom.core.internal.IPreferenceUpdater;
 import com.bdaum.zoom.core.internal.ImportException;
 import com.bdaum.zoom.core.internal.ImportFromDeviceData;
 import com.bdaum.zoom.core.internal.ImportState;
-import com.bdaum.zoom.core.internal.IniReader;
 import com.bdaum.zoom.core.internal.MakerSupport;
 import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.core.internal.db.AssetEnsemble.MWGRegion;
 import com.bdaum.zoom.core.internal.operations.ImportConfiguration;
 import com.bdaum.zoom.image.IExifLoader;
 import com.bdaum.zoom.image.ImageConstants;
+import com.bdaum.zoom.image.ImageConstants.RawType;
 import com.bdaum.zoom.image.ZImage;
 import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.image.recipe.Recipe;
@@ -149,6 +150,15 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 		ImportConfiguration configuration = importState.getConfiguration();
 		boolean importRaw = configuration.rawOptions.equals(Constants.RAWIMPORT_ONLYRAW)
 				|| configuration.rawOptions.equals(Constants.RAWIMPORT_BOTH);
+		if (isRaw && importRaw) {
+			RawType rawType = ImageConstants.getRawFormatMap().get(extension);
+			if (rawType.isUnsupportedBy(rc.getName())) {
+				importState.addErrorOnce(NLS.bind(
+						Messages.getString("ImageMediaSupport.not_supported_by"), //$NON-NLS-1$
+						rawType.toString(), rc.getName()), null);
+				return 0;
+			}
+		}
 		boolean importDng = !configuration.rawOptions.equals(Constants.RAWIMPORT_ONLYRAW);
 		boolean importDngEmbeddedRaw = configuration.rawOptions.equals(Constants.RAWIMPORT_DNGEMBEDDEDRAW);
 		boolean fromImportFilter = false;
@@ -170,14 +180,21 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 			if (importDng && isRaw) {
 				dngUriAsString = Core.removeExtensionFromUri(uriAsString) + ".dng"; //$NON-NLS-1$
 				try {
-					if (configuration.dngFolder != null && !configuration.dngFolder.isEmpty()) {
-						int p = dngUriAsString.lastIndexOf('/');
-						StringBuilder sb = new StringBuilder();
-						sb.append(dngUriAsString, 0, p + 1).append(configuration.dngFolder);
-						dngFolder = new File(new URI(sb.toString()));
+					int p = dngUriAsString.lastIndexOf('/');
+					StringBuilder sb = new StringBuilder();
+					sb.append(dngUriAsString, 0, p + 1);
+					File targetFolder = importState.importFromDeviceData == null ? new File(new URI(sb.toString()))
+							: null;
+					if (targetFolder != null && !targetFolder.canWrite()) {
+						importState.operation.addError(
+								NLS.bind(Messages.getString("ImageMediaSupport.dng_read_only"), targetFolder.getName()), //$NON-NLS-1$
+								null);
+						importDng = false;
+						configuration.rawOptions = Constants.RAWIMPORT_ONLYRAW;
+					} else if (configuration.dngFolder != null && !configuration.dngFolder.isEmpty()) {
+						dngFolder = new File(new URI(sb.append(configuration.dngFolder).toString()));
 						dngFolder.mkdir();
-						sb.append(dngUriAsString, p, dngUriAsString.length());
-						dngUriAsString = sb.toString();
+						dngUriAsString = sb.append(dngUriAsString, p, dngUriAsString.length()).toString();
 					}
 					dngURI = new URI(dngUriAsString);
 					existingDng = AssetEnsemble.getAllAssets(dbManager, dngURI, importState);
@@ -209,10 +226,8 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 						dngEnsemble = (existingDng != null && !existingDng.isEmpty()) ? existingDng.remove(0) : null;
 						importState.reimport = true;
 						importState.canUndo = false;
-					} else {
-						int ret = importState.promptForOverride(file, asset);
-						configuration = importState.getConfiguration();
-						switch (ret) {
+					} else
+						switch (importState.promptForOverride(file, asset)) {
 						case ImportState.CANCEL:
 							aMonitor.setCanceled(true);
 							return 0;
@@ -238,7 +253,6 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 						default:
 							return 0;
 						}
-					}
 				}
 			}
 			if (importRaw || !isRaw) {
@@ -562,7 +576,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 					importState.importNo);
 			if (configuration.rules != null)
 				OperationJob.executeSlaveOperation(new AutoRuleOperation(configuration.rules, assetsToIndex, null),
-						importState.getConfiguration().info);
+						configuration.info, configuration.silent);
 			--work;
 			boolean changed = importState.operation.updateFolderHierarchies(asset, true, configuration.timeline,
 					configuration.locations, false);

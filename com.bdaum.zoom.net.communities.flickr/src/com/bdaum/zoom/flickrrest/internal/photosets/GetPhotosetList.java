@@ -15,9 +15,8 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2015-2018 Berthold Daum  
  */
-
 
 package com.bdaum.zoom.flickrrest.internal.photosets;
 
@@ -44,25 +43,26 @@ public class GetPhotosetList extends FlickrMethod {
 	}
 
 	@Override
-	protected boolean doExecute(CommunityAccount account)
-			throws FlickrException {
+	protected boolean doExecute(CommunityAccount account) throws FlickrException {
 		account = setPermission(Permission.READ);
 		photosets = new ArrayList<PhotoSet>();
-		for (Photoset ps : RestFlickrApi.FLICKR
-				.getPhotosetsInterface().getList(session.getSessionId()).getPhotosets()) {
+		for (Photoset ps : RestFlickrApi.FLICKR.getPhotosetsInterface().getList(session.getSessionId())
+				.getPhotosets()) {
 			FlickrPhotoSet photoSet = new FlickrPhotoSet();
-            photoSet.setId(ps.getId());
-            photoSet.setPrimaryPhotoId(ps.getPrimaryPhoto().getId());
-            photoSet.setNumberOfPhotos(ps.getPhotoCount());
-            photoSet.setSecret(ps.getSecret());
-            photoSet.setServer(ps.getServer());
-            photoSet.setNew(false);
+			photoSet.setId(ps.getId());
+			photoSet.setTitle(ps.getTitle());
+			photoSet.setDescription(ps.getDescription());
+			photoSet.setPrimaryPhotoId(ps.getPrimaryPhoto().getId());
+			photoSet.setNumberOfPhotos(ps.getPhotoCount());
+			photoSet.setUrl(ps.getUrl());
+			photoSet.setSecret(ps.getSecret());
+			photoSet.setServer(ps.getServer());
+			photoSet.setNew(false);
 			photosets.add(photoSet);
 		}
 		Collections.sort(photosets);
 		return true;
 	}
-
 
 	public List<PhotoSet> getPhotoSets() {
 		return photosets;

@@ -1,0 +1,7 @@
+/* Platform extensions */
+Label#clink {color:rgb(180,240,255);background-color:transparent;}
+CLink {color:rgb(192,255,192);background-color:transparent;}
+Label#errors {color:red;background-color:transparent;}
+Label#disabled {color:rgb(120,120,120);background-color:transparent;}
+Text#errors {color:red;background-color:rgb(212,212,212);}
+StyledText#hint {color:rgb(128,128,128);}

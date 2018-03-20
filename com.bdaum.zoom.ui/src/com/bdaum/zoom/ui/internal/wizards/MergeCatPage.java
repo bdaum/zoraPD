@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.wizards;
@@ -215,9 +215,8 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 		UiActivator activator = UiActivator.getDefault();
 		fileEditor = new FileEditor(header, SWT.OPEN | SWT.READ_ONLY, Messages.MergeCatPage_file_name, true,
 				activator.getCatFileExtensions(), activator.getSupportedCatFileNames(), null,
-				'*' + Constants.CATALOGEXTENSION, true);
+				'*' + Constants.CATALOGEXTENSION, true, getWizard().getDialogSettings());
 		fileEditor.addModifyListener(new ModifyListener() {
-
 			public void modifyText(ModifyEvent e) {
 				validatePage();
 			}
@@ -237,7 +236,7 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 	private void createOptionsGroup(Composite comp) {
 		final CGroup header = new CGroup(comp, SWT.NONE);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		header.setLayout(new GridLayout(1, false));
+		header.setLayout(new GridLayout());
 		header.setText(Messages.MergeCatPage_duplicates);
 		policyButtonGroup = new RadioButtonGroup(header, null, SWT.NONE, Messages.MergeCatPage_skip,
 				Messages.MergeCatPage_replace, Messages.MergeCatPage_merge);

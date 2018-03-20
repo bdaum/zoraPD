@@ -59,7 +59,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.AbstractTreeViewer;
 import org.eclipse.jface.viewers.ISelection;
@@ -119,6 +118,7 @@ import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
 import com.bdaum.zoom.css.ZColumnLabelProvider;
+import com.bdaum.zoom.ui.dialogs.ZProgressMonitorDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.widgets.CGroup;
@@ -659,7 +659,7 @@ public class LogView extends ViewPart implements ILogListener {
 				readLogFile();
 			}
 		};
-		ProgressMonitorDialog pmd = new ProgressMonitorDialog(getViewSite().getShell());
+		ZProgressMonitorDialog pmd = new ZProgressMonitorDialog(getViewSite().getShell());
 		try {
 			pmd.run(true, true, op);
 		} catch (InvocationTargetException e) { // do nothing
@@ -784,7 +784,7 @@ public class LogView extends ViewPart implements ILogListener {
 				readLogFile();
 			}
 		};
-		ProgressMonitorDialog pmd = new ProgressMonitorDialog(getViewSite().getShell());
+		ZProgressMonitorDialog pmd = new ZProgressMonitorDialog(getViewSite().getShell());
 		try {
 			pmd.run(true, true, op);
 		} catch (InvocationTargetException e) { // do nothing

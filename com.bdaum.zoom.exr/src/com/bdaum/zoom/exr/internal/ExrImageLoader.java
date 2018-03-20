@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.exr.internal;
 
@@ -45,7 +45,6 @@ public class ExrImageLoader implements IImageLoader {
 		this.file = file;
 	}
 
-	
 	public String getComments() {
 		StringTokenizer st = new StringTokenizer(header.toString(), "\n"); //$NON-NLS-1$
 		while (st.hasMoreTokens()) {
@@ -63,22 +62,18 @@ public class ExrImageLoader implements IImageLoader {
 		return null;
 	}
 
-	
 	public int getImageHeight() {
 		return h;
 	}
 
-	
 	public int getImageWidth() {
 		return w;
 	}
 
 	@SuppressWarnings("deprecation")
-	
-	public ZImage loadImage(int width, int height, int raster, float exposure,
-			double maxFactor) throws IOException {
-		float m = (float) Math.pow(2f, Math.min(Math.max(exposure + 2.47393f,
-				-20f), 20f));
+
+	public ZImage loadImage(int width, int height, int raster, float exposure, double maxFactor) throws IOException {
+		float m = (float) Math.pow(2f, Math.min(Math.max(exposure + 2.47393f, -20f), 20f));
 		RgbaInputFile rgbafile = new RgbaInputFile(file.getAbsolutePath());
 		header = rgbafile.getHeader();
 		float pixelAspectRatio = header.getPixelAspectRatio();
@@ -96,21 +91,17 @@ public class ExrImageLoader implements IImageLoader {
 			w = Math.min(r[0].length, Math.min(g[0].length, b[0].length));
 			if (w > 0) {
 				double f = 1d;
-				if (width > 0 && height > 0)
+				if (width > 0 || height > 0)
 					f = Math.min(maxFactor, computeScale(w, h, width, height));
 				int previewWidth = (int) (w * f + 0.5d);
 				int previewHeight = (int) (h * f + 0.5d);
-				previewHeight = (int) (previewHeight
-						/ (previewWidth * pixelAspectRatio) * previewWidth + .5f);
-				previewWidth = Math.max((previewWidth + raster / 2) / raster
-						* raster, 1);
-				previewHeight = Math.max((previewHeight + raster / 2) / raster
-						* raster, 1);
+				previewHeight = (int) (previewHeight / (previewWidth * pixelAspectRatio) * previewWidth + .5f);
+				previewWidth = Math.max((previewWidth + raster / 2) / raster * raster, 1);
+				previewHeight = Math.max((previewHeight + raster / 2) / raster * raster, 1);
 				double fy = (double) h / previewHeight;
 				double fx = (double) w / previewWidth;
 				PaletteData palette = new PaletteData(0xFF, 0xFF00, 0xFF0000);
-				ImageData data = new ImageData(previewWidth, previewHeight, 24,
-						palette);
+				ImageData data = new ImageData(previewWidth, previewHeight, 24, palette);
 				int[] scanLine = new int[previewWidth];
 				int red, green, blue;
 				for (int y = 0; y < previewHeight; ++y) {
@@ -146,25 +137,25 @@ public class ExrImageLoader implements IImageLoader {
 
 		if (x > 1)
 			x = 1 + knee(x - 1, 0.184874f);
-		return Math.min(Math.max(0,
-				(int) (Math.pow(x, 0.4545f) * 84.66f + 0.5f)), 255);
+		return Math.min(Math.max(0, (int) (Math.pow(x, 0.4545f) * 84.66f + 0.5f)), 255);
 	}
 
 	private static float knee(float x, float f) {
 		return (float) (Math.log(x * f + 1) / f);
 	}
 
-	private static double computeScale(int iWidth, int iHeight, int width,
-			int height) {
+	private static double computeScale(int iWidth, int iHeight, int width, int height) {
 		boolean oriImage = iWidth > iHeight;
-		boolean oriThumb = width > height;
+		boolean oriThumb = Math.abs(width) > Math.abs(height);
 		if (oriImage != oriThumb) {
-			int w = width;
-			width = height;
-			height = w;
+			int w = iWidth;
+			iWidth = iHeight;
+			iHeight = w;
 		}
-		double xscale = (double) width / iWidth;
-		double yscale = (double) height / iHeight;
-		return Math.min(xscale, yscale);
+		if (width < 0)
+			return (double) height / iHeight;
+		if (height < 0)
+			return (double) width / iWidth;
+		return Math.min((double) width / iWidth, (double) height / iHeight);
 	}
 }

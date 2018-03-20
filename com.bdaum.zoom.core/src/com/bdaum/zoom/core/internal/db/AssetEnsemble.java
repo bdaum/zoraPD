@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2015 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.internal.db;
@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -849,9 +850,8 @@ public class AssetEnsemble {
 		}
 		Meta meta = dbManager.getMeta(true);
 		Map<String, SmartCollectionImpl> oldPersonAlbums = new HashMap<String, SmartCollectionImpl>();
-		List<RegionImpl> oldRegions = dbManager.obtainObjects(RegionImpl.class, "asset_person_parent", assetId, //$NON-NLS-1$
-				QueryField.EQUALS);
-		for (RegionImpl region : oldRegions) {
+		for (RegionImpl region : dbManager.obtainObjects(RegionImpl.class, "asset_person_parent", assetId, //$NON-NLS-1$
+				QueryField.EQUALS)) {
 			String albumId = region.getAlbum();
 			if (albumId != null) {
 				SmartCollectionImpl album = dbManager.obtainById(SmartCollectionImpl.class, albumId);
@@ -1276,6 +1276,16 @@ public class AssetEnsemble {
 		}
 		if (props.copyright != null)
 			asset.setCopyright(props.copyright);
+		if (props.event != null)
+			asset.setEvent(props.event);
+		asset.setSafety(props.safety);
+		if (props.keywords != null) {
+			Set<String> set = new HashSet<>(Arrays.asList(asset.getKeyword()));
+			set.addAll(props.keywords);
+			String[] newKeywords = set.toArray(new String[set.size()]);
+			Arrays.sort(newKeywords);
+			asset.setKeyword(newKeywords);
+		}
 	}
 
 	@SuppressWarnings("unchecked")

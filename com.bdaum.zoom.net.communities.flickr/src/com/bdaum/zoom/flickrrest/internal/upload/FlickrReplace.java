@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.flickrrest.internal.upload;
@@ -37,7 +37,7 @@ package com.bdaum.zoom.flickrrest.internal.upload;
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2015 Berthold Daum  
  */
 import java.io.File;
 

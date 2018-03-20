@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2015 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -102,8 +102,8 @@ public class ColorCodeGroup extends Composite implements PaintListener {
 		e2.y = e.y;
 		e2.stateMask = e.stateMask;
 		SelectionEvent ev = new SelectionEvent(e2);
-		for (Object listener : listeners.getListeners())
-			((SelectionListener) listener).widgetSelected(ev);
+		for (SelectionListener listener : listeners)
+			listener.widgetSelected(ev);
 	}
 
 	public void paintControl(PaintEvent e) {

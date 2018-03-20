@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.wizards;
@@ -92,7 +92,6 @@ public class UrlPreviewPage extends ColoredWizardPage {
 		backButton
 				.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
 		backButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				browser.back();
@@ -103,7 +102,6 @@ public class UrlPreviewPage extends ColoredWizardPage {
 		forwardButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false,
 				false));
 		forwardButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				browser.forward();
@@ -115,7 +113,6 @@ public class UrlPreviewPage extends ColoredWizardPage {
 
 		browser = new Browser(composite, SWT.BORDER);
 		browser.addCloseWindowListener(new CloseWindowListener() {
-
 			public void close(WindowEvent event) {
 				getWizard().getContainer().getShell().close();
 			}
@@ -157,7 +154,6 @@ public class UrlPreviewPage extends ColoredWizardPage {
 	protected void validatePage() {
 		backButton.setEnabled(browser.isBackEnabled());
 		forwardButton.setEnabled(browser.isForwardEnabled());
-		// CssActivator.getDefault().setColors(comp, null);
 		String fileName;
 		try {
 			if (url != null) {

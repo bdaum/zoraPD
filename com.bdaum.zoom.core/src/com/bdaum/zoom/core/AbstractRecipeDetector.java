@@ -27,14 +27,9 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 
 	public static class RecipeParameter implements IRecipeParameter {
 
-		/**
-		 * Value descriptor for parameter values
-		 *
-		 */
 		public static class RecipeParameterValue implements IRecipeParameterValue {
 
 			private String label;
-
 			private String id;
 
 			/**
@@ -91,7 +86,6 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 		 *            - parameter default value
 		 */
 		public RecipeParameter(String name, String id, String dflt) {
-			super();
 			this.name = name;
 			this.id = id;
 			value = dflt;
@@ -170,9 +164,7 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 	protected static final double DIA35MM = Math.sqrt(36 * 36 + 24 * 24);
 
 	private String name;
-
 	private String id;
-
 	private List<IRecipeParameter> parameters = new ArrayList<IRecipeDetector.IRecipeParameter>(2);
 
 	/*
@@ -310,8 +302,9 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 			else
 				for (int i = 0; i < subPaths.length; i++)
 					try {
-						File subfolder = new File(new URI(subPaths[i].isEmpty() ? uri : uri + '/' + subPaths[i]));
-						updateWatchedMetaFolders(detectorMap, result, subfolder, this, remove, false);
+						updateWatchedMetaFolders(detectorMap, result,
+								new File(new URI(subPaths[i].isEmpty() ? uri : uri + '/' + subPaths[i])), this, remove,
+								false);
 					} catch (URISyntaxException e) {
 						// dont watch this
 					}
@@ -342,10 +335,8 @@ public abstract class AbstractRecipeDetector implements IRecipeDetector {
 			detectorMap.remove(folder);
 		else {
 			List<IRecipeDetector> list = detectorMap.get(folder);
-			if (list == null) {
-				list = new ArrayList<IRecipeDetector>(2);
-				detectorMap.put(folder, list);
-			}
+			if (list == null)
+				detectorMap.put(folder, list = new ArrayList<IRecipeDetector>(2));
 			list.add(detector);
 		}
 	}

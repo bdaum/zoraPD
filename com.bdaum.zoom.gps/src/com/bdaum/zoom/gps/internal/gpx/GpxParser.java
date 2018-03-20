@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.gps.internal.gpx;
@@ -48,8 +48,6 @@ public class GpxParser implements IGpsParser {
 	private static final String WPT = "wpt"; //$NON-NLS-1$
 	private static final String TRKPT = "trkpt"; //$NON-NLS-1$
 	private static final String TRKSEG = "trkseg"; //$NON-NLS-1$
-	// private static final String GPXURI = "http://www.topografix.com/GPX/1/0";
-	// //$NON-NLS-1$
 	private static final String LATITUDE = "lat"; //$NON-NLS-1$
 	private static final String LONGITUDE = "lon"; //$NON-NLS-1$
 
@@ -58,7 +56,6 @@ public class GpxParser implements IGpsParser {
 	 *
 	 * @see com.bdaum.zoom.gps.gpx.IGpsParser#parse(InputStream in)
 	 */
-
 	public void parse(InputStream in, final List<Trackpoint> points) throws IOException, ParseException {
 		try {
 

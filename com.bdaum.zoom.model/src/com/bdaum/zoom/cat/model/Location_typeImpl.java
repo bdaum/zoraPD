@@ -36,11 +36,12 @@ public class Location_typeImpl extends AomObject implements Location_type {
 	 * @param longitude - Property
 	 * @param latitude - Property
 	 * @param altitude - Property
+	 * @param plusCode - Property
 	 */
 	public Location_typeImpl(String city, String details,
 			String provinceOrState, String countryName, String countryISOCode,
 			String sublocation, String worldRegion, String worldRegionCode,
-			Double longitude, Double latitude, Double altitude) {
+			Double longitude, Double latitude, Double altitude, String plusCode) {
 		super();
 		this.city = city;
 		this.details = details;
@@ -53,6 +54,7 @@ public class Location_typeImpl extends AomObject implements Location_type {
 		this.longitude = longitude;
 		this.latitude = latitude;
 		this.altitude = altitude;
+		this.plusCode = plusCode;
 
 	}
 
@@ -300,6 +302,28 @@ public class Location_typeImpl extends AomObject implements Location_type {
 		return altitude;
 	}
 
+	/* *** Property plusCode *** */
+
+	private String plusCode;
+
+	/**
+	 * Set value of property plusCode
+	 *
+	 * @param _value - new field value
+	 */
+	public void setPlusCode(String _value) {
+		plusCode = _value;
+	}
+
+	/**
+	 * Get value of property plusCode
+	 *
+	 * @return - value of field plusCode
+	 */
+	public String getPlusCode() {
+		return plusCode;
+	}
+
 	/* ----- Equality ----- */
 
 	/**
@@ -347,6 +371,9 @@ public class Location_typeImpl extends AomObject implements Location_type {
 
 				&& ((getAltitude() == null && other.getAltitude() == null) || (getAltitude() != null && getAltitude()
 						.equals(other.getAltitude())))
+
+				&& ((getPlusCode() == null && other.getPlusCode() == null) || (getPlusCode() != null && getPlusCode()
+						.equals(other.getPlusCode())))
 
 		;
 	}
@@ -402,6 +429,9 @@ public class Location_typeImpl extends AomObject implements Location_type {
 
 		hashCode = 31 * hashCode
 				+ ((getAltitude() == null) ? 0 : getAltitude().hashCode());
+
+		hashCode = 31 * hashCode
+				+ ((getPlusCode() == null) ? 0 : getPlusCode().hashCode());
 
 		return hashCode;
 	}

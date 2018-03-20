@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2011 Berthold Daum.
+ * Copyright (c) 2009, 2018 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -70,6 +70,7 @@ public class CssActivator extends AbstractUIPlugin {
 							Shell shell = ((Control) widget).getShell();
 							if (shell.getData("css") == null) //$NON-NLS-1$
 								return;
+							//TODO handle selected system dialogs
 						}
 						engine.applyStyles(widget, false);
 						if (widget instanceof Composite)
@@ -82,15 +83,13 @@ public class CssActivator extends AbstractUIPlugin {
 
 	private static final String JFACE = "JFace "; //$NON-NLS-1$
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.css"; //$NON-NLS-1$
 
 	public static final String DROPINFOLDER = "dropins"; //$NON-NLS-1$
 
-	// The shared instance
 	private static CssActivator plugin;
 
-	private AbstractCSSEngine engine;
+	private CSSSWTEngineImpl engine;
 
 	private String theme;
 
@@ -153,8 +152,8 @@ public class CssActivator extends AbstractUIPlugin {
 				shell = shell.getParent();
 			}
 		}
-		for (Object listener : listeners.getListeners())
-			((IThemeListener) listener).themeChanged();
+		for (IThemeListener listener : listeners)
+			listener.themeChanged();
 	}
 
 	public void setColors(Control control) {
@@ -219,10 +218,9 @@ public class CssActivator extends AbstractUIPlugin {
 					// Should never happend
 				}
 			}
-			if (engine == null) {
-				engine = new CSSSWTEngineImpl(display);
-				new CSSSWTApplyStylesListener(display, engine);
-			} else
+			if (engine == null)
+				new CSSSWTApplyStylesListener(display, engine = new CSSSWTEngineImpl(display));
+			else
 				engine.reset();
 			readJfaceColors(file);
 			try (FileReader fileReader = new FileReader(file)) {
@@ -279,29 +277,21 @@ public class CssActivator extends AbstractUIPlugin {
 
 	private static RGB convertToRGB(String spec) {
 		if (spec.startsWith("rgb(") && spec.endsWith(")")) { //$NON-NLS-1$ //$NON-NLS-2$
-			int i = 0;
-			int red = 0, green = 0;
-			StringTokenizer st = new StringTokenizer(spec, "(,) "); //$NON-NLS-1$
-			while (st.hasMoreTokens()) {
-				String token = st.nextToken();
-				if (i > 0) {
-					try {
-						int v = Integer.parseInt(token);
-						switch (i) {
-						case 1:
-							red = v;
-							break;
-						case 2:
-							green = v;
-							break;
-						case 3:
-							return new RGB(red, green, v);
+			try {
+				StringTokenizer st = new StringTokenizer(spec, "(,) "); //$NON-NLS-1$
+				if (st.hasMoreTokens()) {
+					st.nextToken();
+					if (st.hasMoreTokens()) {
+						int red = Integer.parseInt(st.nextToken());
+						if (st.hasMoreTokens()) {
+							int green = Integer.parseInt(st.nextToken());
+							if (st.hasMoreTokens())
+								return new RGB(red, green, Integer.parseInt(st.nextToken()));
 						}
-					} catch (NumberFormatException e) {
-						break;
 					}
 				}
-				++i;
+			} catch (NumberFormatException e) {
+				// fall through
 			}
 		}
 		RGBColor rgbColor = CSS2ColorHelper.getRGBColor(spec);
@@ -315,11 +305,10 @@ public class CssActivator extends AbstractUIPlugin {
 		}
 	}
 
-	public void applyExtendedStyle(final Control control, final IExtendedColorModel colorModel) {
+	public void applyExtendedStyle(final Control control, final IBaseColorModel colorModel) {
 		AbstractCSSEngine engine = getCssEngine(control.getDisplay());
 		if (engine != null) {
 			ICSSPropertyHandlerProvider handlerProvider = new ICSSPropertyHandlerProvider() {
-
 				public CSSStyleDeclaration getDefaultCSSStyleDeclaration(CSSEngine engine, Object element,
 						CSSStyleDeclaration newStyle, String pseudoE) throws Exception {
 					return null;
@@ -328,7 +317,6 @@ public class CssActivator extends AbstractUIPlugin {
 				public Collection<?> getCSSPropertyHandlers(String property) throws Exception {
 					ArrayList<ICSSPropertyHandler> providers = new ArrayList<ICSSPropertyHandler>();
 					providers.add(new ICSSPropertyHandler() {
-
 						public String retrieveCSSProperty(Object element, String property, CSSEngine engine)
 								throws Exception {
 							return null;
@@ -339,44 +327,62 @@ public class CssActivator extends AbstractUIPlugin {
 							if (colorModel.applyColorsTo(element)) {
 								Display display = control.getDisplay();
 								property = property.intern();
-								if (CSSProperties.OFFLINECOLOR == property)
-									colorModel.setOfflineColor((Color) engine.convert(value, Color.class, display));
-								else if (CSSProperties.REMOTECOLOR == property)
-									colorModel.setRemoteColor((Color) engine.convert(value, Color.class, display));
-								else if (CSSProperties.TITLECOLOR == property)
-									colorModel.setTitleColor((Color) engine.convert(value, Color.class, display));
-								else if (CSSProperties.SELECTEDOFFLINECOLOR == property)
-									colorModel.setSelectedOfflineColor(
-											(Color) engine.convert(value, Color.class, display));
-								else if (CSSProperties.SELECTEDREMOTECOLOR == property)
-									colorModel.setSelectedRemoteColor(
-											(Color) engine.convert(value, Color.class, display));
-								if (colorModel instanceof IExtendedColorModel2) {
-									IExtendedColorModel2 colorModel2 = (IExtendedColorModel2) colorModel;
-									if (CSSProperties.COLOR == property)
-										colorModel2.setForegroundColor(
+								if (colorModel instanceof IColumnLabelColorModel) {
+									IColumnLabelColorModel colorModel0 = (IColumnLabelColorModel) colorModel;
+									if (CSSProperties.SELECTEDBACKGROUNDCOLOR == property)
+										colorModel0.setSelectedBackgroundColor(
 												(Color) engine.convert(value, Color.class, display));
-									else if (CSSProperties.BACKGROUNDCOLOR == property)
-										colorModel2.setBackgroundColor(
+									else if (CSSProperties.SELECTEDFOREGROUNDCOLOR == property)
+										colorModel0.setSelectedForegroundColor(
 												(Color) engine.convert(value, Color.class, display));
-									else if (CSSProperties.FOREGROUNDCOLOR == property)
-										colorModel2.setForegroundColor(
+									else if (CSSProperties.TOOLTIPBACKGROUNDCOLOR == property)
+										colorModel0.setToolTipBackgroundColor(
 												(Color) engine.convert(value, Color.class, display));
+									else if (CSSProperties.TOOLTIPFOREGROUNDCOLOR == property)
+										colorModel0.setToolTipForegroundColor(
+												(Color) engine.convert(value, Color.class, display));
+									else if (CSSProperties.DISABLEDFOREGROUNDCOLOR == property)
+										colorModel0.setDisabledForegroundColor(
+												(Color) engine.convert(value, Color.class, display));
+								} else if (colorModel instanceof IExtendedColorModel) {
+									IExtendedColorModel colorModel1 = (IExtendedColorModel2) colorModel;
+									if (CSSProperties.OFFLINECOLOR == property)
+										colorModel1
+												.setOfflineColor((Color) engine.convert(value, Color.class, display));
+									else if (CSSProperties.REMOTECOLOR == property)
+										colorModel1.setRemoteColor((Color) engine.convert(value, Color.class, display));
 									else if (CSSProperties.TITLECOLOR == property)
-										colorModel2.setTitleForeground(
+										colorModel1.setTitleColor((Color) engine.convert(value, Color.class, display));
+									else if (CSSProperties.SELECTEDOFFLINECOLOR == property)
+										colorModel1.setSelectedOfflineColor(
 												(Color) engine.convert(value, Color.class, display));
-									else if (CSSProperties.TITLEBACKGROUNDCOLOR == property)
-										colorModel2.setTitleBackground(
-												(Color) engine.convert(value, Color.class, display));
-									else if (CSSProperties.BACKGROUNDCOLOR == property)
-										colorModel2.setBackgroundColor(
-												(Color) engine.convert(value, Color.class, display));
-									else if (CSSProperties.SELECTEDCOLOR == property)
-										colorModel2.setSelectionForegroundColor(
-												(Color) engine.convert(value, Color.class, display));
-									else if (CSSProperties.SELECTEDBACKGROUNDCOLOR == property)
-										colorModel2.setSelectionBackgroundColor(
-												(Color) engine.convert(value, Color.class, display));
+									if (colorModel instanceof IExtendedColorModel2) {
+										IExtendedColorModel2 colorModel2 = (IExtendedColorModel2) colorModel;
+										if (CSSProperties.COLOR == property)
+											colorModel2.setForegroundColor(
+													(Color) engine.convert(value, Color.class, display));
+										else if (CSSProperties.BACKGROUNDCOLOR == property)
+											colorModel2.setBackgroundColor(
+													(Color) engine.convert(value, Color.class, display));
+										else if (CSSProperties.FOREGROUNDCOLOR == property)
+											colorModel2.setForegroundColor(
+													(Color) engine.convert(value, Color.class, display));
+										else if (CSSProperties.TITLECOLOR == property)
+											colorModel2.setTitleForeground(
+													(Color) engine.convert(value, Color.class, display));
+										else if (CSSProperties.TITLEBACKGROUNDCOLOR == property)
+											colorModel2.setTitleBackground(
+													(Color) engine.convert(value, Color.class, display));
+										else if (CSSProperties.BACKGROUNDCOLOR == property)
+											colorModel2.setBackgroundColor(
+													(Color) engine.convert(value, Color.class, display));
+										else if (CSSProperties.SELECTEDCOLOR == property)
+											colorModel2.setSelectionForegroundColor(
+													(Color) engine.convert(value, Color.class, display));
+										else if (CSSProperties.SELECTEDBACKGROUNDCOLOR == property)
+											colorModel2.setSelectionBackgroundColor(
+													(Color) engine.convert(value, Color.class, display));
+									}
 								}
 								return true;
 							}
@@ -393,9 +399,6 @@ public class CssActivator extends AbstractUIPlugin {
 		}
 	}
 
-	/**
-	 * @return the theme
-	 */
 	public String getTheme() {
 		return theme;
 	}

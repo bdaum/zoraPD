@@ -2,11 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.gps;singleton:=true
-Bundle-Version: 3.2.2
+Bundle-Version: 3.3.0
 Bundle-Activator: com.bdaum.zoom.gps.internal.GpsActivator
 Bundle-Vendor: %Bundle-Vendor.bdaum
-Require-Bundle: com.bdaum.zoom.rcp;bundle-version="3.2.2",
- com.bdaum.zoom.net.ui;bundle-version="3.2.2";visibility:=reexport,
+Require-Bundle: com.bdaum.zoom.rcp;bundle-version="3.3.0",
+ com.bdaum.zoom.net.ui;bundle-version="3.3.0";visibility:=reexport,
  org.eclipse.help;bundle-version="3.5.100";visibility:=reexport,
  org.eclipse.osgi.services;bundle-version="3.3.0",
  org.eclipse.equinox.ds;bundle-version="1.3.1"
@@ -15,6 +15,8 @@ Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
 Export-Package: com.bdaum.zoom.gps,
  com.bdaum.zoom.gps.geonames,
+ com.bdaum.zoom.gps.internal,
+ com.bdaum.zoom.gps.internal.preferences,
  com.bdaum.zoom.gps.widgets
 Bundle-ClassPath: .
 Service-Component: OSGI-INF/geoService.xml

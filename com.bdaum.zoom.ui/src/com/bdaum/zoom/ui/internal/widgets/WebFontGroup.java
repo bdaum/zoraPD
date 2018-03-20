@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -61,51 +61,42 @@ public class WebFontGroup {
 	private Font_type fonttype;
 
 	public WebFontGroup(final Composite parent, final String text) {
-
 		label = new Label(parent, SWT.NONE);
 		label.setText(text);
 		Composite composite = new Composite(parent, SWT.NONE);
-		composite
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		GridLayout layout = new GridLayout(2, false);
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		composite.setLayout(layout);
-
 		button = new Button(composite, SWT.PUSH | SWT.BORDER);
-		final GridData gd_bgButton = new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false);
+		final GridData gd_bgButton = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
 		gd_bgButton.widthHint = 270;
 		gd_bgButton.heightHint = 28;
 		button.setLayoutData(gd_bgButton);
 		button.setText(Messages.WebFontGroup_select_font);
 		button.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				WebFontDialog dialog = new WebFontDialog(parent.getShell(),
-						text, getFont());
+				WebFontDialog dialog = new WebFontDialog(parent.getShell(), text, getFont());
 				if (dialog.open() == Window.OK)
 					setFont(dialog.getResult());
 			}
 
 		});
 		colorButton = new Button(composite, SWT.PUSH | SWT.BORDER);
-		final GridData gd_colorLabeln = new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false);
+		final GridData gd_colorLabeln = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
 		gd_colorLabeln.widthHint = 14;
 		gd_colorLabeln.heightHint = 28;
 		final Image image = new Image(parent.getShell().getDisplay(), 14, 28);
 		colorButton.setImage(image);
 		colorButton.setLayoutData(gd_colorLabeln);
 		colorButton.addDisposeListener(new DisposeListener() {
-
 			public void widgetDisposed(DisposeEvent e) {
 				image.dispose();
 			}
 		});
 		colorButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (fonttype != null) {
@@ -113,14 +104,11 @@ public class WebFontGroup {
 					dialog.setText(text);
 					Rgb_type color = fonttype.getColor();
 					if (color != null)
-						dialog.setRGB(new RGB(color.getR(), color.getG(), color
-								.getB()));
+						dialog.setRGB(new RGB(color.getR(), color.getG(), color.getB()));
 					RGB rgb = dialog.open();
 					if (rgb != null) {
-						paintButton(colorButton, new Rgb_typeImpl(rgb.red,
-								rgb.green, rgb.blue));
-						fonttype.setColor(new Rgb_typeImpl(rgb.red, rgb.green,
-								rgb.blue));
+						paintButton(colorButton, new Rgb_typeImpl(rgb.red, rgb.green, rgb.blue));
+						fonttype.setColor(new Rgb_typeImpl(rgb.red, rgb.green, rgb.blue));
 					}
 				}
 			}
@@ -131,8 +119,7 @@ public class WebFontGroup {
 		Image image = butt.getImage();
 		Rectangle bounds = image.getBounds();
 		GC gc = new GC(image);
-		Color c = new Color(butt.getShell().getDisplay(), rgb.getR(),
-				rgb.getG(), rgb.getB());
+		Color c = new Color(butt.getShell().getDisplay(), rgb.getR(), rgb.getG(), rgb.getB());
 		gc.setBackground(c);
 		gc.fillRectangle(bounds);
 		c.dispose();
@@ -172,9 +159,8 @@ public class WebFontGroup {
 		return label;
 	}
 
-	public Font_type fillValues(IDialogSettings dialogSettings, String key,
-			String[] family, int size, int style, int weight, int variant,
-			Rgb_type rgb) {
+	public Font_type fillValues(IDialogSettings dialogSettings, String key, String[] family, int size, int style,
+			int weight, int variant, Rgb_type rgb) {
 		try {
 			String s = dialogSettings.get(key + SIZE2);
 			if (s != null)
@@ -207,8 +193,7 @@ public class WebFontGroup {
 			String s = dialogSettings.get(key + COLOR2);
 			if (s != null) {
 				java.awt.Color color = new java.awt.Color(Integer.parseInt(s));
-				rgb = new Rgb_typeImpl(color.getRed(), color.getGreen(),
-						color.getBlue());
+				rgb = new Rgb_typeImpl(color.getRed(), color.getGreen(), color.getBlue());
 			}
 		} catch (NumberFormatException e) {
 			return null;
@@ -216,8 +201,7 @@ public class WebFontGroup {
 		String[] array = dialogSettings.getArray(key + FAMILY2);
 		if (array != null)
 			family = array;
-		Font_typeImpl font = new Font_typeImpl(size, style, weight, variant,
-				rgb);
+		Font_typeImpl font = new Font_typeImpl(size, style, weight, variant, rgb);
 		font.setFamily(family);
 		setFont(font);
 		return font;
@@ -231,8 +215,7 @@ public class WebFontGroup {
 			dialogSettings.put(key + VARIANT2, fonttype.getVariant());
 			Rgb_type rgb = fonttype.getColor();
 			if (rgb != null)
-				dialogSettings.put(key + COLOR2, new java.awt.Color(rgb.getR(),
-						rgb.getG(), rgb.getB()).getRGB());
+				dialogSettings.put(key + COLOR2, new java.awt.Color(rgb.getR(), rgb.getG(), rgb.getB()).getRGB());
 			dialogSettings.put(key + FAMILY2, fonttype.getFamily());
 		}
 	}

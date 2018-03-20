@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -267,7 +267,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 					if (currentSlide.isRatingStar(picked)) {
 						Asset asset = currentSlide.getAsset();
 						if (asset != null) {
-							RatingDialog dialog = new RatingDialog(pcanvas.getShell(), asset.getRating(), 0.6d, true);
+							RatingDialog dialog = new RatingDialog(pcanvas.getShell(), asset.getRating(), 0.6d, true, true);
 							initContextDialog(dialog, pcanvas, event);
 							event.setHandled(true);
 							eat++;

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2013 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -38,7 +38,6 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -54,6 +53,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 
 public class MediaDialog extends ZTitleAreaDialog {
 
@@ -150,8 +150,7 @@ public class MediaDialog extends ZTitleAreaDialog {
 			protected void setValue(Object element, Object value) {
 				if (element instanceof LastDeviceImport && value instanceof String) {
 					try {
-						Date date = sdf.parse((String) value);
-						((LastDeviceImport) element).setTimestamp(date.getTime());
+						((LastDeviceImport) element).setTimestamp(sdf.parse((String) value).getTime());
 						viewer.update(element, null);
 					} catch (ParseException e) {
 						// do nothing
@@ -170,7 +169,6 @@ public class MediaDialog extends ZTitleAreaDialog {
 			protected CellEditor getCellEditor(Object element) {
 				TextCellEditor editor = new TextCellEditor(viewer.getTable());
 				editor.setValidator(new ICellEditorValidator() {
-
 					public String isValid(Object value) {
 						if (value instanceof String) {
 							try {
@@ -233,7 +231,7 @@ public class MediaDialog extends ZTitleAreaDialog {
 			}
 		});
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
-		viewer.setComparator(new ViewerComparator());
+		viewer.setComparator(ZViewerComparator.INSTANCE);
 		viewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
 			@Override
 			public boolean select(Viewer viewer, Object parentElement, Object element) {

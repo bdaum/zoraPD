@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.preferences;
@@ -36,7 +36,6 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.DisposeEvent;
@@ -61,6 +60,7 @@ import org.eclipse.ui.PlatformUI;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.widgets.CLink;
 
 public abstract class AbstractPreferencePage extends PreferencePage implements IWorkbenchPreferencePage, IAdaptable {
@@ -300,7 +300,7 @@ public abstract class AbstractPreferencePage extends PreferencePage implements I
 				}
 			});
 		if (sort)
-			viewer.setComparator(new ViewerComparator());
+			viewer.setComparator(ZViewerComparator.INSTANCE);
 		viewer.setInput(options);
 		return viewer;
 	}
@@ -327,7 +327,6 @@ public abstract class AbstractPreferencePage extends PreferencePage implements I
 	}
 
 
-
 	/**
 	 * Extents the preference page with registered IPreferencePageExtensions
 	 *
@@ -348,7 +347,7 @@ public abstract class AbstractPreferencePage extends PreferencePage implements I
 						IPreferencePageExtension ext = (IPreferencePageExtension) conf
 								.createExecutableExtension("class"); //$NON-NLS-1$
 						if (parent instanceof CTabFolder)
-							UiUtilities.createTabItem((CTabFolder) parent, ext.getLabel())
+							UiUtilities.createTabItem((CTabFolder) parent, ext.getLabel(), ext.getTooltip())
 									.setControl(ext.createPageContents(parent, this));
 						else
 							ext.createPageContents(UiUtilities.createGroup(parent, 1, ext.getLabel()), this);

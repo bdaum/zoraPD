@@ -77,6 +77,8 @@ import com.bdaum.zoom.operations.internal.ImportOperation;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.IRawConverter;
 import com.bdaum.zoom.rcp.internal.perspective.LightboxPerspective;
+import com.bdaum.zoom.rcp.internal.perspective.SleevesPerspective;
+import com.bdaum.zoom.rcp.internal.perspective.TablePerspective;
 import com.bdaum.zoom.ui.IUi;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
@@ -120,9 +122,8 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 			final Shell shell = getShell(adaptable);
 			final InvalidFileDialog dialog = new InvalidFileDialog(shell, title, message, uri, monitor);
 			syncExec(shell, () -> {
-				if (!shell.isDisposed()) {
+				if (!shell.isDisposed())
 					dialog.open();
-				}
 			});
 		}
 
@@ -250,10 +251,9 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 		}
 
 		public IRawConverter showRawDialog(IAdaptable adaptable) {
-			final Shell shell = getShell(adaptable);
-			boolean result = question(Constants.APPLICATION_NAME,
-					Messages.getString("ApplicationWorkbenchAdvisor.no_raw_converter"), adaptable); //$NON-NLS-1$
-			if (result) {
+			if (question(Constants.APPLICATION_NAME,
+					Messages.getString("ApplicationWorkbenchAdvisor.no_raw_converter"), adaptable)) { //$NON-NLS-1$
+				final Shell shell = getShell(adaptable);
 				final int ret[] = new int[1];
 				syncExec(shell, () -> ret[0] = PreferencesUtil.createPreferenceDialogOn(shell, ImportPreferencePage.ID, new String[0],
 						ImportPreferencePage.RAW).open());
@@ -267,11 +267,8 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 	private static final String CURRENT_CATALOG = "com.bdaum.zoom.currentCatalog"; //$NON-NLS-1$
 	private static final String CURRENT_VOLUME = "com.bdaum.zoom.currentVolume"; //$NON-NLS-1$
 	private static final String RECENTCATS = "com.bdaum.zoom.recentCats"; //$NON-NLS-1$
-
 	private final static int RESTORE = 0;
-
 	private final static int QUIT = 1;
-
 	private final static String[] trayMenuItems = new String[] {
 			Messages.getString("ApplicationWorkbenchAdvisor.restore"), //$NON-NLS-1$
 			Messages.getString("ApplicationWorkbenchAdvisor.quit") }; //$NON-NLS-1$
@@ -302,6 +299,9 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 		configurer.setSaveAndRestore(true);
 		workbenchHelper = new WorkbenchHelper(this, true);
 		workbenchHelper.restoreWorkbenchState();
+		UiActivator.getDefault().setGalleryPerspectiveIds(new String[] {
+				LightboxPerspective.ID, SleevesPerspective.ID, TablePerspective.ID
+		});
 	}
 
 	@Override
@@ -312,15 +312,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 		System.setProperty("zoom.version", Platform.getProduct() //$NON-NLS-1$
 				.getDefiningBundle().getVersion().toString());
 		System.setProperty("zoom.year", String.valueOf(new GregorianCalendar().get(GregorianCalendar.YEAR))); //$NON-NLS-1$
-		FontRegistry fontRegistry = JFaceResources.getFontRegistry();
-		FontData fontData = fontRegistry.defaultFontDescriptor().getFontData()[0];
-		fontRegistry.put(UiConstants.MESSAGEFONT,
-				new FontData[] { new FontData(fontData.getName(), fontData.getHeight() + 4, fontData.getStyle()) });
-		fontRegistry.put(UiConstants.SELECTIONFONT,
-				new FontData[] { new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD) });
-		fontData = fontRegistry.getDescriptor(JFaceResources.HEADER_FONT).getFontData()[0];
-		fontRegistry.put(UiConstants.MESSAGETITLEFONT,
-				new FontData[] { new FontData(fontData.getName(), fontData.getHeight() + 4, fontData.getStyle()) });
+		createApplicationFonts();
 		// tray
 		IWorkbenchWindow[] workbenchWindows = workbench.getWorkbenchWindows();
 		if (workbenchWindows.length > 0) {
@@ -456,6 +448,24 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 			}
 		});
 		System.gc();
+	}
+
+	private static void createApplicationFonts() {
+		FontRegistry fontRegistry = JFaceResources.getFontRegistry();
+		FontData fontData = fontRegistry.defaultFontDescriptor().getFontData()[0];
+		fontRegistry.put(UiConstants.MESSAGEFONT,
+				new FontData[] { new FontData(fontData.getName(), fontData.getHeight() + 4, fontData.getStyle()) });
+		fontRegistry.put(UiConstants.SELECTIONFONT,
+				new FontData[] { new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD) });
+		fontRegistry.put(UiConstants.VIEWERFONT,
+				new FontData[] { new FontData(fontData.getName(), 18, fontData.getStyle()) });
+		fontRegistry.put(UiConstants.VIEWERTITLEFONT,
+				new FontData[] { new FontData(fontData.getName(), 24, SWT.BOLD) });
+		fontRegistry.put(UiConstants.VIEWERBANNERFONT,
+				new FontData[] { new FontData(fontData.getName(), 36, SWT.BOLD) });
+		fontData = fontRegistry.getDescriptor(JFaceResources.HEADER_FONT).getFontData()[0];
+		fontRegistry.put(UiConstants.MESSAGETITLEFONT,
+				new FontData[] { new FontData(fontData.getName(), fontData.getHeight() + 4, fontData.getStyle()) });
 	}
 
 	private void setTrayMode() {

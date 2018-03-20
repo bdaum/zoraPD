@@ -14,6 +14,8 @@ public class Messages extends NLS {
 	public static String CatalogConverter_image_ID;
 	public static String CatalogConverter_iptc_dateCreated;
 	public static String CatalogConverter_overlapping_timeline;
+	public static String CatalogConverter_prune_system_collections;
+	public static String CatalogConverter_restore_directory_entries;
 	public static String CatalogConverter_world_region;
 	static {
 		// initialize resource bundle

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -43,26 +43,20 @@ public class LabelConfigGroup implements SelectionListener {
 
 	public LabelConfigGroup(Composite parent, boolean inherit) {
 		offset = inherit ? 0 : 1;
-		CGroup labelgroup = UiUtilities.createGroup(parent, 1,
-				com.bdaum.zoom.ui.internal.widgets.Messages.LabelConfigGroup_tumbnail_labels);
-		showGroup = new RadioButtonGroup(labelgroup, com.bdaum.zoom.ui.internal.widgets.Messages.LabelConfigGroup_show,
-				SWT.VERTICAL,
-				inherit ? new String[] { com.bdaum.zoom.ui.internal.widgets.Messages.LabelConfigGroup_inherited,
-						com.bdaum.zoom.ui.internal.widgets.Messages.LabelConfigGroup_title,
-						com.bdaum.zoom.ui.internal.widgets.Messages.LabelConfigGroup_nothing,
-						com.bdaum.zoom.ui.internal.widgets.Messages.LabelConfigGroup_custom }
-						: new String[] { com.bdaum.zoom.ui.internal.widgets.Messages.LabelConfigGroup_title,
-								com.bdaum.zoom.ui.internal.widgets.Messages.LabelConfigGroup_nothing,
-								com.bdaum.zoom.ui.internal.widgets.Messages.LabelConfigGroup_custom });
+		CGroup labelgroup = UiUtilities.createGroup(parent, 1, Messages.LabelConfigGroup_tumbnail_labels);
+		showGroup = new RadioButtonGroup(labelgroup, Messages.LabelConfigGroup_show, SWT.VERTICAL,
+				inherit ? new String[] { Messages.LabelConfigGroup_inherited, Messages.LabelConfigGroup_title,
+						Messages.LabelConfigGroup_nothing, Messages.LabelConfigGroup_custom }
+						: new String[] { Messages.LabelConfigGroup_title, Messages.LabelConfigGroup_nothing,
+								Messages.LabelConfigGroup_custom });
 		showGroup.addSelectionListener(this);
 		Composite tempComp = new Composite(labelgroup, SWT.NONE);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.horizontalIndent = 15;
 		tempComp.setLayoutData(layoutData);
 		tempComp.setLayout(new GridLayout(4, false));
-		templateGroup = new TextWithVariableGroup(tempComp,
-				com.bdaum.zoom.ui.internal.widgets.Messages.LabelConfigGroup_template,
-				com.bdaum.zoom.ui.internal.widgets.Messages.LabelConfigGroup_variables, Constants.TH_ALL, true);
+		templateGroup = new TextWithVariableGroup(tempComp, Messages.LabelConfigGroup_template, 400, Constants.TH_ALL,
+				true, null, null, null);
 		new Label(tempComp, SWT.NONE).setText(Messages.LabelConfigGroup_fontsize);
 		fontField = new NumericControl(tempComp, SWT.NONE);
 		fontField.setMinimum(5);

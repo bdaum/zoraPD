@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal;
@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,6 +59,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.aoModeling.runtime.AomList;
 import com.bdaum.zoom.cat.model.SimilarityOptions_type;
@@ -102,14 +106,21 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
 public class UiUtilities {
-	private static final int USHRT_MAXV = 65535;
-	private static final Integer MINUSONE = Integer.valueOf(-1);
 
 	public static final Comparator<String> stringComparator = new Comparator<String>() {
 		public int compare(String s1, String s2) {
+			if (s1 == s2)
+				return 0;
+			if (s1 == null)
+				return -1;
+			if (s2 == null)
+				return 1;
 			return s1.compareToIgnoreCase(s2);
 		}
 	};
+
+	private static final int USHRT_MAXV = 65535;
+	private static final Integer MINUSONE = Integer.valueOf(-1);
 
 	/**
 	 * Creates a labeled group
@@ -137,13 +148,35 @@ public class UiUtilities {
 	 *            - tab folder
 	 * @param text
 	 *            - tab item label
+	 * @param tooltip
+	 *            - tool tip
 	 * @return - tab item
 	 */
-	public static CTabItem createTabItem(CTabFolder tabFolder, String text) {
+	public static CTabItem createTabItem(CTabFolder tabFolder, String text, String tooltip) {
 		CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
 		tabItem.setFont(JFaceResources.getBannerFont());
 		tabItem.setText(' ' + text + ' ');
+		if (tooltip != null)
+			tabItem.setToolTipText(tooltip);
 		return tabItem;
+	}
+
+	/**
+	 * Creates a tab page with item
+	 *
+	 * @param tabFolder
+	 *            - tab folder
+	 * @param text
+	 *            - tab item label
+	 * @param tooltip
+	 *            - tool tip
+	 * @return - tab item
+	 */
+	public static Composite createTabPage(CTabFolder tabFolder, String text, String tooltip) {
+		CTabItem item = createTabItem(tabFolder, text, tooltip);
+		Composite comp = new Composite(tabFolder, SWT.NONE);
+		item.setControl(comp);
+		return comp;
 	}
 
 	public static String createSlideTitle(Asset asset) {
@@ -151,7 +184,7 @@ public class UiUtilities {
 		if (tit == null || tit.trim().isEmpty())
 			tit = asset.getHeadline();
 		if (tit == null || tit.trim().isEmpty())
-			tit = Core.getFileName(asset.getUri(), true);
+			return Core.getFileName(asset.getUri(), true);
 		return tit;
 	}
 
@@ -168,9 +201,7 @@ public class UiUtilities {
 								.append(topic.getName());
 						if (++n < value.length)
 							sb.append(",..."); //$NON-NLS-1$
-						sb.append(')');
-						text = sb.toString();
-						break;
+						return sb.append(')').toString();
 					}
 				}
 			}
@@ -206,23 +237,29 @@ public class UiUtilities {
 				}
 			String[] vols = volumes.toArray(new String[volumes.size()]);
 			Arrays.sort(vols);
-			StringBuffer sb = new StringBuffer(Core.toStringList(vols, ", ")); //$NON-NLS-1$
-			String msg = (all) ? NLS.bind(msgTemplate, Messages.UiUtilities_All, sb.toString())
-					: NLS.bind(msgTemplate, errands.size(), sb.toString());
-			AcousticMessageDialog.openWarning(shell, Messages.UiUtilities_Files_missing, msg);
+			String stringlist = Core.toStringList(vols, ", "); //$NON-NLS-1$
+			AcousticMessageDialog.openWarning(shell, Messages.UiUtilities_Files_missing,
+					(all) ? NLS.bind(msgTemplate, Messages.UiUtilities_All, stringlist)
+							: NLS.bind(msgTemplate, errands.size(), stringlist));
 		}
 	}
 
 	public static String[] updateComboHistory(Combo combo) {
-		List<String> newItems = new LinkedList<String>(Arrays.asList(combo.getItems()));
+		String[] items = combo.getItems();
 		String s = combo.getText();
-		if (!s.isEmpty()) {
-			newItems.remove(s);
-			newItems.add(0, s);
-			while (newItems.size() > 8)
-				newItems.remove(newItems.size() - 1);
+		return s.isEmpty() ? items : addToHistoryList(items, s);
+	}
+
+	public static String[] addToHistoryList(String[] items, String text) {
+		List<String> list = new ArrayList<>(items.length + 1);
+		list.add(text);
+		for (String s : items) {
+			if (!s.equals(text))
+				list.add(s);
+			if (list.size() >= 8)
+				break;
 		}
-		return newItems.toArray(new String[newItems.size()]);
+		return list.toArray(new String[list.size()]);
 	}
 
 	public static Point snapToGrid(int x, int y, int w, int h, int yOff, int gridSize, int gridTolerance) {
@@ -293,23 +330,21 @@ public class UiUtilities {
 			if (scoreFormatter == null)
 				return s;
 			sb = new StringBuilder(s);
-		} else {
-			if (cardinality != null) {
-				String name = asset.getName();
-				if (filter != null) {
-					String s = Core.getFileName(asset.getUri(), true);
-					String[] capture = filter.capture(s);
-					for (String c : capture)
-						if (c.length() < s.length())
-							name = c;
-				}
-				sb = new StringBuilder(name).append(" (").append(cardinality.intValue()).append(')'); //$NON-NLS-1$
-			} else {
+		} else if (cardinality != null) {
+			String name = asset.getName();
+			if (filter != null) {
 				String s = Core.getFileName(asset.getUri(), true);
-				if (scoreFormatter == null)
-					return s;
-				sb = new StringBuilder(s);
+				String[] capture = filter.capture(s);
+				for (String c : capture)
+					if (c.length() < s.length())
+						name = c;
 			}
+			sb = new StringBuilder(name).append(" (").append(cardinality.intValue()).append(')'); //$NON-NLS-1$
+		} else {
+			String s = Core.getFileName(asset.getUri(), true);
+			if (scoreFormatter == null)
+				return s;
+			sb = new StringBuilder(s);
 		}
 		if (scoreFormatter != null) {
 			String remark = scoreFormatter.format(asset.getScore());
@@ -378,18 +413,16 @@ public class UiUtilities {
 
 	public static boolean isDoubledRegion(Collection<Rectangle> rectangles, Rectangle r1) {
 		boolean c1 = r1.height < 0;
-		for (Rectangle r2 : rectangles) {
-			boolean c2 = r2.height < 0;
-			if (c1 != c2)
-				continue;
-			if (c1) {
-				if (r2.contains(r1.x, r1.y) && r2.contains(r1.x + r1.width, r1.y + r1.width)
-						|| r1.contains(r2.x, r2.y) && r1.contains(r2.x + r2.width, r2.y + r2.width))
+		for (Rectangle r2 : rectangles)
+			if (c1 == r2.height < 0) {
+				if (c1) {
+					if (r2.contains(r1.x, r1.y) && r2.contains(r1.x + r1.width, r1.y + r1.width)
+							|| r1.contains(r2.x, r2.y) && r1.contains(r2.x + r2.width, r2.y + r2.width))
+						return true;
+				} else if (r2.contains(r1.x, r1.y) && r2.contains(r1.x + r1.width, r1.y + r1.height)
+						|| r1.contains(r2.x, r2.y) && r1.contains(r2.x + r2.width, r2.y + r2.height))
 					return true;
-			} else if (r2.contains(r1.x, r1.y) && r2.contains(r1.x + r1.width, r1.y + r1.height)
-					|| r1.contains(r2.x, r2.y) && r1.contains(r2.x + r2.width, r2.y + r2.height))
-				return true;
-		}
+			}
 		return false;
 	}
 
@@ -568,14 +601,13 @@ public class UiUtilities {
 	}
 
 	private static void compileCategories(Map<String, Category> categories, Set<String> result) {
-		for (Category cat : categories.values()) {
+		for (Category cat : categories.values())
 			if (cat != null) {
 				String label = cat.getLabel();
 				result.add(label);
 				result.add(label);
 				compileCategories(cat.getSubCategory(), result);
 			}
-		}
 	}
 
 	public static Set<String> getValueProposals(IDbManager db, String field, String subfield) {
@@ -585,11 +617,9 @@ public class UiUtilities {
 			QueryField qfield = QueryField.findQuerySubField(field, subfield);
 			if (qfield == QueryField.IPTC_KEYWORDS)
 				return meta.getKeywords();
-			if (qfield == QueryField.IPTC_CATEGORY || qfield == QueryField.IPTC_SUPPLEMENTALCATEGORIES) {
-				result = new HashSet<String>(30);
-				Map<String, Category> categories = meta.getCategory();
-				compileCategories(categories, result);
-			} else if (qfield == QueryField.LOCATION_WORLDREGION) {
+			if (qfield == QueryField.IPTC_CATEGORY || qfield == QueryField.IPTC_SUPPLEMENTALCATEGORIES)
+				compileCategories(meta.getCategory(), result = new HashSet<String>(30));
+			else if (qfield == QueryField.LOCATION_WORLDREGION) {
 				result = new HashSet<String>(10);
 				for (LocationImpl loc : db.obtainObjects(LocationImpl.class)) {
 					String worldRegion = loc.getWorldRegion();
@@ -777,20 +807,19 @@ public class UiUtilities {
 			}
 			if (ICollectionProcessor.TEXTSEARCH.equals(field)) {
 				TextSearchOptions_type options = (TextSearchOptions_type) value;
-				if (options != null) {
+				if (options != null)
 					return compact ? NLS.bind(Messages.UiUtilities_text_search2, options.getQueryString())
 							: NLS.bind(Messages.UiUtilities_text_search, new Object[] { options.getQueryString(),
 									(int) (options.getMinScore() * 100f + 0.5f), options.getMaxResults(), sep });
-				}
 			}
 			QueryField qfield = QueryField.findQueryField(field);
 			if (qfield != null) {
 				if (qfield == QueryField.IPTC_DATECREATED) {
 					SimpleDateFormat df = new SimpleDateFormat(
 							compact ? Messages.UiUtilities_date_format_compact : Messages.UiUtilities_date_format);
-					if (crit.getRelation() == QueryField.EQUALS && value instanceof Date) {
+					if (crit.getRelation() == QueryField.EQUALS && value instanceof Date)
 						return NLS.bind(Messages.UiUtilities_time_search, df.format((Date) value));
-					} else if (crit.getRelation() == QueryField.BETWEEN && value instanceof Range) {
+					else if (crit.getRelation() == QueryField.BETWEEN && value instanceof Range) {
 						Range range = (Range) value;
 						if (range.getFrom() instanceof Date && range.getTo() instanceof Date)
 							return NLS.bind(Messages.UiUtilities_time_search2, df.format((Date) range.getFrom()),
@@ -908,35 +937,25 @@ public class UiUtilities {
 			int rotation = asset.getRotation();
 			regions = new ArrayList<ImageRegion>(regionIds.length);
 			gc.setClipping(xs, ys, width, height);
-			if (!selected) {
-				gc.setForeground(JFaceResources.getColorRegistry().get(Constants.APPCOLOR_REGION_FACE));
-				int i = 0;
-				for (String regionId : regionIds) {
-					if (i++ > showRegions)
-						break;
-					Rectangle frame = computeFrame(regionId, xs, ys, width, height, rotation);
-					if (frame != null && !isDoubledRegion(rectangleOrOvalList, frame)) {
-						rectangleOrOvalList.add(frame);
-						if (frame.height < 0) {
-							int d = frame.width;
-							gc.drawOval(frame.x - d / 2, frame.y - d / 2, d, d);
-						} else
-							gc.drawRectangle(frame);
-						regions.add(new ImageRegion(frame, regionId, null, null, asset));
-					}
-				}
-			} else {
+			int i = 0;
+			boolean[] done = null;
+			if (selected) {
 				IDbManager dbManager = Core.getCore().getDbManager();
-				List<RegionImpl> regionList = dbManager.obtainObjects(RegionImpl.class, "asset_person_parent", //$NON-NLS-1$
-						asset.getStringId(), QueryField.EQUALS);
-				int i = 0;
-				for (RegionImpl region : regionList) {
+				for (RegionImpl region : dbManager.obtainObjects(RegionImpl.class, "asset_person_parent", //$NON-NLS-1$
+						asset.getStringId(), QueryField.EQUALS)) {
 					if (onlyFaces && region.getType() != null && !region.getType().equals(Region.type_face))
 						continue;
 					if (i++ > showRegions)
 						break;
-					Rectangle frame = computeFrame(region.getStringId(), xs, ys, width, height, rotation);
+					String id = region.getStringId();
+					Rectangle frame = computeFrame(id, xs, ys, width, height, rotation);
 					if (frame != null && !isDoubledRegion(rectangleOrOvalList, frame)) {
+						for (int j = 0; j < regionIds.length; j++)
+							if (regionIds[j].equals(id)) {
+								if (done == null)
+									done = new boolean[regionIds.length];
+								done[j] = true;
+							}
 						rectangleOrOvalList.add(frame);
 						gc.setForeground(JFaceResources.getColorRegistry().get(Constants.APPCOLOR_REGION_FACE));
 						if (frame.height < 0) {
@@ -959,8 +978,7 @@ public class UiUtilities {
 							name = region.getAlbum();
 							color = SWT.COLOR_GREEN;
 						}
-						regions.add(new ImageRegion(frame, region.getStringId(), type == null ? Region.type_face : type,
-								name, asset));
+						regions.add(new ImageRegion(frame, id, type == null ? Region.type_face : type, name, asset));
 						if (name != null) {
 							gc.setForeground(device.getSystemColor(SWT.COLOR_DARK_GRAY));
 							gc.drawText(name, frame.x + 5, frame.y + 3, true);
@@ -968,6 +986,23 @@ public class UiUtilities {
 							gc.drawText(name, frame.x + 4, frame.y + 2, true);
 						}
 					}
+				}
+			}
+			gc.setForeground(JFaceResources.getColorRegistry().get(Constants.APPCOLOR_REGION_FACE));
+			for (int j = 0; j < regionIds.length; j++) {
+				if (done != null && done[j])
+					continue;
+				if (i++ > showRegions)
+					break;
+				Rectangle frame = computeFrame(regionIds[j], xs, ys, width, height, rotation);
+				if (frame != null && !isDoubledRegion(rectangleOrOvalList, frame)) {
+					rectangleOrOvalList.add(frame);
+					if (frame.height < 0) {
+						int d = frame.width;
+						gc.drawOval(frame.x - d / 2, frame.y - d / 2, d, d);
+					} else
+						gc.drawRectangle(frame);
+					regions.add(new ImageRegion(frame, regionIds[j], null, null, asset));
 				}
 			}
 			gc.setClipping((Rectangle) null);
@@ -1007,15 +1042,13 @@ public class UiUtilities {
 				break;
 		}
 		Image image = null;
-		int rotation = 0;
 		Rectangle frame = null;
 		if (maxRegion != null) {
 			Asset asset = dbManager.obtainAsset(maxRegion.getAsset_person_parent());
 			if (asset != null) {
 				image = Core.getCore().getImageCache().getImage(asset);
-				rotation = asset.getRotation();
 				Rectangle bounds = image.getBounds();
-				frame = UiUtilities.computeFrame(maxRegion.getStringId(), 0, 0, bounds.width, bounds.height, rotation);
+				frame = UiUtilities.computeFrame(maxRegion.getStringId(), 0, 0, bounds.width, bounds.height, asset.getRotation());
 			}
 		}
 		if (image == null) {
@@ -1046,6 +1079,11 @@ public class UiUtilities {
 			gc.setBackground(marginColor);
 			gc.fillRectangle(0, 0, size + 2 * margins, size + 2 * margins);
 		}
+		if (Platform.getPreferencesService().getBoolean(UiActivator.PLUGIN_ID, PreferenceConstants.ADVANCEDGRAPHICS,
+				false, null)) {
+			gc.setAntialias(SWT.ON);
+			gc.setInterpolation(SWT.HIGH);
+		}
 		gc.drawImage(image, srcX, srcY, srcWidth, srcHeight, destX + margins, destY + margins, destWidth, destHeight);
 		gc.dispose();
 		return thumb;
@@ -1060,7 +1098,7 @@ public class UiUtilities {
 			Rectangle r = parentShell.getBounds();
 			if (mbounds.contains(r.x + r.width / 2, r.y + r.height / 2)) {
 				int max = 0;
-				for (Monitor monitor : monitors) {
+				for (Monitor monitor : monitors)
 					if (!monitor.equals(primaryMonitor)) {
 						r = monitor.getBounds();
 						int d = r.width * r.width + r.height * r.height;
@@ -1069,7 +1107,6 @@ public class UiUtilities {
 							mbounds = r;
 						}
 					}
-				}
 			}
 		}
 		return mbounds;
@@ -1078,7 +1115,7 @@ public class UiUtilities {
 	public static boolean isInterPunction(char c) {
 		return "!.,:;?".indexOf(c) >= 0; //$NON-NLS-1$
 	}
-	
+
 	public static void installDoubleClickExpansion(TreeViewer viewer) {
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
@@ -1092,6 +1129,29 @@ public class UiUtilities {
 				}
 			}
 		});
+	}
+
+	public static IViewPart showView(String id) {
+		IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		if (activeWorkbenchWindow != null) {
+			IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+			if (activePage != null)
+				try {
+					return activePage.showView(id);
+				} catch (PartInitException e1) {
+					// do nothing
+				}
+		}
+		return null;
+	}
+
+	public static String[] getComboHistory(Combo combo, char c) {
+		String[] items = combo.getItems();
+		List<String> list = new ArrayList<>(items.length);
+		for (String s : items)
+			if (s.indexOf(c) < 0)
+				list.add(s);
+		return list.toArray(new String[list.size()]);
 	}
 
 }

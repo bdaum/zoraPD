@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -205,7 +205,6 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 			addMetadataButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 			addMetadataButton.setText(Messages.TemplateEditDialog_add_metadata);
 			addMetadataButton.addSelectionListener(new SelectionAdapter() {
-
 				@Override
 				public void widgetSelected(SelectionEvent e) {
 					TemplateFieldSelectionDialog dialog = new TemplateFieldSelectionDialog(getShell());

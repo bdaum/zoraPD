@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2012 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2012 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -46,8 +46,8 @@ public class DateComponent extends Composite {
 	}
 
 	/**
-	 * @return
-	 * @see com.bdaum.zoom.ui.widgets.DateInput#getDate()
+	 * Returns the selected date
+	 * @return the selected Date
 	 */
 	public Date getSelection() {
 		return dateInput == stackLayout.topControl ? dateInput.getDate() : null;

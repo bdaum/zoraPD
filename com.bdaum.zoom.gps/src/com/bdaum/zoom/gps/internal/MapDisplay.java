@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.gps.internal;
@@ -28,9 +28,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.httpclient.HttpException;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.xml.sax.SAXException;
 
@@ -41,39 +39,22 @@ import com.bdaum.zoom.gps.internal.dialogs.MapDialog;
 import com.bdaum.zoom.gps.internal.views.MapView;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.ILocationDisplay;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 
+@SuppressWarnings("restriction")
 public class MapDisplay implements ILocationDisplay {
 
 	public void display(Location loc) {
-		IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench()
-				.getActiveWorkbenchWindow();
-		if (activeWorkbenchWindow != null) {
-			IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-			if (activePage != null) {
-				try {
-					((MapView) activePage.showView(MapView.ID)).showLocation(loc);
-				} catch (PartInitException e) {
-					// do nothing
-				}
-			}
-		}
+		MapView mapView = (MapView) UiUtilities.showView(MapView.ID);
+		if (mapView != null)
+			mapView.showLocation(loc);
 	}
 
 	public void display(AssetSelection selectedAssets) {
-		IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench()
-				.getActiveWorkbenchWindow();
-		if (activeWorkbenchWindow != null) {
-			IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-			if (activePage != null) {
-				try {
-					((MapView) activePage.showView(MapView.ID)).showLocations(selectedAssets);
-				} catch (PartInitException e) {
-					// do nothing
-				}
-			}
-		}
+		MapView mapView = (MapView) UiUtilities.showView(MapView.ID);
+		if (mapView != null)
+			mapView.showLocations(selectedAssets);
 	}
-
 
 	public Location defineLocation(Location loc) {
 		IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench()

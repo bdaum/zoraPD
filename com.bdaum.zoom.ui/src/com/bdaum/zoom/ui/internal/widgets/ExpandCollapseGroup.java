@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2014 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -38,6 +38,7 @@ public class ExpandCollapseGroup {
 	public ExpandCollapseGroup(Composite parent, int style) {
 		this(parent, style, null);
 	}
+	
 	public ExpandCollapseGroup(Composite parent, int style, Object layoutData) {
 		toolBar = new ToolBar(parent, SWT.FLAT);
 		toolBar.setLayoutData(layoutData != null ? layoutData : new GridData(SWT.END, SWT.BEGINNING, true, false));
@@ -61,7 +62,6 @@ public class ExpandCollapseGroup {
 					treeViewer.expandAll();
 			}
 		});
-
 	}
 
 	public void setViewer(TreeViewer treeViewer) {

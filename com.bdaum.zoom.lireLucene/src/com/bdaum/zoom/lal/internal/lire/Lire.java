@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2014-2017 Berthold Daum  
  */
 package com.bdaum.zoom.lal.internal.lire;
 
@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -95,6 +97,9 @@ public class Lire implements ILireService {
 	public static final int SPLBP = 30;
 
 	public static Algorithm[] SupportedSimilarityAlgorithms;
+	
+	private Set<String> postponedIndexing = Collections.synchronizedSet(new HashSet<>(511));
+
 
 	/**
 	 * Called when service is activated.
@@ -192,20 +197,20 @@ public class Lire implements ILireService {
 	}
 
 	public Job createIndexingJob() {
-		return new IndexingJob(null);
+		return new IndexingJob(null, postponedIndexing);
 	}
 
 	public Job createIndexingJob(String[] assetIds) {
-		return new IndexingJob(assetIds);
+		return new IndexingJob(assetIds, postponedIndexing);
 	}
 
 	public Job createIndexingJob(File indexBackup, Date lastBackup) {
-		return new IndexingJob(indexBackup, lastBackup);
+		return new IndexingJob(indexBackup, lastBackup, postponedIndexing);
 	}
 
 	public Job createIndexingJob(Collection<Asset> assets, boolean reimport, int totalWork, int worked,
 			boolean system) {
-		return new IndexingJob(assets, reimport, totalWork, worked, system);
+		return new IndexingJob(assets, reimport, totalWork, worked, system, postponedIndexing);
 	}
 
 	public Algorithm[] getSupportedSimilarityAlgorithms() {
@@ -217,17 +222,16 @@ public class Lire implements ILireService {
 	}
 
 	public Set<String> postponeIndexing() {
-		Set<String> postponed = new HashSet<String>(500);
 		IJobManager jobManager = Job.getJobManager();
-		Job[] jobs = jobManager.find(Constants.INDEXING);
-		if (jobs.length > 0)
-			for (Job job : jobs)
-				if (job instanceof IndexingJob)
-					postponed.addAll(((IndexingJob) job).getPostponed());
 		jobManager.cancel(Constants.INDEXING);
-		return postponed;
+		try {
+			jobManager.join(Constants.INDEXING, null);
+		} catch (OperationCanceledException | InterruptedException e) {
+			// do nothing
+		}
+		return postponedIndexing;
 	}
-
+	
 	public List<List<String>> findDuplicates(File indexPath, int method, IProgressMonitor monitor) {
 		LireActivator activator = LireActivator.getDefault();
 		ImageSearcher searcher = activator.getContentSearcher(method, Integer.MAX_VALUE);
@@ -262,10 +266,10 @@ public class Lire implements ILireService {
 		Shell shell = adaptable.getAdapter(Shell.class);
 		if (kind.equals(ICollectionProcessor.SIMILARITY)) {
 			SearchSimilarDialog dialog = new SearchSimilarDialog(shell, (Asset) value, current);
-			return (dialog.open() == Window.OK) ? dialog.getResult() : null;
+			return dialog.open() == Window.OK ? dialog.getResult() : null;
 		}
 		TextSearchDialog dialog = new TextSearchDialog(shell, current, (String) value);
-		return (dialog.open() == Window.OK) ? dialog.getResult() : null;
+		return dialog.open() == Window.OK ? dialog.getResult() : null;
 	}
 
 	@Override
@@ -280,8 +284,7 @@ public class Lire implements ILireService {
 
 	@Override
 	public boolean ShowConfigureSearch(IAdaptable adaptable, Point displayLocation) {
-		Shell shell = adaptable.getAdapter(Shell.class);
-		ConfigureSimilaritySearchDialog dialog = new ConfigureSimilaritySearchDialog(shell);
+		ConfigureSimilaritySearchDialog dialog = new ConfigureSimilaritySearchDialog(adaptable.getAdapter(Shell.class));
 		dialog.create();
 		if (displayLocation != null)
 			dialog.getShell().setLocation(displayLocation);

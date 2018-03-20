@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -105,8 +105,7 @@ public class WatermarkGroup {
 			if (copyright == null || copyright.trim().isEmpty()
 					|| copyright.trim().length() == 4 && testYear(copyright))
 				copyrightField.setText(new SimpleDateFormat("yyyy").format(new Date()) + " "); //$NON-NLS-1$ //$NON-NLS-2$
-			boolean watermark = settings.getBoolean(WATERMARK);
-			createWatermarkButton.setSelection(watermark);
+			createWatermarkButton.setSelection(settings.getBoolean(WATERMARK));
 			if (copyright != null)
 				copyrightField.setText(copyright);
 		}
@@ -142,8 +141,7 @@ public class WatermarkGroup {
 			String text = copyrightField.getText();
 			if (text.endsWith(".png") || text.endsWith(".bmp")) { //$NON-NLS-1$ //$NON-NLS-2$
 				try {
-					File file = new File(text);
-					if (file.exists())
+					if (new File(text).exists())
 						return null;
 				} catch (Exception e) {
 					// no file

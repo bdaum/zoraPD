@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2014 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.views;
 
@@ -68,7 +68,6 @@ public final class AssetDragSourceListener implements DragSourceListener {
 	}
 
 	public void dragStart(DragSourceEvent event) {
-
 		assetSelection = host.getAssetSelection();
 		if (assetSelection == null || assetSelection.isEmpty())
 			event.doit = false;
@@ -88,13 +87,6 @@ public final class AssetDragSourceListener implements DragSourceListener {
 			UiActivator.getDefault().dragStart(host);
 		}
 	}
-
-	/**
-	 * Sets a drop target effect using the shape of the specified editPart
-	 *
-	 * @param editPart
-	 *            - dragged edit part
-	 */
 
 	public void dragSetData(DragSourceEvent event) {
 		if (fileTransfer.isSupportedType(event.dataType)) {
@@ -124,12 +116,8 @@ public final class AssetDragSourceListener implements DragSourceListener {
 				sb.append(asset.getStringId());
 			}
 			event.data = sb.toString();
-		} else if (selectionTransfer.isSupportedType(event.dataType)) {
-			if (region != null)
-				selectionTransfer.setSelection(new StructuredSelection(region));
-			else
-				selectionTransfer.setSelection(assetSelection);
-		}
+		} else if (selectionTransfer.isSupportedType(event.dataType))
+			selectionTransfer.setSelection(region != null ? new StructuredSelection(region) : assetSelection);
 	}
 
 	public void dragFinished(DragSourceEvent event) {
@@ -137,9 +125,8 @@ public final class AssetDragSourceListener implements DragSourceListener {
 		if (!errands.isEmpty())
 			AcousticMessageDialog.openWarning(host.getAdapter(Shell.class),
 					Messages.getString("AbstractGalleryView.dragging_files"), //$NON-NLS-1$
-					errands.size() == 1
-							? NLS.bind(Messages.getString("AbstractGalleryView.file_n_offline"), //$NON-NLS-1$
-									errands.get(0), volumes.toArray()[0])
+					errands.size() == 1 ? NLS.bind(Messages.getString("AbstractGalleryView.file_n_offline"), //$NON-NLS-1$
+							errands.get(0), volumes.toArray()[0])
 							: NLS.bind(Messages.getString("AbstractGalleryView.n_files_offline"), //$NON-NLS-1$
 									errands.size(), Core.toStringList(volumes.toArray(), ", "))); //$NON-NLS-1$
 		volumes.clear();

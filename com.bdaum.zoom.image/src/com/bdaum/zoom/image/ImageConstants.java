@@ -12,8 +12,12 @@
 package com.bdaum.zoom.image;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,9 +32,12 @@ import java.util.StringTokenizer;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.util.NLS;
 
+import com.bdaum.zoom.common.internal.IniReader;
 import com.bdaum.zoom.image.internal.EipFileHandler;
 import com.bdaum.zoom.image.internal.ImageActivator;
 
@@ -40,6 +47,39 @@ import com.bdaum.zoom.image.internal.ImageActivator;
  *
  */
 public class ImageConstants {
+
+	public static class RawType {
+
+		private String ext;
+		private String name;
+		private String[] unsupportedBy;
+
+		public RawType(String ext, String name, String[] unsupportedBy) {
+			this.ext = ext;
+			this.name = name;
+			this.unsupportedBy = unsupportedBy;
+		}
+
+		public Object getName() {
+			return name;
+		}
+
+		public boolean isUnsupportedBy(String id) {
+			if (unsupportedBy != null)
+				for (String s : unsupportedBy) {
+					if (s.equals(id))
+						return true;
+				}
+			return false;
+		}
+
+		@Override
+		public String toString() {
+			return NLS.bind("{0} ({1})", ext, name); //$NON-NLS-1$
+		}
+	}
+
+	private static final String RAW_INI = "/raw.ini"; //$NON-NLS-1$
 
 	public static final int NOCMS = 0;
 	public static final int SRGB = 1;
@@ -60,15 +100,26 @@ public class ImageConstants {
 	public static final String DNG = "DNG"; //$NON-NLS-1$
 	public static final String[] JPEGEXTENSIONS = new String[] { ".jpg", ".jpe", ".jpeg", ".jfif" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	public static final String[] VIDEOEXTENSIONS = new String[] { ".aiv", ".mov", ".mp4", ".avchd" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	public static final String[] RAWNAMES = new String[] { "3fr (Hasselblad)", //$NON-NLS-1$
-			"arw (Sony)", "bay (Casio)", "cap (PhaseOne)", "cr2 (Canon)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			"crw (Canon)", "cs1 (Sinar)", "dcr (Kodak)", "dcs (Kodak)", "drf (Kodak)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-			"eip (PhaseOne)", "erf (Epson)", "fff (Imacon)", "iiq (PhaseOne)", "k25 (Kodak)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-			"kdc (Kodak)", "mef (Mamiya)", "mos (Leaf)", "mrw (Minolta)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			"nef (Nikon)", "nrw (Nikon)", "orf (Olympus)", "pef (Pentax)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			"pxn (Logitech)", "ptx (Pentax)", "r3d (Red)", "raf (Fuji)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			"raw (Panasonic)", "rw1 (Leica)", "rw2 (Panasonic)", "sr2 (Sony)", "srf (Sony)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-			"srw (Samsung)", "x3f (Sigma)" }; //$NON-NLS-1$ //$NON-NLS-2$
+	// public static final String[] RAWNAMES = new String[] { "3fr (Hasselblad)",
+	// //$NON-NLS-1$
+	// "arw (Sony)", "bay (Casio)", "cap (PhaseOne)", "cr2 (Canon)", //$NON-NLS-1$
+	// //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	// "crw (Canon)", "cs1 (Sinar)", "dcr (Kodak)", "dcs (Kodak)", "drf (Kodak)",
+	// //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+	// "eip (PhaseOne)", "erf (Epson)", "fff (Imacon)", "gpr (GoPro)", "iiq
+	// (PhaseOne)", "k25 (Kodak)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	// //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	// "kdc (Kodak)", "mdc (Minolta RD-175)", "mef (Mamiya)", "mos (Leaf)", "mrw
+	// (Minolta)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	// //$NON-NLS-5$
+	// "nef (Nikon)", "nrw (Nikon)", "orf (Olympus)", "pef (Pentax)", //$NON-NLS-1$
+	// //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	// "pxn (Logitech)", "ptx (Pentax)", "r3d (Red)", "raf (Fuji)", //$NON-NLS-1$
+	// //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	// "raw (Panasonic)", "rw1 (Leica)", "rw2 (Panasonic)", "sr2 (Sony)", "srf
+	// (Sony)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	// //$NON-NLS-5$
+	// "srw (Samsung)", "x3f (Sigma)" }; //$NON-NLS-1$ //$NON-NLS-2$
 
 	private static String[] PredefinedImageFileExtensions = new String[] { "*.bmp", "*.dcm;*.dc3;*.dic;*.dicm", //$NON-NLS-1$ //$NON-NLS-2$
 			"*.dcx;*.pcx", "*.dng", "*.fits", "*.fpx", "*.gif", "*.hdr;*.pfm", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
@@ -112,7 +163,7 @@ public class ImageConstants {
 
 	private static Map<String, IFileHandler> FILEHANDLERS = new HashMap<String, IFileHandler>(3);
 
-	private static final Map<String, String> RAWFORMATS = new HashMap<String, String>(50);
+	private static Map<String, RawType> RAWFORMATS;
 	private static final Set<String> SWTFORMATS = new HashSet<String>(15);
 
 	private static Map<String, String> MIMEMAP = null;
@@ -158,7 +209,7 @@ public class ImageConstants {
 	public static String[] getSupportedImageFileExtensionsGroups(boolean includeRaw) {
 		List<String> importedNames = ImageActivator.getDefault().getImportedNames();
 		int l = PredefinedImageFileExtensions.length;
-		String[] result = new String[l + importedNames.size() + 1];
+		String[] result = new String[l + importedNames.size() + (includeRaw ? 1 : 0)];
 		System.arraycopy(PredefinedImageFileExtensions, 0, result, 0, l);
 		for (String name : importedNames) {
 			String exts = ""; //$NON-NLS-1$
@@ -202,16 +253,28 @@ public class ImageConstants {
 		return sb.toString();
 	}
 
-	public static Map<String, String> getRawFormatMap() {
-		if (RAWFORMATS.isEmpty())
-			for (String s : RAWNAMES)
-				RAWFORMATS.put(s.substring(0, s.indexOf(' ')).toLowerCase(Locale.ENGLISH), s);
+	public static Map<String, RawType> getRawFormatMap() {
+		if (RAWFORMATS == null) {
+			URL iniUri = FileLocator.find(ImageActivator.getDefault().getBundle(), new Path(RAW_INI), null);
+			try (InputStream in = iniUri.openStream()) {
+				IniReader reader = new IniReader(in, false);
+				Collection<String> sections = reader.listSections();
+				RAWFORMATS = new HashMap<String, RawType>(sections.size() * 3 / 2);
+				for (String ext : sections) {
+					String name = reader.getPropertyString(ext, "name", //$NON-NLS-1$
+							NLS.bind(Messages.ImageConstants_x_format, ext));
+					RAWFORMATS.put(ext, new RawType(ext, name, reader.getStringArray(ext, "unsupportedBy"))); //$NON-NLS-1$
+				}
+			} catch (IOException e) {
+				RAWFORMATS = new HashMap<String, RawType>(0);
+			}
+		}
 		return RAWFORMATS;
 	}
 
 	/**
-	 * Returns a file handler for a given file, or null if no specific
-	 * filehandler exists
+	 * Returns a file handler for a given file, or null if no specific filehandler
+	 * exists
 	 *
 	 * @param file
 	 *            - input file
@@ -260,7 +323,8 @@ public class ImageConstants {
 	 * @return - raw format description
 	 */
 	public static String getRawFormatDescription(String ext) {
-		return getRawFormatMap().get(ext);
+		RawType rawType = getRawFormatMap().get(ext);
+		return rawType == null ? null : rawType.toString();
 	}
 
 	/**
@@ -282,7 +346,8 @@ public class ImageConstants {
 	 * @return true if the file is a JPEG file
 	 */
 	public static boolean isJpeg(String ext) {
-		return ext.charAt(0) == 'j' && ImageConstants.SWTFORMATS.contains(ext);
+		String s = ext.toLowerCase();
+		return s.charAt(0) == 'j' && ImageConstants.SWTFORMATS.contains(s);
 	}
 
 	static {

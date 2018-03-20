@@ -15,7 +15,7 @@
 * along with ZoRa; if not, write to the Free Software
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 *
-* (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+* (c) 2017 Berthold Daum  
 */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -26,7 +26,6 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -57,9 +56,8 @@ public class CheckboxButton extends Composite implements MouseListener, Selectio
 		buttonlabel = new Label(this, SWT.NONE);
 		buttonlabel.setText(text);
 		button.pack();
-		Rectangle bounds = button.getBounds();
 		GridData data = new GridData();
-		data.widthHint = bounds.height + 4;
+		data.widthHint = button.getBounds().height + 4;
 		button.setLayoutData(data);
 		buttonlabel.addMouseListener(this);
 		button.addSelectionListener(this);

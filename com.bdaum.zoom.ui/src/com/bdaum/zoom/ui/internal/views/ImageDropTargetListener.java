@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2014 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.views;
 
@@ -35,19 +35,13 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
-import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IVolumeManager;
-import com.bdaum.zoom.core.internal.FileInput;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.job.OperationJob;
-import com.bdaum.zoom.operations.CompoundOperation;
-import com.bdaum.zoom.operations.IProfiledOperation;
-import com.bdaum.zoom.operations.internal.AddAlbumOperation;
-import com.bdaum.zoom.operations.internal.ImportOperation;
 import com.bdaum.zoom.operations.internal.RetargetOperation;
 import com.bdaum.zoom.operations.internal.VoiceNoteOperation;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -73,8 +67,7 @@ public final class ImageDropTargetListener extends EffectDropTargetListener {
 		this.gps = gps;
 		this.sound = sound;
 		final DropTarget target = new DropTarget(host.getControl(), ops);
-		fileTransfer = FileTransfer.getInstance();
-		target.setTransfer(new Transfer[] { fileTransfer });
+		target.setTransfer(new Transfer[] { fileTransfer = FileTransfer.getInstance() });
 		target.addDropListener(this);
 	}
 
@@ -132,8 +125,7 @@ public final class ImageDropTargetListener extends EffectDropTargetListener {
 			if (images) {
 				imageFiles = new ArrayList<File>(filenames.length);
 				Utilities.collectImages(filenames, imageFiles);
-				folders = new ArrayList<File>(filenames.length);
-				Utilities.collectFolders(filenames, folders);
+				Utilities.collectFolders(filenames, folders = new ArrayList<File>(filenames.length));
 			}
 			if (gps) {
 				gpsFiles = new ArrayList<File>();
@@ -184,7 +176,7 @@ public final class ImageDropTargetListener extends EffectDropTargetListener {
 			assets = (List<Asset>) obj;
 		if (assets != null) {
 			String uri = sound.toURI().toString();
-			OperationJob.executeOperation(new VoiceNoteOperation(assets, uri, uri,null), host);
+			OperationJob.executeOperation(new VoiceNoteOperation(assets, uri, uri, null), host);
 		}
 	}
 
@@ -231,27 +223,14 @@ public final class ImageDropTargetListener extends EffectDropTargetListener {
 		}
 		Shell shell = host.getAdapter(Shell.class);
 		ImportModeDialog dialog = new ImportModeDialog(shell, foreignFolders || device);
-		if (dialog.open() != ImportModeDialog.OK)
-			return;
-		if (dialog.isNewStructure()) {
+		if (dialog.open() == ImportModeDialog.OK) {
 			ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(images.toArray(new File[images.size()]),
-					folders.toArray(new File[folders.size()]), device && foreignFolders, false);
+					folders.toArray(new File[folders.size()]), device && foreignFolders, false, dialog.isNewStructure(),
+					host.getSelectedCollection(), false);
 			WizardDialog wizardDialog = new WizardDialog(shell, wizard);
 			wizard.init(null, null);
 			wizardDialog.open();
-			return;
 		}
-		IProfiledOperation op = new ImportOperation(new FileInput(images, false),
-				UiActivator.getDefault().createImportConfiguration(host), null,
-				folders.toArray(new File[folders.size()]));
-		SmartCollectionImpl selectedCollection = host.getSelectedCollection();
-		if (selectedCollection != null && selectedCollection.getAlbum() && !selectedCollection.getSystem()) {
-			CompoundOperation compoundOperation = new CompoundOperation(op.getLabel());
-			compoundOperation.addOperation(op);
-			compoundOperation.addOperation(new AddAlbumOperation(selectedCollection, (ImportOperation) op));
-			op = compoundOperation;
-		}
-		OperationJob.executeOperation(op, host);
 	}
 
 }

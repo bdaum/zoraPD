@@ -36,22 +36,17 @@ public class UpdateRawImagesJob extends SynchronizeCatJob {
 	@Override
 	protected IStatus run(IProgressMonitor monitor) {
 		List<File> outdatedFiles = new ArrayList<File>();
-		IRawConverter currentRawConverter = BatchActivator.getDefault()
-				.getCurrentRawConverter(false);
+		IRawConverter currentRawConverter = BatchActivator.getDefault().getCurrentRawConverter(false);
 		ICore core = Core.getCore();
 		IVolumeManager volumeManager = core.getVolumeManager();
 		List<AssetImpl> assets = core.getDbManager().obtainAssets();
-		monitor.beginTask(Messages.UpdateRawImagesJob_updating_raw_images,
-				assets.size());
+		monitor.beginTask(Messages.UpdateRawImagesJob_updating_raw_images, assets.size());
 		for (AssetImpl asset : assets) {
 			URI uri = volumeManager.findExistingFile(asset, true);
 			if (uri != null) {
 				String uriString = uri.toString();
-				if (all
-						&& ImageConstants.isRaw(uriString, true)
-						|| currentRawConverter != null
-						&& currentRawConverter.getRecipe(uri.toString(), false,
-								null, null, null) != null)
+				if (all && ImageConstants.isRaw(uriString, true) || currentRawConverter != null
+						&& currentRawConverter.getRecipe(uri.toString(), false, null, null, null) != null)
 					outdatedFiles.add(new File(uri));
 			}
 			if (monitor.isCanceled())
@@ -60,9 +55,8 @@ public class UpdateRawImagesJob extends SynchronizeCatJob {
 		}
 		monitor.done();
 		if (!outdatedFiles.isEmpty())
-			new ChangeProcessor(null, outdatedFiles, null, null,
-					System.currentTimeMillis(), null, Constants.CRITICAL, this)
-					.schedule(250);
+			new ChangeProcessor(null, outdatedFiles, null, null, System.currentTimeMillis(), null, Constants.CRITICAL,
+					this).schedule(250);
 		return Status.OK_STATUS;
 	}
 

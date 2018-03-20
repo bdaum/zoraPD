@@ -15,18 +15,15 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
-
-import java.util.Set;
 
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.ui.internal.dialogs.KeywordDialog;
 
@@ -38,11 +35,9 @@ public class KeywordDialogCellEditor extends AbstractMixedBagDialogCellEditor {
 
 	@Override
 	protected Object openDialogBox(Control cellEditorWindow) {
-		Meta meta = Core.getCore().getDbManager().getMeta(true);
-		Set<String> selectableKeywords = meta.getKeywords();
 		KeywordDialog dialog = new KeywordDialog(cellEditorWindow.getShell(),
 				Messages.getString("KeywordDialogCellEditor.image_keywords"), //$NON-NLS-1$
-				commonItems, selectableKeywords, assets);
+				commonItems, Core.getCore().getDbManager().getMeta(true).getKeywords(), assets);
 		if (dialog.open() == Window.OK)
 			return dialog.getResult();
 		return null;

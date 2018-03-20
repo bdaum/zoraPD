@@ -13,8 +13,9 @@
 
 
 
-<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head>
-<body>
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
 <h2> Web Gallery designer view </h2>
 <p>The purpose of the <span style="font-style: italic;">Web
 Gallery designer view</span>
@@ -64,7 +65,7 @@ dragging left or right.Alternatively, you
 may zoom using the mouse wheel.</p>
 <p>A double click on the exhibit opens the properties dialog.<br>
 </p>
-<h4>Web Gallery properties</h4>
+<h4><a name="properties"></a>Web Gallery properties</h4>
 <ul style="font-weight: normal;">
 <li style="font-weight: bold;">General</li>
 <ul style="font-weight: normal;">
@@ -91,9 +92,29 @@ If specified, also the name plate will be equipped with a link to that
 page.</li><li><span style="font-weight: bold;">Engine Reference.</span>
 Generates the specified text followed by the Engine name as last line
 on the page. A double click on the input field will insert the text
-"Powered by".</li></ul></ul><ul style="font-weight: normal;"><li style="font-weight: bold;">Appearance</li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Background image</span>. This can be a GIF-, JPEG-, or PNG-image that will be shown in the background of the generated page.</li><li><span style="font-weight: bold;">repeat</span>. Check this box if you want a small background image to repeat to fill the available space.</li><li><span style="font-weight: bold;">Background color</span>. The color of the background if no image is defined</li><li><span style="font-weight: bold;">Shaded area color</span>. The color of shaded areas, if any.</li><li><span style="font-weight: bold;">Border color</span>. The color of border lines.</li><li><span style="font-weight: bold;">Link color</span>. The color of clickable links.</li><li><span style="font-weight: bold;">Thumbnail size</span>. Select the desired thumbnail sizes. If a square size is selected, the center part of the image will be used.</li><li><span style="font-weight: bold;">Opacity</span>. The opacity of thumbnails. Some web engines use this to highlight the currently selected thumbnail.</li><li><span style="font-weight: bold;">Padding</span>. The space between thumbnails in pixels.</li><li><span style="font-weight: bold;">Margins</span>. Page margins at top, right, bottom and left in pixels.</li><li><span style="font-weight: bold;">Title font</span>. Font and color of the page title.</li><li><span style="font-weight: bold;">Subtitle font</span>.
+"Powered by".</li></ul></ul><ul style="font-weight: normal;"><li style="font-weight: bold;">Appearance</li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Background image</span>. This can be a GIF-, JPEG-, or PNG-image that will be shown in the background of the generated page.</li><li><span style="font-weight: bold;">repeat</span>. Check this box if you want a small background image to repeat to fill the available space.</li>
+    <li><span style="font-weight: bold;">Colors</span><br>
+    </li>
+    <ul>
+      <li><span style="font-weight: bold;">Background.</span> The color of the background if no image is defined</li>
+      <li><span style="font-weight: bold;">Shaded area</span>. The color of shaded areas, if any.</li>
+      <li><span style="font-weight: bold;">Border</span>. The color of border lines.</li>
+      <li><span style="font-weight: bold;">Link</span>. The color of clickable links.</li>
+    </ul>
+<li><span style="font-weight: bold;">Thumbnail size</span>. Select the desired thumbnail sizes. If a square size is selected, the center part of the image will be used.</li><li><span style="font-weight: bold;">Opacity</span>. The opacity of thumbnails. Some web engines use this to highlight the currently selected thumbnail.</li><li><span style="font-weight: bold;">Padding</span>. The space between thumbnails in pixels.</li><li><span style="font-weight: bold;">Margins</span>. Page margins at top, right, bottom and left in pixels.</li>
+    <li><span style="font-weight: bold;">Fonts</span><br>
+    </li>
+    <ul>
+      <li><span style="font-weight: bold;">Title</span>. Font and color of the page title.</li>
+      <li><span style="font-weight: bold;">Subtitle</span>.
 Font and color of subtitles. If the web engine supports multiple
-storyboards, the storyboard title is formatted with this font.</li><li><span style="font-weight: bold;">Caption font</span>. Font and color of image titles.</li><li><span style="font-weight: bold;">Navigation font</span>. Font and color of navigation hyper-links.</li><li><span style="font-weight: bold;">Description font</span>. Font and color of standard text.</li><li><span style="font-weight: bold;">Footer font</span>. Font and color of the page footer.</li></ul><li style="font-weight: bold;">HTML</li><ul style="font-weight: normal;"><li style="font-weight: bold;">In &lt;HEAD&gt; element. <span style="font-weight: normal;">Define HTML snippets to be inserted into the <code>&lt;HEAD&gt;</code> element such as <code>&lt;SCRIPT&gt;</code> or <code>&lt;LINK&gt;</code> sub elements.</span></li><li style="font-weight: bold;">Top HTML. <span style="font-weight: normal;">Define HTML snippets to be inserted directly after the <code>&lt;BODY&gt;</code> tag.</span></li><li style="font-weight: bold;">Bottom HTML. <span style="font-weight: normal;">Define HTML snippets to be inserted directly before the <code>&lt;/BODY&gt;</code> end tag.</span><span style="font-weight: normal;"></span></li></ul><li style="font-weight: bold;">Meta data</li><ul style="font-weight: normal;"><li>This
+storyboards, the storyboard title is formatted with this font.</li>
+      <li><span style="font-weight: bold;">Caption</span>. Font and color of image titles.</li>
+      <li><span style="font-weight: bold;">Navigation</span>. Font and color of navigation hyper-links.</li>
+      <li><span style="font-weight: bold;">Description</span>. Font and color of standard text.</li>
+      <li><span style="font-weight: bold;">Footer</span>. Font and color of the page footer.</li>
+    </ul>
+</ul><li style="font-weight: bold;">HTML</li><ul style="font-weight: normal;"><li style="font-weight: bold;">In &lt;HEAD&gt; element. <span style="font-weight: normal;">Define HTML snippets to be inserted into the <code>&lt;HEAD&gt;</code> element such as <code>&lt;SCRIPT&gt;</code> or <code>&lt;LINK&gt;</code> sub elements.</span></li><li style="font-weight: bold;">Top HTML. <span style="font-weight: normal;">Define HTML snippets to be inserted directly after the <code>&lt;BODY&gt;</code> tag.</span></li><li style="font-weight: bold;">Bottom HTML. <span style="font-weight: normal;">Define HTML snippets to be inserted directly before the <code>&lt;/BODY&gt;</code> end tag.</span><span style="font-weight: normal;"></span></li></ul><li style="font-weight: bold;">Meta data</li><ul style="font-weight: normal;"><li>This
 group shows selectable EXIF- and IPTC-properties that can be included
 into the generated images. Thumbnails will never contain meta data.
 Uploaded originals are not affected by these settings - they are always
@@ -111,8 +132,9 @@ dialog page.</li></ul></ul><ul style="font-weight: normal;"><li style="font-weig
 <li><span style="font-weight: bold;">Title.</span>
 The storyboard title will be displayed as a subtitle if the web engine supports multiple
 storyboards. May remain empty.</li>
+  <li><span style="font-weight: bold;">Show captions</span>. Check this box if you want to show image captions for the images of that storyboard.</li>
 <li><span style="font-weight: bold;">Description</span>.&nbsp;Short
-description of the&nbsp;storyboard. This field may contain <a href="htmlEditing.html">HTML mark-up</a>.</li><li><span style="font-weight: bold;">Show captions</span>. Check this box if you want to show image captions for the images of that storyboard.</li><li><span style="font-weight: bold;">Show descriptions</span>. Check this box if you want to show image descriptions for the images of that storyboard.</li><li><span style="font-weight: bold;">Show EXIF data</span>. Check this box if you want to show EXIF data for the images of that storyboard.</li><li><span style="font-weight: bold;">Image size</span>. Select a suitable image size for all images of that storyboard.</li><li><span style="font-weight: bold;">Enlarge small images</span>.
+description of the&nbsp;storyboard. This field may contain <a href="htmlEditing.html">HTML mark-up</a>.</li><li><span style="font-weight: bold;">Show descriptions</span>. Check this box if you want to show image descriptions for the images of that storyboard.</li><li><span style="font-weight: bold;">Show EXIF data</span>. Check this box if you want to show EXIF data for the images of that storyboard.</li><li><span style="font-weight: bold;">Image size</span>. Select a suitable image size for all images of that storyboard.</li><li><span style="font-weight: bold;">Enlarge small images</span>.
 Check this box if small images should be enlarged to the selected image
 size. Large images will always be reduced to the selected image size.</li>
 </ul>

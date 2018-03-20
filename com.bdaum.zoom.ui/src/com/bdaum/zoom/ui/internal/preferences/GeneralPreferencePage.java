@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -28,7 +28,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Monitor;
@@ -118,10 +117,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createBackupGroup(Composite composite) {
-		CGroup group = new CGroup(composite, SWT.NONE);
-		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-		group.setLayout(new GridLayout(2, false));
-		group.setText(Messages.getString("GeneralPreferencePage.backup_update")); //$NON-NLS-1$
+		CGroup group = CGroup.create(composite, 1, Messages.getString("GeneralPreferencePage.backup_update"));  //$NON-NLS-1$
 		new Label(group, SWT.NONE).setText(Messages.getString("GeneralPreferencePage.backup_interval")); //$NON-NLS-1$
 		backupField = new NumericControl(group, SWT.NONE);
 		backupField.setMinimum(1);

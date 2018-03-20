@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 package com.bdaum.zoom.report.internal.wizards;
 
@@ -29,7 +29,6 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -57,6 +56,7 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.report.internal.HelpContextIds;
 import com.bdaum.zoom.ui.dialogs.ZListDialog;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.views.CatalogLabelProvider;
 import com.bdaum.zoom.ui.internal.views.CatalogView.CatalogComparator;
 import com.bdaum.zoom.ui.internal.views.IdentifiedElementComparer;
@@ -89,7 +89,7 @@ public class SourcePage extends ColoredWizardPage implements SelectionListener {
 				}
 			});
 			super.create();
-			setComparator(new ViewerComparator());
+			setComparator(ZViewerComparator.INSTANCE);
 			getTableViewer().addSelectionChangedListener(new ISelectionChangedListener() {
 				@Override
 				public void selectionChanged(SelectionChangedEvent event) {

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal;
@@ -55,11 +55,11 @@ public class AddAlbumOperation extends DbOperation {
 	private String[][] oldPersons;
 	private List<List<String>> oldAssetIds = new ArrayList<List<String>>();
 	private List<Region> updatedRegions = new ArrayList<>();
+	private List<String> oldRegionAlbums = new ArrayList<>();
 	private ImportOperation op;
 	private int subalbums;
 	private Region region;
 	private boolean deleteRegion;
-	private String[] oldRegionAlbums;
 
 	public AddAlbumOperation(Collection<SmartCollectionImpl> coll, List<Asset> assets, Region region,
 			boolean deleteRegion) {
@@ -102,12 +102,11 @@ public class AddAlbumOperation extends DbOperation {
 		saveOldAlbums();
 		aMonitor.worked(1);
 		if (setAlbums(aMonitor))
-			fireAssetsModified(null, null);
+			fireAssetsModified(null, QueryField.ALBUMASSETS);
 		return close(info, (String[]) null);
 	}
 
 	private boolean setAlbums(IProgressMonitor monitor) {
-		Set<Asset> modifiedAssets = new HashSet<Asset>(assets.size() * 3 / 2);
 		Set<Object> toBeDeleted = new HashSet<Object>();
 		Set<Object> toBeStored = new HashSet<Object>();
 		if (region != null) {
@@ -117,7 +116,7 @@ public class AddAlbumOperation extends DbOperation {
 				asset.setPerson(Utilities.removeFromStringArray(region.getStringId(), asset.getPerson()));
 				toBeDeleted.add(region);
 				updatedRegions.add(region);
-				modifiedAssets.add(asset);
+				toBeStored.add(asset);
 			}
 			if (albumId != null) {
 				if (!deleteRegion) {
@@ -129,9 +128,10 @@ public class AddAlbumOperation extends DbOperation {
 				if (album != null) {
 					album.removeAsset(asset.getStringId());
 					toBeStored.add(album);
+					dbManager.addDirtyCollection(albumId);
 				}
 				asset.setAlbum(Utilities.removeFromStringArray(albumId, asset.getAlbum()));
-				modifiedAssets.add(asset);
+				toBeStored.add(asset);
 			}
 		}
 		if (!deleteRegion) {
@@ -147,38 +147,43 @@ public class AddAlbumOperation extends DbOperation {
 								continue;
 							String[] albums = asset.getAlbum();
 							String[] newAlbums = Utilities.addToStringArray(name, albums, false);
+							String assetId = asset.getStringId();
 							if (albums == null || newAlbums.length != albums.length) {
 								asset.setAlbum(newAlbums);
-								modifiedAssets.add(asset);
-								String assetId = asset.getStringId();
+								toBeStored.add(asset);
 								List<String> assetIds = tempAlbum.getAsset();
 								if (assetIds == null)
 									assetIds = Collections.singletonList(assetId);
 								else if (!assetIds.contains(assetId))
 									assetIds.add(assetId);
-								String[] persons = asset.getPerson();
-								if (tempAlbum.getAlbum() && tempAlbum.getSystem() && persons != null
-										&& persons.length > 0) {
-									if (region != null) {
+							}
+							String[] persons = asset.getPerson();
+							if (tempAlbum.getAlbum() && tempAlbum.getSystem() && persons != null
+									&& persons.length > 0) {
+								String albumId = tempAlbum.getStringId();
+								if (region != null) {
+									String oldRegionAlbumId = region.getAlbum();
+									if (!albumId.equals(oldRegionAlbumId)) {
+										oldRegionAlbums.add(oldRegionAlbumId);
 										updatedRegions.add(region);
-										region.setAlbum(tempAlbum.getStringId());
+										region.setAlbum(albumId);
 										toBeStored.add(region);
-									} else {
-										List<RegionImpl> regions = dbManager.obtainObjects(RegionImpl.class,
-												"asset_person_parent", assetId, QueryField.EQUALS); //$NON-NLS-1$
-										Region nullRegion = null;
-										int i = 0;
-										for (RegionImpl region : regions)
-											if (region.getAlbum() == null) {
-												++i;
-												if (nullRegion == null)
-													nullRegion = region;
-											}
-										if (i == 1) {
-											updatedRegions.add(nullRegion);
-											nullRegion.setAlbum(tempAlbum.getStringId());
-											toBeStored.add(nullRegion);
+									}
+								} else {
+									Region nullRegion = null;
+									int i = 0;
+									for (RegionImpl region : dbManager.obtainObjects(RegionImpl.class,
+											"asset_person_parent", assetId, QueryField.EQUALS)) //$NON-NLS-1$
+										if (region.getAlbum() == null) {
+											++i;
+											if (nullRegion == null)
+												nullRegion = region;
 										}
+									if (i == 1) {
+										oldRegionAlbums.add(nullRegion.getAlbum());
+										updatedRegions.add(nullRegion);
+										nullRegion.setAlbum(albumId);
+										toBeStored.add(nullRegion);
 									}
 								}
 							}
@@ -188,10 +193,6 @@ public class AddAlbumOperation extends DbOperation {
 				}
 			}
 		}
-		oldRegionAlbums = new String[updatedRegions.size()];
-		for (int i = 0; i < updatedRegions.size(); i++)
-			oldRegionAlbums[i] = updatedRegions.get(i).getAlbum();
-		toBeStored.addAll(modifiedAssets);
 		return storeSafely(toBeDeleted.toArray(), 1, toBeStored.toArray());
 	}
 
@@ -238,7 +239,7 @@ public class AddAlbumOperation extends DbOperation {
 		}
 		i = 0;
 		for (Region region : updatedRegions) {
-			region.setAlbum(oldRegionAlbums[i++]);
+			region.setAlbum(oldRegionAlbums.get(i++));
 			toBeStored.add(region);
 		}
 		updatedRegions.clear();

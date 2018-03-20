@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.email.internal.job;
@@ -46,11 +46,11 @@ import com.bdaum.zoom.cat.model.PageLayout_type;
 import com.bdaum.zoom.cat.model.PageLayout_typeImpl;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.meta.Meta;
+import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.email.internal.Activator;
@@ -130,13 +130,11 @@ public class PdfJob extends CustomJob {
 	private final UnsharpMask unsharpMask;
 	protected String opId = java.util.UUID.randomUUID().toString();
 	protected IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
-	// private final int scalingMethod;
 
 	public PdfJob(List<Asset> assets, PageLayout_typeImpl layout, File targetFile, int quality, int jpegQuality,
 			int cms, UnsharpMask unsharpMask, String collection) {
 		super(Messages.PdfJob_Create_x);
 		this.jpegQuality = jpegQuality;
-		// this.scalingMethod = scalingMethod;
 		this.assets = assets;
 		this.layout = layout;
 		this.targetFile = targetFile;
@@ -195,16 +193,12 @@ public class PdfJob extends CustomJob {
 		fontLead = fontSize / 3f;
 		titlePixelSize = 0;
 		titleLead = 0;
-		if (!layout.getTitle().isEmpty()) {
-			titlePixelSize = titleSize;
-			titleLead = titlePixelSize;
-		}
+		if (!layout.getTitle().isEmpty())
+			titleLead = titlePixelSize = titleSize;
 		subtitlePixelSize = 0;
 		subtitleLead = 0;
-		if (!layout.getSubtitle().isEmpty()) {
-			subtitlePixelSize = subtitleSize;
-			subtitleLead = subtitlePixelSize;
-		}
+		if (!layout.getSubtitle().isEmpty())
+			subtitleLead = subtitlePixelSize = subtitleSize;
 		titleTextSize = titlePixelSize + titleLead + subtitlePixelSize + subtitleLead;
 		footerLead = footerSize;
 		int footerTextSize = footerSize + footerLead;
@@ -241,7 +235,7 @@ public class PdfJob extends CustomJob {
 		fileName = dbManager.getFileName();
 	}
 
-	public static Rectangle computeFormat(PageLayout_typeImpl layout) {
+	public static Rectangle computeFormat(PageLayout_type layout) {
 		Rectangle format = PageSize.A4;
 		String f = layout.getFormat();
 		for (int i = 0; i < PageLayout_type.formatALLVALUES.length; i++)
@@ -301,10 +295,7 @@ public class PdfJob extends CustomJob {
 			Paragraph p = new Paragraph(title,
 					FontFactory.getFont(FontFactory.HELVETICA, titleSize, Font.BOLD, BaseColor.DARK_GRAY));
 			p.setAlignment(Element.ALIGN_CENTER);
-			if (!layout.getSubtitle().isEmpty())
-				p.setSpacingAfter(titleLead);
-			else
-				p.setSpacingAfter(titleLead + upperWaste);
+			p.setSpacingAfter(layout.getSubtitle().isEmpty() ? titleLead + upperWaste : titleLead);
 			document.add(p);
 		}
 		if (!layout.getSubtitle().isEmpty()) {
@@ -316,9 +307,9 @@ public class PdfJob extends CustomJob {
 			p.setSpacingAfter(subtitleLead + upperWaste);
 			document.add(p);
 		}
+		IVolumeManager vm = Core.getCore().getVolumeManager();
 		PdfPTable table = new PdfPTable(layout.getColumns());
-		Ticketbox box = new Ticketbox();
-		try {
+		try (Assetbox box = new Assetbox(null, status, false)) {
 			for (int i = 0; i < rows; i++) {
 				int ni = i * layout.getColumns();
 				for (int j = 0; j < layout.getColumns(); j++) {
@@ -334,7 +325,6 @@ public class PdfJob extends CustomJob {
 						zimage = new ZImage(ImageUtilities.loadThumbnail(display, asset.getJpegThumbnail(), cms,
 								SWT.IMAGE_JPEG, true), null);
 						org.eclipse.swt.graphics.Rectangle bounds = zimage.getBounds();
-						IVolumeManager vm = Core.getCore().getVolumeManager();
 						URI uri = vm.findExistingFile(asset, false);
 						if (uri != null) {
 							boolean r = asset.getRotation() % 180 != 0;
@@ -342,14 +332,8 @@ public class PdfJob extends CustomJob {
 							double h = r ? asset.getWidth() : asset.getHeight();
 							double scale = w == 0 || h == 0 ? 1d : Math.min(pixelWidth / w, pixelHeight / h);
 							scale = (scale <= 0.5d) ? 0.5d : 1d;
-							File file = null;
-							try {
-								file = box.obtainFile(uri);
-							} catch (IOException e) {
-								status.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-										NLS.bind(Messages.PdfJob_download_failed, uri), e));
-							}
-							if (file != null) {
+							File file = box.obtainFile(uri);
+							if (file != null)
 								try {
 									ZImage hzimage = CoreActivator.getDefault().getHighresImageLoader().loadImage(null,
 											status, file, asset.getRotation(), asset.getFocalLengthIn35MmFilm(), null,
@@ -362,8 +346,6 @@ public class PdfJob extends CustomJob {
 								} catch (UnsupportedOperationException e) {
 									// do nothing
 								}
-								box.cleanup();
-							}
 						}
 						display.syncExec(() -> {
 							int kl = (keyLine > 0) ? (int) Math.max(1, (keyLine * dpi / 144)) : 0;
@@ -407,10 +389,8 @@ public class PdfJob extends CustomJob {
 						zimage.dispose();
 						com.itextpdf.text.Image pdfImage = com.itextpdf.text.Image.getInstance(jpegFile.getPath());
 						double factor = Math.min(imageWidth / bounds.width, imageHeight / bounds.height);
-						float w = (float) (bounds.width * factor);
-						float h = (float) (bounds.height * factor);
 						pdfImage.setInterpolation(true);
-						pdfImage.scaleToFit(w, h);
+						pdfImage.scaleToFit((float) (bounds.width * factor), (float) (bounds.height * factor));
 						cell = new PdfPCell(pdfImage, false);
 						cell.setHorizontalAlignment(Element.ALIGN_CENTER);
 						monitor.worked(1);
@@ -423,14 +403,13 @@ public class PdfJob extends CustomJob {
 				renderCaptions(pageNo, seqNo, pageItem, table, ni, layout.getCaption2());
 				pageItem += layout.getColumns();
 				seqNo += layout.getColumns();
-				if (verticalGap > 0 && i < rows - 1) {
+				if (verticalGap > 0 && i < rows - 1)
 					for (int j = 0; j < layout.getColumns(); j++) {
 						PdfPCell cell = new PdfPCell();
 						cell.setFixedHeight(verticalGap);
 						cell.setBorderWidth(0);
 						table.addCell(cell);
 					}
-				}
 			}
 			table.setWidthPercentage(100f);
 			document.add(table);
@@ -443,8 +422,6 @@ public class PdfJob extends CustomJob {
 				p.setSpacingBefore(upperWaste / 2 + footerLead);
 				document.add(p);
 			}
-		} finally {
-			box.endSession();
 		}
 	}
 

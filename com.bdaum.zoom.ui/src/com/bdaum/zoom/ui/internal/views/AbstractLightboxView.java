@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -238,7 +238,8 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 								colorCode = i;
 								break;
 							}
-				} else if (hasMouse) {
+				}
+				if (hasMouse || colorCode != Constants.COLOR_UNDEFINED) {
 					bounds3 = new Rectangle(x + th, y + th, w, w);
 					Image colorCodeIcon = Icons.toSwtColors(colorCode);
 					Rectangle ibounds = colorCodeIcon.getBounds();
@@ -580,7 +581,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 							}
 							if (hotSpots.isRating(e.x, e.y)) {
 								RatingDialog dialog = new RatingDialog(getSite().getShell(), asset.getRating(), 0.5d,
-										true);
+										true, true);
 								dialog.create();
 								dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
 								ZoomActionFactory.rate(Collections.singletonList(asset), AbstractLightboxView.this,
@@ -693,7 +694,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 			currentItem = item;
 			if (oldItem != null)
 				gallery.redraw(oldItem);
-			Job.getJobManager().cancel(DecoJob.ID);
+			cancelJobs(DecoJob.ID);
 			new DecoJob(gallery, currentItem).schedule(250);
 		}
 	}
@@ -897,7 +898,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 			addMouseWheelListener(gallery);
 		addKeyListener();
 		addGestureListener(gallery);
-		addExplanationListener();
+		addExplanationListener(false);
 		// Drop-Unterstützung
 		addDragDropSupport();
 		// Hover
@@ -908,7 +909,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 		hookDoubleClickAction(gallery);
 		contributeToActionBars();
 		setDecorator(gallery, new GalleryDecorateJob(this, gallery));
-		updateActions();
+		updateActions(false);
 	}
 
 }

@@ -71,7 +71,7 @@ import com.bdaum.zoom.ui.widgets.DateInput;
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2012 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2012 Berthold Daum  
  */
 public class ColorCodeGroup {
 
@@ -106,13 +106,11 @@ public class ColorCodeGroup {
 
 	private List<Text> fieldsToValidate = new ArrayList<Text>(2);
 
+	@SuppressWarnings("unused")
 	public ColorCodeGroup(Composite autoGroup, int index, PreferencePage page) {
 		this.page = page;
-		Label label = new Label(autoGroup, SWT.BORDER);
-		// label.setText(QueryField.COLORCODELABELS[index + 1]);
-		label.setImage(Icons.toSwtColors(index));
-		@SuppressWarnings("unused")
-		Label label2 = new Label(autoGroup, SWT.NONE);
+		new Label(autoGroup, SWT.BORDER).setImage(Icons.toSwtColors(index));
+		new Label(autoGroup, SWT.NONE);
 		critGroupCombo = new ComboViewer(autoGroup, SWT.READ_ONLY | SWT.BORDER);
 		Combo comboControl = critGroupCombo.getCombo();
 		comboControl.setVisibleItemCount(10);
@@ -125,7 +123,6 @@ public class ColorCodeGroup {
 		critFieldCombo = new Combo(autoGroup, SWT.READ_ONLY | SWT.BORDER);
 		critFieldCombo.setLayoutData(new GridData(200, SWT.DEFAULT));
 		critFieldCombo.setVisibleItemCount(10);
-
 		critRelationCombo = new Combo(autoGroup, SWT.READ_ONLY | SWT.BORDER);
 		critRelationCombo.setLayoutData(new GridData(80, SWT.DEFAULT));
 		valueComp = new Composite(autoGroup, SWT.NONE);
@@ -262,12 +259,11 @@ public class ColorCodeGroup {
 				index = 0;
 			if (crit != null) {
 				int rel = crit.getRelation();
-				for (int k = 0; k < relationLabels.size(); k++) {
+				for (int k = 0; k < relationLabels.size(); k++)
 					if (relationKeys[k] == rel) {
 						index = k;
 						break;
 					}
-				}
 			}
 			if (index >= 0)
 				critRelationCombo.select(index);
@@ -317,44 +313,39 @@ public class ColorCodeGroup {
 								if (value instanceof Range) {
 									Range range = (Range) value;
 									int v = ((Integer) range.getFrom()).intValue();
-									for (int j = 0; j < intKeys.length; j++) {
+									for (int j = 0; j < intKeys.length; j++)
 										if (intKeys[j] == v) {
 											enumFromField.select(j);
 											break;
 										}
-									}
 									v = ((Integer) range.getTo()).intValue();
-									for (int j = 0; j < intKeys.length; j++) {
+									for (int j = 0; j < intKeys.length; j++)
 										if (intKeys[j] == v) {
 											enumToField.select(j);
 											break;
 										}
-									}
 								} else if (value != null) {
 									int v = ((Integer) value).intValue();
-									for (int j = 0; j < intKeys.length; j++) {
+									for (int j = 0; j < intKeys.length; j++)
 										if (intKeys[j] == v) {
 											enumValueCombo.select(j);
 											break;
 										}
-									}
 								}
 							} else if (enumKeys instanceof String[]) {
 								String[] sKeys = (String[]) enumKeys;
-								for (int j = 0; j < sKeys.length; j++) {
+								for (int j = 0; j < sKeys.length; j++)
 									if (sKeys[j].equals(value)) {
 										enumValueCombo.select(j);
 										break;
 									}
-								}
 							} else {
 								String[] sKeys = enumValueCombo.getItems();
-								for (int j = 0; j < sKeys.length; j++) {
+								for (int j = 0; j < sKeys.length; j++)
 									if (sKeys[j].equals(value)) {
 										enumValueCombo.select(j);
 										break;
 									}
-								}
 							}
 						}
 					}
@@ -558,25 +549,24 @@ public class ColorCodeGroup {
 		criterion.setField(des.qfield.getKey());
 		criterion.setSubfield(des.subfield == null ? null : des.subfield.getKey());
 		criterion.setRelation(relationKeys[relation]);
-		if (valueLayout.topControl == enumGroup) {
+		if (valueLayout.topControl == enumGroup)
 			criterion.setValue(getEnumValue(enumValueCombo, des));
-		} else if (valueLayout.topControl == enumRangeGroup) {
+		else if (valueLayout.topControl == enumRangeGroup)
 			criterion.setValue(new Range(getEnumValue(enumFromField, des), getEnumValue(enumToField, des)));
-		} else if (valueLayout.topControl == dateGroup) {
+		else if (valueLayout.topControl == dateGroup)
 			criterion.setValue(dateValueField.getDate());
-		} else if (valueLayout.topControl == dateRangeGroup) {
+		else if (valueLayout.topControl == dateRangeGroup)
 			criterion.setValue(new Range(dateFromField.getDate(), dateToField.getDate()));
-		} else if (valueLayout.topControl == codeGroup) {
+		else if (valueLayout.topControl == codeGroup)
 			criterion.setValue(UiUtilities.computeCookedValue(des, codeValueField.getText()));
-		} else if (valueLayout.topControl == dateRangeGroup) {
+		else if (valueLayout.topControl == dateRangeGroup)
 			criterion.setValue(new Range(UiUtilities.computeCookedValue(des, codeFromField.getText()),
 					UiUtilities.computeCookedValue(des, codeToField.getText())));
-		} else if (valueLayout.topControl == textGroup) {
+		else if (valueLayout.topControl == textGroup)
 			criterion.setValue(UiUtilities.computeCookedValue(des, textValueField.getText()));
-		} else {
+		else
 			criterion.setValue(new Range(UiUtilities.computeCookedValue(des, textFromField.getText()),
 					UiUtilities.computeCookedValue(des, textToField.getText())));
-		}
 		return criterion;
 	}
 

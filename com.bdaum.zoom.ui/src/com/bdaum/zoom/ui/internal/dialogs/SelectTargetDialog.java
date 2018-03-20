@@ -8,7 +8,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -19,6 +18,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 
 public class SelectTargetDialog extends ZTitleAreaDialog implements
 		ISelectionChangedListener {
@@ -53,7 +53,7 @@ public class SelectTargetDialog extends ZTitleAreaDialog implements
 				| SWT.V_SCROLL | SWT.H_SCROLL);
 		viewer.getControl().setLayoutData(new GridData(500, 200));
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
-		viewer.setComparator(new ViewerComparator());
+		viewer.setComparator(ZViewerComparator.INSTANCE);
 		viewer.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {

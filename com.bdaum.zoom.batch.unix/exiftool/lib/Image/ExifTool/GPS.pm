@@ -12,7 +12,7 @@ use strict;
 use vars qw($VERSION);
 use Image::ExifTool::Exif;
 
-$VERSION = '1.47';
+$VERSION = '1.48';
 
 my %coordConv = (
     ValueConv    => 'Image::ExifTool::GPS::ToDegrees($val)',
@@ -133,7 +133,8 @@ my %coordConv = (
         # pull time out of any format date/time string
         # (converting to UTC if a timezone is given)
         PrintConvInv => sub {
-            my $v = shift;
+            my ($v, $et) = @_;
+            $v = $et->TimeNow() if lc($v) eq 'now';
             my @tz;
             if ($v =~ s/([-+])(.*)//s) {    # remove timezone
                 my $s = $1 eq '-' ? 1 : -1; # opposite sign to convert back to UTC
@@ -314,6 +315,7 @@ my %coordConv = (
         # (and adjust to UTC if this is a full date/time/timezone value)
         PrintConvInv => q{
             my $secs;
+            $val = $self->TimeNow() if lc($val) eq 'now';
             if ($val =~ /[-+]/ and ($secs = Image::ExifTool::GetUnixTime($val, 1))) {
                 $val = Image::ExifTool::ConvertUnixTime($secs);
             }
@@ -374,7 +376,7 @@ my %coordConv = (
         PrintConv => 'Image::ExifTool::GPS::ToDMS($self, $val, 1, "E")',
     },
     GPSAltitude => {
-        SubDoc => 1,    # generate for all sub-documents
+        SubDoc => [1,3], # generate for sub-documents if Desire 1 or 3 has a chance to exist
         Desire => {
             0 => 'GPS:GPSAltitude',
             1 => 'GPS:GPSAltitudeRef',
@@ -537,7 +539,7 @@ GPS (Global Positioning System) meta information in EXIF data.
 
 =head1 AUTHOR
 
-Copyright 2003-2017, Phil Harvey (phil at owl.phy.queensu.ca)
+Copyright 2003-2018, Phil Harvey (phil at owl.phy.queensu.ca)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

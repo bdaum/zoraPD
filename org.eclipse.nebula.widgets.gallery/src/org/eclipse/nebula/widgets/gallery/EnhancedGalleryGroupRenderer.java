@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors :
- *    Berthold Daum  (berthold.daum@bdaum.de)
+ *    Berthold Daum  
  *******************************************************************************/
 
 package org.eclipse.nebula.widgets.gallery;

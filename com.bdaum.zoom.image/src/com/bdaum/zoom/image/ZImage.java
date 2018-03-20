@@ -165,18 +165,21 @@ public class ZImage {
 	 * @param rotation
 	 *            - user defined rotation to be applied during loading
 	 * @param bounds
-	 *            - preferred image bounds or null
+	 *            - preferred image bounds or null to scale only for height. Set
+	 *            bounds.with negative to scale only for width, set bound.height
+	 *            negative. Note that the absolute values of width and height are
+	 *            also used to determine the orientation
 	 * @param scalingFactor
-	 *            - scaling factor to be used when bounds are specified as null
-	 *            Set to 0 for full resolution without subsampling
+	 *            - scaling factor to be used when bounds are specified as null Set
+	 *            to 0 for full resolution without subsampling
 	 * @param maxFactor
 	 *            - maximum scaling factor (limits the effects of the bounds
 	 *            parameter)
 	 * @param advanced
 	 *            - true if antialiasing and quality interpolation shall be used
 	 * @param bw
-	 *            - RGB value if image is to be converted into black and white,
-	 *            null otherwise. The value will be used as filter
+	 *            - RGB value if image is to be converted into black and white, null
+	 *            otherwise. The value will be used as filter
 	 * @param umask
 	 *            - unsharp mask for output sharpening or null
 	 * @param cop
@@ -196,13 +199,14 @@ public class ZImage {
 		if (importFilter != null) {
 			IImageLoader imageLoader = importFilter.getImageLoader(file);
 			image = (bounds != null) ? imageLoader.loadImage(bounds.width, bounds.height, 1, 0f, maxFactor)
-					: imageLoader.loadImage(-1, -1, 1, 0f, maxFactor);
+					: imageLoader.loadImage(0, 0, 1, 0f, maxFactor);
 		}
 		if (image == null) {
 			try {
-				Runtime.getRuntime().gc();
-				long allocatedMemory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
-				long presumableFreeMemory = Runtime.getRuntime().maxMemory() - allocatedMemory;
+				Runtime runtime = Runtime.getRuntime();
+				runtime.gc();
+				long allocatedMemory = (runtime.totalMemory() - runtime.freeMemory());
+				long presumableFreeMemory = runtime.maxMemory() - allocatedMemory;
 				image = loadViaImageIO(file, scalingFactor > 0 ? presumableFreeMemory >> 8 : Integer.MAX_VALUE);
 				if (image == null)
 					image = loadViaImageJ(file);
@@ -216,14 +220,12 @@ public class ZImage {
 		}
 		if (image != null) {
 			if (bounds != null)
-				scalingFactor = (rotation % 180 != 0)
-						? Math.min(maxFactor,
-								Math.min((double) bounds.width / image.height, (double) bounds.height / image.width))
-						: Math.min(maxFactor,
-								Math.min((double) bounds.width / image.width, (double) bounds.height / image.height));
+				scalingFactor = Math.min(maxFactor,
+						rotation % 180 != 0 ? computeScale(image.height, image.width, bounds.width, bounds.height)
+								: computeScale(image.width, image.height, bounds.width, bounds.height));
 			if (scalingFactor != 1d && scalingFactor > 0)
 				image.setScaling((int) (image.width * scalingFactor + 0.5d),
-						(int) (image.height * scalingFactor + 0.5d), advanced, 0, null); 
+						(int) (image.height * scalingFactor + 0.5d), advanced, 0, null);
 			image.setRotation(rotation, 1f, 1f);
 			image.setOutputColorConvert(cop);
 			image.setOutputSharpening(umask);
@@ -231,6 +233,14 @@ public class ZImage {
 			image.setBw(bw);
 		}
 		return image;
+	}
+
+	private static double computeScale(int iWidth, int iHeight, int width, int height) {
+		if (width < 0)
+			return (double) height / iHeight;
+		if (height < 0)
+			return (double) width / iWidth;
+		return Math.min((double) width / iWidth, (double) height / iHeight);
 	}
 
 	private boolean preferSwt(int format) {
@@ -336,8 +346,8 @@ public class ZImage {
 	}
 
 	/**
-	 * Sets the color conversion operator for output color conversion Typically
-	 * used to adapt images to Wide Gamut screens
+	 * Sets the color conversion operator for output color conversion Typically used
+	 * to adapt images to Wide Gamut screens
 	 *
 	 * @param colorConvertOp
 	 *            - the color conversion operator
@@ -387,9 +397,9 @@ public class ZImage {
 	 * @param advanced
 	 *            - true if quality interpolation is to be used
 	 * @param raster
-	 *            - if > 0, image width and height will be adjusted to multiples
-	 *            of the raster value. The purpose of this parameter is to
-	 *            facility lossless JPEG rotation
+	 *            - if > 0, image width and height will be adjusted to multiples of
+	 *            the raster value. The purpose of this parameter is to facility
+	 *            lossless JPEG rotation
 	 * @param frameColor
 	 *            - color of area surrounding the image or null
 	 * @return - the scaling factor
@@ -1108,10 +1118,9 @@ public class ZImage {
 	 *            - preferred image width. Specify -1 (SWT.DEFAULT) for NO
 	 *            preferredWidth
 	 * @param preferredHeight
-	 *            - preferred image height. 0 indicates that the image is
-	 *            cropped to a square format in the size specified with
-	 *            preferredWidth. Specify -1 (SWT.DEFAULT) for NO
-	 *            preferredHeight
+	 *            - preferred image height. 0 indicates that the image is cropped to
+	 *            a square format in the size specified with preferredWidth. Specify
+	 *            -1 (SWT.DEFAULT) for NO preferredHeight
 	 * @param out
 	 *            - output stream
 	 * @param format
@@ -1137,19 +1146,18 @@ public class ZImage {
 	 *            - preferred image width. Specify -1 (SWT.DEFAULT) for NO
 	 *            preferredWidth
 	 * @param preferredHeight
-	 *            - preferred image height. 0 indicates that the image is
-	 *            cropped to a square format in the size specified with
-	 *            preferredWidth. Specify -1 (SWT.DEFAULT) for NO
-	 *            preferredHeight
+	 *            - preferred image height. 0 indicates that the image is cropped to
+	 *            a square format in the size specified with preferredWidth. Specify
+	 *            -1 (SWT.DEFAULT) for NO preferredHeight
 	 * @param out
 	 *            - output stream
 	 * @param format
 	 *            - format: either SWT.IMAGE_PNG, SWT.IMAGE_JPEG, or
 	 *            ZImage.IMAGE_WEBP
 	 * @param quality
-	 *            - a value between -1 and 100 determining the compression
-	 *            quality (100 = high quality, 1 = low quality, -1, 0 = default
-	 *            (only used for JPEG and WebP, default = 75)
+	 *            - a value between -1 and 100 determining the compression quality
+	 *            (100 = high quality, 1 = low quality, -1, 0 = default (only used
+	 *            for JPEG and WebP, default = 75)
 	 * @throws IOException
 	 */
 	public void saveToStream(final IProgressMonitor monitor, boolean develop, final int cropMode,
@@ -1212,7 +1220,7 @@ public class ZImage {
 			loader.save(out, format);
 		}
 	}
-	
+
 	public int getSuperSamplingFactor() {
 		return superSamplingFactor;
 	}

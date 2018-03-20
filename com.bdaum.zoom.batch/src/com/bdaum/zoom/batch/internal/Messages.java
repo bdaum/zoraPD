@@ -25,6 +25,7 @@ public class Messages extends NLS {
 	public static String BatchActivator_IOerror_converting;
 	public static String BatchActivator_No_file_conversion;
 	public static String BatchActivator_output_stream;
+	public static String BatchActivator_run_script;
 	public static String BatchActivator_time_limit_exceeded;
 	public static String ExifTool_Bad_ICC_profile;
 	public static String ExifTool_error_fetching_binary_data;

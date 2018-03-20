@@ -1,91 +1,164 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="en-us"><head>
 
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Working with RAW files</title>
 
 
-  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Working with Raw images</title>
 
 
-<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head>
-<body>
-<h2>Working with Raw images<br>
- </h2>The RAW image format is popular for many serious photographers.
-The reason is, that other than the limited and lossy JPeG format, RAW
-files contain all data captured by the cameras sensor.<br>
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2><span id="result_box" class="" tabindex="-1" lang="en"><span title="Mit RAW-Dateien arbeiten">Working with RAW files</span></span> </h2><span id="result_box" class="" tabindex="-1" lang="en"><span title="Mit RAW-Dateien arbeiten"></span><span title="Das RAW-Bildformat ist bei vielen ernsthaften Fotografen beliebt.">The RAW image format is popular with many serious photographers. </span><span title="Der Grund dafür ist, dass anders als das begrenzte und verlustbehaftete JPEG-Format, RAW-Dateien alle vom Kamerasensor eingefangen Daten enthalten.">The reason for this is that unlike the limited and lossy JPEG format, RAW files contain all data captured by the camera sensor.<br><br></span><span title="RAW-Bilder können nicht direkt angezeigt oder gedruckt werden.">RAW images can not be directly displayed or printed. </span><span title="Stattdessen müssen sie in ein traditionelles Bildformat wie TIFF oder JPeG mit Hilfe eines Raw-Konverters entwickelt werden, zum Beispiel mit Adobe Camera Raw, Adobe Lightroom, Capture One, Raw Therapee, AfterShot, LightZone und anderen.">Instead, they need to be developed into a traditional image format 
+such as TIFF or JPeG using a raw converter, such as <span style="font-style: italic;">Adobe Camera Raw</span>, 
+<span style="font-style: italic;">Adobe Lightroom</span>, <span style="font-style: italic;">Capture One</span>, <span style="font-style: italic;">RawTherapee</span>, <span style="font-style: italic;">AfterShot</span>, <span style="font-style: italic;">LightZone</span>, and 
+others.<br><br></span><span title="Leider verwendet fast jeder Kamerahersteller ein eigenes RAW-Format.">Unfortunately, almost every camera manufacturer uses their own RAW format. </span><span title="In einem Versuch, das RAW-Bildformat zu standardisieren, hat Adobe das DNG-Format geschaffen (Digital Negative).">In an attempt to standardize the RAW image format, Adobe has created the DNG format (Digital Negative). </span><span title="Einige Kamerahersteller unterstützen dieses Format direkt, in den meisten Fällen müssen die von der Kamera gelieferten Bilder jedoch mit dem Adobe DNG Converter in DNG-Dateien umgerechnet werden.">Some
+ camera manufacturers support this format directly, but in most cases 
+the images supplied by the camera must be converted to DNG files using 
+Adobe DNG Converter. </span><span title="Auch diese DNG-Dateien müssen noch mit einem RAW-Konverter zu anzeigbaren Bildern &quot;entwickelt&quot; werden.">These DNG files must also be "developed" with a RAW converter to display images. </span><span title="Allerdings können nicht alle RAW-Konverter DNG-Dateien, die mit dem Adobe DNG Converter gewonnen wurden, umwandeln.">However, not all RAW converters can convert DNG files obtained with the <span style="font-style: italic;">Adobe DNG Converter</span>. </span><span title="Deshalb raten wir dazu, sowohl die originalen RAW-Bilder als auch die daraus ableiteten DNG-Dateien zu speichern.">Therefore, we recommend saving both the original RAW images and the derived DNG files.<br>
 <br>
-RAW images cannot directly be used for display or print purposes.
-Instead, they need to be developed into a traditional image format such
-as TIFF or JPeG using a <span style="font-style: italic;">Raw Converter</span>, for example <span style="font-style: italic;">Adobe Camera Raw</span>, <span style="font-style: italic;">Adobe Lightroom</span>, <span style="font-style: italic;">Capture One</span>, <span style="font-style: italic;">Raw Therapee</span>, <span style="font-style: italic;">Bibble</span>, <span style="font-style: italic;">LightZone</span> and others.<br>
+</span></span>
+<h4><span id="result_box" class="" tabindex="-1" lang="en"><span title="Grundlegende RAW-Unterstützung">Basic RAW support</span></span></h4>
+<h4><span id="result_box" class="" tabindex="-1" lang="en"><span title="Grundlegende RAW-Unterstützung"></span></span></h4>
+<span id="result_box" class="" tabindex="-1" lang="en"><span title="Grundlegende RAW-Unterstützung"></span><span title="ZoRa Photo Director kann RAW-und DNG-Bilder direkt importieren."><span style="font-style: italic;">ZoRa Photo Director</span> can directly import RAW and DNG images. </span><span title="Dabei können Sie wahlweise RAW-Bilder in DNG- Bilder konvertieren lassen, denn ZoRa Photo Director kann den Adobe DNG-Konverter ansteuern.">Optionally, you can have RAW images converted to DNG images, as ZoRa Photo Director can control the <span style="font-style: italic;">Adobe DNG Converter</span>. </span><span title="(Beachten Sie, dass der Adobe DNG-Konverter nicht mit ZoRa Photo Director ausgeliefert wird. Sie müssen ihn von Adobe herunterladen und separat installieren.)">(Note that the Adobe DNG Converter is not included with <span style="font-style: italic;">ZoRa Photo 
+Director</span>, you must download it from Adobe and install it separately.)<br><br></span><span title="Normalerweise ZoRa Photo Director verwendet intern das beliebte Modul DCRAW um RAW-Bilder in ein anzeigbares Format zu konvertieren (siehe auch Importieren von Bildern).">Normally
+ <span style="font-style: italic;">ZoRa Photo Director</span> internally uses the popular <span style="font-weight: bold;">DCRAW</span> module to convert
+ RAW images into a displayable format (see also<a href="../tasks/import.html#raw"> Importing Images</a>). </span><span title="Das ist jedes Mal erforderlich, wenn ein Thumbnail von einem Bild erzeugt wird, wenn die Bilder angesehen oder exportiert werden.">This is required each time a thumbnail is generated from an image when the images are viewed or exported. </span><span title="Normalerweise dauert die Konvertierung ein paar Sekunden.">Normally, the conversion takes a few seconds. </span><span title="Da ständig neue Digitalkameras am Markt erscheinen, ändert DCRAW seine Versionen häufig - häufiger als ZoRa Photo Director.">As new digital cameras appear on the market, DCRAW frequently changes its versions - more often than <span style="font-style: italic;">ZoRa Photo Director</span>. </span><span title="Neue DCRAW-Versionen können Sie aber einfach in den Unterordner dropins/ im Installationsordner von ZoRa Photo Director ablegen, um den Import von neuen Kameramodellen zu gewährleisten.">However, you can simply put new DCRAW versions in the <code>dropins/</code> 
+subfolder in the <span style="font-style: italic;">ZoRa Photo Director</span> installation folder to ensure 
+import of new camera models.<br><br></span><span title="Als Alternative zu DCRAW kann ZoRa Photo Director auch RawTherapee im Batch-Modus verwenden.">As an alternative to DCRAW, <span style="font-style: italic;">ZoRa Photo Director</span> can also use <span style="font-weight: bold;">RawTherapee</span> in batch mode. </span><span title="Die Ergebnisse sind qualitativ besser als bei DCRAW und falls Sie RawTherapee überwiegend als Raw-Konverter verwenden, ist es sinnvoll ihn auch in ZoRa Photo Director zu integrieren, um die Konvertierungsergebnisse konsistent zu halten.">The
+ results are better in quality than DCRAW, and if you use <span style="font-style: italic;">RawTherapee</span> 
+primarily as a raw converter, it makes sense to integrate it into <span style="font-style: italic;">ZoRa 
+Photo Director</span> to keep the conversion results consistent. </span><span title="Außerdem sind neuere Versionen von RawTherapee auf OS X Plattformen leichter erhältlich als neuere dcraw-Versionen.">In addition, newer versions of RawTherapee are more readily available on OS X platforms than newer DCRAW versions. </span><span title="RawTherapee bietet sogar die Möglichkeit auch neue Kameratypen relativ einfach zu unterstützen - siehe hier!"><span style="font-style: italic;">RawTherapee</span> even offers the possibility to support new camera types relatively easily - see <a href="http://rawpedia.rawtherapee.com/Adding_Support_for_New_Raw_Formats" target="_blank">here</a>!<br><br></span><span title="Hier richten Sie die RAW-und DNG-Konvertierung ein:  Fenster&gt;Benutzervorgaben&gt;Importieren&gt; RAW-Konvertierung*.">Here you can set up the RAW and DNG conversion: <acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion*</acronym>.<br><br></span><span title="ZoRa Photo Director kann automatisch die Beziehungen zwischen RAW-Bildern und abgeleiteten Bildern verfolgen."><span style="font-style: italic;">ZoRa Photo Director</span> can automatically track the relationships between RAW images and derived images. </span><span title="Sie können diese Beziehungen mit dem Hierarchie-Sichtfenster visualisieren.">You can visualize these relationships with the <a href="../reference/hierarchy.html">Hierarchy view</a>.<br>
 <br>
-Unfortunately, each camera manufacturer maintains its own RAW format.
-In an attempt to standardize the RAW image format, Adobe has created
-the DNG format (<span style="font-style: italic;">Digital Negative</span>).
-A few camera manufacturers support this camera format directly, but in
-most cases the the images delivered by the camera must be converted using
-Adobe's <span style="font-style: italic;">DNG Converter</span>. Still,
-these DNG images must be processed with a RAW converter to obtain
-displayable images. However, not all RAW converters can convert DNG
-files obtained with Adobe's <span style="font-style: italic;">DNG Converter</span>. So, our advice is to store RAW images both in the RAW format and in the DNG format.<br>
-<br>
-<h4>Basic RAW support</h4>
-<br>
-<span style="font-style: italic;">ZoRa Photo Director</span> can
-directly import RAW and DNG images. In the process it can optionally
-convert RAW images to DNG by integrating the Adobe DNG converter.
-(Note, that <span style="font-style: italic;">Adobe DNG Converter</span> is not distributed with <span style="font-style: italic;">ZoRa Photo Director</span> but must be downloaded from Adobe and installed separately.)<br>
-<br>
-By default <span style="font-style: italic;">ZoRa Photo Director</span> uses internally the popular module <span style="font-style: italic;">dcraw</span> to convert RAW images into a viewable format (see also <a href="../tasks/import.html#raw">Importing images</a>).
-This is done every time when a thumbnail is produced from an image,
-when images are viewed or exported. Typically, the conversion process
-takes a few seconds. Because new digital cameras are released
-frequently, <span style="font-style: italic;">dcraw</span> versions change frequently - more often than ZoRa PD versions. To support the latest digital cameras, <a href="../reference/dcraw.html">new <span style="font-style: italic;">dcraw</span> versions</a> can therefore simply be dropped into the sub folder <code>dropins/ </code>in the <span style="font-style: italic;">ZoRa Photo Director</span> installation folder. <br><br>Alternatively, <span style="font-style: italic;">ZoRa Photo Director</span> can use the <span style="font-style: italic;">RawTherapee</span> raw converter in batch mode instead of&nbsp;<span style="font-style: italic;">dcraw</span>. The quality should be better than with dcraw, and if you dominantly use <span style="font-style: italic;">RawTherapee</span> to convert your raw images, integrating it with <span style="font-style: italic;">ZoRa Photo Director</span> is a good way to keep your image base consistent. Also, on OS X platforms the availability of <span style="font-style: italic;">RawTherapee</span> is better than the availability of <span style="font-style: italic;">dcraw</span>.<br>
-<br>
-To set up RAW and DNG conversion go to <a href="../reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion*</acronym></a><span style="font-style: italic;">.</span> <br>
-<br>
-<span style="font-style: italic;">ZoRa Photo Director</span> can
-automatically track the relationships between RAW images and their
-derived images. You can visualize these relationships through the <a href="../reference/hierarchy.html">Hierarchy view</a>.<br>
-<br>
-<h4><a name="3R"></a>Raw Recipe Reflection (3R)<br>
-</h4>
-When developing RAW images, Raw Converters do not modify the original
-image. Instead they apply certain transformations to the original image
-and store the result in a conventional image format such as TIFF or
-JPeG. These transformations (<span style="font-style: italic;">recipes</span>)
-are usually stored in separate files, for example in XMP sidecars or in
-separate folders, so that later these transformations can be reapplied
-or modified without effort.<br>
-<br>
-<span style="font-style: italic;">ZoRa Photo Director</span> is able to
-read these recipes and to apply them to the image whenever the image is
-converted into a viewable format. This is optional and can be
-configured under <a href="../reference/importPrefs.html"><acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion*</acronym></a><span style="font-style: italic;">. </span>In case that one image has several recipes created with different Raw Converters, <span style="font-style: italic;">ZoRa Photo Director</span> will alway use the newest recipe. In the rare case that two Raw Converters share the same recipe file (as is the case between <span style="font-style: italic;">Adobe Camera Raw/Adobe Lightroom</span> and <span style="font-style: italic;">BIbble</span>), the priority defined under&nbsp;<acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion*</acronym> decides which recipe will be used.<br>
-<br>
-RAW recipes that were used for deriving other images (such as TIFF or
-JPeG images) can automatically be archived within the catalog (<acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion*</acronym>). This allows you at a later time, to restore the original recipe. To do so, open the <a href="../reference/hierarchy.html">Hierarchy view</a> on the RAW image (<acronym>Relations&gt;Show Derivatives</acronym>) and double click the derivative. In the following dialog click <abbr>Restore</abbr>.<br><br>Note, however, that the above applies only when using <span style="font-style: italic;">dcraw</span> as raw converter. If you use <span style="font-style: italic;">RawTherapee</span> you have only the options to apply <code>.pp3</code> sidecar recipes or the standard processing profile setup in <span style="font-style: italic;">RawTherapee</span>. Recipes from other raw converters are ignored. The advandage is that the recipe is processed by <span style="font-style: italic;">RawTherapee</span> itself and therefore is 100% identical with <span style="font-style: italic;">RawTherapee</span> conversion results.<br>
-<br>
-<h4>Advanced Features: CHDK support</h4>
-The CHDK is a tool that can be loaded onto an memory card and enables most <span style="font-style: italic;">Canon</span>
-consumer cameras - among other things - to deliver RAW and DNG files.
-Unfortunately, this RAW format does not contain EXIF data, and the DNG
-files only contain an incomplete set of EXIF data. Fortunatly, the
-camera also produces an associated JPeG file with a complete set of
-EXIF data.<br>
-<br>
-To obtain the most complete set of metadata with these files, we recommend to work in the following way:<br>
+</span></span>
+<h4><span id="result_box" class="" tabindex="-1" lang="en"><span title="Raw Recipe Reflection (3R)">Raw Recipe Refection (3R)</span></span></h4>
+<h4><span id="result_box" class="" tabindex="-1" lang="en"><span title="Raw Recipe Reflection (3R)"></span></span></h4>
+<span id="result_box" class="" tabindex="-1" lang="en"><span title="Raw Recipe Reflection (3R)"></span><span title="Bei der Entwicklung von RAW-Bildern ändert der RAW-Konverter nicht das ursprüngliche Bild.">When developing RAW images, the RAW converter does not change the original image. </span><span title="Stattdessen werden bestimmte Transformationen auf das Originalbild angewandt und das Ergebnis in einem herkömmlichen Bildformat wie TIFF oder JPEG abgespeichert.">Instead,
+ certain transformations are applied to the original image and the 
+result stored in a conventional image format such as TIFF or JPEG. </span><span title="Diese Transformationen (Rezepte) werden in der Regel in separaten Dateien gespeichert, zum Beispiel in XMP-Filialdateien (Sidecars) oder in separaten Ordnern, so dass später diese Transformationen leicht erneut angewendet oder modifiziert werden können.">These transformations (recipes) are usually stored in separate files, 
+such as XMP sidecars or in separate folders, so that 
+later these transformations can easily be reapplied or modified.<br><br></span><span title="ZoRa Photo Director ist in der Lage, diese Rezepte zu lesen und sie auf das Bild anzuwenden, wenn das Bild in ein sichtbares Format konvertiert wird."><span style="font-style: italic;">ZoRa Photo Director</span> is able to read these recipes and apply them to the image when the image is converted to a visible format. </span><span title="Dies erfolgt wahlweise und kann unter Fenster&gt;Benutzervorgaben&gt;Importieren&gt; RAW-Konvertierung* konfiguriert werden.">This is optional and can be configured under <acronym>Window&gt;Preferences&gt;Import RAW Conversion*</acronym>. </span><span title="Im Falle, dass für ein Bild mehrere Rezepte von verschiedenen RAW-Konvertern vorhanden sind, verwendetZoRa Photo Director jeweils das neueste Rezept.">In case there are multiple recipes from different RAW converters for an image, <span style="font-style: italic;">ZoRa Photo Director</span> will use the latest recipe. </span><span title="In dem seltenen Fall, dass zwei RAW-Konverter die gleiche Rezeptdateien verwenden (wie im Fall von Adobe Camera Raw / Adobe Lightroom und AfterShot) entscheidet die Priorität, die unter Fenster&gt;Benutzervorgaben&gt;Importieren&gt; RAW-Konvertierung* eingetragen wurde.">In the rare case that two RAW converters use the same recipe files (as
+ in the case of <span style="font-style: italic;">Adobe Camera Raw</span> / <span style="font-style: italic;">Adobe Lightroom</span> and <span style="font-style: italic;">AfterShot</span>), the 
+priority set in <acronym>Window&gt;Preferences&gt;Import&gt;RAW Conversion*</acronym> 
+decides.<br><br></span><span title="RAW-Rezepte, die benutzt wurden, um abgeleitete Bilder (wie TIFF- oder JPeG-Bilder) zu erzeugen, können automatisch im Katalog archiviert werden (Fenster&gt;Benutzervorgaben&gt;Importieren&gt; RAW-Konvertierung*).">RAW
+ recipes that were used to create derived images (such as TIFF or JPEG 
+images) can be automatically archived in the catalog (</span></span><acronym><span id="result_box" class="" tabindex="-1" lang="en"><span title="In dem seltenen Fall, dass zwei RAW-Konverter die gleiche Rezeptdateien verwenden (wie im Fall von Adobe Camera Raw / Adobe Lightroom und AfterShot) entscheidet die Priorität, die unter Fenster&gt;Benutzervorgaben&gt;Importieren&gt; RAW-Konvertierung* eingetragen wurde.">Window&gt;Preferences&gt;Import&gt;RAW Conversion*</span></span></acronym><span id="result_box" class="" tabindex="-1" lang="en"><span title="RAW-Rezepte, die benutzt wurden, um abgeleitete Bilder (wie TIFF- oder JPeG-Bilder) zu erzeugen, können automatisch im Katalog archiviert werden (Fenster&gt;Benutzervorgaben&gt;Importieren&gt; RAW-Konvertierung*).">). </span><span title="So können Sie später bei Bedarf die Originalrezepte wieder herstellen.">So you can later restore the original recipes as needed. </span><span title="Dazu rufen Sie für das RAW-Bild das Hierarchie-Sichtfenster auf (Beziehungen&gt;Derivate anzeigen) und doppelklicken darin das abgeleitete Bild.">To
+ do this, call up the <a href="../reference/hierarchy.html">Hierarchy view</a> for the RAW image 
+(<acronym>Relationships&gt;Display Derivatives</acronym>) and double-click the derived 
+image in it. </span><span title="Im folgenden Dialog klicken Sie dann auf Wiederherstellen.">In the following dialog, click on <abbr>Restore</abbr>.<br><br></span><span title="Das oben gesagte gilt allerdings nur, wenn Sie dcraw als Raw-Konverter verwenden.">However, the above applies only if you use DCRAW as a raw converter. </span><span title="Bei der Verwendung von RawTherapee, haben Sie nur die Möglichkeit .pp3-Sidecar-Rezepte oder das in RawTherapee eingestellte Standardverarbeitungsprofil zu verwenden.">When
+ using <span style="font-style: italic;">RawTherapee</span>, you only have the option of using <code>.pp3</code> sidecar 
+recipes or the default processing profile set in <span style="font-style: italic;">RawTherapee</span>. </span><span title="Rezepte anderer Raw-Konverter werden ignoriert.">Recipes of other raw converters are ignored. </span><span title="Der Vorteil ist allerdings, dass die Rezeptverarbeitung direkt von RawTherapee durchgeführt wird, so dass die Konvertierungsergebnisse 100% mit denen von RawTherapee übereinstimmen.">The
+ advantage though is that the recipe processing is done directly by 
+<span style="font-style: italic;">RawTherapee</span> so that the conversion results are 100% consistent with 
+those of <span style="font-style: italic;">RawTherapee</span>.<br>
+</span></span>
+<h4><span id="result_box" class="" tabindex="-1" lang="en"><span title="Erweiterte Funktionen: CHDK Unterstützung">Advanced features: CHDK support</span></span></h4>
+<h4><span id="result_box" class="" tabindex="-1" lang="en"><span title="Erweiterte Funktionen: CHDK Unterstützung"></span></span></h4>
+<span id="result_box" class="" tabindex="-1" lang="en"><span title="Das CHDK ist ein Werkzeug, dass auf eine Speicherkarte geladen wird und es den meisten Canon-Consumer-Kameras u.a.">The CHDK is a tool that loads onto a memory card and can be used on most Canon consumer cameras. It </span><span title="ermöglicht, Bilder als RAW oder DNG-Dateien zu liefern.">allows you - among other things - to deliver images as RAW or DNG files. </span><span title="Leider sind in diesem RAW-Format nicht die EXIF-Daten enthalten, und die DNG-Dateien enthalten nur einen unvollständigen Satz von EXIF-Daten.">Unfortunately,
+ this RAW format does not include the EXIF &#8203;&#8203;data, and the DNG files 
+contain only an incomplete set of EXIF &#8203;&#8203;data. </span><span title="Zum Glück produziert die Kamera auch eine zugehörige JPEG-Datei mit einem kompletten Satz von EXIF-Daten.">Luckily, the camera also produces an associated JPEG file with a complete set of EXIF &#8203;&#8203;data.<br><br></span><span title="Um den kompletten Satz von Metadaten mit diesen Dateien zu importieren, empfehlen wir folgendes Vorgehen:
+
+&nbsp;&nbsp;&nbsp;&nbsp;">To import the complete set of metadata with these files, we recommend the following procedure:<br><br></span></span>
 <ul>
-  <li>Set up the camera to deliver DNG images (CHDK menu). This allow
-you to process these images with most RAW converters (the RAW converter
-support for the CHDK propietary RAW format is very limited, indeed.)<br>
-  </li>
-  <li>Set up the camera (CHDK menu) to prefix image names with <code>IMG_</code>.</li>
-  <li>When importing those images from the memory card with the <span style="font-style: italic;">ZoRA Photo Director</span>, check the option <span style="font-weight: bold;">Enabling prefix for EXIF transfer </span>under<span style="font-weight: bold;"> </span><span style="font-weight: bold;">Advanced Options</span> (see also<span style="font-weight: bold;"> </span><a href="../reference/importFromDevice.html">Import from device dialog</a>). <span style="font-style: italic;">ZoRa Photo Director</span> will then import the image from the DNG file but the EXIF data from the associated JPeG file. <span style="font-weight: bold;"></span></li>
-</ul>
+  <li><span id="result_box" class="" tabindex="-1" lang="en"><span title="Um den kompletten Satz von Metadaten mit diesen Dateien zu importieren, empfehlen wir folgendes Vorgehen:
+
+&nbsp;&nbsp;&nbsp;&nbsp;"></span><span title="* Richten Sie die Kamera so ein, dass sie DNG-Bilder liefert (CHDK-Menü).">Set up the camera to deliver DNG images (CHDK menu). </span><span title="Dies ermöglicht es Ihnen, die Bilder mit den meisten RAW-Konvertern zu verarbeiten (die RAW-Konverter-Unterstützung für das proprietäreCHDK-RAW-Format ist sehr begrenzt.)
+&nbsp;&nbsp;&nbsp;&nbsp;">This allows you to process the images with most RAW converters 
+(the RAW converter support for the proprietary CHDK RAW format is very 
+limited).</span></span></li>
+  <li><span id="result_box" class="" tabindex="-1" lang="en"><span title="Dies ermöglicht es Ihnen, die Bilder mit den meisten RAW-Konvertern zu verarbeiten (die RAW-Konverter-Unterstützung für das proprietäreCHDK-RAW-Format ist sehr begrenzt.)
+&nbsp;&nbsp;&nbsp;&nbsp;"></span><span title="* Richten Sie die Kamera so ein,  dass Bildnamen mit dem Präfix IMG_ versehen werden (CHDK-Menü).
+&nbsp;&nbsp;&nbsp;&nbsp;">Set up the camera so that image names are prefixed with <code>IMG_</code> (CHDK menu).</span></span></li>
+  <li><span id="result_box" class="" tabindex="-1" lang="en"><span title="* Richten Sie die Kamera so ein,  dass Bildnamen mit dem Präfix IMG_ versehen werden (CHDK-Menü).
+&nbsp;&nbsp;&nbsp;&nbsp;"></span><span title="* Beim Import der Bilder von der Speicherkarte mit dem ZoRa Photo Director aktivieren Sie die Option Präfix für EXIF-Transfer unter Fortgeschrittene Optionen (siehe auch Import-vom-Gerät-Dialog).">When importing the images from the memory card with <span style="font-style: italic;">ZoRa Photo 
+Directo</span>r, enable the option <span style="font-weight: bold;">Prefix for EXIF &#8203;&#8203;Transfer</span> under <span style="font-weight: bold;">Advanced 
+Options</span> (see also <a href="../reference/importFromDevice.html">Import from Device</a> dialog). </span><span title="ZoRa Photo Director importiert daraufhin das Bild aus der DNG-Datei und die EXIF-Daten aus der zugehörigen JPEG-Datei."><span style="font-style: italic;">ZoRa Photo Director</span> then imports the image from the DNG file and the EXIF &#8203;&#8203;data from the associated JPEG file.</span></span></li>
+</ul><span id="result_box" class="" tabindex="-1" lang="en"><span title="ZoRa Photo Director importiert daraufhin das Bild aus der DNG-Datei und die EXIF-Daten aus der zugehörigen JPEG-Datei."><br>
+</span></span>
+<h4><span id="result_box" class="" tabindex="-1" lang="en"><span class="">Supported RAW formats</span></span></h4>
+<h4><span id="result_box" class="" tabindex="-1" lang="en"></span></h4>
+<span id="result_box" class="" tabindex="-1" lang="en"><span class="">The RAW formats supported by <span style="font-style: italic;">ZoRa Photo Director</span> are defined in the <code>raw.ini</code> file in the <code>com.bdaum.zoom.image</code> plug-in.</span> <span>If necessary, this file can be changed.<br>
 <br>
+</span></span>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;"><span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[3fr]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Hasselblad</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[arw]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Sony</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[bay]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Casio</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[cap]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=PhaseOne</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[cr2]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Canon</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[crw]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Canon</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[cs1]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Sinar</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[dcr]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Kodak</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[dcs]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Kodak</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[drf]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Kodak</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[eip]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=PhaseOne</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[erf]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Epson</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[fff]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Imacon</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[gpr]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=GoPro</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>unsupportedBy=DCRAW;RawTherapee</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[iiq]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=PhaseOne</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[k25]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Kodak</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[kdc]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Kodak</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[mdc]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Minolta RD-175</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[mef]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Mamiya</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[mos]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Leaf</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[mrw]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Minolta</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[nef]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Nikon</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[nrw]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Nikon</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[orf]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Olympus</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[pef]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Pentax</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[pxn]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Logitech</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[ptx]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Pentax</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[r3d]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Red</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[raf]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Fuji</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[raw]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Panasonic</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[rw1]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Leica</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[rw2]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Panasonic</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[sr2]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Sony</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[srf]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Sony</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[srw]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Samsung</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>[x3f]</code></small></span></span><br>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><small><code>name=Sigma</code></small></span></span><br>
+</div>
+<span id="result_box" class="" tabindex="-1" lang="en"><span></span></span></div>
+<span id="result_box" class="" tabindex="-1" lang="en"><span><br>
+</span></span><span id="result_box" class="" tabindex="-1" lang="en"><span>As you can see, raw conversion of GoPro RAW files is not supported by</span></span><span id="result_box" class="" tabindex="-1" lang="en"><span> both converters</span></span><span id="result_box" class="" tabindex="-1" lang="en"><span>.</span> <span>We suggest converting such files to DNG first.</span></span><br>
 
 
-<hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa Photo Director&gt;Preferences&gt;...</acronym><br>
-<br>
-<br>
-<ul style="font-weight: normal;"></ul>
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa Photo Director&gt;Preferences&gt;...</acronym>
 </body></html>

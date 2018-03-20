@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2012-2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2012-2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.views;
 
@@ -54,21 +54,16 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 
 public class CatalogLabelProvider extends ZColumnLabelProvider {
-	/**
-	 *
-	 */
-	private final IAdaptable adaptable;
-
-	/**
-	 * @param catalogView
-	 */
-	public CatalogLabelProvider(IAdaptable adaptable) {
-		this.adaptable = adaptable;
-	}
 
 	private static final int TOOLTIPIMAGESIZE = 60;
 
-	Image thumb;
+	private Image thumb;
+
+	private final IAdaptable adaptable;
+
+	public CatalogLabelProvider(IAdaptable adaptable) {
+		this.adaptable = adaptable;
+	}
 
 	@Override
 	public void dispose() {
@@ -97,11 +92,9 @@ public class CatalogLabelProvider extends ZColumnLabelProvider {
 		if (UiActivator.getDefault().getShowHover() && element instanceof SmartCollection) {
 			SmartCollection sm = (SmartCollection) element;
 			if (sm.getAlbum()) {
-				if (sm.getSystem()) {
-					thumb = UiUtilities.getFace(adaptable.getAdapter(Shell.class).getDisplay(), sm, TOOLTIPIMAGESIZE, 0,
-							null);
-					return thumb;
-				}
+				if (sm.getSystem())
+					return thumb = UiUtilities.getFace(adaptable.getAdapter(Shell.class).getDisplay(), sm,
+							TOOLTIPIMAGESIZE, 0, null);
 				return thumb = getAlbumImage(sm);
 			}
 			if (!sm.getSystem()) {
@@ -156,6 +149,8 @@ public class CatalogLabelProvider extends ZColumnLabelProvider {
 			return null;
 		StringBuilder tooltip = new StringBuilder();
 		if (element instanceof Group) {
+			if (element == CatalogView.WASTEBASKET)
+				return Messages.getString("CatalogLabelProvider.deleted_entries_go_here"); //$NON-NLS-1$
 			String anno = ((Group) element).getAnnotations();
 			if (anno != null && !anno.isEmpty()) {
 				if (Constants.GROUP_ID_AUTO.equals(((Group) element).getStringId()))
@@ -241,7 +236,8 @@ public class CatalogLabelProvider extends ZColumnLabelProvider {
 		if (obj instanceof WebGallery)
 			return Icons.webGallery.getImage();
 		if (obj instanceof GroupImpl)
-			return (((GroupImpl) obj).getAnnotations() == null ? Icons.group : Icons.groupfiltered).getImage();
+			return (obj == CatalogView.WASTEBASKET ? Icons.wastebasket
+					: ((GroupImpl) obj).getAnnotations() == null ? Icons.group : Icons.groupfiltered).getImage();
 		return null;
 	}
 

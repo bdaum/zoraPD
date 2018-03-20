@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal;
@@ -93,8 +93,9 @@ public class DeleteOperation extends DbOperation {
 
 	@Override
 	public IStatus execute(IProgressMonitor aMonitor, final IAdaptable info) throws ExecutionException {
-		final Set<String> volumes = new HashSet<String>();
-		final List<String> errands = new ArrayList<String>();
+		Set<String> volumes = null;
+		String errand = null;
+		int errs = 0;
 		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
 		int size = assets.size();
 		init(aMonitor, size + 1);
@@ -170,14 +171,17 @@ public class DeleteOperation extends DbOperation {
 						if (uri != null) {
 							URI fileURI = volumeManager.findExistingFile(a, true);
 							boolean canWrite = fileURI != null ? new File(fileURI).canWrite() : false;
-							if (canWrite) {
-								deleteAsset(a, true, false);
-								deleted = true;
-							} else {
+							if (canWrite)
+								deleted = deleteAsset(a, true, false);
+							else {
 								String volume = a.getVolume();
-								if (volume != null && !volume.isEmpty())
+								if (volume != null && !volume.isEmpty()) {
+									if (volumes == null)
+										volumes = new HashSet<String>();
 									volumes.add(volume);
-								errands.add(a.getUri());
+								}
+								if (errs++ == 0)
+									errand = a.getUri();
 							}
 						}
 					} else {
@@ -193,28 +197,31 @@ public class DeleteOperation extends DbOperation {
 			}
 		} finally {
 			closeIndex();
-			fireAssetsModified(new BagChange<>(null, null, assets, null), null);
+			fireAssetsModified(new BagChange<>(null, null, assets, null), QueryField.ALL);
 			final IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
 			if (errorHandler != null) {
+				final int ferrs = errs;
+				final Set<String> fvolumes = volumes;
+				final String ferrand = errand;
 				Shell shell = info.getAdapter(Shell.class);
 				if (shell != null && !shell.isDisposed()) {
 					Display display = shell.getDisplay();
 					display.asyncExec(() -> {
 						if (!shell.isDisposed()) {
-							if (!errands.isEmpty()) {
+							if (ferrs > 0) {
 								String msg;
-								if (errands.size() == 1) {
+								if (ferrs == 1) {
+									if (fvolumes == null)
+										msg = NLS.bind(Messages.getString("DeleteOperation.file_deleted_no_volume"), //$NON-NLS-1$
+												ferrand);
 									msg = NLS.bind(Messages.getString("DeleteOperation.File_offline"), //$NON-NLS-1$
-											errands.get(0), volumes.toArray()[0]);
+											ferrand, fvolumes.toArray()[0]);
 								} else {
-									StringBuffer sb = new StringBuffer();
-									for (String volume : volumes) {
-										if (sb.length() > 0)
-											sb.append(", "); //$NON-NLS-1$
-										sb.append(volume);
-									}
+									if (fvolumes == null)
+										msg = NLS.bind(Messages.getString("DeleteOperation.files_deleted_no_volume"), //$NON-NLS-1$
+												ferrs);
 									msg = NLS.bind(Messages.getString("DeleteOperation.Files_offline"), //$NON-NLS-1$
-											errands.size(), sb.toString());
+											ferrs, Core.toStringList(fvolumes.toArray(), ", ")); //$NON-NLS-1$
 
 								}
 								errorHandler.showInformation(Messages.getString("DeleteOperation.Unable_to_delete"), //$NON-NLS-1$
@@ -229,8 +236,8 @@ public class DeleteOperation extends DbOperation {
 		return close(info);
 	}
 
-	private void deleteAsset(final Asset anAsset, final boolean files, final boolean needsGhost) {
-		storeSafely(() -> doDeleteAsset(anAsset, files, needsGhost), 1);
+	private boolean deleteAsset(final Asset anAsset, final boolean files, final boolean needsGhost) {
+		return storeSafely(() -> doDeleteAsset(anAsset, files, needsGhost), 1);
 	}
 
 	private void doDeleteAsset(Asset anAsset, boolean files, boolean needsGhost) {

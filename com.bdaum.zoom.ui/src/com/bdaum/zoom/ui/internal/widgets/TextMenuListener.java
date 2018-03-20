@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -34,15 +34,10 @@ import com.bdaum.zoom.core.ISpellCheckingService.ISpellIncident;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
 final class TextMenuListener implements MenuDetectListener {
-	/**
-	 * 
-	 */
+
 	private final IAugmentedTextField textField;
 	private int style;
 
-	/**
-	 * @param textField
-	 */
 	TextMenuListener(IAugmentedTextField textField, int style) {
 		this.textField = textField;
 		this.style = style;
@@ -122,7 +117,6 @@ final class TextMenuListener implements MenuDetectListener {
 			});
 			item.setEnabled(textField.canRedo());
 		}
-
 		if (incident != null) {
 			new MenuItem(menu, SWT.SEPARATOR);
 			String[] suggestions = incident.getSuggestions();
@@ -141,7 +135,6 @@ final class TextMenuListener implements MenuDetectListener {
 			}
 			item = new MenuItem(menu, SWT.PUSH);
 			item.setText(Messages.TextMenuListener_add_to_dict);
-
 			item.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {

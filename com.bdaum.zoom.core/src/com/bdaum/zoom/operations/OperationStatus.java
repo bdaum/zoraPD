@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017-2018 Berthold Daum  
  */
 package com.bdaum.zoom.operations;
 
@@ -42,16 +42,27 @@ public class OperationStatus extends MultiStatus {
 		collect(this, eb, ERROR);
 		if (eb.length() > 0)
 			sb.append(Messages.getString("OperationStatus.errors")).append(eb); //$NON-NLS-1$
-		collect(this, eb, WARNING);
-		if (eb.length() > 0)
-			sb.append(Messages.getString("OperationStatus.warnings")).append(eb); //$NON-NLS-1$
+		else {
+			collect(this, eb, WARNING);
+			if (eb.length() > 0)
+				sb.append(Messages.getString("OperationStatus.warnings")).append(eb); //$NON-NLS-1$
+		}
 		return sb.toString();
 	}
 
 	private void collect(OperationStatus operationStatus, StringBuilder eb, int severity) {
-		for (IStatus status : getChildren())
-			if (status.getSeverity() == severity)
-				eb.append("\n\t\t").append(status.getMessage()); //$NON-NLS-1$
+		IStatus[] children = getChildren();
+		int j = 0;
+		int k = 0;
+		for (IStatus status : children)
+			if (status.getSeverity() == severity) {
+				if (++j <= 5)
+					eb.append("\n\t\t").append(status.getMessage()); //$NON-NLS-1$
+				else
+					++k;
+			}
+		if (k > 0)
+			eb.append("\n\t\t").append(NLS.bind(Messages.getString("OperationStatus.n_more"), k)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 }

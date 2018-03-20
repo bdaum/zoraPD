@@ -51,19 +51,11 @@ public class FileExtensionDialog extends ZTitleAreaDialog {
 
 	private String filename = ""; //$NON-NLS-1$
 
-	private String initialValue;
+	private String initialValue, title, headerTitle, message, label;
 
 	private Text filenameField;
 
 	private Button okButton;
-
-	private String title;
-
-	private final String headerTitle;
-
-	private final String message;
-
-	private final String label;
 
 	/**
 	 * Constructs a new file extension dialog.
@@ -73,8 +65,7 @@ public class FileExtensionDialog extends ZTitleAreaDialog {
 	 * @param dflt
 	 */
 	public FileExtensionDialog(Shell parentShell) {
-		this(parentShell, Messages
-				.getString("FileExtensionDialog.Add_file_type"), //$NON-NLS-1$
+		this(parentShell, Messages.getString("FileExtensionDialog.Add_file_type"), //$NON-NLS-1$
 				Messages.getString("FileExtensionDialog.Define_new_file_type"), //$NON-NLS-1$
 				Messages.getString("FileExtensionDialog.Enter_file_suffixes"), //$NON-NLS-1$
 				Messages.getString("FileExtensionDialog.File_suffixes")); //$NON-NLS-1$
@@ -95,8 +86,7 @@ public class FileExtensionDialog extends ZTitleAreaDialog {
 	 *            the label for the "file type" field
 	 * @since 3.4
 	 */
-	public FileExtensionDialog(Shell parentShell, String title,
-			String headerTitle, String message, String label) {
+	public FileExtensionDialog(Shell parentShell, String title, String headerTitle, String message, String label) {
 		super(parentShell);
 		this.title = title;
 		this.headerTitle = headerTitle;
@@ -113,8 +103,7 @@ public class FileExtensionDialog extends ZTitleAreaDialog {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets
+	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets
 	 * .Shell)
 	 */
 
@@ -127,29 +116,22 @@ public class FileExtensionDialog extends ZTitleAreaDialog {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.jface.dialogs.TitleAreaDialog#createDialogArea(org.eclipse
+	 * @see org.eclipse.jface.dialogs.TitleAreaDialog#createDialogArea(org.eclipse
 	 * .swt.widgets.Composite)
 	 */
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite parentComposite = (Composite) super.createDialogArea(parent);
-
 		Composite contents = new Composite(parentComposite, SWT.NONE);
 		contents.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-
 		setTitle(headerTitle);
 		setMessage(message);
-
 		new Label(contents, SWT.LEFT).setText(label);
-
 		filenameField = new Text(contents, SWT.SINGLE | SWT.BORDER);
-		if (initialValue != null) {
+		if (initialValue != null)
 			filenameField.setText(initialValue);
-		}
 		filenameField.addModifyListener(new ModifyListener() {
-
 			public void modifyText(ModifyEvent event) {
 				if (event.widget == filenameField) {
 					filename = filenameField.getText().trim();
@@ -162,30 +144,24 @@ public class FileExtensionDialog extends ZTitleAreaDialog {
 		Button browseButton = new Button(contents, SWT.PUSH);
 		browseButton.setText(Messages.getString("FileExtensionDialog.Browse")); //$NON-NLS-1$
 		browseButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				ListDialog dialog = new ZListDialog(getShell(), SWT.MULTI
-						| SWT.V_SCROLL | SWT.BORDER);
-				dialog.setTitle(Messages
-						.getString("FileExtensionDialog.registered_file_types"));//$NON-NLS-1$
+				ListDialog dialog = new ZListDialog(getShell(), SWT.MULTI | SWT.V_SCROLL | SWT.BORDER);
+				dialog.setTitle(Messages.getString("FileExtensionDialog.registered_file_types"));//$NON-NLS-1$
 				dialog.setContentProvider(ArrayContentProvider.getInstance());
 				dialog.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
 				String[] extensions = Program.getExtensions();
 				List<String> list = new ArrayList<String>(extensions.length);
-				for (String s : extensions) {
+				for (String s : extensions)
 					if (s.indexOf(' ') < 0)
 						list.add(s);
-				}
 				extensions = list.toArray(new String[list.size()]);
 				dialog.setInput(extensions);
-				dialog.setMessage(Messages
-						.getString("FileExtensionDialog.Select_registered_file_types")); //$NON-NLS-1$
+				dialog.setMessage(Messages.getString("FileExtensionDialog.Select_registered_file_types")); //$NON-NLS-1$
 				if (dialog.open() == Window.OK) {
 					Object[] result = dialog.getResult();
 					if (result != null && result.length > 0) {
-						StringBuilder sb = new StringBuilder(filenameField
-								.getText());
+						StringBuilder sb = new StringBuilder(filenameField.getText());
 						for (Object object : result) {
 							if (sb.length() > 0)
 								sb.append(';');
@@ -198,38 +174,31 @@ public class FileExtensionDialog extends ZTitleAreaDialog {
 		});
 
 		Dialog.applyDialogFont(parentComposite);
-
 		Point defaultMargins = LayoutConstants.getMargins();
-		GridLayoutFactory.fillDefaults().numColumns(3)
-				.margins(defaultMargins.x, defaultMargins.y)
+		GridLayoutFactory.fillDefaults().numColumns(3).margins(defaultMargins.x, defaultMargins.y)
 				.generateLayout(contents);
-
 		return contents;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse
+	 * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse
 	 * .swt.widgets.Composite)
 	 */
 
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
-		okButton = createButton(parent, IDialogConstants.OK_ID,
-				IDialogConstants.OK_LABEL, true);
+		okButton = createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL, true);
 		okButton.setEnabled(false);
-		createButton(parent, IDialogConstants.CANCEL_ID,
-				IDialogConstants.CANCEL_LABEL, false);
+		createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
 	}
 
 	/**
 	 * Validate the user input for a file type
 	 */
 	private boolean validateFileType() {
-		// We need kernel api to validate the extension or a filename
-
+		//TODO We need kernel api to validate the extension or a filename
 		// check for empty name and extension
 		if (filename.isEmpty()) {
 			setErrorMessage(null);
@@ -242,8 +211,7 @@ public class FileExtensionDialog extends ZTitleAreaDialog {
 			int index = token.lastIndexOf('.');
 			if (index == token.length() - 1) {
 				if (index == 0 || (index == 1 && token.charAt(0) == '*')) {
-					setErrorMessage(Messages
-							.getString("FileExtensionDialog.File_extensions_must_not_be_empty")); //$NON-NLS-1$
+					setErrorMessage(Messages.getString("FileExtensionDialog.File_extensions_must_not_be_empty")); //$NON-NLS-1$
 					return false;
 				}
 			}
@@ -255,19 +223,15 @@ public class FileExtensionDialog extends ZTitleAreaDialog {
 			index = token.indexOf('*');
 			if (index > -1) {
 				if (token.length() == 1) {
-					setErrorMessage(Messages
-							.getString("FileExtensionDialog.File_extensions_must_not_be_empty")); //$NON-NLS-1$
+					setErrorMessage(Messages.getString("FileExtensionDialog.File_extensions_must_not_be_empty")); //$NON-NLS-1$
 					return false;
 				}
 				if (index != 0 || token.charAt(1) != '.') {
-					setErrorMessage(Messages
-							.getString("FileExtensionDialog.File_names_can_only")); //$NON-NLS-1$
+					setErrorMessage(Messages.getString("FileExtensionDialog.File_names_can_only")); //$NON-NLS-1$
 					return false;
 				}
-				if (token.length() > index
-						&& token.indexOf('*', index + 1) != -1) {
-					setErrorMessage(Messages
-							.getString("FileExtensionDialog.File_names_can_only")); //$NON-NLS-1$
+				if (token.length() > index && token.indexOf('*', index + 1) != -1) {
+					setErrorMessage(Messages.getString("FileExtensionDialog.File_names_can_only")); //$NON-NLS-1$
 					return false;
 				}
 			}
@@ -282,7 +246,6 @@ public class FileExtensionDialog extends ZTitleAreaDialog {
 	 * @return the extension
 	 */
 	public String[] getExtensions() {
-
 		List<String> sb = new ArrayList<String>();
 		StringTokenizer st = new StringTokenizer(filename, ";"); //$NON-NLS-1$
 		while (st.hasMoreTokens()) {

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Modifications (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * Modifications (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.juploadr.uploadapi.smugrest.ui;
@@ -27,7 +27,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -42,6 +41,7 @@ import com.bdaum.juploadr.uploadapi.smugrest.SmugmugRestApi;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.net.communities.CommunityAccount;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 
 @SuppressWarnings("restriction")
@@ -100,7 +100,7 @@ public class AlbumPolicyDialog extends ZTitleAreaDialog {
 				return element.toString();
 			}
 		});
-		viewer.setComparator(new ViewerComparator());
+		viewer.setComparator(ZViewerComparator.INSTANCE);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateButtons();

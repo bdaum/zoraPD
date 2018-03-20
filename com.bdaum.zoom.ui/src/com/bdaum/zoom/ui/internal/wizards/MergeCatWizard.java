@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.wizards;
@@ -45,8 +45,7 @@ import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
 @SuppressWarnings("restriction")
-public class MergeCatWizard extends ZWizard implements IWorkbenchWizard,
-		IAdaptable {
+public class MergeCatWizard extends ZWizard implements IWorkbenchWizard, IAdaptable {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.exportFolderProperties"; //$NON-NLS-1$
 	public static final String INCLUDEMETA = "includeMeta"; //$NON-NLS-1$
@@ -92,8 +91,7 @@ public class MergeCatWizard extends ZWizard implements IWorkbenchWizard,
 
 	@Override
 	public IWizardPage getNextPage(IWizardPage page) {
-		if (page == mainPage
-				&& mainPage.getDuplicatePolicy() != Constants.MERGE)
+		if (page == mainPage && mainPage.getDuplicatePolicy() != Constants.MERGE)
 			return null;
 		return super.getNextPage(page);
 	}
@@ -101,8 +99,7 @@ public class MergeCatWizard extends ZWizard implements IWorkbenchWizard,
 	@Override
 	public boolean canFinish() {
 		IWizardPage currentPage = getContainer().getCurrentPage();
-		if (currentPage == mainPage
-				&& mainPage.getDuplicatePolicy() == Constants.MERGE)
+		if (currentPage == mainPage && mainPage.getDuplicatePolicy() == Constants.MERGE)
 			return false;
 		return super.canFinish();
 	}
@@ -113,18 +110,16 @@ public class MergeCatWizard extends ZWizard implements IWorkbenchWizard,
 		if (externalDb.getFile() == null)
 			return false;
 		int duplicatePolicy = mainPage.getDuplicatePolicy();
-		Set<QueryField> filter = (mainPage.getDuplicatePolicy() == Constants.MERGE) ? metaPage
-				.getFilter() : null;
-		int options = (mainPage.getDuplicatePolicy() == Constants.MERGE) ? metaPage
-				.getOptions() : Constants.MERGE;
+		Set<QueryField> filter = (mainPage.getDuplicatePolicy() == Constants.MERGE) ? metaPage.getFilter() : null;
+		int options = (mainPage.getDuplicatePolicy() == Constants.MERGE) ? metaPage.getOptions() : Constants.MERGE;
 		saveDialogSettings();
 		CoreActivator.getDefault().getFileWatchManager().setPaused(true, this.getClass().toString());
 		Job.getJobManager().cancel(Constants.FOLDERWATCH);
 		Job.getJobManager().cancel(Constants.SYNCPICASA);
 		Core.waitOnJobCanceled(Constants.FOLDERWATCH, Constants.SYNCPICASA);
 		try {
-		OperationJob.executeOperation(new MergeCatOperation(externalDb,
-				duplicatePolicy, filter, options), this, true);
+			OperationJob.executeOperation(new MergeCatOperation(externalDb, duplicatePolicy, filter, options), this,
+					true);
 		} finally {
 			UiActivator.getDefault().postCatInit(false);
 			CoreActivator.getDefault().getFileWatchManager().setPaused(false, this.getClass().toString());

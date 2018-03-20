@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2015 Berthold Daum  
  */
 package com.bdaum.zoom.operations.internal;
 
@@ -75,8 +75,9 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 		init(monitor, 2 * assets.size());
 		for (IRelationDetector detector : info.getAdapter(IRelationDetector[].class))
 			detector.reset();
-		final Set<String> volumes = new HashSet<String>();
-		final List<String> errands = new ArrayList<String>();
+		Set<String> volumes = null;
+		String errand = null;
+		int errs = 0;
 		final List<Asset> modified = new ArrayList<Asset>(assets.size());
 		int i = 0;
 		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
@@ -134,9 +135,13 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 							uri = volumeManager.findFile(asset);
 							if (uri != null) {
 								String volume = asset.getVolume();
-								if (volume != null && !volume.isEmpty())
+								if (volume != null && !volume.isEmpty()) {
+									if (volumes == null)
+										volumes = new HashSet<String>(7);
 									volumes.add(volume);
-								errands.add(uri.toString());
+								}
+								if (errs++ == 0)
+									errand = uri.toString();
 								if (monitor.isCanceled())
 									return abort();
 							}
@@ -148,11 +153,11 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 			++i;
 		}
 		fireAssetsModified(new BagChange<>(null, modified, null, null), QueryField.URI);
-		if (!errands.isEmpty()) {
+		if (errs > 0) {
 			final IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
 			if (errorHandler != null)
 				errorHandler.showInformation(Messages.getString("BulkRenameOperation.unable_to_rename"), //$NON-NLS-1$
-						Ticketbox.computeErrorMessage(errands, volumes), info);
+						Ticketbox.computeErrorMessage(errs, errand, volumes), info);
 		}
 		return close(info);
 	}

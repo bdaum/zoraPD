@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -121,16 +121,12 @@ public class RefreshAction extends Action {
 	}
 
 	private boolean checkFile(File file, Asset assetImpl) {
-		if (file.exists()) {
-			long lastModified = BatchUtilities.getImageFileModificationTimestamp(file);
-			long importTime = assetImpl.getImportDate().getTime();
-			if (lastModified > importTime)
-				outdatedFiles.add(file);
-			else
-				otherFiles.add(file);
-		} else {
+		if (file.exists())
+			(BatchUtilities.getImageFileModificationTimestamp(file) > assetImpl.getImportDate().getTime()
+					? outdatedFiles
+					: otherFiles).add(file);
+		else
 			missingFiles.add(assetImpl);
-		}
 		return false;
 	}
 
@@ -145,15 +141,12 @@ public class RefreshAction extends Action {
 			final IStructuredSelection sel = (IStructuredSelection) catView.getSelection();
 			BusyIndicator.showWhile(shell.getDisplay(), () -> {
 				IDbManager dbManager = Core.getCore().getDbManager();
-				Iterator<?> iterator = sel.iterator();
-				while (iterator.hasNext()) {
+				for (Iterator<?> iterator = sel.iterator();iterator.hasNext();) {
 					Object object = iterator.next();
 					if (object instanceof SmartCollectionImpl)
-						assets.addAll(
-								dbManager
-										.createCollectionProcessor(
-												Utilities.localizeSmartCollection((SmartCollection) object))
-										.select(false));
+						assets.addAll(dbManager
+								.createCollectionProcessor(Utilities.localizeSmartCollection((SmartCollection) object))
+								.select(false));
 				}
 			});
 		}

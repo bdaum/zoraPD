@@ -10,6 +10,8 @@
 
 
 
+
+
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Clarifai</title>
 
 
@@ -33,7 +35,7 @@ your credentials (<span style="font-weight: bold;">Client ID</span> and<span sty
 <br>
 The <span style="font-style: italic;">Clarifai</span> service is also
 used to establish a semantic similarity between images (optionally).
-This allows to search for images that depict similar concepts.<span style="font-style: italic;"></span><br>
+This allows to search for images that depict similar concepts. The service is used, too, for automated image rating. <span style="font-style: italic;"></span><br>
 <br>
 <h4>Options</h4>
 
@@ -71,6 +73,9 @@ faces are found bounding boxes in green color will be drawn in the
 image. You have then the option to accept those face regions or to
 dicard them. 
 If this option is set an additional <span style="font-style: italic;">Clarifai</span> request is issued for each image.</li>
+  <li><span style="font-weight: bold;">Detect celebrities.</span> Mark
+this option if you want the service to detect faces of celebrities in the images. If this option is set an additional <span style="font-style: italic;">Clarifai</span> request is issued for each image.</li>
+
 
   <li><span style="font-weight: bold;">Translate.</span> Mark this option if you use English as your default <span style="font-style: italic;">Clarifai</span> language but want the output in another language. The <a href="../../com.bdaum.zoom.ai/html/ai.html"><span style="font-style: italic;">Microsoft Translator Service</span></a> will be used to translate the returned texts.<br>
   </li>

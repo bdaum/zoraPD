@@ -15,18 +15,14 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.email.internal;
 
 import java.io.File;
-import java.net.URI;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Composite;
@@ -34,12 +30,10 @@ import org.eclipse.swt.widgets.Composite;
 import com.bdaum.zoom.cat.model.PageLayout_type;
 import com.bdaum.zoom.cat.model.PageLayout_typeImpl;
 import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
-import com.bdaum.zoom.core.ICore;
-import com.bdaum.zoom.core.IVolumeManager;
-import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.email.internal.job.HtmlJob;
@@ -48,7 +42,6 @@ import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.dialogs.LayoutComponent;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
-import com.itextpdf.text.Rectangle;
 
 @SuppressWarnings("restriction")
 public class CreatePDFPage extends ColoredWizardPage {
@@ -62,39 +55,40 @@ public class CreatePDFPage extends ColoredWizardPage {
 	private int commonHeight = -1;
 	private final String type;
 	private boolean pdf;
+	private IAssetProvider assetProvider;
+	private String collection;
 
 	public CreatePDFPage(List<Asset> assets, String type) {
 		super("main", NLS.bind(Messages.CreatePDFPage_create_x, type), null); //$NON-NLS-1$
 		this.assets = assets;
 		this.type = type;
 		pdf = !"HTML".equals(type); //$NON-NLS-1$
+		assetProvider = Core.getCore().getAssetProvider();
+		if (assetProvider != null)
+			collection = Utilities.getExternalAlbumName(assetProvider.getCurrentCollection());
 	}
 
 	@Override
 	public void createControl(Composite parent) {
 		Composite comp = createComposite(parent, 1);
-		layoutComponent = new LayoutComponent(comp, pdf ? LayoutComponent.PDF
-				: LayoutComponent.HTML);
+		layoutComponent = new LayoutComponent(comp, pdf ? LayoutComponent.PDF : LayoutComponent.HTML, assets,
+				collection);
 		fillValues();
 		checkImages();
 		setControl(comp);
 		setHelp(HelpContextIds.PDF_WIZARD);
 		int size = assets.size();
-		String msg = (size == 1) ? NLS.bind(Messages.CreatePDFPage_compose_one,
-				type) : NLS.bind(Messages.CreatePDFPage_Compose_n, size, type);
-		setMessage(msg);
+		setMessage((size == 1) ? NLS.bind(Messages.CreatePDFPage_compose_one, type)
+				: NLS.bind(Messages.CreatePDFPage_Compose_n, size, type));
 		setTitle(Messages.CreatePDFPage_layout);
 		super.createControl(parent);
 	}
 
 	private void checkImages() {
-		final Set<String> volumes = new HashSet<String>();
-		final List<String> errands = new ArrayList<String>();
-		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
-		for (Asset asset : assets) {
-			URI uri = volumeManager.findFile(asset);
-			if (uri != null) {
-				if (volumeManager.findExistingFile(asset, false) != null) {
+		try (Assetbox box = new Assetbox(assets, null, true)) {
+			for (File file : box)
+				if (file != null) {
+					Asset asset = box.getAsset();
 					if (commonWidth >= 0) {
 						if (commonWidth != asset.getWidth())
 							commonWidth = Integer.MAX_VALUE;
@@ -105,36 +99,22 @@ public class CreatePDFPage extends ColoredWizardPage {
 							commonHeight = Integer.MAX_VALUE;
 					} else
 						commonHeight = asset.getHeight();
-				} else {
-					String volume = asset.getVolume();
-					if (volume != null && !volume.isEmpty())
-						volumes.add(volume);
-					errands.add(uri.toString());
 				}
-			}
+			setErrorMessage(box.getErrorMessage());
 		}
-		setErrorMessage(Ticketbox.computeErrorMessage(errands, volumes));
 	}
 
 	private void fillValues() {
 		String id = pdf ? PDFLAYOUT_ID : HTMLLAYOUT_ID;
 		IDbManager dbManager = Core.getCore().getDbManager();
-		PageLayout_typeImpl layout = dbManager.obtainById(
-				PageLayout_typeImpl.class, id);
+		PageLayout_typeImpl layout = dbManager.obtainById(PageLayout_typeImpl.class, id);
 		if (layout == null) {
-			String footer;
-			if (pdf)
-				footer = "- " + Constants.PT_PAGENO + " -"; //$NON-NLS-1$ //$NON-NLS-2$
-			else {
-				GregorianCalendar cal = new GregorianCalendar();
-				footer = "© " + cal.get(Calendar.YEAR) + " " + dbManager.getMeta(true).getOwner(); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-			layout = new PageLayout_typeImpl(null, pdf ? LayoutComponent.PDF
-					: LayoutComponent.HTML, Constants.PT_COLLECTION,
-					Constants.PT_TODAY, footer, 240, pdf ? 4 : 5, 20, 10,
-					pdf ? 10 : 20, 8, 10, 7, Constants.PI_NAME,
-					Constants.PI_CREATIONDATE, Constants.PI_NAME, 2, false,
-					false, PageLayout_type.format_a4, true, 1.5f, 0.26f, 2, 75);
+			String footer = pdf ? "- " + Constants.PT_PAGENO + " -" //$NON-NLS-1$ //$NON-NLS-2$
+					: "© " + new GregorianCalendar().get(Calendar.YEAR) + " " + dbManager.getMeta(true).getOwner(); //$NON-NLS-1$ //$NON-NLS-2$
+			layout = new PageLayout_typeImpl(null, pdf ? LayoutComponent.PDF : LayoutComponent.HTML,
+					Constants.PT_COLLECTION, Constants.PT_TODAY, footer, 240, pdf ? 4 : 5, 20, 10, pdf ? 10 : 20, 8, 10,
+					7, Constants.PI_NAME, Constants.PI_CREATIONDATE, Constants.PI_NAME, 2, false, false,
+					PageLayout_type.format_a4, true, 1.5f, 0.26f, 2, 75);
 			layout.setStringId(id);
 		}
 		layoutComponent.fillValues(layout);
@@ -146,17 +126,12 @@ public class CreatePDFPage extends ColoredWizardPage {
 		FtpAccount account = w.getFtpAccount();
 		if (file == null && account == null)
 			return false;
-		ICore core = Core.getCore();
-		IAssetProvider assetProvider = core.getAssetProvider();
 		if (assetProvider != null) {
-			String collection = Utilities.getExternalAlbumName(assetProvider
-					.getCurrentCollection());
 			PageLayout_typeImpl layout = layoutComponent.getResult();
-			core.getDbManager().safeTransaction(null, layout);
+			Core.getCore().getDbManager().safeTransaction(null, layout);
 			if (pdf) {
-				PdfJob job = new PdfJob(assets, layout, file, w.getQuality(),
-						w.getJpegQuality(), Ui.getUi().getDisplayCMS(),
-						w.getUnsharpMask(), collection);
+				PdfJob job = new PdfJob(assets, layout, file, w.getQuality(), w.getJpegQuality(),
+						Ui.getUi().getDisplayCMS(), w.getUnsharpMask(), collection);
 				if (w instanceof EmailPDFWizard) {
 					job.setSubject(((EmailPDFWizard) w).getSubject());
 					job.setMessage(((EmailPDFWizard) w).getMessage());
@@ -166,31 +141,25 @@ public class CreatePDFPage extends ColoredWizardPage {
 				String weblink = w.getWeblink();
 				if (weblink == null || weblink.isEmpty())
 					weblink = "index.html"; //$NON-NLS-1$
-				int mode = w.getMode();
-				new HtmlJob(assets, mode, layout, file, account, w.getQuality(),
-						w.getJpegQuality(), w.getUnsharpMask(),
-						collection, weblink, this)
-						.schedule();
+				new HtmlJob(assets, w.getMode(), layout, file, account, w.getQuality(), w.getJpegQuality(),
+						w.getUnsharpMask(), collection, weblink, this).schedule();
 			}
 		}
 		return true;
 	}
 
 	public float getImageSize() {
-		PageLayout_typeImpl layout = layoutComponent.getResult();
-		Rectangle format = PdfJob.computeFormat(layout);
-		float leftMargins = layout.getLeftMargin() / MMPERINCH * 72;
-		float rightMargins = layout.getRightMargin() / MMPERINCH * 72;
+		PageLayout_type layout = layoutComponent.getResult();
 		float horizontalGap = layout.getHorizontalGap() / MMPERINCH * 72;
-		float useableWidth = format.getWidth() - leftMargins - rightMargins;
+		float useableWidth = PdfJob.computeFormat(layout).getWidth()
+				- (layout.getLeftMargin() + layout.getRightMargin()) / MMPERINCH * 72;
 		float cellWidth = (useableWidth + horizontalGap) / layout.getColumns();
-		float keyLine = layout.getKeyLine() * 0.5f;
-		float imageSize = cellWidth - horizontalGap - keyLine;
-		return imageSize;
+		return cellWidth - horizontalGap - layout.getKeyLine() * 0.5f;
 	}
 
 	@Override
 	protected void validatePage() {
+		// do nothing
 	}
 
 }

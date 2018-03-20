@@ -43,73 +43,62 @@ public class StatusHandler extends AbstractStatusHandler {
 			final IStatus status = statusAdapter.getStatus();
 			if (status.getSeverity() == IStatus.ERROR) {
 				++errors;
-				UiActivator uiActivator = UiActivator.getDefault();
-				uiActivator.setRepairCat(true);
+				UiActivator.getDefault().setRepairCat(true);
 				final IWorkbench workbench = PlatformUI.getWorkbench();
 				final Display display = workbench.getDisplay();
-				display.asyncExec(() -> {
-					if (!display.isDisposed()) {
-						if (dialog != null) {
-							dialog.close();
-							dialog = null;
-						}
-						Shell activeShell = display.getActiveShell();
-						if (activeShell != null) {
-							IStatus aStatus = status;
-							if (status instanceof MultiStatus) {
-								IStatus[] children = ((MultiStatus) status)
-										.getChildren();
-								if (children.length == 1)
-									aStatus = children[0];
-							}
-							String title = NLS.bind(Messages.getString("StatusHandler.error_report"), Constants.APPNAME);  //$NON-NLS-1$
-							if (status == aStatus) {
-								dialog = new AcousticMessageDialog(
-										activeShell,
-										title,
-										null,
-										NLS.bind(
-												Messages.getString("StatusHandler.multiple_error_processing"), errors, status.getMessage()), //$NON-NLS-1$
-										MessageDialog.ERROR,
-										new String[] {
-												IDialogConstants.OK_LABEL,
-												Messages.getString("StatusHandler.View_log") }, 0); //$NON-NLS-1$
-							} else
-								dialog = new AcousticMessageDialog(
-										activeShell,
-										title,
-										null,
-										NLS.bind(
-												Messages.getString("StatusHandler.Error_processing"), errors, aStatus.getMessage()), //$NON-NLS-1$
-										MessageDialog.ERROR,
-										new String[] { IDialogConstants.OK_LABEL },
-										0);
-							int ret = dialog.open();
-							if (ret == 1) {
+				if (!display.isDisposed())
+					display.asyncExec(() -> {
+						if (!display.isDisposed()) {
+							if (dialog != null) {
 								dialog.close();
-								IWorkbenchWindow activeWorkbenchWindow = workbench
-										.getActiveWorkbenchWindow();
-								if (activeWorkbenchWindow != null) {
-									IWorkbenchPage activePage = activeWorkbenchWindow
-											.getActivePage();
-									if (activePage != null) {
-										try {
-											activePage
-													.showView(AbstractPerspective.LOG_VIEW);
-											Shell shell = activeWorkbenchWindow.getShell();
-											shell.setVisible(true);
-											shell.setMinimized(false);
-											shell.forceActive();
-										} catch (PartInitException e) {
-											// ignore
+								dialog = null;
+							}
+							Shell activeShell = display.getActiveShell();
+							if (activeShell != null) {
+								IStatus aStatus = status;
+								if (status instanceof MultiStatus) {
+									IStatus[] children = ((MultiStatus) status).getChildren();
+									if (children.length == 1)
+										aStatus = children[0];
+								}
+								String title = NLS.bind(Messages.getString("StatusHandler.error_report"), //$NON-NLS-1$
+										Constants.APPNAME);
+								if (status == aStatus) {
+									dialog = new AcousticMessageDialog(activeShell, title, null,
+											NLS.bind(Messages.getString("StatusHandler.multiple_error_processing"), //$NON-NLS-1$
+													errors, status.getMessage()),
+											MessageDialog.ERROR,
+											new String[] { IDialogConstants.OK_LABEL,
+													Messages.getString("StatusHandler.View_log") }, //$NON-NLS-1$
+											0);
+								} else
+									dialog = new AcousticMessageDialog(activeShell, title, null,
+											NLS.bind(Messages.getString("StatusHandler.Error_processing"), errors, //$NON-NLS-1$
+													aStatus.getMessage()),
+											MessageDialog.ERROR, new String[] { IDialogConstants.OK_LABEL }, 0);
+								int ret = dialog.open();
+								if (ret == 1) {
+									dialog.close();
+									IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
+									if (activeWorkbenchWindow != null) {
+										IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+										if (activePage != null) {
+											try {
+												activePage.showView(AbstractPerspective.LOG_VIEW);
+												Shell shell = activeWorkbenchWindow.getShell();
+												shell.setVisible(true);
+												shell.setMinimized(false);
+												shell.forceActive();
+											} catch (PartInitException e) {
+												// ignore
+											}
 										}
 									}
 								}
+								dialog = null;
 							}
-							dialog = null;
 						}
-					}
-				});
+					});
 			}
 		}
 	}

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2011 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -89,7 +89,6 @@ public abstract class AbstractSelectExhibitDialog extends ZDialog {
 		viewer = new TableViewer(area, SWT.V_SCROLL | SWT.SINGLE | SWT.BORDER | SWT.VIRTUAL);
 		viewer.getControl().setLayoutData(new GridData(200, 350));
 		viewer.setContentProvider(new ILazyContentProvider() {
-
 			public void inputChanged(Viewer aViewer, Object oldInput, Object newInput) {
 				// do nothing
 			}

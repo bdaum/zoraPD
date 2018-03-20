@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.email.internal;
@@ -38,9 +38,6 @@ import com.bdaum.zoom.ui.internal.wizards.MetaSelectionPage;
 public class EmailWizard extends AbstractAssetSelectionWizard implements IExportWizard {
 
 	public static final String MODE = "mode"; //$NON-NLS-1$
-//	public static final int ORIGINALS = 0;
-//	public static final int PREVIEW = 1;
-//	public static final int FIXED = 2;
 	public static final String SCALING = "scaling"; //$NON-NLS-1$
 	protected static final double COMPRESSION = 25d;
 	private static final String SETTINGSID = "com.bdaum.zoom.emailProperties"; //$NON-NLS-1$
@@ -51,9 +48,7 @@ public class EmailWizard extends AbstractAssetSelectionWizard implements IExport
 	private SendEmailPage mainPage;
 	private MetaSelectionPage metaPage;
 
-
 	public EmailWizard() {
-		super();
 		setHelpAvailable(true);
 	}
 

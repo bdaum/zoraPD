@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal;
@@ -46,8 +46,7 @@ public class Icons {
 		private String getKey() {
 			if (key == null) {
 				key = prefix + (++counter);
-				JFaceResources.getImageRegistry().put(key,
-						UiActivator.getImageDescriptor(path));
+				JFaceResources.getImageRegistry().put(key, UiActivator.getImageDescriptor(path));
 				path = null;
 			}
 			return key;
@@ -72,7 +71,10 @@ public class Icons {
 			ImageData imageData = image.getImageData();
 			byte[] alphaData = imageData.alphaData;
 			if (alphaData != null)
-				alphaData[0] = alphaData[1] = alphaData[2] = alphaData[3] = alphaData[w] = alphaData[w + 1] = alphaData[w + 2] = alphaData[w + 3] = alphaData[2 * w] = alphaData[2 * w + 1] = alphaData[2 * w + 2] = alphaData[2 * w + 3] = alphaData[3 * w] = alphaData[3 * w + 1] = alphaData[3 * w + 2] = alphaData[3 * w + 3] = (byte) 255;
+				alphaData[0] = alphaData[1] = alphaData[2] = alphaData[3] = alphaData[w] = alphaData[w
+						+ 1] = alphaData[w + 2] = alphaData[w + 3] = alphaData[2 * w] = alphaData[2 * w
+								+ 1] = alphaData[2 * w + 2] = alphaData[2 * w + 3] = alphaData[3 * w] = alphaData[3 * w
+										+ 1] = alphaData[3 * w + 2] = alphaData[3 * w + 3] = (byte) 255;
 			Image newImage = new Image(image.getDevice(), imageData);
 			GC gc = new GC(newImage);
 			Image patch = toSwtColors(cc);
@@ -99,8 +101,7 @@ public class Icons {
 	public static final Icon rating61 = new Icon("icons/rating61.png"); //$NON-NLS-1$
 	public static final Icon rating60 = new Icon("icons/rating60.png"); //$NON-NLS-1$
 	public static final Icon ratingAll = new Icon("icons/ratingAll.png"); //$NON-NLS-1$
-	public static final Icon ratingAllSmall = new Icon(
-			"icons/ratingAllSmall.png"); //$NON-NLS-1$
+	public static final Icon ratingAllSmall = new Icon("icons/ratingAllSmall.png"); //$NON-NLS-1$
 	public static final Icon rating = new Icon("icons/rating.gif"); //$NON-NLS-1$
 	public static final Icon rating1 = new Icon("icons/rating_1.png"); //$NON-NLS-1$
 	public static final Icon rating2 = new Icon("icons/rating_2.png"); //$NON-NLS-1$
@@ -115,9 +116,13 @@ public class Icons {
 	public static final Icon green = new Icon("icons/patches/green.png"); //$NON-NLS-1$
 	public static final Icon blue = new Icon("icons/patches/blue.png"); //$NON-NLS-1$
 	public static final Icon redDot = new Icon("icons/redDot.png"); //$NON-NLS-1$
+	public static final Icon paleRedDot = new Icon("icons/paleRedDot.png"); //$NON-NLS-1$
 	public static final Icon greenDot = new Icon("icons/greenDot.png"); //$NON-NLS-1$
+	public static final Icon paleGreenDot = new Icon("icons/paleGreenDot.png"); //$NON-NLS-1$
 	public static final Icon blueDot = new Icon("icons/blueDot.png"); //$NON-NLS-1$
+	public static final Icon paleBlueDot = new Icon("icons/paleBlueDot.png"); //$NON-NLS-1$
 	public static final Icon grayscale = new Icon("icons/grayscale.png"); //$NON-NLS-1$
+	public static final Icon paleGrayscale = new Icon("icons/paleGrayscale.png"); //$NON-NLS-1$
 	public static final Icon cyan = new Icon("icons/patches/cyan.png"); //$NON-NLS-1$
 	public static final Icon magenta = new Icon("icons/patches/magenta.png"); //$NON-NLS-1$
 	public static final Icon yellow = new Icon("icons/patches/yellow.png"); //$NON-NLS-1$
@@ -130,10 +135,8 @@ public class Icons {
 	public static final Icon folder_user = new Icon("icons/folder_user.png"); //$NON-NLS-1$
 	public static final Icon folder_table = new Icon("icons/folder_table.png"); //$NON-NLS-1$
 	public static final Icon folder_page = new Icon("icons/folder_page.png"); //$NON-NLS-1$
-	public static final Icon folder_page_white = new Icon(
-			"icons/folder_page_white.png"); //$NON-NLS-1$
-	public static final Icon folder_explore = new Icon(
-			"icons/folder_explore.png"); //$NON-NLS-1$
+	public static final Icon folder_page_white = new Icon("icons/folder_page_white.png"); //$NON-NLS-1$
+	public static final Icon folder_explore = new Icon("icons/folder_explore.png"); //$NON-NLS-1$
 	public static final Icon folder_edit = new Icon("icons/folder_edit.png"); //$NON-NLS-1$
 	public static final Icon folder_add = new Icon("icons/folder_add.png"); //$NON-NLS-1$
 	public static final Icon folder_delete = new Icon("icons/folder_delete.png"); //$NON-NLS-1$
@@ -141,15 +144,12 @@ public class Icons {
 	public static final Icon timeline_find = new Icon("icons/timeline_find.png"); //$NON-NLS-1$
 	public static final Icon map_find = new Icon("icons/map_find.png"); //$NON-NLS-1$
 	public static final Icon folder_image = new Icon("icons/folder_image.png"); //$NON-NLS-1$
-	public static final Icon folder_database = new Icon(
-			"icons/folder_database.png"); //$NON-NLS-1$
+	public static final Icon folder_database = new Icon("icons/folder_database.png"); //$NON-NLS-1$
 	public static final Icon folder_import = new Icon("icons/folder_key.png"); //$NON-NLS-1$
 	public static final Icon folder_clock = new Icon("icons/folder_clock.png"); //$NON-NLS-1$
 	public static final Icon folder_and = new Icon("icons/folder_and.png"); //$NON-NLS-1$
-	public static final Icon folder_add_network = new Icon(
-			"icons/folder_add_network.png"); //$NON-NLS-1$
-	public static final Icon folder_and_network = new Icon(
-			"icons/folder_and_network.png"); //$NON-NLS-1$
+	public static final Icon folder_add_network = new Icon("icons/folder_add_network.png"); //$NON-NLS-1$
+	public static final Icon folder_and_network = new Icon("icons/folder_and_network.png"); //$NON-NLS-1$
 	public static final Icon folder_album = new Icon("icons/folder_heart.png"); //$NON-NLS-1$
 	public static final Icon folder_person = new Icon("icons/folder_person.png"); //$NON-NLS-1$
 	public static final Icon folder_world = new Icon("icons/folder_world.png"); //$NON-NLS-1$
@@ -159,15 +159,14 @@ public class Icons {
 	public static final Icon merge64 = new Icon("icons/banner/merge64.png"); //$NON-NLS-1$
 	public static final Icon person64 = new Icon("icons/banner/person64.png"); //$NON-NLS-1$
 
-
 	public static final Icon forwards = new Icon("icons/forward_nav.png"); //$NON-NLS-1$
 	public static final Icon backwards = new Icon("icons/backward_nav.png"); //$NON-NLS-1$
 	public static final Icon lastImport = new Icon("icons/lastimport.png"); //$NON-NLS-1$
 	public static final Icon group = new Icon("icons/group.png"); //$NON-NLS-1$
 	public static final Icon groupfiltered = new Icon("icons/group_filtered.png"); //$NON-NLS-1$
-	public static final Icon slideshow = new Icon("icons/slideshow.gif"); //$NON-NLS-1$
+	public static final Icon slideshow = new Icon("icons/slideshow.png"); //$NON-NLS-1$
 	public static final Icon exhibition = new Icon("icons/exhibition.png"); //$NON-NLS-1$
-	public static final Icon webGallery = new Icon("icons/webGallery.gif"); //$NON-NLS-1$
+	public static final Icon webGallery = new Icon("icons/webGallery.png"); //$NON-NLS-1$
 	public static final Icon shadow = new Icon("/icons/black.png"); //$NON-NLS-1$
 	public static final Icon signed_yes = new Icon("/icons/signed_yes.gif"); //$NON-NLS-1$
 	public static final Icon signed_no = new Icon("/icons/signed_no.gif"); //$NON-NLS-1$
@@ -176,38 +175,30 @@ public class Icons {
 	public static final Icon record = new Icon("/icons/start32.gif"); //$NON-NLS-1$
 	public static final Icon stop = new Icon("/icons/stop32.gif"); //$NON-NLS-1$
 	public static final Icon folder32 = new Icon("/icons/folder32.gif"); //$NON-NLS-1$
-	public static final Icon largeProperties = new Icon(
-			"icons/banner/icon_document.png"); //$NON-NLS-1$
-	public static final Icon smallProperties = new Icon(
-			"icons/banner/cell_properties.png"); //$NON-NLS-1$
-	public static final Icon largeDelete = new Icon(
-			"icons/banner/delete_large.png"); //$NON-NLS-1$
+	public static final Icon largeProperties = new Icon("icons/banner/icon_document.png"); //$NON-NLS-1$
+	public static final Icon smallProperties = new Icon("icons/banner/cell_properties.png"); //$NON-NLS-1$
+	public static final Icon largeDelete = new Icon("icons/banner/delete_large.png"); //$NON-NLS-1$
 	public static final Icon error = new Icon("icons/error.png"); //$NON-NLS-1$
 	public static final Icon square = new Icon("icons/shape_square.png"); //$NON-NLS-1$
-	public static final Icon nullTitle = new Icon(
-			"icons/banner/nullTitleIcon.gif"); //$NON-NLS-1$
-	public static final Icon emptyTitle = new Icon(
-			"icons/banner/emptyTitleIcon.gif"); //$NON-NLS-1$
+	public static final Icon nullTitle = new Icon("icons/banner/nullTitleIcon.gif"); //$NON-NLS-1$
+	public static final Icon emptyTitle = new Icon("icons/banner/emptyTitleIcon.gif"); //$NON-NLS-1$
 	public static final Icon delete = new Icon("icons/delete_obj.png"); //$NON-NLS-1$
 	public static final Icon delete32 = new Icon("icons/delete32.png"); //$NON-NLS-1$
 	public static final Icon trashrestore = new Icon("icons/trashrestore.png"); //$NON-NLS-1$
-	public static final Icon trashrestoreSmall = new Icon(
-			"icons/restoretrash_s.png"); //$NON-NLS-1$
+	public static final Icon trashrestoreSmall = new Icon("icons/restoretrash_s.png"); //$NON-NLS-1$
 	public static final Icon trash = new Icon("icons/trashcan.png"); //$NON-NLS-1$
 	public static final Icon trash32 = new Icon("icons/trashcan32.png"); //$NON-NLS-1$
 	public static final Icon cleartrash = new Icon("icons/clearTrash.png"); //$NON-NLS-1$
 	public static final Icon file = new Icon("icons/file_obj.png"); //$NON-NLS-1$
 	public static final Icon filter = new Icon("icons/filter.png"); //$NON-NLS-1$
 	public static final Icon selectAll = new Icon("icons/selectall.gif"); //$NON-NLS-1$
-	public static final Icon derivative = new Icon("icons/derivative.gif"); //$NON-NLS-1$
-	public static final Icon original = new Icon("icons/original.gif"); //$NON-NLS-1$
-	public static final Icon composite = new Icon("icons/composite.gif"); //$NON-NLS-1$
-	public static final Icon component = new Icon("icons/component.gif"); //$NON-NLS-1$
+	public static final Icon derivative = new Icon("icons/derivative.png"); //$NON-NLS-1$
+	public static final Icon original = new Icon("icons/original.png"); //$NON-NLS-1$
+	public static final Icon composite = new Icon("icons/composite.png"); //$NON-NLS-1$
+	public static final Icon component = new Icon("icons/component.png"); //$NON-NLS-1$
 	public static final Icon tableSave = new Icon("icons/table_save.png"); //$NON-NLS-1$
-	public static final Icon textsearchOne = new Icon(
-			"icons/textsearch_one.png"); //$NON-NLS-1$
-	public static final Icon textsearchMany = new Icon(
-			"icons/textsearch_many.png"); //$NON-NLS-1$
+	public static final Icon textsearchOne = new Icon("icons/textsearch_one.png"); //$NON-NLS-1$
+	public static final Icon textsearchMany = new Icon("icons/textsearch_many.png"); //$NON-NLS-1$
 	public static final Icon textSearch = new Icon("icons/textsearch.png"); //$NON-NLS-1$
 	public static final Icon format = new Icon("icons/format.gif"); //$NON-NLS-1$
 	public static final Icon formatSelect = new Icon("icons/format_select.gif"); //$NON-NLS-1$
@@ -219,8 +210,7 @@ public class Icons {
 	public static final Icon newSlideshow = new Icon("icons/newslideshow.gif"); //$NON-NLS-1$
 	public static final Icon addAlbum = new Icon("icons/add_album.png"); //$NON-NLS-1$
 	public static final Icon albumRemove = new Icon("icons/heart_delete.png"); //$NON-NLS-1$
-	public static final Icon addSubselection = new Icon(
-			"icons/add_subselection.png"); //$NON-NLS-1$
+	public static final Icon addSubselection = new Icon("icons/add_subselection.png"); //$NON-NLS-1$
 	public static final Icon cut = new Icon("icons/cut_edit.png"); //$NON-NLS-1$
 	public static final Icon copy = new Icon("icons/copy_edit.png"); //$NON-NLS-1$
 	public static final Icon paste = new Icon("icons/paste_edit.png"); //$NON-NLS-1$
@@ -231,12 +221,10 @@ public class Icons {
 	public static final Icon play = new Icon("icons/play.gif"); //$NON-NLS-1$
 	public static final Icon toggle = new Icon("icons/toggle.png"); //$NON-NLS-1$
 	public static final Icon unlink = new Icon("icons/unlink.gif"); //$NON-NLS-1$
-	public static final Icon descriptionEdit = new Icon(
-			"icons/page_white_edit.png"); //$NON-NLS-1$
+	public static final Icon descriptionEdit = new Icon("icons/page_white_edit.png"); //$NON-NLS-1$
 	public static final Icon proximity = new Icon("icons/proximity.gif"); //$NON-NLS-1$
 	public static final Icon image_edit = new Icon("icons/image_edit.png"); //$NON-NLS-1$
-	public static final Icon image_edit_with = new Icon(
-			"icons/image_edit_with.png"); //$NON-NLS-1$
+	public static final Icon image_edit_with = new Icon("icons/image_edit_with.png"); //$NON-NLS-1$
 	public static final Icon colorCode = new Icon("icons/colorCode.gif"); //$NON-NLS-1$
 	public static final Icon sound = new Icon("icons/sound.png"); //$NON-NLS-1$
 	public static final Icon sound_add = new Icon("icons/sound_add.png"); //$NON-NLS-1$
@@ -248,19 +236,13 @@ public class Icons {
 	public static final Icon add = new Icon("icons/add_obj.png"); //$NON-NLS-1$
 	public static final Icon save = new Icon("icons/table_save.png"); //$NON-NLS-1$
 	public static final Icon sync = new Icon("icons/sync.png"); //$NON-NLS-1$
-	public static final Icon slideControl_dark = new Icon(
-			"icons/banner/slideControl_d.png"); //$NON-NLS-1$
-	public static final Icon slideControl_nonselect = new Icon(
-			"icons/banner/slideControl_n.png"); //$NON-NLS-1$
-	public static final Icon slideControl = new Icon(
-			"icons/banner/slideControl.png"); //$NON-NLS-1$
-	public static final Icon importNewStructure = new Icon(
-			"icons/banner/imp_new_structure.png"); //$NON-NLS-1$
-	public static final Icon importDevice = new Icon(
-			"icons/banner/import_dev.png"); //$NON-NLS-1$
+	public static final Icon slideControl_dark = new Icon("icons/banner/slideControl_d.png"); //$NON-NLS-1$
+	public static final Icon slideControl_nonselect = new Icon("icons/banner/slideControl_n.png"); //$NON-NLS-1$
+	public static final Icon slideControl = new Icon("icons/banner/slideControl.png"); //$NON-NLS-1$
+	public static final Icon importNewStructure = new Icon("icons/banner/imp_new_structure.png"); //$NON-NLS-1$
+	public static final Icon importDevice = new Icon("icons/banner/import_dev.png"); //$NON-NLS-1$
 	public static final Icon pref64 = new Icon("icons/banner/exportpref_wiz.png"); //$NON-NLS-1$
-	public static final Icon watchedFolder = new Icon(
-			"icons/banner/watchedFolder.png"); //$NON-NLS-1$
+	public static final Icon watchedFolder = new Icon("icons/banner/watchedFolder.png"); //$NON-NLS-1$
 	public static final Icon splitcat = new Icon("icons/book_go.png"); //$NON-NLS-1$
 	public static final Icon stack = new Icon("/icons/stack.png"); //$NON-NLS-1$
 	public static final Icon hover = new Icon("/icons/comments.png"); //$NON-NLS-1$
@@ -297,11 +279,9 @@ public class Icons {
 	public static final Icon seasons = new Icon("/icons/4seasons.png"); //$NON-NLS-1$
 	public static final Icon network = new Icon("/icons/network.png"); //$NON-NLS-1$
 	public static final Icon local = new Icon("/icons/local.png"); //$NON-NLS-1$
-	public static final Icon closeButton = new Icon(
-			"/icons/close_button_red.png"); //$NON-NLS-1$
+	public static final Icon closeButton = new Icon("/icons/close_button_red.png"); //$NON-NLS-1$
 	public static final Icon MIXED_OVERLAY = new Icon("/icons/mixedOverlay.png"); //$NON-NLS-1$
-	public static final Icon PENDING_OVERLAY = new Icon(
-			"/icons/pendingOverlay.png"); //$NON-NLS-1$
+	public static final Icon PENDING_OVERLAY = new Icon("/icons/pendingOverlay.png"); //$NON-NLS-1$
 	public static final Icon user_magnify = new Icon("icons/user_magnify.png"); //$NON-NLS-1$
 	public static final Icon goggles = new Icon("icons/goggles.gif"); //$NON-NLS-1$
 	public static final Icon textsearch = new Icon("icons/textsearch.png"); //$NON-NLS-1$
@@ -312,13 +292,17 @@ public class Icons {
 	public static final Icon history = new Icon("icons/historyW.png"); //$NON-NLS-1$
 	public static final Icon rename = new Icon("icons/rename.png"); //$NON-NLS-1$
 	public static final Icon move = new Icon("icons/lorry_flatbed.png"); //$NON-NLS-1$
-	public static final Icon warning= new Icon("icons/warn_tsk.gif"); //$NON-NLS-1$
-	public static final Icon info= new Icon("icons/info_tsk.gif"); //$NON-NLS-1$
-	public static final Icon note= new Icon("icons/note.png"); //$NON-NLS-1$
-	public static final Icon note32= new Icon("icons/note32.png"); //$NON-NLS-1$
-	public static final Icon cancel32= new Icon("icons/cancel32.png"); //$NON-NLS-1$
-	public static final Icon neural= new Icon("icons/neural.png"); //$NON-NLS-1$
-	public static final Icon leave= new Icon("icons/leave.png"); //$NON-NLS-1$
+	public static final Icon warning = new Icon("icons/warn_tsk.gif"); //$NON-NLS-1$
+	public static final Icon info = new Icon("icons/info_tsk.gif"); //$NON-NLS-1$
+	public static final Icon note = new Icon("icons/note.png"); //$NON-NLS-1$
+	public static final Icon note32 = new Icon("icons/note32.png"); //$NON-NLS-1$
+	public static final Icon cancel32 = new Icon("icons/cancel32.png"); //$NON-NLS-1$
+	public static final Icon neural = new Icon("icons/neural.png"); //$NON-NLS-1$
+	public static final Icon leave = new Icon("icons/leave.png"); //$NON-NLS-1$
+	public static final Icon centric = new Icon("icons/centric.png"); //$NON-NLS-1$
+	public static final Icon integral = new Icon("icons/integral.png"); //$NON-NLS-1$
+	public static final Icon wastebasket = new Icon("icons/trash.png"); //$NON-NLS-1$
+
 	public static Icon toColorIcon(int code) {
 		switch (code) {
 		case Constants.COLOR_BLACK:

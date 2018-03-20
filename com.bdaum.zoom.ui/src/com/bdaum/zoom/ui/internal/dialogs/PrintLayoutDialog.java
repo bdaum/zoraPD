@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -35,9 +35,12 @@ import com.bdaum.zoom.cat.model.PageLayout_typeImpl;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.IAssetProvider;
+import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 
+@SuppressWarnings("restriction")
 public class PrintLayoutDialog extends ZTitleAreaDialog {
 
 	private static final int PREVIEW = 999;
@@ -71,7 +74,10 @@ public class PrintLayoutDialog extends ZTitleAreaDialog {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-		layoutComponent = new LayoutComponent(area, LayoutComponent.PRINT);
+		IAssetProvider assetProvider = Core.getCore().getAssetProvider();
+		String collection = assetProvider != null ? Utilities.getExternalAlbumName(assetProvider.getCurrentCollection())
+				: null;
+		layoutComponent = new LayoutComponent(area, LayoutComponent.PRINT, assets, collection);
 		layoutComponent.getControl().setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		fillValues();
 		return area;

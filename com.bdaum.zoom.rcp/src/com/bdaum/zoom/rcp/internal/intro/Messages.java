@@ -17,6 +17,7 @@ public class Messages extends NLS {
 	public static String Intro_config_text;
 	public static String Intro_config_title;
 	public static String Intro_config_tooltip;
+	public static String Intro_dictionaries_key;
 	public static String Intro_features_text;
 	public static String Intro_features_title;
 	public static String Intro_features_tooltip;

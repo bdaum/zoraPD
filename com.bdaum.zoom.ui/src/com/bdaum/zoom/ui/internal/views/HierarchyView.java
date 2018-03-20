@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -264,8 +264,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 				if (isInOppositeHierarchy(id))
 					return Messages.getString("HierarchyView.cyclic_relationship"); //$NON-NLS-1$
 			}
-			LinkOperation op = new LinkOperation(typ, asset.getStringId(), ids);
-			OperationJob.executeOperation(op, HierarchyView.this);
+			OperationJob.executeOperation(new LinkOperation(typ, asset.getStringId(), ids), HierarchyView.this);
 			return null;
 		}
 
@@ -309,7 +308,6 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 			}
 			return null;
 		}
-
 	}
 
 	public final static String ID_DERIVATIVES = "com.bdaum.zoom.ui.views.HierarchyViewDerivatives"; //$NON-NLS-1$
@@ -363,9 +361,8 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		}
 
 		private Image getImage(Object element) {
-			if (element instanceof Node) {
+			if (element instanceof Node)
 				return ((Node) element).getThumbnail();
-			}
 			return null;
 		}
 
@@ -416,9 +413,8 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 	private static class ViewContentProvider implements ITreeContentProvider {
 
 		public Object getParent(Object element) {
-			if (element instanceof Node) {
+			if (element instanceof Node)
 				return ((Node) element).getParent();
-			}
 			return null;
 		}
 
@@ -577,7 +573,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		// Listeners
 		addKeyListener();
 		addGestureListener(viewer.getTree());
-		addExplanationListener();
+		addExplanationListener(true);
 		addPartListener();
 		addClipboard(viewer.getControl());
 		addDragSupport();
@@ -589,7 +585,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		// Hover
 		installHoveringController();
 		// Action state
-		updateActions();
+		updateActions(false);
 	}
 
 	protected void addClipboard(Control control) {
@@ -862,7 +858,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 	}
 
 	public void selectionChanged(SelectionChangedEvent event) {
-		updateActions();
+		updateActions(false);
 		IStructuredSelection selection = (IStructuredSelection) event.getSelection();
 		if (cntrlDwn) {
 			Object item = selection.getFirstElement();
@@ -888,27 +884,27 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 	}
 
 	@Override
-	public void updateActions() {
-		if (showPossibleDerivativesAction == null || viewer.getControl().isDisposed())
-			return;
-		boolean writable = !dbIsReadonly();
-		super.updateActions();
-		boolean enabled = false;
-		boolean selected = false;
-		Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
-		if (firstElement instanceof Node) {
-			selected = true;
-			enabled = (((Node) firstElement).getParent() != null);
+	public void updateActions(boolean force) {
+		if (showPossibleDerivativesAction != null && (viewActive || force) && !viewer.getControl().isDisposed()) {
+			boolean writable = !dbIsReadonly();
+			super.updateActions(force);
+			boolean enabled = false;
+			boolean selected = false;
+			Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+			if (firstElement instanceof Node) {
+				selected = true;
+				enabled = (((Node) firstElement).getParent() != null);
+			}
+			showPossibleDerivativesAction.setEnabled(selected);
+			showPossibleOriginalsAction.setEnabled(selected);
+			unlinkAction.setEnabled(enabled && writable);
+			descriptionAction.setEnabled(enabled);
+			showComponentsAction.setEnabled(enabled);
+			showCompositesAction.setEnabled(enabled);
+			showDerivativesAction.setEnabled(enabled);
+			showOriginalAction.setEnabled(enabled);
+			showAssetAction.setEnabled(getNavigationHistory().getSelectedAssets().size() == 1);
 		}
-		showPossibleDerivativesAction.setEnabled(selected);
-		showPossibleOriginalsAction.setEnabled(selected);
-		unlinkAction.setEnabled(enabled && writable);
-		descriptionAction.setEnabled(enabled);
-		showComponentsAction.setEnabled(enabled);
-		showCompositesAction.setEnabled(enabled);
-		showDerivativesAction.setEnabled(enabled);
-		showOriginalAction.setEnabled(enabled);
-		showAssetAction.setEnabled(getNavigationHistory().getSelectedAssets().size() == 1);
 	}
 
 	private void fireSelectionChanged(SelectionChangedEvent event) {
@@ -964,7 +960,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 
 	@Override
 	public boolean assetsChanged() {
-		updateActions();
+		updateActions(false);
 		return false;
 	}
 

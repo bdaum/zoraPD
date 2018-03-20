@@ -67,6 +67,131 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <meta http-equiv="Content-Language" content="en-us">
 <meta name="GENERATOR" content="Microsoft FrontPage 4.0">
 <meta name="ProgId" content="FrontPage.Editor.Document"><title>Readme</title>
@@ -89,15 +214,15 @@ body { font-family: arial, helvetica, geneva; font-size: 10pt; clip: rect( ); ma
 </tr>
 <tr>
 <td>
-<p>May 26, 2017</p>
+<p>March 18, 2018</p>
 <br>
 <h1 style="color: red;"><a class="mozTocH1" name="mozTocId462522"></a>ZoRa Photo Director</h1>
 <div style="margin-left: 40px;"><sub>Zo = <span style="font-weight: bold;">Zo</span>omable
 User Interface</sub><br>
 <sub>Ra = <span style="font-weight: bold;">Ra</span>w
 file support</sub></div>
-<h1><a class="mozTocH2" name="mozTocId943067"></a>Contents<span style="text-decoration: underline;"></span></h1><a href="#mozTocId943067"></a>
-      <ol><span style="text-decoration: underline;"></span><!--mozToc h1 1 h2 2 h3 3 h4 4 h5 5 h6 6--></ol><a href="#mozTocId943067"></a>
+<h1><a class="mozTocH2" name="mozTocId943067"></a>Contents</h1>
+      <a href="#mozTocId943067"></a>
       <ol>
 <li><a href="#mozTocId180886">Description</a></li><li><a href="#mozTocId725139">Features</a></li><li><a href="#mozTocId31540">
 Requirements</a></li><li><a href="#mozTocId493872">Installation</a><ol><li><a href="#mozTocId264756">Installation
@@ -106,7 +231,7 @@ under Windows</a></li><li><a href="#mozTocId688416">Installation under Linux
 on removable media</a></li><li><a href="#mozTocId983009">De-installation</a></li></ol></li><li><a href="#mozTocId767897">Known
 problems
 </a></li><li><a href="#mozTocId82845">License</a></li><li><a href="#mozTocId731789">Copyright</a></li><li><a href="#mozTocId902534">Source code</a></li><li><a href="#mozTocId961538">Change
-log</a><ol><li><a href="#mozTocId527756">Version 3.0.1</a></li><li><a href="#mozTocId527756">Version 3.0.0</a></li><li><a href="#mozTocId342068">Version
+log</a><ol><li><a href="#mozTocId983456">Version 3.3.0</a></li><li><a href="#mozTocId160733">Version 3.2.2</a></li><li><a href="#mozTocId446335">Version 3.2.1</a></li><li><a href="#mozTocId636428">Version 3.2.0</a></li><li><a href="#mozTocId514211">Version 3.1.0</a></li><li><a href="#mozTocId527756">Version 3.0.1</a></li><li><a href="#mozTocId527756">Version 3.0.0</a></li><li><a href="#mozTocId342068">Version
 2.5.0</a></li><li><a href="#mozTocId771503">Version
 2.4.0</a></li><li><a href="#mozTocId557735">Version
 2.3.0</a></li><li><a href="#mozTocId664656">Version
@@ -124,6 +249,18 @@ log</a><ol><li><a href="#mozTocId527756">Version 3.0.1</a></li><li><a href="#moz
 1.2.0</a></li><li><a href="#mozTocId391355">Version
 1.1.0</a></li></ol></li>
       </ol>
+      <span style="text-decoration: underline;"><br>
+      <br>
+      </span>
+
+
+      <ol></ol>
+
+      <ol></ol>
+      <ol>
+        <span style="text-decoration: underline;"></span>
+      </ol>
+
       <ol>
         <span style="text-decoration: underline;"></span>
       </ol>
@@ -166,7 +303,10 @@ YouTube.&nbsp;</li>
 <li>Optional peer-to-peer and multi-catalog
 support.&nbsp;</li>
 <li>Optional support for importing foreign
-catalogs.&nbsp;</li>
+catalogs.</li>
+        <li>Optional support for AI based image categorization and rating<br>
+        </li>
+
 </ul>
 <h2><a class="mozTocH2" name="mozTocId31540"></a><br>
 Requirements</h2>
@@ -311,6 +451,313 @@ Visit <a href="http://www.photozora.org">http://www.photozora.org</a><br>
 <br>
 <h2><a class="mozTocH2" name="mozTocId961538"></a>Change
 log</h2><br>
+      <h3><a class="mozTocH3" name="mozTocId983456"></a>Version 3.3.0</h3>
+
+
+
+
+
+
+
+      
+      
+      
+      
+      
+      
+      
+      <ul>
+<li>Fixed a bug in the metadata preference page</li>
+        <li>Performance tuning: the indexing of metadata can now be customized</li>
+        <li>Fixed a bug metadata field "Days since last modification"</li>
+        <li>Editing exhibition properties works again</li>
+        <li>The unit of geographics distances can now be chosen between km, mi, and NM</li>
+        <li>The unit of dimensions can now be chosen between cm and in</li>
+        <li>Fixed a bug with zooming by key in presentation editors</li>
+        <li>The layout dialog for Print, HTML, and PDF was redesigned</li>
+        <li>Fixed the possibility of a deadlock when a presentation view is visible</li>
+        <li>Fixed a bug with purging empty person albums</li>
+        <li>Fixed a bug with updating the UI after removing an image from an album</li>
+        <li>Added a context function to the Catalog view for removing empty collections</li>
+        <li>Fixed a bug when saving changed catalog properties</li>
+        <li>Fixed a bug occuring after uploading images to Flickr</li>
+        <li>Added the possibilty to use AI based services for image rating</li>
+        <li>Fixed a bug occuring when changing the AI configuration during the categorization process</li>
+        <li>Enabled celebrity detection for the Clarifai categorization service</li>
+        <li>Fixed a bug with displaying color codes</li>
+        <li>Fixed a bug with editing face regions</li>
+        <li>Equipped the properties views with expand and collapse buttons</li>
+        <li>Analog import works again</li>
+        <li>Analog import now checks for digital files</li>
+        <li>Fixed a problem with sporadic freeze-ups after invoking an external image viewer</li>
+        <li>Improved perspective switching</li>
+        <li>Added a context function for removing selected items from the trashcan</li>
+        <li>Various improvements to the different import functions</li>
+        <li>Added support for the raw file formats .gpr (GoPro) and .mdc (Minolta RD-175)</li>
+        <li>Improved the PDF und print layout pages</li>
+        <li>Improved file selection in dialogs, preference pages, and wizards</li>
+        <li>Fixed a problem with the storage of boolean web engine parameters</li>
+        <li>Made improvements to the web gallery properties dialog</li>
+        <li>Updated the Galleria web engine to the latest version</li>
+        <li>Added the Skitter web engine</li>
+        <li>Dropped the Flash based web engines ImageGallery and TiltViewer</li>
+        <li>Fixed a bug in the SimpleViewer generator. This Flash based web engine will be dropped soon, too.</li>
+        <li>Added center weighted measurement to the Histogram view</li>
+        <li>Better scaling for Histogram view</li>
+        <li>The action buttons and the tooltips in the Properties, EXIF, and IPTC views work again</li>
+        <li>The Histogram view now gives advice for postprocessing</li>
+        <li>Added configurable captions to both Preview view and Histogram view</li>
+        <li>Improved editing of the backup location in the Catalog Properties</li>
+        <li>Fixed a bug with cancelling indexing operations through the Progress view</li>
+        <li>Fixed a bug with undoing the Move operation</li>
+        <li>Added a wastebasket to the Catalog view</li>
+        <li>Fixed a problem with the Geo perspective</li>
+        <li>Made improvements to the layout of all perspectives</li>
+        <li>Fixed a bug with accessing external websites from within the application</li>
+        <li>Images can now be dragged on a location collection for settings the location where the image was created</li>
+        <li>Added a Purge button in the Catalog Properties dialog to remove unused Locations, Contacts, and Artworks</li>
+        <li>A bug when displaying Artworks and Contacts hierarchically in the Catalog Properties dialog was fixed</li>
+        <li>More sort options for tables</li>
+        <li>Fixed a bug with deleting locations and contacts in the IPTC view</li>
+        <li>Fixed a bug with the check for new versions</li>
+        <li>Faster geonaming</li>
+        <li>Better support for the Geonaming.org web service including search options<br>
+</li>
+        <li>Fixed a bug with creating and removing location collections during a geonaming operation</li>
+        <li>The Google geonaming service has been re-enabled. You must now specify an API key.</li>
+        <li>Improved general error handling</li>
+        <li>Added support for Google Plus Codes</li>
+        <li>Switched back to GTK2 on Linux to avoid GTK3 related UI problems<br>
+        </li>
+
+</ul>
+
+      <h3><a class="mozTocH3" name="mozTocId160733"></a>Version 3.2.2</h3>
+
+
+
+
+
+
+      
+      
+      
+      
+      
+      
+      <ul>
+<li>Faster watched folder synchronization</li>
+        <li>Performance improvements for large albums</li>
+        <li>Fixed a bug with querying video related fields</li>
+        <li>Added an animated zoom option to slideshows</li>
+        <li>Updated the piccolo library to version 3.0</li>
+        <li>Improved mouse interaction in presentation editors</li>
+        <li>Faster Start-up</li>
+        <li>Added a filter option to the keyword editing dialog</li>
+        <li>Fixed a bug with displaying the description in a relationship view</li>
+        <li>Fixed a bug when querying subject and scene code</li>
+        <li>Allowed for custom defined subject and scene codes<br>
+        </li>
+
+        <li>IPTC genre codes are now supported with proposals</li>
+        <li>Tree nodes can now always be expanded or collapsed using a double click. Properties of tree nodes can be edited using Ctrl+click</li>
+        <li>Fixed a bug when updating folder hierarchies during import</li>
+        <li>Fixed a bug when exporting XMP metadata with arrays in structured data</li>
+        <li>It is now possible to delete system collections pointing to non-existing directories</li>
+        <li>The Split Catalog function is working again</li>
+        <li>Fixed a bug when creating a new catalog</li>
+        <li>Fixed a bug with loosing system collections during import</li>
+        <li>Fixed a problem with unintended pop-up of the collection edit-dialog</li>
+        <li>Replaced the exclamation mark in the view tabs by a red underline of the view icon<br>
+        </li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </ul>
+
+      <h3><a class="mozTocH3" name="mozTocId446335"></a>Version 3.2.1</h3>
+
+
+
+
+
+      
+      
+      
+      
+      
+      <ul>
+<li>Very large images can now be viewed in full resolution using the internal image viewer</li>
+        <li>The application can now be started optionally with a catalog selection prompt</li>
+        <li>Fixed a bug in watched folder processing</li>
+        <li>Added a close button to the Duplicates and Series view</li>
+        <li>Fixed a bug in the management of file associations<br>
+        </li>
+
+
+
+        
+        <li><span style="font-weight: bold; color: red;">Mouse gestures in the Catalog view have been changed: double click now expands or collapses an item, CTRL-click edits an item</span><br>
+        </li>
+
+
+
+      </ul>
+
+      <h3><a class="mozTocH3" name="mozTocId636428"></a>Version 3.2.0</h3>
+
+
+
+
+      
+      
+      
+      
+      <ul>
+<li>Fixed a bug in the Color Code filter</li>
+        <li>Fixed a bug with Leaflet based maps under Linux</li>
+        <li>Fixed a bug in connection with specifying file names</li>
+        <li>Fixed a bug with text editing in the presentation editors</li>
+        <li>Improved key handling in the presentation editors</li>
+        <li>Fixed a bug in the export of metadata</li>
+        <li>Improved context menu in presentation views</li>
+        <li>Added Undo behavior to text fields</li>
+        <li>Improved the display of details in the Statistics section of the Catalog properties</li>
+        <li>Fixed a bug with invoking actions in hierarchical structures in the Catalog properties</li>
+        <li>Fixed a bug in the mouse interaction of the internal image viewer</li>
+        <li>Added the key command "h" and "w" to the internal image viewer to zoom the image to the height or width of the monitor<br>
+        </li>
+
+        <li>Fixed a bug in the Undo logic of multi-view perspectives</li>
+        <li>Active views have now an exclamation mark in the view title</li>
+        <li>Fixed a bug in perspective change handling in the navigation history</li>
+        <li>The Slideshow, Exhibition, and WebGallery perspectives have
+been replaced by a new combined Presentations perspective. However, the
+former are still present for compatibility reasons</li>
+        <li>Fixed bugs in the Autorule preference page</li>
+        <li>It is now possible to apply a name for Autorules</li>
+        <li>Catalog specific Autorules can now be defined in group "Automatic"</li>
+        <li>The groups "Rating", "Recent imports", "Locations", and "Timeline" can now be equipped with filters</li>
+        <li>Moved the preferences for the automatic creation of relations from the "Import" page to the "Automatic actions" page</li>
+        <li>Added a "Difference" button to them "Import from Device" wizard</li>
+        <li>Fixed a bug in the Export folder/email wizard</li>
+        <li>Added privacy options to the import wizard and the adhoc slideshow</li>
+        <li>Improved 'missing catalog' dialog</li>
+        <li>Added RawTherapee version advice in the Import preference page</li>
+        <li>RawTherapee is now located automatically</li>
+        <li>Fixed a bug with remembering the raw converter path and parameters<br>
+        </li>
+
+        <li>Fixed a bug when restoring images from trash</li>
+        <li>Thumbnail labels can now be configured on global, group, and collection level<br>
+</li>
+        <li>Redesign of the group and collection dialogs</li>
+        <li>Fixed a bug in accessing subfields of structured values</li>
+        <li>Fixed a bug with deleting locations_shown entries</li>
+        <li>Fixed a bug in the display of regions</li>
+        <li>Simplified the options for thumbnail decorations</li>
+        <li>Fixed a problem with theme management in the Sleeves view</li>
+        <li>Fixed a bug with the localization of regions in the Sleeves view</li>
+        <li>Fixed a bug with large icons in table viewers</li>
+        <li>Minor improvements to the preference pages</li>
+        <li>Fixed several bugs in the Map view<br>
+        </li>
+
+        <li>Locations shown in images can now be marked in the Map view</li>
+        <li>Better output format for image direction</li>
+        <li>Improved manual geo-tagging in the Map view</li>
+        <li>It is now possible to delete markers in the Map view</li>
+        <li>Better handling of images with corrupt ICC profile<br>
+        </li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </ul>
+
+      <h3><a class="mozTocH3" name="mozTocId514211"></a>Version 3.1.0</h3>
+
+
+
+      
+      
+      
+      <ul>
+<li>Fixed a&nbsp; bug in the Filter dialog in the Catalog view<br>
+</li><li>Faster user interaction in the Lightbox view</li>
+        <li>The Map view and the manual geo-tagging has been reworked. The display and definition of the image direction is now supported.</li>
+        <li>Fixed bugs in connection with WEBP thumbnails</li>
+        <li>Fixed a bug when recording voice notes</li>
+        <li>Alternative to voice notes, text notes can now be attached to images</li>
+        <li>More options for thumbnail decoration</li>
+        <li>Added secondary monitor support for image viewers and slide show</li>
+        <li>Fixed a bug when switching to the native color scheme</li>
+        <li>Upgraded from Lire 0.7.0 to Lire 1.0.0 (similarity search)</li>
+        <li>Additional algorithms for similarity search</li>
+        <li>Semantic similarity with the Clarifai algorithm</li>
+        <li>Updated to Eclipse 4.7 (Oxygen)</li>
+        <li>Buttons appear now in the current theme colour under Windows, too.</li>
+        <li>Fixed a bug in the goto slide function of the slide show player</li>
+        <li>The iText component for PDF creation has been updated to version 5.5</li>
+        <li>It is now possible to save reports as PDF</li>
+        <li>Added an option to skip orphans during report evaluation<br>
+        </li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </ul>
+
+
       <h3><a class="mozTocH3" name="mozTocId527756"></a>Version 3.0.1</h3>
 
 

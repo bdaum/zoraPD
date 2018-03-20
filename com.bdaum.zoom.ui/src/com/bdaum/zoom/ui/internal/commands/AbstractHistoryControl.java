@@ -45,9 +45,8 @@ public abstract class AbstractHistoryControl extends WorkbenchWindowControlContr
 	}
 
 	private static String composeName(SmartCollection sm) {
-		String name;
-		name = sm.getAdhoc() ? UiUtilities.composeContentDescription(sm, " - ", true) : sm //$NON-NLS-1$
-				.getName();
+		String name = sm.getAdhoc() ? UiUtilities.composeContentDescription(sm, " - ", true) //$NON-NLS-1$
+				: sm.getName();
 		while (true) {
 			SmartCollection parent = sm.getSmartCollection_subSelection_parent();
 			if (parent == null)
@@ -61,8 +60,7 @@ public abstract class AbstractHistoryControl extends WorkbenchWindowControlContr
 			sm = parent;
 		}
 		if (name.length() > 64)
-			name = name.substring(0, 64) + "…"; //$NON-NLS-1$
-
+			return name.substring(0, 64) + "…"; //$NON-NLS-1$
 		return name;
 	}
 

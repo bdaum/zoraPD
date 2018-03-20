@@ -15,11 +15,10 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.actions;
 
-import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
@@ -28,7 +27,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.AddAlbumOperation;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -42,18 +40,15 @@ public class AddToAlbumAction extends Action {
 		super(text, image);
 		this.adaptable = adaptable;
 	}
-	
+
 	@Override
 	public void run() {
 		List<Asset> localAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
 		if (localAssets != null && !localAssets.isEmpty()) {
-			AlbumSelectionDialog dialog = new AlbumSelectionDialog(adaptable.getAdapter(Shell.class), false, false,
-					null);
-			if (dialog.open() == AlbumSelectionDialog.OK) {
-				Collection<SmartCollectionImpl> selectedAlbums = dialog.getResult();
-				OperationJob.executeOperation(new AddAlbumOperation(selectedAlbums, localAssets, null, false),
+			AlbumSelectionDialog dialog = new AlbumSelectionDialog(adaptable.getAdapter(Shell.class), false, null);
+			if (dialog.open() == AlbumSelectionDialog.OK)
+				OperationJob.executeOperation(new AddAlbumOperation(dialog.getResult(), localAssets, null, false),
 						adaptable);
-			}
 		}
 	}
 }

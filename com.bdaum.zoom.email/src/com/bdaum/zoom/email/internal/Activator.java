@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.email.internal;
 
@@ -32,25 +32,14 @@ import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
-/**
- * The activator class controls the plug-in life cycle
- */
 @SuppressWarnings("restriction")
 public class Activator extends ZUiPlugin implements IEmailService {
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.email"; //$NON-NLS-1$
 
-	// The shared instance
 	private static Activator plugin;
 
 	private File tempFolder;
-
-	/**
-	 * The constructor
-	 */
-	public Activator() {
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -80,11 +69,6 @@ public class Activator extends ZUiPlugin implements IEmailService {
 		super.stop(context);
 	}
 
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
 	public static Activator getDefault() {
 		return plugin;
 	}

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2011 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.dialogs;
@@ -87,7 +87,7 @@ public class ZTitleAreaDialog extends TitleAreaDialog implements IAdaptable {
 	 */
 	public ZTitleAreaDialog(Shell parentShell) {
 		this(parentShell, null);
-		
+
 	}
 
 	/**
@@ -129,8 +129,7 @@ public class ZTitleAreaDialog extends TitleAreaDialog implements IAdaptable {
 				messageLabel = ((FormData) layoutData).top.control;
 				messageLabel.setFont(JFaceResources.getDefaultFont());
 				if (messageLabel instanceof Scrollable)
-					xTrim = ((Scrollable) messageLabel).computeTrim(0, 0, 100,
-							100).width - 100;
+					xTrim = ((Scrollable) messageLabel).computeTrim(0, 0, 100, 100).width - 100;
 			}
 		}
 	}
@@ -144,8 +143,7 @@ public class ZTitleAreaDialog extends TitleAreaDialog implements IAdaptable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.jface.dialogs.TitleAreaDialog#createDialogArea(org.eclipse
+	 * @see org.eclipse.jface.dialogs.TitleAreaDialog#createDialogArea(org.eclipse
 	 * .swt.widgets.Composite)
 	 */
 	@Override
@@ -164,8 +162,7 @@ public class ZTitleAreaDialog extends TitleAreaDialog implements IAdaptable {
 			// and update the FormData of the message label appropriately
 			Object layoutData = messageLabel.getLayoutData();
 			if (layoutData instanceof FormData) {
-				TextLayout textLayout = new TextLayout(
-						messageLabel.getDisplay());
+				TextLayout textLayout = new TextLayout(messageLabel.getDisplay());
 				textLayout.setText(newMessage);
 				textLayout.setFont(messageLabel.getFont());
 				textLayout.setWidth(messageLabel.getSize().x - xTrim);
@@ -177,8 +174,7 @@ public class ZTitleAreaDialog extends TitleAreaDialog implements IAdaptable {
 				workArea.getParent().layout(true);
 				Shell shell = getShell();
 				shell.setSize(shell.computeSize(shell.getSize().x, SWT.DEFAULT));
-				((FormData) messageLabel.getLayoutData()).height = y
-						+ MESSAGEBOTTOMMARGIN;
+				((FormData) messageLabel.getLayoutData()).height = y + MESSAGEBOTTOMMARGIN;
 				workArea.getParent().layout(true);
 			}
 		}
@@ -187,8 +183,7 @@ public class ZTitleAreaDialog extends TitleAreaDialog implements IAdaptable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.jface.dialogs.TitleAreaDialog#setTitleImage(org.eclipse.swt
+	 * @see org.eclipse.jface.dialogs.TitleAreaDialog#setTitleImage(org.eclipse.swt
 	 * .graphics.Image)
 	 */
 	@Override
@@ -196,7 +191,7 @@ public class ZTitleAreaDialog extends TitleAreaDialog implements IAdaptable {
 		hasTitleImage = titleImage != null;
 		super.setTitleImage(titleImage);
 	}
-	
+
 	protected void setText(Text field, String s) {
 		field.setText(s == null ? "" : s); //$NON-NLS-1$
 	}
@@ -205,14 +200,11 @@ public class ZTitleAreaDialog extends TitleAreaDialog implements IAdaptable {
 		if (field != null && s != null)
 			field.setText(s);
 	}
-	
 
 	protected void setCondText(FileEditor field, String s) {
 		if (s != null)
 			field.setText(s);
 	}
-
-
 
 	/**
 	 * Sets the context help ID of the dialog

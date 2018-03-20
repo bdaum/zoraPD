@@ -55,7 +55,6 @@ public final class WorkbenchHelper {
 	}
 
 	public void flushWorkbenchState() {
-
 		if (saveAndRestore) {
 			SafeRunner.run(new SafeRunnable() {
 				public void run() {
@@ -91,10 +90,7 @@ public final class WorkbenchHelper {
 	 */
 	private IStatus saveState(IMemento memento) {
 		MultiStatus result = new MultiStatus(PlatformUI.PLUGIN_ID, IStatus.OK, "", null); //$NON-NLS-1$
-
-		// Save the advisor state.
-		IMemento advisorState = memento.createChild(IWorkbenchConstants.TAG_WORKBENCH_ADVISOR);
-		result.add(advisor.saveState(advisorState));
+		result.add(advisor.saveState(memento.createChild(IWorkbenchConstants.TAG_WORKBENCH_ADVISOR)));
 		return result;
 	}
 
@@ -102,24 +98,16 @@ public final class WorkbenchHelper {
 	 * Save the workbench UI in a persistence file.
 	 */
 	private static boolean saveMementoToFile(XMLMemento memento) {
-		// Save it to a file.
 		File stateFile = getWorkbenchStateFile();
-		if (stateFile == null) {
-			return false;
-		}
-		try {
-			FileOutputStream stream = new FileOutputStream(stateFile);
-			try (OutputStreamWriter writer = new OutputStreamWriter(stream, "utf-8")) { //$NON-NLS-1$
+		if (stateFile != null)
+			try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(stateFile), "utf-8")) { //$NON-NLS-1$
 				memento.save(writer);
+				return true;
+			} catch (IOException e) {
+				stateFile.delete();
+				MessageDialog.openError((Shell) null, "", ""); //$NON-NLS-1$//$NON-NLS-2$
 			}
-		} catch (IOException e) {
-			stateFile.delete();
-			MessageDialog.openError((Shell) null, "", //$NON-NLS-1$
-					""); //$NON-NLS-1$
-			return false;
-		}
-		// Success !
-		return true;
+		return false;
 	}
 
 	/*
@@ -127,9 +115,8 @@ public final class WorkbenchHelper {
 	 */
 	private static File getWorkbenchStateFile() {
 		IPath path = WorkbenchPlugin.getDefault().getDataLocation();
-		if (path == null) {
+		if (path == null)
 			return null;
-		}
 		path = path.append(DEFAULT_WORKBENCH_STATE_FILENAME);
 		return path.toFile();
 	}
@@ -157,22 +144,17 @@ public final class WorkbenchHelper {
 	 * 
 	 */
 	private static XMLMemento readMementoFromFile() {
-
-		try {
-			File stateFile = getWorkbenchStateFile();
-			if (stateFile == null)
-				return null;
-			FileInputStream input = new FileInputStream(stateFile);
-			try (InputStreamReader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
+		File stateFile = getWorkbenchStateFile();
+		if (stateFile != null)
+			try (InputStreamReader reader = new InputStreamReader(new FileInputStream(stateFile),
+					StandardCharsets.UTF_8)) {
 				return XMLMemento.createReadRoot(reader);
+			} catch (FileNotFoundException e) {
+				// do nothing
+			} catch (Exception e) {
+				RcpActivator.getDefault().logError(Messages.getString("WorkbenchHelper.error_reading_state"), e); //$NON-NLS-1$
 			}
-
-		} catch (FileNotFoundException e) {
-			return null;
-		} catch (Exception e) {
-			RcpActivator.getDefault().logError(Messages.getString("WorkbenchHelper.error_reading_state"), e); //$NON-NLS-1$
-			return null;
-		}
+		return null;
 	}
 
 }

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2014 Berthold Daum  
  */
 package com.bdaum.zoom.core.internal.db;
 
@@ -154,7 +154,7 @@ public class NullDbManager implements IDbManager {
 	 * @see com.bdaum.zoom.core.db.IDbManager#obtainObjects(java.lang.Class,
 	 * boolean, java.lang.String[])
 	 */
-	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<? extends IIdentifiableObject> clazz, boolean or,
+	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<T> clazz, boolean or,
 			Object... namesValuesRelations) {
 		return new ArrayList<T>(0);
 	}
@@ -246,7 +246,7 @@ public class NullDbManager implements IDbManager {
 	 * java.lang.Object, int, boolean)
 	 */
 
-	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<? extends IIdentifiableObject> clazz,
+	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<T> clazz,
 			String field1, Object v1, int rel1, String field2, Object v2, int rel2, boolean or) {
 		return new ArrayList<T>();
 	}
@@ -424,11 +424,11 @@ public class NullDbManager implements IDbManager {
 		return false;
 	}
 
-	public boolean pruneSystemCollection(final SmartCollectionImpl sm) {
+	public boolean pruneSystemCollection(final SmartCollection sm) {
 		return false;
 	}
 
-	public void pruneEmptySystemCollections(IProgressMonitor monitor) {
+	public void pruneEmptySystemCollections(IProgressMonitor monitor, boolean all) {
 		// no op
 	}
 

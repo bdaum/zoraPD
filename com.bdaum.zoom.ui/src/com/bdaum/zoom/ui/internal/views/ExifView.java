@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -24,15 +24,12 @@ import com.bdaum.zoom.core.QueryField;
 
 public class ExifView extends AbstractPropertiesView {
 
-
 	public static final String ID = "com.bdaum.zoom.ui.views.ExifView"; //$NON-NLS-1$
-
 
 	@Override
 	public QueryField getRootElement() {
 		return QueryField.EXIF_ALL;
 	}
-
 
 	@Override
 	protected Object getFieldParent(QueryField element) {
@@ -40,12 +37,10 @@ public class ExifView extends AbstractPropertiesView {
 		return (parent != QueryField.ALL) ? parent : null;
 	}
 
-
 	@Override
 	protected int getExpandLevel() {
 		return 1;
 	}
-
 
 	@Override
 	protected int[] getColumnWidths() {

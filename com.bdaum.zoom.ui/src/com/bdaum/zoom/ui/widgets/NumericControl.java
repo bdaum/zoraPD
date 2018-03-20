@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.widgets;
@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.Spinner;
 public class NumericControl extends Composite
 		implements PaintListener, SelectionListener, FocusListener, MouseListener, MouseMoveListener {
 
+	public static final int LOGARITHMIC = 1 << 30;
 	private static final String TOOLTIP = Messages.NumericControl_click_to_set;
 	private Spinner spinner;
 	private Canvas canvas;
@@ -69,10 +70,12 @@ public class NumericControl extends Composite
 	 */
 	public NumericControl(Composite parent, int style) {
 		super(parent, style & SWT.BORDER);
+		if ((style & LOGARITHMIC) != 0)
+			setLogrithmic(true);
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = layout.verticalSpacing = 0;
 		setLayout(layout);
-		spinner = new Spinner(this, style | SWT.BORDER);
+		spinner = new Spinner(this, style & ~LOGARITHMIC | SWT.BORDER);
 		spinner.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		spinner.addSelectionListener(this);
 		spinner.addFocusListener(this);
@@ -387,8 +390,7 @@ public class NumericControl extends Composite
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * org.eclipse.swt.events.SelectionListener#widgetSelected(org.eclipse.swt.
+	 * @see org.eclipse.swt.events.SelectionListener#widgetSelected(org.eclipse.swt.
 	 * events.SelectionEvent)
 	 */
 	public void widgetSelected(SelectionEvent e) {
@@ -397,8 +399,8 @@ public class NumericControl extends Composite
 	}
 
 	private void fireSelectionChanged(SelectionEvent e) {
-		for (Object l : selectionListeners.getListeners())
-			((SelectionListener) l).widgetSelected(e);
+		for (SelectionListener l : selectionListeners)
+			l.widgetSelected(e);
 	}
 
 	/*
@@ -408,15 +410,14 @@ public class NumericControl extends Composite
 	 * eclipse.swt.events.SelectionEvent)
 	 */
 	public void widgetDefaultSelected(SelectionEvent e) {
-		for (Object l : selectionListeners.getListeners())
-			((SelectionListener) l).widgetDefaultSelected(e);
+		for (SelectionListener l : selectionListeners)
+			l.widgetDefaultSelected(e);
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * org.eclipse.swt.events.FocusListener#focusGained(org.eclipse.swt.events.
+	 * @see org.eclipse.swt.events.FocusListener#focusGained(org.eclipse.swt.events.
 	 * FocusEvent)
 	 */
 	public void focusGained(FocusEvent e) {
@@ -426,8 +427,7 @@ public class NumericControl extends Composite
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * org.eclipse.swt.events.FocusListener#focusLost(org.eclipse.swt.events.
+	 * @see org.eclipse.swt.events.FocusListener#focusLost(org.eclipse.swt.events.
 	 * FocusEvent)
 	 */
 	public void focusLost(FocusEvent e) {
@@ -435,13 +435,13 @@ public class NumericControl extends Composite
 	}
 
 	private void fireFocusGained(FocusEvent e) {
-		for (Object l : focusListeners.getListeners())
-			((FocusListener) l).focusGained(e);
+		for (FocusListener l : focusListeners)
+			l.focusGained(e);
 	}
 
 	private void fireFocusLost(FocusEvent e) {
-		for (Object l : focusListeners.getListeners())
-			((FocusListener) l).focusLost(e);
+		for (FocusListener l : focusListeners)
+			l.focusLost(e);
 	}
 
 	/*
@@ -459,8 +459,7 @@ public class NumericControl extends Composite
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.
+	 * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.
 	 * events.MouseEvent)
 	 */
 	public void mouseDoubleClick(MouseEvent e) {
@@ -472,8 +471,7 @@ public class NumericControl extends Composite
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.
+	 * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.
 	 * MouseEvent)
 	 */
 	public void mouseDown(MouseEvent e) {
@@ -523,7 +521,8 @@ public class NumericControl extends Composite
 
 	public void setLogrithmic(boolean logarithmic) {
 		this.logarithmic = logarithmic;
-		canvas.redraw();
+		if (canvas != null)
+			canvas.redraw();
 	}
 
 }

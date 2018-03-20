@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2015 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -56,7 +56,6 @@ public class TextEventHandler {
 			case 13:
 				if ((focus.getStyle() & SWT.SINGLE) != 0)
 					textFocusLost(true);
-				// break;
 				//$FALL-THROUGH$
 			default:
 				if (traverseHander != null && event.getKeyChar() == SWT.TAB) {
@@ -96,18 +95,15 @@ public class TextEventHandler {
 					processTextEvent(event);
 					return;
 				}
-			} else if (event.isRightMouseButton()
-					&& (field instanceof TextField))
+			} else if (event.isRightMouseButton() && (field instanceof TextField))
 				return;
 		}
 		textFocusLost(true);
 	}
 
 	private void processMouseDrag(PInputEvent event) {
-		if (focus == event.getPickedNode().getParent()) {
-			focus.mouseDragged(startX, startY,
-					event.getPositionRelativeTo(focus));
-		}
+		if (focus == event.getPickedNode().getParent())
+			focus.mouseDragged(startX, startY, event.getPositionRelativeTo(focus));
 	}
 
 	private void processTextEvent(PInputEvent event) {
@@ -115,8 +111,7 @@ public class TextEventHandler {
 			focus.mouseReleased(event);
 		else {
 			textFocusLost(true);
-			focus = (TextField) event.getPickedNode().getParent();
-			toFront(focus);
+			toFront(focus = (TextField) event.getPickedNode().getParent());
 			focus.setSelectedBgColor(selectedBgColor);
 			focus.setPenColor(focus.getPenColor());
 			focus.setFocus(true);

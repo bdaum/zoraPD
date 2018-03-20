@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2011 Berthold Daum.
+ * Copyright (c) 2009, 2018 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,4 +24,8 @@ public interface CSSProperties {
 	static final String REMOTECOLOR = "remote-color"; //$NON-NLS-1$
 	static final String SELECTEDOFFLINECOLOR = "selected-offline-color"; //$NON-NLS-1$
 	static final String SELECTEDREMOTECOLOR = "selected-remote-color"; //$NON-NLS-1$
+	static final String SELECTEDFOREGROUNDCOLOR = "selected-color"; //$NON-NLS-1$
+	static final String TOOLTIPBACKGROUNDCOLOR = "tooltip-background-color"; //$NON-NLS-1$
+	static final String TOOLTIPFOREGROUNDCOLOR = "tooltip-color"; //$NON-NLS-1$
+	static final String DISABLEDFOREGROUNDCOLOR = "disabled-color"; //$NON-NLS-1$
 }

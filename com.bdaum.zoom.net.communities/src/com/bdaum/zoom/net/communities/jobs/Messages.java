@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.net.communities.jobs;
 
@@ -25,7 +25,6 @@ public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.net.communities.jobs.messages"; //$NON-NLS-1$
 	public static String ExportToCommunityJob_cancel;
 	public static String ExportToCommunityJob_communication_error;
-	public static String ExportToCommunityJob_download_failed;
 	public static String ExportToCommunityJob_error_when_exporting;
 	public static String ExportToCommunityJob_export_to_report;
 	public static String ExportToCommunityJob_export_was_canceled;

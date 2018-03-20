@@ -43,10 +43,9 @@ public class ListCellEditorDialog extends AbstractListCellEditorDialog {
 			viewer.addVerifyListener(new VerifyListener() {
 				public void verifyText(VerifyEvent e) {
 					String text = viewer.getText();
-					String newText = text.substring(0, e.start) + e.text
-							+ text.substring(e.end);
 					try {
-						StringTokenizer st = new StringTokenizer(newText, "\n"); //$NON-NLS-1$
+						StringTokenizer st = new StringTokenizer(text.substring(0, e.start) + e.text
+								+ text.substring(e.end), "\n"); //$NON-NLS-1$
 						while (st.hasMoreTokens())
 							Integer.parseInt(st.nextToken().trim());
 					} catch (NumberFormatException e1) {
@@ -63,18 +62,14 @@ public class ListCellEditorDialog extends AbstractListCellEditorDialog {
 		if (qfield.getType() == QueryField.T_INTEGER
 				|| qfield.getType() == QueryField.T_POSITIVEINTEGER) {
 			StringTokenizer st = new StringTokenizer(text, "\n"); //$NON-NLS-1$
-			int cnt = st.countTokens();
-			int[] result = new int[cnt];
+			int[] result = new int[st.countTokens()];
 			int i = 0;
-			while (st.hasMoreTokens()) {
-				String token = st.nextToken().trim();
-				result[i++] = Integer.parseInt(token);
-			}
+			while (st.hasMoreTokens())
+				result[i++] = Integer.parseInt(st.nextToken().trim());
 			value = result;
 		} else if (qfield.getType() == QueryField.T_STRING) {
 			StringTokenizer st = new StringTokenizer(text, "\n"); //$NON-NLS-1$
-			int cnt = st.countTokens();
-			String[] result = new String[cnt];
+			String[] result = new String[st.countTokens()];
 			int i = 0;
 			while (st.hasMoreTokens())
 				result[i++] = st.nextToken().trim();

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -24,7 +24,6 @@ import java.awt.Color;
 import java.awt.Font;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Image;
 import org.piccolo2d.event.PBasicInputEventHandler;
 import org.piccolo2d.event.PInputEvent;
 import org.piccolo2d.extras.swt.PSWTCanvas;
@@ -35,9 +34,6 @@ import com.bdaum.zoom.ui.internal.Icons.Icon;
 
 public abstract class PPanel extends PSWTPath implements PTextHandler {
 
-	/**
-	 *
-	 */
 	private static final long serialVersionUID = -1896974701502837715L;
 	protected TextField title;
 	protected PSWTButton deleteButton;
@@ -48,14 +44,12 @@ public abstract class PPanel extends PSWTPath implements PTextHandler {
 		this.data = data;
 		setPathToRectangle(0, 0, width, height);
 		addInputEventListener(new PBasicInputEventHandler() {
-
 			@Override
 			public void mouseReleased(PInputEvent event) {
-				if (event.getPickedNode() == deleteButton) {
+				if (event.getPickedNode() == deleteButton)
 					deletePressed();
-				} else if (event.getPickedNode() == propButton) {
+				else if (event.getPickedNode() == propButton)
 					propertiesPressed();
-				}
 			}
 		});
 	}
@@ -64,16 +58,14 @@ public abstract class PPanel extends PSWTPath implements PTextHandler {
 
 	protected abstract void deletePressed();
 
-	protected PSWTButton createButton(PSWTCanvas canvas, Icon icon,
-			String tooltip) {
-		Image image = icon.getImage();
-		PSWTButton button = new PSWTButton(canvas, image, tooltip);
+	protected PSWTButton createButton(PSWTCanvas canvas, Icon icon, String tooltip) {
+		PSWTButton button = new PSWTButton(canvas, icon.getImage(), tooltip);
 		addChild(button);
 		return button;
 	}
 
-	protected void createTitle(PSWTCanvas canvas, String text, int x,
-			int y, Color penColor, Color background, int size) {
+	protected void createTitle(PSWTCanvas canvas, String text, int x, int y, Color penColor, Color background,
+			int size) {
 		title = new TextField(text, SWT.DEFAULT, new Font("Arial", //$NON-NLS-1$
 				Font.PLAIN, size), penColor, background, true, SWT.SINGLE);
 		title.setSpellingOptions(10, ISpellCheckingService.TITLEOPTIONS);
@@ -87,6 +79,5 @@ public abstract class PPanel extends PSWTPath implements PTextHandler {
 	public void setTitle(String text) {
 		title.setText(text);
 	}
-
 
 }

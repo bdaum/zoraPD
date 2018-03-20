@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2015 Berthold Daum  
  */
 package com.bdaum.zoom.core.internal.db;
 
@@ -26,9 +26,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -356,6 +358,34 @@ public class CatalogConverter {
 			meta.setWatchedFolder(newWatchedFolders);
 			tobeStored.add(meta);
 			db.safeTransaction(tobeDeleted, tobeStored);
+		}
+		if (version <= 13) {
+			monitor.subTask(Messages.CatalogConverter_restore_directory_entries);
+			Map<String, Asset> uris = new HashMap<>(257);
+			List<AssetImpl> assets = db.obtainAssets();
+			for (AssetImpl asset : assets) {
+				String uri = asset.getUri();
+				int p = uri.lastIndexOf('/');
+				if (p > 0)
+					uris.put(uri.substring(0, p), asset);
+			}
+			for (Asset asset : uris.values())
+				db.createFolderHierarchy(asset);
+			String locationOption = db.getMeta(true).getLocationFolders();
+			for (LocationImpl loc : db.obtainObjects(LocationImpl.class)) {
+				if (Utilities.completeLocation(db, loc)) 
+					db.storeAndCommit(loc);
+				db.createLocationFolders(loc, locationOption);
+			}
+			monitor.subTask(Messages.CatalogConverter_prune_system_collections);
+			List<SmartCollectionImpl> set = db.obtainObjects(SmartCollectionImpl.class, Constants.OID,
+					IDbManager.LOCATIONKEY, QueryField.STARTSWITH);
+			List<Object> toBeDeleted = new ArrayList<>();
+			for (SmartCollectionImpl sm : set)
+				if (sm.getName() == null || sm.getName().isEmpty())
+					Utilities.deleteCollection(sm, true, toBeDeleted);
+			db.safeTransaction(toBeDeleted, null);
+			db.pruneEmptySystemCollections(monitor, true);
 		}
 		meta.setVersion(db.getVersion());
 		db.storeAndCommit(meta);

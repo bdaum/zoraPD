@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -733,7 +733,7 @@ public class ExhibitionView extends AbstractPresentationView {
 			if (fromWall != targetWall)
 				tobeStored.add(fromWall);
 			storeSafelyAndUpdateIndex(null, tobeStored, null);
-			updateActions();
+			updateActions(false);
 			return fromPWall;
 		}
 
@@ -768,7 +768,7 @@ public class ExhibitionView extends AbstractPresentationView {
 			if (wallPanel == null)
 				return Status.CANCEL_STATUS;
 			storeSafelyAndUpdateIndex(exhibit, wallPanel.getWall(), exhibit.getAsset());
-			updateActions();
+			updateActions(false);
 			return Status.OK_STATUS;
 		}
 
@@ -818,7 +818,7 @@ public class ExhibitionView extends AbstractPresentationView {
 			toBeStored.add(exhibit);
 			toBeStored.add(wall);
 			storeSafelyAndUpdateIndex(null, toBeStored, exhibit.getAsset());
-			updateActions();
+			updateActions(false);
 			return Status.OK_STATUS;
 		}
 	}
@@ -974,7 +974,7 @@ public class ExhibitionView extends AbstractPresentationView {
 				toBeStored.add(wall);
 				storeSafelyAndUpdateIndex(null, toBeStored, assetIds);
 			}
-			updateActions();
+			updateActions(false);
 			return Status.OK_STATUS;
 		}
 
@@ -996,7 +996,7 @@ public class ExhibitionView extends AbstractPresentationView {
 			if (deleteOp != null)
 				deleteOp.undo(monitor, info);
 			storeSafelyAndUpdateIndex(toBeDeleted, wallPanel.getWall(), assetIds);
-			updateActions();
+			updateActions(false);
 			return Status.OK_STATUS;
 		}
 	}
@@ -1919,7 +1919,7 @@ public class ExhibitionView extends AbstractPresentationView {
 		if (exhibition != null)
 			setInput(exhibition);
 		addCatalogListener();
-		updateActions();
+		updateActions(false);
 	}
 
 	@Override
@@ -2071,11 +2071,11 @@ public class ExhibitionView extends AbstractPresentationView {
 	}
 
 	@Override
-	public void updateActions() {
-		if (addWallAction == null)
-			return;
-		super.updateActions();
-		addWallAction.setEnabled(!dbIsReadonly());
+	public void updateActions(boolean force) {
+		if (addWallAction != null && (viewActive || force)) {
+			super.updateActions(force);
+			addWallAction.setEnabled(!dbIsReadonly());
+		}
 	}
 
 	@Override
@@ -2097,7 +2097,7 @@ public class ExhibitionView extends AbstractPresentationView {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
-		updateActions();
+		updateActions(false);
 		manager.add(gotoExhibitAction);
 		PNode pickedNode = getPickedNode();
 		if (pickedNode instanceof PExhibit) {
@@ -2190,8 +2190,7 @@ public class ExhibitionView extends AbstractPresentationView {
 	@Override
 	protected void setColor(Control control) {
 		Color newPaint = UiUtilities.getAwtBackground(control, null);
-		selectionBackgroundColor = new Color(224, 224, 124); // .getAwtForeground(control,
-																// null);
+		selectionBackgroundColor = new Color(224, 224, 124);
 		CssActivator.getDefault().applyExtendedStyle(control, this);
 		surface.setPaint(newPaint);
 		for (PWall pwall : walls) {
@@ -2231,7 +2230,7 @@ public class ExhibitionView extends AbstractPresentationView {
 			}
 			setArtists();
 			setColor(canvas);
-			updateActions();
+			updateActions(false);
 			endTask();
 		} else
 			setPartName(Messages.getString("ExhibitionView.exhibition")); //$NON-NLS-1$
@@ -2387,7 +2386,7 @@ public class ExhibitionView extends AbstractPresentationView {
 
 			@Override
 			protected void moveToFront(PNode object) {
-				updateActions();
+				updateActions(false);
 			}
 
 			@Override
@@ -2750,6 +2749,11 @@ public class ExhibitionView extends AbstractPresentationView {
 	protected void refreshAfterHistoryEvent(IUndoableOperation operation) {
 		if (operation instanceof ExhibitionPropertiesOperation)
 			setInput(exhibition);
+	}
+
+	@Override
+	public String getId() {
+		return ID;
 	}
 
 }

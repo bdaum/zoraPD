@@ -43,18 +43,13 @@ public class ZoomSplashHandler extends BasicSplashHandler {
 	@Override
 	public void init(Shell splash) {
 		super.init(splash);
-		final boolean traymode = Platform.getPreferencesService().getBoolean(
-				UiActivator.PLUGIN_ID, PreferenceConstants.TRAY_MODE, false,
-				null);
+		final boolean traymode = Platform.getPreferencesService().getBoolean(UiActivator.PLUGIN_ID,
+				PreferenceConstants.TRAY_MODE, false, null);
 		IProduct product = Platform.getProduct();
-		Version version = (product != null) ? product.getDefiningBundle()
-				.getVersion() : null;
+		Version version = (product != null) ? product.getDefiningBundle().getVersion() : null;
 		setProgressRect(new Rectangle(1, 314, 448, 4));
-
-		final String versionString = NLS.bind(
-				Messages.getString("ZoomSplashHandler.version"), version); //$NON-NLS-1$
-		final String copyrightString = NLS.bind(
-				Messages.getString("ZoomSplashHandler.copyright"), //$NON-NLS-1$
+		final String versionString = NLS.bind(Messages.getString("ZoomSplashHandler.version"), version); //$NON-NLS-1$
+		final String copyrightString = NLS.bind(Messages.getString("ZoomSplashHandler.copyright"), //$NON-NLS-1$
 				new GregorianCalendar().get(GregorianCalendar.YEAR));
 		FontData fontData = splash.getDisplay().getSystemFont().getFontData()[0];
 		fontData.setHeight(7);
@@ -71,13 +66,10 @@ public class ZoomSplashHandler extends BasicSplashHandler {
 					e.gc.drawText(versionString, 335, 302, true);
 					e.gc.drawText(copyrightString, 5, 291, false);
 					if (System.currentTimeMillis() % 7 == 0) {
-						String[] commandLineArgs = Platform
-								.getCommandLineArgs();
-						for (String arg : commandLineArgs)
+						for (String arg : Platform.getCommandLineArgs())
 							if ("-noBirdie".equals(arg)) //$NON-NLS-1$
 								return;
-						Image birdie = RcpActivator
-								.getImageDescriptor("icons/intro/birdie.png").createImage(e.display); //$NON-NLS-1$
+						Image birdie = RcpActivator.getImageDescriptor("icons/intro/birdie.png").createImage(e.display); //$NON-NLS-1$
 						e.gc.drawImage(birdie, 30, 30);
 						birdie.dispose();
 					}

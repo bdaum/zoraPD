@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.email.internal;
@@ -81,8 +81,7 @@ public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExp
 		setAssets(workbench, selection, false);
 		Iterator<Asset> it = assets.iterator();
 		while (it.hasNext()) {
-			Asset a = it.next();
-			IMediaSupport mediaSupport = coreActivator.getMediaSupport(a.getFormat());
+			IMediaSupport mediaSupport = coreActivator.getMediaSupport(it.next().getFormat());
 			if (mediaSupport != null && !mediaSupport.testProperty(IMediaSupport.PDF))
 					it.remove();
 		}
@@ -150,10 +149,6 @@ public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExp
 	public int getJpegQuality() {
 		return mainPage.getJpegQuality();
 	}
-
-//	public int getScalingMethod() {
-//		return mainPage.getScalingMethod();
-//	}
 
 	public FtpAccount getFtpAccount() {
 		return null;

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2014 Berthold Daum  
  */
 package com.bdaum.zoom.lal.internal;
 
@@ -152,8 +152,7 @@ public class LireActivator extends Plugin {
 					readerCounts.remove(currentReader);
 				} else
 					obsoleteReaders.add(currentReader);
-				currentReader = newReader;
-				return currentReader;
+				return currentReader = newReader;
 			}
 			Integer useCount = readerCounts.get(currentReader);
 			readerCounts.put(currentReader, new Integer(useCount == null ? 1 : useCount + 1));
@@ -196,9 +195,8 @@ public class LireActivator extends Plugin {
 		}
 
 		public void releaseAllReaders() {
-			Iterator<IndexReader> iterator = readerCounts.keySet().iterator();
-			while (iterator.hasNext())
-				releaseReader(iterator.next());
+			for (Iterator<IndexReader> it = readerCounts.keySet().iterator();it.hasNext();)
+				releaseReader(it.next());
 			readerCounts.clear();
 		}
 
@@ -558,10 +556,8 @@ public class LireActivator extends Plugin {
 
 	private ImageSearcher getImageSearcher(IndexReader indexReader, int method, int maxResults) {
 		ImageSearcher searcher = searcherMap.get(indexReader);
-		if (searcher == null) {
-			searcher = getContentSearcher(method, maxResults);
-			searcherMap.put(indexReader, searcher);
-		}
+		if (searcher == null)
+			searcherMap.put(indexReader, searcher = getContentSearcher(method, maxResults));
 		return searcher;
 	}
 

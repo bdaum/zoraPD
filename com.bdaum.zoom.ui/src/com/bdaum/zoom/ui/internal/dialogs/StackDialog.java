@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2015 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -37,9 +37,8 @@ import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 
 public class StackDialog extends ZTitleAreaDialog {
 
-	private static final char[] BADCHARS = new char[] { '#', '!', '=', '/',
-			'[', ']', '{', '}', '"', ':', ';', ',', '?', '*', '\\', '<', '>',
-			'|', '&' };
+	private static final char[] BADCHARS = new char[] { '#', '!', '=', '/', '[', ']', '{', '}', '"', ':', ';', ',', '?',
+			'*', '\\', '<', '>', '|', '&' };
 	private Combo nameField;
 	private final String[] names;
 	private String name;
@@ -69,8 +68,7 @@ public class StackDialog extends ZTitleAreaDialog {
 		composite.setLayout(new GridLayout(2, false));
 		new Label(composite, SWT.NONE).setText(Messages.StackDialog_stack_name);
 		nameField = new Combo(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
-		nameField
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		nameField.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				updateButtons();
@@ -95,9 +93,7 @@ public class StackDialog extends ZTitleAreaDialog {
 				char c = name.charAt(i);
 				for (char c2 : BADCHARS)
 					if (c == c2) {
-						errorMessage = NLS.bind(
-								Messages.StackDialog_must_not_contain,
-								String.valueOf(c));
+						errorMessage = NLS.bind(Messages.StackDialog_must_not_contain, String.valueOf(c));
 						break;
 					}
 			}

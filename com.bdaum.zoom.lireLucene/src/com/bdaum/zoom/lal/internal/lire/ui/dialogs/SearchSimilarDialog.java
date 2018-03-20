@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.lal.internal.lire.ui.dialogs;
@@ -100,45 +100,39 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 	private CheckedText keywordField;
 	private Scale scale;
 
-	public SearchSimilarDialog(Shell parentShell, Asset asset,
-			SmartCollection currentCollection) {
+	public SearchSimilarDialog(Shell parentShell, Asset asset, SmartCollection currentCollection) {
 		super(parentShell, HelpContextIds.SEARCHSIMILAR_DIALOG);
 		this.asset = asset;
 		this.currentCollection = currentCollection;
-		settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		ICore core = Core.getCore();
 		if (asset != null)
 			image = core.getImageCache().getImage(asset);
 		else if (currentCollection != null) {
 			adhoc = currentCollection.getAdhoc();
 			Criterion criterion = currentCollection.getCriterion(0);
-			if (criterion != null
-					&& criterion.getValue() instanceof SimilarityOptions_typeImpl)
+			if (criterion != null && criterion.getValue() instanceof SimilarityOptions_typeImpl)
 				options = (SimilarityOptions_typeImpl) criterion.getValue();
 
 		} else {
-			ImageData lastReferenceImage = UiActivator.getDefault()
-					.getLastReferenceImage();
+			ImageData lastReferenceImage = UiActivator.getDefault().getLastReferenceImage();
 			if (lastReferenceImage != null) {
 				image = new Image(parentShell.getDisplay(), lastReferenceImage);
 				disposeImage = true;
 			}
 		}
 		if (options == null) {
-			options = dbManager.obtainById(SimilarityOptions_typeImpl.class,
-					Constants.SIMILARITYOPTIONS_ID);
+			options = dbManager.obtainById(SimilarityOptions_typeImpl.class, Constants.SIMILARITYOPTIONS_ID);
 			if (options == null) {
-				options = new SimilarityOptions_typeImpl(CoreActivator
-						.getDefault().getDefaultCbirAlgorithm().getId(), 50,
-						0.12f, 0, 10, 30, 50, null, 0);
+				options = new SimilarityOptions_typeImpl(CoreActivator.getDefault().getDefaultCbirAlgorithm().getId(),
+						50, 0.12f, 0, 10, 30, 50, null, 0);
 				options.setStringId(Constants.SIMILARITYOPTIONS_ID);
 				options.setPngImage(null);
 			}
 		}
 		if (image == null) {
-			image = ImageUtilities.loadThumbnail(parentShell.getDisplay(),
-					options.getPngImage(), Ui.getUi().getDisplayCMS(),
-					SWT.IMAGE_PNG, false);
+			image = ImageUtilities.loadThumbnail(parentShell.getDisplay(), options.getPngImage(),
+					Ui.getUi().getDisplayCMS(), SWT.IMAGE_PNG, false);
 			if (image != null)
 				disposeImage = true;
 		}
@@ -175,11 +169,9 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 		CGroup group = new CGroup(composite, SWT.NONE);
 		group.setText(Messages.SearchSimilarDialog_additional_keywords);
 		group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		group.setLayout(new GridLayout(1, false));
-		keywordField = new CheckedText(group, SWT.MULTI | SWT.LEAD | SWT.BORDER
-				| SWT.V_SCROLL | SWT.H_SCROLL);
-		keywordField
-				.setSpellingOptions(8, ISpellCheckingService.KEYWORDOPTIONS);
+		group.setLayout(new GridLayout());
+		keywordField = new CheckedText(group, SWT.MULTI | SWT.LEAD | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+		keywordField.setSpellingOptions(8, ISpellCheckingService.KEYWORDOPTIONS);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.widthHint = 120;
 		keywordField.setLayoutData(layoutData);
@@ -190,17 +182,14 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 		});
 		KeywordVerifyListener keywordVerifyListener = new KeywordVerifyListener();
 		Set<String> keywords = dbManager.getMeta(true).getKeywords();
-		keywordVerifyListener.setKeywords(keywords.toArray(new String[keywords
-				.size()]));
+		keywordVerifyListener.setKeywords(keywords.toArray(new String[keywords.size()]));
 		keywordField.addVerifyListener(keywordVerifyListener);
 		Composite sliderGroup = new Composite(group, SWT.NONE);
 		sliderGroup.setLayoutData(new GridData(SWT.FILL, SWT.END, true, false));
 		sliderGroup.setLayout(new GridLayout(3, false));
-		new Label(sliderGroup, SWT.NONE)
-				.setText(Messages.SearchSimilarDialog_visual);
+		new Label(sliderGroup, SWT.NONE).setText(Messages.SearchSimilarDialog_visual);
 		scale = new Scale(sliderGroup, SWT.HORIZONTAL);
-		scale.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
-				false));
+		scale.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		scale.setMaximum(100);
 		scale.setIncrement(5);
 		scale.addSelectionListener(new SelectionAdapter() {
@@ -210,27 +199,24 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 				updateKeywordField();
 			}
 		});
-		new Label(sliderGroup, SWT.NONE)
-				.setText(Messages.SearchSimilarDialog_keywords);
+		new Label(sliderGroup, SWT.NONE).setText(Messages.SearchSimilarDialog_keywords);
 	}
 
 	private void createAlgoGroup(Composite composite) {
-		searchResultGroup = new SearchResultGroup(composite, SWT.NONE, true, true,
-				false, getButton(OK), new GridData(SWT.FILL, SWT.FILL, true, true));
+		searchResultGroup = new SearchResultGroup(composite, SWT.NONE, true, true, false, getButton(OK),
+				new GridData(SWT.FILL, SWT.FILL, true, true));
 		if (Core.getCore().isNetworked())
-			searchResultGroup
-					.addSelectionChangedListener(new ISelectionChangedListener() {
-						public void selectionChanged(SelectionChangedEvent event) {
-							validateAlgo();
-						}
-					});
+			searchResultGroup.addSelectionChangedListener(new ISelectionChangedListener() {
+				public void selectionChanged(SelectionChangedEvent event) {
+					validateAlgo();
+				}
+			});
 	}
 
 	private void fillValues() {
 		if (findWithinGroup != null) {
 			if (currentCollection != null)
-				findWithinGroup.setSelection(currentCollection
-						.getSmartCollection_subSelection_parent() != null);
+				findWithinGroup.setSelection(currentCollection.getSmartCollection_subSelection_parent() != null);
 			else
 				findWithinGroup.fillValues(settings);
 		}
@@ -240,9 +226,8 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 		toolSettings.airbrushIntensity = options.getAirbrushIntensity();
 		scale.setSelection(options.getKeywordWeight());
 		fillKeywords(asset == null ? null : asset.getKeyword());
-		searchResultGroup.fillValues(
-				(int) (100 * options.getMinScore() + 0.5f),
-				options.getMaxResults(), options.getMethod(), 0);
+		searchResultGroup.fillValues((int) (100 * options.getMinScore() + 0.5f), options.getMaxResults(),
+				options.getMethod(), 0);
 		if (findInNetworkGroup != null && currentCollection != null) {
 			findInNetworkGroup.setSelection(currentCollection.getNetwork());
 			validateAlgo();
@@ -253,15 +238,8 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 	}
 
 	private void fillKeywords(String[] keywords) {
-		if (keywords != null) {
-			StringBuilder sb = new StringBuilder();
-			for (String s : QueryField.getKeywordFilter().filter(keywords)) {
-				if (sb.length() > 0)
-					sb.append('\n');
-				sb.append(s);
-			}
-			keywordField.setText(sb.toString());
-		}
+		if (keywords != null)
+			keywordField.setText(Core.toStringList(QueryField.getKeywordFilter().filter(keywords), '\n'));
 		updateScale();
 		updateKeywordField();
 	}
@@ -272,10 +250,9 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 
 	private void createOptionsGroup(Composite comp) {
 		final Composite optionsGroup = new Composite(comp, SWT.NONE);
-		final GridData gd_optionsGroup = new GridData(SWT.LEFT, SWT.TOP, false,
-				false);
-		gd_optionsGroup.verticalIndent = 10;
-		optionsGroup.setLayoutData(gd_optionsGroup);
+		final GridData data = new GridData(SWT.LEFT, SWT.TOP, false, false);
+		data.verticalIndent = 10;
+		optionsGroup.setLayoutData(data);
 		final GridLayout gridLayout = new GridLayout();
 		gridLayout.numColumns = 2;
 		optionsGroup.setLayout(gridLayout);
@@ -300,12 +277,10 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 			Algorithm algo = searchResultGroup.getSelectedAlgorithm();
 			if (networked && algo != null) {
 				IPeerService peerService = Core.getCore().getPeerService();
-				String[] unsupported = peerService.findWeakSimilarityPeers(algo
-						.getName());
+				String[] unsupported = peerService.findWeakSimilarityPeers(algo.getName());
 				if (unsupported != null)
-					setErrorMessage(NLS
-							.bind(Messages.SearchSimilarDialog_no_peer_support_for_algo,
-									Core.toStringList(unsupported, ", "))); //$NON-NLS-1$
+					setErrorMessage(NLS.bind(Messages.SearchSimilarDialog_no_peer_support_for_algo,
+							Core.toStringList(unsupported, ", "))); //$NON-NLS-1$
 				return;
 			}
 			setErrorMessage(null);
@@ -322,9 +297,7 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 			else
 				w = bounds.width * 320 / bounds.height;
 		}
-		final CGroup paintGroup = new CGroup(comp, SWT.NONE);
-		paintGroup.setText(Messages.SearchSimilarDialog_reference_image);
-		paintGroup.setLayout(new GridLayout(2, false));
+		final CGroup paintGroup = CGroup.create(comp, 1, Messages.SearchSimilarDialog_reference_image);
 		paintExample = new PaintExample(paintGroup);
 		paintExample.createGUI(paintGroup, w, h);
 		paintExample.setDefaults();
@@ -335,18 +308,17 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 	@Override
 	protected void okPressed() {
 		Algorithm selectedAlgorithm = searchResultGroup.getSelectedAlgorithm();
-		int method = selectedAlgorithm == null ? CoreActivator.getDefault()
-				.getDefaultCbirAlgorithm().getId() : selectedAlgorithm.getId();
+		int method = selectedAlgorithm == null ? CoreActivator.getDefault().getDefaultCbirAlgorithm().getId()
+				: selectedAlgorithm.getId();
 		Image hardcopy = paintExample.getHardcopy();
-		ColorConvertOp op = (profile == ImageConstants.ARGB) ? ImageActivator
-				.getDefault().getCOLORCONVERTOP_ARGB2SRGB() : null;
+		ColorConvertOp op = (profile == ImageConstants.ARGB) ? ImageActivator.getDefault().getCOLORCONVERTOP_ARGB2SRGB()
+				: null;
 		try {
 			ImageData imageData = hardcopy.getImageData();
 			ZImage zimage = new ZImage(imageData, null);
 			zimage.setOutputColorConvert(op);
 			ByteArrayOutputStream out = new ByteArrayOutputStream(50000);
-			zimage.saveToStream(null, true, ZImage.UNCROPPED, SWT.DEFAULT,
-					SWT.DEFAULT, out, SWT.IMAGE_PNG);
+			zimage.saveToStream(null, true, ZImage.UNCROPPED, SWT.DEFAULT, SWT.DEFAULT, out, SWT.IMAGE_PNG);
 			zimage.dispose();
 			pngImage = out.toByteArray();
 			if (currentCollection == null && paintExample.isDirty())
@@ -354,38 +326,30 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 		} catch (IOException e) {
 			// ignore
 		}
-		String assetId = (asset == null || paintExample.isDirty()) ? null
-				: asset.getStringId();
-		String title = (assetId == null) ? NLS.bind(
-				Messages.SearchSimilarDialog_similarit_search_coll_title,
-				Messages.SearchSimilarDialog_drawing) : NLS.bind(
-				Messages.SearchSimilarDialog_similarit_search_coll_title,
-				UiUtilities.createSlideTitle(asset));
+		String assetId = (asset == null || paintExample.isDirty()) ? null : asset.getStringId();
+		String title = (assetId == null)
+				? NLS.bind(Messages.SearchSimilarDialog_similarit_search_coll_title,
+						Messages.SearchSimilarDialog_drawing)
+				: NLS.bind(Messages.SearchSimilarDialog_similarit_search_coll_title,
+						UiUtilities.createSlideTitle(asset));
 		ToolSettings toolSettings = paintExample.getToolSettings();
-		SimilarityOptions_typeImpl newOptions = new SimilarityOptions_typeImpl(
-				method, searchResultGroup.getMaxNumber(),
-				searchResultGroup.getScore() / 100f,
-				paintExample.getCurrentTool(), toolSettings.pencilRadius,
-				toolSettings.airbrushRadius, toolSettings.airbrushIntensity,
-				assetId, 0);
+		SimilarityOptions_typeImpl newOptions = new SimilarityOptions_typeImpl(method, searchResultGroup.getMaxNumber(),
+				searchResultGroup.getScore() / 100f, paintExample.getCurrentTool(), toolSettings.pencilRadius,
+				toolSettings.airbrushRadius, toolSettings.airbrushIntensity, assetId, 0);
 		newOptions.setPngImage(pngImage);
 		String text = keywordField.getText();
 		if (!text.isEmpty()) {
 			List<String> keywords = Core.fromStringList(text, "\n\r"); //$NON-NLS-1$
-			newOptions
-					.setKeywords(keywords.toArray(new String[keywords.size()]));
+			newOptions.setKeywords(keywords.toArray(new String[keywords.size()]));
 			newOptions.setKeywordWeight(scale.getSelection());
 		}
-		boolean network = findInNetworkGroup == null ? false
-				: findInNetworkGroup.getSelection();
-		collection = new SmartCollectionImpl(title, false, false, adhoc,
-				network, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
-		collection.addCriterion(new CriterionImpl(
-				ICollectionProcessor.SIMILARITY, null, newOptions,
+		boolean network = findInNetworkGroup == null ? false : findInNetworkGroup.getSelection();
+		collection = new SmartCollectionImpl(title, false, false, adhoc, network, null, 0, null, 0, null,
+				Constants.INHERIT_LABEL, null, 0, null);
+		collection.addCriterion(new CriterionImpl(ICollectionProcessor.SIMILARITY, null, newOptions,
 				searchResultGroup.getScore(), false));
 		if (findWithinGroup != null) {
-			collection.setSmartCollection_subSelection_parent(findWithinGroup
-					.getParentCollection());
+			collection.setSmartCollection_subSelection_parent(findWithinGroup.getParentCollection());
 			findWithinGroup.saveValues(settings);
 		}
 		options.setMaxResults(searchResultGroup.getMaxNumber());

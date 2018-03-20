@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -35,8 +35,7 @@ import org.piccolo2d.extras.swt.PSWTCanvas;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
-public final class InertiaMouseWheelListener implements MouseWheelListener,
-		IPreferenceChangeListener {
+public final class InertiaMouseWheelListener implements MouseWheelListener, IPreferenceChangeListener {
 	private double nonlinearity = 0.33333333d;
 	private double currentSpeed;
 	private double minScale = 0.01d;
@@ -50,13 +49,11 @@ public final class InertiaMouseWheelListener implements MouseWheelListener,
 
 	public InertiaMouseWheelListener() {
 		setSoftness();
-		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID)
-				.addPreferenceChangeListener(this);
+		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID).addPreferenceChangeListener(this);
 	}
 
 	private void setSoftness() {
-		softness = UiActivator.getDefault().getPreferenceStore()
-				.getInt(PreferenceConstants.WHEELSOFTNESS);
+		softness = UiActivator.getDefault().getPreferenceStore().getInt(PreferenceConstants.WHEELSOFTNESS);
 		lag = softness * 0.003d + 0.65d;
 		if (softness == 0)
 			cancel();
@@ -91,20 +88,18 @@ public final class InertiaMouseWheelListener implements MouseWheelListener,
 			currentSpeed = e.count;
 			performWheelAction(e);
 		} else {
-			currentSpeed += sensitivity * e.count
-					* Math.pow(Math.abs(e.count), nonlinearity);
+			currentSpeed += sensitivity * e.count * Math.pow(Math.abs(e.count), nonlinearity);
 			if (wheelTask == null && currentSpeed != 0) {
-				wheelTask = UiActivator.getScheduledExecutorService()
-						.scheduleAtFixedRate(() -> {
-							if (e.display.isDisposed())
-								currentSpeed = 0;
-							else {
-								e.display.syncExec(() -> performWheelAction(e));
-								currentSpeed = currentSpeed * lag;
-							}
-							if (Math.abs(currentSpeed) < lag)
-								InertiaMouseWheelListener.this.cancel();
-						}, 0L, 60L, TimeUnit.MILLISECONDS);
+				wheelTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(() -> {
+					if (e.display.isDisposed())
+						currentSpeed = 0;
+					else {
+						e.display.syncExec(() -> performWheelAction(e));
+						currentSpeed = currentSpeed * lag;
+					}
+					if (Math.abs(currentSpeed) < lag)
+						InertiaMouseWheelListener.this.cancel();
+				}, 0L, 60L, TimeUnit.MILLISECONDS);
 			}
 		}
 	}
@@ -118,16 +113,14 @@ public final class InertiaMouseWheelListener implements MouseWheelListener,
 			if (newScale >= minScale && newScale <= maxScale) {
 				pntSrc.setLocation(e.x, e.y);
 				Point2D pntDst = camera.localToView(pntSrc);
-				camera.scaleViewAboutPoint(scaleDelta, pntDst.getX(),
-						pntDst.getY());
+				camera.scaleViewAboutPoint(scaleDelta, pntDst.getX(), pntDst.getY());
 			}
 		}
 	}
 
 	public void dispose() {
 		cancel();
-		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID)
-				.removePreferenceChangeListener(this);
+		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID).removePreferenceChangeListener(this);
 	}
 
 	public void preferenceChange(PreferenceChangeEvent event) {

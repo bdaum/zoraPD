@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.db.internal;
 
@@ -36,8 +36,7 @@ public class ColorCodeFilter extends AssetFilter implements IColorCodeFilter {
 	public ColorCodeFilter(int colorCode) {
 		this.colorCode = colorCode;
 		if (colorCode != Constants.COLOR_UNDEFINED) {
-			IPostProcessor2[] autoColoringProcessors = Core.getCore().getDbFactory()
-					.getAutoColoringProcessors();
+			IPostProcessor2[] autoColoringProcessors = Core.getCore().getDbFactory().getAutoColoringProcessors();
 			processor = autoColoringProcessors == null ? null : autoColoringProcessors[colorCode];
 		}
 	}
@@ -45,8 +44,7 @@ public class ColorCodeFilter extends AssetFilter implements IColorCodeFilter {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.db.internal.AssetFilter#accept(com.bdaum.zoom.cat.model
+	 * @see com.bdaum.zoom.db.internal.AssetFilter#accept(com.bdaum.zoom.cat.model
 	 * .asset.Asset)
 	 */
 	@Override
@@ -64,8 +62,7 @@ public class ColorCodeFilter extends AssetFilter implements IColorCodeFilter {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.db.internal.AssetFilter#getConstraint(com.bdaum.zoom.db
+	 * @see com.bdaum.zoom.db.internal.AssetFilter#getConstraint(com.bdaum.zoom.db
 	 * .internal.DbManager, com.db4o.query.Query)
 	 */
 	@Override
@@ -73,20 +70,12 @@ public class ColorCodeFilter extends AssetFilter implements IColorCodeFilter {
 		if (colorCode == QueryField.SELECTALL)
 			return null;
 		if (colorCode == Constants.COLOR_UNDEFINED)
-			return query.descend(QueryField.COLORCODE.getKey()).constrain(0)
-					.smaller();
-		Constraint con3 = query.descend(QueryField.COLORCODE.getKey())
-				.constrain(colorCode);
+			return query.descend(QueryField.COLORCODE.getKey()).constrain(0).smaller();
+		Constraint con3 = query.descend(QueryField.COLORCODE.getKey()).constrain(colorCode);
 		if (processor instanceof QueryPostProcessor) {
-			Constraint con2 = ((QueryPostProcessor) processor).getConstraint(
-					dbManager, query);
-			if (con2 != null) {
-				Constraint con1 = query.descend(QueryField.COLORCODE.getKey())
-						.constrain(0).not();
-				con1.and(con2);
-				con1.or(con3);
-				return con1;
-			}
+			Constraint con2 = ((QueryPostProcessor) processor).getConstraint(dbManager, query);
+			if (con2 != null)
+				return query.descend(QueryField.COLORCODE.getKey()).constrain(0).not().and(con2).or(con3);
 		}
 		return con3;
 	}
@@ -102,9 +91,7 @@ public class ColorCodeFilter extends AssetFilter implements IColorCodeFilter {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof IColorCodeFilter)
-			return colorCode == ((IColorCodeFilter) obj).getColorCode();
-		return false;
+		return obj instanceof IColorCodeFilter ? colorCode == ((IColorCodeFilter) obj).getColorCode() : false;
 	}
 
 	@Override

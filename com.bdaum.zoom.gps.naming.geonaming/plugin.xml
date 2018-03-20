@@ -2,25 +2,21 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="com.bdaum.zoom.gps.premiumService">
-      <premiumService
-            description="%premiumService.description"
-            id="com.bdaum.zoom.gps.naming.geonaming.premiumService2"
-            name="%premiumService.name">
-         <key
-               id="com.bdaum.zoom.gps.geoNamesParms"
-               name="%key.name">
-         </key>
-      </premiumService>
-   </extension>
-   <extension
          point="com.bdaum.zoom.gps.geonamingService">
       <geonamingService
             class="com.bdaum.zoom.gps.naming.geonaming.internal.GeoNamesService"
             default="false"
             description="%geonamingService.description"
             id="GeoNames"
+            link="http://www.geonames.org/"
             name="%geonamingService.name">
+         <parameter
+               hint="%parameter.hint"
+               id="com.bdaum.zoom.gps.geoNamesParms"
+               label="%parameter.label"
+               reqMsg="%parameter.reqMsg"
+               tooltip="%parameter.tooltip">
+         </parameter>
       </geonamingService>
    </extension>
    <extension

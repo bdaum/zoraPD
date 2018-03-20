@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2011 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal;
@@ -77,8 +77,8 @@ public class ImportOperation extends AbstractImportOperation {
 	static final SimpleDateFormat dfYear = new SimpleDateFormat("yyyy"); //$NON-NLS-1$
 	static final SimpleDateFormat dfShort = new SimpleDateFormat("yyyy-MM"); //$NON-NLS-1$
 	static final SimpleDateFormat dfLong = new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
+	
 	private FileNameExtensionFilter filenameFilter;
-
 	private FileInput fileInput;
 	private URI[] uris;
 	private Date lastDeviceImportDate = new Date();
@@ -98,10 +98,8 @@ public class ImportOperation extends AbstractImportOperation {
 
 	public ImportOperation(ImportFromDeviceData importData, ImportConfiguration configuration, int fileSource) {
 		this(importData.isMedia() ? Messages.getString("ImportOperation.Import_from_device") //$NON-NLS-1$
-				: Messages
-						.getString("ImportOperation.import_new_folder_structure"), //$NON-NLS-1$
+				: Messages.getString("ImportOperation.import_new_folder_structure"), //$NON-NLS-1$
 				configuration, importData, null, fileSource);
-		this.fileInput = importData.getFileInput();
 	}
 
 	public ImportOperation(String name, FileInput fileInput, ImportConfiguration configuration) {
@@ -112,12 +110,13 @@ public class ImportOperation extends AbstractImportOperation {
 	public ImportOperation(String name, URI[] uris, ImportConfiguration configuration) {
 		this(name, configuration, null, null, Constants.FILESOURCE_UNKNOWN);
 		this.uris = uris;
-
 	}
 
-	private ImportOperation(String name, ImportConfiguration configuration, ImportFromDeviceData importData,
+	public ImportOperation(String name, ImportConfiguration configuration, ImportFromDeviceData importData,
 			AnalogProperties properties, int fileSource) {
 		super(name);
+		if (importData != null)
+			this.fileInput = importData.getFileInput();
 		importState = new ImportState(configuration, importData, properties, this, fileSource);
 		filenameFilter = CoreActivator.getDefault().getFilenameExtensionFilter();
 	}
@@ -167,9 +166,9 @@ public class ImportOperation extends AbstractImportOperation {
 							int ret = p1.compareTo(p2);
 							if (ret != 0)
 								return ret;
-							if (ImageConstants.isJpeg(e1.toLowerCase()))
+							if (ImageConstants.isJpeg(e1))
 								return skipPolicy == Constants.SKIP_RAW_IF_JPEG ? -1 : 1;
-							if (ImageConstants.isJpeg(e2.toLowerCase()))
+							if (ImageConstants.isJpeg(e2))
 								return skipPolicy == Constants.SKIP_RAW_IF_JPEG ? 1 : -1;
 							return e1.compareTo(e2);
 						}
@@ -209,10 +208,9 @@ public class ImportOperation extends AbstractImportOperation {
 						if (meta.getLastDeviceImport() == null)
 							meta.setLastDeviceImport(new HashMap<String, LastDeviceImport>());
 						LastDeviceImport lastImport = meta.getLastDeviceImport(key);
-						if (lastImport == null) {
-							lastImport = new LastDeviceImportImpl(key, lastDeviceImportDate.getTime(), null, null);
-							meta.putLastDeviceImport(lastImport);
-						} else
+						if (lastImport == null)
+							meta.putLastDeviceImport(lastImport = new LastDeviceImportImpl(key, lastDeviceImportDate.getTime(), null, null));
+						else
 							lastImport.setTimestamp(lastDeviceImportDate.getTime());
 						toBeStored.add(lastImport);
 					}
@@ -333,8 +331,7 @@ public class ImportOperation extends AbstractImportOperation {
 		int cnt = 0;
 		importState.importedAssets = new HashSet<Asset>(allUris.size());
 		File tempFile = null;
-		Ticketbox box = new Ticketbox();
-		try {
+		try (Ticketbox box = new Ticketbox()) {
 			for (URI uri : allUris) {
 				if (tempFile != null)
 					tempFile.delete();
@@ -345,12 +342,9 @@ public class ImportOperation extends AbstractImportOperation {
 					lastDeviceImportDate.setTime(file.lastModified() + 1);
 				} else {
 					try {
-						file = box.download(uri);
-						tempFile = file;
-						remote = uri;
+						tempFile = file = box.download(remote = uri);
 					} catch (MalformedURLException e) {
-						addError(NLS.bind(Messages.getString("ImportOperation.not_a_valid_url"), uri), //$NON-NLS-1$
-								e);
+						addError(NLS.bind(Messages.getString("ImportOperation.not_a_valid_url"), uri), e); //$NON-NLS-1$
 					} catch (IOException e) {
 						addError(NLS.bind(Messages.getString("ImportOperation.transfer_from_url_failed"), uri), e); //$NON-NLS-1$
 					}
@@ -388,7 +382,6 @@ public class ImportOperation extends AbstractImportOperation {
 			if (tempFile != null)
 				tempFile.delete();
 			CoreActivator.getDefault().getFileWatchManager().stopIgnoring(opId);
-			box.endSession();
 			for (Asset a : importState.allDeletedAssets)
 				dbManager.markSystemCollectionsForPurge(a);
 			if (cnt == 0 && previousImport != null) {
@@ -511,7 +504,7 @@ public class ImportOperation extends AbstractImportOperation {
 	}
 
 	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
-		//do nothing
+		// do nothing
 	}
 
 }

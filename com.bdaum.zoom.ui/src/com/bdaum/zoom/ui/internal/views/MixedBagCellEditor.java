@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2011 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -62,9 +62,8 @@ public class MixedBagCellEditor extends AbstractMixedBagDialogCellEditor {
 		location.x -= 25;
 		location.y += 30;
 		dialog.getShell().setLocation(location);
-		if (dialog.open() == Window.OK) {
+		if (dialog.open() == Window.OK)
 			return value = dialog.getResult();
-		}
 		return null;
 	}
 

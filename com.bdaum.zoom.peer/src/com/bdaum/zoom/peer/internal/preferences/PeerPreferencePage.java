@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2013 Berthold Daum  
  */
 package com.bdaum.zoom.peer.internal.preferences;
 
@@ -47,12 +47,10 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -64,6 +62,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
@@ -76,7 +75,9 @@ import com.bdaum.zoom.peer.internal.model.PeerDefinition;
 import com.bdaum.zoom.peer.internal.model.SharedCatalog;
 import com.bdaum.zoom.peer.internal.ui.HelpContextIds;
 import com.bdaum.zoom.peer.internal.ui.PeerDefinitionDialog;
+import com.bdaum.zoom.ui.internal.SortColumnManager;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
@@ -137,12 +138,12 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 
 		createHeaderGroup(composite);
 		createTabFolder(composite, "Peer"); //$NON-NLS-1$
-		CTabItem tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.PeerPreferencePage_shared_cats);
-		tabItem0.setControl(createSharedGroup(tabFolder));
-		CTabItem tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.PeerPreferencePage_peer_nodes);
-		tabItem1.setControl(createPeerGroup(tabFolder));
-		CTabItem tabItem2 = UiUtilities.createTabItem(tabFolder, Messages.PeerPreferencePage_incoming_calls);
-		tabItem2.setControl(createIncomingGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.PeerPreferencePage_shared_cats,
+				Messages.PeerPreferencePage_cats_tooltip).setControl(createSharedGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.PeerPreferencePage_peer_nodes,
+				Messages.PeerPreferencePage_peer_tooltip).setControl(createPeerGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.PeerPreferencePage_incoming_calls,
+				Messages.PeerPreferencePage_incoming_tooltip).setControl(createIncomingGroup(tabFolder));
 		initTabFolder(0);
 		setHelp(HelpContextIds.PEER_PREFERENCE_PAGE);
 		fillValues();
@@ -158,8 +159,9 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 	private void createHeaderGroup(Composite composite) {
 		String hostName = PeerActivator.getDefault().getHostName();
 		String host = PeerActivator.getDefault().getHost();
-		String location = hostName.isEmpty() ? host : NLS.bind("{0} ({1})", //$NON-NLS-1$
-				hostName, host);
+		String location = hostName.isEmpty() ? host
+				: NLS.bind("{0} ({1})", //$NON-NLS-1$
+						hostName, host);
 		CGroup locationGroup = new CGroup(composite, SWT.NONE);
 		locationGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		locationGroup.setLayout(new GridLayout(6, false));
@@ -182,6 +184,7 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 				getPreferenceStore().getDefaultInt(PreferenceConstants.PORT)));
 	}
 
+	@SuppressWarnings("unused")
 	private Control createIncomingGroup(final CTabFolder parent) {
 		Composite comp = new Composite(parent, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -203,19 +206,6 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		col1.getColumn().setWidth(250);
 		col1.getColumn().setText(Messages.PeerPreferencePage_calling_peer);
 		col1.setLabelProvider(new ColumnLabelProvider());
-		col1.getColumn().addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				if (incomingViewer.getTable().getSortColumn() == col1.getColumn()) {
-					incomingViewer.getTable().setSortDirection(
-							incomingViewer.getTable().getSortDirection() == SWT.DOWN ? SWT.UP : SWT.DOWN);
-				} else {
-					incomingViewer.getTable().setSortColumn(col1.getColumn());
-					incomingViewer.getTable().setSortDirection(SWT.UP);
-				}
-				incomingViewer.setInput(incomingViewer.getInput());
-			}
-		});
 
 		final TableViewerColumn col2 = new TableViewerColumn(incomingViewer, SWT.NONE);
 		col2.getColumn().setWidth(250);
@@ -226,19 +216,6 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 				if (element instanceof PeerDefinition)
 					return nf.format(new Date(((PeerDefinition) element).getLastAccess()));
 				return super.getText(element);
-			}
-		});
-		col2.getColumn().addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				if (incomingViewer.getTable().getSortColumn() == col2.getColumn()) {
-					incomingViewer.getTable().setSortDirection(
-							incomingViewer.getTable().getSortDirection() == SWT.DOWN ? SWT.UP : SWT.DOWN);
-				} else {
-					incomingViewer.getTable().setSortColumn(col2.getColumn());
-					incomingViewer.getTable().setSortDirection(SWT.DOWN);
-				}
-				incomingViewer.setInput(incomingViewer.getInput());
 			}
 		});
 		TableViewerColumn col3 = new TableViewerColumn(incomingViewer, SWT.NONE);
@@ -260,28 +237,30 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 				return super.getForeground(element);
 			}
 		});
+		new SortColumnManager(incomingViewer, new int[] {SWT.UP,  SWT.DOWN, SWT.NONE}, 1);
 		incomingViewer.setContentProvider(ArrayContentProvider.getInstance());
-		incomingViewer.setComparator(new ViewerComparator() {
+		incomingViewer.setComparator(new ZViewerComparator() {
 			@Override
 			public int compare(Viewer viewer, Object e1, Object e2) {
 				if (e1 instanceof PeerDefinition && e2 instanceof PeerDefinition) {
-					int sortDirection = incomingViewer.getTable().getSortDirection();
+					Table table = incomingViewer.getTable();
+					int sortDirection = table.getSortDirection();
 					TableColumn sortColumn = incomingViewer.getTable().getSortColumn();
 					int result;
-					if (sortColumn == col1.getColumn())
-						result = ((PeerDefinition) e1).getLocation().compareTo(((PeerDefinition) e2).getLocation());
+					if (sortColumn == table.getColumn(0))
+						result = UiUtilities.stringComparator.compare(((PeerDefinition) e1).getLocation(),
+								((PeerDefinition) e2).getLocation());
 					else {
 						long t1 = ((PeerDefinition) e1).getLastAccess();
 						long t2 = ((PeerDefinition) e2).getLastAccess();
 						result = t1 > t2 ? 1 : t1 < t2 ? -1 : 0;
 					}
-					return sortDirection == SWT.UP ? result : -result;
+					return sortDirection == SWT.DOWN ? result : -result;
 				}
 				return super.compare(viewer, e1, e2);
 			}
+
 		});
-		incomingViewer.getTable().setSortColumn(col2.getColumn());
-		incomingViewer.getTable().setSortDirection(SWT.DOWN);
 		Composite buttonGroup = new Composite(innerComp, SWT.NONE);
 		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, true));
 		buttonGroup.setLayout(new GridLayout());
@@ -338,6 +317,7 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		super.dispose();
 	}
 
+	@SuppressWarnings("unused")
 	private Control createPeerGroup(CTabFolder parent) {
 		Composite comp = new Composite(parent, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -351,7 +331,6 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		Label label = new Label(innerComp, SWT.WRAP);
 		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		label.setText(Messages.PeerPreferencePage_network_geography);
-
 		peerViewer = new TableViewer(innerComp, SWT.SINGLE | SWT.BORDER | SWT.V_SCROLL);
 		peerViewer.getTable().setLinesVisible(true);
 		peerViewer.getTable().setHeaderVisible(true);
@@ -431,11 +410,14 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 			public String getText(Object element) {
 				if (element instanceof PeerDefinition)
 					return PeerActivator.getDefault().isOnline((PeerDefinition) element)
-							? Messages.PeerPreferencePage_online : Messages.PeerPreferencePage_offline;
+							? Messages.PeerPreferencePage_online
+							: Messages.PeerPreferencePage_offline;
 				return super.getText(element);
 			}
 		});
 		peerViewer.setContentProvider(ArrayContentProvider.getInstance());
+		new SortColumnManager(peerViewer, new int[] {SWT.UP, SWT.UP, SWT.NONE}, 0);
+		peerViewer.setComparator(ZViewerComparator.INSTANCE);
 		Composite buttonGroup = new Composite(innerComp, SWT.NONE);
 		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, true));
 		buttonGroup.setLayout(new GridLayout());
@@ -482,6 +464,7 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		return comp;
 	}
 
+	@SuppressWarnings("unused")
 	private Control createSharedGroup(CTabFolder parent) {
 		Composite comp = new Composite(parent, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -656,6 +639,8 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 				return EMPTY;
 			}
 		});
+		new SortColumnManager(catViewer, new int[] {SWT.UP,  SWT.NONE} , 0);
+		catViewer.setComparator(ZViewerComparator.INSTANCE);
 		UiUtilities.installDoubleClickExpansion(catViewer);
 		Composite buttonGroup = new Composite(innerComp, SWT.NONE);
 		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, true));

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 package com.bdaum.zoom.report.internal.wizards;
 
@@ -27,14 +27,12 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
-import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.osgi.util.NLS;
@@ -55,8 +53,8 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.report.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.dialogs.AllNoneGroup;
-import com.bdaum.zoom.ui.internal.views.AbstractPropertiesView.ViewComparator;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
@@ -157,19 +155,17 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 			layoutData.widthHint = 500;
 			layoutData.heightHint = 250;
 			viewer.getControl().setLayoutData(layoutData);
-			TreeViewerColumn col1 = new TreeViewerColumn(viewer, SWT.NONE);
-			col1.getColumn().setWidth(400);
-			col1.setLabelProvider(new ColumnLabelProvider() {
+			viewer.setLabelProvider(new ZColumnLabelProvider() {
 				@Override
 				public String getText(Object element) {
 					QueryField qfield = getDetailField(element);
 					if (qfield != null)
 						return qfield.getLabel();
-					return super.getText(element);
+					return element.toString();
 				}
 			});
 			viewer.setContentProvider(new MetadataContentProvider());
-			viewer.setComparator(new ViewComparator());
+			viewer.setComparator(ZViewerComparator.INSTANCE);
 			UiUtilities.installDoubleClickExpansion(viewer);
 			viewerFilter = new ViewerFilter() {
 				@Override

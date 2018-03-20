@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.dialogs;
@@ -40,7 +40,6 @@ public class ZInputDialog extends InputDialog {
 	 * true if the catalog is read-only
 	 */
 	protected boolean readonly;
-
 	private final boolean alwaysEnabled;
 	private final IInputAdvisor advisor;
 

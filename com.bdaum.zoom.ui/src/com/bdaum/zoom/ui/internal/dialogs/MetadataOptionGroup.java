@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -38,21 +38,13 @@ public class MetadataOptionGroup {
 	public MetadataOptionGroup(Composite composite, boolean withMerge) {
 		final Composite buttonBar = new Composite(composite, SWT.NONE);
 		buttonBar.setLayout(new GridLayout(withMerge ? 6 : 4, false));
-
 		overWriteButtun = new Button(buttonBar, SWT.RADIO);
-
-		final Label overwriteLabel = new Label(buttonBar, SWT.NONE);
-		overwriteLabel.setText(Messages.PasteMetaDialog_overwrite);
-
+		new Label(buttonBar, SWT.NONE).setText(Messages.PasteMetaDialog_overwrite);
 		fillinButton = new Button(buttonBar, SWT.RADIO);
-
-		final Label fillinBlanksLabel = new Label(buttonBar, SWT.NONE);
-		fillinBlanksLabel.setText(Messages.PasteMetaDialog_fill_in_blanks);
+		new Label(buttonBar, SWT.NONE).setText(Messages.PasteMetaDialog_fill_in_blanks);
 		if (withMerge) {
 			mergeButton = new Button(buttonBar, SWT.RADIO);
-
-			final Label mergeLabel = new Label(buttonBar, SWT.NONE);
-			mergeLabel.setText(Messages.MetadataOptionGroup_combine);
+			new Label(buttonBar, SWT.NONE).setText(Messages.MetadataOptionGroup_combine);
 		}
 	}
 

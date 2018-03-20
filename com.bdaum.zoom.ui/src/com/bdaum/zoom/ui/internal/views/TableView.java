@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -131,10 +131,10 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		private Runnable assetRunnable = new Runnable() {
 			public void run() {
 				Table table = viewer.getTable();
-				for (TableItem item : items) {
+				for (TableItem item : items)
 					if (item != null && !item.isDisposed()) {
 						AssetImpl asset = (AssetImpl) item.getData();
-						if (asset != null) {
+						if (asset != null)
 							switch (volumeManager.determineFileState(asset)) {
 							case IVolumeManager.REMOTE:
 								if (remoteColor != null)
@@ -148,9 +148,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 								item.setForeground(table.getForeground());
 								break;
 							}
-						}
 					}
-				}
 				table.redraw();
 				items = null;
 			}
@@ -353,7 +351,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 			sortColumn = memento.getString(SORT_COLUMN);
 			try {
 				Integer i = memento.getInteger(SORT_DIRECTION);
-				sortDirection = i != null ? i : 1;
+				sortDirection = i != null ? i : SWT.DOWN;
 			} catch (Exception e) {
 				// do nothing
 			}
@@ -393,7 +391,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		contributeToActionBars();
 		setDecorator(gallery.getControl(), new TableDecorateJob(this, gallery));
 		setSortCriterion();
-		updateActions();
+		updateActions(false);
 		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID)
 				.addPreferenceChangeListener(new IPreferenceChangeListener() {
 					public void preferenceChange(PreferenceChangeEvent event) {
@@ -409,7 +407,6 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(gallery.getControl(), HelpContextIds.TABLE_VIEW);
 		themeChanged();
 		gallery.setContentProvider(new ILazyContentProvider() {
-
 			public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 				// do nothing
 			}
@@ -444,7 +441,6 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		icolumn.setText(Messages.getString("TableView.configure")); //$NON-NLS-1$
 		imageColumn.setLabelProvider(new ThumbnailLabelProvider());
 		icolumn.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ConfigureColumnsDialog dialog = new ConfigureColumnsDialog(getSite().getShell());
@@ -483,7 +479,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		ColumnViewerToolTipSupport.enableFor(gallery);
 		addKeyListener();
 		addGestureListener(gallery.getTable());
-		addExplanationListener();
+		addExplanationListener(false);
 		addDragDropSupport();
 		hookContextMenu();
 		hookDoubleClickAction();
@@ -500,7 +496,6 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		column.setWidth(w != null ? w : defaultWidth);
 		column.setResizable(true);
 		column.addControlListener(new ControlAdapter() {
-
 			@Override
 			public void controlResized(ControlEvent e) {
 				int width = column.getWidth();
@@ -509,7 +504,6 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 			}
 		});
 		column.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (refreshing > 0)
@@ -529,16 +523,9 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 	}
 
 	private void switchSort(final Table table, final String key, final TableColumn column) {
-		if (key.equals(sortColumn)) {
-			switch (sortDirection) {
-			case SWT.DOWN:
-				sortDirection = SWT.UP;
-				break;
-			default:
-				sortDirection = SWT.DOWN;
-				break;
-			}
-		} else {
+		if (key.equals(sortColumn))
+			sortDirection = sortDirection == SWT.DOWN ? SWT.UP : SWT.DOWN;
+		else {
 			sortColumn = key;
 			sortDirection = SWT.DOWN;
 		}
@@ -589,10 +576,6 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
-		// if (toggleCollapseAction != null) {
-		// manager.add(toggleCollapseAction);
-		// manager.add(new Separator());
-		// }
 		boolean readOnly = dbIsReadonly();
 		fillEditAndSearchGroup(manager, readOnly);
 		fillRotateGroup(manager, readOnly);
@@ -846,7 +829,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 			}
 			display.asyncExec(() -> {
 				if (!shell.isDisposed())
-					updateActions();
+					updateActions(false);
 			});
 		}
 	}

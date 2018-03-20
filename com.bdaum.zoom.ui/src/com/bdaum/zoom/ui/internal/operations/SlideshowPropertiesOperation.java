@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2014 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.operations;
 
@@ -75,6 +75,7 @@ public class SlideshowPropertiesOperation extends AbstractOperation {
 		to.setTitleContent(from.getTitleContent());
 		to.setAdhoc(from.getAdhoc());
 		to.setSkipDublettes(from.getSkipDublettes());
+		to.setZoom(from.getZoom());
 	}
 
 	public static SlideShowImpl cloneSlideshow(SlideShowImpl show) {

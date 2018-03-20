@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.job;
@@ -132,6 +132,7 @@ public class ChangeProcessor extends Job {
 					config.isResetIptc = true;
 					config.isResetGps = true;
 					config.isResetFaceData = true;
+					config.silent = true;
 					if (observedFolder != null && observedFolder.getTransfer()) {
 						ImportFromDeviceData deviceData = new ImportFromDeviceData(
 								newFiles.toArray(new File[newFiles.size()]),
@@ -155,7 +156,7 @@ public class ChangeProcessor extends Job {
 						op = new ImportOperation(
 								new FileInput(newFiles, false), config, null,
 								null);
-					if (op != null) {
+					if (op != null)
 						try {
 							mstatus.addAll(op.execute(
 									progress.newChild(newFiles.size() * 100
@@ -167,7 +168,6 @@ public class ChangeProcessor extends Job {
 									Messages.FolderWatchJob_import_of_new_images_failed,
 									e));
 						}
-					}
 				} catch (RuntimeException e) {
 					// ignore
 				}

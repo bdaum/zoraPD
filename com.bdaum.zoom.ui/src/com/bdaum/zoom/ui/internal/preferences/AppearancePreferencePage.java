@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -27,13 +27,14 @@ import java.util.List;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -69,12 +70,12 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 	private CheckboxButton doneButton;
 	private CheckboxButton locationButton;
 	private Spinner regionField;
-	private CTabItem tabItem0;
 	private String theme;
 	private Label comment;
-	private CTabItem tabItem1;
 	private RadioButtonGroup showRatingGroup;
 	private LabelConfigGroup labelConfigGroup;
+	private ComboViewer distViewer;
+	private ComboViewer dimViewer;
 
 	public AppearancePreferencePage() {
 		setDescription(Messages.getString("AppearancePreferencePage.appearance_descr")); //$NON-NLS-1$
@@ -84,10 +85,14 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.APPEARANCE_PREFERENCE_PAGE);
 		createTabFolder(composite, "Appearance"); //$NON-NLS-1$
-		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.getString("AppearancePreferencePage.color_scheme")); //$NON-NLS-1$
-		tabItem0.setControl(createColorSchemeGroup(tabFolder));
-		tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.getString("AppearancePreferencePage.thumbnails")); //$NON-NLS-1$
-		tabItem1.setControl(createThumbnailsGroup(tabFolder));
+		UiUtilities
+				.createTabItem(tabFolder, Messages.getString("AppearancePreferencePage.color_scheme"), //$NON-NLS-1$
+						Messages.getString("AppearancePreferencePage.scheme_tooltip")) //$NON-NLS-1$
+				.setControl(createColorSchemeGroup(tabFolder));
+		UiUtilities
+				.createTabItem(tabFolder, Messages.getString("AppearancePreferencePage.thumbnails"), //$NON-NLS-1$
+						Messages.getString("AppearancePreferencePage.thumbnail_tooltip")) //$NON-NLS-1$
+				.setControl(createThumbnailsGroup(tabFolder));
 		initTabFolder(0);
 		createExtensions(tabFolder, "com.bdaum.zoom.ui.preferences.AppearancePreferencePage"); //$NON-NLS-1$
 		fillValues();
@@ -97,7 +102,8 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(1, false));
-		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("AppearancePreferencePage.bg_color")); //$NON-NLS-1$
+		CGroup schemeGroup = UiUtilities.createGroup(composite, 2,
+				Messages.getString("AppearancePreferencePage.bg_color")); //$NON-NLS-1$
 		List<String> dropins = new ArrayList<String>();
 		String path = Platform.getInstallLocation().getURL().getPath();
 		File installFolder = new File(path);
@@ -127,8 +133,8 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		int j = 5;
 		for (String name : dropins)
 			colorOptions[j] = colorLabels[j++] = name;
-		colorViewer = createComboViewer(group, null, colorOptions, colorLabels, false);
-		comment = new Label(group, SWT.NONE);
+		colorViewer = createComboViewer(schemeGroup, null, colorOptions, colorLabels, false);
+		comment = new Label(schemeGroup, SWT.NONE);
 		comment.setText(Messages.getString("AppearancePreferencePage.switching_to_platform_colors")); //$NON-NLS-1$
 		GridData layoutData = new GridData();
 		layoutData.horizontalIndent = 15;
@@ -142,6 +148,37 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 						PreferenceConstants.BACKGROUNDCOLOR_PLATFORM.equals(newTheme) && !newTheme.equals(theme));
 			}
 		});
+		CGroup unitGroup = UiUtilities.createGroup(composite, 2, Messages.getString("AppearancePreferencePage.units")); //$NON-NLS-1$
+		new Label(unitGroup, SWT.NONE).setText(Messages.getString("AppearancePreferencePage.distances")); //$NON-NLS-1$
+		distViewer = new ComboViewer(unitGroup, SWT.NONE);
+		distViewer.setContentProvider(ArrayContentProvider.getInstance());
+		distViewer.setLabelProvider(new LabelProvider() {
+			@Override
+			public String getText(Object element) {
+				if (element instanceof String) {
+					if (((String) element).startsWith("m")) //$NON-NLS-1$
+						return Messages.getString("AppearancePreferencePage.miles"); //$NON-NLS-1$
+					if (((String) element).startsWith("n")) //$NON-NLS-1$
+						return Messages.getString("AppearancePreferencePage.nautical"); //$NON-NLS-1$
+				}
+				return Messages.getString("AppearancePreferencePage.kilometers"); //$NON-NLS-1$
+			}
+		});
+		distViewer.setInput(new String[] { "k", "m", "n" }); //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+		new Label(unitGroup, SWT.NONE).setText(Messages.getString("AppearancePreferencePage.physical_dims")); //$NON-NLS-1$
+		dimViewer = new ComboViewer(unitGroup, SWT.NONE);
+		dimViewer.setContentProvider(ArrayContentProvider.getInstance());
+		dimViewer.setLabelProvider(new LabelProvider() {
+			@Override
+			public String getText(Object element) {
+				if (element instanceof String) {
+					if (((String) element).startsWith("i")) //$NON-NLS-1$
+						return Messages.getString("AppearancePreferencePage.inches"); //$NON-NLS-1$
+				}
+				return Messages.getString("AppearancePreferencePage.centimeters"); //$NON-NLS-1$
+			}
+		});
+		dimViewer.setInput(new String[] { "c", "i" }); //$NON-NLS-1$//$NON-NLS-2$
 		return composite;
 	}
 
@@ -204,6 +241,8 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		theme = preferenceStore.getString(PreferenceConstants.BACKGROUNDCOLOR);
 		colorViewer.setSelection(new StructuredSelection(theme));
+		distViewer.setSelection(new StructuredSelection(preferenceStore.getString(PreferenceConstants.DISTANCEUNIT)));
+		dimViewer.setSelection(new StructuredSelection(preferenceStore.getString(PreferenceConstants.DIMUNIT)));
 		locationButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.SHOWLOCATION));
 		doneButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.SHOWDONEMARK));
 		regionField.setSelection(preferenceStore.getInt(PreferenceConstants.MAXREGIONS));
@@ -224,10 +263,13 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		updateButtons();
 	}
 
-
 	@Override
 	protected void doPerformDefaults() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
+		preferenceStore.setValue(PreferenceConstants.DISTANCEUNIT,
+				preferenceStore.getDefaultInt(PreferenceConstants.DISTANCEUNIT));
+		preferenceStore.setValue(PreferenceConstants.DIMUNIT,
+				preferenceStore.getDefaultInt(PreferenceConstants.DIMUNIT));
 		preferenceStore.setValue(PreferenceConstants.SHOWLABEL,
 				preferenceStore.getDefaultInt(PreferenceConstants.SHOWLABEL));
 		preferenceStore.setValue(PreferenceConstants.THUMBNAILTEMPLATE,
@@ -262,6 +304,12 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		IStructuredSelection selection = (IStructuredSelection) colorViewer.getSelection();
 		if (!selection.isEmpty())
 			preferenceStore.setValue(PreferenceConstants.BACKGROUNDCOLOR, (String) selection.getFirstElement());
+		selection = (IStructuredSelection) distViewer.getSelection();
+		if (!selection.isEmpty())
+			preferenceStore.setValue(PreferenceConstants.DISTANCEUNIT, (String) selection.getFirstElement());
+		selection = (IStructuredSelection) dimViewer.getSelection();
+		if (!selection.isEmpty())
+			preferenceStore.setValue(PreferenceConstants.DIMUNIT, (String) selection.getFirstElement());
 		preferenceStore.setValue(PreferenceConstants.SHOWLOCATION, locationButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.MAXREGIONS, regionField.getSelection());
 		preferenceStore.setValue(PreferenceConstants.SHOWDONEMARK, doneButton.getSelection());

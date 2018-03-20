@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -175,14 +175,11 @@ public class EditWithAction extends Action {
 
 	protected Set<EditorDescriptor> computeDefaultEditors(Set<EditorDescriptor> defaultEditors,
 			Set<EditorDescriptor> allowedEditors, FileEditorMapping mapping) {
-		if (defaultEditors == null) {
-			if (mapping == null)
-				defaultEditors = new HashSet<EditorDescriptor>(1);
-			else
-				defaultEditors = getValidEditors(mapping.getDeclaredDefaultEditors());
-		} else {
+		if (defaultEditors == null)
+			defaultEditors = mapping == null ? new HashSet<EditorDescriptor>(1)
+					: getValidEditors(mapping.getDeclaredDefaultEditors());
+		else
 			defaultEditors.retainAll(Arrays.asList(mapping.getDeclaredDefaultEditors()));
-		}
 		return defaultEditors;
 	}
 
@@ -204,14 +201,10 @@ public class EditWithAction extends Action {
 	}
 
 	protected Set<EditorDescriptor> computeEditors(Set<EditorDescriptor> editors, FileEditorMapping mapping) {
-		if (editors == null) {
-			if (mapping == null)
-				editors = new HashSet<EditorDescriptor>(1);
-			else
-				editors = getValidEditors(mapping.getEditors());
-		} else {
+		if (editors == null)
+			editors = mapping == null ? new HashSet<EditorDescriptor>(1) : getValidEditors(mapping.getEditors());
+		else
 			editors.retainAll(Arrays.asList(mapping.getEditors()));
-		}
 		return editors;
 	}
 
@@ -233,14 +226,11 @@ public class EditWithAction extends Action {
 		}
 		if (program != null) {
 			boolean first = true;
-			for (String parm : parms) {
-				if (!program.execute(parm)) {
-					if (first) {
-						first = false;
-						Core.getCore().logError(NLS.bind(Messages.EditWithAction_launch_failed, editorName), null);
-					}
+			for (String parm : parms)
+				if (!program.execute(parm) && first) {
+					first = false;
+					Core.getCore().logError(NLS.bind(Messages.EditWithAction_launch_failed, editorName), null);
 				}
-			}
 		} else {
 			parms.add(0, editorLocation);
 			try {
@@ -275,7 +265,6 @@ public class EditWithAction extends Action {
 			dialog.setTitle(Messages.EditWithAction_select_one_of);
 			dialog.setContentProvider(ArrayContentProvider.getInstance());
 			dialog.setLabelProvider(new ZColumnLabelProvider() {
-
 				@Override
 				public String getText(Object element) {
 					if (element instanceof EditorDescriptor) {
@@ -303,14 +292,10 @@ public class EditWithAction extends Action {
 						if (editor.getProgram() == null) {
 							String fileName = editor.getFileName();
 							File file = (fileName == null) ? null : new File(fileName);
-							if (file != null && file.exists()) {
-								image = editor.createImage(display);
-								images.add(image);
-							}
-						} else {
-							image = editor.createImage(display);
-							images.add(image);
-						}
+							if (file != null && file.exists())
+								images.add(image = editor.createImage(display));
+						} else
+							images.add(image = editor.createImage(display));
 						if (image == null)
 							image = Icons.error.getImage();
 						return image;
@@ -329,17 +314,12 @@ public class EditWithAction extends Action {
 				if (result != null && result.length > 0)
 					return (EditorDescriptor) result[0];
 			}
-		} else if (ext == null) {
-			AssociationWarningDialog dialog = new AssociationWarningDialog(shell, Messages.EditWithAction_file_editor,
-					Messages.EditWithAction_editor_not_registered, null);
-			dialog.open();
-		} else {
-			AssociationWarningDialog dialog = new AssociationWarningDialog(shell, Messages.EditWithAction_file_editor,
-					NLS.bind(Messages.EditWithAction_no_external_editor, ext), ext);
-			int ret = dialog.open();
-			if (ret == 0)
-				run();
-		}
+		} else if (ext == null)
+			new AssociationWarningDialog(shell, Messages.EditWithAction_file_editor,
+					Messages.EditWithAction_editor_not_registered, null).open();
+		else if (new AssociationWarningDialog(shell, Messages.EditWithAction_file_editor,
+				NLS.bind(Messages.EditWithAction_no_external_editor, ext), ext).open() == 0)
+			run();
 		return null;
 	}
 

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -47,15 +47,13 @@ public class ShowAssetAction extends Action {
 	public void run() {
 		IWorkbenchPage activePage = adaptable.getAdapter(IWorkbenchPage.class);
 		Asset localAsset = adaptable.getAdapter(AssetSelection.class).getFirstLocalAsset();
-		if (localAsset != null) {
-			String viewId = HierarchyView.IDS[type];
+		if (localAsset != null)
 			try {
-				IViewPart view = activePage.showView(viewId);
+				IViewPart view = activePage.showView(HierarchyView.IDS[type]);
 				if (view instanceof HierarchyView)
 					((HierarchyView) view).setInput(localAsset);
 			} catch (PartInitException e) {
 				// do nothing
 			}
-		}
 	}
 }

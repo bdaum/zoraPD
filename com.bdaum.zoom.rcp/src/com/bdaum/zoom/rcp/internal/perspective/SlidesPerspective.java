@@ -34,7 +34,7 @@ public class SlidesPerspective extends AbstractPerspective {
 		layout.addView(HSTRIP_VIEW, IPageLayout.BOTTOM, 0.76f, SlideshowView.ID);
 		layout.addView(PreviewView.ID, IPageLayout.BOTTOM, 0.7f, CATALOG_FOLDER);
 		addCheatSheets(layout, SLIDESHOW_FOLDER);
-		addFastViews(layout, IPageLayout.LEFT, 0.7f, CATALOG_FOLDER);
+		addFastViews(layout, IPageLayout.RIGHT, 0.7f, SLIDESHOW_FOLDER);
 		layout.setEditorAreaVisible(false);
 	}
 

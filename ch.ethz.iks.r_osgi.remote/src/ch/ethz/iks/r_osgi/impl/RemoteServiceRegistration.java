@@ -45,6 +45,7 @@ import ch.ethz.iks.r_osgi.messages.DeliverServiceMessage;
  * Encapsulates a service registered for remote access.
  * 
  * @author Jan S. Rellermeyer
+ *         Berthold Daum (bd) fixed a bug in equals()
  */
 final class RemoteServiceRegistration {
 
@@ -191,7 +192,8 @@ final class RemoteServiceRegistration {
 			final ServiceReference ref = (ServiceReference) obj;
 			return ref.equals(reference);
 		} else if (obj instanceof RemoteServiceRegistration) {
-			return ((RemoteServiceRegistration) obj).equals(reference);
+//			return ((RemoteServiceRegistration) obj).equals(reference); //bd
+			return ((RemoteServiceRegistration) obj).reference.equals(reference); //bd
 		}
 		return false;
 	}

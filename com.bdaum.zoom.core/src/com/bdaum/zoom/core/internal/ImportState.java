@@ -25,7 +25,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 
 import com.adobe.xmp.XMPException;
-import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.batch.internal.ExifTool;
 import com.bdaum.zoom.cat.model.Ghost_typeImpl;
 import com.bdaum.zoom.cat.model.Meta_type;
@@ -33,7 +32,6 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.derivedBy.DerivedBy;
 import com.bdaum.zoom.cat.model.meta.Meta;
-import com.bdaum.zoom.cat.model.meta.WatchedFolder;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
@@ -102,11 +100,12 @@ public class ImportState {
 	private boolean changed;
 	public Set<Asset> added = new HashSet<>();
 	public Set<Asset> modified = new HashSet<>();
+	private Set<String> errorSet = new HashSet<>();
 	private int i = 0;
 
 	public ImportState(ImportConfiguration configuration, ImportFromDeviceData importFromDeviceData,
 			AnalogProperties analogProperties, AbstractImportOperation operation, int fileSource) {
-		this.setConfiguration(configuration);
+		this.configuration = configuration;
 		this.importFromDeviceData = importFromDeviceData;
 		this.analogProperties = analogProperties;
 		this.operation = operation;
@@ -139,7 +138,7 @@ public class ImportState {
 			exifTool = new ExifTool(file, false);
 		else
 			exifTool.reset(file);
-		exifTool.setFast(fast);
+		exifTool.setFast(1);
 		return exifTool;
 	}
 
@@ -500,35 +499,51 @@ public class ImportState {
 		cal.setTimeInMillis(lastModified);
 		String filename = file.getName();
 		File subFolder = new File(importFromDeviceData.getTargetDir());
+		boolean deep = importFromDeviceData.isDeepSubfolders();
 		int subfolderPolicy = importFromDeviceData.getSubfolderPolicy();
 		if (subfolderPolicy != ImportFromDeviceData.SUBFOLDERPOLICY_NO) {
-			subFolder = new File(subFolder, new SimpleDateFormat("yyyy").format(cal.getTime())); //$NON-NLS-1$
+			Date date = cal.getTime();
+			subFolder = new File(subFolder, new SimpleDateFormat("yyyy").format(date)); //$NON-NLS-1$
 			subFolder.mkdir();
 			switch (subfolderPolicy) {
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARMONTH:
-				subFolder = new File(subFolder, new SimpleDateFormat("yyyy-MM").format(cal.getTime())); //$NON-NLS-1$
+				subFolder = new File(subFolder, new SimpleDateFormat("yyyy-MM").format(date)); //$NON-NLS-1$
 				subFolder.mkdir();
 				break;
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARMONTHDAY:
-				subFolder = new File(subFolder, new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime())); //$NON-NLS-1$
+				if (deep) {
+					subFolder = new File(subFolder, new SimpleDateFormat("yyyy-MM").format(date)); //$NON-NLS-1$
+					subFolder.mkdir();
+				}
+				subFolder = new File(subFolder, new SimpleDateFormat("yyyy-MM-dd").format(date)); //$NON-NLS-1$
+				subFolder.mkdir();
+				break;
+			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARWEEK:
+				subFolder = new File(subFolder, new SimpleDateFormat("YYYY-'W'ww").format(date)); //$NON-NLS-1$
+				subFolder.mkdir();
+				break;
+			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARWEEKDAY:
+				if (deep) {
+					subFolder = new File(subFolder, new SimpleDateFormat("YYYY-'W'ww").format(date)); //$NON-NLS-1$
+					subFolder.mkdir();
+				}
+				subFolder = new File(subFolder, new SimpleDateFormat("YYYY-'W'ww-uu").format(date)); //$NON-NLS-1$
 				subFolder.mkdir();
 				break;
 			}
 		}
 		int p = filename.lastIndexOf('.');
 		String ext = (p >= 0) ? filename.substring(p) : ""; //$NON-NLS-1$
-		int maxLength = BatchConstants.MAXPATHLENGTH - subFolder.getAbsolutePath().length() - 1 - ext.length();
-		WatchedFolder watchedFolder = importFromDeviceData.getWatchedFolder();
 		String newFilename = Utilities.evaluateTemplate(importFromDeviceData.getRenamingTemplate(),
-				watchedFolder != null ? Constants.TV_TRANSFER : Constants.TV_ALL, filename, cal, importNo,
-				meta.getLastSequenceNo() + 1, meta.getLastYearSequenceNo() + 1, importFromDeviceData.getCue(), null, "", //$NON-NLS-1$
-				maxLength, true);
+				importFromDeviceData.getWatchedFolder() != null ? Constants.TV_TRANSFER : Constants.TV_ALL, filename,
+				cal, importNo, meta.getLastSequenceNo() + 1, meta.getLastYearSequenceNo() + 1,
+				importFromDeviceData.getCue(), null, "", //$NON-NLS-1$
+				BatchConstants.MAXPATHLENGTH - subFolder.getAbsolutePath().length() - 1 - ext.length(), true);
 		File target = BatchUtilities.makeUniqueFile(subFolder, newFilename, ext);
 		try {
 			CoreActivator.getDefault().getFileWatchManager().copyFileSilently(file, target, lastModified,
 					operation.getOpId(), monitor);
 			if (!importFromDeviceData.isMedia())
-				// import folder into new structure
 				for (IRelationDetector detector : configuration.relationDetectors)
 					detector.transferFile(file, target, importNo == 1, info, operation.getOpId());
 		} catch (IOException e) {
@@ -552,10 +567,10 @@ public class ImportState {
 
 	public boolean skipDuplicates(String originalFileName, Date lastModified) {
 		if (importFromDeviceData != null && importFromDeviceData.isDetectDuplicates()) {
-			List<IdentifiableObject> set = Core.getCore().getDbManager().obtainObjects(AssetImpl.class, false,
-					QueryField.LASTMOD.getKey(), lastModified, QueryField.EQUALS,
-					QueryField.EXIF_ORIGINALFILENAME.getKey(), originalFileName, QueryField.EQUALS);
-			if (!set.isEmpty()) {
+			if (Core.getCore().getDbManager()
+					.obtainObjects(AssetImpl.class, false, QueryField.LASTMOD.getKey(), lastModified, QueryField.EQUALS,
+							QueryField.EXIF_ORIGINALFILENAME.getKey(), originalFileName, QueryField.EQUALS)
+					.iterator().hasNext()) {
 				operation.addWarning(NLS.bind(Messages.ImportState_already_in_cat, originalFileName), null);
 				return true;
 			}
@@ -570,7 +585,7 @@ public class ImportState {
 			if (xmpFile.exists()) {
 				if (reimport) {
 					File backupFile = new File(xmpFile.getAbsolutePath() + ".original"); //$NON-NLS-1$
-					if (backupFile.exists()) {
+					if (backupFile.exists())
 						try {
 							CoreActivator.getDefault().getFileWatchManager().moveFileSilently(backupFile, xmpFile,
 									operation.getOpId(), monitor);
@@ -579,13 +594,11 @@ public class ImportState {
 						} catch (DiskFullException e) {
 							operation.addError(NLS.bind(Messages.ImportState_disk_full_restoring_xmp, xmpFile), e);
 						}
-					} else if (!getConfiguration().isResetExif && !getConfiguration().isResetGps
+					else if (!getConfiguration().isResetExif && !getConfiguration().isResetGps
 							&& !getConfiguration().isResetFaceData && !getConfiguration().isResetIptc
 							&& ensemble.xmpTimestamp != null
-							&& xmpFile.lastModified() == ensemble.xmpTimestamp.getTime()) {
-						// XMP file is not new
-						xmpFile = null;
-					}
+							&& xmpFile.lastModified() == ensemble.xmpTimestamp.getTime())
+						xmpFile = null; // XMP file is not new
 				}
 			} else
 				xmpFile = null;
@@ -645,15 +658,13 @@ public class ImportState {
 		overlayMap.clear();
 		changed |= ret < 0;
 		if (ret != 0) {
-			if (i == 0) {
-				if (!isSilent()) {
-					Core.getCore().fireAssetsModified(new BagChange<>(added, modified, null, null), null);
-					added.clear();
-					modified.clear();
-					if (changed) {
-						Core.getCore().fireStructureModified();
-						changed = false;
-					}
+			if (i == 0 && !isSilent()) {
+				Core.getCore().fireAssetsModified(new BagChange<>(added, modified, null, null), null);
+				added.clear();
+				modified.clear();
+				if (changed) {
+					Core.getCore().fireStructureModified();
+					changed = false;
 				}
 			}
 			if (i++ == 8)
@@ -666,6 +677,11 @@ public class ImportState {
 		if (isSilent())
 			operation.addWarning(message, t);
 		else
+			operation.addError(message, t);
+	}
+
+	public void addErrorOnce(String message, Throwable t) {
+		if (errorSet.add(message))
 			operation.addError(message, t);
 	}
 

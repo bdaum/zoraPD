@@ -7,7 +7,6 @@ public class RenamingTemplate {
 	boolean system;
 
 	public RenamingTemplate(String label, String content, boolean system) {
-		super();
 		this.label = label;
 		this.content = content;
 		this.system = system;

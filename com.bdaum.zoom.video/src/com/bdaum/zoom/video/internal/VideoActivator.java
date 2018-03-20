@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2012 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2012 Berthold Daum  
  */
 package com.bdaum.zoom.video.internal;
 
@@ -51,17 +51,15 @@ import com.sun.jna.NativeLibrary;
 @SuppressWarnings("restriction")
 public class VideoActivator extends ZUiPlugin {
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.video"; //$NON-NLS-1$
 
-	// The shared instance
 	private static VideoActivator plugin;
 
 	private HashMap<String, IImportFilterFactory> importFilters;
 
 	/**
-	 * Returns an image descriptor for the image file at the given plug-in
-	 * relative path
+	 * Returns an image descriptor for the image file at the given plug-in relative
+	 * path
 	 *
 	 * @param path
 	 *            the path
@@ -86,8 +84,7 @@ public class VideoActivator extends ZUiPlugin {
 		if (location != null) {
 			File loc = new File(location);
 			if (loc.exists())
-				NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(),
-						loc.getParent());
+				NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), loc.getParent());
 		}
 	}
 
@@ -116,20 +113,16 @@ public class VideoActivator extends ZUiPlugin {
 	public Map<String, IImportFilterFactory> getImportFilters() {
 		if (importFilters == null) {
 			importFilters = new HashMap<String, IImportFilterFactory>(5);
-			for (IExtension extension : Platform.getExtensionRegistry()
-					.getExtensionPoint(PLUGIN_ID, "importFilter").getExtensions())  //$NON-NLS-1$
-				for (IConfigurationElement conf : extension
-						.getConfigurationElements())
+			for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "importFilter") //$NON-NLS-1$
+					.getExtensions())
+				for (IConfigurationElement conf : extension.getConfigurationElements())
 					try {
-						IImportFilterFactory filter = (IImportFilterFactory) conf
-								.createExecutableExtension("class"); //$NON-NLS-1$
-						StringTokenizer st = new StringTokenizer(conf.getAttribute("extensions"));  //$NON-NLS-1$
+						IImportFilterFactory filter = (IImportFilterFactory) conf.createExecutableExtension("class"); //$NON-NLS-1$
+						StringTokenizer st = new StringTokenizer(conf.getAttribute("extensions")); //$NON-NLS-1$
 						while (st.hasMoreTokens())
 							importFilters.put(st.nextToken().toLowerCase(), filter);
 					} catch (CoreException e) {
-						logError(NLS.bind(
-								Messages.Activator_cannot_create_filter,
-								conf.getAttribute("name")), e); //$NON-NLS-1$
+						logError(NLS.bind(Messages.Activator_cannot_create_filter, conf.getAttribute("name")), e); //$NON-NLS-1$
 					}
 		}
 		return importFilters;
@@ -143,8 +136,7 @@ public class VideoActivator extends ZUiPlugin {
 		File locat = null;
 		while (true) {
 			String vlcLocation = getVlcLocation();
-			locat = (vlcLocation == null || vlcLocation.isEmpty()) ? null
-					: new File(vlcLocation);
+			locat = (vlcLocation == null || vlcLocation.isEmpty()) ? null : new File(vlcLocation);
 			if (locat == null || !locat.exists()) {
 				final VLCDialog dialog = new VLCDialog(shell, locat, null);
 				shell.getDisplay().syncExec(() -> dialog.open());
@@ -154,18 +146,13 @@ public class VideoActivator extends ZUiPlugin {
 				else
 					break;
 			} else {
-				NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(),
-						locat.getParent());
+				NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), locat.getParent());
 				try {
 					return new MediaPlayerFactory(vlcArgs);
 				} catch (Exception e) {
-					final VLCDialog dialog = new VLCDialog(
-							shell,
-							locat,
-							NLS.bind(
-									Platform.getOSArch().indexOf("64") >= 0 ? Messages.Activator_invalid_libary //$NON-NLS-1$
-											: Messages.VideoActivator_invalid_library_64,
-									Constants.APPNAME));
+					final VLCDialog dialog = new VLCDialog(shell, locat,
+							NLS.bind(Platform.getOSArch().indexOf("64") >= 0 ? Messages.Activator_invalid_libary //$NON-NLS-1$
+									: Messages.VideoActivator_invalid_library_64, Constants.APPNAME));
 					shell.getDisplay().syncExec(() -> dialog.open());
 					locat = dialog.getResult();
 					if (locat != null)
@@ -179,10 +166,8 @@ public class VideoActivator extends ZUiPlugin {
 	}
 
 	public void setVlcLocation(File locat) {
-		getPreferenceStore().setValue(PreferenceConstants.VLCLOCATION,
-				locat.getAbsolutePath());
-		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(),
-				locat.getParent());
+		getPreferenceStore().setValue(PreferenceConstants.VLCLOCATION, locat.getAbsolutePath());
+		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), locat.getParent());
 	}
 
 	public String getVlcLocation() {

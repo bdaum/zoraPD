@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -88,7 +88,6 @@ public class WebFontDialog extends ZTitleAreaDialog {
 		this.text = text;
 		this.current = current;
 	}
-
 
 	@Override
 	public void create() {
@@ -172,51 +171,37 @@ public class WebFontDialog extends ZTitleAreaDialog {
 		addCombo.setVisibleItemCount(8);
 		addCombo.select(0);
 		addButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				StringBuilder sb = new StringBuilder();
 				StringTokenizer st = new StringTokenizer(addCombo.getText(),
 						","); //$NON-NLS-1$
 				while (st.hasMoreTokens()) {
-					String token = st.nextToken().trim();
 					if (sb.length() > 0)
 						sb.append('\n');
-					sb.append(token);
+					sb.append(st.nextToken().trim());
 				}
 				familyField.setText(sb.toString());
 			}
 		});
-		Label heightLabel = new Label(comp, SWT.NONE);
-		heightLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false));
-		heightLabel.setText(Messages.WebFontDialog_height);
+		new Label(comp, SWT.NONE).setText(Messages.WebFontDialog_height);
 		heightField = new Spinner(comp, SWT.BORDER);
 		heightField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
 				false, false));
 		heightField.setMaximum(500);
 		heightField.setMinimum(10);
 		heightField.setIncrement(5);
-		Label styleLabel = new Label(comp, SWT.NONE);
-		styleLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
-				false));
-		styleLabel.setText(Messages.WebFontDialog_style);
+		new Label(comp, SWT.NONE).setText(Messages.WebFontDialog_style);
 		styleField = new Combo(comp, SWT.DROP_DOWN | SWT.READ_ONLY);
 		styleField
 				.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
 		styleField.setItems(STYLES);
-		Label weightLabel = new Label(comp, SWT.NONE);
-		weightLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false));
-		weightLabel.setText(Messages.WebFontDialog_weight);
+		new Label(comp, SWT.NONE).setText(Messages.WebFontDialog_weight);
 		weightField = new Combo(comp, SWT.DROP_DOWN | SWT.READ_ONLY);
 		weightField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true,
 				false));
 		weightField.setItems(WEIGHT);
-		Label variantLabel = new Label(comp, SWT.NONE);
-		variantLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false));
-		variantLabel.setText(Messages.WebFontDialog_variant);
+		new Label(comp, SWT.NONE).setText(Messages.WebFontDialog_variant);
 		variantField = new Combo(comp, SWT.DROP_DOWN | SWT.READ_ONLY);
 		variantField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true,
 				false));
@@ -237,7 +222,6 @@ public class WebFontDialog extends ZTitleAreaDialog {
 		final Image image = new Image(getShell().getDisplay(), 20, 20);
 		button.setImage(image);
 		button.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ColorDialog dialog = new ColorDialog(getShell());
@@ -246,16 +230,12 @@ public class WebFontDialog extends ZTitleAreaDialog {
 					dialog.setRGB(new RGB(currentColor.getR(), currentColor
 							.getG(), currentColor.getB()));
 				RGB rgb = dialog.open();
-				if (rgb != null) {
-					currentColor = new Rgb_typeImpl(rgb.red, rgb.green,
-							rgb.blue);
-					paintButton(button, currentColor);
-				}
+				if (rgb != null)
+					paintButton(button, currentColor = new Rgb_typeImpl(rgb.red, rgb.green,
+							rgb.blue));
 			}
 		});
 		button.addDisposeListener(new DisposeListener() {
-
-
 			public void widgetDisposed(DisposeEvent e) {
 				image.dispose();
 			}
@@ -284,9 +264,9 @@ public class WebFontDialog extends ZTitleAreaDialog {
 		StringTokenizer st = new StringTokenizer(familyField.getText(), "\n"); //$NON-NLS-1$
 		while (st.hasMoreTokens())
 			fonts.add(st.nextToken().trim());
-		if (fonts.isEmpty()) {
+		if (fonts.isEmpty())
 			current = null;
-		} else {
+		else {
 			if (current == null)
 				current = new Font_typeImpl();
 			current.setFamily(fonts.toArray(new String[fonts.size()]));

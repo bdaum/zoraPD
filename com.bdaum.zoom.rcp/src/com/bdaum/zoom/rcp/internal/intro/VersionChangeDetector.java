@@ -28,16 +28,12 @@ public class VersionChangeDetector extends IntroContentDetector {
 	public boolean isNewContentAvailable() {
 		boolean versionChange = isVersionChange();
 		if (versionChange) {
-			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench()
-					.getActiveWorkbenchWindow();
+			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 			if (activeWorkbenchWindow != null) {
 				IWorkbenchPage page = activeWorkbenchWindow.getActivePage();
 				if (page != null) {
-					IPerspectiveDescriptor currentPerspective = page
-							.getPerspective();
-					IPerspectiveDescriptor[] perspectiveDescriptors = page
-							.getOpenPerspectives();
-					for (IPerspectiveDescriptor perspective : perspectiveDescriptors) {
+					IPerspectiveDescriptor currentPerspective = page.getPerspective();
+					for (IPerspectiveDescriptor perspective : page.getOpenPerspectives()) {
 						page.setPerspective(perspective);
 						page.resetPerspective();
 					}
@@ -49,24 +45,18 @@ public class VersionChangeDetector extends IntroContentDetector {
 	}
 
 	private static boolean isVersionChange() {
-		IPreferenceStore preferenceStore = RcpActivator.getDefault()
-				.getPreferenceStore();
-		String v = preferenceStore
-				.getString(PreferenceConstants.PREVIOUSVERSION);
+		IPreferenceStore preferenceStore = RcpActivator.getDefault().getPreferenceStore();
+		String v = preferenceStore.getString(PreferenceConstants.PREVIOUSVERSION);
 		if (v == null || v.isEmpty()) {
 			preferenceStore.putValue(PreferenceConstants.PREVIOUSVERSION,
-					Platform.getProduct().getDefiningBundle().getVersion()
-							.toString());
+					Platform.getProduct().getDefiningBundle().getVersion().toString());
 			return true;
 		}
 		Version oldVersion = new Version(v);
-		Version version = Platform.getProduct().getDefiningBundle()
-				.getVersion();
+		Version version = Platform.getProduct().getDefiningBundle().getVersion();
 		if (version.getMajor() > oldVersion.getMajor()
-				|| (version.getMajor() == oldVersion.getMajor() && version
-						.getMinor() > oldVersion.getMinor())) {
-			preferenceStore.putValue(PreferenceConstants.PREVIOUSVERSION,
-					version.toString());
+				|| (version.getMajor() == oldVersion.getMajor() && version.getMinor() > oldVersion.getMinor())) {
+			preferenceStore.putValue(PreferenceConstants.PREVIOUSVERSION, version.toString());
 			return true;
 		}
 		return false;

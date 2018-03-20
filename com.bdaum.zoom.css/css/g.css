@@ -11,6 +11,7 @@ Text[style='SWT.READ_ONLY'] {color:black;background-color:rgb(224,224,230);}
 Text[enabled=false] {color:black;background-color:rgb(230,230,236);}
 Text[editable=false] {color:black;background-color:rgb(224,224,230);}
 Text {color:black;background-color:rgb(240,240,240);}
+StyledText#hint {color:rgb(128,128,128);background-color:rgb(240,240,240);}
 StyledText[style='SWT.READ_ONLY'] {color:black;background-color:rgb(224,224,230);}
 StyledText[enabled=false] {color:black;background-color:rgb(230,230,236);}
 StyledText[editable=false] {color:black;background-color:rgb(224,224,230);}
@@ -20,10 +21,8 @@ Combo {color:black;background-color:rgb(240,240,240);}
 CCombo[enabled=false] {color:black;background-color:rgb(230,230,236);}
 CCombo {color:black;background-color:rgb(240,240,240);}
 ToolTip {color:rgb(30,30,30);background-color:rgb(255,255,230);}
-Tree {color:rgb(32,32,32);background-color:rgb(224,224,230);}
-TreeItem {color:rgb(32,32,32);background-color:rgb(224,224,230);selected-background-color:rgb(192,192,192);selected-color:black);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);}
-Table {color:rgb(32,32,32);background-color:rgb(224,224,230);offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);}
-TableItem {color:rgb(32,32,32);background-color:rgb(224,224,230);selected-background-color:rgb(192,192,192);selected-color:black);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);}
+Tree {color:rgb(32,32,32);background-color:rgb(224,224,230);selected-background-color:rgb(192,192,192);selected-color:black;disabled-color:rgb(128,128,128);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);}
+Table {color:rgb(32,32,32);background-color:rgb(224,224,230);offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);selected-background-color:rgb(192,192,192);selected-color:black;disabled-color:rgb(128,128,128);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);}
 Gallery {color:rgb(32,32,32);background-color:rgb(224,224,230);title-color:rgb(32,32,32);title-background-color:rgb(192,192,192);selected-background-color:rgb(64,64,64);selected-color:rgb(128,128,128);offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);selected-offline-color:red;selected-remote-color:rgb(64, 64, 160);}
 CGroup {color:rgb(0,80,160);background-color:transparent;}
 Composite {background-color:rgb(224,224,230);}

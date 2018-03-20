@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ai.clarifai.internal.preference;
 
@@ -32,7 +32,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -52,6 +51,7 @@ import com.bdaum.zoom.ai.internal.preference.AiPreferencePage;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.Theme;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
@@ -78,7 +78,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 	private CheckboxButton knownButton;
 	private CheckboxButton faceButton;
 	private ComboViewer languageCombo;
-	// private CheckboxButton celebrityButton;
+	private CheckboxButton celebrityButton;
 	private String currentLanguage = "en"; //$NON-NLS-1$
 	private boolean updating;
 
@@ -121,16 +121,13 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 			}
 		});
 
-		CGroup tGroup = new CGroup(composite, SWT.NONE);
-		tGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		tGroup.setLayout(new GridLayout(2, false));
-		tGroup.setText(Messages.PagePart_limits);
+		CGroup tGroup = CGroup.create(composite, 1, Messages.PagePart_limits);
 		new Label(tGroup, SWT.NONE).setText(Messages.PagePart_model);
 		modelCombo = new ComboViewer(tGroup, SWT.READ_ONLY);
 		modelCombo.getControl().setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		modelCombo.setContentProvider(ArrayContentProvider.getInstance());
 		modelCombo.setLabelProvider(new LabelProvider());
-		modelCombo.setComparator(new ViewerComparator());
+		modelCombo.setComparator(ZViewerComparator.INSTANCE);
 		modelCombo.setInput(CoreActivator.getDefault().getThemes().values());
 		ISelectionChangedListener listener = new ISelectionChangedListener() {
 			@Override
@@ -180,9 +177,8 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false), Messages.PagePart_porno);
 		faceButton = WidgetFactory.createCheckButton(buttonArea1, Messages.PagePart_detect_faces, null,
 				Messages.PagePart_detect_faces_tooltip);
-		// celebrityButton = WidgetFactory.createCheckButton(buttonArea1,
-		// Messages.PagePart_detect_celebrities, null,
-		// Messages.PagePart_detect_celebrities_tooltip);
+		celebrityButton = WidgetFactory.createCheckButton(buttonArea1, Messages.PagePart_detect_celebrities, null,
+				Messages.PagePart_detect_celebrities_tooltip);
 		Label sep = new Label(tGroup, SWT.SEPARATOR | SWT.HORIZONTAL);
 		sep.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		translateButton = WidgetFactory.createCheckButton(tGroup, Messages.PagePart_translate,
@@ -223,7 +219,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 			timer.cancel();
 			timer = null;
 		}
-		ClarifaiActivator.getDefault().disposeClient();
+		// ClarifaiActivator.getDefault().disposeClient();
 	}
 
 	@Override
@@ -239,7 +235,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		knownButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.MARKKNOWNONLY));
 		adultButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ADULTCONTENTS));
 		faceButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.FACES));
-		// celebrityButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.CELEBRITIES));
+		celebrityButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.CELEBRITIES));
 		translateButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.TRANSLATE));
 		ClarifaiActivator activator = ClarifaiActivator.getDefault();
 		activator.setAccountCredentials(clientIdField.getText().trim(), clientSecretField.getText().trim());
@@ -265,7 +261,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		knownButton.setEnabled(enabled);
 		adultButton.setEnabled(enabled);
 		faceButton.setEnabled(enabled);
-		// celebrityButton.setEnabled(enabled);
+		celebrityButton.setEnabled(enabled);
 		translateButton.setEnabled(enabled);
 		if (enabled && !wasEnabled) {
 			validate();
@@ -285,8 +281,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		preferenceStore.setValue(PreferenceConstants.MARKKNOWNONLY, knownButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.ADULTCONTENTS, adultButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.FACES, faceButton.getSelection());
-		// preferenceStore.setValue(PreferenceConstants.CELEBRITIES,
-		// celebrityButton.getSelection());
+		preferenceStore.setValue(PreferenceConstants.CELEBRITIES, celebrityButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.TRANSLATE,
 				translateButton.isEnabled() && translateButton.getSelection());
 		Theme theme = (Theme) ((StructuredSelection) modelCombo.getSelection()).getFirstElement();

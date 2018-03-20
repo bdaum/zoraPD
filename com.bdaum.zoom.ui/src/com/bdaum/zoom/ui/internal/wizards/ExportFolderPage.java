@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.wizards;
@@ -34,7 +34,6 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
@@ -86,6 +85,7 @@ public class ExportFolderPage extends ColoredWizardPage {
 		exportModeGroup.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				updateCatButtons();
 				updateControls();
 				checkImages();
 			}
@@ -95,10 +95,7 @@ public class ExportFolderPage extends ColoredWizardPage {
 				checkImages();
 			}
 		});
-		final CGroup metaGroup = new CGroup(composite, SWT.NONE);
-		metaGroup.setText(Messages.ExportFolderPage_metadata);
-		metaGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		metaGroup.setLayout(new GridLayout(2, false));
+		final CGroup metaGroup = CGroup.create(composite, 1, Messages.ExportFolderPage_metadata);
 		metaButton = WidgetFactory.createCheckButton(metaGroup, Messages.ExportFolderPage_include_metadata, null);
 		metaButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -125,7 +122,8 @@ public class ExportFolderPage extends ColoredWizardPage {
 	}
 
 	protected void updateCatButtons() {
-		addToCatGroup.setEnabled(true, outputTargetGroup.getTarget() == Constants.FILE);
+		addToCatGroup.setEnabled(exportModeGroup.getMode() != ExportModeGroup.ORIGINALS,
+				outputTargetGroup.getTarget() == Constants.FILE);
 	}
 
 	@Override
@@ -197,6 +195,7 @@ public class ExportFolderPage extends ColoredWizardPage {
 			addToCatGroup.fillValues(settings);
 			outputTargetGroup.initValues(settings);
 		}
+		updateCatButtons();
 		updateControls();
 	}
 

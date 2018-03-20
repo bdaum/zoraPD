@@ -34,16 +34,14 @@ public abstract class AbstractMailer implements IMailer {
 			List<String> paths = new ArrayList<String>(attachments.size());
 			for (String uri : attachments) {
 				try {
-					File file = new File(new URI(uri));
-					paths.add(file.getAbsolutePath());
+					paths.add(new File(new URI(uri)).getAbsolutePath());
 				} catch (URISyntaxException e) {
 					// should never happen
 				}
 			}
-			if (!sendMailWithAttachments(label, to, cc, bcc, subject, message, paths, originalNames)) {
-				if (!exportToEml(label, to, cc, bcc, subject, message, attachments, originalNames, status))
-					sendMailManually(label, to, cc, bcc, subject, message, paths, status);
-			}
+			if (!sendMailWithAttachments(label, to, cc, bcc, subject, message, paths, originalNames)
+					&& !exportToEml(label, to, cc, bcc, subject, message, attachments, originalNames, status))
+				sendMailManually(label, to, cc, bcc, subject, message, paths, status);
 		}
 		return status;
 	}
@@ -67,14 +65,14 @@ public abstract class AbstractMailer implements IMailer {
 				if (message != null)
 					writer.write(wrap(message));
 				int i = 0;
-				for (String attachment : attachments) {
+				for (String attachment : attachments)
 					try {
 						File file = new File(new URI(attachment));
 						String filename = originalNames != null && originalNames.size() > i ? originalNames.get(i)
 								: file.getName();
 						writer.write("\n--" + boundary + "\n"); //$NON-NLS-1$ //$NON-NLS-2$
 						writer.write(NLS.bind("Content-Type: {1}; name=\"{0}\"\n", //$NON-NLS-1$
-								filename, filename.endsWith(".pdf") ? "application/pdf" : "image/jpeg"));  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+								filename, filename.endsWith(".pdf") ? "application/pdf" : "image/jpeg")); //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 						writer.write(NLS.bind("Content-Disposition: attachment; filename=\"{0}\"\n", //$NON-NLS-1$
 								filename));
 						writer.write("Content-Transfer-Encoding: base64\n"); //$NON-NLS-1$
@@ -91,7 +89,6 @@ public abstract class AbstractMailer implements IMailer {
 					} catch (URISyntaxException e) {
 						addError(status, NLS.bind(Messages.AbstractMailer_bad_uri, attachment), e);
 					}
-				}
 				writer.write("\n--" + boundary + "--\n"); //$NON-NLS-1$//$NON-NLS-2$
 			}
 			if (!Program.launch(eml.getAbsolutePath())) {
@@ -114,8 +111,8 @@ public abstract class AbstractMailer implements IMailer {
 		appendUriQuerySegment("subject", subject, mailto); //$NON-NLS-1$
 		String body = message;
 		if (attachments != null) {
-			body = body == null ? ADD_ATTACHMENTS_MANUALLY + "\n    " : body //$NON-NLS-1$
-					+ "\n\n" + ADD_ATTACHMENTS_MANUALLY + "\n    "; //$NON-NLS-1$ //$NON-NLS-2$
+			body = body == null ? ADD_ATTACHMENTS_MANUALLY + "\n    " //$NON-NLS-1$
+					: body + "\n\n" + ADD_ATTACHMENTS_MANUALLY + "\n    "; //$NON-NLS-1$ //$NON-NLS-2$
 			body += Core.toStringList(attachments.toArray(), "\n    "); //$NON-NLS-1$
 		}
 		appendUriQuerySegment("body", body, mailto); //$NON-NLS-1$
@@ -133,12 +130,6 @@ public abstract class AbstractMailer implements IMailer {
 	protected abstract void sendDesktopMail(StringBuilder mailto, List<String> attachments)
 			throws URISyntaxException, IOException;
 
-	// {
-	// java.awt.Desktop.getDesktop().mail(new URI(mailto.toString()));
-	// if (attachments != null && !attachments.isEmpty())
-	// BatchUtilities.showInFolder(new File(attachments.get(0)));
-	// }
-
 	protected abstract boolean sendMailWithAttachments(String label, List<String> to, List<String> cc, List<String> bcc,
 			String subject, String message, List<String> attachments, List<String> originalNames);
 
@@ -149,10 +140,7 @@ public abstract class AbstractMailer implements IMailer {
 
 	private void appendUriQuerySegment(String key, String s, StringBuilder mailto) {
 		if (s != null) {
-			if (mailto.indexOf("?") >= 0) //$NON-NLS-1$
-				mailto.append('&');
-			else
-				mailto.append('?');
+			mailto.append(mailto.indexOf("?") >= 0 ? '&' : '?'); //$NON-NLS-1$
 			mailto.append(key).append('=').append(Core.encodeUrlSegment(s));
 		}
 	}
@@ -184,7 +172,7 @@ public abstract class AbstractMailer implements IMailer {
 				}
 				int len = token.length();
 				if (cnt + len > 72) {
-					if (len > 72) {
+					if (len > 72)
 						while (!token.isEmpty()) {
 							int q = Math.min(token.length(), 72 - cnt);
 							sb.append(token.substring(0, q));
@@ -196,7 +184,7 @@ public abstract class AbstractMailer implements IMailer {
 								cnt = 0;
 							}
 						}
-					} else {
+					else {
 						sb.append('\n').append(token);
 						cnt = len;
 					}

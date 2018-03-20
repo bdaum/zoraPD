@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2013 Berthold Daum  
  */
 
 /*
@@ -35,7 +35,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2013 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -152,8 +152,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 			} else {
 				if (!op)
 					return Messages.KeywordSearchDialog_bad_keyword;
-				String keyword = findMatchingKeyword(token, keywords);
-				if (!token.equals(keyword))
+				if (!token.equals(findMatchingKeyword(token, keywords)))
 					return NLS.bind(Messages.KeywordSearchDialog_keyword_does_not_exist, token);
 				op = false;
 			}
@@ -188,7 +187,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		Composite area = (Composite) super.createDialogArea(parent);
 		final Composite composite = new Composite(area, SWT.NONE);
 		final GridData gd_composite = new GridData();

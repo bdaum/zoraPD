@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.commands;
 
@@ -120,12 +120,6 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 				showToolTip(true);
 			}
 		});
-		// inputField.addVerifyListener(new VerifyListener() {
-		// @Override
-		// public void verifyText(VerifyEvent e) {
-		// e.doit = !Core.getCore().getDbManager().getMeta(true).getNoIndex();
-		// }
-		// });
 		addDropSupport(inputField);
 		button = new Button(composite, SWT.PUSH);
 		textsearchIcon = UiActivator.getImageDescriptor("icons/configure.png").createImage(); //$NON-NLS-1$
@@ -334,11 +328,10 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 								SimilarityOptions_typeImpl newOptions = new SimilarityOptions_typeImpl(validMethod,
 										queryOptions.getMaxHits(), queryOptions.getScore() / 100f, 0, 1, 10, 30, id,
 										queryOptions.getKeywordWeight());
-								if (queryOptions.getKeywordWeight() > 0 && asset.getKeyword() != null
-										&& asset.getKeyword().length > 0) {
-									newOptions
-											.setKeywords(Arrays.copyOf(asset.getKeyword(), asset.getKeyword().length));
-								} else
+								String[] keywords = asset.getKeyword();
+								if (queryOptions.getKeywordWeight() > 0 && keywords != null && keywords.length > 0)
+									newOptions.setKeywords(Arrays.copyOf(keywords, keywords.length));
+								else
 									newOptions.setKeywordWeight(0);
 								if (queryOptions.getKeywordWeight() < 100)
 									newOptions.setPngImage(asset.getJpegThumbnail());

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.job;
@@ -28,7 +28,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.printing.Printer;
 import org.eclipse.swt.printing.PrinterData;
@@ -71,11 +70,9 @@ public class PrintJob extends CustomJob {
 		long startTime = System.currentTimeMillis();
 		Printer printer = new Printer(printerData);
 		try {
-			Point dpi = printer.getDPI();
 			Rectangle bounds = printer.getClientArea();
-			Rectangle trim = printer.computeTrim(0, 0, 0, 0);
-			processor = new PageProcessor(printerData, layout, assets, bounds.width, bounds.height, 1d, 1d, trim, dpi,
-					ImageConstants.SRGB, umask, adaptable);
+			processor = new PageProcessor(printerData, layout, assets, bounds.width, bounds.height, 1d, 1d,
+					printer.computeTrim(0, 0, 0, 0), printer.getDPI(), ImageConstants.SRGB, umask, adaptable);
 			int pages = processor.getPageCount();
 			int startPage;
 			int endPage;
@@ -93,7 +90,7 @@ public class PrintJob extends CustomJob {
 			int inner = printerData.collate ? 1 : printerData.copyCount;
 			lp: for (int c = 1; c <= outer; c++) {
 				printer.startJob(Constants.APPLICATION_NAME);
-				for (int i = startPage; i <= endPage; i++) {
+				for (int i = startPage; i <= endPage; i++)
 					for (int cc = 1; cc <= inner; cc++) {
 						printer.startPage();
 						GC gc = new GC(printer);
@@ -106,7 +103,6 @@ public class PrintJob extends CustomJob {
 						printer.endPage();
 						monitor.worked(1);
 					}
-				}
 				printer.endJob();
 			}
 		} finally {

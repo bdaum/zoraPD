@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.csv.internal.wizards;
@@ -66,7 +66,7 @@ public class CsvTargetFilePage extends ColoredWizardPage {
 
 		fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY,
 				Messages.CsvTargetFilePage_target_file, true, filterExtensions,
-				filterNames, path, fileName, true);
+				filterNames, path, fileName, true, dialogSettings);
 		fileEditor.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				path = fileEditor.getFilterPath();
@@ -120,6 +120,7 @@ public class CsvTargetFilePage extends ColoredWizardPage {
 	public void finish() {
 		dialogSettings.put(CSVPATH, path);
 		dialogSettings.put(NOFIRSTLINE, !firstLineButton.getSelection());
+		fileEditor.saveValues();
 	}
 
 }

@@ -24,6 +24,10 @@
     <description>Edit a rule for automatic collection creation dialog</description>
     <topic href="html/reference/autoRule.html" label="Edit a rule for automatic collection creation dialog"/>
  </context>
+ <context id="importMode_dialog_context" title="Import mode">
+    <description>Select between import in situ and import into new folder structure</description>
+    <topic href="html/reference/importMode.html" label="Import mode"/>
+ </context>
  <context id="category_dialog_context" title="Category dialog">
     <description>Assign image(s) to categories by checking the category entries. Press Add... to add a new category, Refine... to create a new subcategory.</description>
  </context>
@@ -94,6 +98,18 @@
  <context id="importNewStructureRenaming_wizard_context" title="Import into new folder structure - Renaming files">
     <description>Import images into new folder structure - Renaming files</description>
     <topic href="html/reference/importNewStructure.html#3" label="Import into new folder structure - Renaming files"/>
+ </context>
+ <context id="importNewStructureMetadata_wizard_context" title="Import into new folder structure - Metadata">
+    <description>Import images into new folder structure - Metadata</description>
+    <topic href="html/reference/importNewStructure.html#4" label="Import into new folder structure - Metadata"/>
+ </context>
+ <context id="analogProperties_wizard_context" title="Import analog images">
+    <description>Import analog images</description>
+    <topic href="html/reference/analogImport.html" label="Import analog images"/>
+ </context>
+ <context id="importFolderMetadata_wizard_context" title="Import of files and folders - Metadata">
+    <description>Import of files and folders - Metadata</description>
+    <topic href="html/reference/importFolder.html" label="Import of files and folders - Metadata"/>
  </context>
  <context id="appearance_page_context" title="Appearance Preferences">
     <description>Appearance Preferences</description>
@@ -178,12 +194,12 @@
  </context>
  <context id="editWall_dialog_context" title="Exhibition wall properties">
     <description>Configure an exhibition wall</description>
-    <topic href="html/reference/exhibition.html" label="Exhibition view"/>
+    <topic href="html/reference/exhibition.html#wall" label="Exhibition view"/>
     <topic href="html/reference/htmlEditing.html" label="Editing HTML"/>
  </context>
  <context id="exhibition_dialog_context" title="Exhibition properties">
     <description>Configure a photo exhibition</description>
-    <topic href="html/reference/exhibition.html" label="Exhibition view"/>
+    <topic href="html/reference/exhibition.html#properties" label="Exhibition view"/>
     <topic href="html/reference/htmlEditing.html" label="Editing HTML"/>
  </context>
  <context id="slideshow_dialog_context" title="Slideshow properties">
@@ -222,17 +238,13 @@
     <description>Export images to a folder</description>
     <topic href="html/reference/exportFolder.html" label="Export to folder"/>
  </context>
- <context id="analogImport_dialog_context" title="Import analog images">
-    <description>Import analog images</description>
-    <topic href="html/reference/analogImport.html" label="Import analog images"/>
- </context>
  <context id="webGallery_view_context" title="Web Gallery Designer View">
     <description>Create and design a web gallery</description>
     <topic href="html/reference/webGallery.html" label="Web Gallery Designer View"/>
  </context>
  <context id="editWebGallery_dialog_context" title="WebGallery Properties">
     <description>Configure a web gallery</description>
-    <topic href="html/reference/webGallery.html" label="Web Gallery Properties"/>
+    <topic href="html/reference/webGallery.html#properties" label="Web Gallery Properties"/>
     <topic href="html/reference/htmlEditing.html" label="Editing HTML"/>
  </context>
  <context id="storyboard_dialog_context" title="Storyboard Properties">
@@ -440,4 +452,9 @@
     <description>Maintain user defined vocabularies</description>
     <topic href="html/reference/catPrefs.html" label="Vocabulary"/>
  </context>
+ <context id="autoRating_dialog_context" title="Automatic Rating">
+    <description>Rating images with the help of AI</description>
+    <topic href="html/reference/rating.html" label="Automatic Rating"/>
+ </context>
+ 
 </contexts>

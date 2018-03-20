@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
@@ -40,7 +41,6 @@ import com.bdaum.zoom.cat.model.group.slideShow.SlideShowImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
-import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -49,13 +49,15 @@ import com.bdaum.zoom.ui.internal.dialogs.SlideshowEditDialog;
 import com.bdaum.zoom.ui.internal.views.SlideShowPlayer;
 
 @SuppressWarnings("restriction")
-public class SlideshowAction extends AbstractMultiMediaAction {
+public class SlideshowAction extends Action {
 
 	private IAdaptable adaptable;
+	private IWorkbenchWindow window;
 
 	public SlideshowAction(IWorkbenchWindow window, String label, String tooltip, ImageDescriptor image,
 			IAdaptable adaptable) {
-		super(window, label, image, QueryField.PHOTO);
+		super(label, image);
+		this.window = window;
 		this.adaptable = adaptable;
 		setToolTipText(tooltip);
 	}
@@ -74,49 +76,18 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 			selectedAssets = assetProvider.getAssets();
 		if (!selectedAssets.isEmpty()) {
 			IDialogSettings settings = UiActivator.getDefault().getDialogSettings(SlideshowEditDialog.SETTINGSID);
-			int duration = 7000;
-			int effect = Constants.SLIDE_TRANSITION_RANDOM;
-			int zoom = 0;
-			int fading = 1000;
-			int titleDisplay = 1500;
-			int titleContent = Constants.SLIDE_TITLEONLY;
+			int duration = getInt(settings, SlideshowEditDialog.DELAY, 7000);
+			int effect = getInt(settings, SlideshowEditDialog.EFFECT, Constants.SLIDE_TRANSITION_RANDOM);
+			int zoom = getInt(settings, SlideshowEditDialog.ZOOM, 0);
+			int fading = getInt(settings, SlideshowEditDialog.FADING,1000);
+			int titleDisplay = getInt(settings, SlideshowEditDialog.TITLEDISPLAY,1500);
+			int titleContent = getInt(settings, SlideshowEditDialog.TITLECONTENT,Constants.SLIDE_TITLEONLY);
 			boolean fromPreview = false;
-			try {
-				duration = settings.getInt(SlideshowEditDialog.DELAY);
-			} catch (NumberFormatException e) {
-				// ignore
-			}
-			try {
-				effect = settings.getInt(SlideshowEditDialog.EFFECT);
-			} catch (NumberFormatException e) {
-				// ignore
-			}
-			try {
-				zoom = settings.getInt(SlideshowEditDialog.ZOOM);
-			} catch (NumberFormatException e) {
-				// ignore
-			}
-			try {
-				fading = settings.getInt(SlideshowEditDialog.FADING);
-			} catch (NumberFormatException e) {
-				// ignore
-			}
-			try {
-				titleDisplay = settings.getInt(SlideshowEditDialog.TITLEDISPLAY);
-			} catch (NumberFormatException e) {
-				// ignore
-			}
-			try {
-				titleContent = settings.getInt(SlideshowEditDialog.TITLECONTENT);
-			} catch (NumberFormatException e) {
-				// ignore
-			}
 			try {
 				fromPreview = settings.getBoolean(SlideshowEditDialog.FROMPREVIEW);
 			} catch (Exception e) {
 				// ignore
 			}
-
 			SlideShowImpl show = new SlideShowImpl("", "", fromPreview, duration, //$NON-NLS-1$ //$NON-NLS-2$
 					effect, fading, zoom, titleDisplay, titleContent, true, true, false, new Date(), null);
 			SlideshowEditDialog dialog = new SlideshowEditDialog(window.getShell(), null, show,
@@ -138,6 +109,15 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 				player.close();
 		}
 	}
+	
+	private static int getInt(IDialogSettings settings, String key, int dflt) {
+		try {
+			return settings.getInt(key);
+		} catch (NumberFormatException e) {
+			return dflt;
+		}
+
+	}
 
 	private static boolean updateSlides(List<SlideImpl> slides, SlideShowImpl show, int privacy) {
 		boolean filtered = false;
@@ -146,8 +126,7 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 		int lag = Math.min(fading / 3, duration / 2);
 		int effect = show.getEffect();
 		int zoom = show.getZoom();
-		Iterator<SlideImpl> it = slides.iterator();
-		while (it.hasNext()) {
+		for (Iterator<SlideImpl> it = slides.iterator();it.hasNext();) {
 			SlideImpl slide = it.next();
 			int safety = slide.getSafety();
 			if (safety > privacy) {
@@ -190,11 +169,10 @@ public class SlideshowAction extends AbstractMultiMediaAction {
 				int duration = show.getDuration();
 				int lag = Math.min(fading / 3, duration / 2);
 				int effect = show.getEffect();
-				int zoom = show.getZoom();
 				if (effect == Constants.SLIDE_TRANSITION_RANDOM)
 					effect = (int) (Math.random() * Constants.SLIDE_TRANSITION_N);
 				SlideImpl slide = new SlideImpl(tit, index, null, Constants.SLIDE_NO_THUMBNAILS, fading, fading,
-						duration, fading + lag, effect, zoom, 0, 0, false, asset.getSafety(), asset.getStringId());
+						duration, fading + lag, effect, show.getZoom(), 0, 0, false, asset.getSafety(), asset.getStringId());
 				slides.add(slide);
 				show.addEntry(slide.getStringId());
 				slide.setSlideShow_entry_parent(id);

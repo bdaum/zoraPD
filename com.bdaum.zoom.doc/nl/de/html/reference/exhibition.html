@@ -13,8 +13,9 @@
 
 
 
-<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Ausstellungsdesigner-Sichtfenster</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head>
-<body>
+
+
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Ausstellungsdesigner-Sichtfenster</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
 <h2>Ausstellungsdesigner-Sichtfenster
 </h2>
 <p>Der
@@ -91,14 +92,20 @@ können den Anzeigenabstand anpassen (zoomen), indem Sie bei gedrückter Zoomtas
 können Sie&nbsp;das Mausrad verwenden, um zu zoomen.<br><br>Ein
 Doppelklick auf einen Wandhintergrund zoomt heraus, so dass alle Wände
 sichtbar werden. Ein Doppelklick auf ein Bild-Label zoomt auf dieses
-Label, so dass es bequem editiert werden kann. Ein weiterer Doppelklick macht den ersten Doppelklick wieder rückgängig.<h4>Ausstellungseigenschaften</h4>
+Label, so dass es bequem editiert werden kann. Ein weiterer Doppelklick macht den ersten Doppelklick wieder rückgängig.<h4><a name="properties"></a>Ausstellungseigenschaften</h4>
 <ul style="font-weight: normal;">
 <li style="font-weight: bold;">Übersicht</li>
 <ul style="font-weight: normal;">
-<li><span style="font-weight: bold;"> Name</span>. Der Name der Ausstellung<span style="font-weight: bold;"><br>
+<li><span style="font-weight: bold;">Ausstellung</span><br>
+<span style="font-weight: bold;"></span></li>
+    <ul>
+      <li><span style="font-weight: bold;"> Name</span>. Der Name der Ausstellung<span style="font-weight: bold;"><br>
       </span></li>
-<li><span style="font-weight: bold;"> Beschreibung</span>. Kurze
-Beschreibung der Ausstellung (Ausstellungsort, Datum, Zeitplan, etc..).  Dieses Feld kann <a href="htmlEditing.html">HTML-Markup</a> enthalten.</li><li style="font-weight: bold;">Infotafel</li><ul><li><span style="font-weight: bold;">Text. </span>Beschreibung des Ausstellungsinhalts, die auch in der Ausstellung angezeigt wird.</li><li><span style="font-weight: bold;">Position. </span>Left
+      <li><span style="font-weight: bold;"> Beschreibung</span>. Kurze
+Beschreibung der Ausstellung (Ausstellungsort, Datum, Zeitplan, etc..).  Dieses Feld kann <a href="htmlEditing.html">HTML-Markup</a> enthalten.</li>
+    </ul>
+
+<li style="font-weight: bold;">Infotafel</li><ul><li><span style="font-weight: bold;">Text. </span>Beschreibung des Ausstellungsinhalts, die auch in der Ausstellung angezeigt wird.</li><li><span style="font-weight: bold;">Position. </span>Left
 fest, wo der Info-Text gezeigt wird: links oder rechts der Tür oder
 überhaupt nicht. Zusätzlich werden noch der Name der Ausstellung und
 die Namen der beteiligten Künster angezeigt.</li><li><span style="font-weight: bold;">Credits anzeigen.</span> Markieren Sie dieses Feld, um die aus den Bildern ermittelten Credits auf der Infotafel anzuzeigen.</li></ul>
@@ -110,7 +117,7 @@ Abstand der Gitterlinien voneinander.</li><li><span style="font-weight: bold;">m
 Bilder werden automatisch am Raster ausgerichtet, wenn Sie in die
 Nähe von Rasterlinien gesetzt werden.</li></ul>
 <li><span style="font-weight: bold;"> Details. </span> In
-diesem Abschnitt werden die Bilddaten für jede Wand
+diesem Abschnitt werden die Bild- und Rahmendaten für jede Wand
 einschließlich&nbsp;Position, Größe und&nbsp;Auflösung
 angezeigt. Sie können auf Drucker oder in ein PDF ausgegeben werden.</li>
   <li><span style="font-weight: bold;">Grundriss</span>.
@@ -119,9 +126,28 @@ Sie die räumliche Anordnung der Ausstellungswände und des Eingangs
 (Kreis) festlegen. Wählen Sie eine Wand oder den Eingang aus und geben
 Sie die Koordinaten - und im Fall einer Wand - den Winkel ein. Sie
 können auch auf die Endpunkte der Wänder klicken und diese mit der Maus
-oder den Pfeiltasten verschieben.</li><li><span style="font-weight: bold;">Web Design.</span><br>Diese Sektion betrifft nur&nbsp;generierte virtuelle Ausstellungen.&nbsp;</li><ul><li><span style="font-weight: bold;">Bodenfarbe.</span> Die Farbe des Fußbodens.</li><li><span style="font-weight: bold;">Horizontfarbe.</span> Die Farbe des Horizonts.</li><li><span style="font-weight: bold;">Deckenfarbe.</span> Die Farbe der Saaldecke.</li><li><span style="font-weight: bold;">Tonspur.</span> Eine Tondatei, die während des Betrachtens der Ausstellung abgespielt wird.<br><span style="font-weight: bold; color: rgb(204, 0, 0);">Hinweis:</span><span style="color: rgb(204, 0, 0);"> Aktuelle Firefox-Versionen können MP3 Tonspuren nicht abspielen!</span></li><li><span style="font-weight: bold;">Namensschild</span>. Dies kann ein GIF-, JPEG-oder PNG-Bild sein, das ganz oben auf der Seite platziert wird.</li></ul><li><span style="font-weight: bold;">Ausgabe.</span><br>Diese Sektion betrifft nur&nbsp;generierte virtuelle Ausstellungen.&nbsp;</li><ul><li><span style="font-weight: bold;">Lokaler Ordner</span>.
+oder den Pfeiltasten verschieben.</li><li><span style="font-weight: bold;">Web Design.</span><br>Diese Sektion betrifft nur&nbsp;generierte virtuelle Ausstellungen.&nbsp;</li><ul><li><span style="font-weight: bold;">Farben</span><br>
+<span style="font-weight: bold;"></span></li>
+    <ul>
+      <li><span style="font-weight: bold;">Boden.</span> Die Farbe des Fußbodens.</li>
+      <li><span style="font-weight: bold;">Horizont.</span> Die Farbe des Horizonts.</li>
+      <li><span style="font-weight: bold;">Decken.</span> Die Farbe der Saaldecke.</li>
+    </ul>
+<li><span style="font-weight: bold;">Medien</span><br>
+<span style="font-weight: bold;"></span></li>
+    <ul>
+      <li><span style="font-weight: bold;">Tonspur.</span> Eine Tondatei, die während des Betrachtens der Ausstellung abgespielt wird.<br><span style="font-weight: bold; color: rgb(204, 0, 0);">Hinweis:</span><span style="color: rgb(204, 0, 0);"> Aktuelle Firefox-Versionen können MP3 Tonspuren nicht abspielen!</span></li>
+      <li><span style="font-weight: bold;">Namensschild</span>. Dies kann ein GIF-, JPEG-oder PNG-Bild sein, das ganz oben auf der Seite platziert wird.</li>
+    </ul>
+</ul><li><span style="font-weight: bold;">Ausgabe.</span><br>Diese Sektion betrifft nur&nbsp;generierte virtuelle Ausstellungen.&nbsp;</li><ul><li><span style="font-weight: bold;">Ausgabeziel</span><br>
+<span style="font-weight: bold;"></span></li>
+    <ul>
+      <li><span style="font-weight: bold;">Lokaler Ordner</span>.
 Bitte wählen Sie einen Ordner für die Ausgabe der generierten
-Ausstellung, wenn Sie die generierten Dateien lokal abspeichern möchten.</li><li><span style="font-weight: bold;">FTP-Verzeichnis.</span> Bitte wählen Sie eine <a href="ftpAccount.html">FTP-Konto</a> aus oder erzeugen Sie ein neues, wenn Sie die generierten Dateien auf einen Server hochladen möchten.</li><li><span style="font-weight: bold;">Web-Link</span>. Dies ist der Name der Eingangswebseite in der generierte&nbsp;Ausstellung. Der Standardwert ist "index.html". </li><li><span style="font-weight: bold;">Schlagworte</span>. Geben Sie hier die Schlagworte an, die in den Kopfeintrag der erzeugten Webseite eingefügt werden sollen.</li><li><span style="font-weight: bold;">Ausgabebilder scharfzeichnen.</span> Spezifizieren Sie die Parameter für eine <span style="font-style: italic;">Unschärfemaske</span>, die auf die Ausgabebilder angewendet werden soll.</li><li><span style="font-weight: bold;">Wasserzeichen erstellen</span>.
+Ausstellung, wenn Sie die generierten Dateien lokal abspeichern möchten.</li>
+      <li><span style="font-weight: bold;">FTP-Verzeichnis.</span> Bitte wählen Sie eine <a href="ftpAccount.html">FTP-Konto</a> aus oder erzeugen Sie ein neues, wenn Sie die generierten Dateien auf einen Server hochladen möchten.</li>
+    </ul>
+<li><span style="font-weight: bold;">Web-Link</span>. Dies ist der Name der Eingangswebseite in der generierte&nbsp;Ausstellung. Der Standardwert ist "index.html". </li><li><span style="font-weight: bold;">Schlagworte</span>. Geben Sie hier die Schlagworte an, die in den Kopfeintrag der erzeugten Webseite eingefügt werden sollen.</li><li><span style="font-weight: bold;">Ausgabequalität</span><span style="font-weight: bold;">.</span> Sie können die<span style="font-weight: bold;"> </span>Ausgabequalität<span style="font-weight: bold;"> </span>mit&nbsp;<a href="outputQuality.html">diesen</a> Einstellungen beeinflussen.</li><li><span style="font-weight: bold;">Wasserzeichen erstellen</span>.
 Fügt jedem einzelnen Bild ein Copyright-Vermerk in Form eines
 Wasserzeichens hinzu. Dafür wird der Copyright-Eintrag des Bildes
 wird&nbsp;verwendet. Wenn für das Bild nicht ein eigenes Copyright
@@ -132,11 +158,11 @@ Copyright-Bemerkung wird in der Fußzeile der generierten Webseite
 eingefügt.</li><li><span style="font-weight: bold;">Kontakt</span>. Ein Kontaktname, der in der Fußzeile der generierten Webseite angezeigt wird. </li><li><span style="font-weight: bold;">E-Mail</span>. Eine E-Mail-Adresse für den Kontakt. Der Kontaktname wird mit einem E-Mail-Link an diese Adresse ausgestattet. </li><li><span style="font-weight: bold;">Web-URL</span>.
 Ein Web-URL, der in der Fußzeile der Webseite angezeigt wird. Falls
 angegeben, wird auch das Namensschild mit einem Link zu dieser Seite
-ausgestattet.</li><li>Sie können die<span style="font-weight: bold;"> Ausgabequalität </span>mit&nbsp;<a href="outputQuality.html">diesen</a> Einstellungen beeinflussen.</li></ul>
+ausgestattet.</li></ul>
 
 </ul>
 
-<h4>Wandeigenschaften</h4>
+<h4><a name="wall"></a>Wandeigenschaften</h4>
 <ul style="font-weight: normal;">
 <li><span style="font-weight: bold;">Ort</span>. Aufstellungsort
 der Wand.</li>

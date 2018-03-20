@@ -10,7 +10,11 @@
             name="Pirobox"
             sections="true"
             slideshows="false"
-            unsupported="navfont">
+            unsupported="navfont"
+            url="http://www.pirolab.it">
+         <group
+               name="%group.name.appearance">
+         </group>
          <parameter
                default="black"
                description="%design_description"
@@ -32,16 +36,6 @@
             </enumeration>
          </parameter>
          <parameter
-               default="500"
-               description="%speed_description"
-               id="speed"
-               label="%speed"
-               max="5000"
-               min="50"
-               required="true"
-               type="int">
-         </parameter>
-         <parameter
                default="4"
                description="%radius_description"
                encodeForHtml="false"
@@ -51,62 +45,6 @@
                min="0"
                required="false"
                type="int">
-         </parameter>
-         <parameter
-               default="false"
-               description="%scroll_description"
-               encodeForHtml="false"
-               id="scrollImage"
-               label="%scroll"
-               required="false"
-               type="boolean">
-         </parameter>
-         <parameter
-               default="false"
-               description="%next_description"
-               encodeForHtml="false"
-               id="pirobox_next"
-               label="%next"
-               required="false"
-               type="boolean">
-         </parameter>
-         <parameter
-               default="false"
-               description="%previous_description"
-               encodeForHtml="false"
-               id="pirobox_previous"
-               label="%previous"
-               required="false"
-               type="boolean">
-         </parameter>
-         <parameter
-               default="false"
-               description="%close_all_description"
-               encodeForHtml="false"
-               id="close_all"
-               label="%close_all"
-               required="false"
-               type="boolean">
-         </parameter>
-         <parameter
-               default="true"
-               description="%show_slideshow_description"
-               encodeForHtml="false"
-               id="slideshow"
-               label="%show_slideshow"
-               required="false"
-               type="boolean">
-         </parameter>
-         <parameter
-               default="4.0"
-               description="%slidespeed_description"
-               encodeForHtml="false"
-               id="slideSpeed"
-               label="%slidespeed"
-               max="60"
-               min="1"
-               required="false"
-               type="double">
          </parameter>
          <parameter
                default="none"
@@ -128,6 +66,76 @@
                   id="right"
                   label="%enumeration.label.float.right">
             </enumeration>
+         </parameter>
+         <parameter
+               default="false"
+               description="%next_description"
+               encodeForHtml="false"
+               id="pirobox_next"
+               label="%next"
+               required="false"
+               type="boolean">
+         </parameter>
+         <parameter
+               default="false"
+               description="%previous_description"
+               encodeForHtml="false"
+               id="pirobox_previous"
+               label="%previous"
+               required="false"
+               type="boolean">
+         </parameter>
+         <group
+               name="%group.name.animation">
+         </group>
+         <parameter
+               default="true"
+               description="%show_slideshow_description"
+               encodeForHtml="false"
+               id="slideshow"
+               label="%show_slideshow"
+               required="false"
+               type="boolean">
+         </parameter>
+         <parameter
+               default="4.0"
+               description="%slidespeed_description"
+               enabledIf="slideshow"
+               encodeForHtml="false"
+               id="slideSpeed"
+               label="%slidespeed"
+               max="60"
+               min="1"
+               required="false"
+               type="double">
+         </parameter>
+         <parameter
+               default="500"
+               description="%speed_description"
+               id="speed"
+               label="%speed"
+               max="5000"
+               min="50"
+               required="true"
+               type="int">
+         </parameter>
+         <parameter
+               default="false"
+               description="%scroll_description"
+               encodeForHtml="false"
+               id="scrollImage"
+               label="%scroll"
+               required="false"
+               type="boolean">
+         </parameter>
+         <parameter
+               default="false"
+               description="%close_all_description"
+               encodeForHtml="false"
+               id="close_all"
+               label="%close_all"
+               required="false"
+               type="boolean">
          </parameter>
       </generator>
    </extension>

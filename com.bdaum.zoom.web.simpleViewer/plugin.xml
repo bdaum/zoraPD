@@ -11,7 +11,11 @@
             name="%generator.name"
             sections="false"
             slideshows="false"
-            unsupported="description descriptionfont download thumbnailsize opacity padding sectionfont navfont padding">
+            unsupported="description download thumbnailsize opacity padding sectionfont navfont padding"
+            url="http://www.simpleviewer.net">
+         <group
+               name="%group.name.appearance">
+         </group>
          <parameter
                default="MODERN"
                description="%parameter.description.theme"

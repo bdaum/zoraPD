@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2016 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.operations;
@@ -104,13 +104,13 @@ public class ModifyMetaOperation extends DbOperation {
 	private List<String> vocabularies;
 
 	public ModifyMetaOperation(Meta meta, boolean onCreation, Map<String, Map<QueryField, Object>> structOverlayMap,
-			Map<String, IIdentifiableObject> newObjects, String backupFile, String owner, String theme, String description,
-			String userfield1, String userfield2, boolean cumulateImports, String timeline, String locationOption,
-			Collection<String> keywords, Map<String, Category> categories, String resolution, boolean fromPreview,
-			List<WatchedFolder> folderBackup, List<WatchedFolder> watchedFolders, int latency, boolean paused,
-			boolean readOnly, boolean autoWatch, int sharpen, boolean webpCompression, int jpegQuality, boolean noIndex,
-			String language, Set<String> cbirAlgorithms, Set<String> indexedTextFields, boolean addToKeywords,
-			List<String> categoryChanges, List<String> vocabularies) {
+			Map<String, IIdentifiableObject> newObjects, String backupFile, String owner, String theme,
+			String description, String userfield1, String userfield2, boolean cumulateImports, String timeline,
+			String locationOption, Collection<String> keywords, Map<String, Category> categories, String resolution,
+			boolean fromPreview, List<WatchedFolder> folderBackup, List<WatchedFolder> watchedFolders, int latency,
+			boolean paused, boolean readOnly, boolean autoWatch, int sharpen, boolean webpCompression, int jpegQuality,
+			boolean noIndex, String language, Set<String> cbirAlgorithms, Set<String> indexedTextFields,
+			boolean addToKeywords, List<String> categoryChanges, List<String> vocabularies) {
 		super(Messages.getString("ModifyMetaOperation.Modify_meta")); //$NON-NLS-1$
 		this.meta = meta;
 		this.onCreation = onCreation;
@@ -212,7 +212,8 @@ public class ModifyMetaOperation extends DbOperation {
 			meta.setCumulateImports(cumulateImports);
 			meta.setThumbnailFromPreview(fromPreview);
 			meta.setFolderWatchLatency(latency);
-			meta.setVocabularies(vocabularies);
+			if (vocabularies != null)
+				meta.setVocabularies(vocabularies);
 		}
 		toBeStored.add(meta);
 		dbManager.setReadOnly(false);
@@ -303,11 +304,11 @@ public class ModifyMetaOperation extends DbOperation {
 				}
 			meta.setLastWatchedFolderScan(0L);
 		}
-		if (pauseStarts) {
+		if (pauseStarts)
 			Job.getJobManager().cancel(Constants.FOLDERWATCH);
-		} else if (pauseEnds && !newFolders.isEmpty()) {
+		else if (pauseEnds && !newFolders.isEmpty())
 			new FolderWatchJob(null).schedule(500);
-		} else if (!pause && ids != null) {
+		else if (!pause && ids != null) {
 			Job.getJobManager().cancel(Constants.FOLDERWATCH);
 			if (!ids.isEmpty())
 				new FolderWatchJob(null).schedule(500);
@@ -325,7 +326,7 @@ public class ModifyMetaOperation extends DbOperation {
 			File[] members = folderFile.listFiles();
 			if (members != null && members.length > 0) {
 				IDbManager dbManager = activator.getDbManager();
-				for (File member : members) {
+				for (File member : members)
 					if (member.isDirectory()) {
 						String volume = volumeManager.getVolumeForFile(member);
 						String id = Utilities.computeWatchedFolderId(member, volume);
@@ -335,7 +336,6 @@ public class ModifyMetaOperation extends DbOperation {
 							deleteFolderTree(wf, toBeDeleted);
 						}
 					}
-				}
 			}
 		}
 
@@ -409,12 +409,11 @@ public class ModifyMetaOperation extends DbOperation {
 				AssetImpl asset = dbManager.obtainAsset(id);
 				if (asset != null) {
 					String[] supplementalCats = asset.getSupplementalCats();
-					for (int j = 0; j < supplementalCats.length; j++) {
+					for (int j = 0; j < supplementalCats.length; j++)
 						if (oldLabel.equals(supplementalCats[i])) {
 							supplementalCats[i] = newLabel;
 							break;
 						}
-					}
 					dbManager.store(asset);
 					if (++i % 100 == 0)
 						dbManager.commit();

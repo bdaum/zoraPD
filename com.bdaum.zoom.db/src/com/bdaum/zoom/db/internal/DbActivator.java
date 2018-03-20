@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2013 Berthold Daum  
  */
 package com.bdaum.zoom.db.internal;
 
@@ -37,10 +37,8 @@ import com.bdaum.zoom.program.BatchUtilities;
 
 public class DbActivator extends Plugin {
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.db"; //$NON-NLS-1$
 
-	// The shared instance
 	private static DbActivator plugin;
 
 	/**

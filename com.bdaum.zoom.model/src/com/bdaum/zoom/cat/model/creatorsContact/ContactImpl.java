@@ -1,7 +1,6 @@
 package com.bdaum.zoom.cat.model.creatorsContact;
 
-import java.util.*;
-import com.bdaum.aoModeling.runtime.*;
+import com.bdaum.aoModeling.runtime.ConstraintException;
 import com.bdaum.zoom.cat.model.Contact_typeImpl;
 
 /**
@@ -11,12 +10,15 @@ import com.bdaum.zoom.cat.model.Contact_typeImpl;
 
 /* !! This class is not intended to be modified manually !! */
 
-@SuppressWarnings({ "unused" })
+//Modified manually: no backpointers and other overhead
+
 public class ContactImpl extends Contact_typeImpl implements Contact {
 
-	static final long serialVersionUID = 2307565049L;
+	private static final long serialVersionUID = 1L;
+
 
 	/* ----- Constructors ----- */
+
 
 	public ContactImpl() {
 		super();
@@ -34,49 +36,6 @@ public class ContactImpl extends Contact_typeImpl implements Contact {
 			String state) {
 		super(city, country, postalCode, state);
 
-	}
-
-	/* ----- Initialisation ----- */
-
-	private static List<Instrumentation> _instrumentation = new ArrayList<Instrumentation>();
-
-	public static void attachInstrumentation(int point, Aspect aspect,
-			Object extension) {
-		attachInstrumentation(_instrumentation, point, aspect, extension);
-	}
-
-	public static void attachInstrumentation(int point, Aspect aspect) {
-		attachInstrumentation(_instrumentation, point, aspect);
-	}
-
-	public static void attachInstrumentation(Properties properties,
-			Aspect aspect) {
-		attachInstrumentation(_instrumentation, ContactImpl.class, properties,
-				aspect);
-	}
-
-	/* ----- Fields ----- */
-
-	/* *** Incoming Arc creatorsContact_parent *** */
-
-	private String creatorsContact_parent;
-
-	/**
-	 * Set value of property creatorsContact_parent
-	 *
-	 * @param _value - new field value
-	 */
-	public void setCreatorsContact_parent(String _value) {
-		creatorsContact_parent = _value;
-	}
-
-	/**
-	 * Get value of property creatorsContact_parent
-	 *
-	 * @return - value of field creatorsContact_parent
-	 */
-	public String getCreatorsContact_parent() {
-		return creatorsContact_parent;
 	}
 
 	/* ----- Equality and Identity ----- */
@@ -115,14 +74,6 @@ public class ContactImpl extends Contact_typeImpl implements Contact {
 
 	/* ----- Validation ----- */
 
-	/**
-	 * Tests if all non-null properties and arcs have been supplied with values
-	 * @throws com.bdaum.aoModeling.runtime.ConstraintException
-	 */
-	public void validateCompleteness() throws ConstraintException {
-
-		super.validateCompleteness();
-	}
 
 	/**
 	 * Performs constraint validation
@@ -130,7 +81,7 @@ public class ContactImpl extends Contact_typeImpl implements Contact {
 	 * @see com.bdaum.aoModeling.runtime.IAsset#validate
 	 */
 	public void validate() throws ConstraintException {
-		validateCompleteness();
+		// do nothing
 	}
 
 }

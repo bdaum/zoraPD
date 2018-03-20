@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2013 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -123,9 +123,10 @@ public class StructEditDialog extends ZTitleAreaDialog implements IAdaptable {
 				structComponent.update();
 			}
 		});
-		structComponent = new StructComponent(dbManager, composite, value, qfield.getType(), true, null, radioGroup, 0);
+		structComponent = new StructComponent(dbManager, composite, value, qfield.getType(), true, null, radioGroup,
+				null, 0, settings);
+		structComponent.fillValues();
 		structComponent.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			public void selectionChanged(SelectionChangedEvent event) {
 				value = (AomObject) ((IStructuredSelection) event.getSelection()).getFirstElement();
 				updateButtons();
@@ -192,16 +193,14 @@ public class StructEditDialog extends ZTitleAreaDialog implements IAdaptable {
 			break;
 		case SHOWBUTTONID:
 			if (value instanceof Location) {
-				Location loc = (Location) value;
 				ILocationDisplay service = UiActivator.getDefault().getLocationDisplay();
 				if (service != null)
-					service.display(loc);
+					service.display((Location) value);
 			}
 			break;
 		case EMAILBUTTONID:
 			if (value instanceof Contact) {
-				Contact contact = (Contact) value;
-				String[] email = contact.getEmail();
+				String[] email = ((Contact) value).getEmail();
 				if (email != null && email.length > 0)
 					UiActivator.getDefault().sendMail(Arrays.asList(email));
 			}
@@ -212,8 +211,8 @@ public class StructEditDialog extends ZTitleAreaDialog implements IAdaptable {
 
 	@Override
 	protected void okPressed() {
-		if (radioGroup != null)
-			radioGroup.saveSettings();
+		radioGroup.saveSettings();
+		structComponent.saveSettings();
 		super.okPressed();
 	}
 }

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.wizards;
@@ -121,7 +121,6 @@ public class FtpDirPage extends ColoredWizardPage {
 			}
 		});
 		cbViewer.setContentProvider(new ITreeContentProvider() {
-
 			public void inputChanged(Viewer v, Object oldInput, Object newInput) {
 				fileParents.clear();
 				dirPaths.clear();
@@ -156,9 +155,8 @@ public class FtpDirPage extends ColoredWizardPage {
 			}
 
 			public boolean hasChildren(Object element) {
-				if (element instanceof FTPFile) {
+				if (element instanceof FTPFile)
 					return ((FTPFile) element).isDirectory();
-				}
 				return false;
 			}
 
@@ -171,21 +169,18 @@ public class FtpDirPage extends ColoredWizardPage {
 					FTPFile parent = (FTPFile) parentElement;
 					if (parent.isDirectory()) {
 						String path = dirPaths.get(parent);
-						if (path != null) {
+						if (path != null)
 							try {
-								boolean result = ftp.changeWorkingDirectory(path);
-								if (result) {
+								if (ftp.changeWorkingDirectory(path)) {
 									List<FTPFile> files = new ArrayList<FTPFile>();
-									FTPFile[] listFiles = ftp.listFiles();
-									for (FTPFile ftpFile : listFiles) {
+									for (FTPFile ftpFile : ftp.listFiles()) {
 										if (ftpFile.isDirectory()) {
 											if (!ftpFile.getName().endsWith(".")) { //$NON-NLS-1$
 												files.add(ftpFile);
 												dirPaths.put(ftpFile, path + '/' + ftpFile.getName());
 											}
-										} else if (filter.accept(ftpFile.getName())) {
+										} else if (filter.accept(ftpFile.getName()))
 											files.add(ftpFile);
-										}
 										fileParents.put(ftpFile, parent);
 									}
 									return files.toArray();
@@ -193,7 +188,6 @@ public class FtpDirPage extends ColoredWizardPage {
 							} catch (IOException e) {
 								// ignore
 							}
-						}
 					}
 				}
 				return new Object[0];
@@ -250,18 +244,14 @@ public class FtpDirPage extends ColoredWizardPage {
 		this.url = url;
 		if (ticket != null) {
 			ftp = (FTPClient) service.getClient(ticket, url);
-			if (ftp != null) {
+			if (ftp != null)
 				try {
 					dir = url.getPath();
-					if (!dir.isEmpty()) {
-						boolean result = ftp.changeWorkingDirectory(dir);
-						if (!result)
-							ftp = null;
-					}
+					if (!dir.isEmpty() && !ftp.changeWorkingDirectory(dir))
+						ftp = null;
 				} catch (IOException e) {
 					ftp = null;
 				}
-			}
 			if (ftp != null)
 				viewer.setInput(ftp);
 		}
@@ -324,9 +314,8 @@ public class FtpDirPage extends ColoredWizardPage {
 						else
 							dirPath = stripSlashes(dirPaths.get(parent));
 						try {
-							URI uri = new URI(
-									prefix + (dirPath.isEmpty() ? file.getName() : dirPath + '/' + file.getName()));
-							list.add(uri);
+							list.add(new URI(
+									prefix + (dirPath.isEmpty() ? file.getName() : dirPath + '/' + file.getName())));
 						} catch (URISyntaxException e) {
 							// should never happen
 						}

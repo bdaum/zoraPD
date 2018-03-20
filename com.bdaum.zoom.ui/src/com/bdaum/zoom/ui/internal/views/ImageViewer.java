@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -34,6 +34,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -52,8 +53,6 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Device;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -486,7 +485,6 @@ public class ImageViewer implements KeyListener, IMediaViewer, HelpListener, UiC
 	private Canvas bottomCanvas;
 	private Display display;
 	private File file;
-	private Font font;
 	private TextLayout tlayout;
 	private HighResJob highResJob;
 	private Canvas topCanvas;
@@ -719,12 +717,7 @@ public class ImageViewer implements KeyListener, IMediaViewer, HelpListener, UiC
 						tlayout = new TextLayout(display);
 						tlayout.setAlignment(SWT.CENTER);
 						tlayout.setWidth(sbnds.width);
-						if (font == null) {
-							FontData fontData = display.getSystemFont().getFontData()[0];
-							fontData.setHeight(18);
-							font = new Font(display, fontData);
-						}
-						tlayout.setFont(font);
+						tlayout.setFont(JFaceResources.getFont(UiConstants.VIEWERFONT));
 					}
 					tlayout.setText(text);
 					Rectangle tbounds = tlayout.getBounds();
@@ -1059,12 +1052,14 @@ public class ImageViewer implements KeyListener, IMediaViewer, HelpListener, UiC
 			controlRegion.dispose();
 			controlRegion = null;
 		}
-		if (tlayout != null)
+		if (tlayout != null) {
 			tlayout.dispose();
-		if (font != null)
-			font.dispose();
-		if (image != null)
+			tlayout = null;
+		}
+		if (image != null) {
 			image.dispose();
+			image = null;
+		}
 	}
 
 	private void resetView() {

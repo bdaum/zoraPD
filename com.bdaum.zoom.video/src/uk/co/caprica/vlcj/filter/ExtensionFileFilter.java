@@ -50,7 +50,7 @@ public abstract class ExtensionFileFilter implements FileFilter {
      * @param extensions file extensions to accept
      */
     protected ExtensionFileFilter(String[] extensions) {
-        this.extensions = Utilities.copyOf(extensions, extensions.length);
+        this.extensions = Arrays.copyOf(extensions, extensions.length);
         Arrays.sort(this.extensions);
         for(String extension : extensions)
 			extensionsSet.add(extension);
@@ -64,7 +64,7 @@ public abstract class ExtensionFileFilter implements FileFilter {
      * @return file extensions accepted by the filter
      */
     public String[] getExtensions() {
-        return Utilities.copyOf(extensions, extensions.length);
+        return Arrays.copyOf(extensions, extensions.length);
     }
 
     /**

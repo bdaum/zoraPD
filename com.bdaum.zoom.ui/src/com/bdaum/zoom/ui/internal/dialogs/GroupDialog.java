@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -25,7 +25,6 @@ import java.util.GregorianCalendar;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -84,9 +83,6 @@ public class GroupDialog extends ZTitleAreaDialog {
 	private RadioButtonGroup locationButtons;
 	private String annotations;
 	private CTabFolder tabFolder;
-	private CTabItem tabItem0;
-	private CTabItem tabItem1;
-	private CTabItem tabItem2;
 	private LabelConfigGroup labelConfigGroup;
 	private int showLabel;
 	private String labelTemplate;
@@ -177,15 +173,14 @@ public class GroupDialog extends ZTitleAreaDialog {
 		tabFolder = new CTabFolder(area, SWT.BORDER);
 		tabFolder.setLayoutData(new GridData(GridData.FILL_BOTH));
 		tabFolder.setSimple(false);
-		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.GroupDialog_general);
-		tabItem0.setControl(createGeneralGroup(tabFolder));
-		if (isAuto() || isRating() || isImports() || isLocations() || isTimeline()) {
-			tabItem1 = UiUtilities.createTabItem(tabFolder,
-					isAuto() ? Messages.GroupDialog_rules : Messages.GroupDialog_collectionFilter);
-			tabItem1.setControl(createFilterGroup(tabFolder));
-		}
-		tabItem2 = UiUtilities.createTabItem(tabFolder, Messages.GroupDialog_appearance);
-		tabItem2.setControl(createAppearanceGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.GroupDialog_general, null).setControl(createGeneralGroup(tabFolder));
+		if (isAuto() || isRating() || isImports() || isLocations() || isTimeline())
+			UiUtilities
+					.createTabItem(tabFolder,
+							isAuto() ? Messages.GroupDialog_rules : Messages.GroupDialog_collectionFilter, null)
+					.setControl(createFilterGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.GroupDialog_appearance, null)
+				.setControl(createAppearanceGroup(tabFolder));
 		return area;
 	}
 
@@ -235,7 +230,7 @@ public class GroupDialog extends ZTitleAreaDialog {
 							AutoPreferencePage.RULES).open();
 				}
 			});
-			ruleComponent = new AutoRuleComponent(autoArea, this);
+			ruleComponent = new AutoRuleComponent(autoArea, SWT.SHORT, this);
 		} else if (isRating()) {
 			CGroup ratingArea = new CGroup(composite, SWT.NONE);
 			ratingArea.setText(Messages.GroupDialog_filter);
@@ -371,6 +366,8 @@ public class GroupDialog extends ZTitleAreaDialog {
 		annotations = computeAnnotations();
 		showLabel = labelConfigGroup.getSelection();
 		labelTemplate = labelConfigGroup.getTemplate();
+		if (isAuto() && overwriteButton.getSelection())
+			ruleComponent.accelerate();
 		super.okPressed();
 	}
 

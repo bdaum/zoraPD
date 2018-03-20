@@ -15,28 +15,54 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  
  */
 package com.bdaum.zoom.core;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.osgi.util.NLS;
 
 /**
- * A container containing some object
+ * A Ticketbox represents an FTP session. It can download files via URI. Tempfiles are cleaned up before each download and at the end of the session
+ * Ticketbox can also compile an error message from the errands. 
+ * Typical use:
+ *    try (Ticketbox box = new Ticketbox()) {
+ *    	...
+ *    	File file1 = box.obtainFile(uri1);
+ *    	...
+ *     	File file2 = box.obtainFile(uri2);
+ *    	...
+ *   	String errorMessage = box.getErrorMessage();
+ *    }
  *
  */
-public class Ticketbox {
-	/**
-	 * The object
-	 */
+public class Ticketbox implements AutoCloseable {
+
 	public Object ticket;
 	private File tempFile;
+	private Set<String> volumes;
+	private String errand;
+	private int errs = 0;
+
+	public static String computeErrorMessage(int errs, String errand1, Set<String> volumes) {
+		switch (errs) {
+		case 0:
+			return null;
+		case 1:
+			if (volumes == null)
+				return NLS.bind(Messages.Ticketbox_file_delete_offline, errand1);
+			return NLS.bind(Messages.Ticketbox_file_offline, errand1, volumes.toArray()[0]);
+		default:
+			if (volumes == null)
+				return NLS.bind(Messages.Ticketbox_n_files_deleted_offline, errs);
+			return NLS.bind(Messages.Ticketbox_files_offline, errs, Core.toStringList(volumes.toArray(), ", ")); //$NON-NLS-1$
+		}
+	}
 
 	/**
 	 * Download a file
@@ -52,62 +78,53 @@ public class Ticketbox {
 
 	/**
 	 * Provides a local file or downloads a remote file
-	 * @param uri  - URI of source file
-	 * @return - local or remote file
+	 * 
+	 * @param uri
+	 *            - URI of source file
+	 * @return - local or from remote downloaded file
 	 * @throws IOException
 	 */
 	public File obtainFile(URI uri) throws IOException {
-		tempFile = null;
+		cleanup();
 		if (Constants.FILESCHEME.equals(uri.getScheme()))
 			return new File(uri);
-		tempFile = download(uri);
-		return tempFile;
+		return tempFile = download(uri);
 	}
 
-	/**
-	 * Disposes of resources after file provision
-	 */
-	public void cleanup() {
+	public void addErrand(String errand, String volume) {
+		if (errs++ == 0)
+			this.errand = errand;
+		if (volume != null && !volume.isEmpty()) {
+			if (volumes == null)
+				volumes = new HashSet<String>(7);
+			volumes.add(volume);
+		}
+	}
+
+	private void cleanup() {
 		if (tempFile != null) {
 			tempFile.delete();
 			tempFile = null;
 		}
 	}
 
-	/**
-	 * End FTP session
-	 */
-	public void endSession() {
-		Core.endSession(this);
-	}
-
-	public static String computeErrorMessage(List<String> errands, Set<String> volumes) {
-		if (!errands.isEmpty()) {
-			String msg;
-			if (errands.size() == 1) {
-				msg = NLS.bind(Messages.Ticketbox_file_offline, errands.get(0),
-						volumes.toArray()[0]);
-			} else {
-				StringBuilder sb = new StringBuilder();
-				for (String volume : volumes) {
-					if (sb.length() > 0)
-						sb.append(", "); //$NON-NLS-1$
-					sb.append(volume);
-				}
-				msg = NLS.bind(Messages.Ticketbox_files_offline,
-						errands.size(), sb.toString());
-
-			}
-			return msg;
-		}
-		return null;
+	public String getErrorMessage() {
+		return computeErrorMessage(errs, errand, volumes);
 	}
 
 	/**
 	 * Tests if a file provision was local
-	 * @return - triu if local
+	 * 
+	 * @return - true if local
 	 */
 	public boolean isLocal() {
 		return tempFile == null;
+	}
+
+	@Override
+	public void close() {
+		cleanup();
+		if (ticket != null)
+			Core.endSession(this);
 	}
 }

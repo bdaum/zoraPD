@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2011 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.html;
@@ -510,12 +510,11 @@ public class HtmlContentAssistant implements IContentAssistProcessor {
 		if (parent != null) {
 			parent = parent.intern();
 			boolean found = false;
-			for (int j = 0; j < STYLEPARENTS.length; j++) {
+			for (int j = 0; j < STYLEPARENTS.length; j++)
 				if (parent == STYLEPARENTS[j]) {
 					found = true;
 					break;
 				}
-			}
 			if (!found)
 				return propList;
 		}
@@ -533,7 +532,6 @@ public class HtmlContentAssistant implements IContentAssistProcessor {
 					displayString, null, insert));
 		}
 		for (int i = 0; i < BRACKETS.length; i++) {
-
 			String left, right;
 			left = right = BRACKETS[i];
 			int p = left.indexOf(' ');
@@ -554,7 +552,7 @@ public class HtmlContentAssistant implements IContentAssistProcessor {
 
 	private static String getQualifier(IDocument doc, int documentOffset) {
 		StringBuffer buf = new StringBuffer();
-		while (true) {
+		while (true)
 			try {
 				char c = doc.getChar(--documentOffset);
 				if (c == '>' || Character.isWhitespace(c))
@@ -565,7 +563,6 @@ public class HtmlContentAssistant implements IContentAssistProcessor {
 			} catch (BadLocationException e) {
 				break;
 			}
-		}
 		return ""; //$NON-NLS-1$
 	}
 
@@ -621,12 +618,11 @@ public class HtmlContentAssistant implements IContentAssistProcessor {
 		if (parent != null) {
 			parent = parent.intern();
 			boolean found = false;
-			for (int j = 0; j < STYLEPARENTS.length; j++) {
+			for (int j = 0; j < STYLEPARENTS.length; j++)
 				if (parent == STYLEPARENTS[j]) {
 					found = true;
 					break;
 				}
-			}
 			if (!found)
 				return propList;
 		}

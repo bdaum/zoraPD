@@ -15,17 +15,12 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.net.communities.ui;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -45,10 +40,9 @@ import org.scohen.juploadr.uploadapi.CommunicationException;
 import org.scohen.juploadr.uploadapi.Session;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.core.IVolumeManager;
-import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.net.communities.CommunityAccount;
 import com.bdaum.zoom.net.communities.CommunityApi;
@@ -161,41 +155,16 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 	}
 
 	private void checkImages() {
-		final Set<String> volumes = new HashSet<String>();
-		final List<String> errands = new ArrayList<String>();
-		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
 		int allmx = 16;
-		Ticketbox box = new Ticketbox();
-		try {
-			for (Asset asset : assets) {
-				URI uri = volumeManager.findFile(asset);
-				File file = null;
-				if (uri != null) {
-					try {
-						file = box.obtainFile(uri);
-					} catch (IOException e) {
-						errands.add(uri.toString());
-					}
+		try (Assetbox box = new Assetbox(assets, null, false)) {
+			for (File file : box)
+				if (file != null) {
+					Asset asset = box.getAsset();
+					allmx = Math.max(allmx, Math.max(asset.getWidth(), asset.getHeight()));
 				}
-				if (file != null)
-					try {
-						if (volumeManager.findExistingFile(asset, false) != null)
-							allmx = Math.max(allmx, Math.max(asset.getWidth(), asset.getHeight()));
-						else {
-							String volume = asset.getVolume();
-							if (volume != null && !volume.isEmpty())
-								volumes.add(volume);
-							errands.add(file.getAbsolutePath());
-						}
-					} finally {
-						box.cleanup();
-					}
-			}
-		} finally {
-			box.endSession();
+			setErrorMessage(box.getErrorMessage());
 		}
 		exportModeGroup.setMaximumDim(allmx);
-		setErrorMessage(Ticketbox.computeErrorMessage(errands, volumes));
 		exportModeGroup.updateScale();
 	}
 
@@ -218,13 +187,12 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 		Session session = new Session(api, acc);
 		session.init();
 		if (acc.isAuthenticated()) {
-			new ExportToCommunityJob(configElement, assets, associatedAlbums, titles, descriptions, getMode(), getSizing(),
-					exportModeGroup.getScalingFactor(), exportModeGroup.getDimension(), exportModeGroup.getCropMode(),
-					exportModeGroup.getUnsharpMask(), exportModeGroup.getJpegQuality(),
+			new ExportToCommunityJob(configElement, assets, associatedAlbums, titles, descriptions, getMode(),
+					getSizing(), exportModeGroup.getScalingFactor(), exportModeGroup.getDimension(),
+					exportModeGroup.getCropMode(), exportModeGroup.getUnsharpMask(), exportModeGroup.getJpegQuality(),
 					session, getIncludeMeta() ? ((CommunityExportWizard) getWizard()).getFilter() : null,
-					descriptionButton.getSelection(),
-					watermarkGroup.getCreateWatermark(), watermarkGroup.getCopyright(),
-					this).schedule();
+					descriptionButton.getSelection(), watermarkGroup.getCreateWatermark(),
+					watermarkGroup.getCopyright(), this).schedule();
 			return true;
 		}
 		return false;

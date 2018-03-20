@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009-2015 Berthold Daum.
+ * Copyright (c) 2009-2018 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -46,17 +46,11 @@ import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.IConverter;
 import com.bdaum.zoom.program.IRawConverter;
 
-/**
- * @author bdaum
- *
- */
 @SuppressWarnings("restriction")
 public class HighresImageLoader {
 	public class CleanerJob extends Daemon {
-
 		public CleanerJob() {
-			super(Messages.HighresImageLoader_cleaning_temp,
-					BatchConstants.MAXTEMPFILEAGE * 2);
+			super(Messages.HighresImageLoader_cleaning_temp, BatchConstants.MAXTEMPFILEAGE * 2);
 		}
 
 		@Override
@@ -100,35 +94,29 @@ public class HighresImageLoader {
 			this.original = original;
 			this.options = options;
 			this.rawConverterId = rawConverterId;
-			lastModified = BatchUtilities
-					.getImageFileModificationTimestamp(original);
+			lastModified = BatchUtilities.getImageFileModificationTimestamp(original);
 		}
 
 		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof ImageKey)
-				return ((ImageKey) obj).original.equals(original)
-						&& ((ImageKey) obj).options.equals(options)
-						&& ((ImageKey) obj).rawConverterId
-								.equals(rawConverterId);
+				return ((ImageKey) obj).original.equals(original) && ((ImageKey) obj).options.equals(options)
+						&& ((ImageKey) obj).rawConverterId.equals(rawConverterId);
 			return false;
 		}
 
 		@Override
 		public int hashCode() {
-			return (original.hashCode() * 31 + options.hashCode()) * 31
-					+ rawConverterId.hashCode();
+			return (original.hashCode() * 31 + options.hashCode()) * 31 + rawConverterId.hashCode();
 		}
 
 		public boolean isOutdated(ImageEntry entry) {
 			return !entry.getConverted().exists()
-					|| BatchUtilities
-							.getImageFileModificationTimestamp(original) > lastModified;
+					|| BatchUtilities.getImageFileModificationTimestamp(original) > lastModified;
 		}
 
 	}
 
-	// private static DcrawConfiguration dcrawConfig;
 	private long timestamp;
 	private boolean PROFILING = false;
 	private int total;
@@ -142,10 +130,10 @@ public class HighresImageLoader {
 
 	/**
 	 * @param monitor
-	 *            the progress monitor to use for reporting progress to the
-	 *            user. It is the caller's responsibility to call done() on the
-	 *            given monitor. Accepts null, indicating that no progress
-	 *            should be reported and that the operation cannot be cancelled.
+	 *            the progress monitor to use for reporting progress to the user. It
+	 *            is the caller's responsibility to call done() on the given
+	 *            monitor. Accepts null, indicating that no progress should be
+	 *            reported and that the operation cannot be cancelled.
 	 * @param status
 	 *            the status object receiving error messages
 	 * @param file
@@ -155,10 +143,13 @@ public class HighresImageLoader {
 	 * @param flen35mm
 	 *            - focal length equivalent to 35mm film
 	 * @param bounds
-	 *            desired size, if null, factor applies
+	 *            - desired size, if null, scalingFactor applies to scale only for
+	 *            height, set bounds.with negative to scale only for width, set
+	 *            bound.height negative Note that the absolute values of width and
+	 *            height are also used to determine the orientation
 	 * @param scalingFactor
-	 *            factor applies if bounds == null
-	 *            set to 0 for full resolution without subsampling
+	 *            factor applies if bounds == null set to 0 for full resolution
+	 *            without subsampling
 	 * @param maxFactor
 	 *            maxFactor limits the scaling factor when bounds != null
 	 * @param advanced
@@ -180,13 +171,13 @@ public class HighresImageLoader {
 	 * @param recipeOrRecipeProvider
 	 *            RAW recipe or a RAW recipe provider or null
 	 * @return the loaded image
-	 * @throws UnsupportedOperationException if file format is not supported
+	 * @throws UnsupportedOperationException
+	 *             if file format is not supported
 	 */
-	public ZImage loadImage(IProgressMonitor monitor, MultiStatus status,
-			File file, int rotation, final double flen35mm, Rectangle bounds,
-			double scalingFactor, double maxFactor, boolean advanced, int cms,
-			RGB bw, UnsharpMask umask, Recipe recipe, IFileWatcher fileWatcher,
-			String opId, LoaderListener listener) throws UnsupportedOperationException {
+	public ZImage loadImage(IProgressMonitor monitor, MultiStatus status, File file, int rotation,
+			final double flen35mm, Rectangle bounds, double scalingFactor, double maxFactor, boolean advanced, int cms,
+			RGB bw, UnsharpMask umask, Recipe recipe, IFileWatcher fileWatcher, String opId, LoaderListener listener)
+			throws UnsupportedOperationException {
 		total = 1000;
 		worked = 0;
 		if (monitor != null)
@@ -197,33 +188,29 @@ public class HighresImageLoader {
 		String name = file.getName();
 		int p = name.lastIndexOf('.');
 		String uriString = file.toURI().toString();
-		String extension = (p >= 0) ? name.substring(p + 1).toLowerCase()
-				: ImageUtilities.detectImageFormat(uriString);
+		String extension = (p >= 0) ? name.substring(p + 1).toLowerCase() : ImageUtilities.detectImageFormat(uriString);
 		if (!ImageConstants.getAllFormats().contains(extension))
-			throw new UnsupportedOperationException(NLS.bind(
-					Messages.HighresImageLoader_image_format_not_supported, file)) ;
+			throw new UnsupportedOperationException(
+					NLS.bind(Messages.HighresImageLoader_image_format_not_supported, file));
 		File workfile = file;
 		boolean isRawOrDng = ImageConstants.isRaw(name, true);
 		profile(null);
 		if (isRawOrDng) {
 			BatchActivator activator = BatchActivator.getDefault();
-			IRawConverter rawConverter = activator
-					.getCurrentRawConverter(false);
+			IRawConverter rawConverter = activator.getCurrentRawConverter(false);
 			if (rawConverter == null || !rawConverter.isValid()) {
 				if (!activator.isRawQuestionAsked()) {
-					rawConverter = Core.getCore().getDbFactory()
-							.getErrorHandler().showRawDialog(null);
+					rawConverter = Core.getCore().getDbFactory().getErrorHandler().showRawDialog(null);
 					activator.setRawQuestionAsked(true);
 				}
 				if (rawConverter == null || !rawConverter.isValid()) {
-					addErrorStatus(status,
-							Messages.HighresImageLoader_no_raw_converter, null);
+					addErrorStatus(status, Messages.HighresImageLoader_no_raw_converter, null);
 					return null;
 				}
 			}
 			if (rawConverter.isDetectors()) {
-				rawRecipe = recipe != null ? recipe : rawConverter.getRecipe(
-						uriString, false, new IFocalLengthProvider() {
+				rawRecipe = recipe != null ? recipe
+						: rawConverter.getRecipe(uriString, false, new IFocalLengthProvider() {
 							public double get35mm() {
 								return flen35mm;
 							}
@@ -238,8 +225,7 @@ public class HighresImageLoader {
 				resolution = IRawConverter.HIGH;
 			else
 				resolution = IRawConverter.MEDIUM;
-			int factor = rawConverter.deriveOptions(rawRecipe, options,
-					resolution);
+			int factor = rawConverter.deriveOptions(rawRecipe, options, resolution);
 			scalingFactor *= factor;
 			if (rawRecipe != null) {
 				rawRecipe.setScaling(scalingFactor > 0 ? (float) scalingFactor : 1f);
@@ -258,59 +244,42 @@ public class HighresImageLoader {
 			}
 			if (workfile == null) {
 				try {
-					workfile = activator.convertFile(file,
-							rawConverter.getId(), rawConverter.getPath(),
-							options, true, fileWatcher, opId, null);
+					workfile = activator.convertFile(file, rawConverter.getId(), rawConverter.getPath(), options, true,
+							fileWatcher, opId, null);
 					if (workfile == null) {
-						addErrorStatus(
-								status,
-								NLS.bind(
-										Messages.HighresImageLoader_DCRAWconversion_failed,
-										file), null);
+						addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_DCRAWconversion_failed, file),
+								null);
 						return null;
 					}
 					imageDirectory.put(key, new ImageEntry(workfile));
-					if (reportProgress(monitor,
-							Messages.HighresImageLoader_DCRAW_conversion,
-							listener))
+					if (reportProgress(monitor, Messages.HighresImageLoader_DCRAW_conversion, listener))
 						return null;
 				} catch (ConversionException e) {
-					addErrorStatus(status, NLS.bind(
-							Messages.HighresImageLoader_DCRAWconversion_failed,
-							file), e);
+					addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_DCRAWconversion_failed, file), e);
 					return null;
 				}
 			}
 			extension = "tif"; //$NON-NLS-1$
 		}
-		ColorConvertOp cop = (cms != ImageConstants.NOCMS && !isRawOrDng) ? computeColorConvertOp(
-				workfile, cms) : null;
+		ColorConvertOp cop = (cms != ImageConstants.NOCMS && !isRawOrDng) ? computeColorConvertOp(workfile, cms) : null;
 		try {
-			return ZImage.loadImage(workfile, extension, rotation, bounds,
-					scalingFactor, maxFactor, advanced, bw, umask,
-					cop, rawRecipe);
+			return ZImage.loadImage(workfile, extension, rotation, bounds, scalingFactor, maxFactor, advanced, bw,
+					umask, cop, rawRecipe);
 		} catch (OutOfMemoryError e) {
-			addErrorStatus(
-					status,
-					NLS.bind(
-							Messages.HighresImageLoader_Not_enough_memory_to_open,
-							file), e);
+			addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_Not_enough_memory_to_open, file), e);
 			return null;
 		} catch (Exception e) {
-			addErrorStatus(status, NLS.bind(
-					Messages.HighresImageLoader_error_loading_image, file), e);
+			addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_error_loading_image, file), e);
 			return null;
 		}
 	}
 
 	private static ColorConvertOp computeColorConvertOp(File workfile, int cms) {
 		ICC_Profile sourceProfile = new ExifTool(workfile, true).getICCProfile();
-		return ImageActivator.getDefault().computeColorConvertOp(sourceProfile,
-				cms);
+		return ImageActivator.getDefault().computeColorConvertOp(sourceProfile, cms);
 	}
 
-	private boolean reportProgress(IProgressMonitor monitor, String profile,
-			LoaderListener listener) {
+	private boolean reportProgress(IProgressMonitor monitor, String profile, LoaderListener listener) {
 		if (profile != null)
 			profile(profile);
 		int incr = (total - worked) / 2;
@@ -333,25 +302,20 @@ public class HighresImageLoader {
 	private void profile(String label) {
 		if (PROFILING) {
 			long time = System.currentTimeMillis();
-			System.out
-					.println(label == null ? "-------------" : label + ": " + (time - timestamp)); //$NON-NLS-1$ //$NON-NLS-2$
+			System.out.println(label == null ? "-------------" : label + ": " + (time - timestamp)); //$NON-NLS-1$ //$NON-NLS-2$
 			timestamp = time;
 		}
 	}
 
 	private static void addErrorStatus(MultiStatus status, String message, Throwable t) {
-		status.add(new Status(IStatus.ERROR, BatchActivator.PLUGIN_ID, message,
-				t));
+		status.add(new Status(IStatus.ERROR, BatchActivator.PLUGIN_ID, message, t));
 	}
-
 
 	protected void cleanDirectory() {
 		Set<Entry<ImageKey, ImageEntry>> entrySet = imageDirectory.entrySet();
 		@SuppressWarnings("unchecked")
-		Entry<ImageKey, ImageEntry>[] entries = entrySet
-				.toArray(new Entry[entrySet.size()]);
-		long maxAge = System.currentTimeMillis()
-				- BatchConstants.MAXTEMPFILEAGE;
+		Entry<ImageKey, ImageEntry>[] entries = entrySet.toArray(new Entry[entrySet.size()]);
+		long maxAge = System.currentTimeMillis() - BatchConstants.MAXTEMPFILEAGE;
 		for (Entry<ImageKey, ImageEntry> entry : entries) {
 			ImageEntry imageEntry = entry.getValue();
 			if (imageEntry.getLastAccess() < maxAge) {

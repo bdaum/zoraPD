@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2015 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -31,12 +31,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
-import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ComboBoxCellEditor;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.EditingSupport;
@@ -48,7 +48,6 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewerColumn;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabItem;
@@ -76,6 +75,7 @@ import com.bdaum.zoom.core.IRecipeDetector;
 import com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter;
 import com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter.IRecipeParameterValue;
 import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.IRawConverter;
@@ -84,6 +84,7 @@ import com.bdaum.zoom.program.IRawConverter.RawProperty.RawEnum;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.dialogs.AllNoneGroup;
 import com.bdaum.zoom.ui.internal.job.UpdateRawImagesJob;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
@@ -101,6 +102,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 	public static final String ID = "com.bdaum.zoom.ui.preferences.ImportPreferencePage"; //$NON-NLS-1$
 	public static final String DNG = "dng"; //$NON-NLS-1$
 	public static final String RAW = "raw"; //$NON-NLS-1$
+	private static final String SETTINGSID = "com.bdaum.zoom.importPreferencePage"; //$NON-NLS-1$
 
 	private CGroup basicsGroup, optionsGroup, recipeGroup;
 
@@ -112,9 +114,9 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 	private CheckboxTableViewer recipeViewer;
 
 	private ComboViewer rcViewer, modeviewer;
-	
+
 	private FileEditor dngpathEditor;
-	
+
 	private Text dngfolderField;
 
 	private Label thumbnailWarning;
@@ -140,31 +142,31 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 	private String previousUsesRecipes = ""; //$NON-NLS-1$
 
 	private IRawConverter previousRawConverter;
+	private IDialogSettings dialogSettings;
 
 	public ImportPreferencePage() {
 		setDescription(Messages.getString("ImportPreferencePage.control_how_images_are_imported")); //$NON-NLS-1$
+		dialogSettings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
 	}
 
 	@Override
 	public void applyData(Object data) {
-		if (RAW.equals(data))
-			tabFolder.setSelection(tabItem1);
-		else if (tabItem2 != null && DNG.equals(data))
-			tabFolder.setSelection(tabItem2);
-		else
-			tabFolder.setSelection(tabItem0);
+		tabFolder
+				.setSelection(RAW.equals(data) ? tabItem1 : tabItem2 != null && DNG.equals(data) ? tabItem2 : tabItem0);
 	}
 
 	@Override
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.IMPORT_PREFERENCE_PAGE);
 		createTabFolder(composite, "Import"); //$NON-NLS-1$
-		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.getString("ImportPreferencePage.general")); //$NON-NLS-1$
+		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.getString("ImportPreferencePage.general"), null); //$NON-NLS-1$
 		tabItem0.setControl(createGeneralGroup(tabFolder));
-		tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.getString("ImportPreferencePage.raw_conversion")); //$NON-NLS-1$
+		tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.getString("ImportPreferencePage.raw_conversion"), //$NON-NLS-1$
+				Messages.getString("ImportPreferencePage.raw_tooltip")); //$NON-NLS-1$
 		tabItem1.setControl(createRawGroup(tabFolder));
 		if (Constants.WIN32 || Constants.OSX) {
-			tabItem2 = UiUtilities.createTabItem(tabFolder, Messages.getString("ImportPreferencePage.dng_conversion")); //$NON-NLS-1$
+			tabItem2 = UiUtilities.createTabItem(tabFolder, Messages.getString("ImportPreferencePage.dng_conversion"), //$NON-NLS-1$
+					Messages.getString("ImportPreferencePage.dng_tooltip")); //$NON-NLS-1$
 			tabItem2.setControl(createDngGroup(tabFolder));
 		}
 		createExtensions(tabFolder, "com.bdaum.zoom.ui.preferences.ImportPreferencePage"); //$NON-NLS-1$
@@ -331,7 +333,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 		});
 		dngpathEditor = new FileEditor(basicsGroup, SWT.OPEN | SWT.READ_ONLY,
 				Messages.getString("ImportPreferencePage.location_Adobe_DNG_converter"), //$NON-NLS-1$
-				true, Constants.EXEEXTENSION, Constants.EXEFILTERNAMES, null, null, false);
+				true, Constants.EXEEXTENSION, Constants.EXEFILTERNAMES, null, null, false, dialogSettings);
 		dngpathEditor.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		dngpathEditor.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
@@ -417,7 +419,8 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 						NLS.bind(IRawConverter.OPTIONAL.equals(exec)
 								? Messages.getString("ImportPreferencePage.external_executable") //$NON-NLS-1$
 								: Messages.getString("ImportPreferencePage.executable"), rc.getName()), //$NON-NLS-1$
-						true, Constants.EXEEXTENSION, Constants.EXEFILTERNAMES, null, null, false, true);
+						true, Constants.EXEEXTENSION, Constants.EXEFILTERNAMES, null, null, false, true,
+						dialogSettings);
 				fileEditor.addModifyListener(new ModifyListener() {
 					public void modifyText(ModifyEvent e) {
 						validate();
@@ -540,25 +543,26 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 
 	@SuppressWarnings("unused")
 	private void createRecipeGroup(Composite composite) {
-		recipeGroup = UiUtilities.createGroup(composite, 2, Messages.getString("ImportPreferencePage.recipe_detectors")); //$NON-NLS-1$
+		recipeGroup = UiUtilities.createGroup(composite, 2,
+				Messages.getString("ImportPreferencePage.recipe_detectors")); //$NON-NLS-1$
 		recipeViewer = CheckboxTableViewer.newCheckList(recipeGroup,
 				SWT.SINGLE | SWT.V_SCROLL | SWT.BORDER | SWT.FULL_SELECTION);
 		recipeViewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		TableViewerColumn col1 = new TableViewerColumn(recipeViewer, SWT.NONE);
 		col1.getColumn().setWidth(250);
 		col1.getColumn().setText(Messages.getString("ImportPreferencePage.raw_converter")); //$NON-NLS-1$
-		col1.setLabelProvider(new ColumnLabelProvider() {
+		col1.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof IRecipeDetector)
 					return ((IRecipeDetector) element).getName();
-				return super.getText(element);
+				return element.toString();
 			}
 		});
 		TableViewerColumn col2 = new TableViewerColumn(recipeViewer, SWT.NONE);
 		col2.getColumn().setWidth(350);
 		col2.getColumn().setText(Messages.getString("ImportPreferencePage.configuration")); //$NON-NLS-1$
-		col2.setLabelProvider(new ColumnLabelProvider() {
+		col2.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof IRecipeDetector) {
@@ -573,11 +577,10 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 					}
 					return sb.toString();
 				}
-				return super.getText(element);
+				return element.toString();
 			}
 		});
 		col2.setEditingSupport(new EditingSupport(recipeViewer) {
-
 			@Override
 			protected void setValue(Object element, Object value) {
 				if (element instanceof IRecipeDetector && value instanceof Integer) {
@@ -652,7 +655,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 				return false;
 			}
 		});
-		recipeViewer.setComparator(new ViewerComparator());
+		recipeViewer.setComparator(ZViewerComparator.INSTANCE);
 		recipeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateRecipeButtons();

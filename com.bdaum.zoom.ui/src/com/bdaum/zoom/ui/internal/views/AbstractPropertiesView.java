@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -31,13 +31,13 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -50,6 +50,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewer;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -61,7 +62,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
@@ -93,10 +93,12 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.TrackRecord;
 import com.bdaum.zoom.cat.model.asset.TrackRecordImpl;
 import com.bdaum.zoom.cat.model.creatorsContact.ContactImpl;
+import com.bdaum.zoom.cat.model.creatorsContact.CreatorsContactImpl;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.location.LocationImpl;
+import com.bdaum.zoom.cat.model.locationCreated.LocationCreatedImpl;
 import com.bdaum.zoom.cat.model.locationShown.LocationShownImpl;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.CatalogAdapter;
@@ -118,6 +120,7 @@ import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.Icons.Icon;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.dialogs.MetadataLabelProvider;
 import com.bdaum.zoom.ui.internal.job.SupplyPropertyJob;
 import com.bdaum.zoom.ui.internal.preferences.MetadataPreferencePage;
@@ -130,15 +133,13 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		@Override
 		public boolean select(Viewer aViewer, Object parentElement, Object element) {
 			if (element instanceof QueryField) {
-				if (((QueryField) element).isHidden())
+				if (((QueryField) element).isHidden() || !isApplicable((QueryField) element))
 					return false;
 				switch (mode) {
 				case MODE_SHOW_ESSENTIAL:
-					return essentials.contains(element) && isApplicable((QueryField) element);
+					return essentials.contains(element);
 				case MODE_SHOW_EDITABLE:
-					return isEditable((QueryField) element) && isApplicable((QueryField) element);
-				default:
-					return isApplicable((QueryField) element);
+					return isEditable((QueryField) element);
 				}
 			}
 			return true;
@@ -297,25 +298,6 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 					updateAssetsIfNecessary(qfield, value, oldvalue);
 				}
 			}
-		}
-	}
-
-	public static class ViewComparator extends ViewerComparator {
-
-		@Override
-		public int compare(Viewer viewer, Object e1, Object e2) {
-			if (e1 instanceof QueryField && e2 instanceof QueryField) {
-				String lab1 = ((QueryField) e1).getLabel();
-				String lab2 = ((QueryField) e2).getLabel();
-				if (lab1 == lab2)
-					return 0;
-				if (lab1 == null)
-					return -1;
-				if (lab2 == null)
-					return 1;
-				return lab1.compareToIgnoreCase(lab2);
-			}
-			return super.compare(viewer, e1, e2);
 		}
 	}
 
@@ -552,6 +534,8 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 	private static Set<QueryField> essentials;
 
 	private int flags;
+	private Action expandAction;
+	private Action collapseAction;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -719,8 +703,9 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		col3.getColumn().setWidth(colWidth[2]);
 		col3.setLabelProvider(new ActionColumnLabelProvider());
 		viewer.setContentProvider(new MetadataContentProvider());
-		viewer.setComparator(new ViewComparator());
+		viewer.setComparator(ZViewerComparator.INSTANCE);
 		viewer.setFilters(new ViewerFilter[] { new DetailsViewerFilter(), new ContentTypeViewerFilter() });
+		ColumnViewerToolTipSupport.enableFor(viewer);
 		viewer.setInput(getRootElement());
 		parent.getDisplay().asyncExec(() -> {
 			if (!parent.isDisposed()) {
@@ -746,7 +731,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		});
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
-				updateActions();
+				updateActions(false);
 			}
 		});
 		UiUtilities.installDoubleClickExpansion(viewer);
@@ -765,17 +750,15 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 				}
 				if (col == 2) {
 					TreeItem item = tree.getItem(new Point(e.x, e.y));
-					if (item.getImage(2) != null) {
-						Object element = item.getData();
-						if (element instanceof QueryField) {
-							QueryField qfield = (QueryField) element;
-							if (qfield.getAction() != QueryField.ACTION_NONE)
-								processAction(qfield, (e.stateMask & SWT.SHIFT) != 0);
-						} else if (element instanceof TrackRecord) {
-							String visit = ((TrackRecord) element).getVisit();
-							if (visit != null)
-								showWebUrl(visit);
-						}
+					Object element = item.getData();
+					if (element instanceof QueryField) {
+						QueryField qfield = (QueryField) element;
+						if (qfield.getAction() != QueryField.ACTION_NONE)
+							processAction(qfield, (e.stateMask & SWT.SHIFT) != 0);
+					} else if (element instanceof TrackRecord) {
+						String visit = ((TrackRecord) element).getVisit();
+						if (visit != null)
+							showWebUrl(visit);
 					}
 				}
 			}
@@ -816,7 +799,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 				}
 			}
 		});
-		updateActions();
+		updateActions(false);
 	}
 
 	protected void hookContextMenu() {
@@ -1067,14 +1050,16 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 	protected abstract int[] getColumnWidths();
 
 	@Override
-	public void updateActions() {
-		if (deleteAction != null && !viewer.getControl().isDisposed()) {
-			Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
-			deleteAction.setEnabled((firstElement instanceof IndexedMember
-					|| firstElement instanceof QueryField && ((QueryField) firstElement).isStruct())
-					&& !dbIsReadonly());
+	public void updateActions(boolean force) {
+		if (viewActive || force && !viewer.getControl().isDisposed()) {
+			if (deleteAction != null) {
+				Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				deleteAction.setEnabled((firstElement instanceof IndexedMember
+						|| firstElement instanceof QueryField && ((QueryField) firstElement).isStruct())
+						&& !dbIsReadonly());
+			}
+			updateActions(-1, -1);
 		}
-		updateActions(-1, -1);
 	}
 
 	protected abstract int getExpandLevel();
@@ -1089,12 +1074,18 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 	}
 
 	private void fillLocalToolbar(IToolBarManager manager) {
-		if (deleteAction != null)
+		if (deleteAction != null) {
+			manager.add(expandAction);
+			manager.add(collapseAction);
 			manager.add(deleteAction);
+		}
 	}
 
 	protected void fillLocalPullDown(IMenuManager manager) {
 		if (essentialAction != null && allAction != null) {
+			manager.add(expandAction);
+			manager.add(collapseAction);
+			manager.add(new Separator());
 			manager.add(editableAction);
 			manager.add(essentialAction);
 			manager.add(allAction);
@@ -1107,7 +1098,6 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 	protected void makeActions() {
 		super.makeActions();
 		essentialAction = new Action(Messages.getString("AbstractPropertiesView.essential"), IAction.AS_RADIO_BUTTON) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				mode = MODE_SHOW_ESSENTIAL;
@@ -1116,7 +1106,6 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		};
 		essentialAction.setToolTipText(Messages.getString("AbstractPropertiesView.show_only_essential")); //$NON-NLS-1$
 		allAction = new Action(Messages.getString("AbstractPropertiesView.all"), IAction.AS_RADIO_BUTTON) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				mode = MODE_SHOW_ALL;
@@ -1125,7 +1114,6 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		};
 		allAction.setToolTipText(Messages.getString("AbstractPropertiesView.show_all_entries")); //$NON-NLS-1$
 		editableAction = new Action(Messages.getString("AbstractPropertiesView.editable"), IAction.AS_RADIO_BUTTON) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				mode = MODE_SHOW_EDITABLE;
@@ -1145,7 +1133,6 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 			break;
 		}
 		deleteAction = new Action(Messages.getString("AbstractPropertiesView.delete"), Icons.delete.getDescriptor()) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				deleteSubentry();
@@ -1153,17 +1140,16 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		};
 		deleteAction.setToolTipText(Messages.getString("AbstractPropertiesView.delete_subentry")); //$NON-NLS-1$
 		configureAction = new Action(Messages.getString("AbstractPropertiesView.Configure")) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				PreferencesUtil
-						.createPreferenceDialogOn(getSite().getShell(), MetadataPreferencePage.ID, new String[0], null)
+						.createPreferenceDialogOn(getSite().getShell(), MetadataPreferencePage.ID, new String[0],
+								"essential") //$NON-NLS-1$
 						.open();
 			}
 		};
 		configureAction.setToolTipText(Messages.getString("AbstractPropertiesView.Configure_tooltip")); //$NON-NLS-1$
 		fieldAction = new Action(Messages.getString("AbstractPropertiesView.find_similar")) { //$NON-NLS-1$
-
 			@Override
 			public void runWithEvent(Event event) {
 				Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
@@ -1171,6 +1157,21 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 					processAction((QueryField) firstElement, (event.stateMask & SWT.SHIFT) != 0);
 			}
 		};
+		fieldAction.setToolTipText(Messages.getString("AbstractPropertiesView.find_similar_tooltip")); //$NON-NLS-1$
+		expandAction = new Action(Messages.getString("CatalogView.expand_all"), Icons.expandAll.getDescriptor()) { //$NON-NLS-1$
+			@Override
+			public void run() {
+				viewer.expandAll();
+			}
+		};
+		expandAction.setToolTipText(Messages.getString("CatalogView.expand_all_tooltip")); //$NON-NLS-1$
+		collapseAction = new Action(Messages.getString("CatalogView.collapse_all"), Icons.collapseAll.getDescriptor()) { //$NON-NLS-1$
+			@Override
+			public void run() {
+				viewer.collapseAll();
+			}
+		};
+		collapseAction.setToolTipText(Messages.getString("CatalogView.collapse_all_tree_items")); //$NON-NLS-1$
 	}
 
 	protected void deleteSubentry() {
@@ -1181,11 +1182,46 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 			OperationJob.executeOperation(
 					new MultiModifyAssetOperation(indexedMember.getQfield(), null, indexedMember.getValue(), assets),
 					this);
-		} else if (firstElement instanceof QueryField && ((QueryField) firstElement).isStruct()) {
-			Object value = ((QueryField) firstElement).getStructRelationIds(assets);
-			if (value instanceof String && value != QueryField.VALUE_MIXED)
-				OperationJob.executeOperation(
-						new MultiModifyAssetOperation((QueryField) firstElement, null, value, assets), this);
+		} else if (firstElement instanceof QueryField) {
+			QueryField qfield = (QueryField) firstElement;
+			if (qfield.isStruct()) {
+				IDbManager dbManager = Core.getCore().getDbManager();
+				String oldId = null;
+				Object oldValue = null;
+				if (qfield == QueryField.IPTC_LOCATIONCREATED) {
+					for (Asset asset : assets) {
+						Iterator<LocationCreatedImpl> it = dbManager
+								.obtainStruct(LocationCreatedImpl.class, asset.getStringId(), true, null, null, false)
+								.iterator();
+						if (it.hasNext()) {
+							LocationCreatedImpl rel = it.next();
+							if (oldId == null)
+								oldId = rel.getLocation();
+							else if (!oldId.equals(rel.getLocation()))
+								return;
+						}
+					}
+					if (oldId != null)
+						oldValue = dbManager.obtainById(LocationImpl.class, oldId);
+				} else if (qfield == QueryField.IPTC_CONTACT) {
+					for (Asset asset : assets) {
+						Iterator<CreatorsContactImpl> it = dbManager
+								.obtainStruct(CreatorsContactImpl.class, asset.getStringId(), true, null, null, false)
+								.iterator();
+						if (it.hasNext()) {
+							CreatorsContactImpl rel = it.next();
+							if (oldId == null)
+								oldId = rel.getContact();
+							else if (!oldId.equals(rel.getContact()))
+								return;
+						}
+					}
+					if (oldId != null)
+						oldValue = dbManager.obtainById(ContactImpl.class, oldId);
+				}
+				if (oldValue != null)
+					OperationJob.executeOperation(new MultiModifyAssetOperation(qfield, null, oldValue, assets), this);
+			}
 		}
 	}
 
@@ -1207,27 +1243,30 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		int size = selection.size();
 		if (size == 0)
 			return FieldEntry.NOTHING;
-		List<Asset> selectedAssets = selection.getAssets();
 		FieldEntry entry = valueMap.get(qfield);
 		if (entry == null) {
 			if (size > ASYNCTHRESHOLD) {
 				valueMap.put(qfield, FieldEntry.PENDING);
-				new SupplyPropertyJob(qfield, selectedAssets, this).schedule();
+				new SupplyPropertyJob(qfield, selection.getAssets(), this).schedule();
 				return FieldEntry.PENDING;
 			}
-			entry = new FieldEntry(qfield.obtainFieldValue(selectedAssets, null), qfield.isEditable(selectedAssets),
-					qfield.isApplicable(selectedAssets));
-			valueMap.put(qfield, entry);
+			valueMap.put(qfield, entry = new FieldEntry(qfield.obtainFieldValue(selection.getAssets(), null)));
 		}
 		return entry;
 	}
 
 	boolean isEditable(QueryField qfield) {
-		return getFieldEntry(qfield).editable;
+		AssetSelection selection = getNavigationHistory().getSelectedAssets();
+		if (selection.isEmpty())
+			return true;
+		return qfield.isEditable(selection.getAssets());
 	}
 
 	boolean isApplicable(QueryField qfield) {
-		return getFieldEntry(qfield).applicable;
+		AssetSelection selection = getNavigationHistory().getSelectedAssets();
+		if (selection.isEmpty())
+			return true;
+		return qfield.isApplicable(selection.getAssets());
 	}
 
 	public ISelection getSelection() {
@@ -1245,7 +1284,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 	}
 
 	private void resetCaches() {
-		Job.getJobManager().cancel(Constants.PROPERTYPROVIDER);
+		cancelJobs(Constants.PROPERTYPROVIDER);
 		valueMap.clear();
 	}
 

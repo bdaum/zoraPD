@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.net.communities;
 
@@ -26,6 +26,7 @@ public class Messages extends NLS {
 	public static String CommunitiesActivator_cannot_instantiate;
 	public static String CommunitiesPreferencePage_communities;
 	public static String CommunitiesPreferencePage_community_descr;
+	public static String CommunitiesPreferencePage_community_tooltip;
 	public static String CommunitiesPreferencePage_create_a_new_account;
 	public static String CommunitiesPreferencePage_edit;
 	public static String CommunitiesPreferencePage_edit_selected_account;

@@ -25,6 +25,10 @@
     <description>Regel für die automatische Erstellung von Kollektionen bearbeiten</description>
     <topic href="html/reference/autoRule.html" label="Regel für die automatische Erstellung von Kollektionen bearbeiten"/>
  </context>
+ <context id="importMode_dialog_context" title="Importmodus">
+    <description>Zwischen Import in situ und Import in neue Ordnerstruktur auswählen</description>
+    <topic href="html/reference/importMode.html" label="Importmodus"/>
+ </context>
  <context id="category_dialog_context" title="Kategoriedialog">
     <description>Bilder werden an  Kategorie-Einträge zugewiesen, indem Sie die Kategorien markieren. Drücken Sie Hinzufügen... um eine neue Kategorie zu definieren.</description>
  </context>
@@ -96,6 +100,18 @@
  <context id="importNewStructureRenaming_wizard_context" title="In neue Ordnerstruktur importieren - Dateien umbenennen">
     <description>Bilder in neue Ordnerstruktur importieren - Metadaten</description>
     <topic href="html/reference/importNewStructure.html#3" label="in neue Ordnerstruktur importieren - Dateien umbenennen"/>
+ </context>
+ <context id="importNewStructureMetadata_wizard_context" title="In neue Ordnerstruktur importieren - Metadaten">
+    <description>In neue Ordnerstruktur importieren - Metadaten</description>
+    <topic href="html/reference/importNewStructure.html#4" label="In neue Ordnerstruktur importieren - Metadaten"/>
+ </context>
+ <context id="importFolderMetadata_wizard_context" title="Import von Dateien und Ordnern - Metadaten">
+    <description>Import von Dateien und Ordnern - Metadaten</description>
+    <topic href="html/reference/importFolder.html" label="Import von Dateien und Ordnern - Metadaten"/>
+ </context>
+ <context id="analogProperties_wizard_context" title="Analoge Bilder importieren">
+    <description>Analoge Bilder importieren</description>
+    <topic href="html/reference/analogImport.html" label="Analoge Bilder importieren"/>
  </context>
  <context id="appearance_page_context" title="Darstellungseinstellungen">
     <description>Darstellungseinstellungen</description>
@@ -180,12 +196,12 @@
  </context>
  <context id="editWall_dialog_context" title="Ausstellungswand-Eigenschaften">
     <description>Ausstellungswand konfigurieren</description>
-    <topic href="html/reference/exhibition.html" label="Ausstellungswand-Eigenschaften"/>
+    <topic href="html/reference/exhibition.html#wall" label="Ausstellungswand-Eigenschaften"/>
     <topic href="html/reference/htmlEditing.html" label="HTML bearbeiten"/>
  </context>
  <context id="exhibition_dialog_context" title="Ausstellungs-Dialog">
     <description>Ausstellung konfigurieren</description>
-    <topic href="html/reference/exhibition.html" label="Ausstellungs-Designer"/>
+    <topic href="html/reference/exhibition.html#properties" label="Ausstellungs-Designer"/>
     <topic href="html/reference/htmlEditing.html" label="HTML bearbeiten"/>
  </context>
  <context id="slideshow_dialog_context" title="Diashow-Eigenschaften">
@@ -219,10 +235,6 @@
     <description>In Ordner exportieren</description>
     <topic href="html/reference/exportFolder.html" label="Ordner-Export"/>
  </context>
- <context id="analogImport_dialog_context" title="Analoge Bilder importieren">
-    <description>Analoge Bilder importieren</description>
-    <topic href="html/reference/analogImport.html" label="Analoge Bilder importieren"/>
- </context>
  <context id="webGallery_view_context" title="Webgalerie-Designer-Sichtfenster">
     <description>Webgalerie erstellen und bearbeiten</description>
     <topic href="html/reference/webGallery.html" label="Webgalerie-Designer-Sichtfenster"/>
@@ -234,7 +246,7 @@
  </context>
  <context id="editWebGallery_dialog_context" title="Webgalerie-Eigenschaften">
     <description>Webgalerie konfigurieren</description>
-    <topic href="html/reference/webGallery.html" label="Webgalerie-Eigenschaften"/>
+    <topic href="html/reference/webGallery.html#properties" label="Webgalerie-Eigenschaften"/>
     <topic href="html/reference/htmlEditing.html" label="HTML bearbeiten"/>
  </context>
  <context id="storyboard_dialog_context" title="Storyboard-Eigenschaften">
@@ -442,5 +454,8 @@
     <description>Benutzerdefinierte Wortschätze pflegen</description>
     <topic href="html/reference/catPrefs.html" label="Wortschatz"/>
  </context>
-
+ <context id="autoRating_dialog_context" title="Automatische Bildbewertung">
+    <description>Mehrere Bilder mit Hilfe von KI bewerten</description>
+    <topic href="html/reference/rating.html" label="Automatische Bildbewertung"/>
+ </context>
 </contexts>

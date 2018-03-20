@@ -49,6 +49,9 @@
 
    <element name="provider">
       <complexType>
+         <sequence>
+            <element ref="ratingModel" minOccurs="0" maxOccurs="unbounded"/>
+         </sequence>
          <attribute name="id" type="string" use="required">
             <annotation>
                <documentation>
@@ -72,7 +75,7 @@
                   
                </documentation>
                <appinfo>
-                  <meta.attribute kind="java" basedOn=":com.bdaum.zoom.ai.internal.services.IAiServiceProvider"/>
+                  <meta.attribute kind="java" basedOn="com.bdaum.zoom.ai.internal.AbstractAiServiceProvider:com.bdaum.zoom.ai.internal.services.IAiServiceProvider"/>
                </appinfo>
             </annotation>
          </attribute>
@@ -88,6 +91,28 @@
                <documentation>
                   An unique integer number greater 1000 identifying the Lire feature provided by this service provider
                </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="ratingModel">
+      <complexType>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="label" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
             </annotation>
          </attribute>
       </complexType>

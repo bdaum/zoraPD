@@ -19,13 +19,11 @@ import com.bdaum.zoom.ui.internal.views.AbstractPropertiesView;
 @SuppressWarnings("restriction")
 public class GPSView extends AbstractPropertiesView {
 
-
 	@Override
 	protected Object getFieldParent(QueryField element) {
 		QueryField parent = element.getParent();
 		return (parent != QueryField.EXIF_ALL) ? parent : null;
 	}
-
 
 	@Override
 	public QueryField getRootElement() {
@@ -37,21 +35,18 @@ public class GPSView extends AbstractPropertiesView {
 		return 1;
 	}
 
-
 	@Override
 	protected void fillLocalPullDown(IMenuManager manager) {
 		// do nothing
 	}
-
 
 	@Override
 	protected void makeActions() {
 		// do nothing
 	}
 
-
 	@Override
-	public void updateActions() {
+	public void updateActions(boolean force) {
 		// do nothing
 	}
 
@@ -64,6 +59,4 @@ public class GPSView extends AbstractPropertiesView {
 	protected int[] getColumnMaxWidths() {
 		return new int[] { 220, Integer.MAX_VALUE, 30 };
 	}
-
-
 }

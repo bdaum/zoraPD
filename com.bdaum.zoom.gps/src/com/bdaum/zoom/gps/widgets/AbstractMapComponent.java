@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.gps.widgets;
@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.eclipse.core.runtime.ListenerList;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
@@ -52,6 +53,7 @@ import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.browser.StatusTextListener;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -68,6 +70,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.osgi.framework.Bundle;
@@ -80,6 +83,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.gps.CoordinatesListener;
 import com.bdaum.zoom.gps.MaptypeChangedListener;
+import com.bdaum.zoom.gps.geonames.IGeocodingService;
 import com.bdaum.zoom.gps.geonames.Place;
 import com.bdaum.zoom.gps.geonames.WebServiceException;
 import com.bdaum.zoom.gps.internal.GpsActivator;
@@ -90,11 +94,96 @@ import com.bdaum.zoom.gps.internal.dialogs.DirPinDialog;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.gps.Trackpoint;
 import com.bdaum.zoom.ui.gps.WaypointArea;
+import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
 public abstract class AbstractMapComponent implements IMapComponent {
+
+	public class SearchDetailDialog extends ZTitleAreaDialog {
+
+		private Combo combo;
+		private String[] serviceNames;
+		private int dflt = -1;
+		private String result;
+		private String current;
+		private StackLayout stackLayout;
+		private Map<String, Control> stackMap = new HashMap<>(5);
+		private CGroup parmGroup;
+
+		public SearchDetailDialog(Shell parentShell, String current) {
+			super(parentShell);
+			this.current = current;
+		}
+
+		@Override
+		public void create() {
+			super.create();
+			setTitle(Messages.AbstractMapComponent_loc_search_config);
+			setMessage(Messages.AbstractMapComponent_select_service_provider);
+		}
+
+		@Override
+		protected Control createDialogArea(Composite parent) {
+			Composite area = (Composite) super.createDialogArea(parent);
+			Composite composite = new Composite(area, SWT.NONE);
+			composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			composite.setLayout(new GridLayout(2, false));
+			new Label(composite, SWT.NONE).setText(Messages.AbstractMapComponent_service);
+			combo = new Combo(composite, SWT.DROP_DOWN | SWT.READ_ONLY);
+			combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+			IGeocodingService[] namingServices = GpsActivator.getDefault().getNamingServices();
+			serviceNames = new String[namingServices.length];
+			int select = -1;
+			for (int i = 0; i < namingServices.length; i++) {
+				serviceNames[i] = namingServices[i].getName();
+				if (namingServices[i].isDefault())
+					dflt = i;
+				if (serviceNames[i].equals(current))
+					select = i;
+			}
+			if (select < 0)
+				select = dflt;
+			combo.setItems(serviceNames);
+			combo.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					updateStack(combo.getSelectionIndex());
+				}
+			});
+			GridData data = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
+			data.widthHint = 500;
+			data.heightHint = 250;
+			parmGroup = new CGroup(composite, SWT.NONE);
+			parmGroup.setLayoutData(data);
+			parmGroup.setText(Messages.AbstractMapComponent_parameters);
+			stackLayout = new StackLayout();
+			parmGroup.setLayout(stackLayout);
+			for (int i = 0; i < namingServices.length; i++)
+				stackMap.put(namingServices[i].getName(), namingServices[i].createParameterGroup(parmGroup));
+			combo.select(select);
+			updateStack(select);
+			return area;
+		}
+
+		public void updateStack(int index) {
+			stackLayout.topControl = stackMap.get(serviceNames[index]);
+			parmGroup.layout(true, true);
+		}
+
+		@Override
+		protected void okPressed() {
+			result = combo.getText();
+			super.okPressed();
+		}
+
+		public String getResult() {
+			return result;
+		}
+
+	}
 
 	private static final String SHOWN = "shown="; //$NON-NLS-1$
 
@@ -126,8 +215,6 @@ public abstract class AbstractMapComponent implements IMapComponent {
 				uuid = st.nextToken();
 		}
 	}
-
-
 
 	/**
 	 * Format for formatting floating point number that are going to be used in HTML
@@ -207,17 +294,18 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	private static final String NOSCRIPT = "${noscript}"; //$NON-NLS-1$
 
 	private static final String MAP_HTML = "map.html"; //$NON-NLS-1$
+	private static final String SEARCHSERVICE = "searchService"; //$NON-NLS-1$
 
 	// private
-	private ListenerList<CoordinatesListener> coordinatesListeners = new ListenerList<CoordinatesListener>();
-	private ListenerList<MaptypeChangedListener> maptypeListeners = new ListenerList<MaptypeChangedListener>();
+	private ListenerList<CoordinatesListener> coordinatesListeners = new ListenerList<>();
+	private ListenerList<MaptypeChangedListener> maptypeListeners = new ListenerList<>();
 	private LinkedList<HistoryItem> history = new LinkedList<HistoryItem>();
 	private int historyPosition = 0;
 	private String maptype;
 	private Composite comp;
 	private Browser browser;
 	private ToolItem pin1Button;
-	private Combo combo;
+	private Combo searchCombo;
 	private Label explanationLabel;
 	private Map<String, WaypointArea> areaMap;
 	private ToolItem backButton;
@@ -231,6 +319,8 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	private String selectedMarker = ""; //$NON-NLS-1$
 	private ToolBar deleteBar;
 	private ToolItem deleteButton;
+	private Button searchButton;
+	private IDialogSettings settings;
 
 	static {
 		usformat.setMaximumFractionDigits(5);
@@ -244,6 +334,7 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 */
 
 	public void createComponent(Composite parent, boolean header) {
+		settings = GpsActivator.getDefault().getDialogSettings();
 		area = new Composite(parent, SWT.NONE);
 		area.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		GridLayout layout = new GridLayout(1, false);
@@ -258,7 +349,6 @@ public abstract class AbstractMapComponent implements IMapComponent {
 		browser = new Browser(comp, SWT.NONE);
 		browser.setJavascriptEnabled(true);
 		browser.addLocationListener(new LocationListener() {
-
 			public void changing(LocationEvent event) {
 				String location = event.location;
 				if (location.startsWith(GMAPEVENTURL)) {
@@ -407,29 +497,55 @@ public abstract class AbstractMapComponent implements IMapComponent {
 				forwards();
 			}
 		});
-
-		combo = new Combo(header, SWT.DROP_DOWN);
-		combo.setLayoutData(new GridData(200, SWT.DEFAULT));
-		combo.setVisibleItemCount(8);
-		combo.addKeyListener(new KeyAdapter() {
+		searchCombo = new Combo(header, SWT.DROP_DOWN);
+		searchCombo.setLayoutData(new GridData(200, SWT.DEFAULT));
+		searchCombo.setVisibleItemCount(8);
+		searchCombo.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.character == 13) {
-					startSearch();
+					startSearch(e.stateMask);
 					e.doit = false;
 				}
 			}
 		});
-		combo.setItems(GpsActivator.getDefault().getSearchHistory());
-		final Button searchButton = new Button(header, SWT.PUSH);
-		searchButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+		searchCombo.setItems(GpsActivator.getDefault().getSearchHistory());
+		searchButton = new Button(header, SWT.PUSH);
+		searchButton.setLayoutData(new GridData(120, SWT.DEFAULT));
 		searchButton.setText(Messages.AbstractMapComponent_search);
+		searchButton.setToolTipText(Messages.AbstractMapComponent_configure);
 		searchButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				startSearch();
+				if ((e.stateMask & SWT.CONTROL) != 0) {
+					IGeocodingService currentService = getSearchService();
+					SearchDetailDialog dialog = new SearchDetailDialog(searchButton.getShell(),
+							currentService == null ? null : currentService.getName());
+					if (dialog.open() == SearchDetailDialog.OK) {
+						String result = dialog.getResult();
+						settings.put(SEARCHSERVICE, result);
+						updateSearchButton();
+					}
+				}
+				startSearch(e.stateMask);
 			}
 		});
+		updateSearchButton();
+	}
+
+	private IGeocodingService getSearchService() {
+		return GpsActivator.getDefault().getNamingServiceByName(settings.get(SEARCHSERVICE));
+	}
+
+	private void updateSearchButton() {
+		IGeocodingService service = getSearchService();
+		if (service == null)
+			searchButton.setEnabled(false);
+		else {
+			searchButton.setEnabled(true);
+			searchButton.setText(NLS.bind(Messages.AbstractMapComponent_search_with, service.getName()));
+		}
+
 	}
 
 	protected void deleteMarker() {
@@ -447,8 +563,8 @@ public abstract class AbstractMapComponent implements IMapComponent {
 		}
 	}
 
-	public void startSearch() {
-		String text = combo.getText();
+	public void startSearch(int stateMask) {
+		String text = searchCombo.getText();
 		if (!text.isEmpty())
 			try {
 				WaypointArea[] areas = GpsUtilities.findLocation(text);
@@ -462,9 +578,9 @@ public abstract class AbstractMapComponent implements IMapComponent {
 						Set<String> keySet = areaMap.keySet();
 						String[] items = keySet.toArray(new String[keySet.size()]);
 						Arrays.sort(items);
-						LocationSelectionDialog dialog = new LocationSelectionDialog(combo.getShell(), items);
+						LocationSelectionDialog dialog = new LocationSelectionDialog(searchCombo.getShell(), items);
 						dialog.create();
-						dialog.getShell().setLocation(combo.toDisplay(0, 0));
+						dialog.getShell().setLocation(searchCombo.toDisplay(0, 0));
 						dialog.open();
 						String item = dialog.getResult();
 						if (item != null && areaMap != null) {
@@ -474,14 +590,14 @@ public abstract class AbstractMapComponent implements IMapComponent {
 						}
 					}
 				} else
-					AcousticMessageDialog.openInformation(combo.getShell(),
+					AcousticMessageDialog.openInformation(searchCombo.getShell(),
 							Messages.AbstractMapComponent_location_search,
 							Messages.AbstractMapComponent_location_not_found);
 			} catch (WebServiceException e1) {
-				AcousticMessageDialog.openError(combo.getShell(),
+				AcousticMessageDialog.openError(searchCombo.getShell(),
 						Messages.AbstractMapComponent_web_service_error_search, e1.getMessage());
 			} catch (Exception e1) {
-				AcousticMessageDialog.openError(combo.getShell(), Messages.AbstractMapComponent_error_search,
+				AcousticMessageDialog.openError(searchCombo.getShell(), Messages.AbstractMapComponent_error_search,
 						e1.toString());
 			}
 	}
@@ -497,8 +613,8 @@ public abstract class AbstractMapComponent implements IMapComponent {
 			updateCombo(waypointArea.getName());
 			if (historyPosition > 0 && historyPosition <= history.size()) {
 				HistoryItem historyItem = history.get(historyPosition - 1);
-				if (historyItem.getLatitude() == waypointArea.getLat() && historyItem.getLongitude() == waypointArea.getLon()
-						&& historyItem.getDetail() >= 12)
+				if (historyItem.getLatitude() == waypointArea.getLat()
+						&& historyItem.getLongitude() == waypointArea.getLon() && historyItem.getDetail() >= 12)
 					return;
 			}
 			browser.execute(NLS.bind("setCenter({0},{1});", //$NON-NLS-1$
@@ -507,30 +623,30 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	}
 
 	private void updateCombo(String name) {
-		if (combo != null) {
-			String oldText = combo.getText();
+		if (searchCombo != null) {
+			String oldText = searchCombo.getText();
 			if (!oldText.isEmpty()) {
 				GpsActivator activator = GpsActivator.getDefault();
 				String[] history = activator.getSearchHistory();
 				for (String item : history) {
 					if (item.equals(name)) {
-						combo.setText(name);
+						searchCombo.setText(name);
 						return;
 					}
 				}
 				if (history.length >= GpsActivator.MAXHISTORYLENGTH) {
 					System.arraycopy(history, 0, history, 1, history.length - 1);
 					history[0] = oldText;
-					combo.setItems(history);
+					searchCombo.setItems(history);
 				} else {
 					String[] newHistory = new String[history.length + 1];
 					System.arraycopy(history, 0, newHistory, 1, history.length);
 					newHistory[0] = oldText;
 					activator.setSearchHistory(newHistory);
-					combo.setItems(newHistory);
+					searchCombo.setItems(newHistory);
 				}
 			}
-			combo.setText(name);
+			searchCombo.setText(name);
 		}
 	}
 
@@ -541,8 +657,8 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 * @param longitude
 	 */
 	protected void fireCoordinatesChanged(String[] assetIds, PositionAndZoom pz) {
-		for (Object listener : coordinatesListeners.getListeners())
-			((CoordinatesListener) listener).setCoordinates(assetIds, pz.lat, pz.lng, pz.zoom, pz.type, pz.uuid);
+		for (CoordinatesListener listener : coordinatesListeners)
+			listener.setCoordinates(assetIds, pz.lat, pz.lng, pz.zoom, pz.type, pz.uuid);
 	}
 
 	/**
@@ -551,8 +667,8 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 * @param newType
 	 */
 	protected void fireMaptypeChanged(String newType) {
-		for (Object listener : maptypeListeners.getListeners())
-			((MaptypeChangedListener) listener).setMaptype(newType);
+		for (MaptypeChangedListener listener : maptypeListeners)
+			listener.setMaptype(newType);
 	}
 
 	/**
@@ -1322,10 +1438,10 @@ public abstract class AbstractMapComponent implements IMapComponent {
 				sb.replace(p, p + var.length(), text);
 		}
 	}
-	
+
 	public HistoryItem getLastHistoryItem() {
-		if (historyPosition > 0 && historyPosition <= history.size()) 
-			return history.get(historyPosition-1);
+		if (historyPosition > 0 && historyPosition <= history.size())
+			return history.get(historyPosition - 1);
 		return null;
 	}
 

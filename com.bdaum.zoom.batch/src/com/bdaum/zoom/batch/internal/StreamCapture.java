@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.batch.internal;
@@ -35,7 +35,7 @@ import org.eclipse.osgi.util.NLS;
  */
 public class StreamCapture extends Thread {
 	private final InputStream inputStream;
-	private final StringBuffer data = new StringBuffer();
+	private final StringBuilder data = new StringBuilder();
 	private final String statusPrefix;
 	private int severity;
 	private String kind;
@@ -43,7 +43,7 @@ public class StreamCapture extends Thread {
 	private boolean abort = false;
 
 	public StreamCapture(InputStream inputStream, String charsetName, String label, String kind, int severity) {
-		super(label + "(" + kind + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+		super(NLS.bind("{0}({1})", label, kind)); //$NON-NLS-1$
 		this.inputStream = inputStream;
 		this.statusPrefix = label + ": "; //$NON-NLS-1$
 		this.severity = severity;
@@ -58,13 +58,13 @@ public class StreamCapture extends Thread {
 			String line;
 			while (!abort && (line = reader.readLine()) != null) {
 				data.append(line).append('\n');
-				if (severity != IStatus.OK) {
-					final String message = statusPrefix + line;
-					BatchActivator.getDefault().getLog().log(new Status(severity, BatchActivator.PLUGIN_ID, message));
-				}
+				if (severity != IStatus.OK)
+					BatchActivator.getDefault().getLog()
+							.log(new Status(severity, BatchActivator.PLUGIN_ID, statusPrefix + line));
 			}
 		} catch (UnsupportedEncodingException e) {
-			BatchActivator.getDefault().logError(NLS.bind(Messages.StreamCapture_unsupported_code_page, charsetName), e);
+			BatchActivator.getDefault().logError(NLS.bind(Messages.StreamCapture_unsupported_code_page, charsetName),
+					e);
 		} catch (final IOException e) {
 			BatchActivator.getDefault().logError(NLS.bind(Messages.BatchActivator_error_when_reading, kind), e);
 		}

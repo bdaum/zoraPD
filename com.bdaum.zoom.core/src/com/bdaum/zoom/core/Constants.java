@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.core;
@@ -107,9 +107,6 @@ public class Constants {
 	public static final String DERIVE_FOLDER = "folder"; //$NON-NLS-1$
 	public static final String DERIVE_ALL = "true"; //$NON-NLS-1$
 
-	public static final String USERFIELD2 = "{userfield2}"; //$NON-NLS-1$
-	public static final String USERFIELD1 = "{userfield1}"; //$NON-NLS-1$
-
 	public final static int FILESOURCE_UNKNOWN = 0;
 	public final static int FILESOURCE_FILMSCANNER = 1;
 	public final static int FILESOURCE_REFLECTIVE_SCANNER = 2;
@@ -182,6 +179,7 @@ public class Constants {
 	public static final String PI_NAME = "{name}"; //$NON-NLS-1$
 	public static final String PI_DESCRIPTION = "{description}"; //$NON-NLS-1$
 	public static final String PI_CREATIONDATE = "{creationDate}"; //$NON-NLS-1$
+	public static final String PI_CREATIONYEAR = "{creationYear}"; //$NON-NLS-1$
 	public static final String PI_SEQUENCENO = "{sequenceNo}"; //$NON-NLS-1$
 	public static final String PI_PAGEITEM = "{pageItem}"; //$NON-NLS-1$
 	public static final String PI_SIZE = "{size}"; //$NON-NLS-1$
@@ -230,10 +228,9 @@ public class Constants {
 			TV_YY, TV_YYYY, TV_IMAGE_NO5, TV_IMAGE_NO4, TV_IMAGE_NO3, TV_IMAGE_NO2, TV_IMAGE_NO1, TV_EXTENSION,
 			TV_FILENAME, TV_USER, TV_OWNER, TV_CUE };
 	public static final String[] PI_ALL = new String[] { PI_TITLE, PI_NAME, PI_DESCRIPTION, PI_CREATIONDATE,
-			PT_COLLECTION, PI_SEQUENCENO, PI_PAGEITEM, PI_SIZE, PI_FORMAT };
-	public static final String[] TH_ALL = new String[] { Constants.PI_TITLE, Constants.PI_NAME,
-			Constants.PI_FORMAT, Constants.PI_SIZE, Constants.PI_CREATIONDATE, TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_MM,
-			TV_YY, TV_YYYY };
+			PI_CREATIONYEAR, PT_COLLECTION, PI_SEQUENCENO, PI_PAGEITEM, PI_SIZE, PI_FORMAT };
+	public static final String[] TH_ALL = new String[] { PI_TITLE, PI_NAME, PI_FORMAT, PI_SIZE, PI_CREATIONDATE,
+			TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_MM, TV_YY, TV_YYYY };
 
 	public final static String RAWIMPORT_ONLYRAW = "raw"; //$NON-NLS-1$
 	public final static String RAWIMPORT_ONLYDNG = "dng"; //$NON-NLS-1$
@@ -339,6 +336,7 @@ public class Constants {
 	public static final String DATEVAR = "{date}"; //$NON-NLS-1$
 	public static final String LOCVAR = "{catalogLocation}"; //$NON-NLS-1$
 	public static final String BACKUPEXT = "backup"; //$NON-NLS-1$
+	public static final String[] BV_ALL = new String[] { LOCVAR, DATEVAR };
 
 	// Export
 	public static final int FTP = 1;

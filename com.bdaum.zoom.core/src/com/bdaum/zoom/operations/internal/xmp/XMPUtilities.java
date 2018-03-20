@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal.xmp;
@@ -94,7 +94,6 @@ public class XMPUtilities {
 					if (p >= 0)
 						detail = detail.substring(p + 1);
 					String subdetail = null;
-
 					p = detail.indexOf('/');
 					if (p >= 0) {
 						subdetail = detail.substring(p + 1);
@@ -309,24 +308,21 @@ public class XMPUtilities {
 										String.valueOf(array[i]), null);
 					} else if (fieldValue instanceof boolean[]) {
 						boolean[] array = (boolean[]) fieldValue;
-						for (int i = 0; i < array.length; i++) {
+						for (int i = 0; i < array.length; i++)
 							if (array[i])
 								xmpMeta.appendArrayItem(xmpNs, path, new PropertyOptions(PropertyOptions.ARRAY_ORDERED),
 										String.valueOf(array[i]), null);
-						}
 					} else if (fieldValue instanceof double[]) {
 						double[] array = (double[]) fieldValue;
-						for (int i = 0; i < array.length; i++) {
+						for (int i = 0; i < array.length; i++)
 							if (array[i] != 0d)
 								xmpMeta.appendArrayItem(xmpNs, path, new PropertyOptions(PropertyOptions.ARRAY_ORDERED),
 										String.valueOf(array[i]), null);
-						}
 					} else if (fieldValue instanceof String[]) {
 						String[] array = (String[]) fieldValue;
-						for (int i = 0; i < array.length; i++) {
+						for (int i = 0; i < array.length; i++)
 							if (array[i] != null && !array[i].isEmpty())
 								xmpMeta.appendArrayItem(xmpNs, path, optionsArray, array[i], null);
-						}
 					}
 				} else {
 					Object value = getFieldValue(queryField, asset);

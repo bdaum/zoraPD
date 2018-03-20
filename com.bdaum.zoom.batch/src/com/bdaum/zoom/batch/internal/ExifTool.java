@@ -16,6 +16,7 @@ package com.bdaum.zoom.batch.internal;
 import java.awt.color.ICC_Profile;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,7 +47,7 @@ import com.bdaum.zoom.program.BatchUtilities;
 
 public class ExifTool implements IExifLoader {
 
-	private static class IOStream {
+	private static class IOStream implements Closeable {
 		private OutputStreamWriter writer;
 		private TimeoutInputStream inputStream;
 		private BufferedReader inputReader;
@@ -54,7 +55,7 @@ public class ExifTool implements IExifLoader {
 		public IOStream(InputStream inputStream, OutputStreamWriter writer) {
 			this.inputStream = new TimeoutInputStream(inputStream, new InterruptTimer());
 			this.inputStream.setTimeout(MAXTIMEFORTASK);
-			inputReader = new BufferedReader(new InputStreamReader(this.inputStream));
+			this.inputReader = new BufferedReader(new InputStreamReader(this.inputStream));
 			this.writer = writer;
 		}
 
@@ -80,46 +81,48 @@ public class ExifTool implements IExifLoader {
 		}
 	}
 
-	private static final String[] B_ICCPROFILE = new String[] { "-b", "-icc_profile" //$NON-NLS-1$ //$NON-NLS-2$
-	};
+	private static final String[] B_ICCPROFILE = new String[] { "-b", "-icc_profile"}; //$NON-NLS-1$ //$NON-NLS-2$
 	private static final String[] B_PREVIEWIMAGE_FAST = new String[] { "-b", //$NON-NLS-1$
 			"-previewimage", "-fast" }; //$NON-NLS-1$ //$NON-NLS-2$
 	private static final String[] E_S_N_FAST_STRUCT = new String[] { "-E", "-S", "-n", "-fast", "-g0", "-struct" }; //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	private static final String[] E_S_N_FAST2_STRUCT = new String[] { "-E", "-S", "-n", "-fast2", "-g0", "-struct" }; //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	private static final String[] E_S_N_FAST3_STRUCT = new String[] { "-E", "-S", "-n", "-fast2", "-g0", "-struct" }; //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 	private static final String[] E_S_N_STRUCT = new String[] { "-E", "-S", "-n", "-g0", "-struct" }; //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 	private static final String[] STAYOPEN = new String[] { "-stay_open", //$NON-NLS-1$
 			"True", "-@", "-" }; //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-	private File file;
-	private String[] toolLocation;
-	private Map<String, String> metadata;
-	private Set<String> makerNotes;
-	private boolean isMakerNote;
-
+	private static Process proc;
 	private static final float[][] SWTORIENTATION = new float[][] { new float[] { 0f, 1f, 1f },
 			new float[] { 0f, -1f, 1f }, new float[] { 180f, 1f, 1f }, new float[] { 0f, 1f, -1f },
 			new float[] { 90f, -1f, 1f }, new float[] { 90f, 1f, 1f }, new float[] { 270f, -1f, 1f },
 			new float[] { 270f, 1f, 1f }, };
 	private static final long CLEANUP_DELAY = 60000;
 	private static final int MAXTIMEFORTASK = 10000;
-	private final boolean once;
+
+	private File file;
+	private String[] toolLocation;
+	private Map<String, String> metadata;
+	private Set<String> makerNotes;
+	private boolean isMakerNote;
 	private IOStream streams;
 	private final StringBuffer data = new StringBuffer();
 	private byte[] buffer;
+	private final boolean once;
 	private boolean abort;
-	private boolean fast;
+	private int fast;
+	private Daemon cleanupJob;
+	
 	private Thread shutdownHook = new Thread() {
 		@Override
 		public void run() {
 			ExifTool.this.dispose();
 		}
 	};
-	private Daemon cleanupJob;
-	private static Process proc;
 
 	public ExifTool(File file, boolean once) {
 		this.file = file;
 		this.once = once;
 		toolLocation = BatchActivator.getDefault().locateExifTool();
-		if (!once) {
+		if (toolLocation != null && !once) {
 			try {
 				Runtime.getRuntime().addShutdownHook(shutdownHook);
 			} catch (Exception e) {
@@ -144,13 +147,8 @@ public class ExifTool implements IExifLoader {
 	}
 
 	private void resetCleanupTask() {
-		// no-op if the timer was never created.
 		if (cleanupJob != null) {
-
-			// Cancel the current cleanup task if necessary.
 			Job.getJobManager().cancel(cleanupJob);
-
-			// Schedule a new cleanup task.
 			cleanupJob.schedule(CLEANUP_DELAY);
 		}
 	}
@@ -165,7 +163,22 @@ public class ExifTool implements IExifLoader {
 		metadata = new HashMap<String, String>(300);
 		makerNotes = new HashSet<String>(150);
 		if (toolLocation != null) {
-			String[] parms = fast ? E_S_N_FAST_STRUCT : E_S_N_STRUCT;
+			String[] parms;
+			switch (fast) {
+			case 1:
+				parms =  E_S_N_FAST_STRUCT;
+				break;
+			case 2:
+				parms =  E_S_N_FAST2_STRUCT;
+				break;
+			case 3:
+				parms =  E_S_N_FAST3_STRUCT;
+				break;
+
+			default:
+				parms =  E_S_N_STRUCT;
+				break;
+			}
 			try {
 				String result = (String) connectToExifTool(parms, false);
 				if (result != null) {
@@ -241,10 +254,9 @@ public class ExifTool implements IExifLoader {
 							abort = true;
 						}
 					}
-					if (bdata == null) {
-						bdata = new byte[read];
-						System.arraycopy(buffer, 0, bdata, 0, read);
-					} else {
+					if (bdata == null)
+						System.arraycopy(buffer, 0, bdata = new byte[read], 0, read);
+					else {
 						byte[] newData = new byte[bdata.length + read];
 						System.arraycopy(bdata, 0, newData, 0, bdata.length);
 						System.arraycopy(buffer, 0, newData, bdata.length, read);
@@ -278,18 +290,15 @@ public class ExifTool implements IExifLoader {
 	}
 
 	protected static IOStream startExifToolProcess(List<String> args) throws ConversionException {
-		IOStream streams = null;
 		try {
 			ProcessBuilder processBuilder = new ProcessBuilder(args);
 			processBuilder.redirectErrorStream(true); // redirect error stream to avoid blocked input stream (and hope
-														// error messages are sorted out in later stages)
-			//TODO implemented a better solution with two concurring readers
+														// error messages - if any -  are sorted out in later stages)
 			proc = processBuilder.start();
 		} catch (Exception e) {
 			throw new ConversionException(Messages.ExifTool_error_launching_error_tool, e);
 		}
-		streams = new IOStream(proc.getInputStream(), new OutputStreamWriter(proc.getOutputStream()));
-		return streams;
+		return new IOStream(proc.getInputStream(), new OutputStreamWriter(proc.getOutputStream()));
 	}
 
 	public void dispose() {
@@ -342,11 +351,9 @@ public class ExifTool implements IExifLoader {
 	}
 
 	public byte[] getBinaryData(String tag, boolean check) {
-		String pvi = check ? getMetadata().get(tag) : ""; //$NON-NLS-1$
-		if (pvi != null) {
-			String[] parms = new String[] { "-b", "-" + tag.toLowerCase() }; //$NON-NLS-1$//$NON-NLS-2$
+		if (!check || getMetadata().get(tag) != null) {
 			try {
-				return (byte[]) connectToExifTool(parms, true);
+				return (byte[]) connectToExifTool(new String[] { "-b", "-" + tag.toLowerCase() }, true); //$NON-NLS-1$//$NON-NLS-2$
 			} catch (ConversionException e) {
 				BatchActivator.getDefault().logError(NLS.bind(Messages.ExifTool_errort_fetching_binary_data, tag, file),
 						e);
@@ -362,8 +369,7 @@ public class ExifTool implements IExifLoader {
 	 */
 
 	public ZImage getPreviewImage(boolean check) {
-		String pvi = check ? getMetadata().get("PreviewImage") : ""; //$NON-NLS-1$ //$NON-NLS-2$
-		if (pvi != null) {
+		if (!check || getMetadata().get("PreviewImage") != null) //$NON-NLS-1$
 			try {
 				byte[] result = (byte[]) connectToExifTool(B_PREVIEWIMAGE_FAST, true);
 				if (result != null && result.length > 0) {
@@ -380,7 +386,6 @@ public class ExifTool implements IExifLoader {
 				BatchActivator.getDefault().logError(NLS.bind(Messages.ExifTool_Internal_error_fetching_preview, file),
 						e);
 			}
-		}
 		return null;
 	}
 
@@ -403,20 +408,18 @@ public class ExifTool implements IExifLoader {
 	 * @see com.bdaum.zoom.batch.IExifTool#getICCProfile()
 	 */
 	public ICC_Profile getICCProfile() {
-		if (toolLocation != null) {
+		if (toolLocation != null)
 			try {
 				byte[] result = (byte[]) connectToExifTool(B_ICCPROFILE, true);
-				if (result != null) {
+				if (result != null)
 					try {
 						return ICC_Profile.getInstance(result);
 					} catch (Exception e) {
 						BatchActivator.getDefault().logWarning(NLS.bind(Messages.ExifTool_Bad_ICC_profile, file), null);
 					}
-				}
 			} catch (ConversionException e) {
 				BatchActivator.getDefault().logError(NLS.bind(Messages.ExifTool_Internal_error_fetching_ICC, file), e);
 			}
-		}
 		return null;
 	}
 
@@ -435,7 +438,11 @@ public class ExifTool implements IExifLoader {
 		streams = null;
 	}
 
-	public void setFast(boolean fast) {
+	/**
+	 * Sets the ExifTools -fast, -fast2, -fast3 parameters
+	 * @param fast - 0-3 (default 0)
+	 */
+	public void setFast(int fast) {
 		this.fast = fast;
 	}
 

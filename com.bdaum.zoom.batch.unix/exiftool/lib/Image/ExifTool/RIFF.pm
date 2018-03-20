@@ -29,7 +29,7 @@ use strict;
 use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 
-$VERSION = '1.45';
+$VERSION = '1.46';
 
 sub ConvertTimecode($);
 
@@ -864,7 +864,7 @@ my %code2charset = (
 %Image::ExifTool::RIFF::CSET = (
     PROCESS_PROC => \&Image::ExifTool::RIFF::ProcessBinaryData,
     GROUPS => { 2 => 'Other' },
-    Format => 'int16u',
+    FORMAT => 'int16u',
     0 => {
         Name => 'CodePage',
         RawConv => '$$self{CodePage} = $val',
@@ -1544,7 +1544,7 @@ sub ProcessRIFF($$)
         } elsif ($tag eq 'data' and $len == 0xffffffff and $$et{DataSize64}) {
             $len = $$et{DataSize64};
         }
-        $et->VPrint(0, "RIFF '$tag' chunk ($len bytes of data):\n");
+        $et->VPrint(0, "RIFF '${tag}' chunk ($len bytes of data):\n");
         if ($len <= 0) {
             if ($len < 0) {
                 $et->Warn('Invalid chunk length');
@@ -1616,7 +1616,7 @@ including AVI videos, WAV audio files and WEBP images.
 
 =head1 AUTHOR
 
-Copyright 2003-2017, Phil Harvey (phil at owl.phy.queensu.ca)
+Copyright 2003-2018, Phil Harvey (phil at owl.phy.queensu.ca)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

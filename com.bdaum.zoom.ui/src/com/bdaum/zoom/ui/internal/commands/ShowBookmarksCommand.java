@@ -15,31 +15,18 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.commands;
 
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PartInitException;
-
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.views.BookmarkView;
 
 public class ShowBookmarksCommand extends AbstractCommandHandler {
 
 	@Override
 	public void run() {
-		IWorkbenchWindow activeWorkbenchWindow = getActiveWorkbenchWindow();
-		if (activeWorkbenchWindow != null) {
-			IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-			if (activePage != null) {
-				try {
-					activePage.showView(BookmarkView.ID);
-				} catch (PartInitException e) {
-					// Should never happen
-				}
-			}
-		}
+		UiUtilities.showView(BookmarkView.ID);
 	}
 
 }

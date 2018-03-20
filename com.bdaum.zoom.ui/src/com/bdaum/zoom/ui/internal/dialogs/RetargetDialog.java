@@ -84,8 +84,7 @@ public class RetargetDialog extends ZTitleAreaDialog implements SelectionListene
 	}
 
 	public void widgetSelected(SelectionEvent e) {
-		int index = e.detail;
-		result = (Integer) ((RadioButtonGroup) e.widget).getData(index, VALUE);
+		result = (Integer) ((RadioButtonGroup) e.widget).getData(e.detail, VALUE);
 		updateButtons();
 	}
 

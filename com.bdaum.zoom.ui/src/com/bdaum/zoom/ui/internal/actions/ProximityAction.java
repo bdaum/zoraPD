@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -85,15 +85,14 @@ public class ProximityAction extends Action {
 			double mx = 0;
 			for (Asset asset : selection)
 				if (!Double.isNaN(asset.getGPSLatitude()) && !Double.isNaN(asset.getGPSLongitude()))
-					mx = Math.max(mx, Core.distance(lat, lon, asset.getGPSLatitude(), asset.getGPSLongitude(), 'k'));
+					mx = Math.max(mx, Core.distance(lat, lon, asset.getGPSLatitude(), asset.getGPSLongitude(),
+							Core.getCore().getDbFactory().getDistanceUnit()));
 			Double[] values = new Double[] { lat, lon, (distance + mx) };
 			SmartCollectionImpl coll = new SmartCollectionImpl(Messages.ProximityAction_proximity_search, false, false,
 					true, dialog.isNetworked(), null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
-			CriterionImpl crit = new CriterionImpl(QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), null, values,
-					QueryField.NOTGREATER, false);
-			coll.addCriterion(crit);
-			SortCriterionImpl sort = new SortCriterionImpl(QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), null, false);
-			coll.addSortCriterion(sort);
+			coll.addCriterion(new CriterionImpl(QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), null, values,
+					QueryField.NOTGREATER, false));
+			coll.addSortCriterion(new SortCriterionImpl(QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), null, false));
 			coll.setSmartCollection_subSelection_parent(dialog.getParentCollection());
 			UiActivator.getDefault().getNavigationHistory(adaptable.getAdapter(IWorkbenchWindow.class))
 					.postSelection(new StructuredSelection(coll));

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2014 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.preferences;
 
@@ -23,7 +23,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
@@ -99,9 +98,7 @@ public class ApplicationPreferencePage extends AbstractPreferencePage {
 	private void createScreenGroup(Composite composite) {
 		CGroup group = UiUtilities.createGroup(composite, 1,
 				Messages.getString("ApplicationPreferencePage.fullscreen_mode")); //$NON-NLS-1$
-		Label explLabel = new Label(group, SWT.WRAP);
-		explLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
-		explLabel.setText(Messages.getString("ApplicationPreferencePage.full_screen_expl")); //$NON-NLS-1$
+		new Label(group, SWT.WRAP).setText(Messages.getString("ApplicationPreferencePage.full_screen_expl")); //$NON-NLS-1$
 		menuButton = WidgetFactory.createCheckButton(group, Messages.getString("ApplicationPreferencePage.hide_menu"), //$NON-NLS-1$
 				null);
 		statusButton = WidgetFactory.createCheckButton(group,
@@ -111,9 +108,7 @@ public class ApplicationPreferencePage extends AbstractPreferencePage {
 	@SuppressWarnings("unused")
 	private void createTaskGroup(Composite composite) {
 		CGroup group = UiUtilities.createGroup(composite, 1, Messages.getString("ApplicationPreferencePage.tray_mode")); //$NON-NLS-1$
-		Label explLabel = new Label(group, SWT.WRAP);
-		explLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
-		explLabel.setText(Messages.getString("ApplicationPreferencePage.tray_mode_expl")); //$NON-NLS-1$
+		new Label(group, SWT.WRAP).setText(Messages.getString("ApplicationPreferencePage.tray_mode_expl")); //$NON-NLS-1$
 		new Label(group, SWT.NONE);
 		trayButtonGroup = new RadioButtonGroup(group, Messages.getString("ApplicationPreferencePage.start_app"), //$NON-NLS-1$
 				SWT.HORIZONTAL, Messages.getString("ApplicationPreferencePage.in_tray"), //$NON-NLS-1$

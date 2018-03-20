@@ -15,15 +15,18 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 package com.bdaum.zoom.ai.clarifai.internal.core;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -32,9 +35,11 @@ import java.util.StringTokenizer;
 import javax.imageio.ImageIO;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;
 
 import com.bdaum.zoom.ai.clarifai.internal.ClarifaiActivator;
@@ -42,28 +47,45 @@ import com.bdaum.zoom.ai.clarifai.internal.preference.PreferenceConstants;
 import com.bdaum.zoom.ai.internal.AbstractAiServiceProvider;
 import com.bdaum.zoom.ai.internal.AiActivator;
 import com.bdaum.zoom.ai.internal.translator.TranslatorClient;
+import com.bdaum.zoom.batch.internal.IFileWatcher;
+import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Ticketbox;
+import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.ai.Prediction;
 import com.bdaum.zoom.core.internal.ai.Prediction.Token;
 import com.bdaum.zoom.core.internal.lire.AiAlgorithm;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
+import com.bdaum.zoom.image.ImageConstants;
+import com.bdaum.zoom.image.ZImage;
+import com.bdaum.zoom.ui.internal.UiActivator;
 
 import clarifai2.api.ClarifaiClient;
 import clarifai2.api.ClarifaiResponse;
 import clarifai2.dto.ClarifaiStatus;
+import clarifai2.dto.input.ClarifaiImage;
 import clarifai2.dto.input.ClarifaiInput;
-import clarifai2.dto.input.image.ClarifaiImage;
-import clarifai2.dto.input.image.Crop;
+import clarifai2.dto.input.Crop;
 import clarifai2.dto.model.Model;
 import clarifai2.dto.model.output.ClarifaiOutput;
 import clarifai2.dto.prediction.Concept;
 import clarifai2.dto.prediction.Embedding;
+import clarifai2.dto.prediction.FaceConcepts;
+import clarifai2.dto.prediction.Focus;
 
+@SuppressWarnings("restriction")
 public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
+	// Models
+	private static final String GENERAL_ID = "aaa03c23b3724a16a56b629203edc62c"; //$NON-NLS-1$
+	private static final String FOOD_ID = "bd367be194cf45149e75f01d59f77ba7"; //$NON-NLS-1$
+	private static final String TRAVEL_ID = "eee28c313d69466f836ab83287a54ed9"; //$NON-NLS-1$
+	private static final String WEDDING_ID = "c386b7a870114f4a87477c0824499348"; //$NON-NLS-1$
+	private static final String CELEBRITIES_ID = "e466caa0619f444ab97497640cefc4dc"; //$NON-NLS-1$
+	// Concepts
+	private static final String HIGH_QUALITY = "ai_b0de276c341f4e9582348f72f26b48fe"; //$NON-NLS-1$
+	private static final String SAFE_FOR_WORK = "sfw"; //$NON-NLS-1$
 
-	private static final Object GENERAL_ID = "aaa03c23b3724a16a56b629203edc62c"; //$NON-NLS-1$
-	private static final Object FOOD_ID = "bd367be194cf45149e75f01d59f77ba7"; //$NON-NLS-1$
-	private static final Object TRAVEL_ID = "eee28c313d69466f836ab83287a54ed9"; //$NON-NLS-1$
-	private static final Object WEDDING_ID = "c386b7a870114f4a87477c0824499348"; //$NON-NLS-1$
 	private static final float[] EMPTY = new float[0];
 
 	private Model<?> currentModel;
@@ -79,22 +101,18 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 			if (modelId != null) {
 				IPreferenceStore preferenceStore = activator.getPreferenceStore();
 				String lang = preferenceStore.getString(PreferenceConstants.LANGUAGE);
+				int maxConcepts = preferenceStore.getInt(PreferenceConstants.MAXCONCEPTS);
+				double minConfidence = preferenceStore.getInt(PreferenceConstants.MINCONFIDENCE) * 0.01f;
 				Model<?> model = getModel(client, modelId);
-				ClarifaiInput input = ClarifaiInput.forImage(ClarifaiImage.of(jpeg));
-				ClarifaiResponse<?> response = model.predict().withInputs(input).withLanguage(lang).executeSync();
+				ClarifaiInput input = ClarifaiInput.forInputValue(ClarifaiImage.of(jpeg));
+				ClarifaiResponse<?> response = model.predict().withInputs(input).withLanguage(lang)
+						.withMaxConcepts(maxConcepts).withMinValue(minConfidence).executeSync();
 				ClarifaiStatus status = response.getStatus();
 				if (response.isSuccessful()) {
-					int maxConcepts = preferenceStore.getInt(PreferenceConstants.MAXCONCEPTS);
-					float minConfidence = preferenceStore.getInt(PreferenceConstants.MINCONFIDENCE) * 0.01f;
 					List<Token> result = new ArrayList<>(20);
-					List<ClarifaiOutput<Concept>> list = (List<ClarifaiOutput<Concept>>) response.get();
-					lp: for (ClarifaiOutput<Concept> clarifaiOutput : list)
-						for (Concept concept : clarifaiOutput.data()) {
-							float value = concept.value();
-							if (result.size() >= maxConcepts || value < minConfidence)
-								break lp;
-							result.add(new Token(concept.name(), value));
-						}
+					for (ClarifaiOutput<Concept> clarifaiOutput : (List<ClarifaiOutput<Concept>>) response.get())
+						for (Concept concept : clarifaiOutput.data())
+							result.add(new Token(concept.name(), concept.value()));
 					if (preferenceStore.getBoolean(PreferenceConstants.TRANSLATE)) {
 						TranslatorClient translatorClient = AiActivator.getDefault().getClient();
 						if (translatorClient != null) {
@@ -108,12 +126,8 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 								String translate = translatorClient.translate(sb.toString());
 								StringTokenizer st = new StringTokenizer(translate, ","); //$NON-NLS-1$
 								Iterator<Token> it = result.iterator();
-								while (st.hasMoreTokens()) {
-									if (!it.hasNext())
-										break;
-									Token token = it.next();
-									token.setLabel(st.nextToken().trim());
-								}
+								while (st.hasMoreTokens() && it.hasNext())
+									it.next().setLabel(st.nextToken().trim());
 							} catch (Exception e) {
 								// don't translate
 							}
@@ -124,58 +138,55 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 					if (checkAdultContent()) {
 						ClarifaiResponse<List<ClarifaiOutput<Concept>>> response2 = client.getDefaultModels()
 								.nsfwModel().predict().withInputs(input).executeSync();
-						if (response2.isSuccessful()) {
-							lp2: for (ClarifaiOutput<Concept> clarifaiOutput : response2.get())
+						if (response2.isSuccessful())
+							lp: for (ClarifaiOutput<Concept> clarifaiOutput : response2.get())
 								for (Concept concept : clarifaiOutput.data())
-									if ("sfw".equals(concept.name())) { //$NON-NLS-1$
+									if (SAFE_FOR_WORK.equals(concept.name())) {
 										prediction.setSafeForWork(concept.value(), -1f);
-										break lp2;
+										break lp;
 									}
-						}
 					}
-					// if (checkCelebrities()) {
-					// ClarifaiResponse<List<ClarifaiOutput<clarifai2.dto.prediction.Prediction>>>
-					// response4 = client
-					// .predict("e466caa0619f444ab97497640cefc4dc")
-					// .withInputs(ClarifaiInput.forImage(ClarifaiImage.of(jpeg))).executeSync();
-					// if (response4.isSuccessful()) {
-					// int height = 0;
-					// int width = 0;
-					// List<Rectangle> rects = null;
-					// if (checkFaces()) {
-					// try (InputStream in = new ByteArrayInputStream(jpeg)) {
-					// BufferedImage image = ImageIO.read(in);
-					// height = image.getHeight();
-					// width = image.getWidth();
-					// rects = new ArrayList<>();
-					// } catch (IOException e) {
-					// // should never happen
-					// }
-					// }
-					// for (ClarifaiOutput<clarifai2.dto.prediction.Prediction>
-					// clarifaiOutput : response4.get())
-					// for (clarifai2.dto.prediction.Prediction p :
-					// clarifaiOutput.data()) {
-					// System.out.println(p);
-					// if (rects != null) {
-					// FaceDetection faceDetection = p.asFaceDetection();
-					// Crop crop = faceDetection.boundingBox();
-					// rects.add(new Rectangle((int) (crop.left() * width +
-					// 0.5f),
-					// (int) (crop.top() * height + 0.5f),
-					// (int) ((crop.right() - crop.left()) * width + 0.5f),
-					// (int) ((crop.bottom() - crop.top()) * height + 0.5f)));
-					// }
-					//
-					// }
-					// if (rects != null)
-					// prediction.setFaces(rects);
-					// }
-					// } else
+					if (checkCelebrities()) {
+						ClarifaiResponse<List<ClarifaiOutput<clarifai2.dto.prediction.Prediction>>> response4 = client
+								.predict(CELEBRITIES_ID).withInputs(ClarifaiInput.forInputValue(ClarifaiImage.of(jpeg)))
+								.withMaxConcepts(maxConcepts).withMinValue(minConfidence).executeSync();
+						if (response4.isSuccessful()) {
+							int height = 0;
+							int width = 0;
+							List<Rectangle> rects = null;
+							if (checkFaces()) {
+								try (InputStream in = new ByteArrayInputStream(jpeg)) {
+									BufferedImage image = ImageIO.read(in);
+									height = image.getHeight();
+									width = image.getWidth();
+									rects = new ArrayList<>();
+								} catch (IOException e) {
+									// should never happen
+								}
+							}
+							for (ClarifaiOutput<clarifai2.dto.prediction.Prediction> clarifaiOutput : response4.get())
+								for (clarifai2.dto.prediction.Prediction p : clarifaiOutput.data()) {
+									if (p instanceof FaceConcepts) {
+										FaceConcepts fc = (FaceConcepts) p;
+										if (rects != null) {
+											Crop crop = fc.boundingBox();
+											rects.add(new Rectangle((int) (crop.left() * width + 0.5f),
+													(int) (crop.top() * height + 0.5f),
+													(int) ((crop.right() - crop.left()) * width + 0.5f),
+													(int) ((crop.bottom() - crop.top()) * height + 0.5f)));
 
-					if (checkFaces()) {
+										}
+										for (Concept concept : fc.concepts())
+											result.add(new Token(concept.name(), concept.value()));
+									}
+								}
+							if (rects != null)
+								prediction.setFaces(rects);
+						}
+					} else if (checkFaces()) {
 						Model<?> faceModel = client.getDefaultModels().faceDetectionModel();
-						ClarifaiResponse<?> response3 = faceModel.predict().withInputs(input).executeSync();
+						ClarifaiResponse<?> response3 = faceModel.predict().withInputs(input)
+								.withMaxConcepts(maxConcepts).withMinValue(minConfidence).executeSync();
 						if (response3.isSuccessful()) {
 							try (InputStream in = new ByteArrayInputStream(jpeg)) {
 								BufferedImage image = ImageIO.read(in);
@@ -203,6 +214,74 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public int rate(Asset asset, String opId, int maxRating, String modelId) {
+		ClarifaiClient client = ClarifaiActivator.getDefault().getClient();
+		if (client != null) {
+			Model<?> model = currentModel = client.getModelByID(modelId).executeSync().get();
+			URI uri = Core.getCore().getVolumeManager().findExistingFile(asset, false);
+			if (uri != null) {
+				String ext = Core.getFileExtension(uri.toString());
+				if (ImageConstants.isJpeg(ext)) {
+					if (Constants.FILESCHEME.equals(uri.getScheme()))
+						return rateImage(maxRating, model, ClarifaiImage.of(new File(uri)));
+					try {
+						return rateImage(maxRating, model, ClarifaiImage.of(uri.toURL()));
+					} catch (MalformedURLException e) {
+						return -1;
+					}
+				}
+				IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
+				MultiStatus status = new MultiStatus(ClarifaiActivator.PLUGIN_ID, 0,
+						Messages.ClarifaiServiceProvider_image_rating, null);
+				File file = null;
+				ZImage hzimage = null;
+				try (Ticketbox box = new Ticketbox()) {
+					try {
+						file = box.obtainFile(uri);
+					} catch (IOException e) {
+						status.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
+								NLS.bind(Messages.ClarifaiServiceProvider_download_failed, uri), e));
+					}
+					if (file != null) {
+						hzimage = CoreActivator.getDefault().getHighresImageLoader().loadImage(null, status, file,
+								asset.getRotation(), asset.getFocalLengthIn35MmFilm(), null, 1d, Double.MAX_VALUE, true,
+								ImageConstants.SRGB, null, null, null, fileWatcher, opId, null);
+						try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+							hzimage.saveToStream(null, true, ZImage.CROPPED, SWT.DEFAULT, SWT.DEFAULT, out,
+									SWT.IMAGE_JPEG, 75);
+							return rateImage(maxRating, model, ClarifaiImage.of(out.toByteArray()));
+						} catch (UnsupportedOperationException e) {
+							// ignore file
+						} catch (IOException e) {
+							status.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
+									NLS.bind(Messages.ClarifaiServiceProvider_loading_failed, uri), e));
+						}
+					}
+				} finally {
+					if (hzimage != null)
+						hzimage.dispose();
+					fileWatcher.stopIgnoring(opId);
+				}
+			}
+		}
+		return -1;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected int rateImage(int maxRating, Model<?> model, ClarifaiImage cImage) {
+		ClarifaiResponse<?> response = model.predict().withInputs(ClarifaiInput.forInputValue(cImage)).executeSync();
+		if (response.isSuccessful())
+			for (ClarifaiOutput<clarifai2.dto.prediction.Prediction> clarifaiOutput : (List<ClarifaiOutput<clarifai2.dto.prediction.Prediction>>) response
+					.get())
+				for (clarifai2.dto.prediction.Prediction prediction : clarifaiOutput.data())
+					if (prediction instanceof Focus)
+						return (int) (maxRating * ((Focus) prediction).value() + 0.5f);
+					else if (HIGH_QUALITY.equals(((Concept) prediction).id()))
+						return (int) (maxRating * ((Concept) prediction).value() + 0.5f);
+		return -1;
 	}
 
 	protected Model<?> getModel(ClarifaiClient client, String modelId) {
@@ -257,11 +336,10 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 		return ClarifaiActivator.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.FACES);
 	}
 
-	// @Override
-	// public boolean checkCelebrities() {
-	// return
-	// ClarifaiActivator.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.CELEBRITIES);
-	// }
+	@Override
+	public boolean checkCelebrities() {
+		return ClarifaiActivator.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.CELEBRITIES);
+	}
 
 	@Override
 	public float getMarkAbove() {
@@ -278,11 +356,11 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 	public float[] getFeatureVector(BufferedImage image) {
 		ClarifaiActivator activator = ClarifaiActivator.getDefault();
 		ClarifaiClient client = activator.getClient();
-		if (client != null) {
+		if (client != null)
 			try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 				ImageIO.write(image, "jpg", out); //$NON-NLS-1$
 				ClarifaiResponse<?> response = client.getDefaultModels().generalEmbeddingModel().predict()
-						.withInputs(ClarifaiInput.forImage(ClarifaiImage.of(out.toByteArray()))).executeSync();
+						.withInputs(ClarifaiInput.forInputValue(ClarifaiImage.of(out.toByteArray()))).executeSync();
 				if (response.isSuccessful())
 					for (ClarifaiOutput<Embedding> clarifaiOutput : (List<ClarifaiOutput<Embedding>>) response.get())
 						for (Embedding emb : clarifaiOutput.data())
@@ -290,7 +368,6 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 			} catch (IOException e) {
 				// should never happen
 			}
-		}
 		return EMPTY;
 	}
 
@@ -302,8 +379,7 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 	@Override
 	public Algorithm getAlgorithm() {
 		return new AiAlgorithm(getFeatureId(), "clarifai", "Clarifai", //$NON-NLS-1$ //$NON-NLS-2$
-				Messages.ClarifaiServiceProvider_clarifai_expl,
-				true, ClarifaiActivator.PLUGIN_ID);
+				Messages.ClarifaiServiceProvider_clarifai_expl, true, ClarifaiActivator.PLUGIN_ID);
 	}
 
 	@Override

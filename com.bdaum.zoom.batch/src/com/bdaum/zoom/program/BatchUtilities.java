@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.program;
 
@@ -41,6 +41,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
@@ -650,9 +651,9 @@ public class BatchUtilities {
 	}
 
 	/**
-	 * Sbows the folder where the specified file is located Both the folder in
-	 * the catalog and the host file system are shown If possible the file is
-	 * selected in the host folder
+	 * Sbows the folder where the specified file is located Both the folder in the
+	 * catalog and the host file system are shown If possible the file is selected
+	 * in the host folder
 	 *
 	 * @param file
 	 *            - the file to be shown
@@ -660,21 +661,20 @@ public class BatchUtilities {
 	public static void showInFolder(final File file) {
 		BusyIndicator.showWhile(null, () -> {
 			try {
-				if (BatchConstants.WIN32) {
-					if (BatchActivator.getDefault().runScript(new String[] { "/select.bat", //$NON-NLS-1$
-							file.getAbsolutePath() }) > 1)
-						throw new IOException(Messages.getString("BatchUtilities.script_execution_failed")); //$NON-NLS-1$
-				} else if (BatchConstants.OSX)
-					Runtime.getRuntime().exec(new String[] { "open", file.getParentFile().getAbsolutePath() }) //$NON-NLS-1$
-							.waitFor();
+				if (BatchConstants.WIN32)
+					BatchActivator.getDefault().runScript(new String[] { "/select.bat", //$NON-NLS-1$
+							file.getAbsolutePath() });
 				else
-					Runtime.getRuntime().exec(new String[] { "xdg-open", file.getParentFile().getAbsolutePath() }) //$NON-NLS-1$
-							.waitFor();
+					BatchUtilities.executeCommand(
+							new String[] { BatchConstants.OSX ? "open" : "xdg-open", //$NON-NLS-1$ //$NON-NLS-2$
+									file.getParentFile().getAbsolutePath() },
+							null, Messages.getString("BatchUtilities.run_script"), IStatus.OK, IStatus.ERROR, 0, 1000L, "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
 			} catch (IOException e1) {
 				BatchActivator.getDefault().logError(Messages.getString("BatchUtilities.io_error_showFile"), //$NON-NLS-1$
 						e1);
-			} catch (InterruptedException e) {
-				// ignore
+			} catch (ExecutionException e) {
+				BatchActivator.getDefault().logError(Messages.getString("BatchUtilities.script_execution_failed"), //$NON-NLS-1$
+						e);
 			}
 		});
 
@@ -729,19 +729,18 @@ public class BatchUtilities {
 	 * @param label
 	 *            - job label
 	 * @param logLevel
-	 *            - status level (as defined in IStatus) for output data.
-	 *            IStatus.OK turns of logging
+	 *            - status level (as defined in IStatus) for output data. IStatus.OK
+	 *            turns logging off
 	 * @param errorLevel
-	 *            - status level (as defined in IStatus) for error data.
-	 *            IStatus.OK turns of logging
+	 *            - status level (as defined in IStatus) for error data. IStatus.OK
+	 *            turns logging off
 	 * @param errorHandling
-	 *            determines when an error message is generated if no error data
-	 *            is supplied by the error stream: > 0 returned condition code
-	 *            must match this number; -1 returned condition code must be
-	 *            unequal 0
+	 *            determines when an error message is generated if no error data is
+	 *            supplied by the error stream: > 0 returned condition code must
+	 *            match this number; -1 returned condition code must be unequal 0; 0
+	 *            no error message
 	 * @param timeout
-	 *            - timeout value in msec for waiting on output. 0 waits
-	 *            forever.
+	 *            - timeout value in msec for waiting on output. 0 waits forever.
 	 * @param charsetName
 	 *            - character set used such as "UTF-8"
 	 * @return standard output data
@@ -768,8 +767,7 @@ public class BatchUtilities {
 					return inputGrabber.getData();
 				}
 				String errorData = errorGrabber.getData().trim();
-				if (errorData.isEmpty()
-						&& (ret != 0 && errorHandling < 0 || errorHandling == ret && errorHandling > 0))
+				if (errorData.isEmpty() && (ret != 0 && errorHandling < 0 || errorHandling == ret && errorHandling > 0))
 					errorData = Arrays.toString(parms);
 				throw new ExecutionException(
 						NLS.bind(Messages.getString("BatchUtilities.command_execution_failed"), ret, errorData), //$NON-NLS-1$
@@ -874,8 +872,8 @@ public class BatchUtilities {
 	 *            - input html
 	 * @param result
 	 *            - resulting plain text
-	 * @return - true if input contains markup that cannot be represented in
-	 *         plain text
+	 * @return - true if input contains markup that cannot be represented in plain
+	 *         text
 	 */
 	private static final int START = 0;
 	private static final int TAGOREND = 1;
@@ -1053,12 +1051,11 @@ public class BatchUtilities {
 		}
 		return 0;
 	}
-	
+
 	public static void putPreferences(String key, String value) {
-		putPreferences(InstanceScope.INSTANCE.getNode(BatchActivator.PLUGIN_ID),
-				key, value);
+		putPreferences(InstanceScope.INSTANCE.getNode(BatchActivator.PLUGIN_ID), key, value);
 	}
-	
+
 	public static void putPreferences(IEclipsePreferences node, String key, String value) {
 		node.put(key, value);
 		try {
@@ -1088,5 +1085,5 @@ public class BatchUtilities {
 			// do nothing
 		}
 	}
-
+	
 }

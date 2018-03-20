@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2015 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal;
@@ -58,6 +58,7 @@ import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IRelationDetector;
 import com.bdaum.zoom.core.IVolumeManager;
+import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.db.IDbErrorHandler;
 import com.bdaum.zoom.core.internal.CoreActivator;
@@ -100,58 +101,54 @@ public class MoveOperation extends DbOperation {
 	public IStatus execute(final IProgressMonitor aMonitor, final IAdaptable info) throws ExecutionException {
 		for (IRelationDetector detector : info.getAdapter(IRelationDetector[].class))
 			detector.reset();
-		final Set<String> volumes = new HashSet<String>();
-		final List<String> errands = new ArrayList<String>();
 		init(aMonitor, assets.size() + 2);
 		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
-		final Ticketbox box = new Ticketbox();
-		try {
-			for (Asset asset1 : assets) {
-				if (asset1.getFileState() == IVolumeManager.PEER) {
+		try (Ticketbox box = new Ticketbox()) {
+			for (Asset asset : assets) {
+				if (asset.getFileState() == IVolumeManager.PEER) {
 					AssetOrigin assetOrigin = null;
-					String assetId = asset1.getStringId();
+					String assetId = asset.getStringId();
 					if (peerService != null)
 						assetOrigin = peerService.getAssetOrigin(assetId);
 					FileInfo fileInfo = null;
 					if (assetOrigin != null) {
 						try {
-							fileInfo = peerService.getFileInfo(assetOrigin, asset1.getUri(), asset1.getVolume());
+							fileInfo = peerService.getFileInfo(assetOrigin, asset.getUri(), asset.getVolume());
 							if (fileInfo != null) {
 								final FileLocationBackup backup = new FileLocationBackup(opId, assetId, null, false,
 										true);
-								File newFile = copyRemoteFile(aMonitor, asset1, assetOrigin, fileInfo, info,
+								File newFile = copyRemoteFile(aMonitor, asset, assetOrigin, fileInfo, info,
 										fileWatchManager);
 								if (newFile == null) {
 									newFile = fileInfo.getFile();
 									backup.setFileMoved(false);
 								}
 								final List<Object> toBeStored = new ArrayList<Object>();
+								copyRemoteAsset(asset, assetOrigin, toBeStored, fileInfo, newFile, backup);
 								toBeStored.add(backup);
-								copyRemoteAsset(asset1, assetOrigin, toBeStored, fileInfo, newFile);
 								if (!storeSafely(() -> {
 									dbManager.storeTrash(backup);
 									for (Object o : toBeStored)
 										dbManager.store(o);
 								}, 1))
 									return close(info);
-								dbManager.createFolderHierarchy(asset1);
+								dbManager.createFolderHierarchy(asset);
 							} else
-								errands.add(assetId);
+								box.addErrand(asset.getUri(), assetOrigin.toString());
 						} catch (ConnectionLostException e) {
-							errands.add(assetId);
+							box.addErrand(asset.getUri(), assetOrigin.toString());
 						}
 					} else
-						errands.add(assetId);
+						box.addErrand(asset.getUri(), null);
 				} else {
-					final Asset a = asset1;
-					final URI file = volumeManager.findFile(asset1);
+					final URI file = volumeManager.findFile(asset);
 					if (file != null) {
-						if (volumeManager.findExistingFile(asset1, true) != null) {
-							dbManager.markSystemCollectionsForPurge(a);
+						if (volumeManager.findExistingFile(asset, true) != null) {
+							dbManager.markSystemCollectionsForPurge(asset);
 							final List<Object> toBeStored = new ArrayList<Object>(1);
 							final List<Object> toBeTrashed = new ArrayList<Object>(1);
-							moveAsset(box, a, file, folder, info, aMonitor, errands, fileWatchManager, toBeStored,
-									toBeTrashed);
+							moveAsset(box, asset, file, asset.getVolume(), folder, info, aMonitor, fileWatchManager,
+									toBeStored, toBeTrashed);
 							if (!storeSafely(new Runnable() {
 								public void run() {
 									for (Object o : toBeTrashed)
@@ -164,36 +161,33 @@ public class MoveOperation extends DbOperation {
 							IRelationDetector[] detectors = info.getAdapter(IRelationDetector[].class);
 							for (IRelationDetector detector : detectors)
 								try {
-									if (detector.moveAsset(asset1, new File(file), new File(new URI(asset1.getUri())),
+									if (detector.moveAsset(asset, new File(file), new File(new URI(asset.getUri())),
 											info, opId))
 										break;
 								} catch (URISyntaxException e) {
 									break;
 								}
-							dbManager.createFolderHierarchy(asset1);
+							dbManager.createFolderHierarchy(asset);
 						} else {
-							String volume = asset1.getVolume();
-							if (volume != null && !volume.isEmpty())
-								volumes.add(volume);
-							errands.add(file.toString());
+							box.addErrand(asset.getUri(), asset.getVolume());
 							if (aMonitor.isCanceled())
 								return abort();
 						}
 					}
 				}
 			}
+			String errorMessage = box.getErrorMessage();
+			if (errorMessage != null) {
+				final IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
+				if (errorHandler != null)
+					errorHandler.showInformation(Messages.getString("MoveOperation.Unable_to_move"), //$NON-NLS-1$
+							errorMessage, info);
+			}
 		} finally {
 			fileWatchManager.stopIgnoring(opId);
-			box.endSession();
 		}
 		fireAssetsModified(null, null);
 		fireStructureModified();
-		if (!errands.isEmpty()) {
-			final IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
-			if (errorHandler != null)
-				errorHandler.showInformation(Messages.getString("MoveOperation.Unable_to_move"), //$NON-NLS-1$
-						Ticketbox.computeErrorMessage(errands, volumes), info);
-		}
 		assets = null;
 		return close(info);
 	}
@@ -282,7 +276,7 @@ public class MoveOperation extends DbOperation {
 	}
 
 	private void copyRemoteAsset(Asset movedAsset, AssetOrigin assetOrigin, List<Object> toBeStored, FileInfo fileInfo,
-			File newFile) throws ConnectionLostException {
+			File newFile, FileLocationBackup backup) throws ConnectionLostException {
 		if (now == null) {
 			now = new Date();
 			createLastImport();
@@ -311,23 +305,20 @@ public class MoveOperation extends DbOperation {
 					if (contact == null)
 						asset.setCreatorsContact_parent(null);
 					else {
-						contact.setCreatorsContact_parent(null);
 						Iterator<ContactImpl> cit = dbManager.queryByExample(contact).iterator();
 						if (cit.hasNext()) {
 							contact = cit.next();
-							String creatorsContact_parent = contact.getCreatorsContact_parent();
-							if (creatorsContact_parent != null) {
-								CreatorsContactImpl lc = dbManager.obtainById(CreatorsContactImpl.class,
-										creatorsContact_parent);
-								if (lc != null)
-									rel = lc;
-								else
-									rel.setContact(contactId);
-							} else
+							Iterator<CreatorsContactImpl> itcc = dbManager
+									.obtainObjects(CreatorsContactImpl.class, "contact", //$NON-NLS-1$
+											contact.getStringId(), QueryField.EQUALS)
+									.iterator();
+							if (itcc.hasNext())
+								rel = itcc.next();
+							else
 								rel.setContact(contactId);
 						} else {
-							contact.setCreatorsContact_parent(rel.getStringId());
 							toBeStored.add(contact);
+							backup.addCreatedObject(contact);
 						}
 						rel.getAsset().clear();
 						rel.addAsset(assetId);
@@ -352,24 +343,20 @@ public class MoveOperation extends DbOperation {
 					if (location == null)
 						asset.setLocationCreated_parent(null);
 					else {
-						location.setLocationCreated_parent(null);
-						location.getLocationShown_parent().clear();
 						Iterator<LocationImpl> cit = dbManager.queryByExample(location).iterator();
 						if (cit.hasNext()) {
 							location = cit.next();
-							String locationCreated_parent = location.getLocationCreated_parent();
-							if (locationCreated_parent != null) {
-								LocationCreatedImpl lc = dbManager.obtainById(LocationCreatedImpl.class,
-										locationCreated_parent);
-								if (lc != null)
-									rel = lc;
-								else
-									rel.setLocation(locationId);
-							} else
+							Iterator<LocationCreatedImpl> itlc = dbManager
+									.obtainObjects(LocationCreatedImpl.class, "location", //$NON-NLS-1$
+											location.getStringId(), QueryField.EQUALS)
+									.iterator();
+							if (itlc.hasNext())
+								rel = itlc.next();
+							else
 								rel.setLocation(locationId);
 						} else {
-							location.setLocationCreated_parent(rel.getStringId());
 							toBeStored.add(location);
+							backup.addCreatedObject(location);
 						}
 						rel.addAsset(assetId);
 						toBeStored.add(rel);
@@ -389,15 +376,14 @@ public class MoveOperation extends DbOperation {
 					if (location == null)
 						relIds.remove(r.getStringId());
 					else {
-						location.getLocationShown_parent().clear();
-						location.setLocationCreated_parent(null);
 						Iterator<LocationImpl> cit = dbManager.queryByExample(location).iterator();
 						if (cit.hasNext()) {
 							location = cit.next();
 							r.setLocation(location.getStringId());
-						} else
+						} else {
 							toBeStored.add(location);
-						location.addLocationShown_parent(r.getStringId());
+							backup.addCreatedObject(location);
+						}
 						r.setAsset(assetId);
 						toBeStored.add(r);
 					}
@@ -418,15 +404,14 @@ public class MoveOperation extends DbOperation {
 					if (artwork == null)
 						relIds.remove(r.getStringId());
 					else {
-						artwork.getArtworkOrObjectShown_parent().clear();
-						List<ArtworkOrObjectImpl> cset = dbManager.queryByExample(artwork);
-						if (cset.isEmpty()) {
-							toBeStored.add(artwork);
-						} else {
-							artwork = cset.get(0);
+						Iterator<ArtworkOrObjectImpl> ita = dbManager.queryByExample(artwork).iterator();
+						if (ita.hasNext()) {
+							artwork = ita.next();
 							r.setArtworkOrObject(artwork.getStringId());
+						} else {
+							toBeStored.add(artwork);
+							backup.addCreatedObject(artwork);
 						}
-						artwork.addArtworkOrObjectShown_parent(r.getStringId());
 						r.setAsset(assetId);
 						toBeStored.add(r);
 					}
@@ -451,83 +436,78 @@ public class MoveOperation extends DbOperation {
 			fireStructureModified();
 	}
 
-	private void moveAsset(Ticketbox box, Asset movedAsset, URI uri, File target, IAdaptable info,
-			IProgressMonitor aMonitor, List<String> errands, FileWatchManager fwManager, List<Object> toBeStored,
-			List<Object> toBeTrashed) {
+	private void moveAsset(Ticketbox box, Asset movedAsset, URI uri, String volume, File target, IAdaptable info,
+			IProgressMonitor aMonitor, FileWatchManager fwManager, List<Object> toBeStored, List<Object> toBeTrashed) {
 		File file = null;
 		if (uri != null) {
 			try {
 				file = box.obtainFile(uri);
 			} catch (IOException e) {
-				errands.add(uri.toString());
+				box.addErrand(uri.toString(), volume);
 			}
 		}
 		String assetId = movedAsset.getStringId();
-		if (file != null)
-			try {
-				Path path = new Path(file.getAbsolutePath());
-				toBeTrashed.add(new FileLocationBackup(opId, assetId, box.isLocal() ? path : null, true, false));
-				Path folderPath = new Path(target.getAbsolutePath());
-				IPath newPath = folderPath.append(path.lastSegment());
-				if (!newPath.equals(path)) {
-					File newFile = newPath.toFile();
-					if (newFile.exists()) {
-						switch (promptForOverwrite(newFile, info)) {
-						case IGNORE:
-							return;
-						case RENAME:
-							newFile = makeUnique(newFile);
-							break;
-						case OVERWRITE:
-							newFile.delete();
-							break;
-						default:
-							aMonitor.setCanceled(true);
-							return;
-						}
-					}
-					URI[] xmpOrigURIs = Core.getSidecarURIs(uri);
-					URI newURI = newFile.toURI();
-					URI[] xmpTargetURIs = Core.getSidecarURIs(newURI);
-					URI voiceOrigURI = null;
-					URI voiceTargetURI = null;
-					String voiceFileURI = movedAsset.getVoiceFileURI();
-					if (".".equals(voiceFileURI)) { //$NON-NLS-1$
-						voiceOrigURI = Core.getVoicefileURI(file);
-						voiceTargetURI = Core.getVoicefileURI(newFile);
-					}
-					try {
-						fwManager.moveFileSilently(file, newFile, opId, aMonitor);
-						movedAsset.setUri(newURI.toString());
-						toBeStored.add(movedAsset);
-						for (int i = 0; i < xmpOrigURIs.length; i++) {
-							File xmpFile = new File(xmpOrigURIs[i]);
-							File xmpTarget = null;
-							if (xmpFile.exists()) {
-								xmpTarget = new File(xmpTargetURIs[i]);
-								xmpTarget.delete();
-								fwManager.moveFileSilently(xmpFile, xmpTarget, opId, aMonitor);
-							}
-						}
-						if (voiceOrigURI != null) {
-							File voiceFile = new File(voiceOrigURI);
-							File voiceTarget = null;
-							if (voiceFile.exists()) {
-								voiceTarget = new File(voiceTargetURI);
-								voiceTarget.delete();
-								fwManager.moveFileSilently(voiceFile, voiceTarget, opId, aMonitor);
-							}
-						}
-					} catch (IOException e) {
-						addError(NLS.bind(Messages.getString("MoveOperation.Moving_of_image_failed"), file), e); //$NON-NLS-1$
-					} catch (DiskFullException e) {
-						addError(NLS.bind(Messages.getString("MoveOperation.Moving_of_image_failed"), file), e); //$NON-NLS-1$
+		if (file != null) {
+			Path path = new Path(file.getAbsolutePath());
+			toBeTrashed.add(new FileLocationBackup(opId, assetId, box.isLocal() ? path : null, true, false));
+			Path folderPath = new Path(target.getAbsolutePath());
+			IPath newPath = folderPath.append(path.lastSegment());
+			if (!newPath.equals(path)) {
+				File newFile = newPath.toFile();
+				if (newFile.exists()) {
+					switch (promptForOverwrite(newFile, info)) {
+					case IGNORE:
+						return;
+					case RENAME:
+						newFile = makeUnique(newFile);
+						break;
+					case OVERWRITE:
+						newFile.delete();
+						break;
+					default:
+						aMonitor.setCanceled(true);
+						return;
 					}
 				}
-			} finally {
-				box.cleanup();
+				URI[] xmpOrigURIs = Core.getSidecarURIs(uri);
+				URI newURI = newFile.toURI();
+				URI[] xmpTargetURIs = Core.getSidecarURIs(newURI);
+				URI voiceOrigURI = null;
+				URI voiceTargetURI = null;
+				String voiceFileURI = movedAsset.getVoiceFileURI();
+				if (".".equals(voiceFileURI)) { //$NON-NLS-1$
+					voiceOrigURI = Core.getVoicefileURI(file);
+					voiceTargetURI = Core.getVoicefileURI(newFile);
+				}
+				try {
+					fwManager.moveFileSilently(file, newFile, opId, aMonitor);
+					movedAsset.setUri(newURI.toString());
+					toBeStored.add(movedAsset);
+					for (int i = 0; i < xmpOrigURIs.length; i++) {
+						File xmpFile = new File(xmpOrigURIs[i]);
+						File xmpTarget = null;
+						if (xmpFile.exists()) {
+							xmpTarget = new File(xmpTargetURIs[i]);
+							xmpTarget.delete();
+							fwManager.moveFileSilently(xmpFile, xmpTarget, opId, aMonitor);
+						}
+					}
+					if (voiceOrigURI != null) {
+						File voiceFile = new File(voiceOrigURI);
+						File voiceTarget = null;
+						if (voiceFile.exists()) {
+							voiceTarget = new File(voiceTargetURI);
+							voiceTarget.delete();
+							fwManager.moveFileSilently(voiceFile, voiceTarget, opId, aMonitor);
+						}
+					}
+				} catch (IOException e) {
+					addError(NLS.bind(Messages.getString("MoveOperation.Moving_of_image_failed"), file), e); //$NON-NLS-1$
+				} catch (DiskFullException e) {
+					addError(NLS.bind(Messages.getString("MoveOperation.Moving_of_image_failed"), file), e); //$NON-NLS-1$
+				}
 			}
-		else
+		} else
 			toBeTrashed.add(new FileLocationBackup(opId, assetId, null, true, false));
 	}
 
@@ -542,11 +522,9 @@ public class MoveOperation extends DbOperation {
 		IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
 		if (errorHandler != null)
 			ret = errorHandler.showMessageDialog(Messages.getString("MoveOperation.Same_file_exists"), //$NON-NLS-1$
-					null,
-					NLS.bind(Messages.getString("MoveOperation.File_already_exists"), //$NON-NLS-1$
+					null, NLS.bind(Messages.getString("MoveOperation.File_already_exists"), //$NON-NLS-1$
 							newFile.getName()),
-					MessageDialog.QUESTION,
-					new String[] { Messages.getString("MoveOperation.Overwrite"), //$NON-NLS-1$
+					MessageDialog.QUESTION, new String[] { Messages.getString("MoveOperation.Overwrite"), //$NON-NLS-1$
 							Messages.getString("MoveOperation.Overwrite_all"), IDialogConstants.SKIP_LABEL, //$NON-NLS-1$
 							Messages.getString("MoveOperation.Skip_all"), //$NON-NLS-1$
 							Messages.getString("MoveOperation.Rename"), Messages.getString("MoveOperation.Rename_all"), //$NON-NLS-1$ //$NON-NLS-2$
@@ -652,7 +630,7 @@ public class MoveOperation extends DbOperation {
 	}
 
 	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
-		//do nothing
+		// do nothing
 	}
 
 }

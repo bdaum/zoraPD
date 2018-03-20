@@ -50,9 +50,8 @@ public class LargeTextCellEditorDialog extends ZTitleAreaDialog {
 		viewer.setLayoutData(layoutData);
 		viewer.addVerifyListener(new VerifyListener() {
 			public void verifyText(VerifyEvent e) {
-				String newText = viewer.getText().substring(0, e.start) + e.text
-						+ viewer.getText().substring(e.end);
-				String msg = qfield.isValid(newText, asset);
+				String msg = qfield.isValid(viewer.getText().substring(0, e.start) + e.text
+						+ viewer.getText().substring(e.end), asset);
 				setErrorMessage(msg);
 				valid = msg == null;
 				updateButtons();

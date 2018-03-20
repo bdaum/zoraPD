@@ -18,12 +18,9 @@ import com.bdaum.aoModeling.runtime.*;
 @SuppressWarnings({ "unused" })
 public interface ArtworkOrObjectShown extends ArtworkOrObjectShown_type, IAsset {
 
-	/*----- Operation points -----*/
-
-	public static final int OP_$init = 0;
-
-	public static final int OP_$dispose = 1;
-
+	// Modified manually: no backpointers and other overhead
+	
+	
 	/* ----- Fields ----- */
 
 	/**
@@ -54,19 +51,5 @@ public interface ArtworkOrObjectShown extends ArtworkOrObjectShown_type, IAsset 
 	 */
 	public String getAsset();
 
-	/* ----- Validation ----- */
-
-	/**
-	 * Tests if all non-null properties and arcs have been supplied with values
-	 * @throws com.bdaum.aoModeling.runtime.ConstraintException
-	 */
-	public void validateCompleteness() throws ConstraintException;
-
-	/**
-	 * Performs constraint validation
-	 * @throws com.bdaum.aoModeling.runtime.ConstraintException
-	 * @see com.bdaum.aoModeling.runtime.IAsset#validate
-	 */
-	public void validate() throws ConstraintException;
 
 }

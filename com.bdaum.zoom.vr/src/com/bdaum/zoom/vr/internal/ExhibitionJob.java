@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2012-2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2012-2014 Berthold Daum  
  */
 package com.bdaum.zoom.vr.internal;
 
@@ -472,8 +472,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 		int sy = gallery.getStartY();
 		int tagId = 1;
 		int wallId = 1;
-		Ticketbox box = new Ticketbox();
-		try {
+		try (Ticketbox box = new Ticketbox()) {
 			List<File> renamedFiles = new ArrayList<File>();
 			for (Wall wall : gallery.getWall()) {
 				Rgb_type wallColor = getWallColor(wall);
@@ -656,7 +655,6 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 												generateLabel(shell.getDisplay(), exhibit, roomFolder, tid);
 										});
 									}
-									box.cleanup();
 									generateExhibit(sb, wall, roomName, exhibit, tagId++, sceneSize, woff, scale, zoom,
 											headHeight, hideLabel);
 								}
@@ -681,7 +679,6 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 			if (doorWall != null && infoPlatePosition != INFONONE)
 				generateInfoPlate(sb, shell, artists, roomFolder, roomName, doorWall, scale, woff, mx, my, tagId);
 		} finally {
-			box.endSession();
 			if (entryGC != null)
 				entryGC.dispose();
 			if (entryImage != null)

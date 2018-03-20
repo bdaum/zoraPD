@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2015 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.dialogs;
@@ -65,16 +65,8 @@ public class AcousticMessageDialog extends MessageDialog {
 	 *         <code>false</code> otherwise
 	 */
 	public static boolean openConfirm(Shell parent, String title, String message) {
-		MessageDialog dialog = new AcousticMessageDialog(parent, title, null, // accept
-				// the
-				// default
-				// window
-				// icon
-				message, QUESTION, new String[] { IDialogConstants.OK_LABEL, IDialogConstants.CANCEL_LABEL }, 0); // OK
-																													// is
-																													// the
-		// default
-		return dialog.open() == 0;
+		return new AcousticMessageDialog(parent, title, null, message, QUESTION,
+				new String[] { IDialogConstants.OK_LABEL, IDialogConstants.CANCEL_LABEL }, 0).open() == 0;
 	}
 
 	/**
@@ -88,16 +80,8 @@ public class AcousticMessageDialog extends MessageDialog {
 	 *            the message
 	 */
 	public static void openError(Shell parent, String title, String message) {
-		MessageDialog dialog = new AcousticMessageDialog(parent, title, null, // accept
-				// the
-				// default
-				// window
-				// icon
-				message, ERROR, new String[] { IDialogConstants.OK_LABEL }, 0); // ok
-		// is
-		// the
-		// default
-		dialog.open();
+		new AcousticMessageDialog(parent, title, null,
+				message, ERROR, new String[] { IDialogConstants.OK_LABEL }, 0).open();
 	}
 
 	/**
@@ -127,13 +111,8 @@ public class AcousticMessageDialog extends MessageDialog {
 	 *            when the validator is executed and returns true the dialog closes
 	 */
 	public static void openInformation(Shell parent, String title, String message, IValidator validator) {
-		AcousticMessageDialog dialog = new AcousticMessageDialog(parent, title, null, // accept
-				// the
-				// default
-				// window
-				// icon
+		AcousticMessageDialog dialog = new AcousticMessageDialog(parent, title, null,
 				message, INFORMATION, new String[] { IDialogConstants.OK_LABEL }, 0);
-		// ok is the default
 		dialog.setValidator(validator);
 		dialog.open();
 	}
@@ -151,17 +130,8 @@ public class AcousticMessageDialog extends MessageDialog {
 	 *         <code>false</code> otherwise
 	 */
 	public static boolean openQuestion(Shell parent, String title, String message) {
-		MessageDialog dialog = new AcousticMessageDialog(parent, title, null, // accept
-				// the
-				// default
-				// window
-				// icon
-				message, QUESTION, new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL }, 0); // yes
-																												// is
-																												// the
-																												// default
-		dialog.create();
-		return dialog.open() == 0;
+		return new AcousticMessageDialog(parent, title, null, 
+				message, QUESTION, new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL }, 0).open() == 0;
 	}
 
 	/**
@@ -175,17 +145,8 @@ public class AcousticMessageDialog extends MessageDialog {
 	 *            the message
 	 */
 	public static void openWarning(Shell parent, String title, String message) {
-		MessageDialog dialog = new AcousticMessageDialog(parent, title, null, // accept
-				// the
-				// default
-				// window
-				// icon
-				message, WARNING, new String[] { IDialogConstants.OK_LABEL }, 0); // ok
-		// is
-		// the
-		// default
-		dialog.open();
-		return;
+		new AcousticMessageDialog(parent, title, null,
+				message, WARNING, new String[] { IDialogConstants.OK_LABEL }, 0).open();
 	}
 
 	/**
@@ -306,7 +267,6 @@ public class AcousticMessageDialog extends MessageDialog {
 			titleLabel.setFont(JFaceResources.getFont(UiConstants.MESSAGETITLEFONT));
 			titleLabel.setText(dialogTitle);
 		}
-		// create message
 		if (message != null) {
 			composite = new Composite(parent, SWT.NONE);
 			composite.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 2, 1));

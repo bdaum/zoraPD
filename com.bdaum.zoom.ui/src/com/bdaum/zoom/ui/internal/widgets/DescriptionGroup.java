@@ -25,16 +25,15 @@ public class DescriptionGroup {
 	private HtmlSourceViewer descriptionHtmlViewer;
 	private RadioButtonGroup formatButtonGroup;
 
+	@SuppressWarnings("unused")
 	public DescriptionGroup(final Composite parent, int style) {
-		@SuppressWarnings("unused")
-		Label label = new Label(parent, SWT.NONE);
+		new Label(parent, SWT.NONE).setText(Messages.DescriptionGroup_description);
 		int numColumns = ((GridLayout) parent.getLayout()).numColumns;
 		Composite formatGroup = new Composite(parent, SWT.NONE);
 		formatGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false, numColumns - 1, 1));
 		formatGroup.setLayout(new GridLayout(2, false));
 		formatButtonGroup = new RadioButtonGroup(formatGroup, null, SWT.HORIZONTAL,
 				Messages.DescriptionGroup_plain_text, "HTML"); //$NON-NLS-1$
-
 		formatButtonGroup.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -46,10 +45,7 @@ public class DescriptionGroup {
 		gd_descriptionHelp.horizontalIndent = 20;
 		descriptionHelpLabel.setLayoutData(gd_descriptionHelp);
 		descriptionHelpLabel.setText(Messages.DescriptionGroup_html_assist);
-		Label descriptionLabel = new Label(parent, SWT.NONE);
-		descriptionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
-		descriptionLabel.setText(Messages.DescriptionGroup_description);
-
+		new Label(parent, SWT.NONE);
 		GridData gd_descriptionField = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gd_descriptionField.widthHint = 250;
 		gd_descriptionField.heightHint = 70;
@@ -62,11 +58,8 @@ public class DescriptionGroup {
 				SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.H_SCROLL | SWT.V_SCROLL, new XMLCodeScanner(),
 				new HtmlContentAssistant(false));
 		descriptionHtmlViewer.setDocument(new Document());
-		while (numColumns > 2) {
-			@SuppressWarnings("unused")
-			Label label2 = new Label(parent, SWT.NONE);
-			--numColumns;
-		}
+		while (numColumns-- > 2)
+			new Label(parent, SWT.NONE);
 		setText("", false); //$NON-NLS-1$
 	}
 
@@ -77,12 +70,11 @@ public class DescriptionGroup {
 			descriptionHtmlViewer.setFocus();
 		} else {
 			StringBuilder sb = new StringBuilder();
-			if (BatchUtilities.decodeHTML(descriptionHtmlViewer.getDocument().get(), sb)) {
-				if (!AcousticMessageDialog.openConfirm(parent.getShell(), Messages.DescriptionGroup_html_to_plain,
-						Messages.DescriptionGroup_existing_markup_will_be_deleted)) {
-					formatButtonGroup.setSelection(1);
-					return;
-				}
+			if (BatchUtilities.decodeHTML(descriptionHtmlViewer.getDocument().get(), sb)
+					&& !AcousticMessageDialog.openConfirm(parent.getShell(), Messages.DescriptionGroup_html_to_plain,
+							Messages.DescriptionGroup_existing_markup_will_be_deleted)) {
+				formatButtonGroup.setSelection(1);
+				return;
 			}
 			descriptionField.setText(sb.toString());
 			descriptionStack.topControl = descriptionField;

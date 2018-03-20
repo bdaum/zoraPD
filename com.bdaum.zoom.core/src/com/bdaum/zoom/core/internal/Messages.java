@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.core.internal;
 
@@ -63,6 +63,7 @@ public class Messages extends NLS {
 	public static String CoreActivator_use_newer_version;
 	public static String CoreActivator_User_defined;
 	public static String CoreActivator_web_galleries;
+	public static String CoreActivator_workspace_locked;
 	public static String CoreActivator_wrong_index_version;
 	public static String FileWatchManager_cannot_instantiate_file_monitor;
 	public static String FileWatchManager_internal_error_processing_file_change;
@@ -93,8 +94,6 @@ public class Messages extends NLS {
 	public static String Utilities_last_import;
 	public static String Utilities_not_categorized;
 	public static String Utilities_nxmpixel;
-	public static String Utilities_Written_by_cat;
-	public static String Utilities_Written_by_keywords;
 	public static String Utilities_yyyymdhmm;
 	public static String VolumeManager_error_compiling_pattern;
 	public static String VolumeManager_monitor_volumes;

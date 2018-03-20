@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.commands;
 
@@ -40,38 +40,39 @@ public class RenameCatalogCommand extends AbstractCommandHandler {
 		Shell activeShell = getShell();
 		IDbManager dbManager = activator.getDbManager();
 		File file = dbManager.getFile();
-		if (file == null)
-			return;
-		String fileName = file.getName();
-		int p = fileName.lastIndexOf('.');
-		final String name = p >= 0 ? fileName.substring(0, p) : fileName;
-		FilenameInputDialog dialog = new FilenameInputDialog(activeShell, Messages.RenameCatActionDelegate_rename_cat,
-				Messages.RenameCatActionDelegate_specify_new_name, name);
-		if (dialog.open() == InputDialog.OK) {
-			String newName = dialog.getValue();
-			activator.fireCatalogClosed(CatalogListener.NORMAL);
-			String folder = file.getParent();
-			File newFile = new File(folder, newName + Constants.CATALOGEXTENSION);
-			try {
-				file.renameTo(newFile);
-			} catch (Exception e1) {
-				activator.logError(Messages.RenameCatActionDelegate_cannot_rename_cat, e1);
-				return;
-			}
-			File indexFile = new File(folder, name + Constants.INDEXEXTENSION);
-			if (indexFile.exists())
+		if (file != null) {
+			String fileName = file.getName();
+			int p = fileName.lastIndexOf('.');
+			final String name = p >= 0 ? fileName.substring(0, p) : fileName;
+			FilenameInputDialog dialog = new FilenameInputDialog(activeShell,
+					Messages.RenameCatActionDelegate_rename_cat, Messages.RenameCatActionDelegate_specify_new_name,
+					name);
+			if (dialog.open() == InputDialog.OK) {
+				String newName = dialog.getValue();
+				activator.fireCatalogClosed(CatalogListener.NORMAL);
+				String folder = file.getParent();
+				File newFile = new File(folder, newName + Constants.CATALOGEXTENSION);
 				try {
-					indexFile.renameTo(new File(folder, newName + Constants.INDEXEXTENSION));
-				} catch (Exception e) {
-					activator.logError(Messages.RenameCatActionDelegate_cannot_rename_index, e);
-					newFile.renameTo(file);
+					file.renameTo(newFile);
+				} catch (Exception e1) {
+					activator.logError(Messages.RenameCatActionDelegate_cannot_rename_cat, e1);
 					return;
 				}
-			dbManager = activator.openDatabase(newFile.getAbsolutePath());
-			activeShell.setText(Constants.APPLICATION_NAME + " - " //$NON-NLS-1$
-					+ dbManager.getFileName());
-			activator.setCatFile(newFile);
-			activator.fireCatalogOpened(false);
+				File indexFile = new File(folder, name + Constants.INDEXEXTENSION);
+				if (indexFile.exists())
+					try {
+						indexFile.renameTo(new File(folder, newName + Constants.INDEXEXTENSION));
+					} catch (Exception e) {
+						activator.logError(Messages.RenameCatActionDelegate_cannot_rename_index, e);
+						newFile.renameTo(file);
+						return;
+					}
+				dbManager = activator.openDatabase(newFile.getAbsolutePath());
+				activeShell.setText(Constants.APPLICATION_NAME + " - " //$NON-NLS-1$
+						+ dbManager.getFileName());
+				activator.setCatFile(newFile);
+				activator.fireCatalogOpened(false);
+			}
 		}
 	}
 

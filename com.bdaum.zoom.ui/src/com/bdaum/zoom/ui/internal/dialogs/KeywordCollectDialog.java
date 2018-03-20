@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -33,7 +33,6 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
@@ -50,6 +49,7 @@ import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.fileMonitor.internal.filefilter.FilterChain;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 
 public class KeywordCollectDialog extends ZProgressDialog {
 
@@ -170,7 +170,7 @@ public class KeywordCollectDialog extends ZProgressDialog {
 		viewer1.getTable().setLayoutData(new GridData(500, 300));
 		viewer1.setContentProvider(ArrayContentProvider.getInstance());
 		viewer1.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
-		viewer1.setComparator(new ViewerComparator());
+		viewer1.setComparator(ZViewerComparator.INSTANCE);
 		viewer1.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewer1.addCheckStateListener(new ICheckStateListener() {
 			public void checkStateChanged(CheckStateChangedEvent event) {
@@ -193,7 +193,7 @@ public class KeywordCollectDialog extends ZProgressDialog {
 		viewer2.getTable().setLayoutData(new GridData(500, 300));
 		viewer2.setContentProvider(ArrayContentProvider.getInstance());
 		viewer2.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
-		viewer2.setComparator(new ViewerComparator());
+		viewer2.setComparator(ZViewerComparator.INSTANCE);
 		viewer2.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewer2.addCheckStateListener(new ICheckStateListener() {
 			public void checkStateChanged(CheckStateChangedEvent event) {

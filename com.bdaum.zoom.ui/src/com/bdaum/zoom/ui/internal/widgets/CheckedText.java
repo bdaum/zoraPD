@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -59,6 +59,7 @@ import org.eclipse.ui.PlatformUI;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.core.ISpellCheckingService.ISpellIncident;
+import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.job.SpellCheckingJob;
@@ -76,7 +77,6 @@ public class CheckedText extends Composite
 	private FocusListener focusListener;
 	private String hint = ""; //$NON-NLS-1$
 	protected boolean hintShown;
-	protected Color originalTextColor;
 	private ListenerList<ModifyListener> modifyListeners;
 	private ListenerList<VerifyListener> verifyListeners;
 	private IOperationHistory history;
@@ -300,6 +300,11 @@ public class CheckedText extends Composite
 			lastChar = 0;
 		}
 	}
+	
+	@Override
+	public void setToolTipText(String text) {
+		control.setToolTipText(text);
+	}
 
 	public void setHint(String hint) {
 		if (hint == null)
@@ -330,9 +335,9 @@ public class CheckedText extends Composite
 			String text = control.getText();
 			if (text.isEmpty()) {
 				removeAllListeners();
-				originalTextColor = control.getForeground();
-				control.setForeground(control.getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW));
+				control.setData("id", "hint"); //$NON-NLS-1$ //$NON-NLS-2$
 				control.setText(hint);
+				CssActivator.getDefault().applyStyles(control, false);
 				hintShown = true;
 			}
 		}
@@ -340,9 +345,10 @@ public class CheckedText extends Composite
 
 	protected void removeHint() {
 		if (hintShown) {
-			control.setForeground(originalTextColor);
+			control.setData("id", null); //$NON-NLS-1$
 			control.setText(""); //$NON-NLS-1$
 			hintShown = false;
+			CssActivator.getDefault().applyStyles(control, false);
 			addAllListeners();
 		}
 	}
@@ -379,7 +385,7 @@ public class CheckedText extends Composite
 	}
 
 	public String getText() {
-		return control.getText();
+		return hintShown ? "" : control.getText(); //$NON-NLS-1$
 	}
 
 	public void setText(String text) {
@@ -487,26 +493,20 @@ public class CheckedText extends Composite
 	}
 
 	public static int[] computePolyline(Point left, Point right, int height) {
-
 		final int WIDTH = 3;
 		final int HEIGHT = 2;
 
 		int w2 = 2 * WIDTH;
 		int peeks = (right.x - left.x) / w2;
-
 		int leftX = left.x;
-
 		// compute (number of points) * 2
 		int length = 4 * peeks + 2;
 		if (length <= 0)
 			return NOREDSEA;
-
 		int[] coordinates = new int[length];
-
 		// compute top and bottom of peeks
 		int bottom = left.y + height;
 		int top = bottom - HEIGHT;
-
 		// populate array with peek coordinates
 		int index = 0;
 		for (int i = 0; i < peeks; i++) {
@@ -516,8 +516,8 @@ public class CheckedText extends Composite
 			coordinates[index++] = top;
 		}
 		// add the last down flank
-		coordinates[length - 2] = left.x + (w2 * peeks - WIDTH / 2);
-		coordinates[length - 1] = (top + bottom + 1) / 2;
+		coordinates[--length] = (top + bottom + 1) / 2;
+		coordinates[--length] = left.x + (w2 * peeks - WIDTH / 2);
 		return coordinates;
 	}
 
@@ -675,11 +675,9 @@ public class CheckedText extends Composite
 			try {
 				Point loc = control.toControl(e.x, e.y);
 				int offset = control.getOffsetAtLocation(loc);
-				for (ISpellIncident inc : incidents) {
-					if (inc.happensAt(offset)) {
+				for (ISpellIncident inc : incidents)
+					if (inc.happensAt(offset))
 						return inc;
-					}
-				}
 			} catch (IllegalArgumentException e1) {
 				// nothing found
 			}

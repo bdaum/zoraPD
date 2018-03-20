@@ -85,15 +85,11 @@ public class FilterPage extends ColoredWizardPage {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(2, false));
-
-		viewer = new TableViewer(composite, SWT.SINGLE | SWT.V_SCROLL
-				| SWT.BORDER);
-		viewer.getTable().setLayoutData(
-				new GridData(SWT.FILL, SWT.FILL, true, true));
+		viewer = new TableViewer(composite, SWT.SINGLE | SWT.V_SCROLL | SWT.BORDER);
+		viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewer.getTable().setLinesVisible(true);
 		viewer.getTable().setHeaderVisible(true);
-		TableViewerColumn col1 = createColumn(
-				Messages.FileFilterDialog_pattern, 300);
+		TableViewerColumn col1 = createColumn(Messages.FileFilterDialog_pattern, 300);
 		col1.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -103,7 +99,6 @@ public class FilterPage extends ColoredWizardPage {
 			}
 		});
 		col1.setEditingSupport(new EditingSupport(viewer) {
-
 			@Override
 			protected void setValue(Object element, Object value) {
 				if (element instanceof Filter && value instanceof String) {
@@ -121,8 +116,7 @@ public class FilterPage extends ColoredWizardPage {
 
 			@Override
 			protected CellEditor getCellEditor(Object element) {
-				TextCellEditor textCellEditor = new TextCellEditor(viewer
-						.getTable());
+				TextCellEditor textCellEditor = new TextCellEditor(viewer.getTable());
 				textCellEditor.setValidator(new ICellEditorValidator() {
 					public String isValid(Object value) {
 						String errorMessage = null;
@@ -140,8 +134,7 @@ public class FilterPage extends ColoredWizardPage {
 				return true;
 			}
 		});
-		TableViewerColumn col2 = createColumn(Messages.FileFilterDialog_type,
-				70);
+		TableViewerColumn col2 = createColumn(Messages.FileFilterDialog_type, 70);
 		col2.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -178,8 +171,7 @@ public class FilterPage extends ColoredWizardPage {
 				return true;
 			}
 		});
-		TableViewerColumn col3 = createColumn(Messages.FileFilterDialog_action,
-				90);
+		TableViewerColumn col3 = createColumn(Messages.FileFilterDialog_action, 90);
 		col3.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -223,8 +215,7 @@ public class FilterPage extends ColoredWizardPage {
 		});
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
 		Composite buttonGroup = new Composite(composite, SWT.NONE);
-		buttonGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.END, true,
-				false));
+		buttonGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.END, true, false));
 		buttonGroup.setLayout(new GridLayout(1, false));
 		addFolderButton = new Button(buttonGroup, SWT.PUSH);
 		addFolderButton.setText(Messages.FilterPage_add_folder);
@@ -233,19 +224,14 @@ public class FilterPage extends ColoredWizardPage {
 			public void widgetSelected(SelectionEvent e) {
 				DirectoryDialog dialog = new DirectoryDialog(getShell());
 				try {
-					File parent = new File(new URI(watchedFolder.getUri()));
-					String parentPath = parent.getAbsolutePath();
+					String parentPath = new File(new URI(watchedFolder.getUri())).getAbsolutePath();
 					dialog.setFilterPath(parentPath);
 					dialog.setText(Messages.FilterPage_select_subfolder);
 					dialog.setMessage(Messages.FilterPage_select_subfolder_msg);
 					String subdir = dialog.open();
-					if (subdir != null
-							&& subdir.length() > parentPath.length() + 1
-							&& subdir.startsWith(parentPath)) {
-						File folder = new File(subdir);
-						String folderPath = folder.getAbsolutePath();
-						Filter f = new Filter('-' + folderPath
-								.substring(parentPath.length() + 1) + '/');
+					if (subdir != null && subdir.length() > parentPath.length() + 1 && subdir.startsWith(parentPath)) {
+						String folderPath = new File(subdir).getAbsolutePath();
+						Filter f = new Filter('-' + folderPath.substring(parentPath.length() + 1) + '/');
 						filters.add(f);
 						viewer.insert(f, -1);
 						viewer.setSelection(new StructuredSelection(f));
@@ -271,8 +257,7 @@ public class FilterPage extends ColoredWizardPage {
 		removeButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) viewer
-						.getSelection();
+				IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 				if (!selection.isEmpty()) {
 					Filter f = (Filter) selection.getFirstElement();
 					filters.remove(f);
@@ -286,8 +271,7 @@ public class FilterPage extends ColoredWizardPage {
 		upButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) viewer
-						.getSelection();
+				IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 				if (!selection.isEmpty()) {
 					Filter f = (Filter) selection.getFirstElement();
 					int index = filters.indexOf(f);
@@ -305,10 +289,9 @@ public class FilterPage extends ColoredWizardPage {
 		downButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) viewer
-						.getSelection();
-				if (!selection.isEmpty()) {
-					Filter f = (Filter) selection.getFirstElement();
+				Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				if (firstElement instanceof Filter) {
+					Filter f = (Filter) firstElement;
 					int index = filters.indexOf(f);
 					if (index < filters.size() - 1) {
 						filters.remove(f);
@@ -336,8 +319,7 @@ public class FilterPage extends ColoredWizardPage {
 	}
 
 	private void fillValues() {
-		String s = watchedFolder.getFilters();
-		for (String f : Core.fromStringList(s, ";")) //$NON-NLS-1$
+		for (String f : Core.fromStringList(watchedFolder.getFilters(), ";")) //$NON-NLS-1$
 			filters.add(new Filter(f));
 		viewer.setInput(filters);
 	}
@@ -356,8 +338,7 @@ public class FilterPage extends ColoredWizardPage {
 	}
 
 	protected void updateButtons() {
-		Object first = ((IStructuredSelection) viewer.getSelection())
-				.getFirstElement();
+		Object first = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
 		if (first == null) {
 			removeButton.setEnabled(false);
 			upButton.setEnabled(false);

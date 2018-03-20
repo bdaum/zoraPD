@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.views;
 
@@ -26,10 +26,6 @@ import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 public final class IdentifiedElementComparer implements IElementComparer {
 	
 	private static IdentifiedElementComparer INSTANCE;
-	
-	private IdentifiedElementComparer() {
-		super();
-	}
 	
 	public static IdentifiedElementComparer getInstance() {
 		if (INSTANCE == null)

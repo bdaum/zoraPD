@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2014 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.views;
 
@@ -122,25 +122,23 @@ public class AssetDropTargetEffect extends DropTargetEffect implements PaintList
 	 * .events.PaintEvent)
 	 */
 	public void paintControl(final PaintEvent event) {
-		if (image != null) {
-			if (mode != DND.DROP_NONE) {
-				org.eclipse.swt.graphics.Rectangle imagebounds = image.getBounds();
-				GC gc = event.gc;
-				int w = (int) (imagebounds.width * magnification);
-				int h = (int) (imagebounds.height * magnification);
-				gc.setBackground(event.display.getSystemColor(SWT.COLOR_WHITE));
-				if (caption != null) {
-					gc.fillRectangle(MULTDIST, MULTDIST, w + 2, h + 2);
-					gc.drawImage(image, 0, 0, imagebounds.width, imagebounds.height, MULTDIST + 1, MULTDIST + 1, w, h);
-				}
-				gc.fillRectangle(0, 0, w + 2, h + 2);
-				gc.drawImage(image, 0, 0, imagebounds.width, imagebounds.height, 1, 1, w, h);
-				if (caption != null) {
-					gc.setBackground(event.display.getSystemColor(SWT.COLOR_BLUE));
-					gc.setForeground(event.display.getSystemColor(SWT.COLOR_WHITE));
-					Point textExtent = gc.textExtent(caption);
-					gc.drawText(String.valueOf(caption), (w - textExtent.x) / 2 + 1, (h - textExtent.y) / 2 + 1, false);
-				}
+		if (image != null && mode != DND.DROP_NONE) {
+			Rectangle imagebounds = image.getBounds();
+			GC gc = event.gc;
+			int w = (int) (imagebounds.width * magnification);
+			int h = (int) (imagebounds.height * magnification);
+			gc.setBackground(event.display.getSystemColor(SWT.COLOR_WHITE));
+			if (caption != null) {
+				gc.fillRectangle(MULTDIST, MULTDIST, w + 2, h + 2);
+				gc.drawImage(image, 0, 0, imagebounds.width, imagebounds.height, MULTDIST + 1, MULTDIST + 1, w, h);
+			}
+			gc.fillRectangle(0, 0, w + 2, h + 2);
+			gc.drawImage(image, 0, 0, imagebounds.width, imagebounds.height, 1, 1, w, h);
+			if (caption != null) {
+				gc.setBackground(event.display.getSystemColor(SWT.COLOR_BLUE));
+				gc.setForeground(event.display.getSystemColor(SWT.COLOR_WHITE));
+				Point textExtent = gc.textExtent(caption);
+				gc.drawText(String.valueOf(caption), (w - textExtent.x) / 2 + 1, (h - textExtent.y) / 2 + 1, false);
 			}
 		}
 	}

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -46,7 +46,6 @@ import org.eclipse.swt.widgets.Text;
 import com.bdaum.aoModeling.runtime.AomList;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.group.GroupImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
@@ -184,7 +183,6 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	}
 
 	private final ModifyListener modifyListener = new ModifyListener() {
-
 		public void modifyText(ModifyEvent e) {
 			updateButtons();
 		}
@@ -203,7 +201,6 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 				importGroup = new ImportGalleryGroup(comp, new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1),
 						Messages.SlideshowEditDialog_slideshow);
 				importGroup.addChangeListener(new ISelectionChangedListener() {
-
 					public void selectionChanged(SelectionChangedEvent event) {
 						IdentifiableObject fromItem = importGroup.getFromItem();
 						if (fromItem instanceof SlideShowImpl)
@@ -213,19 +210,16 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 				});
 			}
 			new Label(comp, SWT.NONE).setText(Messages.SlideshowEditDialog_name);
-
 			nameField = new Text(comp, SWT.BORDER);
 			nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			nameField.addModifyListener(modifyListener);
 			new Label(comp, SWT.NONE).setText(Messages.SlideshowEditDialog_description);
-
 			final GridData gd_descriptionField = new GridData(SWT.FILL, SWT.FILL, true, true);
 			gd_descriptionField.widthHint = 250;
 			gd_descriptionField.heightHint = 70;
 			descriptionField = new CheckedText(comp, SWT.WRAP | SWT.V_SCROLL | SWT.MULTI | SWT.BORDER);
 			descriptionField.setLayoutData(gd_descriptionField);
 		}
-
 		final Composite pcomp = new Composite(comp, SWT.NONE);
 		pcomp.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
 		pcomp.setLayout(new GridLayout(3, false));
@@ -240,20 +234,16 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 		parms.setLayout(new GridLayout(4, false));
 		parms.setText(Messages.SlideshowEditDialog_default_timing);
 		new Label(parms, SWT.NONE).setText(Messages.SlideshowEditDialog_duration);
-
 		durationField = new Text(parms, SWT.BORDER);
 		GridData data = new GridData(40, SWT.DEFAULT);
 		data.horizontalSpan = 3;
 		durationField.setLayoutData(data);
 		durationField.addModifyListener(modifyListener);
-
 		new Label(parms, SWT.NONE).setText(Messages.SlideshowEditDialog_fading);
-
 		fadingField = new Text(parms, SWT.BORDER);
 		fadingField.addModifyListener(modifyListener);
 		data = new GridData(40, SWT.DEFAULT);
 		fadingField.setLayoutData(data);
-
 		final Label effectLabel = new Label(parms, SWT.NONE);
 		data = new GridData();
 		data.horizontalIndent = 15;
@@ -263,12 +253,10 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 		effectField.setLayoutData(new GridData(150, SWT.DEFAULT));
 		effectField.setItems(EFFECTS);
 		effectField.setVisibleItemCount(EFFECTS.length / 2);
-
 		new Label(parms, SWT.NONE).setText(Messages.SlideshowEditDialog_zoom_in);
 		zoomField = new NumericControl(parms, SWT.NONE);
 		zoomField.setMaximum(100);
 		zoomField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
-
 		new Label(parms, SWT.NONE).setText(Messages.SlideshowEditDialog_title_display);
 		titleDisplayField = new Text(parms, SWT.BORDER);
 		titleDisplayField.setLayoutData(new GridData(40, SWT.DEFAULT));
@@ -342,7 +330,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	}
 
 	private void fillValues(SlideShowImpl show, boolean template) {
-		settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		try {
 			duration = settings.getInt(DELAY);
 		} catch (NumberFormatException e) {
@@ -408,15 +396,13 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 		titleContentField.select(titleContent);
 		fromPreviewButton.setSelection(fromPreview);
 		voiceButton.setSelection(voiceNotes);
-		if (skipDubletteswButton != null) {
-			try {
-				skipDublettes = settings.getBoolean(SKIP_DUBLETTES);
-			} catch (NumberFormatException e) {
-				skipDublettes = true;
-				// ignore
-			}
-			skipDubletteswButton.setSelection(skipDublettes);
+		try {
+			skipDublettes = settings.getBoolean(SKIP_DUBLETTES);
+		} catch (NumberFormatException e) {
+			skipDublettes = true;
+			// ignore
 		}
+		skipDubletteswButton.setSelection(skipDublettes);
 		if (adhoc)
 			privacyGroup.setSelection(QueryField.SAFETY_RESTRICTED);
 	}
@@ -480,7 +466,6 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			}
 			if (!adhoc && !canUndo) {
 				dbManager.safeTransaction(new Runnable() {
-
 					public void run() {
 						if (importGroup != null) {
 							IdentifiableObject obj = importGroup.getFromItem();
@@ -546,8 +531,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 						ExhibitImpl exhibit = dbManager.obtainById(ExhibitImpl.class, exhibitId);
 						if (exhibit != null) {
 							String assetId = exhibit.getAsset();
-							AssetImpl asset = dbManager.obtainAsset(assetId);
-							if (!SlideshowView.accepts(asset))
+							if (!SlideshowView.accepts(dbManager.obtainAsset(assetId)))
 								continue;
 							newSlide = new SlideImpl(exhibit.getTitle(), seqNo++, exhibit.getDescription(),
 									Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(),
@@ -571,8 +555,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 						WebExhibitImpl exhibit = dbManager.obtainById(WebExhibitImpl.class, exhibitId);
 						if (exhibit != null) {
 							String assetId = exhibit.getAsset();
-							AssetImpl asset = dbManager.obtainAsset(assetId);
-							if (!SlideshowView.accepts(asset))
+							if (!SlideshowView.accepts(dbManager.obtainAsset(assetId)))
 								continue;
 							newSlide = new SlideImpl(exhibit.getCaption(), seqNo++, exhibit.getDescription(),
 									Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(),

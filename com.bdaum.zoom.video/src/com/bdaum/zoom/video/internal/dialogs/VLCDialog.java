@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.video.internal.dialogs;
 
@@ -39,12 +39,12 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.browser.IWebBrowser;
 
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.db.IDbErrorHandler;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.widgets.FileEditor;
 import com.bdaum.zoom.ui.widgets.CLink;
 import com.bdaum.zoom.video.internal.VideoActivator;
@@ -52,6 +52,7 @@ import com.bdaum.zoom.video.internal.VideoActivator;
 @SuppressWarnings("restriction")
 public class VLCDialog extends ZTitleAreaDialog {
 
+	private static final String SETTINGSID = "com.bdaum.zoom.vlcDialog"; //$NON-NLS-1$
 	private File vlcLocation;
 	private Image vlcImage;
 	private FileEditor fileEditor;
@@ -76,29 +77,22 @@ public class VLCDialog extends ZTitleAreaDialog {
 		super.create();
 		getShell().setText(Constants.APPLICATION_NAME);
 		setTitle(Messages.VLCDialog_no_vlc);
-		vlcImage = VideoActivator.getImageDescriptor(
-				"icons/banner/largeVLC.png").createImage(); //$NON-NLS-1$
-		setTitleImage(vlcImage);
-		setMessage(NLS.bind(Messages.VLCDialog_assign_correct_version,
-				Constants.APPNAME));
+		setTitleImage(vlcImage = VideoActivator.getImageDescriptor("icons/banner/largeVLC.png").createImage()); //$NON-NLS-1$
+		setMessage(NLS.bind(Messages.VLCDialog_assign_correct_version, Constants.APPNAME));
 		updateButtons();
 	}
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-
 		final Composite composite = new Composite(area, SWT.NONE);
-		composite
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		composite.setLayout(new GridLayout(1, false));
-		fileEditor = new FileEditor(composite, SWT.OPEN,
-				Messages.VLCDialog_executable, true, Constants.EXEEXTENSION,
-				Constants.EXEFILTERNAMES, null,
-				vlcLocation == null ? "" : vlcLocation //$NON-NLS-1$
-						.getAbsolutePath(), false, false);
+		fileEditor = new FileEditor(composite, SWT.OPEN, Messages.VLCDialog_executable, true, Constants.EXEEXTENSION,
+				Constants.EXEFILTERNAMES, null, vlcLocation == null ? "" //$NON-NLS-1$
+						: vlcLocation.getAbsolutePath(),
+				false, false, getDialogSettings(UiActivator.getDefault(), SETTINGSID));
 		fileEditor.addModifyListener(new ModifyListener() {
-
 			public void modifyText(ModifyEvent e) {
 				updateButtons();
 			}
@@ -109,12 +103,9 @@ public class VLCDialog extends ZTitleAreaDialog {
 		link.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				String vlcDownload = System
-						.getProperty(Messages.VLCDialog_vlckey);
+				String vlcDownload = System.getProperty(Messages.VLCDialog_vlckey);
 				try {
-					IWebBrowser externalBrowser = PlatformUI.getWorkbench()
-							.getBrowserSupport().getExternalBrowser();
-					externalBrowser.openURL(new URL(vlcDownload));
+					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));
 				} catch (PartInitException e1) {
 					// do nothing
 				} catch (MalformedURLException e1) {
@@ -134,11 +125,9 @@ public class VLCDialog extends ZTitleAreaDialog {
 				vlcLocation = new File(s);
 				if (!vlcLocation.exists())
 					errorMessage = Messages.VLCDialog_does_not_exist;
-				else if (Constants.WIN32
-						&& Platform.getOSArch().indexOf("64") >= 0 //$NON-NLS-1$
+				else if (Constants.WIN32 && Platform.getOSArch().indexOf("64") >= 0 //$NON-NLS-1$
 						&& s.indexOf("(x86)") >= 0) //$NON-NLS-1$
-					errorMessage = NLS.bind(Messages.VLCDialog_not_suitable,
-							Constants.APPNAME);
+					errorMessage = NLS.bind(Messages.VLCDialog_not_suitable, Constants.APPNAME);
 
 			}
 		}
@@ -149,8 +138,7 @@ public class VLCDialog extends ZTitleAreaDialog {
 	}
 
 	public File getResult() {
-		return (vlcLocation == null || !vlcLocation.exists()) ? null
-				: vlcLocation;
+		return (vlcLocation == null || !vlcLocation.exists()) ? null : vlcLocation;
 	}
 
 	@Override

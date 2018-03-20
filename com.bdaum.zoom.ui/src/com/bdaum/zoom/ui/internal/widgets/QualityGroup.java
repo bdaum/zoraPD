@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -51,15 +51,15 @@ public class QualityGroup {
 	public QualityGroup(Composite parent, boolean resolution) {
 		group = new CGroup(parent, SWT.NONE);
 		GridLayout layout = (GridLayout) parent.getLayout();
-		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true,
-				false, layout.numColumns, 1);
-		group.setLayoutData(layoutData);
+		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true,
+				false, layout.numColumns, 1));
 		group.setText(Messages.QualityGroup_output_quality);
-		group.setLayout(new GridLayout(2, false));
+		group.setLayout(new GridLayout(4, false));
 		if (resolution) {
-			final Label qualityLabel = new Label(group, SWT.NONE);
-			qualityLabel.setText(Messages.QualityGroup_resolution);
+			new Label(group, SWT.NONE).setText(Messages.QualityGroup_resolution);
 			qualityField = new Combo(group, SWT.READ_ONLY);
+			qualityField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
+					false));
 			qualityField.setItems(new String[] { Messages.QualityGroup_screen,
 					Messages.QualityGroup_printer });
 			qualityField.addSelectionListener(new SelectionAdapter() {
@@ -69,18 +69,18 @@ public class QualityGroup {
 				}
 			});
 		}
-		sharpenGroup = new SharpeningGroup(group);
 		Composite jpegGroup = new Composite(group, SWT.NONE);
-		jpegGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		jpegGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, resolution ? 2 : 4, 1));
 		layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = 0;
 		jpegGroup.setLayout(layout);
 		compressionGroup = new CompressionGroup(jpegGroup, false);
+		sharpenGroup = new SharpeningGroup(group);
 	}
 
 	protected void fireSelectionEvent(SelectionEvent e) {
-		for (Object listener : selectionListeners.getListeners())
-			((SelectionListener) listener).widgetSelected(e);
+		for (SelectionListener listener : selectionListeners)
+			listener.widgetSelected(e);
 	}
 
 	public void saveSettings(IDialogSettings settings) {
@@ -108,13 +108,11 @@ public class QualityGroup {
 		sharpenGroup.fillValues(settings);
 		compressionGroup.fillValues(settings);
 		if (qualityField != null) {
-			int quality;
 			try {
-				quality = settings.getInt(PDFQUALITY);
+				qualityField.select(settings.getInt(PDFQUALITY));
 			} catch (NumberFormatException e1) {
-				quality = Constants.SCREEN_QUALITY;
+				qualityField.select(Constants.SCREEN_QUALITY);
 			}
-			qualityField.select(quality);
 		}
 	}
 

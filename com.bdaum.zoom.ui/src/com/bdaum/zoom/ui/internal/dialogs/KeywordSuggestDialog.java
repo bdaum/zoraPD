@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2013 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -31,7 +31,6 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -57,6 +56,8 @@ import com.bdaum.zoom.core.internal.lire.Algorithm;
 import com.bdaum.zoom.core.internal.lire.ILireService;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 
 @SuppressWarnings("restriction")
@@ -91,10 +92,9 @@ public class KeywordSuggestDialog extends ZProgressDialog implements SelectionLi
 						options.setKeywords(keywords);
 						options.setKeywordWeight(
 								(keywords == null || keywords.length == 0) ? 0 : queryOptions.getKeywordWeight());
-						List<Asset> set = collectionProcessor
+						for (Asset foundAsset : collectionProcessor
 								.processContentSearch(new CriterionImpl(ICollectionProcessor.SIMILARITY, null, options,
-										(int) (options.getMinScore() * 100), true), null, null);
-						for (Asset foundAsset : set)
+										(int) (options.getMinScore() * 100), true), null, null))
 							addScoredString(foundAssets, (int) (foundAsset.getScore() * 100), foundAsset.getStringId());
 						if (monitor.isCanceled())
 							return Status.CANCEL_STATUS;
@@ -228,7 +228,7 @@ public class KeywordSuggestDialog extends ZProgressDialog implements SelectionLi
 		viewer.getControl().setLayoutData(layoutData);
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
 		viewer.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
-		viewer.setComparator(new ViewerComparator() {
+		viewer.setComparator(new ZViewerComparator() {
 			@Override
 			public int compare(Viewer viewer, Object e1, Object e2) {
 				if (sortButtonGroup.getSelection() == 0) {
@@ -237,7 +237,8 @@ public class KeywordSuggestDialog extends ZProgressDialog implements SelectionLi
 					if (((ScoredString) e1).getScore() < ((ScoredString) e2).getScore())
 						return 1;
 				}
-				return ((ScoredString) e1).getString().compareTo(((ScoredString) e2).getString());
+				return UiUtilities.stringComparator.compare(((ScoredString) e1).getString(),
+						((ScoredString) e2).getString());
 			}
 		});
 		AllNoneGroup buttonbar = new AllNoneGroup(viewerComp, new SelectionAdapter() {

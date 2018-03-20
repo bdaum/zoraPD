@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.hover;
@@ -239,14 +239,6 @@ public class HoverInfo implements IHoverInfo {
 			return ((AssetImpl) object).getName();
 		if (object instanceof Bookmark)
 			return ((Bookmark) object).getLabel();
-		// if (object instanceof SmartCollectionImpl)
-		// return ((SmartCollectionImpl) object).getName();
-		// if (object instanceof Exhibition)
-		// return ((Exhibition) object).getName();
-		// if (object instanceof SlideShow)
-		// return ((SlideShow) object).getName();
-		// if (object instanceof WebGallery)
-		// return ((WebGallery) object).getName();
 		return ""; //$NON-NLS-1$
 	}
 

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -341,7 +341,7 @@ public class SlideshowView extends AbstractPresentationView {
 					pslide.offset(iWidth, 0);
 					pslide.slide.setSequenceNo(pslide.slide.getSequenceNo() + diff);
 				}
-			updateActions();
+			updateActions(false);
 			return Status.OK_STATUS;
 		}
 
@@ -358,7 +358,7 @@ public class SlideshowView extends AbstractPresentationView {
 				if (show != null) {
 					doRemoveSlide(show, added);
 					storeSafelyAndUpdateIndex(added.slide, show, added.slide.getAsset());
-					updateActions();
+					updateActions(false);
 				}
 			}
 			return Status.OK_STATUS;
@@ -465,7 +465,7 @@ public class SlideshowView extends AbstractPresentationView {
 					pslide.setSequenceNo(pslide.slide.getSequenceNo() + diff);
 				}
 				Core.getCore().getDbManager().safeTransaction(null, show);
-				updateActions();
+				updateActions(false);
 			}
 		}
 
@@ -502,7 +502,7 @@ public class SlideshowView extends AbstractPresentationView {
 			if (show != null) {
 				doRemoveSlide(show, deleted);
 				storeSafelyAndUpdateIndex(slide, show, slide.getAsset());
-				updateActions();
+				updateActions(false);
 			}
 			return Status.OK_STATUS;
 		}
@@ -552,7 +552,7 @@ public class SlideshowView extends AbstractPresentationView {
 					pslide.offset(iWidth, 0);
 					pslide.setSequenceNo(pslide.slide.getSequenceNo() + 1);
 				}
-				updateActions();
+				updateActions(false);
 			}
 			return Status.OK_STATUS;
 		}
@@ -662,7 +662,7 @@ public class SlideshowView extends AbstractPresentationView {
 				toBeStored.add(show);
 				storeSafelyAndUpdateIndex(null, toBeStored, assetIds);
 			}
-			updateActions();
+			updateActions(false);
 			return Status.OK_STATUS;
 		}
 
@@ -686,7 +686,7 @@ public class SlideshowView extends AbstractPresentationView {
 				if (deleteOp != null)
 					deleteOp.undo(monitor, info);
 				storeSafelyAndUpdateIndex(toBeDeleted, show, assetIds);
-				updateActions();
+				updateActions(false);
 			}
 			return Status.OK_STATUS;
 		}
@@ -718,8 +718,7 @@ public class SlideshowView extends AbstractPresentationView {
 			final Display display = canvas.getDisplay();
 			display.syncExec(colorRunnable);
 			IDbManager dbManager = Core.getCore().getDbManager();
-			Object[] children = slideBar.getChildrenReference().toArray();
-			for (Object child : children) {
+			for (Object child : slideBar.getChildrenReference().toArray()) {
 				if (child instanceof PSlide && isVisible() && mayRun()) {
 					final PSlide pslide = (PSlide) child;
 					SlideImpl slide = pslide.slide;
@@ -956,7 +955,7 @@ public class SlideshowView extends AbstractPresentationView {
 				}
 				performOperation(new EditSlideOperation(PSlide.this, slide, backup, style));
 				setPickedNode(this);
-				updateActions();
+				updateActions(false);
 				updateHandles();
 			}
 
@@ -1425,7 +1424,7 @@ public class SlideshowView extends AbstractPresentationView {
 			setInput(slideshow);
 		addCatalogListener();
 		setDecorator(canvas, new SlideShowDecorateJob());
-		updateActions();
+		updateActions(false);
 	}
 
 	private void setPanAndZoomHandlers() {
@@ -1536,11 +1535,11 @@ public class SlideshowView extends AbstractPresentationView {
 	}
 
 	@Override
-	public void updateActions() {
-		if (playAction == null)
-			return;
-		super.updateActions();
-		playAction.setEnabled(!slides.isEmpty());
+	public void updateActions(boolean force) {
+		if (playAction != null && (viewActive || force)) {
+			super.updateActions(force);
+			playAction.setEnabled(!slides.isEmpty());
+		}
 	}
 
 	@Override
@@ -1557,7 +1556,7 @@ public class SlideshowView extends AbstractPresentationView {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
-		updateActions();
+		updateActions(false);
 		boolean writable = !dbIsReadonly();
 		manager.add(setTimerCursorAction);
 		manager.add(new Separator());
@@ -1731,7 +1730,7 @@ public class SlideshowView extends AbstractPresentationView {
 				progressBar.worked(1);
 			}
 			updateSlidebarBounds(x);
-			updateActions();
+			updateActions(false);
 			endTask();
 		} else
 			setPartName(Messages.getString("SlideshowView.slide_show")); //$NON-NLS-1$
@@ -1798,7 +1797,7 @@ public class SlideshowView extends AbstractPresentationView {
 
 			@Override
 			protected void moveToFront(PNode object) {
-				updateActions();
+				updateActions(false);
 			}
 
 			@Override
@@ -1862,6 +1861,11 @@ public class SlideshowView extends AbstractPresentationView {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public String getId() {
+		return ID;
 	}
 
 }

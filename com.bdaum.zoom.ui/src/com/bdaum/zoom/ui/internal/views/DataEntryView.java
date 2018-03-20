@@ -1,3 +1,23 @@
+/*
+ * This file is part of the ZoRa project: http://www.photozora.org.
+ *
+ * ZoRa is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ZoRa is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ZoRa; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c) 2009-2018 Berthold Daum  
+ */
+
 package com.bdaum.zoom.ui.internal.views;
 
 import java.text.NumberFormat;
@@ -9,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -33,14 +52,17 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -54,6 +76,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
@@ -85,6 +108,7 @@ import com.bdaum.zoom.operations.internal.MultiModifyAssetOperation;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
+import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.dialogs.AbstractListCellEditorDialog;
 import com.bdaum.zoom.ui.internal.dialogs.CategoryDialog;
 import com.bdaum.zoom.ui.internal.dialogs.CodeCellEditorDialog;
@@ -99,12 +123,135 @@ import com.bdaum.zoom.ui.internal.dialogs.SupplementalCategoryDialog;
 import com.bdaum.zoom.ui.internal.job.SupplyPropertyJob;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.DateComponent;
-import com.bdaum.zoom.ui.internal.widgets.SpinnerComponent;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
 public class DataEntryView extends BasicView implements IFieldUpdater {
-	private static final String LAB = "label"; //$NON-NLS-1$
+
+	public class SpinnerComponent extends Composite {
+
+		private StackLayout stackLayout;
+		private Spinner spinner;
+		private Label label;
+
+		public SpinnerComponent(Composite parent, int style) {
+			super(parent, style);
+			stackLayout = new StackLayout();
+			setLayout(stackLayout);
+			spinner = new Spinner(this, style);
+			label = new Label(this, SWT.BORDER);
+			label.setAlignment(SWT.CENTER);
+			stackLayout.topControl = spinner;
+		}
+
+		/**
+		 * @return
+		 * @see com.bdaum.zoom.ui.widgets.DateInput#getDate()
+		 */
+		public Integer getSelection() {
+			return spinner == stackLayout.topControl ? spinner.getSelection() : null;
+		}
+
+		/**
+		 * @param value
+		 * @see com.bdaum.zoom.ui.widgets.DateInput#setDate(java.util.Date)
+		 */
+		public void setSelection(Object value) {
+			if (value instanceof Integer) {
+				spinner.setSelection((Integer) value);
+				stackLayout.topControl = spinner;
+			} else {
+				label.setText(value.toString());
+				stackLayout.topControl = label;
+			}
+			layout(true, true);
+		}
+
+		/**
+		 * @param listener
+		 * @see com.bdaum.zoom.ui.widgets.DateInput#addSelectionListener(org.eclipse.swt.events.SelectionListener)
+		 */
+		public void addSelectionListener(SelectionListener listener) {
+			spinner.addSelectionListener(listener);
+		}
+
+		/**
+		 * @param enabled
+		 * @see com.bdaum.zoom.ui.widgets.DateInput#setEnabled(boolean)
+		 */
+		@Override
+		public void setEnabled(boolean enabled) {
+			spinner.setEnabled(enabled);
+			super.setEnabled(enabled);
+		}
+
+		/**
+		 * @param listener
+		 * @see org.eclipse.swt.widgets.Control#addKeyListener(org.eclipse.swt.events.KeyListener)
+		 */
+		@Override
+		public void addKeyListener(KeyListener listener) {
+			spinner.addKeyListener(listener);
+		}
+
+		/**
+		 * @param listener
+		 * @see org.eclipse.swt.widgets.Spinner#removeSelectionListener(org.eclipse.swt.events.SelectionListener)
+		 */
+		public void removeSelectionListener(SelectionListener listener) {
+			spinner.removeSelectionListener(listener);
+		}
+
+		/**
+		 * @param value
+		 * @see org.eclipse.swt.widgets.Spinner#setDigits(int)
+		 */
+		public void setDigits(int value) {
+			spinner.setDigits(value);
+		}
+
+		/**
+		 * @param value
+		 * @see org.eclipse.swt.widgets.Spinner#setIncrement(int)
+		 */
+		public void setIncrement(int value) {
+			spinner.setIncrement(value);
+		}
+
+		/**
+		 * @param value
+		 * @see org.eclipse.swt.widgets.Spinner#setMaximum(int)
+		 */
+		public void setMaximum(int value) {
+			spinner.setMaximum(value);
+		}
+
+		/**
+		 * @param value
+		 * @see org.eclipse.swt.widgets.Spinner#setMinimum(int)
+		 */
+		public void setMinimum(int value) {
+			spinner.setMinimum(value);
+		}
+
+		/**
+		 * @param value
+		 * @see org.eclipse.swt.widgets.Spinner#setPageIncrement(int)
+		 */
+		public void setPageIncrement(int value) {
+			spinner.setPageIncrement(value);
+		}
+
+		/**
+		 * @param listener
+		 * @see org.eclipse.swt.widgets.Control#removeKeyListener(org.eclipse.swt.events.KeyListener)
+		 */
+		@Override
+		public void removeKeyListener(KeyListener listener) {
+			spinner.removeKeyListener(listener);
+		}
+	}
+
 	public static final String ID = "com.bdaum.zoom.ui.DataEntryView"; //$NON-NLS-1$
 	private static final String EXIFPREFIX = "EXIF "; //$NON-NLS-1$
 	private static final int ASYNCTHRESHOLD = 2;
@@ -272,7 +419,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 				// do nothing
 			}
 		});
-		updateActions();
+		updateActions(true);
 
 	}
 
@@ -322,7 +469,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 					OperationJob.executeOperation(new MultiModifyAssetOperation(valueMap, oldValueMap, dirtyAssets),
 							DataEntryView.this);
 					dirtyAssets = null;
-					updateActions();
+					updateActions(false);
 					refresh();
 				}
 			}
@@ -334,7 +481,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 				valueMap.clear();
 				fillValues();
 				dirtyAssets = null;
-				updateActions();
+				updateActions(false);
 			}
 		};
 		restoreAction.setToolTipText(Messages.getString("DataEntryView.restore_all_fields")); //$NON-NLS-1$
@@ -713,7 +860,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 		switch (qtype) {
 		case QueryField.T_BOOLEAN:
 			final Button checkButton = new Button(parent, SWT.CHECK);
-			checkButton.setData(LAB, label);
+			checkButton.setData(UiConstants.LABEL, label);
 			layoutData.grabExcessHorizontalSpace = false;
 			checkButton.setLayoutData(layoutData);
 			widgetMap.put(qfield, checkButton);
@@ -727,7 +874,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			return checkButton;
 		case QueryField.T_DATE: {
 			final DateComponent dateField = new DateComponent(parent, SWT.NONE);
-			dateField.setData(LAB, label);
+			dateField.setData(UiConstants.LABEL, label);
 			layoutData.widthHint = widthHint;
 			dateField.setLayoutData(layoutData);
 			dateField.addSelectionListener(new SelectionAdapter() {
@@ -744,7 +891,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			IFormatter formatter = qfield.getFormatter();
 			if (formatter != null) {
 				final Text textField = new Text(parent, SWT.BORDER | style);
-				textField.setData(LAB, label);
+				textField.setData(UiConstants.LABEL, label);
 				layoutData.widthHint = widthHint;
 				textField.setLayoutData(layoutData);
 				widgetMap.put(qfield, textField);
@@ -766,7 +913,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 				return textField;
 			}
 			final SpinnerComponent spinner = new SpinnerComponent(parent, SWT.BORDER);
-			spinner.setData(LAB, label);
+			spinner.setData(UiConstants.LABEL, label);
 			spinner.setDigits(Format.getCurrencyDigits());
 			spinner.setIncrement(1);
 			spinner.setPageIncrement((int) Math.pow(10, Format.getCurrencyDigits()));
@@ -801,7 +948,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 		case QueryField.T_FLOATB:
 		case QueryField.T_POSITIVEFLOAT: {
 			final Text textField = new Text(parent, SWT.BORDER | style);
-			textField.setData(LAB, label);
+			textField.setData(UiConstants.LABEL, label);
 			layoutData.horizontalAlignment = widthHint == SWT.DEFAULT ? SWT.FILL : SWT.LEFT;
 			layoutData.widthHint = widthHint;
 			textField.setLayoutData(layoutData);
@@ -839,7 +986,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 		case QueryField.T_POSITIVELONG:
 			if (qfield.getEnumeration() instanceof int[]) {
 				final ComboViewer comboViewer = new ComboViewer(parent, SWT.NONE);
-				comboViewer.getControl().setData(LAB, label);
+				comboViewer.getControl().setData(UiConstants.LABEL, label);
 				layoutData.horizontalAlignment = widthHint == SWT.DEFAULT ? SWT.FILL : SWT.LEFT;
 				comboViewer.getCombo().setLayoutData(layoutData);
 				comboViewer.setLabelProvider(new IntArrayLabelProvider(qfield));
@@ -856,7 +1003,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 				return comboViewer;
 			}
 			final SpinnerComponent spinner = new SpinnerComponent(parent, SWT.BORDER);
-			spinner.setData(LAB, label);
+			spinner.setData(UiConstants.LABEL, label);
 			spinner.setLayoutData(layoutData);
 			spinner.addSelectionListener(new SelectionAdapter() {
 				@Override
@@ -888,7 +1035,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			layoutData.horizontalAlignment = widthHint == SWT.DEFAULT ? SWT.FILL : SWT.LEFT;
 			if (qfield.getEnumeration() instanceof String[]) {
 				final ComboViewer comboViewer = new ComboViewer(parent, SWT.NONE);
-				comboViewer.getControl().setData(LAB, label);
+				comboViewer.getControl().setData(UiConstants.LABEL, label);
 				comboViewer.getCombo().setLayoutData(layoutData);
 				widgetMap.put(qfield, comboViewer);
 				comboViewer.setContentProvider(ArrayContentProvider.getInstance());
@@ -905,7 +1052,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			}
 			if (qfield.getSpellingOptions() == ISpellCheckingService.NOSPELLING || horSpan < 0) {
 				final Text textField = new Text(parent, SWT.BORDER | style | (horSpan < 0 ? SWT.READ_ONLY : SWT.NONE));
-				textField.setData(LAB, label);
+				textField.setData(UiConstants.LABEL, label);
 				layoutData.widthHint = widthHint;
 				if ((style & SWT.MULTI) != 0)
 					layoutData.heightHint = 50;
@@ -927,7 +1074,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 								putValue(qfield, result);
 								String text = qfield.value2text(result, CLICK_TO_VIEW_DETAILS);
 								textField.setText(text);
-								updateActions();
+								updateActions(false);
 							}
 						}
 
@@ -958,7 +1105,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 				return textField;
 			}
 			final CheckedText checkedTextField = new CheckedText(parent, SWT.BORDER | style);
-			checkedTextField.setData(LAB, label);
+			checkedTextField.setData(UiConstants.LABEL, label);
 			checkedTextField.setSpellingOptions(10, qfield.getSpellingOptions());
 			layoutData.horizontalAlignment = widthHint == SWT.DEFAULT ? SWT.FILL : SWT.LEFT;
 			layoutData.widthHint = widthHint;
@@ -1064,7 +1211,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			oldValueMap.put(qfield, getFieldValue(qfield));
 		valueMap.put(qfield, value);
 		dirtyAssets = getNavigationHistory().getSelectedAssets().getAssets();
-		updateActions();
+		updateActions(false);
 	}
 
 	private String[] getCommonItems(QueryField qfield) {
@@ -1128,10 +1275,12 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 	}
 
 	@Override
-	public void updateActions() {
-		saveAction.setEnabled(dirtyAssets != null);
-		restoreAction.setEnabled(dirtyAssets != null);
-		updateActions(-1, -1);
+	public void updateActions(boolean force) {
+		if (viewActive || force) {
+			saveAction.setEnabled(dirtyAssets != null);
+			restoreAction.setEnabled(dirtyAssets != null);
+			updateActions(-1, -1);
+		}
 	}
 
 	@Override
@@ -1152,7 +1301,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 	}
 
 	private void resetCaches() {
-		Job.getJobManager().cancel(Constants.PROPERTYPROVIDER);
+		cancelJobs(Constants.PROPERTYPROVIDER);
 		checkDirty();
 		valueMap.clear();
 		oldValueMap.clear();
@@ -1287,7 +1436,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 		Button editButton = (Button) control.getData(EDITBUTTON);
 		if (editButton != null)
 			editButton.setVisible(visible);
-		Label label = (Label) control.getData(LAB);
+		Label label = (Label) control.getData(UiConstants.LABEL);
 		if (label != null)
 			label.setVisible(visible);
 		if (!visible)

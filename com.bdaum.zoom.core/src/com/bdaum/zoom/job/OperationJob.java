@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.job;
@@ -95,8 +95,8 @@ public class OperationJob extends CustomJob {
 	public static OperationJob executeOperation(IProfiledOperation operation,
 			IAdaptable info, boolean user, long delay) {
 		OperationJob job = new OperationJob(operation, info);
-		for (Object listener : jobChangeListeners.getListeners())
-			job.addJobChangeListener((IJobChangeListener) listener);
+		for (IJobChangeListener listener : jobChangeListeners)
+			job.addJobChangeListener(listener);
 		job.setUser(user);
 		job.schedule(delay);
 		return job;
@@ -113,11 +113,12 @@ public class OperationJob extends CustomJob {
 	 * @return - the job running in the background
 	 */
 	public static OperationJob executeSlaveOperation(
-			IProfiledOperation operation, IAdaptable info) {
+			IProfiledOperation operation, IAdaptable info, boolean system) {
 		OperationJob job = new OperationJob(operation, info);
 		job.setUser(false);
-		job.schedule(0L);
 		job.setSlave(true);
+		job.setSystem(system);
+		job.schedule(0L);
 		return job;
 	}
 

@@ -15,12 +15,13 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2011-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2011-2017 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,10 +29,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.ListenerList;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -51,14 +56,18 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.ui.internal.dialogs.Messages;
-import com.bdaum.zoom.ui.internal.job.PrepareDataJob;
 
 public class CollectionEditGroup {
 
-	public class PrepareJob extends PrepareDataJob {
+	public class PrepareJob extends Job implements DisposeListener {
+
+		private Control control;
 
 		public PrepareJob(Control control) {
-			super(Messages.CollectionEditDialog_prepare_field_values, control);
+			super(Messages.CollectionEditDialog_prepare_field_values);
+			this.control = control;
+			setSystem(true);
+			setPriority(Job.INTERACTIVE);
 		}
 
 		@Override
@@ -67,38 +76,71 @@ public class CollectionEditGroup {
 		}
 
 		@Override
+		protected IStatus run(IProgressMonitor monitor) {
+			asyncExec(() -> {
+				if (!control.isDisposed()) {
+					control.addDisposeListener(PrepareJob.this);
+					// control.setCursor(control.getDisplay().getSystemCursor(SWT.CURSOR_APPSTARTING));
+				}
+			});
+			try {
+				doRun(monitor);
+			} finally {
+				asyncExec(() -> {
+					if (!control.isDisposed()) {
+						control.removeDisposeListener(PrepareJob.this);
+						// control.setCursor(control.getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
+					}
+				});
+			}
+			return Status.OK_STATUS;
+		}
+
+		protected void asyncExec(Runnable runnable) {
+			if (!control.isDisposed())
+				control.getDisplay().asyncExec(runnable);
+		}
+
+		public void widgetDisposed(DisposeEvent e) {
+			cancel();
+		}
+
 		protected void doRun(IProgressMonitor monitor) {
-			Map<QueryField, Set<String>> valueMap = new HashMap<QueryField, Set<String>>(EXPLORABLES.length * 3 / 2);
-			IDbManager dbManager = Core.getCore().getDbManager();
-			for (AssetImpl asset : dbManager.obtainAssets()) {
+			int i = 0;
+			for (AssetImpl asset : Core.getCore().getDbManager().obtainAssets()) {
 				for (QueryField qfield : EXPLORABLES) {
 					Object v = qfield.obtainFieldValue(asset);
 					if (v instanceof String[]) {
 						for (String s : (String[]) v)
 							if (s != null && !s.isEmpty())
-								saveProposal(valueMap, qfield, s);
-					} else if (v instanceof String) {
-						String s = (String) v;
-						if (!s.isEmpty())
-							saveProposal(valueMap, qfield, s);
-					}
+								saveProposal(preparedValues, qfield, s);
+					} else if (v instanceof String && !((String) v).isEmpty())
+						saveProposal(preparedValues, qfield, (String) v);
 				}
 				if (monitor.isCanceled())
 					break;
+				if (++i % 500 == 0)
+					apply();
 			}
-			preparedValues = valueMap;
-			if (!control.isDisposed())
+			preparationDone = true;
+			apply();
+		}
+
+		public void apply() {
+			if (!applyPreparationList.isEmpty() && !control.isDisposed())
 				asyncExec(() -> {
-					if (!control.isDisposed())
-						for (Runnable runnable : applyPreparationList)
-							runnable.run();
+					if (!control.isDisposed()) {
+						int size = applyPreparationList.size();
+						for (int i = 0; i < size; i++)
+							applyPreparationList.get(i).run();
+					}
 				});
 		}
 
 		protected void saveProposal(Map<QueryField, Set<String>> valueMap, QueryField qfield, String s) {
 			Set<String> set = valueMap.get(qfield);
 			if (set == null)
-				valueMap.put(qfield, set = new HashSet<String>(100));
+				valueMap.put(qfield, set = Collections.synchronizedSet(new HashSet<String>(101)));
 			set.add(s);
 		}
 	}
@@ -106,8 +148,8 @@ public class CollectionEditGroup {
 	protected static final QueryField[] EXPLORABLES = new QueryField[] { QueryField.EMULSION, QueryField.USERFIELD1,
 			QueryField.USERFIELD2, QueryField.IMPORTEDBY, QueryField.EXIF_COPYRIGHT, QueryField.EXIF_LENS,
 			QueryField.EXIF_MAKE, QueryField.EXIF_MODEL, QueryField.EXIF_SOFTWARE, QueryField.IPTC_BYLINE,
-			QueryField.IPTC_EVENT, QueryField.IPTC_NAMEOFORG, QueryField.IPTC_OWNER,
-			QueryField.IPTC_USAGE, QueryField.IPTC_WRITEREDITOR };
+			QueryField.IPTC_EVENT, QueryField.IPTC_NAMEOFORG, QueryField.IPTC_OWNER, QueryField.IPTC_USAGE,
+			QueryField.IPTC_WRITEREDITOR };
 
 	private Composite sortComp;
 
@@ -125,7 +167,9 @@ public class CollectionEditGroup {
 
 	private ListenerList<ModifyListener> modifyListeners = new ListenerList<ModifyListener>();
 
-	private Map<QueryField, Set<String>> preparedValues;
+	private Map<QueryField, Set<String>> preparedValues = Collections.synchronizedMap(new HashMap<>());
+
+	private boolean preparationDone = false;
 
 	private List<Runnable> applyPreparationList = new ArrayList<Runnable>(5);
 
@@ -325,8 +369,8 @@ public class CollectionEditGroup {
 	}
 
 	public void fireModified() {
-		for (Object listener : modifyListeners.getListeners())
-			((ModifyListener) listener).modifyText(null);
+		for (ModifyListener listener : modifyListeners)
+			listener.modifyText(null);
 	}
 
 	public boolean hasPreparedValues(QueryField qfield) {
@@ -337,7 +381,7 @@ public class CollectionEditGroup {
 	}
 
 	public void fillPreparedValues(final Combo combo, final QueryField qfield) {
-		if (preparedValues != null) {
+		if (preparationDone) {
 			Set<String> valueSet = preparedValues.get(qfield);
 			String[] values = valueSet.toArray(new String[valueSet.size()]);
 			Arrays.sort(values);
@@ -350,8 +394,10 @@ public class CollectionEditGroup {
 						Set<String> valueSet = preparedValues.get(qfield);
 						String[] values = valueSet.toArray(new String[valueSet.size()]);
 						Arrays.sort(values);
-						combo.setItems(values);
-						combo.setText(text);
+						if (!Arrays.equals(combo.getItems(), values)) {
+							combo.setItems(values);
+							combo.setText(text);
+						}
 					}
 				}
 			});

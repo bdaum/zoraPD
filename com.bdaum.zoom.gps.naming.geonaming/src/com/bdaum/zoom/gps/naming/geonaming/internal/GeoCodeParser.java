@@ -1,3 +1,22 @@
+/*
+ * This file is part of the ZoRa project: http://www.photozora.org.
+ *
+ * ZoRa is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ZoRa is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ZoRa; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c) 2009 Berthold Daum  
+ */
 package com.bdaum.zoom.gps.naming.geonaming.internal;
 
 import java.io.InputStream;
@@ -27,8 +46,7 @@ public class GeoCodeParser extends AbstractParser {
 	protected static final String TOTALRESULTCOUNT = "totalResultsCount";//$NON-NLS-1$
 	public static final int MAXRESULTS = 100;
 
-	public GeoCodeParser(InputStream in) throws ParserConfigurationException,
-			SAXException {
+	public GeoCodeParser(InputStream in) throws ParserConfigurationException, SAXException {
 		super(in);
 	}
 
@@ -42,13 +60,11 @@ public class GeoCodeParser extends AbstractParser {
 			private String countryname;
 
 			@Override
-			public void startElement(String namespaceURI, String localName,
-					String qName, Attributes atts) throws SAXException {
-				if (STATUS.equals(qName)) {
-					String message = atts.getValue(MESSAGE);
-					throw new WebServiceException(NLS.bind(
-							Messages.getString("GeoCodeParser.web_service_exception"), message)); //$NON-NLS-1$
-				} else if (GEONAME.equals(qName)) {
+			public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
+					throws SAXException {
+				if (STATUS.equals(qName))
+					AbstractGeonamesParser.checkStatus(qName, atts);
+				else if (GEONAME.equals(qName)) {
 					geo = true;
 					waypoint = null;
 					toponymname = null;
@@ -64,8 +80,7 @@ public class GeoCodeParser extends AbstractParser {
 			}
 
 			@Override
-			public void endElement(String uri, String localName, String qName)
-					throws SAXException {
+			public void endElement(String uri, String localName, String qName) throws SAXException {
 				if (geo) {
 					if (GEONAME.equals(qName)) {
 						geo = false;
@@ -93,15 +108,13 @@ public class GeoCodeParser extends AbstractParser {
 							countryname = s;
 						} else if (LAT.equals(qName)) {
 							try {
-								double lat = getDouble(text.toString());
-								getWaypoint().setLat(lat);
+								getWaypoint().setLat(getDouble(text.toString()));
 							} catch (ParseException e) {
 								throw new SAXException(e);
 							}
 						} else if (LNG.equals(qName)) {
 							try {
-								double lon = getDouble(text.toString());
-								getWaypoint().setLon(lon);
+								getWaypoint().setLon(getDouble(text.toString()));
 							} catch (ParseException e) {
 								throw new SAXException(e);
 							}
@@ -111,7 +124,8 @@ public class GeoCodeParser extends AbstractParser {
 					try {
 						int totalResultCount = Integer.parseInt(text.toString());
 						if (totalResultCount > MAXRESULTS)
-							throw new WebServiceException(NLS.bind(Messages.getString("GeoCodeParser.too_many_results"), totalResultCount)); //$NON-NLS-1$
+							throw new WebServiceException(
+									NLS.bind(Messages.getString("GeoCodeParser.too_many_results"), totalResultCount)); //$NON-NLS-1$
 					} catch (NumberFormatException e) {
 						// No check possible
 					}
@@ -119,10 +133,8 @@ public class GeoCodeParser extends AbstractParser {
 			}
 
 			public WaypointArea getWaypoint() {
-				if (waypoint == null) {
-					waypoint = new WaypointArea();
-					pnts.add(waypoint);
-				}
+				if (waypoint == null)
+					pnts.add(waypoint = new WaypointArea());
 				return waypoint;
 			}
 		};

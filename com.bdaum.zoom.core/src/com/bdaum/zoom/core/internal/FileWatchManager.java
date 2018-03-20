@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2011 Berthold Daum  
  */
 package com.bdaum.zoom.core.internal;
 
@@ -100,15 +100,13 @@ public class FileWatchManager implements IFileWatcher {
 				return null;
 			}
 			fileMonitor.addFileListener(new FileWatchListener() {
-
 				public synchronized void fileChanged(File file, int kind) {
 					try {
 						if (!paused.isEmpty() || isFileIgnored(file))
 							return;
 						Job.getJobManager().cancel(PROCESSFILECHANGES);
-						List<IRecipeDetector> recipeDetectors = findRecipeDetectors(file);
 						Set<File> imageFiles = new HashSet<File>(3);
-						IRecipeDetector recipeDetector = findImageFiles(recipeDetectors, file, imageFiles);
+						IRecipeDetector recipeDetector = findImageFiles(findRecipeDetectors(file), file, imageFiles);
 						if (kind == previousKind)
 							previousFiles.removeAll(imageFiles);
 						processFileChanges(null);
@@ -212,17 +210,16 @@ public class FileWatchManager implements IFileWatcher {
 			if (kind == FileWatchListener.CREATED)
 				kind = checkFileAgainstCatalog(file);
 			if (kind != FileWatchListener.NOOP)
-				for (Object listener : listeners.getListeners())
+				for (IFileWatchListener listener : listeners)
 					switch (kind) {
 					case FileWatchListener.CREATED:
-						((IFileWatchListener) listener).fileCreated(file);
+						listener.fileCreated(file);
 						break;
 					case FileWatchListener.DELETED:
-						((IFileWatchListener) listener).fileDeleted(file);
+						listener.fileDeleted(file);
 						break;
 					default:
-						((IFileWatchListener) listener).fileModified(file);
-						// break;
+						listener.fileModified(file);
 					}
 		}
 	}

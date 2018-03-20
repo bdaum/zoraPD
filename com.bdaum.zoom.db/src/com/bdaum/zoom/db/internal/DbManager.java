@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2018 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  
  */
 package com.bdaum.zoom.db.internal;
 
@@ -174,7 +174,7 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	private static final int MAXIDS = 256;
 
-	private static final int VERSION = 11;
+	private static final int VERSION = 14;
 
 	private static final boolean DIAGNOSE = false;
 
@@ -189,16 +189,8 @@ public class DbManager implements IDbManager, IAdaptable {
 	private static final List<Trash> EMPTYTRASH = new ArrayList<Trash>(0);
 
 	private static final long ONEDAY = 24 * 60 * 60 * 1000L;
-	
-	private static List<String> lexFields = new ArrayList<String>(5);
-	
-	static {
-		lexFields.add(QueryField.URI.getKey());
-		lexFields.add(QueryField.VOLUME.getKey());
-		lexFields.add(QueryField.NAME.getKey());
-		lexFields.add(QueryField.EXIF_ORIGINALFILENAME.getKey());
-		lexFields.add(QueryField.MIMETYPE.getKey());
-	}
+
+	private Set<String> indexedFields;
 
 	private ObjectContainer db;
 
@@ -230,9 +222,9 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	private String previousTimeline = Meta_type.timeline_no;
 
-	private Set<String> lastFolderUris = new HashSet<String>();
+	private Set<String> lastFolderUris;
 
-	private Set<String> previousLocationKeys = new HashSet<String>();
+	private Set<String> previousLocationKeys;
 
 	private boolean emergency;
 
@@ -359,13 +351,11 @@ public class DbManager implements IDbManager, IAdaptable {
 		common.objectClass(SmartCollectionImpl.class).objectField("lastAccessDate").indexed(true); //$NON-NLS-1$
 		common.objectClass(SmartCollection_typeImpl.class).indexed(false);
 		// Criteria
-		ObjectClass crit = common.objectClass(CriterionImpl.class);
-		crit.updateDepth(1);
+		common.objectClass(CriterionImpl.class).updateDepth(1);
 		common.objectClass(Criterion_typeImpl.class).indexed(false);
 		common.objectClass(Criterion_typeImpl.class).cascadeOnDelete(true);
 		// SortCriteria
-		ObjectClass sortcrit = common.objectClass(SortCriterionImpl.class);
-		sortcrit.updateDepth(1);
+		common.objectClass(SortCriterionImpl.class).updateDepth(1);
 		common.objectClass(SortCriterion_typeImpl.class).indexed(false);
 		// Relations
 		ObjectClass derivedBy = common.objectClass(DerivedByImpl.class);
@@ -385,22 +375,9 @@ public class DbManager implements IDbManager, IAdaptable {
 		common.objectClass(AssetImpl.class).cascadeOnDelete(true);
 		ObjectClass assetType = common.objectClass(Asset_typeImpl.class);
 		assetType.indexed(false);
-		assetType.objectField(QueryField.URI.getKey()).indexed(true);
-		assetType.objectField(QueryField.VOLUME.getKey()).indexed(true);
-		assetType.objectField(QueryField.ALBUM.getKey()).indexed(true);
-		assetType.objectField(QueryField.NAME.getKey()).indexed(true);
-		assetType.objectField(QueryField.EXIF_DATETIMEORIGINAL.getKey()).indexed(true);
-		assetType.objectField(QueryField.IPTC_KEYWORDS.getKey()).indexed(true);
-		assetType.objectField(QueryField.IPTC_CATEGORY.getKey()).indexed(true);
-		assetType.objectField(QueryField.IPTC_DATECREATED.getKey()).indexed(true);
-		assetType.objectField(QueryField.LASTMOD.getKey()).indexed(true);
-		assetType.objectField(QueryField.EXIF_ORIGINALFILENAME.getKey()).indexed(true);
-		assetType.objectField(QueryField.IMPORTDATE.getKey()).indexed(true);
-		assetType.objectField(QueryField.EXIF_GPSLATITUDE.getKey()).indexed(true);
-		assetType.objectField(QueryField.EXIF_GPSLONGITUDE.getKey()).indexed(true);
-		assetType.objectField(QueryField.FORMAT.getKey()).indexed(true);
-		assetType.objectField(QueryField.MIMETYPE.getKey()).indexed(true);
-		assetType.objectField(QueryField.RATING.getKey()).indexed(true);
+		indexedFields = new HashSet<>(factory.getIndexedFields());
+		for (String key : indexedFields)
+			assetType.objectField(key).indexed(true);
 		// Track and Ghost
 		common.objectClass(TrackRecordImpl.class).objectField("asset_track_parent") //$NON-NLS-1$
 				.indexed(true);
@@ -409,39 +386,36 @@ public class DbManager implements IDbManager, IAdaptable {
 		common.objectClass(Ghost_typeImpl.class).indexed(true);
 		// Region
 		ObjectClass region = common.objectClass(RegionImpl.class);
-		region.objectField("asset_person_parent") //$NON-NLS-1$
-				.indexed(true);
-		region.objectField("album") //$NON-NLS-1$
-				.indexed(true);
+		region.objectField("asset_person_parent").indexed(true); //$NON-NLS-1$
+		region.objectField("album").indexed(true); //$NON-NLS-1$
 		common.objectClass(Region_typeImpl.class).indexed(false);
-
 		// Location, Artwork, Contacts
 		ObjectClass locationCreated = common.objectClass(LocationCreatedImpl.class);
 		locationCreated.cascadeOnDelete(true);
-		locationCreated.objectField("asset") //$NON-NLS-1$
-				.indexed(true);
-		locationCreated.objectField("location") //$NON-NLS-1$
-				.indexed(true);
+		locationCreated.objectField("asset").indexed(true); //$NON-NLS-1$
+		locationCreated.objectField("location").indexed(true); //$NON-NLS-1$
 		ObjectClass locationShown = common.objectClass(LocationShownImpl.class);
-		locationShown.objectField("asset") //$NON-NLS-1$
-				.indexed(true);
-		locationShown.objectField("location") //$NON-NLS-1$
-				.indexed(true);
+		locationShown.objectField("asset").indexed(true); //$NON-NLS-1$
+		locationShown.objectField("location").indexed(true); //$NON-NLS-1$
 		ObjectClass artworkOrObject = common.objectClass(ArtworkOrObjectShownImpl.class);
-		artworkOrObject.objectField("asset") //$NON-NLS-1$
-				.indexed(true);
+		artworkOrObject.objectField("asset").indexed(true); //$NON-NLS-1$
 		artworkOrObject.objectField("artworkOrObject").indexed(true); //$NON-NLS-1$
 		ObjectClass creatorsContact = common.objectClass(CreatorsContactImpl.class);
 		creatorsContact.cascadeOnDelete(true);
-		creatorsContact.objectField("asset") //$NON-NLS-1$
-				.indexed(true);
+		creatorsContact.objectField("asset").indexed(true); //$NON-NLS-1$
 		common.objectClass(CreatorsContact_typeImpl.class).indexed(false);
 		common.objectClass(LocationCreated_typeImpl.class).indexed(false);
 		common.objectClass(LocationShown_typeImpl.class).indexed(false);
 		common.objectClass(ArtworkOrObject_typeImpl.class).indexed(false);
-		creatorsContact.objectField("contact") //$NON-NLS-1$
-				.indexed(true);
-
+		creatorsContact.objectField("contact").indexed(true); //$NON-NLS-1$
+		ObjectClass location = common.objectClass(LocationImpl.class);
+		location.objectField("worldRegion").indexed(true); //$NON-NLS-1$
+		location.objectField("countryISOCode").indexed(true); //$NON-NLS-1$
+		location.objectField("countryName").indexed(true); //$NON-NLS-1$
+		location.objectField("provinceOrState").indexed(true); //$NON-NLS-1$
+		location.objectField("city").indexed(true); //$NON-NLS-1$
+		location.objectField("sublocation").indexed(true); //$NON-NLS-1$
+		location.objectField("details").indexed(true); //$NON-NLS-1$
 		// Presentations
 		common.objectClass(SlideShowImpl.class).objectField("group_slideshow_parent") //$NON-NLS-1$
 				.indexed(false);
@@ -554,14 +528,14 @@ public class DbManager implements IDbManager, IAdaptable {
 	 * @see com.bdaum.zoom.core.IDbManager#obtainMeta()
 	 */
 	private Meta obtainMeta() {
-		Iterator<MetaImpl> it = obtainObjects(MetaImpl.class).iterator();
-		if (it.hasNext()) {
-			MetaImpl metaImpl = it.next();
+		try {
+			MetaImpl metaImpl = obtainObjects(MetaImpl.class).get(0);
 			if (metaImpl.getPlatform() == null)
 				metaImpl.setPlatform(Platform.getOS());
 			return metaImpl;
+		} catch (Exception e) {
+			return null;
 		}
-		return null;
 	}
 
 	protected Meta createMeta() {
@@ -595,7 +569,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				query.descend(Constants.OID).constrain(id);
 				ObjectSet<T> set = query.<T>execute();
 				T obj = set.hasNext() ? set.next() : null;
-				if (obj != null && !readOnly)
+				if (obj != null && !readOnly && !(obj instanceof RegionImpl))
 					while (set.hasNext())
 						delete(set.next()); // Delete duplicates with next commit
 				dbErrorCounter = 0;
@@ -618,8 +592,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				Query query = db.query();
 				query.constrain(clazz);
 				query.descend(Constants.OID).constrain(id);
-				ObjectSet<IIdentifiableObject> set = query.<IIdentifiableObject>execute();
-				boolean hasNext = set.hasNext();
+				boolean hasNext = query.<IIdentifiableObject>execute().hasNext();
 				dbErrorCounter = 0;
 				return hasNext;
 			} catch (DatabaseClosedException e) {
@@ -799,9 +772,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				Constraint or = null;
 				for (String value : values) {
 					Constraint constraint = query.descend(field).constrain(value);
-					if (or != null)
-						constraint = constraint.or(or);
-					or = constraint;
+					or = or != null ? constraint.or(or) : constraint;
 				}
 				ObjectSet<T> set = query.execute();
 				dbErrorCounter = 0;
@@ -821,7 +792,7 @@ public class DbManager implements IDbManager, IAdaptable {
 			Collection<? extends IIdentifiableObject> children) {
 		while (children != null && db != null) {
 			if (children.isEmpty())
-				return new ArrayList<T>(0);
+				break;
 			try {
 				if (children.size() > MAXIDS) {
 					Set<T> set = new HashSet<T>(children.size());
@@ -839,9 +810,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				Constraint or = null;
 				for (IIdentifiableObject child : children) {
 					Constraint constraint = query.descend(field).constrain(child.getStringId());
-					if (or != null)
-						constraint = constraint.or(or);
-					or = constraint;
+					or = or != null ? constraint.or(or) : constraint;
 				}
 				ObjectSet<T> set = query.execute();
 				dbErrorCounter = 0;
@@ -866,7 +835,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<T> clazz, String field, Collection<String> ids) {
 		while (ids != null && db != null) {
 			if (ids.isEmpty())
-				return new ArrayList<T>(0);
+				break;
 			try {
 				if (ids.size() > MAXIDS) {
 					List<T> set = new ArrayList<T>(ids.size());
@@ -884,9 +853,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				Constraint or = null;
 				for (String id : ids) {
 					Constraint constraint = query.descend(field).constrain(id);
-					if (or != null)
-						constraint = constraint.or(or);
-					or = constraint;
+					or = or != null ? constraint.or(or) : constraint;
 				}
 				ObjectSet<T> set = query.execute();
 				dbErrorCounter = 0;
@@ -979,8 +946,8 @@ public class DbManager implements IDbManager, IAdaptable {
 	 * java.lang.String, java.lang.Object, int, java.lang.String, java.lang.Object,
 	 * int, boolean)
 	 */
-	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<? extends IIdentifiableObject> clazz,
-			String field1, Object v1, int rel1, String field2, Object v2, int rel2, boolean or) {
+	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<T> clazz, String field1, Object v1, int rel1,
+			String field2, Object v2, int rel2, boolean or) {
 		return obtainObjects(clazz, or, field1, v1, rel1, field2, v2, rel2);
 	}
 
@@ -1022,7 +989,7 @@ public class DbManager implements IDbManager, IAdaptable {
 		}
 	}
 
-	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<? extends IIdentifiableObject> clazz, boolean or,
+	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<T> clazz, boolean or,
 			Object... namesValuesRelations) {
 		while (db != null) {
 			try {
@@ -1036,13 +1003,9 @@ public class DbManager implements IDbManager, IAdaptable {
 					if (field instanceof String && rel instanceof Integer) {
 						constraint2 = query.descend((String) field).constrain(namesValuesRelations[i + 1]);
 						applyRelation((Integer) rel, constraint2);
-						if (constraint1 != null) {
-							if (or)
-								constraint1.or(constraint2);
-							else
-								constraint1.and(constraint2);
-						} else
-							constraint1 = constraint2;
+						constraint1 = constraint1 != null
+								? or ? constraint1.or(constraint2) : constraint1.and(constraint2)
+								: constraint2;
 					}
 				}
 				ObjectSet<T> set = query.execute();
@@ -1072,43 +1035,31 @@ public class DbManager implements IDbManager, IAdaptable {
 				Query query = db.query();
 				query.constrain(LocationImpl.class);
 				Constraint c = null;
-				if (location.getCity() != null) {
+				if (location.getCity() != null)
 					c = query.descend("city").constrain(location.getCity()); //$NON-NLS-1$
-				}
-				if (location.getCountryName() != null) {
-					Constraint c2 = query.descend("countryName").constrain( //$NON-NLS-1$
-							location.getCountryName());
-					if (c != null)
-						c2.and(c);
-					c = c2;
-				}
 				if (location.getCountryISOCode() != null) {
 					Constraint c2 = query.descend("countryISOCode").constrain( //$NON-NLS-1$
 							location.getCountryISOCode());
-					if (c != null)
-						c2.and(c);
-					c = c2;
+					c = c != null ? c2.and(c) : c2;
+				} else if (location.getCountryName() != null) {
+					Constraint c2 = query.descend("countryName").constrain( //$NON-NLS-1$
+							location.getCountryName());
+					c = c != null ? c2.and(c) : c2;
 				}
 				if (location.getProvinceOrState() != null) {
 					Constraint c2 = query.descend("provinceOrState").constrain( //$NON-NLS-1$
 							location.getProvinceOrState());
-					if (c != null)
-						c2.and(c);
-					c = c2;
+					c = c != null ? c2.and(c) : c2;
 				}
 				if (location.getSublocation() != null) {
 					Constraint c2 = query.descend("sublocation").constrain( //$NON-NLS-1$
 							location.getSublocation());
-					if (c != null)
-						c2.and(c);
-					c = c2;
+					c = c != null ? c2.and(c) : c2;
 				}
 				if (location.getDetails() != null) {
 					Constraint c2 = query.descend("details").constrain( //$NON-NLS-1$
 							location.getDetails());
-					if (c != null)
-						c2.and(c);
-					c = c2;
+					c = c != null ? c2.and(c) : c2;
 				}
 				ObjectSet<LocationImpl> set = query.execute();
 				dbErrorCounter = 0;
@@ -1263,7 +1214,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				query.descend("name").constrain(Core.getFileName(uri, false)); //$NON-NLS-1$
 				ObjectSet<Trash> set = query.execute();
 				dbErrorCounter = 0;
-				if (set.isEmpty())
+				if (!set.hasNext())
 					return set;
 				List<Trash> matching = new ArrayList<Trash>(set.size());
 				IVolumeManager vm = Core.getCore().getVolumeManager();
@@ -1286,8 +1237,7 @@ public class DbManager implements IDbManager, IAdaptable {
 		if (++dbErrorCounter > 100 || emergency)
 			throw e;
 		String trashcanName = getTrashcanName();
-		File f = new File(trashcanName);
-		while (!f.exists())
+		while (!new File(trashcanName).exists())
 			promptForReconnect();
 		try {
 			trashCan.close();
@@ -1348,10 +1298,9 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 	public void close(int mode) {
 		if (mode == CatalogListener.NORMAL)
-			for (Object listener : factory.getListeners()) {
+			for (IDbListener listener : factory.getListeners()) {
 				try {
-					boolean doit = ((IDbListener) listener).databaseAboutToClose(this);
-					if (!doit)
+					if (!listener.databaseAboutToClose(this))
 						return;
 				} catch (Exception e) {
 					// ignore
@@ -1359,11 +1308,7 @@ public class DbManager implements IDbManager, IAdaptable {
 			}
 		else if (mode == CatalogListener.EMERGENCY)
 			emergency = true;
-		previousDay = -1L;
-		previousTimeline = Meta_type.timeline_no;
-		previousLocationKeys.clear();
-		lastFolderUris.clear();
-
+		resetSystemCollectionCache();
 		if (db != null) {
 			if (!emergency) // db4o has its own shutdown hook
 				try {
@@ -1419,7 +1364,9 @@ public class DbManager implements IDbManager, IAdaptable {
 				int p = path.lastIndexOf('/');
 				if (p > 0) {
 					String folderUri = path.substring(0, p);
-					if (lastFolderUris.contains(folderUri))
+					if (lastFolderUris == null)
+						lastFolderUris = new HashSet<>();
+					else if (lastFolderUris.contains(folderUri))
 						return;
 					lastFolderUris.add(folderUri);
 				}
@@ -1432,9 +1379,8 @@ public class DbManager implements IDbManager, IAdaptable {
 				String device = ""; //$NON-NLS-1$
 				p = path.indexOf(':', pathFrom);
 				if (p >= pathFrom) {
-					protocol = path.substring(pathFrom, p);
+					sb.append(protocol = path.substring(pathFrom, p)).append(':');
 					pathFrom = p;
-					sb.append(protocol).append(':');
 				}
 				while (path.charAt(++pathFrom) == '/')
 					sb.append('/');
@@ -1445,9 +1391,8 @@ public class DbManager implements IDbManager, IAdaptable {
 				else if (win32) {
 					p = path.indexOf(':', pathFrom);
 					if (p >= pathFrom) {
-						device = path.substring(pathFrom, p + 1);
+						sb.append(device = path.substring(pathFrom, p + 1));
 						pathFrom = p;
-						sb.append(device);
 						while (path.charAt(++pathFrom) == '/')
 							sb.append('/');
 						String volume = asset.getVolume();
@@ -1486,9 +1431,7 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	public SmartCollection createDirectoryCollection(String name, SmartCollection parentColl, GroupImpl group,
 			String fieldname, String fieldvalue, int rel, boolean[] changeIndicator) {
-		StringBuilder ksb = new StringBuilder(fieldname);
-		ksb.append('=').append(fieldvalue);
-		String key = ksb.toString();
+		String key = new StringBuilder(fieldname).append('=').append(fieldvalue).toString();
 		List<SmartCollectionImpl> set = obtainObjects(SmartCollectionImpl.class, Constants.OID, key, QueryField.EQUALS);
 		SmartCollectionImpl coll1 = null;
 		if (set.isEmpty()) {
@@ -1519,6 +1462,19 @@ public class DbManager implements IDbManager, IAdaptable {
 					// remove duplicates
 					changeIndicator[0] = true;
 					transferChildren(sm, coll1);
+					SmartCollection psm = sm.getSmartCollection_subSelection_parent();
+					if (psm != null && psm != parentColl) {
+						psm.removeSubSelection(sm);
+						store(psm);
+					}
+					String gsmid = sm.getGroup_rootCollection_parent();
+					if (gsmid != null && !gsmid.equals(group.getStringId())) {
+						GroupImpl gsm = obtainById(GroupImpl.class, gsmid);
+						if (gsm != null && gsm != group) {
+							gsm.removeRootCollection(sm.getStringId());
+							store(gsm);
+						}
+					}
 					deleteCollection(sm);
 				}
 				if (parentColl != null)
@@ -1526,44 +1482,61 @@ public class DbManager implements IDbManager, IAdaptable {
 				else
 					group.removeRootCollection(sm.getStringId());
 			}
-			if (parentColl != null)
+			if (parentColl != null) {
 				parentColl.addSubSelection(coll1);
-			else
+				coll1.setSmartCollection_subSelection_parent(parentColl);
+				store(parentColl);
+			} else {
 				group.addRootCollection(coll1.getStringId());
+				coll1.setGroup_rootCollection_parent(group.getStringId());
+				store(group);
+			}
+			store(coll1);
 		}
 		return coll1;
 	}
 
 	private void transferChildren(SmartCollection source, SmartCollection target) {
 		SmartCollection found = null;
-		for (Iterator<SmartCollection> iterator = source.getSubSelection().iterator(); iterator.hasNext();) {
-			SmartCollection subcol = iterator.next();
+		for (Iterator<SmartCollection> it = source.getSubSelection().iterator(); it.hasNext();) {
+			SmartCollection subcol = it.next();
 			String id = subcol.getStringId();
 			for (SmartCollection cand : target.getSubSelection())
 				if (cand.getStringId().equals(id)) {
 					found = cand;
+					if (subcol == cand)
+						it.remove();
+					else
+						transferChildren(subcol, found);
 					break;
 				}
-			if (found != null)
-				transferChildren(subcol, found);
-			else {
+			if (found == null) {
 				target.addSubSelection(subcol);
-				iterator.remove();
+				subcol.setSmartCollection_subSelection_parent(target);
+				it.remove();
 			}
 		}
 	}
 
 	private void deleteCollection(SmartCollection collection) {
-		for (SmartCollection sub : collection.getSubSelection())
-			deleteCollection(sub);
-		for (Criterion crit : collection.getCriterion())
-			delete(crit);
-		for (SortCriterion crit : collection.getSortCriterion())
-			delete(crit);
-		PostProcessor postProcessor = collection.getPostProcessor();
-		if (postProcessor != null)
-			delete(postProcessor);
-		delete(collection);
+		if (collection != null) {
+			AomList<SmartCollection> subSelections = collection.getSubSelection();
+			if (subSelections != null)
+				for (SmartCollection sub : subSelections)
+					deleteCollection(sub);
+			AomList<Criterion> criterions = collection.getCriterion();
+			if (criterions != null)
+				for (Criterion crit : criterions)
+					delete(crit);
+			AomList<SortCriterion> sortCriterions = collection.getSortCriterion();
+			if (sortCriterions != null)
+				for (SortCriterion crit : sortCriterions)
+					delete(crit);
+			PostProcessor postProcessor = collection.getPostProcessor();
+			if (postProcessor != null)
+				delete(postProcessor);
+			delete(collection);
+		}
 	}
 
 	/*
@@ -1593,10 +1566,9 @@ public class DbManager implements IDbManager, IAdaptable {
 					}
 				} else
 					previousImport = (Date) value;
-				String id = Utilities.setImportKeyAndLabel(coll, value);
 				group.removeRootCollection(Constants.LAST_IMPORT_ID);
 				subgroup = getRecentImportsSubgroup(group);
-				subgroup.addRootCollection(id);
+				subgroup.addRootCollection(Utilities.setImportKeyAndLabel(coll, value));
 				coll.setGroup_rootCollection_parent(subgroup.getStringId());
 				store(coll);
 			} else {
@@ -1640,8 +1612,7 @@ public class DbManager implements IDbManager, IAdaptable {
 			subgroup.setStringId(Constants.GROUP_ID_RECENTIMPORTS);
 			subgroup.setGroup_subgroup_parent(group);
 			group.addSubgroup(subgroup);
-			Iterator<String> it = group.getRootCollection().iterator();
-			while (it.hasNext()) {
+			for (Iterator<String> it = group.getRootCollection().iterator(); it.hasNext();) {
 				String id = it.next();
 				if (!id.equals(Constants.LAST_IMPORT_ID)) {
 					SmartCollectionImpl coll = obtainById(SmartCollectionImpl.class, id);
@@ -1827,7 +1798,9 @@ public class DbManager implements IDbManager, IAdaptable {
 		ksb.append(LOCATIONKEY).append(regionCode).append('|').append(countryCode).append('|').append(state).append('|')
 				.append(city);
 		final String locationKey = ksb.toString();
-		if (previousLocationKeys.contains(locationKey))
+		if (previousLocationKeys == null)
+			previousLocationKeys = new HashSet<>();
+		else if (previousLocationKeys.contains(locationKey))
 			return false;
 		previousLocationKeys.add(locationKey);
 		ksb.setLength(LOCATIONKEY.length());
@@ -2091,7 +2064,7 @@ public class DbManager implements IDbManager, IAdaptable {
 						Query query = targetContainer.query();
 						query.constrain(clazz);
 						query.descend(Constants.OID).constrain(((IIdentifiableObject) object).getStringId());
-						if (!query.<IIdentifiableObject>execute().isEmpty())
+						if (query.<IIdentifiableObject>execute().hasNext())
 							continue;
 					}
 					targetContainer.store(object);
@@ -2119,7 +2092,7 @@ public class DbManager implements IDbManager, IAdaptable {
 		if (!readOnly && hasDirtyCollection()) {
 			IRunnableWithProgress runnable = new IRunnableWithProgress() {
 				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
-					pruneEmptySystemCollections(monitor);
+					pruneEmptySystemCollections(monitor, false);
 				}
 			};
 			try {
@@ -2147,7 +2120,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 
 	public void markSystemCollectionsForPurge(Asset asset) {
-		getMeta(true);
+		Meta meta = getMeta(true);
 		boolean cleaned = meta.getCleaned();
 		if (!cleaned || beginSafeTransactionWithReport()) {
 			try {
@@ -2158,21 +2131,18 @@ public class DbManager implements IDbManager, IAdaptable {
 				int p = uri.lastIndexOf('/', uri.length() - 2);
 				while (p >= 0) {
 					uri = uri.substring(0, p + 1);
-					p = uri.lastIndexOf('/', uri.length() - 2);
+					int from = uri.length() - 2;
+					p = uri.lastIndexOf('/', from);
 					if (p < 0)
 						break;
-					int q = uri.lastIndexOf(':', uri.length() - 2);
 					sb.setLength(0);
-					String volume = asset.getVolume();
-					if (q > p) {
-						if (volume != null && !volume.isEmpty()) {
-							sb.append(VOLUMEKEY).append(volume);
-							added |= addDirtyCollection(sb.toString());
-						}
+					if (uri.lastIndexOf(':', from) > p) {
+						String volume = asset.getVolume();
+						if (volume != null && !volume.isEmpty())
+							added |= addDirtyCollection(sb.append(VOLUMEKEY).append(volume).toString());
 						break;
 					}
-					sb.append(URIKEY).append(uri);
-					added |= addDirtyCollection(sb.toString());
+					added |= addDirtyCollection(sb.append(URIKEY).append(uri).toString());
 				}
 				Date dateCreated = asset.getDateCreated();
 				if (dateCreated == null)
@@ -2181,26 +2151,22 @@ public class DbManager implements IDbManager, IAdaptable {
 					GregorianCalendar cal = new GregorianCalendar();
 					cal.setTime(dateCreated);
 					StringBuilder ksb = new StringBuilder(DATETIMEKEY);
-					ksb.append(String.valueOf(cal.get(Calendar.YEAR)));
-					added |= addDirtyCollection(ksb.toString());
+					added |= addDirtyCollection(ksb.append(String.valueOf(cal.get(Calendar.YEAR))).toString());
 					int l = ksb.length();
-					ksb.append('-').append(String.valueOf(cal.get(Calendar.MONTH)));
-					added |= addDirtyCollection(ksb.toString());
-					ksb.append('-').append(String.valueOf(Calendar.DAY_OF_MONTH));
-					added |= addDirtyCollection(ksb.toString());
+					added |= addDirtyCollection(
+							ksb.append('-').append(String.valueOf(cal.get(Calendar.MONTH))).toString())
+							| addDirtyCollection(
+									ksb.append('-').append(String.valueOf(Calendar.DAY_OF_MONTH)).toString());
 					ksb.setLength(l);
-					ksb.append("-W").append( //$NON-NLS-1$
-							String.valueOf(cal.get(Calendar.WEEK_OF_YEAR)));
-					added |= addDirtyCollection(ksb.toString());
-					ksb.append('-').append(String.valueOf(Calendar.DAY_OF_WEEK));
-					added |= addDirtyCollection(ksb.toString());
+					added |= addDirtyCollection(
+							ksb.append("-W").append(String.valueOf(cal.get(Calendar.WEEK_OF_YEAR))).toString()) //$NON-NLS-1$
+							| addDirtyCollection(
+									ksb.append('-').append(String.valueOf(Calendar.DAY_OF_WEEK)).toString());
 				}
 				for (LocationCreatedImpl locationCreated : obtainStructForAsset(LocationCreatedImpl.class,
-						asset.getStringId(), true)) {
-					LocationImpl loc = obtainById(LocationImpl.class, locationCreated.getLocation());
-					if (loc != null)
-						added |= markSystemCollectionsForPurge(loc);
-				}
+						asset.getStringId(), true))
+					added |= markSystemCollectionsForPurge(
+							obtainById(LocationImpl.class, locationCreated.getLocation()));
 				Date importDate = asset.getImportDate();
 				if (importDate != null)
 					added |= addDirtyCollection(IMPORTKEY + Constants.DFIMPORT.format(importDate));
@@ -2219,29 +2185,19 @@ public class DbManager implements IDbManager, IAdaptable {
 	}
 
 	public boolean markSystemCollectionsForPurge(Location loc) {
-		// Continent
-		boolean added = false;
-		StringBuilder ksb = new StringBuilder(LOCATIONKEY);
-		ksb.append(loc.getWorldRegionCode());
-		added |= addDirtyCollection(ksb.toString());
-		// Country
-		ksb.append('|').append(loc.getCountryISOCode());
-		added |= addDirtyCollection(ksb.toString());
-		// State
-		ksb.append('|').append(loc.getProvinceOrState());
-		added |= addDirtyCollection(ksb.toString());
-		// City
-		ksb.append('|').append(loc.getCity());
-		return added | addDirtyCollection(ksb.toString());
+		if (loc != null) {
+			StringBuilder ksb = new StringBuilder(LOCATIONKEY);
+			return addDirtyCollection(ksb.append(loc.getWorldRegionCode()).toString())
+					| addDirtyCollection(ksb.append('|').append(loc.getCountryISOCode()).toString())
+					| addDirtyCollection(ksb.append('|').append(loc.getProvinceOrState()).toString())
+					| addDirtyCollection(ksb.append('|').append(loc.getCity()).toString());
+		}
+		return false;
 	}
 
-	public boolean pruneSystemCollection(final SmartCollectionImpl sm) {
-		if (readOnly)
-			return false;
-		if (sm.getCriterion() != null && !sm.getCriterion().isEmpty() && sm.getCriterion().get(0) != null
-				&& !createCollectionProcessor(sm, null, null).isEmpty())
-			return false;
-		if (beginSafeTransactionWithReport()) {
+	public boolean pruneSystemCollection(final SmartCollection sm) {
+		if (!readOnly && (sm.getCriterion() == null || sm.getCriterion().isEmpty() || sm.getCriterion().get(0) == null
+				|| createCollectionProcessor(sm, null, null).isEmpty()) && beginSafeTransactionWithReport())
 			try {
 				SmartCollection parent = sm.getSmartCollection_subSelection_parent();
 				if (parent != null) {
@@ -2254,7 +2210,7 @@ public class DbManager implements IDbManager, IAdaptable {
 						store(group);
 					}
 				}
-				delete(sm);
+				deleteCollection(sm);
 				commit();
 				return true;
 			} catch (Exception e) {
@@ -2263,87 +2219,90 @@ public class DbManager implements IDbManager, IAdaptable {
 			} finally {
 				endSafeTransaction();
 			}
-		}
 		return false;
 	}
 
-	public void pruneEmptySystemCollections(IProgressMonitor monitor) {
+	public void pruneEmptySystemCollections(IProgressMonitor monitor, boolean all) {
 		synchronized (dirtyCollections) {
 			// long time = System.currentTimeMillis();
-			if (!readOnly && hasDirtyCollection()) {
-				Group importGroup = getImportGroup();
-				List<Group> subgroups = importGroup.getSubgroup();
-				if (!subgroups.isEmpty())
-					importGroup = subgroups.get(0);
-				List<String> importIds = new ArrayList<String>(importGroup.getRootCollection());
-				int imports = importIds.size();
-				int maxImports = factory.getMaxImports() - 1;
-				int work = dirtyCollections.size() + 2 + imports;
-				monitor.beginTask(Messages.DbManager_pruning_empty, work);
-				LinkedList<String> sorted = new LinkedList<String>(dirtyCollections);
-				Collections.sort(sorted, new Comparator<String>() {
-					public int compare(String o1, String o2) {
-						return (o1.length() == o2.length() ? 0 : o1.length() < o2.length() ? 1 : -1);
-					}
-				});
-				monitor.worked(1);
-				if (db != null) {
-					while (!sorted.isEmpty()) {
-						String id = sorted.poll();
-						monitor.worked(1);
-						if (id.startsWith(IDbManager.IMPORTKEY))
-							continue;
-						SmartCollectionImpl sm = obtainById(SmartCollectionImpl.class, id);
-						if (sm == null)
-							continue;
-						try {
-							Thread.sleep(50);
-						} catch (InterruptedException e) {
-							// ignore
+			if (!readOnly) {
+				if (all) {
+					List<SmartCollectionImpl> set = obtainObjects(SmartCollectionImpl.class);
+					for (SmartCollectionImpl sm : set)
+						if (sm.getSystem()) {
+							String id = sm.getStringId();
+							if (id.startsWith(VOLUMEKEY) || id.startsWith(URIKEY) || id.startsWith(DATETIMEKEY)
+									|| id.startsWith(LOCATIONKEY) || id.startsWith(IMPORTKEY))
+								dirtyCollections.add(id);
 						}
-						if (pruneSystemCollection(sm))
-							continue;
-						Iterator<String> it = sorted.iterator();
-						while (it.hasNext()) {
-							String next = it.next();
-							if (id.startsWith(next)) {
-								it.remove();
-								monitor.worked(1);
-							}
-						}
-					}
-					importIds.remove(Constants.LAST_IMPORT_ID);
-					Collections.sort(importIds, new Comparator<String>() {
-						@Override
+				}
+				if (hasDirtyCollection()) {
+					Group importGroup = getImportGroup();
+					List<Group> subgroups = importGroup.getSubgroup();
+					if (!subgroups.isEmpty())
+						importGroup = subgroups.get(0);
+					List<String> importIds = new ArrayList<String>(importGroup.getRootCollection());
+					monitor.beginTask(Messages.DbManager_pruning_empty, dirtyCollections.size() + 2 + importIds.size());
+					LinkedList<String> sorted = new LinkedList<String>(dirtyCollections);
+					Collections.sort(sorted, new Comparator<String>() {
 						public int compare(String o1, String o2) {
-							return o2.compareTo(o1);
+							return (o1.length() == o2.length() ? 0 : o1.length() < o2.length() ? 1 : -1);
 						}
 					});
-					List<Object> toBeDeleted = new ArrayList<>();
-					int i = 0;
-					for (String id : importIds) {
-						SmartCollectionImpl sm = obtainById(SmartCollectionImpl.class, id);
-						if (sm != null && sm.getSubSelection().isEmpty()) {
-							if (i < maxImports && !Utilities.isImportEmpty(this, sm))
-								++i;
-							else {
-								importGroup.removeRootCollection(id);
-								toBeDeleted.add(sm);
-							}
-						}
-						monitor.worked(1);
-					}
-					if (!toBeDeleted.isEmpty())
-						safeTransaction(toBeDeleted, importGroup);
 					monitor.worked(1);
-					Meta meta1 = getMeta(true);
-					meta1.setCleaned(true);
-					safeTransaction(null, meta1);
-					dirtyCollections.clear();
+					if (db != null) {
+						int maxImports = factory.getMaxImports() - 1;
+						while (!sorted.isEmpty()) {
+							String id = sorted.poll();
+							monitor.worked(1);
+							if (id.startsWith(IDbManager.IMPORTKEY))
+								continue;
+							SmartCollectionImpl sm = obtainById(SmartCollectionImpl.class, id);
+							try {
+								Thread.sleep(50);
+							} catch (InterruptedException e) {
+								// ignore
+							}
+							if (sm != null && !pruneSystemCollection(sm))
+								for (Iterator<String> it = sorted.iterator(); it.hasNext();)
+									if (id.startsWith(it.next())) {
+										it.remove();
+										monitor.worked(1);
+									}
+						}
+						importIds.remove(Constants.LAST_IMPORT_ID);
+						Collections.sort(importIds, new Comparator<String>() {
+							@Override
+							public int compare(String o1, String o2) {
+								return o2.compareTo(o1);
+							}
+						});
+						List<Object> toBeDeleted = new ArrayList<>();
+						int i = 0;
+						for (String id : importIds) {
+							SmartCollectionImpl sm = obtainById(SmartCollectionImpl.class, id);
+							if (sm != null && sm.getSubSelection().isEmpty()) {
+								if (i < maxImports && !Utilities.isImportEmpty(this, sm))
+									++i;
+								else {
+									importGroup.removeRootCollection(id);
+									toBeDeleted.add(sm);
+								}
+							}
+							monitor.worked(1);
+						}
+						if (!toBeDeleted.isEmpty())
+							safeTransaction(toBeDeleted, importGroup);
+						monitor.worked(1);
+						Meta meta = getMeta(true);
+						meta.setCleaned(true);
+						safeTransaction(null, meta);
+						dirtyCollections.clear();
+					}
+					monitor.done();
 				}
-				monitor.done();
+				// System.out.println(System.currentTimeMillis() - time);
 			}
-			// System.out.println(System.currentTimeMillis() - time);
 		}
 	}
 
@@ -2379,13 +2338,13 @@ public class DbManager implements IDbManager, IAdaptable {
 			return true;
 		boolean success = Core.deleteFileOrFolder(indexPath);
 		if (success && !readOnly) {
-			Meta meta1 = obtainMeta();
-			if (meta1 != null) {
-				Set<String> postponed = meta1.getPostponed();
+			Meta meta = obtainMeta();
+			if (meta != null) {
+				Set<String> postponed = meta.getPostponed();
 				if (postponed != null && !postponed.isEmpty()) {
-					meta1.clearPostponed();
+					meta.clearPostponed();
 					store(postponed);
-					storeAndCommit(meta1);
+					storeAndCommit(meta);
 				}
 			}
 		}
@@ -2417,19 +2376,19 @@ public class DbManager implements IDbManager, IAdaptable {
 	 * int)
 	 */
 	public BackupJob performBackup(long delay, long interval, boolean block, int generations) {
-		Meta meta1 = getMeta(true);
-		String backupLocation = meta1.getBackupLocation();
+		Meta meta = getMeta(true);
+		String backupLocation = meta.getBackupLocation();
 		if (backupLocation != null && !backupLocation.isEmpty()) {
 			if (checkAvailableSpace(backupLocation, getFile(), getIndexPath())) {
-				Date date = meta1.getLastBackup();
-				Date lastSessionEnd = meta1.getLastSessionEnd();
+				Date date = meta.getLastBackup();
+				Date lastSessionEnd = meta.getLastSessionEnd();
 				long lastBackup = date.getTime();
 				long lastSession = lastSessionEnd == null ? Long.MAX_VALUE : lastSessionEnd.getTime();
 				long now = System.currentTimeMillis();
 				if (interval < 0 || now - lastBackup > interval && lastSession > lastBackup) {
 					date.setTime(now);
-					meta1.setLastBackupFolder(backupLocation);
-					storeAndCommit(meta1);
+					meta.setLastBackupFolder(backupLocation);
+					storeAndCommit(meta);
 					BackupJob job = new BackupJob(backupLocation, getFile(), getIndexPath(), generations);
 					job.schedule(delay);
 					backupScheduled = true;
@@ -2449,13 +2408,11 @@ public class DbManager implements IDbManager, IAdaptable {
 	private boolean checkAvailableSpace(String backupLocation, File catFile, File indexPath) {
 		File backupFile = new File(backupLocation);
 		long freeSpace = CoreActivator.getDefault().getFreeSpace(backupFile);
-		if (freeSpace > 0L) {
-			long requiredSpace = catFile.length() + computeSpace(indexPath, 4096L) - computeSpace(backupFile, 0L);
-			if (requiredSpace > freeSpace) {
-				factory.getErrorHandler().showWarning(Constants.APPLICATION_NAME, Messages.DbManager_backup_impossible,
-						null);
-				return false;
-			}
+		if (freeSpace > 0L
+				&& catFile.length() + computeSpace(indexPath, 4096L) - computeSpace(backupFile, 0L) > freeSpace) {
+			factory.getErrorHandler().showWarning(Constants.APPLICATION_NAME, Messages.DbManager_backup_impossible,
+					null);
+			return false;
 		}
 		return true;
 	}
@@ -2502,17 +2459,28 @@ public class DbManager implements IDbManager, IAdaptable {
 					deleteMember(((SmartCollection) object).getCriterion());
 					deleteMember(((SmartCollection) object).getSortCriterion());
 					deleteMember(((SmartCollection) object).getSubSelection());
-				} else if (object instanceof SlideShow) {
+					resetSystemCollectionCache();
+					if (DIAGNOSE)
+						DbActivator.getDefault().logInfo("Deleted " + object); //$NON-NLS-1$
+				} else if (object instanceof SlideShow)
 					deleteMember(((SlideShow) object).getEntry());
-				} else if (object instanceof Wall) {
+				else if (object instanceof Wall)
 					deleteMember(((Wall) object).getExhibit());
-				} else if (object instanceof Storyboard) {
+				else if (object instanceof Storyboard)
 					deleteMember(((Storyboard) object).getExhibit());
-				}
 				db.delete(object);
 			} catch (Exception e) {
 				transactionFailed = true;
 			}
+	}
+
+	private void resetSystemCollectionCache() {
+		if (lastFolderUris != null)
+			lastFolderUris.clear();
+		if (previousLocationKeys != null)
+			previousLocationKeys.clear();
+		previousDay = -1L;
+		previousTimeline = Meta_type.timeline_no;
 	}
 
 	private void deleteMember(Object object) {
@@ -2860,8 +2828,7 @@ public class DbManager implements IDbManager, IAdaptable {
 			if (crits == null)
 				removeCollection(toBeStored, toBeDeleted, sm);
 			else {
-				Iterator<Criterion> it = crits.iterator();
-				while (it.hasNext())
+				for (Iterator<Criterion> it = crits.iterator(); it.hasNext();)
 					if (it.next() == null)
 						it.remove();
 				if (crits.isEmpty())
@@ -2888,8 +2855,8 @@ public class DbManager implements IDbManager, IAdaptable {
 		toBeDeleted.add(sm);
 	}
 
-	protected boolean isLexField(String field) {
-		return lexFields.contains(field);
+	protected boolean isIndexed(String field) {
+		return indexedFields.contains(field);
 	}
 
 }

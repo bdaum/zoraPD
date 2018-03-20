@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -96,55 +96,22 @@ public class RefreshDialog extends ZTitleAreaDialog {
 	}
 
 	private void fillValues() {
-		settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
-
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
+		setButton(resetImageButton, IMAGE);
+		setButton(resetStatusButton, STATUS);
+		setButton(resetFaceButton, FACE);
+		setButton(resetExifButton, EXIF);
+		setButton(resetGpsButton, GPS);
+		setButton(resetIptcButton, IPTC);
+		setButton(existingButton, OUTDATED);
+		setButton(uptoDateButton, UPTODATE);
+		setButton(missingButton, MISSING);
+		setButton(remoteButton, REMOTE);
+	}
+	
+	private void setButton(CheckboxButton button, String key) {
 		try {
-			resetImageButton.setSelection(settings.getBoolean(IMAGE));
-		} catch (Exception e) {
-			// ignore
-		}
-		try {
-			resetStatusButton.setSelection(settings.getBoolean(STATUS));
-		} catch (Exception e) {
-			// ignore
-		}
-		try {
-			resetFaceButton.setSelection(settings.getBoolean(FACE));
-		} catch (Exception e) {
-			// ignore
-		}
-		try {
-			resetExifButton.setSelection(settings.getBoolean(EXIF));
-		} catch (Exception e) {
-			// ignore
-		}
-		try {
-			resetGpsButton.setSelection(settings.getBoolean(GPS));
-		} catch (Exception e) {
-			// ignore
-		}
-		try {
-			resetIptcButton.setSelection(settings.getBoolean(IPTC));
-		} catch (Exception e) {
-			// ignore
-		}
-		try {
-			existingButton.setSelection(settings.getBoolean(OUTDATED));
-		} catch (Exception e) {
-			// ignore
-		}
-		try {
-			uptoDateButton.setSelection(settings.getBoolean(UPTODATE));
-		} catch (Exception e) {
-			// ignore
-		}
-		try {
-			missingButton.setSelection(settings.getBoolean(MISSING));
-		} catch (Exception e) {
-			// ignore
-		}
-		try {
-			remoteButton.setSelection(settings.getBoolean(REMOTE));
+			button.setSelection(settings.getBoolean(key));
 		} catch (Exception e) {
 			// ignore
 		}
@@ -208,7 +175,6 @@ public class RefreshDialog extends ZTitleAreaDialog {
 		resetIptcButton = WidgetFactory.createCheckButton(comp,
 				Messages.RefreshDialog_refresh_iptc, gd_resetIptcButton);
 		existingButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				updateButtons();

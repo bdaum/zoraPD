@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.widgets;
@@ -144,8 +144,8 @@ public class CLink extends Composite implements MouseListener,
 	}
 
 	private void fireSelectionEvent(SelectionEvent event) {
-		for (Object listener : listeners.getListeners()) 
-			((SelectionListener) listener).widgetSelected(event);
+		for (SelectionListener listener : listeners) 
+			listener.widgetSelected(event);
 	}
 
 	

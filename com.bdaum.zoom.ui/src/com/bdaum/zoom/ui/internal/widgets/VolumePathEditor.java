@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -56,15 +56,14 @@ public class VolumePathEditor extends PathEditor {
 	 * @param parent
 	 *            the parent of the field editor's control
 	 */
-	public VolumePathEditor(String name, String labelText,
-			String dirChooserLabelText, Composite parent) {
+	public VolumePathEditor(String name, String labelText, String dirChooserLabelText, Composite parent) {
 		super(name, labelText, dirChooserLabelText, parent);
 	}
 
 	/*
-	 * (non-Javadoc) Method declared on ListEditor. Creates a single string from
-	 * the given array by separating each string with the appropriate
-	 * OS-specific path separator.
+	 * (non-Javadoc) Method declared on ListEditor. Creates a single string from the
+	 * given array by separating each string with the appropriate OS-specific path
+	 * separator.
 	 */
 
 	@Override
@@ -79,18 +78,9 @@ public class VolumePathEditor extends PathEditor {
 				volume = path.substring(p + VOLSEP.length(), path.length() - 1);
 				path = path.substring(0, p);
 			}
-			if (volume == null) {
-				File file = new File(items[i]);
-				volume = volumeManager.rootToVolume(volumeManager
-						.getRootFile(file));
-			}
-			sb.append(path);
-			sb.append(File.pathSeparator);
-			if (volume != null)
-				sb.append(volume);
-			else
-				sb.append("*"); //$NON-NLS-1$
-			sb.append(File.pathSeparator);
+			if (volume == null)
+				volume = volumeManager.rootToVolume(volumeManager.getRootFile(new File(items[i])));
+			sb.append(path).append(File.pathSeparator).append(volume != null ? volume : "*").append(File.pathSeparator); //$NON-NLS-1$
 		}
 		return sb.toString();
 	}
@@ -98,12 +88,10 @@ public class VolumePathEditor extends PathEditor {
 	@Override
 	protected String getNewInputObject() {
 		String dir = super.getNewInputObject();
-		File file = new File(dir);
 		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
-		String volume = volumeManager.rootToVolume(volumeManager
-				.getRootFile(file));
+		String volume = volumeManager.rootToVolume(volumeManager.getRootFile(new File(dir)));
 		if (volume != null)
-			dir += VOLSEP + volume + VOLEND;
+			dir = new StringBuilder().append(dir).append(VOLSEP).append(volume).append(VOLEND).toString();
 		return dir;
 	}
 
@@ -114,8 +102,7 @@ public class VolumePathEditor extends PathEditor {
 	@Override
 	protected String[] parseString(String stringList) {
 		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
-		StringTokenizer st = new StringTokenizer(stringList, File.pathSeparator
-				+ "\n\r");//$NON-NLS-1$
+		StringTokenizer st = new StringTokenizer(stringList, File.pathSeparator + "\n\r");//$NON-NLS-1$
 		ArrayList<String> v = new ArrayList<String>();
 		String dir = null;
 		int i = 0;
@@ -130,12 +117,11 @@ public class VolumePathEditor extends PathEditor {
 				if (root != null) {
 					File file = new File(dir);
 					File oldRoot = volumeManager.getRootFile(file);
-					File newFile = new File(root, file.getAbsolutePath()
-							.substring(oldRoot.getAbsolutePath().length()));
-					dir = newFile.getAbsolutePath();
+					dir = new File(root, file.getAbsolutePath().substring(oldRoot.getAbsolutePath().length()))
+							.getAbsolutePath();
 				}
 				if (!"*".equals(volume)) //$NON-NLS-1$
-					dir += VOLSEP + volume + VOLEND;
+					dir = new StringBuilder().append(dir).append(VOLSEP).append(volume).append(VOLEND).toString();
 				v.add(dir);
 			}
 		}

@@ -15,11 +15,12 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.core.commands.ExecutionException;
@@ -33,22 +34,29 @@ import com.bdaum.zoom.operations.IProfiledOperation;
 
 public class EmptyTrashOperation extends DbOperation {
 
+	private Trash[] items;
+
+
 	public EmptyTrashOperation() {
 		super(Messages.getString("EmptyTrashOperation.Empty_trashcan")); //$NON-NLS-1$
+	}
+
+
+	public EmptyTrashOperation(Trash[] items) {
+		this();
+		this.items = items;
 	}
 
 
 	@Override
 	public IStatus execute(IProgressMonitor aMonitor, IAdaptable info)
 			throws ExecutionException {
-		List<Trash> set = dbManager.obtainTrashToDelete(false);
+		List<Trash> set = items == null ? dbManager.obtainTrashToDelete(false) : Arrays.asList(items);
 		init(aMonitor, set.size());
 		if (!set.isEmpty()) {
-			for (Trash trash : set) {
-				final Trash t = trash;
-				if (!storeSafely(() -> t.removeItem(dbManager), 1))
+			for (Trash trash : set)
+				if (!storeSafely(() -> trash.removeItem(dbManager), 1))
 					return close(info);
-			}
 			fireAssetsModified(null, null);
 		}
 		return close(info);

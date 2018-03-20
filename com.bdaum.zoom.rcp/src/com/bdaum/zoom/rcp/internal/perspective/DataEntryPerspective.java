@@ -34,7 +34,7 @@ public class DataEntryPerspective extends AbstractPerspective {
 				DATAENTRY_FOLDER);
 		layout.addView(PreviewView.ID, IPageLayout.BOTTOM, 0.7f, CATALOG_FOLDER);
 		addCheatSheets(layout, DATAENTRY_FOLDER);
-		addFastViews(layout, IPageLayout.LEFT, 0.7f, CATALOG_FOLDER);
+		addFastViews(layout, IPageLayout.RIGHT, 0.7f, DATAENTRY_FOLDER);
 		layout.setEditorAreaVisible(false);
 	}
 	

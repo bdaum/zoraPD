@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2011 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.internal;
@@ -32,7 +32,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.lang.reflect.Array;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -46,6 +45,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -83,6 +83,7 @@ import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.program.BatchConstants;
 import com.bdaum.zoom.program.BatchUtilities;
+import com.google.openlocationcode.OpenLocationCode;
 
 public class Utilities {
 
@@ -249,16 +250,13 @@ public class Utilities {
 	}
 
 	public static void saveCategories(Meta meta, File categoryFile) {
-		FileOutputStream out = null;
 		categoryFile.delete();
-		try {
+		try (FileOutputStream out = new FileOutputStream(categoryFile)) {
 			categoryFile.createNewFile();
-			out = new FileOutputStream(categoryFile);
 			saveCategories(meta, out);
 		} catch (IOException e) {
 			CoreActivator.getDefault().logError(Messages.Utilities_io_error_creating_categories, e);
 		}
-
 	}
 
 	public static void saveCategories(Meta meta, OutputStream out) {
@@ -383,6 +381,8 @@ public class Utilities {
 			value = asset.getName();
 		else if (tv == Constants.PI_CREATIONDATE)
 			value = cal == null ? "" : new SimpleDateFormat(Messages.Utilities_yyyymdhmm).format(cal.getTime()); //$NON-NLS-1$
+		else if (tv == Constants.PI_CREATIONYEAR || tv == Constants.TV_YYYY)
+			value = cal == null ? "" : String.valueOf(cal.get(Calendar.YEAR)); //$NON-NLS-1$
 		else if (tv == Constants.PT_COLLECTION)
 			value = collection;
 		else if (tv == Constants.PI_SEQUENCENO)
@@ -411,8 +411,6 @@ public class Utilities {
 			value = cal == null ? "" : leadingZeros(cal.get(Calendar.MONTH) + 1, 2); //$NON-NLS-1$
 		else if (tv == Constants.TV_YY)
 			value = cal == null ? "" : leadingZeros(cal.get(Calendar.YEAR) % 100, 2); //$NON-NLS-1$
-		else if (tv == Constants.TV_YYYY)
-			value = cal == null ? "" : String.valueOf(cal.get(Calendar.YEAR)); //$NON-NLS-1$
 		else if (tv == Constants.TV_SEQUENCE_NO5)
 			value = leadingZeros(sequenceNo, 5);
 		else if (tv == Constants.TV_SEQUENCE_NO4)
@@ -529,7 +527,7 @@ public class Utilities {
 			}
 	}
 
-	private static void collectFilteredFiles(File[] list, List<File> files, FileNameExtensionFilter filter) {
+	public static void collectFilteredFiles(File[] list, List<File> files, FileNameExtensionFilter filter) {
 		if (list != null)
 			for (File f : list)
 				if (f.isDirectory())
@@ -774,10 +772,9 @@ public class Utilities {
 				coll.setGroup_rootCollection_parent(null);
 				coll.setSmartCollection_subSelection_parent(parentCollection);
 			}
-		} else {
-			SmartCollectionImpl parentCollection = parentCat == null ? null : newCollections.get(parentCat.getLabel());
-			coll = addCategoryCollection(cat, parentCollection, catGroup, toBeStored);
-		}
+		} else
+			coll = addCategoryCollection(cat, parentCat == null ? null : newCollections.get(parentCat.getLabel()),
+					catGroup, toBeStored);
 		toBeStored.add(coll);
 		newCollections.put(cat.getLabel(), coll);
 		Map<String, Category> subCategories = cat.getSubCategory();
@@ -806,8 +803,8 @@ public class Utilities {
 			}
 		}
 		newSm.setSubSelection(oldSm.getSubSelection());
-		Utilities.deleteCollection(oldSm, false, toBeDeleted);
-		Utilities.storeCollection(newSm, false, toBeStored);
+		deleteCollection(oldSm, false, toBeDeleted);
+		storeCollection(newSm, false, toBeStored);
 	}
 
 	public static void deleteCollection(SmartCollection collection, boolean deep, Collection<Object> toBeDeleted) {
@@ -824,7 +821,10 @@ public class Utilities {
 				deleteCollection(sub, deep, toBeDeleted);
 	}
 
-	public static void storeCollection(SmartCollection collection, boolean deep, Collection<Object> toBeStored) {
+	public static Collection<Object> storeCollection(SmartCollection collection, boolean deep,
+			Collection<Object> toBeStored) {
+		if (toBeStored == null)
+			toBeStored = new ArrayList<Object>();
 		toBeStored.add(collection);
 		for (Criterion crit : collection.getCriterion())
 			toBeStored.add(crit);
@@ -838,6 +838,7 @@ public class Utilities {
 				sub.setSmartCollection_subSelection_parent(collection);
 				storeCollection(sub, deep, toBeStored);
 			}
+		return toBeStored;
 	}
 
 	public static String downGradeLastImport(SmartCollectionImpl coll) {
@@ -847,24 +848,19 @@ public class Utilities {
 	public static String setImportKeyAndLabel(SmartCollectionImpl coll, Object value) {
 		String lab, id;
 		if (value instanceof Range) {
-			Range range = (Range) value;
-			Date from = (Date) range.getFrom();
-			Date to = (Date) range.getTo();
+			Date from = (Date) ((Range) value).getFrom();
+			Date to = (Date) ((Range) value).getTo();
 			String sto = Constants.DFIMPORT.format(to);
 			String sfrom = Constants.DFIMPORTDD.format(from);
-			StringBuilder sb = new StringBuilder();
-			if (sfrom.equals(Constants.DFIMPORTDD.format(to)))
-				sb.append(sfrom).append(' ').append(Constants.DFIMPORTHH.format(from)).append(" - ") //$NON-NLS-1$
-						.append(Constants.DFIMPORTHH.format(to));
-			else
-				sb.append(Constants.DFIMPORT.format(from)).append(" - ") //$NON-NLS-1$
-						.append(sto);
-			lab = sb.toString();
+			lab = sfrom.equals(Constants.DFIMPORTDD.format(to))
+					? new StringBuilder().append(sfrom).append(' ').append(Constants.DFIMPORTHH.format(from))
+							.append(" - ") //$NON-NLS-1$
+							.append(Constants.DFIMPORTHH.format(to)).toString()
+					: new StringBuilder().append(Constants.DFIMPORT.format(from)).append(" - ") //$NON-NLS-1$
+							.append(sto).toString();
 			id = IDbManager.IMPORTKEY + sto;
-		} else {
-			lab = Constants.DFIMPORT.format((Date) value);
-			id = IDbManager.IMPORTKEY + lab;
-		}
+		} else
+			id = IDbManager.IMPORTKEY + (lab = Constants.DFIMPORT.format((Date) value));
 		coll.setName(lab);
 		coll.setStringId(id);
 		coll.setSystem(false);
@@ -877,9 +873,8 @@ public class Utilities {
 			uri = uri.substring(0, p + 1);
 			p = uri.lastIndexOf('/', uri.length() - 2);
 			if (p >= 0) {
-				int q = uri.lastIndexOf(':', uri.length() - 2);
 				StringBuilder sb = new StringBuilder();
-				if (q > p && volume != null && !volume.isEmpty())
+				if (uri.lastIndexOf(':', uri.length() - 2) > p && volume != null && !volume.isEmpty())
 					sb.append(IDbManager.VOLUMEKEY).append(volume);
 				else
 					sb.append(IDbManager.URIKEY).append(uri);
@@ -944,8 +939,7 @@ public class Utilities {
 				}
 				if (personId != null) {
 					List<RegionImpl> regions = dbManager.obtainObjects(RegionImpl.class, false, "asset_person_parent", //$NON-NLS-1$
-							asset.getStringId(), QueryField.EQUALS, "album", personId, QueryField.EQUALS //$NON-NLS-1$
-					);
+							asset.getStringId(), QueryField.EQUALS, "album", personId, QueryField.EQUALS); //$NON-NLS-1$
 					if (newName == null) {
 						if (toBeDeleted != null)
 							toBeDeleted.addAll(regions);
@@ -1016,10 +1010,8 @@ public class Utilities {
 			SmartCollectionImpl coll = new SmartCollectionImpl((i < 0) ? Messages.CoreActivator_Not_rated : STARS[i],
 					true, false, false, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 			coll.setStringId(prefix + i);
-			CriterionImpl crit = new CriterionImpl(ratingKey, null, i, QueryField.EQUALS, false);
-			coll.addCriterion(crit);
-			SortCriterionImpl scrit = new SortCriterionImpl(QueryField.IMPORTDATE.getKey(), null, true);
-			coll.addSortCriterion(scrit);
+			coll.addCriterion(new CriterionImpl(ratingKey, null, i, QueryField.EQUALS, false));
+			coll.addSortCriterion(new SortCriterionImpl(QueryField.IMPORTDATE.getKey(), null, true));
 			coll.setGroup_rootCollection_parent(rating.getStringId());
 			rating.addRootCollection(coll.getStringId());
 			db.store(coll);
@@ -1036,14 +1028,13 @@ public class Utilities {
 
 	public static int parseHex(String s, int from, int to) {
 		int v = 0;
-		for (int i = from; i < to; i++) {
+		for (int i = from; i < to; i++)
 			if (i >= 0) {
 				int d = Character.digit(s.charAt(i), 16);
 				if (d < 0)
 					throw new NumberFormatException(NLS.bind("Invalid hex character", s.substring(i, i + 1))); //$NON-NLS-1$
 				v = (v << 4) + d;
 			}
-		}
 		return v;
 	}
 
@@ -1069,18 +1060,18 @@ public class Utilities {
 	public static String toRect64(double x, double y, double w, double h) {
 		StringBuilder sb = new StringBuilder(16);
 		if (java.lang.Double.isNaN(h)) {
-			Utilities.toHex(sb, (int) (x * 65535 + 0.5d));
-			Utilities.toHex(sb, (int) (y * 65535 + 0.5d));
-			Utilities.toHex(sb, (int) (w * 65535 + 0.5d));
+			toHex(sb, (int) (x * 65535 + 0.5d));
+			toHex(sb, (int) (y * 65535 + 0.5d));
+			toHex(sb, (int) (w * 65535 + 0.5d));
 		} else {
 			x = Math.max(0.03d, Math.min(0.97d, x));
 			y = Math.max(0.03d, Math.min(0.97d, y));
 			w = Math.max(0.03d, w);
 			h = Math.max(0.03d, h);
-			Utilities.toHex(sb, (int) (x * 65535 + 0.5d));
-			Utilities.toHex(sb, (int) (y * 65535 + 0.5d));
-			Utilities.toHex(sb, (int) (Math.min(0.97d, (x + w)) * 65535 + 0.5d));
-			Utilities.toHex(sb, (int) (Math.min(0.97d, (y + h)) * 65535 + 0.5d));
+			toHex(sb, (int) (x * 65535 + 0.5d));
+			toHex(sb, (int) (y * 65535 + 0.5d));
+			toHex(sb, (int) (Math.min(0.97d, (x + w)) * 65535 + 0.5d));
+			toHex(sb, (int) (Math.min(0.97d, (y + h)) * 65535 + 0.5d));
 		}
 		return sb.toString();
 	}
@@ -1122,22 +1113,18 @@ public class Utilities {
 		// Step 1
 		n = s.length();
 		m = t.length();
-		if (n == 0) {
+		if (n == 0)
 			return m;
-		}
-		if (m == 0) {
+		if (m == 0)
 			return n;
-		}
 		d = new int[n + 1][m + 1];
 
 		// Step 2
-		for (i = 0; i <= n; i++) {
+		for (i = 0; i <= n; i++)
 			d[i][0] = i;
-		}
 
-		for (j = 0; j <= m; j++) {
+		for (j = 0; j <= m; j++)
 			d[0][j] = j;
-		}
 
 		// Step 3
 		for (i = 1; i <= n; i++) {
@@ -1150,11 +1137,10 @@ public class Utilities {
 				t_j = t.charAt(j - 1);
 
 				// Step 5
-				if (s_i == t_j) {
+				if (s_i == t_j)
 					cost = 0;
-				} else {
+				else
 					cost = 1;
-				}
 
 				// Step 6
 				d[i][j] = Minimum(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
@@ -1172,33 +1158,71 @@ public class Utilities {
 	private static int Minimum(int a, int b, int c) {
 		int mi;
 		mi = a;
-		if (b < mi) {
+		if (b < mi)
 			mi = b;
-		}
-		if (c < mi) {
-			mi = c;
-		}
+		if (c < mi)
+			return c;
 		return mi;
 	}
 
 	public static boolean completeLocation(IDbManager db, Location loc) {
+		boolean changed = false;
 		String worldRegion = loc.getWorldRegion();
 		String worldRegionCode = loc.getWorldRegionCode();
 		String countryISOCode = loc.getCountryISOCode();
+		String countryName = loc.getCountryName();
+		String city = loc.getCity();
+		Double latitude = loc.getLatitude();
+		Double longitude = loc.getLongitude();
+		if (city == null && latitude != null && !Double.isNaN(latitude) && longitude != null
+				&& !Double.isNaN(longitude)) {
+			List<LocationImpl> set = db.obtainObjects(LocationImpl.class, false, "latitude", latitude, //$NON-NLS-1$
+					QueryField.EQUALS, "longitude", //$NON-NLS-1$
+					longitude, QueryField.EQUALS);
+			for (LocationImpl cloc : set) {
+				city = cloc.getCity();
+				if (city != null) {
+					loc.setCity(cloc.getCity());
+					if (cloc.getCountryName() != null)
+						loc.setCountryName(countryName = cloc.getCountryName());
+					if (cloc.getCountryISOCode() != null)
+						loc.setCountryISOCode(countryISOCode = cloc.getCountryISOCode());
+					if (cloc.getWorldRegion() != null)
+						loc.setWorldRegion(worldRegion = cloc.getWorldRegion());
+					if (cloc.getWorldRegionCode() != null)
+						loc.setWorldRegionCode(worldRegionCode = cloc.getWorldRegionCode());
+					if (cloc.getSublocation() != null)
+						loc.setSublocation(cloc.getSublocation());
+					if (cloc.getDetails() != null)
+						loc.setDetails(cloc.getDetails());
+					break;
+				}
+			}
+		}
 		if (countryISOCode == null) {
-			String countryName = loc.getCountryName();
 			if (countryName != null) {
 				countryISOCode = LocationConstants.countryNameToIsoCode.get(countryName);
 				if (countryISOCode == null) {
-					// $NON-NLS-1$
-					for (LocationImpl cloc : db.obtainObjects(LocationImpl.class, "countryName", countryName, //$NON-NLS-1$
-							QueryField.EQUALS)) {
-						String iso = cloc.getCountryISOCode();
-						if (iso != null) {
-							countryISOCode = iso;
+					for (Locale locale : Locale.getAvailableLocales())
+						if (countryName.equals(locale.getDisplayCountry())) {
+							countryISOCode = locale.getCountry();
 							break;
 						}
-					}
+					if (countryISOCode == null)
+						for (LocationImpl cloc : db.obtainObjects(LocationImpl.class, "countryName", countryName, //$NON-NLS-1$
+								QueryField.EQUALS)) {
+							countryISOCode = cloc.getCountryISOCode();
+							if (countryISOCode != null)
+								break;
+						}
+				}
+			} else if (city != null) {
+				for (LocationImpl cloc : db.obtainObjects(LocationImpl.class, "city", city, //$NON-NLS-1$
+						QueryField.EQUALS)) {
+					countryName = cloc.getCountryName();
+					countryISOCode = cloc.getCountryISOCode();
+					if (countryISOCode != null)
+						break;
 				}
 			}
 		}
@@ -1209,21 +1233,41 @@ public class Utilities {
 		}
 		if (countryISOCode != null && !countryISOCode.equals(loc.getCountryISOCode())) {
 			loc.setCountryISOCode(countryISOCode);
-			return true;
+			changed = true;
+		}
+		if (countryName != null && !countryName.equals(loc.getCountryName())) {
+			loc.setCountryName(countryName);
+			changed = true;
 		}
 		if (worldRegionCode == null || worldRegionCode.isEmpty()) {
 			String continentCode = null;
 			if (countryISOCode != null)
 				continentCode = LocationConstants.countryToContinent.get(countryISOCode);
-			else if (worldRegion != null)
+			else if (worldRegion != null) {
 				continentCode = LocationConstants.worldRegionToContinent.get(worldRegion);
+				if (continentCode == null) {
+					for (LocationImpl cloc : db.obtainObjects(LocationImpl.class, "worldRegion", worldRegion, //$NON-NLS-1$
+							QueryField.EQUALS)) {
+						continentCode = cloc.getWorldRegionCode();
+						if (continentCode != null)
+							break;
+					}
+				}
+			}
 			if (continentCode != null) {
 				loc.setWorldRegionCode(continentCode);
 				loc.setWorldRegion(GeoMessages.getString(GeoMessages.PREFIX + continentCode));
-				return true;
+				changed = true;
 			}
 		}
-		return false;
+		if (latitude != null && !Double.isNaN(latitude) && longitude != null && !Double.isNaN(longitude)) {
+			String plusCode = OpenLocationCode.encode(latitude, longitude);
+			if (!plusCode.equals(loc.getPlusCode())) {
+				loc.setPlusCode(plusCode);
+				changed = true;
+			}
+		}
+		return changed;
 	}
 
 	public static boolean popLastImport(final List<Object> toBeStored, final Set<Object> toBeDeleted,
@@ -1242,7 +1286,7 @@ public class Utilities {
 			if (!empty)
 				return false;
 			for (SmartCollectionImpl sm : dbManager.obtainByIds(SmartCollectionImpl.class, group.getRootCollection()))
-				Utilities.deleteCollection(sm, true, toBeDeleted);
+				deleteCollection(sm, true, toBeDeleted);
 			group.getRootCollection().clear();
 			toBeStored.add(group);
 			if (previousImport != null) {
@@ -1251,8 +1295,7 @@ public class Utilities {
 				if (previous != null && !previous.getCriterion().isEmpty()) {
 					GroupImpl subgroup = dbManager.obtainById(GroupImpl.class, Constants.GROUP_ID_RECENTIMPORTS);
 					previous.setStringId(Constants.LAST_IMPORT_ID);
-					Criterion crit = previous.getCriterion(0);
-					Object value = crit.getValue();
+					Object value = previous.getCriterion(0).getValue();
 					previous.setName(value instanceof Range ? Messages.Utilities_last_background_imports
 							: Messages.Utilities_last_import);
 					previous.setSystem(true);
@@ -1278,11 +1321,10 @@ public class Utilities {
 			Object value = criterion.getValue();
 			String field = criterion.getField();
 			List<AssetImpl> set;
-			if (value instanceof Range)
-				set = dbManager.obtainObjects(AssetImpl.class, false, field, ((Range) value).getFrom(),
-						QueryField.GREATER, field, ((Range) value).getTo(), QueryField.NOTGREATER);
-			else
-				set = dbManager.obtainObjects(AssetImpl.class, field, value, QueryField.EQUALS);
+			set = value instanceof Range
+					? dbManager.obtainObjects(AssetImpl.class, false, field, ((Range) value).getFrom(),
+							QueryField.GREATER, field, ((Range) value).getTo(), QueryField.NOTGREATER)
+					: dbManager.obtainObjects(AssetImpl.class, field, value, QueryField.EQUALS);
 			return !set.iterator().hasNext();
 		}
 		return false;
@@ -1303,94 +1345,6 @@ public class Utilities {
 			temp = temp.getSmartCollection_subSelection_parent();
 		}
 		return sb.toString();
-	}
-
-	// Cloning
-
-	/**
-	 * Copies the specified array, truncating or padding with nulls (if necessary)
-	 * so the copy has the specified length. For all indices that are valid in both
-	 * the original array and the copy, the two arrays will contain identical
-	 * values. For any indices that are valid in the copy but not the original, the
-	 * copy will contain <tt>null</tt>. Such indices will exist if and only if the
-	 * specified length is greater than that of the original array. The resulting
-	 * array is of exactly the same class as the original array.
-	 *
-	 * @param original
-	 *            the array to be copied
-	 * @param newLength
-	 *            the length of the copy to be returned
-	 * @return a copy of the original array, truncated or padded with nulls to
-	 *         obtain the specified length
-	 * @throws NegativeArraySizeException
-	 *             if <tt>newLength</tt> is negative
-	 * @throws NullPointerException
-	 *             if <tt>original</tt> is null
-	 * @since 1.6
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T> T[] copyOf(T[] original, int newLength) {
-		return (T[]) copyOf(original, newLength, original.getClass());
-	}
-
-	/**
-	 * Copies the specified array, truncating or padding with nulls (if necessary)
-	 * so the copy has the specified length. For all indices that are valid in both
-	 * the original array and the copy, the two arrays will contain identical
-	 * values. For any indices that are valid in the copy but not the original, the
-	 * copy will contain <tt>null</tt>. Such indices will exist if and only if the
-	 * specified length is greater than that of the original array. The resulting
-	 * array is of the class <tt>newType</tt>.
-	 *
-	 * @param original
-	 *            the array to be copied
-	 * @param newLength
-	 *            the length of the copy to be returned
-	 * @param newType
-	 *            the class of the copy to be returned
-	 * @return a copy of the original array, truncated or padded with nulls to
-	 *         obtain the specified length
-	 * @throws NegativeArraySizeException
-	 *             if <tt>newLength</tt> is negative
-	 * @throws NullPointerException
-	 *             if <tt>original</tt> is null
-	 * @throws ArrayStoreException
-	 *             if an element copied from <tt>original</tt> is not of a runtime
-	 *             type that can be stored in an array of class <tt>newType</tt>
-	 * @since 1.6
-	 */
-	public static <T, U> T[] copyOf(U[] original, int newLength, Class<? extends T[]> newType) {
-		@SuppressWarnings("unchecked")
-		T[] copy = ((Object) newType == (Object) Object[].class) ? (T[]) new Object[newLength]
-				: (T[]) Array.newInstance(newType.getComponentType(), newLength);
-		System.arraycopy(original, 0, copy, 0, Math.min(original.length, newLength));
-		return copy;
-	}
-
-	/**
-	 * Copies the specified array, truncating or padding with zeros (if necessary)
-	 * so the copy has the specified length. For all indices that are valid in both
-	 * the original array and the copy, the two arrays will contain identical
-	 * values. For any indices that are valid in the copy but not the original, the
-	 * copy will contain <tt>0</tt>. Such indices will exist if and only if the
-	 * specified length is greater than that of the original array.
-	 *
-	 * @param original
-	 *            the array to be copied
-	 * @param newLength
-	 *            the length of the copy to be returned
-	 * @return a copy of the original array, truncated or padded with zeros to
-	 *         obtain the specified length
-	 * @throws NegativeArraySizeException
-	 *             if <tt>newLength</tt> is negative
-	 * @throws NullPointerException
-	 *             if <tt>original</tt> is null
-	 * @since 1.6
-	 */
-	public static int[] copyOf(int[] original, int newLength) {
-		int[] copy = new int[newLength];
-		System.arraycopy(original, 0, copy, 0, Math.min(original.length, newLength));
-		return copy;
 	}
 
 	public static String[] computeBackupLocation(File catFile, String backupLocation) {
@@ -1475,7 +1429,8 @@ public class Utilities {
 		newMeta.setCbirAlgorithms(CoreActivator.getDefault().getCbirAlgorithms());
 		newMeta.setIndexedTextFields(CoreActivator.getDefault().getIndexedTextFields(oldMeta));
 		newMeta.setNoIndex(oldMeta.getNoIndex());
-		newMeta.setVocabularies(oldMeta.getVocabularies());
+		if (oldMeta.getVocabularies() != null)
+			newMeta.setVocabularies(oldMeta.getVocabularies());
 	}
 
 	public static boolean updateAlbumWithEmail(SmartCollectionImpl album, String emails) {
@@ -1555,11 +1510,10 @@ public class Utilities {
 			Map<String, Category> newCats, Collection<Object> toBeDeleted, Collection<Object> toBeStored) {
 		ensureCatConsistency(newCats, new HashSet<String>(), new ArrayList<String>());
 		if (!oldCats.equals(newCats)) {
-			List<CategoryImpl> existingCats = dbManager.obtainObjects(CategoryImpl.class);
-			toBeDeleted.addAll(existingCats);
+			toBeDeleted.addAll(dbManager.obtainObjects(CategoryImpl.class));
 			storeCats(newCats, toBeStored);
-			GroupImpl catGroup = Utilities.obtainCatGroup(dbManager, toBeDeleted, toBeStored);
-			createCatCollections(dbManager, catGroup, newCats, toBeDeleted, toBeStored);
+			createCatCollections(dbManager, obtainCatGroup(dbManager, toBeDeleted, toBeStored), newCats, toBeDeleted,
+					toBeStored);
 			return true;
 		}
 		return false;

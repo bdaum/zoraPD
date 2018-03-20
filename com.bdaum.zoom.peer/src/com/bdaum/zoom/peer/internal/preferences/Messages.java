@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2013 Berthold Daum  
  */
 package com.bdaum.zoom.peer.internal.preferences;
 
@@ -30,12 +30,14 @@ public class Messages extends NLS {
 	public static String PeerPreferencePage_automatic_update;
 	public static String PeerPreferencePage_calling_peer;
 	public static String PeerPreferencePage_catalog_does_not_exist;
+	public static String PeerPreferencePage_cats_tooltip;
 	public static String PeerPreferencePage_clear;
 	public static String PeerPreferencePage_computer_name;
 	public static String PeerPreferencePage_dateformat;
 	public static String PeerPreferencePage_defaultport;
 	public static String PeerPreferencePage_incoming_calls;
 	public static String PeerPreferencePage_incoming_msg;
+	public static String PeerPreferencePage_incoming_tooltip;
 	public static String PeerPreferencePage_last_access;
 	public static String PeerPreferencePage_last_op;
 	public static String PeerPreferencePage_local;
@@ -49,6 +51,7 @@ public class Messages extends NLS {
 	public static String PeerPreferencePage_peer_and_shared_cat_definition;
 	public static String PeerPreferencePage_peer_location;
 	public static String PeerPreferencePage_peer_nodes;
+	public static String PeerPreferencePage_peer_tooltip;
 	public static String PeerPreferencePage_port;
 	public static String PeerPreferencePage_privacy;
 	public static String PeerPreferencePage_public_items;

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -59,7 +59,6 @@ import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.DeleteOperation;
 import com.bdaum.zoom.ui.AssetSelection;
-import com.bdaum.zoom.ui.INavigationHistory;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
@@ -83,9 +82,8 @@ public class DeleteAction extends Action {
 
 	@Override
 	public void run() {
-		INavigationHistory navigationHistory = UiActivator.getDefault()
-				.getNavigationHistory(adaptable.getAdapter(IWorkbenchWindow.class));
-		SmartCollectionImpl selectedCollection = navigationHistory.getSelectedCollection();
+		SmartCollectionImpl selectedCollection = UiActivator.getDefault()
+				.getNavigationHistory(adaptable.getAdapter(IWorkbenchWindow.class)).getSelectedCollection();
 		boolean inAlbum = selectedCollection.getAlbum() && !selectedCollection.getSystem();
 		AssetSelection selection = adaptable.getAdapter(AssetSelection.class);
 		List<SlideImpl> slides = null;
@@ -156,12 +154,10 @@ public class DeleteAction extends Action {
 							}
 						}
 						StringBuilder message = new StringBuilder();
-						message.append(NLS.bind(Messages.DeleteAction_image_used_in, sb));
-						if (i == 1)
-							message.append(Messages.DeleteAction_remove_image_singular);
-						else
-							message.append(Messages.DeleteAction_remove_image_plural);
-						message.append(Messages.DeleteAction_operation_cannot_be_undome);
+						message.append(NLS.bind(Messages.DeleteAction_image_used_in, sb))
+								.append(i == 1 ? Messages.DeleteAction_remove_image_singular
+										: Messages.DeleteAction_remove_image_plural)
+								.append(Messages.DeleteAction_operation_cannot_be_undome);
 						if (!AcousticMessageDialog.openConfirm(shell, Messages.DeleteAction_used_in_artifacts,
 								message.toString()))
 							return;
@@ -177,16 +173,13 @@ public class DeleteAction extends Action {
 										new String[] { Messages.DeleteAction_remove_from_album,
 												Messages.DeleteAction_delete_only_cat, IDialogConstants.CANCEL_LABEL },
 										0);
-								int ret = dialog.open();
-								if (ret != 2)
+								if (dialog.open() != 2)
 									launchOperation(selectedCollection, false, Collections.singletonList(asset), slides,
 											exhibits, webexhibits);
-							} else {
-								if (AcousticMessageDialog.openConfirm(shell, Messages.DeleteAction_deleting_images,
-										NLS.bind(Messages.DeleteAction_delete_cat_entry, asset.getName())))
-									launchOperation(null, false, Collections.singletonList(asset), slides, exhibits,
-											webexhibits);
-							}
+							} else if (AcousticMessageDialog.openConfirm(shell, Messages.DeleteAction_deleting_images,
+									NLS.bind(Messages.DeleteAction_delete_cat_entry, asset.getName())))
+								launchOperation(null, false, Collections.singletonList(asset), slides, exhibits,
+										webexhibits);
 							return;
 						}
 					} else {
@@ -199,16 +192,13 @@ public class DeleteAction extends Action {
 										new String[] { Messages.DeleteAction_remove_from_album,
 												Messages.DeleteAction_delete_only_cat, IDialogConstants.CANCEL_LABEL },
 										0);
-								int ret = dialog.open();
-								if (ret != 2)
+								if (dialog.open() != 2)
 									launchOperation(selectedCollection, false, Collections.singletonList(asset), slides,
 											exhibits, webexhibits);
-							} else {
-								if (AcousticMessageDialog.openConfirm(shell, Messages.DeleteAction_deleting_images, NLS
-										.bind(Messages.DeleteAction_delete_cat_entry_write_protected, asset.getName())))
-									launchOperation(null, false, Collections.singletonList(asset), slides, exhibits,
-											webexhibits);
-							}
+							} else if (AcousticMessageDialog.openConfirm(shell, Messages.DeleteAction_deleting_images,
+									NLS.bind(Messages.DeleteAction_delete_cat_entry_write_protected, asset.getName())))
+								launchOperation(null, false, Collections.singletonList(asset), slides, exhibits,
+										webexhibits);
 							return;
 						}
 					}
@@ -225,12 +215,9 @@ public class DeleteAction extends Action {
 				boolean fileOnDisc = false;
 				for (Asset asset : localAssets) {
 					URI uri = volumeManager.findExistingFile(asset, true);
-					if (uri != null && !volumeManager.isOffline(asset.getVolume())) {
-						File file = new File(uri);
-						if (file.canWrite()) {
-							fileOnDisc = true;
-							break;
-						}
+					if (uri != null && !volumeManager.isOffline(asset.getVolume()) && new File(uri).canWrite()) {
+						fileOnDisc = true;
+						break;
 					}
 				}
 				int esc = 1;

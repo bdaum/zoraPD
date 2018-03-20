@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.commands;
@@ -34,11 +34,11 @@ public class CheckUpdateCommand extends AbstractCommandHandler {
 
 	@Override
 	public void run() {
-		if (UiActivator.getDefault().getUpdaterCommand() != null) {
+		if (UiActivator.getDefault().getUpdaterCommand() != null)
 			AcousticMessageDialog.openInformation(getShell(),
 					Constants.APPLICATION_NAME,
 					Messages.CheckUpdatesAction_already_scheduled);
-		} else
+		else
 			new CheckForUpdateJob(this, false).schedule();
 	}
 

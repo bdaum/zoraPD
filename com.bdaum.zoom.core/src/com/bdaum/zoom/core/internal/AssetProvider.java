@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.internal;
@@ -68,11 +68,17 @@ public class AssetProvider implements IAssetProvider {
 	 * )
 	 */
 	public boolean invalidate(QueryField node) {
-		String key = node.getKey();
-		if (currentCollection != null)
-			invalid |= isAffectedBy(currentCollection, key);
-		SortCriterion customSort = currentProcessor == null ? null : currentProcessor.getCustomSort();
-		invalid |= (customSort != null && !customSort.getField().equals(key));
+		if (node == QueryField.ALL || node == QueryField.ALBUMASSETS && currentCollection.getAlbum())
+			invalid = true;
+		else {
+			String key = node.getKey();
+			if (currentCollection != null)
+				invalid |= isAffectedBy(currentCollection, key);
+			if (!invalid) {
+				SortCriterion customSort = currentProcessor == null ? null : currentProcessor.getCustomSort();
+				invalid = (customSort != null && !customSort.getField().equals(key));
+			}
+		}
 		if (cloneMap != null)
 			for (AssetProvider child : cloneMap.values())
 				child.invalidate(node);

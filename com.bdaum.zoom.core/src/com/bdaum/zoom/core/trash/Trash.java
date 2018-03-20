@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.trash;
@@ -28,6 +28,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.imageio.ImageIO;
 
@@ -51,6 +52,7 @@ import com.bdaum.zoom.core.Messages;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.program.BatchUtilities;
 import com.sun.jna.platform.FileUtils;
 
 /**
@@ -349,18 +351,20 @@ public class Trash extends HistoryItem {
 				}
 			}
 			if (!trashed) {
-				if (Constants.LINUX) {
+				if (Constants.LINUX)
 					try {
 						String[] cmd = new String[] { "trash", null }; //$NON-NLS-1$
 						for (File file : toBeDeleted) {
 							cmd[1] = file.getAbsolutePath();
-							Runtime.getRuntime().exec(cmd);
+							BatchUtilities.executeCommand(
+									cmd,
+									null, Messages.Trash_send_to_trash, IStatus.OK, IStatus.ERROR, -1, 1500L, "UTF-8"); //$NON-NLS-1$
 						}
 						return;
-					} catch (IOException e) {
+					} catch (IOException|ExecutionException e) {
 						activator.logError(Messages.Trash_install_trash_cli, e);
 					}
-				} else if (exc == null)
+				else if (exc == null)
 					activator.logError(Messages.Trash_no_waste_basket, null);
 				else
 					activator.logError(Messages.Trash_io_error_moving_to_waste_basket, exc);

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -157,7 +157,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 
 	@Override
 	public void createPartControl(Composite parent) {
-		// Create gallery
+		// Gallery
 		setPreferences();
 		final int orientation = HSTRIP.equals(layout) ? SWT.H_SCROLL : SWT.V_SCROLL;
 		gallery = new Gallery(parent, orientation | SWT.VIRTUAL | SWT.MULTI);
@@ -165,19 +165,18 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 		gallery.setHigherQualityDelay(300);
 		gallery.setLowQualityOnUserAction(true);
 		setAppStarting(gallery);
-
 		if (isStrip)
 			gallery.addControlListener(new ControlAdapter() {
 				@Override
 				public void controlResized(ControlEvent e) {
-					Rectangle clientArea = gallery.getClientArea();
-					thumbsize = (orientation == SWT.H_SCROLL) ? clientArea.height - TRIM : clientArea.width - TRIM;
+					thumbsize = (orientation == SWT.H_SCROLL) ? gallery.getClientArea().height - TRIM
+							: gallery.getClientArea().width - TRIM;
 					fireSizeChanged();
 				}
 			});
 		setHelp(orientation);
 		// Renderers
-		groupRenderer = new NoGroupRenderer(); // DefaultGalleryGroupRenderer();
+		groupRenderer = new NoGroupRenderer();
 		groupRenderer.setItemSize(thumbsize, thumbsize);
 		groupRenderer.setMinMargin(3);
 		itemRenderer = new LightboxGalleryItemRenderer(gallery);
@@ -198,7 +197,6 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	}
 
 	protected void setHelp(final int orientation) {
-		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem()
 				.setHelp(gallery, isStrip
 						? ((orientation == SWT.H_SCROLL) ? HelpContextIds.HSTRIP_VIEW : HelpContextIds.VSTRIP_VIEW)
@@ -218,7 +216,6 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 		};
 		configureCollapseAction.setToolTipText(Messages.getString("LightboxView.configure_folding_tooltip")); //$NON-NLS-1$
 		collapseAction = new Action(Messages.getString("LightboxView.collapsed"), IAction.AS_CHECK_BOX) { //$NON-NLS-1$
-
 			@Override
 			public void runWithEvent(Event event) {
 				if ((event.stateMask & SWT.CTRL) != 0) {
@@ -250,7 +247,6 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 		collapseAction.setChecked(folding);
 		toggleCollapseAction = new Action(Messages.getString("LightboxView.toggle_collapsed"), Icons.collapsed //$NON-NLS-1$
 				.getDescriptor()) {
-
 			@Override
 			public void run() {
 				GalleryItem[] items = gallery.getSelection();
@@ -298,9 +294,11 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	}
 
 	@Override
-	public void updateActions() {
-		super.updateActions();
-		updateCollapseAction();
+	public void updateActions(boolean force) {
+		if (viewActive || force) {
+			super.updateActions(force);
+			updateCollapseAction();
+		}
 	}
 
 	protected void updateCollapseAction() {
@@ -628,7 +626,6 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	}
 
 	protected Object vstripSizeProvider = new ISizeProvider() {
-
 		public int getSizeFlags(boolean width) {
 			return width ? SWT.MIN : SWT.NONE;
 		}

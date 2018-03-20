@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -42,26 +42,20 @@ public class CatPreferencePage extends AbstractPreferencePage {
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.CAT_PREFERENCE_PAGE);
 		Label label = new Label(composite, SWT.WRAP);
-		label.setText(Messages
-				.getString("CatPreferencePage.catalog_settings_apply_to_specific")); //$NON-NLS-1$
+		label.setText(Messages.getString("CatPreferencePage.catalog_settings_apply_to_specific")); //$NON-NLS-1$
 		Button button = new Button(composite, SWT.PUSH);
-		button.setText(Messages
-				.getString("CatPreferencePage.edit_cat_settings")); //$NON-NLS-1$
+		button.setText(Messages.getString("CatPreferencePage.edit_cat_settings")); //$NON-NLS-1$
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IWorkbenchWindow activeWorkbenchWindow = PlatformUI
-						.getWorkbench().getActiveWorkbenchWindow();
+				IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 				if (activeWorkbenchWindow != null) {
-					final IWorkbenchPage activePage = activeWorkbenchWindow
-							.getActivePage();
-					BusyIndicator.showWhile(activeWorkbenchWindow.getShell()
-							.getDisplay(), () -> {
-								EditMetaDialog mdialog = new EditMetaDialog(
-										getShell(), activePage, Core.getCore()
-												.getDbManager(), false, null);
-								mdialog.open();
-							});
+					final IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+					if (activePage != null)
+						BusyIndicator.showWhile(activeWorkbenchWindow.getShell().getDisplay(), () -> {
+							new EditMetaDialog(getShell(), activePage, Core.getCore().getDbManager(), false, null)
+									.open();
+						});
 				}
 			}
 		});

@@ -19,6 +19,7 @@
 
 
 
+
 <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Tuning</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
 <h2>Tuning</h2>
 <br>
@@ -142,22 +143,31 @@ DNG-Dateien automatisch erstellen</span>. Schalten Sie diese Option ab, wenn Sie
   </ul>
 </ul>
 
-<h3>Indizierung</h3>
+<h3>Indizierung</h3><span id="result_box" class="" lang="de"><span title="There are two areas where indexing takes place:
 
+&nbsp;&nbsp;&nbsp;&nbsp;">Es gibt zwei Bereiche, in denen indexiert wird:<br><br></span></span>
+<ul>
+  <li><span id="result_box" class="" lang="de"><span style="font-weight: bold;" title="There are two areas where indexing takes place:
 
-Die Indizierung läuft generell als Hintergrundprozess und stellt die
-Daten für die Ähnlichkeitssuche und die Freitextsuche zusammen. Die
-Beschleunigung dieses Prozesses wird die generelle Performanz
-verbessern. <br>
-<br>
-<br>
-<a href="../../../../html/reference/facePrefs.html"><acronym>Katalog&gt;Eigenschaften&gt;Indizierung</acronym></a><span style="font-style: italic;">.</span><br>
-<br> Vermindern Sie die Zahl
-der ausgewählten Ähnlichkeitsalgorithmen auf ein Minimum, da jeder
-Algorithmus
-zusätzliche Schritte bei der Konstruktion des Indexes benötigt. Auf
-leistungsschwachen Plattformen können Sie die Indizierung auch komplett
-ausschalten.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"></span><span title="* Metadata indexing."><span style="font-weight: bold;">Metadaten-Indexierung</span>. </span><span title="Some metadata fields are indexed in the catalog database (Db4o).">Einige Metadatenfelder werden in der Katalogdatenbank (<span style="font-style: italic;">Db4o</span>) indiziert. </span><span title="Indexing speeds up the query process considerably: A query for a non-indexed metadata field will scan through all images, while a query for an indexed metadata field will find matching images rather quickly.">Die
+ Indexierung beschleunigt den Abfrageprozess beträchtlich: Eine Abfrage 
+für ein nicht indiziertes Metadatenfeld durchsucht alle Bilder, während 
+eine Abfrage für ein indiziertes Metadatenfeld relativ schnell 
+übereinstimmende Bilder findet. </span><span title="Of course, maintaining an index will take some time, so imports and deletions will be slower when many metadata fields are indexed.">Natürlich
+ dauert die Pflege eines Index einige Zeit, daher werden Importe und 
+Löschungen langsamer, wenn viele Metadatenfelder indiziert werden. </span><span title="Also the catalog becomes larger.">Auch der Katalog wird größer. </span><span title="You can configure metadata indexing under Window&gt;Preferences&gt;Metadata&gt;Tuning*).
+&nbsp;&nbsp;&nbsp;&nbsp;">Sie können die Metadaten-Indizierung unter </span></span><a href="../reference/metadataPrefs.html"><acronym>enster&gt;Einstellungen&gt;Import&gt;RAW-Konvertierung</acronym></a><sup>*)</sup><span id="result_box" class="" lang="de"><span title="You can configure metadata indexing under Window&gt;Preferences&gt;Metadata&gt;Tuning*).
+&nbsp;&nbsp;&nbsp;&nbsp;"> konfigurieren.</span></span></li>
+  <li><span id="result_box" class="" lang="de"><span style="font-weight: bold;" title="You can configure metadata indexing under Window&gt;Preferences&gt;Metadata&gt;Tuning*).
+&nbsp;&nbsp;&nbsp;&nbsp;"></span><span title="* Text search and similarity."><span style="font-weight: bold;">Textsuche und Ähnlichkeit</span>. </span><span title="For text and similarity searches a separate indexing process is used (Lucene).">Für Text- und Ähnlichkeitssuchen wird ein separater Indexierungsprozess verwendet (<span style="font-style: italic;">Lucene</span>). </span><span title="This indexing is always performed in the background.">Diese Indexierung wird immer im Hintergrund ausgeführt. </span><span title="Speeding up this process will improve general performance.">Durch Beschleunigung dieses Prozesses wird die allgemeine Leistung verbessert. </span><span title="You can configure this indexing process under Catalog&gt;Properties&gt;Indexing.">Sie können diesen Indizierungsvorgang unter </span></span><a href="../../../../html/reference/facePrefs.html"><acronym>Katalog&gt;Eigenschaften&gt;Indizierung</acronym></a><span style="font-style: italic;"></span><span id="result_box" class="" lang="de"><span title="You can configure this indexing process under Catalog&gt;Properties&gt;Indexing."> konfigurieren. </span><span title="You may want to reduce the number of selected similarity algorithms to a minimum because each algorithm requires extra steps when constructing the index.">Möglicherweise
+ möchten Sie die Anzahl der ausgewählten Ähnlichkeitsalgorithmen auf ein
+ Minimum reduzieren, da jeder Algorithmus beim Erstellen des Index 
+zusätzliche Schritte erfordert. </span><span title="On low level platforms you may want to switch indexing off, altogether, or even exclude the indexing module during installation.">Auf
+ Plattformen mit geringer Leistung möchten Sie möglicherweise die 
+Indizierung insgesamt deaktivieren oder sogar das Indizierungsmodul 
+während der Installation abwählen.</span></span></li>
+</ul>
+
 
 <span style="font-style: italic;"><br>
 </span>

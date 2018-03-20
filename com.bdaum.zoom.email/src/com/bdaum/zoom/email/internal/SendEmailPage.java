@@ -15,18 +15,14 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.email.internal;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URI;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -46,12 +42,11 @@ import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
+import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.ISpellCheckingService;
-import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.email.internal.job.EmailJob;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -70,27 +65,16 @@ import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 public class SendEmailPage extends ColoredWizardPage {
 
 	private List<Asset> assets;
-	private Label mailSizeLabel;
+	private Label mailSizeLabel, imageSizeLabel;
 	private long totalSize;
-	private CheckedText subjectField;
-	private CheckedText messageField;
-	private Label imageSizeLabel;
+	private CheckedText subjectField, messageField;
 	private int commonWidth = -1;
-
 	private int commonHeight = -1;
-
 	private final boolean pdf;
-
-	private CheckboxButton metaButton;
-
+	private CheckboxButton metaButton, trackExportButton;
 	private WatermarkGroup watermarkGroup;
-
 	private PrivacyGroup privacyGroup;
-
-	private CheckboxButton trackExportButton;
-
 	private ExportModeGroup exportModeGroup;
-
 	private QualityGroup qualityGroup;
 
 	public SendEmailPage(List<Asset> assets, boolean pdf) {
@@ -104,15 +88,14 @@ public class SendEmailPage extends ColoredWizardPage {
 	public void createControl(Composite parent) {
 		int size = assets.size();
 		Composite composite = createComposite(parent, 1);
-		final Label email0ImagesLabel = new Label(composite, SWT.NONE);
-		final GridData gd_email0ImagesLabel = new GridData();
-		gd_email0ImagesLabel.horizontalIndent = 5;
-		email0ImagesLabel.setLayoutData(gd_email0ImagesLabel);
+		Label imagesLabel = new Label(composite, SWT.NONE);
+		GridData data = new GridData();
+		data.horizontalIndent = 5;
+		imagesLabel.setLayoutData(data);
 		if (size > 0) {
 			if (pdf) {
 				qualityGroup = new QualityGroup(composite, true);
 				qualityGroup.addSelectionListener(new SelectionAdapter() {
-
 					@Override
 					public void widgetSelected(SelectionEvent e) {
 						computePdfSize();
@@ -129,7 +112,6 @@ public class SendEmailPage extends ColoredWizardPage {
 					}
 				};
 				exportModeGroup.addSelectionListener(new SelectionAdapter() {
-
 					@Override
 					public void widgetSelected(SelectionEvent e) {
 						updateControls();
@@ -137,39 +119,35 @@ public class SendEmailPage extends ColoredWizardPage {
 					}
 				});
 				exportModeGroup.addModifyListener(new ModifyListener() {
-
 					public void modifyText(ModifyEvent e) {
 						checkImages();
 					}
 				});
 			}
 			mailSizeLabel = new Label(composite, SWT.NONE);
-			final GridData gd_mailSizeLabel = new GridData(SWT.FILL, SWT.CENTER, true, false);
-			gd_mailSizeLabel.horizontalIndent = 15;
-			gd_mailSizeLabel.verticalIndent = 10;
-			mailSizeLabel.setLayoutData(gd_mailSizeLabel);
+			data = new GridData(SWT.FILL, SWT.CENTER, true, false);
+			data.horizontalIndent = 15;
+			data.verticalIndent = 10;
+			mailSizeLabel.setLayoutData(data);
 			mailSizeLabel.setText(Messages.SendEmailPage_Mail_size);
 
 			imageSizeLabel = new Label(composite, SWT.NONE);
-			final GridData gd_imageSizeLabel = new GridData(SWT.FILL, SWT.CENTER, true, false);
-			gd_imageSizeLabel.horizontalIndent = 15;
-			imageSizeLabel.setLayoutData(gd_imageSizeLabel);
+			data = new GridData(SWT.FILL, SWT.CENTER, true, false);
+			data.horizontalIndent = 15;
+			imageSizeLabel.setLayoutData(data);
 			if (!pdf)
 				imageSizeLabel.setText(Messages.SendEmailPage_Image_size);
 		}
 		CGroup textGroup = UiUtilities.createGroup(composite, 2, Messages.SendEmailPage_email);
-		final Label subjectLabel = new Label(textGroup, SWT.NONE);
-		subjectLabel.setText(Messages.SendEmailPage_Subject);
-
+		new Label(textGroup, SWT.NONE).setText(Messages.SendEmailPage_Subject);
 		subjectField = new CheckedText(textGroup, SWT.BORDER);
 		subjectField.setSpellingOptions(8, ISpellCheckingService.TITLEOPTIONS);
 		subjectField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		final Label messageLabel = new Label(textGroup, SWT.NONE);
 		messageLabel.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
 		messageLabel.setText(Messages.SendEmailPage_Message);
-
 		messageField = new CheckedText(textGroup, SWT.WRAP | SWT.V_SCROLL | SWT.MULTI | SWT.BORDER);
-		GridData data = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
+		data = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
 		data.heightHint = 70;
 		messageField.setLayoutData(data);
 		final CGroup metaGroup = UiUtilities.createGroup(composite, 2, Messages.SendEmailPage_Matadata);
@@ -188,8 +166,7 @@ public class SendEmailPage extends ColoredWizardPage {
 		privacyGroup = new PrivacyGroup(metaGroup, Messages.SendEmailPage_Export_only, assets);
 		fillValues();
 		updateControls();
-		String message = checkImages();
-		messageField.setText(message);
+		messageField.setText(checkImages());
 		setControl(composite);
 		setHelp(HelpContextIds.EMAIL_WIZARD);
 		setTitle(Messages.SendEmailPage_title);
@@ -206,9 +183,6 @@ public class SendEmailPage extends ColoredWizardPage {
 		commonWidth = -1;
 		totalSize = 0;
 		int imageSize = 0;
-		final Set<String> volumes = new HashSet<String>();
-		final List<String> errands = new ArrayList<String>();
-		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
 		StringBuffer message = new StringBuffer(256);
 		if (pdf) {
 			IPdfWizard w = (IPdfWizard) getWizard();
@@ -216,79 +190,55 @@ public class SendEmailPage extends ColoredWizardPage {
 			message.append('\n').append(NLS.bind(Messages.SendEmailPage_pdf_file_n_attached, targetFile.getName()));
 			imageSize = (int) (w.getImageSize() * 300 / 72);
 		}
-		Ticketbox box = new Ticketbox();
 		int allmx = 16;
-		try {
-			for (Asset asset : assets) {
-				URI uri = volumeManager.findFile(asset);
-				File file = null;
-				if (uri != null) {
-					try {
-						file = box.obtainFile(uri);
-					} catch (IOException e) {
-						errands.add(uri.toString());
+		try (Assetbox box = new Assetbox(assets, null, false)) {
+			for (File file : box) {
+				Asset asset = box.getAsset();
+				if (file != null) {
+					if (!pdf) {
+						if (message.length() == 0)
+							message.append('\n').append(Messages.SendEmailPage_attachments);
+						String name = file.getName();
+						message.append("\n\t").append(name); //$NON-NLS-1$
+						String title = UiUtilities.createSlideTitle(asset);
+						if (!name.equals(title))
+							message.append(" (").append(title).append(')'); //$NON-NLS-1$
 					}
-				}
-				if (file != null)
-					try {
-						if (volumeManager.findExistingFile(asset, false) != null) {
-							if (!pdf) {
-								if (message.length() == 0)
-									message.append('\n').append(Messages.SendEmailPage_attachments);
-								String name = file.getName();
-								message.append("\n\t").append(name); //$NON-NLS-1$
-								String title = UiUtilities.createSlideTitle(asset);
-								if (!name.equals(title))
-									message.append(" (").append(title).append(')'); //$NON-NLS-1$
-							}
-							int width = asset.getWidth();
-							int height = asset.getHeight();
-							int longEdge = Math.max(width, height);
-							allmx = Math.max(allmx, longEdge);
-							if (exportModeGroup != null) {
-								int mode = exportModeGroup.getMode();
-								if (mode == Constants.FORMAT_ORIGINAL)
-									totalSize += file.length();
-								else if (mode == Constants.SCALE_FIXED) {
-									double scale = Math.min(1, (double) exportModeGroup.getDimension() / longEdge);
-									width = (int) (scale * width);
-									height = (int) (scale * height);
-									totalSize += 3L * width * height / EmailWizard.COMPRESSION;
-								} else
-									totalSize += 3L * width * height / EmailWizard.COMPRESSION;
-							} else {
-								int mx = Math.max(width, height);
-								double factor = (double) imageSize / mx;
-								int w = (int) (factor * width);
-								int h = (int) (factor * height);
-								totalSize += 3L * w * h / IPdfWizard.COMPRESSION;
-							}
-							if (commonWidth >= 0) {
-								if (commonWidth != width)
-									commonWidth = Integer.MAX_VALUE;
-							} else
-								commonWidth = width;
-							if (commonHeight >= 0) {
-								if (commonHeight != height)
-									commonHeight = Integer.MAX_VALUE;
-							} else
-								commonHeight = height;
-						} else {
-							String volume = asset.getVolume();
-							if (volume != null && !volume.isEmpty())
-								volumes.add(volume);
-							errands.add(file.getAbsolutePath());
+					int width = asset.getWidth();
+					int height = asset.getHeight();
+					int longEdge = Math.max(width, height);
+					allmx = Math.max(allmx, longEdge);
+					if (exportModeGroup != null) {
+						int mode = exportModeGroup.getMode();
+						if (mode == Constants.FORMAT_ORIGINAL)
+							totalSize += file.length();
+						else if (mode == Constants.SCALE_FIXED) {
+							double scale = Math.min(1, (double) exportModeGroup.getDimension() / longEdge);
+							width = (int) (scale * width);
+							height = (int) (scale * height);
 						}
-					} finally {
-						box.cleanup();
+						totalSize += 3L * width * height / EmailWizard.COMPRESSION;
+					} else {
+						int mx = Math.max(width, height);
+						double factor = (double) imageSize / mx;
+						totalSize += 3L * (int) (factor * width) * (int) (factor * height) / IPdfWizard.COMPRESSION;
 					}
+					if (commonWidth >= 0) {
+						if (commonWidth != width)
+							commonWidth = Integer.MAX_VALUE;
+					} else
+						commonWidth = width;
+					if (commonHeight >= 0) {
+						if (commonHeight != height)
+							commonHeight = Integer.MAX_VALUE;
+					} else
+						commonHeight = height;
+				}
 			}
-		} finally {
-			box.endSession();
+			setErrorMessage(box.getErrorMessage());
 		}
 		if (exportModeGroup != null)
 			exportModeGroup.setMaximumDim(allmx);
-		setErrorMessage(Ticketbox.computeErrorMessage(errands, volumes));
 		if (!pdf) {
 			computeScaledSize();
 			if (exportModeGroup != null)
@@ -303,19 +253,14 @@ public class SendEmailPage extends ColoredWizardPage {
 		long scaledBytes = exportModeGroup.computeScaledSize(totalSize);
 		NumberFormat nf = NumberFormat.getNumberInstance();
 		nf.setMaximumFractionDigits(2);
-		if (mailSizeLabel != null) {
-			double mbytes = scaledBytes / 1000000d;
-			mailSizeLabel.setText(NLS.bind(Messages.SendEmailPage_Estimated_size, nf.format(mbytes)));
-		}
+		if (mailSizeLabel != null)
+			mailSizeLabel.setText(NLS.bind(Messages.SendEmailPage_Estimated_size, nf.format(scaledBytes / 1000000d)));
 	}
 
 	private void computePdfSize() {
 		if (qualityGroup != null) {
-			long scaledBytes = totalSize;
-			if (getQuality() == Constants.SCREEN_QUALITY)
-				scaledBytes = (long) (scaledBytes * 0.02f);
-			else
-				scaledBytes = (long) (scaledBytes * 0.13f);
+			long scaledBytes = getQuality() == Constants.SCREEN_QUALITY ? (long) (totalSize * 0.02f)
+					: (long) (totalSize * 0.13f);
 			NumberFormat nf = NumberFormat.getNumberInstance();
 			nf.setMaximumFractionDigits(2);
 			if (mailSizeLabel != null)
@@ -334,11 +279,8 @@ public class SendEmailPage extends ColoredWizardPage {
 				t = Messages.SendEmailPage_undefined;
 			else if (commonWidth == Integer.MAX_VALUE || commonHeight == Integer.MAX_VALUE)
 				t = Messages.SendEmailPage_mixed;
-			else {
-				int w = (int) (commonWidth * f + 0.5d);
-				int h = (int) (commonHeight * f + 0.5d);
-				t = w + "x" + h; //$NON-NLS-1$
-			}
+			else
+				t = (int) (commonWidth * f + 0.5d) + "x" + (int) (commonHeight * f + 0.5d); //$NON-NLS-1$
 			if (imageSizeLabel != null)
 				imageSizeLabel.setText(NLS.bind(Messages.SendEmailPage_Image_size_n, t));
 		}
@@ -353,13 +295,10 @@ public class SendEmailPage extends ColoredWizardPage {
 		if (privacyGroup != null)
 			privacyGroup.fillValues(settings);
 		if (settings != null) {
-			if (metaButton != null) {
-				boolean includeMeta = settings.getBoolean(EmailWizard.INCLUDEMETA);
-				metaButton.setSelection(includeMeta);
-			}
+			if (metaButton != null)
+				metaButton.setSelection(settings.getBoolean(EmailWizard.INCLUDEMETA));
 			watermarkGroup.fillValues(settings);
-			boolean trackExports = settings.getBoolean(EmailWizard.TRACKEXPORTS);
-			trackExportButton.setSelection(trackExports);
+			trackExportButton.setSelection(settings.getBoolean(EmailWizard.TRACKEXPORTS));
 		}
 	}
 
@@ -387,7 +326,6 @@ public class SendEmailPage extends ColoredWizardPage {
 				}
 			}
 		}
-
 		new EmailJob(assets, to, getMode(), getSizing(), exportModeGroup.getScalingFactor(),
 				exportModeGroup.getDimension(), exportModeGroup.getCropMode(), exportModeGroup.getUnsharpMask(),
 				exportModeGroup.getJpegQuality(), subjectField.getText(), messageField.getText(), filter,
@@ -453,16 +391,12 @@ public class SendEmailPage extends ColoredWizardPage {
 
 	@Override
 	protected void validatePage() {
-		String errorMessage = null;
 		int n = 0;
 		int privacy = privacyGroup.getSelection();
 		for (Asset a : assets)
 			if (a.getSafety() <= privacy)
 				++n;
-		if (n == 0)
-			errorMessage = Messages.no_images_pass_privacy0;
-		else
-			errorMessage = watermarkGroup.validate();
+		String errorMessage = n == 0 ? Messages.no_images_pass_privacy0 : watermarkGroup.validate();
 		setErrorMessage(errorMessage);
 		setPageComplete(errorMessage == null);
 	}
@@ -470,9 +404,8 @@ public class SendEmailPage extends ColoredWizardPage {
 	@Override
 	public void setVisible(boolean visible) {
 		if (visible && subjectField != null && subjectField.getText().length() == 0
-				&& getWizard() instanceof EmailPDFWizard) {
+				&& getWizard() instanceof EmailPDFWizard)
 			subjectField.setText(((EmailPDFWizard) getWizard()).getTitle());
-		}
 		super.setVisible(visible);
 	}
 
@@ -480,10 +413,5 @@ public class SendEmailPage extends ColoredWizardPage {
 		return (exportModeGroup != null) ? exportModeGroup.getJpegQuality()
 				: (qualityGroup != null) ? qualityGroup.getJpegQuality() : -1;
 	}
-
-	// public int getScalingMethod() {
-	// return (qualityGroup != null) ? qualityGroup.getScalingMethod() :
-	// ZImage.SCALE_DEFAULT;
-	// }
 
 }

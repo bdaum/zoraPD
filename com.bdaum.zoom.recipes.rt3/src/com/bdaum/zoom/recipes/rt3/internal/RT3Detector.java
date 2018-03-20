@@ -23,11 +23,11 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.graphics.RGB;
 
 import com.bdaum.zoom.cat.model.meta.WatchedFolder;
+import com.bdaum.zoom.common.internal.IniReader;
 import com.bdaum.zoom.core.AbstractRecipeDetector;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IRecipeDetector;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.internal.IniReader;
 import com.bdaum.zoom.image.IFocalLengthProvider;
 import com.bdaum.zoom.image.recipe.ColorShift;
 import com.bdaum.zoom.image.recipe.Cropping;

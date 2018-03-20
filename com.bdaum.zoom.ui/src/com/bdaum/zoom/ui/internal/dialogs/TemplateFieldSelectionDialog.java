@@ -10,7 +10,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -25,6 +24,7 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.FieldDescriptor;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.GroupComboCatFilter;
 import com.bdaum.zoom.ui.internal.widgets.GroupComboLabelProvider;
 
@@ -89,7 +89,7 @@ public class TemplateFieldSelectionDialog extends ZTitleAreaDialog {
 				return super.getText(element);
 			}
 		});
-		fieldCombo.setComparator(new ViewerComparator());
+		fieldCombo.setComparator(ZViewerComparator.INSTANCE);
 		fieldCombo.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
 				validate();

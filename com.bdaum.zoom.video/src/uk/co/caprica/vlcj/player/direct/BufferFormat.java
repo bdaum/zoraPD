@@ -75,11 +75,9 @@ public class BufferFormat {
         this.chroma = chroma;
         this.width = width;
         this.height = height;
-//        this.pitches = Arrays.copyOf(pitches, pitches.length);
-//        this.lines = Arrays.copyOf(lines, lines.length);
 
-        this.pitches = Utilities.copyOf(pitches, pitches.length);
-        this.lines = Utilities.copyOf(lines, lines.length);
+        this.pitches = Arrays.copyOf(pitches, pitches.length);
+        this.lines = Arrays.copyOf(lines, lines.length);
     }
 
     /**

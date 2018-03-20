@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.core;
@@ -53,16 +53,14 @@ public class Format {
 	private static final class CurrencyExpressionFormatter implements IFormatter {
 
 		public String toString(Object obj) {
-			if (obj != null) {
+			if (obj != null)
 				try {
 					double v = evaluateCurrencyExpression(obj.toString());
 					return (v != 0d) ? getCurrencyNumberFormat().format(v) + "+" //$NON-NLS-1$
 							: getCurrencyNumberFormat().format(v);
 				} catch (ParseException e) {
-					// do nothing
+					return obj.toString();
 				}
-				return obj.toString();
-			}
 			return null;
 		}
 
@@ -95,57 +93,84 @@ public class Format {
 			int degrees = (int) d;
 			int minutes = (int) ((d - degrees) * 60);
 			double seconds = ((d - degrees) * 60 - minutes) * 60;
-			sb.append(degrees).append('°').append(minutes).append('\'').append(formatDecimal(seconds, 2)).append('"');
-			return sb.toString();
+			return sb.append(degrees).append('°').append(minutes).append('\'')
+					.append(getDecimalUSFormat(2).format(seconds)).append('"').toString();
 		}
 
 		public Object fromString(String s) throws ParseException {
 			s = s.trim();
-			NumberFormat af = getDecimalFormat(10);
+			NumberFormat af = getDecimalUSFormat(10);
 			try {
-				if (s.indexOf('°') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\'') >= 0 || s.indexOf(' ') >= 0) {
+				boolean dms = s.indexOf('°') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\'') >= 0;
+				if (dms || s.indexOf(' ') >= 0) {
 					double sign = 1d;
-					if (s.startsWith(neg)) {
+					if (s.startsWith(neg) || s.startsWith("-")) { //$NON-NLS-1$
 						sign = -1d;
 						s = s.substring(1);
-					} else if (s.startsWith(pos))
+					} else if (s.startsWith(pos) || s.startsWith("+")) //$NON-NLS-1$
 						s = s.substring(1);
-					StringTokenizer st = new StringTokenizer(s + " ", "°'\" ", //$NON-NLS-1$ //$NON-NLS-2$
+					else if (s.endsWith(neg)) {
+						sign = -1d;
+						s = s.substring(0, s.length() - 1);
+					} else if (s.endsWith(pos))
+						s = s.substring(0, s.length() - 1);
+					StringTokenizer st = new StringTokenizer(s + "\n", "°'\" \n", //$NON-NLS-1$ //$NON-NLS-2$
 							true);
 					String n = null;
 					double d = 0;
 					int i = 0;
+					boolean degHappened = false;
+					boolean minHappened = false;
+					boolean secHappened = false;
 					while (st.hasMoreTokens()) {
 						String token = st.nextToken();
 						if ("°".equals(token)) { //$NON-NLS-1$
+							if (degHappened)
+								throw new ParseException("", 0); //$NON-NLS-1$
+							degHappened = true;
 							if (n != null) {
 								d += Integer.parseInt(n);
 								n = null;
 								i = 1;
 							}
+						} else if (!dms && " ".equals(token)) { //$NON-NLS-1$
+							if (n != null) {
+								if (degHappened)
+									throw new ParseException("", 0); //$NON-NLS-1$
+								degHappened = true;
+								d += Integer.parseInt(n);
+								n = null;
+								i = 1;
+							}
 						} else if ("'".equals(token)) { //$NON-NLS-1$
+							if (minHappened)
+								throw new ParseException("", 0); //$NON-NLS-1$
+							minHappened = true;
 							if (n != null) {
 								d += Integer.parseInt(n) / 60d;
 								n = null;
 								i = 2;
 							}
 						} else if ("\"".equals(token)) { //$NON-NLS-1$
+							if (secHappened)
+								throw new ParseException("", 0); //$NON-NLS-1$
+							secHappened = true;
 							if (n != null) {
 								d += af.parse(n).doubleValue() / 3600d;
 								n = null;
 								i = 3;
 							}
-						} else if (" ".equals(token)) { //$NON-NLS-1$
+						} else if ("\n".equals(token)) { //$NON-NLS-1$
 							if (n != null) {
 								switch (i) {
 								case 0:
 									d += Integer.parseInt(n);
 									break;
 								case 1:
-									d += Integer.parseInt(n) / 60d;
+									d += (dms ? (double) Integer.parseInt(n) : af.parse(n).doubleValue()) / 60d;
 									break;
 								case 2:
-									d += af.parse(s).doubleValue() / 3600d;
+									d += af.parse(n).doubleValue() / 3600d;
 									break;
 								}
 								n = null;
@@ -180,9 +205,12 @@ public class Format {
 		return nf;
 	}
 
-	/**
-	 * Exposure time
-	 */
+	public static NumberFormat getDecimalUSFormat(int digits) {
+		NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+		nf.setMaximumFractionDigits(digits);
+		return nf;
+	}
+
 	public final static IFormatter exposureTimeFormatter = new IFormatter() {
 
 		public String toString(Object o) {
@@ -477,13 +505,11 @@ public class Format {
 	public static final IFormatter currencyExpressionFormatter = new CurrencyExpressionFormatter();
 
 	public static int getCurrencyDigits() {
-		Currency curr = null;
 		try {
-			curr = Currency.getInstance(Locale.getDefault());
+			return Currency.getInstance(Locale.getDefault()).getDefaultFractionDigits();
 		} catch (Exception e) {
-			// do nothing
+			return 2;
 		}
-		return curr == null ? 2 : curr.getDefaultFractionDigits();
 	}
 
 	public static double evaluateCurrencyExpression(String expression) throws ParseException {

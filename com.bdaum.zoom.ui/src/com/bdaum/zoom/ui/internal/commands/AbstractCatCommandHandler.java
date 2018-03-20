@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.commands;
 
@@ -28,7 +28,6 @@ import org.eclipse.ui.operations.IWorkbenchOperationSupport;
 import com.bdaum.zoom.core.CatalogListener;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.internal.CoreActivator;
-import com.bdaum.zoom.ui.INavigationHistory;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.actions.Messages;
 
@@ -51,9 +50,7 @@ public abstract class AbstractCatCommandHandler extends AbstractCommandHandler {
 	}
 
 	protected void resetNavigationHistory() {
-		INavigationHistory navigationHistory = UiActivator.getDefault()
-				.getNavigationHistory(getActiveWorkbenchWindow());
-		navigationHistory.resetHistory();
+		UiActivator.getDefault().getNavigationHistory(getActiveWorkbenchWindow()).resetHistory();
 	}
 
 	protected boolean preCatClose(boolean hideShell) {

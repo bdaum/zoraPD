@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<toc label="GPS preferences" link_to="../com.bdaum.zoom.doc/tocreference.xml#preferences">
-   <topic href="html/geoTagging.html" label="GPS">
+<toc label="Geo preferences" link_to="../com.bdaum.zoom.doc/tocreference.xml#preferences">
+   <topic href="html/geoTagging.html" label="Geo">
       <anchor id="mappingSystemPrefs"/>
    </topic>
    <topic href="html/geoTagging.html" label="Webservices">

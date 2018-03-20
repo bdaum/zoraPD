@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -23,7 +23,6 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.net.MalformedURLException;
-import java.util.List;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
@@ -46,7 +45,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.aoModeling.runtime.AomMap;
-import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.Font_type;
 import com.bdaum.zoom.cat.model.Font_typeImpl;
 import com.bdaum.zoom.cat.model.Rgb_type;
@@ -118,7 +116,6 @@ public class SaveTemplateDialog extends ZTrayDialog {
 				updateButtons();
 			}
 		});
-
 		try {
 			browser.setUrl(start.toURI().toURL().toString());
 		} catch (MalformedURLException e) {
@@ -140,9 +137,8 @@ public class SaveTemplateDialog extends ZTrayDialog {
 		}
 		getShell().setModified(true);
 		okButton.setEnabled(true);
-		List<IdentifiableObject> set = Core.getCore().getDbManager().obtainObjects(WebGalleryImpl.class, false, "name", //$NON-NLS-1$
-				name, QueryField.EQUALS, "template", Boolean.TRUE, QueryField.EQUALS); //$NON-NLS-1$
-		if (!set.isEmpty()) {
+		if (Core.getCore().getDbManager().obtainObjects(WebGalleryImpl.class, false, "name", //$NON-NLS-1$
+				name, QueryField.EQUALS, "template", Boolean.TRUE, QueryField.EQUALS).iterator().hasNext()) { //$NON-NLS-1$
 			msgLabel.setText(Messages.SaveTemplateDialog_a_design_with_that_name_already_exists);
 			msgLabel.setForeground(msgLabel.getDisplay().getSystemColor(SWT.COLOR_YELLOW));
 			okButton.setText(Messages.SaveTemplateDialog_overwrite);
@@ -232,7 +228,6 @@ public class SaveTemplateDialog extends ZTrayDialog {
 		try {
 			gc.setAntialias(SWT.ON);
 			gc.setInterpolation(SWT.HIGH);
-//			gc.setAdvanced(true);
 			gc.drawImage(image, 0, 0, owidth, oheight, 0, 0, newWidth, newHeight);
 			return thumbnail;
 		} finally {

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -90,11 +90,9 @@ public abstract class ZResizableDialog extends ZTrayDialog {
 
 		int width = 0;
 		int height = 0;
-
 		final Shell s = getShell();
 		if (s != null) {
 			s.addControlListener(new ControlListener() {
-
 				public void controlMoved(ControlEvent arg0) {
 					fNewBounds = s.getBounds();
 				}
@@ -156,7 +154,6 @@ public abstract class ZResizableDialog extends ZTrayDialog {
 	@Override
 	protected Point getInitialLocation(Point initialSize) {
 		Point loc = super.getInitialLocation(initialSize);
-
 		IDialogSettings bounds = fSettings.getSection(getBoundsKey());
 		if (bounds != null) {
 			try {
@@ -184,10 +181,8 @@ public abstract class ZResizableDialog extends ZTrayDialog {
 
 	private void saveBounds(Rectangle bounds) {
 		IDialogSettings dialogBounds = fSettings.getSection(getBoundsKey());
-		if (dialogBounds == null) {
-			dialogBounds = new DialogSettings(getBoundsKey());
-			fSettings.addSection(dialogBounds);
-		}
+		if (dialogBounds == null)
+			fSettings.addSection(dialogBounds = new DialogSettings(getBoundsKey()));
 		dialogBounds.put(X, bounds.x);
 		dialogBounds.put(Y, bounds.y);
 		dialogBounds.put(WIDTH, bounds.width);

@@ -10,7 +10,11 @@
             name="Galleria"
             sections="true"
             slideshows="true"
-            unsupported="opacity sectionfont captionfont navfont thumbnailsize margins">
+            unsupported="opacity sectionfont captionfont navfont thumbnailsize margins"
+            url="https://galleria.io">
+         <group
+               name="%group.name.appearance">
+         </group>
          <parameter
                default="com.bdaum.zoom.web.galleria.theme.classic"
                description="%theme.parameter.description"
@@ -20,24 +24,12 @@
                required="false"
                type="string">
             <enumeration
-                  id="com.bdaum.zoom.web.galleria.theme.classic"
-                  label="Classic">
+                  id="classic"
+                  label="%enumeration.label.classic">
             </enumeration>
             <enumeration
-                  id="com.bdaum.zoom.web.galleria.theme.miniml"
-                  label="Miniml">
-            </enumeration>
-            <enumeration
-                  id="com.bdaum.zoom.web.galleria.theme.twelve"
-                  label="Twelve">
-            </enumeration>
-            <enumeration
-                  id="com.bdaum.zoom.web.galleria.theme.fullscreen"
-                  label="Fullscreen">
-            </enumeration>
-            <enumeration
-                  id="com.bdaum.zoom.web.galleria.theme.folio"
-                  label="Folio">
+                  id="fullscreen"
+                  label="%enumeration.label.fullscreen">
             </enumeration>
          </parameter>
          <parameter
@@ -49,16 +41,19 @@
                required="false"
                type="text">
          </parameter>
+         <group
+               name="%group.name.animation">
+         </group>
          <parameter
-               default="0"
+               default="0.0"
                description="%autoplay.parameter.description"
                encodeForHtml="false"
                id="autoplay"
                label="%autoplay.parameter.label"
-               max="60000"
+               max="300"
                min="0"
                required="false"
-               type="int">
+               type="double">
          </parameter>
       </generator>
    </extension>

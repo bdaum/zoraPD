@@ -15,20 +15,19 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.Collections;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
@@ -52,6 +51,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IFTPService;
 import com.bdaum.zoom.image.ZImage;
 import com.bdaum.zoom.operations.internal.ExportMetadataOperation;
+import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -93,7 +93,8 @@ public class ViewImageAction extends Action {
 		if (asset != null) {
 			final Asset a = asset;
 			final boolean b = bw;
-			BusyIndicator.showWhile(Display.getCurrent(), () -> launchViewer(a, shift, b, ctrl, adaptable.getAdapter(IWorkbenchWindow.class)));
+			BusyIndicator.showWhile(Display.getCurrent(),
+					() -> launchViewer(a, shift, b, ctrl, adaptable.getAdapter(IWorkbenchWindow.class)));
 		}
 	}
 
@@ -131,10 +132,8 @@ public class ViewImageAction extends Action {
 						File file;
 						if (isFile)
 							file = new File(uri);
-						else {
-							file = Core.download(uri, null);
-							tempFile = file;
-						}
+						else
+							file = tempFile = Core.download(uri, null);
 						boolean autoExport = preferencesService.getBoolean(UiActivator.PLUGIN_ID,
 								PreferenceConstants.AUTOEXPORT, true, null);
 						if (autoExport && tempFile == null) {
@@ -144,7 +143,6 @@ public class ViewImageAction extends Action {
 									true, false);
 							try {
 								op.execute(new NullProgressMonitor(), new IAdaptable() {
-
 									@SuppressWarnings({ "unchecked", "rawtypes" })
 									public Object getAdapter(Class adapter) {
 										if (Shell.class.equals(adapter))
@@ -156,19 +154,10 @@ public class ViewImageAction extends Action {
 								// should not happen
 							}
 						}
-						Process process = Runtime.getRuntime()
-								.exec(new String[] { viewerPath, file.getAbsolutePath() });
-						BufferedReader br = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-						while ((br.readLine()) != null) {
-							// do nothing
-						}
-						try {
-							process.waitFor();
-							if (tempFile != null)
-								tempFile.delete();
-						} catch (InterruptedException e) {
-							// do nothing
-						}
+						BatchUtilities.executeCommand(new String[] { viewerPath, file.getAbsolutePath() }, null,
+								Messages.ViewImageAction_run_viewer, IStatus.OK, IStatus.ERROR, -1, 2500L, "UTF-8"); //$NON-NLS-1$
+						if (tempFile != null)
+							tempFile.delete();
 						return;
 					} catch (Exception e) {
 						Core.getCore().logError(NLS.bind(Messages.ViewImageAction_error_launching, viewerPath), e);

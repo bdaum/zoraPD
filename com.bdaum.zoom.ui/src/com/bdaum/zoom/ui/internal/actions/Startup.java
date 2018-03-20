@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2015 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -173,14 +173,11 @@ public class Startup implements IStartup, IAdaptable {
 			p = version.indexOf('-');
 		if (p >= 0)
 			version = version.substring(0, p);
-		if (Constants.REQUIRED_JAVA_VERSIONS.compareTo(version) > 0) {
-			if (shell != null) {
-				final String v = version;
-				shell.getDisplay()
-						.syncExec(() -> AcousticMessageDialog.openError(shell, Messages.Startup_wrong_java_version,
-								NLS.bind(Messages.Startup_wrong_java_version_expl, new Object[] {
-										System.getProperty("java.home"), Constants.REQUIRED_JAVA_VERSIONS, v }))); //$NON-NLS-1$
-			}
+		if (Constants.REQUIRED_JAVA_VERSIONS.compareTo(version) > 0 && shell != null) {
+			final String v = version;
+			shell.getDisplay().syncExec(() -> AcousticMessageDialog.openError(shell,
+					Messages.Startup_wrong_java_version, NLS.bind(Messages.Startup_wrong_java_version_expl,
+							new Object[] { System.getProperty("java.home"), Constants.REQUIRED_JAVA_VERSIONS, v }))); //$NON-NLS-1$
 		}
 		String traymode = Platform.getPreferencesService().getString(UiActivator.PLUGIN_ID,
 				PreferenceConstants.TRAY_MODE, PreferenceConstants.TRAY_DESK, null); // $NON-NLS-1$

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.trash;
@@ -23,6 +23,7 @@ package com.bdaum.zoom.core.trash;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -30,12 +31,11 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.osgi.util.NLS;
 
-import com.bdaum.zoom.cat.model.artworkOrObjectShown.ArtworkOrObjectImpl;
+import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 import com.bdaum.zoom.cat.model.artworkOrObjectShown.ArtworkOrObjectShownImpl;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.creatorsContact.ContactImpl;
 import com.bdaum.zoom.cat.model.creatorsContact.CreatorsContactImpl;
-import com.bdaum.zoom.cat.model.location.LocationImpl;
 import com.bdaum.zoom.cat.model.locationCreated.LocationCreatedImpl;
 import com.bdaum.zoom.cat.model.locationShown.LocationShownImpl;
 import com.bdaum.zoom.core.Core;
@@ -48,7 +48,6 @@ import com.bdaum.zoom.program.DiskFullException;
 
 /**
  * A trash item keeping an image asset and the image file location
- *
  */
 public class FileLocationBackup extends HistoryItem {
 
@@ -56,10 +55,8 @@ public class FileLocationBackup extends HistoryItem {
 	protected String assetId;
 	private boolean fileMoved = true;
 	private boolean peer;
+	private Set<IIdentifiableObject> createdObjects;
 
-	/**
-	 * Default constructor
-	 */
 	public FileLocationBackup() {
 	}
 
@@ -75,8 +72,7 @@ public class FileLocationBackup extends HistoryItem {
 	 * @param peer
 	 *            - true if this represents a trashed peer item
 	 */
-	public FileLocationBackup(String opId, String assetId, IPath path,
-			boolean fileMoved, boolean peer) {
+	public FileLocationBackup(String opId, String assetId, IPath path, boolean fileMoved, boolean peer) {
 		super(opId);
 		this.assetId = assetId;
 		this.path = path;
@@ -97,9 +93,10 @@ public class FileLocationBackup extends HistoryItem {
 	 * @param toBeStored
 	 * @return - restored asset
 	 */
-	public Asset restore(IDbManager dbManager, String anOpId,
-			IProgressMonitor monitor, List<Object> toBeStored,
+	public Asset restore(IDbManager dbManager, String anOpId, IProgressMonitor monitor, List<Object> toBeStored,
 			Set<Object> toBeDeleted) {
+		if (createdObjects != null)
+			toBeDeleted.addAll(createdObjects);
 		Asset asset = dbManager.obtainAsset(assetId);
 		if (asset != null) {
 			CoreActivator activator = CoreActivator.getDefault();
@@ -110,18 +107,15 @@ public class FileLocationBackup extends HistoryItem {
 				if (file != null && fileMoved)
 					deleteFile(asset, file);
 				toBeDeleted.add(asset);
-				String relId = asset.getCreatorsContact_parent();
-				if (relId != null) {
-					for (CreatorsContactImpl rel : dbManager
-							.obtainStructForAsset(CreatorsContactImpl.class,
-									assetId, true)) {
+				if (asset.getCreatorsContact_parent() != null)
+					for (CreatorsContactImpl rel : dbManager.obtainStructForAsset(CreatorsContactImpl.class, assetId,
+							true)) {
 						rel.removeAsset(assetId);
 						if (rel.getAsset().isEmpty()) {
 							toBeDeleted.add(rel);
 							String contactId = rel.getContact();
 							if (contactId != null) {
-								ContactImpl contact = dbManager.obtainById(
-										ContactImpl.class, contactId);
+								ContactImpl contact = dbManager.obtainById(ContactImpl.class, contactId);
 								if (contact != null)
 									toBeDeleted.add(contact);
 							}
@@ -129,79 +123,30 @@ public class FileLocationBackup extends HistoryItem {
 							toBeStored.add(rel);
 						break;
 					}
-				}
-				relId = asset.getLocationCreated_parent();
-				if (relId != null) {
-					for (LocationCreatedImpl rel : dbManager
-							.obtainStructForAsset(LocationCreatedImpl.class,
-									assetId, true)) {
+				if (asset.getLocationCreated_parent() != null)
+					for (LocationCreatedImpl rel : dbManager.obtainStructForAsset(LocationCreatedImpl.class, assetId,
+							true)) {
 						rel.removeAsset(assetId);
-						if (rel.getAsset().isEmpty()) {
+						if (rel.getAsset().isEmpty())
 							toBeDeleted.add(rel);
-							String locationId = rel.getLocation();
-							if (locationId != null) {
-								LocationImpl location = dbManager.obtainById(
-										LocationImpl.class, locationId);
-								if (location != null)
-									toBeDeleted.add(location);
-							}
-						} else
+						else
 							toBeStored.add(rel);
 						break;
 					}
-				}
-				List<String> relIds = asset.getLocationShown_parent();
-				if (!relIds.isEmpty()) {
-					for (LocationShownImpl rel : dbManager
-							.obtainStructForAsset(LocationShownImpl.class,
-									assetId, true)) {
-						toBeDeleted.add(rel);
-						String locationId = rel.getLocation();
-						if (locationId != null) {
-							LocationImpl location = dbManager.obtainById(
-									LocationImpl.class, locationId);
-							location.removeLocationShown_parent(relId);
-							if (location.getLocationShown_parent().isEmpty()) {
-								toBeDeleted.add(location);
-								toBeStored.remove(location);
-							} else
-								toBeStored.add(location);
-						}
-					}
-				}
-				relIds = asset.getArtworkOrObjectShown_parent();
-				if (!relIds.isEmpty()) {
-					for (ArtworkOrObjectShownImpl rel : dbManager
-							.obtainStructForAsset(
-									ArtworkOrObjectShownImpl.class, assetId,
-									true)) {
-						toBeDeleted.add(rel);
-						String artworkId = rel.getArtworkOrObject();
-						if (artworkId != null) {
-							ArtworkOrObjectImpl artwork = dbManager.obtainById(
-									ArtworkOrObjectImpl.class, artworkId);
-							artwork.removeArtworkOrObjectShown_parent(relId);
-							if (artwork.getArtworkOrObjectShown_parent()
-									.isEmpty()) {
-								toBeDeleted.add(artwork);
-								toBeStored.remove(artwork);
-							} else
-								toBeStored.add(artwork);
-						}
-					}
-					dbManager.markSystemCollectionsForPurge(asset);
-					return null;
-				}
+				if (!asset.getLocationShown_parent().isEmpty())
+					toBeDeleted.addAll(dbManager.obtainStructForAsset(LocationShownImpl.class, assetId, true));
+				if (!asset.getArtworkOrObjectShown_parent().isEmpty())
+					toBeDeleted.addAll(dbManager.obtainStructForAsset(ArtworkOrObjectShownImpl.class, assetId, true));
+				dbManager.markSystemCollectionsForPurge(asset);
+				return null;
 			}
 			if (file == null)
 				return asset;
 			if (path != null) {
 				File newFile = path.toFile();
-				FileWatchManager fileWatchManager = activator
-						.getFileWatchManager();
+				FileWatchManager fileWatchManager = activator.getFileWatchManager();
 				try {
-					fileWatchManager.moveFileSilently(file, newFile, anOpId,
-							monitor);
+					fileWatchManager.moveFileSilently(file, newFile, anOpId, monitor);
 					URI[] xmpURIs = Core.getSidecarURIs(file.toURI());
 					URI[] xmpTargetURIs = Core.getSidecarURIs(newFile.toURI());
 					URI voiceOrigURI = null;
@@ -213,37 +158,24 @@ public class FileLocationBackup extends HistoryItem {
 					}
 					for (int i = 0; i < xmpURIs.length; i++) {
 						File xmpFile = new File(xmpURIs[i]);
-						if (xmpFile.exists()) {
-							File xmpTargetFile = new File(xmpTargetURIs[i]);
-							fileWatchManager.moveFileSilently(xmpFile,
-									xmpTargetFile, anOpId, monitor);
-						}
+						if (xmpFile.exists())
+							fileWatchManager.moveFileSilently(xmpFile, new File(xmpTargetURIs[i]), anOpId, monitor);
 					}
 					if (voiceOrigURI != null) {
 						File voiceFile = new File(voiceOrigURI);
-						if (voiceFile.exists()) {
-							File voiceTargetFile = new File(voiceTargetURI);
-							fileWatchManager.moveFileSilently(voiceFile,
-									voiceTargetFile, anOpId, monitor);
-						}
+						if (voiceFile.exists())
+							fileWatchManager.moveFileSilently(voiceFile, new File(voiceTargetURI), anOpId, monitor);
 					}
+					dbManager.markSystemCollectionsForPurge(asset);
 					asset.setUri(newFile.toURI().toString());
 					toBeStored.add(asset);
 					return asset;
 				} catch (IOException e) {
-					CoreActivator
-							.getDefault()
-							.logError(
-									NLS.bind(
-											Messages.FileLocationBackup_IO_error_restoring_file,
-											file), e);
+					CoreActivator.getDefault()
+							.logError(NLS.bind(Messages.FileLocationBackup_IO_error_restoring_file, file), e);
 				} catch (DiskFullException e) {
-					CoreActivator
-							.getDefault()
-							.logError(
-									NLS.bind(
-											Messages.FileLocationBackup_IO_error_restoring_file,
-											file), e);
+					CoreActivator.getDefault()
+							.logError(NLS.bind(Messages.FileLocationBackup_IO_error_restoring_file, file), e);
 				}
 			} else {
 				deleteFile(asset, file);
@@ -265,11 +197,13 @@ public class FileLocationBackup extends HistoryItem {
 			new File(voiceOrigURI).delete();
 	}
 
-	/**
-	 * @param fileMoved
-	 *            das zu setzende Objekt fileMoved
-	 */
 	public void setFileMoved(boolean fileMoved) {
 		this.fileMoved = fileMoved;
+	}
+
+	public void addCreatedObject(IIdentifiableObject object) {
+		if (createdObjects == null)
+			createdObjects = new HashSet<>(7);
+		createdObjects.add(object);
 	}
 }

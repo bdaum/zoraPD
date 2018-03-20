@@ -47,6 +47,7 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.program.BatchConstants;
 import com.bdaum.zoom.ui.internal.Icons;
+import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.RenamingTemplate;
 import com.bdaum.zoom.ui.internal.dialogs.TemplateEditDialog;
@@ -165,8 +166,7 @@ public class RenameGroup extends Composite {
 			final Label fileRenamingLabel = new Label(labelGroup, SWT.NONE);
 			fileRenamingLabel.setFont(JFaceResources.getBannerFont());
 			fileRenamingLabel.setText(Messages.RenameGroup_file_renaming);
-			Label selectLabel = new Label(labelGroup, SWT.NONE);
-			selectLabel.setText(Messages.RenameGroup_please_select_template);
+			new Label(labelGroup, SWT.NONE).setText(Messages.RenameGroup_please_select_template);
 		}
 		new Label(labelGroup, SWT.NONE).setLayoutData(new GridData(100, -1));
 		startField = createNumericControl(labelGroup, Messages.RenameGroup_start_at);
@@ -195,7 +195,7 @@ public class RenameGroup extends Composite {
 		});
 		templateViewer = new TableViewer(this, SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, false);
-		layoutData.heightHint = 100;
+		layoutData.heightHint = 150;
 		templateViewer.getControl().setLayoutData(layoutData);
 		templateViewer.setContentProvider(ArrayContentProvider.getInstance());
 		templateViewer.setLabelProvider(new TemplateLabelProvider());
@@ -270,8 +270,8 @@ public class RenameGroup extends Composite {
 		Label label = new Label(parent, SWT.NONE);
 		label.setText(lab);
 		NumericControl startField = new NumericControl(parent, SWT.NONE);
-		startField.setData("key", START); //$NON-NLS-1$
-		startField.setData("label", label); //$NON-NLS-1$
+		startField.setData(UiConstants.KEY, START); 
+		startField.setData(UiConstants.LABEL, label); 
 		startField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		startField.setSelection(start);
 		return startField;
@@ -281,15 +281,14 @@ public class RenameGroup extends Composite {
 		Label label = new Label(parent, SWT.NONE);
 		label.setText(lab);
 		Combo cueCombo = new Combo(parent, SWT.NONE);
-		cueCombo.setData("key", CUE); //$NON-NLS-1$
-		cueCombo.setData("label", label); //$NON-NLS-1$
+		cueCombo.setData(UiConstants.KEY, CUE);
+		cueCombo.setData(UiConstants.LABEL, label); 
 		cueCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		return cueCombo;
 	}
 
 	private void saveComboHistory(Combo combo, IDialogSettings settings) {
-		String[] items = UiUtilities.updateComboHistory(combo);
-		settings.put(CUE, items);
+		settings.put(CUE, UiUtilities.updateComboHistory(combo));
 		settings.put(START, start);
 	}
 
@@ -311,7 +310,7 @@ public class RenameGroup extends Composite {
 			templateViewer.update(selectedTemplate, null);
 		boolean visible = selectedTemplate != null && selectedTemplate.getContent().indexOf(Constants.TV_CUE) >= 0;
 		cueField.setVisible(visible);
-		((Control) cueField.getData("label")).setVisible(visible); //$NON-NLS-1$
+		((Control) cueField.getData(UiConstants.LABEL)).setVisible(visible); 
 		if (visible)
 			CssActivator.getDefault().setColors(cueField);
 		visible = asset != null && selectedTemplate != null
@@ -321,7 +320,7 @@ public class RenameGroup extends Composite {
 						|| selectedTemplate.getContent().indexOf(Constants.TV_IMAGE_NO2) >= 0
 						|| selectedTemplate.getContent().indexOf(Constants.TV_IMAGE_NO1) >= 0);
 		startField.setVisible(visible);
-		((Control) startField.getData("label")).setVisible(visible); //$NON-NLS-1$
+		((Control) startField.getData(UiConstants.LABEL)).setVisible(visible); 
 		if (visible)
 			CssActivator.getDefault().setColors(startField);
 	}
@@ -381,8 +380,7 @@ public class RenameGroup extends Composite {
 		updateParameterFields();
 		if (fieldViewer != null) {
 			String id = dialogSettings.get(FIELD);
-			field = id != null ? QueryField.findQueryField(id) : QueryField.URI;
-			fieldViewer.setSelection(new StructuredSelection(field));
+			fieldViewer.setSelection(new StructuredSelection(field = id != null ? QueryField.findQueryField(id) : QueryField.URI));
 		}
 	}
 
@@ -439,18 +437,18 @@ public class RenameGroup extends Composite {
 	}
 
 	protected void fireSelection(SelectionEvent e) {
-		for (Object listener : selectionListeners.getListeners())
-			((SelectionListener) listener).widgetSelected(e);
+		for (SelectionListener listener : selectionListeners)
+			listener.widgetSelected(e);
 	}
 
 	protected void fireSelectionChanged(SelectionChangedEvent e) {
-		for (Object listener : selectionChangedListeners.getListeners())
-			((ISelectionChangedListener) listener).selectionChanged(e);
+		for (ISelectionChangedListener listener : selectionChangedListeners)
+			listener.selectionChanged(e);
 	}
 
 	protected void fireModify(ModifyEvent e) {
-		for (Object listener : modifyListeners.getListeners())
-			((ModifyListener) listener).modifyText(e);
+		for (ModifyListener listener : modifyListeners)
+			listener.modifyText(e);
 	}
 
 	public String getCue() {

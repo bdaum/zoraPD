@@ -15,13 +15,12 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2014 Berthold Daum  
  */
 package com.bdaum.zoom.lal.internal.lire;
 
 import java.awt.image.BufferedImage;
 import java.util.Collection;
-import java.util.List;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -74,69 +73,47 @@ public class TextDocumentBuilder extends AbstractLocalDocumentBuilder {
 		AssetImpl asset = dbManager.obtainAsset(identifier);
 		if (asset != null) {
 			StringBuilder text = new StringBuilder(1024);
-			for (QueryField qfield : QueryField.getQueryFields()) {
-				if (qfield.isFullTextBase()) {
-					if (textFields == null
-							|| textFields.contains(qfield.getId())) {
-						if (qfield.isStruct()) {
-							Object struct = qfield.getStruct(asset);
-							if (struct instanceof String[])
-								for (String structId : (String[]) struct)
-									serializeStruct(structId, text);
-							else if (struct instanceof String)
-								serializeStruct((String) struct, text);
-						} else
-							retrieveFieldValue(text, asset, qfield);
+			for (QueryField qfield : QueryField.getQueryFields())
+				if (qfield.isFullTextBase() && (textFields == null || textFields.contains(qfield.getId()))) {
+					if (qfield.isStruct()) {
+						Object struct = qfield.getStruct(asset);
+						if (struct instanceof String[])
+							for (String structId : (String[]) struct)
+								serializeStruct(structId, text);
+						else if (struct instanceof String)
+							serializeStruct((String) struct, text);
+					} else
+						retrieveFieldValue(text, asset, qfield);
+				}
+			if ((textFields == null || textFields.contains(ILuceneService.INDEX_PERSON_SHOWN))
+					&& asset.getPerson() != null && asset.getPerson().length > 0)
+				for (RegionImpl region : dbManager.obtainObjects(RegionImpl.class, "asset_person_parent", //$NON-NLS-1$
+						asset.getStringId(), QueryField.EQUALS)) {
+					String albumId = region.getAlbum();
+					if (albumId != null) {
+						SmartCollectionImpl album = dbManager.obtainById(SmartCollectionImpl.class, albumId);
+						if (album != null)
+							addSentence(text, album.getName());
 					}
 				}
-			}
-			if (textFields == null
-					|| textFields.contains(ILuceneService.INDEX_PERSON_SHOWN)) {
-				if (asset.getPerson() != null && asset.getPerson().length > 0) {
-					List<RegionImpl> regions = dbManager
-							.obtainObjects(
-									RegionImpl.class,
-									"asset_person_parent", asset.getStringId(), QueryField.EQUALS); //$NON-NLS-1$
-					for (RegionImpl region : regions) {
-						String albumId = region.getAlbum();
-						if (albumId != null) {
-							SmartCollectionImpl album = dbManager.obtainById(
-									SmartCollectionImpl.class, albumId);
-							if (album != null)
-								addSentence(text, album.getName());
-						}
-					}
-				}
-			}
-			if (textFields == null
-					|| textFields.contains(ILuceneService.INDEX_FILENAME))
+			if (textFields == null || textFields.contains(ILuceneService.INDEX_FILENAME))
 				addSentence(text, Core.getFileName(asset.getUri(), false));
-			boolean title = textFields == null
-					|| textFields.contains(ILuceneService.INDEX_SLIDE_TITLE);
-			boolean descr = textFields == null
-					|| textFields.contains(ILuceneService.INDEX_SLIDE_DESCR);
-			if (title || descr) {
-				List<SlideImpl> slides = dbManager
-						.obtainObjects(SlideImpl.class,
-								"asset", identifier, QueryField.EQUALS); //$NON-NLS-1$
-				for (SlideImpl slide : slides) {
+			boolean title = textFields == null || textFields.contains(ILuceneService.INDEX_SLIDE_TITLE);
+			boolean descr = textFields == null || textFields.contains(ILuceneService.INDEX_SLIDE_DESCR);
+			if (title || descr)
+				for (SlideImpl slide : dbManager.obtainObjects(SlideImpl.class, "asset", identifier, //$NON-NLS-1$
+						QueryField.EQUALS)) {
 					if (title)
 						addSentence(text, slide.getCaption());
 					if (descr)
 						addSentence(text, slide.getDescription());
 				}
-			}
-			title = textFields == null
-					|| textFields.contains(ILuceneService.INDEX_EXH_TITLE);
-			descr = textFields == null
-					|| textFields.contains(ILuceneService.INDEX_EXH_DESCR);
-			boolean credits = textFields == null
-					|| textFields.contains(ILuceneService.INDEX_EXH_CREDITS);
-			if (title || descr || credits) {
-				List<ExhibitImpl> exhibits = dbManager.obtainObjects(
-						ExhibitImpl.class,
-						"asset", identifier, QueryField.EQUALS); //$NON-NLS-1$
-				for (ExhibitImpl exhibit : exhibits) {
+			title = textFields == null || textFields.contains(ILuceneService.INDEX_EXH_TITLE);
+			descr = textFields == null || textFields.contains(ILuceneService.INDEX_EXH_DESCR);
+			boolean credits = textFields == null || textFields.contains(ILuceneService.INDEX_EXH_CREDITS);
+			if (title || descr || credits)
+				for (ExhibitImpl exhibit : dbManager.obtainObjects(ExhibitImpl.class, "asset", identifier, //$NON-NLS-1$
+						QueryField.EQUALS)) {
 					if (title)
 						addSentence(text, exhibit.getTitle());
 					if (descr)
@@ -144,40 +121,30 @@ public class TextDocumentBuilder extends AbstractLocalDocumentBuilder {
 					if (credits)
 						addSentence(text, exhibit.getCredits());
 				}
-			}
-			title = textFields == null
-					|| textFields.contains(ILuceneService.INDEX_WEBGAL_TITLE);
-			descr = textFields == null
-					|| textFields.contains(ILuceneService.INDEX_WEBGAL_DESCR);
-			boolean alt = textFields == null
-					|| textFields.contains(ILuceneService.INDEX_WEBGAL_ALT);
-			if (title || descr || alt) {
-				List<WebExhibitImpl> webexhibits = dbManager.obtainObjects(
-						WebExhibitImpl.class,
-						"asset", identifier, QueryField.EQUALS); //$NON-NLS-1$
-				for (WebExhibitImpl exhibit : webexhibits) {
+			title = textFields == null || textFields.contains(ILuceneService.INDEX_WEBGAL_TITLE);
+			descr = textFields == null || textFields.contains(ILuceneService.INDEX_WEBGAL_DESCR);
+			boolean alt = textFields == null || textFields.contains(ILuceneService.INDEX_WEBGAL_ALT);
+			if (title || descr || alt)
+				for (WebExhibitImpl exhibit : dbManager.obtainObjects(WebExhibitImpl.class, "asset", identifier, //$NON-NLS-1$
+						QueryField.EQUALS)) {
 					if (title)
 						addSentence(text, exhibit.getCaption());
 					if (descr)
-						addSentence(text,
-								Utilities.getPlainDescription(exhibit));
+						addSentence(text, Utilities.getPlainDescription(exhibit));
 					if (alt)
 						addSentence(text, exhibit.getAltText());
 				}
-			}
 			return text.toString();
 		}
 		return null;
 
 	}
 
-
 	public Field[] createDescriptorFields(BufferedImage image, String identifier) {
 		String text = createTextDescriptorValue(identifier);
 		if (text == null)
 			return EMPTYFIELDS;
-		return new Field[] { LireActivator.getDefault().createTextSearchField(
-				fieldName, text) };
+		return new Field[] { LireActivator.getDefault().createTextSearchField(fieldName, text) };
 	}
 
 	private static void addSentence(StringBuilder text, String v) {
@@ -189,8 +156,7 @@ public class TextDocumentBuilder extends AbstractLocalDocumentBuilder {
 	}
 
 	private static void serializeStruct(String id, StringBuilder text) {
-		IdentifiableObject obj = Core.getCore().getDbManager()
-				.obtainById(IdentifiableObject.class, id);
+		IdentifiableObject obj = Core.getCore().getDbManager().obtainById(IdentifiableObject.class, id);
 		QueryField[] children = null;
 		if (obj instanceof LocationImpl)
 			children = QueryField.LOCATION_TYPE.getChildren();
@@ -204,8 +170,7 @@ public class TextDocumentBuilder extends AbstractLocalDocumentBuilder {
 					retrieveFieldValue(text, obj, qChild);
 	}
 
-	private static void retrieveFieldValue(StringBuilder text, Object obj,
-			QueryField qfield) {
+	private static void retrieveFieldValue(StringBuilder text, Object obj, QueryField qfield) {
 		if (qfield.getId() != qfield.getKey())
 			return;
 		Object value = qfield.obtainPlainFieldValue(obj);

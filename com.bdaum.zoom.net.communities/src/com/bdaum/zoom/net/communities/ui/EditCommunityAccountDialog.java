@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.net.communities.ui;
 
@@ -38,12 +38,10 @@ import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -78,12 +76,14 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.Utilities;
+import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.net.communities.CommunityAccount;
 import com.bdaum.zoom.net.communities.CommunityApi;
 import com.bdaum.zoom.net.communities.HelpContextIds;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.dialogs.KeywordGroup;
 import com.bdaum.zoom.ui.internal.operations.ModifyMetaOperation;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
@@ -260,39 +260,18 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		composite.setLayout(new GridLayout(1, false));
 		CTabFolder tabFolder = new CTabFolder(composite, SWT.TOP);
 		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		final CTabItem overviewTabItem = UiUtilities.createTabItem(tabFolder,
-				Messages.EditCommunityAccountDialog_general);
-		final Composite comp = new Composite(tabFolder, SWT.NONE);
-		overviewTabItem.setControl(comp);
-		createOverviewGroup(comp);
+		createOverviewGroup(UiUtilities.createTabPage(tabFolder, Messages.EditCommunityAccountDialog_general, null));
 		if (api != null) {
-			if (api.isSupportsPhotosets()) {
-				final CTabItem albumTabItem = UiUtilities.createTabItem(tabFolder,
-						Messages.EditCommunityAccountDialog_photosets_albums);
-				final Composite comp1 = new Composite(tabFolder, SWT.NONE);
-				albumTabItem.setControl(comp1);
-				createAlbumGroup(comp1);
-			}
-			if (api.isSupportsTagging()) {
-				final CTabItem kwTabItem = UiUtilities.createTabItem(tabFolder,
-						Messages.EditCommunityAccountDialog_tags);
-				final Composite comp1 = new Composite(tabFolder, SWT.NONE);
-				kwTabItem.setControl(comp1);
-				createTagGroup(comp1);
-			}
-			if (api.isSupportsCategories()) {
-				final CTabItem catTabItem = UiUtilities.createTabItem(tabFolder,
-						Messages.EditCommunityAccountDialog_categories);
-				final Composite comp1 = new Composite(tabFolder, SWT.NONE);
-				catTabItem.setControl(comp1);
-				createCategoryGroup(comp1);
-			}
+			if (api.isSupportsPhotosets())
+				createAlbumGroup(
+						UiUtilities.createTabPage(tabFolder, Messages.EditCommunityAccountDialog_photosets_albums, null));
+			if (api.isSupportsTagging())
+				createTagGroup(UiUtilities.createTabPage(tabFolder, Messages.EditCommunityAccountDialog_tags, null));
+			if (api.isSupportsCategories())
+				createCategoryGroup(
+						UiUtilities.createTabPage(tabFolder, Messages.EditCommunityAccountDialog_categories, null));
 		}
-		final CTabItem advancedTabItem = UiUtilities.createTabItem(tabFolder,
-				Messages.EditCommunityAccountDialog_Capacity);
-		final Composite comp2 = new Composite(tabFolder, SWT.NONE);
-		advancedTabItem.setControl(comp2);
-		createCommunicationGroup(comp2);
+		createCommunicationGroup(UiUtilities.createTabPage(tabFolder, Messages.EditCommunityAccountDialog_Capacity, null));
 		return area;
 	}
 
@@ -307,11 +286,10 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 				bandwidthField.setEnabled(limitedButton.getSelection());
 			}
 		});
-		bandwidthField = new NumericControl(group1, SWT.NONE);
+		bandwidthField = new NumericControl(group1, NumericControl.LOGARITHMIC);
 		bandwidthField.setMinimum(10);
 		bandwidthField.setMaximum(1000000);
 		bandwidthField.setIncrement(10);
-		bandwidthField.setLogrithmic(true);
 		restrictionGroup = UiUtilities.createGroup(parent, 2, Messages.EditCommunityAccountDialog_restrictions);
 		trafficLimitField = createTextField(restrictionGroup, Messages.EditCommunityAccountDialog_available_bandwidth,
 				60, SWT.READ_ONLY, 1);
@@ -498,12 +476,12 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		layoutData.heightHint = 400;
 		albumViewer.getControl().setLayoutData(layoutData);
 		albumViewer.setContentProvider(ArrayContentProvider.getInstance());
-		albumViewer.setLabelProvider(new ColumnLabelProvider() {
+		albumViewer.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof PhotoSet)
 					return ((PhotoSet) element).getTitle();
-				return super.getText(element);
+				return element.toString();
 			}
 
 			@Override
@@ -514,7 +492,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 			}
 
 		});
-		albumViewer.setComparator(new ViewerComparator());
+		albumViewer.setComparator(ZViewerComparator.INSTANCE);
 		albumViewer.addCheckStateListener(new ICheckStateListener() {
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				updateAlbumsButton();
@@ -598,12 +576,12 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		layoutData.heightHint = 150;
 		allCatViewer.getControl().setLayoutData(layoutData);
 		allCatViewer.setContentProvider(ArrayContentProvider.getInstance());
-		allCatViewer.setLabelProvider(new ColumnLabelProvider() {
+		allCatViewer.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof org.scohen.juploadr.app.Category)
 					return ((org.scohen.juploadr.app.Category) element).getTitle();
-				return super.getText(element);
+				return element.toString();
 			}
 
 			@Override
@@ -615,9 +593,8 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 			}
 
 		});
-		allCatViewer.setComparator(new ViewerComparator());
+		allCatViewer.setComparator(ZViewerComparator.INSTANCE);
 		allCatViewer.addCheckStateListener(new ICheckStateListener() {
-
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				Object element = event.getElement();
 				if (!externalCategories.contains(((org.scohen.juploadr.app.Category) element).getTitle()))
@@ -729,12 +706,12 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 				return EMPTY;
 			}
 		});
-		usedCatViewer.setLabelProvider(new ColumnLabelProvider() {
+		usedCatViewer.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof Category)
 					return ((Category) element).getLabel();
-				return super.getText(element);
+				return element.toString();
 			}
 
 			@Override
@@ -745,7 +722,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 			}
 
 		});
-		usedCatViewer.setComparator(new ViewerComparator());
+		usedCatViewer.setComparator(ZViewerComparator.INSTANCE);
 		usedCatViewer.addCheckStateListener(new ICheckStateListener() {
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				Object element = event.getElement();

@@ -15,14 +15,12 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2018 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -38,6 +36,7 @@ import com.bdaum.zoom.cat.model.Rgb_typeImpl;
 import com.bdaum.zoom.cat.model.group.exhibition.Exhibit;
 import com.bdaum.zoom.cat.model.group.exhibition.ExhibitionImpl;
 import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.widgets.WebColorGroup;
@@ -48,19 +47,14 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 
 	private static final int DEFAULTBUTTON = 9999;
 	private final Exhibit exhibit;
-	private NumericControl matWidthField;
-	private WebColorGroup matColorGroup;
-	private NumericControl frameWidthField;
-	private WebColorGroup frameColorGroup;
+	private WebColorGroup matColorGroup, frameColorGroup;
 	private final ExhibitionImpl exhibition;
-	private NumericControl imageWidthField;
-	private NumericControl imageHeightField;
-	private NumericControl totalWidthField;
-	private NumericControl totalHeightField;
+	private NumericControl matWidthField, frameWidthField, imageWidthField, imageHeightField, totalWidthField,
+			totalHeightField;
 	private LabelLayoutGroup labelLayoutGroup;
+	private char unit = Core.getCore().getDbFactory().getDimUnit();
 
-	public ExhibitLayoutDialog(Shell parentShell, ExhibitionImpl exhibition,
-			Exhibit exhibit) {
+	public ExhibitLayoutDialog(Shell parentShell, ExhibitionImpl exhibition, Exhibit exhibit) {
 		super(parentShell, HelpContextIds.EXHIBITLAYOUT_DIALOG);
 		this.exhibition = exhibition;
 		this.exhibit = exhibit;
@@ -82,12 +76,10 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new GridLayout(3, false));
 		CGroup imageGroup = new CGroup(comp, SWT.NONE);
-		imageGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING,
-				true, false));
+		imageGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false));
 		imageGroup.setLayout(new GridLayout(4, false));
 		imageGroup.setText(Messages.ExhibitLayoutDialog_image);
-		new Label(imageGroup, SWT.NONE)
-				.setText(Messages.ExhibitLayoutDialog_size);
+		new Label(imageGroup, SWT.NONE).setText(Messages.ExhibitLayoutDialog_size + captionUnitcmin());
 		imageWidthField = new NumericControl(imageGroup, SWT.NONE);
 		imageWidthField.setMaximum(10000);
 		imageWidthField.setDigits(1);
@@ -110,12 +102,10 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 			}
 		});
 		CGroup matGroup = new CGroup(comp, SWT.NONE);
-		matGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true,
-				false));
+		matGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false));
 		matGroup.setLayout(new GridLayout(4, false));
 		matGroup.setText(Messages.ExhibitLayoutDialog_mat);
-		new Label(matGroup, SWT.NONE)
-				.setText(Messages.ExhibitLayoutDialog_width);
+		new Label(matGroup, SWT.NONE).setText(Messages.ExhibitLayoutDialog_width + captionUnitcmin());
 		matWidthField = new NumericControl(matGroup, SWT.NONE);
 		matWidthField.setMaximum(1000);
 		matWidthField.setDigits(1);
@@ -126,15 +116,12 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 				updateTotal();
 			}
 		});
-		matColorGroup = new WebColorGroup(matGroup,
-				Messages.ExhibitLayoutDialog_color);
+		matColorGroup = new WebColorGroup(matGroup, Messages.ExhibitLayoutDialog_color);
 		CGroup frameGroup = new CGroup(comp, SWT.NONE);
-		frameGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING,
-				true, false));
+		frameGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false));
 		frameGroup.setLayout(new GridLayout(4, false));
 		frameGroup.setText(Messages.ExhibitLayoutDialog_frame);
-		new Label(frameGroup, SWT.NONE)
-				.setText(Messages.ExhibitLayoutDialog_width);
+		new Label(frameGroup, SWT.NONE).setText(Messages.ExhibitLayoutDialog_width + captionUnitcmin());
 		frameWidthField = new NumericControl(frameGroup, SWT.NONE);
 		frameWidthField.setMaximum(100);
 		frameWidthField.setDigits(1);
@@ -145,15 +132,12 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 				updateTotal();
 			}
 		});
-		frameColorGroup = new WebColorGroup(frameGroup,
-				Messages.ExhibitLayoutDialog_color);
+		frameColorGroup = new WebColorGroup(frameGroup, Messages.ExhibitLayoutDialog_color);
 		CGroup totalGroup = new CGroup(comp, SWT.NONE);
-		totalGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING,
-				true, false));
+		totalGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false));
 		totalGroup.setLayout(new GridLayout(4, false));
 		totalGroup.setText(Messages.ExhibitLayoutDialog_total);
-		new Label(totalGroup, SWT.NONE)
-				.setText(Messages.ExhibitLayoutDialog_size);
+		new Label(totalGroup, SWT.NONE).setText(Messages.ExhibitLayoutDialog_size + captionUnitcmin());
 		totalWidthField = new NumericControl(totalGroup, SWT.NONE);
 		totalWidthField.setMaximum(10000);
 		totalWidthField.setDigits(1);
@@ -176,50 +160,34 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 			}
 		});
 		CGroup labelGroup = new CGroup(comp, SWT.NONE);
-		labelGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true,
-				false, 2, 1));
+		labelGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
 		labelGroup.setLayout(new GridLayout());
 		labelGroup.setText(Messages.ExhibitLayoutDialog_label);
 		labelLayoutGroup = new LabelLayoutGroup(labelGroup, SWT.NONE, false);
-		labelLayoutGroup.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				validate();
-			}
-		});
 		new Label(comp, SWT.NONE);
 		return area;
 	}
 
-	protected void validate() {
-		String errorMessage = labelLayoutGroup.validate();
-		getButton(OK).setEnabled(errorMessage == null);
-		setErrorMessage(errorMessage);
-	}
-
 	protected void updateSizeFields(Widget widget) {
 		if (widget == imageWidthField) {
-			imageHeightField.setSelection(exhibit.getHeight()
-					* imageWidthField.getSelection()
-					/ Math.max(1, exhibit.getWidth()));
+			imageHeightField.setSelection(
+					exhibit.getHeight() * imageWidthField.getSelection() / Math.max(1, exhibit.getWidth()));
 			updateTotal();
 		} else if (widget == imageHeightField) {
-			imageWidthField.setSelection(exhibit.getWidth()
-					* imageHeightField.getSelection()
-					/ Math.max(1, exhibit.getHeight()));
+			imageWidthField.setSelection(
+					exhibit.getWidth() * imageHeightField.getSelection() / Math.max(1, exhibit.getHeight()));
 			updateTotal();
 		} else if (widget == totalWidthField) {
-			int tara = 2 * matWidthField.getSelection() + 2
-					* frameWidthField.getSelection();
-			totalHeightField.setSelection(exhibit.getHeight()
-					* (totalWidthField.getSelection() - tara)
-					/ Math.max(1, exhibit.getWidth()) + tara);
+			int tara = 2 * matWidthField.getSelection() + 2 * frameWidthField.getSelection();
+			totalHeightField.setSelection(
+					exhibit.getHeight() * (totalWidthField.getSelection() - tara) / Math.max(1, exhibit.getWidth())
+							+ tara);
 			updateImage(tara);
 		} else if (widget == totalHeightField) {
-			int tara = 2 * matWidthField.getSelection() + 2
-					* frameWidthField.getSelection();
-			totalWidthField.setSelection(exhibit.getWidth()
-					* (totalHeightField.getSelection() - tara)
-					/ Math.max(1, exhibit.getHeight()) + tara);
+			int tara = 2 * matWidthField.getSelection() + 2 * frameWidthField.getSelection();
+			totalWidthField.setSelection(
+					exhibit.getWidth() * (totalHeightField.getSelection() - tara) / Math.max(1, exhibit.getHeight())
+							+ tara);
 			updateImage(tara);
 		}
 
@@ -231,8 +199,7 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 	}
 
 	private void updateTotal() {
-		int tara = 2 * matWidthField.getSelection() + 2
-				* frameWidthField.getSelection();
+		int tara = 2 * matWidthField.getSelection() + 2 * frameWidthField.getSelection();
 		totalWidthField.setSelection(imageWidthField.getSelection() + tara);
 		totalHeightField.setSelection(imageHeightField.getSelection() + tara);
 		totalWidthField.setMinimum(tara);
@@ -246,9 +213,9 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 
 	private void fillValues() {
 		int width = exhibit.getWidth();
-		imageWidthField.setSelection(width);
+		imageWidthField.setSelection(fromMm(width));
 		int height = exhibit.getHeight();
-		imageHeightField.setSelection(height);
+		imageHeightField.setSelection(fromMm(height));
 		Integer o = exhibit.getMatWidth();
 		int matWidth = (o == null) ? exhibition.getMatWidth() : o;
 		Rgb_type matColor = exhibit.getMatColor();
@@ -264,15 +231,15 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 			frameColor = exhibition.getFrameColor();
 		if (frameColor == null)
 			frameColor = new Rgb_typeImpl(8, 8, 8);
-		matWidthField.setSelection(matWidth);
+		matWidthField.setSelection(fromMm(matWidth));
 		matColorGroup.setRGB(matColor);
-		frameWidthField.setSelection(frameWidth);
+		frameWidthField.setSelection(fromMm(frameWidth));
 		frameColorGroup.setRGB(frameColor);
 		int tara = 2 * matWidth + 2 * frameWidth;
-		totalWidthField.setSelection(width + tara);
-		totalHeightField.setSelection(height + tara);
-		totalWidthField.setMinimum(tara);
-		totalHeightField.setMinimum(tara);
+		totalWidthField.setSelection(fromMm(width + tara));
+		totalHeightField.setSelection(fromMm(height + tara));
+		totalWidthField.setMinimum(fromMm(tara));
+		totalHeightField.setMinimum(fromMm(tara));
 		Boolean h = exhibit.getHideLabel();
 		Integer a = exhibit.getLabelAlignment();
 		if (a == null)
@@ -283,8 +250,7 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 		Integer i = exhibit.getLabelIndent();
 		if (i == null)
 			i = exhibition.getLabelIndent();
-		labelLayoutGroup.fillValues(
-				h == null ? exhibition.getHideLabel() : h.booleanValue(),
+		labelLayoutGroup.fillValues(h == null ? exhibition.getHideLabel() : h.booleanValue(),
 				a == null ? Constants.DEFAULTLABELALIGNMENT : a.intValue(),
 				d == null ? Constants.DEFAULTLABELDISTANCE : d.intValue(),
 				i == null ? Constants.DEFAULTLABELINDENT : i.intValue());
@@ -293,8 +259,7 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
-		createButton(parent, DEFAULTBUTTON,
-				Messages.ExhibitLayoutDialog_set_defaults, false);
+		createButton(parent, DEFAULTBUTTON, Messages.ExhibitLayoutDialog_set_defaults, false);
 		super.createButtonsForButtonBar(parent);
 	}
 
@@ -313,18 +278,30 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 			return;
 		}
 		if (buttonId == OK) {
-			exhibit.setMatWidth(matWidthField.getSelection());
+			exhibit.setMatWidth(toMm(matWidthField.getSelection()));
 			exhibit.setMatColor(matColorGroup.getRGB());
-			exhibit.setFrameWidth(frameWidthField.getSelection());
+			exhibit.setFrameWidth(toMm(frameWidthField.getSelection()));
 			exhibit.setFrameColor(frameColorGroup.getRGB());
-			exhibit.setWidth(imageWidthField.getSelection());
-			exhibit.setHeight(imageHeightField.getSelection());
+			exhibit.setWidth(toMm(imageWidthField.getSelection()));
+			exhibit.setHeight(toMm(imageHeightField.getSelection()));
 			exhibit.setHideLabel(labelLayoutGroup.isHide());
 			exhibit.setLabelAlignment(labelLayoutGroup.getAlign());
 			exhibit.setLabelDistance(labelLayoutGroup.getDist());
 			exhibit.setLabelIndent(labelLayoutGroup.getIndent());
 		}
 		super.buttonPressed(buttonId);
+	}
+
+	private String captionUnitcmin() {
+		return unit == 'i' ? " (in)" : " (cm)"; //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	private int fromMm(int x) {
+		return unit == 'i' ? (int) (x / 2.54d + 0.5d) : x;
+	}
+
+	private int toMm(int x) {
+		return unit == 'i' ? (int) (x * 2.54d + 0.5d) : x;
 	}
 
 }

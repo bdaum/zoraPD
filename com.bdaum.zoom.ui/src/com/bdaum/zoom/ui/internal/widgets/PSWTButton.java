@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
  
  package com.bdaum.zoom.ui.internal.widgets;
@@ -26,9 +26,6 @@ import org.piccolo2d.extras.swt.PSWTCanvas;
 
 public class PSWTButton extends ZPSWTImage {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 6624680368318335535L;
 	private final String tooltip;
 

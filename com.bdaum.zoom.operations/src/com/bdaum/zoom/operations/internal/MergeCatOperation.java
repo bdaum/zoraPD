@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.operations.internal;
 
@@ -826,23 +826,21 @@ public class MergeCatOperation extends AbstractCloneCatOperation {
 	private void mergeAsset(AssetImpl source, AssetImpl target) {
 		if (xmpFilter != null) {
 			for (QueryField queryField : QueryField.getQueryFields()) {
-				String key = queryField.getKey();
-				if (key == null || key.startsWith("$") || !xmpFilter.contains(queryField)) //$NON-NLS-1$
-					continue;
-				switch (metaDataPolicy) {
-				case Constants.SKIP:
-					Object oldValue = queryField.obtainPlainFieldValue(target);
-					if (!queryField.isNeutralValue(oldValue))
-						continue;
-					//$FALL-THROUGH$
-				case Constants.REPLACE:
-					Object newValue = queryField.obtainPlainFieldValue(source);
-					queryField.setPlainFieldValue(target, newValue);
-					break;
-				default:
-					queryField.mergeValues(source, target);
-					break;
-				}
+				if (!queryField.isVirtual() && xmpFilter.contains(queryField))
+					switch (metaDataPolicy) {
+					case Constants.SKIP:
+						Object oldValue = queryField.obtainPlainFieldValue(target);
+						if (!queryField.isNeutralValue(oldValue))
+							continue;
+						//$FALL-THROUGH$
+					case Constants.REPLACE:
+						Object newValue = queryField.obtainPlainFieldValue(source);
+						queryField.setPlainFieldValue(target, newValue);
+						break;
+					default:
+						queryField.mergeValues(source, target);
+						break;
+					}
 			}
 		}
 	}
@@ -858,7 +856,7 @@ public class MergeCatOperation extends AbstractCloneCatOperation {
 	}
 
 	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
-		//do nothing
+		// do nothing
 	}
 
 }

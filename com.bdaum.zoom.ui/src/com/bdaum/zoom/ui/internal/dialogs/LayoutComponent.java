@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -31,7 +31,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -47,6 +46,7 @@ import org.eclipse.ui.dialogs.ListSelectionDialog;
 
 import com.bdaum.zoom.cat.model.PageLayout_type;
 import com.bdaum.zoom.cat.model.PageLayout_typeImpl;
+import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
@@ -54,8 +54,10 @@ import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.dialogs.ZListDialog;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.SharpeningGroup;
 import com.bdaum.zoom.ui.internal.widgets.TextWithVariableGroup;
+import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 public class LayoutComponent implements IInputValidator {
@@ -114,8 +116,16 @@ public class LayoutComponent implements IInputValidator {
 			Constants.PT_COUNT, Constants.PT_PAGENO, Constants.PT_COLLECTION, Constants.PT_USER, Constants.PT_OWNER };
 
 	protected static final String[] CAPTIONVARIABLES = new String[] { Constants.PI_TITLE, Constants.PI_NAME,
-			Constants.PI_FORMAT, Constants.PI_CREATIONDATE, Constants.PI_SIZE, Constants.PT_COLLECTION,
-			Constants.PI_SEQUENCENO, Constants.PI_PAGEITEM };
+			Constants.PI_FORMAT, Constants.PI_CREATIONDATE, Constants.PI_CREATIONYEAR, Constants.PI_SIZE,
+			Constants.PT_COLLECTION, Constants.PI_SEQUENCENO, Constants.PI_PAGEITEM };
+	private static final String[] CAPTIONTEMPLATES = new String[] { "- {sequenceNo} -", //$NON-NLS-1$
+			"- {pageItem} -", //$NON-NLS-1$
+			"{title}", //$NON-NLS-1$
+			"{title} - {creationDate}", //$NON-NLS-1$
+			"{title} - {creationYear}", //$NON-NLS-1$
+			"{title} ©{creationYear} {meta=artist}", //$NON-NLS-1$
+			Messages.LayoutComponent_template4, Messages.LayoutComponent_template5,
+			Messages.LayoutComponent_template6 };
 
 	private TextWithVariableGroup titleField;
 	private NumericControl columnsField;
@@ -131,138 +141,139 @@ public class LayoutComponent implements IInputValidator {
 	private TextWithVariableGroup footerField;
 	private TextWithVariableGroup subtitleField;
 	private NumericControl keylineField;
-
 	private Composite composite;
-
 	private Combo oriField;
-
 	private Combo formatField;
-
 	private Button facingField;
-
 	private SharpeningGroup sharpeningGroup;
-
 	private NumericControl sizeField;
-
 	private TextWithVariableGroup altField;
 	private final int type;
 	private Button loadButton;
+	private char unit = Core.getCore().getDbFactory().getDimUnit();
 
 	@SuppressWarnings("unused")
-	public LayoutComponent(Composite parent, final int type) {
+	public LayoutComponent(Composite parent, final int type, List<Asset> assets, String collection) {
 		this.type = type;
+		Asset asset = assets.isEmpty() ? null : assets.get(0);
 		composite = new Composite(parent, SWT.NONE);
-		composite.setLayout(new GridLayout(4, false));
+		composite.setLayout(new GridLayout());
 		if (type == PDF) {
-			final Label formatLabel = new Label(composite, SWT.NONE);
-			formatLabel.setText(Messages.LayoutComponent_Format);
-			formatField = new Combo(composite, SWT.READ_ONLY);
-			formatField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+			CGroup pageGroup = createGroup(composite, Messages.LayoutComponent_page_format, 4);
+			new Label(pageGroup, SWT.NONE).setText(Messages.LayoutComponent_Format);
+			formatField = new Combo(pageGroup, SWT.READ_ONLY);
+			formatField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 			formatField.setItems(PageLayout_type.formatALLVALUES);
-			final Label oriLabel = new Label(composite, SWT.NONE);
-			oriLabel.setText(Messages.LayoutComponent_Orientation);
-			oriField = new Combo(composite, SWT.READ_ONLY);
-			oriField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+			Label label = new Label(pageGroup, SWT.NONE);
+			GridData layoutData = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
+			layoutData.horizontalIndent = 10;
+			label.setLayoutData(layoutData);
+			label.setText(Messages.LayoutComponent_Orientation);
+			oriField = new Combo(pageGroup, SWT.READ_ONLY);
+			oriField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 			oriField.setItems(new String[] { Messages.LayoutComponent_Portrait, Messages.LayoutComponent_Landscape });
 		}
-		titleField = new TextWithVariableGroup(composite, Messages.PrintLayoutDialog_page_title,
-				Messages.LayoutComponent_page__vars, PAGEVARIABLES, false);
-		new Label(composite, SWT.NONE);
-
-		subtitleField = new TextWithVariableGroup(composite, Messages.PrintLayoutDialog_aubtitle,
-				Messages.LayoutComponent_page__vars, PAGEVARIABLES, false);
-		new Label(composite, SWT.NONE);
-		footerField = new TextWithVariableGroup(composite, Messages.PrintLayoutDialog_footer,
-				Messages.LayoutComponent_page__vars, PAGEVARIABLES, false);
-		new Label(composite, SWT.NONE);
+		CGroup titleGroup = createGroup(composite, Messages.LayoutComponent_titles, 3);
+		titleField = new TextWithVariableGroup(titleGroup, Messages.PrintLayoutDialog_page_title, 300, PAGEVARIABLES,
+				false, null, asset, collection);
+		subtitleField = new TextWithVariableGroup(titleGroup, Messages.PrintLayoutDialog_aubtitle, 300, PAGEVARIABLES,
+				false, null, asset, collection);
+		footerField = new TextWithVariableGroup(titleGroup, Messages.PrintLayoutDialog_footer, 300, PAGEVARIABLES,
+				false, null, asset, collection);
+		CGroup layoutGroup = createGroup(composite, Messages.LayoutComponent_layout, 4);
 		if (type == HTML) {
-			new Label(composite, SWT.NONE).setText(Messages.LayoutComponent_size);
-			sizeField = new NumericControl(composite, SWT.NONE);
-			sizeField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+			new Label(layoutGroup, SWT.NONE).setText(Messages.LayoutComponent_size);
+			sizeField = new NumericControl(layoutGroup, SWT.NONE);
+			sizeField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 			sizeField.setMaximum(640);
 			sizeField.setMinimum(64);
 		}
-		new Label(composite, SWT.NONE).setText(Messages.PrintLayoutDialog_colums);
-		columnsField = new NumericControl(composite, SWT.NONE);
-		columnsField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+		new Label(layoutGroup, SWT.NONE).setText(Messages.PrintLayoutDialog_colums);
+		columnsField = new NumericControl(layoutGroup, SWT.NONE);
+		columnsField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, type != HTML ? 1 : 3, 1));
 		columnsField.setMaximum(20);
 		columnsField.setMinimum(1);
 		if (type != HTML) {
-			new Label(composite, SWT.NONE).setText(Messages.PrintLayoutDialog_left_margins);
-			leftMarginsField = new NumericControl(composite, SWT.NONE);
+			Label label = new Label(layoutGroup, SWT.NONE);
+			label.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
+			label.setText(Messages.LayoutComponent_Facing_pages);
+			facingField = new Button(layoutGroup, SWT.CHECK);
+			facingField.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
+			new Label(layoutGroup, SWT.NONE).setText(Messages.PrintLayoutDialog_left_margins + captionUnitcmin());
+			leftMarginsField = new NumericControl(layoutGroup, SWT.NONE);
 			leftMarginsField.setMinimum(3);
-			leftMarginsField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-			leftMarginsField.setMaximum(50);
+			leftMarginsField.setDigits(1);
+			leftMarginsField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+			leftMarginsField.setMaximum(unit == 'i' ? 20 : 50);
 
-			new Label(composite, SWT.NONE).setText(Messages.PrintLayoutDialog_right_margins);
-			rightMarginsField = new NumericControl(composite, SWT.NONE);
+			label = new Label(layoutGroup, SWT.NONE);
+			label.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
+			label.setText(Messages.PrintLayoutDialog_right_margins + captionUnitcmin());
+			rightMarginsField = new NumericControl(layoutGroup, SWT.NONE);
 			rightMarginsField.setMinimum(3);
-			rightMarginsField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-			rightMarginsField.setMaximum(50);
-			final Label facingLabel = new Label(composite, SWT.NONE);
-			facingLabel.setText(Messages.LayoutComponent_Facing_pages);
-			facingField = new Button(composite, SWT.CHECK);
-			facingField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-			new Label(composite, SWT.NONE).setText(Messages.PrintLayoutDialog_hor_gap);
-			horizontalGapField = new NumericControl(composite, SWT.NONE);
-			horizontalGapField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+			rightMarginsField.setDigits(1);
+			rightMarginsField.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
+			rightMarginsField.setMaximum(unit == 'i' ? 20 : 50);
+			new Label(layoutGroup, SWT.NONE).setText(Messages.PrintLayoutDialog_hor_gap + captionUnitcmin());
+			horizontalGapField = new NumericControl(layoutGroup, SWT.NONE);
+			horizontalGapField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 			horizontalGapField.setMinimum(1);
-			horizontalGapField.setMaximum(30);
-			final Label topMarginsLabel = new Label(composite, SWT.NONE);
-			topMarginsLabel.setText(Messages.PrintLayoutDialog_top_margins);
-
-			topMarginsField = new NumericControl(composite, SWT.NONE);
-			topMarginsField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-			topMarginsField.setMaximum(50);
-
-			new Label(composite, SWT.NONE).setText(Messages.PrintLayoutDialog_bottom_margins);
-			bottomMarginsField = new NumericControl(composite, SWT.NONE);
-			bottomMarginsField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-			bottomMarginsField.setMaximum(50);
-
-			new Label(composite, SWT.NONE).setText(Messages.PrintLayoutDialog_vert_gap);
-			verticalGapField = new NumericControl(composite, SWT.NONE);
-			verticalGapField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-			verticalGapField.setMaximum(30);
+			horizontalGapField.setDigits(1);
+			horizontalGapField.setMaximum(unit == 'i' ? 12 : 30);
+			label = new Label(layoutGroup, SWT.NONE);
+			label.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
+			label.setText(Messages.PrintLayoutDialog_vert_gap + captionUnitcmin());
+			verticalGapField = new NumericControl(layoutGroup, SWT.NONE);
+			verticalGapField.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
+			verticalGapField.setMaximum(unit == 'i' ? 12 : 30);
 			verticalGapField.setMinimum(1);
+			verticalGapField.setDigits(1);
+			new Label(layoutGroup, SWT.NONE).setText(Messages.PrintLayoutDialog_top_margins + captionUnitcmin());
+			topMarginsField = new NumericControl(layoutGroup, SWT.NONE);
+			topMarginsField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+			topMarginsField.setMaximum(50);
+			topMarginsField.setDigits(1);
+			label = new Label(layoutGroup, SWT.NONE);
+			label.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
+			label.setText(Messages.PrintLayoutDialog_bottom_margins + captionUnitcmin());
+			bottomMarginsField = new NumericControl(layoutGroup, SWT.NONE);
+			bottomMarginsField.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
+			bottomMarginsField.setMaximum(50);
+			bottomMarginsField.setDigits(1);
 		} else {
-			new Label(composite, SWT.NONE).setText(Messages.LayoutComponent_padding);
-			horizontalGapField = new NumericControl(composite, SWT.NONE);
-			horizontalGapField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+			new Label(layoutGroup, SWT.NONE).setText(Messages.LayoutComponent_padding);
+			horizontalGapField = new NumericControl(layoutGroup, SWT.NONE);
+			horizontalGapField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 			horizontalGapField.setMinimum(0);
 			horizontalGapField.setMaximum(100);
 		}
-		caption1Field = new TextWithVariableGroup(composite, Messages.PrintLayoutDialog_capt_line_1,
-				Messages.LayoutComponent_caption_vars, CAPTIONVARIABLES, true);
-		caption2Field = new TextWithVariableGroup(composite, Messages.PrintLayoutDialog_capt_line_2,
-				Messages.LayoutComponent_caption_vars, CAPTIONVARIABLES, true);
+		CGroup captionGroup = createGroup(composite, Messages.LayoutComponent_captions, 5);
+		caption1Field = new TextWithVariableGroup(captionGroup, Messages.PrintLayoutDialog_capt_line_1, 300,
+				CAPTIONVARIABLES, true, CAPTIONTEMPLATES, asset, collection);
+		caption2Field = new TextWithVariableGroup(captionGroup, Messages.PrintLayoutDialog_capt_line_2, 300,
+				CAPTIONVARIABLES, true, CAPTIONTEMPLATES, asset, collection);
 		if (type == HTML)
-			altField = new TextWithVariableGroup(composite, Messages.LayoutComponent_alt,
-					Messages.LayoutComponent_caption_vars, CAPTIONVARIABLES, true);
+			altField = new TextWithVariableGroup(captionGroup, Messages.LayoutComponent_alt, 300, CAPTIONVARIABLES,
+					true, CAPTIONTEMPLATES, asset, collection);
 		else {
-			new Label(composite, SWT.NONE).setText(Messages.PrintLayoutDialog_keyline);
-			keylineField = new NumericControl(composite, SWT.NONE);
-			keylineField.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+			new Label(captionGroup, SWT.NONE).setText(Messages.PrintLayoutDialog_keyline);
+			keylineField = new NumericControl(captionGroup, SWT.NONE);
+			keylineField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1));
 			keylineField.setMaximum(10);
 		}
 		if (type == PRINT) {
-			new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL)
-					.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
-			Label sharpeningLabel = new Label(composite, SWT.NONE);
-			sharpeningLabel.setText(Messages.LayoutComponent_sharpening);
-			sharpeningLabel.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, false, false));
-			Composite group = new Composite(composite, SWT.NONE);
-			group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 3, 1));
+			CGroup sharpGroup = createGroup(composite, Messages.LayoutComponent_sharpening, 1);
+			Composite group = new Composite(sharpGroup, SWT.NONE);
+			group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 			GridLayout gl = new GridLayout();
 			gl.marginHeight = gl.marginWidth = 0;
 			group.setLayout(gl);
 			sharpeningGroup = new SharpeningGroup(group);
 		}
-		// new Label(composite, SWT.NONE);
-		Label sep = new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL);
-		sep.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
+		new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL)
+				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		Composite buttonGroup = new Composite(parent, SWT.NONE);
-		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, true, false, 4, 1));
+		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, true, false));
 		buttonGroup.setLayout(new GridLayout(2, false));
 		loadButton = new Button(buttonGroup, SWT.PUSH);
 		loadButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
@@ -286,7 +297,7 @@ public class LayoutComponent implements IInputValidator {
 				});
 				dialog.setInput(set);
 				dialog.create();
-				dialog.setComparator(new ViewerComparator());
+				dialog.setComparator(ZViewerComparator.INSTANCE);
 				if (dialog.open() == ListSelectionDialog.OK) {
 					Object[] result = dialog.getResult();
 					if (result != null && result.length > 0 && result[0] instanceof PageLayout_typeImpl)
@@ -322,8 +333,15 @@ public class LayoutComponent implements IInputValidator {
 			}
 		});
 		new Label(buttonGroup, SWT.NONE);
-		new Label(buttonGroup, SWT.NONE);
 		updateButtons();
+	}
+
+	protected CGroup createGroup(Composite parent, String title, int columns) {
+		CGroup pageGroup = new CGroup(parent, SWT.NONE);
+		pageGroup.setText(title);
+		pageGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		pageGroup.setLayout(new GridLayout(columns, false));
+		return pageGroup;
 	}
 
 	private void updateButtons() {
@@ -344,17 +362,18 @@ public class LayoutComponent implements IInputValidator {
 			layout.setSize(sizeField.getSelection());
 		layout.setColumns(columnsField.getSelection());
 		if (leftMarginsField != null)
-			layout.setLeftMargin(leftMarginsField.getSelection());
+			layout.setLeftMargin(toMm(leftMarginsField.getSelection()));
 		if (rightMarginsField != null)
-			layout.setRightMargin(rightMarginsField.getSelection());
+			layout.setRightMargin(toMm(rightMarginsField.getSelection()));
 		layout.setFacingPages(facingField == null ? false : facingField.getSelection());
-		layout.setHorizontalGap(horizontalGapField.getSelection());
+		layout.setHorizontalGap(
+				type == HTML ? horizontalGapField.getSelection() : toMm(horizontalGapField.getSelection()));
 		if (topMarginsField != null)
-			layout.setTopMargin(topMarginsField.getSelection());
+			layout.setTopMargin(toMm(topMarginsField.getSelection()));
 		if (bottomMarginsField != null)
-			layout.setBottomMargin(bottomMarginsField.getSelection());
+			layout.setBottomMargin(toMm(bottomMarginsField.getSelection()));
 		if (verticalGapField != null)
-			layout.setVerticalGap(verticalGapField.getSelection());
+			layout.setVerticalGap(toMm(verticalGapField.getSelection()));
 		layout.setCaption1(caption1Field.getText().trim());
 		layout.setCaption2(caption2Field.getText().trim());
 		if (altField != null)
@@ -383,18 +402,18 @@ public class LayoutComponent implements IInputValidator {
 			sizeField.setSelection(aLayout.getSize());
 		columnsField.setSelection(aLayout.getColumns());
 		if (leftMarginsField != null)
-			leftMarginsField.setSelection(aLayout.getLeftMargin());
+			leftMarginsField.setSelection(fromMm(aLayout.getLeftMargin()));
 		if (rightMarginsField != null)
-			rightMarginsField.setSelection(aLayout.getRightMargin());
+			rightMarginsField.setSelection(fromMm(aLayout.getRightMargin()));
 		if (facingField != null)
 			facingField.setSelection(aLayout.getFacingPages());
-		horizontalGapField.setSelection(aLayout.getHorizontalGap());
+		horizontalGapField.setSelection(type == HTML ? aLayout.getHorizontalGap() : fromMm(aLayout.getHorizontalGap()));
 		if (topMarginsField != null)
-			topMarginsField.setSelection(aLayout.getTopMargin());
+			topMarginsField.setSelection(fromMm(aLayout.getTopMargin()));
 		if (bottomMarginsField != null)
-			bottomMarginsField.setSelection(aLayout.getBottomMargin());
+			bottomMarginsField.setSelection(fromMm(aLayout.getBottomMargin()));
 		if (verticalGapField != null)
-			verticalGapField.setSelection(aLayout.getVerticalGap());
+			verticalGapField.setSelection(fromMm(aLayout.getVerticalGap()));
 		caption1Field.setText(aLayout.getCaption1());
 		caption2Field.setText(aLayout.getCaption2());
 		if (altField != null)
@@ -421,6 +440,18 @@ public class LayoutComponent implements IInputValidator {
 		if (newText.isEmpty())
 			return Messages.LayoutComponent_empty_name;
 		return null;
+	}
+
+	private String captionUnitcmin() {
+		return unit == 'i' ? " (in)" : " (cm)"; //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	private int fromMm(int x) {
+		return unit == 'i' ? (int) (x / 2.54d + 0.5d) : x;
+	}
+
+	private int toMm(int x) {
+		return unit == 'i' ? (int) (x * 2.54d + 0.5d) : x;
 	}
 
 }

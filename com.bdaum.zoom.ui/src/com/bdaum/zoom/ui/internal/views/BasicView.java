@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -30,6 +30,9 @@ import java.util.Set;
 
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.runtime.ListenerList;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.jobs.IJobManager;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.eclipse.jface.action.IAction;
@@ -56,6 +59,8 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -83,7 +88,10 @@ import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IRelationDetector;
+import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
+import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.IPreferenceUpdater;
 import com.bdaum.zoom.core.internal.VolumeListener;
 import com.bdaum.zoom.css.internal.CssActivator;
@@ -125,9 +133,11 @@ public abstract class BasicView extends ViewPart
 	private IAction redoAction;
 	protected boolean viewActive;
 	protected IUndoContext undoContext;
+	private Image titleImage;
+	private Image highlightedTitleImage;
+	private ImageData imageData;
 
 	public BasicView() {
-
 		configureCache();
 		colorProfilePreferenceListener = new IPreferenceChangeListener() {
 			public void preferenceChange(PreferenceChangeEvent event) {
@@ -140,6 +150,17 @@ public abstract class BasicView extends ViewPart
 		Ui.getUi().addPreferenceChangeListener(colorProfilePreferenceListener);
 		CssActivator.getDefault().addThemeListener(this);
 	}
+	
+	protected static void cancelJobs(Object family) {
+		IJobManager jobManager = Job.getJobManager();
+		jobManager.cancel(family);
+		try {
+			jobManager.join(family, null);
+		} catch (OperationCanceledException | InterruptedException e) {
+			// ignore
+		}
+	}
+
 
 	protected INavigationHistory getNavigationHistory() {
 		if (navigationHistory == null)
@@ -154,6 +175,31 @@ public abstract class BasicView extends ViewPart
 				return asset;
 		}
 		return null;
+	}
+
+	protected static boolean hasVoiceNote(AssetSelection assetSelection) {
+		if (assetSelection != null) {
+			for (Asset asset : assetSelection)
+				if (asset.getFileState() != IVolumeManager.PEER)
+					return getVoiceNoteAsset(asset) != null;
+		}
+		return false;
+	}
+
+	protected static boolean isMedia(AssetSelection assetSelection, int flags, boolean local) {
+		if (assetSelection != null) {
+			CoreActivator activator = CoreActivator.getDefault();
+			for (Asset asset : assetSelection)
+				if (!local || asset.getFileState() != IVolumeManager.PEER) {
+					IMediaSupport mediaSupport = activator.getMediaSupport(asset.getFormat());
+					if (mediaSupport != null) {
+						if (!mediaSupport.testProperty(flags))
+							return false;
+					} else if ((flags & QueryField.PHOTO) == 0)
+						return false;
+				}
+		}
+		return true;
 	}
 
 	public static boolean isSetEqual(Collection<String> c1, Collection<String> c2) {
@@ -261,7 +307,7 @@ public abstract class BasicView extends ViewPart
 	private Runnable refresher = new Runnable() {
 		public void run() {
 			refresh();
-			updateActions();
+			updateActions(false);
 		}
 	};
 
@@ -275,10 +321,10 @@ public abstract class BasicView extends ViewPart
 			navigationHistory.postSelection(new StructuredSelection(object));
 	}
 
-	public abstract void updateActions();
+	public abstract void updateActions(boolean force);
 
 	public void updateActions(int imageCount, int localImageCount) {
-		if (extraViewActions != null && viewActive)
+		if (extraViewActions != null)
 			for (IViewAction action : extraViewActions)
 				action.setEnabled(dbIsReadonly(), imageCount, localImageCount);
 	}
@@ -329,6 +375,10 @@ public abstract class BasicView extends ViewPart
 			navigationHistory.removeSelectionListener(this);
 		getSite().getWorkbenchWindow().getPartService().removePartListener(this);
 		Core.getCore().getVolumeManager().removeVolumeListener(this);
+		if (titleImage != null)
+			titleImage.dispose();
+		if (highlightedTitleImage != null)
+			highlightedTitleImage.dispose();
 		super.dispose();
 	}
 
@@ -337,12 +387,12 @@ public abstract class BasicView extends ViewPart
 	}
 
 	protected void fireSelection() {
-		updateActions();
+		updateActions(false);
 		updateStatusLine();
 		Display display = getSite().getShell().getDisplay();
 		final SelectionChangedEvent event = new SelectionChangedEvent(BasicView.this, getSelection());
-		for (final Object listener : listeners.getListeners())
-			display.syncExec(() -> ((ISelectionChangedListener) listener).selectionChanged(event)); // this must be a syncExec
+		for (final ISelectionChangedListener listener : listeners)
+			display.syncExec(() -> listener.selectionChanged(event)); // this must be a syncExec
 	}
 
 	protected void updateStatusLine() {
@@ -402,10 +452,8 @@ public abstract class BasicView extends ViewPart
 	}
 
 	protected void updateAssetsIfNecessary(QueryField qfield, Object value, Object oldvalue) {
-		if (value instanceof BagChange) {
-			if (!((BagChange<?>) value).hasChanges())
-				return;
-		}
+		if (value instanceof BagChange && !((BagChange<?>) value).hasChanges())
+			return;
 		if (oldvalue instanceof String[] && value instanceof String[]) {
 			if (isSetEqual(Arrays.asList((String[]) oldvalue), Arrays.asList((String[]) value)))
 				return;
@@ -450,8 +498,7 @@ public abstract class BasicView extends ViewPart
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.views.IHoverSubject#getGalleryHover(org.eclipse.swt
+	 * @see com.bdaum.zoom.ui.views.IHoverSubject#getGalleryHover(org.eclipse.swt
 	 * .events.MouseEvent)
 	 */
 
@@ -520,10 +567,6 @@ public abstract class BasicView extends ViewPart
 		return asset != null && !Double.isNaN(asset.getGPSLatitude()) && !Double.isNaN(asset.getGPSLongitude());
 	}
 
-	protected boolean hasVoiceNote(AssetSelection assetSelection) {
-		return assetSelection != null && getVoiceNoteAsset(assetSelection.getFirstElement()) != null;
-	}
-
 	protected void registerCommand(IAction action, String commandId) {
 		if (action != null) {
 			IHandlerService service = getSite().getService(IHandlerService.class);
@@ -551,14 +594,13 @@ public abstract class BasicView extends ViewPart
 						previousMagnification = 1d;
 				} else if (e.detail == SWT.GESTURE_MAGNIFY) {
 					if (scaleContributionItem != null) {
-						previousMagnification = e.magnification;
 						scaleContributionItem.setSelection((int) (scaleContributionItem.getSelection()
 								* Math.sqrt(e.magnification / previousMagnification) + 0.5d));
+						previousMagnification = e.magnification;
 					}
 				}
 			}
 		});
-
 	}
 
 	public void partActivated(IWorkbenchPartReference partRef) {
@@ -567,9 +609,25 @@ public abstract class BasicView extends ViewPart
 			registerCommands();
 			viewActive = true;
 			setVisible(true);
-			String pn = getPartName();
-			if (!pn.endsWith("!")) //$NON-NLS-1$
-				setPartName(pn+"!"); //$NON-NLS-1$
+			Display display = getSite().getShell().getDisplay();
+			Image image = getTitleImage();
+			if (titleImage != null)
+				titleImage.dispose();
+			if (imageData == null)
+				imageData = image.getImageData();
+			titleImage = new Image(display, imageData);
+			if (highlightedTitleImage == null) {
+				Rectangle bounds = image.getBounds();
+				for (int y = bounds.height - 2; y < bounds.height; y++)
+					for (int x = 0; x < bounds.width; x++) {
+						imageData.setPixel(x, y, 0xff00);
+						imageData.setAlpha(x, y, 255);
+					}
+				highlightedTitleImage = new Image(display, imageData);
+				imageData = image.getImageData();
+			}
+			setTitleImage(highlightedTitleImage);
+			updateActions(true);
 			show();
 		}
 	}
@@ -586,17 +644,17 @@ public abstract class BasicView extends ViewPart
 	}
 
 	public void partDeactivated(IWorkbenchPartReference partRef) {
-		if (partRef.getPart(false) == this) {
+		if (partRef != null && partRef.getPart(false) == this) {
 			deregisterCommands();
 			viewActive = false;
-			String pn = getPartName();
-			if (pn.endsWith("!")) //$NON-NLS-1$
-				setPartName(pn.substring(0, pn.length()-1));
+			if (titleImage != null)
+				setTitleImage(titleImage);
+			updateActions(true);
 		}
 	}
 
 	public void partHidden(IWorkbenchPartReference partRef) {
-		if (partRef.getPart(false) == this)
+		if (partRef != null && partRef.getPart(false) == this)
 			setVisible(false);
 	}
 
@@ -605,7 +663,7 @@ public abstract class BasicView extends ViewPart
 	}
 
 	public void partOpened(IWorkbenchPartReference partRef) {
-		if (partRef.getPart(false) == this) {
+		if (partRef != null && partRef.getPart(false) == this) {
 			getNavigationHistory();
 			if (navigationHistory != null) {
 				if (navigationHistory.getSelectedCollection() != null)
@@ -616,12 +674,11 @@ public abstract class BasicView extends ViewPart
 					selectionChanged();
 			}
 			refreshBusy();
-			// setVisible(true);
 		}
 	}
 
 	public void partVisible(IWorkbenchPartReference partRef) {
-		if (partRef.getPart(false) == this) {
+		if (partRef != null && partRef.getPart(false) == this) {
 			setVisible(true);
 			show();
 		}
@@ -637,9 +694,8 @@ public abstract class BasicView extends ViewPart
 		if (extraViewActions != null)
 			for (IViewAction action : extraViewActions) {
 				action.setAdaptable(this);
-				String actionDefinitionId = action.getActionDefinitionId();
-				if (actionDefinitionId != null)
-					registerCommand(action, actionDefinitionId);
+				if (action.getActionDefinitionId() != null)
+					registerCommand(action, action.getActionDefinitionId());
 			}
 	}
 
@@ -687,8 +743,7 @@ public abstract class BasicView extends ViewPart
 	 * (nicht-Javadoc)
 	 * 
 	 * @see
-	 * com.bdaum.zoom.core.internal.VolumeListener#volumesChanged(java.io.File[]
-	 * )
+	 * com.bdaum.zoom.core.internal.VolumeListener#volumesChanged(java.io.File[] )
 	 */
 	public void volumesChanged(File[] roots) {
 		launchDecorator();
@@ -716,7 +771,7 @@ public abstract class BasicView extends ViewPart
 		redoAction = addAction(ActionFactory.REDO.create(getSite().getWorkbenchWindow()));
 		extraViewActions = UiActivator.getDefault().getExtraViewActions(getSite().getId());
 	}
-	
+
 	@Override
 	public IUndoContext getUndoContext() {
 		return undoContext;

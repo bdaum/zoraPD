@@ -23,6 +23,7 @@
 		</entry>
 		<entry keyword="Rating">
 			<topic href="html/reference/galleries.html#imagebuttons" label="Galleries - Image buttons" />
+			<topic href="html/reference/rating.html" label="Automatic rating" />
 		</entry>
 	</entry>
 	<entry keyword="Bookmarks">
@@ -204,6 +205,9 @@
 			<topic href="html/reference/catProperties.html#watchedFolders"
 				label="Show background imports" />
 		</entry>
+		<entry keyword="~ mode">
+			<topic href="html/reference/importMode.html" />
+		</entry>
 	</entry>
 	<entry keyword="Watched Folders">
 		<topic href="html/reference/catProperties.html#watchedFolders"
@@ -325,6 +329,10 @@
 		</entry>
 		<entry keyword="selecting">
 			<topic href="html/reference/metadataPrefs.html" />
+		</entry>
+		<entry keyword="tuning">
+			<topic href="html/reference/metadataPrefs.html" />
+			<topic href="html/tasks/tuning.html" />
 		</entry>
 		<entry keyword="JPEG">
 			<topic href="html/concepts/basic.html" />
@@ -691,6 +699,7 @@
 	<entry keyword="Rating">
 		<entry keyword="assign ~">
 			<topic href="html/reference/galleries.html#imagebuttons" label="Galleries - Image buttons" />
+			<topic href="html/reference/rating.html" label="Automatic rating" />
 		</entry>
 		<entry keyword="~ filter">
 			<topic href="html/reference/galleries.html#rating" label="Galleries - Rating filter" />
@@ -702,6 +711,7 @@
 	<entry keyword="Tuning">
 		<topic href="html/tasks/tuning.html" label="General Tuning Tips" />
 		<topic href="html/reference/catProperties.html" label="Defragmentation" />
+		<topic href="html/reference/metadataPrefs.html" label="Metadata ~" />
 	</entry>
 	<entry keyword="Performance">
 		<topic href="html/tasks/tuning.html" label="General Tuning Tips" />
@@ -866,4 +876,8 @@
 	<entry keyword="WebP">
 		<topic href="html/concepts/images.html" />
 	</entry>
+	<entry keyword="Units">
+		<topic href="html/reference/appearancePrefs.html" />
+	</entry>
+	
 </index>

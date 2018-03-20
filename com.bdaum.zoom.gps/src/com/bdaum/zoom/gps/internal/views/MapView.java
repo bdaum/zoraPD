@@ -33,7 +33,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.browser.StatusTextEvent;
 import org.eclipse.swt.browser.StatusTextListener;
 import org.eclipse.swt.widgets.Composite;
@@ -49,6 +48,8 @@ import org.eclipse.ui.operations.IWorkbenchOperationSupport;
 import org.eclipse.ui.operations.UndoRedoActionGroup;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.cat.model.group.Criterion;
+import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.location.Location;
 import com.bdaum.zoom.cat.model.location.LocationImpl;
 import com.bdaum.zoom.cat.model.locationShown.LocationShownImpl;
@@ -78,6 +79,7 @@ import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.gps.RasterCoordinate;
 import com.bdaum.zoom.ui.gps.Trackpoint;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.views.BasicView;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
@@ -104,7 +106,7 @@ public class MapView extends BasicView {
 					return element.toString();
 				}
 			});
-			viewer.setComparator(new ViewerComparator());
+			viewer.setComparator(ZViewerComparator.INSTANCE);
 			viewer.setComparer(new IElementComparer() {
 				public int hashCode(Object element) {
 					if (element instanceof IConfigurationElement)
@@ -241,7 +243,7 @@ public class MapView extends BasicView {
 					});
 			}
 		});
-		updateActions();
+		updateActions(true);
 	}
 
 	private void createMapComponent(Composite parent, IConfigurationElement conf) {
@@ -282,7 +284,7 @@ public class MapView extends BasicView {
 		GpsActivator.setCurrentMappingSystem(conf);
 		disposeMapComponent();
 		createMapComponent(viewParent, conf);
-		updateActions();
+		updateActions(false);
 		viewParent.layout();
 		showMap();
 	}
@@ -315,17 +317,16 @@ public class MapView extends BasicView {
 			}
 			if (ids.length > 0) {
 				IProfiledOperation op;
+				Trackpoint trackpoint = new Trackpoint(latitude, longitude, false);
 				switch (type) {
 				case CoordinatesListener.IMGDIR:
-					op = new GeodirOperation(new Trackpoint(latitude, longitude, false), ids[0]);
+					op = new GeodirOperation(trackpoint, ids[0]);
 					break;
 				case CoordinatesListener.SHOWNLOC:
-					op = new GeoshownOperation(new Trackpoint(latitude, longitude, false), modify, ids, uuid,
-							gpsConfig);
+					op = new GeoshownOperation(trackpoint, modify, ids, uuid, gpsConfig);
 					break;
 				default:
-					op = new GeotagOperation(new Trackpoint[] { new Trackpoint(latitude, longitude, false) }, ids,
-							gpsConfig);
+					op = new GeotagOperation(new Trackpoint[] { trackpoint }, ids, gpsConfig);
 				}
 				OperationJob.executeOperation(op, this);
 				isDirty = true;
@@ -436,7 +437,7 @@ public class MapView extends BasicView {
 
 	public void showLocations(AssetSelection selectedAssets) {
 		assetsChanged(selectedAssets, true);
-		updateActions();
+		updateActions(false);
 	}
 
 	public void showMap() {
@@ -633,6 +634,33 @@ public class MapView extends BasicView {
 
 	@Override
 	public boolean collectionChanged() {
+		SmartCollectionImpl sm = getNavigationHistory().getSelectedCollection();
+		if (sm.getStringId().startsWith(IDbManager.LOCATIONKEY)) {
+			LocationImpl loc = new LocationImpl();
+			for (Criterion crit : sm.getCriterion()) {
+				String subfield = crit.getSubfield();
+				String value = (String) crit.getValue();
+				if ("city".equals(subfield)) //$NON-NLS-1$
+					loc.setCity(value);
+				else if ("provinceOrState".equals(subfield)) //$NON-NLS-1$
+					loc.setProvinceOrState(value);
+				else if ("countryISOCode".equals(subfield)) //$NON-NLS-1$
+					loc.setCountryISOCode(value);
+			}
+			for (LocationImpl loc2 : Core.getCore().getDbManager().findLocation(loc))
+				if (loc2.getLatitude() != null && !Double.isNaN(loc2.getLatitude()) && loc2.getLongitude() != null
+						&& !Double.isNaN(loc2.getLongitude())) {
+					Place mapPosition = new Place(loc2.getLatitude(), loc2.getLongitude());
+					int initialZoomLevel = 12;
+					if (loc.getCity() == null) {
+						initialZoomLevel = 8;
+						if (loc.getProvinceOrState() == null)
+							initialZoomLevel = 6;
+					}
+					mapComponent.setInput(mapPosition, initialZoomLevel, null, null, null, IMapComponent.NONE);
+					break;
+				}
+		}
 		return false;
 	}
 
@@ -651,10 +679,11 @@ public class MapView extends BasicView {
 	}
 
 	@Override
-	public void updateActions() {
-		String query = currentConf == null ? null : currentConf.getAttribute("query"); //$NON-NLS-1$
-		webAction.setEnabled(query != null);
-		updateActions(-1, -1);
+	public void updateActions(boolean force) {
+		if (viewActive || force) {
+			webAction.setEnabled(currentConf != null && currentConf.getAttribute("query") != null); //$NON-NLS-1$
+			updateActions(-1, -1);
+		}
 	}
 
 	@Override

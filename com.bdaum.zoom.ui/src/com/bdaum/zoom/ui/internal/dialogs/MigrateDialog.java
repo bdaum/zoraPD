@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -62,6 +62,7 @@ import com.bdaum.zoom.program.BatchConstants;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.widgets.FileEditor;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
@@ -69,6 +70,7 @@ public class MigrateDialog extends ZTitleAreaDialog {
 
 	private static final int LOAD = 9999;
 	private static final int SAVE = 9998;
+	private static final String SETTINGSID = "com.bdaum.zoom.migrateDialog"; //$NON-NLS-1$
 	private File catFile;
 	private List<MigrationRule> rules = new ArrayList<MigrationRule>();
 	private FileEditor fileEditor;
@@ -106,7 +108,7 @@ public class MigrateDialog extends ZTitleAreaDialog {
 		CGroup fileGroup = new CGroup(composite, SWT.NONE);
 		fileGroup.setText(Messages.MigrateDialog_save_as);
 		fileGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, true));
-		fileGroup.setLayout(new GridLayout(1, false));
+		fileGroup.setLayout(new GridLayout());
 		String filename = catFile.getName();
 		String migrated = "migrated_" + filename; //$NON-NLS-1$
 		String parentFile = catFile.getParent();
@@ -115,13 +117,11 @@ public class MigrateDialog extends ZTitleAreaDialog {
 				new String[] { "*" + BatchConstants.CATEXTENSION }, //$NON-NLS-1$
 				new String[] { "ZoRaPD Catalog (*" //$NON-NLS-1$
 						+ BatchConstants.CATEXTENSION + ")" }, //$NON-NLS-1$
-				parentFile,
-				migratedFile.getPath(), false);
-
+				parentFile, migratedFile.getPath(), false, getDialogSettings(UiActivator.getDefault(), SETTINGSID));
 		CGroup tableGroup = new CGroup(composite, SWT.NONE);
 		tableGroup.setText(Messages.MigrateDialog_transformation);
 		tableGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, true));
-		tableGroup.setLayout(new GridLayout(1, false));
+		tableGroup.setLayout(new GridLayout());
 		new Label(tableGroup, SWT.NONE).setText(Messages.MigrateDialog_file_separator_policy);
 		fileSeparatorCombo = new Combo(tableGroup, SWT.DROP_DOWN | SWT.READ_ONLY);
 		fileSeparatorCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -318,7 +318,6 @@ public class MigrateDialog extends ZTitleAreaDialog {
 				}
 			}
 		});
-
 		return area;
 	}
 
@@ -376,7 +375,6 @@ public class MigrateDialog extends ZTitleAreaDialog {
 			if (!set.isEmpty()) {
 				List<MigrationPolicy> policies = new ArrayList<MigrationPolicy>(set);
 				ListDialog dialog = new ListDialog(getShell()) {
-
 					@Override
 					public void create() {
 						super.create();
@@ -477,18 +475,14 @@ public class MigrateDialog extends ZTitleAreaDialog {
 	}
 
 	public String convertFileSeparatorPolicy() {
-		String fsp;
 		switch (fileSepearatorPolicy) {
 		case 1:
-			fsp = MigrationPolicy_type.fileSeparatorPolicy_tOSLASH;
-			break;
+			return MigrationPolicy_type.fileSeparatorPolicy_tOSLASH;
 		case 2:
-			fsp = MigrationPolicy_type.fileSeparatorPolicy_tOBACKSLASH;
-			break;
+			return MigrationPolicy_type.fileSeparatorPolicy_tOBACKSLASH;
 		default:
-			fsp = MigrationPolicy_type.fileSeparatorPolicy_nOCHANGE;
+			return MigrationPolicy_type.fileSeparatorPolicy_nOCHANGE;
 		}
-		return fsp;
 	}
 
 	@Override

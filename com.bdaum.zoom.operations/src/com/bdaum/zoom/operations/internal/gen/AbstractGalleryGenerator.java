@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal.gen;
@@ -34,10 +34,12 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -58,7 +60,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Shell;
 import org.osgi.framework.Bundle;
@@ -75,17 +76,15 @@ import com.bdaum.zoom.cat.model.group.webGallery.Storyboard;
 import com.bdaum.zoom.cat.model.group.webGallery.StoryboardImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebExhibit;
 import com.bdaum.zoom.cat.model.group.webGallery.WebExhibitImpl;
-import com.bdaum.zoom.cat.model.group.webGallery.WebGallery;
 import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebParameter;
 import com.bdaum.zoom.common.internal.FileLocator;
+import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IGalleryGenerator;
-import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.image.ImageConstants;
@@ -101,6 +100,8 @@ import com.bdaum.zoom.program.DiskFullException;
 @SuppressWarnings("restriction")
 public abstract class AbstractGalleryGenerator implements IGalleryGenerator, LoaderListener {
 
+	protected static final String IMAGE_HEIGHT = "imageHeight"; //$NON-NLS-1$
+	protected static final String IMAGE_WIDTH = "imageWidth"; //$NON-NLS-1$
 	protected static final String NAVPOS = "navpos"; //$NON-NLS-1$
 	protected static final String RIGHTMARGIN = "rightmargin"; //$NON-NLS-1$
 	protected static final String LEFTMARGIN = "leftmargin"; //$NON-NLS-1$
@@ -111,7 +112,8 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	public static final String[] WEIGHT = new String[] { "normal", "bold", //$NON-NLS-1$ //$NON-NLS-2$
 			"bolder ", "lighter" }; //$NON-NLS-1$ //$NON-NLS-2$
 	public static final String[] VARIANT = new String[] { "normal", "smallCaps" }; //$NON-NLS-1$ //$NON-NLS-2$
-
+	private static final String HEX = "01234567890abcdef"; //$NON-NLS-1$
+	private Storyboard selectedStoryboard;
 	private MultiStatus status;
 	private WebGalleryImpl gallery;
 	private File thumbnailFolder;
@@ -138,8 +140,11 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 			File[] templates = getTemplates();
 			String[] targetNames = getTargetNames();
 			int work = templates == null ? 1 : templates.length + 1;
-			for (Storyboard storyboard : webGallery.getStoryboard())
-				work += storyboard.getExhibit().size();
+			if (selectedStoryboard == null)
+				for (Storyboard storyboard : webGallery.getStoryboard())
+					work += storyboard.getExhibit().size();
+			else
+				work += selectedStoryboard.getExhibit().size();
 			aMonitor.beginTask(Messages.AbstractGalleryGenerator_generating_web_gallery, work);
 			prefix = getGeneratorId() + '.';
 			boolean isFtp = webGallery.getIsFtp();
@@ -194,8 +199,10 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 				bigFolder = new File(targetFolder, "big"); //$NON-NLS-1$
 				bigFolder.mkdirs();
 			}
-			originalsFolder = new File(targetFolder, "originals"); //$NON-NLS-1$
-			originalsFolder.mkdirs();
+			if (needsOriginals()) {
+				originalsFolder = new File(targetFolder, "originals"); //$NON-NLS-1$
+				originalsFolder.mkdirs();
+			}
 			Map<String, String> vars = getSubstitutions();
 			if (aMonitor.isCanceled())
 				return;
@@ -215,11 +222,15 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		}
 	}
 
+	protected boolean needsOriginals() {
+		return gallery.getDownloadText() != null && !gallery.getDownloadText().isEmpty() && !gallery.getHideDownload();
+	}
+
 	protected File[] getThemeFiles() {
 		return null;
 	}
 
-	protected Point getBigImageSize() {
+	protected Rectangle getBigImageSize() {
 		return null;
 	}
 
@@ -238,6 +249,8 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	private File targetFolder;
 	private IConfigurationElement configurationElement;
 	private int jpegQuality;
+	protected int maxImageWidthInSection = -1;
+	protected int maxImageHeightInSection = -1;
 
 	private void createArtefact(File template, File targetDir, String targetName, Map<String, String> vars,
 			Map<String, WebParameter> parameters) {
@@ -407,7 +420,22 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 
 	protected abstract File[] getTemplates();
 
-	protected abstract String[] getTargetNames();
+	protected String[] getTargetNames() {
+		String pageName = getShow().getPageName();
+		File[] templates = getTemplates();
+		String[] names = new String[templates.length];
+		for (int i = 0; i < templates.length; i++) {
+			String name = templates[i].getName();
+			if (name.equals(getHtmlTemplateName()) && pageName != null && !pageName.isEmpty())
+				name = pageName;
+			names[i] = name;
+		}
+		return names;
+	}
+
+	protected String getHtmlTemplateName() {
+		return "index.html";//$NON-NLS-1$
+	}
 
 	protected abstract File[] getResourceFiles();
 
@@ -450,6 +478,36 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		if (footerHtml != null)
 			varmap.put("footerhtml", footerHtml); //$NON-NLS-1$
 		varmap.put("resources", getDeployResourceFolder().getName()); //$NON-NLS-1$
+		String pageName = getShow().getPageName();
+		if (pageName == null)
+			pageName = getHtmlTemplateName();
+		varmap.put("pagename", pageName); //$NON-NLS-1$
+		File plate = getNameplate();
+		if (plate != null)
+			varmap.put("nameplatediv", generateNameplate(gallery, plate)); //$NON-NLS-1$
+		File bgImage = getBgImage();
+		if (bgImage != null)
+			varmap.put("bgimage", generateBg(gallery, bgImage)); //$NON-NLS-1$
+		varmap.put("keywords", BatchUtilities.encodeHTML( //$NON-NLS-1$
+				Core.toStringList(gallery.getKeyword(), ", "), false)); //$NON-NLS-1$
+		String s = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(new Date()); //$NON-NLS-1$
+		varmap.put("date", s.substring(0, s.length() - 2) + ':' + s.substring(s.length() - 2)); //$NON-NLS-1$
+		String url = configurationElement.getAttribute("url"); //$NON-NLS-1$
+		if (!gallery.getHideHeader()) {
+			varmap.put("name", BatchUtilities.encodeHTML(gallery.getName(), false)); //$NON-NLS-1$
+			String description = gallery.getDescription();
+			if (description != null && !description.isEmpty()) {
+				String d = gallery.getHtmlDescription() ? description : BatchUtilities.encodeHTML(description, true);
+				varmap.put("description", d); //$NON-NLS-1$
+				varmap.put("descriptiondiv", //$NON-NLS-1$
+						NLS.bind("<div id=\"description\" class=\"description-container\">{0}</div>", d)); //$NON-NLS-1$
+			}
+		}
+		varmap.put("footer", //$NON-NLS-1$
+				generateFooter(gallery,
+						url != null && !url.isEmpty() ? NLS.bind("<a href=\"{0}\" target=\"_blank\">{1}</a>", url, //$NON-NLS-1$
+								configurationElement.getAttribute("name")) //$NON-NLS-1$
+								: null));
 		return varmap;
 	}
 
@@ -472,23 +530,28 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		Map<String, WebParameter> parameters = gallery.getParameter();
 		StringBuilder sb = new StringBuilder();
 		CoreActivator activator = CoreActivator.getDefault();
-		IVolumeManager volumeManager = activator.getVolumeManager();
 		IDbManager dbManager = activator.getDbManager();
 		int thumbnailSizeInPixel = getThumbnailSizeInPixel(gallery.getThumbSize());
 		int i = 0;
 		boolean first = true;
 		for (Storyboard storyboard : gallery.getStoryboard()) {
+			if (selectedStoryboard != null && selectedStoryboard != storyboard)
+				continue;
+			maxImageWidthInSection = -1;
+			maxImageHeightInSection = -1;
 			String sectionSnippet = getSectionHeader(++i);
 			Map<String, String> sectionvars = null;
 			if (sectionSnippet != null) {
 				sectionvars = getSectionSnippetVars((StoryboardImpl) storyboard, i);
-				sb.append(generateSnippet(parameters, sb, sectionvars, sectionSnippet));
+				StringBuffer generated = generateSnippet(parameters, sectionvars, sectionSnippet);
+				if (sb.length() > 0 && generated.length() > 0)
+					sb.append('\n');
+				sb.append(generated);
 			}
 			boolean enlarge = storyboard.getEnlargeSmall();
 			int imageSizeInPixels = getImageSizeInPixels(storyboard.getImageSize());
 			List<String> exhibits = storyboard.getExhibit();
-			Ticketbox box = new Ticketbox();
-			try {
+			try (Assetbox box = new Assetbox(null, status, false)) {
 				for (String id : exhibits) {
 					WebExhibitImpl exhibit = dbManager.obtainById(WebExhibitImpl.class, id);
 					if (exhibit != null) {
@@ -514,118 +577,130 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 								if (copyright != null && copyright.isEmpty())
 									copyright = null;
 							}
-							URI uri = volumeManager.findExistingFile(asset, false);
-							if (uri != null) {
-								File originalFile = null;
-								try {
-									originalFile = box.obtainFile(uri);
-								} catch (IOException e) {
-									status.add(new Status(IStatus.ERROR, CoreActivator.PLUGIN_ID,
-											NLS.bind(Messages.AbstractGalleryGenerator_download_failed, uri), e));
-								}
-								if (originalFile != null) {
-									boolean includeMetadata = exhibit.getIncludeMetadata();
-									int rotation = asset.getRotation();
-									createManifestEntry(newsettings, uri, rotation, isize, thumbnailSizeInPixel,
-											getBigImageSize(), includeMetadata, copyright, enlarge, gallery.getRadius(),
-											gallery.getAmount(), gallery.getThreshold(), gallery.getApplySharpening());
-									String imageName = Core.getFileName(uri, false) + ".jpg"; //$NON-NLS-1$
-									File imageFile = new File(imageFolder, imageName);
-									File bigFile = bigFolder != null ? new File(bigFolder, imageName) : null;
-									File thumbnail = thumbnailFolder == null ? null
-											: new File(thumbnailFolder, imageName);
-									if (manifestEntryModified(settings, imageFile, thumbnail, uri, rotation, isize,
-											thumbnailSizeInPixel, getBigImageSize(), includeMetadata, copyright,
-											enlarge, gallery.getRadius(), gallery.getAmount(), gallery.getThreshold(),
-											gallery.getApplySharpening())) {
-										UnsharpMask umask = gallery.getApplySharpening()
-												? ImageActivator.getDefault().computeUnsharpMask(gallery.getRadius(),
-														gallery.getAmount(), gallery.getThreshold())
-												: null;
-										Point bigImageSize = getBigImageSize();
-										ZImage zimage = null;
-										 try {
-											zimage = CoreActivator.getDefault().getHighresImageLoader().loadImage(
-													null, status, originalFile, rotation, asset.getFocalLengthIn35MmFilm(),
-													new Rectangle(0, 0, bigImageSize == null ? isize : bigImageSize.x,
-															bigImageSize == null ? isize : bigImageSize.y),
-													1d, enlarge ? Double.MAX_VALUE : 1d, true, ImageConstants.SRGB, null,
-													umask, null, fileWatcher, opId, this);
-										} catch (UnsupportedOperationException e) {
-											// do nothning
-										}
-										Image image = null;
+							File originalFile = box.obtainFile(asset);
+							Rectangle bounds = null;
+							if (originalFile != null) {
+								URI uri = box.getUri();
+								boolean includeMetadata = exhibit.getIncludeMetadata();
+								int rotation = asset.getRotation();
+								IDialogSettings manifestSection = createManifestEntry(newsettings, uri, rotation, isize,
+										thumbnailSizeInPixel, getBigImageSize(), includeMetadata, copyright, enlarge,
+										gallery.getRadius(), gallery.getAmount(), gallery.getThreshold(),
+										gallery.getApplySharpening());
+								String imageName = Core.getFileName(uri, false) + ".jpg"; //$NON-NLS-1$
+								File imageFile = new File(imageFolder, imageName);
+								File bigFile = bigFolder != null ? new File(bigFolder, imageName) : null;
+								File thumbnail = thumbnailFolder == null ? null : new File(thumbnailFolder, imageName);
+								Rectangle imageDims = manifestEntryModified(settings, imageFile, thumbnail, uri,
+										rotation, isize, thumbnailSizeInPixel, getBigImageSize(), includeMetadata,
+										copyright, enlarge, gallery.getRadius(), gallery.getAmount(),
+										gallery.getThreshold(), gallery.getApplySharpening());
+								if (imageDims == null) {
+									UnsharpMask umask = gallery.getApplySharpening()
+											? ImageActivator.getDefault().computeUnsharpMask(gallery.getRadius(),
+													gallery.getAmount(), gallery.getThreshold())
+											: null;
+									Rectangle bigImageSize = getBigImageSize();
+									ZImage zimage = null;
+									try {
+										zimage = CoreActivator.getDefault().getHighresImageLoader().loadImage(null,
+												status, originalFile, rotation, asset.getFocalLengthIn35MmFilm(),
+												bigImageSize == null ? computeImageBounds(isize) : bigImageSize, 1d,
+												enlarge ? Double.MAX_VALUE : 1d, true, ImageConstants.SRGB, null, umask,
+												null, fileWatcher, opId, this);
+									} catch (UnsupportedOperationException e) {
+										// do nothing
+									}
+									Image image = null;
+									Image bigImage = null;
+									try {
 										if (bigImageSize != null) {
-											Image bigImage = zimage == null ? null
+											bigImage = zimage == null ? null
 													: zimage.getSwtImage(shell.getDisplay(), true, ZImage.CROPPED,
-															bigImageSize.x, bigImageSize.y);
-											if (bigImage != null)
-												try {
-													image = new Image(shell.getDisplay(), ImageUtilities
-															.downSample(bigImage.getImageData(), isize, isize, 0));
-													bigFile = decorateImage(bigImage, bigFile, asset, copyright,
-															includeMetadata);
-													imageFile = decorateImage(image, imageFile, asset, copyright,
-															includeMetadata);
-													if (thumbnail != null)
-														thumbnail = generateThumbnail(thumbnail, image,
-																thumbnailSizeInPixel);
-												} finally {
-													bigImage.dispose();
-													if (image != null)
-														image.dispose();
-												}
+															bigImageSize.width, bigImageSize.height);
+											if (bigImage != null) {
+												image = new Image(shell.getDisplay(), ImageUtilities
+														.downSample(bigImage.getImageData(), isize, isize, 0));
+												bigFile = decorateImage(bigImage, bigFile, asset, copyright,
+														includeMetadata);
+												imageFile = decorateImage(image, imageFile, asset, copyright,
+														includeMetadata);
+												if (thumbnail != null && thumbnailSizeInPixel > 0)
+													thumbnail = generateThumbnail(thumbnail, image,
+															thumbnailSizeInPixel);
+											}
 										} else {
 											image = zimage == null ? null
 													: zimage.getSwtImage(shell.getDisplay(), true, ZImage.CROPPED,
 															isize, isize);
-											if (image != null)
-												try {
-													imageFile = decorateImage(image, imageFile, asset, copyright,
-															includeMetadata);
-													if (thumbnail != null)
-														thumbnail = generateThumbnail(thumbnail, image,
-																thumbnailSizeInPixel);
-												} finally {
-													image.dispose();
-												}
+											if (image != null) {
+												imageFile = decorateImage(image, imageFile, asset, copyright,
+														includeMetadata);
+												if (thumbnail != null && thumbnailSizeInPixel > 0)
+													thumbnail = generateThumbnail(thumbnail, image,
+															thumbnailSizeInPixel);
+											}
 										}
-									} else if (filter != null && !filter.isEmpty()) {
+									} finally {
+										if (bigImage != null)
+											bigImage.dispose();
+										if (image != null) {
+											bounds = image.getBounds();
+											image.dispose();
+											updateSection(manifestSection, bounds);
+										}
+									}
+								} else {
+									bounds = imageDims;
+									if (filter != null && !filter.isEmpty()) {
 										imageFile = generateImage(asset, imageFile, null, includeMetadata, jpegQuality);
 										if (bigFile != null)
 											bigFile = generateImage(asset, bigFile, null, includeMetadata, jpegQuality);
 									}
-									File copiedFile = new File(originalsFolder, originalFile.getName());
-									boolean downloadable = exhibit.getDownloadable()
-											&& gallery.getDownloadText() != null
-											&& !gallery.getDownloadText().isEmpty() && !gallery.getHideDownload();
-									if (originalModified(settings, copiedFile, downloadable, uri)) {
-										if (downloadable)
-											copiedFile = copyImage(originalFile, copiedFile);
-										else {
-											copiedFile.delete();
-											copiedFile = null;
-										}
-									}
-									Map<String, String> vars = getImageSnippetVars(exhibit, asset, storyboard,
-											thumbnail == null ? null
-													: (relative) ? thumbnail.getName()
-															: thumbnailFolder.getName() + '/' + thumbnail.getName(),
-											imageFile == null ? null
-													: (relative) ? imageFile.getName()
-															: imageFolder.getName() + '/' + imageFile.getName(),
-											bigFile == null ? null
-													: (relative) ? bigFile.getName()
-															: bigFolder.getName() + '/' + bigFile.getName(),
-											copiedFile == null ? null
-													: (relative) ? copiedFile.getName()
-															: originalsFolder.getName() + '/' + copiedFile.getName(),
-											i);
-									String snippet = getImageSnippet(first);
-									first = false;
-									sb.append(generateSnippet(parameters, sb, vars, snippet));
-									box.cleanup();
 								}
+								File copiedFile = new File(originalsFolder, originalFile.getName());
+								boolean downloadable = exhibit.getDownloadable() && needsOriginals();
+								if (originalModified(settings, copiedFile, downloadable, uri)) {
+									if (downloadable)
+										copiedFile = copyImage(originalFile, copiedFile);
+									else {
+										copiedFile.delete();
+										copiedFile = null;
+									}
+								}
+								Map<String, String> vars = getImageSnippetVars(exhibit, asset, storyboard,
+										thumbnail == null ? null
+												: (relative) ? thumbnail.getName()
+														: thumbnailFolder.getName() + '/' + thumbnail.getName(),
+										imageFile == null ? null
+												: (relative) ? imageFile.getName()
+														: imageFolder.getName() + '/' + imageFile.getName(),
+										bigFile == null ? null
+												: (relative) ? bigFile.getName()
+														: bigFolder.getName() + '/' + bigFile.getName(),
+										copiedFile == null ? null
+												: (relative) ? copiedFile.getName()
+														: originalsFolder == null ? null
+																: originalsFolder.getName() + '/'
+																		+ copiedFile.getName(),
+										i);
+								if (bounds != null) {
+									vars.put(IMAGE_WIDTH, String.valueOf(bounds.width));
+									vars.put(IMAGE_HEIGHT, String.valueOf(bounds.height));
+									if (bounds.width > maxImageWidthInSection)
+										maxImageWidthInSection = bounds.width;
+									if (bounds.height > maxImageHeightInSection)
+										maxImageHeightInSection = bounds.height;
+								} else {
+									vars.put(IMAGE_WIDTH, "-1"); //$NON-NLS-1$
+									vars.put(IMAGE_HEIGHT, "-1"); //$NON-NLS-1$
+								}
+								String snippet = getImageSnippet(first);
+								first = false;
+								StringBuffer generated = generateSnippet(parameters, vars, snippet);
+								if (sb.length() > 0 && generated.length() > 0)
+									sb.append('\n');
+								sb.append(generated);
 							}
 						}
 					}
@@ -633,12 +708,12 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 					if (monitor.isCanceled())
 						return ""; //$NON-NLS-1$
 				}
-			} finally {
-				box.endSession();
 			}
 			if (sectionSnippet != null) {
-				sectionSnippet = getSectionFooter();
-				sb.append(generateSnippet(parameters, sb, sectionvars, sectionSnippet));
+				StringBuffer generated = generateSnippet(parameters, sectionvars, sectionSnippet = getSectionFooter());
+				if (sb.length() > 0 && generated.length() > 0)
+					sb.append('\n');
+				sb.append(generated);
 			}
 		}
 		manifest.delete();
@@ -648,6 +723,15 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 			// ignore
 		}
 		return sb.toString();
+	}
+
+	protected Rectangle computeImageBounds(int isize) {
+		return new Rectangle(0, 0, isize, isize);
+	}
+
+	private static void updateSection(IDialogSettings manifestSection, Rectangle bounds) {
+		manifestSection.put("actualWidth", bounds.width); //$NON-NLS-1$
+		manifestSection.put("actualHeight", bounds.height); //$NON-NLS-1$
 	}
 
 	private File decorateImage(Image image, File imageFile, AssetImpl asset, String copyright,
@@ -660,8 +744,8 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		return imageFile;
 	}
 
-	private StringBuffer generateSnippet(Map<String, WebParameter> parameters, StringBuilder sb,
-			Map<String, String> vars, String snippet) {
+	protected StringBuffer generateSnippet(Map<String, WebParameter> parameters, Map<String, String> vars,
+			String snippet) {
 		StringReader in = new StringReader(snippet);
 		StringWriter out = new StringWriter();
 		try {
@@ -671,10 +755,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		} catch (IOException e) {
 			// should never happen
 		}
-		StringBuffer buffer = out.getBuffer();
-		if (sb.length() > 0)
-			sb.append('\n');
-		return buffer;
+		return out.getBuffer();
 	}
 
 	private static boolean originalModified(DialogSettings settings, File copiedFile, boolean downloadable,
@@ -692,53 +773,54 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		return false;
 	}
 
-	private boolean manifestEntryModified(DialogSettings settings, File imageFile, File thumbnail, URI originalFile,
-			int rotation, int imageSizeInPixel, int thumbnailSizeInPixel, Point bigImageSize, boolean includeMetadata,
-			String copyright, boolean enlarge, float radius, float amount, int threshold, boolean applySharpening) {
+	private Rectangle manifestEntryModified(DialogSettings settings, File imageFile, File thumbnail, URI originalFile,
+			int rotation, int imageSizeInPixel, int thumbnailSizeInPixel, Rectangle bigImageBounds,
+			boolean includeMetadata, String copyright, boolean enlarge, float radius, float amount, int threshold,
+			boolean applySharpening) {
 		if (!imageFile.exists() || (thumbnail != null && !thumbnail.exists()))
-			return true;
+			return null;
 		IDialogSettings section = settings.getSection(originalFile.toString());
 		if (section == null)
-			return true;
+			return null;
 		if (Constants.FILESCHEME.equals(originalFile.getScheme())) {
 			long timestamp = BatchUtilities.getImageFileModificationTimestamp(new File(originalFile));
 			if (getLongSetting(section, "modifiedAt") != timestamp) //$NON-NLS-1$
-				return true;
+				return null;
 		}
 		if (getIntSetting(section, "rotation") != rotation) //$NON-NLS-1$
-			return true;
+			return null;
 		if (getIntSetting(section, "imageSize") != imageSizeInPixel) //$NON-NLS-1$
-			return true;
+			return null;
 		if (getIntSetting(section, "thumbnailSize") != thumbnailSizeInPixel) //$NON-NLS-1$
-			return true;
-		if (bigImageSize != null) {
-			if (getIntSetting(section, "bigImageWidth") != bigImageSize.x) //$NON-NLS-1$
-				return true;
-			if (getIntSetting(section, "bigImageHeight") != bigImageSize.y) //$NON-NLS-1$
-				return true;
+			return null;
+		if (bigImageBounds != null) {
+			if (getIntSetting(section, "bigImageWidth") != bigImageBounds.width) //$NON-NLS-1$
+				return null;
+			if (getIntSetting(section, "bigImageHeight") != bigImageBounds.height) //$NON-NLS-1$
+				return null;
 		}
 		if (section.getBoolean("includeMeta") != includeMetadata) //$NON-NLS-1$
-			return true;
+			return null;
 		if (section.getBoolean("enlarge") != enlarge) //$NON-NLS-1$
-			return true;
+			return null;
 		if (section.getBoolean("applySharpening") != applySharpening) //$NON-NLS-1$
-			return true;
+			return null;
 		if (applySharpening) {
 			if (getFloatSetting(section, "radius") != radius) //$NON-NLS-1$
-				return true;
+				return null;
 			if (getFloatSetting(section, "amount") != amount) //$NON-NLS-1$
-				return true;
+				return null;
 			if (getIntSetting(section, "threshold") != threshold) //$NON-NLS-1$
-				return true;
+				return null;
 		}
 		boolean hasMetaData = (includeMetadata && filter != null && !filter.isEmpty());
 		boolean hadMetaData = section.getBoolean("hasMetaData"); //$NON-NLS-1$
 		if (hadMetaData != hasMetaData)
-			return true;
+			return null;
 		String s = section.get("copyright"); //$NON-NLS-1$
-		if (s == null)
-			return copyright != null;
-		return !s.equals(copyright);
+		if (s == null && copyright != null || s != null && !s.equals(copyright))
+			return null;
+		return new Rectangle(0, 0, getIntSetting(section, "actualWidth"), getIntSetting(section, "actualHeight")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	private static int getIntSetting(IDialogSettings section, String key) {
@@ -765,9 +847,9 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		}
 	}
 
-	private void createManifestEntry(DialogSettings settings, URI originalFile, int rotation, int imageSizeInPixel,
-			int thumbnailSizeInPixel, Point bigImageSize, boolean includeMetadata, String copyright, boolean enlarge,
-			float radius, float amount, int threshold, boolean applySharpening) {
+	private IDialogSettings createManifestEntry(DialogSettings settings, URI originalFile, int rotation,
+			int imageSizeInPixel, int thumbnailSizeInPixel, Rectangle bigImageBounds, boolean includeMetadata,
+			String copyright, boolean enlarge, float radius, float amount, int threshold, boolean applySharpening) {
 		IDialogSettings section = settings.addNewSection(originalFile.toString());
 		if (Constants.FILESCHEME.equals(originalFile.getScheme())) {
 			long timestamp = BatchUtilities.getImageFileModificationTimestamp(new File(originalFile));
@@ -776,9 +858,9 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		section.put("rotation", rotation); //$NON-NLS-1$
 		section.put("imageSize", imageSizeInPixel); //$NON-NLS-1$
 		section.put("thumbnailSize", thumbnailSizeInPixel); //$NON-NLS-1$
-		if (bigImageSize != null) {
-			section.put("bigImageWidth", bigImageSize.x); //$NON-NLS-1$
-			section.put("bigImageHeight", bigImageSize.y); //$NON-NLS-1$
+		if (bigImageBounds != null) {
+			section.put("bigImageWidth", bigImageBounds.width); //$NON-NLS-1$
+			section.put("bigImageHeight", bigImageBounds.height); //$NON-NLS-1$
 		}
 		section.put("includeMeta", includeMetadata); //$NON-NLS-1$
 		section.put("enlarge", enlarge); //$NON-NLS-1$
@@ -790,6 +872,13 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 			section.put("copyright", copyright); //$NON-NLS-1$
 		if (includeMetadata && filter != null && !filter.isEmpty())
 			section.put("hasMetaData", true); //$NON-NLS-1$
+		return section;
+	}
+
+	protected int getImageSizeInPixels() {
+		if (selectedStoryboard != null)
+			return getImageSizeInPixels(selectedStoryboard.getImageSize());
+		return getImageSizeInPixels(gallery.getStoryboard(0).getImageSize());
 	}
 
 	protected abstract int getThumbnailSizeInPixel(int thumbSize);
@@ -818,7 +907,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	protected abstract String getImageSnippet(boolean first);
 
 	protected abstract Map<String, String> getImageSnippetVars(WebExhibit exhibit, AssetImpl asset,
-			Storyboard storyboard, String thumbnail, String image, String big, String original, int i);
+			Storyboard storyboard, String thumbnail, String image, String big, String original, int storyBoardNo);
 
 	private File generateImage(AssetImpl asset, File imageFile, Image image, boolean meta, int quality) {
 		ImageLoader swtLoader = null;
@@ -984,8 +1073,6 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		return sb.toString();
 	}
 
-	private static final String HEX = "01234567890abcdef"; //$NON-NLS-1$
-
 	private static void generateColorComponent(StringBuilder sb, int c) {
 		sb.append(HEX.charAt(c / 16));
 		sb.append(HEX.charAt(c % 16));
@@ -1111,7 +1198,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 				sb.append(BatchUtilities.encodeHTML(label, false)).append("</a>"); //$NON-NLS-1$
 			}
 			String poweredBy = show.getPoweredByText();
-			if (poweredBy != null && !poweredBy.isEmpty()) {
+			if (poweredBy != null && !poweredBy.isEmpty() && engineText != null) {
 				if (sb.length() > 0)
 					sb.append("<br/>"); //$NON-NLS-1$
 				if (poweredBy.indexOf("{0}") < 0) //$NON-NLS-1$
@@ -1148,21 +1235,21 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		return sb.append("</div>").toString(); //$NON-NLS-1$
 	}
 
-	protected void setFontsAndColors(Map<String, String> varmap, WebGallery show) {
-		varmap.put("bgcolor", generateColor("background-color", show //$NON-NLS-1$ //$NON-NLS-2$
+	protected void setFontsAndColors(Map<String, String> varmap) {
+		varmap.put("bgcolor", generateColor("background-color", gallery //$NON-NLS-1$ //$NON-NLS-2$
 				.getBgColor()));
-		varmap.put("backgroundcolor", generateColor(show.getBgColor())); //$NON-NLS-1$
-		varmap.put("shadecolor", generateColor("background-color", show //$NON-NLS-1$ //$NON-NLS-2$
+		varmap.put("backgroundcolor", generateColor(gallery.getBgColor())); //$NON-NLS-1$
+		varmap.put("shadecolor", generateColor("background-color", gallery //$NON-NLS-1$ //$NON-NLS-2$
 				.getShadeColor()));
-		varmap.put("bordercolor", generateColor("border-color", show //$NON-NLS-1$ //$NON-NLS-2$
+		varmap.put("bordercolor", generateColor("border-color", gallery //$NON-NLS-1$ //$NON-NLS-2$
 				.getBorderColor()));
-		varmap.put("linkcolor", generateColor("color", show.getLinkColor())); //$NON-NLS-1$ //$NON-NLS-2$
-		varmap.put("titlefont", generateFont(show.getTitleFont())); //$NON-NLS-1$
-		varmap.put("sectionfont", generateFont(show.getSectionFont())); //$NON-NLS-1$
-		varmap.put("captionfont", generateFont(show.getCaptionFont())); //$NON-NLS-1$
-		varmap.put("bodyfont", generateFont(show.getDescriptionFont())); //$NON-NLS-1$
-		Font_type footerFont = show.getFooterFont();
-		Font_type navFont = show.getControlsFont();
+		varmap.put("linkcolor", generateColor("color", gallery.getLinkColor())); //$NON-NLS-1$ //$NON-NLS-2$
+		varmap.put("titlefont", generateFont(gallery.getTitleFont())); //$NON-NLS-1$
+		varmap.put("sectionfont", generateFont(gallery.getSectionFont())); //$NON-NLS-1$
+		varmap.put("captionfont", generateFont(gallery.getCaptionFont())); //$NON-NLS-1$
+		varmap.put("bodyfont", generateFont(gallery.getDescriptionFont())); //$NON-NLS-1$
+		Font_type footerFont = gallery.getFooterFont();
+		Font_type navFont = gallery.getControlsFont();
 		varmap.put("footerfont", generateFont(footerFont)); //$NON-NLS-1$
 		if (navFont == null)
 			navFont = footerFont;
@@ -1252,6 +1339,24 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		return dflt;
 	}
 
+	protected String getParamString(WebParameter param, String dflt) {
+		if (param != null) {
+			Object value = param.getValue();
+			if (value != null)
+				return value.toString();
+		}
+		return dflt;
+	}
+
+	protected boolean getParamBoolean(WebParameter param) {
+		if (param != null) {
+			Object value = param.getValue();
+			if (value != null)
+				return Boolean.parseBoolean(value.toString());
+		}
+		return false;
+	}
+
 	/*
 	 * (nicht-Javadoc)
 	 *
@@ -1259,5 +1364,9 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	 */
 	public boolean needsThumbnails() {
 		return true;
+	}
+
+	public void setSelectedStoryBoard(Storyboard selectedStoryboard) {
+		this.selectedStoryboard = selectedStoryboard;
 	}
 }

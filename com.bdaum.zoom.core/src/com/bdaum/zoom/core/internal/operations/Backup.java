@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.internal.operations;
@@ -64,10 +64,6 @@ public class Backup extends HistoryItem {
 	private boolean folderHierarchyChange;
 	private AssetImpl asset;
 
-	public Backup() {
-		super();
-	}
-
 	public Backup(String opId, Asset asset, QueryField... qfields)
 			throws SecurityException, IllegalArgumentException {
 		super(opId);
@@ -85,6 +81,12 @@ public class Backup extends HistoryItem {
 				folderHierarchyChange |= (qfield == QueryField.URI || qfield == QueryField.VOLUME);
 			}
 		}
+	}
+	
+	public void indicateChange(boolean timelineChange, boolean locationChange, boolean folderHierarchyChange) {
+		this.timeLineChange |= timelineChange;
+		this.locationChange |= locationChange;
+		this.folderHierarchyChange |= folderHierarchyChange;
 	}
 
 	public void addRelation(AomObject rel) {

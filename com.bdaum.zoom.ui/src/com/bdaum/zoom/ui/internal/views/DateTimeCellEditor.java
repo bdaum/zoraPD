@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -50,22 +50,18 @@ public class DateTimeCellEditor extends DialogCellEditor {
 		private DateTime dateField;
 		private DateTime timeField;
 
-		public DateTimeEditorDialog(Shell parentShell, Object value,
-				QueryField qfield) {
+		public DateTimeEditorDialog(Shell parentShell, Object value, QueryField qfield) {
 			super(parentShell);
 			this.value = value;
 			this.qfield = qfield;
 		}
 
-
 		@Override
 		public void create() {
 			super.create();
 			setTitle(qfield.getLabel());
-			setMessage(Messages
-					.getString("DateTimeCellEditor.enter_date_and_time")); //$NON-NLS-1$
+			setMessage(Messages.getString("DateTimeCellEditor.enter_date_and_time")); //$NON-NLS-1$
 		}
-
 
 		@Override
 		protected Control createDialogArea(Composite parent) {
@@ -73,19 +69,15 @@ public class DateTimeCellEditor extends DialogCellEditor {
 			Composite area = new Composite(comp, SWT.NONE);
 			area.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 			area.setLayout(new GridLayout(2, false));
-			Label dateLabel = new Label(area, SWT.NONE);
-			dateLabel.setText(Messages.getString("DateTimeCellEditor.date")); //$NON-NLS-1$
+			new Label(area, SWT.NONE).setText(Messages.getString("DateTimeCellEditor.date")); //$NON-NLS-1$
 			dateField = new DateTime(area, SWT.DROP_DOWN | SWT.MEDIUM);
-			Label timeLabel = new Label(area, SWT.NONE);
-			timeLabel.setText(Messages.getString("DateTimeCellEditor.time")); //$NON-NLS-1$
+			new Label(area, SWT.NONE).setText(Messages.getString("DateTimeCellEditor.time")); //$NON-NLS-1$
 			timeField = new DateTime(area, SWT.TIME);
 			GregorianCalendar cal = new GregorianCalendar();
 			if (value instanceof Date)
 				cal.setTime((Date) value);
-			dateField.setDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
-					cal.get(Calendar.DAY_OF_MONTH));
-			timeField.setTime(cal.get(Calendar.HOUR_OF_DAY), cal
-					.get(Calendar.MINUTE), cal.get(Calendar.SECOND));
+			dateField.setDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+			timeField.setTime(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND));
 			return comp;
 		}
 
@@ -104,14 +96,10 @@ public class DateTimeCellEditor extends DialogCellEditor {
 			super.buttonPressed(buttonId);
 		}
 
-
 		@Override
 		protected void okPressed() {
-			GregorianCalendar cal = new GregorianCalendar(dateField.getYear(),
-					dateField.getMonth(), dateField.getDay(), timeField
-							.getHours(), timeField.getMinutes(), timeField
-							.getSeconds());
-			value = cal.getTime();
+			value = new GregorianCalendar(dateField.getYear(), dateField.getMonth(), dateField.getDay(),
+					timeField.getHours(), timeField.getMinutes(), timeField.getSeconds()).getTime();
 			super.okPressed();
 		}
 
@@ -129,12 +117,10 @@ public class DateTimeCellEditor extends DialogCellEditor {
 		create(parent);
 	}
 
-
 	@Override
 	protected Object doGetValue() {
 		return value;
 	}
-
 
 	@Override
 	protected void doSetValue(Object v) {
@@ -142,26 +128,18 @@ public class DateTimeCellEditor extends DialogCellEditor {
 		super.doSetValue(v);
 	}
 
-
 	@Override
 	protected void updateContents(Object v) {
 		IFormatter formatter = qfield.getFormatter();
-		super
-				.updateContents(v instanceof Date ? (formatter != null ? formatter
-						.toString(v)
-						: Constants.DFDT.format((Date) v))
-						: v);
+		super.updateContents(
+				v instanceof Date ? (formatter != null ? formatter.toString(v) : Constants.DFDT.format((Date) v)) : v);
 	}
-
 
 	@Override
 	protected Object openDialogBox(Control cellEditorWindow) {
-		DateTimeEditorDialog dialog = new DateTimeEditorDialog(cellEditorWindow
-				.getShell(), value, qfield);
-		if (dialog.open() == Window.OK) {
-			value = dialog.getResult();
-			return value;
-		}
+		DateTimeEditorDialog dialog = new DateTimeEditorDialog(cellEditorWindow.getShell(), value, qfield);
+		if (dialog.open() == Window.OK)
+			return value = dialog.getResult();
 		return null;
 	}
 

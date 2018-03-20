@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -32,7 +32,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.dialogs.TimeSearchDialog;
@@ -51,9 +50,8 @@ public class TimeSearchAction extends Action {
 	public void run() {
 		Date date1 = new Date(Long.MAX_VALUE);
 		Date date2 = new Date(0);
-		AssetSelection selection = adaptable.getAdapter(AssetSelection.class);
-		List<Asset> selectedAssets = selection.getAssets();
-		if (!selectedAssets.isEmpty()) {
+		List<Asset> selectedAssets = adaptable.getAdapter(AssetSelection.class).getAssets();
+		if (!selectedAssets.isEmpty())
 			for (Asset asset : selectedAssets) {
 				Date date = asset.getDateTimeOriginal();
 				if (date == null)
@@ -65,16 +63,13 @@ public class TimeSearchAction extends Action {
 						date2 = date;
 				}
 			}
-		}
 		if (date1.compareTo(date2) > 0) {
 			date1 = new Date();
 			date2 = new Date();
 		}
 		TimeSearchDialog dialog = new TimeSearchDialog(adaptable.getAdapter(Shell.class), date1, date2);
-		if (dialog.open() == Window.OK) {
-			SmartCollectionImpl collection = dialog.getResult();
+		if (dialog.open() == Window.OK)
 			UiActivator.getDefault().getNavigationHistory(adaptable.getAdapter(IWorkbenchWindow.class))
-					.postSelection(new StructuredSelection(collection));
-		}
+					.postSelection(new StructuredSelection(dialog.getResult()));
 	}
 }

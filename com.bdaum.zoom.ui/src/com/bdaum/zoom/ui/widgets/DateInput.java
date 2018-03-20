@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.widgets;
 
@@ -58,8 +58,7 @@ public class DateInput extends Composite implements SelectionListener {
 	public DateInput(Composite parent, int style) {
 		super(parent, style & ~(SWT.TIME | SWT.SHORT | SWT.DATE | SWT.MEDIUM | SWT.READ_ONLY | SWT.DROP_DOWN));
 		GridLayout layout = new GridLayout(2, false);
-		layout.marginWidth = 0;
-		layout.marginHeight = 0;
+		layout.marginWidth = layout.marginHeight = 0;
 		layout.horizontalSpacing = 1;
 		setLayout(layout);
 		if ((style & SWT.DATE) == 0 && (style & SWT.TIME) == 0)
@@ -143,7 +142,6 @@ public class DateInput extends Composite implements SelectionListener {
 			dateField.removeSelectionListener(this);
 		if (timeField != null)
 			timeField.removeSelectionListener(this);
-
 	}
 
 	/*

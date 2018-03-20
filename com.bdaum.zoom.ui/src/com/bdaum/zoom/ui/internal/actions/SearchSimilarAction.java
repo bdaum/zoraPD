@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -57,7 +57,6 @@ public class SearchSimilarAction extends RetargetAction {
 		this.adaptable = adaptable;
 		setToolTipText(tooltip);
 		dbListener = new DbAdapter() {
-
 			@Override
 			public void databaseOpened(IDbManager manager, boolean primary) {
 				if (primary) {
@@ -95,8 +94,8 @@ public class SearchSimilarAction extends RetargetAction {
 		if (dbFactory.getLireServiceVersion() >= 0) {
 			if (!dbManager.getMeta(true).getNoIndex()) {
 				List<Asset> selectedAssets = adaptable.getAdapter(AssetSelection.class).getAssets();
-				Asset asset = selectedAssets.isEmpty() ? null : selectedAssets.get(0);
-				dbFactory.getLireService(true).performQuery(asset, adaptable, ICollectionProcessor.SIMILARITY);
+				dbFactory.getLireService(true).performQuery(selectedAssets.isEmpty() ? null : selectedAssets.get(0),
+						adaptable, ICollectionProcessor.SIMILARITY);
 			} else if (AcousticMessageDialog.openQuestion(shell, Messages.SearchSimilarAction_similarity_search,
 					Messages.SearchSimilarAction_search_not_possible)) {
 				BusyIndicator.showWhile(shell.getDisplay(), () -> {

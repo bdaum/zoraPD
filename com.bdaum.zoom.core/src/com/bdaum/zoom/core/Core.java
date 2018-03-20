@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.core;
 
@@ -32,7 +32,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -44,6 +43,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 import com.bdaum.zoom.batch.internal.BatchActivator;
+import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.image.IRecipeProvider;
 import com.bdaum.zoom.image.ImageUtilities;
@@ -126,38 +126,7 @@ public class Core {
 	 */
 
 	public static List<String> fromStringList(String stringlist, String seps) {
-		ArrayList<String> result = new ArrayList<String>();
-		if (stringlist != null) {
-			char[] chars = stringlist.toCharArray();
-			boolean token = false;
-			int offset = 0;
-			int l = chars.length;
-			for (int i = 0; i < l; i++) {
-				char c = chars[i];
-				if (token) {
-					if (seps.indexOf(c) >= 0) {
-						int end = i;
-						while (end > offset && chars[end - 1] == ' ')
-							--end;
-						while (offset < end && chars[offset] == ' ')
-							++offset;
-						result.add(new String(chars, offset, end - offset));
-						token = false;
-					}
-				} else if (seps.indexOf(c) < 0) {
-					token = true;
-					offset = i;
-				}
-			}
-			if (token) {
-				while (l > offset && chars[l - 1] == ' ')
-					--l;
-				while (offset < l && chars[offset] == ' ')
-					++offset;
-				result.add(new String(chars, offset, l - offset));
-			}
-		}
-		return result;
+		return CommonUtilities.fromStringList(stringlist, seps);
 	}
 
 	/**
@@ -267,10 +236,7 @@ public class Core {
 		double lat2 = Math.asin(Math.sin(lat1) * Math.cos(dist) + Math.cos(lat1) * Math.sin(dist) * Math.cos(brg));
 		double lon2 = lon1 + Math.atan2(Math.sin(brg) * Math.sin(dist) * Math.cos(lat1),
 				Math.cos(dist) - Math.sin(lat1) * Math.sin(lat2));
-		lat2 = Math.toDegrees(lat2);
-		lon2 = Math.toDegrees(lon2);
-		lon2 = (lon2 + 540) % 360 - 180;
-		return new Point2D.Double(lat2, lon2);
+		return new Point2D.Double(Math.toDegrees(lat2), (Math.toDegrees(lon2) + 540) % 360 - 180);
 	}
 
 	/** File utilities **/
@@ -362,12 +328,12 @@ public class Core {
 			} else
 				ticket = new Object();
 			InputStream in = service.retrieveFile(ticket, url);
-			File file = createTempFile("ImageDownLoad", fileExtension); //$NON-NLS-1$
-			copyBytesToFile(in, file, null);
+			File tempfile = createTempFile("ImageDownLoad", fileExtension); //$NON-NLS-1$
+			copyBytesToFile(in, tempfile, null);
 			if (box == null)
 				service.endSession(ticket);
 			bundleContext.ungetService(serviceReference);
-			return file;
+			return tempfile;
 		}
 		File file = createTempFile("ImageDownLoad", fileExtension); //$NON-NLS-1$
 		copyBytesToFile(url.openStream(), file, null);
@@ -405,15 +371,13 @@ public class Core {
 	 *            - a ticket box containing a session ticket
 	 */
 	public static void endSession(Ticketbox box) {
-		if (box != null && box.ticket != null) {
-			BundleContext bundleContext = CoreActivator.getDefault().getBundle().getBundleContext();
-			ServiceReference<?> serviceReference = bundleContext.getServiceReference(IFTPService.class.getName());
-			if (serviceReference != null) {
-				IFTPService service = (IFTPService) bundleContext.getService(serviceReference);
-				if (service != null) {
-					service.endSession(box.ticket);
-					bundleContext.ungetService(serviceReference);
-				}
+		BundleContext bundleContext = CoreActivator.getDefault().getBundle().getBundleContext();
+		ServiceReference<?> serviceReference = bundleContext.getServiceReference(IFTPService.class.getName());
+		if (serviceReference != null) {
+			IFTPService service = (IFTPService) bundleContext.getService(serviceReference);
+			if (service != null) {
+				service.endSession(box.ticket);
+				bundleContext.ungetService(serviceReference);
 			}
 		}
 	}
@@ -490,7 +454,7 @@ public class Core {
 		if (!url.startsWith("http:") && !url.startsWith("https:")) { //$NON-NLS-1$ //$NON-NLS-2$
 			while (url.startsWith("/")) //$NON-NLS-1$
 				url = url.substring(1);
-			url = "http://" + url; //$NON-NLS-1$
+			return "http://" + url; //$NON-NLS-1$
 		}
 		return url;
 	}
@@ -505,8 +469,7 @@ public class Core {
 	 */
 	public static String encodeUrlSegment(String s) {
 		try {
-			String encoded = URLEncoder.encode(s, "UTF-8"); //$NON-NLS-1$
-			return encoded.replaceAll("\\+", "%20"); //$NON-NLS-1$ //$NON-NLS-2$
+			return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		} catch (UnsupportedEncodingException e) {
 			return s;
 		}
@@ -590,13 +553,12 @@ public class Core {
 	 *            - families that were canceled
 	 */
 	public static void waitOnJobCanceled(String... families) {
-		for (String family : families) {
+		for (String family : families)
 			try {
 				Job.getJobManager().join(family, null);
 			} catch (OperationCanceledException | InterruptedException e) {
 				// ignore
 			}
-		}
 	}
 
 }

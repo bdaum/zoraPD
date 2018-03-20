@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -43,11 +43,18 @@ public class Messages extends NLS {
 	public static String AlbumSelectionDialog_specify_person_name;
 	public static String AllNoneGroup_selectAll;
 	public static String AllNoneGroup_selectNone;
-	public static String AnalogPropertiesDialog_creation_time;
-	public static String AnalogPropertiesDialog_import_analog_images;
-	public static String AnalogPropertiesDialog_lv_must_be_a_number;
-	public static String AnalogPropertiesDialog_lv_range_warning;
-	public static String AnalogPropertiesDialog_specify_metadata;
+	public static String AutomatedRatingDialog_ai_rating_msg;
+	public static String AutomatedRatingDialog_max_rating;
+	public static String AutomatedRatingDialog_options;
+	public static String AutomatedRatingDialog_overwrite;
+	public static String AutomatedRatingDialog_provider;
+	public static String AutomatedRatingDialog_select_provider;
+	public static String AutomatedRatingDialog_select_sujet;
+	public static String AutomatedRatingDialog_service;
+	public static String AutomatedRatingDialog_sujet;
+	public static String AutomatedRatingDialog_use_ai_rating;
+	public static String AutoRuleComponent_accel_candidates;
+	public static String AutoRuleComponent_accel_msg;
 	public static String AutoRuleComponent_add;
 	public static String AutoRuleComponent_apply;
 	public static String AutoRuleComponent_apply_tooltip;
@@ -157,6 +164,11 @@ public class Messages extends NLS {
 	public static String CategoryDialog_mark_existing_or_enter_new;
 	public static String CategoryGroup_add;
 	public static String CategoryGroup_refine;
+	public static String CleanupDialog_artworks;
+	public static String CleanupDialog_contacts;
+	public static String CleanupDialog_locations;
+	public static String CleanupDialog_unused_items;
+	public static String CleanupDialog_unused_msg;
 	public static String CodeCellEditorDialog_add;
 
 	public static String CodeCellEditorDialog_add_remove_codes;
@@ -202,6 +214,13 @@ public class Messages extends NLS {
 	public static String CollectionEditDialog_sort_group;
 	public static String CollectionEditDialog_specify_name;
 	public static String CollectionEditDialog_value;
+	public static String ConfigureCaptionDialog_alignment;
+	public static String ConfigureCaptionDialog_center;
+	public static String ConfigureCaptionDialog_configure_caption;
+	public static String ConfigureCaptionDialog_configure_caption_msg;
+	public static String ConfigureCaptionDialog_left;
+	public static String ConfigureCaptionDialog_right;
+	public static String ConfigureCaptionDialog_template;
 	public static String ConflictDialog_apply_to_all;
 	public static String ConflictDialog_importDateFormat;
 	public static String ConflictDialog_imported;
@@ -338,6 +357,9 @@ public class Messages extends NLS {
 	public static String EditMetaDialog_category_tooltip;
 	public static String EditMetaDialog_catversion;
 	public static String EditMetaDialog_cities;
+	public static String EditMetaDialog_clean_up;
+	public static String EditMetaDialog_clean_up_msg;
+	public static String EditMetaDialog_clean_up_tooltip;
 	public static String EditMetaDialog_closing_for_defrag;
 	public static String EditMetaDialog_collect;
 	public static String EditMetaDialog_collect_keyword_tooltip;
@@ -590,6 +612,7 @@ public class Messages extends NLS {
 	public static String ExhibitionEditDialog_capt_cred_des;
 	public static String ExhibitionEditDialog_capt_des_cred;
 	public static String ExhibitionEditDialog_ceiling_color;
+	public static String ExhibitionEditDialog_colors;
 	public static String ExhibitionEditDialog_contact;
 	public static String ExhibitionEditDialog_copyright;
 	public static String ExhibitionEditDialog_create_watermarks;
@@ -603,6 +626,7 @@ public class Messages extends NLS {
 	public static String ExhibitionEditDialog_entrance;
 	public static String ExhibitionEditDialog_exh_image_list;
 	public static String ExhibitionEditDialog_exhibition_name;
+	public static String ExhibitionEditDialog_exhibition;
 	public static String ExhibitionEditDialog_exhibitions;
 	public static String ExhibitionEditDialog_floorplan;
 	public static String ExhibitionEditDialog_font;
@@ -639,6 +663,7 @@ public class Messages extends NLS {
 	public static String ExhibitionEditDialog_mat_and_fram;
 	public static String ExhibitionEditDialog_matColor;
 	public static String ExhibitionEditDialog_matWidth;
+	public static String ExhibitionEditDialog_media;
 	public static String ExhibitionEditDialog_name;
 	public static String ExhibitionEditDialog_name_already_exists;
 	public static String ExhibitionEditDialog_nameplate_does_not_exist;
@@ -853,12 +878,9 @@ public class Messages extends NLS {
 	public static String KeywordSuggestDialog_score;
 	public static String KeywordSuggestDialog_sort_by;
 	public static String KeywordValidator_Bad_char;
-	public static String LabelLayoutGroup_bad_distance;
-	public static String LabelLayoutGroup_bad_indent;
 	public static String LabelLayoutGroup_bottom;
 	public static String LabelLayoutGroup_center;
 	public static String LabelLayoutGroup_distance;
-	public static String LabelLayoutGroup_distance_negative;
 	public static String LabelLayoutGroup_hide;
 	public static String LabelLayoutGroup_image_label;
 	public static String LabelLayoutGroup_indent;
@@ -869,7 +891,7 @@ public class Messages extends NLS {
 	public static String LabelLayoutGroup_top;
 	public static String LargeTextCellEditorDialog_enter_text;
 	public static String LayoutComponent_alt;
-	public static String LayoutComponent_caption_vars;
+	public static String LayoutComponent_captions;
 	public static String LayoutComponent_date_format;
 	public static String LayoutComponent_delete;
 	public static String LayoutComponent_empty_name;
@@ -877,19 +899,24 @@ public class Messages extends NLS {
 	public static String LayoutComponent_Format;
 	public static String LayoutComponent_Landscape;
 	public static String LayoutComponent_layout_exists;
+	public static String LayoutComponent_layout;
 	public static String LayoutComponent_layout_name;
 	public static String LayoutComponent_layout_name_msg;
 	public static String LayoutComponent_load_layout;
 	public static String LayoutComponent_load_layout_title;
 	public static String LayoutComponent_Orientation;
 	public static String LayoutComponent_padding;
-	public static String LayoutComponent_page__vars;
+	public static String LayoutComponent_page_format;
 	public static String LayoutComponent_Portrait;
 	public static String LayoutComponent_save_layout;
 	public static String LayoutComponent_save_layout_title;
 	public static String LayoutComponent_select_layout;
 	public static String LayoutComponent_sharpening;
 	public static String LayoutComponent_size;
+	public static String LayoutComponent_template4;
+	public static String LayoutComponent_template5;
+	public static String LayoutComponent_template6;
+	public static String LayoutComponent_titles;
 	public static String ListCellEditorDialog_enter_each_item_on_separate_line;
 	public static String MediaDialog_bad_date_format;
 	public static String MediaDialog_comments;
@@ -958,7 +985,6 @@ public class Messages extends NLS {
 	public static String OutputTargetGroup_state;
 	public static String OutputTargetGroup_timeline;
 	public static String OutputTargetGroup_timeline_num;
-	public static String PageProcessor_download_failed;
 	public static String PageProcessor_margins_too_large;
 	public static String PageProcessor_page_rending_report;
 	public static String PageProcessor_printing_error;
@@ -1006,6 +1032,13 @@ public class Messages extends NLS {
 	public static String ProximityEditDialog_latitude;
 	public static String ProximityEditDialog_longitude;
 	public static String ProximityEditDialog_search_images;
+	public static String PurgeEmptyDialog_analyzing;
+	public static String PurgeEmptyDialog_deleted;
+	public static String PurgeEmptyDialog_finish;
+	public static String PurgeEmptyDialog_kept;
+	public static String PurgeEmptyDialog_please_wait;
+	public static String PurgeEmptyDialog_Removing_empty;
+	public static String PurgeEmptyDialog_undo;
 	public static String SaveTemplateDialog_a_design_with_that_name_already_exists;
 	public static String SaveTemplateDialog_design_name;
 	public static String SaveTemplateDialog_overwrite;
@@ -1120,6 +1153,7 @@ public class Messages extends NLS {
 	public static String SupplementalCategoryGroup_add;
 	public static String SupplementalCategoryGroup_delete;
 	public static String SupplementalCategoryGroup_refine;
+	public static String RatingDialog_use_rating_service;
 	public static String RefreshDialog_include_remote;
 	public static String RefreshDialog_include_up_to_date;
 	public static String RefreshDialog_reimport;
@@ -1194,8 +1228,6 @@ public class Messages extends NLS {
 	public static String VoiceNoteDialog_cannot_record;
 	public static String VoiceNoteDialog_delete_voicenote;
 	public static String VoiceNoteDialog_enter_text;
-	public static String VoiceNoteDialog_internal_error_writing;
-	public static String VoiceNoteDialog_io_error_writing;
 	public static String VoiceNoteDialog_mixed_contents;
 	public static String VoiceNoteDialog_overwrite_single;
 	public static String VoiceNoteDialog_ready;
@@ -1234,6 +1266,7 @@ public class Messages extends NLS {
 	public static String WebGalleryEditDialog_bottom;
 	public static String WebGalleryEditDialog_browse;
 	public static String WebGalleryEditDialog_caption_font;
+	public static String WebGalleryEditDialog_Colors;
 	public static String WebGalleryEditDialog_contact;
 	public static String WebGalleryEditDialog_copyright;
 	public static String WebGalleryEditDialog_create_watermarks;
@@ -1243,6 +1276,7 @@ public class Messages extends NLS {
 	public static String WebGalleryEditDialog_email;
 	public static String WebGalleryEditDialog_engine;
 	public static String WebGalleryEditDialog_engine_reference;
+	public static String WebGalleryEditDialog_Fonts;
 	public static String WebGalleryEditDialog_footer_font;
 	public static String WebGalleryEditDialog_footer_html;
 	public static String WebGalleryEditDialog_header_html;

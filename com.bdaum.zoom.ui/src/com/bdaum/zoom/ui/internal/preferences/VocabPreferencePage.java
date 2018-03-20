@@ -19,7 +19,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -216,9 +215,8 @@ public class VocabPreferencePage extends AbstractPreferencePage {
 	}
 
 	private VocabPage createTab(QueryField qfield) {
-		final CTabItem tabItem = UiUtilities.createTabItem(tabFolder, qfield.getLabel());
 		final VocabPage vocabTab = new VocabPage(tabFolder, SWT.NONE, qfield);
-		tabItem.setControl(vocabTab);
+		UiUtilities.createTabItem(tabFolder, qfield.getLabel(), null).setControl(vocabTab);
 		return vocabTab;
 	}
 

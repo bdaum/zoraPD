@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -27,9 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.jobs.IJobManager;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -82,7 +79,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 
 	@Override
 	public void createPartControl(Composite parent) {
-		// Create gallery
+		// Gallery
 		setPreferences();
 		gallery = new Gallery(parent, SWT.H_SCROLL | SWT.V_SCROLL | SWT.VIRTUAL | SWT.MULTI);
 		gallery.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_WHITE));
@@ -149,7 +146,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 
 	private void disposeBusyIndicator() {
 		if (busyJob != null) {
-			Job.getJobManager().cancel(busyJob);
+			cancelJobs(busyJob);
 			busyJob = null;
 		}
 		if (!gallery.isDisposed())
@@ -179,14 +176,8 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 		closeAction = new Action(Messages.getString("DuplicatesView.close"), Icons.leave.getDescriptor()) { //$NON-NLS-1$
 			@Override
 			public void run() {
-				IJobManager jobManager = Job.getJobManager();
-				jobManager.cancel(Constants.DUPLICATES);
-				try {
-					jobManager.join(Constants.DUPLICATES, null);
-					getSite().getPage().hideView(DuplicatesView.this);
-				} catch (OperationCanceledException | InterruptedException e) {
-					// do nothing
-				}
+				cancelJobs(Constants.DUPLICATES);
+				getSite().getPage().hideView(DuplicatesView.this);
 			}
 		};
 		closeAction.setToolTipText(Messages.getString("DuplicatesView.close_tooltip")); //$NON-NLS-1$
@@ -400,8 +391,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 	}
 
 	public void setItemType(String itemType) {
-		this.itemType = itemType;
-		setPartName(itemType);
+		setPartName(this.itemType = itemType);
 	}
 
 	@Override

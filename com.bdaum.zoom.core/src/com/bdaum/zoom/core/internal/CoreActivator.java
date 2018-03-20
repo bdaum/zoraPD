@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.internal;
@@ -68,8 +68,8 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.operations.IWorkbenchOperationSupport;
@@ -129,12 +129,10 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 
 	private static final String CAT_OPID = "$$cat$$"; //$NON-NLS-1$
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.core"; //$NON-NLS-1$
 
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("com.bdaum.zoom.debug")); //$NON-NLS-1$
 
-	// The shared instance
 	private static CoreActivator plugin;
 
 	private IDbManager dbManager = NULLDBMANAGER;
@@ -211,40 +209,31 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 		IdentifiableObject.setIdentifierGenerator(new UUIDgenerator());
 		IPath stateLocation = getStateLocation();
 		showfile = stateLocation.append(SHOW).toFile();
-		IPath lockfile = stateLocation.append(LOCK);
-		File file = lockfile.toFile();
+		File file = stateLocation.append(LOCK).toFile();
 		locker = new Locker(file);
 		try {
 			if (!locker.lock()) {
+				logInfo(Messages.CoreActivator_workspace_locked);
 				try {
 					showfile.createNewFile();
 					String[] commandLineArgs = Platform.getApplicationArgs();
-					if (commandLineArgs.length > 0) {
-						BufferedWriter writer = null;
-						try {
-							writer = new BufferedWriter(new FileWriter(showfile));
+					if (commandLineArgs.length > 0)
+						try (BufferedWriter writer = new BufferedWriter(new FileWriter(showfile))) {
 							writer.write(Core.toStringList(commandLineArgs, "\n")); //$NON-NLS-1$
-						} finally {
-							try {
-								if (writer != null)
-									writer.close();
-							} catch (Exception e) {
-								// ignore
-							}
 						}
-					}
 				} catch (Exception e) {
 					// ignore
 				}
 				plugin = null;
 				System.exit(0);
-			}
+			} else
+				logInfo(NLS.bind(Messages.CoreActivator_session_started, getBundle().getVersion().toString()));
 		} catch (IOException e) {
 			// don't lock if we can't
 		}
-		logInfo(NLS.bind(Messages.CoreActivator_session_started, getBundle().getVersion().toString()));
 		if (Constants.WIN32)
 			ImageActivator.getDefault().deleteFileAfterShutdown(file);
+		ImageActivator.getDefault().registerImageIOPlugins();
 	}
 
 	/*
@@ -283,7 +272,6 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	public void deleteTrashCan() {
 		if (dbManager.hasTrash()) {
 			IRunnableWithProgress runnable = new IRunnableWithProgress() {
-
 				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 					List<Trash> set = dbManager.obtainTrashToDelete(true);
 					monitor.beginTask(Messages.CoreActivator_Cleaning_up, set.size() + 1);
@@ -639,9 +627,8 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	public Map<String, String> getMediaMimeMap() {
 		if (mediaMimeMap == null) {
 			mediaMimeMap = new HashMap<String, String>(30);
-			IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID,
-					"mediaSupport"); //$NON-NLS-1$
-			for (IExtension extension : extensionPoint.getExtensions())
+			for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "mediaSupport") //$NON-NLS-1$
+					.getExtensions())
 				for (IConfigurationElement conf : extension.getConfigurationElements()) {
 					StringTokenizer st = new StringTokenizer(conf.getAttribute("formats")); //$NON-NLS-1$
 					StringTokenizer stm = new StringTokenizer(conf.getAttribute("mimetypes")); //$NON-NLS-1$
@@ -655,9 +642,8 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	public Map<String, IMediaSupport> getMediaSupportMap() {
 		if (mediaSupportMap == null) {
 			mediaSupportMap = new HashMap<String, IMediaSupport>(5);
-			IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID,
-					"mediaSupport"); //$NON-NLS-1$
-			for (IExtension extension : extensionPoint.getExtensions())
+			for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "mediaSupport") //$NON-NLS-1$
+					.getExtensions())
 				for (IConfigurationElement conf : extension.getConfigurationElements()) {
 					String name = conf.getAttribute("name"); //$NON-NLS-1$
 					String plural = conf.getAttribute("plural"); //$NON-NLS-1$
@@ -676,7 +662,6 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 							mediaSupportMap.put(ext, mediaSupport);
 						}
 						mediaSupport.setMimeMap(mimeMap);
-
 					} catch (CoreException e) {
 						logError(NLS.bind(Messages.CoreActivator_internal_error_instantiating_media_support, name), e);
 					}
@@ -691,7 +676,8 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 		int supportedVersion = db.getVersion();
 		if (catVersion > supportedVersion)
 			Core.getCore().getDbFactory().getErrorHandler().fatalError(Messages.CoreActivator_unsupported_version,
-					NLS.bind(Messages.CoreActivator_use_newer_version, Constants.APPLICATION_NAME), (IAdaptable) db);
+					NLS.bind(Messages.CoreActivator_use_newer_version, Constants.APPLICATION_NAME, db.getFileName()),
+					(IAdaptable) db);
 		else if (catVersion < supportedVersion) {
 			IRunnableWithProgress runnable = new IRunnableWithProgress() {
 				public void run(IProgressMonitor monitor) {
@@ -704,16 +690,20 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 					monitor.done();
 				}
 			};
-			Display current = Display.getCurrent();
-			Shell shell = (current != null) ? current.getActiveShell() : null;
+			IWorkbench workbench = PlatformUI.getWorkbench();
+			Shell shell = workbench.getWorkbenchWindowCount() > 0 ? workbench.getWorkbenchWindows()[0].getShell()
+					: null;
 			if (shell != null) {
-				try {
-					new ProgressMonitorDialog(shell).run(false, false, runnable);
-				} catch (InvocationTargetException e) {
-					logError(NLS.bind(Messages.CoreActivator_error_when_updating_to_version_n, db.getVersion()), e);
-				} catch (InterruptedException e) {
-					// should never happen
-				}
+				shell.getDisplay().syncExec(() -> {
+					try {
+						new ProgressMonitorDialog(shell).run(true, false, runnable);
+					} catch (InvocationTargetException e1) {
+						logError(NLS.bind(Messages.CoreActivator_error_when_updating_to_version_n, db.getVersion()),
+								e1);
+					} catch (InterruptedException e2) {
+						// should never happen
+					}
+				});
 			} else
 				try {
 					runnable.run(new NullProgressMonitor());
@@ -788,8 +778,8 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	public void fireCatalogClosed(int mode) {
 		if (dbManager.getFile() != null) {
 			if (mode != CatalogListener.EMERGENCY) {
-				for (Object listener : listeners.getListeners())
-					((CatalogListener) listener).catalogClosed(mode);
+				for (CatalogListener listener : listeners)
+					listener.catalogClosed(mode);
 				resetInfrastructure();
 				System.setProperty(Constants.PROP_CATACCESS, Constants.PROP_CATACCESS_NONE);
 			}
@@ -816,8 +806,8 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 		System.setProperty(Constants.PROP_CATACCESS,
 				dbManager.isReadOnly() ? Constants.PROP_CATACCESS_READ : Constants.PROP_CATACCESS_WRITE);
 		resetInfrastructure();
-		for (Object listener : listeners.getListeners())
-			((CatalogListener) listener).catalogOpened(newDb);
+		for (CatalogListener listener : listeners)
+			listener.catalogOpened(newDb);
 		fireAssetsModified(null, null);
 	}
 
@@ -830,8 +820,8 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	}
 
 	public void fireApplyRules(Collection<? extends Asset> assets, QueryField node) {
-		for (Object listener : listeners.getListeners())
-			((CatalogListener) listener).applyRules(assets, node);
+		for (CatalogListener listener : listeners)
+			listener.applyRules(assets, node);
 	}
 
 	/*
@@ -843,11 +833,11 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 
 	public void fireAssetsModified(BagChange<Asset> changes, QueryField node) {
 		if (resetInfrastructure(assetProvider, changes == null ? null : changes.getChanged(), node))
-			for (Object listener : listeners.getListeners())
-				((CatalogListener) listener).assetsModified(null, null);
+			for (CatalogListener listener : listeners)
+				listener.assetsModified(null, null);
 		else
-			for (Object listener : listeners.getListeners())
-				((CatalogListener) listener).assetsModified(changes, node);
+			for (CatalogListener listener : listeners)
+				listener.assetsModified(changes, node);
 	}
 
 	public boolean resetInfrastructure(IAssetProvider provider, Collection<? extends Asset> assets, Object node) {
@@ -871,8 +861,8 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	public void fireStructureModified() {
 		if (assetProvider != null)
 			assetProvider.resetProcessor();
-		for (Object listener : listeners.getListeners())
-			((CatalogListener) listener).structureModified();
+		for (CatalogListener listener : listeners)
+			listener.structureModified();
 	}
 
 	/*
@@ -882,8 +872,8 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	 * .IStructuredSelection)
 	 */
 	public void fireCatalogSelection(IStructuredSelection selection, boolean forceUpdate) {
-		for (Object listener : listeners.getListeners())
-			((CatalogListener) listener).setCatalogSelection(selection, forceUpdate);
+		for (CatalogListener listener : listeners)
+			listener.setCatalogSelection(selection, forceUpdate);
 	}
 
 	/*
@@ -893,13 +883,13 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	 */
 
 	public void fireHierarchyModified() {
-		for (Object listener : listeners.getListeners())
-			((CatalogListener) listener).hierarchyModified();
+		for (CatalogListener listener : listeners)
+			listener.hierarchyModified();
 	}
 
 	public void fireBookmarksModified() {
-		for (Object listener : listeners.getListeners())
-			((CatalogListener) listener).bookmarksModified();
+		for (CatalogListener listener : listeners)
+			listener.bookmarksModified();
 	}
 
 	/*
@@ -1049,8 +1039,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 		--aiUsers;
 		if (aiUsers <= 0 && aiServiceRef != null) {
 			service.dispose(providerId);
-			BundleContext bundleContext = getBundle().getBundleContext();
-			bundleContext.ungetService(aiServiceRef);
+			getBundle().getBundleContext().ungetService(aiServiceRef);
 			aiServiceRef = null;
 		}
 	}
@@ -1240,9 +1229,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 		if (xmpMap != null) {
 			String filename = member.getName();
 			int p = filename.lastIndexOf('.');
-			if (p >= 0)
-				filename = filename.substring(0, p);
-			File sidecar = xmpMap.get(filename);
+			File sidecar = xmpMap.get(p >= 0 ? filename.substring(0, p) : filename);
 			if (sidecar != null)
 				xmpdate = sidecar.lastModified();
 		}
@@ -1299,13 +1286,12 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 			themes = new HashMap<>(6);
 			IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID,
 					"catalogTheme"); //$NON-NLS-1$
-			for (IExtension iExtension : extensionPoint.getExtensions()) {
+			for (IExtension iExtension : extensionPoint.getExtensions())
 				for (IConfigurationElement conf : iExtension.getConfigurationElements()) {
 					String id = conf.getAttribute("id"); //$NON-NLS-1$
 					themes.put(id, new Theme(id, conf.getAttribute("name"), conf.getAttribute("keywords"), //$NON-NLS-1$ //$NON-NLS-2$
 							conf.getAttribute("categories"), Boolean.parseBoolean(conf.getAttribute("default")))); //$NON-NLS-1$ //$NON-NLS-2$
 				}
-			}
 		}
 		return themes;
 	}
@@ -1314,10 +1300,9 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 		String themeID = dbManager.getMeta(true).getThemeID();
 		Map<String, Theme> themes = getThemes();
 		if (themeID == null || themeID.isEmpty())
-			for (Theme theme : themes.values()) {
+			for (Theme theme : themes.values())
 				if (theme.isDefault())
 					return theme;
-			}
 		return themes.get(themeID);
 	}
 

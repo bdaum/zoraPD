@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -24,7 +24,6 @@ import com.bdaum.zoom.core.QueryField;
 
 public class MetadataView extends AbstractPropertiesView {
 
-
 	public static final String ID = "com.bdaum.zoom.ui.views.MetadataView"; //$NON-NLS-1$
 
 	@Override
@@ -32,12 +31,10 @@ public class MetadataView extends AbstractPropertiesView {
 		return QueryField.ALL;
 	}
 
-
 	@Override
 	protected Object getFieldParent(QueryField element) {
 		return element.getParent();
 	}
-
 
 	@Override
 	protected int getExpandLevel() {

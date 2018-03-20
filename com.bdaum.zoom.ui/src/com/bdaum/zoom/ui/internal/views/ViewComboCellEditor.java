@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 
@@ -55,22 +55,20 @@ public class ViewComboCellEditor extends ComboBoxCellEditor {
 		if (enumeration instanceof int[]) {
 			int v = ((Integer) value).intValue();
 			int[] intEnum = (int[]) enumeration;
-			for (int i = 0; i < intEnum.length; i++) {
+			for (int i = 0; i < intEnum.length; i++)
 				if (v == intEnum[i]) {
 					super.doSetValue(i);
 					return;
 				}
-			}
 			return;
 		}
 		String[] stringEnum = (enumeration instanceof String[]) ? ((String[]) enumeration)
 				: getItems();
 		String v = String.valueOf(value);
-		for (int i = 0; i < stringEnum.length; i++) {
+		for (int i = 0; i < stringEnum.length; i++)
 			if (v.equals(stringEnum[i])) {
 				super.doSetValue(i);
 				return;
 			}
-		}
 	}
 }

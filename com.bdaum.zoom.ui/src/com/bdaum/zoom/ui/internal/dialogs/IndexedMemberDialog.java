@@ -33,8 +33,7 @@ public class IndexedMemberDialog extends ZTitleAreaDialog {
 	private Button addButton;
 	private Button removeButton;
 
-	public IndexedMemberDialog(Shell parentShell, IndexedMember[] members,
-			QueryField qfield) {
+	public IndexedMemberDialog(Shell parentShell, IndexedMember[] members, QueryField qfield) {
 		super(parentShell);
 		this.members = members;
 		this.qfield = qfield;
@@ -55,29 +54,22 @@ public class IndexedMemberDialog extends ZTitleAreaDialog {
 		Composite composite = new Composite(area, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(2, false));
-		viewer = new ListViewer(composite, SWT.BORDER | SWT.V_SCROLL
-				| SWT.H_SCROLL | SWT.SINGLE);
-		viewer.getControl().setLayoutData(
-				new GridData(SWT.FILL, SWT.FILL, true, true));
+		viewer = new ListViewer(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.SINGLE);
+		viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
 		viewer.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				if (element instanceof IndexedMember) {
-					Object value = ((IndexedMember) element).getValue();
-					return QueryField.serializeStruct(value,
+				if (element instanceof IndexedMember)
+					return QueryField.serializeStruct(((IndexedMember) element).getValue(),
 							Messages.IndexedMemberDialog_click_edit);
-				}
 				return element.toString();
 			}
 		});
 		viewer.setFilters(new ViewerFilter[] { new ViewerFilter() {
-
 			@Override
-			public boolean select(Viewer aViewer, Object parentElement,
-					Object element) {
-				return (element instanceof IndexedMember && ((IndexedMember) element)
-						.getValue() != null);
+			public boolean select(Viewer aViewer, Object parentElement, Object element) {
+				return (element instanceof IndexedMember && ((IndexedMember) element).getValue() != null);
 			}
 		} });
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -93,18 +85,15 @@ public class IndexedMemberDialog extends ZTitleAreaDialog {
 		editButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IndexedMember member = (IndexedMember) ((IStructuredSelection) viewer
-						.getSelection()).getFirstElement();
-				StructEditDialog dialog = new StructEditDialog(editButton
-						.getShell(), (AomObject) member.getValue(),
+				IndexedMember member = (IndexedMember) ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				StructEditDialog dialog = new StructEditDialog(editButton.getShell(), (AomObject) member.getValue(),
 						qfield);
 				if (dialog.open() == Window.OK) {
-					for (int i = 0; i < members.length; i++) {
+					for (int i = 0; i < members.length; i++)
 						if (members[i] == member) {
 							members[i].setValue(dialog.getResult());
 							break;
 						}
-					}
 					viewer.setInput(members);
 				}
 			}
@@ -114,18 +103,14 @@ public class IndexedMemberDialog extends ZTitleAreaDialog {
 		addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				StructEditDialog dialog = new StructEditDialog(editButton
-						.getShell(), null, qfield);
+				StructEditDialog dialog = new StructEditDialog(editButton.getShell(), null, qfield);
 				if (dialog.open() == Window.OK) {
 					IndexedMember[] newMembers = new IndexedMember[members.length + 1];
-					System.arraycopy(members, 0, newMembers, 0,
-							members.length);
+					System.arraycopy(members, 0, newMembers, 0, members.length);
 					newMembers[members.length - 1].setValue(dialog.getResult());
 					newMembers[members.length - 1].setIndex(members.length - 1);
-					newMembers[members.length] = new IndexedMember(qfield,
-							null, members.length);
-					members = newMembers;
-					viewer.setInput(members);
+					newMembers[members.length] = new IndexedMember(qfield, null, members.length);
+					viewer.setInput(members = newMembers);
 				}
 			}
 		});
@@ -134,32 +119,27 @@ public class IndexedMemberDialog extends ZTitleAreaDialog {
 		removeButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IndexedMember member = (IndexedMember) ((IStructuredSelection) viewer
-						.getSelection()).getFirstElement();
+				IndexedMember member = (IndexedMember) ((IStructuredSelection) viewer.getSelection()).getFirstElement();
 				for (int i = 0; i < members.length; i++) {
 					if (members[i] == member) {
 						IndexedMember[] newMembers = new IndexedMember[members.length - 1];
-						System.arraycopy(members, 0, newMembers, 0,
-								i);
-						System.arraycopy(members, i+1, newMembers, i,
-								members.length-i-1);
+						System.arraycopy(members, 0, newMembers, 0, i);
+						System.arraycopy(members, i + 1, newMembers, i, members.length - i - 1);
 						for (int j = i; j < newMembers.length; j++)
 							newMembers[j].setIndex(j);
-						members = newMembers;
+						viewer.setInput(members = newMembers);
 						break;
 					}
 				}
-				viewer.setInput(members);
 			}
 		});
 		return area;
 	}
 
 	private void updateButtons() {
-		Object firstElement = ((IStructuredSelection) viewer.getSelection())
-				.getFirstElement();
-		editButton.setEnabled(firstElement != null);
-		removeButton.setEnabled(firstElement != null);
+		boolean enabled = !viewer.getSelection().isEmpty();
+		editButton.setEnabled(enabled);
+		removeButton.setEnabled(enabled);
 	}
 
 	private void fillValues() {

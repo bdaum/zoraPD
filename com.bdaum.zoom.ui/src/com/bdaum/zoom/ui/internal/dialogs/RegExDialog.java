@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -116,10 +116,8 @@ public class RegExDialog extends ZTitleAreaDialog {
 		fTargetHistory = Core.fromStringList(history, "\n"); //$NON-NLS-1$
 		history = dialogSettings.get(VOLUMEHISTORY);
 		volumeHistory = Core.fromStringList(history, "\n"); //$NON-NLS-1$
-		if (!targetOnly) {
-			history = dialogSettings.get(SOURCEHISTORY);
-			fSourceHistory = Core.fromStringList(history, "\n"); //$NON-NLS-1$
-		}
+		if (!targetOnly)
+			fSourceHistory = Core.fromStringList(history = dialogSettings.get(SOURCEHISTORY), "\n"); //$NON-NLS-1$
 		if (defPath == null)
 			testPath = dialogSettings.get(TESTPATH);
 		if (rule != null) {
@@ -304,7 +302,6 @@ public class RegExDialog extends ZTitleAreaDialog {
 							targetPathLabel.setText(result);
 							targetVolumeLabel.setText(volume != null ? volume
 									: extractVolume(result));
-
 						} else {
 							targetPathLabel
 									.setText(Messages.RegExDialog_test_file_not_migrated);
@@ -349,13 +346,12 @@ public class RegExDialog extends ZTitleAreaDialog {
 		if (!targetOnly) {
 			if (fSourceField.getText().isEmpty())
 				errormessage = Messages.RegExDialog_specify_source_pattern;
-			else {
+			else
 				try {
 					Pattern.compile(fSourceField.getText());
 				} catch (PatternSyntaxException e) {
 					errormessage = e.getLocalizedMessage();
 				}
-			}
 		}
 		setErrorMessage(errormessage);
 		getButton(OK).setEnabled(errormessage == null);

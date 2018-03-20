@@ -1,3 +1,22 @@
+/*
+ * This file is part of the ZoRa project: http://www.photozora.org.
+ *
+ * ZoRa is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ZoRa is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ZoRa; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c) 2009 Berthold Daum  
+ */
 package com.bdaum.zoom.gps.naming.google.internal;
 
 import java.io.IOException;
@@ -5,33 +24,40 @@ import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.httpclient.HttpException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.xml.sax.SAXException;
 
 import com.bdaum.zoom.batch.internal.DoneParsingException;
-import com.bdaum.zoom.gps.geonames.IGeonamingService;
 import com.bdaum.zoom.gps.geonames.Place;
 import com.bdaum.zoom.gps.geonames.WebServiceException;
+import com.bdaum.zoom.gps.internal.AbstractGeocodingService;
+import com.bdaum.zoom.gps.internal.preferences.GpsPreferencePage;
 import com.bdaum.zoom.net.ui.internal.NetActivator;
 import com.bdaum.zoom.ui.gps.WaypointArea;
+import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
-public class GoogleGeonamingService implements IGeonamingService {
+public class GoogleGeonamingService extends AbstractGeocodingService {
 
 	private static final String COM_BDAUM_ZOOM_GPS = "com.bdaum.zoom.gps"; //$NON-NLS-1$
-	public static final NumberFormat usformat = NumberFormat.getInstance(Locale.US);
-	static {
-		usformat.setMaximumFractionDigits(5);
-	}
+	private static int answers = 0;
 
 	public Place fetchPlaceInfo(double lat, double lon) throws SocketTimeoutException, IOException, WebServiceException,
 			SAXException, ParserConfigurationException, UnknownHostException {
@@ -48,7 +74,7 @@ public class GoogleGeonamingService implements IGeonamingService {
 		place.setLat(lat);
 		place.setLon(lon);
 		try (InputStream in = openGoogleService(
-				NLS.bind("http://maps.google.com/maps/api/geocode/xml?latlng={0},{1}&sensor=false&language={2}", //$NON-NLS-1$
+				NLS.bind("https://maps.google.com/maps/api/geocode/xml?latlng={0},{1}&sensor=false&language={2}", //$NON-NLS-1$
 						parms))) {
 			new GooglePlaceParser(in).parse(place);
 		} catch (DoneParsingException e) {
@@ -63,14 +89,33 @@ public class GoogleGeonamingService implements IGeonamingService {
 				null);
 		String privateKey = preferencesService.getString(COM_BDAUM_ZOOM_GPS, PreferenceConstants.GOOGLEPRIVATEKEY, "", //$NON-NLS-1$
 				null);
-		if (clientId != null && !clientId.isEmpty() && privateKey != null && !privateKey.isEmpty()) {
-			String cand = query + (NLS.bind("&client={0}", clientId)); //$NON-NLS-1$
-			try {
-				query += (NLS.bind("&client={0}&signature={0}", clientId, //$NON-NLS-1$
-						UrlSigner.computeSignature(cand, privateKey)));
-			} catch (Exception e) {
-				GoogleNamingActivator.getDefault().logError(Messages.GoogleGeonamingService_error_signing, e);
+		if (clientId == null || clientId.isEmpty()) {
+			if (answers < 3) {
+				IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+				if (activeWorkbenchWindow != null) {
+					PreferencesUtil.createPreferenceDialogOn(activeWorkbenchWindow.getShell(), GpsPreferencePage.ID,
+							null, GpsPreferencePage.ACCOUNTS).open();
+					++answers;
+					clientId = preferencesService.getString(COM_BDAUM_ZOOM_GPS, PreferenceConstants.GOOGLECLIENTID, "", //$NON-NLS-1$
+							null);
+				}
 			}
+			if (clientId == null || clientId.isEmpty())
+				throw new WebServiceException(Messages.GoogleGeonamingService_api_key_required);
+		}
+
+		if (clientId != null && !clientId.trim().isEmpty()) {
+			clientId = clientId.trim();
+			if (privateKey != null && !privateKey.trim().isEmpty()) {
+				String cand = query + (NLS.bind("&client={0}", clientId)); //$NON-NLS-1$
+				try {
+					query += (NLS.bind("&client={0}&signature={0}", clientId, //$NON-NLS-1$
+							UrlSigner.computeSignature(cand, privateKey.trim())));
+				} catch (Exception e) {
+					GoogleNamingActivator.getDefault().logError(Messages.GoogleGeonamingService_error_signing, e);
+				}
+			} else
+				query += (NLS.bind("&key={0}", clientId));//$NON-NLS-1$
 		}
 		return NetActivator.getDefault().openStream(query);
 	}
@@ -80,13 +125,26 @@ public class GoogleGeonamingService implements IGeonamingService {
 		List<WaypointArea> pnts = new ArrayList<WaypointArea>();
 		Locale locale = Locale.getDefault();
 		try (InputStream in = openGoogleService(NLS.bind(
-				"http://maps.googleapis.com/maps/api/geocode/xml?address={0}&region={1}&language={2}", //$NON-NLS-1$
+				"https://maps.googleapis.com/maps/api/geocode/xml?address={0}&region={1}&language={2}", //$NON-NLS-1$
 				new Object[] { URLEncoder.encode(address, "UTF-8"), locale.getCountry(), locale.getLanguage() }))) { //$NON-NLS-1$
 			new GoogleGeoCodeParser(in).parse(pnts);
 		} catch (DoneParsingException e) {
 			// everything okay
 		}
 		return pnts.toArray(new WaypointArea[pnts.size()]);
+	}
+
+	@Override
+	public Control createParameterGroup(CGroup parmGroup) {
+		Composite composite = new Composite(parmGroup, SWT.NONE);
+		composite.setLayout(new GridLayout(2, false));
+		new Label(composite, SWT.NONE).setText(Messages.GoogleGeonamingService_no_parameters);
+		return composite;
+	}
+
+	@Override
+	public double getElevation(double lat, double lon) throws UnknownHostException, HttpException, IOException {
+		throw new UnsupportedOperationException();
 	}
 
 }

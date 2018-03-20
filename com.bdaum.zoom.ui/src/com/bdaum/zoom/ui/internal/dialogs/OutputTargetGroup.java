@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -27,7 +27,6 @@ import java.util.List;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -50,6 +49,7 @@ import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.net.core.ftp.FtpAccount;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 public class OutputTargetGroup {
@@ -109,9 +109,7 @@ public class OutputTargetGroup {
 					dialog.setFilterPath(path);
 				String dir = dialog.open();
 				if (dir != null) {
-					String[] items = folderField.getItems();
-					items = addToHistoryList(items, dir);
-					folderField.setItems(items);
+					folderField.setItems(UiUtilities.addToHistoryList(folderField.getItems(), dir));
 					folderField.setText(dir);
 					notifyModifyListener(listener);
 				}
@@ -133,15 +131,11 @@ public class OutputTargetGroup {
 			ftpViewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 			ftpViewer.setContentProvider(ArrayContentProvider.getInstance());
 			ftpViewer.setLabelProvider(new LabelProvider() {
-
 				@Override
 				public String getText(Object element) {
 					if (element instanceof FtpAccount) {
-						FtpAccount acc = (FtpAccount) element;
-						String name = acc.getName();
-						if (name == null)
-							return Messages.OutputTargetGroup_create_new_account;
-						return name;
+						String name = ((FtpAccount) element).getName();
+						return name == null ? Messages.OutputTargetGroup_create_new_account : name;
 					}
 					return super.getText(element);
 				}
@@ -149,7 +143,6 @@ public class OutputTargetGroup {
 			editButton = new Button(group, SWT.PUSH);
 			editButton.setText(Messages.OutputTargetGroup_edit);
 			editButton.addSelectionListener(new SelectionAdapter() {
-
 				@Override
 				public void widgetSelected(SelectionEvent e) {
 					Object el = ((IStructuredSelection) ftpViewer.getSelection()).getFirstElement();
@@ -200,8 +193,7 @@ public class OutputTargetGroup {
 							Messages.OutputTargetGroup_job_id, Messages.OutputTargetGroup_event,
 							Messages.OutputTargetGroup_export_date, Messages.OutputTargetGroup_export_time };
 			new Label(group, SWT.NONE);
-			Label label = new Label(group, SWT.NONE);
-			label.setText(Messages.OutputTargetGroup_group_by);
+			new Label(group, SWT.NONE).setText(Messages.OutputTargetGroup_group_by);
 			subfolderViewer = new ComboViewer(group);
 			subfolderViewer.setContentProvider(ArrayContentProvider.getInstance());
 			subfolderViewer.setLabelProvider(new LabelProvider() {
@@ -225,34 +217,30 @@ public class OutputTargetGroup {
 	protected void updateFields() {
 		boolean ftp = ftpButton != null && ftpButton.getSelection();
 		folderField.setEnabled(!ftp);
-		if (ftpViewer != null)
+		if (ftpViewer != null) {
 			ftpViewer.getControl().setEnabled(ftp);
+			editButton.setEnabled(ftp && !ftpViewer.getSelection().isEmpty());
+		}
 		if (ftp)
 			ftpViewer.getControl().setFocus();
 		else
 			folderField.setFocus();
-		if (ftpViewer != null) {
-			ISelection sel = ftpViewer.getSelection();
-			editButton.setEnabled(ftp && !sel.isEmpty());
-		}
 	}
 
 	public void setLocalFolder(String outputFolder) {
 		if (outputFolder != null) {
-			folderField.setItems(addToHistoryList(folderField.getItems(), outputFolder));
+			folderField.setItems(UiUtilities.addToHistoryList(folderField.getItems(), outputFolder));
 			folderField.setText(outputFolder);
 		}
 	}
 
 	public void setFtpDir(String ftpDir) {
-		if (ftpDir != null && ftpViewer != null) {
-			for (FtpAccount acc : ftpAccounts) {
+		if (ftpDir != null && ftpViewer != null)
+			for (FtpAccount acc : ftpAccounts)
 				if (ftpDir.equals(acc.getName())) {
 					ftpViewer.setSelection(new StructuredSelection(acc));
 					break;
 				}
-			}
-		}
 	}
 
 	public void setTarget(int target) {
@@ -264,15 +252,13 @@ public class OutputTargetGroup {
 			if (fileButton != null)
 				fileButton.setSelection(true);
 			browseButton.setEnabled(true);
-			// CssActivator.getDefault().setColors(browseButton, null);
 		}
 		updateFields();
 	}
 
 	public String validate() {
 		if (ftpButton != null && ftpButton.getSelection()) {
-			IStructuredSelection selection = (IStructuredSelection) ftpViewer.getSelection();
-			FtpAccount acc = (FtpAccount) selection.getFirstElement();
+			FtpAccount acc = (FtpAccount) ((IStructuredSelection) ftpViewer.getSelection()).getFirstElement();
 			if (acc == null || acc.getName() == null)
 				return Messages.OutputTargetGroup_select_ftp_dir;
 		} else {
@@ -294,10 +280,8 @@ public class OutputTargetGroup {
 	}
 
 	public FtpAccount getFtpDir() {
-		if (ftpViewer == null)
-			return null;
-		IStructuredSelection selection = (IStructuredSelection) ftpViewer.getSelection();
-		return (FtpAccount) selection.getFirstElement();
+		return ftpViewer == null ? null
+				: (FtpAccount) ((IStructuredSelection) ftpViewer.getSelection()).getFirstElement();
 	}
 
 	public void initValues(IDialogSettings settings) {
@@ -346,23 +330,6 @@ public class OutputTargetGroup {
 			settings.put(SELECTED_ACCOUNT, ((FtpAccount) firstElement).getName());
 		if (subfolderoption != null)
 			settings.put(SUBFOLDERS, subfolderoption);
-	}
-
-	private static String[] addToHistoryList(String[] items, String text) {
-		boolean found = false;
-		for (String item : items) {
-			if (item.equals(text)) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			String[] newItems = new String[Math.min(8, items.length + 1)];
-			System.arraycopy(items, 0, newItems, 1, newItems.length - 1);
-			newItems[0] = text;
-			items = newItems;
-		}
-		return items;
 	}
 
 	private static void notifyModifyListener(final ModifyListener listener) {

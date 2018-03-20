@@ -21,7 +21,7 @@ use vars qw($VERSION $AUTOLOAD $lastFetched);
 use Image::ExifTool qw(:DataAccess :Utils);
 require Exporter;
 
-$VERSION = '1.43';
+$VERSION = '1.44';
 
 sub FetchObject($$$$);
 sub ExtractObject($$;$$);
@@ -927,7 +927,7 @@ sub ExtractObject($$;$$)
         }
         if ($$dict{$tag}) {
             # duplicate dictionary entries are not allowed
-            $et->Warn("Duplicate '$tag' entry in dictionary (ignored)");
+            $et->Warn("Duplicate '${tag}' entry in dictionary (ignored)");
         } else {
             # save the entry
             push @tags, $tag;
@@ -2052,9 +2052,7 @@ sub ProcessDict($$$$;$$)
         DecodeStream($et, $dict) or last;
         if ($verbose > 2) {
             $et->VPrint(2,"$$et{INDENT}$$et{DIR_NAME} stream data\n");
-            my %parms = ( Prefix => $$et{INDENT} );
-            $parms{MaxLen} = $verbose > 3 ? 1024 : 96 if $verbose < 5;
-            HexDump(\$$dict{_stream}, undef, %parms);
+            $et->VerboseDump(\$$dict{_stream});
         }
         # extract information from stream
         my %dirInfo = (
@@ -2347,7 +2345,7 @@ including AESV2 (AES-128) and AESV3 (AES-256).
 
 =head1 AUTHOR
 
-Copyright 2003-2017, Phil Harvey (phil at owl.phy.queensu.ca)
+Copyright 2003-2018, Phil Harvey (phil at owl.phy.queensu.ca)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

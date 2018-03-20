@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal;
@@ -114,9 +114,6 @@ public interface HelpContextIds extends IHelpContexts {
 	public static final String PASTEMETA_DIALOG = PREFIX
 			+ "pasteMetadata" + DIALOG_POSTFIX; //$NON-NLS-1$
 
-	public static final String ANALOG_IMPORT_DIALOG = PREFIX
-			+ "analogImport" + DIALOG_POSTFIX; //$NON-NLS-1$
-
 	public static final String EDITWEBEXHIBIT_DIALOG = PREFIX
 			+ "webExhibit" + DIALOG_POSTFIX; //$NON-NLS-1$
 
@@ -183,6 +180,13 @@ public interface HelpContextIds extends IHelpContexts {
 	public static final String GROUP_DIALOG = PREFIX
 			+ "group" + DIALOG_POSTFIX; //$NON-NLS-1$
 
+	public static final String AUTORATING_DIALOG = PREFIX
+			+ "autoRating" + DIALOG_POSTFIX; //$NON-NLS-1$
+	
+
+	public static final String IMPORTMODE_DIALOG  = PREFIX
+			+ "importMode" + DIALOG_POSTFIX; //$NON-NLS-1$
+
 
 	/* Views */
 	public static final String LIGHTBOX_VIEW = PREFIX
@@ -234,12 +238,18 @@ public interface HelpContextIds extends IHelpContexts {
 			+ "importDeviceRenaming" + WIZARD_POSTFIX; //$NON-NLS-1$
 	public static final String IMPORT_FROM_DEVICE_WIZARD_METADATA = PREFIX
 			+ "importDeviceMetadata" + WIZARD_POSTFIX; //$NON-NLS-1$
+	public static final String IMPORT_FROM_DEVICE_WIZARD_ANALOG = PREFIX
+			+ "analogProperties" + WIZARD_POSTFIX; //$NON-NLS-1$
 	public static final String IMPORT_NEW_STRUCTURE_WIZARD_FILE_SELECTION = PREFIX
 			+ "importNewStructureFileSelection" + WIZARD_POSTFIX; //$NON-NLS-1$
 	public static final String IMPORT_NEW_STRUCTURE_WIZARD_TARGET_SELECTION = PREFIX
 			+ "importNewStructureTargetSelection" + WIZARD_POSTFIX; //$NON-NLS-1$
 	public static final String IMPORT_NEW_STRUCTURE_WIZARD_RENAMING = PREFIX
 			+ "importNewStructureRenaming" + WIZARD_POSTFIX; //$NON-NLS-1$
+	public static final String IMPORT_NEW_STRUCTURE_WIZARD_METADATA =  PREFIX
+			+ "importNewStructureMetadata" + WIZARD_POSTFIX; //$NON-NLS-1$
+	public static final String IMPORT_FOLDER_WIZARD_METADATA =  PREFIX
+			+ "importFolderMetadata" + WIZARD_POSTFIX; //$NON-NLS-1$
 	public static final String WATCHED_FOLDER_FILE_SELECTION = PREFIX
 			+ "watchedFolderFileSelection" + WIZARD_POSTFIX; //$NON-NLS-1$
 	public static final String WATCHED_FOLDER_METADATA = PREFIX

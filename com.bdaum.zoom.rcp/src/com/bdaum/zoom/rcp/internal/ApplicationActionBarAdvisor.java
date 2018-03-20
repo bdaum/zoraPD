@@ -12,7 +12,6 @@
 package com.bdaum.zoom.rcp.internal;
 
 import java.io.File;
-import java.util.LinkedList;
 
 import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IOperationHistoryListener;
@@ -74,7 +73,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		private final static int DEFAULT_CHAR_WIDTH = 45;
 
 		private int charWidth;
-
 		private CLabel label;
 
 		/**
@@ -84,9 +82,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		private Composite statusLine = null;
 
 		private String text = ""; //$NON-NLS-1$
-
 		private int widthHint = -1;
-
 		private IWorkbenchAction handler;
 
 		/**
@@ -163,7 +159,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 			if (!this.text.equals(text)) {
 				this.text = text;
 				if (label != null && !label.isDisposed()) {
-					label.setText(this.text);
+					label.setText(text);
 					IContributionManager contributionManager = getParent();
 					if (contributionManager != null)
 						contributionManager.update(true);
@@ -205,7 +201,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 							NLS.bind(Messages.getString("ApplicationActionBarAdvisor.cat_does_not_exist"), cat)); //$NON-NLS-1$
 			}
 		}
-
 	}
 
 	public ApplicationActionBarAdvisor(IActionBarConfigurer configurer) {
@@ -297,9 +292,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 				CoreActivator activator = CoreActivator.getDefault();
 				File file = activator.getDbManager().getFile();
 				CatLocation current = file == null ? null : new CatLocation(file);
-				LinkedList<CatLocation> recentCats = activator.getRecentCats();
 				int i = 0;
-				for (CatLocation cat : recentCats)
+				for (CatLocation cat : activator.getRecentCats())
 					if ((current == null || !current.equals(cat)) && cat.exists())
 						recentMenu.add(new OpenAction(cat, ++i));
 				if (recentMenu.isEmpty())
@@ -308,7 +302,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		});
 		catMenu.add(recentMenu);
 		catMenu.add(new Separator(IZoomActionConstants.CATALOG_EXT1));
-
 		catMenu.add(getAction(ActionFactory.PRINT.getId()));
 		catMenu.add(new Separator(IZoomActionConstants.CATALOG_EXT2));
 		catMenu.add(new Separator(IZoomActionConstants.CATALOG_EXT3));
@@ -399,7 +392,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 
 	public void hookUndoMessenger() {
 		IPartListener partListener = new IPartListener() {
-
 			@Override
 			public void partOpened(IWorkbenchPart part) {
 				// do nothing
@@ -429,7 +421,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		};
 		IWorkbench workbench = PlatformUI.getWorkbench();
 		workbench.addWindowListener(new IWindowListener() {
-
 			@Override
 			public void windowOpened(IWorkbenchWindow window) {
 				// do nothing

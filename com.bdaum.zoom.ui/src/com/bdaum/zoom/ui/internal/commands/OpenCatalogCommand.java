@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.commands;
 
@@ -35,6 +35,8 @@ import com.bdaum.zoom.ui.internal.actions.Messages;
 
 @SuppressWarnings("restriction")
 public class OpenCatalogCommand extends AbstractCatCommandHandler {
+
+	private boolean inhibitWatchedFolderCheck;
 
 	@Override
 	public void run() {
@@ -61,7 +63,8 @@ public class OpenCatalogCommand extends AbstractCatCommandHandler {
 					if (preCatClose(false))
 						try {
 							IDbManager db = CoreActivator.getDefault().openDatabase(catFile.getAbsolutePath());
-							checkPausedFolderWatch(getShell(), db);
+							if (!inhibitWatchedFolderCheck)
+								checkPausedFolderWatch(getShell(), db);
 							postCatOpen(db.getFileName(), false);
 							postCatInit(false);
 						} catch (IllegalStateException e) {
@@ -72,20 +75,26 @@ public class OpenCatalogCommand extends AbstractCatCommandHandler {
 			}
 		} finally {
 			catFile = null;
+			inhibitWatchedFolderCheck = false;
 		}
 
 	}
 
 	public static void checkPausedFolderWatch(Shell shell, IDbManager dbManager) {
-		if (dbManager.getFile() != null) {
+		if (dbManager.getFile() != null && !shell.isDisposed()) {
 			Meta meta = dbManager.getMeta(true);
-			if (meta.getPauseFolderWatch() && AcousticMessageDialog.openQuestion(shell, Messages.OpenCatalogCommand_paused,
-					Messages.OpenCatalogCommand_resume_watch)) {
+			if (meta.getPauseFolderWatch() && AcousticMessageDialog.openQuestion(shell,
+					Messages.OpenCatalogCommand_paused, Messages.OpenCatalogCommand_resume_watch)) {
 				meta.setPauseFolderWatch(false);
 				dbManager.storeAndCommit(meta);
 			}
 		}
 
+	}
+
+	public void setCatFile(File file, boolean inhibitWatchedFolderCheck) {
+		this.inhibitWatchedFolderCheck = inhibitWatchedFolderCheck;
+		setCatFile(file);
 	}
 
 }

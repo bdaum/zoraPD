@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -110,18 +110,15 @@ public class ProximityEditDialog extends ZTitleAreaDialog {
 			if (coll != null)
 				findInNetworkGroup.setSelection(coll.getNetwork());
 		}
-		final Label latLabel = new Label(comp, SWT.NONE);
-		latLabel.setText(Messages.ProximityEditDialog_latitude);
+		new Label(comp, SWT.NONE).setText(Messages.ProximityEditDialog_latitude);
 		latField = new Text(comp, SWT.BORDER);
 		latField.setLayoutData(new GridData(80, SWT.DEFAULT));
 		latField.addModifyListener(modifyListener);
-		final Label lonLabel = new Label(comp, SWT.NONE);
-		lonLabel.setText(Messages.ProximityEditDialog_longitude);
+		new Label(comp, SWT.NONE).setText(Messages.ProximityEditDialog_longitude);
 		lonField = new Text(comp, SWT.BORDER);
 		lonField.setLayoutData(new GridData(80, SWT.DEFAULT));
 		lonField.addModifyListener(modifyListener);
-		final Label distancekmLabel = new Label(comp, SWT.NONE);
-		distancekmLabel.setText(Messages.ProximityEditDialog_distance);
+		new Label(comp, SWT.NONE).setText(Messages.ProximityEditDialog_distance);
 		distanceField = new NumericControl(comp, SWT.NONE);
 		distanceField.setDigits(3);
 		distanceField.setIncrement(100);

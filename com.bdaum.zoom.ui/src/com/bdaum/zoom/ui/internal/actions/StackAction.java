@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2015 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2015 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.actions;
 
@@ -72,11 +72,11 @@ public class StackAction extends Action {
 			}
 			StackDialog dialog = new StackDialog(adaptable.getAdapter(Shell.class),
 					names.toArray(new String[names.size()]));
-			if (dialog.open() == Window.OK) {
-				String template = Constants.STACK + dialog.getName() + '!' + Constants.TV_FILENAME;
-				OperationJob.executeOperation(new BulkRenameOperation(selectedAssets, template, null, 1, null),
+			if (dialog.open() == Window.OK)
+				OperationJob.executeOperation(
+						new BulkRenameOperation(selectedAssets,
+								Constants.STACK + dialog.getName() + '!' + Constants.TV_FILENAME, null, 1, null),
 						adaptable);
-			}
 		}
 
 	}

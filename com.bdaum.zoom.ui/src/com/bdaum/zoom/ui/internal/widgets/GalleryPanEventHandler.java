@@ -15,11 +15,9 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
-
-import java.awt.geom.Point2D;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
@@ -58,9 +56,6 @@ public class GalleryPanEventHandler extends PPanEventHandler implements
 	private int bottom;
 	private final double speedOffset;
 
-	/**
-	 * @param animatedGallery
-	 */
 	public GalleryPanEventHandler(IPresentationHandler presentationHandler,
 			PNode[] workarea, int left, int top, int right, int bottom,
 			int dir, int forcePanMask, double speedOffset) {
@@ -76,7 +71,6 @@ public class GalleryPanEventHandler extends PPanEventHandler implements
 		setMouseSpeed();
 		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID)
 				.addPreferenceChangeListener(this);
-
 	}
 
 	private void setMouseSpeed() {
@@ -122,8 +116,7 @@ public class GalleryPanEventHandler extends PPanEventHandler implements
 			return;
 		if (y + viewBounds.getHeight() > bottom && deltaY < 0)
 			return;
-		Point2D l = e.getPosition();
-		if (camera.getViewBounds().contains(l)) {
+		if (camera.getViewBounds().contains(e.getPosition())) {
 			camera.translateView(deltaX, deltaY);
 			if (presentationHandler != null)
 				presentationHandler.resetTransform();

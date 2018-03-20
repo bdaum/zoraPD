@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.net.communities;
 
@@ -33,7 +33,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
@@ -48,6 +47,7 @@ import org.eclipse.swt.widgets.Label;
 
 import com.bdaum.zoom.net.communities.ui.EditCommunityAccountDialog;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePagePart;
@@ -80,7 +80,7 @@ public class CommunitiesPreferencePage extends AbstractPreferencePagePart {
 		accountViewer.getControl().setLayoutData(layoutData);
 		accountViewer.setContentProvider(new AccountContentProvider(accounts));
 		accountViewer.setLabelProvider(new AccountLabelProvider(accountViewer));
-		accountViewer.setComparator(new ViewerComparator());
+		accountViewer.setComparator(ZViewerComparator.INSTANCE);
 		UiUtilities.installDoubleClickExpansion(accountViewer);
 		Composite buttonGroup = new Composite(group, SWT.NONE);
 		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.FILL, false, true));
@@ -138,7 +138,6 @@ public class CommunitiesPreferencePage extends AbstractPreferencePagePart {
 		removeButton = createPushButton(buttonGroup, Messages.CommunitiesPreferencePage_remove,
 				Messages.CommunitiesPreferencePage_remove_selected_account);
 		removeButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				IStructuredSelection selection = (IStructuredSelection) accountViewer.getSelection();
@@ -204,6 +203,11 @@ public class CommunitiesPreferencePage extends AbstractPreferencePagePart {
 	@Override
 	public String getLabel() {
 		return Messages.CommunitiesPreferencePage_communities;
+	}
+	
+	@Override
+	public String getTooltip() {
+		return Messages.CommunitiesPreferencePage_community_tooltip;
 	}
 
 	@Override

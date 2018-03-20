@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.views;
 
@@ -65,14 +65,12 @@ public class CatalogContentProvider implements ITreeContentProvider {
 	public Object[] getElements(Object parent) {
 		calYear = null;
 		if (GroupImpl.class.equals(parent)) {
-			List<GroupImpl> groups = Core.getCore().getDbManager().obtainObjects(GroupImpl.class);
-			List<GroupImpl> roots = new ArrayList<GroupImpl>(groups);
-			Iterator<GroupImpl> it = roots.iterator();
-			while (it.hasNext()) {
-				GroupImpl group = it.next();
-				if (group.getGroup_subgroup_parent() != null)
+			List<GroupImpl> roots = new ArrayList<GroupImpl>(
+					Core.getCore().getDbManager().obtainObjects(GroupImpl.class));
+			for (Iterator<GroupImpl> it = roots.iterator(); it.hasNext();)
+				if (it.next().getGroup_subgroup_parent() != null)
 					it.remove();
-			}
+			roots.add(CatalogView.WASTEBASKET);
 			return roots.toArray();
 		}
 		return getChildren(parent);
@@ -97,13 +95,11 @@ public class CatalogContentProvider implements ITreeContentProvider {
 	}
 
 	public Object[] getChildren(Object parent) {
-		String annotation = getAnnotation(parent);
-		return getChildren(parent, annotation);
+		return getChildren(parent, getAnnotation(parent));
 	}
 
 	protected Object[] getChildren(Object parent, String annotation) {
 		if (parent instanceof GroupImpl) {
-			IDbManager dbManager = Core.getCore().getDbManager();
 			List<IIdentifiableObject> children = new ArrayList<>();
 			Set<String> ids = new HashSet<String>();
 			GroupImpl group = (GroupImpl) parent;
@@ -119,7 +115,7 @@ public class CatalogContentProvider implements ITreeContentProvider {
 			if (group.getWebGallery() != null)
 				ids.addAll(group.getWebGallery());
 			if (!ids.isEmpty()) {
-				List<IdentifiableObject> set = dbManager.obtainByIds(IdentifiableObject.class, ids);
+				List<IdentifiableObject> set = Core.getCore().getDbManager().obtainByIds(IdentifiableObject.class, ids);
 				for (IdentifiableObject obj : set) {
 					if (obj instanceof SmartCollectionImpl
 							&& groupId.equals(((SmartCollectionImpl) obj).getGroup_rootCollection_parent())) {
@@ -144,13 +140,11 @@ public class CatalogContentProvider implements ITreeContentProvider {
 			if (annotation == null || annotation.isEmpty())
 				return new HashSet<>(((SmartCollection) parent).getSubSelection()).toArray(); // avoid duplicates
 			Set<SmartCollection> set = new HashSet<>();
-			for (SmartCollection sm : ((SmartCollection) parent).getSubSelection()) {
+			for (SmartCollection sm : ((SmartCollection) parent).getSubSelection())
 				if (filter(sm, annotation))
 					set.add(sm);
-			}
 			return set.toArray();
 		}
-
 		return EMPTY;
 	}
 
@@ -182,7 +176,7 @@ public class CatalogContentProvider implements ITreeContentProvider {
 			List<Criterion> crits = sm.getCriterion();
 			if (crits.isEmpty())
 				return false;
-			Criterion criterion = sm.getCriterion(0);
+			Criterion criterion = crits.get(0);
 			if (criterion == null)
 				return false;
 			Object value = criterion.getValue();

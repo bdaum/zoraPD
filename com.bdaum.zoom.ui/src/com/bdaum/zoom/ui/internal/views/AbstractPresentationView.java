@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2011 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -304,24 +304,6 @@ public abstract class AbstractPresentationView extends BasicView
 		surfaceBounds = computeSurfaceSize(canvas.getDisplay().getPrimaryMonitor().getBounds());
 		surface = PSWTPath.createRectangle(surfaceBounds.x, surfaceBounds.y, surfaceBounds.width, surfaceBounds.height);
 		canvas.getLayer().addChild(surface);
-		// TODO is this needed?
-		// canvas.addGestureListener(new GestureListener() {
-		// public void gesture(GestureEvent e) {
-		// if ((e.detail & SWT.GESTURE_BEGIN) != 0) {
-		// if (e.magnification == 1d) {
-		// previousMagnification = e.magnification;
-		// wheelListener.pause();
-		// }
-		// } else if ((e.detail & SWT.GESTURE_MAGNIFY) != 0) {
-		// zoom(canvas, Math.sqrt(e.magnification / previousMagnification));
-		// previousMagnification = e.magnification;
-		// } else if ((e.detail & SWT.GESTURE_PAN) != 0) {
-		// pan(canvas.getCamera(), e.xDirection, e.yDirection);
-		// } else if ((e.detail & SWT.GESTURE_END) != 0) {
-		// wheelListener.restart();
-		// }
-		// }
-		// });
 		canvas.addMouseListener(new MouseAdapter() {
 
 			@Override
@@ -357,7 +339,6 @@ public abstract class AbstractPresentationView extends BasicView
 		GridData data = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
 		data.heightHint = PROGRESS_THICKNESS;
 		progressBar.setLayoutData(data);
-
 		addKeyListener();
 		getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getOperationHistory()
 				.addOperationHistoryListener(new IOperationHistoryListener() {
@@ -689,7 +670,10 @@ public abstract class AbstractPresentationView extends BasicView
 	@Override
 	public void refresh() {
 		if (canvas != null && !canvas.isDisposed())
-			canvas.getDisplay().syncExec(() -> canvas.redraw());
+			canvas.getDisplay().asyncExec(() -> {
+				if (canvas != null && !canvas.isDisposed())
+					canvas.redraw();
+			});
 	}
 
 	@Override
@@ -811,8 +795,7 @@ public abstract class AbstractPresentationView extends BasicView
 		PCamera camera = pcanvas.getCamera();
 		double newScale = scaleDelta * camera.getViewScale();
 		if (newScale >= wheelListener.getMinScale() && newScale <= wheelListener.getMaxScale()) {
-			Rectangle area = pcanvas.getClientArea();
-			camera.scaleViewAboutPoint(scaleDelta, area.x + area.width / 2, area.y + area.height / 2);
+			camera.scaleView(scaleDelta);
 			resetTransform();
 		}
 	}
@@ -991,17 +974,10 @@ public abstract class AbstractPresentationView extends BasicView
 		return super.getAdapter(adapter);
 	}
 
-	/**
-	 * @return the pickedNode
-	 */
 	protected PNode getPickedNode() {
 		return pickedNode;
 	}
 
-	/**
-	 * @param pickedNode
-	 *            the pickedNode to set
-	 */
 	protected void setPickedNode(PNode pickedNode) {
 		this.pickedNode = pickedNode;
 		synchronize();
@@ -1126,32 +1102,31 @@ public abstract class AbstractPresentationView extends BasicView
 	}
 
 	@Override
-	public void updateActions() {
-		AssetSelection selection = (AssetSelection) getAdapter(AssetSelection.class);
-		boolean writable = !dbIsReadonly();
-		int count = selection.size();
-		int localCount = selection.getLocalAssets().size();
-		if (viewActive) {
+	public void updateActions(boolean force) {
+		if (viewActive || force) {
+			AssetSelection selection = (AssetSelection) getAdapter(AssetSelection.class);
+			boolean writable = !dbIsReadonly();
+			int count = selection.size();
+			int localCount = selection.getLocalAssets().size();
 			boolean one = count == 1;
 			boolean localOne = localCount == 1;
-			boolean selected = count > 0;
 			boolean localSelected = localCount > 0;
-			boolean canPlayVoiceNote = one && hasVoiceNote(selection);
 			editAction.setEnabled(localSelected);
 			editWithAction.setEnabled(localSelected);
 			showInFolderAction.setEnabled(localOne);
 			showInTimeLineAction.setEnabled(localOne && hasTimeLine());
 			if (exhibitPropertiesAction != null)
 				exhibitPropertiesAction.setEnabled(one);
-			voiceNoteAction.setEnabled(canPlayVoiceNote);
-			rotateLeftAction.setEnabled(localSelected && writable);
-			rotateRightAction.setEnabled(localSelected && writable);
+			voiceNoteAction.setEnabled(localOne && hasVoiceNote(selection));
+			rotateLeftAction.setEnabled(localSelected && writable && isMedia(selection, QueryField.PHOTO, true));
+			rotateRightAction.setEnabled(localSelected && writable && isMedia(selection, QueryField.PHOTO, true));
 			showFullscreenAction.setEnabled(one);
 			if (showInMapAction != null)
-				showInMapAction.setEnabled(selected);
+				showInMapAction.setEnabled(count > 0);
+			super.updateActions(count, localCount);
 		}
-		super.updateActions(count, localCount);
 	}
+
 
 	/**
 	 * Set cue cursor
@@ -1172,5 +1147,7 @@ public abstract class AbstractPresentationView extends BasicView
 	}
 
 	protected abstract void refreshAfterHistoryEvent(IUndoableOperation operation);
+
+	public abstract String getId();
 
 }

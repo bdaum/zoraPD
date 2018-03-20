@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -23,23 +23,21 @@ package com.bdaum.zoom.ui.internal.actions;
 import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
-@SuppressWarnings("restriction")
-public class PlayVoiceNoteAction extends AbstractMultiMediaAction {
+public class PlayVoiceNoteAction extends Action {
 
 	private IAdaptable adaptable;
 
 	public PlayVoiceNoteAction(IWorkbenchWindow window, String label, String tooltip, ImageDescriptor image,
 			IAdaptable adaptable) {
-		super(window, label, image, QueryField.PHOTO | IMediaSupport.VIDEO);
+		super(label, image);
 		this.adaptable = adaptable;
 		setToolTipText(tooltip);
 	}

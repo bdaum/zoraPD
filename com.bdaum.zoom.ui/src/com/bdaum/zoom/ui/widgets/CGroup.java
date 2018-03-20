@@ -15,11 +15,12 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.widgets;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -27,6 +28,8 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
@@ -45,6 +48,14 @@ public class CGroup extends Composite implements PaintListener {
 	private String text;
 	private int th = 0;
 	private int tw;
+	
+	public static CGroup create(Composite parent, int cols, String text) {
+		CGroup cGroup = new CGroup(parent, SWT.NONE);
+		cGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, cols, 1));
+		cGroup.setLayout(new GridLayout(2, false));
+		cGroup.setText(text);
+		return cGroup;
+	}
 
 	/**
 	 * Constructor

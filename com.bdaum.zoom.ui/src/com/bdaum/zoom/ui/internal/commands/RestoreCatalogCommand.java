@@ -15,16 +15,14 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.commands;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -32,7 +30,6 @@ import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.widgets.DirectoryDialog;
 
 import com.bdaum.zoom.batch.internal.BatchActivator;
-import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
@@ -55,30 +52,27 @@ public class RestoreCatalogCommand extends AbstractCatCommandHandler {
 		IDbManager dbManager = coreActivator.getDbManager();
 		File catFile = dbManager.getFile();
 		if (catFile != null) {
-			Meta meta1 = dbManager.getMeta(true);
-			String backupLocation = meta1.getBackupLocation();
+			String backupLocation = dbManager.getMeta(true).getBackupLocation();
 			if (backupLocation != null && !backupLocation.isEmpty()) {
-				String[] result = Utilities.computeBackupLocation(catFile, backupLocation);
-				File generationFolder = new File(result[1]);
+				File generationFolder = new File(Utilities.computeBackupLocation(catFile, backupLocation)[1]);
 				FileNameExtensionFilter filter = new FileNameExtensionFilter(new String[] { Constants.BACKUPEXT },
 						false);
 				File[] backups = generationFolder.listFiles();
 				if (backups != null && backups.length > 0) {
-					List<File> backUpFolders = new ArrayList<File>(backups.length);
-					for (File file : backups) {
-						if (file.isDirectory() && filter.accept(file.getName()))
-							backUpFolders.add(file);
-					}
-					if (!backUpFolders.isEmpty()) {
-						Collections.sort(backUpFolders, new Comparator<File>() {
-							public int compare(File f1, File f2) {
-								long m1 = f1.lastModified();
-								long m2 = f2.lastModified();
-								return m1 == m2 ? 0 : m1 > m2 ? -1 : 1;
-							}
-						});
-						dialog.setFilterPath(backUpFolders.get(0).getAbsolutePath());
-					}
+					Arrays.sort(backups, new Comparator<File>() {
+						public int compare(File f1, File f2) {
+							long m1 = f1.lastModified();
+							long m2 = f2.lastModified();
+							return m1 == m2 ? 0 : m1 > m2 ? -1 : 1;
+						}
+					});
+					String path = backups[0].getAbsolutePath();
+					for (File file : backups)
+						if (file.isDirectory() && filter.accept(file.getName())) {
+							path = file.getAbsolutePath();
+							break;
+						}
+					dialog.setFilterPath(path);
 				}
 			}
 		}
@@ -93,66 +87,61 @@ public class RestoreCatalogCommand extends AbstractCatCommandHandler {
 						sourceName = name;
 						break;
 					}
-			if (catFile != null && !catFile.getName().equals(sourceName)) {
-				if (!AcousticMessageDialog.openQuestion(getShell(), Messages.RestoreCatActionDelegate_restore_cat,
-						NLS.bind(Messages.RestoreCatActionDelegate_not_a_backup_of_current, sourceName,
-								catFile.getName())))
-					return;
-			}
+			if (catFile != null && !catFile.getName().equals(sourceName) && !AcousticMessageDialog.openQuestion(
+					getShell(), Messages.RestoreCatActionDelegate_restore_cat,
+					NLS.bind(Messages.RestoreCatActionDelegate_not_a_backup_of_current, sourceName, catFile.getName())))
+				return;
 			DirectoryDialog targetDialog = new DirectoryDialog(getShell(), SWT.SAVE);
 			targetDialog.setText(Messages.RestoreCatActionDelegate_target_dir);
 			if (catFile != null)
 				targetDialog.setFilterPath(catFile.getParent());
 			String target = targetDialog.open();
-			if (target == null)
-				return;
-			File targetFolder = new File(target);
-			final File targetFile = sourceName == null ? null : new File(targetFolder, sourceName);
-			final File sourceFile = sourceName == null ? null : new File(sourceFolder, sourceName);
-			if (sourceFile != null && targetFile != null) {
-				if (targetFile.exists() && !AcousticMessageDialog.openQuestion(getShell(),
-						Messages.RestoreCatActionDelegate_restore_cat,
-						NLS.bind(Messages.RestoreCatActionDelegate_already_exists, sourceName)))
-					return;
-			}
-			if (targetFile != null && sourceFile != null) {
-				String absolutePath = sourceFile.getAbsolutePath();
-				final File sourceIndexFolder = new File(
-						absolutePath.substring(0, absolutePath.length() - BatchConstants.CATEXTENSION.length())
-								+ Constants.INDEXEXTENSION);
-				absolutePath = targetFile.getAbsolutePath();
-				final File targetIndexFolder = new File(
-						absolutePath.substring(0, absolutePath.length() - BatchConstants.CATEXTENSION.length())
-								+ Constants.INDEXEXTENSION);
-				coreActivator.closeDatabase();
-				BusyIndicator.showWhile(getShell().getDisplay(), () -> {
-					targetFile.delete();
-					try {
-						BatchUtilities.copyFile(sourceFile, targetFile, null);
-						if (targetIndexFolder.exists())
-							BatchUtilities.deleteFileOrFolder(targetIndexFolder);
-						if (sourceIndexFolder.exists())
-							BatchUtilities.copyFolder(sourceIndexFolder, targetIndexFolder, null);
-						coreActivator.openDatabase(targetFile.getAbsolutePath());
-						CoreActivator.logDebug("Database created", null); //$NON-NLS-1$
-						getShell().setText(Constants.APPLICATION_NAME + " - " //$NON-NLS-1$
-								+ targetFile);
-						coreActivator.fireCatalogOpened(false);
-					} catch (IOException e1) {
-						AcousticMessageDialog.openError(getShell(), Messages.RestoreCatActionDelegate_restore_cat,
-								NLS.bind(Messages.RestoreCatActionDelegate_io_error, e1, targetFile));
-						BatchActivator.setFastExit(true);
-						getActiveWorkbenchWindow().getWorkbench().close();
-					} catch (DiskFullException e2) {
-						AcousticMessageDialog.openError(getShell(), Messages.RestoreCatActionDelegate_restore_cat,
-								NLS.bind(Messages.RestoreCatActionDelegate_disk_full, targetFile));
-						BatchActivator.setFastExit(true);
-						getActiveWorkbenchWindow().getWorkbench().close();
-					}
+			if (target != null) {
+				File targetFolder = new File(target);
+				final File targetFile = sourceName == null ? null : new File(targetFolder, sourceName);
+				final File sourceFile = sourceName == null ? null : new File(sourceFolder, sourceName);
+				if (targetFile != null && sourceFile != null) {
+					if (targetFile.exists() && !AcousticMessageDialog.openQuestion(getShell(),
+							Messages.RestoreCatActionDelegate_restore_cat,
+							NLS.bind(Messages.RestoreCatActionDelegate_already_exists, sourceName)))
+						return;
+					String absolutePath = sourceFile.getAbsolutePath();
+					final File sourceIndexFolder = new File(
+							absolutePath.substring(0, absolutePath.length() - BatchConstants.CATEXTENSION.length())
+									+ Constants.INDEXEXTENSION);
+					absolutePath = targetFile.getAbsolutePath();
+					final File targetIndexFolder = new File(
+							absolutePath.substring(0, absolutePath.length() - BatchConstants.CATEXTENSION.length())
+									+ Constants.INDEXEXTENSION);
+					coreActivator.closeDatabase();
+					BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+						targetFile.delete();
+						try {
+							BatchUtilities.copyFile(sourceFile, targetFile, null);
+							if (targetIndexFolder.exists())
+								BatchUtilities.deleteFileOrFolder(targetIndexFolder);
+							if (sourceIndexFolder.exists())
+								BatchUtilities.copyFolder(sourceIndexFolder, targetIndexFolder, null);
+							coreActivator.openDatabase(targetFile.getAbsolutePath());
+							CoreActivator.logDebug("Database created", null); //$NON-NLS-1$
+							getShell().setText(Constants.APPLICATION_NAME + " - " //$NON-NLS-1$
+									+ targetFile);
+							coreActivator.fireCatalogOpened(false);
+						} catch (IOException e1) {
+							AcousticMessageDialog.openError(getShell(), Messages.RestoreCatActionDelegate_restore_cat,
+									NLS.bind(Messages.RestoreCatActionDelegate_io_error, e1, targetFile));
+							BatchActivator.setFastExit(true);
+							getActiveWorkbenchWindow().getWorkbench().close();
+						} catch (DiskFullException e2) {
+							AcousticMessageDialog.openError(getShell(), Messages.RestoreCatActionDelegate_restore_cat,
+									NLS.bind(Messages.RestoreCatActionDelegate_disk_full, targetFile));
+							BatchActivator.setFastExit(true);
+							getActiveWorkbenchWindow().getWorkbench().close();
+						}
 
-				});
+					});
+				}
 			}
-
 		}
 	}
 }

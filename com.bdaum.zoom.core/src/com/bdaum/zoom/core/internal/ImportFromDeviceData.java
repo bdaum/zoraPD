@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.internal;
@@ -32,6 +32,8 @@ public class ImportFromDeviceData {
 	public static final int SUBFOLDERPOLICY_YEAR = 1;
 	public static final int SUBFOLDERPOLICY_YEARMONTH = 2;
 	public static final int SUBFOLDERPOLICY_YEARMONTHDAY = 3;
+	public static final int SUBFOLDERPOLICY_YEARWEEK = 4;
+	public static final int SUBFOLDERPOLICY_YEARWEEKDAY = 5;
 	private String targetDir;
 	private int subfolderPolicy;
 	private boolean detectDuplicates;
@@ -49,6 +51,7 @@ public class ImportFromDeviceData {
 	private final File[] dcims;
 	private WatchedFolder watchedFolder;
 	private int privacy;
+	private boolean deepSubfolders;
 
 
 	public ImportFromDeviceData(File[] dcims, boolean media, WatchedFolder watchedFolder) {
@@ -191,6 +194,14 @@ public class ImportFromDeviceData {
 
 	public int getPrivacy() {
 		return privacy;
+	}
+
+	public void setDeepSubfolders(boolean deepSubfolders) {
+		this.deepSubfolders = deepSubfolders;
+	}
+
+	public boolean isDeepSubfolders() {
+		return deepSubfolders;
 	}
 
 }

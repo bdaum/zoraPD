@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.db.internal;
 
@@ -60,234 +60,175 @@ public class TypeFilter extends AssetFilter implements ITypeFilter {
 			return isDng(format);
 		case RAW | DNG:
 			return ImageConstants.IMAGE_X_RAW.equals(mimeType);
-
 		case JPEG:
 			return ImageConstants.JPEG.equals(format);
-
 		case JPEG | RAW:
 			return ImageConstants.JPEG.equals(format)
 					|| isRaw(format, mimeType);
-
 		case JPEG | DNG:
 			return ImageConstants.JPEG.equals(format) || isDng(format);
-
 		case JPEG | DNG | RAW:
 			return ImageConstants.JPEG.equals(format)
 					|| ImageConstants.IMAGE_X_RAW.equals(mimeType);
-
 		case TIFF:
 			return ImageConstants.TIFF.equals(format);
 
 		case TIFF | RAW:
 			return ImageConstants.TIFF.equals(format)
 					|| isRaw(format, mimeType);
-
 		case TIFF | DNG:
 			return ImageConstants.TIFF.equals(format) || isDng(format);
-
 		case TIFF | DNG | RAW:
 			return ImageConstants.TIFF.equals(format)
 					|| ImageConstants.IMAGE_X_RAW.equals(mimeType);
-
 		case TIFF | JPEG:
 			return ImageConstants.TIFF.equals(format)
 					|| ImageConstants.JPEG.equals(format);
-
 		case TIFF | JPEG | RAW:
 			return ImageConstants.JPEG.equals(format)
 					|| ImageConstants.TIFF.equals(format)
 					|| isRaw(format, mimeType);
-
 		case TIFF | JPEG | DNG:
 			return ImageConstants.TIFF.equals(format)
 					|| ImageConstants.JPEG.equals(format) || isDng(format);
-
 		case TIFF | JPEG | DNG | RAW:
 			return ImageConstants.TIFF.equals(format)
 					|| ImageConstants.JPEG.equals(format)
 					|| ImageConstants.IMAGE_X_RAW.equals(mimeType);
-
 		case OTHER:
 			return !ImageConstants.TIFF.equals(format)
 					&& !ImageConstants.JPEG.equals(format)
 					&& !ImageConstants.IMAGE_X_RAW.equals(mimeType)
 					&& !isMedia(format);
-
 		case OTHER | RAW:
 			return !ImageConstants.TIFF.equals(format)
 					&& !ImageConstants.JPEG.equals(format) && !isDng(format)
 					&& !isMedia(format);
-
 		case OTHER | DNG:
 			return !ImageConstants.TIFF.equals(format)
 					&& !ImageConstants.JPEG.equals(format)
 					&& !isRaw(format, mimeType) && !isMedia(format);
-
 		case OTHER | DNG | RAW:
 			return !ImageConstants.TIFF.equals(format)
 					&& !ImageConstants.JPEG.equals(format) && !isMedia(format);
-
 		case OTHER | JPEG:
 			return !ImageConstants.TIFF.equals(format)
 					&& !ImageConstants.IMAGE_X_RAW.equals(mimeType)
 					&& !isMedia(format);
-
 		case OTHER | JPEG | RAW:
 			return !ImageConstants.TIFF.equals(format) && !isDng(format)
 					&& !isMedia(format);
-
 		case OTHER | JPEG | DNG:
 			return !ImageConstants.TIFF.equals(format)
 					&& !isRaw(format, mimeType) && !isMedia(format);
-
 		case OTHER | JPEG | DNG | RAW:
 			return !ImageConstants.TIFF.equals(format) && !isMedia(format);
-
 		case OTHER | TIFF:
 			return !ImageConstants.JPEG.equals(format)
 					&& !ImageConstants.IMAGE_X_RAW.equals(mimeType)
 					&& !isMedia(format);
-
 		case OTHER | TIFF | RAW:
 			return !ImageConstants.JPEG.equals(format) && !isDng(format)
 					&& !isMedia(format);
-
 		case OTHER | TIFF | DNG:
 			return !ImageConstants.JPEG.equals(format)
 					&& !isRaw(format, mimeType) && !isMedia(format);
-
 		case OTHER | TIFF | DNG | RAW:
 			return !ImageConstants.JPEG.equals(format) && !isMedia(format);
-
 		case OTHER | TIFF | JPEG:
 			return !ImageConstants.IMAGE_X_RAW.equals(mimeType)
 					&& !isMedia(format);
-
 		case OTHER | TIFF | JPEG | RAW:
 			return !isDng(format) && !isMedia(format);
-
 		case OTHER | TIFF | JPEG | DNG:
 			return !isRaw(format, mimeType) && !isMedia(format);
-
 		case OTHER | TIFF | JPEG | DNG | RAW:
 			return !isMedia(format);
-
 		case MEDIA:
 			return isMedia(format);
-
 		case MEDIA | RAW:
 			return isMedia(format) || isRaw(format, mimeType);
-
 		case MEDIA | DNG:
 			return isMedia(format) || isDng(format);
-
 		case MEDIA | RAW | DNG:
 			return isMedia(format)
 					|| ImageConstants.IMAGE_X_RAW.equals(mimeType);
-
 		case MEDIA | JPEG:
 			return isMedia(format) || ImageConstants.JPEG.equals(format);
-
 		case MEDIA | JPEG | RAW:
 			return isMedia(format) || ImageConstants.JPEG.equals(format)
 					|| isRaw(format, mimeType);
-
 		case MEDIA | JPEG | DNG:
 			return isMedia(format) || ImageConstants.JPEG.equals(format)
 					|| isDng(format);
-
 		case MEDIA | JPEG | DNG | RAW:
 			return isMedia(format) || ImageConstants.JPEG.equals(format)
 					|| ImageConstants.IMAGE_X_RAW.equals(mimeType);
-
 		case MEDIA | TIFF:
 			return isMedia(format) || ImageConstants.TIFF.equals(format);
-
 		case MEDIA | TIFF | RAW:
 			return isMedia(format) || ImageConstants.TIFF.equals(format)
 					|| isRaw(format, mimeType);
-
 		case MEDIA | TIFF | DNG:
 			return isMedia(format) || ImageConstants.TIFF.equals(format)
 					|| isDng(format);
-
 		case MEDIA | TIFF | DNG | RAW:
 			return isMedia(format) || ImageConstants.TIFF.equals(format)
 					|| ImageConstants.IMAGE_X_RAW.equals(mimeType);
-
 		case MEDIA | TIFF | JPEG:
 			return isMedia(format) || ImageConstants.TIFF.equals(format)
 					|| ImageConstants.JPEG.equals(format);
-
 		case MEDIA | TIFF | JPEG | RAW:
 			return isMedia(format) || ImageConstants.JPEG.equals(format)
 					|| ImageConstants.TIFF.equals(format)
 					|| isRaw(format, mimeType);
-
 		case MEDIA | TIFF | JPEG | DNG:
 			return isMedia(format) || ImageConstants.TIFF.equals(format)
 					|| ImageConstants.JPEG.equals(format) || isDng(format);
-
 		case MEDIA | TIFF | JPEG | DNG | RAW:
 			return isMedia(format) || ImageConstants.TIFF.equals(format)
 					|| ImageConstants.JPEG.equals(format)
 					|| ImageConstants.IMAGE_X_RAW.equals(mimeType);
-
 		case MEDIA | OTHER:
 			return !ImageConstants.TIFF.equals(format)
 					&& !ImageConstants.JPEG.equals(format)
 					&& !ImageConstants.IMAGE_X_RAW.equals(mimeType);
-
 		case MEDIA | OTHER | RAW:
 			return !ImageConstants.TIFF.equals(format)
 					&& !ImageConstants.JPEG.equals(format) && !isDng(format);
-
 		case MEDIA | OTHER | DNG:
 			return !ImageConstants.TIFF.equals(format)
 					&& !ImageConstants.JPEG.equals(format)
 					&& !isRaw(format, mimeType);
-
 		case MEDIA | OTHER | DNG | RAW:
 			return !ImageConstants.TIFF.equals(format)
 					&& !ImageConstants.JPEG.equals(format);
-
 		case MEDIA | OTHER | JPEG:
 			return !ImageConstants.TIFF.equals(format)
 					&& !ImageConstants.IMAGE_X_RAW.equals(mimeType);
-
 		case MEDIA | OTHER | JPEG | RAW:
 			return !ImageConstants.TIFF.equals(format) && !isDng(format);
-
 		case MEDIA | OTHER | JPEG | DNG:
 			return !ImageConstants.TIFF.equals(format)
 					&& !isRaw(format, mimeType);
-
 		case MEDIA | OTHER | JPEG | DNG | RAW:
 			return !ImageConstants.TIFF.equals(format);
-
 		case MEDIA | OTHER | TIFF:
 			return !ImageConstants.JPEG.equals(format)
 					&& !ImageConstants.IMAGE_X_RAW.equals(mimeType);
-
 		case MEDIA | OTHER | TIFF | RAW:
 			return !ImageConstants.JPEG.equals(format) && !isDng(format);
-
 		case MEDIA | OTHER | TIFF | DNG:
 			return !ImageConstants.JPEG.equals(format)
 					&& !isRaw(format, mimeType);
-
 		case MEDIA | OTHER | TIFF | DNG | RAW:
 			return !ImageConstants.JPEG.equals(format);
-
 		case MEDIA | OTHER | TIFF | JPEG:
 			return !ImageConstants.IMAGE_X_RAW.equals(mimeType);
-
 		case MEDIA | OTHER | TIFF | JPEG | RAW:
 			return !isDng(format);
-
 		case MEDIA | OTHER | TIFF | JPEG | DNG:
 			return !isRaw(format, mimeType);
-
 		case MEDIA | OTHER | TIFF | JPEG | DNG | RAW:
 			break;
 		}
@@ -470,12 +411,8 @@ public class TypeFilter extends AssetFilter implements ITypeFilter {
 			if ((formats & MEDIA) != 0) {
 				formatConstraint = createMediaConstraint(query);
 				Constraint c2 = getConstraint(dbManager, query, formats-MEDIA);
-				if (c2 != null) {
-					if (formatConstraint == null)
-						formatConstraint = c2;
-					else
-						formatConstraint = formatConstraint.or(c2);
-				}
+				if (c2 != null)
+					return formatConstraint == null ? c2 : formatConstraint.or(c2);
 			}
 			return formatConstraint;
 		}
@@ -488,10 +425,7 @@ public class TypeFilter extends AssetFilter implements ITypeFilter {
 		for (String format : mediaFormats) {
 			Constraint c2 = query.descend(QueryField.FORMAT.getKey())
 					.constrain(format);
-			if (c1 == null)
-				c1 = c2;
-			else
-				c1.or(c2);
+			c1 = c1 == null ? c2 : c1.or(c2);
 		}
 		return c1;
 	}

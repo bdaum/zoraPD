@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2013 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2013 Berthold Daum  
  */
 package com.bdaum.zoom.core.internal.peer;
 
@@ -70,6 +70,11 @@ public class AssetOrigin implements Serializable {
 				return location.substring(0,p);
 		}
 		return location;
+	}
+	
+	@Override
+	public String toString() {
+		return getHost() + '/' + getLocation();
 	}
 
 

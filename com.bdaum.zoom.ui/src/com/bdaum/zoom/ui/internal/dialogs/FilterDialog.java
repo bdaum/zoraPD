@@ -30,8 +30,8 @@ public class FilterDialog extends ZTitleAreaDialog {
 	private final String[] catitemlabels;
 	private int colorCode;
 
-	public FilterDialog(Shell parentShell, int colorCode, String[] allcatitems,
-			Set<String> hiddenCatItems, String[] catitemlabels) {
+	public FilterDialog(Shell parentShell, int colorCode, String[] allcatitems, Set<String> hiddenCatItems,
+			String[] catitemlabels) {
 		super(parentShell, HelpContextIds.FILTERDIALOG);
 		this.allcatitems = allcatitems;
 		this.hiddenCatItems = hiddenCatItems;
@@ -71,7 +71,7 @@ public class FilterDialog extends ZTitleAreaDialog {
 		CGroup typeGroup = new CGroup(composite, SWT.NONE);
 		typeGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		typeGroup.setText(Messages.FilterDialog_hide_by_type);
-		typeGroup.setLayout(new GridLayout(1, false));
+		typeGroup.setLayout(new GridLayout());
 		typeViewer = CheckboxTableViewer.newCheckList(typeGroup, SWT.NONE);
 		typeViewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		typeViewer.setContentProvider(ArrayContentProvider.getInstance());
@@ -105,12 +105,9 @@ public class FilterDialog extends ZTitleAreaDialog {
 	}
 
 	private void setTooltip(final Label label, int newColorCode) {
-		String tooltip = colorCode <= 0 ? null
-				: NLS.bind(
-						Messages.FilterDialog_show_only_with_color_code,
-						QueryField.COLORCODELABELS[newColorCode + 1]);
-		if (Icons.toColorIcon(newColorCode) == Icons.dashed)
-			tooltip = Messages.FilterDialog_color_not_set;
-		label.setText(tooltip);
+		label.setText(Icons.toColorIcon(newColorCode) == Icons.dashed ? Messages.FilterDialog_color_not_set
+				: colorCode <= 0 ? null
+						: NLS.bind(Messages.FilterDialog_show_only_with_color_code,
+								QueryField.COLORCODELABELS[newColorCode + 1]));
 	}
 }

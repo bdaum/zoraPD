@@ -166,6 +166,7 @@ sub WriteQuickTime($$$)
                     HasData  => $$subdir{HasData},  # necessary?
                     Multi    => $$subdir{Multi},    # necessary?
                     OutFile  => $outfile,
+                    InPlace  => 2, # (to write fixed-length XMP if possible)
                 );
                 # pass the header pointer if necessary (for EXIF IFD's
                 # where the Base offset is at the end of the header)
@@ -215,9 +216,9 @@ sub WriteQuickTime($$$)
                     # so hold this atom and write it out later
                     if ($len) {
                         push @hold, Set32u($len+8), $tag, $newData;
-                        $et->VPrint(0,"  Moving '$tag' atom to after 'mdat'");
+                        $et->VPrint(0,"  Moving '${tag}' atom to after 'mdat'");
                     } else {
-                        $et->VPrint(0,"  Freeing '$tag' atom (and zeroing data)");
+                        $et->VPrint(0,"  Freeing '${tag}' atom (and zeroing data)");
                     }
                     # write a 'free' atom here to keep 'mdat' at the same offset
                     substr($hdr, 4, 4) = 'free';
@@ -351,7 +352,7 @@ QuickTime-based file formats like MOV and MP4.
 
 =head1 AUTHOR
 
-Copyright 2003-2017, Phil Harvey (phil at owl.phy.queensu.ca)
+Copyright 2003-2018, Phil Harvey (phil at owl.phy.queensu.ca)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

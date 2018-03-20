@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.db.internal.job;
@@ -55,7 +55,6 @@ public class BackupJob extends CustomJob {
 		this.indexPath = indexPath;
 		this.generations = generations;
 		setPriority(DECORATE);
-
 		String[] result = Utilities.computeBackupLocation(catFile, backupLocation);
 		this.backupLocation = result[0];
 		generationFolder = result[1];
@@ -111,10 +110,9 @@ public class BackupJob extends CustomJob {
 					}
 				}
 			}
-			if (deleted > 0)
-				core.logInfo(NLS.bind(Messages.getString("BackupJob.backup_performed_with_deletions"), deleted)); //$NON-NLS-1$
-			else
-				core.logInfo(Messages.getString("BackupJob.catalog_backup")); //$NON-NLS-1$
+			core.logInfo(
+					deleted > 0 ? NLS.bind(Messages.getString("BackupJob.backup_performed_with_deletions"), deleted) //$NON-NLS-1$
+							: Messages.getString("BackupJob.catalog_backup")); //$NON-NLS-1$
 		} catch (Exception e) {
 			core.logError(Messages.getString("BackupJob.Backup_failed"), e); //$NON-NLS-1$
 			return Status.CANCEL_STATUS;

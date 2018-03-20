@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -54,8 +54,6 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -70,7 +68,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
@@ -79,7 +76,9 @@ import org.eclipse.ui.keys.IBindingService;
 
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.SortColumnManager;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 
 public class KeyPreferencePage extends AbstractPreferencePage {
@@ -140,8 +139,6 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 			"org.eclipse.help.ui.indexcommand" }; //$NON-NLS-1$
 
 	private TableViewer bindingViewer;
-	private TableColumn sortColumn;
-	private int sortDirection;
 	private TableViewerColumn commandColumn;
 	private TableViewerColumn keyColumn;
 	private TableViewerColumn catColumn;
@@ -171,10 +168,9 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		Set<String> hidden = new HashSet<String>(Arrays.asList(hiddenCommands));
 		Command[] cmds = commandService.getDefinedCommands();
 		List<Command> list = new ArrayList<Command>(cmds.length);
-		for (Command command : cmds) {
+		for (Command command : cmds)
 			if (!hidden.contains(command.getId()))
 				list.add(command);
-		}
 		definedCommands = list.toArray(new Command[list.size()]);
 	}
 
@@ -185,9 +181,9 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		createButtonBar(parent);
 		createDetailsArea(parent);
 		fillValues();
-
 	}
 
+	@SuppressWarnings("unused")
 	private void createBindingTable(Composite composite) {
 		bindingViewer = new TableViewer(composite, SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL | SWT.FULL_SELECTION);
 		Table table = bindingViewer.getTable();
@@ -196,7 +192,6 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		table.setLinesVisible(true);
 		commandColumn = createColumn(bindingViewer, Messages.getString("KeyPreferencePage.command"), 200); //$NON-NLS-1$
 		commandLabelProvider = new ZColumnLabelProvider() {
-
 			@Override
 			public String getText(Object element) {
 				if (element instanceof Command) {
@@ -222,15 +217,12 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		commandColumn.setLabelProvider(commandLabelProvider);
 		keyColumn = createColumn(bindingViewer, Messages.getString("KeyPreferencePage.keys"), 150); //$NON-NLS-1$
 		keyLabelProvider = new ZColumnLabelProvider() {
-
 			@Override
 			public String getText(Object element) {
 				if (element instanceof Command) {
 					Binding binding = commandMap.get(((Command) element).getId());
-					if (binding != null) {
-						TriggerSequence triggerSequence = binding.getTriggerSequence();
-						return triggerSequence.format();
-					}
+					if (binding != null)
+						return binding.getTriggerSequence().format();
 					return null;
 				}
 				return element.toString();
@@ -239,103 +231,45 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		keyColumn.setLabelProvider(keyLabelProvider);
 		catColumn = createColumn(bindingViewer, Messages.getString("KeyPreferencePage.category"), 150); //$NON-NLS-1$
 		catLabelProvider = new ZColumnLabelProvider() {
-
 			@Override
 			public String getText(Object element) {
-				if (element instanceof Command) {
+				if (element instanceof Command)
 					try {
 						return ((Command) element).getCategory().getName();
 					} catch (NotDefinedException e) {
 						return Messages.getString("KeyPreferencePage.undefined"); //$NON-NLS-1$
 					}
-				}
 				return element.toString();
 			}
 		};
 		catColumn.setLabelProvider(catLabelProvider);
 		bindingViewer.setContentProvider(ArrayContentProvider.getInstance());
-		bindingViewer.setComparator(new ViewerComparator() {
-
-			@Override
-			public int compare(Viewer viewer, Object e1, Object e2) {
-
-				ZColumnLabelProvider labelProvider;
-				if (sortColumn == commandColumn.getColumn())
-					labelProvider = commandLabelProvider;
-				else if (sortColumn == keyColumn.getColumn())
-					labelProvider = keyLabelProvider;
-				else
-					labelProvider = catLabelProvider;
-				String s1 = labelProvider.getText(e1);
-				String s2 = labelProvider.getText(e2);
-				return (sortDirection == SWT.DOWN) ? s1.compareToIgnoreCase(s2) : s2.compareToIgnoreCase(s1);
-			}
-		});
+		new SortColumnManager(bindingViewer, new int[] {SWT.UP, SWT.UP, SWT.UP}, 0);
+		bindingViewer.setComparator(ZViewerComparator.INSTANCE);
 		bindingViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateDetails();
 			}
 		});
-		switchSort(table, commandColumn.getColumn());
 	}
 
-	private TableViewerColumn createColumn(final TableViewer viewer, String lab, int w) {
+	private static TableViewerColumn createColumn(final TableViewer viewer, String lab, int w) {
 		final TableViewerColumn column = new TableViewerColumn(viewer, SWT.NONE);
 		column.getColumn().setText(lab);
 		column.getColumn().setWidth(w);
-		column.getColumn().addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				switchSort(viewer.getTable(), column.getColumn());
-			}
-		});
 		return column;
 	}
 
-	protected void switchSort(Table table, TableColumn column) {
-		if (sortColumn == column) {
-			switch (sortDirection) {
-			case SWT.DOWN:
-				sortDirection = SWT.UP;
-				break;
-			default:
-				sortDirection = SWT.DOWN;
-				break;
-			}
-		} else {
-			sortColumn = column;
-			sortDirection = SWT.DOWN;
-		}
-		table.setSortColumn(column);
-		table.setSortDirection(sortDirection);
-		bindingViewer.refresh();
-	}
-
 	private final Control createButtonBar(final Composite parent) {
-		GridLayout layout;
-		GridData gridData;
-		// int widthHint;
-
-		// Creates controls related to the tree.
 		final Composite buttonBar = new Composite(parent, SWT.NONE);
-		layout = new GridLayout(2, false);
+		GridLayout layout = new GridLayout(2, false);
 		layout.marginWidth = 0;
 		buttonBar.setLayout(layout);
-		gridData = new GridData();
-		gridData.grabExcessHorizontalSpace = true;
-		gridData.horizontalAlignment = SWT.FILL;
-		buttonBar.setLayoutData(gridData);
+		buttonBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		final Button removeBindingButton = new Button(buttonBar, SWT.PUSH);
-		gridData = new GridData();
-		// widthHint =
-		// convertHorizontalDLUsToPixels(IDialogConstants.BUTTON_WIDTH);
 		removeBindingButton.setText(Messages.getString("KeyPreferencePage.remove_shortcuts")); //$NON-NLS-1$
-		// gridData.widthHint = Math.max(widthHint, removeBindingButton
-		// .computeSize(SWT.DEFAULT, SWT.DEFAULT, true).x) + 5;
-		removeBindingButton.setLayoutData(gridData);
 		removeBindingButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public final void widgetSelected(final SelectionEvent event) {
 				if (selectedCommand != null) {
@@ -352,15 +286,8 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		});
 
 		final Button restore = new Button(buttonBar, SWT.PUSH);
-		gridData = new GridData();
-		// widthHint =
-		// convertHorizontalDLUsToPixels(IDialogConstants.BUTTON_WIDTH);
 		restore.setText(Messages.getString("KeyPreferencePage.restore_command")); //$NON-NLS-1$
-		// gridData.widthHint = Math.max(widthHint, restore.computeSize(
-		// SWT.DEFAULT, SWT.DEFAULT, true).x) + 5;
-		restore.setLayoutData(gridData);
 		restore.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public final void widgetSelected(final SelectionEvent event) {
 				if (selectedCommand != null) {
@@ -371,7 +298,6 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 				}
 			}
 		});
-
 		return buttonBar;
 	}
 
@@ -393,18 +319,15 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		final Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(2, false));
-		Label nameLabel = new Label(composite, SWT.NONE);
-		nameLabel.setText(Messages.getString("KeyPreferencePage.command2")); //$NON-NLS-1$
+		new Label(composite, SWT.NONE).setText(Messages.getString("KeyPreferencePage.command2")); //$NON-NLS-1$
 		nameField = new Text(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER | SWT.READ_ONLY);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		Label descriptionLabel = new Label(composite, SWT.NONE);
-		descriptionLabel.setText(Messages.getString("KeyPreferencePage.description")); //$NON-NLS-1$
+		new Label(composite, SWT.NONE).setText(Messages.getString("KeyPreferencePage.description")); //$NON-NLS-1$
 		descriptionField = new Text(composite, SWT.MULTI | SWT.LEAD | SWT.BORDER | SWT.READ_ONLY | SWT.WRAP);
 		GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		layoutData.heightHint = 50;
 		descriptionField.setLayoutData(layoutData);
-		Label keyLabel = new Label(composite, SWT.NONE);
-		keyLabel.setText(Messages.getString("KeyPreferencePage.key_sequence")); //$NON-NLS-1$
+		new Label(composite, SWT.NONE).setText(Messages.getString("KeyPreferencePage.key_sequence")); //$NON-NLS-1$
 		Composite keyGroup = new Composite(composite, SWT.NONE);
 		keyGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 		GridLayout layout = new GridLayout(2, false);
@@ -416,13 +339,11 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		keySequenceField = new KeySequenceText(keyField);
 		keySequenceField.setKeyStrokeLimit(2);
 		keySequenceField.addPropertyChangeListener(new IPropertyChangeListener() {
-
 			public final void propertyChange(final PropertyChangeEvent event) {
 				if (!event.getOldValue().equals(event.getNewValue())) {
 					final KeySequence keySequence = keySequenceField.getKeySequence();
-					if (selectedCommand == null || !keySequence.isComplete()) {
+					if (selectedCommand == null || !keySequence.isComplete())
 						return;
-					}
 					boolean empty = keySequence.isEmpty();
 					Binding newBinding;
 					Binding b = commandMap.get(selectedCommand.getId());
@@ -430,20 +351,17 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 						newBinding = new KeyBinding(keySequence, empty ? null : b.getParameterizedCommand(),
 								activeSchemeId, b.getContextId(), null, null, null, Binding.USER);
 						userMap.put(keySequence, newBinding);
-						if (empty) {
+						if (empty)
 							commandMap.remove(selectedCommand.getId());
-						} else {
+						else
 							commandMap.put(selectedCommand.getId(), newBinding);
-						}
 					} else if (!empty) {
 						ParameterizedCommand pc = new ParameterizedCommand(selectedCommand, null);
 						newBinding = new KeyBinding(keySequence, pc, activeSchemeId, "org.eclipse.ui.contexts.window", //$NON-NLS-1$
-								null,
-								null, null, Binding.USER);
+								null, null, null, Binding.USER);
 						userMap.put(keySequence, newBinding);
 						commandMap.put(selectedCommand.getId(), newBinding);
 					}
-
 					refreshViewer();
 					validate();
 					keyField.setSelection(keyField.getTextLimit());
@@ -459,12 +377,10 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		for (int i = 0; i < tabStops.length; i++) {
 			Control tabStop = tabStops[i];
 			newTabStops.add(tabStop);
-			if (keyField.equals(tabStop)) {
+			if (keyField.equals(tabStop))
 				newTabStops.add(helpButton);
-			}
 		}
-		final Control[] newTabStopArray = newTabStops.toArray(new Control[newTabStops.size()]);
-		keyGroup.setTabList(newTabStopArray);
+		keyGroup.setTabList(newTabStops.toArray(new Control[newTabStops.size()]));
 
 		// Construct the menu to attach to the above button.
 		final Menu addKeyMenu = new Menu(helpButton);
@@ -474,7 +390,6 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 			final MenuItem menuItem = new MenuItem(addKeyMenu, SWT.PUSH);
 			menuItem.setText(trappedKey.format());
 			menuItem.addSelectionListener(new SelectionAdapter() {
-
 				@Override
 				public void widgetSelected(SelectionEvent e) {
 					keySequenceField.insert(trappedKey);
@@ -500,9 +415,7 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(1, false));
-		// The description label.
-		final Label descriptionLabel = new Label(composite, SWT.NONE);
-		descriptionLabel.setText(Messages.getString("KeyPreferencePage.conflicts")); //$NON-NLS-1$
+		new Label(composite, SWT.NONE).setText(Messages.getString("KeyPreferencePage.conflicts")); //$NON-NLS-1$
 		conflictViewer = new TableViewer(composite,
 				SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER | SWT.FULL_SELECTION);
 		Table table = conflictViewer.getTable();
@@ -510,7 +423,6 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		bindingNameColumn.getColumn().setWidth(250);
 		table.setLayoutData(new GridData(250, 80));
 		bindingNameColumn.setLabelProvider(new ZColumnLabelProvider() {
-
 			@Override
 			public String getText(Object element) {
 				if (element instanceof Binding[]) {
@@ -535,7 +447,6 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		});
 		conflictViewer.setContentProvider(ArrayContentProvider.getInstance());
 		conflictViewer.addDoubleClickListener(new IDoubleClickListener() {
-
 			public void doubleClick(DoubleClickEvent event) {
 				IStructuredSelection selection = (IStructuredSelection) event.getSelection();
 				if (!selection.isEmpty()) {
@@ -607,10 +518,9 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 			}
 		}
 		List<Binding[]> conflicts = new ArrayList<Binding[]>();
-		for (List<Binding> conflict : conflictMap.values()) {
+		for (List<Binding> conflict : conflictMap.values())
 			if (conflict.size() > 1)
 				conflicts.add(conflict.toArray(new Binding[conflict.size()]));
-		}
 		conflictViewer.setInput(conflicts);
 		return conflicts.isEmpty() ? null : Messages.getString("KeyPreferencePage.there_are_conflicts"); //$NON-NLS-1$
 	}
@@ -641,8 +551,7 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void updateDetails() {
-		IStructuredSelection selection = (IStructuredSelection) bindingViewer.getSelection();
-		selectedCommand = (Command) selection.getFirstElement();
+		selectedCommand = (Command) ((IStructuredSelection) bindingViewer.getSelection()).getFirstElement();
 		if (selectedCommand != null) {
 			try {
 				String name = selectedCommand.getName();
@@ -657,9 +566,8 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 						keySequenceField.setKeySequence((KeySequence) triggerSequence);
 					else
 						keySequenceField.setKeySequence(null);
-				} else {
+				} else
 					keySequenceField.setKeySequence(null);
-				}
 			} catch (NotDefinedException e) {
 				// ignore
 			}

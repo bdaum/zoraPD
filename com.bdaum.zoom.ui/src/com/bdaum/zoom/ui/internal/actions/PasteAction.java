@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -28,7 +28,6 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.FileTransfer;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
@@ -48,21 +47,18 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 public class PasteAction extends RetargetAction implements IAdaptable {
 	private IWorkbenchWindow window;
 	private Clipboard clipboard;
-	private Listener focusListener;
+	private Listener focusListener = new Listener() {
+		public void handleEvent(Event event) {
+			updateEnablement();
+		}
+	};
 
-	public PasteAction(IWorkbenchWindow window, Clipboard clipboard, String id,
-			String text) {
+	public PasteAction(IWorkbenchWindow window, Clipboard clipboard, String id, String text) {
 		super(id, text);
 		setActionHandler(this);
 		this.window = window;
 		this.clipboard = clipboard;
-		Display display = window.getShell().getDisplay();
-		focusListener = new Listener() {
-			public void handleEvent(Event event) {
-				updateEnablement();
-			}
-		};
-		display.addFilter(SWT.FocusIn, focusListener);
+		window.getShell().getDisplay().addFilter(SWT.FocusIn, focusListener);
 	}
 
 	@Override
@@ -100,12 +96,9 @@ public class PasteAction extends RetargetAction implements IAdaptable {
 					Utilities.collectImages(fileNames, images);
 					Utilities.collectFolders(fileNames, folders);
 					if (!images.isEmpty())
-						OperationJob.executeOperation(
-								new ImportOperation(
-										new FileInput(images, false), activator
-												.createImportConfiguration(this),
-										null, folders.toArray(new File[folders
-												.size()])), this);
+						OperationJob.executeOperation(new ImportOperation(new FileInput(images, false),
+								activator.createImportConfiguration(this), null,
+								folders.toArray(new File[folders.size()])), this);
 				}
 			}
 		} catch (Exception e) {

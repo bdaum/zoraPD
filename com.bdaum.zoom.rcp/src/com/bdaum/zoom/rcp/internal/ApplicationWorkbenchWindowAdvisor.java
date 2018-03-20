@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009-2017 Berthold Daum.
+ * Copyright (c) 2009-2018 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,9 +24,12 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IPerspectiveDescriptor;
+import org.eclipse.ui.IPerspectiveListener;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
@@ -47,15 +50,30 @@ import com.bdaum.zoom.core.db.IDbFactory;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.fileMonitor.internal.filefilter.FilterChain;
+import com.bdaum.zoom.rcp.internal.perspective.DataEntryPerspective;
+import com.bdaum.zoom.rcp.internal.perspective.ExhibitionPerspective;
+import com.bdaum.zoom.rcp.internal.perspective.LightboxPerspective;
+import com.bdaum.zoom.rcp.internal.perspective.PresentationPerspective;
+import com.bdaum.zoom.rcp.internal.perspective.SleevesPerspective;
+import com.bdaum.zoom.rcp.internal.perspective.SlidesPerspective;
+import com.bdaum.zoom.rcp.internal.perspective.TablePerspective;
+import com.bdaum.zoom.rcp.internal.perspective.WebGalleryPerspective;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.commands.ImportDeviceCommand;
 import com.bdaum.zoom.ui.internal.preferences.PreferenceInitializer;
+import com.bdaum.zoom.ui.internal.views.DataEntryView;
 import com.bdaum.zoom.ui.internal.views.DuplicatesView;
+import com.bdaum.zoom.ui.internal.views.ExhibitionView;
+import com.bdaum.zoom.ui.internal.views.LightboxView;
+import com.bdaum.zoom.ui.internal.views.SlideshowView;
+import com.bdaum.zoom.ui.internal.views.TableView;
+import com.bdaum.zoom.ui.internal.views.WebGalleryView;
+import com.bdaum.zoom.ui.internal.views.ZuiView;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
-		implements DeviceInsertionListener {
+public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implements DeviceInsertionListener {
 
 	private final static String UI_NAMESPACE = UiActivator.PLUGIN_ID;
 	private ApplicationWorkbenchAdvisor applicationWorkbenchAdvisor;
@@ -89,15 +107,14 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	@Override
 	public void preWindowOpen() {
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-		Display display = Display.getCurrent();
-		Rectangle clientArea = display.getMonitors()[0].getClientArea();
+		Rectangle clientArea = Display.getCurrent().getMonitors()[0].getClientArea();
 		configurer.setInitialSize(new Point(clientArea.width * 4 / 5, clientArea.height * 4 / 5));
 		configurer.setShowCoolBar(true);
 		configurer.setShowStatusLine(true);
 		configurer.setShowProgressIndicator(true);
 		configurer.setShowPerspectiveBar(true);
 		configurer.setTitle(Constants.APPLICATION_NAME);
-		configureUi(configurer);
+		configureInfrastructure(configurer);
 	}
 
 	@Override
@@ -112,7 +129,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		return true;
 	}
 
-	private void configureUi(final IWorkbenchWindowConfigurer configurer) {
+	private void configureInfrastructure(final IWorkbenchWindowConfigurer configurer) {
 		final IWorkbenchWindow window = configurer.getWindow();
 		final IPreferencesService preferencesService = Platform.getPreferencesService();
 		setTheme(preferencesService.getString(UI_NAMESPACE, PreferenceConstants.BACKGROUNDCOLOR,
@@ -129,6 +146,11 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 				preferencesService.getString(UI_NAMESPACE, PreferenceConstants.METADATATOLERANCES, "", null)); //$NON-NLS-1$
 		dbFactory.setMaxImports(preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.MAXIMPORTS, 99, null));
 		dbFactory.setAutoColoringProcessors(createAutoColoringPostProcessors());
+		dbFactory.setIndexedFields(
+				preferencesService.getString(UI_NAMESPACE, PreferenceConstants.METADATATUNING, "", null)); //$NON-NLS-1$
+		dbFactory.setDistanceUnit(
+				preferencesService.getString(UI_NAMESPACE, PreferenceConstants.DISTANCEUNIT, "k", null)); //$NON-NLS-1$
+		dbFactory.setDimUnit(preferencesService.getString(UI_NAMESPACE, PreferenceConstants.DIMUNIT, "c", null)); //$NON-NLS-1$
 		configureUndoLevels(window, preferencesService);
 		configureKeywordExclusions(preferencesService);
 		configureDeviceInsertionListeners(preferencesService);
@@ -157,6 +179,15 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 						else if (key == PreferenceConstants.AUTOCOLORCODECRIT
 								|| key == PreferenceConstants.SHOWCOLORCODE)
 							dbFactory.setAutoColoringProcessors(createAutoColoringPostProcessors());
+						else if (key == PreferenceConstants.METADATATUNING)
+							dbFactory.setIndexedFields(preferencesService.getString(UI_NAMESPACE,
+									PreferenceConstants.METADATATUNING, "", null)); //$NON-NLS-1$
+						else if (key == PreferenceConstants.DISTANCEUNIT)
+							dbFactory.setDistanceUnit(preferencesService.getString(UI_NAMESPACE,
+									PreferenceConstants.DISTANCEUNIT, "k", null)); //$NON-NLS-1$
+						else if (key == PreferenceConstants.DIMUNIT)
+							dbFactory.setDimUnit(
+									preferencesService.getString(UI_NAMESPACE, PreferenceConstants.DIMUNIT, "c", null)); //$NON-NLS-1$
 						else if (key == PreferenceConstants.NOPROGRESS)
 							activator.setNoProgress(preferencesService.getBoolean(UI_NAMESPACE,
 									PreferenceConstants.NOPROGRESS, false, null));
@@ -232,8 +263,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	}
 
 	private static void setTheme(String theme) {
-		if (PreferenceConstants.BACKGROUNDCOLOR_PLATFORM.equals(theme))
-			theme = null;
 		CssActivator.getDefault().setTheme(theme);
 	}
 
@@ -249,7 +278,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 
 	@Override
 	public void postWindowOpen() {
-		final Shell shell = getWindowConfigurer().getWindow().getShell();
+		final IWorkbenchWindow window = getWindowConfigurer().getWindow();
+		final Shell shell = window.getShell();
 		shell.addShellListener(new ShellAdapter() {
 			@Override
 			public void shellActivated(ShellEvent e) {
@@ -262,8 +292,41 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 				CoreActivator.getDefault().getFileWatchManager().setActiveWindows(false);
 			}
 		});
-	}
+		window.addPerspectiveListener(new IPerspectiveListener() {
+			@Override
+			public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId) {
+				// do nothing
+			}
 
+			@Override
+			public void perspectiveActivated(IWorkbenchPage page, IPerspectiveDescriptor perspective) {
+				String id = perspective.getId().intern();
+				try {
+					if (id == LightboxPerspective.ID)
+						page.showView(LightboxView.ID);
+					else if (id == SleevesPerspective.ID)
+						page.showView(ZuiView.ID);
+					else if (id == TablePerspective.ID)
+						page.showView(TableView.ID);
+					else if (id == DataEntryPerspective.ID)
+						page.showView(DataEntryView.ID);
+					else if (id == ExhibitionPerspective.ID)
+						page.showView(ExhibitionView.ID);
+					else if (id == WebGalleryPerspective.ID)
+						page.showView(WebGalleryView.ID);
+					else if (id == SlidesPerspective.ID)
+						page.showView(SlideshowView.ID);
+					else if (id == PresentationPerspective.ID) {
+						String viewId = Ui.getUi().getNavigationHistory(window).getLastPresentationView();
+						if (viewId != null)
+							page.showView(viewId);
+					}
+				} catch (PartInitException e) {
+					// should never happen
+				}
+			}
+		});
+	}
 
 	public void deviceInserted() {
 		final ImportDeviceCommand command = new ImportDeviceCommand();

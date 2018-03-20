@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -83,10 +83,7 @@ public class MousePreferencePage extends AbstractPreferencePage {
 		setHelp(HelpContextIds.MOUSE_PREFERENCE_PAGE);
 		new Label(comp, SWT.WRAP).setText(Messages.getString("MousePreferencePage.mouse_descr")); //$NON-NLS-1$
 		new Label(comp, SWT.NONE);
-		CGroup speedGroup = new CGroup(comp, SWT.NONE);
-		speedGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-		speedGroup.setLayout(new GridLayout(2, false));
-		speedGroup.setText(Messages.getString("MousePreferencePage.speed")); //$NON-NLS-1$
+		CGroup speedGroup = CGroup.create(comp, 1, Messages.getString("MousePreferencePage.speed"));//$NON-NLS-1$
 		new Label(speedGroup, SWT.NONE).setText(Messages.getString("MousePreferencePage.mouse_speed")); //$NON-NLS-1$
 		speedScale = new Scale(speedGroup, SWT.HORIZONTAL);
 		speedScale.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -97,10 +94,7 @@ public class MousePreferencePage extends AbstractPreferencePage {
 		wheelScale.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		wheelScale.setMaximum(100);
 		wheelScale.setIncrement(0);
-		CGroup keyGroup = new CGroup(comp, SWT.NONE);
-		keyGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-		keyGroup.setLayout(new GridLayout(2, true));
-		keyGroup.setText(Messages.getString("MousePreferencePage.control_keys")); //$NON-NLS-1$
+		CGroup keyGroup = CGroup.create(comp, 1, Messages.getString("MousePreferencePage.control_keys"));//$NON-NLS-1$
 		zoomGroup = new RadioButtonGroup(keyGroup, Messages.getString("MousePreferencePage.zoom_key"), SWT.VERTICAL, zoomLabels); //$NON-NLS-1$
 		zoomGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		wheelGroup = new RadioButtonGroup(keyGroup, Messages.getString("MousePreferencePage.mouse_wheel_behavior"), SWT.VERTICAL, wheelLabels); //$NON-NLS-1$

@@ -43,9 +43,6 @@ import com.bdaum.zoom.program.IConverter;
 import com.bdaum.zoom.program.IRawConverter;
 import com.bdaum.zoom.program.IRawConverter.RawProperty.RawEnum;
 
-/**
- * The activator class controls the plug-in life cycle
- */
 @SuppressWarnings("restriction")
 public class BatchActivator extends Plugin {
 
@@ -58,8 +55,7 @@ public class BatchActivator extends Plugin {
 		private String kind;
 		private boolean abort;
 
-		public ByteArrayStreamGrabber(final InputStream inputStream,
-				String label, String kind) {
+		public ByteArrayStreamGrabber(final InputStream inputStream, String label, String kind) {
 			super(label);
 			this.inputStream = inputStream;
 			this.kind = kind;
@@ -87,9 +83,7 @@ public class BatchActivator extends Plugin {
 				}
 
 			} catch (final IOException e) {
-				BatchActivator.getDefault().logError(
-						NLS.bind(Messages.BatchActivator_error_when_reading,
-								kind), e);
+				BatchActivator.getDefault().logError(NLS.bind(Messages.BatchActivator_error_when_reading, kind), e);
 			} finally {
 				try {
 					inputStream.close();
@@ -108,27 +102,20 @@ public class BatchActivator extends Plugin {
 		}
 	}
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.batch"; //$NON-NLS-1$
 
-	// The shared instance
 	private static BatchActivator plugin;
-
 	private static boolean fastExit = true;
 
 	private String[] exifToolLocation;
-
 	private Map<String, IRawConverter> rawConverters;
-
 	private IRawConverter currentRawConverter;
-
 	private boolean rawQuestionAsked;
 
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.core.runtime.Plugins#start(org.osgi.framework.BundleContext)
+	 * @see org.eclipse.core.runtime.Plugins#start(org.osgi.framework.BundleContext)
 	 */
 
 	@Override
@@ -140,8 +127,7 @@ public class BatchActivator extends Plugin {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.core.runtime.Plugin#stop(org.osgi.framework.BundleContext)
+	 * @see org.eclipse.core.runtime.Plugin#stop(org.osgi.framework.BundleContext)
 	 */
 
 	@Override
@@ -168,17 +154,15 @@ public class BatchActivator extends Plugin {
 	}
 
 	@SuppressWarnings("finally")
-	public File convertFile(File file, String converter, String location,
-			Options options, boolean useTempFile, IFileWatcher filewatcher,
-			String opId, IProgressMonitor monitor) throws ConversionException {
+	public File convertFile(File file, String converter, String location, Options options, boolean useTempFile,
+			IFileWatcher filewatcher, String opId, IProgressMonitor monitor) throws ConversionException {
 		BundleContext bundleContext = getBundle().getBundleContext();
 		ServiceReference<?> reference = null;
 		try {
-			ServiceReference<?>[] serviceReferences = bundleContext
-					.getServiceReferences(IConverter.class.getName(),
-							new StringBuilder().append("(") //$NON-NLS-1$
-									.append(IConverter.CONVERTER).append("=") //$NON-NLS-1$
-									.append(converter).append(")").toString()); //$NON-NLS-1$
+			ServiceReference<?>[] serviceReferences = bundleContext.getServiceReferences(IConverter.class.getName(),
+					new StringBuilder().append("(") //$NON-NLS-1$
+							.append(IConverter.CONVERTER).append("=") //$NON-NLS-1$
+							.append(converter).append(")").toString()); //$NON-NLS-1$
 			if (serviceReferences != null && serviceReferences.length > 0) {
 				reference = serviceReferences[0];
 				IConverter c = (IConverter) bundleContext.getService(reference);
@@ -189,17 +173,15 @@ public class BatchActivator extends Plugin {
 				File backup = null;
 				if (useTempFile) {
 					if (out.exists()) {
-						backup = ImageActivator.getDefault().createTempFile(
-								"Convert", null); //$NON-NLS-1$
+						backup = ImageActivator.getDefault().createTempFile("Convert", null); //$NON-NLS-1$
 						try {
 							BatchUtilities.moveFile(out, backup, monitor);
 						} catch (DiskFullException e) {
-							throw new ConversionException(NLS.bind(
-									Messages.BatchActivator_No_file_conversion,
-									file), e);
+							throw new ConversionException(NLS.bind(Messages.BatchActivator_No_file_conversion, file),
+									e);
 						}
 					}
-				} else 
+				} else
 					out.delete();
 				if (monitor != null && monitor.isCanceled())
 					return null;
@@ -209,23 +191,17 @@ public class BatchActivator extends Plugin {
 				ConversionException cex = null;
 				try {
 					if (parms == null)
-						throw new ConversionException(
-								Messages.BatchActivator_no_dcraw_module_installed);
+						throw new ConversionException(Messages.BatchActivator_no_dcraw_module_installed);
 					if (filewatcher != null)
 						filewatcher.ignore(out, opId);
-					data = executeCommand(parms, c.getInputDirectory(),
-							converter, IStatus.INFO, IStatus.INFO, 180000L,
+					data = executeCommand(parms, c.getInputDirectory(), converter, IStatus.INFO, IStatus.INFO, 180000L,
 							null);
 					if (monitor != null && monitor.isCanceled())
 						return null;
 					BatchUtilities.yield();
-					if (useTempFile) {
-						if (out.exists()) {
-							temp = ImageActivator.getDefault().createTempFile(
-									"Convert", null); //$NON-NLS-1$
-							BatchUtilities.moveFile(out, temp, monitor);
-						}
-					}
+					if (useTempFile && out.exists())
+						BatchUtilities.moveFile(out, temp = ImageActivator.getDefault().createTempFile("Convert", null), //$NON-NLS-1$
+								monitor);
 				} catch (ConversionException e) {
 					cex = e;
 				} finally {
@@ -235,9 +211,8 @@ public class BatchActivator extends Plugin {
 								filewatcher.ignore(out, opId);
 							BatchUtilities.moveFile(backup, out, monitor);
 						} catch (DiskFullException e) {
-							throw new ConversionException(NLS.bind(
-									Messages.BatchActivator_No_file_conversion,
-									file), e);
+							throw new ConversionException(NLS.bind(Messages.BatchActivator_No_file_conversion, file),
+									e);
 						}
 						if (cex != null)
 							throw cex;
@@ -253,15 +228,13 @@ public class BatchActivator extends Plugin {
 						if (out.exists())
 							return out;
 					}
-					throw new ConversionException(NLS.bind(
-							Messages.BatchActivator_No_file_conversion, file));
+					throw new ConversionException(NLS.bind(Messages.BatchActivator_No_file_conversion, file));
 				}
 			}
 		} catch (InvalidSyntaxException e) {
 			// should never happen
 		} catch (IOException e) {
-			throw new ConversionException(NLS.bind(
-					Messages.BatchActivator_IOerror_converting, file), e);
+			throw new ConversionException(NLS.bind(Messages.BatchActivator_IOerror_converting, file), e);
 		} finally {
 			if (reference != null)
 				bundleContext.ungetService(reference);
@@ -269,35 +242,28 @@ public class BatchActivator extends Plugin {
 		return null;
 	}
 
-	public static String executeCommand(String[] parms, File dir, String label,
-			int logLevel, int errorLevel, long timeout, String charsetName)
-			throws ConversionException {
+	public static String executeCommand(String[] parms, File dir, String label, int logLevel, int errorLevel,
+			long timeout, String charsetName) throws ConversionException {
 		try {
-			return BatchUtilities.executeCommand(parms, dir, label, logLevel,
-					errorLevel, 1, timeout, charsetName);
+			return BatchUtilities.executeCommand(parms, dir, label, logLevel, errorLevel, 1, timeout, charsetName);
 		} catch (ExecutionException e1) {
-			throw new ConversionException(
-					NLS.bind(
-							Messages.BatchActivator_conversion_ended_with_error,
-							label), e1.getCause());
+			throw new ConversionException(NLS.bind(Messages.BatchActivator_conversion_ended_with_error, label),
+					e1.getCause());
 		} catch (IOException e) {
-			throw new ConversionException(NLS.bind(
-					Messages.BatchActivator_Error_when_launching, label), e);
+			throw new ConversionException(NLS.bind(Messages.BatchActivator_Error_when_launching, label), e);
 		}
 	}
 
-	public static byte[] executeBinaryCommand(String[] parms, String label,
-			int errorLevel, long timeout, String charsetName)
-			throws ConversionException {
+	public static byte[] executeBinaryCommand(String[] parms, String label, int errorLevel, long timeout,
+			String charsetName) throws ConversionException {
 		ByteArrayStreamGrabber inputGrabber = null;
 		StreamCapture errorGrabber = null;
 		try {
 			Process process = Runtime.getRuntime().exec(parms);
-			inputGrabber = new ByteArrayStreamGrabber(process.getInputStream(),
-					label, Messages.BatchActivator_output_stream);
+			inputGrabber = new ByteArrayStreamGrabber(process.getInputStream(), label,
+					Messages.BatchActivator_output_stream);
 			if (errorLevel != IStatus.OK) {
-				errorGrabber = new StreamCapture(process.getErrorStream(),
-						charsetName, label,
+				errorGrabber = new StreamCapture(process.getErrorStream(), charsetName, label,
 						Messages.BatchActivator_error_stream, errorLevel);
 				errorGrabber.start();
 			}
@@ -309,22 +275,15 @@ public class BatchActivator extends Plugin {
 					return inputGrabber.getData();
 				}
 				if (errorGrabber != null)
-					throw new ConversionException(
-							NLS.bind(
-									Messages.BatchActivator_conversion_ended_with_error,
-									new Object[] { label, ret,
-											errorGrabber.getData().trim() }));
+					throw new ConversionException(NLS.bind(Messages.BatchActivator_conversion_ended_with_error,
+							new Object[] { label, ret, errorGrabber.getData().trim() }));
 			} catch (InterruptedException e) {
 				if (errorGrabber != null)
-					throw new ConversionException(NLS.bind(
-							Messages.BatchActivator_time_limit_exceeded,
-							new Object[] { label,
-									errorGrabber.getData().trim(),
-									timeout / 1000 }), e);
+					throw new ConversionException(NLS.bind(Messages.BatchActivator_time_limit_exceeded,
+							new Object[] { label, errorGrabber.getData().trim(), timeout / 1000 }), e);
 			}
 		} catch (IOException e) {
-			throw new ConversionException(NLS.bind(
-					Messages.BatchActivator_Error_when_launching, label), e);
+			throw new ConversionException(NLS.bind(Messages.BatchActivator_Error_when_launching, label), e);
 		} finally {
 			if (inputGrabber != null)
 				inputGrabber.abort();
@@ -334,10 +293,10 @@ public class BatchActivator extends Plugin {
 		return null;
 	}
 
-	public int runScript(String[] parms) throws InterruptedException,
-			IOException {
+	public void runScript(String[] parms) throws IOException, ExecutionException {
 		parms[0] = locate(parms[0]);
-		return Runtime.getRuntime().exec(parms).waitFor();
+		BatchUtilities.executeCommand(parms, null, Messages.BatchActivator_run_script, IStatus.OK, IStatus.ERROR, 2,
+				1000L, "UTF-8"); //$NON-NLS-1$
 	}
 
 	public String locate(String path) {
@@ -350,23 +309,13 @@ public class BatchActivator extends Plugin {
 
 	public String[] locateExifTool() {
 		if (exifToolLocation == null) {
-			if (BatchConstants.WIN32)
-				try {
-					exifToolLocation = new String[] { FileLocator
-							.findAbsolutePath(getBundle(), "/exiftool.exe") }; //$NON-NLS-1$
-				} catch (IOException e) {
-					// should never happen
-				}
-			else
-				try {
-					exifToolLocation = new String[] {
-							"perl", //$NON-NLS-1$
-							FileLocator.findAbsolutePath(getBundle(),
-									"/exiftool/exiftool") }; //$NON-NLS-1$
-				} catch (IOException e) {
-					logError(Messages.BatchActivator_could_not_locate_exiftool,
-							e);
-				}
+			try {
+				exifToolLocation = BatchConstants.WIN32
+						? new String[] { FileLocator.findAbsolutePath(getBundle(), "/exiftool.exe") } //$NON-NLS-1$
+						: new String[] { "perl", FileLocator.findAbsolutePath(getBundle(), "/exiftool/exiftool") };  //$NON-NLS-1$//$NON-NLS-2$
+			} catch (IOException e) {
+				logError(Messages.BatchActivator_could_not_locate_exiftool, e);
+			}
 		}
 		return exifToolLocation;
 	}
@@ -389,30 +338,21 @@ public class BatchActivator extends Plugin {
 	public Map<String, IRawConverter> getRawConverters() {
 		if (rawConverters == null) {
 			rawConverters = new HashMap<String, IRawConverter>(3);
-			IExtension[] extensions = Platform
-					.getExtensionRegistry()
-					.getExtensionPoint(PLUGIN_ID, "rawConverter").getExtensions(); //$NON-NLS-1$
-
-			for (IExtension ext : extensions) {
-				for (IConfigurationElement config : ext
-						.getConfigurationElements()) {
+			for (IExtension ext : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "rawConverter") //$NON-NLS-1$
+					.getExtensions())
+				for (IConfigurationElement config : ext.getConfigurationElements()) {
 					String name = config.getAttribute("name"); //$NON-NLS-1$
 					try {
-						IRawConverter converter = (IRawConverter) config
-								.createExecutableExtension("class"); //$NON-NLS-1$
+						IRawConverter converter = (IRawConverter) config.createExecutableExtension("class"); //$NON-NLS-1$
 						String id = config.getAttribute("id"); //$NON-NLS-1$
 						converter.setId(id);
 						converter.setName(name);
-						converter.setExecutable(config
-								.getAttribute("executable")); //$NON-NLS-1$
-						converter.setDetectors(Boolean.parseBoolean(config
-								.getAttribute("detectors"))); //$NON-NLS-1$
-						converter.setDefault(Boolean.parseBoolean(config
-								.getAttribute("isDefault"))); //$NON-NLS-1$
+						converter.setExecutable(config.getAttribute("executable")); //$NON-NLS-1$
+						converter.setDetectors(Boolean.parseBoolean(config.getAttribute("detectors"))); //$NON-NLS-1$
+						converter.setDefault(Boolean.parseBoolean(config.getAttribute("isDefault"))); //$NON-NLS-1$
 						converter.setPathId(config.getAttribute("path")); //$NON-NLS-1$
 						rawConverters.put(id, converter);
-						for (IConfigurationElement propElement : config
-								.getChildren()) {
+						for (IConfigurationElement propElement : config.getChildren()) {
 							IRawConverter.RawProperty prop = new IRawConverter.RawProperty(
 									propElement.getAttribute("id"), //$NON-NLS-1$
 									propElement.getAttribute("name"), //$NON-NLS-1$
@@ -421,39 +361,29 @@ public class BatchActivator extends Plugin {
 									propElement.getAttribute("min"), //$NON-NLS-1$
 									propElement.getAttribute("max")); //$NON-NLS-1$
 							converter.addProperty(prop);
-							IConfigurationElement[] enumsElements = propElement
-									.getChildren();
+							IConfigurationElement[] enumsElements = propElement.getChildren();
 							if (enumsElements.length > 0) {
 								List<RawEnum> enums = new ArrayList<IRawConverter.RawProperty.RawEnum>();
 								for (IConfigurationElement enumElement : enumsElements)
-									enums.add(prop.new RawEnum(enumElement
-											.getAttribute("id"), //$NON-NLS-1$
+									enums.add(prop.new RawEnum(enumElement.getAttribute("id"), //$NON-NLS-1$
 											enumElement.getAttribute("value"), //$NON-NLS-1$
-											Boolean.parseBoolean(enumElement
-													.getAttribute("recipe")))); //$NON-NLS-1$
+											Boolean.parseBoolean(enumElement.getAttribute("recipe")))); //$NON-NLS-1$
 								prop.enums = enums;
 							}
 						}
 					} catch (CoreException e) {
-						logError(
-								NLS.bind(
-										Messages.BatchActivator_cannot_create_raw_converter,
-										name), e);
+						logError(NLS.bind(Messages.BatchActivator_cannot_create_raw_converter, name), e);
 					}
 				}
-			}
 		}
 		return rawConverters;
 	}
 
 	public IRawConverter getCurrentRawConverter(boolean force) {
 		if (currentRawConverter == null || force) {
-			IPreferencesService preferencesService = Platform
-					.getPreferencesService();
-			String rcId = preferencesService.getString(PLUGIN_ID,
-					PreferenceConstants.RAWCONVERTER, null, null);
-			Map<String, IRawConverter> rawConverters = BatchActivator
-					.getDefault().getRawConverters();
+			IPreferencesService preferencesService = Platform.getPreferencesService();
+			String rcId = preferencesService.getString(PLUGIN_ID, PreferenceConstants.RAWCONVERTER, null, null);
+			Map<String, IRawConverter> rawConverters = BatchActivator.getDefault().getRawConverters();
 			IRawConverter rc = rcId == null ? null : rawConverters.get(rcId);
 			if (rc == null)
 				for (IRawConverter c : rawConverters.values())
@@ -462,13 +392,11 @@ public class BatchActivator extends Plugin {
 						break;
 					}
 			if (rc != null) {
-				String path = preferencesService.getString(PLUGIN_ID,
-						rc.getPathId(), null, null);
+				String path = preferencesService.getString(PLUGIN_ID, rc.getPathId(), null, null);
 				if (path != null)
 					rc.setPath(path.trim());
 				for (IRawConverter.RawProperty prop : rc.getProperties())
-					prop.value = preferencesService.getString(PLUGIN_ID,
-							prop.id, null, null);
+					prop.value = preferencesService.getString(PLUGIN_ID, prop.id, null, null);
 				currentRawConverter = rc;
 			}
 		}
@@ -477,8 +405,7 @@ public class BatchActivator extends Plugin {
 
 	public void setCurrentRawConverter(IRawConverter c) {
 		currentRawConverter = c;
-		BatchUtilities.putPreferences(
-				PreferenceConstants.RAWCONVERTER, c.getId());
+		BatchUtilities.putPreferences(PreferenceConstants.RAWCONVERTER, c.getId());
 	}
 
 	public boolean isRawQuestionAsked() {

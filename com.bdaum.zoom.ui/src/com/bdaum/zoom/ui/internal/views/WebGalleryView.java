@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.views;
 
@@ -45,8 +45,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -60,7 +58,12 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressIndicator;
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -69,9 +72,12 @@ import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -103,6 +109,7 @@ import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.Utilities;
+import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.net.core.ftp.FtpAccount;
@@ -112,6 +119,7 @@ import com.bdaum.zoom.operations.jobs.WebGalleryJob;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -137,6 +145,71 @@ import com.bdaum.zoom.ui.internal.widgets.ZPSWTImage;
 
 @SuppressWarnings("restriction")
 public class WebGalleryView extends AbstractPresentationView {
+
+	public class SelectStoryBoardDialog extends ZTitleAreaDialog {
+
+		private String title;
+		private String msg;
+		private Collection<Storyboard> input;
+		private TableViewer viewer;
+		private Storyboard selected;
+
+		public SelectStoryBoardDialog(Shell parentShell, String title, String msg, Collection<Storyboard> input) {
+			super(parentShell);
+			this.title = title;
+			this.msg = msg;
+			this.input = input;
+		}
+
+		@Override
+		public void create() {
+			super.create();
+			setTitle(title);
+			setMessage(msg);
+			updateButtons();
+		}
+
+		@Override
+		protected Control createDialogArea(Composite parent) {
+			Composite area = (Composite) super.createDialogArea(parent);
+			Composite composite = new Composite(area, SWT.NONE);
+			composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			composite.setLayout(new FillLayout());
+			viewer = new TableViewer(composite, SWT.SINGLE | SWT.V_SCROLL | SWT.BORDER);
+			viewer.setContentProvider(ArrayContentProvider.getInstance());
+			viewer.setLabelProvider(new ZColumnLabelProvider() {
+				@Override
+				public String getText(Object element) {
+					if (element instanceof Storyboard)
+						return ((Storyboard) element).getTitle();
+					return super.getText(element);
+				}
+			});
+			viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+				@Override
+				public void selectionChanged(SelectionChangedEvent event) {
+					updateButtons();
+				}
+			});
+			viewer.setInput(input);
+			return area;
+		}
+
+		private void updateButtons() {
+			getButton(OK).setEnabled(!viewer.getSelection().isEmpty());
+		}
+
+		@Override
+		protected void okPressed() {
+			selected = (Storyboard) ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+			super.okPressed();
+		}
+
+		public Storyboard getResult() {
+			return selected;
+		}
+
+	}
 
 	private static final Point DRAGTOLERANCE = new Point(25, 25);
 	private static final java.awt.Rectangle RECT1 = new java.awt.Rectangle(0, 0, 1, 1);
@@ -265,14 +338,11 @@ public class WebGalleryView extends AbstractPresentationView {
 				Point2D offset = added.getOffset();
 				double ydiff = added.getHeight() + 15;
 				surface.removeChild(added);
-				ListIterator<?> it = surface.getChildrenIterator();
-				while (it.hasNext()) {
+				for (ListIterator<?> it = surface.getChildrenIterator(); it.hasNext();) {
 					Object obj = it.next();
-					if (obj instanceof PStoryboard) {
-						PStoryboard w = (PStoryboard) obj;
-						if (w.getOffset().getY() > offset.getY())
-							w.offset(0, -ydiff);
-					}
+					if (obj instanceof PStoryboard)
+						if (((PStoryboard) obj).getOffset().getY() > offset.getY())
+							((PStoryboard) obj).offset(0, -ydiff);
 				}
 				storyboards.remove(added);
 				setPanAndZoomHandlers();
@@ -445,7 +515,6 @@ public class WebGalleryView extends AbstractPresentationView {
 		private void doSetTextField(String t) {
 			textField.setText(t);
 		}
-
 	}
 
 	public class EditExhibitOperation extends AbstractOperation {
@@ -574,7 +643,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			tobeStored.add(targetStoryboard);
 			tobeStored.add(sourceStoryboard);
 			storeSafelyAndUpdateIndex(null, tobeStored, null);
-			updateActions();
+			updateActions(false);
 			return fromStoryboard;
 		}
 
@@ -608,7 +677,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			exhibit = deleted.exhibit;
 			doRemoveExhibit(deleted);
 			storeSafelyAndUpdateIndex(exhibit, pstoryboard.getStoryboard(), exhibit.getAsset());
-			updateActions();
+			updateActions(false);
 			return Status.OK_STATUS;
 		}
 
@@ -624,8 +693,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			double pos = 0;
 			int index = 0;
 			List<PWebExhibit> trail = new ArrayList<PWebExhibit>(storyboard.getExhibit().size());
-			ListIterator<?> it = pstoryboard.getChildrenIterator();
-			while (it.hasNext()) {
+			for (ListIterator<?> it = pstoryboard.getChildrenIterator(); it.hasNext();) {
 				Object next = it.next();
 				if (next instanceof PWebExhibit) {
 					PWebExhibit pExhibit = (PWebExhibit) next;
@@ -661,7 +729,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			toBeStored.add(exhibit);
 			toBeStored.add(storyboard);
 			storeSafelyAndUpdateIndex(null, toBeStored, exhibit.getAsset());
-			updateActions();
+			updateActions(false);
 			return Status.OK_STATUS;
 		}
 	}
@@ -750,7 +818,7 @@ public class WebGalleryView extends AbstractPresentationView {
 					toBeStored.add(storyboard);
 					storeSafelyAndUpdateIndex(null, toBeStored, assetIds);
 				}
-				updateActions();
+				updateActions(false);
 			}
 			return Status.OK_STATUS;
 		}
@@ -773,7 +841,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			if (deleteOp != null)
 				deleteOp.undo(monitor, info);
 			storeSafelyAndUpdateIndex(toBeDeleted, pstoryboard.getStoryboard(), assetIds);
-			updateActions();
+			updateActions(false);
 			return Status.OK_STATUS;
 		}
 	}
@@ -800,9 +868,8 @@ public class WebGalleryView extends AbstractPresentationView {
 			final Display display = canvas.getDisplay();
 			IDbManager dbManager = Core.getCore().getDbManager();
 			offline.clear();
-			for (PStoryboard storyboard : storyboards) {
-				Object[] children = storyboard.getChildrenReference().toArray();
-				for (Object child : children) {
+			for (PStoryboard storyboard : storyboards)
+				for (Object child : storyboard.getChildrenReference().toArray()) {
 					if (child instanceof PWebExhibit && isVisible() && mayRun()) {
 						final PWebExhibit pexhibit = (PWebExhibit) child;
 						WebExhibit exhibit = pexhibit.exhibit;
@@ -842,7 +909,6 @@ public class WebGalleryView extends AbstractPresentationView {
 					if (monitor.isCanceled())
 						break;
 				}
-			}
 			offlineImages = offline;
 		}
 	}
@@ -888,8 +954,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			seqNo.setPickable(false);
 			addChild(seqNo);
 			// caption
-			String text = exhibit.getCaption();
-			caption = new TextField(text, (int) (imageSize - 2 * textHorMargins - seqNo.getWidth()),
+			caption = new TextField(exhibit.getCaption(), (int) (imageSize - 2 * textHorMargins - seqNo.getWidth()),
 					new Font("Arial", Font.BOLD, 9), strokePaint, null, true, SWT.SINGLE); //$NON-NLS-1$
 			caption.setSpellingOptions(10, ISpellCheckingService.TITLEOPTIONS);
 			caption.setGreekThreshold(5);
@@ -978,8 +1043,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			Image image = ImageUtilities.loadThumbnail(canvas.getDisplay(), asset.getJpegThumbnail(),
 					Ui.getUi().getDisplayCMS(), SWT.IMAGE_JPEG, true);
 			images.add(image);
-			pImage = new ZPSWTImage(canvas, image);
-			addChild(0, pImage);
+			addChild(0, pImage = new ZPSWTImage(canvas, image));
 			configureImage();
 			pImage.lowerToBottom();
 			setCaptionAndDescription(exh);
@@ -991,15 +1055,13 @@ public class WebGalleryView extends AbstractPresentationView {
 			double width = bounds.getWidth();
 			double height = bounds.getHeight();
 			double scale = Math.min(imageSize / width, imageSize / height);
-			double xx = (imageSize - width * scale) / 2;
-			double yy = (imageSize - height * scale) / 2;
-			pImage.setOffset(STORYBOARDMARGINS + xx, STORYBOARDMARGINS + yy);
+			pImage.setOffset(STORYBOARDMARGINS + ((imageSize - width * scale) / 2),
+					STORYBOARDMARGINS + ((imageSize - height * scale) / 2));
 			pImage.scale(scale);
 		}
 
 		public void updateColors(Color selectedPaint) {
-			ListIterator<?> it = getChildrenIterator();
-			while (it.hasNext()) {
+			for (ListIterator<?> it = getChildrenIterator(); it.hasNext();) {
 				PNode child = (PNode) it.next();
 				if (child instanceof TextField)
 					((TextField) child).setSelectedPenColor(selectedPaint);
@@ -1081,8 +1143,7 @@ public class WebGalleryView extends AbstractPresentationView {
 
 		public void updateColors() {
 			Color color = (Color) getPaint();
-			ListIterator<?> it = getChildrenIterator();
-			while (it.hasNext()) {
+			for (ListIterator<?> it = getChildrenIterator(); it.hasNext();) {
 				PNode child = (PNode) it.next();
 				if (child instanceof PWebExhibit)
 					((PWebExhibit) child).updateColors(color);
@@ -1101,9 +1162,6 @@ public class WebGalleryView extends AbstractPresentationView {
 			editStoryboardAction.run();
 		}
 
-		/**
-		 * @return the highlightColor
-		 */
 		public Color getHighlightColor() {
 			return highlightColor;
 		}
@@ -1222,7 +1280,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			setInput(gallery);
 		addCatalogListener();
 		setDecorator(canvas, new GalleryDecorateJob());
-		updateActions();
+		updateActions(false);
 	}
 
 	@Override
@@ -1245,7 +1303,7 @@ public class WebGalleryView extends AbstractPresentationView {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
-		updateActions();
+		updateActions(false);
 		manager.add(gotoExhibitAction);
 		PNode pickedNode = getPickedNode();
 		if (pickedNode != null && pickedNode.getParent() instanceof PWebExhibit)
@@ -1267,9 +1325,8 @@ public class WebGalleryView extends AbstractPresentationView {
 		Map<String, Asset> amap = new HashMap<String, Asset>(assets.size());
 		for (Asset a : assets)
 			amap.put(a.getStringId(), a);
-		for (PStoryboard pstoryboard : storyboards) {
-			ListIterator<?> it = pstoryboard.getChildrenIterator();
-			while (it.hasNext()) {
+		for (PStoryboard pstoryboard : storyboards)
+			for (ListIterator<?> it = pstoryboard.getChildrenIterator(); it.hasNext();) {
 				Object next = it.next();
 				if (next instanceof PWebExhibit) {
 					PWebExhibit pexhibit = (PWebExhibit) next;
@@ -1280,28 +1337,26 @@ public class WebGalleryView extends AbstractPresentationView {
 					}
 				}
 			}
-		}
 	}
 
 	@Override
-	public void updateActions() {
-		if (addStoryBoardAction == null)
-			return;
-		boolean hasGallery = gallery != null;
-		addStoryBoardAction.setEnabled(hasGallery && !dbIsReadonly());
-		propertiesAction.setEnabled(hasGallery);
-		saveAction.setEnabled(hasGallery);
-		generateAction.setEnabled(hasGallery);
-		gotoExhibitAction.setEnabled(hasGallery);
-		super.updateActions();
+	public void updateActions(boolean force) {
+		if (addStoryBoardAction != null && (viewActive || force)) {
+			boolean hasGallery = gallery != null;
+			addStoryBoardAction.setEnabled(hasGallery && !dbIsReadonly());
+			propertiesAction.setEnabled(hasGallery);
+			saveAction.setEnabled(hasGallery);
+			generateAction.setEnabled(hasGallery);
+			gotoExhibitAction.setEnabled(hasGallery);
+			super.updateActions(force);
+		}
 	}
 
 	private void setupGallery(IViewSite site, WebGalleryImpl gallery) {
 		if (gallery != null) {
 			int h = Math.max(2, gallery.getStoryboard().size()) * STORYBOARDDIST;
-			double factor = site.getShell().getDisplay().getPrimaryMonitor().getBounds().height / (2d * h);
 			surface.setBounds(-3000d, -3000d, (STORYBOARDWIDTH + 6000d), (h + 6000d));
-			surface.setScale(factor);
+			surface.setScale(site.getShell().getDisplay().getPrimaryMonitor().getBounds().height / (2d * h));
 		}
 	}
 
@@ -1327,12 +1382,9 @@ public class WebGalleryView extends AbstractPresentationView {
 		surface.setPaint(newPaint);
 		selectionBackgroundColor = UiUtilities.getAwtForeground(control, null);
 		CssActivator.getDefault().applyExtendedStyle(control, this);
-		wallPaint = UiUtilities.getAwtForeground(control, null);
+		wallPaint = newPaint; // UiUtilities.getAwtForeground(control, null);
 		for (PStoryboard pstoryboard : storyboards) {
 			pstoryboard.setPaint(wallPaint);
-			pstoryboard.setStrokeColor(selectionBackgroundColor);
-		}
-		for (PStoryboard pstoryboard : storyboards) {
 			pstoryboard.setStrokeColor(selectionBackgroundColor);
 			ListIterator<?> it = pstoryboard.getChildrenIterator();
 			while (it.hasNext()) {
@@ -1365,8 +1417,7 @@ public class WebGalleryView extends AbstractPresentationView {
 				show = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, show, show.getName(),
 						false, true, null);
 				if (show != null) {
-					gallery = show;
-					performOperation(new WebGalleryPropertiesOperation(backup, gallery));
+					performOperation(new WebGalleryPropertiesOperation(backup, gallery = show));
 					setInput(gallery);
 				}
 			}
@@ -1374,7 +1425,6 @@ public class WebGalleryView extends AbstractPresentationView {
 		propertiesAction.setToolTipText(Messages.getString("WebGalleryView.gallery_properties_tooltip")); //$NON-NLS-1$
 		addStoryBoardAction = new Action(Messages.getString("WebGalleryView.add_storyboard"), //$NON-NLS-1$
 				Icons.add.getDescriptor()) {
-
 			@Override
 			public void run() {
 				WebGalleryImpl show = getGallery();
@@ -1403,18 +1453,15 @@ public class WebGalleryView extends AbstractPresentationView {
 		};
 		saveAction.setToolTipText(Messages.getString("WebGalleryView.generate_web_gallery")); //$NON-NLS-1$
 		gotoExhibitAction = new Action(Messages.getString("WebGalleryView.goto_exhibit")) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
 				List<WebExhibitImpl> exhibits = new ArrayList<WebExhibitImpl>(300);
-				for (PStoryboard sb : storyboards) {
-					ListIterator<?> it = sb.getChildrenIterator();
-					while (it.hasNext()) {
+				for (PStoryboard sb : storyboards)
+					for (ListIterator<?> it = sb.getChildrenIterator(); it.hasNext();) {
 						Object next = it.next();
 						if (next instanceof PWebExhibit && ((PWebExhibit) next).exhibit != null)
 							exhibits.add(((PWebExhibit) next).exhibit);
 					}
-				}
 				SelectWebExhibitDialog dialog = new SelectWebExhibitDialog(getSite().getShell(), exhibits);
 				dialog.create();
 				org.eclipse.swt.graphics.Point pos = canvas.toDisplay((int) positionRelativeToCamera.getX(),
@@ -1424,9 +1471,8 @@ public class WebGalleryView extends AbstractPresentationView {
 				dialog.getShell().setLocation(pos);
 				if (dialog.open() == Window.OK) {
 					WebExhibitImpl selectedExhibit = dialog.getResult();
-					for (PStoryboard sb : storyboards) {
-						ListIterator<?> it = sb.getChildrenIterator();
-						while (it.hasNext()) {
+					for (PStoryboard sb : storyboards)
+						for (ListIterator<?> it = sb.getChildrenIterator(); it.hasNext();) {
 							Object next = it.next();
 							if (next instanceof PWebExhibit) {
 								PWebExhibit pexhibit = (PWebExhibit) next;
@@ -1443,7 +1489,6 @@ public class WebGalleryView extends AbstractPresentationView {
 								}
 							}
 						}
-					}
 				}
 			}
 		};
@@ -1553,8 +1598,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			pstoryboard.removeChild(moved);
 			WebExhibitImpl exhibit = moved.exhibit;
 			int sequenceNo = exhibit.getSequenceNo();
-			ListIterator<?> it = pstoryboard.getChildrenIterator();
-			while (it.hasNext()) {
+			for (ListIterator<?> it = pstoryboard.getChildrenIterator(); it.hasNext();) {
 				Object next = it.next();
 				if (next instanceof PWebExhibit) {
 					PWebExhibit pExhibit = (PWebExhibit) next;
@@ -1598,12 +1642,11 @@ public class WebGalleryView extends AbstractPresentationView {
 				w = Math.max(w, addStoryboard(sb, y, progressBar).getBoundsReference().getWidth());
 				y += STORYBOARDDIST;
 			}
-			double h = gal.getStoryboard().size() * (STORYBOARDHEIGHT + STORYBOARDDIST) + 2 * STORYBOARDMARGINS
-					- STORYBOARDDIST;
-			w += 2 * STORYBOARDMARGINS;
-			updateSurfaceBounds(w, h);
+			updateSurfaceBounds(w + 2 * STORYBOARDMARGINS,
+					gal.getStoryboard().size() * (STORYBOARDHEIGHT + STORYBOARDDIST) + 2 * STORYBOARDMARGINS
+							- STORYBOARDDIST);
 			setColor(canvas);
-			updateActions();
+			updateActions(false);
 			endTask();
 		} else
 			setPartName(Messages.getString("WebGalleryView.web_gallery")); //$NON-NLS-1$
@@ -1611,59 +1654,56 @@ public class WebGalleryView extends AbstractPresentationView {
 
 	private void generate(final boolean save) {
 		WebGalleryImpl show = getGallery();
-		if (show == null)
-			return;
-		if (offlineImages != null && !offlineImages.isEmpty()) {
-			String[] volumes = offlineImages.toArray(new String[offlineImages.size()]);
-			Arrays.sort(volumes);
-			AcousticMessageDialog.openInformation(getSite().getShell(),
-					Messages.getString("WebGalleryView.images_are_offline"), //$NON-NLS-1$
-					volumes.length > 1
-							? NLS.bind(Messages.getString("WebGalleryView.some_image_on_volumes_are_offline"), //$NON-NLS-1$
-									Core.toStringList(volumes, ", ")) //$NON-NLS-1$
-							: NLS.bind(Messages.getString("WebGalleryView.some_images_on_volume_n_are_offline"), //$NON-NLS-1$
-									volumes[0]));
-			return;
-		}
-		String selectedEngine = show.getSelectedEngine();
-		boolean isFtp = show.getIsFtp();
-		String outputFolder = (isFtp) ? show.getFtpDir() : show.getOutputFolder();
-		while (selectedEngine == null || outputFolder == null || selectedEngine.isEmpty() || outputFolder.isEmpty()) {
-			show = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, show, show.getName(), true,
-					false, Messages.getString("WebGalleryView.select_web_gallery")); //$NON-NLS-1$
-			if (show == null)
-				return;
-			selectedEngine = show.getSelectedEngine();
-			isFtp = show.getIsFtp();
-			outputFolder = (isFtp) ? show.getFtpDir() : show.getOutputFolder();
-		}
-		IExtensionRegistry extensionRegistry = Platform.getExtensionRegistry();
-		IExtensionPoint extensionPoint = extensionRegistry.getExtensionPoint(UiActivator.PLUGIN_ID, "galleryGenerator"); //$NON-NLS-1$
-		IExtension[] extensions = extensionPoint.getExtensions();
-		for (IExtension ext : extensions) {
-			IConfigurationElement[] configurationElements = ext.getConfigurationElements();
-			for (IConfigurationElement el : configurationElements)
-				if (el.getAttribute("id").equals(selectedEngine)) { //$NON-NLS-1$
-					if (createGenerator(show, el, outputFolder, isFtp, save))
+		if (show != null) {
+			if (offlineImages != null && !offlineImages.isEmpty()) {
+				String[] volumes = offlineImages.toArray(new String[offlineImages.size()]);
+				Arrays.sort(volumes);
+				AcousticMessageDialog.openInformation(getSite().getShell(),
+						Messages.getString("WebGalleryView.images_are_offline"), //$NON-NLS-1$
+						volumes.length > 1
+								? NLS.bind(Messages.getString("WebGalleryView.some_image_on_volumes_are_offline"), //$NON-NLS-1$
+										Core.toStringList(volumes, ", ")) //$NON-NLS-1$
+								: NLS.bind(Messages.getString("WebGalleryView.some_images_on_volume_n_are_offline"), //$NON-NLS-1$
+										volumes[0]));
+			} else {
+				String selectedEngine = show.getSelectedEngine();
+				boolean isFtp = show.getIsFtp();
+				String outputFolder = (isFtp) ? show.getFtpDir() : show.getOutputFolder();
+				while (selectedEngine == null || outputFolder == null || selectedEngine.isEmpty()
+						|| outputFolder.isEmpty()) {
+					show = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, show,
+							show.getName(), true, false, Messages.getString("WebGalleryView.select_web_gallery")); //$NON-NLS-1$
+					if (show == null)
 						return;
-					break;
+					selectedEngine = show.getSelectedEngine();
+					isFtp = show.getIsFtp();
+					outputFolder = (isFtp) ? show.getFtpDir() : show.getOutputFolder();
 				}
+				for (IExtension ext : Platform.getExtensionRegistry()
+						.getExtensionPoint(UiActivator.PLUGIN_ID, "galleryGenerator").getExtensions()) //$NON-NLS-1$
+					for (IConfigurationElement el : ext.getConfigurationElements())
+						if (el.getAttribute("id").equals(selectedEngine)) { //$NON-NLS-1$
+							if (createGenerator(show, el, outputFolder, isFtp, save))
+								return;
+							break;
+						}
+			}
 		}
 	}
 
 	private boolean createGenerator(WebGalleryImpl show, IConfigurationElement el, String outputFolder, boolean isFtp,
 			final boolean save) {
 		try {
-			String sections = el.getAttribute("sections"); //$NON-NLS-1$
-			if (!Boolean.parseBoolean(sections) && show.getStoryboard().size() > 1) {
-				AcousticMessageDialog dialog = new AcousticMessageDialog(getSite().getShell(),
+			Storyboard selectedStoryboard = null;
+			if (!Boolean.parseBoolean(el.getAttribute("sections")) && show.getStoryboard().size() > 1) { //$NON-NLS-1$
+				SelectStoryBoardDialog dialog = new SelectStoryBoardDialog(getSite().getShell(),
 						Messages.getString("WebGalleryView.multiple_storyboards"), //$NON-NLS-1$
-						null, NLS.bind(Messages.getString("WebGalleryView.does_not_support_multiple_storyboards"), //$NON-NLS-1$
+						NLS.bind(Messages.getString("WebGalleryView.does_not_support_multiple_storyboards"), //$NON-NLS-1$
 								el.getAttribute("name")), //$NON-NLS-1$
-						MessageDialog.WARNING, new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL },
-						0);
-				if (dialog.open() != 0)
+						show.getStoryboard());
+				if (dialog.open() != SelectStoryBoardDialog.OK)
 					return true;
+				selectedStoryboard = dialog.getResult();
 			}
 			String maxImages = el.getAttribute("maxImages"); //$NON-NLS-1$
 			if (maxImages != null) {
@@ -1672,23 +1712,79 @@ public class WebGalleryView extends AbstractPresentationView {
 					int n = 0;
 					for (Storyboard storyboard : show.getStoryboard())
 						max -= storyboard.getExhibit().size();
-					if (n > max) {
-						AcousticMessageDialog dialog = new AcousticMessageDialog(getSite().getShell(),
-								Messages.getString("WebGalleryView.too_many"), //$NON-NLS-1$
-								null, NLS.bind(Messages.getString("WebGalleryView.n_exceeds_max"), //$NON-NLS-1$
-										new Object[] { n, max, el.getAttribute("name") }), //$NON-NLS-1$
-								MessageDialog.WARNING,
-								new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL }, 0);
-						if (dialog.open() != 0)
-							return true;
-					}
+					if (n > max && !AcousticMessageDialog.openQuestion(getSite().getShell(),
+							Messages.getString("WebGalleryView.too_many"), //$NON-NLS-1$
+							NLS.bind(Messages.getString("WebGalleryView.n_exceeds_max"), //$NON-NLS-1$
+									new Object[] { n, max, el.getAttribute("name") }))) //$NON-NLS-1$
+						return true;
 				} catch (NumberFormatException e) {
 					// ignore
 				}
 			}
+			String aspectRatio = el.getAttribute("aspectRatio"); //$NON-NLS-1$
+			if (aspectRatio != null) {
+				aspectRatio.trim();
+				if (!aspectRatio.isEmpty()) {
+					double sample = Double.NaN;
+					double tolerance = 5;
+					int p = aspectRatio.indexOf(' ');
+					if (p > 0) {
+						try {
+							sample = Double.parseDouble(aspectRatio.substring(0, p));
+						} catch (NumberFormatException e) {
+							// Leave at NaN
+						}
+						aspectRatio = aspectRatio.substring(p + 1);
+					}
+					if (aspectRatio.endsWith("%")) { //$NON-NLS-1$
+						try {
+							tolerance = Double.parseDouble(aspectRatio.substring(0, aspectRatio.length() - 1));
+						} catch (NumberFormatException e) {
+							// Leave at 5
+						}
+					}
+					List<String> errands = new ArrayList<>();
+					IDbManager dbManager = Core.getCore().getDbManager();
+					lp: for (Storyboard storyboard : show.getStoryboard()) {
+						for (String exhibitId : storyboard.getExhibit()) {
+							WebExhibitImpl exhibit = dbManager.obtainById(WebExhibitImpl.class, exhibitId);
+							if (exhibit != null) {
+								AssetImpl asset = dbManager.obtainAsset(exhibit.getAsset());
+								if (asset != null & asset.getHeight() > 0) {
+									double prop = (double) asset.getWidth() / asset.getHeight();
+									if (Double.isNaN(sample))
+										sample = prop;
+									else if (Math.abs(sample - prop) > sample * tolerance / 100d) {
+										if (p > 0)
+											errands.add((asset.getName()));
+										else {
+											if (!AcousticMessageDialog.openQuestion(getSite().getShell(),
+													Messages.getString("WebGalleryView.unequal_proportions"), //$NON-NLS-1$
+													NLS.bind(
+															Messages.getString(
+																	"WebGalleryView.unequal_proportions_msg"), //$NON-NLS-1$
+															el.getAttribute("name")))) //$NON-NLS-1$
+												return true;
+											break lp;
+										}
+									}
+								}
+							}
+						}
+					}
+					if (!errands.isEmpty() && !AcousticMessageDialog.openQuestion(getSite().getShell(),
+							Messages.getString("WebGalleryView.unequal_proportions"), //$NON-NLS-1$
+							NLS.bind(Messages.getString("WebGalleryView.required_aspect_ratio"), //$NON-NLS-1$
+									new Object[] { el.getAttribute("name"), sample, Core.toStringList( //$NON-NLS-1$
+											errands.toArray(new String[errands.size()]), ", ") }))) //$NON-NLS-1$
+						return true;
+				}
+			}
 			final IGalleryGenerator generator = (IGalleryGenerator) el.createExecutableExtension("class"); //$NON-NLS-1$
-			if (generator instanceof AbstractGalleryGenerator)
+			if (generator instanceof AbstractGalleryGenerator) {
 				((AbstractGalleryGenerator) generator).setConfigurationElement(el);
+				((AbstractGalleryGenerator) generator).setSelectedStoryBoard(selectedStoryboard);
+			}
 			final File file = new File(outputFolder);
 			if (!isFtp && file.exists() && file.listFiles().length > 0) {
 				AcousticMessageDialog dialog = new AcousticMessageDialog(getSite().getShell(),
@@ -1756,7 +1852,7 @@ public class WebGalleryView extends AbstractPresentationView {
 							if (dialog.open() == Window.OK) {
 								final WebGalleryImpl template = dialog.getResult();
 								final IDbManager dbManager = Core.getCore().getDbManager();
-								List<IdentifiableObject> set = dbManager.obtainObjects(WebGalleryImpl.class, false,
+								List<WebGalleryImpl> set = dbManager.obtainObjects(WebGalleryImpl.class, false,
 										"name", template.getName(), QueryField.EQUALS, "template", true, //$NON-NLS-1$//$NON-NLS-2$
 										QueryField.EQUALS);
 								dbManager.safeTransaction(set, template);
@@ -1818,10 +1914,9 @@ public class WebGalleryView extends AbstractPresentationView {
 			boolean restricted, PNode presentationObject) {
 		return new AbstractPresentationView.AbstractHandleDragSequenceEventHandler(node, relative, restricted,
 				presentationObject) {
-
 			@Override
 			protected void moveToFront(PNode object) {
-				updateActions();
+				updateActions(false);
 			}
 
 			@Override
@@ -1896,9 +1991,8 @@ public class WebGalleryView extends AbstractPresentationView {
 			}
 		if (pstoryboard != null) {
 			int rawIx = computeSequenceNumber(position.getX() - pstoryboard.getOffset().getX());
-			if (rawIx >= 1 && rawIx <= pstoryboard.getStoryboard().getExhibit().size()) {
-				ListIterator<?> it = pstoryboard.getChildrenIterator();
-				while (it.hasNext()) {
+			if (rawIx >= 1 && rawIx <= pstoryboard.getStoryboard().getExhibit().size())
+				for (ListIterator<?> it = pstoryboard.getChildrenIterator(); it.hasNext();) {
 					Object next = it.next();
 					if (next instanceof PWebExhibit) {
 						PWebExhibit pExhibit = (PWebExhibit) next;
@@ -1906,9 +2000,13 @@ public class WebGalleryView extends AbstractPresentationView {
 							return pExhibit;
 					}
 				}
-			}
 		}
 		return null;
+	}
+
+	@Override
+	public String getId() {
+		return ID;
 	}
 
 }

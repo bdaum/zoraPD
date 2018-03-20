@@ -42,9 +42,9 @@ public class DngConverter implements IConverter {
 		int p = name.lastIndexOf('.');
 		if (p >= 0)
 			name = name.substring(0, p);
-		File f = new File(name + ".dng"); //$NON-NLS-1$
+		name += ".dng";  //$NON-NLS-1$
 		String folder = (String) options.get("outputFolder"); //$NON-NLS-1$
-		return (folder != null) ? new File(folder, f.getName()) : f;
+		return (folder != null) ? new File(folder, name) : new File(name);
 	}
 
 	public String[] getParms(Options options) {

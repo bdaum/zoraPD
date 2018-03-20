@@ -16,8 +16,7 @@ import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
-public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard,
-		IAdaptable {
+public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard, IAdaptable {
 
 	private WatchedFolderImpl watchedFolder;
 	private IWorkbenchWindow window;
@@ -40,8 +39,7 @@ public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard,
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		setWindowTitle(Constants.APPLICATION_NAME);
-		setDialogSettings(UiActivator.getDefault(),
-				ImportFromDeviceWizard.MEDIAID);
+		setDialogSettings(UiActivator.getDefault(), ImportFromDeviceWizard.MEDIAID);
 		if (workbench == null)
 			workbench = PlatformUI.getWorkbench();
 		window = workbench.getActiveWorkbenchWindow();
@@ -53,24 +51,20 @@ public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard,
 	@Override
 	public void addPages() {
 		ImageDescriptor imageDescriptor = Icons.watchedFolder.getDescriptor();
-		folderSelectionPage = new WatchedFolderSelectionPage(
-				Messages.WatchedFolderWizard_folder_selection, watchedFolder);
+		folderSelectionPage = new WatchedFolderSelectionPage(Messages.WatchedFolderWizard_folder_selection,
+				watchedFolder);
 		folderSelectionPage.setImageDescriptor(imageDescriptor);
 		addPage(folderSelectionPage);
-		transferPage = new TransferPage(
-				Messages.WatchedFolderWizard_transfer_parameters, watchedFolder);
+		transferPage = new TransferPage(Messages.WatchedFolderWizard_transfer_parameters, watchedFolder);
 		transferPage.setImageDescriptor(imageDescriptor);
 		addPage(transferPage);
-		filterPage = new FilterPage(Messages.WatchedFolderWizard_file_filters,
-				watchedFolder);
+		filterPage = new FilterPage(Messages.WatchedFolderWizard_file_filters, watchedFolder);
 		filterPage.setImageDescriptor(imageDescriptor);
 		addPage(filterPage);
-		targetPage = new WatchedFolderTargetPage(
-				Messages.WatchedFolderWizard_target_selection, watchedFolder);
+		targetPage = new WatchedFolderTargetPage(Messages.WatchedFolderWizard_target_selection, watchedFolder);
 		targetPage.setImageDescriptor(imageDescriptor);
 		addPage(targetPage);
-		renamingPage = new WatchedFolderRenamingPage(
-				Messages.WatchedFolderWizard_file_renaming, watchedFolder);
+		renamingPage = new WatchedFolderRenamingPage(Messages.WatchedFolderWizard_file_renaming, watchedFolder);
 		renamingPage.setImageDescriptor(imageDescriptor);
 		addPage(renamingPage);
 	}
@@ -96,12 +90,9 @@ public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard,
 	@Override
 	public boolean canFinish() {
 		if (folderSelectionPage.isTransfer())
-			return folderSelectionPage.isPageComplete()
-					&& transferPage.isPageComplete()
-					&& targetPage.isPageComplete()
+			return folderSelectionPage.isPageComplete() && transferPage.isPageComplete() && targetPage.isPageComplete()
 					&& renamingPage.isPageComplete();
-		return folderSelectionPage.isPageComplete()
-				&& filterPage.isPageComplete();
+		return folderSelectionPage.isPageComplete() && filterPage.isPageComplete();
 	}
 
 	@Override

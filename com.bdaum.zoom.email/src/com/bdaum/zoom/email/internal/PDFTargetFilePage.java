@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.email.internal;
@@ -69,7 +69,7 @@ public class PDFTargetFilePage extends ColoredWizardPage {
 	@Override
 	public void createControl(Composite parent) {
 		dialogSettings = getWizard().getDialogSettings();
-		path = pdf ? dialogSettings.get(PDFPATH) : dialogSettings.get(HTMLPATH);
+		path = dialogSettings.get(pdf ? PDFPATH : HTMLPATH);
 		Composite composite = createComposite(parent, 3);
 		String[] filterExtensions;
 		String[] filterNames;
@@ -80,7 +80,7 @@ public class PDFTargetFilePage extends ColoredWizardPage {
 					Messages.PDFTargetFilePage_all_files };
 			fileName = "*.pdf"; //$NON-NLS-1$
 			fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY, Messages.PDFTargetFilePage_target_file,
-					true, filterExtensions, filterNames, path, fileName, true);
+					true, filterExtensions, filterNames, path, fileName, true, dialogSettings);
 			fileEditor.addModifyListener(new ModifyListener() {
 				public void modifyText(ModifyEvent e) {
 					path = fileEditor.getFilterPath();
@@ -94,7 +94,6 @@ public class PDFTargetFilePage extends ColoredWizardPage {
 							validatePage();
 						}
 					}, false, true);
-			// Link
 			new Label(composite, SWT.NONE).setText(Messages.PDFTargetFilePage_weblink);
 			linkField = new Text(composite, SWT.BORDER);
 			linkField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
@@ -178,15 +177,13 @@ public class PDFTargetFilePage extends ColoredWizardPage {
 			outputTargetGroup.saveValues(dialogSettings);
 		if (linkField != null)
 			dialogSettings.put(WEBLINK, linkField.getText());
+		if (fileEditor != null)
+			fileEditor.saveValues();
 	}
 
 	public int getJpegQuality() {
 		return qualityGroup != null ? qualityGroup.getJpegQuality() : exportModeGroup.getJpegQuality();
 	}
-
-//	public int getScalingMethod() {
-//		return qualityGroup != null ? qualityGroup.getScalingMethod() : exportModeGroup.getScalingMethod();
-//	}
 
 	public int getMode() {
 		return exportModeGroup != null ? exportModeGroup.getMode() : Constants.FORMAT_JPEG;

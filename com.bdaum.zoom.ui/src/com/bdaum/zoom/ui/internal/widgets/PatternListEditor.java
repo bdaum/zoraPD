@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -86,8 +86,7 @@ public class PatternListEditor extends Composite implements SelectionListener, I
 	}
 
 	public void setInput(String input) {
-		patterns = parseString(input);
-		viewer.setInput(patterns);
+		viewer.setInput(patterns = parseString(input));
 		updateButtons();
 	}
 
@@ -124,7 +123,7 @@ public class PatternListEditor extends Composite implements SelectionListener, I
 		if (index >= 0) {
 			String[] newPatterns = new String[patterns.length - 1];
 			System.arraycopy(patterns, 0, newPatterns, 0, index);
-			System.arraycopy(patterns, index+1, newPatterns, index, patterns.length - index - 1);
+			System.arraycopy(patterns, index + 1, newPatterns, index, patterns.length - index - 1);
 			viewer.setInput(patterns = newPatterns);
 			updateButtons();
 		}
@@ -133,7 +132,7 @@ public class PatternListEditor extends Composite implements SelectionListener, I
 	private void swap(boolean up) {
 		int index = getSelectionIndex();
 		if (index >= 0) {
-			String oldLine =  patterns[index];
+			String oldLine = patterns[index];
 			int target = up ? index - 1 : index + 1;
 			String line = patterns[target];
 			patterns[target] = patterns[index];
@@ -207,25 +206,22 @@ public class PatternListEditor extends Composite implements SelectionListener, I
 				return i;
 		return -1;
 	}
-	
+
 	private String createList(String[] items) {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < items.length; i++) {
 			if (sb.length() > 0)
 				sb.append(separator);
 			if (items[i].endsWith(REJECTS))
-				sb.append(items[i].substring(0, items[i].length()
-						- REJECTS.length()));
+				sb.append(items[i].substring(0, items[i].length() - REJECTS.length()));
 			else if (items[i].endsWith(ACCEPTS))
-				sb.append('>').append(
-						items[i].substring(0, items[i].length()
-								- ACCEPTS.length()));
+				sb.append('>').append(items[i].substring(0, items[i].length() - ACCEPTS.length()));
 			else
 				sb.append(items[i]);
 		}
 		return sb.toString();
 	}
-	
+
 	public String getResult() {
 		return createList(patterns);
 	}

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.job;
@@ -78,8 +78,7 @@ public class CheckForUpdateJob extends AbstractUpdateJob {
 				if (monitor.isCanceled())
 					return Status.CANCEL_STATUS;
 				final Version publishedVersion = new Version(v.toString());
-				Version currentVersion = Platform.getProduct().getDefiningBundle().getVersion();
-				final int result = currentVersion.compareTo(publishedVersion);
+				final int result = Platform.getProduct().getDefiningBundle().getVersion().compareTo(publishedVersion);
 				final Shell shell = adaptable.getAdapter(Shell.class);
 				shell.getDisplay().syncExec(() -> showResult(shell, result, publishedVersion));
 			}

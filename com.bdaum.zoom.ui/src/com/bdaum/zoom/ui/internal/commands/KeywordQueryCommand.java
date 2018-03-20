@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.commands;
@@ -23,7 +23,6 @@ package com.bdaum.zoom.ui.internal.commands;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 
-import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.dialogs.KeywordSearchDialog;
 
@@ -36,11 +35,9 @@ public class KeywordQueryCommand extends AbstractCommandHandler {
 	@Override
 	public void run() {
 		KeywordSearchDialog dialog = new KeywordSearchDialog(getShell(), null);
-		if (dialog.open() == Window.OK) {
-			SmartCollection collection = dialog.getResult();
+		if (dialog.open() == Window.OK)
 			UiActivator.getDefault().getNavigationHistory(getActiveWorkbenchWindow())
-					.postSelection(new StructuredSelection(collection));
-		}
+					.postSelection(new StructuredSelection(dialog.getResult()));
 	}
 
 }

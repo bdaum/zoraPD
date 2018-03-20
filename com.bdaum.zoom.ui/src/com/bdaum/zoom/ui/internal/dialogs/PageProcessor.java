@@ -15,25 +15,19 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -54,12 +48,12 @@ import com.bdaum.zoom.batch.internal.IFileWatcher;
 import com.bdaum.zoom.cat.model.PageLayout_typeImpl;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.meta.Meta;
+import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.Utilities;
@@ -117,7 +111,6 @@ public class PageProcessor {
 	protected IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
 	protected boolean aborted;
 	private ZImage swtImage;
-	private Map<URI, File> tempFiles = new HashMap<URI, File>();
 	private double iDpi;
 	private double dpiX;
 	private double dpiY;
@@ -204,46 +197,30 @@ public class PageProcessor {
 			collection = Utilities.getExternalAlbumName(assetProvider.getCurrentCollection());
 	}
 
-	private ZImage loadHighresImage(final Device device, Ticketbox box, SubMonitor progress, final Asset asset) {
-		URI uri = Core.getCore().getVolumeManager().findExistingFile(asset, false);
-		if (uri != null) {
-			MultiStatus status = new MultiStatus(UiActivator.PLUGIN_ID, 0, Messages.PageProcessor_page_rending_report,
-					null);
-			File file = null;
-			if (Constants.FILESCHEME.equals(uri.getScheme()))
-				file = new File(uri);
-			else {
-				file = tempFiles.get(uri);
-				if (file == null) {
-					try {
-						file = box.download(uri);
-						tempFiles.put(uri, file);
-					} catch (IOException e) {
-						status.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
-								NLS.bind(Messages.PageProcessor_download_failed, uri), e));
-					}
-				}
+	private ZImage loadHighresImage(final Device device, Assetbox box, SubMonitor progress, final Asset asset) {
+		MultiStatus status = new MultiStatus(UiActivator.PLUGIN_ID, 0, Messages.PageProcessor_page_rending_report,
+				null);
+		box.setStatus(status);
+		File file = box.obtainFile(asset);
+		if (file != null) {
+			int pixelWidth = (int) (imageWidth * iDpi / 25.4d);
+			int pixelHeight = (int) (imageHeight * iDpi / 25.4d);
+			boolean r = asset.getRotation() % 180 != 0;
+			double w = r ? asset.getHeight() : asset.getWidth();
+			double h = r ? asset.getWidth() : asset.getHeight();
+			double scale = w == 0 || h == 0 ? 1d : (2 * pixelWidth <= w && 2 * pixelHeight <= h) ? 0.5d : 1d;
+			ZImage hrImage = null;
+			try {
+				hrImage = CoreActivator.getDefault().getHighresImageLoader().loadImage(
+						progress != null ? progress.newChild(1000) : null, status, file, asset.getRotation(),
+						asset.getFocalLengthIn35MmFilm(), null, scale, Double.MAX_VALUE, true, ImageConstants.SRGB,
+						null, umask, null, fileWatcher, opId, null);
+				if (status.isOK())
+					UiActivator.getDefault().getLog().log(status);
+			} catch (UnsupportedOperationException e) {
+				// Do nothing
 			}
-			if (file != null) {
-				int pixelWidth = (int) (imageWidth * iDpi / 25.4d);
-				int pixelHeight = (int) (imageHeight * iDpi / 25.4d);
-				boolean r = asset.getRotation() % 180 != 0;
-				double w = r ? asset.getHeight() : asset.getWidth();
-				double h = r ? asset.getWidth() : asset.getHeight();
-				double scale = w == 0 || h == 0 ? 1d : (2 * pixelWidth <= w && 2 * pixelHeight <= h) ? 0.5d : 1d;
-				ZImage hrImage = null;
-				try {
-					hrImage = CoreActivator.getDefault().getHighresImageLoader().loadImage(
-							progress != null ? progress.newChild(1000) : null, status, file, asset.getRotation(),
-							asset.getFocalLengthIn35MmFilm(), null, scale, Double.MAX_VALUE, true, ImageConstants.SRGB,
-							null, umask, null, fileWatcher, opId, null);
-					if (status.isOK())
-						UiActivator.getDefault().getLog().log(status);
-				} catch (UnsupportedOperationException e) {
-					// Do nothing
-				}
-				return hrImage;
-			}
+			return hrImage;
 		}
 		return null;
 	}
@@ -292,11 +269,10 @@ public class PageProcessor {
 				iGc.drawText(footer, (cBounds.width - iGc.textExtent(footer).x) / 2,
 						cBounds.height - bottomMargins - footerPixelSize, true);
 			}
-			final Ticketbox box = new Ticketbox();
 			Runnable runnable = new Runnable() {
 				public void run() {
 					SubMonitor progress = jmon == null ? null : SubMonitor.convert(jmon, 1000 * size);
-					try {
+					try (Assetbox box = new Assetbox(null, null, false)) {
 						if (progress != null)
 							progress.beginTask(NLS.bind(Messages.PageProcessor_rendering_images, imagesPerPage),
 									1000 * imagesPerPage);
@@ -372,7 +348,6 @@ public class PageProcessor {
 						}
 					} finally {
 						fileWatcher.stopIgnoring(opId);
-						box.endSession();
 						aborted = progress != null && progress.isCanceled();
 					}
 				}
@@ -449,8 +424,6 @@ public class PageProcessor {
 			footerFont.dispose();
 		if (textFont != null)
 			textFont.dispose();
-		for (File tempFile : tempFiles.values())
-			tempFile.delete();
 	}
 
 	public int getImagesPerPage() {

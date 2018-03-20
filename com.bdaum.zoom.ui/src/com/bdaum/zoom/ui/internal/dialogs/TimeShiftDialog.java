@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -59,25 +59,21 @@ public class TimeShiftDialog extends ZTitleAreaDialog implements SelectionListen
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-
 		final Composite comp = new Composite(area, SWT.NONE);
 		final GridLayout gridLayout = new GridLayout(2, false);
 		comp.setLayout(gridLayout);
-		Label label = new Label(comp, SWT.NONE);
-		label.setText(Messages.TimeShiftDialog_hours);
+		new Label(comp, SWT.NONE).setText(Messages.TimeShiftDialog_hours);
 		hourField = new Spinner(comp, SWT.BORDER);
 		hourField.setMinimum(-876600);
 		hourField.setMaximum(876600);
 		hourField.addSelectionListener(this);
-		label = new Label(comp, SWT.NONE);
-		label.setText(Messages.TimeShiftDialog_minutes);
+		new Label(comp, SWT.NONE).setText(Messages.TimeShiftDialog_minutes);
 		minuteField = new Spinner(comp, SWT.BORDER);
 		minuteField.setMinimum(-59);
 		minuteField.setMaximum(59);
 		minuteField.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		minuteField.addSelectionListener(this);
-		label = new Label(comp, SWT.NONE);
-		label.setText(Messages.TimeShiftDialog_seconds);
+		new Label(comp, SWT.NONE).setText(Messages.TimeShiftDialog_seconds);
 		secondField = new Spinner(comp, SWT.BORDER);
 		secondField.setMinimum(-59);
 		secondField.setMaximum(59);
@@ -101,13 +97,11 @@ public class TimeShiftDialog extends ZTitleAreaDialog implements SelectionListen
 	public long getResult() {
 		return shift;
 	}
-
 	
 	public void widgetDefaultSelected(SelectionEvent e) {
 		// do nothing
 	}
 
-	
 	public void widgetSelected(SelectionEvent e) {
 		updateButtons();
 	}

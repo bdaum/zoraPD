@@ -15,11 +15,10 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2017 Berthold Daum  
  */
 package com.bdaum.zoom.css;
 
-import org.akrogen.tkui.css.core.impl.engine.AbstractCSSEngine;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -41,14 +40,13 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
-import org.eclipse.swt.widgets.Widget;
-import org.w3c.dom.Element;
-import org.w3c.dom.css.CSSStyleDeclaration;
-import org.w3c.dom.css.CSSValue;
 
 import com.bdaum.zoom.css.internal.CssActivator;
+import com.bdaum.zoom.css.internal.IColumnLabelColorModel;
+import com.bdaum.zoom.css.internal.IThemeListener;
 
-public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider implements ILabelProvider {
+public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider
+		implements ILabelProvider, IColumnLabelColorModel, IThemeListener {
 
 	private static ZColumnLabelProvider instance;
 
@@ -59,6 +57,7 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider implem
 				public String getText(Object element) {
 					return element.toString();
 				}
+
 			};
 		return instance;
 	}
@@ -69,20 +68,30 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider implem
 	private Item colItem;
 	private Composite viewerControl;
 	private String tooltip;
-	private ColumnViewer viewer;
-	private AbstractCSSEngine engine;
 	private int maxWidth = 0;
+	private Color disabledForegroundColor;
+	private Color toolTipBackgroundColor;
+	private Color toolTipForegroundColor;
+	private Color selectedBackgroundColor;
+	private Color selectedForegroundColor;
 
 	@Override
 	protected void initialize(ColumnViewer viewer, ViewerColumn column) {
-		this.viewer = viewer;
 		viewerControl = (Composite) viewer.getControl();
-		engine = CssActivator.getDefault().getCssEngine(viewerControl.getDisplay());
+		CssActivator activator = CssActivator.getDefault();
+		activator.applyExtendedStyle(viewerControl, this);
+		activator.addThemeListener(this);
 		if (column instanceof TreeViewerColumn)
 			colItem = ((TreeViewerColumn) column).getColumn();
 		else if (column instanceof TableViewerColumn)
 			colItem = ((TableViewerColumn) column).getColumn();
 		super.initialize(viewer, column);
+	}
+	
+	@Override
+	public void dispose() {
+		CssActivator.getDefault().removeThemeListener(this);
+		super.dispose();
 	}
 
 	@Override
@@ -114,61 +123,33 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider implem
 	}
 
 	protected Color getSelectedBackground(Object element) {
-		Color color = getColor(element, "selected-background-color"); //$NON-NLS-1$
-		return color != null ? color : viewerControl.getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION);
-	}
-
-	private Color getColor(Object element, String propertyName) {
-		return (Color) getResource(viewer.testFindItem(element), propertyName, Color.class);
-	}
-
-	private Object getResource(Widget widget, String propertyName, Object toType) {
-		CSSValue value = getCSSValue(widget, propertyName);
-		if (value != null) {
-			try {
-				return engine.convert(value, toType, widget.getDisplay());
-			} catch (Exception e) {
-				engine.handleExceptions(e);
-			}
-		}
-		return null;
-	}
-
-	private CSSValue getCSSValue(Widget widget, String propertyName) {
-		if (widget == null || engine == null)
-			return null;
-		Element elt = engine.getElement(widget);
-		if (elt == null)
-			return null;
-		CSSStyleDeclaration styleDeclaration = engine.getViewCSS().getComputedStyle(elt, null);
-		if (styleDeclaration == null)
-			return null;
-		return styleDeclaration.getPropertyCSSValue(propertyName);
+		return selectedBackgroundColor;
 	}
 
 	protected Color getSelectedForeground(Object element) {
-		Color color = getColor(element, "selected-color"); //$NON-NLS-1$
-		return color != null ? color : viewerControl.getForeground();
+		return selectedForegroundColor;
+	}
+
+	protected Color getDisabledForeground(Object element) {
+		return disabledForegroundColor;
 	}
 
 	protected Color getBackground(Object element) {
-		Color color = getColor(element, "background-color"); //$NON-NLS-1$
-		return color != null ? color : viewerControl.getBackground();
+		return viewerControl.getBackground();
 	}
 
 	protected Color getForeground(Object element) {
-		Color color = getColor(element, "color"); //$NON-NLS-1$
-		return color != null ? color : viewerControl.getForeground();
+		return viewerControl.getForeground();
 	}
 
 	@Override
 	public Color getToolTipBackgroundColor(Object element) {
-		return getColor(element, "tooltip-background-color"); //$NON-NLS-1$
+		return toolTipBackgroundColor;
 	}
 
 	@Override
 	public Color getToolTipForegroundColor(Object element) {
-		return getColor(element, "tooltip-color"); //$NON-NLS-1$
+		return toolTipForegroundColor;
 	}
 
 	protected void paint(Event event, Object element) {
@@ -323,5 +304,43 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider implem
 	public Image getImage(Object element) {
 		return null;
 	}
+
+	@Override
+	public void setDisabledForegroundColor(Color c) {
+		disabledForegroundColor = c != null ? c : viewerControl.getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
+	}
+
+	@Override
+	public void setToolTipBackgroundColor(Color c) {
+		toolTipBackgroundColor = c;
+	}
+
+	@Override
+	public void setToolTipForegroundColor(Color c) {
+		toolTipForegroundColor = c;
+	}
+
+	@Override
+	public void setSelectedBackgroundColor(Color c) {
+		selectedBackgroundColor = c != null ? c : viewerControl.getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION);
+
+	}
+
+	@Override
+	public void setSelectedForegroundColor(Color c) {
+		selectedForegroundColor = c != null ? c : viewerControl.getForeground();
+	}
+
+	@Override
+	public boolean applyColorsTo(Object element) {
+		return element instanceof Tree || element instanceof Table;
+	}
+	
+
+	@Override
+	public void themeChanged() {
+		CssActivator.getDefault().applyExtendedStyle(viewerControl, this);
+	}
+
 
 }

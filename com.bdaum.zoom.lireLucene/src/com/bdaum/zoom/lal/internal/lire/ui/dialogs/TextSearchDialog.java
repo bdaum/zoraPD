@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.lal.internal.lire.ui.dialogs;
 
@@ -72,28 +72,24 @@ public class TextSearchDialog extends ZTitleAreaDialog {
 	private SmartCollection currentCollection;
 	private final String text;
 
-	public TextSearchDialog(Shell parentShell,
-			SmartCollection currentCollection, String text) {
+	public TextSearchDialog(Shell parentShell, SmartCollection currentCollection, String text) {
 		super(parentShell, HelpContextIds.TEXT_SEARCH_DIALOG);
 		this.currentCollection = currentCollection;
 		this.text = text;
-		settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		QueryOptions queryOptions = UiActivator.getDefault().getQueryOptions();
 		if (currentCollection != null) {
 			adhoc = currentCollection.getAdhoc();
 			networked = currentCollection.getNetwork();
 			Criterion criterion = currentCollection.getCriterion(0);
-			if (criterion != null
-					&& criterion.getValue() instanceof TextSearchOptions_typeImpl)
+			if (criterion != null && criterion.getValue() instanceof TextSearchOptions_typeImpl)
 				options = (TextSearchOptions_typeImpl) criterion.getValue();
 		} else
 			networked = queryOptions.isNetworked();
 		if (options == null) {
-			options = dbManager.obtainById(TextSearchOptions_typeImpl.class,
-					Constants.TEXTSEARCHOPTIONS_ID);
+			options = dbManager.obtainById(TextSearchOptions_typeImpl.class, Constants.TEXTSEARCHOPTIONS_ID);
 			if (options == null) {
-				options = new TextSearchOptions_typeImpl(
-						"", queryOptions.getMaxHits(), queryOptions.getScore() / 100f); //$NON-NLS-1$
+				options = new TextSearchOptions_typeImpl("", queryOptions.getMaxHits(), queryOptions.getScore() / 100f); //$NON-NLS-1$
 				options.setStringId(Constants.TEXTSEARCHOPTIONS_ID);
 			}
 		}
@@ -105,8 +101,7 @@ public class TextSearchDialog extends ZTitleAreaDialog {
 		setTitle(Messages.TextSearchDialog_text_search);
 		if (Job.getJobManager().find(Constants.INDEXING).length > 0)
 			setMessage(Messages.TextSearchDialog_indexing_in_progress + '\n'
-					+ Messages.TextSearchDialog_specify_a_search_string,
-					IMessageProvider.WARNING);
+					+ Messages.TextSearchDialog_specify_a_search_string, IMessageProvider.WARNING);
 		else
 			setMessage(Messages.TextSearchDialog_specify_a_search_string);
 		fillValues();
@@ -142,14 +137,13 @@ public class TextSearchDialog extends ZTitleAreaDialog {
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
 		final Composite composite = new Composite(area, SWT.NONE);
-		final GridData gd_composite = new GridData();
-		gd_composite.verticalIndent = 15;
-		composite.setLayoutData(gd_composite);
+		GridData data = new GridData();
+		data.verticalIndent = 15;
+		composite.setLayoutData(data);
 		final GridLayout gridLayout = new GridLayout(2, false);
 		gridLayout.horizontalSpacing = 10;
 		composite.setLayout(gridLayout);
-		new Label(composite, SWT.NONE)
-				.setText(Messages.TextSearchDialog_query_string);
+		new Label(composite, SWT.NONE).setText(Messages.TextSearchDialog_query_string);
 		combo = new Combo(composite, SWT.NONE);
 		String[] items = settings.getArray(HISTORY);
 		if (items == null)
@@ -162,35 +156,29 @@ public class TextSearchDialog extends ZTitleAreaDialog {
 				updateButtons();
 			}
 		});
-		final GridData gd_combo = new GridData(SWT.FILL, SWT.CENTER, true,
-				false);
-		gd_combo.widthHint = 350;
-		combo.setLayoutData(gd_combo);
+		data = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		data.widthHint = 350;
+		combo.setLayoutData(data);
 		if (adhoc)
 			findWithinGroup = new FindWithinGroup(composite);
 		if (Core.getCore().isNetworked())
 			findInNetworkGroup = new FindInNetworkGroup(composite);
-		searchResultGroup = new SearchResultGroup(composite, SWT.NONE, false,
-				true, false, null, null);
+		searchResultGroup = new SearchResultGroup(composite, SWT.NONE, false, true, false, null, null);
 		return area;
 	}
 
 	private void fillValues() {
-		if (options.getQueryString() != null
-				&& !options.getQueryString().isEmpty()) {
+		if (options.getQueryString() != null && !options.getQueryString().isEmpty()) {
 			String queryString = options.getQueryString();
 			combo.setText(queryString);
 			combo.setSelection(new Point(0, queryString.length()));
 			validate();
 		}
 		combo.setFocus();
-		searchResultGroup.fillValues(
-				(int) (options.getMinScore() * 100 + 0.5f),
-				options.getMaxResults(), -1, 0);
+		searchResultGroup.fillValues((int) (options.getMinScore() * 100 + 0.5f), options.getMaxResults(), -1, 0);
 		if (findWithinGroup != null) {
 			if (currentCollection != null)
-				findWithinGroup.setSelection(currentCollection
-						.getSmartCollection_subSelection_parent() != null);
+				findWithinGroup.setSelection(currentCollection.getSmartCollection_subSelection_parent() != null);
 			else
 				findWithinGroup.fillValues(settings);
 		}
@@ -207,16 +195,13 @@ public class TextSearchDialog extends ZTitleAreaDialog {
 		int maxNumber = searchResultGroup.getMaxNumber();
 		int score = searchResultGroup.getScore();
 		String s = combo.getText();
-		result = new SmartCollectionImpl(s
-				+ NLS.bind(Messages.TextSearchDialog_maxmin, maxNumber, score),
-				false, false, adhoc, findInNetworkGroup == null ? false
-						: findInNetworkGroup.getSelection(), null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
-		result.addCriterion(new CriterionImpl(ICollectionProcessor.TEXTSEARCH,
-				null, new TextSearchOptions_typeImpl(
-						s, maxNumber, score / 100f), score, false));
+		result = new SmartCollectionImpl(s + NLS.bind(Messages.TextSearchDialog_maxmin, maxNumber, score), false, false,
+				adhoc, findInNetworkGroup == null ? false : findInNetworkGroup.getSelection(), null, 0, null, 0, null,
+				Constants.INHERIT_LABEL, null, 0, null);
+		result.addCriterion(new CriterionImpl(ICollectionProcessor.TEXTSEARCH, null,
+				new TextSearchOptions_typeImpl(s, maxNumber, score / 100f), score, false));
 		if (findWithinGroup != null) {
-			result.setSmartCollection_subSelection_parent(findWithinGroup
-					.getParentCollection());
+			result.setSmartCollection_subSelection_parent(findWithinGroup.getParentCollection());
 			findWithinGroup.saveValues(settings);
 		}
 		if (findInNetworkGroup != null)

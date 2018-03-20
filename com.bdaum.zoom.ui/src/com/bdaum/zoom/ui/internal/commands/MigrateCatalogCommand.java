@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.commands;
 
@@ -77,7 +77,6 @@ public class MigrateCatalogCommand extends AbstractCommandHandler {
 				final IDbManager newDbManager = dbFactory.createDbManager(policy.getTargetCatalog(), true, false,
 						false);
 				IRunnableWithProgress runnable1 = new IRunnableWithProgress() {
-
 					public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 						CoreActivator.getDefault().getFileWatchManager().setPaused(true, this.getClass().toString());
 						Job.getJobManager().cancel(Constants.FOLDERWATCH);
@@ -86,8 +85,8 @@ public class MigrateCatalogCommand extends AbstractCommandHandler {
 						MigrateOperation op = new MigrateOperation(newDbManager, policy);
 						try {
 							status = op.execute(monitor, MigrateCatalogCommand.this);
-							MigrateCatalogCommand.this.finalMessage = op.getFinalMessage();
-							MigrateCatalogCommand.this.severity = op.getSeverity();
+							finalMessage = op.getFinalMessage();
+							severity = op.getSeverity();
 						} catch (ExecutionException e) {
 							status = new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
 									Messages.MigrateCatActionDelegate_internal_error, e);
@@ -110,8 +109,7 @@ public class MigrateCatalogCommand extends AbstractCommandHandler {
 					if (finalMessage == null)
 						finalMessage = ""; //$NON-NLS-1$
 					if (status.getSeverity() == IStatus.WARNING) {
-						String message = status.getMessage();
-						finalMessage += '\n' + message;
+						finalMessage += '\n' + status.getMessage();
 						severity = MessageDialog.WARNING;
 					}
 					AcousticMessageDialog finalDialog = new AcousticMessageDialog(getShell(),

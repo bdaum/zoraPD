@@ -1,15 +1,32 @@
+/*
+ * This file is part of the ZoRa project: http://www.photozora.org.
+ *
+ * ZoRa is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ZoRa is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ZoRa; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c) 2009 Berthold Daum  
+ */
+
 package com.bdaum.zoom.gps.internal;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.NumberFormat;
-import java.util.List;
 import java.util.Locale;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
@@ -21,6 +38,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.IGeoService;
 import com.bdaum.zoom.gps.internal.views.MapView;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 
 @SuppressWarnings("restriction")
 public class GeoService implements IGeoService {
@@ -31,9 +49,8 @@ public class GeoService implements IGeoService {
 			double lon = asset.getGPSLongitude();
 			if (Double.isNaN(lat) || Double.isNaN(lon)) {
 				IDbManager dbManager = Core.getCore().getDbManager();
-				List<LocationShownImpl> set = dbManager
-						.obtainStructForAsset(LocationShownImpl.class, asset.getStringId(), false);
-				for (LocationShownImpl rel : set) {
+				for (LocationShownImpl rel : dbManager.obtainStructForAsset(LocationShownImpl.class,
+						asset.getStringId(), false)) {
 					LocationImpl loc = dbManager.obtainById(LocationImpl.class, rel.getLocation());
 					if (loc != null && !(Double.isNaN(loc.getLatitude()) || Double.isNaN(loc.getLongitude()))) {
 						lat = loc.getLatitude();
@@ -50,16 +67,7 @@ public class GeoService implements IGeoService {
 					// do nothing
 				}
 		}
-		IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-		if (activeWorkbenchWindow != null) {
-			IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-			if (activePage != null)
-				try {
-					activePage.showView(MapView.ID);
-				} catch (PartInitException e1) {
-					// do nothing
-				}
-		}
+		UiUtilities.showView(MapView.ID);
 	}
 
 	public static void showInWebbrowser(double lat, double lon, int zoom)

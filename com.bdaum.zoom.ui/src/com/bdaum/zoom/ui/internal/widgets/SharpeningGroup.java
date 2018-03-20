@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -61,7 +61,6 @@ public class SharpeningGroup {
 				Messages.SharpeningGroup_apply_sharpening, new GridData(
 						SWT.BEGINNING, SWT.CENTER, true, false, 6, 1));
 		applyButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				updateControls();
@@ -81,8 +80,7 @@ public class SharpeningGroup {
 		radiusField.setMaximum(50);
 		radiusField.setIncrement(1);
 		radiusField.setDigits(1);
-		Label amountLabel = new Label(group, SWT.NONE);
-		amountLabel.setText(Messages.SharpeningGroup_amount);
+		new Label(group, SWT.NONE).setText(Messages.SharpeningGroup_amount);
 		amountField = new NumericControl(group, SWT.NONE);
 		amountField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
 				false, false));
@@ -90,8 +88,7 @@ public class SharpeningGroup {
 		amountField.setMaximum(200);
 		amountField.setIncrement(10);
 		amountField.setDigits(2);
-		Label threshholdLabel = new Label(group, SWT.NONE);
-		threshholdLabel.setText(Messages.SharpeningGroup_threshhold);
+		new Label(group, SWT.NONE).setText(Messages.SharpeningGroup_threshhold);
 		threshholdField = new NumericControl(group, SWT.NONE);
 		threshholdField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
 				false, false));

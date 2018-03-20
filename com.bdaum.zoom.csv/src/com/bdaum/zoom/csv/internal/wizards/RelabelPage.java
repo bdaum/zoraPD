@@ -13,7 +13,6 @@ import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TextCellEditor;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -24,8 +23,10 @@ import org.eclipse.swt.widgets.Table;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.csv.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
+@SuppressWarnings("restriction")
 public class RelabelPage extends ColoredWizardPage {
 
 	private static final String NEWLABELS = "newLabels"; //$NON-NLS-1$
@@ -74,7 +75,6 @@ public class RelabelPage extends ColoredWizardPage {
 			}
 		});
 		col2.setEditingSupport(new EditingSupport(viewer) {
-
 			@Override
 			protected void setValue(Object element, Object value) {
 				if (element instanceof String) {
@@ -104,8 +104,7 @@ public class RelabelPage extends ColoredWizardPage {
 			}
 		});
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
-		viewer.setComparator(new ViewerComparator());
-
+		viewer.setComparator(ZViewerComparator.INSTANCE);
 	}
 
 	protected void fillViewer() {

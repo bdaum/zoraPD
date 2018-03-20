@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ai.internal.services;
 
@@ -32,6 +32,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 import com.bdaum.zoom.ai.internal.AiActivator;
 import com.bdaum.zoom.ai.internal.preference.AiPreferencePage;
 import com.bdaum.zoom.ai.internal.preference.PreferenceConstants;
+import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.internal.ai.IAiService;
 import com.bdaum.zoom.core.internal.ai.Prediction;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
@@ -64,6 +65,37 @@ public class AiService implements IAiService {
 		return new Prediction("", null, null, //$NON-NLS-1$
 				new Status(IStatus.INFO, AiActivator.PLUGIN_ID, Messages.AiService_deactivated));
 	}
+	
+	@Override
+	public int rate(Asset asset, String opId, int maxRating, String modelId, String serviceId) {
+		if (isEnabled()) {
+			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(serviceId);
+			if (provider != null)
+				return provider.rate(asset, opId, maxRating, modelId);
+		}
+		return -1;
+	}
+
+	@Override
+	public String[] getRatingModelIds(String serviceId) {
+		if (isEnabled()) {
+			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(serviceId);
+			if (provider != null)
+				return provider.getRatingModelIds();
+		}
+		return null;
+	}
+
+	@Override
+	public String[] getRatingModelLabels(String serviceId) {
+		if (isEnabled()) {
+			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(serviceId);
+			if (provider != null)
+				return provider.getRatingModelLabels();
+		}
+		return null;
+	}
+
 
 	@Override
 	public float getMarkAbove(String serviceId) {
@@ -92,6 +124,30 @@ public class AiService implements IAiService {
 		for (int i = 0; i < ids.length; i++)
 			ids[i] = providers[i].getId();
 		return ids;
+	}
+
+	@Override
+	public String[] getRatingProviderNames() {
+		IAiServiceProvider[] providers = AiActivator.getDefault().getServiceProviders();
+		List<String> list = new ArrayList<>(providers.length);
+		for (int i = 0; i < providers.length; i++) {
+			String[] ratingModelIds = providers[i].getRatingModelIds();
+			if (ratingModelIds != null && ratingModelIds.length > 0)
+				list.add(providers[i].getName());
+		}
+		return list.toArray(new String[list.size()]);
+	}
+	
+	@Override
+	public String[] getRatingProviderIds() {
+		IAiServiceProvider[] providers = AiActivator.getDefault().getServiceProviders();
+		List<String> list = new ArrayList<>(providers.length);
+		for (int i = 0; i < providers.length; i++) {
+			String[] ratingModelIds = providers[i].getRatingModelIds();
+			if (ratingModelIds != null && ratingModelIds.length > 0)
+				list.add(providers[i].getId());
+		}
+		return list.toArray(new String[list.size()]);
 	}
 
 	@Override
@@ -222,5 +278,6 @@ public class AiService implements IAiService {
 		}
 		return null;
 	}
+
 
 }

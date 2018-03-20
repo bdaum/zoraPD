@@ -15,17 +15,18 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
 
 import java.io.File;
+import java.util.Arrays;
 
 import org.eclipse.core.runtime.ListenerList;
+import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -33,22 +34,29 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.ui.internal.Icons;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 
 public class FileEditor extends Composite {
 
-	private Text fileNameField;
-	ListenerList<ModifyListener> listeners = new ListenerList<ModifyListener>();
+	private static final String FILEHISTORY = "fileHistory"; //$NON-NLS-1$
+	private static final String LASTFILENAME = "lastFilename"; //$NON-NLS-1$
+	private Combo fileNameField;
+	private ListenerList<ModifyListener> listeners = new ListenerList<ModifyListener>();
 	private String path;
 	private Button clearButton;
-	private boolean browsed;
+	private IDialogSettings settings;
+	private String historyKey;
+	private String lastfileKey;
+	private String fileName;
+	private int lastSelectionIndex = 0;
 
 	/**
 	 * Constructor
@@ -71,13 +79,13 @@ public class FileEditor extends Composite {
 	 *            - file name (not used for folders)
 	 * @param overwrite
 	 *            - check for overwrite (not used for folders)
+	 * @param settings
+	 *            - dialogSettings for storing and retrieving the history
 	 */
-	public FileEditor(Composite parent, final int style, final String lab,
-			boolean hasLabel, final String[] filterExtensions,
-			final String[] filterNames, final String path,
-			final String fileName, final boolean overwrite) {
-		this(parent, style, lab, hasLabel, filterExtensions, filterNames, path,
-				fileName, overwrite, false);
+	public FileEditor(Composite parent, final int style, final String lab, boolean hasLabel,
+			final String[] filterExtensions, final String[] filterNames, final String path, final String fileName,
+			final boolean overwrite, IDialogSettings settings) {
+		this(parent, style, lab, hasLabel, filterExtensions, filterNames, path, fileName, overwrite, false, settings);
 	}
 
 	/**
@@ -97,19 +105,25 @@ public class FileEditor extends Composite {
 	 *            - filter names (not used for folders)
 	 * @param path
 	 *            - path
-	 * @param fileName
+	 * @param filenameProposal
 	 *            - file name (not used for folders)
 	 * @param overwrite
 	 *            - check for overwrite (not used for folders)
 	 * @param clear
 	 *            - has clear button
+	 * @param settings
+	 *            - dialogSettings for storing and retrieving the history
 	 */
-	public FileEditor(Composite parent, final int style, final String lab,
-			boolean hasLabel, final String[] filterExtensions,
-			final String[] filterNames, final String path,
-			final String fileName, final boolean overwrite, final boolean clear) {
+	public FileEditor(Composite parent, final int style, final String lab, boolean hasLabel,
+			final String[] filterExtensions, final String[] filterNames, final String path,
+			final String filenameProposal, final boolean overwrite, final boolean clear, IDialogSettings settings) {
 		super(parent, style);
 		this.path = path;
+		this.fileName = filenameProposal;
+		this.settings = settings;
+		int hashCode = Arrays.hashCode(filterExtensions);
+		historyKey = FILEHISTORY + hashCode;
+		lastfileKey = LASTFILENAME + hashCode;
 		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		int cols = 2;
 		if (hasLabel)
@@ -122,43 +136,52 @@ public class FileEditor extends Composite {
 		setLayout(layout);
 		if (hasLabel)
 			new Label(this, SWT.NONE).setText(lab);
-		fileNameField = new Text(this, SWT.BORDER | (style & SWT.READ_ONLY));
-		final GridData gd_fileName = new GridData(SWT.FILL, SWT.CENTER, true,
-				false);
-		gd_fileName.widthHint = 200;
-		fileNameField.setLayoutData(gd_fileName);
-		if (fileName != null)
-			fileNameField.setText(fileName);
-		if ((style & SWT.READ_ONLY) == 0) {
+		fileNameField = new Combo(this, SWT.BORDER | (style & SWT.READ_ONLY));
+		final GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		data.widthHint = 200;
+		fileNameField.setLayoutData(data);
+		String[] items = settings == null ? null : settings.getArray(historyKey);
+		if (items == null)
+			items = new String[0];
+		fileNameField.setVisibleItemCount(8);
+		String lastFile = settings == null ? null : settings.get(lastfileKey);
+		if (lastFile != null)
+			this.path = new File(this.fileName = lastFile).getParent();
+		if (this.fileName != null) {
+			fileNameField.setItems(UiUtilities.addToHistoryList(items, this.fileName));
+			fileNameField.setText(this.fileName);
+		}
+		if (overwrite && lastFile != null && !lastFile.isEmpty() && new File(lastFile).exists()) {
+			fileNameField.setItems(UiUtilities.addToHistoryList(fileNameField.getItems(), filenameProposal));
+			fileNameField.setText(this.fileName = filenameProposal);
+			this.path = path;
+		}
+		fileNameField.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				int selectionIndex = fileNameField.getSelectionIndex();
+				if (!overwrite || !new File(fileNameField.getItem(selectionIndex)).exists() || MessageDialog
+						.openQuestion(getShell(), Messages.FileEditor_file_exists, Messages.FileEditor_overwrite))
+					lastSelectionIndex = selectionIndex;
+				else
+					fileNameField.select(lastSelectionIndex);
+				fireModifyEvent(createModifyEvent());
+			}
+		});
+		if ((style & SWT.READ_ONLY) == 0)
 			fileNameField.addModifyListener(new ModifyListener() {
 				public void modifyText(ModifyEvent e) {
 					fireModifyEvent(e);
 				}
 			});
-		}
-		if (overwrite && path != null && (style & (SWT.OPEN | SWT.SAVE)) != 0) {
-			fileNameField.addFocusListener(new FocusListener() {
-				public void focusLost(FocusEvent e) {
-					// do nothing
-				}
-				public void focusGained(FocusEvent e) {
-					if (!browsed) {
-						File file = new File(path);
-						if (file.exists())
-							openBrowseDialog(style, lab, filterExtensions, filterNames,
-									path, fileName, overwrite);
-					}
-				}
-			});
-		}
 		Button button = new Button(this, SWT.PUSH);
 		button.setText(Messages.FileEditor_browse);
 		button.setToolTipText(Messages.FileEditor_browse_tooltip);
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				openBrowseDialog(style, lab, filterExtensions, filterNames,
-						path, fileName, overwrite);
+				openBrowseDialog(style, lab, filterExtensions, filterNames, FileEditor.this.path,
+						FileEditor.this.fileName, overwrite);
 			}
 		});
 		if (clear) {
@@ -191,8 +214,8 @@ public class FileEditor extends Composite {
 	}
 
 	public void fireModifyEvent(ModifyEvent e) {
-		for (Object o : listeners.getListeners())
-			((ModifyListener) o).modifyText(e);
+		for (ModifyListener o : listeners)
+			o.modifyText(e);
 	}
 
 	public String getText() {
@@ -200,6 +223,14 @@ public class FileEditor extends Composite {
 	}
 
 	public void setText(String string) {
+		int index = fileNameField.indexOf(string);
+		if (index < 0) {
+			String[] items = fileNameField.getItems();
+			String[] newItems = new String[items.length + 1];
+			newItems[0] = string;
+			System.arraycopy(items, 0, newItems, 1, items.length);
+			fileNameField.setItems(newItems);
+		}
 		fileNameField.setText(string);
 		if (clearButton != null)
 			clearButton.setEnabled(!getText().isEmpty());
@@ -216,13 +247,10 @@ public class FileEditor extends Composite {
 		return new ModifyEvent(ev);
 	}
 
-	public void openBrowseDialog(final int style, final String lab,
-			final String[] filterExtensions, final String[] filterNames,
-			final String path, final String fileName, final boolean overwrite) {
-		browsed = true;
+	public void openBrowseDialog(final int style, final String lab, final String[] filterExtensions,
+			final String[] filterNames, final String path, final String fileName, final boolean overwrite) {
 		if ((style & (SWT.OPEN | SWT.SAVE)) != 0) {
-			FileDialog dialog = new FileDialog(getShell(), style
-					& (SWT.OPEN | SWT.SAVE));
+			FileDialog dialog = new FileDialog(getShell(), style & (SWT.OPEN | SWT.SAVE));
 			dialog.setText(lab);
 			dialog.setFilterExtensions(filterExtensions);
 			dialog.setFilterNames(filterNames);
@@ -242,11 +270,10 @@ public class FileEditor extends Composite {
 			dialog.setOverwrite(overwrite);
 			String file = dialog.open();
 			if (file != null) {
+				fileNameField.setItems(UiUtilities.addToHistoryList(fileNameField.getItems(), file));
 				fileNameField.setText(file);
-				FileEditor.this.path = dialog.getFilterPath();
-				ModifyEvent e1 = createModifyEvent();
-				for (Object o : listeners.getListeners())
-					((ModifyListener) o).modifyText(e1);
+				this.path = dialog.getFilterPath();
+				fireModifyEvent(createModifyEvent());
 			}
 		} else {
 			DirectoryDialog dialog = new DirectoryDialog(getShell());
@@ -261,11 +288,10 @@ public class FileEditor extends Composite {
 			if (folder != null) {
 				if (!folder.endsWith(File.separator))
 					folder += File.separator;
+				fileNameField.setItems(UiUtilities.addToHistoryList(fileNameField.getItems(), folder));
 				fileNameField.setText(folder);
-				FileEditor.this.path = dialog.getFilterPath();
-				ModifyEvent e1 = createModifyEvent();
-				for (Object o : listeners.getListeners())
-					((ModifyListener) o).modifyText(e1);
+				this.path = dialog.getFilterPath();
+				fireModifyEvent(createModifyEvent());
 			}
 		}
 	}
@@ -273,6 +299,16 @@ public class FileEditor extends Composite {
 	@Override
 	public boolean setFocus() {
 		return fileNameField.setFocus();
+	}
+
+	public void saveValues() {
+		if (settings != null) {
+			String text = getText();
+			if (!text.isEmpty()) {
+				settings.put(lastfileKey, text);
+				settings.put(historyKey, UiUtilities.getComboHistory(fileNameField, '*'));
+			}
+		}
 	}
 
 }

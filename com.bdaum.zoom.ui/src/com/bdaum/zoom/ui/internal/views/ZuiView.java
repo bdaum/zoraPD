@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -158,21 +158,13 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 	private AnimatedGallery animatedGallery;
 	private boolean forceExternalSelection;
 	protected boolean mouseDown;
-
 	protected int lastMouseX;
-
 	protected int mouseButton;
-
 	private int currentSystemCursor = SWT.CURSOR_ARROW;
-
 	private String currentCustomCursor;
-
 	private SmartCollectionImpl currentCollection;
-
 	private int showLabelDflt;
-
 	private String labelTemplateDflt;
-
 	private int labelFontsizeDflt;
 
 	@Override
@@ -193,13 +185,8 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 	}
 
 	public void setNumberOfColums(int cnt) {
-		this.columns = cnt;
-		animatedGallery.setColumns(columns);
+		animatedGallery.setColumns(columns = cnt);
 	}
-
-	/**
-	 * This is a callback that will allow us to create the viewer and initialize it.
-	 */
 
 	@Override
 	public void createPartControl(final Composite parent) {
@@ -280,9 +267,8 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 			}
 		});
 		addKeyListener();
-		addExplanationListener();
+		addExplanationListener(false);
 		setFocus();
-
 		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(animatedGallery.getControl(), HelpContextIds.SLEEVES_VIEW);
 		// Drop-Unterstützung
@@ -296,7 +282,7 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 		hookContextMenu();
 		contributeToActionBars();
 		setDecorator(animatedGallery.getControl(), new ZuiGalleryDecorateJob(this, animatedGallery));
-		updateActions();
+		updateActions(false);
 	}
 
 	protected void setCanvasCursor(String customCursor, int systemCursor) {
@@ -306,13 +292,11 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 				currentSystemCursor = systemCursor;
 				currentCustomCursor = null;
 			}
-		} else {
-			if (currentCustomCursor != customCursor || currentSystemCursor >= 0) {
-				animatedGallery
-						.setCursor(UiActivator.getDefault().getCursor(animatedGallery.getDisplay(), customCursor));
-				currentSystemCursor = -1;
-				currentCustomCursor = customCursor;
-			}
+		} else if (currentCustomCursor != customCursor || currentSystemCursor >= 0) {
+			animatedGallery
+					.setCursor(UiActivator.getDefault().getCursor(animatedGallery.getDisplay(), customCursor));
+			currentSystemCursor = -1;
+			currentCustomCursor = customCursor;
 		}
 	}
 
@@ -362,10 +346,6 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 		else
 			action24.setChecked(true);
 	}
-
-	/**
-	 * Passing the focus request to the viewer's control.
-	 */
 
 	@Override
 	public void setFocus() {

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.rcp.internal.perspective;
 
@@ -50,7 +50,7 @@ public class TablePerspective extends AbstractPerspective {
 		layout.addView(HistogramView.ID, IPageLayout.BOTTOM, 0.85f,
 				MetadataView.ID);
 		addCheatSheets(layout, MetadataView.ID);
-		addFastViews(layout, IPageLayout.LEFT, 0.7f, CATALOG_FOLDER);
+		addFastViews(layout, IPageLayout.RIGHT, 0.7f, TABLE_FOLDER);
 		layout.setEditorAreaVisible(false);
 	}
 	

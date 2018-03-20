@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -109,6 +109,7 @@ public class VoiceNoteDialog extends ZTitleAreaDialog {
 
 	public VoiceNoteDialog(Shell parentShell, List<Asset> assets, boolean textNotes) {
 		super(parentShell);
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		this.textNotes = textNotes;
 		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
 		multi = assets.size() > 1;
@@ -139,7 +140,6 @@ public class VoiceNoteDialog extends ZTitleAreaDialog {
 	}
 
 	private void fillValues() {
-		settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
 		try {
 			replay = settings.getBoolean(REPLAY);
 			replayButton.setSelection(replay);
@@ -268,15 +268,8 @@ public class VoiceNoteDialog extends ZTitleAreaDialog {
 			String file = openFileDialog(settings, SWT.OPEN);
 			if (file != null) {
 				noteText = null;
-				IDialogSettings settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
 				settings.put(SOUNDFILE, file);
-				try {
-					settings.save(UiActivator.getDefault().getStateLocation().toString() + "/dialog_settings.xml"); //$NON-NLS-1$
-				} catch (IllegalStateException e) {
-					UiActivator.getDefault().logError(Messages.VoiceNoteDialog_internal_error_writing, e);
-				} catch (IOException e) {
-					UiActivator.getDefault().logError(Messages.VoiceNoteDialog_io_error_writing, e);
-				}
+				UiActivator.getDefault().saveDialogSettings();
 				outputFile = new File(file);
 				sourceUri = outputFile.toURI().toString();
 				targetUri = sourceUri;
@@ -362,7 +355,6 @@ public class VoiceNoteDialog extends ZTitleAreaDialog {
 		if (remote) {
 			if (AcousticMessageDialog.openQuestion(getShell(), Messages.VoiceNoteDialog_add_voice_file,
 					Messages.VoiceNoteDialog_the_voice_file_cannot_be_stored_alongside)) {
-				IDialogSettings settings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
 				String file = openFileDialog(settings, SWT.SAVE);
 				if (file != null) {
 					try {

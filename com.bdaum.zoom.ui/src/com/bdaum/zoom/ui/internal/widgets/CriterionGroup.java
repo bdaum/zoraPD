@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2017 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -263,7 +263,6 @@ public class CriterionGroup extends AbstractCriterionGroup {
 						if (des != null)
 							configureNumericField(intField, des.getDetailQueryField());
 						intField.setSelection((Integer) value);
-
 						return true;
 					}
 					if (layout.topControl == codeComposite) {
@@ -448,7 +447,8 @@ public class CriterionGroup extends AbstractCriterionGroup {
 				public void selectionChanged(SelectionChangedEvent event) {
 					fillFieldCombo(crit);
 					fromStack.resetValues();
-					toStack.resetValues();
+					if (toStack != null)
+						toStack.resetValues();
 					validate();
 					signalModification();
 				}

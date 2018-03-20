@@ -15,9 +15,13 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2012 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2012 Berthold Daum  
  */
 package com.bdaum.zoom.common;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class CommonUtilities {
 
 	private CommonUtilities() {
@@ -34,5 +38,51 @@ public class CommonUtilities {
 	public static String encodeBlanks(String s) {
 		return s == null ? null : s.replaceAll("[\\+]|\\s", "%20"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
+	
+	/**
+	 * Converts a separator separated string list into a list of strings
+	 *
+	 * @param stringlist
+	 *            - input string
+	 * @param seps
+	 *            - valid separators
+	 * @return - resulting list
+	 */
+
+	public static List<String> fromStringList(String stringlist, String seps) {
+		ArrayList<String> result = new ArrayList<String>();
+		if (stringlist != null) {
+			char[] chars = stringlist.toCharArray();
+			boolean token = false;
+			int offset = 0;
+			int l = chars.length;
+			for (int i = 0; i < l; i++) {
+				char c = chars[i];
+				if (token) {
+					if (seps.indexOf(c) >= 0) {
+						int end = i;
+						while (end > offset && chars[end - 1] == ' ')
+							--end;
+						while (offset < end && chars[offset] == ' ')
+							++offset;
+						result.add(new String(chars, offset, end - offset));
+						token = false;
+					}
+				} else if (seps.indexOf(c) < 0) {
+					token = true;
+					offset = i;
+				}
+			}
+			if (token) {
+				while (l > offset && chars[l - 1] == ' ')
+					--l;
+				while (offset < l && chars[offset] == ' ')
+					++offset;
+				result.add(new String(chars, offset, l - offset));
+			}
+		}
+		return result;
+	}
+
 
 }

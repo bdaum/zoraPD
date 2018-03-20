@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -40,8 +40,7 @@ public class ZPSWTPath extends PSWTPath {
 	}
 	@Override
 	protected void paint(PPaintContext paintContext) {
-		final SWTGraphics2D g2 = (SWTGraphics2D) paintContext.getGraphics();
-		g2.setLineWidth(lineWidth);
+		((SWTGraphics2D) paintContext.getGraphics()).setLineWidth(lineWidth);
 		super.paint(paintContext);
 	}
 }

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -28,7 +28,6 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -194,20 +193,10 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 		composite.setLayout(new GridLayout(1, false));
 		CTabFolder tabFolder = new CTabFolder(composite, SWT.TOP);
 		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		final CTabItem overviewTabItem = UiUtilities.createTabItem(tabFolder, Messages.EditFtpDialog_general);
-		final Composite comp = new Composite(tabFolder, SWT.NONE);
-		overviewTabItem.setControl(comp);
-		createOverviewGroup(comp);
-		final CTabItem connectionTabItem = UiUtilities.createTabItem(tabFolder, Messages.EditFtpDialog_connection);
-		final Composite comp2 = new Composite(tabFolder, SWT.NONE);
-		connectionTabItem.setControl(comp2);
-		createConnectionGroup(comp2);
-		if (!adhoc) {
-			final CTabItem advancedTabItem = UiUtilities.createTabItem(tabFolder, Messages.EditFtpDialog_web);
-			final Composite comp1 = new Composite(tabFolder, SWT.NONE);
-			advancedTabItem.setControl(comp1);
-			createAdvancedGroup(comp1);
-		}
+		createOverviewGroup(UiUtilities.createTabPage(tabFolder, Messages.EditFtpDialog_general, null));
+		createConnectionGroup(UiUtilities.createTabPage(tabFolder, Messages.EditFtpDialog_connection, null));
+		if (!adhoc)
+			createAdvancedGroup(UiUtilities.createTabPage(tabFolder, Messages.EditFtpDialog_web, null));
 		return area;
 	}
 

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.commands;
 
@@ -68,7 +68,6 @@ public class ArchiveCommand extends AbstractCommandHandler {
 			ZProgressMonitorDialog dialog = new ZProgressMonitorDialog(getShell());
 			try {
 				dialog.run(false, true, new IRunnableWithProgress() {
-
 					public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 						imageSize = 0;
 						catSize = 0;
@@ -146,7 +145,6 @@ public class ArchiveCommand extends AbstractCommandHandler {
 				ZProgressMonitorDialog runDialog = new ZProgressMonitorDialog(getShell());
 				try {
 					runDialog.run(true, true, new IRunnableWithProgress() {
-
 						public void run(IProgressMonitor monitor)
 								throws InvocationTargetException, InterruptedException {
 							CoreActivator coreActivator = CoreActivator.getDefault();
@@ -240,8 +238,7 @@ public class ArchiveCommand extends AbstractCommandHandler {
 										if (++i % 10 == 0) {
 											int remainingImages = localImages - i;
 											if (remainingImages > 0) {
-												long current = System.currentTimeMillis();
-												long elapsed = current - start;
+												long elapsed = System.currentTimeMillis() - start;
 												long estimated = elapsed / i * remainingImages;
 												monitor.subTask(NLS.bind(Messages.ArchiveAction_elapsed_time,
 														Format.timeFormatter

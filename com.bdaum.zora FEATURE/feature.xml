@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE"
       label="ZoRa Photo Director Feature"
-      version="3.2.2"
+      version="3.3.0"
       provider-name="bdaum industrial communications"
       plugin="com.bdaum.zoom.rcp">
 
@@ -572,12 +572,6 @@ your option) any later version.
          version="0.0.0"/>
 
    <plugin
-         id="com.bdaum.zoom.web.imageGallery"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
          id="org.eclipse.equinox.ds"
          download-size="0"
          install-size="0"
@@ -830,12 +824,6 @@ your option) any later version.
 
    <plugin
          id="com.bdaum.zoom.web.simpleViewer"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="com.bdaum.zoom.web.tiltViewer"
          download-size="0"
          install-size="0"
          version="0.0.0"/>
@@ -1305,6 +1293,13 @@ your option) any later version.
 
    <plugin
          id="piccolo3"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.web.skitter"
          download-size="0"
          install-size="0"
          version="0.0.0"

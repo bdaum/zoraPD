@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -71,8 +71,7 @@ public class GreekedPSWTText extends PSWTText {
 						if (alignment == SWT.RIGHT)
 							textOffset = textWidth - 2 * padding - textExtent.x;
 						else if (alignment == SWT.CENTER)
-							textOffset = (textWidth - textExtent.x) / 2
-									- padding;
+							textOffset = (textWidth - textExtent.x) / 2 - padding;
 					}
 					sg2.fillRect(textOffset, y, textExtent.x, textExtent.y);
 				}
@@ -82,9 +81,9 @@ public class GreekedPSWTText extends PSWTText {
 	}
 
 	/**
-	 * Paints this object normally (show it's text). Note that the entire text
-	 * gets rendered so that it's upper left corner appears at the origin of
-	 * this local object.
+	 * Paints this object normally (show it's text). Note that the entire text gets
+	 * rendered so that it's upper left corner appears at the origin of this local
+	 * object.
 	 *
 	 * @param ppc
 	 *            The graphics context to paint into.
@@ -93,17 +92,11 @@ public class GreekedPSWTText extends PSWTText {
 	public void paintAsText(final PPaintContext ppc) {
 		isGreek = false;
 		final SWTGraphics2D sg2 = (SWTGraphics2D) ppc.getGraphics();
-
 		if (!isTransparent()) {
-			if (getPaint() == null)
-				sg2.setBackground(Color.WHITE);
-			else
-				sg2.setBackground((Color) getPaint());
+			sg2.setBackground(getPaint() == null ? Color.WHITE : (Color) getPaint());
 			sg2.fillRect(0, 0, (int) getWidth(), (int) getHeight());
 		}
-
 		sg2.translate(padding, padding);
-
 		sg2.setColor(penColor);
 		sg2.setFont(font);
 		String line;
@@ -117,11 +110,9 @@ public class GreekedPSWTText extends PSWTText {
 				int textOffset = 0;
 				if (textWidth != SWT.DEFAULT) {
 					if (alignment == SWT.RIGHT)
-						textOffset = textWidth - 2 * padding
-								- textExtent(line).x;
+						textOffset = textWidth - 2 * padding - textExtent(line).x;
 					else if (alignment == SWT.CENTER)
-						textOffset = (textWidth - textExtent(line).x) / 2
-								- padding;
+						textOffset = (textWidth - textExtent(line).x) / 2 - padding;
 				}
 				sg2.drawString(line, textOffset, y, true);
 			}
@@ -133,26 +124,17 @@ public class GreekedPSWTText extends PSWTText {
 	@Override
 	protected void recomputeBounds() {
 		final GC gc = new GC(Display.getDefault());
-
-		final Point newBounds;
-		if (isTextEmpty()) {
-			newBounds = gc.stringExtent(" "); //$NON-NLS-1$
-		} else {
-			newBounds = calculateTextBounds(gc);
-		}
-
+		final Point newBounds = isTextEmpty() ? gc.stringExtent(" ") : calculateTextBounds(gc); //$NON-NLS-1$
 		gc.dispose();
-
 		double textOffset = 0;
 		if (textWidth != SWT.DEFAULT) {
-			if (alignment == SWT.RIGHT) {
+			if (alignment == SWT.RIGHT)
 				textOffset = textWidth - 2 * padding - newBounds.x;
-			} else if (alignment == SWT.CENTER) {
+			else if (alignment == SWT.CENTER)
 				textOffset = (textWidth - newBounds.x) / 2 - padding;
-			}
 		}
-		setBounds(translateX + textOffset, translateY, newBounds.x + 2
-				* DEFAULT_PADDING, newBounds.y + 2 * DEFAULT_PADDING);
+		setBounds(translateX + textOffset, translateY, newBounds.x + 2 * DEFAULT_PADDING,
+				newBounds.y + 2 * DEFAULT_PADDING);
 	}
 
 	/**
@@ -172,12 +154,10 @@ public class GreekedPSWTText extends PSWTText {
 		@SuppressWarnings("unchecked")
 		final Iterator<String> lineIterator = lines.iterator();
 		while (lineIterator.hasNext()) {
-			String line = lineIterator.next();
-			Point lineBounds = gc.stringExtent(line);
+			Point lineBounds = gc.stringExtent(lineIterator.next());
 			if (firstLine) {
 				textBounds.x = lineBounds.x;
-				textBounds.y += fm.getAscent() + fm.getDescent()
-						+ fm.getLeading();
+				textBounds.y += fm.getAscent() + fm.getDescent() + fm.getLeading();
 				firstLine = false;
 			} else {
 				textBounds.x = Math.max(lineBounds.x, textBounds.x);
@@ -193,17 +173,17 @@ public class GreekedPSWTText extends PSWTText {
 	 * @return true if the text is the empty string
 	 */
 	private boolean isTextEmpty() {
-		return lines.isEmpty() || lines.size() == 1
-				&& ((String) lines.get(0)).isEmpty();
+		return lines.isEmpty() || lines.size() == 1 && ((String) lines.get(0)).isEmpty();
 	}
 
 	public int getOffsetAtLocation(double x, double y) {
 		int sx = -1;
 		int ya = 0;
 		int offset = 0;
+		String line;
 		StringTokenizer st = new StringTokenizer(getText(), "\n\r", true); //$NON-NLS-1$
 		loop: while (st.hasMoreTokens()) {
-			String line = st.nextToken();
+			line = st.nextToken();
 			if (!"\n".equals(line) && !"\r".equals(line)) { //$NON-NLS-1$ //$NON-NLS-2$
 				Point tx = textExtent(line);
 				int textOffset = -padding;
@@ -232,7 +212,7 @@ public class GreekedPSWTText extends PSWTText {
 	}
 
 	public Point getLocationAtOffset(int offset) {
-		Point result = new Point(padding,padding);
+		Point result = new Point(padding, padding);
 		int la = 0;
 		String str = getText();
 		StringTokenizer st = new StringTokenizer(str, "\n\r", true); //$NON-NLS-1$
@@ -242,19 +222,17 @@ public class GreekedPSWTText extends PSWTText {
 			if (!"\n".equals(line) && !"\r".equals(line)) { //$NON-NLS-1$ //$NON-NLS-2$
 				if (offset >= la && offset <= lb) {
 					String linesAbove = str.substring(0, la);
-					if (!linesAbove.isEmpty()) {
-						Point tx = textExtent(linesAbove);
-						result.y += tx.y;
-					}
+					if (!linesAbove.isEmpty())
+						result.y += textExtent(linesAbove).y;
 					int textOffset = 0;
 					if (textWidth != SWT.DEFAULT) {
 						if (alignment == SWT.RIGHT)
 							textOffset = (textWidth - 2 * padding - textExtent(line).x);
 						else if (alignment == SWT.CENTER)
-							textOffset = (textWidth  - textExtent(line).x) / 2 - padding;
+							textOffset = (textWidth - textExtent(line).x) / 2 - padding;
 					}
 					result.x += textOffset;
-					result.x += textExtent(line.substring(0, offset-la)).x;
+					result.x += textExtent(line.substring(0, offset - la)).x;
 					return result;
 				}
 			}
@@ -268,14 +246,11 @@ public class GreekedPSWTText extends PSWTText {
 		final SWTGraphics2D g2 = new SWTGraphics2D(gc, Display.getDefault());
 		g2.setFont(font);
 		final FontMetrics fm = g2.getSWTFontMetrics();
-		final Point textBounds = new Point(0, fm.getAscent() + fm.getDescent()
-				+ fm.getLeading());
-
+		final Point textBounds = new Point(0, fm.getAscent() + fm.getDescent() + fm.getLeading());
 		boolean firstLine = true;
 		StringTokenizer st = new StringTokenizer(text, "\n\r"); //$NON-NLS-1$
 		while (st.hasMoreTokens()) {
-			String line = st.nextToken();
-			Point lineBounds = gc.textExtent(line);
+			Point lineBounds = gc.textExtent(st.nextToken());
 			if (firstLine) {
 				textBounds.x = lineBounds.x;
 				firstLine = false;
@@ -328,11 +303,9 @@ public class GreekedPSWTText extends PSWTText {
 		int textOffset = 0;
 		if (textWidth != SWT.DEFAULT) {
 			if (alignment == SWT.RIGHT)
-				textOffset = textWidth - 2 * padding
-						- textExtent((String) lines.get(y)).x;
+				textOffset = textWidth - 2 * padding - textExtent((String) lines.get(y)).x;
 			else if (alignment == SWT.CENTER)
-				textOffset = (textWidth - textExtent((String) lines.get(y)).x)
-						/ 2 - padding;
+				textOffset = (textWidth - textExtent((String) lines.get(y)).x) / 2 - padding;
 		}
 		return textOffset;
 	}

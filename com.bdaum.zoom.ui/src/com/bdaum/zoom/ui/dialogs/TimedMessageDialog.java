@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.dialogs;
@@ -97,7 +97,6 @@ public class TimedMessageDialog extends AcousticMessageDialog {
 	public TimedMessageDialog(Shell parentShell, IInputValidator validator, String dialogTitle, Image dialogTitleImage,
 			String dialogMessage, int dialogImageType, String[] dialogButtonLabels, int defaultIndex, int cancelIndex,
 			long interval) {
-
 		super(parentShell, dialogTitle, dialogTitleImage, dialogMessage, dialogImageType, dialogButtonLabels,
 				defaultIndex);
 		Assert.isNotNull(validator);

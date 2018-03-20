@@ -47,10 +47,10 @@ public abstract class AbstractPerspective implements IPerspectiveFactory {
 	public static final String LOG_VIEW = "org.eclipse.pde.runtime.LogView"; //$NON-NLS-1$
 	public static final String MAP_VIEW = "com.bdaum.zoom.gps.MapView"; //$NON-NLS-1$
 	public static final String GPS_VIEW = "com.bdaum.zoom.gps.GPSView"; //$NON-NLS-1$
-	protected static final String COMPONENTS_VIEW = "com.bdaum.zoom.ui.views.HierarchyViewComponents"; //$NON-NLS-1$
-	protected static final String COMPOSITES_VIEW = "com.bdaum.zoom.ui.views.HierarchyViewComposites"; //$NON-NLS-1$
-	protected static final String ORIGINALS_VIEW = "com.bdaum.zoom.ui.views.HierarchyViewOriginals"; //$NON-NLS-1$
-	protected static final String DERIVATIVES_VIEW = "com.bdaum.zoom.ui.views.HierarchyViewDerivatives"; //$NON-NLS-1$
+	public static final String COMPONENTS_VIEW = "com.bdaum.zoom.ui.views.HierarchyViewComponents"; //$NON-NLS-1$
+	public static final String COMPOSITES_VIEW = "com.bdaum.zoom.ui.views.HierarchyViewComposites"; //$NON-NLS-1$
+	public static final String ORIGINALS_VIEW = "com.bdaum.zoom.ui.views.HierarchyViewOriginals"; //$NON-NLS-1$
+	public static final String DERIVATIVES_VIEW = "com.bdaum.zoom.ui.views.HierarchyViewDerivatives"; //$NON-NLS-1$
 
 	protected static final String HIERARCHY_FOLDER = "com.bdaum.zoom.ui.views.HierarchyFolder"; //$NON-NLS-1$
 	protected static final String HISTOGRAM_FOLDER = "com.bdaum.zoom.ui.views.HistogramFolder"; //$NON-NLS-1$
@@ -60,7 +60,8 @@ public abstract class AbstractPerspective implements IPerspectiveFactory {
 
 	private static final String[] MAINVIEWS = new String[] { LightboxView.ID, ZuiView.ID, TableView.ID,
 			ExhibitionView.ID, SlideshowView.ID, WebGalleryView.ID, DataEntryView.ID, DuplicatesView.ID, MAP_VIEW };
-	private List<String> fastViews = new ArrayList<>(5);
+	
+	protected List<String> fastViews = new ArrayList<>(5);
 
 	@Override
 	public void createInitialLayout(IPageLayout layout) {
@@ -103,20 +104,17 @@ public abstract class AbstractPerspective implements IPerspectiveFactory {
 		fastViews.add(BookmarkView.ID);
 		folder.addView(TagCloudView.ID);
 		fastViews.add(TagCloudView.ID);
-		// layout.addFastView(LOG_VIEW, 0.4f);
-		// layout.addFastView(TrashcanView.ID, 0.5f);
-		// layout.addFastView(BookmarkView.ID, 0.3f);
-		// layout.addFastView(TagCloudView.ID, 0.6f);
 	}
 
 	protected void addCheatSheets(IPageLayout layout, String anchor) {
 		layout.addPlaceholder(CHEATSHEET_VIEW, IPageLayout.RIGHT, 0.3f, anchor);
 	}
 
-	protected void createCatalogFolder(IPageLayout layout, int dir, float ratio, String ref) {
+	protected IFolderLayout createCatalogFolder(IPageLayout layout, int dir, float ratio, String ref) {
 		IFolderLayout folder = layout.createFolder(CATALOG_FOLDER, dir, ratio, ref);
 		folder.addView(CatalogView.ID);
 		folder.addView(HistoryView.ID);
+		return folder;
 	}
 
 }

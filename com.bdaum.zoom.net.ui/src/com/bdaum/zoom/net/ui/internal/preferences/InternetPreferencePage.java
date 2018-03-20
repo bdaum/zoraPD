@@ -23,10 +23,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
@@ -45,6 +43,7 @@ import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.net.ui.internal.HelpContextIds;
 import com.bdaum.zoom.net.ui.internal.NetActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.dialogs.EditFtpDialog;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
@@ -62,7 +61,6 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 	private TableViewer ftpViewer;
 	private Button editButton;
 	private Button removeButton;
-	private CTabItem tabItem0;
 	private RadioButtonGroup proxyGroup;
 
 	public InternetPreferencePage() {
@@ -92,8 +90,7 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.INTERNET_PREFERENCE_PAGE);
 		createTabFolder(composite, "Internet"); //$NON-NLS-1$
-		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.InternetPreferencePage_http_ftp);
-		tabItem0.setControl(createHttpGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.InternetPreferencePage_http_ftp, Messages.InternetPreferencePage_http_tooltip).setControl(createHttpGroup(tabFolder));
 		initTabFolder(0);
 		createExtensions(tabFolder, "com.bdaum.zoom.net.preferences.InternetPreferencePage"); //$NON-NLS-1$
 		fillValues();
@@ -122,7 +119,7 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 				return element.toString();
 			}
 		});
-		ftpViewer.setComparator(new ViewerComparator());
+		ftpViewer.setComparator(ZViewerComparator.INSTANCE);
 		Composite buttonGroup = new Composite(group, SWT.NONE);
 		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.FILL, false, true));
 		buttonGroup.setLayout(new GridLayout(1, false));

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2011 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2011 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -44,8 +44,7 @@ public class SelectWebExhibitDialog extends AbstractSelectExhibitDialog {
 
 	@Override
 	public String getText(Object element) {
-		WebExhibitImpl exhibit = (WebExhibitImpl) element;
-		return "  " + exhibit.getCaption(); //$NON-NLS-1$
+		return "  " + ((WebExhibitImpl) element).getCaption(); //$NON-NLS-1$
 	}
 
 }

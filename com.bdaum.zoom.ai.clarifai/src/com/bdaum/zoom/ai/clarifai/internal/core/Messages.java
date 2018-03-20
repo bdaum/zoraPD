@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2016 Berthold Daum  
  */
 package com.bdaum.zoom.ai.clarifai.internal.core;
 
@@ -26,6 +26,9 @@ public class Messages extends NLS {
 	public static String Clarifai_request_refused;
 	public static String Clarifai_service_disabled;
 	public static String ClarifaiServiceProvider_clarifai_expl;
+	public static String ClarifaiServiceProvider_download_failed;
+	public static String ClarifaiServiceProvider_image_rating;
+	public static String ClarifaiServiceProvider_loading_failed;
 	public static String ClarifaiServiceProvider_network_error;
 	public static String ClarifaiServiceProvider_not_set_or_wrong;
 	public static String ClarifaiServiceProvider_pending;

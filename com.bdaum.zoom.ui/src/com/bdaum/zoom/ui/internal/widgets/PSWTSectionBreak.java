@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -34,9 +34,7 @@ import com.bdaum.zoom.cat.model.group.slideShow.SlideImpl;
 import com.bdaum.zoom.core.Constants;
 
 public class PSWTSectionBreak extends ZPSWTImage {
-	/**
-	 *
-	 */
+	
 	private static final long serialVersionUID = -5539327360971870974L;
 	private final SlideImpl slide;
 	private final PSWTCanvas canvas;
@@ -147,19 +145,15 @@ public class PSWTSectionBreak extends ZPSWTImage {
 		case Constants.SLIDE_THUMBNAILS_LEFT:
 			for (int i = 0; i < 5; i++) {
 				int y = i * 2 * s + s / 2 + iy;
-				for (int j = 0; j < 3; j++) {
-					int x = j * 2 * s + s + ix;
-					gc.fillRectangle(x, y, s, s);
-				}
+				for (int j = 0; j < 3; j++)
+					gc.fillRectangle(j * 2 * s + s + ix, y, s, s);
 			}
 			break;
 		case Constants.SLIDE_THUMBNAILS_TOP:
 		case Constants.SLIDE_THUMBNAILS_BOTTOM:
-			for (int i = 0; i < 6; i++) {
-				int x = i * 18 * s / 10 + ix;
-				int y = s + iy;
-				gc.fillRectangle(x, y, s, s);
-			}
+			int y = s + iy;
+			for (int i = 0; i < 6; i++)
+				gc.fillRectangle(i * 18 * s / 10 + ix, y, s, s);
 			break;
 		}
 		gc.dispose();
@@ -170,10 +164,8 @@ public class PSWTSectionBreak extends ZPSWTImage {
 	@Override
 	public Image getImage() {
 		Image image = super.getImage();
-		if (image.isDisposed()) {
-			image = createSectionImage(canvas, slide);
-			setImage(image);
-		}
+		if (image.isDisposed())
+			setImage(image = createSectionImage(canvas, slide));
 		return image;
 	}
 

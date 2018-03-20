@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009-2014 Berthold Daum  
  */
 package com.bdaum.zoom.ui.preferences;
 
@@ -27,9 +27,8 @@ import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
-public abstract class AbstractPreferencePagePart implements
-		IPreferencePageExtension {
-	
+public abstract class AbstractPreferencePagePart implements IPreferencePageExtension {
+
 	protected boolean enabled = true;
 	protected Label statusField;
 
@@ -39,6 +38,10 @@ public abstract class AbstractPreferencePagePart implements
 	 * @see com.bdaum.zoom.ui.preferences.IPreferencePageExtension#getLabel()
 	 */
 	public String getLabel() {
+		return null;
+	}
+
+	public String getTooltip() {
 		return null;
 	}
 
@@ -63,8 +66,7 @@ public abstract class AbstractPreferencePagePart implements
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.preferences.IPreferencePageExtension#performDefaults()
+	 * @see com.bdaum.zoom.ui.preferences.IPreferencePageExtension#performDefaults()
 	 */
 	public void performDefaults() {
 		// do nothing
@@ -78,7 +80,7 @@ public abstract class AbstractPreferencePagePart implements
 	public String validate() {
 		return null;
 	}
-	
+
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
@@ -86,8 +88,7 @@ public abstract class AbstractPreferencePagePart implements
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.ui.preferences.IPreferencePageExtension#updateButtons()
+	 * @see com.bdaum.zoom.ui.preferences.IPreferencePageExtension#updateButtons()
 	 */
 	public void updateButtons() {
 		// do nothing
@@ -117,15 +118,14 @@ public abstract class AbstractPreferencePagePart implements
 	 *            - tab item label
 	 * @return - tab item
 	 */
-	protected ComboViewer createComboViewer(Composite parent, String lab,
-			final String[] options, final Object labelling, boolean sort) {
-		return AbstractPreferencePage.createComboViewer(parent, lab, options,
-				labelling, sort);
+	protected ComboViewer createComboViewer(Composite parent, String lab, final String[] options,
+			final Object labelling, boolean sort) {
+		return AbstractPreferencePage.createComboViewer(parent, lab, options, labelling, sort);
 	}
 
 	protected void showStatus(String msg, boolean error) {
 		statusField.setText(msg);
-		statusField.setData("id", error ? "errors" : null);  //$NON-NLS-1$//$NON-NLS-2$
+		statusField.setData("id", error ? "errors" : null); //$NON-NLS-1$//$NON-NLS-2$
 		CssActivator.getDefault().setColors(statusField);
 	}
 

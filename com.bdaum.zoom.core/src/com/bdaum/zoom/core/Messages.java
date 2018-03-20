@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2009 Berthold Daum  
  */
 
 package com.bdaum.zoom.core;
@@ -34,6 +34,7 @@ public class Messages extends NLS {
 //	public static String Constants_Tamura_Explanation = null;
 //	public static String Constants_Gabor_Explanation = null;
 	public static String AbstractDuplicatesProvider_searching_duplicates;
+	public static String Assetbox_download_failed;
 	public static String CollectionProcessor_Empty;
 	public static String Constants_all_files;
 //	public static String Constants_CEDD;
@@ -244,7 +245,6 @@ public class Messages extends NLS {
 	public static String QueryField_ISO_studio_tungsten;
 	public static String QueryField_Job_ID;
 	public static String QueryField_Keywords;
-	public static String QueryField_km;
 	public static String QueryField_kodak_disc;
 	public static String QueryField_Landscape;
 	public static String QueryField_Landscape_mode;
@@ -279,7 +279,6 @@ public class Messages extends NLS {
 	public static String QueryField_MIME_type;
 	public static String QueryField_mag_dir;
 	public static String QueryField_maker_notes;
-	public static String QueryField_mi;
 	public static String QueryField_mixed;
 	public static String QueryField_moderate;
 	public static String QueryField_move_dir;
@@ -303,7 +302,6 @@ public class Messages extends NLS {
 	public static String QueryField_n_records;
 	public static String QueryField_negative;
 	public static String QueryField_ninth_plate;
-	public static String QueryField_nm;
 	public static String QueryField_no;
 	public static String QueryField_no_persons;
 	public static String QueryField_not_between;
@@ -332,6 +330,7 @@ public class Messages extends NLS {
 	public static String QueryField_person_display_name;
 	public static String QueryField_photo;
 	public static String QueryField_pink;
+	public static String QueryField_plus_code;
 	public static String QueryField_pocket;
 	public static String QueryField_price;
 	public static String QueryField_Portrait;
@@ -400,9 +399,6 @@ public class Messages extends NLS {
 	public static String QueryField_similar;
 	public static String QueryField_sixth_plate;
 	public static String QueryField_starts_with;
-	public static String QueryField_subj_dist;
-	public static String QueryField_subj_lat;
-	public static String QueryField_subj_long;
 	public static String QueryField_ThreeChip;
 	public static String QueryField_Title;
 	public static String QueryField_Title_art;
@@ -449,13 +445,16 @@ public class Messages extends NLS {
 	public static String QueryField_yes;
 	public static String SeriesProvider_searching_series;
 	public static String SeriesProvider_series;
+	public static String Ticketbox_file_delete_offline;
 	public static String Ticketbox_file_offline;
 	public static String Ticketbox_files_offline;
+	public static String Ticketbox_n_files_deleted_offline;
 	public static String Trash_error_adding_to_lucene;
 	public static String Trash_file_not_deleted;
 	public static String Trash_install_trash_cli;
 	public static String Trash_io_error_moving_to_waste_basket;
 	public static String Trash_no_waste_basket;
+	public static String Trash_send_to_trash;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

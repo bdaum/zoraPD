@@ -15,12 +15,11 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014 Berthold Daum  (berthold.daum@bdaum.de)
+ * (c) 2018 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import java.text.NumberFormat;
-import java.text.ParseException;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.osgi.util.NLS;
@@ -34,10 +33,11 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Text;
 
+import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
+import com.bdaum.zoom.ui.widgets.NumericControl;
 
 public class LabelLayoutGroup extends Composite implements ModifyListener {
 
@@ -47,14 +47,14 @@ public class LabelLayoutGroup extends Composite implements ModifyListener {
 	}
 	private CheckboxButton hideButton;
 	private CCombo alignField;
-	private Text distField;
-	private Text indentField;
+	private NumericControl distField, indentField;
 	private String[] words = new String[] { Messages.LabelLayoutGroup_left,
 			Messages.LabelLayoutGroup_center, Messages.LabelLayoutGroup_right,
 			Messages.LabelLayoutGroup_top, Messages.LabelLayoutGroup_middle,
 			Messages.LabelLayoutGroup_bottom };
 	private ListenerList<ModifyListener> listeners = new ListenerList<ModifyListener>();
 	private final boolean dontHide;
+	private char unit = Core.getCore().getDbFactory().getDimUnit();
 
 	public LabelLayoutGroup(Composite parent, int style, boolean dontHide) {
 		super(parent, style);
@@ -116,23 +116,25 @@ public class LabelLayoutGroup extends Composite implements ModifyListener {
 		alignField.setItems(items);
 		alignField.setVisibleItemCount(9);
 		new Label(composite, SWT.NONE)
-				.setText(Messages.LabelLayoutGroup_distance);
-		distField = new Text(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
-		distField.setLayoutData(new GridData(30, SWT.DEFAULT));
+				.setText(Messages.LabelLayoutGroup_distance + captionUnitcmin());
+		distField = new NumericControl(composite, SWT.NONE);
+		distField.setDigits(1);
+		distField.setMaximum(unit == 'i' ? 1000 : 2500);
 		distField.addModifyListener(this);
 		new Label(composite, SWT.NONE)
-				.setText(Messages.LabelLayoutGroup_indent);
-		indentField = new Text(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
-		indentField.setLayoutData(new GridData(30, SWT.DEFAULT));
+				.setText(Messages.LabelLayoutGroup_indent + captionUnitcmin());
+		indentField = new NumericControl(composite, SWT.NONE);
+		indentField.setDigits(1);
+		indentField.setMaximum(unit == 'i' ? 400 : 1000);
+		indentField.setMinimum(unit == 'i' ? -400 : -1000);
 		indentField.addModifyListener(this);
-
 	}
 
 	public void fillValues(boolean hide, int alignment, int distance, int indent) {
 		hideButton.setSelection(hide);
 		alignField.select(alignment);
-		distField.setText(nf.format(distance * 0.1d + 0.05d*Math.signum(distance)));
-		indentField.setText(nf.format(indent * 0.1d + 0.05d*Math.signum(indent)));
+		distField.setSelection(fromMm(distance));
+		indentField.setSelection(fromMm(indent));
 		if (!dontHide)
 			updateFields();
 	}
@@ -162,29 +164,19 @@ public class LabelLayoutGroup extends Composite implements ModifyListener {
 	 * @return dist
 	 */
 	public int getDist() {
-		try {
-			return (int) (10 * nf.parse(distField.getText()).doubleValue() + 0.5);
-		} catch (ParseException e) {
-			// should never happen
-			return 50;
-		}
+		return toMm(distField.getSelection());
 	}
 
 	/**
 	 * @return indent
 	 */
 	public int getIndent() {
-		try {
-			return (int) (10 * nf.parse(indentField.getText()).doubleValue() + 0.5);
-		} catch (ParseException e) {
-			// should never happen
-			return 50;
-		}
+		return toMm(indentField.getSelection());
 	}
 
 	public void modifyText(ModifyEvent e) {
-		for (Object listener : listeners.getListeners())
-			((ModifyListener) listener).modifyText(e);
+		for (ModifyListener listener : listeners)
+			listener.modifyText(e);
 	}
 
 	public void addModifyListener(ModifyListener listener) {
@@ -195,21 +187,16 @@ public class LabelLayoutGroup extends Composite implements ModifyListener {
 		listeners.remove(listener);
 	}
 
-	public String validate() {
-		try {
-			Number n = nf.parse(distField.getText());
-			if (n.doubleValue() < 0)
-				return Messages.LabelLayoutGroup_distance_negative;
+	private String captionUnitcmin() {
+		return unit == 'i' ? " (in)" : " (cm)"; //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	private int fromMm(double x) {
+		return (int) ((unit == 'i' ? (x / 2.54d ) : x) + + 0.5d);
+	}
 
-		} catch (Exception e) {
-			return Messages.LabelLayoutGroup_bad_distance;
-		}
-		try {
-			nf.parse(indentField.getText());
-		} catch (Exception e) {
-			return Messages.LabelLayoutGroup_bad_indent;
-		}
-		return null;
+	private int toMm(int x) {
+		return unit == 'i' ? (int) (x * 2.54d  + 0.5d) : x;
 	}
 
 }
