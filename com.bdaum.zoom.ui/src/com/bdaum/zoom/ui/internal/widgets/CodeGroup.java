@@ -28,6 +28,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.core.QueryField;
@@ -110,6 +111,14 @@ public class CodeGroup extends Composite implements SelectionListener {
 	@Override
 	public void widgetDefaultSelected(SelectionEvent e) {
 		// do nothing
+	}
+
+	public void removeListener(Listener listener) {
+		textfield.removeListener(SWT.Modify, listener);
+	}
+
+	public void addListener(Listener listener) {
+		textfield.addListener(SWT.Modify, listener);
 	}
 
 }

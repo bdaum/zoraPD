@@ -17,6 +17,7 @@ public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.batch.internal.messages"; //$NON-NLS-1$
 	public static String BatchActivator_error_when_reading;
 	public static String BatchActivator_no_dcraw_module_installed;
+	public static String BatchActivator_not_instantiated;
 	public static String BatchActivator_cannot_create_raw_converter;
 	public static String BatchActivator_conversion_ended_with_error;
 	public static String BatchActivator_could_not_locate_exiftool;

@@ -75,6 +75,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.putBoolean(PreferenceConstants.ADVANCEDGRAPHICS, false);
 		defaultNode.putBoolean(PreferenceConstants.AUTODERIVE, true);
 		defaultNode.putBoolean(PreferenceConstants.APPLYXMPTODERIVATES, true);
+		defaultNode.putBoolean(PreferenceConstants.IMPORTMAKERNOTES, true);
+		defaultNode.putBoolean(PreferenceConstants.IMPORTFACEDATA, true);
 		defaultNode.putInt(PreferenceConstants.COLORPROFILE, ImageConstants.SRGB);
 		defaultNode.put(PreferenceConstants.BWFILTER, StringConverter.asString(new RGB(64, 128, 64)));
 		defaultNode.put(PreferenceConstants.DNGFOLDER, "dng"); //$NON-NLS-1$
@@ -134,7 +136,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.putInt(PreferenceConstants.MOUSE_SPEED, 10);
 		defaultNode.putInt(PreferenceConstants.ZOOMKEY,
 				Constants.WIN32 ? PreferenceConstants.ZOOMALT : PreferenceConstants.ZOOMSHIFT);
-		defaultNode.putInt(PreferenceConstants.WHEELKEY, PreferenceConstants.WHEELSHIFTPANS);
 		defaultNode.putInt(PreferenceConstants.WHEELSOFTNESS, 50);
 		defaultNode.putInt(PreferenceConstants.MAXIMPORTS, 99);
 		defaultNode.putBoolean(PreferenceConstants.ADDNOISE, true);

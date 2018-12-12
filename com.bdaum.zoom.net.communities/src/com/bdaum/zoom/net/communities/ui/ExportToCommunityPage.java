@@ -20,6 +20,7 @@
 package com.bdaum.zoom.net.communities.ui;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
@@ -29,12 +30,10 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.scohen.juploadr.uploadapi.AuthException;
 import org.scohen.juploadr.uploadapi.CommunicationException;
 import org.scohen.juploadr.uploadapi.Session;
@@ -43,6 +42,9 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.QueryField;
+import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.net.communities.CommunityAccount;
 import com.bdaum.zoom.net.communities.CommunityApi;
@@ -67,6 +69,8 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 	private CheckboxButton descriptionButton;
 	private WatermarkGroup watermarkGroup;
 	private ExportModeGroup exportModeGroup;
+	private int media = IMediaSupport.PHOTO;
+	private boolean multimedia;
 
 	public ExportToCommunityPage(IConfigurationElement configElement, List<Asset> assets,
 			AlbumDescriptor[] associatedAlbums, String[] titles, String[] descriptions, String id, String title,
@@ -76,15 +80,37 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 		this.associatedAlbums = associatedAlbums;
 		this.titles = titles;
 		this.descriptions = descriptions;
-		for (Asset asset : assets)
+		String attribute = configElement.getAttribute("media"); //$NON-NLS-1$
+		if (attribute != null && attribute.length() > 0) {
+			try {
+				media = Integer.parseInt(attribute);
+			} catch (NumberFormatException e) {
+				// use default
+			}
+		}
+		for (Iterator<Asset> it = assets.iterator(); it.hasNext();) {
+			Asset asset = it.next();
+			IMediaSupport mediaSupport = CoreActivator.getDefault().getMediaSupport(asset.getFormat());
+			if (mediaSupport != null) {
+				if (!mediaSupport.testProperty(media)) {
+					it.remove();
+					continue;
+				}
+			} else if ((media & QueryField.PHOTO) == 0) {
+				it.remove();
+				continue;
+			}
 			if (ImageConstants.isRaw(asset.getUri(), true)) {
 				hasRawImaages = true;
 				break;
 			}
+		}
+		multimedia = Core.getCore().isMultiMedia(assets);
 		int size = assets.size();
 		msg = (assets.isEmpty()) ? Messages.ExportToCommunityPage_nothing_to_export
-				: (size == 1) ? Messages.ExportToCommunityPage_exporting_one_image
-						: NLS.bind(Messages.ExportToCommunityPage_exporting_n_images, size);
+				: multimedia ? Messages.ExportToCommunityPage_exporting_multimedia
+						: size == 1 ? Messages.ExportToCommunityPage_exporting_one_image
+								: NLS.bind(Messages.ExportToCommunityPage_exporting_n_images, size);
 
 	}
 
@@ -96,30 +122,31 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 		createAccountGroup(composite);
 		boolean raw = Core.getCore().containsRawImage(assets, true);
 		exportModeGroup = new ExportModeGroup(composite,
-				ExportModeGroup.ALLFORMATS | ExportModeGroup.SIZING | (raw ? ExportModeGroup.RAWCROP : 0));
-		exportModeGroup.addSelectionListener(new SelectionAdapter() {
+				multimedia ? ExportModeGroup.ORIGINALS
+						: ExportModeGroup.ALLFORMATS | ExportModeGroup.SIZING | (raw ? ExportModeGroup.RAWCROP : 0),
+				multimedia ? Messages.ExportToCommunityPage_media : Messages.ExportToCommunityPage_image);
+		exportModeGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				updateControls();
 				checkImages();
 			}
 		});
-		exportModeGroup.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				checkImages();
-			}
-		});
 		final CGroup metaGroup = UiUtilities.createGroup(parent, 1, Messages.ExportToCommunityPage_metadata);
-		metaButton = WidgetFactory.createCheckButton(metaGroup, Messages.ExportToCommunityPage_include_metadata, null);
-		metaButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e) {
-				getWizard().getContainer().updateButtons();
-			}
-		});
+		if (!multimedia) {
+			metaButton = WidgetFactory.createCheckButton(metaGroup, Messages.ExportToCommunityPage_include_metadata,
+					null);
+			metaButton.addListener(new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					getWizard().getContainer().updateButtons();
+				}
+			});
+		}
 		descriptionButton = WidgetFactory.createCheckButton(metaGroup, Messages.ExportToCommunityPage_show_descriptions,
 				null);
-		watermarkGroup = new WatermarkGroup(metaGroup);
+		if (!multimedia)
+			watermarkGroup = new WatermarkGroup(metaGroup);
 		setTitle(Messages.ExportToCommunityPage_title);
 		setMessage(msg);
 		fillValues();
@@ -132,7 +159,7 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 	@Override
 	protected void updateFields() {
 		super.updateFields();
-		IStructuredSelection sel = (IStructuredSelection) accountViewer.getSelection();
+		IStructuredSelection sel = accountViewer.getStructuredSelection();
 		if (!sel.isEmpty()) {
 			CommunityAccount account = (CommunityAccount) sel.getFirstElement();
 			boolean noOrigs = !account.isSupportsRaw() && hasRawImaages;
@@ -148,7 +175,7 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 	@Override
 	protected void validatePage() {
 		String message = assets.isEmpty() ? Messages.ExportToCommunityPage_no_images_selected : checkAccount();
-		if (message == null)
+		if (message == null && watermarkGroup != null)
 			message = watermarkGroup.validate();
 		setErrorMessage(message);
 		setPageComplete(message == null);
@@ -174,9 +201,11 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 		IDialogSettings settings = getDialogSettings();
 		exportModeGroup.fillValues(settings);
 		if (settings != null) {
-			watermarkGroup.fillValues(settings);
+			if (watermarkGroup != null)
+				watermarkGroup.fillValues(settings);
 			descriptionButton.setSelection(settings.getBoolean(CommunityExportWizard.SHOWDESCRIPTIONS));
-			metaButton.setSelection(settings.getBoolean(CommunityExportWizard.INCLUDEMETA));
+			if (metaButton != null)
+				metaButton.setSelection(settings.getBoolean(CommunityExportWizard.INCLUDEMETA));
 		}
 		updateControls();
 	}
@@ -191,8 +220,9 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 					getSizing(), exportModeGroup.getScalingFactor(), exportModeGroup.getDimension(),
 					exportModeGroup.getCropMode(), exportModeGroup.getUnsharpMask(), exportModeGroup.getJpegQuality(),
 					session, getIncludeMeta() ? ((CommunityExportWizard) getWizard()).getFilter() : null,
-					descriptionButton.getSelection(), watermarkGroup.getCreateWatermark(),
-					watermarkGroup.getCopyright(), this).schedule();
+					descriptionButton.getSelection(),
+					watermarkGroup == null ? false : watermarkGroup.getCreateWatermark(),
+					watermarkGroup == null ? "" : watermarkGroup.getCopyright(), this).schedule(); //$NON-NLS-1$
 			return true;
 		}
 		return false;
@@ -207,7 +237,8 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 		IDialogSettings settings = getDialogSettings();
 		if (settings != null) {
 			exportModeGroup.saveSettings(settings);
-			watermarkGroup.saveSettings(settings);
+			if (watermarkGroup != null)
+				watermarkGroup.saveSettings(settings);
 			settings.put(CommunityExportWizard.SHOWDESCRIPTIONS, getShowDescriptions());
 			settings.put(CommunityExportWizard.INCLUDEMETA, getIncludeMeta());
 			super.saveSettings();
@@ -219,7 +250,7 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 	}
 
 	protected boolean getIncludeMeta() {
-		return metaButton.getSelection();
+		return metaButton == null ? false : metaButton.getSelection();
 	}
 
 	protected int getMode() {
@@ -228,8 +259,10 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 
 	private void updateControls() {
 		boolean enabled = getMode() != Constants.FORMAT_ORIGINAL;
-		metaButton.setEnabled(enabled);
-		watermarkGroup.setEnabled(getMode() != Constants.FORMAT_ORIGINAL);
+		if (metaButton != null)
+			metaButton.setEnabled(enabled);
+		if (watermarkGroup != null)
+			watermarkGroup.setEnabled(getMode() != Constants.FORMAT_ORIGINAL);
 	}
 
 }

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.operations.internal;
@@ -23,8 +23,10 @@ package com.bdaum.zoom.operations.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.commands.ExecutionException;
@@ -49,11 +51,12 @@ import com.bdaum.zoom.operations.IProfiledOperation;
 @SuppressWarnings("restriction")
 public class AddAlbumOperation extends DbOperation {
 
+	private static final String[] EMPTY = new String[0];
 	private Collection<SmartCollectionImpl> albums;
 	private List<Asset> assets;
 	private String[][] oldAlbums;
 	private String[][] oldPersons;
-	private List<List<String>> oldAssetIds = new ArrayList<List<String>>();
+	private Map<SmartCollection, List<String>> oldAssetIds = new HashMap<>();
 	private List<Region> updatedRegions = new ArrayList<>();
 	private List<String> oldRegionAlbums = new ArrayList<>();
 	private ImportOperation op;
@@ -89,13 +92,14 @@ public class AddAlbumOperation extends DbOperation {
 		if (op != null)
 			assets = op.obtainImportedAssets();
 		subalbums = 0;
-		for (SmartCollection album : albums) {
-			SmartCollection tempAlbum = album;
-			while (tempAlbum != null) {
-				++subalbums;
-				tempAlbum = tempAlbum.getSmartCollection_subSelection_parent();
+		if (albums != null)
+			for (SmartCollection album : albums) {
+				SmartCollection tempAlbum = album;
+				while (tempAlbum != null) {
+					++subalbums;
+					tempAlbum = tempAlbum.getSmartCollection_subSelection_parent();
+				}
 			}
-		}
 		init(aMonitor, subalbums * assets.size() + 1);
 		oldAlbums = new String[assets.size()][];
 		oldPersons = new String[assets.size()][];
@@ -109,37 +113,35 @@ public class AddAlbumOperation extends DbOperation {
 	private boolean setAlbums(IProgressMonitor monitor) {
 		Set<Object> toBeDeleted = new HashSet<Object>();
 		Set<Object> toBeStored = new HashSet<Object>();
-		if (region != null) {
+		if (deleteRegion) {
 			Asset asset = assets.get(0);
-			String albumId = region.getAlbum();
-			if (deleteRegion) {
-				asset.setPerson(Utilities.removeFromStringArray(region.getStringId(), asset.getPerson()));
+			String assetId = asset.getStringId();
+			if (region != null) {
 				toBeDeleted.add(region);
-				updatedRegions.add(region);
+				removeRegionFeatures(asset, region, toBeStored);
+				asset.setPerson(Utilities.removeFromStringArray(region.getStringId(), asset.getPerson()));
+			} else {
+				for (RegionImpl r : dbManager.obtainObjects(RegionImpl.class, "asset_person_parent", assetId, //$NON-NLS-1$
+						QueryField.EQUALS)) {
+					toBeDeleted.add(r);
+					removeRegionFeatures(asset, r, toBeStored);
+				}
+				asset.setPerson(EMPTY);
+			}
+			toBeStored.add(asset);
+		} else {
+			if (region != null) {
+				Asset asset = assets.get(0);
+				toBeStored.add(region);
+				removeRegionFeatures(asset, region, toBeStored);
 				toBeStored.add(asset);
 			}
-			if (albumId != null) {
-				if (!deleteRegion) {
-					region.setAlbum(null);
-					toBeStored.add(region);
-					updatedRegions.add(region);
-				}
-				SmartCollectionImpl album = dbManager.obtainById(SmartCollectionImpl.class, albumId);
-				if (album != null) {
-					album.removeAsset(asset.getStringId());
-					toBeStored.add(album);
-					dbManager.addDirtyCollection(albumId);
-				}
-				asset.setAlbum(Utilities.removeFromStringArray(albumId, asset.getAlbum()));
-				toBeStored.add(asset);
-			}
-		}
-		if (!deleteRegion) {
 			for (SmartCollection album : albums) {
 				SmartCollection tempAlbum = album;
 				while (tempAlbum != null) {
 					toBeStored.add(tempAlbum);
-					oldAssetIds.add(new ArrayList<String>(tempAlbum.getAsset()));
+					if (!oldAssetIds.containsKey(tempAlbum))
+						oldAssetIds.put(tempAlbum, new ArrayList<String>(tempAlbum.getAsset()));
 					String name = tempAlbum.getName();
 					if (name != null)
 						for (Asset asset : assets) {
@@ -196,6 +198,24 @@ public class AddAlbumOperation extends DbOperation {
 		return storeSafely(toBeDeleted.toArray(), 1, toBeStored.toArray());
 	}
 
+	private void removeRegionFeatures(Asset asset, Region r, Set<Object> toBeStored) {
+		updatedRegions.add(r);
+		String albumId = r.getAlbum();
+		if (albumId != null) {
+			SmartCollectionImpl album = dbManager.obtainById(SmartCollectionImpl.class, albumId);
+			SmartCollection tempAlbum = album;
+			while (tempAlbum != null) {
+				albumId = tempAlbum.getStringId();
+				oldAssetIds.put(tempAlbum, new ArrayList<String>(tempAlbum.getAsset()));
+				tempAlbum.removeAsset(asset.getStringId());
+				toBeStored.add(tempAlbum);
+				dbManager.addDirtyCollection(albumId);
+				asset.setAlbum(Utilities.removeFromStringArray(albumId, asset.getAlbum()));
+				tempAlbum = tempAlbum.getSmartCollection_subSelection_parent();
+			}
+		}
+	}
+
 	private void saveOldAlbums() {
 		for (int i = 0; i < assets.size(); i++) {
 			oldPersons[i] = assets.get(i).getPerson();
@@ -226,16 +246,11 @@ public class AddAlbumOperation extends DbOperation {
 			monitor.worked(1);
 			++i;
 		}
-		i = 0;
-		for (SmartCollection album : albums) {
-			SmartCollection tempAlbum = album;
-			while (tempAlbum != null && i < oldAssetIds.size()) {
-				toBeStored.add(tempAlbum);
-				tempAlbum.setAsset(oldAssetIds.get(i));
-				tempAlbum = tempAlbum.getSmartCollection_subSelection_parent();
-				monitor.worked(1);
-				++i;
-			}
+		for (Map.Entry<SmartCollection, List<String>> entry : oldAssetIds.entrySet()) {
+			SmartCollection album = entry.getKey();
+			toBeStored.add(album);
+			album.setAsset(oldAssetIds.get(album));
+			monitor.worked(1);
 		}
 		i = 0;
 		for (Region region : updatedRegions) {

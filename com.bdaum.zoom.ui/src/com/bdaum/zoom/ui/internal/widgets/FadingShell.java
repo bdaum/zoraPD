@@ -94,6 +94,14 @@ public class FadingShell {
 	public boolean isDisposed() {
 		return shell.isDisposed();
 	}
+	
+	public boolean isVisible() {
+		return shell.isVisible();
+	}
+	
+	public void setMinimized(boolean minimized) {
+		shell.setMinimized(minimized);
+	}
 
 	public void forceActive() {
 		shell.forceActive();

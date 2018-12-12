@@ -19,16 +19,19 @@
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.TrayDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.css.internal.CssActivator;
+import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
 public class ZTrayDialog extends TrayDialog {
 
 	protected String helpId;
+	private ZUiPlugin plugin;
 
 	public ZTrayDialog(Shell parent) {
 		this(parent, null);
@@ -46,6 +49,20 @@ public class ZTrayDialog extends TrayDialog {
 		super.create();
 		getShell().setText(Constants.APPLICATION_NAME);
 		CssActivator.getDefault().setColors(getShell());
+	}
+	
+	protected IDialogSettings getDialogSettings(ZUiPlugin plugin, String id) {
+		this.plugin = plugin;
+		return plugin.getDialogSettings(id);
+	}
+
+	public boolean close() {
+		// We flush die dialog settings to file.
+		// Otherwise they would not be saved when the native platform is shut
+		// down
+		if (plugin != null)
+			plugin.saveDialogSettings();
+		return super.close();
 	}
 
 }

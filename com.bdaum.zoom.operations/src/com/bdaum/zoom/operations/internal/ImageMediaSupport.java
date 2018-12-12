@@ -26,7 +26,6 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -84,6 +83,7 @@ import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.image.recipe.Recipe;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.job.OperationJob;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.IRawConverter;
 
@@ -96,8 +96,8 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 
 	/*** Importing ***/
 
-	public int importFile(File file, String extension, ImportState importState, IProgressMonitor aMonitor, URI remote)
-			throws Exception {
+	public int importFile(StorageObject object, String extension, ImportState importState, IProgressMonitor aMonitor,
+			URI remote) throws Exception {
 		this.importState = importState;
 		IRawConverter rc = importState.getConfiguration().rawConverter;
 		twidth = importState.computeThumbnailWidth();
@@ -109,24 +109,24 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 		List<Asset> deletedAssets = new ArrayList<Asset>();
 		byte[] oldThumbnail = null;
 		byte[] oldDngThumbnail = null;
-		File originalFile = null;
+		StorageObject originalFile = null;
 		String oldId = null;
 		String oldDngId = null;
 		int icnt = 0;
-		String originalFileName = file.getName();
-		File parent = file.getParentFile();
+		String originalFileName = object.getName();
+		StorageObject parent = object.getParentObject();
 		while (parent != null) {
 			String name = parent.getName();
 			if ("DCIM".equals(name)) //$NON-NLS-1$
 				break;
 			originalFileName = name + '/' + originalFileName;
-			parent = parent.getParentFile();
+			parent = parent.getParentObject();
 		}
-		long lastMod = file.lastModified();
+		long lastMod = object.lastModified();
 
 		CoreActivator coreActivator = CoreActivator.getDefault();
 		IDbManager dbManager = coreActivator.getDbManager();
-		URI uri = file.toURI();
+		URI uri = object.toURI();
 		String uriAsString = uri.toString();
 		if (importState.importFromDeviceData == null && rc != null)
 			lastMod = rc.getLastRecipeModification(uriAsString, lastMod, importState.recipeDetectorIds);
@@ -135,26 +135,31 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 		boolean isRaw = ImageConstants.isRaw(uriAsString, false);
 		boolean isJpeg = ImageConstants.isJpeg(extension);
 		ImportFromDeviceData importFromDeviceData = importState.importFromDeviceData;
+		File[] files = null;
 		if (importFromDeviceData != null) {
 			int skipPolicy = importFromDeviceData.getSkipPolicy();
 			if (skipPolicy == Constants.SKIP_JPEG && isJpeg || skipPolicy == Constants.SKIP_RAW && (isDng || isRaw))
 				return 0;
-			if (importState.skipDuplicates(originalFileName, lastModified))
+			files = importState.transferFile(originalFile = object, importState.importNo, aMonitor);
+			if (files == null || !files[0].exists())
 				return 0;
-			originalFile = file;
-			file = importState.transferFile(file, importState.importNo, aMonitor);
-			if (file == null)
+			if (importState.skipDuplicates(files[0], originalFileName, lastModified)) {
+				for (File f : files)
+					f.delete();
 				return 0;
-			uriAsString = file.toURI().toString();
-		}
+			}
+			uriAsString = files[0].toURI().toString();
+		} else if (object.isLocal())
+			files = new File[] {(File) object.getNativeObject()};
+		else
+			return 0;
 		ImportConfiguration configuration = importState.getConfiguration();
 		boolean importRaw = configuration.rawOptions.equals(Constants.RAWIMPORT_ONLYRAW)
 				|| configuration.rawOptions.equals(Constants.RAWIMPORT_BOTH);
 		if (isRaw && importRaw) {
 			RawType rawType = ImageConstants.getRawFormatMap().get(extension);
 			if (rawType.isUnsupportedBy(rc.getName())) {
-				importState.addErrorOnce(NLS.bind(
-						Messages.getString("ImageMediaSupport.not_supported_by"), //$NON-NLS-1$
+				importState.addErrorOnce(NLS.bind(Messages.getString("ImageMediaSupport.not_supported_by"), //$NON-NLS-1$
 						rawType.toString(), rc.getName()), null);
 				return 0;
 			}
@@ -168,13 +173,14 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 			fromImportFilter = ImageActivator.getDefault().getImportFilters().get(extension) != null;
 		File convert = null;
 		File dngFolder = null;
+		StorageObject exifObject = null;
 		try {
 			AssetEnsemble ensemble = null;
 			AssetEnsemble dngEnsemble = null;
 			List<AssetEnsemble> existing = null;
 			List<AssetEnsemble> existingDng = null;
 			if (importRaw || !isRaw)
-				existing = AssetEnsemble.getAllAssets(dbManager, remote != null ? remote : file.toURI(), importState);
+				existing = AssetEnsemble.getAllAssets(dbManager, remote != null ? remote : files[0].toURI(), importState);
 			String dngUriAsString = null;
 			URI dngURI = null;
 			if (importDng && isRaw) {
@@ -227,7 +233,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 						importState.reimport = true;
 						importState.canUndo = false;
 					} else
-						switch (importState.promptForOverride(file, asset)) {
+						switch (importState.promptForOverride(files[0], asset)) {
 						case ImportState.CANCEL:
 							aMonitor.setCanceled(true);
 							return 0;
@@ -256,14 +262,16 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 				}
 			}
 			if (importRaw || !isRaw) {
-				List<Ghost_typeImpl> ghosts = dbManager.obtainGhostsForFile(remote != null ? remote : file.toURI());
+				List<Ghost_typeImpl> ghosts = dbManager.obtainGhostsForFile(remote != null ? remote : files[0].toURI());
 				importState.allDeletedGhosts.addAll(ghosts);
 				toBeDeleted.addAll(ghosts);
 				if (ensemble == null)
 					ensemble = new AssetEnsemble(dbManager, importState, oldId);
 			}
-			Asset asset = importState.resetEnsemble(ensemble, remote != null ? remote : file.toURI(), file,
+			Asset asset = importState.resetEnsemble(ensemble, remote != null ? remote : files[0].toURI(), files[0],
 					lastModified, originalFileName, importState.importDate);
+			if (files.length > 1)
+				AssetEnsemble.insertVoiceNote(asset, asset.getVolume(), "."); //$NON-NLS-1$
 			Asset dngAsset = null;
 			ZImage dngImage = null;
 			aMonitor.worked(1);
@@ -272,7 +280,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 			if (isRaw && importDng) {
 				if (dngEnsemble == null)
 					dngEnsemble = new AssetEnsemble(dbManager, importState, oldDngId);
-				dngAsset = importState.resetEnsemble(dngEnsemble, dngURI, file, importState.importDate,
+				dngAsset = importState.resetEnsemble(dngEnsemble, dngURI, files[0], importState.importDate,
 						originalFileName, importState.importDate);
 				String dngLocation = configuration.dngLocator.getDngLocation();
 				File locat = (dngLocation == null || dngLocation.isEmpty()) ? null : new File(dngLocation);
@@ -301,21 +309,30 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 								.getAbsolutePath());
 					File dngFile = null;
 					try {
-						dngFile = BatchActivator.getDefault().convertFile(file, "dng", //$NON-NLS-1$
+						dngFile = BatchActivator.getDefault().convertFile(files[0], "dng", //$NON-NLS-1$
 								configuration.dngLocator.getDngLocation(), options, false,
 								coreActivator.getFileWatchManager(), importState.operation.getOpId(), aMonitor);
 					} catch (ConversionException e) {
 						importState.operation
 								.addError(NLS.bind(Messages.getString("ImageMediaSupport.DNG_conversion_failed"), //$NON-NLS-1$
-										file), e);
+										files[0]), e);
 					}
 					if (dngFile != null) {
+						if (files.length > 1 && dngFolder != null) {
+							String name = files[1].getName();
+							int p = name.lastIndexOf('.');
+							File target = new File(Core.removeExtensionFromUri(dngFile.getAbsolutePath()) + name.substring(p));
+							CoreActivator.getDefault().getFileWatchManager().ignore(target, importState.operation.getOpId());
+							BatchUtilities.copyFile(files[1], target, null);
+							AssetEnsemble.insertVoiceNote(dngAsset, dngAsset.getVolume(), "."); //$NON-NLS-1$
+						}
 						List<Ghost_typeImpl> ghosts = dbManager.obtainGhostsForFile(dngURI);
 						importState.allDeletedGhosts.addAll(ghosts);
 						toBeDeleted.addAll(ghosts);
 						dngAsset.setLastModification(new Date(dngFile.lastModified()));
 						dngAsset.setFileSize(dngFile.length());
-						IExifLoader etool = importState.getExifTool(dngFile, true);
+						IExifLoader etool = importState.getExifTool(dngFile,
+								importState.getConfiguration().getExifFastMode());
 						Recipe dngRecipe = null;
 						if (oldDngThumbnail == null) {
 							if (meta.getThumbnailFromPreview())
@@ -331,13 +348,13 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 									else {
 										importState.reportError(NLS.bind(
 												Messages.getString("ImageMediaSupport.DCRAW_conversion_DNG_failed"), //$NON-NLS-1$
-												file), null);
+												files[0]), null);
 										dngAsset = null;
 									}
 								} catch (ConversionException e) {
 									importState.reportError(NLS.bind(
 											Messages.getString("ImageMediaSupport.DCRAW_conversion_DNG_failed"), //$NON-NLS-1$
-											file), e);
+											files[0]), e);
 								}
 							}
 						}
@@ -363,54 +380,56 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 			String imageURI = remote != null ? remote.toString() : uriAsString;
 			if (asset != null) {
 				ZImage image = null;
-				IExifLoader etool;
+				IExifLoader etool = null;
 				if (fromImportFilter)
-					etool = new ExifToolSubstitute(file);
+					etool = new ExifToolSubstitute(files[0]);
 				else {
-					File exifFile = file;
+					exifObject = new StorageObject(files[0]);
 					if (importFromDeviceData != null && originalFile != null) {
 						String originalUri = (remote != null ? remote : originalFile.toURI()).toString();
 						if (isRaw || isDng) {
-							File jpegFile = remote != null ? null : findJpegSibling(originalFile);
+							StorageObject jpegFile = remote != null ? null : findJpegSibling(originalFile);
 							if (jpegFile != null && importFromDeviceData.getSkipPolicy() == Constants.SKIP_JPEG_IF_RAW)
 								importState.skipFile = jpegFile;
 							if (!importFromDeviceData.getExifTransferPrefix().isEmpty()) {
 								int q = originalUri.lastIndexOf('/');
 								String name = (q < 0) ? originalUri : originalUri.substring(q + 1);
 								if (jpegFile != null && name.startsWith(importFromDeviceData.getExifTransferPrefix()))
-									exifFile = jpegFile;
+									exifObject = jpegFile;
 							}
 						} else if (isJpeg) {
-							File rawFile = remote != null ? null : findRawSibling(originalFile);
+							StorageObject rawFile = remote != null ? null : findRawSibling(originalFile);
 							if (rawFile != null && importFromDeviceData.getSkipPolicy() == Constants.SKIP_RAW_IF_JPEG)
 								importState.skipFile = rawFile;
 						}
 					}
-					etool = importState.getExifTool(exifFile, true);
+					File exifFile = exifObject.resolve();
+					if (exifFile != null)
+						etool = importState.getExifTool(exifFile, importState.getConfiguration().getExifFastMode());
 				}
 				Recipe rawRecipe = null;
 				if (isDng) {
 					if (oldThumbnail == null) {
-						if (meta.getThumbnailFromPreview())
+						if (etool != null && meta.getThumbnailFromPreview())
 							image = loadPreviewImage(etool, meta, asset);
 						if (image == null)
 							try {
 								rawRecipe = rc == null ? null
 										: rc.getRecipe(uriAsString, false, etool, importState.overlayMap,
 												importState.recipeDetectorIds);
-								convert = rawConvert(file, rawRecipe, aMonitor);
+								convert = rawConvert(files[0], rawRecipe, aMonitor);
 								if (convert != null)
 									image = ZImage.loadThumbnail(convert, null, twidth);
 								else {
 									importState.reportError(NLS.bind(
 											Messages.getString("ImageMediaSupport.DCRAW_conversion_DNG_failed"), //$NON-NLS-1$
-											file), null);
+											files[0]), null);
 									asset = null;
 								}
 							} catch (ConversionException e) {
 								importState.reportError(
 										NLS.bind(Messages.getString("ImageMediaSupport.DCRAW_conversion_DNG_failed"), //$NON-NLS-1$
-												file),
+												files[0]),
 										e);
 							}
 					}
@@ -425,7 +444,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 						image = dngImage;
 						oldThumbnail = oldDngThumbnail;
 						asset.setUri(imageURI);
-						asset.setFileSize(file.length());
+						asset.setFileSize(files[0].length());
 						setRawFormat(asset, extension);
 						AssetEnsemble.deleteAll(existing, deletedAssets, toBeDeleted, toBeStored);
 						ensemble.store(toBeDeleted, toBeStored);
@@ -448,19 +467,19 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 								image = loadPreviewImage(etool, meta, asset);
 							if (image == null)
 								try {
-									convert = rawConvert(file, rawRecipe, aMonitor);
+									convert = rawConvert(files[0], rawRecipe, aMonitor);
 									if (convert != null)
 										image = ZImage.loadThumbnail(convert, null, twidth);
 									else {
 										importState.reportError(NLS.bind(
 												Messages.getString("ImageMediaSupport.DCRAW_conversion_failed"), //$NON-NLS-1$
-												file), null);
+												files[0]), null);
 										asset = null;
 									}
 								} catch (ConversionException e) {
 									importState.reportError(NLS.bind(
 											Messages.getString("ImageMediaSupport.dcraw_conversion_failed_because"), //$NON-NLS-1$
-											file, e), e);
+											files[0], e), e);
 								}
 						}
 					}
@@ -472,22 +491,22 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 									ImportState.MCUWidth, 0f);
 						else
 							try {
-								image = ZImage.loadThumbnail(file, extension, twidth);
+								image = ZImage.loadThumbnail(files[0], extension, twidth);
 							} catch (OutOfMemoryError e) {
 								throw e;
 							} catch (NoClassDefFoundError e) {
 								importState
 										.reportError(NLS.bind(Messages.getString("ImageMediaSupport.codec_not_found"), //$NON-NLS-1$
-												file, Constants.APPLICATION_NAME), e);
+												files[0], Constants.APPLICATION_NAME), e);
 								return 0;
 							} catch (Exception e) {
 								if (e instanceof IndexOutOfBoundsException
 										|| e.getCause() instanceof ArrayIndexOutOfBoundsException)
 									importState.reportError(NLS.bind(
-											Messages.getString("ImageMediaSupport.error_when_reading_swt"), file), e); //$NON-NLS-1$
+											Messages.getString("ImageMediaSupport.error_when_reading_swt"), files[0]), e); //$NON-NLS-1$
 								else
 									importState.reportError(
-											NLS.bind(Messages.getString("ImageMediaSupport.error_reading"), file), e); //$NON-NLS-1$
+											NLS.bind(Messages.getString("ImageMediaSupport.error_reading"), files[0]), e); //$NON-NLS-1$
 								return 0;
 							}
 					}
@@ -495,7 +514,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 				aMonitor.worked(1);
 				--work;
 				if (asset != null && ensemble != null) {
-					if (createImageEntry(file, uri, extension, convert != null, ensemble, image, oldThumbnail, etool,
+					if (createImageEntry(files[0], uri, extension, convert != null, ensemble, image, oldThumbnail, etool,
 							rawRecipe, importState.importDate, toBeStored, toBeDeleted, aMonitor)) {
 						if (isRaw)
 							setRawFormat(asset, extension);
@@ -583,7 +602,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 			changed |= importState.operation.updateFolderHierarchies(dngAsset, true, configuration.timeline,
 					configuration.locations, false);
 			if (importFromDeviceData != null && importFromDeviceData.getWatchedFolder() != null && originalFile != null
-					&& !file.equals(originalFile))
+					&& !files[0].equals(originalFile.getNativeObject()))
 				originalFile.delete();
 			// from transfer folder. Delete original file
 			return (changed) ? -icnt : icnt;
@@ -592,12 +611,14 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 		} finally {
 			if (convert != null)
 				convert.delete();
+			if (exifObject != null)
+				exifObject.dispose();
 			if (importFromDeviceData != null && isRaw
 					&& (configuration.rawOptions.equals(Constants.RAWIMPORT_DNGEMBEDDEDRAW)
 							|| configuration.rawOptions.equals(Constants.RAWIMPORT_ONLYDNG)))
 				// When importing from camera, the transmitted raw file can be
 				// deleted if only the converted DNG file is wanted
-				file.delete();
+				files[0].delete();
 			aMonitor.worked(work);
 		}
 	}
@@ -649,9 +670,10 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 			}
 			importState.getConfiguration().rawConverter = rawConverter;
 		}
-		Options options = null;
+		Options options = new Options();
+		int sampleFactor = rawConverter.deriveOptions(recipe, options, IRawConverter.THUMB);
 		if (recipe != null && recipe != Recipe.NULL)
-			recipe.setSampleFactor(rawConverter.deriveOptions(recipe, options = new Options(), IRawConverter.THUMB));
+			recipe.setSampleFactor(sampleFactor);
 		return BatchActivator.getDefault().convertFile(dngFile, rawConverter.getId(), rawConverter.getPath(), options,
 				true, CoreActivator.getDefault().getFileWatchManager(), importState.operation.getOpId(), monitor);
 	}
@@ -664,33 +686,43 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 		}
 	}
 
-	private static File findJpegSibling(File file) {
-		File folder = file.getParentFile();
-		String oname = file.getName();
-		int p = oname.lastIndexOf('.');
-		final String origname = p < 0 ? oname + '.' : oname.substring(0, p + 1);
-		String[] members = folder.list(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.startsWith(origname) && ImageConstants.isJpeg(name.substring(origname.length()));
-			}
-		});
-		return members == null || members.length == 0 ? null : new File(folder, members[0]);
+	private static StorageObject findJpegSibling(StorageObject file) {
+		try {
+			StorageObject folder = file.getParentObject();
+			String oname = file.getName();
+			int p = oname.lastIndexOf('.');
+			final String origname = p < 0 ? oname + '.' : oname.substring(0, p + 1);
+			StorageObject[] children = folder.listChildren();
+			if (children != null && children.length > 0)
+				for (StorageObject child : children) {
+					String name = child.getName();
+					if (name.startsWith(origname) && ImageConstants.isJpeg(name.substring(origname.length())))
+						return child;
+				}
+		} catch (IOException e) {
+			// connection lost?
+		}
+		return null;
 	}
 
-	private static File findRawSibling(File file) {
-		File folder = file.getParentFile();
-		String oname = file.getName();
-		int p = oname.lastIndexOf('.');
-		final String origname = p < 0 ? oname + '.' : oname.substring(0, p + 1);
-		String[] members = folder.list(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.startsWith(origname)
-						&& ImageConstants.getRawFormatMap().containsKey(name.substring(origname.length()));
-			}
-		});
-		return members == null || members.length == 0 ? null : new File(folder, members[0]);
+	private static StorageObject findRawSibling(StorageObject file) {
+		try {
+			StorageObject folder = file.getParentObject();
+			String oname = file.getName();
+			int p = oname.lastIndexOf('.');
+			final String origname = p < 0 ? oname + '.' : oname.substring(0, p + 1);
+			StorageObject[] children = folder.listChildren();
+			if (children != null && children.length > 0)
+				for (StorageObject child : children) {
+					String name = child.getName();
+					if (name.startsWith(origname)
+							&& ImageConstants.getRawFormatMap().containsKey(name.substring(origname.length())))
+						return child;
+				}
+		} catch (IOException e) {
+			// connection lost?
+		}
+		return null;
 	}
 
 	private byte[] archiveRecipe(String parmFile, byte[] archivedRecipe) {
@@ -826,16 +858,16 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 	private void propagateXmp(Asset orig, Asset deriv, AssetEnsemble ensemble, Collection<Object> toBeDeleted,
 			Collection<Object> toBeStored) {
 		if (importState.getConfiguration().applyXmp) {
-			URI[] derivXmpURIs = ImportState.getXmpURIs(deriv);
-			URI[] origXmpURIs = ImportState.getXmpURIs(orig);
-			for (int i = 0; i < origXmpURIs.length; i++) {
-				File origXmpFile = new File(origXmpURIs[i]);
+			File[] derivXmps = ImportState.getXmpURIs(deriv);
+			File[] origXmps = ImportState.getXmpURIs(orig);
+			for (int i = 0; i < origXmps.length; i++) {
+				File origXmpFile = origXmps[i];
 				if (origXmpFile.exists()) {
-					if (i < derivXmpURIs.length && new File(derivXmpURIs[i]).exists())
+					if (i < derivXmps.length && derivXmps[i].exists())
 						continue;
 					if (ensemble == null)
 						ensemble = new AssetEnsemble(Core.getCore().getDbManager(), deriv, importState);
-					importState.safeReadXmp(ensemble, deriv, origXmpURIs[i]);
+					importState.safeReadXmp(ensemble, deriv, origXmps[i].toURI());
 					ensemble.store(toBeDeleted, toBeStored);
 				}
 			}
@@ -976,19 +1008,24 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 				}
 			}
 		}
-		if (!importState.processExifData(ensemble, originalFile, true))
+		if (!importState.processExifData(ensemble, originalFile, importState.getConfiguration().getExifFastMode()))
 			return false;
-		if (importState.processSidecars())
+		if (importState.processSidecars() && "file".equals(uri.getScheme())) //$NON-NLS-1$
 			importState.processXmpSidecars(uri, monitor, ensemble);
-		MakerSupport makerSupport = MakerSupport.getMakerSupport(asset.getMake());
+		MakerSupport makerSupport = importState.getConfiguration().faceData
+				? MakerSupport.getMakerSupport(asset.getMake())
+				: null;
 		try {
 			if (makerSupport != null)
 				makerSupport.processFaceData(ensemble, exifTool);
 			else {
-				Map<String, String> metadata = exifTool.getMetadata();
-				String numPositions = metadata.get("FacesDetected"); //$NON-NLS-1$
-				if (numPositions != null)
+				String numPositions = exifTool.getMetadata().get("FacesDetected"); //$NON-NLS-1$
+				if (numPositions != null) {
+					int p = numPositions.indexOf(' ');
+					if (p > 0)
+						numPositions = numPositions.substring(0, p);
 					asset.setNoPersons(Math.max(asset.getNoPersons(), Integer.parseInt(numPositions)));
+				}
 			}
 		} catch (NumberFormatException e) {
 			importState.operation.addError(NLS.bind(Messages.getString("ImageMediaSupport.bad_face_data"), //$NON-NLS-1$
@@ -1079,7 +1116,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 
 	public int getPropertyFlags() {
 		return IMediaSupport.PHOTO | IMediaSupport.EXHIBITION | IMediaSupport.SLIDESHOW | IMediaSupport.WEBGALLERY
-				| IMediaSupport.KML | IMediaSupport.PDF;
+				| IMediaSupport.PDF;
 	}
 
 	public Image getIcon40() {
@@ -1155,7 +1192,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 		// do nothing
 	}
 
-	public File getMediaFolder(File file) {
+	public StorageObject getMediaFolder(StorageObject file) {
 		return file;
 	}
 

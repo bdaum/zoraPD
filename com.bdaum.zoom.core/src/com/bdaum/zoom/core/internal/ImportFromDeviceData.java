@@ -20,11 +20,10 @@
 
 package com.bdaum.zoom.core.internal;
 
-import java.io.File;
 import java.util.Set;
 
 import com.bdaum.zoom.cat.model.meta.WatchedFolder;
-
+import com.bdaum.zoom.mtp.StorageObject;
 
 public class ImportFromDeviceData {
 
@@ -48,13 +47,12 @@ public class ImportFromDeviceData {
 	private final boolean media;
 	private int skipPolicy;
 	private Set<String> skippedFormats;
-	private final File[] dcims;
+	private final StorageObject[] dcims;
 	private WatchedFolder watchedFolder;
 	private int privacy;
 	private boolean deepSubfolders;
 
-
-	public ImportFromDeviceData(File[] dcims, boolean media, WatchedFolder watchedFolder) {
+	public ImportFromDeviceData(StorageObject[] dcims, boolean media, WatchedFolder watchedFolder) {
 		this.dcims = dcims;
 		this.media = media;
 		this.watchedFolder = watchedFolder;
@@ -171,17 +169,11 @@ public class ImportFromDeviceData {
 	}
 
 	/**
-	 * @param skippedFormats the skippedFormats to set
+	 * @param skippedFormats
+	 *            the skippedFormats to set
 	 */
 	public void setSkippedFormats(Set<String> skippedFormats) {
 		this.skippedFormats = skippedFormats;
-	}
-
-	/**
-	 * @return dcims
-	 */
-	public File[] getDcims() {
-		return dcims;
 	}
 
 	public WatchedFolder getWatchedFolder() {
@@ -202,6 +194,12 @@ public class ImportFromDeviceData {
 
 	public boolean isDeepSubfolders() {
 		return deepSubfolders;
+	}
+
+	public String getDcimOwner() {
+		if (dcims != null && dcims.length > 0)
+			return dcims[0].getParentName();
+		return null;
 	}
 
 }

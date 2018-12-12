@@ -68,6 +68,7 @@ public class Messages extends NLS {
 	public static String DbManager_internal_error_timeline;
 	public static String DbManager_last_import;
 	public static String DbManager_operation_was_aborted;
+	public static String DbManager_tethered;
 	public static String DbManager_time_out;
 	public static String DbManager_locations;
 	public static String DbManager_lost_connection;

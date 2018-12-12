@@ -1,14 +1,10 @@
 package com.bdaum.zoom.ui.internal.wizards;
 
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWizard;
-import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.cat.model.meta.WatchedFolder;
 import com.bdaum.zoom.cat.model.meta.WatchedFolderImpl;
@@ -16,35 +12,25 @@ import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
-public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard, IAdaptable {
+public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard {
 
 	private WatchedFolderImpl watchedFolder;
-	private IWorkbenchWindow window;
 	private WatchedFolderSelectionPage folderSelectionPage;
 	private WatchedFolderTargetPage targetPage;
 	private WatchedFolderRenamingPage renamingPage;
 	private TransferPage transferPage;
 	private FilterPage filterPage;
+	private boolean typeChoice;
 
-	public WatchedFolderWizard() {
+	public WatchedFolderWizard(boolean typeChoice) {
+		this.typeChoice = typeChoice;
 		setHelpAvailable(true);
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public Object getAdapter(Class adapter) {
-		if (Shell.class.equals(adapter))
-			return window.getShell();
-		return null;
-	}
-
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		super.init(workbench, selection);
 		setWindowTitle(Constants.APPLICATION_NAME);
 		setDialogSettings(UiActivator.getDefault(), ImportFromDeviceWizard.MEDIAID);
-		if (workbench == null)
-			workbench = PlatformUI.getWorkbench();
-		window = workbench.getActiveWorkbenchWindow();
-		if (window == null)
-			window = workbench.getWorkbenchWindows()[0];
 		watchedFolder = (WatchedFolderImpl) selection.getFirstElement();
 	}
 
@@ -52,7 +38,7 @@ public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard, IA
 	public void addPages() {
 		ImageDescriptor imageDescriptor = Icons.watchedFolder.getDescriptor();
 		folderSelectionPage = new WatchedFolderSelectionPage(Messages.WatchedFolderWizard_folder_selection,
-				watchedFolder);
+				watchedFolder, typeChoice);
 		folderSelectionPage.setImageDescriptor(imageDescriptor);
 		addPage(folderSelectionPage);
 		transferPage = new TransferPage(Messages.WatchedFolderWizard_transfer_parameters, watchedFolder);

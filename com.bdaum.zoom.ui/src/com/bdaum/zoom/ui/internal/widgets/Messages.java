@@ -42,6 +42,7 @@ public class Messages extends NLS {
 	public static String AutoRatingGroup_select_provider;
 	public static String AutoRatingGroup_select_theme;
 	public static String AutoRatingGroup_theme;
+	public static String CheckedText_text_operation;
 	public static String CodeGroup_select_code;
 	public static String DescriptionGroup_description;
 	public static String DescriptionGroup_existing_markup_will_be_deleted;
@@ -75,6 +76,7 @@ public class Messages extends NLS {
 	public static String SearchResultGroup_search_by;
 	public static String SearchResultGroup_search_parameters;
 	public static String SearchResultGroup_visual;
+	public static String TextField_text_operation;
 	public static String TextMenuListener_add_to_dict;
 	public static String TextMenuListener_copy;
 	public static String TextMenuListener_cut;
@@ -125,6 +127,7 @@ public class Messages extends NLS {
 	public static String RenameGroup_file_renaming;
 	public static String RenameGroup_filename_imagename;
 	public static String RenameGroup_please_select_template;
+	public static String RenameGroup_preview;
 	public static String RenameGroup_remove;
 	public static String RenameGroup_select_template;
 	public static String RenameGroup_start_at;

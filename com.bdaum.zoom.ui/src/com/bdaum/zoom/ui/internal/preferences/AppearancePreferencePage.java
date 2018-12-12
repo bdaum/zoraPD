@@ -143,7 +143,7 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		colorViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
-				Object newTheme = ((IStructuredSelection) colorViewer.getSelection()).getFirstElement();
+				Object newTheme = colorViewer.getStructuredSelection().getFirstElement();
 				comment.setVisible(
 						PreferenceConstants.BACKGROUNDCOLOR_PLATFORM.equals(newTheme) && !newTheme.equals(theme));
 			}
@@ -301,13 +301,13 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 			if (showLabel == Constants.CUSTOM_LABEL)
 				preferenceStore.setValue(PreferenceConstants.THUMBNAILTEMPLATE, labelConfigGroup.getTemplate());
 		}
-		IStructuredSelection selection = (IStructuredSelection) colorViewer.getSelection();
+		IStructuredSelection selection = colorViewer.getStructuredSelection();
 		if (!selection.isEmpty())
 			preferenceStore.setValue(PreferenceConstants.BACKGROUNDCOLOR, (String) selection.getFirstElement());
-		selection = (IStructuredSelection) distViewer.getSelection();
+		selection = distViewer.getStructuredSelection();
 		if (!selection.isEmpty())
 			preferenceStore.setValue(PreferenceConstants.DISTANCEUNIT, (String) selection.getFirstElement());
-		selection = (IStructuredSelection) dimViewer.getSelection();
+		selection = dimViewer.getStructuredSelection();
 		if (!selection.isEmpty())
 			preferenceStore.setValue(PreferenceConstants.DIMUNIT, (String) selection.getFirstElement());
 		preferenceStore.setValue(PreferenceConstants.SHOWLOCATION, locationButton.getSelection());

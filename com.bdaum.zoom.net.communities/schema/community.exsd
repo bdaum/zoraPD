@@ -234,6 +234,17 @@ set: only photosets may declare a subcategory
                </appinfo>
             </annotation>
          </attribute>
+         <attribute name="media" type="string">
+            <annotation>
+               <documentation>
+                  An integer ORed value describing the media types accepted by the community
+512 = PHOTO
+1024 = VIDEO
+2048 = AUDIO
+The default is PHOTO.
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 

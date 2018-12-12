@@ -36,6 +36,7 @@ import com.bdaum.zoom.net.core.job.TransferJob;
 import com.bdaum.zoom.operations.jobs.AbstractExportJob;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.DiskFullException;
+import com.bdaum.zoom.program.HtmlEncoderDecoder;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.dialogs.PageProcessor;
 
@@ -55,6 +56,7 @@ public class HtmlJob extends AbstractExportJob {
 	private Date now;
 	private int horizontalGap;
 	private final String weblink;
+	private HtmlEncoderDecoder htmlEncoderDecoder;
 
 	public HtmlJob(List<Asset> assets, int mode, PageLayout_typeImpl layout, File targetFile, FtpAccount account,
 			int quality, int jpegQuality, UnsharpMask unsharpMask, String collection, String weblink,
@@ -167,7 +169,7 @@ public class HtmlJob extends AbstractExportJob {
 	private String generateFooter() {
 		String footer = PageProcessor.computeTitle(layout.getFooter(), fileName, now, assets.size(), 1, 1, collection,
 				meta);
-		return generateDiv(footer, "footer"); //$NON-NLS-1$
+		return generateDiv(getHtmlEncoderDecoder().encodeHTML(footer, true), "footer"); //$NON-NLS-1$
 	}
 
 	private String generateTitle() {
@@ -175,7 +177,7 @@ public class HtmlJob extends AbstractExportJob {
 		if (!layout.getTitle().isEmpty()) {
 			String title = PageProcessor.computeTitle(layout.getTitle(), fileName, now, assets.size(), 1, 1, collection,
 					meta);
-			sb.append("\t<h1 align=\"center\">").append(title) //$NON-NLS-1$
+			sb.append("\t<h1 align=\"center\">").append(getHtmlEncoderDecoder().encodeHTML(title, true)) //$NON-NLS-1$
 					.append("\t</h1>\n"); //$NON-NLS-1$
 		}
 		return sb.toString();
@@ -186,7 +188,7 @@ public class HtmlJob extends AbstractExportJob {
 		if (!layout.getSubtitle().isEmpty()) {
 			String title = PageProcessor.computeTitle(layout.getSubtitle(), fileName, now, assets.size(), 1, 1,
 					collection, meta);
-			sb.append("\t<h2 align=\"center\">").append(title) //$NON-NLS-1$
+			sb.append("\t<h2 align=\"center\">").append(getHtmlEncoderDecoder().encodeHTML(title, true)) //$NON-NLS-1$
 					.append("\t</h2>\n"); //$NON-NLS-1$
 		}
 		return sb.toString();
@@ -230,7 +232,8 @@ public class HtmlJob extends AbstractExportJob {
 	}
 
 	private String generateCaption(int k, String caption) {
-		return PageProcessor.computeCaption(caption, Constants.PI_ALL, assets.get(k), collection, k, k);
+		String s = PageProcessor.computeCaption(caption, Constants.PI_ALL, assets.get(k), collection, k, k);
+		return getHtmlEncoderDecoder().encodeHTML(s, true);
 	}
 
 	private String generateDiv(String text, String clazz) {
@@ -268,7 +271,7 @@ public class HtmlJob extends AbstractExportJob {
 		String title = PageProcessor.computeTitle(layout.getTitle(), fileName, now, assets.size(), 1, 1, collection,
 				meta);
 		StringBuilder sb = new StringBuilder();
-		sb.append("\t<title>").append(title).append("</title>\n"); //$NON-NLS-1$ //$NON-NLS-2$
+		sb.append("\t<title>").append(getHtmlEncoderDecoder().encodeHTML(title, true)).append("</title>\n"); //$NON-NLS-1$ //$NON-NLS-2$
 		return sb.toString();
 	}
 
@@ -277,6 +280,12 @@ public class HtmlJob extends AbstractExportJob {
 			BatchUtilities.deleteFileOrFolder(tempFolder);
 			tempFolder = null;
 		}
+	}
+	
+	private HtmlEncoderDecoder getHtmlEncoderDecoder() {
+		if (htmlEncoderDecoder == null)
+			htmlEncoderDecoder = new HtmlEncoderDecoder();
+		return htmlEncoderDecoder;
 	}
 
 }

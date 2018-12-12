@@ -71,18 +71,17 @@ public class RawConverter extends AbstractRawConverter {
 	}
 
 	public File setInput(File file, Options options) {
-		rawFile = file;
-		IFileHandler fileHandler = ImageConstants.findFileHandler(file);
+		IFileHandler fileHandler = ImageConstants.findFileHandler(rawFile = file);
 		if (fileHandler != null) {
 			rawFile = fileHandler.getImageFile(file);
 			if (rawFile == null)
 				return null;
 		}
-		String name = rawFile.getAbsolutePath();
-		int p = name.lastIndexOf('.');
+		String path = rawFile.getAbsolutePath();
+		int p = path.lastIndexOf('.');
 		if (p >= 0)
-			name = name.substring(0, p);
-		return new File(name + ".tiff"); //$NON-NLS-1$
+			path = path.substring(0, p);
+		return new File(path + ".tiff"); //$NON-NLS-1$
 	}
 
 	public String[] getParms(Options options) {
@@ -146,10 +145,7 @@ public class RawConverter extends AbstractRawConverter {
 				parms.add(nf.format(wf[0]));
 				parms.add(nf.format(wf[1]));
 				parms.add(nf.format(wf[2]));
-				if (wf.length < 4)
-					parms.add(nf.format(wf[1]));
-				else
-					parms.add(nf.format(wf[3]));
+				parms.add(nf.format(wf[wf.length < 4 ? 1 : 3]));
 			}
 			if (getOption(options, ADOBE_RGB)) {
 				parms.add("-o"); //$NON-NLS-1$
@@ -288,7 +284,7 @@ public class RawConverter extends AbstractRawConverter {
 					return t1 > t2 ? -1 : 1;
 				}
 			});
-			for (IRecipeDetector detector : detectors) {
+			for (IRecipeDetector detector : detectors)
 				try {
 					Recipe recipe = detector.loadRecipeForImage(uri, highres, focalLengthProvider, overlayMap);
 					if (recipe != null)
@@ -297,16 +293,13 @@ public class RawConverter extends AbstractRawConverter {
 					Activator.getDefault().logError(NLS.bind(Messages.getString("RawConverter.internal_error"), //$NON-NLS-1$
 							detector.getName()), e);
 				}
-			}
 		}
 		return null;
 	}
 
 	@Override
 	public boolean isValid() {
-		if (dcraw != null)
-			return true;
-		return super.isValid();
+		return dcraw != null ? true : super.isValid();
 	}
 
 }

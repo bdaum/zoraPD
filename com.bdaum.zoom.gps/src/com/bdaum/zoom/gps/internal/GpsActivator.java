@@ -263,7 +263,7 @@ public class GpsActivator extends ZUiPlugin {
 						for (IConfigurationElement child : conf.getChildren())
 							service.addParameter(new IGeocodingService.Parameter(child.getAttribute("id"), //$NON-NLS-1$
 									child.getAttribute("label"), child.getAttribute("reqMsg"), //$NON-NLS-1$ //$NON-NLS-2$
-									child.getAttribute("hint"), child.getAttribute("tooltip"))); //$NON-NLS-1$ //$NON-NLS-2$
+									child.getAttribute("hint"), child.getAttribute("tooltip"), child.getAttribute("explanation"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 						namingList.add(service);
 					} catch (CoreException e) {
 						logError(NLS.bind(Messages.getString("GpsActivator.cannot_create_geonaming_service"), name), e); //$NON-NLS-1$

@@ -39,6 +39,7 @@ import com.bdaum.zoom.core.internal.FileInput;
 import com.bdaum.zoom.core.internal.IPreferenceUpdater;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.job.OperationJob;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.operations.internal.ImportOperation;
 import com.bdaum.zoom.ui.internal.PreferencesUpdater;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -96,9 +97,11 @@ public class PasteAction extends RetargetAction implements IAdaptable {
 					Utilities.collectImages(fileNames, images);
 					Utilities.collectFolders(fileNames, folders);
 					if (!images.isEmpty())
-						OperationJob.executeOperation(new ImportOperation(new FileInput(images, false),
-								activator.createImportConfiguration(this), null,
-								folders.toArray(new File[folders.size()])), this);
+						OperationJob.executeOperation(
+								new ImportOperation(new FileInput(StorageObject.fromFile(images), false),
+										activator.createImportConfiguration(this), null,
+										folders.toArray(new File[folders.size()])),
+								this);
 				}
 			}
 		} catch (Exception e) {

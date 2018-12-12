@@ -28,9 +28,11 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
+@SuppressWarnings("restriction")
 public class PlayVoiceNoteAction extends Action {
 
 	private IAdaptable adaptable;
@@ -47,8 +49,7 @@ public class PlayVoiceNoteAction extends Action {
 		List<Asset> localAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
 		if (localAssets.size() == 1) {
 			Asset asset = localAssets.get(0);
-			String voiceFileURI = asset.getVoiceFileURI();
-			if (voiceFileURI != null && !voiceFileURI.startsWith("?")) //$NON-NLS-1$
+			if (AssetEnsemble.hasVoiceNote(asset))
 				UiActivator.getDefault().playVoicenote(asset);
 		}
 	}

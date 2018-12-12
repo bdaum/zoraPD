@@ -161,10 +161,12 @@ public class CommunitiesPreferencePage extends AbstractPreferencePagePart {
 		});
 		accountViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
+				updateButtons();
 				validate();
 			}
 		});
 		setViewerInput();
+		updateButtons();
 		return composite;
 	}
 

@@ -48,10 +48,12 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 	private final WatchedFolderImpl watchedFolder;
 	private CheckboxButton subfolderButton;
 	private RadioButtonGroup typeButtonGroup;
+	private boolean typeChoice;
 
-	public WatchedFolderSelectionPage(String pageName, WatchedFolderImpl watchedFolder) {
+	public WatchedFolderSelectionPage(String pageName, WatchedFolderImpl watchedFolder, boolean typeChoice) {
 		super(pageName);
 		this.watchedFolder = watchedFolder;
+		this.typeChoice = typeChoice;
 	}
 
 	@Override
@@ -90,7 +92,10 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 		setControl(comp);
 		setHelp(HelpContextIds.WATCHED_FOLDER_FILE_SELECTION);
 		setTitle(getName());
-		setMessage(Messages.WatchedFolderSelectionPage_msg);
+		String msg = Messages.WatchedFolderSelectionPage_msg;
+		if (watchedFolder != null && watchedFolder.getTethered())
+			msg += '\n' + Messages.WatchedFolderSelectionPage_dedicated_to_tethered;
+		setMessage(msg);
 		fillValues();
 		super.createControl(parent);
 	}
@@ -107,6 +112,7 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 			typeButtonGroup.setSelection(1);
 		else
 			typeButtonGroup.setSelection(0);
+		typeButtonGroup.setEnabled(typeChoice && !watchedFolder.getTethered());
 		subfolderButton.setSelection(watchedFolder.getRecursive());
 
 	}

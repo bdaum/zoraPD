@@ -131,7 +131,6 @@ public abstract class BasicView extends ViewPart
 	protected List<RetargetAction> actions = new ArrayList<>();
 	private IAction undoAction;
 	private IAction redoAction;
-	protected boolean viewActive;
 	protected IUndoContext undoContext;
 	private Image titleImage;
 	private Image highlightedTitleImage;
@@ -150,7 +149,7 @@ public abstract class BasicView extends ViewPart
 		Ui.getUi().addPreferenceChangeListener(colorProfilePreferenceListener);
 		CssActivator.getDefault().addThemeListener(this);
 	}
-	
+
 	protected static void cancelJobs(Object family) {
 		IJobManager jobManager = Job.getJobManager();
 		jobManager.cancel(family);
@@ -161,28 +160,32 @@ public abstract class BasicView extends ViewPart
 		}
 	}
 
-
 	protected INavigationHistory getNavigationHistory() {
 		if (navigationHistory == null)
-			navigationHistory = UiActivator.getDefault().getNavigationHistory(getSite().getWorkbenchWindow());
+			navigationHistory = Ui.getUi().getNavigationHistory(getSite().getWorkbenchWindow());
 		return navigationHistory;
 	}
 
 	protected static Asset getVoiceNoteAsset(Asset asset) {
 		if (asset != null) {
 			String voiceFileURI = asset.getVoiceFileURI();
-			if (voiceFileURI != null && !voiceFileURI.isEmpty() && !voiceFileURI.startsWith("?")) //$NON-NLS-1$
-				return asset;
+			if (voiceFileURI != null && !voiceFileURI.isEmpty()) {
+				int p = voiceFileURI.indexOf('\f');
+				if (p >= 0) {
+					if (p > 0)
+						return asset;
+				} else if (!voiceFileURI.startsWith("?")) //$NON-NLS-1$
+					return asset;
+			}
 		}
 		return null;
 	}
 
 	protected static boolean hasVoiceNote(AssetSelection assetSelection) {
-		if (assetSelection != null) {
+		if (assetSelection != null)
 			for (Asset asset : assetSelection)
 				if (asset.getFileState() != IVolumeManager.PEER)
 					return getVoiceNoteAsset(asset) != null;
-		}
 		return false;
 	}
 
@@ -228,10 +231,16 @@ public abstract class BasicView extends ViewPart
 		return Core.getCore().getDbManager().isReadOnly();
 	}
 
-	protected void installListeners(Composite parent) {
+	protected void installListeners() {
 		getSite().getWorkbenchWindow().getPartService().addPartListener(this);
 		hookSelectionService();
 		Core.getCore().getVolumeManager().addVolumeListener(this);
+	}
+
+	protected void uninstallListeners() {
+		getSite().getWorkbenchWindow().getPartService().removePartListener(this);
+		unhookSelectionService();
+		Core.getCore().getVolumeManager().removeVolumeListener(this);
 	}
 
 	protected void hookSelectionService() {
@@ -239,6 +248,14 @@ public abstract class BasicView extends ViewPart
 		navigationHistory.registerSelectionProvider(this);
 		navigationHistory.addSelectionListener(this);
 		getSite().setSelectionProvider(this);
+	}
+
+	protected void unhookSelectionService() {
+		if (navigationHistory != null) {
+			navigationHistory.deregisterSelectionProvicder(this);
+			navigationHistory.removeSelectionListener(this);
+			getSite().setSelectionProvider(null);
+		}
 	}
 
 	public void addSelectionChangedListener(ISelectionChangedListener listener) {
@@ -294,8 +311,6 @@ public abstract class BasicView extends ViewPart
 	}
 
 	public void collectionChanged(IWorkbenchPart part, IStructuredSelection sel) {
-		// if (part == this)
-		// return;
 		if (collectionChanged()) {
 			if (isVisible)
 				refreshBusy();
@@ -366,6 +381,10 @@ public abstract class BasicView extends ViewPart
 
 	@Override
 	public void dispose() {
+		uninstallListeners();
+		if (undoContext != null)
+			PlatformUI.getWorkbench().getOperationSupport().getOperationHistory().dispose(undoContext, true, true,
+					true);
 		for (RetargetAction action : actions)
 			action.dispose();
 		if (colorProfilePreferenceListener != null)
@@ -607,7 +626,7 @@ public abstract class BasicView extends ViewPart
 		if (partRef.getPart(false) == this) {
 			deregisterCommands(); // Just to be sure
 			registerCommands();
-			viewActive = true;
+			// viewActive = true;
 			setVisible(true);
 			Display display = getSite().getShell().getDisplay();
 			Image image = getTitleImage();
@@ -646,7 +665,7 @@ public abstract class BasicView extends ViewPart
 	public void partDeactivated(IWorkbenchPartReference partRef) {
 		if (partRef != null && partRef.getPart(false) == this) {
 			deregisterCommands();
-			viewActive = false;
+			// viewActive = false;
 			if (titleImage != null)
 				setTitleImage(titleImage);
 			updateActions(true);

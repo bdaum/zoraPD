@@ -97,7 +97,6 @@ public class SupplementalCategoryGroup {
 			}
 			return false;
 		}
-
 	}
 
 	private BagChange<String> result;

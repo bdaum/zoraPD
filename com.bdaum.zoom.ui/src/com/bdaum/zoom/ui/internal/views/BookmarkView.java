@@ -24,7 +24,6 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -400,18 +399,12 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 		action.run();
 	}
 
-	@SuppressWarnings("unchecked")
 	private void importSound(int x, int y, File sound) {
 		Point coord = getControl().toControl(x, y);
 		Object obj = findObject(coord.x, coord.y);
-		List<Asset> assets = null;
-		if (obj instanceof Asset) {
-			assets = Collections.singletonList((Asset) obj);
-		} else if (obj instanceof List<?>)
-			assets = (List<Asset>) obj;
-		if (assets != null) {
+		if (obj instanceof Asset && ((Asset) obj).getFileState() != IVolumeManager.PEER) {
 			String uri = sound.toURI().toString();
-			OperationJob.executeOperation(new VoiceNoteOperation(assets, uri, uri, null), this);
+			OperationJob.executeOperation(new VoiceNoteOperation((Asset) obj, uri, uri, null, null), this);
 		}
 	}
 
@@ -628,7 +621,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 
 	private void updateActions() {
 		if (!viewer.getControl().isDisposed()) {
-			boolean enabled = !((IStructuredSelection) viewer.getSelection()).isEmpty();
+			boolean enabled = !viewer.getStructuredSelection().isEmpty();
 			gotoBookmarkAction.setEnabled(enabled);
 			deleteAction.setEnabled(enabled);
 		}
@@ -640,7 +633,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 				.getDescriptor()) {
 			@Override
 			public void run() {
-				IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+				IStructuredSelection selection = viewer.getStructuredSelection();
 				if (!selection.isEmpty()) {
 					Bookmark bookmark = (Bookmark) selection.getFirstElement();
 					Core.getCore().getDbManager().safeTransaction(bookmark, null);
@@ -676,6 +669,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 	}
 
 	protected void fillContextMenu(IMenuManager menuManager) {
+		updateActions();
 		menuManager.add(gotoBookmarkAction);
 		menuManager.add(new Separator());
 		menuManager.add(deleteAction);
@@ -684,7 +678,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 	private void hookDoubleClickAction() {
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			public void doubleClick(DoubleClickEvent event) {
-				IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+				IStructuredSelection selection = viewer.getStructuredSelection();
 				if (!selection.isEmpty()) {
 					gotoBookmarkAction.setBookmark((Bookmark) selection.getFirstElement());
 					gotoBookmarkAction.run();

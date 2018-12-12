@@ -19,22 +19,15 @@
  */
 package com.bdaum.zoom.gps.leaflet.internal;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.osgi.framework.BundleContext;
 
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
-/**
- * The activator class controls the plug-in life cycle
- */
 @SuppressWarnings("restriction")
 public class LeafletActivator extends ZUiPlugin {
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.gps.leaflet"; //$NON-NLS-1$
 
-	// The shared instance
 	private static LeafletActivator plugin;
 
 	/*
@@ -57,18 +50,8 @@ public class LeafletActivator extends ZUiPlugin {
 		super.stop(context);
 	}
 
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
 	public static LeafletActivator getDefault() {
 		return plugin;
-	}
-
-
-	public void logError(String message, Throwable e) {
-		getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, message, e));
 	}
 
 }

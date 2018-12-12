@@ -58,9 +58,6 @@ public class Icons {
 	}
 
 	public static final Icon video40 = new Icon("icons/video40.png"); //$NON-NLS-1$
-//	public static final Icon videoControl = new Icon(
-//			"icons/banner/videoControl.png"); //$NON-NLS-1$
-	public static final Icon zoraShell = new Icon("/icons/zoraShell.gif"); //$NON-NLS-1$
 	public static final Icon volume = new Icon("/icons/banner/loudness.png"); //$NON-NLS-1$
 	public static final Icon volume_d = new Icon("/icons/banner/loudness_d.png"); //$NON-NLS-1$
 	public static final Icon play = new Icon("/icons/play.png"); //$NON-NLS-1$

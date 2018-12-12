@@ -26,15 +26,13 @@ import java.net.URL;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -74,9 +72,7 @@ public class DNGConverterDialog extends ZTitleAreaDialog {
 	public void create() {
 		super.create();
 		setTitle(Messages.DNGConverterDialog_no_converter);
-		dngImage = UiActivator
-				.getImageDescriptor("icons/banner/dng.png").createImage(); //$NON-NLS-1$
-		setTitleImage(dngImage);
+		setTitleImage(dngImage = UiActivator.getImageDescriptor("icons/banner/dng.png").createImage()); //$NON-NLS-1$
 		setMessage(Messages.DNGConverterDialog_make_sure);
 		updateButtons();
 	}
@@ -84,33 +80,28 @@ public class DNGConverterDialog extends ZTitleAreaDialog {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-
 		final Composite composite = new Composite(area, SWT.NONE);
-		composite
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		composite.setLayout(new GridLayout(1, false));
-		fileEditor = new FileEditor(composite, SWT.OPEN,
-				Messages.DNGConverterDialog_location, true,
+		fileEditor = new FileEditor(composite, SWT.OPEN, Messages.DNGConverterDialog_location, true,
 				Constants.EXEEXTENSION, Constants.EXEFILTERNAMES, null,
 				dngLocation == null ? "" : dngLocation.getAbsolutePath(), //$NON-NLS-1$
 				false, false, dialogSettings);
-
-		fileEditor.addModifyListener(new ModifyListener() {
-			public void modifyText(final ModifyEvent e) {
+		fileEditor.addListener(new Listener() {
+			@Override
+			public void handleEvent(Event event) {
 				updateButtons();
 			}
 		});
 		CLink link = new CLink(composite, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		link.setText(Messages.DNGConverterDialog_download);
-		link.addSelectionListener(new SelectionAdapter() {
+		link.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				String vlcDownload = System
-						.getProperty(Messages.DNGConverterDialog_dngkey);
+			public void handleEvent(Event event) {
+				String vlcDownload = System.getProperty(Messages.DNGConverterDialog_dngkey);
 				try {
-					PlatformUI.getWorkbench().getBrowserSupport()
-							.getExternalBrowser().openURL(new URL(vlcDownload));
+					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));
 				} catch (PartInitException e1) {
 					// do nothing
 				} catch (MalformedURLException e1) {
@@ -118,14 +109,12 @@ public class DNGConverterDialog extends ZTitleAreaDialog {
 				}
 			}
 		});
-
 		return area;
 	}
 
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
-		createButton(parent, WITHOUTDNG,
-				Messages.DNGConverterDialog_import_without_dng, false);
+		createButton(parent, WITHOUTDNG, Messages.DNGConverterDialog_import_without_dng, false);
 		super.createButtonsForButtonBar(parent);
 	}
 
@@ -133,11 +122,11 @@ public class DNGConverterDialog extends ZTitleAreaDialog {
 	protected void buttonPressed(int buttonId) {
 		if (buttonId == WITHOUTDNG) {
 			dngLocation = new File(""); //$NON-NLS-1$
-			super.buttonPressed(IDialogConstants.OK_ID);
+			okPressed();
 		}
 		super.buttonPressed(buttonId);
 	}
-	
+
 	@Override
 	protected void okPressed() {
 		fileEditor.saveValues();
@@ -147,12 +136,10 @@ public class DNGConverterDialog extends ZTitleAreaDialog {
 	protected void updateButtons() {
 		boolean enabled = false;
 		String s = fileEditor.getText();
-		if (!s.isEmpty()) {
+		if (!s.isEmpty())
 			dngLocation = new File(s);
-			enabled = dngLocation.exists();
-		}
-		setErrorMessage(enabled ? null
-				: Messages.DNGConverterDialog_for_converting);
+		enabled = dngLocation.exists();
+		setErrorMessage(enabled ? null : Messages.DNGConverterDialog_for_converting);
 		getButton(IDialogConstants.OK_ID).setEnabled(enabled);
 	}
 
@@ -163,8 +150,7 @@ public class DNGConverterDialog extends ZTitleAreaDialog {
 	}
 
 	public File getResult() {
-		if (dngLocation != null && !dngLocation.getName().isEmpty()
-				&& !dngLocation.exists())
+		if (dngLocation != null && !dngLocation.getName().isEmpty() && !dngLocation.exists())
 			return null;
 		return dngLocation;
 	}

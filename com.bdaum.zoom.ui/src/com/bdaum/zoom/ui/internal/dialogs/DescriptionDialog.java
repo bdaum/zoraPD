@@ -57,6 +57,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IRecipeDetector;
 import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.image.IFocalLengthProvider;
 import com.bdaum.zoom.image.recipe.Recipe;
@@ -306,11 +307,11 @@ public class DescriptionDialog extends ZTitleAreaDialog {
 	protected boolean validateParmFile() {
 		File file = getParmFile(parmFileField.getText());
 		if (file == null) {
-			parmFileField.setData("id", "errors"); //$NON-NLS-1$ //$NON-NLS-2$
+			parmFileField.setData(CSSProperties.ID, CSSProperties.ERRORS);
 			CssActivator.getDefault().setColors(parmFileField);
 			return false;
 		}
-		parmFileField.setData("id", null); //$NON-NLS-1$
+		parmFileField.setData(CSSProperties.ID, null); 
 		CssActivator.getDefault().setColors(parmFileField);
 		return !parmFileField.getText().isEmpty();
 	}

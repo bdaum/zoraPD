@@ -68,7 +68,7 @@ public class CssActivator extends AbstractUIPlugin {
 						Widget widget = event.widget;
 						if (widget instanceof Control) {
 							Shell shell = ((Control) widget).getShell();
-							if (shell.getData("css") == null) //$NON-NLS-1$
+							if (shell.getData(CSSProperties.CSS) == null) 
 								return;
 							//TODO handle selected system dialogs
 						}
@@ -159,7 +159,7 @@ public class CssActivator extends AbstractUIPlugin {
 	public void setColors(Control control) {
 		if (control != null) {
 			if (control instanceof Shell)
-				control.setData("css", "true"); //$NON-NLS-1$ //$NON-NLS-2$
+				control.setData(CSSProperties.CSS, Boolean.TRUE);
 			if (theme != null) {
 				AbstractCSSEngine engine = getCssEngine(control.getDisplay());
 				if (engine != null) {

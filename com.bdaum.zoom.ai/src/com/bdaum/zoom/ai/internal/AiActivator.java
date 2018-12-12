@@ -38,6 +38,7 @@ import org.osgi.framework.BundleContext;
 import com.bdaum.zoom.ai.internal.preference.PreferenceConstants;
 import com.bdaum.zoom.ai.internal.services.IAiServiceProvider;
 import com.bdaum.zoom.ai.internal.translator.TranslatorClient;
+import com.bdaum.zoom.core.internal.lire.AiAlgorithm;
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
 /**
@@ -128,6 +129,7 @@ public class AiActivator extends ZUiPlugin {
 			IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID,
 					"serviceProvider"); //$NON-NLS-1$
 			for (IExtension ext : extensionPoint.getExtensions()) {
+				String namespaceIdentifier = ext.getNamespaceIdentifier();
 				for (IConfigurationElement config : ext.getConfigurationElements()) {
 					String id = config.getAttribute("id"); //$NON-NLS-1$
 					String name = config.getAttribute("name"); //$NON-NLS-1$
@@ -137,7 +139,6 @@ public class AiActivator extends ZUiPlugin {
 						provider.setId(id);
 						provider.setName(name);
 						provider.setLatency(getInt(config, "latency", 3000)); //$NON-NLS-1$
-						provider.setFeatureId(getInt(config, "featureId", -1)); //$NON-NLS-1$
 						providerMap.put(id, provider);
 						List<String> modelIds = new ArrayList<>(5);
 						List<String> modelLabels = new ArrayList<>(5);
@@ -147,13 +148,18 @@ public class AiActivator extends ZUiPlugin {
 						}
 						provider.setRatingModelIds(modelIds.toArray(new String[modelIds.size()]));
 						provider.setRatingModelLabels(modelLabels.toArray(new String[modelIds.size()]));
+						List<AiAlgorithm> algorithms = new ArrayList<>(5);
+						for (IConfigurationElement feature : config.getChildren("feature")) //$NON-NLS-1$
+							algorithms.add(new AiAlgorithm(getInt(feature, "id", -1), feature.getAttribute("name"), //$NON-NLS-1$ //$NON-NLS-2$
+									feature.getAttribute("label"), feature.getAttribute("description"),  //$NON-NLS-1$//$NON-NLS-2$
+									Boolean.parseBoolean(feature.getAttribute("essential")), namespaceIdentifier)); //$NON-NLS-1$
+						provider.setFeatures(algorithms.toArray(new AiAlgorithm[algorithms.size()]));
 					} catch (CoreException e) {
 						logError(NLS.bind(Messages.AiActivator_error_loading_provider, name), e);
 					}
 				}
 			}
 		}
-
 	}
 
 	protected int getInt(IConfigurationElement config, String att, int dflt) {

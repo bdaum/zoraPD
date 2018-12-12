@@ -38,6 +38,7 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.AccessDeniedException;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.stream.IntStream;
@@ -113,7 +114,7 @@ public class ImageUtilities {
 			} catch (IOException e) {
 				// do nothing
 			}
-		} catch (URISyntaxException e) {
+		} catch (URISyntaxException | IllegalArgumentException e) {
 			// Do nothing
 		}
 		return fileExtension;
@@ -3011,5 +3012,21 @@ public class ImageUtilities {
 			}
 		}
 	}
+	
+	public static void waitUntilFileIsReady(File file) throws AccessDeniedException {
+		int i = 20;
+		while (--i > 0) {
+			if (file.exists() && file.canRead())
+				return;
+			try {
+				Thread.sleep(25);
+			} catch (InterruptedException e) {
+				break;
+			}
+		}
+		throw new AccessDeniedException(file.getAbsolutePath());
+	}
+
+
 
 }

@@ -18,9 +18,11 @@ import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
+import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.operations.DbOperation;
 import com.bdaum.zoom.operations.IProfiledOperation;
 
+@SuppressWarnings("restriction")
 public class RetargetOperation extends DbOperation {
 
 	private final File newFile;
@@ -35,6 +37,7 @@ public class RetargetOperation extends DbOperation {
 	private String newFolderUri;
 	private final boolean voiceNote;
 	private String[] vAssetIds;
+	private String[] oldVoiceUris;
 
 	public RetargetOperation(AssetImpl asset, File newFile, int level, boolean voiceNote) {
 		super(Messages.getString("RetargetOperation.retarget")); //$NON-NLS-1$
@@ -95,6 +98,7 @@ public class RetargetOperation extends DbOperation {
 				vAssets = dbManager.obtainObjects(AssetImpl.class, "voiceFileURI", oldFolderUriSlash, //$NON-NLS-1$
 						QueryField.STARTSWITH);
 				vAssetIds = new String[vsize = vAssets.size()];
+				oldVoiceUris = new String[vsize];
 			}
 			init(aMonitor, size + vsize + 1);
 			assetIds = new String[size];
@@ -139,24 +143,22 @@ public class RetargetOperation extends DbOperation {
 			if (vAssets != null) {
 				i = 0;
 				for (AssetImpl a : vAssets) {
-					String voiceUri = a.getVoiceFileURI();
-					if (voiceUri != null && !".".equals(voiceUri) && !voiceUri.startsWith("?")) //$NON-NLS-1$ //$NON-NLS-2$
+					if (AssetEnsemble.hasVoiceNote(a) && !AssetEnsemble.hasCloseVoiceNote(a)) {
+						String voiceUri = AssetEnsemble.extractVoiceNote(a);
 						try {
-							File voiceFile = new File(new URI(voiceUri));
-							if (!voiceFile.exists()) {
-								String newVoiceUri = newFolderUri + voiceUri.substring(oldFolderUri.length());
-								File nVoiceFile = new File(new URI(newVoiceUri));
-								if (nVoiceFile.exists()) {
-									a.setVoiceFileURI(newVoiceUri);
-									a.setVoiceVolume(volume);
-									if (dbManager.safeTransaction(null, a))
-										vAssetIds[i] = a.getStringId();
-								}
+							String newVoiceUri = newFolderUri + voiceUri.substring(oldFolderUri.length());
+							File nVoiceFile = new File(new URI(newVoiceUri));
+							if (nVoiceFile.exists()) {
+								oldVoiceUris[i] = a.getVoiceFileURI();
+								AssetEnsemble.insertVoiceNote(a, volume, newVoiceUri);
+								if (dbManager.safeTransaction(null, a))
+									vAssetIds[i] = a.getStringId();
 							}
 						} catch (URISyntaxException e) {
 							addError(NLS.bind(Messages.getString("RetargetOperation.bad_uri_execute"), //$NON-NLS-1$
 									voiceUri), e);
 						}
+					}
 					aMonitor.worked(1);
 					++i;
 				}
@@ -216,10 +218,10 @@ public class RetargetOperation extends DbOperation {
 					if (assetId != null) {
 						AssetImpl a = dbManager.obtainAsset(assetId);
 						if (a != null) {
-							String uri = a.getVoiceFileURI();
+							String uri = AssetEnsemble.extractVoiceNote(a);
 							if (uri != null && uri.startsWith(newFolderUri)) {
 								a.setVoiceVolume(oldVolume);
-								a.setVoiceFileURI(oldFolderUri + uri.substring(newFolderUri.length()));
+								a.setVoiceFileURI(oldVoiceUris[i]);
 								dbManager.safeTransaction(null, a);
 							}
 						}

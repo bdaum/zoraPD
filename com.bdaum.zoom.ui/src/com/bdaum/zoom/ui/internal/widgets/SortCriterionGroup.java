@@ -20,13 +20,12 @@
 
 package com.bdaum.zoom.ui.internal.widgets;
 
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.group.SortCriterion;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
@@ -48,28 +47,28 @@ public class SortCriterionGroup extends AbstractCriterionGroup {
 		relationKeys = new int[] { 0, 1, 2 };
 		initGroup(crit != null ? QueryField.findQueryField(crit.getField()) : null);
 		if (groupCombo != null)
-			groupCombo.addSelectionChangedListener(new ISelectionChangedListener() {
-				public void selectionChanged(SelectionChangedEvent event) {
+			groupCombo.getCombo().addListener(SWT.Selection, new Listener() {
+				public void handleEvent(Event event) {
 					fillFieldCombo(crit);
-					signalModification();
+					signalModification(event);
 				}
 			});
 		createButtons(parent);
 		if (fieldCombo != null)
-			fieldCombo.addSelectionListener(new SelectionAdapter() {
+			fieldCombo.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					fillRelationCombo(crit);
-					signalModification();
+					signalModification(event);
 				}
 			});
 		if (relationCombo != null) {
 			relationCombo.setVisibleItemCount(3);
-			relationCombo.addSelectionListener(selectionListener);
+			relationCombo.addListener(SWT.Selection, selectionListener);
 		}
 		// init
 		fillFieldCombo(crit);
-		signalModification();
+		signalModification(null);
 	}
 
 	private void fillFieldCombo(SortCriterion crit) {
@@ -81,22 +80,22 @@ public class SortCriterionGroup extends AbstractCriterionGroup {
 
 	private void createButtons(final Composite parent) {
 		andButton = createButton(parent, Messages.SortCriterionGroup_AND);
-		andButton.addSelectionListener(new SelectionAdapter() {
+		andButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				collectionEditGroup.addSortGroup(parent, SortCriterionGroup.this, null);
-				signalModification();
+				signalModification(e);
 			}
 		});
 		clearButton = createButton(parent, Icons.delete.getImage());
-		clearButton.addSelectionListener(new SelectionAdapter() {
+		clearButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				if (groupNo == 0)
 					reset();
 				else {
 					collectionEditGroup.removeSortGroup(SortCriterionGroup.this);
-					signalModification();
+					signalModification(e);
 				}
 			}
 		});

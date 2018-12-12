@@ -28,7 +28,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.ui.AssetSelection;
-import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.views.EducatedSelectionListener;
 
 public abstract class AbstractSelectionAction extends Action implements EducatedSelectionListener {
@@ -39,7 +39,7 @@ public abstract class AbstractSelectionAction extends Action implements Educated
 	public AbstractSelectionAction(IWorkbenchWindow window, String label, ImageDescriptor image) {
 		super(label, image);
 		this.window = window;
-		UiActivator.getDefault().getNavigationHistory(window).addSelectionListener(this);
+		Ui.getUi().getNavigationHistory(window).addSelectionListener(this);
 	}
 
 	public void assetsChanged(IWorkbenchPart part, AssetSelection selectedAssets) {

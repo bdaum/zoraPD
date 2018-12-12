@@ -24,7 +24,7 @@
             fastViewWidthRatio="0.2"
             icon="icons/gpsdata.png"
             id="com.bdaum.zoom.gps.GPSView"
-            name="GPS"
+            name="%view.name.gps"
             restorable="true">
       </view>
    </extension>
@@ -179,7 +179,7 @@
       <parser
             class="com.bdaum.zoom.gps.internal.gpx.GpxParser"
             extensions="gpx"
-            name="GPX"
+            name="%parser.name.gpx"
             waypoints="com.bdaum.zoom.gps.internal.gpx.WaypointCollector">
          <type
                name="%type.name.gpx">
@@ -188,7 +188,7 @@
       <parser
             class="com.bdaum.zoom.gps.internal.nmea.NmeaParser"
             extensions="nmea;log"
-            name="NMEA">
+            name="%parser.name.nmea">
          <type
                name="%type.name.nmea">
          </type>
@@ -316,6 +316,34 @@
                id="com.bdaum.zoom.gps.perspective">
          </perspectiveShortcut>
       </perspectiveExtension>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.ui.perspectiveGallery">
+      <gallery
+            galleryId="com.bdaum.zoom.ui.views.VStripView"
+            perspectiveId="com.bdaum.zoom.gps.perspective">
+      </gallery>
+   </extension>
+   <extension
+         point="org.eclipse.ui.exportWizards">
+      <category
+            id="com.bdaum.zoom.gps.category"
+            name="%category.name.geo2">
+      </category>
+      <wizard
+            category="com.bdaum.zoom.gps.category"
+            class="com.bdaum.zoom.gps.internal.wizards.KmlExportWizard"
+            icon="icons/kml.png"
+            id="com.bdaum.zoom.gps.wizard.export.kml"
+            name="%wizard.name.kmlfile">
+      </wizard>
+      <wizard
+            category="com.bdaum.zoom.gps.category"
+            class="com.bdaum.zoom.gps.internal.wizards.GpxExportWizard"
+            icon="icons/gpx.png"
+            id="com.bdaum.zoom.gps.wizard.export.gpx"
+            name="%wizard.name.gpxfile">
+      </wizard>
    </extension>
 
 </plugin>

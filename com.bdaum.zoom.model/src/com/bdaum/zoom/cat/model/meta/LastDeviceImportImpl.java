@@ -30,10 +30,26 @@ public class LastDeviceImportImpl extends LastDeviceImport_typeImpl implements
 	 * @param timestamp - Property
 	 * @param description - Property
 	 * @param owner - Property
+	 * @param path - Property
+	 * @param detectDuplicates - Property
+	 * @param removeMedia - Property
+	 * @param skipPolicy - Property
+	 * @param targetDir - Property
+	 * @param subfolders - Property
+	 * @param deepSubfolders - Property
+	 * @param selectedTemplate - Property
+	 * @param cue - Property
+	 * @param prefix - Property
+	 * @param privacy - Property
 	 */
 	public LastDeviceImportImpl(String volume, long timestamp,
-			String description, String owner) {
-		super(volume, timestamp, description, owner);
+			String description, String owner, String path,
+			Boolean detectDuplicates, Boolean removeMedia, Integer skipPolicy,
+			String targetDir, Integer subfolders, Boolean deepSubfolders,
+			String selectedTemplate, String cue, String prefix, Integer privacy) {
+		super(volume, timestamp, description, owner, path, detectDuplicates,
+				removeMedia, skipPolicy, targetDir, subfolders, deepSubfolders,
+				selectedTemplate, cue, prefix, privacy);
 
 	}
 

@@ -21,19 +21,19 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
-public class LabelConfigGroup implements SelectionListener {
+public class LabelConfigGroup implements Listener {
 
 	private RadioButtonGroup showGroup;
 	private TextWithVariableGroup templateGroup;
@@ -49,7 +49,7 @@ public class LabelConfigGroup implements SelectionListener {
 						Messages.LabelConfigGroup_nothing, Messages.LabelConfigGroup_custom }
 						: new String[] { Messages.LabelConfigGroup_title, Messages.LabelConfigGroup_nothing,
 								Messages.LabelConfigGroup_custom });
-		showGroup.addSelectionListener(this);
+		showGroup.addListener(this);
 		Composite tempComp = new Composite(labelgroup, SWT.NONE);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.horizontalIndent = 15;
@@ -64,7 +64,7 @@ public class LabelConfigGroup implements SelectionListener {
 	}
 
 	@Override
-	public void widgetSelected(SelectionEvent e) {
+	public void handleEvent(Event e) {
 		updateControls();
 	}
 
@@ -72,11 +72,6 @@ public class LabelConfigGroup implements SelectionListener {
 		boolean enabled = showGroup.getSelection() + offset == Constants.CUSTOM_LABEL;
 		templateGroup.setEnabled(enabled);
 		fontField.setEnabled(enabled);
-	}
-
-	@Override
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
 	}
 
 	public void setSelection(int index, String template, int fontSize) {
@@ -100,12 +95,12 @@ public class LabelConfigGroup implements SelectionListener {
 		return templateGroup.getText();
 	}
 
-	public void addSelectionListener(SelectionListener selectionListener) {
-		showGroup.addSelectionListener(selectionListener);
+	public void addListener(Listener listener) {
+		showGroup.addListener(listener);
 	}
 
-	public void removeSelectionListener(SelectionListener selectionListener) {
-		showGroup.removeSelectionListener(selectionListener);
+	public void removeSelectionListener(Listener listener) {
+		showGroup.removeListener(listener);
 	}
 
 	public String validate() {

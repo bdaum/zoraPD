@@ -127,10 +127,8 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	@Override
 	public void setInitializationData(IConfigurationElement cfig, String propertyName, Object data) {
 		super.setInitializationData(cfig, propertyName, data);
-		if (data instanceof String) {
-			layout = (String) data;
-			isStrip = (HSTRIP.equals(layout) || VSTRIP.equals(layout));
-		}
+		if (data instanceof String)
+			isStrip = (HSTRIP.equals(layout = (String) data) || VSTRIP.equals(layout));
 	}
 
 	@Override
@@ -189,9 +187,9 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 		gallery.setItemCount(1);
 		// Actions
 		makeActions(getViewSite().getActionBars());
-		installListeners(parent);
+		installListeners();
 		gallery.addSelectionListener(this);
-		installInfrastructure(!isStrip, 1000);
+		installInfrastructure(1000);
 		if (folding && !canBeCollapsed())
 			setUriSort();
 	}
@@ -295,7 +293,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 
 	@Override
 	public void updateActions(boolean force) {
-		if (viewActive || force) {
+		if (isVisible() || force) {
 			super.updateActions(force);
 			updateCollapseAction();
 		}
@@ -326,6 +324,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
+		updateActions(true);
 		GalleryItem[] items = gallery.getSelection();
 		for (GalleryItem item : items) {
 			if (item.getData(CARD) != null) {
@@ -389,7 +388,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	}
 
 	@Override
-	protected void setAssetSelection(AssetSelection assetSelection) {
+	public void setAssetSelection(AssetSelection assetSelection) {
 		selection = assetSelection;
 		if (assetSelection.isEmpty())
 			gallery.setSelection(NOITEM);
@@ -466,9 +465,8 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 							selectedAssets.add(asset);
 						}
 					}
-					GalleryItem[] selectedItems = items.toArray(new GalleryItem[items.size()]);
 					galleryMap.clear();
-					gallery.setSelection(selectedItems);
+					gallery.setSelection(items.toArray(new GalleryItem[items.size()]));
 					selection = new AssetSelection(selectedAssets);
 				} else {
 					galleryMap.clear();
@@ -602,16 +600,12 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 					boolean multiple = item.getData(CARD) != null;
 					if (multiple && foldingIndex != null) {
 						Integer index = galleryMap.get(asset);
-						if (index != null) {
-							int i = index.intValue();
-							int start = foldingIndex[i] + 1;
-							int end = foldingIndex[i + 1];
-							for (int j = start; j < end; j++) {
+						if (index != null)
+							for (int j = foldingIndex[index] + 1; j < foldingIndex[index + 1]; j++) {
 								Asset nextAsset = assetProvider.getAsset(j);
 								if (nextAsset != null)
 									sel.add(nextAsset);
 							}
-						}
 					}
 				}
 			}
@@ -660,13 +654,6 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 		return super.getAdapter(adapter);
 	}
 
-	@Override
-	protected void scroll(int dist) {
-		ScrollBar scrollBar = getScrollBar();
-		if (scrollBar != null)
-			scrollBar.setSelection(dist + scrollBar.getSelection());
-	}
-
 	private ScrollBar getScrollBar() {
 		ScrollBar scrollBar = gallery.getVerticalBar();
 		return (scrollBar == null) ? gallery.getHorizontalBar() : scrollBar;
@@ -674,7 +661,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 
 	@Override
 	protected void editTitleArea(final GalleryItem item, Rectangle bounds) {
-		final Asset asset = (Asset) item.getData("asset"); //$NON-NLS-1$
+		final Asset asset = (Asset) item.getData(ASSET);
 		if (asset != null) {
 			cancelInput();
 			final String captionText = UiUtilities.computeImageCaption(asset, null, null, null, null);
@@ -710,9 +697,8 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 								GalleryItem[] sel = gallery.getSelection();
 								if (sel.length == 1) {
 									GalleryItem item1 = sel[0];
-									AssetImpl asset1 = (AssetImpl) item1.getData(ASSET);
 									Hotspots hotSpots = (Hotspots) item1.getData(HOTSPOTS);
-									if (hotSpots != null && asset1 != null) {
+									if (hotSpots != null && item1.getData(ASSET) != null) {
 										Rectangle titleArea = hotSpots.getTitleArea();
 										if (titleArea != null)
 											editTitleArea(item1, titleArea);

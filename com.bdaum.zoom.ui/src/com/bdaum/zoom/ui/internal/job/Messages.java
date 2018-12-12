@@ -84,6 +84,15 @@ public class Messages extends NLS {
 	public static String SyncPicasaJob_scanning_picasa;
 	public static String SyncPicasaJob_synchronize;
 
+	public static String TetheredJob_disk_full;
+	public static String TetheredJob_init;
+	public static String TetheredJob_io_error_init;
+	public static String TetheredJob_io_error_scanning;
+	public static String TetheredJob_io_error_transferring;
+	public static String TetheredJob_tethered;
+	public static String TetheredJob_tethered_n;
+	public static String TetheredJob_tethered_report;
+
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

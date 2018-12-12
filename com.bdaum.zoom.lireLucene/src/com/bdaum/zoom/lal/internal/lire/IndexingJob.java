@@ -38,6 +38,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.IndexNotFoundException;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -184,11 +185,11 @@ public class IndexingJob extends Job {
 	@Override
 	protected IStatus run(IProgressMonitor monitor) {
 		status = new MultiStatus(LireActivator.PLUGIN_ID, 0, Messages.IndexingJob_Indexing_report, null);
-		startTime = System.currentTimeMillis();
 		if (reset && !dbManager.resetLuceneIndex())
 			addErrorStatus(Messages.IndexingJob_cannot_delete_folders, null);
 		if (noIndex)
 			return status;
+		startTime = System.currentTimeMillis();
 		File indexPath = dbManager.getIndexPath();
 		if (indexPath == null)
 			return status;
@@ -255,6 +256,9 @@ public class IndexingJob extends Job {
 				iw = activator.flushIndexWriter(indexPath);
 				postponed.removeAll(done);
 			}
+		} catch (CorruptIndexException | IndexNotFoundException e) {
+			addErrorStatus(Messages.IndexingJob_index_corrupz, e);
+			return status;
 		} catch (IOException e) {
 			addErrorStatus(Messages.IndexingJob_error_creating_lucene_index, e);
 			return status;

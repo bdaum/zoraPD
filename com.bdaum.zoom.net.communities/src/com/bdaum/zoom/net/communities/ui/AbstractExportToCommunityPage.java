@@ -8,7 +8,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
@@ -79,7 +78,7 @@ public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
 		editButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				Object el = ((IStructuredSelection) accountViewer.getSelection()).getFirstElement();
+				Object el = accountViewer.getStructuredSelection().getFirstElement();
 				if (el instanceof CommunityAccount) {
 					final CommunityApi api = ((AbstractCommunityExportWizard) getWizard()).getApi();
 					final CommunityAccount account = (CommunityAccount) el;
@@ -113,7 +112,7 @@ public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
 	}
 
 	protected String checkAccount() {
-		CommunityAccount acc = (CommunityAccount) ((IStructuredSelection) accountViewer.getSelection())
+		CommunityAccount acc = (CommunityAccount) accountViewer.getStructuredSelection()
 				.getFirstElement();
 		if (acc == null || acc.getName() == null)
 			return Messages.ExportToCommunityPage_please_select_an_account;
@@ -140,14 +139,14 @@ public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
 
 	protected void saveSettings() {
 		IDialogSettings settings = getDialogSettings();
-		Object firstElement = ((IStructuredSelection) accountViewer.getSelection()).getFirstElement();
+		Object firstElement = accountViewer.getStructuredSelection().getFirstElement();
 		if (firstElement instanceof CommunityAccount && settings != null)
 			settings.put(SELECTED_ACCOUNT, ((CommunityAccount) firstElement).getName());
 	}
 
 	public boolean finish() throws CommunicationException, AuthException {
 		saveSettings();
-		Object firstElement = ((IStructuredSelection) accountViewer.getSelection()).getFirstElement();
+		Object firstElement = accountViewer.getStructuredSelection().getFirstElement();
 		if (firstElement instanceof CommunityAccount)
 			return doFinish((CommunityAccount) firstElement);
 		return true;

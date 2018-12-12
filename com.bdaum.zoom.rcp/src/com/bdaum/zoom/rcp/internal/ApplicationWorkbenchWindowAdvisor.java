@@ -13,6 +13,7 @@ package com.bdaum.zoom.rcp.internal;
 
 import java.util.List;
 
+import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
@@ -42,7 +43,6 @@ import com.bdaum.zoom.cat.model.group.Criterion;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.core.DeviceInsertionListener;
 import com.bdaum.zoom.core.IPostProcessor2;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
@@ -50,6 +50,7 @@ import com.bdaum.zoom.core.db.IDbFactory;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.fileMonitor.internal.filefilter.FilterChain;
+import com.bdaum.zoom.mtp.DeviceInsertionListener;
 import com.bdaum.zoom.rcp.internal.perspective.DataEntryPerspective;
 import com.bdaum.zoom.rcp.internal.perspective.ExhibitionPerspective;
 import com.bdaum.zoom.rcp.internal.perspective.LightboxPerspective;
@@ -60,7 +61,9 @@ import com.bdaum.zoom.rcp.internal.perspective.TablePerspective;
 import com.bdaum.zoom.rcp.internal.perspective.WebGalleryPerspective;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.commands.AbstractCommandHandler;
 import com.bdaum.zoom.ui.internal.commands.ImportDeviceCommand;
+import com.bdaum.zoom.ui.internal.commands.TetheredShootingCommand;
 import com.bdaum.zoom.ui.internal.preferences.PreferenceInitializer;
 import com.bdaum.zoom.ui.internal.views.DataEntryView;
 import com.bdaum.zoom.ui.internal.views.DuplicatesView;
@@ -240,10 +243,11 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 
 	void configureDeviceInsertionListeners(final IPreferencesService preferencesService) {
 		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
-		if (preferencesService.getBoolean(UI_NAMESPACE, PreferenceConstants.DEVICEWATCH, false, null))
-			volumeManager.addDeviceInsertionListener(ApplicationWorkbenchWindowAdvisor.this);
-		else
+		String watch = preferencesService.getString(UI_NAMESPACE, PreferenceConstants.DEVICEWATCH, "false", null); //$NON-NLS-1$
+		if ("false".equalsIgnoreCase(watch)) //$NON-NLS-1$
 			volumeManager.removeDeviceInsertionListener(ApplicationWorkbenchWindowAdvisor.this);
+		else
+			volumeManager.addDeviceInsertionListener(ApplicationWorkbenchWindowAdvisor.this);
 	}
 
 	void configureKeywordExclusions(final IPreferencesService preferencesService) {
@@ -329,14 +333,34 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 	}
 
 	public void deviceInserted() {
-		final ImportDeviceCommand command = new ImportDeviceCommand();
+		String watch = Platform.getPreferencesService().getString(UI_NAMESPACE, PreferenceConstants.DEVICEWATCH,
+				"false", null); //$NON-NLS-1$
+		final AbstractCommandHandler command = PreferenceConstants.TETHERED.equals(watch)
+				? new TetheredShootingCommand()
+				: new ImportDeviceCommand();
 		IWorkbenchWindow window = getWindowConfigurer().getWindow();
-		command.init(window);
 		final Shell shell = window.getShell();
-		shell.getDisplay().asyncExec(() -> {
-			if (!shell.isDisposed())
-				command.run();
-		});
+		if (!shell.isDisposed())
+			shell.getDisplay().asyncExec(() -> {
+				if (!shell.isDisposed())
+					try {
+						command.init(window);
+						command.execute(null);
+					} catch (ExecutionException e) {
+						// Tdo nothing
+					}
+			});
+	}
+
+	@Override
+	public void deviceEjected() {
+		if (UiActivator.getDefault().isTetheredShootingActive()) {
+			try {
+				new TetheredShootingCommand().execute(null);
+			} catch (ExecutionException e) {
+				// ignore
+			}
+		}
 	}
 
 	private static void configureUndoLevels(final IWorkbenchWindow window,

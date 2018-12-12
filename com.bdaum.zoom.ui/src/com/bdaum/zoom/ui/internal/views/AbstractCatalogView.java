@@ -36,7 +36,6 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchCommandConstants;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
@@ -63,6 +62,7 @@ import com.bdaum.zoom.ui.IZoomCommandIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.actions.SelectionActionCluster;
 import com.bdaum.zoom.ui.internal.actions.ZoomActionFactory;
 import com.bdaum.zoom.ui.internal.dialogs.CollectionEditDialog;
 import com.bdaum.zoom.ui.internal.dialogs.ExhibitionEditDialog;
@@ -104,7 +104,7 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 				if (!control.isDisposed())
 					control.getDisplay().asyncExec(() -> {
 						if (!control.isDisposed() && !monitor.isCanceled()) {
-							IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+							IStructuredSelection selection = viewer.getStructuredSelection();
 							Object firstElement = selection.getFirstElement();
 							if (firstElement instanceof SlideShowImpl || firstElement instanceof ExhibitionImpl
 									|| firstElement instanceof WebGalleryImpl) {
@@ -129,7 +129,6 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 		}
 	}
 
-	protected IAction selectAllAction;
 	protected IAction editItemAction;
 	protected IAction playSlideshowAction;
 	private IAction splitCatAction;
@@ -137,27 +136,24 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 	protected IOperationHistory operationHistory;
 	protected boolean cntrlDwn;
 	private boolean selectionJobRunning;
-	
+
 	protected void updateActions(IStructuredSelection selection, boolean force) {
-		if (viewActive || force) {
-			if (selection.isEmpty()) {
-				editItemAction.setEnabled(false);
-				playSlideshowAction.setEnabled(false);
-			} else {
-				editItemAction.setEnabled(true);
-				Object obj = selection.getFirstElement();
-				playSlideshowAction.setEnabled(obj instanceof SlideShow || obj instanceof SmartCollection);
-			}
-			updateActions(force);
+		if (selection.isEmpty()) {
+			editItemAction.setEnabled(false);
+			playSlideshowAction.setEnabled(false);
+		} else {
+			editItemAction.setEnabled(true);
+			Object obj = selection.getFirstElement();
+			playSlideshowAction.setEnabled(obj instanceof SlideShow || obj instanceof SmartCollection);
 		}
+		updateActions(force);
 	}
 
 	@Override
 	public void updateActions(boolean force) {
-		if (viewActive || force) {
-			splitCatAction.setEnabled(true);
-			updateActions(-1, -1);
-		}
+		selectionActionCluster.updateActions();
+		splitCatAction.setEnabled(true);
+		updateActions(-1, -1);
 	}
 
 	protected static final ISchedulingRule rule = new ISchedulingRule() {
@@ -169,6 +165,7 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 			return rule == this;
 		}
 	};
+	private SelectionActionCluster selectionActionCluster;
 
 	public AbstractCatalogView() {
 		super();
@@ -233,36 +230,24 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 		getSite().registerContextMenu(menuMgr, viewer);
 	}
 
-	protected abstract void fillContextMenu(IMenuManager manager);
+	protected void fillContextMenu(IMenuManager manager) {
+		updateActions(true);
+		addEnabled(manager, playSlideshowAction);
+		selectionActionCluster.addToMenuManager(manager);
+		addEnabled(manager, editItemAction);
+	}
 
 	@Override
 	protected void makeActions() {
 		super.makeActions();
-		selectAllAction = new Action(Messages.getString("CatalogView.select_all"), //$NON-NLS-1$
-				Icons.selectAll.getDescriptor()) {
-			@Override
-			public void run() {
-				for (IViewReference ref : getSite().getPage().getViewReferences()) {
-					IWorkbenchPart part = ref.getPart(false);
-					if (part instanceof SelectAllActionProvider) {
-						IAction action = ((SelectAllActionProvider) part).getSelectAllAction();
-						if (action != null) {
-							part.getSite().getPage().activate(part);
-							action.run();
-						}
-					}
-				}
-			}
-		};
-		selectAllAction.setToolTipText(Messages.getString("CatalogView.select_all_tooltip")); //$NON-NLS-1$
-
+		selectionActionCluster = ZoomActionFactory.createSelectionActionCluster(null, this);
 		editItemAction = new Action(Messages.getString("CatalogView.edit"), Icons.folder_edit.getDescriptor()) { //$NON-NLS-1$
 			@Override
 			public void run() {
 				final IDbManager dbManager = Core.getCore().getDbManager();
 				if (dbManager == null)
 					return;
-				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof SmartCollectionImpl) {
 					final SmartCollection current = (SmartCollectionImpl) obj;
 					final SmartCollection result = editCollection(current);
@@ -385,7 +370,7 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 		playSlideshowAction = new Action(Messages.getString("CatalogView.play_slideshow"), Icons.play.getDescriptor()) { //$NON-NLS-1$
 			@Override
 			public void run() {
-				IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+				IStructuredSelection selection = viewer.getStructuredSelection();
 				Object obj = selection.getFirstElement();
 				if (obj instanceof SlideShowImpl) {
 					List<SlideImpl> slides = new ArrayList<SlideImpl>(300);
@@ -395,7 +380,9 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 						if (object != null)
 							slides.add(object);
 					}
-					new SlideShowPlayer(getSite().getWorkbenchWindow(), slideshow, slides, false).open(0);
+					SlideShowPlayer player = new SlideShowPlayer();
+					player.init(getSite().getWorkbenchWindow(), slideshow, slides, false);
+					player.open(0);
 				} else if (obj instanceof SmartCollection)
 					ZoomActionFactory.SLIDESHOW.create(null, AbstractCatalogView.this).run();
 			}
@@ -408,7 +395,10 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 	protected void registerCommands() {
 		registerCommand(editItemAction, IZoomCommandIds.EditCommand);
 		registerCommand(playSlideshowAction, IZoomCommandIds.AdhocSlideshowCommand);
-		registerCommand(selectAllAction, IWorkbenchCommandConstants.EDIT_SELECT_ALL);
+		registerCommand(selectionActionCluster.getAction(SelectionActionCluster.SELECTALL),
+				IWorkbenchCommandConstants.EDIT_SELECT_ALL);
+		registerCommand(selectionActionCluster.getAction(SelectionActionCluster.SELECTNONE), IZoomCommandIds.Deselect);
+		registerCommand(selectionActionCluster.getAction(SelectionActionCluster.REVERT), IZoomCommandIds.Revert);
 		registerCommand(splitCatAction, IZoomCommandIds.SplitCatalogCommand);
 		super.registerCommands();
 	}

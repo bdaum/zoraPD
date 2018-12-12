@@ -53,7 +53,6 @@ import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.ICore;
-import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
@@ -62,6 +61,7 @@ import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.job.OperationJob;
+import com.bdaum.zoom.mtp.IRootManager;
 import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.net.core.job.TransferJob;
 import com.bdaum.zoom.operations.internal.AddTrackRecordsOperation;
@@ -162,7 +162,7 @@ public class ExportfolderJob extends AbstractExportJob {
 			folder.mkdirs();
 			targetFolder = folder;
 		}
-		IVolumeManager vm = Core.getCore().getVolumeManager();
+		IRootManager vm = Core.getCore().getVolumeManager();
 		try (Assetbox box = new Assetbox(assets, status, false)) {
 			for (File file : box) {
 				if (file != null) {
@@ -277,7 +277,7 @@ public class ExportfolderJob extends AbstractExportJob {
 				String id = Utilities.computeWatchedFolderId(folder, volume);
 				if (!meta.getWatchedFolder().contains(id)) {
 					WatchedFolderImpl wf = new WatchedFolderImpl(folder.toURI().toString(), volume, 0L, true, null,
-							false, null, false, 0, null, 2, null, null, Constants.FILESOURCE_DIGITAL_CAMERA);
+							false, null, false, 0, null, 2, null, null, Constants.FILESOURCE_DIGITAL_CAMERA, false);
 					wf.setStringId(id);
 					CoreActivator activator = CoreActivator.getDefault();
 					activator.putObservedFolder(wf);

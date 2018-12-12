@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.widgets.CGroup;
@@ -125,7 +126,7 @@ public abstract class AbstractPreferencePagePart implements IPreferencePageExten
 
 	protected void showStatus(String msg, boolean error) {
 		statusField.setText(msg);
-		statusField.setData("id", error ? "errors" : null); //$NON-NLS-1$//$NON-NLS-2$
+		statusField.setData(CSSProperties.ID, error ? CSSProperties.ERRORS : null);
 		CssActivator.getDefault().setColors(statusField);
 	}
 

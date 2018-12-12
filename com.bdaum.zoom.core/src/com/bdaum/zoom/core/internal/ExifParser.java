@@ -7,130 +7,103 @@ import java.util.Map;
 
 public class ExifParser {
 
-	final private char[] characters;
-	final private int mxIndex;
-	private int i = 0;
+	private char[] characters;
+	private int mxIndex;
+	private char[] tokens;
+	private int hw, i;
 
-	public ExifParser(String input) {
+	public Object parse(String input) {
 		characters = input.toCharArray();
 		mxIndex = characters.length - 1;
-	}
-
-	public Object parse() {
-		StringBuilder token = new StringBuilder();
+		if (tokens == null || tokens.length <= mxIndex)
+			tokens = new char[characters.length];
+		i = hw = 0;
 		while (i <= mxIndex) {
 			char c = characters[i++];
-			if (c == '|' && i < mxIndex) {
-				token.append(characters[++i]);
-				continue;
-			}
 			switch (c) {
 			case '{':
-				return parseStruct();
+				return parseStruct(hw);
 			case '[':
-				return parseList();
+				return parseList(hw);
 			case '|':
-				if (i <= mxIndex)
-					token.append(characters[i++]);
-				else
-					token.append(c);
+				tokens[hw++] = i < mxIndex ? characters[++i] : i == mxIndex ? characters[i++] : c;
 				break;
 			default:
-				token.append(c);
+				tokens[hw++] = c;
 			}
 		}
-		return token.toString();
+		return new String(tokens, 0, hw);
 	}
 
-	private List<Object> parseList() {
-		StringBuilder token = new StringBuilder();
+	private List<Object> parseList(int start) {
+		int end = start;
 		List<Object> result = new ArrayList<Object>();
 		Object element = null;
 		while (i <= mxIndex) {
 			char c = characters[i++];
 			switch (c) {
 			case '{':
-				element = parseStruct();
+				element = parseStruct(end);
 				break;
 			case '[':
-				element = parseList();
+				element = parseList(end);
 				break;
 			case ',':
-				if (element != null)
-					result.add(element);
-				else
-					result.add(token.toString());
-				token.setLength(0);
+				result.add(element != null ? element : new String(tokens, start, end - start));
+				end = start;
 				element = null;
 				break;
 			case ']':
-				if (element != null)
-					result.add(element);
-				else
-					result.add(token.toString());
+				result.add(element != null ? element : new String(tokens, start, end - start));
 				return result;
 			case '|':
-				if (i <= mxIndex)
-					token.append(characters[i++]);
-				else
-					token.append(c);
+				tokens[end++] = i <= mxIndex ? characters[i++] : c;
 				break;
 			default:
-				token.append(c);
+				tokens[end++] = c;
 			}
 		}
 		return result;
 	}
 
-	private Map<String, Object> parseStruct() {
+	private Map<String, Object> parseStruct(int start) {
+		int end = start;
 		String key = null;
-		StringBuilder token = new StringBuilder();
 		Map<String, Object> result = new HashMap<String, Object>();
 		Object element = null;
 		while (i <= mxIndex) {
 			char c = characters[i++];
 			if (key == null) {
-				switch (c) {
-				case '=':
-					key = token.toString();
-					token.setLength(0);
-					break;
-				default:
-					token.append(c);
-				}
-			} else {
+				if (c == '=') {
+					key = new String(tokens, start, end - start);
+					end = start;
+				} else
+					tokens[end++] = c;
+			} else
 				switch (c) {
 				case '[':
-					element = parseList();
+					element = parseList(end);
 					break;
 				case '{':
-					element = parseStruct();
+					element = parseStruct(end);
 					break;
 				case ',':
-					if (element == null)
-						element = token.toString();
 					if (!key.isEmpty())
-						result.put(key, element);
+						result.put(key, element != null ? element : new String(tokens, start, end - start));
 					key = null;
 					element = null;
-					token.setLength(0);
+					end = start;
 					break;
 				case '}':
-					if (element == null)
-						element = token.toString();
 					if (!key.isEmpty())
-						result.put(key, element);
+						result.put(key, element != null ? element : new String(tokens, start, end - start));
 					return result;
 				case '|':
-					if (i <= mxIndex)
-						token.append(characters[i++]);
-					else
-						token.append(c);
+					tokens[end++] = i <= mxIndex ? characters[i++] : c;
 					break;
 				default:
-					token.append(c);
+					tokens[end++] = c;
 				}
-			}
 		}
 		return result;
 	}

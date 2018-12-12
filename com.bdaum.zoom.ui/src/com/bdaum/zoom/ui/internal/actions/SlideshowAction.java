@@ -43,6 +43,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
 import com.bdaum.zoom.image.ImageConstants;
+import com.bdaum.zoom.mtp.ObjectFilter;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.dialogs.SlideshowEditDialog;
@@ -93,7 +94,8 @@ public class SlideshowAction extends Action {
 			SlideshowEditDialog dialog = new SlideshowEditDialog(window.getShell(), null, show,
 					Messages.SlideshowActionDelegate_adhoc_slideshow, true, false);
 			List<SlideImpl> slides = createSlides(selectedAssets, show);
-			SlideShowPlayer player = new SlideShowPlayer(window, show, slides, true);
+			SlideShowPlayer player = new SlideShowPlayer();
+			player.init(window, show, slides, true);
 			player.create();
 			player.prepare(0);
 			if (dialog.open() == Window.OK) {
@@ -145,7 +147,7 @@ public class SlideshowAction extends Action {
 	}
 
 	private static List<SlideImpl> createSlides(List<Asset> selectedAssets, SlideShowImpl show) {
-		FileNameExtensionFilter filter = new FileNameExtensionFilter(
+		ObjectFilter filter = new FileNameExtensionFilter(
 				ImageConstants.getSupportedImageFileExtensionsGroups(true), true);
 		List<SlideImpl> slides = new ArrayList<SlideImpl>(selectedAssets.size());
 		int index = 0;

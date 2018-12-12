@@ -72,7 +72,7 @@ public class FindDuplicatesDialog extends ZTitleAreaDialog {
 
 	private QueryOptions options;
 
-	private Button byFileNameButton;
+	private Button byFileNameButton, byOriginalButton;
 
 	private CheckboxButton extensionButton;
 
@@ -98,7 +98,7 @@ public class FindDuplicatesDialog extends ZTitleAreaDialog {
 	private void updateControls() {
 		searchResultGroup.setEnabled(bySimilarityButton.getSelection()
 				|| combinedButton.getSelection());
-		extensionButton.setEnabled(byFileNameButton.getSelection());
+		extensionButton.setEnabled(byFileNameButton.getSelection() || byOriginalButton.getSelection());
 	}
 
 	@SuppressWarnings("unused")
@@ -125,6 +125,10 @@ public class FindDuplicatesDialog extends ZTitleAreaDialog {
 		byFileNameButton.addSelectionListener(selectionListener);
 		new Label(methodGroup, SWT.NONE)
 				.setText(Messages.FindDuplicatesDialog_by_filename);
+		byOriginalButton = new Button(methodGroup, SWT.RADIO);
+		byOriginalButton.addSelectionListener(selectionListener);
+		new Label(methodGroup, SWT.NONE)
+				.setText(Messages.FindDuplicatesDialog_by_original);
 		new Label(methodGroup, SWT.NONE);
 		extensionButton = WidgetFactory.createCheckButton(methodGroup,
 				Messages.FindDuplicatesDialog_include_ext, null);
@@ -175,6 +179,9 @@ public class FindDuplicatesDialog extends ZTitleAreaDialog {
 				else
 					byExposureDataButton.setSelection(true);
 				break;
+			case Constants.DUPES_BYORIGINAL:
+				byOriginalButton.setSelection(true);
+				break;
 			default:
 				byFileNameButton.setSelection(true);
 				break;
@@ -202,6 +209,8 @@ public class FindDuplicatesDialog extends ZTitleAreaDialog {
 			kind = Constants.DUPES_BYSIMILARITY;
 		else if (byFileNameButton.getSelection())
 			kind = Constants.DUPES_BYFILENAME;
+		else if (byOriginalButton.getSelection())
+			kind = Constants.DUPES_BYORIGINAL;
 		settings.put(KIND, kind);
 		ignoreDerivates = ignoreDerivedButton.getSelection();
 		withExtension = extensionButton.getSelection();

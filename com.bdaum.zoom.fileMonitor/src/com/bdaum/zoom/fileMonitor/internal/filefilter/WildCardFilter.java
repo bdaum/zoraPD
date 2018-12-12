@@ -99,36 +99,58 @@ public class WildCardFilter {
 	 * @param wildString
 	 *            - filter expression (*,?) wildcards
 	 * @param prefixes
-	 *            - first character denotes reject, second character accept. Can be
-	 *            null. If only one character is supplied, this character denotes
-	 *            accept.
+	 *            - one, two, or four characters. Can be null. - One character
+	 *            supplied: character denotes accept. - Two characters supplied:
+	 *            first character denotes reject, second character accept. - Four
+	 *            characters supplied: first character denotes reject, second
+	 *            character accept, third character denotes case sensitive reject,
+	 *            fourth character denotes case sensitive accept.
 	 * @param includeDirs
 	 *            - true if directory patterns (pattern/) are allowed
 	 */
 	public WildCardFilter(String wildString, String prefixes, boolean includeDirs) {
+		int begin = 0;
+		int end = wildString.length();
 		wildPattern = wildString;
-		if (prefixes != null && !wildString.isEmpty()) {
+		if (prefixes != null && end > 0) {
 			char c = wildString.charAt(0);
 			switch (prefixes.length()) {
 			case 1:
 				if (prefixes.charAt(0) == c)
-					wildString = wildString.substring(1);
+					begin = 1;
 				else
 					rejects = true;
 				break;
 			case 2:
 				if (prefixes.charAt(0) == c) {
-					wildString = wildString.substring(1);
+					begin = 1;
 					rejects = true;
 				} else if (prefixes.charAt(1) == c)
-					wildString = wildString.substring(1);
+					begin = 1;
+				break;
+			case 4:
+				if (prefixes.charAt(0) == c) {
+					begin = 1;
+					rejects = true;
+				} else if (prefixes.charAt(1) == c)
+					begin = 1;
+				else if (prefixes.charAt(2) == c) {
+					begin = 1;
+					rejects = true;
+					ignoreCase = false;
+				} else if (prefixes.charAt(3) == c) {
+					begin = 1;
+					ignoreCase = false;
+				}
 				break;
 			}
 		}
 		if (includeDirs && wildString.endsWith("/")) { //$NON-NLS-1$
-			wildString = wildString.substring(0, wildString.length() - 1);
+			--end;
 			checkDir = true;
 		}
+		if (begin > 0 || end < wildString.length())
+			wildString = wildString.substring(begin, end);
 		isPath = wildString.indexOf('/') >= 0;
 		parseWildString(wildString, false);
 	}
@@ -180,10 +202,9 @@ public class WildCardFilter {
 						commands.add(CONSUME);
 					else if ("*".equals(token)) { //$NON-NLS-1$
 						commands.add(FIND);
-						if (tokens.hasMoreTokens()) {
-							token = tokens.nextToken();
-							commands.add(token);
-						} else
+						if (tokens.hasMoreTokens())
+							commands.add(token = tokens.nextToken());
+						else
 							commands.add(ANYTHING);
 					} else {
 						if (!commands.isEmpty() && commands.get(commands.size() - 1) == CAPTURE) {
@@ -225,10 +246,9 @@ public class WildCardFilter {
 					commands.add(CONSUME);
 				else if ("*".equals(token)) { //$NON-NLS-1$
 					commands.add(FIND);
-					if (tokens.hasMoreTokens()) {
-						token = tokens.nextToken();
-						commands.add(token);
-					} else
+					if (tokens.hasMoreTokens())
+						commands.add(token = tokens.nextToken());
+					else
 						commands.add(ANYTHING);
 				} else {
 					commands.add(EXPECT);
@@ -258,11 +278,7 @@ public class WildCardFilter {
 	 * @return - true if successful
 	 */
 	public boolean accept(String name) {
-		if (patterns.length == 0)
-			return true;
-		if (accept(patterns[0], name))
-			return true;
-		return false;
+		return (patterns.length == 0 || accept(patterns[0], name));
 	}
 
 	private boolean accept(String[] pattern, String name) {
@@ -274,9 +290,7 @@ public class WildCardFilter {
 		if (pattern[0] == ENDSWITH)
 			return name.endsWith(pattern[1]);
 		// start processing the pattern vector
-
 		int currPos = 0;
-
 		for (int cmdPos = 0; cmdPos < pattern.length; cmdPos++) {
 			String command = pattern[cmdPos];
 			if (command == FIND) {
@@ -473,7 +487,7 @@ public class WildCardFilter {
 	 * @return - true if accepted
 	 */
 	public boolean accept(String name, boolean isDir) {
-		return (checkDir != isDir) ? false : accept(name);
+		return checkDir == isDir && accept(name);
 	}
 
 	@Override

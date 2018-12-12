@@ -54,10 +54,12 @@ import com.bdaum.zoom.operations.internal.ExportMetadataOperation;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.internal.IKiosk;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.views.AssetContainer;
 import com.bdaum.zoom.ui.internal.views.ImageViewer;
+import com.bdaum.zoom.ui.internal.views.MultiViewer;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.views.IMediaViewer;
 
@@ -80,27 +82,33 @@ public class ViewImageAction extends Action {
 		boolean bw = bwopt != null ? bwopt : false;
 		if ((event.stateMask & SWT.ALT) != 0)
 			bw = !bw;
-		Asset asset = null;
+		Asset asset1 = null;
+		Asset asset2 = null;
 		if (event.data instanceof AssetImpl)
-			asset = ((AssetImpl) event.data);
+			asset1 = ((AssetImpl) event.data);
 		else if (event.data instanceof AssetContainer)
-			asset = ((AssetContainer) event.data).getAsset();
-		if (asset == null) {
+			asset1 = ((AssetContainer) event.data).getAsset();
+		if (asset1 == null) {
 			AssetSelection selection = adaptable.getAdapter(AssetSelection.class);
-			if (!selection.isEmpty())
-				asset = selection.get(0);
+			if (!selection.isEmpty()) {
+				asset1 = selection.get(0);
+				if (selection.size() > 1)
+					asset2 = selection.get(1);
+			}
 		}
-		if (asset != null) {
-			final Asset a = asset;
+		if (asset1 != null) {
+			final Asset a1 = asset1;
+			final Asset a2 = asset2;
 			final boolean b = bw;
 			BusyIndicator.showWhile(Display.getCurrent(),
-					() -> launchViewer(a, shift, b, ctrl, adaptable.getAdapter(IWorkbenchWindow.class)));
+					() -> launchViewer(a1, a2, shift, b, ctrl, adaptable.getAdapter(IWorkbenchWindow.class)));
 		}
 	}
 
-	protected void launchViewer(Asset asset, boolean shift, boolean alt, boolean ctrl, final IWorkbenchWindow window) {
-		IMediaViewer imageViewer = UiActivator.getDefault().getMediaViewer(asset);
-		URI uri = Core.getCore().getVolumeManager().findExistingFile(asset, false);
+	protected void launchViewer(Asset asset1, Asset asset2, boolean shift, boolean alt, boolean ctrl,
+			final IWorkbenchWindow window) {
+		IMediaViewer imageViewer = UiActivator.getDefault().getMediaViewer(asset1);
+		URI uri = Core.getCore().getVolumeManager().findExistingFile(asset1, false);
 		boolean isFile = uri == null || Constants.FILESCHEME.equals(uri.getScheme());
 		boolean isFtp = uri == null || IFTPService.FTPSCHEME.equals(uri.getScheme());
 		try {
@@ -115,7 +123,8 @@ public class ViewImageAction extends Action {
 		RGB filter = StringConverter.asRGB(
 				preferencesService.getString(UiActivator.PLUGIN_ID, PreferenceConstants.BWFILTER, null, null),
 				new RGB(64, 128, 64));
-		if (!shift && !alt && !ctrl && (isFile || imageViewer == null || !imageViewer.canHandleRemote())) {
+		if (asset2 == null && !shift && !alt && !ctrl
+				&& (isFile || imageViewer == null || !imageViewer.canHandleRemote())) {
 			String viewerPath = preferencesService.getString(UiActivator.PLUGIN_ID,
 					imageViewer == null ? PreferenceConstants.EXTERNALVIEWER
 							: PreferenceConstants.EXTERNALMEDIAVIEWER + imageViewer.getId(),
@@ -125,7 +134,7 @@ public class ViewImageAction extends Action {
 				if (viewer.exists()) {
 					try {
 						if (uri == null) {
-							UiUtilities.showFileIsOffline(window.getShell(), asset);
+							UiUtilities.showFileIsOffline(window.getShell(), asset1);
 							return;
 						}
 						File tempFile = null;
@@ -137,7 +146,7 @@ public class ViewImageAction extends Action {
 						boolean autoExport = preferencesService.getBoolean(UiActivator.PLUGIN_ID,
 								PreferenceConstants.AUTOEXPORT, true, null);
 						if (autoExport && tempFile == null) {
-							ExportMetadataOperation op = new ExportMetadataOperation(Collections.singletonList(asset),
+							ExportMetadataOperation op = new ExportMetadataOperation(Collections.singletonList(asset1),
 									UiActivator.getDefault().getExportFilter(), UiActivator.getDefault()
 											.getPreferenceStore().getBoolean(PreferenceConstants.JPEGMETADATA),
 									true, false);
@@ -168,12 +177,18 @@ public class ViewImageAction extends Action {
 						NLS.bind(Messages.ViewImageAction_configured_external_viewer, viewerPath));
 			}
 		}
-		IMediaViewer viewer = UiActivator.getDefault().getMediaViewer(asset);
-		if (viewer == null)
-			viewer = new ImageViewer();
-		viewer.init(window, alt ? filter : null, ctrl ? (shift ? ZImage.ORIGINAL : ZImage.CROPPED) : ZImage.CROPMASK);
+		if (imageViewer == null)
+			imageViewer = new ImageViewer();
+		if (asset2 != null) {
+			IMediaViewer rightViewer = UiActivator.getDefault().getMediaViewer(asset2);
+			if (rightViewer == null)
+				rightViewer = new ImageViewer();
+			imageViewer = new MultiViewer(imageViewer, rightViewer);
+		}
+		imageViewer.init(window, IKiosk.PRIMARY, alt ? filter : null,
+				ctrl ? (shift ? ZImage.ORIGINAL : ZImage.CROPPED) : ZImage.CROPMASK);
 		try {
-			viewer.open(asset);
+			imageViewer.open(new Asset[] { asset1, asset2 });
 		} catch (IOException e) {
 			Core.getCore().logError(Messages.ViewImageAction_error_launching_internal_viewer, e);
 		}

@@ -63,12 +63,14 @@ import com.bdaum.zoom.core.IPostProcessor2;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
+import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.css.internal.IExtendedColorModel2;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.actions.ZoomActionFactory;
 import com.bdaum.zoom.ui.internal.dialogs.ColorCodeDialog;
 import com.bdaum.zoom.ui.internal.dialogs.RatingDialog;
@@ -215,15 +217,16 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 				}
 			}
 			// Voicenote
-			String voiceFileURI = asset.getVoiceFileURI();
-			if (showVoicenoteButton && voiceFileURI != null && !voiceFileURI.isEmpty()) {
-				Image speakerIcon = (voiceFileURI.startsWith("?") ? Icons.note : Icons.speaker).getImage(); //$NON-NLS-1$
-				Rectangle ibounds = speakerIcon.getBounds();
-				bounds5 = new Rectangle(x + (width - (int) (ibounds.width * factor + 0.5d)) / 2,
-						y + height - (int) (ibounds.height * factor + 0.5d) - fontHeight,
-						(int) (ibounds.width * factor + 0.5d), (int) (ibounds.height * factor + 0.5d));
-				gc.drawImage(speakerIcon, ibounds.x, ibounds.y, ibounds.width, ibounds.height, bounds5.x, bounds5.y,
-						bounds5.width, bounds5.height);
+			if (showVoicenoteButton) {
+				Image speakerIcon = UiUtilities.getAnnotationIcon(asset);
+				if (speakerIcon != null) {
+					Rectangle ibounds = speakerIcon.getBounds();
+					bounds5 = new Rectangle(x + (width - (int) (ibounds.width * factor + 0.5d)) / 2,
+							y + height - (int) (ibounds.height * factor + 0.5d) - fontHeight,
+							(int) (ibounds.width * factor + 0.5d), (int) (ibounds.height * factor + 0.5d));
+					gc.drawImage(speakerIcon, ibounds.x, ibounds.y, ibounds.width, ibounds.height, bounds5.x, bounds5.y,
+							bounds5.width, bounds5.height);
+				}
 			}
 			th = (int) (UPPER_THUMBNAIL_HMARGINS * factor + 0.5d);
 			int w = (int) (COLORSPOT * factor + 0.5d);
@@ -272,15 +275,23 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 			// Rating
 			if (RATING_NO != showRating) {
 				int rating = asset.getRating();
-				if (rating > 0) {
+				if (rating > RatingDialog.UNDEF) {
 					double rfactor;
 					Image ratingIcon;
 					if (RATING_SIZE == showRating) {
-						rfactor = factor * (rating + 0.6d) / 5.6d;
-						ratingIcon = Icons.rating61.getImage();
+						if (rating > 0) {
+							rfactor = factor * (rating + 0.6d) / 5.6d;
+							ratingIcon = Icons.rating61.getImage();
+						} else {
+							rfactor = factor * 1.6d / 5.6d;
+							ratingIcon = Icons.rating60.getImage();
+						}
 					} else {
 						rfactor = factor * 2.6d / 5.6d;
 						switch (rating) {
+						case 0:
+							ratingIcon = Icons.rating60.getImage();
+							break;
 						case 1:
 							ratingIcon = Icons.rating61.getImage();
 							break;
@@ -310,7 +321,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 					bounds4.height = h;
 				} else if (hasMouse) {
 					double rfactor = factor * 0.64d;
-					Image ratingEmptyIcon = Icons.rating60.getImage();
+					Image ratingEmptyIcon = Icons.rating6u.getImage();
 					bounds4 = ratingEmptyIcon.getBounds();
 					w = (int) (bounds4.width * rfactor + 0.5d);
 					int h = (int) (bounds4.height * rfactor + 0.5d);
@@ -458,11 +469,9 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 				return !(Double.isNaN(asset.getGPSLatitude()) || Double.isNaN(asset.getGPSLatitude()))
 						? Messages.getString("AbstractLightboxView.location_data") //$NON-NLS-1$
 						: Messages.getString("AbstractLightboxView.no_location_data"); //$NON-NLS-1$
-			if (isVoicenotes(x, y)) {
-				String voiceFileURI = asset.getVoiceFileURI();
-				return voiceFileURI.startsWith("?") ? voiceFileURI.substring(1) //$NON-NLS-1$
-						: Messages.getString("AbstractLightboxView.play_voicenote"); //$NON-NLS-1$
-			}
+			if (isVoicenotes(x, y))
+				return AssetEnsemble.hasVoiceNote(asset) ? Messages.getString("AbstractLightboxView.play_voicenote") //$NON-NLS-1$
+						: AssetEnsemble.getNoteText(asset);
 			return null;
 		}
 
@@ -518,8 +527,6 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 	public void dispose() {
 		if (placeHolder != null)
 			placeHolder.dispose();
-		if (mouseWheelListener != null)
-			mouseWheelListener.cancel();
 		super.dispose();
 	}
 
@@ -553,79 +560,84 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 
 	protected void addMouseListener() {
 		gallery.addMouseListener(new MouseAdapter() {
-
 			@Override
 			public void mouseUp(MouseEvent e) {
-				GalleryItem[] items = gallery.getSelection();
-				for (GalleryItem item : items) {
-					Asset asset = (Asset) item.getData(ASSET);
-					if (asset != null) {
-						ImageRegion foundRegion = findBestFaceRegion(item, e.x, e.y, false);
-						if (foundRegion != null) {
-							editRegionName(foundRegion);
-							break;
-						}
-						Hotspots hotSpots = (Hotspots) item.getData(HOTSPOTS);
-						if (hotSpots != null) {
-							if (hotSpots.isRotate270(e.x, e.y)) {
-								rotate(asset, 270);
-								item.setData(ROT, R270);
-								gallery.redraw(item);
+				if (e.button == 1) {
+					GalleryItem[] items = gallery.getSelection();
+					for (GalleryItem item : items) {
+						Asset asset = (Asset) item.getData(ASSET);
+						if (asset != null) {
+							ImageRegion foundRegion = findBestFaceRegion(item, e.x, e.y, false);
+							if (foundRegion != null) {
+								editRegionName(foundRegion);
 								break;
 							}
-							if (hotSpots.isRotate90(e.x, e.y)) {
-								rotate(asset, 90);
-								item.setData(ROT, R90);
-								gallery.redraw(item);
-								break;
-							}
-							if (hotSpots.isRating(e.x, e.y)) {
-								RatingDialog dialog = new RatingDialog(getSite().getShell(), asset.getRating(), 0.5d,
-										true, true);
-								dialog.create();
-								dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
-								ZoomActionFactory.rate(Collections.singletonList(asset), AbstractLightboxView.this,
-										dialog.open());
-								break;
-							}
-							if (hotSpots.isDoneMark(e.x, e.y)) {
-								StatusDialog dialog = new StatusDialog(getSite().getShell(), asset.getStatus());
-								dialog.create();
-								dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
-								setStatus(asset, dialog.open());
-								break;
-							}
-							if (hotSpots.isColorSpot(e.x, e.y)) {
-								ColorCodeDialog dialog = new ColorCodeDialog(getSite().getShell(),
-										asset.getColorCode());
-								dialog.create();
-								dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
-								int code = dialog.open();
-								if (code >= Constants.COLOR_UNDEFINED)
-									colorCode(asset, code);
-								break;
-							}
-							if (hotSpots.isLocationPin(e.x, e.y)) {
-								showLocation(asset, (e.stateMask & SWT.SHIFT) == SWT.SHIFT);
-								break;
-							}
-							if (hotSpots.isVoicenotes(e.x, e.y)) {
-								String voiceFileURI = asset.getVoiceFileURI();
-								if (voiceFileURI != null && !voiceFileURI.startsWith("?")) //$NON-NLS-1$
-									UiActivator.getDefault().playVoicenote(asset);
-								break;
-							}
-							if (hotSpots.isExpandCollapse(e.x, e.y)) {
-								if (item.getData(CARD) != null)
-									expandedSet.add(asset);
-								else
-									expandedSet.remove(asset);
-								redrawCollection(null, null);
-								break;
-							}
-							if (hotSpots.isTitleArea(e.x, e.y)) {
-								editTitleArea(item, hotSpots.getTitleArea());
-								break;
+							Hotspots hotSpots = (Hotspots) item.getData(HOTSPOTS);
+							if (hotSpots != null) {
+								if (hotSpots.isRotate270(e.x, e.y)) {
+									rotate(asset, 270);
+									item.setData(ROT, R270);
+									gallery.redraw(item);
+									break;
+								}
+								if (hotSpots.isRotate90(e.x, e.y)) {
+									rotate(asset, 90);
+									item.setData(ROT, R90);
+									gallery.redraw(item);
+									break;
+								}
+								if (hotSpots.isRating(e.x, e.y)) {
+									RatingDialog dialog = new RatingDialog(getSite().getShell(), asset.getRating(),
+											0.5d, true, true);
+									dialog.create();
+									dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
+									ZoomActionFactory.rate(Collections.singletonList(asset), AbstractLightboxView.this,
+											dialog.open());
+									break;
+								}
+								if (hotSpots.isDoneMark(e.x, e.y)) {
+									StatusDialog dialog = new StatusDialog(getSite().getShell(), asset.getStatus());
+									dialog.create();
+									dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
+									setStatus(asset, dialog.open());
+									break;
+								}
+								if (hotSpots.isColorSpot(e.x, e.y)) {
+									ColorCodeDialog dialog = new ColorCodeDialog(getSite().getShell(),
+											asset.getColorCode());
+									dialog.create();
+									dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
+									int code = dialog.open();
+									if (code >= Constants.COLOR_UNDEFINED)
+										colorCode(asset, code);
+									break;
+								}
+								if (hotSpots.isLocationPin(e.x, e.y)) {
+									showLocation(asset, (e.stateMask & SWT.SHIFT) == SWT.SHIFT);
+									break;
+								}
+								if (hotSpots.isVoicenotes(e.x, e.y)) {
+									if (AssetEnsemble.hasVoiceNote(asset))
+										UiActivator.getDefault().playVoicenote(asset);
+									else {
+										String voiceFileURI = asset.getVoiceFileURI();
+										if (voiceFileURI != null && !voiceFileURI.isEmpty())
+											addVoiceNoteAction.run();
+									}
+									break;
+								}
+								if (hotSpots.isExpandCollapse(e.x, e.y)) {
+									if (item.getData(CARD) != null)
+										expandedSet.add(asset);
+									else
+										expandedSet.remove(asset);
+									redrawCollection(null, null);
+									break;
+								}
+								if (hotSpots.isTitleArea(e.x, e.y)) {
+									editTitleArea(item, hotSpots.getTitleArea());
+									break;
+								}
 							}
 						}
 					}
@@ -891,11 +903,9 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 			((DefaultGalleryGroupRenderer) groupRenderer).setTitleBackground(color);
 	}
 
-	protected void installInfrastructure(boolean mouseWheel, int delay) {
+	protected void installInfrastructure(int delay) {
 		// Mouse, Keys
 		addMouseListener();
-		if (mouseWheel)
-			addMouseWheelListener(gallery);
 		addKeyListener();
 		addGestureListener(gallery);
 		addExplanationListener(false);

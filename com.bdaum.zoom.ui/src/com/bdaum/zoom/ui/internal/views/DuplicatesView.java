@@ -48,7 +48,6 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.PlatformUI;
@@ -107,10 +106,10 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 		gallery.addListener(SWT.SetData, this);
 		// Actions
 		makeActions(getViewSite().getActionBars());
-		installListeners(parent);
+		installListeners();
 		redrawCollection(null, null);
 		gallery.addSelectionListener(this);
-		installInfrastructure(false, 3000);
+		installInfrastructure(3000);
 	}
 
 	@Override
@@ -237,7 +236,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 	}
 
 	@Override
-	protected void setAssetSelection(AssetSelection assetSelection) {
+	public void setAssetSelection(AssetSelection assetSelection) {
 		selection = assetSelection;
 		if (assetSelection.isEmpty()) {
 			gallery.setSelection(NOITEM);
@@ -395,15 +394,6 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 	}
 
 	@Override
-	protected void scroll(int dist) {
-		ScrollBar scrollBar = gallery.getVerticalBar();
-		if (scrollBar == null)
-			scrollBar = gallery.getHorizontalBar();
-		if (scrollBar != null)
-			scrollBar.setSelection(dist + scrollBar.getSelection());
-	}
-
-	@Override
 	protected void editTitleArea(GalleryItem item, Rectangle bounds) {
 		// Do nothing
 	}
@@ -411,6 +401,18 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 	@Override
 	protected void setDefaultPartName() {
 		// do nothing
+	}
+	
+	@Override
+	protected QueryField[] getHoverNodes() {
+		QueryField[] hoverNodes = super.getHoverNodes();
+		for (QueryField qf : hoverNodes)
+			if (qf == QueryField.URI)
+				return hoverNodes;
+		QueryField[] newNodes = new QueryField[hoverNodes.length+1];
+		newNodes[0] = QueryField.URI;
+		System.arraycopy(hoverNodes, 0, newNodes, 1, hoverNodes.length);
+		return newNodes;
 	}
 
 }

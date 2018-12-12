@@ -34,7 +34,6 @@ import java.util.StringTokenizer;
 import org.eclipse.core.commands.operations.UndoContext;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -42,7 +41,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.LocalSelectionTransfer;
-import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -92,7 +90,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.operations.UndoRedoActionGroup;
 import org.eclipse.ui.part.DrillDownAdapter;
 
-import com.bdaum.aoModeling.runtime.AomList;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
@@ -127,9 +124,9 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.core.db.IDbManager;
-import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.job.OperationJob;
+import com.bdaum.zoom.mtp.ObjectFilter;
 import com.bdaum.zoom.operations.IProfiledOperation;
 import com.bdaum.zoom.operations.internal.AddAlbumOperation;
 import com.bdaum.zoom.operations.internal.AutoRuleOperation;
@@ -165,15 +162,22 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 
 	public final class CatalogDragSourceListener implements DragSourceListener {
 		public void dragStart(DragSourceEvent event) {
-			Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+			Object firstElement = viewer.getStructuredSelection().getFirstElement();
 			if (firstElement != null && firstElement != WASTEBASKET) {
 				boolean canDrag = false;
 				IDbManager dbManager = Core.getCore().getDbManager();
 				if (firstElement instanceof SmartCollection) {
-					String groupId = ((SmartCollection) firstElement).getGroup_rootCollection_parent();
+					SmartCollection parent = (SmartCollection) firstElement;
+					while (parent.getSmartCollection_subSelection_parent() != null)
+						parent = parent.getSmartCollection_subSelection_parent();
+					String groupId = parent.getGroup_rootCollection_parent();
 					if (groupId != null) {
 						Group group = dbManager.obtainById(GroupImpl.class, groupId);
-						canDrag = (group != null && !group.getSystem());
+						if (group != null) {
+							while (group.getGroup_subgroup_parent() != null)
+								group = group.getGroup_subgroup_parent();
+							canDrag = (!group.getSystem() || group.getStringId().equals(Constants.GROUP_ID_PERSONS));
+						}
 					}
 				} else if (firstElement instanceof Group)
 					canDrag = (((Group) firstElement).getGroup_subgroup_parent() != null);
@@ -277,23 +281,25 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 					if (data == WASTEBASKET)
 						return false;
 					Group target = ((Group) data);
-					canDrop = !target.getSystem();
+					Group targetRoot = getRoot(target);
+					String targetRootId = targetRoot.getStringId();
+					boolean targetIsPersonGroup = Constants.GROUP_ID_PERSONS.equals(targetRootId);
+					canDrop = !targetRoot.getSystem() || targetIsPersonGroup;
 					if (canDrop) {
 						Object firstElement = selection.getFirstElement();
 						if (firstElement instanceof Group) {
 							Group group = (Group) firstElement;
-							if (group == target || group.getGroup_subgroup_parent() == target)
-								canDrop = false;
+							canDrop = group != target && group.getGroup_subgroup_parent() != target
+									&& isPersonGroup(group) == targetIsPersonGroup;
 						} else {
 							boolean exhibition = !target.getExhibition().isEmpty();
 							boolean slideshow = !target.getSlideshow().isEmpty();
 							boolean webgallery = target.getWebGallery() != null && !target.getWebGallery().isEmpty();
 							boolean collection = !target.getRootCollection().isEmpty();
-							String groupId = target.getStringId();
 							if (!exhibition && !slideshow && !webgallery && !collection) {
-								exhibition = Constants.GROUP_ID_EXHIBITION.equals(groupId);
-								slideshow = Constants.GROUP_ID_SLIDESHOW.equals(groupId);
-								webgallery = Constants.GROUP_ID_WEBGALLERY.equals(groupId);
+								exhibition = Constants.GROUP_ID_EXHIBITION.equals(targetRootId);
+								slideshow = Constants.GROUP_ID_SLIDESHOW.equals(targetRootId);
+								webgallery = Constants.GROUP_ID_WEBGALLERY.equals(targetRootId);
 								if (!exhibition && !slideshow && !webgallery)
 									collection = exhibition = slideshow = webgallery = true;
 							}
@@ -304,7 +310,8 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 							if (firstElement instanceof WebGallery)
 								canDrop &= webgallery;
 							if (firstElement instanceof SmartCollection)
-								canDrop &= collection;
+								canDrop &= collection
+										&& (!isPersonFolder((SmartCollection) firstElement) || targetIsPersonGroup);
 						}
 					}
 				}
@@ -386,15 +393,24 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 							target.addSubgroup(group);
 					} else if (movedElement instanceof SmartCollection) {
 						SmartCollection sm = (SmartCollection) movedElement;
-						String parentId = sm.getGroup_rootCollection_parent();
-						if (parentId != null) {
-							Group parent = dbManager.obtainById(Group.class, parentId);
-							if (parent != null) {
-								parent.removeRootCollection(sm.getStringId());
-								toBeStored.add(parent);
-							}
+						SmartCollection parentSm = sm.getSmartCollection_subSelection_parent();
+						if (parentSm != null) {
+							parentSm.removeSubSelection(sm);
+							toBeStored.add(parentSm);
+							sm.setSmartCollection_subSelection_parent(null);
 							sm.setGroup_rootCollection_parent(target.getStringId());
 							target.addRootCollection(sm.getStringId());
+						} else {
+							String parentId = sm.getGroup_rootCollection_parent();
+							if (parentId != null) {
+								Group parent = dbManager.obtainById(Group.class, parentId);
+								if (parent != null) {
+									parent.removeRootCollection(sm.getStringId());
+									toBeStored.add(parent);
+								}
+								sm.setGroup_rootCollection_parent(target.getStringId());
+								target.addRootCollection(sm.getStringId());
+							}
 						}
 					} else if (movedElement instanceof Exhibition) {
 						Exhibition exhibition = (Exhibition) movedElement;
@@ -435,7 +451,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 					}
 					dbManager.safeTransaction(null, toBeStored);
 					setInput();
-					setViewerSelection(new StructuredSelection(movedElement));
+					setViewerSelection(new StructuredSelection(movedElement), true);
 				}
 			}
 			if (selectionTransfer.isSupportedType(event.currentDataType)) {
@@ -501,7 +517,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 					wizardDialog.open();
 					return;
 				}
-				FileNameExtensionFilter filter = UiActivator.getDefault().createGpsFileFormatFilter();
+				ObjectFilter filter = UiActivator.getDefault().createGpsFileFormatFilter();
 				List<File> gpx = new ArrayList<File>();
 				for (int j = 0; j < filenames.length; j++) {
 					File file = new File(filenames[j]);
@@ -555,7 +571,10 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				if (c2 == CatalogView.WASTEBASKET)
 					return -1;
 				return c1.getName().compareToIgnoreCase(c2.getName());
-			}
+			} else if (e1 instanceof Group && e2 instanceof SmartCollection)
+				return ((SmartCollection)e2).getStringId().equals(Constants.LAST_IMPORT_ID) ? 1 : -1;
+			else if (e1 instanceof SmartCollection && e2 instanceof Group)
+				return ((SmartCollection)e1).getStringId().equals(Constants.LAST_IMPORT_ID) ? -1 : 1;
 			return super.compare(viewer, e1, e2);
 		}
 	}
@@ -601,6 +620,9 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 	private boolean initialized;
 	private int colorCode = -1;
 	protected boolean catOpen;
+	protected boolean selectionChanged;
+	private Point findingPoint = new Point(0,0);
+
 
 	private ViewerFilter userFilter = new ViewerFilter() {
 		@Override
@@ -674,12 +696,13 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		viewer.setComparator(new CatalogComparator());
 		viewer.setComparer(IdentifiedElementComparer.getInstance());
 		UiUtilities.installDoubleClickExpansion((TreeViewer) viewer);
-		ColumnViewerToolTipSupport.enableFor(viewer);
+		ZColumnViewerToolTipSupport.enableFor(viewer);
 		// setInput();
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), HelpContextIds.CATALOG_VIEW);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(final SelectionChangedEvent event) {
-				if (((IStructuredSelection) viewer.getSelection()).getFirstElement() == WASTEBASKET) {
+				selectionChanged = true;
+				if (viewer.getStructuredSelection().getFirstElement() == WASTEBASKET) {
 					try {
 						getSite().getPage().showView(TrashcanView.ID);
 					} catch (PartInitException e) {
@@ -705,7 +728,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		Tree tree = ((TreeViewer) viewer).getTree();
 		addGestureListener(tree);
 		makeActions();
-		installListeners(parent);
+		installListeners();
 		hookContextMenu(viewer);
 		contributeToActionBars();
 		addDragDropClipboard(tree);
@@ -740,7 +763,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 						if (!shell.isDisposed()) {
 							ISelection selection = viewer.getSelection();
 							viewer.setSelection(StructuredSelection.EMPTY);
-							setViewerSelection(selection);
+							setViewerSelection(selection, true);
 							fireSelection(new SelectionChangedEvent(CatalogView.this, selection));
 						}
 					});
@@ -779,7 +802,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				}
 			}
 		});
-		updateActions((IStructuredSelection) viewer.getSelection(), true);
+		updateActions(viewer.getStructuredSelection(), true);
 	}
 
 	public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId) {
@@ -787,7 +810,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 	}
 
 	public void perspectiveActivated(IWorkbenchPage page, IPerspectiveDescriptor perspective) {
-		IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		if (!selection.isEmpty()) {
 			Object selected = selection.getFirstElement();
 			Object newSelection = null;
@@ -802,15 +825,16 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				}
 			}
 			if (newSelection != null)
-				setViewerSelection(new StructuredSelection(newSelection));
+				setViewerSelection(new StructuredSelection(newSelection), true);
 		}
 	}
 
-	private void setViewerSelection(ISelection selection) {
+	private void setViewerSelection(ISelection selection, boolean reveal) {
 		settingSelection = true;
 		try {
-			viewer.setSelection(selection, true);
+			viewer.setSelection(selection, reveal);
 		} finally {
+			selectionChanged = false;
 			settingSelection = false;
 		}
 	}
@@ -828,7 +852,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				for (Object element : expandedElements)
 					if (element instanceof IdentifiableObject)
 						meta.addLastExpansion(element.toString());
-				Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object firstElement = viewer.getStructuredSelection().getFirstElement();
 				SmartCollectionImpl selectedCollection = null;
 				String lastSelection = null;
 				if (firstElement instanceof IdentifiableObject) {
@@ -908,11 +932,9 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			boolean writable = !dbIsReadonly();
 			createGroup.setEnabled(writable);
 			if (selection.isEmpty()) {
-				if (viewActive) {
-					deleteAction.setEnabled(false);
-					cutCollection.setEnabled(false);
-					copyCollection.setEnabled(false);
-				}
+				deleteAction.setEnabled(false);
+				cutCollection.setEnabled(false);
+				copyCollection.setEnabled(false);
 				createSlideShowAction.setEnabled(false);
 				createWebGalleryAction.setEnabled(false);
 				createExhibitionAction.setEnabled(false);
@@ -939,17 +961,15 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 						if (!exhibition && !slideshow && !webgallery)
 							collection = exhibition = slideshow = webgallery = true;
 					}
-					addSubGroupAction.setEnabled(!group.getSystem());
+					addSubGroupAction.setEnabled((!group.getSystem() || isPersonGroup(group)) && writable);
 					createWebGalleryAction.setEnabled(webgallery && writable);
 					createSlideShowAction.setEnabled(slideshow && writable);
 					createExhibitionAction.setEnabled(exhibition && writable);
 					createCollectionAction.setEnabled(collection && writable);
 					createAlbumAction.setEnabled(collection && writable);
-					if (viewActive) {
-						deleteAction.setEnabled(group.getRootCollection().isEmpty() && !group.getSystem() && writable);
-						cutCollection.setEnabled(false);
-						copyCollection.setEnabled(false);
-					}
+					deleteAction.setEnabled(!hasChildren(group) && !group.getSystem() && writable);
+					cutCollection.setEnabled(false);
+					copyCollection.setEnabled(false);
 					addSubCollectionAction.setEnabled(false);
 					addSubAlbumAction.setEnabled(false);
 					refreshAction.setEnabled(true);
@@ -963,36 +983,32 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 					createAlbumAction.setEnabled(false);
 					if (obj instanceof SmartCollection) {
 						SmartCollection coll = (SmartCollection) obj;
-						if (viewActive) {
-							boolean enabled = !coll.getSystem() && writable;
-							boolean deleteEnabled = enabled;
-							if (!enabled) {
-								deleteEnabled = coll.getName() == null || coll.getName().isEmpty();
-								if (!deleteEnabled) {
-									String collId = coll.getStringId();
-									String key = QueryField.URI.getKey() + '=';
-									if (collId.startsWith(key))
-										try {
-											deleteEnabled = !new File(new URI(collId.substring(key.length()))).exists();
-										} catch (URISyntaxException e) {
-											deleteEnabled = true;
-										}
-								}
+						boolean enabled = !coll.getSystem() && writable;
+						boolean deleteEnabled = enabled;
+						if (!enabled) {
+							deleteEnabled = coll.getName() == null || coll.getName().isEmpty();
+							if (!deleteEnabled) {
+								String collId = coll.getStringId();
+								String key = QueryField.URI.getKey() + '=';
+								if (collId.startsWith(key))
+									try {
+										deleteEnabled = !new File(new URI(collId.substring(key.length()))).exists();
+									} catch (URISyntaxException e) {
+										deleteEnabled = true;
+									}
 							}
-							deleteAction.setEnabled(deleteEnabled);
-							cutCollection.setEnabled(enabled);
-							copyCollection.setEnabled(enabled);
 						}
+						deleteAction.setEnabled(deleteEnabled);
+						cutCollection.setEnabled(enabled);
+						copyCollection.setEnabled(enabled);
 						boolean isFinal = (coll.getCriterion().size() == 1
 								&& coll.getCriterion(0).getField().startsWith("*")); //$NON-NLS-1$
 						addSubCollectionAction.setEnabled(!isFinal && writable);
 						addSubAlbumAction.setEnabled(!coll.getSystem() && coll.getAlbum() && writable);
 					} else {
-						if (viewActive) {
-							deleteAction.setEnabled(writable);
-							cutCollection.setEnabled(writable);
-							copyCollection.setEnabled(writable);
-						}
+						deleteAction.setEnabled(writable);
+						cutCollection.setEnabled(writable);
+						copyCollection.setEnabled(writable);
 						addSubCollectionAction.setEnabled(false);
 					}
 				}
@@ -1001,6 +1017,22 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			pasteCollection.setEnabled((contents instanceof IStructuredSelection
 					&& ((IStructuredSelection) contents).getFirstElement() instanceof SmartCollectionImpl) && writable);
 		}
+	}
+
+	private static boolean isPersonGroup(Group group) {
+		Group root = getRoot(group);
+		return root == null ? false : root.getStringId().equals(Constants.GROUP_ID_PERSONS);
+	}
+
+	private static Group getRoot(Group group) {
+		if (group != null)
+			while (group.getGroup_subgroup_parent() != null)
+				group = group.getGroup_subgroup_parent();
+		return group;
+	}
+
+	private static boolean isPersonFolder(SmartCollection sm) {
+		return sm.getSystem() && sm.getAlbum();
 	}
 
 	@Override
@@ -1099,21 +1131,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			addEnabled(manager, refreshAction);
 		}
 		manager.add(new Separator());
-		addEnabled(manager, playSlideshowAction);
-		boolean selectall = false;
-		for (IViewReference ref : getSite().getPage().getViewReferences()) {
-			IWorkbenchPart part = ref.getPart(false);
-			if (part instanceof SelectAllActionProvider) {
-				IAction action = ((SelectAllActionProvider) part).getSelectAllAction();
-				if (action != null && action.isEnabled()) {
-					selectall = true;
-					break;
-				}
-			}
-		}
-		if (selectall)
-			manager.add(selectAllAction);
-		addEnabled(manager, editItemAction);
+		super.fillContextMenu(manager);
 		if (!readOnly) {
 			manager.add(new Separator());
 			addEnabled(manager, cutCollection);
@@ -1155,7 +1173,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 					group.setLabelTemplate(dialog.getLabelTemplate());
 					Core.getCore().getDbManager().safeTransaction(null, group);
 					setInput();
-					setViewerSelection(new StructuredSelection(group));
+					setViewerSelection(new StructuredSelection(group), true);
 				}
 			}
 		};
@@ -1164,7 +1182,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				Icons.newSlideshow.getDescriptor()) {
 			@Override
 			public void run() {
-				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof GroupImpl) {
 					SlideshowEditDialog dialog = new SlideshowEditDialog(getSite().getShell(), (GroupImpl) obj, null,
 							Messages.getString("CatalogView.create_slideshow"), //$NON-NLS-1$
@@ -1172,7 +1190,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 					if (dialog.open() == Window.OK) {
 						SlideShowImpl result = dialog.getResult();
 						((TreeViewer) viewer).add(obj, result);
-						setViewerSelection(new StructuredSelection(result));
+						setViewerSelection(new StructuredSelection(result), true);
 						openSlideShowEditor(result, true);
 					}
 				}
@@ -1184,31 +1202,31 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				Icons.exhibition.getDescriptor()) {
 			@Override
 			public void run() {
-				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof GroupImpl) {
 					ExhibitionImpl show = ExhibitionEditDialog.open(getSite().getShell(), (GroupImpl) obj, null,
 							Messages.getString("CatalogView.create_exhibition"), false, null); //$NON-NLS-1$
 					if (show != null) {
-						ExhibitionImpl result = show;
-						((TreeViewer) viewer).add(obj, result);
-						setViewerSelection(new StructuredSelection(result));
-						openExhibitionEditor(result, true);
+						((TreeViewer) viewer).add(obj, show);
+						setViewerSelection(new StructuredSelection(show), true);
+						openExhibitionEditor(show, true);
 					}
 				}
 			}
 		};
 		createExhibitionAction.setToolTipText(Messages.getString("CatalogView.creates_a_new_exhibition")); //$NON-NLS-1$
+
 		createWebGalleryAction = new Action(Messages.getString("CatalogView.create_web_gallery"), //$NON-NLS-1$
 				Icons.webGallery.getDescriptor()) {
 			@Override
 			public void run() {
-				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof GroupImpl) {
 					WebGalleryImpl result = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(),
 							(GroupImpl) obj, null, Messages.getString("CatalogView.web_gallery"), false, false, null); //$NON-NLS-1$
 					if (result != null) {
 						((TreeViewer) viewer).add(obj, result);
-						setViewerSelection(new StructuredSelection(result));
+						setViewerSelection(new StructuredSelection(result), true);
 						openWebGalleryEditor(result, true);
 					}
 				}
@@ -1220,7 +1238,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				Icons.addAlbum.getDescriptor()) {
 			@Override
 			public void run() {
-				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof GroupImpl) {
 					CollectionEditDialog dialog = new CollectionEditDialog(getSite().getShell(), null,
 							Messages.getString("CatalogView.create_album"), //$NON-NLS-1$
@@ -1237,27 +1255,28 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				Icons.newGroup.getDescriptor()) {
 			@Override
 			public void run() {
-				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
-				if (obj instanceof Group && (!((Group) obj).getSystem())) {
+				Object obj = viewer.getStructuredSelection().getFirstElement();
+				if (obj instanceof Group) {
 					Group parent = (Group) obj;
-					GroupDialog dialog = new GroupDialog(getSite().getShell(), null, parent);
-					if (dialog.open() == Window.OK) {
-						Group group = new GroupImpl(dialog.getName(), false, Constants.INHERIT_LABEL, null, 0, null);
-						group.setAnnotations(dialog.getAnnotations());
-						group.setShowLabel(dialog.getShowLabel());
-						group.setLabelTemplate(dialog.getLabelTemplate());
-						group.setGroup_subgroup_parent(parent);
-						List<Group> subgroups = parent.getSubgroup();
-						if (subgroups == null)
-							parent.setSubgroup(Collections.singletonList(group));
-						else
-							parent.addSubgroup(group);
-						List<Object> toBeStored = new ArrayList<Object>(2);
-						toBeStored.add(group);
-						toBeStored.add(parent);
-						Core.getCore().getDbManager().safeTransaction(null, toBeStored);
-						setInput();
-						setViewerSelection(new StructuredSelection(group));
+					if (!parent.getSystem() || isPersonGroup(parent)) {
+						GroupDialog dialog = new GroupDialog(getSite().getShell(), null, parent);
+						if (dialog.open() == Window.OK) {
+							Group group = new GroupImpl(dialog.getName(), false, Constants.INHERIT_LABEL, null, 0,
+									null);
+							group.setAnnotations(dialog.getAnnotations());
+							group.setShowLabel(dialog.getShowLabel());
+							group.setLabelTemplate(dialog.getLabelTemplate());
+							group.setGroup_subgroup_parent(parent);
+							List<Group> subgroups = parent.getSubgroup();
+							if (subgroups == null)
+								parent.setSubgroup(Collections.singletonList(group));
+							else
+								parent.addSubgroup(group);
+							Core.getCore().getDbManager().safeTransaction(null,
+									Utilities.storeGroup(parent, true, null));
+							setInput();
+							setViewerSelection(new StructuredSelection(group), true);
+						}
 					}
 				}
 			}
@@ -1268,7 +1287,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				Icons.addAlbum.getDescriptor()) {
 			@Override
 			public void run() {
-				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof SmartCollection) {
 					SmartCollection sm = (SmartCollection) obj;
 					SmartCollection parent = sm.getSmartCollection_subSelection_parent();
@@ -1289,7 +1308,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				Icons.folder_add.getDescriptor()) {
 			@Override
 			public void run() {
-				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof GroupImpl) {
 					CollectionEditDialog dialog = new CollectionEditDialog(getSite().getShell(), null,
 							Messages.getString("CatalogView.create_collection"), //$NON-NLS-1$
@@ -1306,7 +1325,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				Icons.addSubselection.getDescriptor()) {
 			@Override
 			public void run() {
-				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof SmartCollection) {
 					SmartCollection parent = (SmartCollection) obj;
 					CollectionEditDialog dialog = new CollectionEditDialog(getSite().getShell(), null,
@@ -1323,7 +1342,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		deleteAction = new Action(Messages.getString("CatalogView.delete"), Icons.folder_delete.getDescriptor()) { //$NON-NLS-1$
 			@Override
 			public void run() {
-				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof SmartCollectionImpl) {
 					SmartCollectionImpl current = (SmartCollectionImpl) obj;
 					if (!current.getSystem()) {
@@ -1359,27 +1378,21 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 						deleteWebGallery(current);
 				} else if (obj instanceof GroupImpl) {
 					final GroupImpl current = (GroupImpl) obj;
-					if (!current.getSystem()) {
-						boolean hasChildren = current.getSubgroup() != null && !current.getSubgroup().isEmpty()
-								|| current.getExhibition() != null && !current.getExhibition().isEmpty()
-								|| current.getSlideshow() != null && !current.getSlideshow().isEmpty()
-								|| current.getWebGallery() != null && !current.getWebGallery().isEmpty()
-								|| current.getRootCollection() != null && !current.getRootCollection().isEmpty();
-						if (AcousticMessageDialog.openQuestion(getSite().getShell(),
-								Messages.getString("CatalogView.delete_group"), //$NON-NLS-1$
-								hasChildren ? Messages.getString("CatalogView.delete_group_with_contents") //$NON-NLS-1$
-										: Messages.getString("CatalogView.really_delete_group"))) //$NON-NLS-1$
-							deleteGroup(current);
-					}
+					if (!current.getSystem() && AcousticMessageDialog.openQuestion(getSite().getShell(),
+							Messages.getString("CatalogView.delete_group"), //$NON-NLS-1$
+							hasChildren(current) ? Messages.getString("CatalogView.delete_group_with_contents") //$NON-NLS-1$
+									: Messages.getString("CatalogView.really_delete_group"))) //$NON-NLS-1$
+						deleteGroup(current);
 				}
 			}
+
 		};
 		deleteAction.setToolTipText(Messages.getString("CatalogView.delete_selected_item")); //$NON-NLS-1$
 
 		cutCollection = new Action(Messages.getString("CatalogView.cut"), Icons.cut.getDescriptor()) { //$NON-NLS-1$
 			@Override
 			public void run() {
-				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof SmartCollectionImpl) {
 					copyCollection.run();
 					deleteCollection((SmartCollectionImpl) obj);
@@ -1391,7 +1404,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		copyCollection = new Action(Messages.getString("CatalogView.copy"), Icons.copy.getDescriptor()) { //$NON-NLS-1$
 			@Override
 			public void run() {
-				IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+				IStructuredSelection selection = viewer.getStructuredSelection();
 				Object obj = selection.getFirstElement();
 				if (obj instanceof SmartCollection) {
 					selectionTransfer.setSelection(selection);
@@ -1403,10 +1416,9 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		copyCollection.setToolTipText(Messages.getString("CatalogView.copy_selected_item")); //$NON-NLS-1$
 
 		pasteCollection = new Action(Messages.getString("CatalogView.paste"), Icons.paste.getDescriptor()) { //$NON-NLS-1$
-
 			@Override
 			public void run() {
-				Object obj = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof GroupImpl) {
 					Object contents = clipboard.getContents(selectionTransfer);
 					if (contents instanceof IStructuredSelection) {
@@ -1420,7 +1432,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 							newSm.setGroup_slideshow_parent(group.getStringId());
 							Core.getCore().getDbManager().safeTransaction(null, group);
 							((TreeViewer) viewer).add(group, newSm);
-							setViewerSelection(new StructuredSelection(newSm));
+							setViewerSelection(new StructuredSelection(newSm), true);
 							openSlideShowEditor(newSm, true);
 						}
 					}
@@ -1516,6 +1528,14 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		registerCommand(refreshAction, IZoomCommandIds.RefreshCommand);
 		super.registerCommands();
 	}
+	
+	private static boolean hasChildren(final GroupImpl group) {
+		return group.getSubgroup() != null && !group.getSubgroup().isEmpty()
+				|| group.getExhibition() != null && !group.getExhibition().isEmpty()
+				|| group.getSlideshow() != null && !group.getSlideshow().isEmpty()
+				|| group.getWebGallery() != null && !group.getWebGallery().isEmpty()
+				|| group.getRootCollection() != null && !group.getRootCollection().isEmpty();
+	}
 
 	protected void deleteGroup(Group current) {
 		Set<Object> toBeStored = new HashSet<Object>();
@@ -1574,7 +1594,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		dbManager.safeTransaction(toBeDeleted, toBeStored);
 		refresh();
 		if (sibling != null)
-			setViewerSelection(new StructuredSelection(sibling));
+			setViewerSelection(new StructuredSelection(sibling), true);
 		tellHistoryView(gallery);
 	}
 
@@ -1615,7 +1635,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			if ((firstElement instanceof SlideShow && ((SlideShow) firstElement).getAdhoc())
 					|| (firstElement instanceof SmartCollection && ((SmartCollection) firstElement).getAdhoc()))
 				selection = StructuredSelection.EMPTY;
-			setViewerSelection(selection);
+			setViewerSelection(selection, selectionChanged);
 			updateActions((IStructuredSelection) selection, false);
 		}
 	}
@@ -1625,7 +1645,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		Core.getCore().getDbManager().safeTransaction(null, parent);
 		((TreeViewer) viewer).add(parent, subSelection);
 		((TreeViewer) viewer).expandToLevel(subSelection, 1);
-		setViewerSelection(new StructuredSelection(subSelection));
+		setViewerSelection(new StructuredSelection(subSelection), true);
 	}
 
 	private void deleteCollection(final SmartCollectionImpl collection) {
@@ -1636,7 +1656,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		dbManager.safeTransaction(toBeDeleted, toBeStored);
 		refresh();
 		if (sibling != null)
-			setViewerSelection(new StructuredSelection(sibling));
+			setViewerSelection(new StructuredSelection(sibling), true);
 		tellHistoryView(collection);
 	}
 
@@ -1650,7 +1670,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			Set<Object> toBeStored, final IDbManager dbManager) {
 		if (collection.getAlbum()) {
 			if (!collection.getCriterion().isEmpty()) {
-				AomList<String> assetIds = collection.getAsset();
+				List<String> assetIds = collection.getAsset();
 				if (assetIds != null) {
 					List<AssetImpl> set = dbManager.obtainByIds(AssetImpl.class, assetIds);
 					if (!set.isEmpty())
@@ -1697,7 +1717,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		dbManager.safeTransaction(toBeDeleted, toBeStored);
 		refresh();
 		if (sibling != null)
-			setViewerSelection(new StructuredSelection(sibling));
+			setViewerSelection(new StructuredSelection(sibling), true);
 		tellHistoryView(slideshow);
 	}
 
@@ -1722,7 +1742,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		dbManager.safeTransaction(toBeDeleted, toBeStored);
 		refresh();
 		if (sibling != null)
-			setViewerSelection(new StructuredSelection(sibling));
+			setViewerSelection(new StructuredSelection(sibling), true);
 		tellHistoryView(exhibition);
 	}
 
@@ -1751,12 +1771,14 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			dbManager.store(group);
 		});
 		((TreeViewer) viewer).add(group, result);
-		setViewerSelection(new StructuredSelection(result));
+		setViewerSelection(new StructuredSelection(result), true);
 	}
 
 	@Override
 	public Object findObject(MouseEvent event) {
-		ViewerCell cell = viewer.getCell(new Point(event.x, event.y));
+		findingPoint.x = event.x;
+		findingPoint.y = event.y;
+		ViewerCell cell = viewer.getCell(findingPoint);
 		return cell == null ? null : cell.getElement();
 	}
 
@@ -1787,7 +1809,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 	@Override
 	public void collectionChanged(IWorkbenchPart part, IStructuredSelection selection) {
 		if (part != this && selection != null && !selection.isEmpty())
-			setViewerSelection(selection);
+			setViewerSelection(selection, true);
 	}
 
 }

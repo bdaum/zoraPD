@@ -17,8 +17,6 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
@@ -26,7 +24,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IMemento;
@@ -106,14 +106,12 @@ public class FilterDialog extends ZTrayDialog {
 		comp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		limit =  WidgetFactory.createCheckButton(comp, Messages.LogView_FilterDialog_limitTo, new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
-
 		limit.setSelection(memento.getString(LogView.P_USE_LIMIT).equals("true")); //$NON-NLS-1$
-		limit.addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent e) {
-				limitText.setEnabled(((Button) e.getSource()).getSelection());
+		limit.addListener(new Listener() {
+			public void handleEvent(Event event) {
+				limitText.setEnabled(((Button) event.widget).getSelection());
 			}
 		});
-
 		limitText = new Text(comp, SWT.BORDER);
 		limitText.addVerifyListener(new VerifyListener() {
 			public void verifyText(VerifyEvent e) {

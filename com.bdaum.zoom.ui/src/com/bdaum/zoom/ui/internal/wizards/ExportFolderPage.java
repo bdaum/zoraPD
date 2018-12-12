@@ -29,13 +29,11 @@ import java.util.Set;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Constants;
@@ -55,17 +53,18 @@ import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 public class ExportFolderPage extends ColoredWizardPage {
 
 	private List<Asset> assets;
-
 	private OutputTargetGroup outputTargetGroup;
 	private CheckboxButton metaButton;
 	private WatermarkGroup watermarkGroup;
 	private PrivacyGroup privacyGroup;
 	private AddToCatGroup addToCatGroup;
 	private ExportModeGroup exportModeGroup;
+	private boolean updating;
+	private boolean multiMedia;
 
 	public ExportFolderPage(List<Asset> assets) {
 		super("main", Messages.ExportFolderPage_export_into_folder, null); //$NON-NLS-1$
-		this.assets = assets;
+		multiMedia = Core.getCore().isMultiMedia(this.assets = assets);
 	}
 
 	@SuppressWarnings("unused")
@@ -74,56 +73,109 @@ public class ExportFolderPage extends ColoredWizardPage {
 		Composite composite = createComposite(parent, 1);
 		new Label(composite, SWT.NONE);
 		outputTargetGroup = new OutputTargetGroup(composite,
-				new GridData(GridData.FILL, GridData.BEGINNING, true, false), new ModifyListener() {
-					public void modifyText(ModifyEvent e) {
-						updateCatButtons();
-						validatePage();
+				new GridData(GridData.FILL, GridData.BEGINNING, true, false), new Listener() {
+					public void handleEvent(Event e) {
+						if (e.data == OutputTargetGroup.SUBFOLDER) {
+							if (!updating)
+								saveOptions();
+						} else {
+							if (!updating)
+								updateOptions();
+							updateCatButtons();
+							validatePage();
+						}
 					}
-				}, true, true);
-		exportModeGroup = new ExportModeGroup(composite, ExportModeGroup.ALLFORMATS | ExportModeGroup.SIZING
-				| (Core.getCore().containsRawImage(assets, true) ? ExportModeGroup.RAWCROP : 0));
-		exportModeGroup.addSelectionListener(new SelectionAdapter() {
+				}, true, true, true);
+		exportModeGroup = new ExportModeGroup(composite,
+				multiMedia ? ExportModeGroup.ORIGINALS
+						: ExportModeGroup.ALLFORMATS | ExportModeGroup.SIZING
+								| (Core.getCore().containsRawImage(assets, true) ? ExportModeGroup.RAWCROP : 0),
+				multiMedia ? Messages.ExportFolderPage_media : Messages.ExportFolderPage_image);
+		exportModeGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
+				saveOptions();
 				updateCatButtons();
 				updateControls();
 				checkImages();
 			}
 		});
-		exportModeGroup.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				checkImages();
-			}
-		});
 		final CGroup metaGroup = CGroup.create(composite, 1, Messages.ExportFolderPage_metadata);
-		metaButton = WidgetFactory.createCheckButton(metaGroup, Messages.ExportFolderPage_include_metadata, null);
-		metaButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e) {
-				getWizard().getContainer().updateButtons();
-			}
-		});
-		watermarkGroup = new WatermarkGroup(metaGroup);
+		if (!multiMedia) {
+			metaButton = WidgetFactory.createCheckButton(metaGroup, Messages.ExportFolderPage_include_metadata, null);
+			metaButton.addListener(new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					saveOptions();
+					getWizard().getContainer().updateButtons();
+				}
+			});
+			watermarkGroup = new WatermarkGroup(metaGroup);
+			watermarkGroup.addListener(new Listener() {
+				@Override
+				public void handleEvent(Event e) {
+					saveOptions();
+				}
+			});
+		}
 		privacyGroup = new PrivacyGroup(metaGroup, Messages.ExportFolderPage_export_only, assets);
-		addToCatGroup = new AddToCatGroup(composite);
-		fillValues();
+		Listener selectionListener = new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				saveOptions();
+			}
+		};
+		privacyGroup.addListener(selectionListener);
+		if (!multiMedia) {
+			addToCatGroup = new AddToCatGroup(composite);
+			addToCatGroup.addListener(selectionListener);
+		}
+		fillValues(getDialogSettings());
+		updateOptions();
 		checkImages();
 		setControl(composite);
 		setHelp(HelpContextIds.EXPORTFOLDER_WIZARD);
 		setTitle(Messages.ExportFolderPage_title);
 		int size = assets.size();
-		String msg = (assets.isEmpty()) ? Messages.ExportFolderPage_nothing_to_export
-				: (size == 1) ? Messages.SendEmailPage_Send_one : NLS.bind(Messages.SendEmailPage_Send_n, size);
-		if (!assets.isEmpty())
+		String msg;
+		if (assets.isEmpty())
+			msg = Messages.ExportFolderPage_nothing_to_export;
+		else if (multiMedia)
+			msg = Messages.ExportFolderPage_exporting_media;
+		else {
+			msg = (size == 1) ? Messages.SendEmailPage_Send_one : NLS.bind(Messages.SendEmailPage_Send_n, size);
 			msg += Messages.ExportFolderPage_adjust_size;
+		}
 		setMessage(msg);
 		super.createControl(parent);
 		validatePage();
 	}
 
+	protected void saveOptions() {
+		IDialogSettings section = outputTargetGroup.getTargetSection(getDialogSettings(), true);
+		if (section != null)
+			saveSettings(section);
+	}
+
+	protected void updateOptions() {
+		try {
+			updating = true;
+			IDialogSettings section = outputTargetGroup.getTargetSection(getDialogSettings(), false);
+			if (section != null) {
+				outputTargetGroup.updateSubfolderOption(section);
+				fillValues(section);
+			} else
+				saveOptions();
+		} finally {
+			updating = false;
+		}
+	}
+
 	protected void updateCatButtons() {
-		addToCatGroup.setEnabled(exportModeGroup.getMode() != ExportModeGroup.ORIGINALS,
-				outputTargetGroup.getTarget() == Constants.FILE);
+		if (addToCatGroup != null) {
+			boolean reformat = getMode() != ExportModeGroup.ORIGINALS;
+			addToCatGroup.setEnabled(reformat, reformat && outputTargetGroup.getTarget() == Constants.FILE);
+		}
 	}
 
 	@Override
@@ -139,7 +191,7 @@ public class ExportFolderPage extends ColoredWizardPage {
 					++n;
 			msg = n == 0 ? Messages.ExportFolderPage_no_images_pass_privacy : outputTargetGroup.validate();
 		}
-		if (msg == null)
+		if (msg == null && watermarkGroup != null)
 			msg = watermarkGroup.validate();
 		setErrorMessage(msg);
 		setPageComplete(msg == null);
@@ -184,30 +236,36 @@ public class ExportFolderPage extends ColoredWizardPage {
 		exportModeGroup.updateScale();
 	}
 
-	private void fillValues() {
-		IDialogSettings settings = getDialogSettings();
-		exportModeGroup.fillValues(settings);
-		privacyGroup.fillValues(settings);
+	private void fillValues(IDialogSettings settings) {
 		if (settings != null) {
-			boolean includeMeta = settings.getBoolean(ExportFolderWizard.INCLUDEMETA);
-			metaButton.setSelection(includeMeta);
-			watermarkGroup.fillValues(settings);
-			addToCatGroup.fillValues(settings);
-			outputTargetGroup.initValues(settings);
+			if (multiMedia) {
+				privacyGroup.fillValues(settings);
+				outputTargetGroup.initValues(settings);
+			} else {
+				exportModeGroup.fillValues(settings);
+				privacyGroup.fillValues(settings);
+				boolean includeMeta = settings.getBoolean(ExportFolderWizard.INCLUDEMETA);
+				metaButton.setSelection(includeMeta);
+				watermarkGroup.fillValues(settings);
+				addToCatGroup.fillValues(settings);
+				outputTargetGroup.initValues(settings);
+			}
 		}
 		updateCatButtons();
 		updateControls();
 	}
 
 	public boolean finish() {
-		saveSettings();
+		saveSettings(getDialogSettings());
 		new ExportfolderJob(assets, getMode(), getSizing(), exportModeGroup.getScalingFactor(),
 				exportModeGroup.getDimension(), exportModeGroup.getUnsharpMask(), exportModeGroup.getJpegQuality(),
 				exportModeGroup.getCropMode(), outputTargetGroup.getTarget(), outputTargetGroup.getFtpDir(),
 				outputTargetGroup.getLocalFolder(), outputTargetGroup.getSubfolderoption(),
 				getIncludeMeta() ? ((ExportFolderWizard) getWizard()).getFilter() : null,
-				watermarkGroup.getCreateWatermark(), watermarkGroup.getCopyright(), privacyGroup.getSelection(),
-				addToCatGroup.getAddSelection(), addToCatGroup.getWatchSelection(), this).schedule();
+				watermarkGroup == null ? false : watermarkGroup.getCreateWatermark(),
+				watermarkGroup == null ? "" : watermarkGroup.getCopyright(), privacyGroup.getSelection(), //$NON-NLS-1$
+				addToCatGroup == null ? false : addToCatGroup.getAddSelection(),
+				addToCatGroup == null ? false : addToCatGroup.getWatchSelection(), this).schedule();
 		return true;
 	}
 
@@ -215,18 +273,19 @@ public class ExportFolderPage extends ColoredWizardPage {
 		return exportModeGroup.getSizing();
 	}
 
-	private void saveSettings() {
-		IDialogSettings settings = getDialogSettings();
+	private void saveSettings(IDialogSettings settings) {
 		exportModeGroup.saveSettings(settings);
 		privacyGroup.saveSettings(settings);
-		watermarkGroup.saveSettings(settings);
-		addToCatGroup.saveValues(settings);
+		if (watermarkGroup != null)
+			watermarkGroup.saveSettings(settings);
+		if (addToCatGroup != null)
+			addToCatGroup.saveValues(settings);
 		settings.put(ExportFolderWizard.INCLUDEMETA, getIncludeMeta());
 		outputTargetGroup.saveValues(settings);
 	}
 
 	protected boolean getIncludeMeta() {
-		return metaButton.getSelection();
+		return metaButton == null ? false : metaButton.getSelection();
 	}
 
 	protected int getMode() {
@@ -235,8 +294,10 @@ public class ExportFolderPage extends ColoredWizardPage {
 
 	private void updateControls() {
 		int mode = getMode();
-		metaButton.setEnabled(mode != Constants.FORMAT_ORIGINAL && mode != Constants.FORMAT_WEBP);
-		watermarkGroup.setEnabled(mode != Constants.FORMAT_ORIGINAL);
+		if (metaButton != null)
+			metaButton.setEnabled(mode != Constants.FORMAT_ORIGINAL && mode != Constants.FORMAT_WEBP);
+		if (watermarkGroup != null)
+			watermarkGroup.setEnabled(mode != Constants.FORMAT_ORIGINAL);
 	}
 
 }

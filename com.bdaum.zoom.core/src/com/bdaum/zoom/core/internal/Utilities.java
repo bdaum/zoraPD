@@ -55,6 +55,7 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.graphics.RGB;
 
 import com.bdaum.zoom.cat.model.Meta_type;
 import com.bdaum.zoom.cat.model.asset.Asset;
@@ -81,8 +82,9 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.core.db.IDbManager;
+import com.bdaum.zoom.mtp.ObjectFilter;
 import com.bdaum.zoom.program.BatchConstants;
-import com.bdaum.zoom.program.BatchUtilities;
+import com.bdaum.zoom.program.HtmlEncoderDecoder;
 import com.google.openlocationcode.OpenLocationCode;
 
 public class Utilities {
@@ -91,6 +93,7 @@ public class Utilities {
 	private static final String KEYWORDSEQUALS = "keywords="; //$NON-NLS-1$
 	private static final String EMAIL = Messages.Utilities_email;
 	private static final String FILE2 = "file://"; //$NON-NLS-1$
+	private static final String hexChars = "0123456789ABCDEF"; //$NON-NLS-1$
 
 	/**
 	 * Clones a collection and removes the network attribute and the sort criteria
@@ -175,11 +178,8 @@ public class Utilities {
 	 */
 	public static String getPlainDescription(WebExhibitImpl exhibit) {
 		String description = exhibit.getDescription();
-		if (description != null && exhibit.getHtmlDescription()) {
-			StringBuilder sb = new StringBuilder();
-			BatchUtilities.decodeHTML(description, sb);
-			return sb.toString();
-		}
+		if (description != null && exhibit.getHtmlDescription())
+			return new HtmlEncoderDecoder().decodeHTML(description);
 		return description;
 	}
 
@@ -495,9 +495,7 @@ public class Utilities {
 
 	public static String computeWatchedFolderId(File folder, String volume) {
 		String uri = folder.toURI().toString();
-		if (volume == null || volume.isEmpty() || !Constants.WIN32)
-			return uri;
-		if (uri.startsWith("file:")) { //$NON-NLS-1$
+		if (volume != null && !volume.isEmpty() && Constants.WIN32 && uri.startsWith("file:")) { //$NON-NLS-1$
 			int q = uri.indexOf(':', 5);
 			if (q >= 0) {
 				int r = uri.lastIndexOf('/', q);
@@ -510,37 +508,38 @@ public class Utilities {
 		return uri;
 	}
 
-	public static void collectImages(String[] fileNames, List<File> files) {
-		collectFilteredFiles(fileNames, files, CoreActivator.getDefault().getFilenameExtensionFilter());
+	public static void collectImages(String[] fileNames, List<File> result) {
+		collectFilteredFiles(fileNames, result, CoreActivator.getDefault().getFilenameExtensionFilter());
 	}
 
-	public static void collectFilteredFiles(String[] fileNames, List<File> files, FileNameExtensionFilter filter) {
+	public static void collectFilteredFiles(String[] fileNames, List<File> result, ObjectFilter filter) {
 		if (fileNames != null)
 			for (String fileName : fileNames) {
 				File f = new File(fileName);
 				if (f.exists()) {
 					if (f.isDirectory())
-						collectFilteredFiles(f.listFiles(), files, filter);
+						collectFilteredFiles(f.listFiles(), result, filter);
 					else if (filter.accept(f))
-						files.add(f);
+						result.add(f);
 				}
 			}
 	}
 
-	public static void collectFilteredFiles(File[] list, List<File> files, FileNameExtensionFilter filter) {
-		if (list != null)
-			for (File f : list)
+	public static void collectFilteredFiles(File[] folders, Collection<File> result, ObjectFilter filter) {
+		if (folders != null)
+			for (File f : folders)
 				if (f.isDirectory())
-					collectFilteredFiles(f.listFiles(), files, filter);
-				else if (filter.accept(f))
-					files.add(f);
+					collectFilteredFiles(f.listFiles(), result, filter);
+				else if (filter == null || filter.accept(f))
+					result.add(f);
 	}
 
-	public static void collectFolders(String[] fileNames, List<File> folders) {
+
+	public static void collectFolders(String[] fileNames, List<File> result) {
 		for (String fileName : fileNames) {
 			File f = new File(fileName);
 			if (f.exists() && f.isDirectory())
-				folders.add(f);
+				result.add(f);
 		}
 	}
 
@@ -841,6 +840,18 @@ public class Utilities {
 		return toBeStored;
 	}
 
+	public static Collection<Object> storeGroup(Group group, boolean deep, Collection<Object> toBeStored) {
+		if (toBeStored == null)
+			toBeStored = new ArrayList<Object>();
+		toBeStored.add(group);
+		if (deep)
+			for (Group sub : group.getSubgroup()) {
+				sub.setGroup_subgroup_parent(group);
+				storeGroup(sub, deep, toBeStored);
+			}
+		return toBeStored;
+	}
+
 	public static String downGradeLastImport(SmartCollectionImpl coll) {
 		return setImportKeyAndLabel(coll, coll.getCriterion(0).getValue());
 	}
@@ -921,8 +932,8 @@ public class Utilities {
 					newAlbums[albums.length] = newName;
 					asset.setAlbum(newAlbums);
 					modified = true;
-				} else {
-					for (int j = 0; j < albums.length; j++) {
+				} else
+					for (int j = 0; j < albums.length; j++)
 						if (oldName.equals(albums[j])) {
 							ret = true;
 							if (newName == null) {
@@ -935,8 +946,6 @@ public class Utilities {
 							modified = true;
 							break;
 						}
-					}
-				}
 				if (personId != null) {
 					List<RegionImpl> regions = dbManager.obtainObjects(RegionImpl.class, false, "asset_person_parent", //$NON-NLS-1$
 							asset.getStringId(), QueryField.EQUALS, "album", personId, QueryField.EQUALS); //$NON-NLS-1$
@@ -947,21 +956,20 @@ public class Utilities {
 						if (personRects != null && personRects.length > 0) {
 							for (RegionImpl region : regions) {
 								String rect64 = region.getStringId();
-								for (int j = 0; j < personRects.length; j++) {
+								for (int j = 0; j < personRects.length; j++)
 									if (rect64.equals(personRects[j])) {
 										String[] newRects = new String[personRects.length - 1];
 										System.arraycopy(personRects, 0, newRects, 0, j);
 										System.arraycopy(personRects, j + 1, newRects, j, newRects.length - j);
 										personRects = newRects;
 									}
-								}
 							}
 							asset.setPerson(personRects);
 						}
 						asset.setNoPersons(Math.max(0, asset.getNoPersons() - 1));
 						modified = true;
-					} else if (oldName != null) {
-						for (RegionImpl region : regions) {
+					} else if (oldName != null)
+						for (RegionImpl region : regions)
 							if (region.getKeywordAdded()) {
 								for (int j = 0; j < asset.getKeyword().length; j++) {
 									if (asset.getKeyword(j).equals(oldName)) {
@@ -972,8 +980,6 @@ public class Utilities {
 								}
 								break;
 							}
-						}
-					}
 				}
 				if (modified)
 					toBeStored.add(asset);
@@ -1037,8 +1043,6 @@ public class Utilities {
 			}
 		return v;
 	}
-
-	private static final String hexChars = "0123456789ABCDEF"; //$NON-NLS-1$
 
 	public static final Comparator<? super String> KEYWORDCOMPARATOR = new Comparator<String>() {
 		public int compare(String s1, String s2) {
@@ -1137,10 +1141,7 @@ public class Utilities {
 				t_j = t.charAt(j - 1);
 
 				// Step 5
-				if (s_i == t_j)
-					cost = 0;
-				else
-					cost = 1;
+				cost = s_i == t_j ? 0 : 1;
 
 				// Step 6
 				d[i][j] = Minimum(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
@@ -1599,18 +1600,44 @@ public class Utilities {
 				break;
 			}
 			case QueryField.T_STRING: {
-				for (String s : (String[]) v) {
+				for (String s : (String[]) v)
 					if (s != null) {
 						if (sb.length() > 0)
 							sb.append(sep);
 						sb.append(s);
 					}
-				}
 				break;
 			}
 			}
 		}
 		return sb.toString();
+	}
+
+	public static String toHtmlColors(int red, int green, int blue) {
+		StringBuilder sb = new StringBuilder("#"); //$NON-NLS-1$
+		generateColorComponent(sb, red);
+		generateColorComponent(sb, green);
+		generateColorComponent(sb, blue);
+		return sb.toString();
+	}
+
+	private static void generateColorComponent(StringBuilder sb, int c) {
+		sb.append(hexChars.charAt(c / 16));
+		sb.append(hexChars.charAt(c % 16));
+	}
+
+	public static RGB fromHtmlColors(String html) {
+		if (html.startsWith("#")) //$NON-NLS-1$
+			html = html.substring(1);
+		if (html.length() >= 6) {
+			html = html.toUpperCase();
+			return new RGB(fromHex(html, 0), fromHex(html, 2), fromHex(html, 4));
+		}
+		return new RGB(0, 0, 0);
+	}
+
+	private static int fromHex(String html, int i) {
+		return 16 * hexChars.indexOf(html.charAt(i)) + hexChars.indexOf(html.charAt(i + 1));
 	}
 
 }

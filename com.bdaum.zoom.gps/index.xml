@@ -58,6 +58,9 @@
 		<topic href="html/gps.html" />
 		<topic href="html/geoTagging.html" />
 	</entry>
+	<entry keyword="NoGo areas">
+		<topic href="html/geoTagging.html" />
+	</entry>
 	<entry keyword="Web browser">
 		<entry keyword="Show map in external ~">
 			<topic href="html/maps.html" />

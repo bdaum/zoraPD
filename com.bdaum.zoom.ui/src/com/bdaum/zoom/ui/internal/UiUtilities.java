@@ -57,7 +57,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
@@ -90,6 +89,7 @@ import com.bdaum.zoom.core.IScoreFormatter;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.Range;
+import com.bdaum.zoom.core.TetheredRange;
 import com.bdaum.zoom.core.db.ICollectionProcessor;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.Utilities;
@@ -914,8 +914,14 @@ public class UiUtilities {
 		if (!coll.getAlbum() && coll.getNetwork())
 			return coll.getSmartCollection_subSelection_parent() == null ? Icons.folder_add_network
 					: Icons.folder_and_network;
-		if (coll.getStringId().startsWith(IDbManager.IMPORTKEY))
+		if (coll.getStringId().startsWith(IDbManager.IMPORTKEY)) {
+			if (!coll.getCriterion().isEmpty()) {
+				Criterion crit = coll.getCriterion().get(0);
+				if (crit != null && crit.getValue() instanceof TetheredRange)
+					return Icons.folder_tethered;
+			}
 			return Icons.folder_import;
+		}
 		return coll.getAlbum() ? Icons.folder_album
 				: coll.getSmartCollection_subSelection_parent() == null ? Icons.folder_add : Icons.folder_and;
 	}
@@ -1048,7 +1054,8 @@ public class UiUtilities {
 			if (asset != null) {
 				image = Core.getCore().getImageCache().getImage(asset);
 				Rectangle bounds = image.getBounds();
-				frame = UiUtilities.computeFrame(maxRegion.getStringId(), 0, 0, bounds.width, bounds.height, asset.getRotation());
+				frame = UiUtilities.computeFrame(maxRegion.getStringId(), 0, 0, bounds.width, bounds.height,
+						asset.getRotation());
 			}
 		}
 		if (image == null) {
@@ -1087,29 +1094,6 @@ public class UiUtilities {
 		gc.drawImage(image, srcX, srcY, srcWidth, srcHeight, destX + margins, destY + margins, destWidth, destHeight);
 		gc.dispose();
 		return thumb;
-	}
-
-	public static Rectangle getSecondaryMonitorBounds(Shell parentShell) {
-		Monitor primaryMonitor = parentShell.getDisplay().getPrimaryMonitor();
-		Rectangle mbounds = primaryMonitor.getBounds();
-		Monitor[] monitors = parentShell.getDisplay().getMonitors();
-		if (monitors.length > 1 && Platform.getPreferencesService().getBoolean(UiActivator.PLUGIN_ID,
-				PreferenceConstants.SECONDARYMONITOR, false, null)) {
-			Rectangle r = parentShell.getBounds();
-			if (mbounds.contains(r.x + r.width / 2, r.y + r.height / 2)) {
-				int max = 0;
-				for (Monitor monitor : monitors)
-					if (!monitor.equals(primaryMonitor)) {
-						r = monitor.getBounds();
-						int d = r.width * r.width + r.height * r.height;
-						if (d > max) {
-							max = d;
-							mbounds = r;
-						}
-					}
-			}
-		}
-		return mbounds;
 	}
 
 	public static boolean isInterPunction(char c) {
@@ -1152,6 +1136,23 @@ public class UiUtilities {
 			if (s.indexOf(c) < 0)
 				list.add(s);
 		return list.toArray(new String[list.size()]);
+	}
+
+	public static Image getAnnotationIcon(Asset asset) {
+		String voiceFileURI = asset.getVoiceFileURI();
+		if (voiceFileURI != null && !voiceFileURI.isEmpty()) {
+			int p = voiceFileURI.indexOf('\f');
+			if (p < 0)
+				return (voiceFileURI.startsWith("?") ? Icons.note : Icons.speaker).getImage(); //$NON-NLS-1$
+			if (p > 0)
+				return (voiceFileURI.length() > p + 2 ? Icons.speakerPlus : Icons.speaker).getImage();
+			int q = voiceFileURI.indexOf('\f', p + 1);
+			if (q > p + 1)
+				return (voiceFileURI.length() > q + 1 ? Icons.notePlus : Icons.note).getImage();
+			if (q < voiceFileURI.length() - 1)
+				return Icons.drawing.getImage();
+		}
+		return null;
 	}
 
 }

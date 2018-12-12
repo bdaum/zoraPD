@@ -32,6 +32,7 @@ import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.image.ImageConstants;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.actions.Messages;
 import com.bdaum.zoom.ui.internal.dialogs.ImportModeDialog;
@@ -122,7 +123,7 @@ public class ImportFilesCommand extends AbstractCommandHandler {
 				}
 				ImportModeDialog imDialog = new ImportModeDialog(getShell(), device || foreignFolders);
 				if (imDialog.open() == ImportModeDialog.OK) {
-					ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(files.toArray(new File[files.size()]),
+					ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(StorageObject.fromFile(files),
 							null, device && foreignFolders, false, imDialog.isNewStructure(), null, false);
 					WizardDialog wizardDialog = new WizardDialog(getShell(), wizard);
 					wizard.init(null, null);

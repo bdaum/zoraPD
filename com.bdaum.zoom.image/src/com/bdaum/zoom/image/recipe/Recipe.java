@@ -154,7 +154,6 @@ public class Recipe {
 	// private int rating = -1;
 	// private int colorCode = -1;
 	private List<Derivative> derivatives;
-	// private String ratedBy;
 	private String location;
 	private String tool;
 	private float[][] channelMatrix;
@@ -162,7 +161,6 @@ public class Recipe {
 	private ColorBoost colorBoost;
 	private PerspectiveCorrection perspectiveCorrection;
 	private boolean useHSV;
-	// private List<String> keywords;
 	private Transformation transform;
 
 	public Recipe(String tool, String location, boolean useHSL) {

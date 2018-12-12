@@ -50,8 +50,8 @@ public class ExportFolderWizard extends AbstractAssetSelectionWizard implements 
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		super.init(workbench, selection);
 		setDialogSettings(UiActivator.getDefault(), SETTINGSID);
-		setAssets(workbench, selection, false);
 		int size = assets.size();
 		setWindowTitle(assets.isEmpty() ? Messages.ExportFolderWizard_nothing_selected
 				: size == 1 ? Messages.ExportFolderWizard_export_one_image
@@ -64,8 +64,8 @@ public class ExportFolderWizard extends AbstractAssetSelectionWizard implements 
 
 	@Override
 	public void addPages() {
-		ImageDescriptor imageDescriptor = Icons.folder64.getDescriptor();
 		super.addPages();
+		ImageDescriptor imageDescriptor = Icons.folder64.getDescriptor();
 		mainPage = new ExportFolderPage(assets);
 		mainPage.setImageDescriptor(imageDescriptor);
 		addPage(mainPage);

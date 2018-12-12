@@ -46,7 +46,6 @@ public abstract class AbstractPerspective implements IPerspectiveFactory {
 	public static final String PROGRESS_VIEW = "org.eclipse.ui.views.ProgressView"; //$NON-NLS-1$
 	public static final String LOG_VIEW = "org.eclipse.pde.runtime.LogView"; //$NON-NLS-1$
 	public static final String MAP_VIEW = "com.bdaum.zoom.gps.MapView"; //$NON-NLS-1$
-	public static final String GPS_VIEW = "com.bdaum.zoom.gps.GPSView"; //$NON-NLS-1$
 	public static final String COMPONENTS_VIEW = "com.bdaum.zoom.ui.views.HierarchyViewComponents"; //$NON-NLS-1$
 	public static final String COMPOSITES_VIEW = "com.bdaum.zoom.ui.views.HierarchyViewComposites"; //$NON-NLS-1$
 	public static final String ORIGINALS_VIEW = "com.bdaum.zoom.ui.views.HierarchyViewOriginals"; //$NON-NLS-1$
@@ -80,8 +79,6 @@ public abstract class AbstractPerspective implements IPerspectiveFactory {
 			}
 		});
 	}
-
-	protected abstract String getId();
 
 	protected void fillMainFolder(IFolderLayout folder, String... visible) {
 		for (String id : visible)

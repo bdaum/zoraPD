@@ -23,6 +23,7 @@ import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPlaceholderFolderLayout;
 
+import com.bdaum.zoom.ui.internal.views.CalendarView;
 import com.bdaum.zoom.ui.internal.views.HistogramView;
 import com.bdaum.zoom.ui.internal.views.MetadataView;
 import com.bdaum.zoom.ui.internal.views.PreviewView;
@@ -37,7 +38,7 @@ public class TablePerspective extends AbstractPerspective {
 		super.createInitialLayout(layout);
 		IFolderLayout folder = layout.createFolder(TABLE_FOLDER,
 				IPageLayout.RIGHT,  0.9f, IPageLayout.ID_EDITOR_AREA);
-		fillMainFolder(folder, TableView.ID, MAP_VIEW);
+		fillMainFolder(folder, TableView.ID, MAP_VIEW, CalendarView.ID);
 		IPlaceholderFolderLayout pfolder = layout.createPlaceholderFolder(
 				HIERARCHY_FOLDER, IPageLayout.RIGHT, 0.8f, TABLE_FOLDER);
 		pfolder.addPlaceholder(COMPONENTS_VIEW);
@@ -53,11 +54,5 @@ public class TablePerspective extends AbstractPerspective {
 		addFastViews(layout, IPageLayout.RIGHT, 0.7f, TABLE_FOLDER);
 		layout.setEditorAreaVisible(false);
 	}
-	
-	@Override
-	protected String getId() {
-		return ID;
-	}
-
 
 }

@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.FileDialog;
 
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.db.NullDbManager;
@@ -40,7 +41,7 @@ public class NewCatalogCommand extends AbstractCatCommandHandler {
 
 	@Override
 	public void run() {
-		final CoreActivator coreActivator = CoreActivator.getDefault();
+		final ICore coreActivator = CoreActivator.getDefault();
 		FileDialog dialog = new FileDialog(getShell(), SWT.SAVE);
 		dialog.setText(Messages.NewCatAction_Create_new_cat);
 		UiActivator uiActivator = UiActivator.getDefault();

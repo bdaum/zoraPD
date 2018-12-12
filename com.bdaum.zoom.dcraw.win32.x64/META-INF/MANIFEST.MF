@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: 64 bit Windows DCRAW Plugin
+Bundle-Name: 64 bit Windows DCRAW Fragment
 Bundle-SymbolicName: com.bdaum.zoom.dcraw.win32.x64;singleton:=true
 Bundle-Version: 9.27
 Bundle-Vendor: bdaum industrial communications

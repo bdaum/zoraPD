@@ -49,8 +49,8 @@ import org.osgi.framework.ServiceReference;
 
 import com.bdaum.zoom.core.IFTPService;
 import com.bdaum.zoom.core.internal.CoreActivator;
-import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
+import com.bdaum.zoom.mtp.ObjectFilter;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
@@ -64,7 +64,7 @@ public class FtpDirPage extends ColoredWizardPage {
 	private FTPClient ftp;
 	protected Map<FTPFile, FTPFile> fileParents = new HashMap<FTPFile, FTPFile>(57);
 	protected Map<FTPFile, String> dirPaths = new HashMap<FTPFile, String>(57);
-	private FileNameExtensionFilter filter;
+	private ObjectFilter filter;
 	private String dir;
 	private Label urlLabel;
 	private URL url;

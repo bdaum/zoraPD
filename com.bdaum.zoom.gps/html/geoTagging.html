@@ -6,6 +6,7 @@
 
 
 
+
   
   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Geotagging</title>
   
@@ -68,7 +69,16 @@ information instead of using web services when geo-naming.</dd></dl><dl>
   </dl><dl style="text-align: justify; margin-left: 80px;"><dt style="font-weight: bold;">Update altitude through
 webservice</dt><dd>This will usually result in more precise altitude readings
 but will slow down the process of geo-tagging.</dd><dt><br>
-</dt><dt style="font-weight: bold;">Edit trackpoints</dt><dd>Mark this option if you want to edit the <a href="trackpoint.html">trackpoints</a> contained in imported trackfiles before applying these trackpoints to your images.&nbsp;</dd></dl><dl>
+</dt><dt style="font-weight: bold;">Edit trackpoints</dt><dd>Mark this option if you want to edit the <a href="trackpoint.html">trackpoints</a> contained in imported trackfiles before applying these trackpoints to your images.<br>
+    <br>
+</dd><dt style="font-weight: bold;">NoGo areas</dt>
+  <dd>You may define an unlimited number of NoGo areas by setting a
+center point and adjusting the diameter. When importing tracker data
+(GPX, NMEA) locations inside the NoGo areas are ignored. NoGo areas may
+be defined for privacy reasons or to avoid "overcrowded" regions (e.g.
+your home area).<br>
+  </dd>
+</dl><dl>
   </dl><dl style="margin-left: 40px;"><dt style="font-weight: bold;">Keywords</dt></dl><dl style="margin-left: 80px;"><dt style="font-weight: bold;">Include coordinates into
 keywords</dt><dd>Check
 this option if you want to include the GPS coordinates into the image

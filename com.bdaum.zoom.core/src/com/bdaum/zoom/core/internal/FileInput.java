@@ -19,55 +19,33 @@
  */
 package com.bdaum.zoom.core.internal;
 
-import java.io.File;
-import java.net.URI;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.mtp.ObjectFilter;
+import com.bdaum.zoom.mtp.StorageObject;
 
 public class FileInput {
 
-	private static class Entry {
-		private File file;
-		private long size;
-		private long lastModified;
+	private List<StorageObject> entries = new ArrayList<StorageObject>();
+	private StorageObject first;
 
-		Entry(File file) {
-			this.file = file;
-			this.size = file.length();
-			this.lastModified = file.lastModified();
-		}
-
-		File getFile() {
-			return (file.exists() && file.lastModified() == lastModified && file
-					.length() == size) ? file : null;
-		}
-	}
-
-	private List<Entry> entries = new ArrayList<Entry>();
-	private File first;
-
-	public FileInput(File[] files, boolean skipHiddenFiles) {
-		listFiles(files, skipHiddenFiles);
-	}
-
-	public FileInput(List<File> files, boolean skipHiddenFiles) {
-		this(files.toArray(new File[files.size()]), skipHiddenFiles);
-	}
-
-	private void listFiles(File[] files, boolean skipHiddenFiles) {
-		if (files != null)
-			for (File file : files) {
-				if (file == null || skipHiddenFiles && file.isHidden())
-					continue;
-				if (first == null)
+	public FileInput(StorageObject[] files, boolean skipHiddenFiles) {
+		try {
+			StorageObject.collectFilteredFiles(files, entries, null, skipHiddenFiles, null);
+			for (StorageObject file : files)
+				if (!file.isHidden()) {
 					first = file;
-				if (file.isDirectory())
-					listFiles(file.listFiles(), skipHiddenFiles);
-				else
-					entries.add(new Entry(file));
-			}
+					break;
+				}
+		} catch (IOException e) {
+			// should never happen, FileInput is not applied to mobile device files
+		}
+	}
+
+	public FileInput(List<StorageObject> files, boolean skipHiddenFiles) {
+		this(files.toArray(new StorageObject[files.size()]), skipHiddenFiles);
 	}
 
 	public int size() {
@@ -78,13 +56,11 @@ public class FileInput {
 		return first == null ? "" : first.getName(); //$NON-NLS-1$
 	}
 
-	public void getURIs(FileNameExtensionFilter filenameFilter,
-			List<URI> resultList) {
-		for (Entry entry : entries) {
-			File file = entry.getFile();
-			if (filenameFilter.accept(file))
-				resultList.add(file.toURI());
-		}
+	public void getObjects(ObjectFilter filenameFilter,
+			List<StorageObject> resultList) {
+		for (StorageObject entry : entries)
+			if (filenameFilter.accept(entry))
+				resultList.add(entry);
 	}
 
 	public String getAbsolutePath() {
@@ -92,6 +68,6 @@ public class FileInput {
 	}
 
 	public String getVolume() {
-		return first == null ? null : Core.getCore().getVolumeManager().getVolumeForFile(first);
+		return first == null ? null : first.getVolume(); 
 	}
 }

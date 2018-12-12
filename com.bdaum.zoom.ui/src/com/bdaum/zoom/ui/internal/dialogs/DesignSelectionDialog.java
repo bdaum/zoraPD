@@ -52,8 +52,7 @@ import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 
-public class DesignSelectionDialog extends ZTitleAreaDialog implements
-		PaintListener {
+public class DesignSelectionDialog extends ZTitleAreaDialog implements PaintListener {
 
 	private TableViewer viewer;
 	private Canvas canvas;
@@ -63,8 +62,7 @@ public class DesignSelectionDialog extends ZTitleAreaDialog implements
 
 	public DesignSelectionDialog(Shell parentShell) {
 		super(parentShell);
-		elements = dbManager.obtainObjects(WebGalleryImpl.class,
-				"template", Boolean.TRUE, //$NON-NLS-1$
+		elements = dbManager.obtainObjects(WebGalleryImpl.class, "template", Boolean.TRUE, //$NON-NLS-1$
 				QueryField.EQUALS).toArray();
 	}
 
@@ -72,10 +70,8 @@ public class DesignSelectionDialog extends ZTitleAreaDialog implements
 	public void create() {
 		super.create();
 		setTitle(Messages.DesignSelectionDialog_web_gallery_design_selection);
-		if (elements.length == 0)
-			setMessage(Messages.DesignSelectionDialog_no_designs_available);
-		else
-			setMessage(Messages.DesignSelectionDialog_please_select_a_design);
+		setMessage(elements.length == 0 ? Messages.DesignSelectionDialog_no_designs_available
+				: Messages.DesignSelectionDialog_please_select_a_design);
 		updatedButtons();
 	}
 
@@ -94,8 +90,7 @@ public class DesignSelectionDialog extends ZTitleAreaDialog implements
 		Composite viewComp = new Composite(comp, SWT.NONE);
 		viewComp.setLayout(new GridLayout());
 		viewComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		viewer = new TableViewer(viewComp, SWT.V_SCROLL | SWT.SINGLE
-				| SWT.BORDER);
+		viewer = new TableViewer(viewComp, SWT.V_SCROLL | SWT.SINGLE | SWT.BORDER);
 		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		data.widthHint = 200;
 		viewer.getControl().setLayoutData(data);
@@ -116,24 +111,18 @@ public class DesignSelectionDialog extends ZTitleAreaDialog implements
 		});
 		viewer.setInput(elements);
 		clearButton = new Button(viewComp, SWT.PUSH);
-		clearButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false));
+		clearButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		clearButton.setText(Messages.DesignSelectionDialog_delete);
 		clearButton.addSelectionListener(new SelectionAdapter() {
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) viewer
-						.getSelection();
+				IStructuredSelection selection = viewer.getStructuredSelection();
 				Object first = selection.getFirstElement();
 				if (first instanceof WebGalleryImpl) {
 					String name = ((WebGalleryImpl) first).getName();
-					if (AcousticMessageDialog.openConfirm(
-							getShell(),
-							Messages.DesignSelectionDialog_delete_design,
-							NLS.bind(
-									Messages.DesignSelectionDialog_do_you_really_want_to_delete,
-									name))) {
+					if (AcousticMessageDialog.openConfirm(getShell(), Messages.DesignSelectionDialog_delete_design,
+							NLS.bind(Messages.DesignSelectionDialog_do_you_really_want_to_delete, name))) {
 						viewer.remove(first);
 						dbManager.safeTransaction(first, null);
 					}
@@ -151,8 +140,7 @@ public class DesignSelectionDialog extends ZTitleAreaDialog implements
 
 	@Override
 	protected void okPressed() {
-		IStructuredSelection selection = (IStructuredSelection) viewer
-				.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		Object first = selection.getFirstElement();
 		if (first instanceof WebGalleryImpl)
 			selected = (WebGalleryImpl) first;
@@ -164,26 +152,20 @@ public class DesignSelectionDialog extends ZTitleAreaDialog implements
 		GC gc = e.gc;
 		gc.setBackground(canvas.getParent().getBackground());
 		gc.fillRectangle(clientArea);
-		IStructuredSelection selection = (IStructuredSelection) viewer
-				.getSelection();
-		Object first = selection.getFirstElement();
+		Object first = viewer.getStructuredSelection().getFirstElement();
 		if (first instanceof WebGalleryImpl) {
-			Image image = ImageUtilities.loadThumbnail(e.display,
-					((WebGalleryImpl) first).getPreview(),
+			Image image = ImageUtilities.loadThumbnail(e.display, ((WebGalleryImpl) first).getPreview(),
 					ImageConstants.NOCMS, SWT.IMAGE_JPEG, false);
 			if (image != null) {
 				Rectangle ibounds = image.getBounds();
-				gc.drawImage(image, 0, 0, ibounds.width, ibounds.height,
-						(clientArea.width - ibounds.width) / 2,
-						(clientArea.height - ibounds.height) / 2,
-						clientArea.width, clientArea.height);
+				gc.drawImage(image, 0, 0, ibounds.width, ibounds.height, (clientArea.width - ibounds.width) / 2,
+						(clientArea.height - ibounds.height) / 2, clientArea.width, clientArea.height);
 			}
 		} else {
 			gc.setForeground(canvas.getParent().getForeground());
 			String msg = Messages.DesignSelectionDialog_no_design_selected;
 			Point tx = gc.textExtent(msg);
-			gc.drawText(msg, (clientArea.width - tx.x) / 2,
-					(clientArea.height - tx.y) / 2);
+			gc.drawText(msg, (clientArea.width - tx.x) / 2, (clientArea.height - tx.y) / 2);
 		}
 	}
 

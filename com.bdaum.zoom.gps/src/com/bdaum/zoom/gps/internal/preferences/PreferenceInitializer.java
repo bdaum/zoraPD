@@ -26,16 +26,14 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
 	@Override
 	public void initializeDefaultPreferences() {
-		IEclipsePreferences node = DefaultScope.INSTANCE
-				.getNode(GpsActivator.PLUGIN_ID);
+		IEclipsePreferences node = DefaultScope.INSTANCE.getNode(GpsActivator.PLUGIN_ID);
 		// get local time shift to UTC
 		SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:s"); //$NON-NLS-1$
 		Date now = new Date();
 		String today = DF.format(now);
 		DF.setTimeZone(TimeZone.getTimeZone("UTC")); //$NON-NLS-1$
 		try {
-			Date utc = DF.parse(today);
-			long diff = now.getTime() - utc.getTime();
+			long diff = now.getTime() - DF.parse(today).getTime();
 			diff += diff < 0 ? -30000L : 30000L;
 			node.putInt(PreferenceConstants.TIMESHIFT, (int) (diff / 60000L));
 		} catch (ParseException e) {
@@ -46,8 +44,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		node.putBoolean(PreferenceConstants.UPDATEALTITUDE, true);
 		node.putBoolean(PreferenceConstants.INCLUDENAMES, true);
 		node.putBoolean(PreferenceConstants.USEWAYPOINTS, true);
-		node.put(PreferenceConstants.NAMINGSERVICE,
-				PreferenceConstants.GEONAMES);
+		node.put(PreferenceConstants.NAMINGSERVICE, PreferenceConstants.GEONAMES);
 		node.putBoolean(PreferenceConstants.EVENTTAGGINGCAT, true);
 		node.putBoolean(PreferenceConstants.EVENTTAGGINGWEB, true);
 		node.putBoolean(PreferenceConstants.EVENTTAGGINGKEYWORDS, true);

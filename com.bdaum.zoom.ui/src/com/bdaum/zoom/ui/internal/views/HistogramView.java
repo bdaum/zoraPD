@@ -90,6 +90,8 @@ public class HistogramView extends BasicView implements PaintListener {
 	private String template;
 	private Action configureAction;
 	private int alignment;
+	private Composite composite;
+	private Label space;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -121,17 +123,15 @@ public class HistogramView extends BasicView implements PaintListener {
 			memento.putBoolean(SHOW_BLUE, showBlue);
 			memento.putBoolean(SHOW_GREY, showGrey);
 			memento.putBoolean(SHOW_GREY, weighted);
-			if (template != null)
-				memento.putString(TEMPLATE, template);
+			memento.putString(TEMPLATE, template);
 			memento.putInteger(ALIGNMENT, alignment);
 		}
 		super.saveState(memento);
 	}
 
-	@SuppressWarnings("unused")
 	@Override
 	public void createPartControl(Composite parent) {
-		Composite composite = new Composite(parent, SWT.NONE);
+		composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = 0;
 		layout.marginTop = 10;
@@ -139,18 +139,9 @@ public class HistogramView extends BasicView implements PaintListener {
 		canvas = new Canvas(composite, SWT.DOUBLE_BUFFERED);
 		canvas.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		canvas.addPaintListener(this);
-		new Label(composite, SWT.NONE);
-		caption = new Label(composite, SWT.NONE);
-		caption.setLayoutData(new GridData(SWT.FILL, SWT.END, true, false));
-		caption.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent e) {
-				configureAction.run();
-			}
-		});
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(canvas, HelpContextIds.HISTOGRAM_VIEW);
 		makeActions();
-		installListeners(parent);
+		installListeners();
 		contributeToActionBars();
 		updateActions(true);
 		canvas.redraw();
@@ -403,11 +394,33 @@ public class HistogramView extends BasicView implements PaintListener {
 	}
 
 	protected void updateCaption() {
-		caption.setText(currentItem == null || template == null ? "" //$NON-NLS-1$
-				: Utilities.evaluateTemplate(template, Constants.TH_ALL, "", null, -1, -1, -1, null, currentItem, //$NON-NLS-1$
-						"", Integer.MAX_VALUE, false)); //$NON-NLS-1$
-		caption.setAlignment(alignment);
+		if (template.isEmpty()) {
+			if (caption != null) {
+				space.dispose();
+				caption.dispose();
+				caption = null;
+				composite.layout(true, true);
+			}
+		} else {
+			if (caption == null) {
+				space = new Label(composite, SWT.NONE);
+				caption = new Label(composite, SWT.NONE);
+				caption.setLayoutData(new GridData(SWT.FILL, SWT.END, true, false));
+				caption.addMouseListener(new MouseAdapter() {
+					@Override
+					public void mouseUp(MouseEvent e) {
+						configureAction.run();
+					}
+				});
+				composite.layout(true, true);
+			}
+			caption.setText(currentItem == null ? "" //$NON-NLS-1$
+					: Utilities.evaluateTemplate(template, Constants.TH_ALL, "", null, -1, -1, -1, null, currentItem, //$NON-NLS-1$
+							"", Integer.MAX_VALUE, false)); //$NON-NLS-1$
+			caption.setAlignment(alignment);
+		}
 	}
+
 
 	protected void recalculate() {
 		mxvalue = 0;
@@ -488,11 +501,12 @@ public class HistogramView extends BasicView implements PaintListener {
 	@Override
 	public void refresh() {
 		canvas.redraw();
+		updateActions(false);
 	}
 
 	@Override
 	public void updateActions(boolean force) {
-		if (redAction != null && (viewActive || force)) {
+		if (redAction != null && (isVisible() || force)) {
 			boolean enabled = mxvalue > 0;
 			redAction.setEnabled(enabled);
 			greenAction.setEnabled(enabled);
@@ -504,7 +518,7 @@ public class HistogramView extends BasicView implements PaintListener {
 	}
 
 	public ISelection getSelection() {
-		return (currentItem != null) ? new StructuredSelection(currentItem) : StructuredSelection.EMPTY;
+		return currentItem != null ? new StructuredSelection(currentItem) : StructuredSelection.EMPTY;
 	}
 
 	public void setSelection(ISelection selection) {

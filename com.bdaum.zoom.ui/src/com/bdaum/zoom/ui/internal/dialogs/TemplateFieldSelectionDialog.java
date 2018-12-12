@@ -6,7 +6,6 @@ import java.util.List;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -53,8 +52,7 @@ public class TemplateFieldSelectionDialog extends ZTitleAreaDialog {
 		Composite composite = new Composite(area, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(4, false));
-		new Label(composite, SWT.NONE)
-				.setText(Messages.TemplateFieldSelectionDialog_group);
+		new Label(composite, SWT.NONE).setText(Messages.TemplateFieldSelectionDialog_group);
 		List<Object> categories = QueryField.getCategoriesAndSubgroups();
 		groupCombo = new ComboViewer(composite, SWT.READ_ONLY | SWT.BORDER);
 		Combo comboControl = groupCombo.getCombo();
@@ -70,8 +68,7 @@ public class TemplateFieldSelectionDialog extends ZTitleAreaDialog {
 				fieldCombo.setSelection(new StructuredSelection(fields.get(0)));
 			}
 		});
-		new Label(composite, SWT.NONE)
-				.setText(Messages.TemplateFieldSelectionDialog_field);
+		new Label(composite, SWT.NONE).setText(Messages.TemplateFieldSelectionDialog_field);
 		fieldCombo = new ComboViewer(composite, SWT.READ_ONLY | SWT.BORDER);
 		comboControl = fieldCombo.getCombo();
 		comboControl.setVisibleItemCount(10);
@@ -83,8 +80,7 @@ public class TemplateFieldSelectionDialog extends ZTitleAreaDialog {
 				if (element instanceof FieldDescriptor) {
 					FieldDescriptor fd = (FieldDescriptor) element;
 					return fd.subfield == null ? fd.qfield.getLabel()
-							: fd.qfield.getLabel() + ':'
-									+ fd.subfield.getLabel();
+							: fd.qfield.getLabel() + ':' + fd.subfield.getLabel();
 				}
 				return super.getText(element);
 			}
@@ -99,14 +95,12 @@ public class TemplateFieldSelectionDialog extends ZTitleAreaDialog {
 	}
 
 	private void fillValues() {
-		groupCombo
-				.setSelection(new StructuredSelection(QueryField.CATEGORY_ALL));
+		groupCombo.setSelection(new StructuredSelection(QueryField.CATEGORY_ALL));
 		validate();
 	}
 
 	private void validate() {
-		FieldDescriptor fd = (FieldDescriptor) ((IStructuredSelection) fieldCombo
-				.getSelection()).getFirstElement();
+		FieldDescriptor fd = (FieldDescriptor) fieldCombo.getStructuredSelection().getFirstElement();
 		String errorMsg = null;
 		if (fd == null)
 			errorMsg = Messages.TemplateFieldSelectionDialog_select_field;
@@ -116,23 +110,20 @@ public class TemplateFieldSelectionDialog extends ZTitleAreaDialog {
 
 	protected void fillFieldCombo() {
 		fields.clear();
-		Object g = ((IStructuredSelection) groupCombo.getSelection())
-				.getFirstElement();
+		Object g = groupCombo.getStructuredSelection().getFirstElement();
 		for (String id : QueryField.getQueryFieldKeys()) {
 			QueryField mainField = QueryField.findQueryField(id);
 			if (mainField.belongsTo(g) && mainField.isUiField()) {
 				fields.add(new FieldDescriptor(mainField, null));
 				if (mainField.isStruct()) {
 					QueryField[] children = null;
-					QueryField parent = QueryField.getStructParent(mainField
-							.getType());
+					QueryField parent = QueryField.getStructParent(mainField.getType());
 					if (parent != null)
 						children = parent.getChildren();
 					if (children != null)
 						for (QueryField detailField : children)
 							if (detailField.isUiField())
-								fields.add(new FieldDescriptor(mainField,
-										detailField));
+								fields.add(new FieldDescriptor(mainField, detailField));
 				}
 			}
 		}
@@ -141,8 +132,7 @@ public class TemplateFieldSelectionDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		result = (FieldDescriptor) ((IStructuredSelection) fieldCombo
-				.getSelection()).getFirstElement();
+		result = (FieldDescriptor) fieldCombo.getStructuredSelection().getFirstElement();
 		super.okPressed();
 	}
 

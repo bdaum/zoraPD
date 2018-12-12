@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+   <context id="pref_page_context" title="Bing preferences">
+      <description>Google geonaming premium web service</description>
+      <topic href="html/GooglePreferences.html" label="Google geonaming premium web service"/>
+   </context>
+</contexts>

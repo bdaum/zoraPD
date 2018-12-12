@@ -1,41 +1,44 @@
 /* White */
 JFace {HYPERLINK_COLOR:blue;ACTIVE_HYPERLINK_COLOR:rgb(128,128,255);}
-Label#clink {color:blue;background-color:transparent;}
 CLink {color:rgb(0,128,255);background-color:transparent;}
-Label#errors {color:red;background-color:transparent;}
-Label#disabled {color:rgb(120,120,120);background-color:transparent;}
-Label {color:black;background-color:transparent;}
-Button {color:black;background-color:white;}
-Text#errors {color:red;background-color:rgb(240,240,240);}
-Text[editable=false] {color:black;background-color:white;}
-Text[style='SWT.READ_ONLY'] {color:black;background-color:white;}
-Text[enabled=false] {color:black;background-color:white;}
-Text {color:black;background-color:rgb(240,240,240);}
+Label#clink {color:blue;}
+Label#errors {color:red;}
+Label#sectionTitle {color:rgb(128, 0, 0);}
+Label#disabled {color:rgb(120,120,120);}
+Label {background-color:transparent;}
+Button {background-color:white;}
+Text#errors {color:red;}
+Text[editable=false] {background-color:white;}
+Text[style='SWT.READ_ONLY'] {background-color:white;}
+Text[enabled=false] {background-color:white;}
+Text {background-color:rgb(240,240,240);}
 StyledText#hint {color:rgb(128,128,128);background-color:white;}
-StyledText[editable=false] {color:black;background-color:white;}
-StyledText[style='SWT.READ_ONLY'] {color:black;background-color:white;}
-StyledText[enabled=false] {color:black;background-color:white;}
-StyledText {color:black;background-color:rgb(240,240,240);}
-Combo {color:black;background-color:rgb(240,240,240);}
-CCombo {color:black;background-color:rgb(240,240,240);}
+StyledText[editable=false] {background-color:white;}
+StyledText[style='SWT.READ_ONLY'] {background-color:white;}
+StyledText[enabled=false] {background-color:white;}
+StyledText {background-color:rgb(240,240,240);}
+Combo[enabled=false] {color:rgb(64,64,64);background-color:rgb(192,192,192);}
+Combo {background-color:rgb(240,240,240);}
+CCombo[enabled=false] {color:rgb(64,64,64);background-color:rgb(192,192,192);}
+CCombo {background-color:rgb(240,240,240);}
 ToolTip {color:rgb(32,32,32);background-color:rgb(255,255,230);}
 Tree {color:rgb(32,32,32);background-color:white;selected-background-color:rgb(224,224,224);selected-color:black;disabled-color:rgb(96,96,96);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);}
 Table {color:rgb(32,32,32);background-color:white;offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);selected-background-color:rgb(224,224,224);selected-color:black;disabled-color:rgb(96,96,96);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);}
 Gallery {color:rgb(128,128,128);background-color:white;title-color:rgb(112,112,112);title-background-color:rgb(224,224,224);selected-background-color:rgb(144,144,144);selected-color:white;offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);selected-offline-color:red;selected-remote-color:rgb(64, 64, 160);}
 CGroup {color:rgb(0,80,160);background-color:transparent;}
-Composite {background-color:white;}
 Shell#slideshow {color:rgb(224,224,224);background-color:black;}
-Shell {color:rgb(128,128,128;background-color:white;}
-CBanner {background-color:white;}
-Coolbar {background-color:white;}
-Toolbar {background-color:white;}
-Scale {background-color:white;}
-Statusline {background-color:white;}
+Shell {color:rgb(128,128,128;}
+CBanner {}
+Coolbar {}
+Toolbar {}
+Scale {}
+Statusline {}
 CLabel#selection {color:rgb(128,64,0);}
-CLabel {color:black;background-color:white;}
+CLabel {}
 TrimCommonUIHandle {background-color:white;}
-ZPSWTCanvas#slideshow {color:rgb(144,144,144);foreground-color:rgb(144,144,144);title-color:rgb(124,124,124);background-color:white;selected-background-color:rgb(200,200,200);offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);selected-offline-color:red;selected-remote-color:rgb(64, 64, 160);}
-ZPSWTCanvas#exhibition {color:rgb(144,144,144);title-color:rgb(124,124,124);background-color:white;selected-background-color:rgb(224,224,124);offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);selected-offline-color:red;selected-remote-color:rgb(64, 64, 160);}
-ZPSWTCanvas#webgallery {color:rgb(224, 224, 224);foreground-color:rgb(144,144,144);title-color:rgb(114,114,114);background-color:white;selected-background-color:rgb(200,200,200);offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);selected-offline-color:red;selected-remote-color:rgb(64, 64, 160);}
-ZPSWTCanvas {color:rgb(128,128,128;background-color:white;offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);selected-offline-color:red;selected-remote-color:rgb(64, 64, 160);selected-background-color:rgb(200,200,200);selected-color:rgb(64,64,64);}
+ZPSWTCanvas#slideshow {color:rgb(144,144,144);foreground-color:rgb(144,144,144);title-color:rgb(64,64,64);}
+ZPSWTCanvas#exhibition {color:rgb(144,144,144);title-color:rgb(124,124,124);selected-background-color:rgb(224,224,124);}
+ZPSWTCanvas#webgallery {color:rgb(96,96,96);foreground-color:rgb(144,144,144);title-color:rgb(114,114,114);selected-color:black;}
+ZPSWTCanvas {color:rgb(128,128,128;offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);selected-offline-color:red;selected-remote-color:rgb(64, 64, 160);selected-background-color:rgb(200,200,200);selected-color:rgb(64,64,64);}
+Composite {}
 * {color:black;background-color:white;}

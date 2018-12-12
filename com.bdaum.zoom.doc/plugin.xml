@@ -45,7 +45,7 @@
    <extension
          point="org.eclipse.help.index">
       <index
-            file="index.xml">
+            file="src/jmtp/index.xml">
       </index>
    </extension>
    <extension

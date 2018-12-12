@@ -22,12 +22,13 @@ package com.bdaum.zoom.core;
 import java.io.File;
 import java.net.URI;
 
-import javax.swing.Icon;
-
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.internal.VolumeListener;
+import com.bdaum.zoom.mtp.DeviceInsertionListener;
+import com.bdaum.zoom.mtp.IRootManager;
+import com.bdaum.zoom.mtp.StorageObject;
 
-public interface IVolumeManager {
+public interface IVolumeManager extends IRootManager {
 
 	public static final String FILE = Constants.FILESCHEME + ':';
 
@@ -97,33 +98,6 @@ public interface IVolumeManager {
 	int determineFileState(Asset asset);
 
 	/**
-	 * Returns the base volume name for a given file
-	 *
-	 * @param file
-	 *            - given file
-	 * @return - volume name
-	 */
-	String getVolumeForFile(File file);
-
-	/**
-	 * Converts root file to voume name
-	 *
-	 * @param root
-	 *            - root file
-	 * @return volume name
-	 */
-	String rootToVolume(File root);
-
-	/**
-	 * Converts volume name to root file
-	 *
-	 * @param volume
-	 *            - volume name
-	 * @return - root file
-	 */
-	File volumeToRoot(String volume);
-
-	/**
 	 * Returns the URI of an associated voice file
 	 *
 	 * @param asset
@@ -131,33 +105,6 @@ public interface IVolumeManager {
 	 * @return voice file URI
 	 */
 	URI findVoiceFile(Asset asset);
-
-	/**
-	 * Tests if the specified volume is offline
-	 *
-	 * @param volume
-	 *            - volume name
-	 * @return true if volume is offline
-	 */
-	boolean isOffline(String volume);
-
-	/**
-	 * Returns the icon belonging to a given file
-	 *
-	 * @param path
-	 *            - file path
-	 * @return - associated icon
-	 */
-	Icon getFileIcon(String path);
-
-	/**
-	 * Extracts the root of a file path
-	 *
-	 * @param file
-	 *            - given file
-	 * @return - root file
-	 */
-	File getRootFile(File file);
 
 	/**
 	 * Adds a device insertion listener
@@ -198,5 +145,12 @@ public interface IVolumeManager {
 	 * @param listener - the volume listener
 	 */
 	void addVolumeListener(VolumeListener listener);
+
+	/**
+	 * Collects all DCIM folders
+	 */
+	StorageObject[] findDCIMs();
+
+	String getErrorMessage();
 
 }

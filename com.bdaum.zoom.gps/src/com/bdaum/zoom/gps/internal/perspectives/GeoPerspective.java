@@ -14,6 +14,7 @@ package com.bdaum.zoom.gps.internal.perspectives;
 import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
 
+import com.bdaum.zoom.gps.internal.views.GPSView;
 import com.bdaum.zoom.rcp.internal.perspective.AbstractPerspective;
 import com.bdaum.zoom.ui.internal.views.PreviewView;
 
@@ -32,18 +33,13 @@ public class GeoPerspective extends AbstractPerspective {
 		IFolderLayout geofolder = layout.createFolder(GEO_FOLDER,
 				IPageLayout.BOTTOM, 0.75f, CATALOG_FOLDER);
 		geofolder.addView(PreviewView.ID);
-		geofolder.addView(GPS_VIEW);
+		geofolder.addView(GPSView.ID);
 		IFolderLayout folder = layout.createFolder(MAP_FOLDER,
 				IPageLayout.RIGHT, 0.9f, IPageLayout.ID_EDITOR_AREA);
 		fillMainFolder(folder, MAP_VIEW);
 		addCheatSheets(layout, MAP_FOLDER);
 		addFastViews(layout, IPageLayout.RIGHT, 0.7f, MAP_FOLDER);
 		layout.setEditorAreaVisible(false);
-	}
-
-	@Override
-	protected String getId() {
-		return ID;
 	}
 
 }

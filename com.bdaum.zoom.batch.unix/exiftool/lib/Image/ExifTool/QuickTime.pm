@@ -42,9 +42,8 @@ use Image::ExifTool qw(:DataAccess :Utils);
 use Image::ExifTool::Exif;
 use Image::ExifTool::GPS;
 
-$VERSION = '2.12';
+$VERSION = '2.20';
 
-sub FixWrongFormat($);
 sub ProcessMOV($$;$);
 sub ProcessKeys($$$);
 sub ProcessMetaKeys($$$);
@@ -53,10 +52,12 @@ sub ProcessEncodingParams($$$);
 sub ProcessSampleDesc($$$);
 sub ProcessHybrid($$$);
 sub ProcessRights($$$);
-sub ProcessMebx($$$); # (in QuickTimeStream.pl)
+sub Process_mebx($$$); # (in QuickTimeStream.pl)
 sub ParseItemLocation($$);
 sub ParseItemInfoEntry($$);
 sub ParseItemPropAssoc($$);
+sub FixWrongFormat($);
+sub GetMatrixStructure($$);
 sub ConvertISO6709($);
 sub ConvertChapterList($);
 sub PrintChapter($);
@@ -86,7 +87,7 @@ my %mimeLookup = (
     HEIC => 'image/heic',
     HEVC => 'image/heic-sequence',
     HEIF => 'image/heif',
-    CR3  => 'image/x-canon-cr3',
+    CRX  => 'video/x-canon-crx',    # (will get overridden)
 );
 
 # look up file type from ftyp atom type, with MIME type in comment if known
@@ -185,7 +186,7 @@ my %ftypLookup = (
     'hevc' => 'High Efficiency Image Format HEVC sequence (.HEICS)', # image/heic-sequence
     'mif1' => 'High Efficiency Image Format still image (.HEIF)', # image/heif
     'msf1' => 'High Efficiency Image Format sequence (.HEIFS)', # image/heif-sequence
-    'crx ' => 'Canon Raw (.CR3)', #PH
+    'crx ' => 'Canon Raw (.CRX)', #PH (CR3 or CRM; use Canon CompressorVersion to decide)
 );
 
 # information for time/date-based tags (time zero is Jan 1, 1904)
@@ -378,10 +379,12 @@ my %eeStd = ( stco => 1, co64 => 1, stsz => 1, stz2 => 1, stsc => 1, stts => 1 )
 
 # boxes for the various handler types that we want to save when ExtractEmbedded is enabled
 my %eeBox = (
-  # (nothing useful found yet in video stream)
-  # vide => { %eeStd, avcC => 1 },
+    # (note: vide is only processed if specific atoms exist in the VideoSampleDesc)
+    vide => { %eeStd, JPEG => 1 }, # (add avcC to parse H264 stream)
     text => { %eeStd },
     meta => { %eeStd },
+    sbtl => { %eeStd },
+    data => { %eeStd },
     camm => { %eeStd }, # (Insta360)
     ''   => { 'gps ' => 1 }, # (no handler -- top level box)
 );
@@ -389,17 +392,20 @@ my %eeBox = (
 # QuickTime atoms
 %Image::ExifTool::QuickTime::Main = (
     PROCESS_PROC => \&ProcessMOV,
-    WRITE_PROC => \&WriteQuickTime,
+    WRITE_PROC => \&WriteQuickTime, # (only needs to be defined for directories to process when writing)
     GROUPS => { 2 => 'Video' },
     NOTES => q{
         The QuickTime format is used for many different types of audio, video and
-        image files (most commonly, MOV and MP4 videos).  Exiftool extracts standard
-        meta information a variety of audio, video and image parameters, as well as
-        proprietary information written by many camera models.  Tags with a question
-        mark after their name are not extracted unless the Unknown option is set.
-
-        ExifTool has the ability to write/create XMP, and edit some date/time tags
-        in QuickTime-format files.
+        image files (most notably, MOV/MP4 videos and HEIC/CR3 images).  Exiftool
+        extracts standard meta information a variety of audio, video and image
+        parameters, as well as proprietary information written by many camera
+        models.  Tags with a question mark after their name are not extracted unless
+        the Unknown option is set.
+        
+        ExifTool currently has a very limited ability to write metadata in
+        QuickTime-format videos.  It can edit/create/delete any XMP tags, but may
+        only be used to edit certain date/time tags and the video orientation in
+        native QuickTime metadata.
 
         According to the specification, many QuickTime date/time tags should be
         stored as UTC.  Unfortunately, digital cameras often store local time values
@@ -469,6 +475,12 @@ my %eeBox = (
         Name => 'Movie',
         SubDirectory => { TagTable => 'Image::ExifTool::QuickTime::Movie' },
     },
+    moof => {
+        Name => 'MovieFragment',
+        SubDirectory => { TagTable => 'Image::ExifTool::QuickTime::MovieFragment' },
+    },
+    # mfra - movie fragment random access: contains tfra (track fragment random access), and
+    #           mfro (movie fragment random access offset) (ref 5)
     mdat => { Name => 'MovieData', Unknown => 1, Binary => 1 },
     'mdat-size' => {
         Name => 'MovieDataSize',
@@ -573,7 +585,12 @@ my %eeBox = (
             return \$str;
         },
     },
+    udat => { #PH (GPS NMEA-format log written by Datakam Player software)
+        Name => 'GPSLog',
+        Binary => 1,    # (actually ASCII, but very lengthy)
+    },
     # meta - proprietary XML information written by some Flip cameras - PH
+    # beam - 16 bytes found in an iPhone video
 );
 
 # MPEG-4 'ftyp' atom
@@ -735,6 +752,12 @@ my %eeBox = (
         Unknown => 1,
         Binary => 1,
     },
+    JPEG => { # (found in CR3 images; used as a flag to identify JpgFromRaw 'vide' stream)
+        Name => 'JPEGInfo',
+        # (4 bytes all zero)
+        Unknown => 1,
+        Binary => 1,
+    },
     # hvcC - HEVC configuration
     # svcC - 7 bytes: 00 00 00 00 ff e0 00
     # esds - elementary stream descriptor
@@ -778,8 +801,9 @@ my %eeBox = (
     PROCESS_PROC => \&ProcessMOV,
     GROUPS => { 2 => 'Video' },
     NOTES => q{
-        Tags defined by the Spherical Video V2 specification (see
-        https://github.com/google/spatial-media/blob/master/docs/spherical-video-v2-rfc.md).
+        Tags defined by the Spherical Video V2 specification.  See
+        L<https://github.com/google/spatial-media/blob/master/docs/spherical-video-v2-rfc.md>
+        for the specification.
     },
     svhd => {
         Name => 'MetadataSource',
@@ -942,7 +966,7 @@ my %eeBox = (
         Name => 'HTCTrack',
         SubDirectory => { TagTable => 'Image::ExifTool::QuickTime::Track' },
     },
-   'gps ' => {  # GPS data written by Novatek cameras
+   'gps ' => {  # GPS data written by Novatek cameras (parsed in QuickTimeStream.pl)
         Name => 'GPSDataList',
         Unknown => 1,
         Binary => 1,
@@ -950,7 +974,38 @@ my %eeBox = (
     # prfl - Profile (ref 12)
     # clip - clipping --> contains crgn (clip region) (ref 12)
     # mvex - movie extends --> contains mehd (movie extends header), trex (track extends) (ref 14)
-    # ICAT - 4 bytes: "6350" (Nikon CoolPix S6900)
+    # ICAT - 4 bytes: "6350" (Nikon CoolPix S6900), "6500" (Panasonic FT7)
+);
+
+# (ref CFFMediaFormat-2_1.pdf)
+%Image::ExifTool::QuickTime::MovieFragment = (
+    PROCESS_PROC => \&ProcessMOV,
+    WRITE_PROC => \&WriteQuickTime,
+    GROUPS => { 2 => 'Video' },
+    # mfhd - movie fragment header
+    traf => {
+        Name => 'TrackFragment',
+        SubDirectory => { TagTable => 'Image::ExifTool::QuickTime::TrackFragment' },
+    },
+);
+
+# (ref CFFMediaFormat-2_1.pdf)
+%Image::ExifTool::QuickTime::TrackFragment = (
+    PROCESS_PROC => \&ProcessMOV,
+    WRITE_PROC => \&WriteQuickTime,
+    GROUPS => { 2 => 'Video' },
+    # tfhd - track fragment header
+    # edts - edits --> contains elst (edit list) (ref PH)
+    # tfdt - track fragment base media decode time
+    # trik - trick play box
+    # trun - track fragment run box
+    # avcn - AVC NAL unit storage box
+    # secn - sample encryption box
+    # saio - sample auxiliary information offsets box
+    # sbgp - sample to group box
+    # sgpd - sample group description box
+    # sdtp - independent and disposable samples (ref 5)
+    # subs - sub-sample information (ref 5)
 );
 
 # movie header data block
@@ -1087,7 +1142,7 @@ my %eeBox = (
     CHECK_PROC => \&Image::ExifTool::CheckBinaryData,
     GROUPS => { 1 => 'Track#', 2 => 'Video' },
     FORMAT => 'int32u',
-    DATAMEMBER => [ 0, 1, 2, 5 ],
+    DATAMEMBER => [ 0, 1, 2, 5, 7 ],
     0 => {
         Name => 'TrackHeaderVersion',
         Format => 'int8u',
@@ -1121,6 +1176,12 @@ my %eeBox = (
         # this is int64u if TrackHeaderVersion == 1 (ref 13)
         Hook => '$$self{TrackHeaderVersion} and $format = "int64u", $varSize += 4',
     },
+    7 => { # (used only for writing MatrixStructure)
+        Name => 'ImageSizeLookahead',
+        Hidden => 1,
+        Format => 'int32u[14]',
+        RawConv => '$$self{ImageSizeLookahead} = $val; undef',
+    },
     8 => {
         Name => 'TrackLayer',
         Format => 'int16u',
@@ -1136,10 +1197,20 @@ my %eeBox = (
     10 => {
         Name => 'MatrixStructure',
         Format => 'fixed32s[9]',
+        Notes => 'writable for the video track via the Composite Rotation tag',
+        Writable => 1,
+        Permanent => 1,
+        # only set rotation if image size is non-zero
+        RawConvInv => \&GetMatrixStructure,
         # (the right column is fixed 2.30 instead of 16.16)
         ValueConv => q{
             my @a = split ' ',$val;
             $_ /= 0x4000 foreach @a[2,5,8];
+            return "@a";
+        },
+        ValueConvInv => q{
+            my @a = split ' ',$val;
+            $_ *= 0x4000 foreach @a[2,5,8];
             return "@a";
         },
     },
@@ -1241,6 +1312,7 @@ my %eeBox = (
     "\xa9gpt" => 'CameraPitch', #PH
     "\xa9gyw" => 'CameraYaw', #PH
     "\xa9grl" => 'CameraRoll', #PH
+    "\xa9enc" => 'EncoderID', #PH (forum9271)
     # and the following entries don't have the proper 4-byte header for \xa9 tags:
     "\xa9dji" => { Name => 'UserData_dji', Format => 'undef', Binary => 1, Unknown => 1, Hidden => 1 },
     "\xa9res" => { Name => 'UserData_res', Format => 'undef', Binary => 1, Unknown => 1, Hidden => 1 },
@@ -1652,6 +1724,8 @@ my %eeBox = (
         SubDirectory => { TagTable => 'Image::ExifTool::GoPro::GPMF' },
     },
     # free (all zero)
+    "\xa9TSC" => 'StartTimeScale', # (Hero6)
+    "\xa9TSZ" => 'StartTimeSampleSize', # (Hero6)
     # --- HTC ----
     htcb => {
         Name => 'HTCBinary',
@@ -1662,19 +1736,35 @@ my %eeBox = (
         Name => 'KodakDcMD',
         SubDirectory => { TagTable => 'Image::ExifTool::Kodak::DcMD' },
     },
+    SNum => { Name => 'SerialNumber', Groups => { 2 => 'Camera' } },
+    ptch => { Name => 'Pitch', Format => 'rational64s' }, # Units??
+    _yaw => { Name => 'Yaw',   Format => 'rational64s' }, # Units??
+    roll => { Name => 'Roll',  Format => 'rational64s' }, # Units??
+    _cx_ => { Name => 'CX',    Format => 'rational64s', Unknown => 1 },
+    _cy_ => { Name => 'CY',    Format => 'rational64s', Unknown => 1 },
+    rads => { Name => 'Rads',  Format => 'rational64s', Unknown => 1 },
+    lvlm => { Name => 'LevelMeter', Format => 'rational64s', Unknown => 1 }, # (guess)
+    Lvlm => { Name => 'LevelMeter', Format => 'rational64s', Unknown => 1 }, # (guess)
+    pose => { Name => 'pose', SubDirectory => { TagTable => 'Image::ExifTool::Kodak::pose' } },
     # AMBA => Ambarella AVC atom (unknown data written by Kodak Playsport video cam)
-    # tmlp - 1 byte: 0 (PixPro SP360)
+    # tmlp - 1 byte: 0 (PixPro SP360/4KVR360)
     # pivi - 72 bytes (PixPro SP360)
     # pive - 12 bytes (PixPro SP360)
-    # m ev - 2 bytes: 0 0 (PixPro SP360)
-    # m wb - 4 bytes: 0 0 0 0 (PixPro SP360)
-    # mclr - 4 bytes: 0 0 0 0 (PixPro SP360)
-    # mmtr - 4 bytes: 6 0 0 0 (PixPro SP360)
+    # loop - 4 bytes: 0 0 0 0 (PixPro 4KVR360)
+    # m cm - 2 bytes: 0 0 (PixPro 4KVR360)
+    # m ev - 2 bytes: 0 0 (PixPro SP360/4KVR360) (exposure comp?)
+    # m vr - 2 bytes: 0 1 (PixPro 4KVR360) (virtual reality?)
+    # m wb - 4 bytes: 0 0 0 0 (PixPro SP360/4KVR360) (white balance?)
+    # mclr - 4 bytes: 0 0 0 0 (PixPro SP360/4KVR360)
+    # mmtr - 4 bytes: 0,6 0 0 0 (PixPro SP360/4KVR360)
     # mflr - 4 bytes: 0 0 0 0 (PixPro SP360)
     # lvlm - 24 bytes (PixPro SP360)
+    # Lvlm - 24 bytes (PixPro 4KVR360)
     # ufdm - 4 bytes: 0 0 0 1 (PixPro SP360)
-    # mtdt - 1 byte: 0 (PixPro SP360)
+    # mtdt - 1 byte: 0 (PixPro SP360/4KVR360)
     # gdta - 75240 bytes (PixPro SP360)
+    # EIS1 - 4 bytes: 03 07 00 00 (PixPro 4KVR360)
+    # EIS2 - 4 bytes: 04 97 00 00 (PixPro 4KVR360)
     # ---- LG ----
     adzc => { Name => 'Unknown_adzc', Unknown => 1, Hidden => 1, %langText }, # "false\0/","true\0/"
     adze => { Name => 'Unknown_adze', Unknown => 1, Hidden => 1, %langText }, # "false\0/"
@@ -4911,16 +5001,17 @@ my %eeBox = (
         Name => 'MediaType',
         PrintConvColumns => 2,
         PrintConv => { #(http://weblog.xanga.com/gryphondwb/615474010/iphone-ringtones---what-did-itunes-741-really-do.html)
-            0 => 'Movie',
+            0 => 'Movie (old)', #forum9059 (was Movie)
             1 => 'Normal (Music)',
             2 => 'Audiobook',
             5 => 'Whacked Bookmark',
             6 => 'Music Video',
-            9 => 'Short Film',
+            9 => 'Movie', #forum9059 (was Short Film)
             10 => 'TV Show',
             11 => 'Booklet',
             14 => 'Ringtone',
             21 => 'Podcast', #15
+            23 => 'iTunes U', #forum9059
         },
     },
     rate => 'RatingPercent', #PH
@@ -4988,7 +5079,7 @@ my %eeBox = (
         Name => 'FaceItem',
         SubDirectory => {
             TagTable => 'Image::ExifTool::QuickTime::Keys',
-            ProcessProc => \&ProcessMebx,
+            ProcessProc => \&Process_mebx,
         },
     },
 );
@@ -5410,6 +5501,7 @@ my %eeBox = (
 # MP4 media information box (ref 5)
 %Image::ExifTool::QuickTime::MediaInfo = (
     PROCESS_PROC => \&ProcessMOV,
+    WRITE_PROC => \&WriteQuickTime,
     GROUPS => { 1 => 'Track#', 2 => 'Video' },
     NOTES => 'MP4 media info box.',
     vmhd => {
@@ -5484,6 +5576,7 @@ my %eeBox = (
 # MP4 sample table box (ref 5)
 %Image::ExifTool::QuickTime::SampleTable = (
     PROCESS_PROC => \&ProcessMOV,
+    WRITE_PROC => \&WriteQuickTime,
     GROUPS => { 2 => 'Video' },
     NOTES => 'MP4 sample table box.',
     stsd => [
@@ -5603,6 +5696,7 @@ my %eeBox = (
         Name => 'PartialSyncSamples',
         ValueConv => 'join " ",unpack("x8N*",$val)',
     },
+    # mark - 8 bytes all zero (GoPro)
 );
 
 # MP4 audio sample description box (ref 5/AtomicParsley 0.9.4 parsley.cpp)
@@ -6113,6 +6207,7 @@ my %eeBox = (
 #   fdsc         -       -
 #   gpmd         -       -
 #   rtmd         -       -
+#   CTMD         -       -
 #
    'keys' => { #PH (iPhone7+ hevc)
         Name => 'Keys',
@@ -6130,7 +6225,11 @@ my %eeBox = (
 # MP4 generic sample description box
 %Image::ExifTool::QuickTime::OtherSampleDesc = (
     PROCESS_PROC => \&ProcessHybrid,
-    4 => { Name => 'OtherFormat', Format => 'undef[4]' },
+    4 => {
+        Name => 'OtherFormat',
+        Format => 'undef[4]',
+        RawConv => '$$self{MetaFormat} = $val', # (yes, use MetaFormat for this too)
+    },
 #
 # Observed offsets for child atoms of various OtherFormat types:
 #
@@ -6140,6 +6239,7 @@ my %eeBox = (
 #   mp4a         36      esds
 #   mp4s         16      esds
 #   tmcd         34      name
+#   data         -       -
 #
     ftab => { Name => 'FontTable',  Format => 'undef', ValueConv => 'substr($val, 5)' },
 );
@@ -6257,6 +6357,15 @@ my %eeBox = (
             $_ = substr($val,4); s/\0.*//s; $_;
         },
     },
+    "url\0" => { # (written by GoPro)
+        Name => 'URL',
+        Format => 'undef',  # (necessary to prevent decoding as string!)
+        RawConv => q{
+            # ignore if self-contained (flags bit 0 set)
+            return undef if unpack("N",$val) & 0x01;
+            $_ = substr($val,4); s/\0.*//s; $_;
+        },
+    },
     'urn ' => {
         Name => 'URN',
         Format => 'undef',  # (necessary to prevent decoding as string!)
@@ -6308,6 +6417,7 @@ my %eeBox = (
             nrtm => 'Non-Real Time Metadata', #PH (Sony ILCE-7S) [how is this different from "meta"?]
             pict => 'Picture', # (HEIC images)
             camm => 'Camera Metadata', # (Insta360 MP4)
+            psmd => 'Panasonic Static Metadata', #PH (Leica C-Lux CAM-DC25)
         },
     },
     12 => { #PH
@@ -6355,11 +6465,20 @@ my %eeBox = (
 %Image::ExifTool::QuickTime::Composite = (
     GROUPS => { 2 => 'Video' },
     Rotation => {
+        Notes => q{
+            writing this tag updates QuickTime MatrixStructure for all tracks with a
+            non-zero image size
+        },
         Require => {
             0 => 'QuickTime:MatrixStructure',
             1 => 'QuickTime:HandlerType',
         },
+        Writable => 1,
+        WriteAlso => {
+            MatrixStructure => 'Image::ExifTool::QuickTime::GetRotationMatrix($val)',
+        },
         ValueConv => 'Image::ExifTool::QuickTime::CalcRotation($self)',
+        ValueConvInv => '$val',
     },
     AvgBitrate => {
         Priority => 0,  # let QuickTime::AvgBitrate take priority
@@ -6463,13 +6582,42 @@ Image::ExifTool::AddCompositeTags('Image::ExifTool::QuickTime');
 #
 sub AUTOLOAD
 {
-    if ($AUTOLOAD eq 'Image::ExifTool::QuickTime::ProcessMebx') {
+    if ($AUTOLOAD eq 'Image::ExifTool::QuickTime::Process_mebx') {
         require 'Image/ExifTool/QuickTimeStream.pl';
         no strict 'refs';
         return &$AUTOLOAD(@_);
     } else {
         return Image::ExifTool::DoAutoLoad($AUTOLOAD, @_);
     }
+}
+
+#------------------------------------------------------------------------------
+# Get rotation matrix
+# Inputs: 0) angle in degrees
+# Returns: 9-element rotation matrix as a string (with 0 x/y offsets)
+sub GetRotationMatrix($)
+{
+    my $ang = 3.1415926536 * shift() / 180;
+    my $cos = cos $ang;
+    my $sin = sin $ang;
+    my $msn = -$sin;
+    return "$cos $sin 0 $msn $cos 0 0 0 1";
+}
+
+#------------------------------------------------------------------------------
+# Get rotation angle from a matrix
+# Inputs: 0) rotation matrix as a string
+# Return: positive rotation angle in degrees rounded to 3 decimal points,
+#         or undef on error
+sub GetRotationAngle($)
+{
+    my $rotMatrix = shift;
+    my @a = split ' ', $rotMatrix;
+    return undef if $a[0]==0 and $a[1]==0;
+    # calculate the rotation angle (assume uniform rotation)
+    my $angle = atan2($a[1], $a[0]) * 180 / 3.14159;
+    $angle += 360 if $angle < 0;
+    return int($angle * 1000 + 0.5) / 1000;
 }
 
 #------------------------------------------------------------------------------
@@ -6497,14 +6645,38 @@ sub CalcRotation($)
         my $tag = "MatrixStructure$idx";
         last unless $$value{$tag};
         next unless $et->GetGroup($tag, 1) eq $track;
-        my @a = split ' ', $$value{$tag};
-        return undef unless $a[0] or $a[1];
-        # calculate the rotation angle (assume uniform rotation)
-        my $angle = atan2($a[1], $a[0]) * 180 / 3.14159;
-        $angle += 360 if $angle < 0;
-        return int($angle * 1000 + 0.5) / 1000;
+        return GetRotationAngle($$value{$tag});
     }
     return undef;
+}
+
+#------------------------------------------------------------------------------
+# Get MatrixStructure for a given rotation angle
+# Inputs: 0) rotation angle (deg), 1) ExifTool ref
+# Returns: matrix structure as a string, or undef if it can't be rotated
+# - requires ImageSizeLookahead to determine the video image size, and doesn't
+#   rotate matrix unless image size is valid
+sub GetMatrixStructure($$)
+{
+    my ($val, $et) = @_;
+    my @a = split ' ', $val;
+    # pass straight through if it already has an offset
+    return $val unless $a[6] == 0 and $a[7] == 0;
+    my @s = split ' ', $$et{ImageSizeLookahead};
+    my ($w, $h) = @s[12,13];
+    return undef unless $w and $h;  # don't rotate 0-sized track
+    $_ = Image::ExifTool::QuickTime::FixWrongFormat($_) foreach $w,$h;
+    # apply necessary offsets for the standard rotations
+    my $angle = GetRotationAngle($val);
+    return undef unless defined $angle;
+    if ($angle == 90) {
+        @a[6,7] = ($h, 0);
+    } elsif ($angle == 180) {
+        @a[6,7] = ($w, $h);
+    } elsif ($angle == 270) {
+        @a[6,7] = (0, $w);
+    }
+    return "@a";
 }
 
 #------------------------------------------------------------------------------
@@ -6531,10 +6703,7 @@ sub FixWrongFormat($)
 {
     my $val = shift;
     return undef unless $val;
-    if ($val & 0xffff0000) {
-        $val = unpack('n',pack('N',$val));
-    }
-    return $val;
+    return $val & 0xfff00000 ? unpack('n',pack('N',$val)) : $val;
 }
 
 #------------------------------------------------------------------------------
@@ -6606,7 +6775,12 @@ sub PrintChapter($)
     $dur -= $h * 3600;
     my $m = int($dur / 60);
     my $s = $dur - $m * 60;
-    return sprintf("[%d:%.2d:%06.3f] %s",$h,$m,$s,$title);
+    my $ss = sprintf('%06.3f', $s);
+    if ($ss >= 60) {
+        $ss = '00.000';
+        ++$m >= 60 and $m -= 60, ++$h;
+    }
+    return sprintf("[%d:%.2d:%s] %s",$h,$m,$ss,$title);
 }
 
 #------------------------------------------------------------------------------
@@ -7061,7 +7235,7 @@ sub ProcessSampleDesc($$$)
     $pos += 8;
     my $i;
     for ($i=0; $i<$num; ++$i) {     # loop through sample descriptions
-        last if $pos + 16 > $dirLen;
+        last if $pos + 8 > $dirLen;
         my $size = Get32u($dataPt, $pos);
         last if $pos + $size > $dirLen;
         $$dirInfo{DirStart} = $pos;
@@ -7336,14 +7510,16 @@ sub ProcessMOV($$;$)
             }
             $fileType or $fileType = 'MP4'; # default to MP4
             $et->SetFileType($fileType, $mimeLookup{$fileType} || 'video/mp4');
-            # temporarily set ExtractEmbedded option for CR3 files
-            $saveOptions{ExtractEmbedded} = $et->Options(ExtractEmbedded => 1) if $fileType eq 'CR3';
+            # temporarily set ExtractEmbedded option for CRX files
+            $saveOptions{ExtractEmbedded} = $et->Options(ExtractEmbedded => 1) if $fileType eq 'CRX';
         } else {
             $et->SetFileType();       # MOV
         }
         SetByteOrder('MM');
         $$et{PRIORITY_DIR} = 'XMP';   # have XMP take priority
     }
+    $$raf{NoBuffer} = 1 if $et->Options('FastScan'); # disable buffering in FastScan mode
+
     if ($$et{OPTIONS}{ExtractEmbedded}) {
         $ee = 1;
         $unkOpt = $$et{OPTIONS}{Unknown};
@@ -7401,12 +7577,13 @@ sub ProcessMOV($$;$)
             }
         }
         # set flag to store additional information for ExtractEmbedded option
-        if ($eeBox{$$et{HandlerType}} and $eeBox{$$et{HandlerType}}{$tag}) {
+        my $handlerType = $$et{HandlerType};
+        if ($eeBox{$handlerType} and $eeBox{$handlerType}{$tag}) {
             if ($ee) {
                 $eeTag = 1;
                 $$et{OPTIONS}{Unknown} = 1; # temporarily enable "Unknown" option
-            } elsif (not $$et{OPTIONS}{Validate}) {
-                $et->WarnOnce('The ExtractEmbedded option may find more tags in the movie data',1);
+            } elsif ($handlerType ne 'vide' and not $$et{OPTIONS}{Validate}) {
+                $et->WarnOnce('The ExtractEmbedded option may find more tags in the movie data',3);
             }
         }
         my $tagInfo = $et->GetTagInfo($tagTablePtr, $tag);
@@ -7809,8 +7986,10 @@ QTLang: foreach $tag (@{$$et{QTLang}}) {
         }
         delete $$et{QTLang};
     }
-    # finally, process our item information
-    HandleItemInfo($et, $raf) if $topLevel;
+    if ($topLevel) {
+        HandleItemInfo($et, $raf);  # process our item information
+        ScanMovieData($et) if $ee;  # brute force scan for metadata embedded in movie data
+    }
     # restore any changed options
     $et->Options($_ => $saveOptions{$_}) foreach keys %saveOptions;
     return 1;

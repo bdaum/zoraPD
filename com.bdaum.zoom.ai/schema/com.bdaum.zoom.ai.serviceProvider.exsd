@@ -50,7 +50,12 @@
    <element name="provider">
       <complexType>
          <sequence>
-            <element ref="ratingModel" minOccurs="0" maxOccurs="unbounded"/>
+            <sequence>
+               <element ref="ratingModel" minOccurs="0" maxOccurs="unbounded"/>
+            </sequence>
+            <sequence>
+               <element ref="feature" minOccurs="0" maxOccurs="unbounded"/>
+            </sequence>
          </sequence>
          <attribute name="id" type="string" use="required">
             <annotation>
@@ -86,13 +91,6 @@
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="featureId" type="string">
-            <annotation>
-               <documentation>
-                  An unique integer number greater 1000 identifying the Lire feature provided by this service provider
-               </documentation>
-            </annotation>
-         </attribute>
       </complexType>
    </element>
 
@@ -109,6 +107,52 @@
             <annotation>
                <documentation>
                   
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="feature">
+      <complexType>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  A unique integer number greater 1000 identifying the Lire feature provided by this service provider
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  A unique feature name
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="label" type="string" use="required">
+            <annotation>
+               <documentation>
+                  A display label
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="essential" type="boolean">
+            <annotation>
+               <documentation>
+                  true if the feature should be shown when only essential features are displayed
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="description" type="string">
+            <annotation>
+               <documentation>
+                  A detailed description of this feature
                </documentation>
                <appinfo>
                   <meta.attribute translatable="true"/>

@@ -33,7 +33,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.ui.AssetSelection;
-import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.dialogs.TimeSearchDialog;
 
 public class TimeSearchAction extends Action {
@@ -69,7 +69,7 @@ public class TimeSearchAction extends Action {
 		}
 		TimeSearchDialog dialog = new TimeSearchDialog(adaptable.getAdapter(Shell.class), date1, date2);
 		if (dialog.open() == Window.OK)
-			UiActivator.getDefault().getNavigationHistory(adaptable.getAdapter(IWorkbenchWindow.class))
+			Ui.getUi().getNavigationHistory(adaptable.getAdapter(IWorkbenchWindow.class))
 					.postSelection(new StructuredSelection(dialog.getResult()));
 	}
 }

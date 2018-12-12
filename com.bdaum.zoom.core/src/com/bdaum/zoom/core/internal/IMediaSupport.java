@@ -19,7 +19,6 @@
  */
 package com.bdaum.zoom.core.internal;
 
-import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.List;
@@ -32,6 +31,7 @@ import org.eclipse.swt.graphics.Image;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.MediaExtension;
 import com.bdaum.zoom.core.QueryField;
+import com.bdaum.zoom.mtp.StorageObject;
 
 public interface IMediaSupport {
 	/*** Property flags ***/
@@ -62,21 +62,17 @@ public interface IMediaSupport {
 	 */
 	int SLIDESHOW = 1 << 26;
 	/**
-	 * Media is in PDF format
+	 * Media supports PDF format
 	 */
 	int PDF = 1 << 27;
-	/**
-	 * Media is in KML format
-	 */
-	int KML = 1 << 28;
 
 	int IMPORTWORKSTEPS = 6;
 
 	/**
 	 * Imports a file into the catalog
 	 *
-	 * @param file
-	 *            - file to import
+	 * @param object
+	 *            - object to import
 	 * @param extension
 	 *            - file extension
 	 * @param importState
@@ -89,7 +85,7 @@ public interface IMediaSupport {
 	 *         has changed
 	 * @throws Exception
 	 */
-	int importFile(File file, String extension, ImportState importState,
+	int importFile(StorageObject object, String extension, ImportState importState,
 			IProgressMonitor aMonitor, URI remote) throws Exception;
 
 	/**
@@ -246,11 +242,11 @@ public interface IMediaSupport {
 	/**
 	 * Obtain specific folder for this media type
 	 *
-	 * @param file
+	 * @param dcims
 	 *            - DCIM folder
 	 * @return - media folder
 	 */
-	File getMediaFolder(File file);
+	StorageObject getMediaFolder(StorageObject dcims);
 
 	/**
 	 * Perform specific undo tasks for the given imported asset

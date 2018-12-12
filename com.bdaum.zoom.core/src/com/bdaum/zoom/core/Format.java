@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.core;
@@ -65,7 +65,7 @@ public class Format {
 		}
 
 		public Object fromString(String s) throws ParseException {
-			return evaluateCurrencyExpression(s);
+			return evaluateCurrencyExpression(s.trim());
 		}
 
 	}
@@ -182,7 +182,7 @@ public class Format {
 					return d * sign;
 				}
 				return af.parse(s).doubleValue();
-			} catch (ParseException e) {
+			} catch (ParseException | NumberFormatException e) {
 				throw new ParseException(Messages.Format_bad_lat_lon, 0);
 			}
 		}
@@ -512,42 +512,126 @@ public class Format {
 		}
 	}
 
-	public static double evaluateCurrencyExpression(String expression) throws ParseException {
-		double total = 0d;
-		double sign = 1d;
-		String ops = "-+"; //$NON-NLS-1$
-		StringTokenizer st = new StringTokenizer(expression, ops, true);
-		while (st.hasMoreElements()) {
-			String token = st.nextToken();
-			int p = ops.indexOf(token);
-			if (p >= 0)
-				sign = 2 * p - 1;
-			else
-				total += sign * evaluateProduct(token);
-		}
-		return total;
-	}
+	// public static double evaluateCurrencyExpression(String expression) throws
+	// ParseException {
+	// double total = 0d;
+	// double sign = 1d;
+	// String ops = "-+"; //$NON-NLS-1$
+	// StringTokenizer st = new StringTokenizer(expression, ops, true);
+	// while (st.hasMoreElements()) {
+	// String token = st.nextToken();
+	// int p = ops.indexOf(token);
+	// if (p >= 0)
+	// sign = 2 * p - 1;
+	// else
+	// total += sign * evaluateProduct(token.trim());
+	// }
+	// return total;
+	// }
+	//
+	// private static double evaluateProduct(String s) throws ParseException {
+	// double total = 1d;
+	// boolean divide = false;
+	// String ops = "/*"; //$NON-NLS-1$
+	// StringTokenizer st = new StringTokenizer(s, ops, true);
+	// while (st.hasMoreElements()) {
+	// String token = st.nextToken();
+	// int p = ops.indexOf(token);
+	// if (p >= 0)
+	// divide = p == 0;
+	// else if (divide)
+	// total /= parseCurreny(token.trim());
+	// else
+	// total *= parseCurreny(token.trim());
+	// }
+	// return total;
+	// }
+//
+//	private static double parseCurreny(String token) throws ParseException {
+//		return getCurrencyNumberFormat().parse(token).doubleValue();
+//	}
+	
+	// Based on an idea by Boann (https://stackoverflow.com/questions/3422673/evaluating-a-math-expression-given-in-string-form)
 
-	private static double evaluateProduct(String s) throws ParseException {
-		double total = 1d;
-		boolean divide = false;
-		String ops = "/*"; //$NON-NLS-1$
-		StringTokenizer st = new StringTokenizer(s, ops, true);
-		while (st.hasMoreElements()) {
-			String token = st.nextToken();
-			int p = ops.indexOf(token);
-			if (p >= 0)
-				divide = p == 0;
-			else if (divide)
-				total /= parseCurreny(token);
-			else
-				total *= parseCurreny(token);
-		}
-		return total;
-	}
+	private static double evaluateCurrencyExpression(final String str) throws ParseException {
+		return new Object() {
+			int pos = -1, ch;
 
-	private static double parseCurreny(String token) throws ParseException {
-		return getCurrencyNumberFormat().parse(token).doubleValue();
+			void nextChar() {
+				ch = (++pos < str.length()) ? str.charAt(pos) : -1;
+			}
+
+			boolean eat(int charToEat) {
+				while (ch == ' ')
+					nextChar();
+				if (ch == charToEat) {
+					nextChar();
+					return true;
+				}
+				return false;
+			}
+
+			double parse() throws ParseException {
+				nextChar();
+				double x = parseExpression();
+				if (pos < str.length())
+					throw new ParseException(NLS.bind(Messages.Format_unexpected, (char) ch), this.pos);
+				return x;
+			}
+
+			// Grammar:
+			// expression = term | expression `+` term | expression `-` term
+			// term = factor | term `*` factor | term `/` factor
+			// factor = `+` factor | `-` factor | `(` expression `)` | currency
+
+			double parseExpression() throws ParseException {
+				double x = parseTerm();
+				for (;;) {
+					if (eat('+'))
+						x += parseTerm(); // addition
+					else if (eat('-'))
+						x -= parseTerm(); // subtraction
+					else
+						return x;
+				}
+			}
+
+			double parseTerm() throws ParseException {
+				double x = parseFactor();
+				for (;;) {
+					if (eat('*'))
+						x *= parseFactor(); // multiplication
+					else if (eat('/'))
+						x /= parseFactor(); // division
+					else
+						return x;
+				}
+			}
+
+			double parseFactor() throws ParseException {
+				if (eat('+'))
+					return parseFactor(); // unary plus
+				if (eat('-'))
+					return -parseFactor(); // unary minus
+				int startPos = this.pos;
+				if (eat('(')) { // parentheses
+					double x = parseExpression();
+					eat(')');
+					return x;
+				} else if (ch != '+' && ch != '-' && ch != '*' && ch != '/' && ch != '(' && ch != ')' && ch != ' ' && ch != -1) { // anything
+																														// else
+					while (ch != '+' && ch != '-' && ch != '*' && ch != '/' && ch != '(' && ch != ')' && ch != ' ' && ch != -1)
+						nextChar();
+					String token = str.substring(startPos, this.pos);
+					try {
+						return getCurrencyNumberFormat().parse(token).doubleValue();
+					} catch (ParseException e) {
+						return  getDecimalFormat(3).parse(token).doubleValue();
+					}
+				} else
+					throw new ParseException(NLS.bind(Messages.Format_unexpected, (char) ch), this.pos);
+			}
+		}.parse();
 	}
 
 }

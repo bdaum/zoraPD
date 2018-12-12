@@ -70,7 +70,6 @@ public abstract class PPanel extends PSWTPath implements PTextHandler {
 				Font.PLAIN, size), penColor, background, true, SWT.SINGLE);
 		title.setSpellingOptions(10, ISpellCheckingService.TITLEOPTIONS);
 		title.setGreekThreshold(3);
-		title.setSelectedPenColor(penColor);
 		title.setOffset(x, y);
 		title.setPickable(true);
 		addChild(title);

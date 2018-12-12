@@ -54,12 +54,10 @@ final class AccountContentProvider implements
 	public Object[] getElements(Object inputElement) {
 		if (inputElement instanceof IExtensionPoint) {
 			List<IConfigurationElement> allElements = new ArrayList<IConfigurationElement>();
-			IExtension[] extensions = ((IExtensionPoint) inputElement)
-					.getExtensions();
-			for (IExtension ext : extensions) {
+			for (IExtension ext : ((IExtensionPoint) inputElement)
+					.getExtensions())
 				allElements.addAll(Arrays.asList(ext
 						.getConfigurationElements()));
-			}
 			return allElements.toArray();
 		}
 		return CommunitiesPreferencePage.EMPTY;
@@ -72,10 +70,9 @@ final class AccountContentProvider implements
 
 	
 	public Object getParent(Object element) {
-		if (element instanceof CommunityAccount) {
+		if (element instanceof CommunityAccount)
 			return ((CommunityAccount) element).getConfiguration()
 					.getParent();
-		}
 		return null;
 	}
 
@@ -87,10 +84,7 @@ final class AccountContentProvider implements
 					.getChildren("account")[0]; //$NON-NLS-1$
 			String id = configElement.getAttribute("id"); //$NON-NLS-1$
 			List<CommunityAccount> acc = accounts.get(id);
-			if (acc == null) {
-				acc = CommunityAccount.loadAllAccounts(id, accountConfig);
-				accounts.put(id, acc);
-			}
+			accounts.put(id, acc = CommunityAccount.loadAllAccounts(id, accountConfig));
 			return acc.toArray();
 		}
 		return CommunitiesPreferencePage.EMPTY;

@@ -21,10 +21,10 @@ package com.bdaum.zoom.ui.internal.preferences;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiUtilities;
@@ -116,9 +116,9 @@ public class ApplicationPreferencePage extends AbstractPreferencePage {
 				Messages.getString("ApplicationPreferencePage.with_prompt")); //$NON-NLS-1$
 		trashButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("ApplicationPreferencePage.delete_trashcan"), null); //$NON-NLS-1$
-		trayButtonGroup.addSelectionListener(new SelectionAdapter() {
+		trayButtonGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateButtons();
 			}
 		});

@@ -30,6 +30,7 @@ public class Messages extends NLS {
 	public static String ImportState_Internal_error_processing_field;
 	public static String ImportState_Malformed_XMP;
 	public static String ImportState_IO_error_accessing_XMP;
+	public static String ImportState_IO_error_importing;
 	public static String ImportState_Internal_error_assigning;
 	public static String ImportState_Bad_XMP_URL;
 	public static String ImportState_IO_Error_XMP;
@@ -96,6 +97,8 @@ public class Messages extends NLS {
 	public static String Utilities_nxmpixel;
 	public static String Utilities_yyyymdhmm;
 	public static String VolumeManager_error_compiling_pattern;
+	public static String VolumeManager_initialization_failed;
+	public static String VolumeManager_initialize;
 	public static String VolumeManager_monitor_volumes;
 	static {
 		// initialize resource bundle

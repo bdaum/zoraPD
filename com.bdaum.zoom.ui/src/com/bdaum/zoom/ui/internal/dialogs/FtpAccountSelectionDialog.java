@@ -25,7 +25,6 @@ import java.util.List;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
@@ -93,7 +92,7 @@ public class FtpAccountSelectionDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		account = (FtpAccount) ((IStructuredSelection) ftpViewer.getSelection()).getFirstElement();
+		account = (FtpAccount) ftpViewer.getStructuredSelection().getFirstElement();
 		super.okPressed();
 	}
 

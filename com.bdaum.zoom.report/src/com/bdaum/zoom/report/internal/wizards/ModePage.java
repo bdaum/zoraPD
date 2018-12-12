@@ -21,12 +21,12 @@ package com.bdaum.zoom.report.internal.wizards;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.report.Report;
 import com.bdaum.zoom.report.internal.HelpContextIds;
@@ -37,7 +37,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class ModePage extends ColoredWizardPage implements SelectionListener {
+public class ModePage extends ColoredWizardPage implements Listener {
 
 	private CheckboxButton countButton;
 	private CheckboxButton salesButton;
@@ -66,20 +66,20 @@ public class ModePage extends ColoredWizardPage implements SelectionListener {
 		valueGroup.setText(Messages.ModePage_values_y);
 		countButton = WidgetFactory.createCheckButton(valueGroup, Messages.ModePage_imageCount,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-		countButton.addSelectionListener(this);
+		countButton.addListener(this);
 		salesButton = WidgetFactory.createCheckButton(valueGroup, Messages.ModePage_dales,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-		salesButton.addSelectionListener(this);
+		salesButton.addListener(this);
 		earningsButton = WidgetFactory.createCheckButton(valueGroup, Messages.ModePage_earnings,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-		earningsButton.addSelectionListener(this);
+		earningsButton.addListener(this);
 		CGroup xGroup = new CGroup(composite, SWT.NONE);
 		xGroup.setLayout(new FillLayout());
 		xGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, true));
 		xGroup.setText(Messages.ModePage_xAxis);
 		domainGroup = new RadioButtonGroup(xGroup, null, SWT.NONE, Messages.ModePage_daytime, Messages.ModePage_caltime, Messages.ModePage_numeric,
 				Messages.ModePage_discrete);
-		domainGroup.addSelectionListener(this);
+		domainGroup.addListener(this);
 		domainGroup.setSelection(1);
 		CGroup optionsGroup = new CGroup(composite, SWT.NONE);
 		optionsGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, true));
@@ -88,13 +88,13 @@ public class ModePage extends ColoredWizardPage implements SelectionListener {
 		sortButtonGroup = new RadioButtonGroup(optionsGroup, Messages.ModePage_sortBy, SWT.NONE, Messages.ModePage_noSort, Messages.ModePage_name, Messages.ModePage_count, Messages.ModePage_sales,
 				Messages.ModePage_earnings);
 		sortButtonGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.FILL, true, true));
-		sortButtonGroup.addSelectionListener(this);
+		sortButtonGroup.addListener(this);
 		sortButtonGroup.setSelection(0);
 		sortDirectionGroup = new RadioButtonGroup(optionsGroup, Messages.ModePage_sortDirection, SWT.NONE, Messages.ModePage_ascending, Messages.ModePage_descending);
 		layoutData = new GridData(SWT.BEGINNING, SWT.FILL, true, true);
 		layoutData.verticalIndent = 5;
 		sortDirectionGroup.setLayoutData(layoutData);
-		sortDirectionGroup.addSelectionListener(this);
+		sortDirectionGroup.addListener(this);
 		sortDirectionGroup.setSelection(0);
 		countButton.setSelection(true);
 		super.createControl(parent);
@@ -110,15 +110,20 @@ public class ModePage extends ColoredWizardPage implements SelectionListener {
 				mode |= ReportWizard.SALES;
 			if (earningsButton.getSelection())
 				mode |= ReportWizard.EARNINGS;
-			int selection = domainGroup.getSelection();
-			if (selection == 0)
+			switch (domainGroup.getSelection()) {
+			case 0:
 				mode |= ReportWizard.DAYTIME;
-			else if (selection == 1)
+				break;
+			case 1:
 				mode |= ReportWizard.TIME;
-			else if (selection == 2)
+				break;
+			case 2:
 				mode |= ReportWizard.NUMERIC;
-			else if (selection == 3)
+				break;
+			case 3:
 				mode |= ReportWizard.DISCRETE;
+				break;
+			}
 			updateSortOptions();
 			report.setMode(mode);
 		}
@@ -197,14 +202,9 @@ public class ModePage extends ColoredWizardPage implements SelectionListener {
 		}
 	}
 
-	public void widgetSelected(SelectionEvent e) {
+	public void handleEvent(Event e) {
 		updateFields();
 		validatePage();
-	}
-
-	@Override
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
 	}
 
 }

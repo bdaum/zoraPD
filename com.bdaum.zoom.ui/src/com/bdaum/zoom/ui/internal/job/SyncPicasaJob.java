@@ -118,7 +118,7 @@ public class SyncPicasaJob extends AbstractUiDaemon {
 							for (WatchedFolder wf : watchedFolders) {
 								File folderFile = volumeManager.findExistingFile(wf.getUri(), wf.getVolume());
 								if (folderFile != null) {
-									FilterChain filterChain = new FilterChain(UiUtilities.getFilters(wf), "-+", ";", //$NON-NLS-1$//$NON-NLS-2$
+									FilterChain filterChain = new FilterChain(UiUtilities.getFilters(wf), "-+_*", ";", //$NON-NLS-1$//$NON-NLS-2$
 											true);
 									filterChain.setBaseLength(folderFile.getAbsolutePath().length() + 1);
 									scanIniFiles(folderFile, monitor, wf, filterChain, lastScanTime, now);

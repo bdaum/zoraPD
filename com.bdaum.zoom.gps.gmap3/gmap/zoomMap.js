@@ -1,3 +1,4 @@
+// GMAP3
 var map;
 var mgr;
 var infowindow;
@@ -20,13 +21,13 @@ var batch = [];
 var arrowBatch = [];
 var redraw = false;
 var selected;
+var areaCircle;
 
 function setupMap() {
 	document.getElementById("map").innerHTML = mapIsLoading;
 	var mapTypeIds = [];
-	for ( var type in google.maps.MapTypeId) {
+	for ( var type in google.maps.MapTypeId) 
 		mapTypeIds.push(google.maps.MapTypeId[type]);
-	}
 	mapTypeIds.push("OSM");
 	var mapTypeControlOptions = {
 		mapTypeIds : mapTypeIds
@@ -78,7 +79,7 @@ function setupMap() {
 	google.maps.event.addDomListener(document, 'keyup', function(e) {
 		if (draggedMarker) {
 			var code = (e.keyCode ? e.keyCode : e.which);
-			if (code == 27) 
+			if (code == 27)
 				releaseDragged();
 		}
 	});
@@ -121,7 +122,7 @@ function performDrawing(redraw) {
 			setBoundsForShape(track);
 	} else {
 		setMarkers();
-		if (!redraw && (locCreated.length > 0 || locShown.length > 0)) 
+		if (!redraw && (locCreated.length > 0 || locShown.length > 0))
 			setBoundsForShape(locCreated.concat(locShown));
 	}
 }
@@ -201,9 +202,9 @@ function setMarkers() {
 	for (i = 0; i < locCreated.length; i++) {
 		markerLocation = locCreated[i];
 		bearing = imgDirection ? imgDirection[i] : NaN;
-		if (bearing !== bearing) {
+		if (bearing !== bearing)
 			arrowBatch.push(null);
-		} else if (!isClustered(batch[i]))
+		else if (!isClustered(batch[i]))
 			arrowBatch.push(createArrow(markerLocation, bearing));
 	}
 	sendCamCount();
@@ -240,15 +241,13 @@ function createArrow(markerLocation, bearing) {
 function clearMarkers() {
 	camCount = 0;
 	mgr.clearMarkers();
-	for (var i = 0; i < batch.length; i++) {
+	for (var i = 0; i < batch.length; i++)
 		if (batch[i])
 			batch[i].setMap(null);
-	}
 	batch = [];
-	for (i = 0; i < arrowBatch.length; i++) {
+	for (i = 0; i < arrowBatch.length; i++)
 		if (arrowBatch[i])
 			arrowBatch[i].setMap(null);
-	}
 	arrowBatch = [];
 }
 
@@ -275,22 +274,18 @@ function coord(coord, dist, bearing) {
 			+ Math.atan2(Math.sin(brg) * Math.sin(dist) * Math.cos(lat1), Math
 					.cos(dist)
 					- Math.sin(lat1) * Math.sin(lat2));
-	lat2 = radToDeg * lat2;
-	lon2 = radToDeg * lon2;
-	lon2 = (lon2 + 540) % 360 - 180;
-	return new google.maps.LatLng(lat2, lon2);
+	return new google.maps.LatLng(radToDeg * lat2, (radToDeg * lon2 + 540) % 360 - 180);
 }
 
 function makeDragEndCallback(marker, bearing, i, ids) {
 	return function() {
 		var markerPoint = marker.getPosition();
-		if (typeof (ids) === "string") {
+		if (typeof (ids) === "string")
 			locShown[i] = markerPoint;
-		} else {
+		else
 			locCreated[i] = markerPoint;
-		}
 		setSelection(ids);
-		sendPosition('modify', markerPoint, map.getZoom(),
+		sendPosition('modify', markerPoint, map.getZoom(), 0,
 				typeof (ids) === "string" ? ids : ids.join());
 		if (bearing !== bearing) {
 			// skip NaN
@@ -418,8 +413,7 @@ function locationPin() {
 							function() {
 								if (lmarker) {
 									sendPosition('click',
-											lmarker.getPosition(), map
-													.getZoom(), 0);
+											lmarker.getPosition(), map.getZoom(), 0);
 									releaseDragged();
 								}
 							});
@@ -645,11 +639,7 @@ function applyCameraSet(pos) {
 	locImage = [];
 	locImage.push(selected);
 	imgDirection = [];
-	if (locShown && locShown.length > 0) {
-		imgDirection.push(bearing(pos, locShown[0]));
-	} else {
-		imgDirection.push(NaN);
-	}
+	imgDirection.push(locShown && locShown.length > 0 ? bearing(pos, locShown[0]) : NaN);
 }
 
 function concatTitles(array) {
@@ -677,9 +667,8 @@ function flatten(array) {
 	var result = [];
 	for (var i = 0; i < array.length; i++) {
 		var subArray = array[i];
-		for (var j = 0; j < subArray.length; j++) {
+		for (var j = 0; j < subArray.length; j++)
 			result.push(subArray[j]);
-		}
 	}
 	return result;
 }
@@ -700,11 +689,7 @@ function bearing(from, to) {
 
 function applyShownSet(pos) {
 	locShown.push(pos);
-	if (locTitles.length > 0) {
-		locShownTitles.push(locTitles[0]);
-	} else {
-		locShownTitles.push("");
-	}
+	locShownTitles.push(locTitles.length > 0 ? locTitles[0] : "");
 	var uuid = generateQuickGuid();
 	selected = "shown=" + uuid;
 	locShownImage.push(selected);
@@ -713,9 +698,8 @@ function applyShownSet(pos) {
 }
 
 function applyDirectionSet(pos) {
-	if (imgDirection.length > 0 && locCreated.length > 0) {
+	if (imgDirection.length > 0 && locCreated.length > 0)
 		imgDirection[0] = bearing(locCreated[0], pos);
-	}
 }
 
 function generateQuickGuid() {
@@ -750,18 +734,37 @@ function deleteSelected() {
 
 function removeItem(array, index) {
 	var newArray = [];
-	for (var i = 0; i < array.length; i++) {
-		if (i !== index) {
+	for (var i = 0; i < array.length; i++)
+		if (i !== index)
 			newArray.push(array[i]);
-		}
-	}
 	return newArray;
 }
+
 function findItem(array, item) {
-	for (var i = 0; i < array.length; i++) {
-		if (item == array[i]) {
+	for (var i = 0; i < array.length; i++)
+		if (item == array[i])
 			return i;
-		}
-	}
 	return -1;
+}
+
+function setAreaCircle(position, diameter) {
+	if (areaCircle) {
+		areaCircle.setCenter(position);
+		areaCircle.setRadius(diameter / 2);
+	} else {
+		areaCircle = new google.maps.Circle({
+			strokeColor : '#00FF00',
+			strokeOpacity : 0.8,
+			strokeWeight : 2,
+			fillColor : '#00FF00',
+			fillOpacity : 0.35,
+			draggable : true,
+			map : map,
+			center : position,
+			radius : diameter / 2
+		});
+		google.maps.event.addListener(areaCircle, 'dragend', function() {
+			sendPosition('modify', areaCircle.getCenter(), map.getZoom(), 4);
+		});
+	}
 }

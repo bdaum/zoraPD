@@ -192,6 +192,64 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <meta http-equiv="Content-Language" content="en-us">
 <meta name="GENERATOR" content="Microsoft FrontPage 4.0">
 <meta name="ProgId" content="FrontPage.Editor.Document"><title>Readme</title>
@@ -214,15 +272,14 @@ body { font-family: arial, helvetica, geneva; font-size: 10pt; clip: rect( ); ma
 </tr>
 <tr>
 <td>
-<p>March 18, 2018</p>
+<p>December 8, 2018</p>
 <br>
 <h1 style="color: red;"><a class="mozTocH1" name="mozTocId462522"></a>ZoRa Photo Director</h1>
 <div style="margin-left: 40px;"><sub>Zo = <span style="font-weight: bold;">Zo</span>omable
 User Interface</sub><br>
 <sub>Ra = <span style="font-weight: bold;">Ra</span>w
 file support</sub></div>
-<h1><a class="mozTocH2" name="mozTocId943067"></a>Contents</h1>
-      <a href="#mozTocId943067"></a>
+<h1><a class="mozTocH2" name="mozTocId943067"></a>Contents<span style="text-decoration: underline;"></span></h1><span style="text-decoration: underline;"><br></span>
       <ol>
 <li><a href="#mozTocId180886">Description</a></li><li><a href="#mozTocId725139">Features</a></li><li><a href="#mozTocId31540">
 Requirements</a></li><li><a href="#mozTocId493872">Installation</a><ol><li><a href="#mozTocId264756">Installation
@@ -231,7 +288,7 @@ under Windows</a></li><li><a href="#mozTocId688416">Installation under Linux
 on removable media</a></li><li><a href="#mozTocId983009">De-installation</a></li></ol></li><li><a href="#mozTocId767897">Known
 problems
 </a></li><li><a href="#mozTocId82845">License</a></li><li><a href="#mozTocId731789">Copyright</a></li><li><a href="#mozTocId902534">Source code</a></li><li><a href="#mozTocId961538">Change
-log</a><ol><li><a href="#mozTocId983456">Version 3.3.0</a></li><li><a href="#mozTocId160733">Version 3.2.2</a></li><li><a href="#mozTocId446335">Version 3.2.1</a></li><li><a href="#mozTocId636428">Version 3.2.0</a></li><li><a href="#mozTocId514211">Version 3.1.0</a></li><li><a href="#mozTocId527756">Version 3.0.1</a></li><li><a href="#mozTocId527756">Version 3.0.0</a></li><li><a href="#mozTocId342068">Version
+log</a><ol><li><a href="#mozTocId445631">Version 3.5.0</a></li><li><a href="#mozTocId983456">Version 3.4.0</a></li><li><a href="#mozTocId983456">Version 3.3.0</a></li><li><a href="#mozTocId160733">Version 3.2.2</a></li><li><a href="#mozTocId446335">Version 3.2.1</a></li><li><a href="#mozTocId636428">Version 3.2.0</a></li><li><a href="#mozTocId514211">Version 3.1.0</a></li><li><a href="#mozTocId527756">Version 3.0.1</a></li><li><a href="#mozTocId527756">Version 3.0.0</a></li><li><a href="#mozTocId342068">Version
 2.5.0</a></li><li><a href="#mozTocId771503">Version
 2.4.0</a></li><li><a href="#mozTocId557735">Version
 2.3.0</a></li><li><a href="#mozTocId664656">Version
@@ -249,7 +306,7 @@ log</a><ol><li><a href="#mozTocId983456">Version 3.3.0</a></li><li><a href="#moz
 1.2.0</a></li><li><a href="#mozTocId391355">Version
 1.1.0</a></li></ol></li>
       </ol>
-      <span style="text-decoration: underline;"><br>
+      <span style="text-decoration: underline;">
       <br>
       </span>
 
@@ -279,6 +336,9 @@ catalogs.</li>
 frame, Visual Similarity, Full text, Duplicates, and Series</li>
 <li>Support for offline and remote media (mobile devices,
 Internet, etc.)</li>
+        <li>Tethered shooting (WIndows only)<br>
+        </li>
+
 <li>Tracking relationships between images.&nbsp;</li>
 <li>Integrated Geo-tagging and Geo-naming.</li>
 <li>Support for RAW files with integrated DNG conversion
@@ -440,7 +500,7 @@ or&nbsp;(at your option) any later version.</p>
 <span style="font-weight: bold;"></span>
 <h2><a class="mozTocH2" name="mozTocId731789"></a>Copyright</h2>
 <br>
-(c) Berthold Daum and contributors 2009-2017.&nbsp; All rights
+(c) Berthold Daum and contributors 2009-2018.&nbsp; All rights
 reserved.<br>
 <br>
 Visit <a href="http://www.photozora.org">http://www.photozora.org</a><br>
@@ -451,6 +511,159 @@ Visit <a href="http://www.photozora.org">http://www.photozora.org</a><br>
 <br>
 <h2><a class="mozTocH2" name="mozTocId961538"></a>Change
 log</h2><br>
+      <h3><a class="mozTocH3" name="mozTocId445631"></a>Version 3.5.0</h3>
+
+
+
+
+
+
+
+
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <ul>
+<li>Made improvements to the Import wizard</li>
+        <li>Improved the file format dialog</li>
+        <li>Fixed a bug in the Import from Device wizard</li>
+        <li>Added support for <span style="font-weight: bold;">MTP- </span>or<span style="font-weight: bold;"> PTP-enabled devices</span>, e.g. Import from Device works for Smartphones, too (<span style="font-style: italic;">Windows platforms only!</span>)</li>
+        <li>Fixed a bug in watched folder processing</li>
+        <li>Added <span style="font-weight: bold;">tethered shooting</span>  (<span style="font-style: italic;">Windows platforms only!</span>)</li>
+        <li>Improvements in the support of multiple monitors</li>
+        <li>It is now possible to <span style="font-weight: bold;">compare</span> images by selecting two images and invoking the internal image viewer</li>
+        <li>Fixed a bug when adding a new person album from the Edit person name dialog</li>
+        <li>Fixed a bug in the key shortcuts preference page</li>
+        <li>Search for duplicates can now be performed by the original file name, too.</li>
+        <li>Skipping duplicates during import from device should now work properly.</li>
+        <li>A bug in the export to external folder wizard was fixed.<br>
+        </li>
+        <li>The behaviour of the mouse wheel has been reworked.</li>
+        <li>A bug with creating the Lucene index for a new catalog was fixed</li>
+        <li>Reduced movements in the Catalog view caused by operations elsewhere</li>
+        <li>Faster parsing of EXIF data</li>
+        <li style="color: red;"><strong>Dropped support for YouTube</strong></li>
+        <li>Improved media management during import from device</li>
+        <li>Harmonized export functions with multimedia content</li>
+        <li>Lens related EXIF fields such as focal length or f-number can now be edited if they are unknown</li>
+        <li>Attached voice notes are now imported, too, from devices<br>
+        </li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </ul>
+
+      <h3><a class="mozTocH3" name="mozTocId983456"></a>Version 3.4.0</h3>
+
+
+
+
+
+
+
+
+      
+      
+      
+      
+      
+      
+      
+      
+      <ul>
+<li>It is now possible to switch off the captions for the Preview view and the Histogram view by specifying an empty template</li>
+        <li>Added more <span style="font-weight: bold;">selection functions</span></li>
+        <li>Improved the rating dialog</li>
+        <li>When using the internal image viewer on a secondary monitor, the displayed image area is now marked in the Preview view</li>
+        <li>Fixed a bug when querying he parent album of subalbums</li>
+        <li>It is now possible to copy and paste text and voice notes through the Copy metadata and Paste metadata functions</li>
+        <li>Fixed a bug with pasting metadata</li>
+        <li>Voice notes and text notes can now be attached to an image simultanously</li>
+        <li>It is now possible to attach <span style="font-weight: bold;">drawings</span> to an image<br>
+        </li>
+
+        <li>Fixed a bug with displaying Undo/Redo texts in the status line</li>
+        <li>Fixed a bug with DNG conversion when DNG images are not stored in a separate folder</li>
+        <li><span style="font-weight: bold;">darktable</span> can now be used as a rawconverter instead of dcraw or rawtherapee</li>
+        <li>Improved the Export metadata function</li>
+        <li>It is now possible to Undo and Redo painting operations in the Search similar dialog using Ctrl+z and Ctrl+y</li>
+        <li>Added an opacity option for painting in the Search similar dialog</li>
+        <li>Fixed a bug with undoing label movements in the Exhibition view</li>
+        <li>Improved the color scheme of the Slideshow view and the Web gallery view</li>
+        <li>Fixed a bug with displaying selected table elements in the native platform color scheme</li>
+        <li>Fixed a bug in the file selection page of the import wizard</li>
+        <li>Enabled support for makernotes of newer Olympus cameras</li>
+        <li>Fixed a bug with the map display of locations that do not have coordinates</li>
+        <li>Added the possibility to exclude areas from geotagging (<span style="font-weight: bold;">NoGo areas</span>)</li>
+        <li>Harmonized the switching between Geonaming services</li>
+        <li>Added a <span style="font-weight: bold;">calendar view</span></li>
+        <li>Made the import of face data optional</li>
+        <li>Face detection via Clarifai works again</li>
+        <li><span style="font-weight: bold;">Face similarity</span> with the Clarifai algorithm</li>
+        <li>New Google accounting supported</li>
+        <li>Fixed a bug when importing an image and an artist was specified and the camera EXIF data contained the same artist</li>
+        <li>Fixed a bug in similarity search</li>
+        <li>Added <span style="font-weight: bold;">GPX</span>- and <span style="font-weight: bold;">KML</span>-export</li>
+        <li>Patterns in watched folder filters can now be made case sensitive</li>
+        <li>Fixed a bug when importing images without a valid EXIF creation date</li>
+        <li>Fixed a bug with the detection of modified raw recipes in watched folders</li>
+        <li>Fixed a bug in the gallery file format filter</li>
+        <li>Fixed a bug in the Show in timeline action</li>
+        <li>Improved the Set person dialog</li>
+        <li>It is now possible to define <span style="font-weight: bold;">person subgroups</span></li>
+        <li>The dialog for export into a folder or FTP now supports target specific presets<br>
+        </li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </ul>
+
       <h3><a class="mozTocH3" name="mozTocId983456"></a>Version 3.3.0</h3>
 
 

@@ -215,6 +215,20 @@ public interface WatchedFolder_type extends AomValueChangedNotifier,
 	 */
 	public int getFileSource();
 
+	/**
+	 * Set value of property tethered
+	 *
+	 * @param _value - new element value
+	 */
+	public void setTethered(boolean _value);
+
+	/**
+	 * Get value of property tethered
+	 *
+	 * @return - value of field tethered
+	 */
+	public boolean getTethered();
+
 	/* ----- Validation ----- */
 
 	/**

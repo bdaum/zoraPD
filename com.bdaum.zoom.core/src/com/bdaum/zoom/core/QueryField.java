@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.core;
@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.osgi.util.NLS;
@@ -234,8 +233,9 @@ public class QueryField {
 	public static final int EDIT_NEVER = 0;
 	public static final int EDIT_DIGITAL = 1;
 	public static final int EDIT_ANALOG = 2;
-	public static final int EDIT_ALWAYS = 3;
-	public static final int EDIT_HIDDEN = 4;
+	public static final int EDIT_UNKNOWN = 3;
+	public static final int EDIT_ALWAYS = 4;
+	public static final int EDIT_HIDDEN = 8; // can be ORed
 	public static final int EDIT_MASK = 15;
 	// Auto creation
 	public static final int AUTO_DISCRETE = 1 << 21;
@@ -573,8 +573,8 @@ public class QueryField {
 
 	public static final QueryField ROTATION = new QueryField(IMAGE_IMAGE, "rotation", //$NON-NLS-1$
 			null, null, null, Messages.QueryField_rotation, ACTION_QUERY, PHOTO | EDIT_NEVER | QUERY | AUTO_LINEAR,
-			CATEGORY_ASSET, T_POSITIVEINTEGER, 1, 1, new int[] { 0, 90, 180, 270 }, new String[] { "0째", "90째", //$NON-NLS-1$//$NON-NLS-2$
-					"180째", "270째" }, //$NON-NLS-1$//$NON-NLS-2$
+			CATEGORY_ASSET, T_POSITIVEINTEGER, 1, 1, new int[] { 0, 90, 180, 270 }, new String[] { "0�", "90�", //$NON-NLS-1$//$NON-NLS-2$
+					"180�", "270�" }, //$NON-NLS-1$//$NON-NLS-2$
 			null, 5f, ISpellCheckingService.NOSPELLING) {
 
 		@Override
@@ -1231,11 +1231,7 @@ public class QueryField {
 					return v.indexOf("270") > 0 ? 5 //$NON-NLS-1$
 							: v.indexOf("90") > 0 ? 7 //$NON-NLS-1$
 									: 2;
-				if (v.indexOf("180") > 0) //$NON-NLS-1$
-					return 3;
-				if (v.indexOf("90") > 6) //$NON-NLS-1$
-					return 3;
-				if (v.indexOf("270") > 8) //$NON-NLS-1$
+				if (v.indexOf("180") > 0 || v.indexOf("90") > 6 || v.indexOf("270") > 8) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					return 3;
 			}
 			return 0;
@@ -1329,7 +1325,7 @@ public class QueryField {
 			"FNumber", //$NON-NLS-1$
 			NS_EXIF, "FNumber", //$NON-NLS-1$
 			Messages.QueryField_fNumber, ACTION_QUERY,
-			PHOTO | EDIT_ANALOG | ESSENTIAL | HOVER | QUERY | AUTO_LOG | REPORT, CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 1,
+			PHOTO | EDIT_UNKNOWN | ESSENTIAL | HOVER | QUERY | AUTO_LOG | REPORT, CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 1,
 			0f, 128f, ISpellCheckingService.NOSPELLING) {
 
 		@Override
@@ -1381,7 +1377,7 @@ public class QueryField {
 	public static final QueryField EXIF_ISOSPEEDRATINGS = new QueryField(EXIF_CAMERA, "isoSpeedRatings", //$NON-NLS-1$
 			"ISO", //$NON-NLS-1$
 			NS_EXIF, "ISOSpeedRatings", //$NON-NLS-1$
-			null, ACTION_NONE, PHOTO | EDIT_NEVER, CATEGORY_EXIF, T_POSITIVEINTEGER, CARD_LIST, 6, 0f, 52428800,
+			null, ACTION_NONE, PHOTO | EDIT_NEVER, CATEGORY_EXIF, T_POSITIVEINTEGER, CARD_LIST, 8, 0f, 52428800,
 			ISpellCheckingService.NOSPELLING) {
 
 		@Override
@@ -1415,7 +1411,7 @@ public class QueryField {
 	public static final QueryField EXIF_MAXLENSAPERTURE = new QueryField(EXIF_CAMERA, "maxLensAperture", //$NON-NLS-1$
 			"MaxApertureValue", //$NON-NLS-1$
 			NS_EXIF, "MaxApertureValue", //$NON-NLS-1$
-			Messages.QueryField_Max_lens_aperture, ACTION_QUERY, PHOTO | EDIT_ANALOG | QUERY | REPORT, CATEGORY_EXIF,
+			Messages.QueryField_Max_lens_aperture, ACTION_QUERY, PHOTO | EDIT_UNKNOWN | QUERY | REPORT, CATEGORY_EXIF,
 			T_POSITIVEFLOAT, 1, 1, Format.apertureFormatter, 0f, 16f, ISpellCheckingService.NOSPELLING) {
 
 		@Override
@@ -1426,7 +1422,7 @@ public class QueryField {
 	public static final QueryField EXIF_SUBJECTDISTANCE = new QueryField(EXIF_CAMERA, "subjectDistance", //$NON-NLS-1$
 			"SubjectDistance", //$NON-NLS-1$
 			NS_EXIF, "SubjectDistance", //$NON-NLS-1$
-			Messages.QueryField_Subject_distance, ACTION_QUERY, PHOTO | EDIT_ANALOG | QUERY | AUTO_LOG | REPORT,
+			Messages.QueryField_Subject_distance, ACTION_QUERY, PHOTO | EDIT_UNKNOWN | QUERY | AUTO_LOG | REPORT,
 			CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 2, 10f, 10000f, ISpellCheckingService.NOSPELLING) {
 
 		@Override
@@ -1612,8 +1608,9 @@ public class QueryField {
 	public static final QueryField EXIF_FOCALLENGTH = new QueryField(EXIF_CAMERA, "focalLength", //$NON-NLS-1$
 			"FocalLength", //$NON-NLS-1$
 			NS_EXIF, "FocalLength", //$NON-NLS-1$
-			Messages.QueryField_Focal_length, ACTION_QUERY, PHOTO | EDIT_ANALOG | ESSENTIAL | QUERY | AUTO_LOG | REPORT,
-			CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 1, 5f, 20000f, ISpellCheckingService.NOSPELLING) {
+			Messages.QueryField_Focal_length, ACTION_QUERY,
+			PHOTO | EDIT_UNKNOWN | ESSENTIAL | QUERY | AUTO_LOG | REPORT, CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 1, 5f,
+			20000f, ISpellCheckingService.NOSPELLING) {
 
 		@Override
 		protected double getDouble(Asset asset) {
@@ -1773,7 +1770,7 @@ public class QueryField {
 	public static final QueryField EXIF_FOCALLENGTHIN35MMFILM = new QueryField(EXIF_CAMERA, "focalLengthIn35MmFilm", //$NON-NLS-1$
 			"FocalLength35efl", //$NON-NLS-1$
 			NS_EXIF, "FocalLengthIn35mmFilm", //$NON-NLS-1$
-			Messages.QueryField_Focal_length_35, ACTION_QUERY, PHOTO | EDIT_ANALOG | HOVER | QUERY | AUTO_LOG | REPORT,
+			Messages.QueryField_Focal_length_35, ACTION_QUERY, PHOTO | EDIT_UNKNOWN | HOVER | QUERY | AUTO_LOG | REPORT,
 			CATEGORY_EXIF, T_POSITIVEINTEGER, 1, 4, 5f, 20000f, ISpellCheckingService.NOSPELLING) {
 
 		@Override
@@ -1789,7 +1786,7 @@ public class QueryField {
 	public static final QueryField EXIF_FOCALLENGTHFACTOR = new QueryField(EXIF_CAMERA, "focalLengthFactor", //$NON-NLS-1$
 			"ScaleFactor35efl", //$NON-NLS-1$
 			null, null, Messages.QueryField_Focal_length_factor, ACTION_QUERY,
-			PHOTO | EDIT_ANALOG | QUERY | AUTO_DISCRETE | REPORT, CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 2, 1f, 200f,
+			PHOTO | EDIT_UNKNOWN | QUERY | AUTO_DISCRETE | REPORT, CATEGORY_EXIF, T_POSITIVEFLOAT, 1, 2, 1f, 200f,
 			ISpellCheckingService.NOSPELLING) {
 
 		@Override
@@ -2030,7 +2027,7 @@ public class QueryField {
 	public static final QueryField EXIF_LENS = new QueryField(EXIF_AUX, "lens", //$NON-NLS-1$
 			"Lens", //$NON-NLS-1$
 			NS_AUX, "Lens", //$NON-NLS-1$
-			Messages.QueryField_Lens, ACTION_QUERY, PHOTO | EDIT_ANALOG | HOVER | QUERY | AUTO_DISCRETE | REPORT,
+			Messages.QueryField_Lens, ACTION_QUERY, PHOTO | EDIT_UNKNOWN | HOVER | QUERY | AUTO_DISCRETE | REPORT,
 			CATEGORY_EXIF, T_STRING, 1, 50, 0f, Float.NaN, ISpellCheckingService.NOSPELLING) {
 
 		@Override
@@ -2041,7 +2038,7 @@ public class QueryField {
 	public static final QueryField EXIF_LENSSERIAL = new QueryField(EXIF_AUX, "lensSerial", //$NON-NLS-1$
 			"LensSerialNumber", //$NON-NLS-1$
 			NS_AUX, "LensSerialNumber", //$NON-NLS-1$
-			Messages.QueryField_Lens_Serial_Number, ACTION_QUERY, PHOTO | EDIT_ANALOG | QUERY | AUTO_DISCRETE,
+			Messages.QueryField_Lens_Serial_Number, ACTION_QUERY, PHOTO | EDIT_UNKNOWN | QUERY | AUTO_DISCRETE,
 			CATEGORY_EXIF, T_STRING, 1, 32, 0f, Float.NaN, ISpellCheckingService.NOSPELLING) {
 
 		@Override
@@ -2484,7 +2481,7 @@ public class QueryField {
 			StringBuilder sb = new StringBuilder();
 			String[] array = (String[]) value;
 			FilterChain filter = getKeywordFilter();
-			for (String v : array) {
+			for (String v : array)
 				if (filter.accept(v)) {
 					String s = formatScalarValue(v, useEnums, useFormatter, inLocale);
 					if (s == null)
@@ -2493,7 +2490,6 @@ public class QueryField {
 						sb.append(';');
 					sb.append(s);
 				}
-			}
 			return sb.toString();
 		}
 	};
@@ -2542,9 +2538,6 @@ public class QueryField {
 					(String[]) mergeVectoredValue(target, normalizeHierarchy((String[]) newValue)));
 		}
 
-		/**
-		 * @return unique id
-		 */
 		@Override
 		public String getId() {
 			return "msHierarchicalKeywords"; //$NON-NLS-1$
@@ -2577,9 +2570,6 @@ public class QueryField {
 					(String[]) mergeVectoredValue(target, normalizeHierarchy((String[]) newValue)));
 		}
 
-		/**
-		 * @return unique id
-		 */
 		@Override
 		public String getId() {
 			return "lrHierarchicalSubjects"; //$NON-NLS-1$
@@ -2826,8 +2816,8 @@ public class QueryField {
 		}
 	};
 	public static final QueryField LOCATION_PLUSCODE = new QueryField(LOCATION_TYPE, "plusCode", null, //$NON-NLS-1$
-			null, null, Messages.QueryField_plus_code, ACTION_QUERY, EDIT_NEVER, CATEGORY_FOREIGN,
-			T_STRING, 1, 12,  0f, Float.NaN, ISpellCheckingService.NOSPELLING);
+			null, null, Messages.QueryField_plus_code, ACTION_QUERY, EDIT_NEVER, CATEGORY_FOREIGN, T_STRING, 1, 12, 0f,
+			Float.NaN, ISpellCheckingService.NOSPELLING);
 
 	// Artwork
 	public static final QueryField ARTWORKOROBJECT_TITLE = new QueryField(ARTWORKOROBJECT_TYPE, "title", null, //$NON-NLS-1$
@@ -3062,11 +3052,9 @@ public class QueryField {
 	 * @return - QueryField instance
 	 */
 	public static QueryField findQuerySubField(String id, String subId) {
-		if (id == null)
-			return null;
-		if (subId == null)
-			return findQueryField(id);
-		return findQueryField(new StringBuilder().append(id).append(':').append(subId).toString());
+		return id == null ? null
+				: subId == null ? findQueryField(id)
+						: findQueryField(new StringBuilder().append(id).append(':').append(subId).toString());
 	}
 
 	/**
@@ -3094,16 +3082,40 @@ public class QueryField {
 
 	protected static Object normalizeHierarchy(String[] cats) {
 		String[] newCats = new String[cats.length];
-		StringBuilder sb = new StringBuilder();
+		boolean sep, mod;
+		int newLength = 0;
 		for (int i = 0; i < cats.length; i++) {
-			StringTokenizer st = new StringTokenizer(cats[i], "/|.\\>"); //$NON-NLS-1$
-			sb.setLength(0);
-			while (st.hasMoreTokens()) {
-				if (sb.length() > 0)
-					sb.append('/');
-				sb.append(st.nextToken());
+			String s = cats[i];
+			int l = s.length();
+			sep = false;
+			mod = false;
+			newLength = 0;
+			char[] ca = new char[l];
+			for (int j = 0; j < l; j++) {
+				char c = s.charAt(j);
+				switch (c) {
+				case '|':
+				case '.':
+				case '\\':
+					if (!sep)
+						ca[newLength++] = '/';
+					sep = true;
+					mod = true;
+					break;
+				case '/':
+					if (sep)
+						mod = true;
+					else
+						ca[newLength++] = c;
+					sep = true;
+					break;
+				default:
+					ca[newLength++] = c;
+					sep = false;
+					break;
+				}
 			}
-			newCats[i] = sb.toString();
+			newCats[i] = mod ? new String(ca, 0, newLength) : s;
 		}
 		return newCats;
 	}
@@ -3627,21 +3639,36 @@ public class QueryField {
 	 * @return true if field can be edited
 	 */
 	public boolean isEditable(Asset asset) {
-		if (asset == null || asset.getFileState() == IVolumeManager.PEER)
-			return false;
-		switch (getEditable()) {
-		case EDIT_ALWAYS:
-			return true;
-		case EDIT_ANALOG:
-			return asset.getFileSource() != Constants.FILESOURCE_DIGITAL_CAMERA
-					&& asset.getFileSource() != Constants.FILESOURCE_SIGMA_DIGITAL_CAMERA;
-		case EDIT_DIGITAL:
-			return asset.getFileSource() != Constants.FILESOURCE_FILMSCANNER
-					&& asset.getFileSource() != Constants.FILESOURCE_REFLECTIVE_SCANNER;
-		}
+		if (asset != null && asset.getFileState() != IVolumeManager.PEER)
+			switch (getEditable()) {
+			case EDIT_ALWAYS:
+				return true;
+			case EDIT_ANALOG:
+				return asset.getFileSource() != Constants.FILESOURCE_DIGITAL_CAMERA
+						&& asset.getFileSource() != Constants.FILESOURCE_SIGMA_DIGITAL_CAMERA;
+			case EDIT_DIGITAL:
+				return asset.getFileSource() != Constants.FILESOURCE_FILMSCANNER
+						&& asset.getFileSource() != Constants.FILESOURCE_REFLECTIVE_SCANNER;
+			case EDIT_UNKNOWN:
+				return isNeutralValue(obtainFieldValue(asset));
+			}
 		return false;
 	}
 
+	/**
+	 * Test if the field can in principle be edited
+	 * 
+	 * @return true if the field can in principle be edited
+	 */
+	public boolean canEdit() {
+		return getEditable() != EDIT_NEVER;
+	}
+
+	/**
+	 * Test if the field can appear in a report
+	 * 
+	 * @return true if the field can appear in a report
+	 */
 	public boolean isReportField() {
 		return (flags & REPORT) != 0;
 	}
@@ -3905,10 +3932,13 @@ public class QueryField {
 		if (!(enumeration instanceof String[]))
 			return s.isEmpty();
 		String[] ids = (String[]) enumeration;
-		for (int j = 0; j < ids.length; j++)
-			if (ids[j].equals(s))
-				return enumLabels[j].equals(Messages.QueryField_Undefined)
-						|| enumLabels[j].equals(Messages.QueryField_Unknown);
+		int l = ids.length;
+		if (l > 0 && ids[0].equals(s))
+			return enumLabels[0].equals(Messages.QueryField_Undefined)
+					|| enumLabels[0].equals(Messages.QueryField_Unknown);
+		if (l > 1 && ids[1].equals(s))
+			return enumLabels[1].equals(Messages.QueryField_Undefined)
+					|| enumLabels[1].equals(Messages.QueryField_Unknown);
 		return false;
 	}
 

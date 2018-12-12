@@ -26,20 +26,18 @@ import java.util.List;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.internal.FieldDescriptor;
@@ -72,11 +70,11 @@ public abstract class AbstractCriterionGroup {
 	private FieldDescriptor fieldValue;
 	private int relationValue;
 
-	protected SelectionListener selectionListener = new SelectionAdapter() {
+	protected Listener selectionListener = new Listener() {
 		@Override
-		public void widgetSelected(SelectionEvent e) {
+		public void handleEvent(Event e) {
 			validate();
-			signalModification();
+			signalModification(e);
 		}
 	};
 
@@ -142,8 +140,8 @@ public abstract class AbstractCriterionGroup {
 			control.dispose();
 	}
 
-	protected void signalModification() {
-		collectionEditGroup.fireModified();
+	protected void signalModification(Event ev) {
+		collectionEditGroup.fireModified(ev);
 	}
 
 	protected void fillFieldCombo(FieldDescriptor extra) {
@@ -187,7 +185,7 @@ public abstract class AbstractCriterionGroup {
 
 	protected Object getGroupValue() {
 		if (enabled)
-			return ((IStructuredSelection) groupCombo.getSelection()).getFirstElement();
+			return groupCombo.getStructuredSelection().getFirstElement();
 		return groupValue;
 	}
 

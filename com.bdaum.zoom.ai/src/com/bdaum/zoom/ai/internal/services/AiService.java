@@ -229,11 +229,11 @@ public class AiService implements IAiService {
 	}
 
 	@Override
-	public float[] getFeatureVector(BufferedImage image, String serviceId) {
+	public float[] getFeatureVector(BufferedImage image, String serviceId, int featureId) {
 		if (isEnabled()) {
 			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(serviceId);
 			if (provider != null)
-				return provider.getFeatureVector(image);
+				return provider.getFeatureVector(image, featureId);
 		}
 		return null;
 	}
@@ -262,19 +262,20 @@ public class AiService implements IAiService {
 		List<Algorithm> algs = new ArrayList<>(3);
 		IAiServiceProvider[] providers = AiActivator.getDefault().getServiceProviders();
 		for (IAiServiceProvider provider : providers) {
-			Algorithm alg = provider.getAlgorithm();
-			if (alg != null)
-				algs.add(alg);
+			Algorithm[] algorithms = provider.getAlgorithms();
+			if (algorithms != null)
+				for (Algorithm algorithm : algorithms) 
+					algs.add(algorithm);
 		}
 		return algs.toArray(new Algorithm[algs.size()]);
 	}
 
 	@Override
-	public Class<?> getFeature(String providerId) {
+	public Class<?> getFeature(String providerId, Algorithm algorithm) {
 		if (isEnabled()) {
 			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(providerId);
 			if (provider != null)
-				return provider.getFeature();
+				return provider.getFeature(algorithm);
 		}
 		return null;
 	}

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -51,7 +51,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.program.BatchConstants;
@@ -68,22 +70,24 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 	private RenamingTemplate template;
 	private Text nameField;
 	private Button addVariableButton;
-	private final Asset asset;
+	private Asset asset;
+	private File file;
 	private Button addMetadataButton;
 	private final QueryField field;
 	private String[] variables;
-	private final boolean transfer;
 	private ComboViewer varViewer;
 	protected String selectedVar;
 
-	public TemplateEditDialog(Shell parentShell, RenamingTemplate template, Asset asset, QueryField field,
-			boolean transfer) {
+	public TemplateEditDialog(Shell parentShell, RenamingTemplate template, Object assetOrFile, QueryField field,
+			String[] variables) {
 		super(parentShell, HelpContextIds.TEMPLATE_DIALOG);
 		this.template = template;
-		this.asset = asset;
+		if (assetOrFile instanceof Asset)
+			this.asset = (Asset) assetOrFile;
+		else if (assetOrFile instanceof File)
+			this.file = (File) assetOrFile;
 		this.field = field;
-		this.transfer = transfer;
-		variables = asset != null ? Constants.TV_RENAME : transfer ? Constants.TV_TRANSFER : Constants.TV_ALL;
+		this.variables = variables;
 	}
 
 	@Override
@@ -162,7 +166,8 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 		buttonComp.setLayout(gridLayout);
 		final ISelectionChangedListener varListener = new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
-				templateField.insert(selectedVar = (String) ((IStructuredSelection) event.getSelection()).getFirstElement());
+				templateField
+						.insert(selectedVar = (String) ((IStructuredSelection) event.getSelection()).getFirstElement());
 				varViewer.getCombo().setVisible(false);
 			}
 		};
@@ -225,22 +230,24 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 		int maxLength = BatchConstants.MAXPATHLENGTH;
 		String filename = "_1072417.JPG"; //$NON-NLS-1$
 		if (asset != null) {
-			File file;
 			try {
 				file = new File(new URI(asset.getUri()));
-				filename = file.getName();
-				String ext = ""; //$NON-NLS-1$
-				int p = filename.lastIndexOf('.');
-				if (p >= 0)
-					ext = filename.substring(p);
-				maxLength -= (file.getParent().length() + 1 + ext.length());
 			} catch (URISyntaxException e) {
 				// use default
 			}
 		}
-		exampleField.setText(Utilities.evaluateTemplate(templateField.getText(),
-				asset != null ? Constants.TV_RENAME : transfer ? Constants.TV_TRANSFER : Constants.TV_ALL, filename,
-				new GregorianCalendar(), 1, 1, 1, Messages.TemplateEditDialog_exmp, asset, "", maxLength, //$NON-NLS-1$
+		if (file != null) {
+			filename = file.getName();
+			String ext = ""; //$NON-NLS-1$
+			int p = filename.lastIndexOf('.');
+			if (p >= 0)
+				ext = filename.substring(p);
+			maxLength -= (file.getParent().length() + 1 + ext.length());
+		}
+		Meta meta = Core.getCore().getDbManager().getMeta(true);
+		exampleField.setText(Utilities.evaluateTemplate(templateField.getText(), variables, filename,
+				new GregorianCalendar(), 1, meta.getLastSequenceNo() + 1, meta.getLastYearSequenceNo() + 1,
+				Messages.TemplateEditDialog_exmp, asset, "", maxLength, //$NON-NLS-1$
 				QueryField.URI == field));
 	}
 
@@ -265,15 +272,14 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 			setErrorMessage(Messages.TemplateEditDialog_template_no_var);
 			return false;
 		}
-		String[] tvs = asset != null ? Constants.TV_RENAME : transfer ? Constants.TV_TRANSFER : Constants.TV_ALL;
 		boolean numbered = false;
-		for (int i = 0; i < tvs.length; i++) {
+		for (int i = 0; i < variables.length; i++) {
 			while (true) {
-				int p = sb.indexOf(tvs[i]);
+				int p = sb.indexOf(variables[i]);
 				if (p >= 0) {
-					if (i < tvs.length - 3)
+					if (i < variables.length - 3)
 						numbered = true;
-					sb.delete(p, p + tvs[i].length());
+					sb.delete(p, p + variables[i].length());
 				} else
 					break;
 			}

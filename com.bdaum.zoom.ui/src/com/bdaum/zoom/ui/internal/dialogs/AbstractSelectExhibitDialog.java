@@ -211,7 +211,7 @@ public abstract class AbstractSelectExhibitDialog extends ZDialog {
 	}
 
 	protected void processSelection() {
-		IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
+		IStructuredSelection sel = viewer.getStructuredSelection();
 		if (sel.isEmpty())
 			cancelPressed();
 		else {

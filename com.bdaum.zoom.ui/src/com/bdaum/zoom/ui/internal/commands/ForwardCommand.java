@@ -23,18 +23,18 @@ import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.ui.INavigationHistory;
-import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.Ui;
 
 public class ForwardCommand extends AbstractCommandHandler {
 	@Override
 	public void run() {
 		final IWorkbenchWindow window = getActiveWorkbenchWindow();
-		BusyIndicator.showWhile(window.getShell().getDisplay(), () -> UiActivator.getDefault().getNavigationHistory(window).forward());
+		BusyIndicator.showWhile(window.getShell().getDisplay(), () -> Ui.getUi().getNavigationHistory(window).forward());
 	}
 
 	@Override
 	public boolean isEnabled() {
-		INavigationHistory navigationHistory = UiActivator.getDefault().getNavigationHistory(getActiveWorkbenchWindow());
+		INavigationHistory navigationHistory = Ui.getUi().getNavigationHistory(getActiveWorkbenchWindow());
 		return navigationHistory == null ? false : navigationHistory.canGoForward();
 	}
 

@@ -21,6 +21,7 @@ package com.bdaum.zoom.video.internal;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.text.NumberFormat;
@@ -74,6 +75,7 @@ import com.bdaum.zoom.image.ZImage;
 import com.bdaum.zoom.image.recipe.Recipe;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.logging.InvalidFileFormatException;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.operations.internal.AbstractMediaSupport;
 import com.bdaum.zoom.operations.internal.AutoRuleOperation;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
@@ -412,8 +414,8 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 	 * org.eclipse.core.runtime.IProgressMonitor, java.net.URI,
 	 * com.bdaum.zoom.core.internal.ImportState)
 	 */
-	public int importFile(File file, String extension, ImportState importState, IProgressMonitor aMonitor, URI remote)
-			throws Exception {
+	public int importFile(StorageObject object, String extension, ImportState importState, IProgressMonitor aMonitor,
+			URI remote) throws Exception {
 		if (this.importState != importState) {
 			this.importState = importState;
 			convertall = false;
@@ -427,27 +429,30 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 		byte[] oldThumbnail = null;
 		String oldId = null;
 		int icnt = 0;
-		String originalFileName = file.getName();
-		long lastMod = file.lastModified();
+		String originalFileName = object.getName();
+		long lastMod = object.lastModified();
 
 		Date lastModified = new Date(lastMod);
-		URI uri = file.toURI();
+		URI uri = object.toURI();
 		ImportFromDeviceData importFromDeviceData = importState.importFromDeviceData;
 		boolean fromImportFilter = VideoActivator.getDefault().getImportFilters().get(extension) != null;
-
-		if (importState.skipDuplicates(originalFileName, lastModified))
-			return 0;
+		File[] files = null;
 		if (importFromDeviceData != null) {
-			file = importState.transferFile(file, importState.importNo, aMonitor);
-			if (file == null)
+			files = importState.transferFile(object, importState.importNo, aMonitor);
+			if (files == null || !files[0].exists())
 				return 0;
-		}
+			if (importState.skipDuplicates(files[0], originalFileName, lastModified)) {
+				files[0].delete();
+				return 0;
+			}
+		} else if (object.isLocal())
+			files = new File[] {(File) object.getNativeObject()};
 		IDbManager dbManager = CoreActivator.getDefault().getDbManager();
 		ImportConfiguration configuration = importState.getConfiguration();
 		MediaPlayerFactory factory = null;
 		try {
 			AssetEnsemble ensemble = null;
-			List<AssetEnsemble> existing = AssetEnsemble.getAllAssets(dbManager, remote != null ? remote : file.toURI(),
+			List<AssetEnsemble> existing = AssetEnsemble.getAllAssets(dbManager, remote != null ? remote : files[0].toURI(),
 					importState);
 			if (importFromDeviceData == null) {
 				Asset asset = null;
@@ -464,7 +469,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 						importState.reimport = true;
 						importState.canUndo = false;
 					} else
-						switch (importState.promptForOverride(file, asset)) {
+						switch (importState.promptForOverride(files[0], asset)) {
 						case ImportState.CANCEL:
 							aMonitor.setCanceled(true);
 							return 0;
@@ -496,30 +501,30 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 				return 0;
 			}
 
-			List<Ghost_typeImpl> ghosts = dbManager.obtainGhostsForFile(remote != null ? remote : file.toURI());
+			List<Ghost_typeImpl> ghosts = dbManager.obtainGhostsForFile(remote != null ? remote : files[0].toURI());
 			importState.allDeletedGhosts.addAll(ghosts);
 			toBeDeleted.addAll(ghosts);
 			if (ensemble == null)
 				ensemble = new AssetEnsemble(dbManager, importState, oldId);
-			Asset asset = importState.resetEnsemble(ensemble, remote != null ? remote : file.toURI(), file,
+			Asset asset = importState.resetEnsemble(ensemble, remote != null ? remote : files[0].toURI(), files[0],
 					lastModified, originalFileName, importState.importDate);
 			aMonitor.worked(1);
 			--work;
 			// Read Image
 			if (asset != null) {
 				ZImage image = null;
-				File exifFile = file;
-				IExifLoader etool = fromImportFilter ? new ExifToolSubstitute(file)
-						: importState.getExifTool(exifFile, false);
+				File exifFile = files[0];
+				IExifLoader etool = fromImportFilter ? new ExifToolSubstitute(files[0])
+						: importState.getExifTool(exifFile, 0);
 				if (oldThumbnail == null) {
 					if (fromImportFilter) {
 						int twidth = importState.computeThumbnailWidth();
 						image = ((ExifToolSubstitute) etool).loadThumbnail(twidth, twidth / 4 * 3, ImportState.MCUWidth,
 								0f);
 					} else {
-						decodeAndCaptureFrames(file, factory);
+						decodeAndCaptureFrames(files[0], factory);
 						if (thumbnail != null) {
-							image = new ZImage(thumbnail, file.getAbsolutePath());
+							image = new ZImage(thumbnail, files[0].getAbsolutePath());
 							thumbnail = null;
 						}
 					}
@@ -528,7 +533,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 				}
 				aMonitor.worked(1);
 				--work;
-				if (asset != null && createImageEntry(file, uri, extension, false, ensemble, image, oldThumbnail, etool,
+				if (asset != null && createImageEntry(files[0], uri, extension, false, ensemble, image, oldThumbnail, etool,
 						null, ensemble.xmpTimestamp, importState.importDate, toBeStored, toBeDeleted, aMonitor)) {
 					AssetEnsemble.deleteAll(existing, deletedAssets, toBeDeleted, toBeStored);
 					ensemble.removeFromTrash(trashed);
@@ -591,7 +596,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 		ensemble.resetEnsemble(assetStatus);
 		if (importState.analogProperties != null)
 			ensemble.setAnalogProperties(importState.analogProperties);
-		if (!importState.processExifData(ensemble, originalFile, false))
+		if (!importState.processExifData(ensemble, originalFile, 0))
 			return false;
 		importState.processXmpSidecars(uri, monitor, ensemble);
 		ensemble.cleanUp(now);
@@ -1016,8 +1021,18 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 		this.plural = plural;
 	}
 
-	public File getMediaFolder(File file) {
-		return Core.getCore().getVolumeManager().getRootFile(file);
+	public StorageObject getMediaFolder(StorageObject file) {
+		try {
+			while (true) {
+				if ("DCIM".equals(file.getName())) //$NON-NLS-1$
+					return file;
+				if (file.isStorage())
+					return file;
+				file = file.getParentObject();
+			}
+		} catch (IOException e) {
+			return null;
+		}
 	}
 
 	public boolean undoImport(Asset asset, Set<Object> toBeDeleted, List<Object> toBeStored) {

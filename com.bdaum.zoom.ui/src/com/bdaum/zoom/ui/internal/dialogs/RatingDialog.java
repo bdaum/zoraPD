@@ -21,13 +21,15 @@
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.jface.window.Window;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.ShellAdapter;
@@ -51,12 +53,15 @@ import com.bdaum.zoom.ui.internal.Icons.Icon;
 import com.bdaum.zoom.ui.internal.widgets.ZDialog;
 
 @SuppressWarnings("restriction")
-public class RatingDialog extends ZDialog implements PaintListener {
+public class RatingDialog extends ZDialog implements PaintListener, MouseMoveListener, MouseListener, KeyListener {
 
-	public static final int BYSERVICE = -4;
-	public static final int SELECTABORT = -3;
-	public static final int ABORT = -1;
-	public static final int DELETE = -2;
+	public static final int BYSERVICE = -5;
+	public static final int SELECTABORT = -4;
+	public static final int ABORT = -2;
+	public static final int DELETE = -3;
+	public static final int UNDEF = -1;
+	private static final int nfields = 8;
+	private static final int zero = nfields - 6;
 	private int rating;
 	private Canvas canvas;
 	private int width;
@@ -64,7 +69,6 @@ public class RatingDialog extends ZDialog implements PaintListener {
 	private int buttonHeight = 0;
 	private Icon trash;
 	private double scale;
-	private int nfields;
 	private boolean select;
 	private boolean focusWatch = true;
 	private boolean ai;
@@ -76,7 +80,6 @@ public class RatingDialog extends ZDialog implements PaintListener {
 		setShellStyle(SWT.NO_TRIM);
 		this.rating = rating;
 		this.scale = scale;
-		this.nfields = 7;
 		this.select = false;
 		trash = rating == DELETE ? Icons.trashrestore : Icons.trash;
 	}
@@ -86,9 +89,8 @@ public class RatingDialog extends ZDialog implements PaintListener {
 		setShellStyle(SWT.NO_TRIM);
 		this.rating = rating;
 		this.scale = 0.5d;
-		this.nfields = 8;
 		this.select = true;
-		trash = Icons.ratingAll;
+		trash = Icons.rating6a;
 	}
 
 	@Override
@@ -113,56 +115,9 @@ public class RatingDialog extends ZDialog implements PaintListener {
 					close();
 				}
 			});
-		canvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				if (buttonHeight > 0 && e.y > height) {
-					rating = BYSERVICE;
-					close();
-					return;
-				}
-				int r = e.x / width - 1;
-				rating = select ? r - 1 : r < 0 ? DELETE : r;
-				canvas.redraw();
-				getShell().getDisplay().timerExec(100, () -> {
-					if (!canvas.isDisposed())
-						close();
-				});
-			}
-		});
-		canvas.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				switch (e.character) {
-				case '0':
-				case '1':
-				case '2':
-				case '3':
-				case '4':
-				case '5':
-					rating = e.character - '0';
-					canvas.redraw();
-					break;
-				case '*':
-					if (buttonHeight > 0) {
-						rating = BYSERVICE;
-						close();
-					}
-					break;
-				default:
-					switch (e.keyCode) {
-					case SWT.ESC:
-						setReturnCode(Window.CANCEL);
-						close();
-						break;
-					case SWT.DEL:
-						rating = DELETE;
-						canvas.redraw();
-					}
-					break;
-				}
-			}
-		});
+		canvas.addMouseListener(this);
+		canvas.addMouseMoveListener(this);
+		canvas.addKeyListener(this);
 		Rectangle bounds = Icons.rating61.getImage().getBounds();
 		width = (int) (bounds.width * scale);
 		height = (int) (bounds.height * scale);
@@ -171,10 +126,10 @@ public class RatingDialog extends ZDialog implements PaintListener {
 			if (aiService != null && aiService.isEnabled() && aiService.getRatingProviderIds().length > 0)
 				buttonHeight = height;
 		}
-		canvas.redraw();
 		Shell shell = getShell();
-		shell.setSize(nfields * width + 2, height + 2 + buttonHeight);
+		shell.setSize(nfields * width + 8, height + 2 + buttonHeight);
 		shell.layout();
+		canvas.redraw();
 		canvas.setFocus();
 		return comp;
 	}
@@ -192,23 +147,24 @@ public class RatingDialog extends ZDialog implements PaintListener {
 	public void paintControl(PaintEvent e) {
 		GC gc = e.gc;
 		gc.setBackground(e.display.getSystemColor(SWT.COLOR_WHITE));
-		gc.fillRectangle(0, 0, nfields * width, height);
-		int zero = nfields - 6;
+		int w = nfields * width + 6;
+		gc.fillRectangle(0, 0, w, height);
 		for (int i = 0; i < nfields; i++) {
 			int r = i - zero;
 			if (i == 0)
-				drawCell(e, trash.getImage(), i, DELETE);
-			else if (i == 1 && select)
-				drawCell(e, Icons.rating60.getImage(), i, QueryField.SELECTUNDEF);
+				drawCell(e, trash.getImage(), 0, select ? QueryField.SELECTALL : DELETE);
+			else if (i == 1)
+				drawCell(e, (select ? Icons.rating6u : Icons.rating6r).getImage(), 1,
+						select ? QueryField.SELECTUNDEF : UNDEF);
 			else if (i == zero)
-				drawCell(e, null, i, r);
+				drawCell(e, Icons.rating60.getImage(), i, r);
 			else if (i > zero)
 				drawCell(e, Icons.rating61.getImage(), i, r);
 		}
 		if (buttonHeight > 0) {
 			String text = Messages.RatingDialog_use_rating_service;
 			Point tx = gc.textExtent(text);
-			gc.drawText(text, (nfields * width - tx.x) / 2, height + (height - tx.y) / 2, true);
+			gc.drawText(text, (w - tx.x) / 2, height + (height - tx.y) / 2, true);
 		}
 	}
 
@@ -227,4 +183,118 @@ public class RatingDialog extends ZDialog implements PaintListener {
 					(height - h) / 2, w, h);
 		}
 	}
+
+	@Override
+	public void mouseMove(MouseEvent e) {
+		if (buttonHeight > 0 && e.y > height) {
+			canvas.setToolTipText(Messages.RatingDialog_start_automated);
+			return;
+		}
+		int r = e.x / width;
+		switch (r) {
+		case 0:
+			canvas.setToolTipText(select ? Messages.RatingDialog_all : Messages.RatingDialog_delete);
+			break;
+		case 1:
+			canvas.setToolTipText(select ? Messages.RatingDialog_unrated : Messages.RatingDialog_remove);
+			break;
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+			canvas.setToolTipText(NLS.bind("{0} ({1})", QueryField.RATING.getEnumLabels()[r - 1], r - 2)); //$NON-NLS-1$
+			break;
+		default:
+			canvas.setToolTipText(""); //$NON-NLS-1$
+			break;
+		}
+
+	}
+
+	@Override
+	public void mouseDown(MouseEvent e) {
+		if (buttonHeight > 0 && e.y > height) {
+			rating = BYSERVICE;
+			close();
+			return;
+		}
+		int r = e.x / width;
+		switch (r) {
+		case 0:
+			rating = select ? QueryField.SELECTALL : DELETE;
+			break;
+		case 1:
+			rating = select ? QueryField.SELECTUNDEF : UNDEF;
+			break;
+		default:
+			rating = r - 2;
+		}
+		canvas.redraw();
+		getShell().getDisplay().timerExec(100, () -> {
+			if (!canvas.isDisposed())
+				close();
+		});
+	}
+
+	@Override
+	public void mouseDoubleClick(MouseEvent e) {
+		// do nothing
+	}
+
+	@Override
+	public void mouseUp(MouseEvent e) {
+		// do nothing
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		switch (e.character) {
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+			rating = e.character - '0';
+			canvas.redraw();
+			break;
+		case 'a':
+			if (select) {
+				rating = QueryField.SELECTALL;
+				canvas.redraw();
+			}
+			break;
+		case '-':
+			rating = select ? QueryField.SELECTUNDEF : UNDEF;
+			canvas.redraw();
+			break;
+		case '*':
+			if (buttonHeight > 0) {
+				rating = BYSERVICE;
+				close();
+			}
+			break;
+		default:
+			switch (e.keyCode) {
+			case SWT.ESC:
+				setReturnCode(Window.CANCEL);
+				close();
+				break;
+			case SWT.DEL:
+				if (!select) {
+					rating = DELETE;
+					canvas.redraw();
+				}
+			}
+			break;
+		}
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		// do nothing
+	}
+
 }

@@ -22,7 +22,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -40,11 +39,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPerspectiveDescriptor;
-import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
@@ -418,7 +415,7 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
 		viewer.setLabelProvider(new HistoryLabelProvider(this));
 		viewer.setComparer(IdentifiedElementComparer.getInstance());
-		ColumnViewerToolTipSupport.enableFor(viewer);
+		ZColumnViewerToolTipSupport.enableFor(viewer);
 //		setInput();
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), HelpContextIds.HISTORY_VIEW);
 		addCtrlKeyListener();
@@ -438,7 +435,7 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 		addKeyListener();
 		addGestureListener(((TableViewer) viewer).getTable());
 		makeActions();
-		installListeners(parent);
+		installListeners();
 		hookContextMenu(viewer);
 		hookDoubleClickAction();
 		contributeToActionBars();
@@ -490,7 +487,7 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 				cancelJobs(HistoryView.this);
 			}
 		});
-		updateActions((IStructuredSelection) viewer.getSelection(), true);
+		updateActions(viewer.getStructuredSelection(), true);
 		getNavigationHistory().addHistoryListener(this);
 		switch (historyLimit) {
 		case ONEMONTH:
@@ -506,6 +503,12 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 			oneYearAction.setChecked(true);
 			break;
 		}
+	}
+	
+	@Override
+	public void dispose() {
+		getNavigationHistory().removeHistoryListener(this);
+		super.dispose();
 	}
 
 	@Override
@@ -651,23 +654,8 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
-		updateActions((IStructuredSelection) getSelection(), false);
-		addEnabled(manager, playSlideshowAction);
-		boolean selectall = false;
-		IViewReference[] viewReferences = getSite().getPage().getViewReferences();
-		for (IViewReference ref : viewReferences) {
-			IWorkbenchPart part = ref.getPart(false);
-			if (part instanceof SelectAllActionProvider) {
-				IAction action = ((SelectAllActionProvider) part).getSelectAllAction();
-				if (action != null && action.isEnabled()) {
-					selectall = true;
-					break;
-				}
-			}
-		}
-		if (selectall)
-			manager.add(selectAllAction);
-		addEnabled(manager, editItemAction);
+		updateActions((IStructuredSelection) getSelection(), true);
+		super.fillContextMenu(manager);
 		// Other plug-ins can contribute there actions here
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}

@@ -181,9 +181,7 @@ public class EditStructDialog extends ZTitleAreaDialog implements IAdaptable {
 
 		@Override
 		protected boolean canEdit(Object element) {
-			if (!readonly && element instanceof QueryField)
-				return (((QueryField) element).getEditable() != QueryField.EDIT_NEVER);
-			return false;
+			return (!readonly && element instanceof QueryField) ? ((QueryField) element).canEdit() : false;
 		}
 
 		@Override

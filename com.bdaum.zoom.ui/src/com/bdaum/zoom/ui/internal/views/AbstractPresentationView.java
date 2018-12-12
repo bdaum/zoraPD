@@ -21,6 +21,7 @@
 package com.bdaum.zoom.ui.internal.views;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Point;
 import java.awt.event.InputEvent;
 import java.awt.geom.AffineTransform;
@@ -173,7 +174,7 @@ public abstract class AbstractPresentationView extends BasicView
 		protected void startDrag(PInputEvent event) {
 			super.startDrag(event);
 			moveToFront(presentationObject);
-			oldOffset = relative ? node.getOffset() : presentationObject.getOffset();
+			oldOffset = (relative ? node : presentationObject).getOffset();
 			oldPos = event.getCanvasPosition();
 		}
 
@@ -186,12 +187,8 @@ public abstract class AbstractPresentationView extends BasicView
 		protected void drag(PInputEvent event) {
 			super.drag(event);
 			PDimension aDelta = event.getDeltaRelativeTo(presentationObject);
-			if (aDelta.getWidth() != 0 || aDelta.getHeight() != 0) {
-				if (relative)
-					node.offset(aDelta.getWidth(), aDelta.getHeight());
-				else
-					presentationObject.offset(aDelta.getWidth(), aDelta.getHeight());
-			}
+			if (aDelta.getWidth() != 0 || aDelta.getHeight() != 0)
+				(relative ? node : presentationObject).offset(aDelta.getWidth(), aDelta.getHeight());
 		}
 
 		@Override
@@ -214,10 +211,8 @@ public abstract class AbstractPresentationView extends BasicView
 			}
 			if (doDrop)
 				drop(event, node);
-			else if (relative)
-				node.setOffset(oldOffset);
 			else
-				presentationObject.setOffset(oldOffset);
+				(relative ? node : presentationObject).setOffset(oldOffset);
 		}
 
 		protected abstract void drop(PInputEvent event, PNode nod);
@@ -259,7 +254,6 @@ public abstract class AbstractPresentationView extends BasicView
 	private String currentCustomCursor;
 	protected Color offlineColor;
 	protected Color remoteColor;
-	protected Color titleColor;
 	protected Color selectedRemoteColor;
 	protected Color foregroundColor;
 	protected Color selectionForegroundColor;
@@ -289,6 +283,19 @@ public abstract class AbstractPresentationView extends BasicView
 	private Cursor cue;
 	protected Action exhibitPropertiesAction;
 
+	protected static TextField createTextLine(PNode parent, String text, int greekThreshold, int textWidth, int indent,
+			double ypos, Color penColor, Color bgColor, String fontFamily, int fontStyle, int fontSize,
+			int spellingOptions, int style) {
+		TextField field = new TextField(text, textWidth, new Font(fontFamily, fontStyle, fontSize), penColor, bgColor,
+				true, style);
+		field.setSpellingOptions(10, spellingOptions);
+		field.setOffset(indent, ypos);
+		field.setPickable(true);
+		field.setGreekThreshold(greekThreshold);
+		parent.addChild(field);
+		return field;
+	}
+
 	@Override
 	public void createPartControl(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
@@ -305,7 +312,6 @@ public abstract class AbstractPresentationView extends BasicView
 		surface = PSWTPath.createRectangle(surfaceBounds.x, surfaceBounds.y, surfaceBounds.width, surfaceBounds.height);
 		canvas.getLayer().addChild(surface);
 		canvas.addMouseListener(new MouseAdapter() {
-
 			@Override
 			public void mouseDown(MouseEvent e) {
 				mouseDown = true;
@@ -521,7 +527,7 @@ public abstract class AbstractPresentationView extends BasicView
 	}
 
 	public void setTitleColor(org.eclipse.swt.graphics.Color c) {
-		titleColor = UiUtilities.getAwtForeground(getControl(), c);
+		titleForegroundColor = UiUtilities.getAwtForeground(getControl(), c);
 	}
 
 	public void setSelectedOfflineColor(org.eclipse.swt.graphics.Color selectedOfflineColor) {
@@ -960,13 +966,10 @@ public abstract class AbstractPresentationView extends BasicView
 		} else if (adapter == AssetSelection.class) {
 			if (pickedNode != null) {
 				IPresentationItem par = (IPresentationItem) getAdapter(IPresentationItem.class);
-				if (par != null) {
-					String assetId = par.getAssetId();
-					if (assetId != null) {
-						AssetImpl asset = Core.getCore().getDbManager().obtainAsset(assetId);
-						if (asset != null)
-							return new AssetSelection(asset);
-					}
+				if (par != null && par.getAssetId() != null) {
+					AssetImpl asset = Core.getCore().getDbManager().obtainAsset(par.getAssetId());
+					if (asset != null)
+						return new AssetSelection(asset);
 				}
 			}
 			return AssetSelection.EMPTY;
@@ -1025,11 +1028,12 @@ public abstract class AbstractPresentationView extends BasicView
 			final PNode presentationObject) {
 		AbstractHandleDragSequenceEventHandler handleDragger = createDragSequenceEventHandler(node, relative,
 				restricted, presentationObject);
-		handleDragger.setEventFilter(new PInputEventFilter(InputEvent.BUTTON1_MASK, FORCE_PAN_MASK));
-		handleDragger.getEventFilter().setMarksAcceptedEventsAsHandled(true);
-		handleDragger.getEventFilter().setAcceptsMouseEntered(false);
-		handleDragger.getEventFilter().setAcceptsMouseExited(false);
-		handleDragger.getEventFilter().setAcceptsMouseMoved(false);
+		PInputEventFilter eventFilter = new PInputEventFilter(InputEvent.BUTTON1_MASK, FORCE_PAN_MASK);
+		handleDragger.setEventFilter(eventFilter);
+		eventFilter.setMarksAcceptedEventsAsHandled(true);
+		eventFilter.setAcceptsMouseEntered(false);
+		eventFilter.setAcceptsMouseExited(false);
+		eventFilter.setAcceptsMouseMoved(false);
 		node.addInputEventListener(handleDragger);
 	}
 
@@ -1103,7 +1107,7 @@ public abstract class AbstractPresentationView extends BasicView
 
 	@Override
 	public void updateActions(boolean force) {
-		if (viewActive || force) {
+		if (isVisible() || force) {
 			AssetSelection selection = (AssetSelection) getAdapter(AssetSelection.class);
 			boolean writable = !dbIsReadonly();
 			int count = selection.size();
@@ -1127,13 +1131,6 @@ public abstract class AbstractPresentationView extends BasicView
 		}
 	}
 
-
-	/**
-	 * Set cue cursor
-	 *
-	 * @param new
-	 *            Cue cursor
-	 */
 	protected void setCue(Cursor cue) {
 		if (this.cue != null)
 			this.cue.dispose();

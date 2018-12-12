@@ -112,7 +112,7 @@ public class AutomatedRatingDialog extends ZTitleAreaDialog {
 			providerViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 				@Override
 				public void selectionChanged(SelectionChangedEvent event) {
-					selectedProvider = (String) ((StructuredSelection) providerViewer.getSelection()).getFirstElement();
+					selectedProvider = (String) providerViewer.getStructuredSelection().getFirstElement();
 					updateModelViewer();
 					validate();
 				}
@@ -169,7 +169,7 @@ public class AutomatedRatingDialog extends ZTitleAreaDialog {
 
 	private void updateModelViewer() {
 		if (selectedProvider != null) {
-			String selectedModel = (String) ((StructuredSelection) modelViewer.getSelection()).getFirstElement();
+			String selectedModel = (String) modelViewer.getStructuredSelection().getFirstElement();
 			if (selectedModel == null)
 				selectedModel = settings.get(MODEL);
 			modelIds = aiService.getRatingModelIds(selectedProvider);
@@ -184,13 +184,13 @@ public class AutomatedRatingDialog extends ZTitleAreaDialog {
 	protected void okPressed() {
 		saveValues();
 		OperationJob.executeOperation(new AutoRatingOperation(assets, selectedProvider,
-				(String) ((StructuredSelection) modelViewer.getSelection()).getFirstElement(),
+				(String) modelViewer.getStructuredSelection().getFirstElement(),
 				overwriteButton.getSelection(), maxField.getSelection()), this);
 		super.okPressed();
 	}
 
 	private void saveValues() {
-		String selectedModel = (String) ((StructuredSelection) modelViewer.getSelection()).getFirstElement();
+		String selectedModel = (String) modelViewer.getStructuredSelection().getFirstElement();
 		if (selectedProvider != null && selectedModel != null) {
 			settings.put(PROVIDER, selectedProvider);
 			settings.put(MODEL, selectedModel);

@@ -10,7 +10,6 @@
  *******************************************************************************/
 package com.bdaum.zoom.image;
 
-import java.awt.color.CMMException;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
@@ -132,21 +131,18 @@ public class ZImage {
 	 * @throws Exception
 	 */
 	public static ZImage loadThumbnail(File file, String imageFormat, int maxDim) throws Exception {
-		if (!file.canRead())
-			throw new AccessDeniedException(file.getAbsolutePath());
+		ImageUtilities.waitUntilFileIsReady(file);
 		ZImage image = null;
-		if (image == null) {
-			try {
-				image = loadViaImageIO(file, 3 * maxDim * maxDim);
-				if (image == null)
-					image = loadViaImageJ(file);
-				if (image == null)
-					image = loadExtraFileTypes(file);
-			} catch (OutOfMemoryError e) {
-				throw e;
-			} catch (Exception e) {
+		try {
+			image = loadViaImageIO(file, 3 * maxDim * maxDim);
+			if (image == null)
+				image = loadViaImageJ(file);
+			if (image == null)
 				image = loadExtraFileTypes(file);
-			}
+		} catch (OutOfMemoryError e) {
+			throw e;
+		} catch (Exception e) {
+			image = loadExtraFileTypes(file);
 		}
 		if (image != null) {
 			image.thumbnail = true;
@@ -800,7 +796,7 @@ public class ZImage {
 					convertToBuffered();
 				try {
 					colorConvertOp.filter(bufferedImage, bufferedImage);
-				} catch (CMMException e) {
+				} catch (Exception e) {
 					// can't convert color profile
 				}
 				if (reportProgress(monitor))

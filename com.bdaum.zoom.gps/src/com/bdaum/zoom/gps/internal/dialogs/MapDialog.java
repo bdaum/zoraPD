@@ -53,6 +53,12 @@ public class MapDialog extends ZResizableDialog {
 	}
 
 	@Override
+	public void create() {
+		super.create();
+		getShell().pack();
+	}
+
+	@Override
 	protected Point getDefaultSize() {
 		return new Point(800, 600);
 	}

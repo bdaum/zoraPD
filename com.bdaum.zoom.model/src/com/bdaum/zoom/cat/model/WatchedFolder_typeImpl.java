@@ -40,12 +40,14 @@ public class WatchedFolder_typeImpl extends AomObject implements
 	 * @param selectedTemplate - Property
 	 * @param cue - Property
 	 * @param fileSource - Property
+	 * @param tethered - Property
 	 */
 	public WatchedFolder_typeImpl(String uri, String volume,
 			long lastObservation, boolean recursive, String filters,
 			boolean transfer, String artist, boolean skipDuplicates,
 			int skipPolicy, String targetDir, int subfolderPolicy,
-			String selectedTemplate, String cue, int fileSource) {
+			String selectedTemplate, String cue, int fileSource,
+			boolean tethered) {
 		super();
 		this.uri = uri;
 		this.volume = volume;
@@ -61,6 +63,7 @@ public class WatchedFolder_typeImpl extends AomObject implements
 		this.selectedTemplate = selectedTemplate;
 		this.cue = cue;
 		this.fileSource = fileSource;
+		this.tethered = tethered;
 
 	}
 
@@ -377,6 +380,28 @@ public class WatchedFolder_typeImpl extends AomObject implements
 		return fileSource;
 	}
 
+	/* *** Property tethered *** */
+
+	private boolean tethered;
+
+	/**
+	 * Set value of property tethered
+	 *
+	 * @param _value - new field value
+	 */
+	public void setTethered(boolean _value) {
+		tethered = _value;
+	}
+
+	/**
+	 * Get value of property tethered
+	 *
+	 * @return - value of field tethered
+	 */
+	public boolean getTethered() {
+		return tethered;
+	}
+
 	/* ----- Equality ----- */
 
 	/**
@@ -428,6 +453,8 @@ public class WatchedFolder_typeImpl extends AomObject implements
 
 				&& getFileSource() == other.getFileSource()
 
+				&& getTethered() == other.getTethered()
+
 		;
 	}
 
@@ -478,6 +505,8 @@ public class WatchedFolder_typeImpl extends AomObject implements
 				+ ((getCue() == null) ? 0 : getCue().hashCode());
 
 		hashCode = 31 * hashCode + getFileSource();
+
+		hashCode = 31 * hashCode + (getTethered() ? 1231 : 1237);
 
 		return hashCode;
 	}

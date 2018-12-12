@@ -13,7 +13,6 @@ import com.bdaum.zoom.cat.model.group.webGallery.WebExhibit;
 import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebParameter;
 import com.bdaum.zoom.operations.internal.gen.AbstractGalleryGenerator;
-import com.bdaum.zoom.program.BatchUtilities;
 
 @SuppressWarnings("restriction")
 public class SimpleViewerGenerator extends AbstractGalleryGenerator {
@@ -121,7 +120,7 @@ public class SimpleViewerGenerator extends AbstractGalleryGenerator {
 			String description = exhibit.getDescription();
 			String exifdiv = getExifDiv(storyboard, exhibit, asset, "<single>"); //$NON-NLS-1$
 			if (description != null && !description.isEmpty())
-				xml = exhibit.getHtmlDescription() ? BatchUtilities.decodeHTML(description) : description;
+				xml = exhibit.getHtmlDescription() ? getHtmlEncoderDecoder().decodeHTML(description) : description;
 			if (exifdiv != null) {
 				if (!xml.isEmpty())
 					xml += "\n\n"; //$NON-NLS-1$

@@ -8,20 +8,15 @@
             default="true"
             description="%geonamingService.description"
             id="Google"
-            link="https://developers.google.com/maps/documentation/geocoding"
+            link="https://cloud.google.com/maps-platform/"
             name="%geonamingService.name">
         <parameter
+              explanation="%parameter.explanation.apikey"
               hint="%parameter.hint.id"
               id="com.bdaum.zoom.gps.googleClientId"
               label="%parameter.label.id"
               reqMsg="%parameter.reqMsg"
               tooltip="%parameter.tooltip.id">
-         </parameter>
-         <parameter
-               hint="%parameter.hint.privatekey"
-               id="com.bdaum.zoom.gps.googlePrivateKey"
-               label="%parameter.label.privateKey"
-               tooltip="%parameter.tooltip.privatekey">
          </parameter>
        </geonamingService>
    </extension>

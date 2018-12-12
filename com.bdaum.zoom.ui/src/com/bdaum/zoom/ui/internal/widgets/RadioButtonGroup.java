@@ -21,10 +21,6 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -32,30 +28,47 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Widget;
 
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.internal.CssActivator;
 
-public class RadioButtonGroup extends Composite implements MouseListener, SelectionListener {
-
-	private static final String DISABLED = "disabled"; //$NON-NLS-1$
+public class RadioButtonGroup extends Composite implements Listener {
 
 	private Button[] buttons;
 	private Label[] buttonlabels;
 
-	private ListenerList<SelectionListener> selectionListeners = new ListenerList<>();
+	private ListenerList<Listener> listeners = new ListenerList<>();
 
 	private boolean horizontal;
 
 	private int indent = 0;
+	private int columns;
 
+	/**
+	 * Creates a horizontal, vertical, or multi-column radio group
+	 * 
+	 * @param parent
+	 *            - parent composite
+	 * @param title
+	 *            - title or null
+	 * @param style
+	 *            - SWT.BORDER; SWT.HORIZONTAL or SWT.VERTICAL or number of columns
+	 *            (<=15)
+	 * @param labels
+	 *            - Labels for radio buttons
+	 */
 	public RadioButtonGroup(Composite parent, String title, int style, String... labels) {
 		super(parent, style & SWT.BORDER);
 		horizontal = (style & SWT.HORIZONTAL) != 0;
-		GridLayout layout = new GridLayout(horizontal ? labels.length * 2 + (title != null ? 2 : 0) : 2, false);
+		columns = style & 0xf;
+		int col = columns == 0 ? horizontal ? labels.length * 2 + (title != null ? 2 : 0) : 2 : 2 * columns;
+		GridLayout layout = new GridLayout(col, false);
 		if (title != null) {
 			Label titleLabel = new Label(this, SWT.NONE);
-			titleLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+			titleLabel.setLayoutData(
+					new GridData(SWT.BEGINNING, SWT.CENTER, false, false, columns == 0 ? 2 : columns * 2, 1));
 			titleLabel.setText(title);
 			indent = 10;
 		}
@@ -89,12 +102,12 @@ public class RadioButtonGroup extends Composite implements MouseListener, Select
 		Rectangle bounds = buttons[i].getBounds();
 		GridData data = new GridData();
 		data.widthHint = bounds.height + 4;
-		data.horizontalIndent = indent;
+		data.horizontalIndent = columns == 0 || i % columns == 0 ? indent : 5;
 		if (horizontal)
 			indent = 5;
 		buttons[i].setLayoutData(data);
-		buttonlabels[i].addMouseListener(this);
-		buttons[i].addSelectionListener(this);
+		buttonlabels[i].addListener(SWT.MouseDown, this);
+		buttons[i].addListener(SWT.Selection, this);
 	}
 
 	public void setToolTipText(int i, String tooltip) {
@@ -123,7 +136,7 @@ public class RadioButtonGroup extends Composite implements MouseListener, Select
 	public void setEnabled(int i, boolean enabled) {
 		if (i >= 0 && i < buttons.length) {
 			buttons[i].setEnabled(enabled);
-			buttonlabels[i].setData("id", enabled ? null : DISABLED); //$NON-NLS-1$
+			buttonlabels[i].setData(CSSProperties.ID, enabled ? null : CSSProperties.DISABLED);
 			CssActivator.getDefault().setColors(buttonlabels[i]);
 		}
 	}
@@ -141,42 +154,33 @@ public class RadioButtonGroup extends Composite implements MouseListener, Select
 	}
 
 	@Override
-	public void mouseDoubleClick(MouseEvent e) {
-		// do nothing
-	}
-
-	@Override
-	public void mouseUp(MouseEvent e) {
-		// do nothing
-	}
-
-	@Override
-	public void mouseDown(MouseEvent e) {
-		Widget widget = e.widget;
-		for (int i = 0; i < buttonlabels.length; i++) {
-			if (widget == buttonlabels[i]) {
-				setSelection(i);
-				if (!selectionListeners.isEmpty()) {
-					Event event = new Event();
+	public void handleEvent(Event event) {
+		Widget widget = event.widget;
+		event.widget = this;
+		if (event.type == SWT.MouseDown)
+			for (int i = 0; i < buttonlabels.length; i++) {
+				if (widget == buttonlabels[i]) {
+					setSelection(i);
 					event.detail = i;
-					event.display = e.display;
-					event.widget = this;
-					event.time = e.time;
-					event.data = e.data;
-					event.x = e.x;
-					event.y = e.y;
-					event.stateMask = e.stateMask;
 					event.doit = true;
-					fireSelectionEvent(new SelectionEvent(event));
+					fireEvent(event);
+					break;
 				}
-				break;
 			}
+		else {
+			event.detail = -1;
+			for (int i = 0; i < buttons.length; i++)
+				if (buttons[i] == widget) {
+					event.detail = i;
+					break;
+				}
+			fireEvent(event);
 		}
 	}
 
-	private void fireSelectionEvent(SelectionEvent e) {
-		for (SelectionListener selectionListener : selectionListeners)
-			selectionListener.widgetSelected(e);
+	private void fireEvent(Event event) {
+		for (Listener listener : listeners)
+			listener.handleEvent(event);
 	}
 
 	public void setSelection(int index) {
@@ -196,38 +200,19 @@ public class RadioButtonGroup extends Composite implements MouseListener, Select
 	}
 
 	public boolean isEnabled() {
-		if (!super.isEnabled())
-			return false;
-		for (int i = 0; i < buttons.length; i++)
-			if (buttons[i].getEnabled())
-				return true;
+		if (super.isEnabled())
+			for (int i = 0; i < buttons.length; i++)
+				if (buttons[i].getEnabled())
+					return true;
 		return false;
 	}
 
-	public void addSelectionListener(SelectionListener selectionListener) {
-		selectionListeners.add(selectionListener);
+	public void addListener(Listener listener) {
+		listeners.add(listener);
 	}
 
-	public void removeSelectionListener(SelectionListener selectionListener) {
-		selectionListeners.remove(selectionListener);
-	}
-
-	@Override
-	public void widgetSelected(SelectionEvent e) {
-		e.detail = -1;
-		for (int i = 0; i < buttons.length; i++)
-			if (buttons[i] == e.widget) {
-				e.detail = i;
-				e.widget = this;
-				break;
-			}
-		e.widget = this;
-		fireSelectionEvent(e);
-	}
-
-	@Override
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
+	public void removeListener(Listener listener) {
+		listeners.remove(listener);
 	}
 
 	public int size() {

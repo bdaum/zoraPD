@@ -8,15 +8,15 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
@@ -48,6 +48,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 	private static final String EVENTS = "events"; //$NON-NLS-1$
 	private static final String KEYWORDS = "keywords"; //$NON-NLS-1$
 	private static final String PREFIX = "exifPrefix"; //$NON-NLS-1$
+	private static final String PRIVACY = "privacy"; //$NON-NLS-1$
 
 	private Combo artistField;
 	private Combo eventField;
@@ -64,6 +65,9 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 	private CheckboxButton albumButton;
 	private boolean newStruct;
 	private AutoRatingGroup autoGroup;
+	private String presetKeywords;
+	private String presetPrefix;
+	private Integer presetPrivacy;
 
 	public ImportAddMetadataPage(String pageName, boolean media, SmartCollectionImpl collection, boolean newStruct) {
 		super(pageName);
@@ -112,9 +116,9 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 		if (aiService != null && aiService.isEnabled() && aiService.getRatingProviderIds().length > 0) {
 			autoGroup = new AutoRatingGroup(comp, aiService, dialogSettings);
 			autoGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-			autoGroup.addModifyListener(new ModifyListener() {
+			autoGroup.addListener(new Listener() {
 				@Override
-				public void modifyText(ModifyEvent e) {
+				public void handleEvent(Event event) {
 					validatePage();
 				}
 			});
@@ -187,45 +191,51 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 			combo.setVisibleItemCount(8);
 		} else
 			combo.setItems(EMPTYSTRINGS);
-		combo.setData(UiConstants.KEY, key); 
+		combo.setData(UiConstants.KEY, key);
 		combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		return combo;
 	}
 
 	private static void saveComboHistory(Combo combo, IDialogSettings settings) {
-		settings.put((String) combo.getData(UiConstants.KEY), UiUtilities.updateComboHistory(combo)); 
+		settings.put((String) combo.getData(UiConstants.KEY), UiUtilities.updateComboHistory(combo));
 	}
 
 	private void fillValues() {
 		String[] keywords = dialogSettings.getArray(KEYWORDS);
 		if (keywords != null)
-			keywordField.setText(Core.toStringList(currentKeywords = keywords, "\n")); //$NON-NLS-1$
+			keywordField.setText(presetKeywords = Core.toStringList(currentKeywords = keywords, "\n")); //$NON-NLS-1$
 		if (prefixField != null) {
 			String prefix = dialogSettings.get(PREFIX);
 			if (prefix != null)
-				prefixField.setText(prefix);
+				prefixField.setText(presetPrefix = prefix);
 		}
-		updateAuthor();
-		privacyGroup.setSelection(0);
+		try {
+			privacyGroup.setSelection(presetPrivacy = dialogSettings.getInt(PRIVACY));
+		} catch (NumberFormatException e) {
+			privacyGroup.setSelection(presetPrivacy = 0);
+		}
+		updateValues(((ImportFromDeviceWizard) getWizard()).getCurrentDevice());
 		if (autoGroup != null)
 			autoGroup.fillValues();
 		validatePage();
 	}
 
-	public void updateAuthor() {
-		if (artistField.getText().equals(presetAuthor)) {
-			String volume = ((ImportFromDeviceWizard) getWizard()).getVolume();
-			if (volume != null) {
-				LastDeviceImport lastImport = Core.getCore().getDbManager().getMeta(true).getLastDeviceImport(volume);
-				if (lastImport != null) {
-					String owner = lastImport.getOwner();
-					if (owner != null && !owner.isEmpty())
-						artistField.setText(presetAuthor = owner);
-				}
-			}
+	public void updateValues(LastDeviceImport current) {
+		if (current != null && artistField != null) {
+			String owner = current.getOwner();
+			if (artistField.getText().equals(presetAuthor) && (owner != null && !owner.isEmpty()))
+				artistField.setText(presetAuthor = owner);
+			String[] kk = current.getKeywords();
+			if (keywordField.getText().equals(presetKeywords) && kk != null)
+				keywordField.setText(presetKeywords = Core.toStringList(currentKeywords = kk, "\n")); //$NON-NLS-1$
+			Integer privacy = current.getPrivacy();
+			if (privacyGroup.getSelection() == presetPrivacy && privacy != null)
+				privacyGroup.setSelection(presetPrivacy = privacy);
+			String pp = current.getPrefix();
+			if (prefixField.getText().equals(presetPrefix) && pp != null)
+				prefixField.setText(presetKeywords = pp);
 		}
 	}
-
 
 	@Override
 	protected void validatePage() {
@@ -235,6 +245,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 	}
 
 	public void performFinish(ImportFromDeviceData importData) {
+		LastDeviceImport newDevice = ((ImportFromDeviceWizard) getWizard()).getNewDevice();
 		saveComboHistory(artistField, dialogSettings);
 		String artist = artistField.getText();
 		importData.setArtist(artist);
@@ -243,7 +254,11 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 		importData.setEvent(eventField.getText());
 		dialogSettings.put(KEYWORDS, currentKeywords);
 		importData.setKeywords(currentKeywords);
-		importData.setPrivacy(privacyGroup.getSelection() * 3);
+		newDevice.setKeywords(currentKeywords);
+		int privacy = privacyGroup.getSelection();
+		dialogSettings.put(PRIVACY, privacy);
+		importData.setPrivacy(privacy * 3);
+		newDevice.setPrivacy(privacy);
 		if (prefixField != null) {
 			String prefix = prefixField.getText();
 			importData.setExifTransferPrefix(prefix);
@@ -258,19 +273,19 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 	}
 
 	public String getProviderId() {
-		return autoGroup != null  ? autoGroup.getProviderId() : null;
+		return autoGroup != null ? autoGroup.getProviderId() : null;
 	}
 
 	public String getModelId() {
-		return autoGroup != null  ? autoGroup.getModelId() : null;
+		return autoGroup != null ? autoGroup.getModelId() : null;
 	}
 
 	public boolean getOverwrite() {
-		return autoGroup != null  ? autoGroup.getOverwrite() : false;
+		return autoGroup != null ? autoGroup.getOverwrite() : false;
 	}
 
 	public int getMaxRating() {
-		return autoGroup != null  ? autoGroup.getMaxRating() : 3;
+		return autoGroup != null ? autoGroup.getMaxRating() : 3;
 	}
 
 }

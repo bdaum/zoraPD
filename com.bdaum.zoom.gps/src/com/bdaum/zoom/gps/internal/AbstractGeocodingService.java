@@ -35,6 +35,7 @@ public abstract class AbstractGeocodingService implements IGeocodingService {
 	private String link;
 	private List<Parameter> parameters = new ArrayList<>(3);
 	private String description;
+	protected String searchParms;
 
 	static {
 		usformat.setMaximumFractionDigits(5);
@@ -83,7 +84,6 @@ public abstract class AbstractGeocodingService implements IGeocodingService {
 	public void setLink(String link) {
 		this.link = link;
 	}
-	
 
 	@Override
 	public String getDescription() {
@@ -94,7 +94,6 @@ public abstract class AbstractGeocodingService implements IGeocodingService {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-
 
 	@Override
 	public void addParameter(Parameter parameter) {

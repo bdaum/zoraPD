@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -29,8 +29,6 @@ import java.util.List;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IOperationHistory;
-import org.eclipse.core.commands.operations.IUndoContext;
-import org.eclipse.core.commands.operations.UndoContext;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.core.runtime.jobs.Job;
@@ -39,8 +37,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.VerifyEvent;
@@ -49,8 +45,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.operations.IWorkbenchOperationSupport;
 import org.piccolo2d.PNode;
 import org.piccolo2d.event.PInputEvent;
 import org.piccolo2d.extras.swt.PSWTCanvas;
@@ -61,6 +55,7 @@ import org.piccolo2d.util.PPickPath;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.core.ISpellCheckingService.ISpellIncident;
+import com.bdaum.zoom.ui.LocalOperationHistory;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.job.SpellCheckingJob;
@@ -77,7 +72,6 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 	private Point selection = new Point(-1, -1);
 	private ZPSWTPath highlight;
 	private Color penColor;
-	private Color selectedPenColor;
 	private int lead;
 	private boolean dirleft;
 	private PSWTPath textCanvas;
@@ -98,11 +92,11 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 	private int wordX = -1;
 	private int wordY;
 	private IOperationHistory history;
-	private IUndoContext context;
 	private char lastChar;
 	private char previousChar;
 	private TextOperation currentOperation;
 	private long timeStamp;
+	private Color highlightColor;
 
 	public TextField(String str, int textWidth, Font font, Color penColor, Color backgroundColor, boolean transparent,
 			int style) {
@@ -124,37 +118,25 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 		addChild(textfield);
 		setPenColor(penColor);
 		setText(str);
-		control.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				if (history != null) {
-					history.dispose(context, true, true, true);
-					history = null;
-					context = null;
-				}
-			}
-		});
 	}
 
 	private IOperationHistory getHistory() {
 		if (history == null) {
-			IWorkbenchOperationSupport operationSupport = PlatformUI.getWorkbench().getOperationSupport();
-			history = operationSupport.getOperationHistory();
-			context = new UndoContext();
-			history.setLimit(context,
+			history = new LocalOperationHistory();
+			history.setLimit(null,
 					UiActivator.getDefault().getPreferenceStore().getInt(PreferenceConstants.UNDOLEVELS));
 		}
 		return history;
 	}
 
-	private void setHighlight(boolean b) {
+	private void setHighlight(boolean visible) {
 		textfield.setPenColor(penColor);
 		if (highlight == null) {
-			if (!b)
+			if (!visible)
 				return;
 			createCaretAndHighlight();
 		}
-		highlight.setVisible(b);
+		highlight.setVisible(visible);
 	}
 
 	public void setGreekThreshold(double threshold) {
@@ -166,8 +148,7 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 	}
 
 	public void setPenColor(Color color) {
-		penColor = color;
-		textfield.setPenColor(color);
+		textfield.setPenColor(penColor = color);
 	}
 
 	public Color getPenColor() {
@@ -175,9 +156,9 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 	}
 
 	public void setSelectedBgColor(Color selectedBgColor) {
-		if (highlight == null)
-			createCaretAndHighlight();
-		highlight.setPaint(selectedBgColor);
+		highlightColor = selectedBgColor;
+		if (highlight != null)
+			highlight.setPaint(highlightColor);
 	}
 
 	public void setBackgroundColor(Color color) {
@@ -207,11 +188,10 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 		if (textfield.getTextWidth() != SWT.DEFAULT) {
 			if ((style & SWT.WRAP) != 0) {
 				StringBuilder sb = new StringBuilder();
-				int lastLineBreak = 0;
-				int lastWordBreak = 0;
+				int lastLineBreak = 0, lastWordBreak = 0;
+				char c;
 				for (int i = 0; i < str.length(); i++) {
-					char c = str.charAt(i);
-					sb.append(c);
+					sb.append(c = str.charAt(i));
 					String recentLine = sb.substring(lastLineBreak);
 					if (textfield.textExtent(recentLine).x > textfield.getTextWidth()) {
 						if (lastWordBreak > lastLineBreak) {
@@ -248,8 +228,7 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 					}
 					if (showChar) {
 						sb.append(c);
-						String recentLine = sb.substring(lastLineBreak);
-						if (textfield.textExtent(recentLine).x > textfield.getTextWidth()) {
+						if (textfield.textExtent(sb.substring(lastLineBreak)).x > textfield.getTextWidth()) {
 							sb.append('…');
 							showChar = false;
 						}
@@ -282,7 +261,7 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 		if (hasFocus) {
 			if ((style & SWT.READ_ONLY) == 0) {
 				selection.x = 0;
-				selection.y = setText ? text.length() : textfield.getText().length();
+				selection.y = (setText ? text : textfield.getText()).length();
 				wordX = -1;
 				textCanvas.setStrokeColor(penColor);
 			}
@@ -372,8 +351,9 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 			if (sy1 == sy2)
 				highlight.setPathToRectangle(sx1 + lx, sy1 * h + base, sx2 - sx1, h);
 			else if (lines2 != null) {
-				float[] xp = new float[(sy2 - sy1) * 2 + 6];
-				float[] yp = new float[(sy2 - sy1) * 2 + 6];
+				int n = (sy2 - sy1) * 2 + 6;
+				float[] xp = new float[n];
+				float[] yp = new float[n];
 				int lx2 = textfield.getLineOffsetAt(sy2);
 				xp[0] = lx2;
 				yp[0] = h * (sy1 + 1) + base;
@@ -407,6 +387,7 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 		highlight = new ZPSWTPath();
 		highlight.setPathToRectangle(0, 0, 30, lead);
 		highlight.setStrokeColor(null);
+		highlight.setPaint(highlightColor);
 		highlight.setLineWidth(0);
 		highlight.setPickable(false);
 		highlight.setVisible(false);
@@ -442,9 +423,9 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 		String newText = text;
 		boolean editable = (style & SWT.READ_ONLY) == 0;
 		int modifiers = event.getModifiers();
+		int keyCode = event.getKeyCode();
 		if ((modifiers & InputEvent.CTRL_MASK) != 0) {
 			createUndoPoint();
-			int keyCode = event.getKeyCode();
 			switch (keyCode) {
 			case 'a':
 				// Ctrl+A
@@ -480,7 +461,7 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 		}
 		long time = System.currentTimeMillis();
 		StringBuilder sb = new StringBuilder(oldText);
-		switch (event.getKeyCode()) {
+		switch (keyCode) {
 		case '\b':
 			if (lastChar != '\b')
 				createUndoPoint();
@@ -612,8 +593,7 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 					keyChar = '\n';
 					// FALL THROUGH
 				default:
-					String str = new String(new char[] { keyChar });
-					newText = replace(sb, selection.x, selection.x + selection.y, str);
+					newText = replace(sb, selection.x, selection.x + selection.y, new String(new char[] { keyChar }));
 					selection.y = 0;
 					selection.x += 1;
 					break;
@@ -652,7 +632,7 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 	public void undo() {
 		if (history != null)
 			try {
-				history.undo(context, null, this);
+				history.undo(null, null, this);
 			} catch (ExecutionException e) {
 				// should never happen
 			}
@@ -661,7 +641,7 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 	public void redo() {
 		if (history != null)
 			try {
-				history.redo(context, null, this);
+				history.redo(null, null, this);
 			} catch (ExecutionException e) {
 				// should never happen
 			}
@@ -673,7 +653,7 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 			if (currentOperation != null)
 				currentOperation.addToHistory(hist);
 			if (currentOperation == null || !currentOperation.isEmpty())
-				currentOperation = new TextOperation(this, context, text, selection);
+				currentOperation = new TextOperation(this, null, text, selection);
 			timeStamp = 0;
 			previousChar = 0;
 			lastChar = 0;
@@ -734,8 +714,7 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 				Point sel = (textfield.getTextWidth() != SWT.DEFAULT && (style & SWT.WRAP) != 0)
 						? computeTrueSelection(selection)
 						: selection;
-				String t = replace(sb, sel.x, sel.x + sel.y, (String) contents);
-				setText(t);
+				setText(replace(sb, sel.x, sel.x + sel.y, (String) contents));
 				setSelection(sel.x, sel.x + ((String) contents).length());
 			}
 		}
@@ -922,14 +901,6 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 		textfield.setFont(font);
 	}
 
-	public Color getSelectedPenColor() {
-		return selectedPenColor;
-	}
-
-	public void setSelectedPenColor(Color selectedPenColor) {
-		this.selectedPenColor = selectedPenColor;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 *
@@ -1005,26 +976,19 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 
 	public static Point2D[] computePolyline(org.eclipse.swt.graphics.Point left, org.eclipse.swt.graphics.Point right,
 			int height) {
-
 		final int WIDTH = 3;
 		final int HEIGHT = 2;
-
 		int w2 = 2 * WIDTH;
 		int peeks = (right.x - left.x) / w2;
-
 		int leftX = left.x;
-
 		// compute (number of points) * 2
 		int length = 2 * peeks + 1;
 		if (length <= 0)
 			return new Point2D[0];
-
 		Point2D[] coordinates = new Point2D[length];
-
 		// compute top and bottom of peeks
 		int bottom = left.y + height;
 		int top = bottom - HEIGHT;
-
 		// populate array with peek coordinates
 		int index = 0;
 		for (int i = 0; i < peeks; i++) {
@@ -1126,12 +1090,12 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 
 	@Override
 	public boolean canUndo() {
-		return getHistory().canUndo(context);
+		return getHistory().canUndo(null);
 	}
 
 	@Override
 	public boolean canRedo() {
-		return getHistory().canRedo(context);
+		return getHistory().canRedo(null);
 	}
 
 	@Override

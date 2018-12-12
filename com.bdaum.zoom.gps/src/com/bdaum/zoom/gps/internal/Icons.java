@@ -61,4 +61,6 @@ public class Icons {
 	public static final Icon dirPin = new Icon("/icons/dirpin.png"); //$NON-NLS-1$
 	public static final Icon shownPin = new Icon("/icons/shownPin.png"); //$NON-NLS-1$
 	public static final Icon delete = new Icon("/icons/delete32.png"); //$NON-NLS-1$
+	public static final Icon gpx64 = new Icon("/icons/gpx64.png"); //$NON-NLS-1$
+	public static final Icon kml64 = new Icon("/icons/kml64.png"); //$NON-NLS-1$
 }

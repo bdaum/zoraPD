@@ -15,6 +15,7 @@ import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPlaceholderFolderLayout;
 
+import com.bdaum.zoom.ui.internal.views.CalendarView;
 import com.bdaum.zoom.ui.internal.views.MetadataView;
 import com.bdaum.zoom.ui.internal.views.ZuiView;
 
@@ -28,7 +29,7 @@ public class SleevesPerspective extends AbstractPerspective {
 		super.createInitialLayout(layout);
 		IFolderLayout folder = layout.createFolder(SLEEVES_FOLDER,
 				IPageLayout.RIGHT,  0.9f, IPageLayout.ID_EDITOR_AREA);
-		fillMainFolder(folder, ZuiView.ID, MAP_VIEW);
+		fillMainFolder(folder, ZuiView.ID, MAP_VIEW, CalendarView.ID);
 		IPlaceholderFolderLayout pfolder = layout.createPlaceholderFolder(
 				HIERARCHY_FOLDER, IPageLayout.RIGHT, 0.8f, SLEEVES_FOLDER);
 		pfolder.addPlaceholder(COMPONENTS_VIEW);
@@ -41,11 +42,6 @@ public class SleevesPerspective extends AbstractPerspective {
 		addCheatSheets(layout, MetadataView.ID);
 		addFastViews(layout, IPageLayout.RIGHT, 0.7f, SLEEVES_FOLDER);
 		layout.setEditorAreaVisible(false);
-	}
-
-	@Override
-	protected String getId() {
-		return ID;
 	}
 
 }

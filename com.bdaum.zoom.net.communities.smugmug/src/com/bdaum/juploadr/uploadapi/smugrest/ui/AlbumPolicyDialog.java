@@ -114,7 +114,7 @@ public class AlbumPolicyDialog extends ZTitleAreaDialog {
 	protected void okPressed() {
 		saveValues();
 		session.setAlbumPolicy(albumGroup.getSelection() == 0 ? SmugmugRestApi.SELECT : SmugmugRestApi.USEDEFAULT);
-		IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		if (!selection.isEmpty())
 			session.setDefaultAlbum(((PhotoSet) selection.getFirstElement()));
 		super.okPressed();
@@ -123,7 +123,7 @@ public class AlbumPolicyDialog extends ZTitleAreaDialog {
 	private void saveValues() {
 		CommunityAccount account = session.getAccount();
 		account.setAlbumPolicy(albumGroup.getSelection() == 0 ? SmugmugRestApi.SELECT : SmugmugRestApi.USEDEFAULT);
-		IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		if (!selection.isEmpty())
 			account.setDefaultAlbum(((PhotoSet) selection.getFirstElement()).getTitle());
 		account.save();

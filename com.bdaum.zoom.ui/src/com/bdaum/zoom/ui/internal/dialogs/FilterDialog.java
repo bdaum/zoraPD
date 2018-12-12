@@ -6,13 +6,13 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.QueryField;
@@ -60,11 +60,10 @@ public class FilterDialog extends ZTitleAreaDialog {
 		final ColorCodeGroup colorCodeGroup = new ColorCodeGroup(colorGroup, SWT.NONE, colorCode);
 		final Label tooltip = new Label(colorGroup, SWT.NONE);
 		tooltip.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-		colorCodeGroup.addSelectionListener(new SelectionAdapter() {
+		colorCodeGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				colorCode = colorCodeGroup.getCode();
-				setTooltip(tooltip, colorCode);
+			public void handleEvent(Event event) {
+				setTooltip(tooltip, colorCode = colorCodeGroup.getCode());
 			}
 		});
 		setTooltip(tooltip, colorCode);

@@ -52,8 +52,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
@@ -62,7 +60,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PartInitException;
@@ -75,12 +75,14 @@ import com.bdaum.zoom.core.IRecipeDetector;
 import com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter;
 import com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter.IRecipeParameterValue;
 import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.IRawConverter;
 import com.bdaum.zoom.program.IRawConverter.RawProperty;
 import com.bdaum.zoom.program.IRawConverter.RawProperty.RawEnum;
+import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
@@ -89,6 +91,7 @@ import com.bdaum.zoom.ui.internal.dialogs.AllNoneGroup;
 import com.bdaum.zoom.ui.internal.job.UpdateRawImagesJob;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.FileEditor;
+import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
@@ -108,8 +111,8 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 
 	private StackLayout basicsLayout, optionsLayout;
 
-	private CheckboxButton makerNotesButton, deviceButton, processRecipesButton, synchronizeRecipesButton,
-			archiveRecipesButton, showButton, uncompressedButton, linearButton;
+	private CheckboxButton makerNotesButton, processRecipesButton, synchronizeRecipesButton, archiveRecipesButton,
+			showButton, uncompressedButton, linearButton;
 
 	private CheckboxTableViewer recipeViewer;
 
@@ -143,6 +146,9 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 
 	private IRawConverter previousRawConverter;
 	private IDialogSettings dialogSettings;
+	private CheckboxButton faceDataButton;
+	private RadioButtonGroup deviceGroup;
+	private RadioButtonGroup tetheredGroup;
 
 	public ImportPreferencePage() {
 		setDescription(Messages.getString("ImportPreferencePage.control_how_images_are_imported")); //$NON-NLS-1$
@@ -178,25 +184,45 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 	private Composite createGeneralGroup(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		composite.setLayout(new GridLayout(2, false));
-		GridData layoutData = new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1);
-		layoutData.verticalIndent = 15;
-		makerNotesButton = WidgetFactory.createCheckButton(composite,
-				Messages.getString("ImportPreferencePage.import_maker_notes"), layoutData);//$NON-NLS-1$
-		showButton = WidgetFactory.createCheckButton(composite,
-				Messages.getString("ImportPreferencePage.show_imported"), //$NON-NLS-1$
+		composite.setLayout(new GridLayout());
+		CGroup contentGroup = CGroup.create(composite, 1, Messages.getString("ImportPreferencePage.content")); //$NON-NLS-1$
+		makerNotesButton = WidgetFactory.createCheckButton(contentGroup,
+				Messages.getString("ImportPreferencePage.import_maker_notes"), //$NON-NLS-1$
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-
-		Label maxLabel = new Label(composite, SWT.NONE);
+		faceDataButton = WidgetFactory.createCheckButton(contentGroup,
+				Messages.getString("ImportPreferencePage.imp_face_data"), //$NON-NLS-1$
+				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		CGroup displayGroup = CGroup.create(composite, 1, Messages.getString("ImportPreferencePage.display")); //$NON-NLS-1$
+		Label maxLabel = new Label(displayGroup, SWT.NONE);
 		maxLabel.setText(Messages.getString("ImportPreferencePage.max_length_imports")); //$NON-NLS-1$
-		maxSpinner = new NumericControl(composite, SWT.NONE);
+		maxSpinner = new NumericControl(displayGroup, SWT.NONE);
 		maxSpinner.setMaximum(999);
 		maxSpinner.setMinimum(1);
 		maxSpinner.setIncrement(1);
-		deviceButton = WidgetFactory.createCheckButton(composite,
-				Messages.getString("ImportPreferencePage.automatically_invoke_import"), //$NON-NLS-1$
+		CGroup eventGroup = CGroup.create(composite, 1, Messages.getString("ImportPreferencePage.events")); //$NON-NLS-1$
+		showButton = WidgetFactory.createCheckButton(eventGroup,
+				Messages.getString("ImportPreferencePage.show_imported"), //$NON-NLS-1$
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		deviceGroup = new RadioButtonGroup(eventGroup, Messages.getString("ImportPreferencePage.on_device_insertion"), //$NON-NLS-1$
+				SWT.HORIZONTAL, Messages.getString("ImportPreferencePage.do_nothing"), //$NON-NLS-1$
+				Messages.getString("ImportPreferencePage.automatically_invoke_import"), //$NON-NLS-1$
+				Messages.getString("ImportPreferencePage.start_tethered")); //$NON-NLS-1$
+		deviceGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		tetheredGroup = new RadioButtonGroup(eventGroup, Messages.getString("ImportPreferencePage.show_new"), SWT.HORIZONTAL, Messages.getString("ImportPreferencePage.gallery"), //$NON-NLS-1$ //$NON-NLS-2$
+				Messages.getString("ImportPreferencePage.internal_viewer"), Messages.getString("ImportPreferencePage.external_viewer")); //$NON-NLS-1$ //$NON-NLS-2$
+		tetheredGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		return composite;
+	}
+
+	protected void checkForTetheringHint() {
+		if (deviceGroup.getSelection() == 2) {
+			if (!showButton.getSelection()) {
+				if (AcousticMessageDialog.openQuestion(getShell(), Messages.getString("ImportPreferencePage.tether"), //$NON-NLS-1$
+						Messages.getString("ImportPreferencePage.tether_tip"))) //$NON-NLS-1$
+					showButton.setSelection(true);
+			}
+		}
+
 	}
 
 	@SuppressWarnings("unchecked")
@@ -270,9 +296,13 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 		if (dngfolderField != null)
 			dngfolderField.setText(preferenceStore.getString(PreferenceConstants.DNGFOLDER));
 		maxSpinner.setSelection(preferenceStore.getInt(PreferenceConstants.MAXIMPORTS));
-		deviceButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.DEVICEWATCH));
+		String s = preferenceStore.getString(PreferenceConstants.DEVICEWATCH);
+		deviceGroup.setSelection(PreferenceConstants.TETHERED.equals(s) ? 2 : Boolean.parseBoolean(s) ? 1 : 0);
+		int tetheredShow = preferenceStore.getInt(PreferenceConstants.TETHEREDSHOW);
+		tetheredGroup.setSelection(tetheredShow);
 		showButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.SHOWIMPORTED));
 		makerNotesButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.IMPORTMAKERNOTES));
+		faceDataButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.IMPORTFACEDATA));
 		if (recipeViewer != null) {
 			List<String> configurations = Core
 					.fromStringList(preferenceStore.getString(PreferenceConstants.RECIPEDETECTORCONFIGURATIONS), "\n"); //$NON-NLS-1$
@@ -306,6 +336,12 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 			processRecipesButton.setSelection(previousProcessRecipes);
 			archiveRecipesButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ARCHIVERECIPES));
 		}
+		deviceGroup.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				checkForTetheringHint();
+			}
+		});
 	}
 
 	@Override
@@ -335,17 +371,19 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 				Messages.getString("ImportPreferencePage.location_Adobe_DNG_converter"), //$NON-NLS-1$
 				true, Constants.EXEEXTENSION, Constants.EXEFILTERNAMES, null, null, false, dialogSettings);
 		dngpathEditor.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		dngpathEditor.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+		dngpathEditor.addListener(new Listener() {
+			@Override
+			public void handleEvent(Event event) {
 				validate();
 			}
 		});
 		CLink link = new CLink(basicsGroup, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		link.setText(Messages.getString("ImportPreferencePage.download_dng")); //$NON-NLS-1$
-		link.addSelectionListener(new SelectionAdapter() {
+		link.addListener(new Listener() {
+
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				String vlcDownload = System.getProperty(Messages.getString("ImportPreferencePage.dng_key")); //$NON-NLS-1$
 				try {
 					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));
@@ -421,8 +459,9 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 								: Messages.getString("ImportPreferencePage.executable"), rc.getName()), //$NON-NLS-1$
 						true, Constants.EXEEXTENSION, Constants.EXEFILTERNAMES, null, null, false, true,
 						dialogSettings);
-				fileEditor.addModifyListener(new ModifyListener() {
-					public void modifyText(ModifyEvent e) {
+				fileEditor.addListener(new Listener() {
+					@Override
+					public void handleEvent(Event event) {
 						validate();
 					}
 				});
@@ -492,6 +531,8 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 					} else if ("boolean".equals(type)) //$NON-NLS-1$
 						optionProps.put(prop.id, WidgetFactory.createCheckButton(optionComp, prop.name,
 								new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1)));
+					else if ("label".equals(type)) //$NON-NLS-1$
+						new Label(optionComp, SWT.NONE).setText(prop.name);
 					else {
 						new Label(optionComp, SWT.NONE).setText(prop.name);
 						optionProps.put(prop.id, new Text(optionComp, SWT.BORDER));
@@ -505,7 +546,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 		if (allDetectors != null && !allDetectors.isEmpty())
 			createRecipeGroup(composite);
 		thumbnailWarning = new Label(composite, SWT.NONE);
-		thumbnailWarning.setData("id", "errors"); //$NON-NLS-1$ //$NON-NLS-2$
+		thumbnailWarning.setData(CSSProperties.ID, CSSProperties.ERRORS);
 		thumbnailWarning.setText(Messages.getString("ImportPreferencePage.raw_thumbnail_warning")); //$NON-NLS-1$
 		archiveRecipesButton = WidgetFactory.createCheckButton(composite,
 				Messages.getString("ImportPreferencePage.archive_recipes"), new GridData(SWT.BEGINNING, SWT.CENTER, //$NON-NLS-1$
@@ -517,7 +558,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 	}
 
 	protected void updateRawOptions() {
-		IRawConverter rc = (IRawConverter) ((IStructuredSelection) rcViewer.getSelection()).getFirstElement();
+		IRawConverter rc = (IRawConverter) rcViewer.getStructuredSelection().getFirstElement();
 		if (rc != null) {
 			String id = rc.getId();
 			FileEditor fe = basicsFileEditors.get(id);
@@ -690,12 +731,11 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 		processRecipesButton = WidgetFactory.createCheckButton(recipeGroup,
 				Messages.getString("ImportPreferencePage.process_recipes"), new GridData(SWT.BEGINNING, SWT.CENTER, //$NON-NLS-1$
 						false, false, 2, 1));
-		processRecipesButton.addSelectionListener(new SelectionAdapter() {
+		processRecipesButton.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateThumbnailWarning();
 			}
-
 		});
 		synchronizeRecipesButton = WidgetFactory.createCheckButton(recipeGroup,
 				Messages.getString("ImportPreferencePage.immediate_update"), new GridData(SWT.BEGINNING, SWT.CENTER, //$NON-NLS-1$
@@ -704,7 +744,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void updateRecipeOptionButtons() {
-		IRawConverter rc = (IRawConverter) ((IStructuredSelection) rcViewer.getSelection()).getFirstElement();
+		IRawConverter rc = (IRawConverter) rcViewer.getStructuredSelection().getFirstElement();
 		boolean enabled = rc != null && rc.isDetectors() && processRecipesButton.getSelection();
 		String usesRecipes = rc == null ? "" : rc.getUsesRecipes(); //$NON-NLS-1$
 		archiveRecipesButton.setVisible(enabled || !usesRecipes.isEmpty());
@@ -716,7 +756,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void updateThumbnailWarning() {
-		IRawConverter rc = (IRawConverter) ((IStructuredSelection) rcViewer.getSelection()).getFirstElement();
+		IRawConverter rc = (IRawConverter) rcViewer.getStructuredSelection().getFirstElement();
 		boolean visible = rc != null && (!rc.getUsesRecipes().isEmpty()
 				|| (rc.isDetectors() && processRecipesButton.getEnabled() && processRecipesButton.getSelection()))
 				&& Core.getCore().getDbManager().getMeta(true).getThumbnailFromPreview();
@@ -729,10 +769,6 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 			processRecipesButton.setEnabled(!selectedRecipeDetectors.isEmpty());
 		updateThumbnailWarning();
 	}
-
-	/**
-	 * The default button has been pressed.
-	 */
 
 	@Override
 	public void doPerformDefaults() {
@@ -763,6 +799,8 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 				preferenceStore.getDefaultString(PreferenceConstants.DNGFOLDER));
 		preferenceStore.setValue(PreferenceConstants.DEVICEWATCH,
 				preferenceStore.getDefaultString(PreferenceConstants.DEVICEWATCH));
+		preferenceStore.setValue(PreferenceConstants.TETHEREDSHOW,
+				preferenceStore.getDefaultString(PreferenceConstants.TETHEREDSHOW));
 		preferenceStore.setValue(PreferenceConstants.MAXIMPORTS,
 				preferenceStore.getDefaultInt(PreferenceConstants.MAXIMPORTS));
 		preferenceStore.setValue(PreferenceConstants.RECIPEDETECTORS,
@@ -773,12 +811,16 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 				preferenceStore.getDefaultBoolean(PreferenceConstants.ARCHIVERECIPES));
 		preferenceStore.setValue(PreferenceConstants.AUTORULES,
 				preferenceStore.getDefaultString(PreferenceConstants.AUTORULES));
+		preferenceStore.setValue(PreferenceConstants.IMPORTFACEDATA,
+				preferenceStore.getDefaultBoolean(PreferenceConstants.IMPORTFACEDATA));
+		preferenceStore.setValue(PreferenceConstants.IMPORTMAKERNOTES,
+				preferenceStore.getDefaultBoolean(PreferenceConstants.IMPORTMAKERNOTES));
 	}
 
 	@Override
 	protected void doPerformOk() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		IRawConverter c = (IRawConverter) ((IStructuredSelection) rcViewer.getSelection()).getFirstElement();
+		IRawConverter c = (IRawConverter) rcViewer.getStructuredSelection().getFirstElement();
 		if (c != null)
 			BatchActivator.getDefault().setCurrentRawConverter(c);
 		Map<String, IRawConverter> rawConverters = BatchActivator.getDefault().getRawConverters();
@@ -794,7 +836,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 			for (RawProperty prop : props) {
 				Object object = optionProps.get(prop.id);
 				if (object instanceof ComboViewer) {
-					RawEnum rawEnum = (RawEnum) ((IStructuredSelection) ((ComboViewer) object).getSelection())
+					RawEnum rawEnum = (RawEnum) ((ComboViewer) object).getStructuredSelection()
 							.getFirstElement();
 					if (rawEnum != null)
 						prop.value = rawEnum.id;
@@ -810,7 +852,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 		}
 
 		if (modeviewer != null) {
-			IStructuredSelection selection = (IStructuredSelection) modeviewer.getSelection();
+			IStructuredSelection selection = modeviewer.getStructuredSelection();
 			if (!selection.isEmpty())
 				preferenceStore.setValue(PreferenceConstants.RAWIMPORT, (String) selection.getFirstElement());
 		}
@@ -823,9 +865,13 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 		if (dngfolderField != null)
 			preferenceStore.setValue(PreferenceConstants.DNGFOLDER, dngfolderField.getText());
 		preferenceStore.setValue(PreferenceConstants.MAXIMPORTS, maxSpinner.getSelection());
-		preferenceStore.setValue(PreferenceConstants.DEVICEWATCH, deviceButton.getSelection());
+		int devIns = deviceGroup.getSelection();
+		preferenceStore.setValue(PreferenceConstants.DEVICEWATCH,
+				devIns == 0 ? "false" : devIns == 1 ? "true" : PreferenceConstants.TETHERED); //$NON-NLS-1$ //$NON-NLS-2$
+		preferenceStore.setValue(PreferenceConstants.TETHEREDSHOW, tetheredGroup.getSelection());
 		preferenceStore.setValue(PreferenceConstants.SHOWIMPORTED, showButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.IMPORTMAKERNOTES, makerNotesButton.getSelection());
+		preferenceStore.setValue(PreferenceConstants.IMPORTFACEDATA, faceDataButton.getSelection());
 		StringBuilder sb = new StringBuilder();
 		if (recipeViewer != null && recipeGroup.isVisible()) {
 			if (allDetectors != null) {
@@ -857,14 +903,14 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 	@Override
 	protected String doValidate() {
 		if (modeviewer != null) {
-			IStructuredSelection selection = (IStructuredSelection) modeviewer.getSelection();
+			IStructuredSelection selection = modeviewer.getStructuredSelection();
 			if (!selection.isEmpty() && !Constants.RAWIMPORT_ONLYRAW.equals(selection.getFirstElement())) {
 				String fn = dngpathEditor.getText();
 				if (!fn.isEmpty() && !new File(fn).exists())
 					return Messages.getString("ImportPreferencePage.dng_converter_does_not_exist"); //$NON-NLS-1$
 			}
 		}
-		IRawConverter c = (IRawConverter) ((IStructuredSelection) rcViewer.getSelection()).getFirstElement();
+		IRawConverter c = (IRawConverter) rcViewer.getStructuredSelection().getFirstElement();
 		if (c != null) {
 			String fn = basicsFileEditors.get(c.getId()).getText();
 			if (!fn.isEmpty()) {

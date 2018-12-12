@@ -24,11 +24,11 @@ import java.util.List;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.csv.internal.HelpContextIds;
@@ -67,8 +67,9 @@ public class CsvTargetFilePage extends ColoredWizardPage {
 		fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY,
 				Messages.CsvTargetFilePage_target_file, true, filterExtensions,
 				filterNames, path, fileName, true, dialogSettings);
-		fileEditor.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+		fileEditor.addListener(new Listener() {
+			@Override
+			public void handleEvent(Event event) {
 				path = fileEditor.getFilterPath();
 				validatePage();
 			}

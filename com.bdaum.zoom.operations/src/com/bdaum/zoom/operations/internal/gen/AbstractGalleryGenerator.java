@@ -83,10 +83,12 @@ import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.Format;
+import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IGalleryGenerator;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.image.ZImage;
@@ -96,6 +98,7 @@ import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.operations.internal.xmp.XMPUtilities;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.DiskFullException;
+import com.bdaum.zoom.program.HtmlEncoderDecoder;
 
 @SuppressWarnings("restriction")
 public abstract class AbstractGalleryGenerator implements IGalleryGenerator, LoaderListener {
@@ -112,7 +115,6 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	public static final String[] WEIGHT = new String[] { "normal", "bold", //$NON-NLS-1$ //$NON-NLS-2$
 			"bolder ", "lighter" }; //$NON-NLS-1$ //$NON-NLS-2$
 	public static final String[] VARIANT = new String[] { "normal", "smallCaps" }; //$NON-NLS-1$ //$NON-NLS-2$
-	private static final String HEX = "01234567890abcdef"; //$NON-NLS-1$
 	private Storyboard selectedStoryboard;
 	private MultiStatus status;
 	private WebGalleryImpl gallery;
@@ -126,6 +128,8 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	protected IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
 	private File bigFolder;
 	private File tTarget;
+	private HtmlEncoderDecoder htmlEncoderDecoder;
+
 
 	public void generate(WebGalleryImpl webGallery, IProgressMonitor aMonitor, IAdaptable info, MultiStatus mstatus)
 			throws IOException {
@@ -322,7 +326,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 							else {
 								substitute = value.toString();
 								if (webParameter.getEncodeHtml())
-									substitute = BatchUtilities.encodeHTML(substitute, false);
+									substitute = getHtmlEncoderDecoder().encodeHTML(substitute, false);
 							}
 						}
 					}
@@ -488,16 +492,16 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		File bgImage = getBgImage();
 		if (bgImage != null)
 			varmap.put("bgimage", generateBg(gallery, bgImage)); //$NON-NLS-1$
-		varmap.put("keywords", BatchUtilities.encodeHTML( //$NON-NLS-1$
+		varmap.put("keywords", getHtmlEncoderDecoder().encodeHTML( //$NON-NLS-1$
 				Core.toStringList(gallery.getKeyword(), ", "), false)); //$NON-NLS-1$
 		String s = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(new Date()); //$NON-NLS-1$
 		varmap.put("date", s.substring(0, s.length() - 2) + ':' + s.substring(s.length() - 2)); //$NON-NLS-1$
 		String url = configurationElement.getAttribute("url"); //$NON-NLS-1$
 		if (!gallery.getHideHeader()) {
-			varmap.put("name", BatchUtilities.encodeHTML(gallery.getName(), false)); //$NON-NLS-1$
+			varmap.put("name", getHtmlEncoderDecoder().encodeHTML(gallery.getName(), false)); //$NON-NLS-1$
 			String description = gallery.getDescription();
 			if (description != null && !description.isEmpty()) {
-				String d = gallery.getHtmlDescription() ? description : BatchUtilities.encodeHTML(description, true);
+				String d = gallery.getHtmlDescription() ? description : getHtmlEncoderDecoder().encodeHTML(description, true);
 				varmap.put("description", d); //$NON-NLS-1$
 				varmap.put("descriptiondiv", //$NON-NLS-1$
 						NLS.bind("<div id=\"description\" class=\"description-container\">{0}</div>", d)); //$NON-NLS-1$
@@ -529,7 +533,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		}
 		Map<String, WebParameter> parameters = gallery.getParameter();
 		StringBuilder sb = new StringBuilder();
-		CoreActivator activator = CoreActivator.getDefault();
+		ICore activator = CoreActivator.getDefault();
 		IDbManager dbManager = activator.getDbManager();
 		int thumbnailSizeInPixel = getThumbnailSizeInPixel(gallery.getThumbSize());
 		int i = 0;
@@ -1062,20 +1066,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	protected String generateColor(Rgb_type color) {
 		if (color == null)
 			return ""; //$NON-NLS-1$
-		return toHtmlColors(color.getR(), color.getG(), color.getB());
-	}
-
-	public static String toHtmlColors(int red, int green, int blue) {
-		StringBuilder sb = new StringBuilder("#"); //$NON-NLS-1$
-		generateColorComponent(sb, red);
-		generateColorComponent(sb, green);
-		generateColorComponent(sb, blue);
-		return sb.toString();
-	}
-
-	private static void generateColorComponent(StringBuilder sb, int c) {
-		sb.append(HEX.charAt(c / 16));
-		sb.append(HEX.charAt(c % 16));
+		return Utilities.toHtmlColors(color.getR(), color.getG(), color.getB());
 	}
 
 	protected static String encodeURL(String s) {
@@ -1132,8 +1123,8 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 										sb.append("<li>"); //$NON-NLS-1$
 									else if (first)
 										sb.append(", "); //$NON-NLS-1$
-									sb.append(BatchUtilities.encodeHTML(qf.getLabel(), false)).append(": ").append( //$NON-NLS-1$
-											BatchUtilities.encodeHTML(text, false));
+									sb.append(getHtmlEncoderDecoder().encodeHTML(qf.getLabel(), false)).append(": ").append( //$NON-NLS-1$
+											getHtmlEncoderDecoder().encodeHTML(text, false));
 									if (css != null)
 										sb.append("</li>\n"); //$NON-NLS-1$
 								}
@@ -1173,7 +1164,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 			web = formatWebUrl(web);
 			String copyright = show.getCopyright();
 			if (copyright != null && !copyright.isEmpty())
-				sb.append("&copy; ").append(BatchUtilities.encodeHTML(copyright, false)); //$NON-NLS-1$
+				sb.append("&copy; ").append(getHtmlEncoderDecoder().encodeHTML(copyright, false)); //$NON-NLS-1$
 			String contact = show.getContactName();
 			String email = show.getEmail();
 			if (contact == null || contact.isEmpty())
@@ -1183,9 +1174,9 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 					sb.append("  -  "); //$NON-NLS-1$
 				if (email != null && !email.isEmpty())
 					sb.append("<a href=\"mailto:").append(email).append("\">") //$NON-NLS-1$ //$NON-NLS-2$
-							.append(BatchUtilities.encodeHTML(contact, false)).append("</a>"); //$NON-NLS-1$
+							.append(getHtmlEncoderDecoder().encodeHTML(contact, false)).append("</a>"); //$NON-NLS-1$
 				else
-					sb.append(BatchUtilities.encodeHTML(contact, false));
+					sb.append(getHtmlEncoderDecoder().encodeHTML(contact, false));
 			}
 			if (web != null && !web.isEmpty()) {
 				if (sb.length() > 0)
@@ -1195,7 +1186,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 				else if (label.startsWith(HTTPS))
 					label = label.substring(HTTPS.length());
 				generateLink(web, sb);
-				sb.append(BatchUtilities.encodeHTML(label, false)).append("</a>"); //$NON-NLS-1$
+				sb.append(getHtmlEncoderDecoder().encodeHTML(label, false)).append("</a>"); //$NON-NLS-1$
 			}
 			String poweredBy = show.getPoweredByText();
 			if (poweredBy != null && !poweredBy.isEmpty() && engineText != null) {
@@ -1369,4 +1360,12 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	public void setSelectedStoryBoard(Storyboard selectedStoryboard) {
 		this.selectedStoryboard = selectedStoryboard;
 	}
+	
+	protected HtmlEncoderDecoder getHtmlEncoderDecoder() {
+		if (htmlEncoderDecoder == null)
+			htmlEncoderDecoder = new HtmlEncoderDecoder();
+		return htmlEncoderDecoder;
+	}
+
+
 }

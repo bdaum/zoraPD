@@ -45,9 +45,6 @@ public class AssetSelection extends StructuredSelection implements Iterable<Asse
 
 	private static final Object[] DUMMY = new Object[] { AssetSelection.class };
 
-	/**
-	 * Empty selection
-	 */
 	public static final AssetSelection EMPTY = new AssetSelection(0);
 
 	private static final String[] EMPTYSTRING = new String[0];

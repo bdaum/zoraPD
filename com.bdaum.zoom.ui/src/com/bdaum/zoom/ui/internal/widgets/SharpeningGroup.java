@@ -22,12 +22,12 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
@@ -60,9 +60,9 @@ public class SharpeningGroup {
 		applyButton = WidgetFactory.createCheckButton(group,
 				Messages.SharpeningGroup_apply_sharpening, new GridData(
 						SWT.BEGINNING, SWT.CENTER, true, false, 6, 1));
-		applyButton.addSelectionListener(new SelectionAdapter() {
+		applyButton.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateControls();
 				if (radiusField.getEnabled())
 					radiusField.setFocus();
@@ -96,6 +96,21 @@ public class SharpeningGroup {
 		threshholdField.setMaximum(25);
 		threshholdField.setIncrement(1);
 	}
+	
+	public void addListener(Listener listener) {
+		applyButton.addListener(listener);
+		radiusField.addListener(listener);
+		amountField.addListener(listener);
+		threshholdField.addListener(listener);
+	}
+
+	public void removeListener(Listener listener) {
+		applyButton.removeListener(listener);
+		radiusField.removeListener(listener);
+		amountField.removeListener(listener);
+		threshholdField.removeListener(listener);
+	}
+
 
 	public void updateControls() {
 		boolean sharpenEnabled = applyButton.getEnabled()

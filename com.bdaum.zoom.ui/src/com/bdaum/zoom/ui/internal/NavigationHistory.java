@@ -64,7 +64,7 @@ import com.bdaum.zoom.ui.internal.views.AbstractGalleryView;
 import com.bdaum.zoom.ui.internal.views.AbstractPresentationView;
 import com.bdaum.zoom.ui.internal.views.BasicView;
 import com.bdaum.zoom.ui.internal.views.EducatedSelectionListener;
-import com.bdaum.zoom.ui.internal.views.SelectAllHandler;
+import com.bdaum.zoom.ui.internal.views.SelectionActionClusterProvider;
 
 @SuppressWarnings("restriction")
 public class NavigationHistory implements IPerspectiveListener, ISelectionChangedListener, INavigationHistory {
@@ -728,8 +728,8 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 								assets.add(a);
 						}
 						postSelection(new AssetSelection(assets));
-					} else if (view instanceof SelectAllHandler)
-						((SelectAllHandler) view).selectAll();
+					} else if (view instanceof SelectionActionClusterProvider)
+						((SelectionActionClusterProvider) view).selectAll();
 				}
 			}
 		} finally {
@@ -822,9 +822,17 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	 * @see com.bdaum.zoom.ui.INavigationHistory#addHistoryListener(com.bdaum.zoom
 	 * .ui.HistoryListener)
 	 */
-
 	public void addHistoryListener(HistoryListener listener) {
 		historyListeners.add(listener);
+	}
+	
+
+	/* (nicht-Javadoc)
+	 * @see com.bdaum.zoom.ui.INavigationHistory#removeHistoryListener(com.bdaum.zoom.ui.HistoryListener)
+	 */
+	@Override
+	public void removeHistoryListener(HistoryListener listener) {
+		historyListeners.remove(listener);
 	}
 
 	/*
@@ -832,7 +840,6 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	 *
 	 * @see com.bdaum.zoom.ui.INavigationHistory#getFilter()
 	 */
-
 	public IAssetFilter[] getFilters() {
 		return filters;
 	}

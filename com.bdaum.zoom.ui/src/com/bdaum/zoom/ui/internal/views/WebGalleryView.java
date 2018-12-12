@@ -21,6 +21,7 @@ package com.bdaum.zoom.ui.internal.views;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Paint;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.io.File;
@@ -61,7 +62,6 @@ import org.eclipse.jface.dialogs.ProgressIndicator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
@@ -109,6 +109,7 @@ import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.Utilities;
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.image.ImageUtilities;
@@ -201,7 +202,7 @@ public class WebGalleryView extends AbstractPresentationView {
 
 		@Override
 		protected void okPressed() {
-			selected = (Storyboard) ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+			selected = (Storyboard) viewer.getStructuredSelection().getFirstElement();
 			super.okPressed();
 		}
 
@@ -606,7 +607,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			if (ix < 0) {
 				ix = computeSequenceNumber(to.getX());
 				if (toFront)
-					ix += 1;
+					++ix;
 				else
 					ix = (Math.max(1, ix));
 			}
@@ -891,7 +892,7 @@ public class WebGalleryView extends AbstractPresentationView {
 										offline.add((volume == null) ? "" : volume); //$NON-NLS-1$
 										break;
 									default:
-										penColor = titleColor;
+										penColor = titleForegroundColor;
 										break;
 									}
 									if (penColor != null && !display.isDisposed()
@@ -920,13 +921,10 @@ public class WebGalleryView extends AbstractPresentationView {
 		private PSWTImage pImage;
 		private TextField caption;
 		private TextField description;
-		private int imageSize = CELLSIZE - 2 * STORYBOARDMARGINS;
 		private PSWTButton propButton;
 		private GreekedPSWTText seqNo;
-		private final PStoryboard pstoryboard;
 
 		public PWebExhibit(final PSWTCanvas canvas, PStoryboard pstoryboard, WebExhibitImpl exhibit, int pos, int y) {
-			this.pstoryboard = pstoryboard;
 			this.exhibit = exhibit;
 			setPickable(false);
 			// Image
@@ -939,7 +937,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			Image propImage = Icons.smallProperties.getImage();
 			propButton = new PSWTButton(canvas, propImage, Messages.getString("WebGalleryView.slide_properties")); //$NON-NLS-1$
 			Rectangle propbounds = propImage.getBounds();
-			propButton.setOffset(STORYBOARDMARGINS, imageSize + CSIZE);
+			propButton.setOffset(STORYBOARDMARGINS, IMAGESIZE + CSIZE);
 			addChild(propButton);
 			// Seqno
 			Color strokePaint = (Color) pstoryboard.getStrokePaint();
@@ -949,28 +947,19 @@ public class WebGalleryView extends AbstractPresentationView {
 			seqNo.setTransparent(true);
 			seqNo.setPenColor(strokePaint);
 			int textHorMargins = 2 * STORYBOARDMARGINS + propbounds.width;
-			int textYPos = imageSize + CSIZE;
+			int textYPos = IMAGESIZE + CSIZE;
 			seqNo.setOffset(textHorMargins, textYPos);
-			seqNo.setPickable(false);
+			seqNo.setPickable(true);
 			addChild(seqNo);
 			// caption
-			caption = new TextField(exhibit.getCaption(), (int) (imageSize - 2 * textHorMargins - seqNo.getWidth()),
-					new Font("Arial", Font.BOLD, 9), strokePaint, null, true, SWT.SINGLE); //$NON-NLS-1$
-			caption.setSpellingOptions(10, ISpellCheckingService.TITLEOPTIONS);
-			caption.setGreekThreshold(5);
-			caption.setOffset(textHorMargins + seqNo.getWidth(), textYPos);
-			caption.setPickable(true);
-			addChild(caption);
+			caption = createTextLine(this, exhibit.getCaption(), 5,
+					(int) (IMAGESIZE - 2 * textHorMargins - seqNo.getWidth()),
+					(int) (textHorMargins + seqNo.getWidth()), textYPos, titleForegroundColor, null, "Arial", Font.BOLD, //$NON-NLS-1$
+					9, ISpellCheckingService.TITLEOPTIONS, SWT.SINGLE);
 			// legend
-			description = new TextField(getDescription(exhibit), imageSize - 2 * textHorMargins - 2 * CSIZE,
-					new Font("Arial", //$NON-NLS-1$
-							Font.PLAIN, 9),
-					strokePaint, null, true, SWT.SINGLE);
-			description.setSpellingOptions(10, ISpellCheckingService.DESCRIPTIONOPTIONS);
-			description.setGreekThreshold(5);
-			description.setOffset(textHorMargins + CSIZE, textYPos + 2 * CSIZE);
-			description.setPickable(true);
-			addChild(description);
+			description = createTextLine(this, getDescription(exhibit), 5, IMAGESIZE - 2 * textHorMargins - 2 * CSIZE,
+					textHorMargins + CSIZE, textYPos + 2 * CSIZE, foregroundColor, null, "Arial", Font.PLAIN, 9, //$NON-NLS-1$
+					ISpellCheckingService.DESCRIPTIONOPTIONS, SWT.SINGLE);
 			// position and bounds
 			setOffset(pos, y);
 			installHandleEventHandlers(pImage, false, false, this);
@@ -982,7 +971,8 @@ public class WebGalleryView extends AbstractPresentationView {
 
 				@Override
 				public void mouseReleased(PInputEvent event) {
-					if (getPickedNode() == propButton || event.getClickCount() == 2)
+					PNode pickedNode = getPickedNode();
+					if (pickedNode == propButton || pickedNode == seqNo || event.getClickCount() == 2)
 						editExhibitProperties();
 				}
 			};
@@ -994,9 +984,9 @@ public class WebGalleryView extends AbstractPresentationView {
 		public void raiseToTop() {
 			super.raiseToTop();
 			if (exhibitAtFront != null)
-				exhibitAtFront.description.setPenColor((Color) pstoryboard.getStrokePaint());
+				exhibitAtFront.description.setPenColor(foregroundColor);
 			exhibitAtFront = this;
-			description.setPenColor(pstoryboard.getHighlightColor());
+			description.setPenColor(selectionForegroundColor);
 		}
 
 		@Override
@@ -1004,7 +994,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			super.lowerToBottom();
 			if (exhibitAtFront == this)
 				exhibitAtFront = null;
-			description.setPenColor((Color) pstoryboard.getStrokePaint());
+			description.setPenColor(foregroundColor);
 		}
 
 		private void editExhibitProperties() {
@@ -1054,18 +1044,10 @@ public class WebGalleryView extends AbstractPresentationView {
 			PBounds bounds = pImage.getBoundsReference();
 			double width = bounds.getWidth();
 			double height = bounds.getHeight();
-			double scale = Math.min(imageSize / width, imageSize / height);
-			pImage.setOffset(STORYBOARDMARGINS + ((imageSize - width * scale) / 2),
-					STORYBOARDMARGINS + ((imageSize - height * scale) / 2));
+			double scale = Math.min(IMAGESIZE / width, IMAGESIZE / height);
+			pImage.setOffset(STORYBOARDMARGINS + ((IMAGESIZE - width * scale) / 2),
+					STORYBOARDMARGINS + ((IMAGESIZE - height * scale) / 2));
 			pImage.scale(scale);
-		}
-
-		public void updateColors(Color selectedPaint) {
-			for (ListIterator<?> it = getChildrenIterator(); it.hasNext();) {
-				PNode child = (PNode) it.next();
-				if (child instanceof TextField)
-					((TextField) child).setSelectedPenColor(selectedPaint);
-			}
 		}
 
 		public void setSequenceNo(int i) {
@@ -1080,8 +1062,9 @@ public class WebGalleryView extends AbstractPresentationView {
 		}
 
 		public void setPenColor(Color color) {
-			caption.setPenColor(color);
+			seqNo.setPenColor(color);
 			description.setPenColor(color);
+			description.setSelectedBgColor(selectionBackgroundColor);
 		}
 
 		public void setBackgroundColor(Color color) {
@@ -1090,18 +1073,22 @@ public class WebGalleryView extends AbstractPresentationView {
 
 		public void setTitleColor(Color color) {
 			caption.setPenColor(color);
+			caption.setSelectedBgColor(selectionBackgroundColor);
 		}
 
 		public String getAssetId() {
 			return exhibit.getAsset();
 		}
 
+		@Override
+		public void updateColors(Color selectedPaint) {
+			// do nothing
+		}
+
 	}
 
 	@SuppressWarnings("serial")
 	public class PStoryboard extends PPanel {
-
-		private Color highlightColor;
 
 		public PStoryboard(Storyboard storyboard) {
 			super(storyboard, STORYBOARDWIDTH, STORYBOARDHEIGHT);
@@ -1115,9 +1102,8 @@ public class WebGalleryView extends AbstractPresentationView {
 			bounds = propButton.getImage().getBounds();
 			propButton.setOffset(STORYBOARDMARGINS, STORYBOARDHEIGHT - 2 * (bounds.height / 2 + STORYBOARDMARGINS));
 			// Title
-			createTitle(canvas, storyboard.getTitle(), STORYBOARDMARGINS, STORYBOARDMARGINS, new Color(132, 132, 132),
+			createTitle(canvas, storyboard.getTitle(), STORYBOARDMARGINS, STORYBOARDMARGINS, titleForegroundColor, 
 					(Color) getPaint(), 18);
-			highlightColor = new Color(0, 0, 0);
 		}
 
 		public Storyboard getStoryboard() {
@@ -1126,6 +1112,35 @@ public class WebGalleryView extends AbstractPresentationView {
 
 		public void setStoryboard(StoryboardImpl storyboard) {
 			this.data = storyboard;
+		}
+
+		@Override
+		public void setPaint(Paint newPaint) {
+			super.setPaint(newPaint);
+			for (ListIterator<?> it = getChildrenIterator(); it.hasNext();) {
+				Object child = it.next();
+				if (child instanceof TextField)
+					((TextField) child).setBackgroundColor((Color) newPaint);
+				else if (child instanceof PWebExhibit)
+					((PWebExhibit) child).setBackgroundColor((Color) newPaint);
+			}
+		}
+
+		@Override
+		public void setStrokeColor(Paint strokeColor) {
+			super.setStrokeColor(strokeColor);
+			for (ListIterator<?> it = getChildrenIterator(); it.hasNext();) {
+				Object child = it.next();
+				if (child instanceof PSWTText)
+					((PSWTText) child).setPenColor((Color) strokeColor);
+				else if (child instanceof TextField) {
+					((TextField) child).setPenColor((Color) strokeColor);
+					((TextField) child).setSelectedBgColor(selectionBackgroundColor);
+				} else if (child instanceof PWebExhibit) {
+					((PWebExhibit) child).setPenColor(foregroundColor);
+					((PWebExhibit) child).setTitleColor(titleForegroundColor);
+				}
+			}
 		}
 
 		/*
@@ -1162,9 +1177,6 @@ public class WebGalleryView extends AbstractPresentationView {
 			editStoryboardAction.run();
 		}
 
-		public Color getHighlightColor() {
-			return highlightColor;
-		}
 	}
 
 	public static final String ID = "com.bdaum.zoom.ui.WebGalleryView"; //$NON-NLS-1$
@@ -1175,6 +1187,7 @@ public class WebGalleryView extends AbstractPresentationView {
 	private static final int STORYBOARDMARGINS = 5;
 	private static final int CSIZE = 12;
 	private static final int STORYBOARDHEIGHT = CELLSIZE + 5 * CSIZE;
+	private static final int IMAGESIZE = CELLSIZE - 2 * STORYBOARDMARGINS;
 	protected static final int STORYBOARDDIST = STORYBOARDHEIGHT + CSIZE;
 	private static final int LARGEBUTTONSIZE = 64;
 	private Color wallPaint = new Color(255, 255, 250);
@@ -1214,7 +1227,7 @@ public class WebGalleryView extends AbstractPresentationView {
 	@Override
 	public void createPartControl(Composite parent) {
 		super.createPartControl(parent);
-		canvas.setData("id", "webgallery"); //$NON-NLS-1$ //$NON-NLS-2$
+		canvas.setData(CSSProperties.ID, CSSProperties.WEBGALLERY);
 		undoContext = new UndoContext() {
 			@Override
 			public String getLabel() {
@@ -1273,7 +1286,7 @@ public class WebGalleryView extends AbstractPresentationView {
 		installHoveringController();
 		// Actions
 		makeActions();
-		installListeners(parent);
+		installListeners();
 		hookContextMenu();
 		contributeToActionBars();
 		if (gallery != null)
@@ -1303,7 +1316,7 @@ public class WebGalleryView extends AbstractPresentationView {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
-		updateActions(false);
+		updateActions(true);
 		manager.add(gotoExhibitAction);
 		PNode pickedNode = getPickedNode();
 		if (pickedNode != null && pickedNode.getParent() instanceof PWebExhibit)
@@ -1341,7 +1354,7 @@ public class WebGalleryView extends AbstractPresentationView {
 
 	@Override
 	public void updateActions(boolean force) {
-		if (addStoryBoardAction != null && (viewActive || force)) {
+		if (addStoryBoardAction != null && (isVisible() || force)) {
 			boolean hasGallery = gallery != null;
 			addStoryBoardAction.setEnabled(hasGallery && !dbIsReadonly());
 			propertiesAction.setEnabled(hasGallery);
@@ -1378,28 +1391,11 @@ public class WebGalleryView extends AbstractPresentationView {
 
 	@Override
 	protected void setColor(Control control) {
-		Color newPaint = UiUtilities.getAwtBackground(control, null);
-		surface.setPaint(newPaint);
-		selectionBackgroundColor = UiUtilities.getAwtForeground(control, null);
 		CssActivator.getDefault().applyExtendedStyle(control, this);
-		wallPaint = newPaint; // UiUtilities.getAwtForeground(control, null);
+		surface.setPaint(wallPaint = UiUtilities.getAwtBackground(control, null));
 		for (PStoryboard pstoryboard : storyboards) {
 			pstoryboard.setPaint(wallPaint);
 			pstoryboard.setStrokeColor(selectionBackgroundColor);
-			ListIterator<?> it = pstoryboard.getChildrenIterator();
-			while (it.hasNext()) {
-				Object child = it.next();
-				if (child instanceof PSWTText)
-					((PSWTText) child).setPenColor(newPaint);
-				else if (child instanceof TextField) {
-					((TextField) child).setPenColor(newPaint);
-					((TextField) child).setBackgroundColor(wallPaint);
-				} else if (child instanceof PWebExhibit) {
-					((PWebExhibit) child).setPenColor(foregroundColor);
-					((PWebExhibit) child).setTitleColor(titleForegroundColor);
-					((PWebExhibit) child).setBackgroundColor(wallPaint);
-				}
-			}
 		}
 	}
 
@@ -1638,10 +1634,8 @@ public class WebGalleryView extends AbstractPresentationView {
 			beginTask(n);
 			int y = 2 * STORYBOARDMARGINS;
 			double w = STORYBOARDWIDTH;
-			for (Storyboard sb : gal.getStoryboard()) {
-				w = Math.max(w, addStoryboard(sb, y, progressBar).getBoundsReference().getWidth());
-				y += STORYBOARDDIST;
-			}
+			for (Storyboard sb : gal.getStoryboard())
+				w = Math.max(w, addStoryboard(sb, y += STORYBOARDDIST, progressBar).getBoundsReference().getWidth());
 			updateSurfaceBounds(w + 2 * STORYBOARDMARGINS,
 					gal.getStoryboard().size() * (STORYBOARDHEIGHT + STORYBOARDDIST) + 2 * STORYBOARDMARGINS
 							- STORYBOARDDIST);
@@ -1852,8 +1846,8 @@ public class WebGalleryView extends AbstractPresentationView {
 							if (dialog.open() == Window.OK) {
 								final WebGalleryImpl template = dialog.getResult();
 								final IDbManager dbManager = Core.getCore().getDbManager();
-								List<WebGalleryImpl> set = dbManager.obtainObjects(WebGalleryImpl.class, false,
-										"name", template.getName(), QueryField.EQUALS, "template", true, //$NON-NLS-1$//$NON-NLS-2$
+								List<WebGalleryImpl> set = dbManager.obtainObjects(WebGalleryImpl.class, false, "name", //$NON-NLS-1$
+										template.getName(), QueryField.EQUALS, "template", true, //$NON-NLS-1$
 										QueryField.EQUALS);
 								dbManager.safeTransaction(set, template);
 							}

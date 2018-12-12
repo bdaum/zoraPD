@@ -24,18 +24,19 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.ui.internal.widgets.PatternListEditor;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.internal.widgets.ZDialog;
@@ -84,14 +85,13 @@ public class PatternEditDialog extends ZDialog {
 			policyButtonGroup.setToolTipText(0, Messages.getString("PatternEditDialog.Pattern_rejects")); //$NON-NLS-1$
 			policyButtonGroup.setToolTipText(1, Messages.getString("PatternEditDialog.Pattern_accepts")); //$NON-NLS-1$
 			policyButtonGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-			policyButtonGroup.addSelectionListener(new SelectionAdapter() {
+			policyButtonGroup.addListener(new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					setAcceptOrReject(policyButtonGroup.getSelection() == 0);
 				}
 			});
-			boolean accepts = result.startsWith(">"); //$NON-NLS-1$
-			policyButtonGroup.setSelection(accepts ? 1 : 0);
+			policyButtonGroup.setSelection(result.startsWith(">") ? 1 : 0); //$NON-NLS-1$
 		}
 
 		Label label = new Label(body, SWT.NONE);
@@ -100,7 +100,7 @@ public class PatternEditDialog extends ZDialog {
 		text.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		errorMsg = new Label(body, SWT.NONE);
 		errorMsg.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		errorMsg.setData("id", "errors"); //$NON-NLS-1$ //$NON-NLS-2$
+		errorMsg.setData(CSSProperties.ID, CSSProperties.ERRORS);
 		errorMsg.setForeground(errorMsg.getDisplay().getSystemColor(SWT.COLOR_RED));
 		if (forbiddenChars != null)
 			text.addVerifyListener(new VerifyListener() {

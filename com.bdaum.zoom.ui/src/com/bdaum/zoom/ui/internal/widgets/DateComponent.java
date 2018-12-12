@@ -23,9 +23,9 @@ import java.util.Date;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.ui.widgets.DateInput;
 
@@ -68,12 +68,8 @@ public class DateComponent extends Composite {
 		layout(true,true);
 	}
 
-	/**
-	 * @param listener
-	 * @see com.bdaum.zoom.ui.widgets.DateInput#addSelectionListener(org.eclipse.swt.events.SelectionListener)
-	 */
-	public void addSelectionListener(SelectionListener listener) {
-		dateInput.addSelectionListener(listener);
+	public void addListener(Listener listener) {
+		dateInput.addListener(listener);
 	}
 
 	/**
@@ -86,12 +82,8 @@ public class DateComponent extends Composite {
 		super.setEnabled(enabled);
 	}
 
-	/**
-	 * @param listener
-	 * @see com.bdaum.zoom.ui.widgets.DateInput#removeSelectionListener(org.eclipse.swt.events.SelectionListener)
-	 */
-	public void removeSelectionListener(SelectionListener listener) {
-		dateInput.removeSelectionListener(listener);
+	public void removeListener(Listener listener) {
+		dateInput.removeListener(listener);
 	}
 
 }

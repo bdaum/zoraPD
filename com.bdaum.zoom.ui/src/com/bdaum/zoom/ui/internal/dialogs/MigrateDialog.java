@@ -256,7 +256,7 @@ public class MigrateDialog extends ZTitleAreaDialog {
 		editPatternButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				MigrationRule policy = (MigrationRule) ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				MigrationRule policy = (MigrationRule) viewer.getStructuredSelection().getFirstElement();
 				RegExDialog regexDialog = new RegExDialog(getShell(), policy, null, false,
 						fileSeparatorCombo.getSelectionIndex(), -1);
 				if (regexDialog.open() == RegExDialog.OK) {
@@ -275,7 +275,7 @@ public class MigrateDialog extends ZTitleAreaDialog {
 		removePatternButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				Object policy = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object policy = viewer.getStructuredSelection().getFirstElement();
 				rules.remove(policy);
 				viewer.remove(policy);
 				updateButtons();
@@ -290,7 +290,7 @@ public class MigrateDialog extends ZTitleAreaDialog {
 		upButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				MigrationRule policy = (MigrationRule) ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				MigrationRule policy = (MigrationRule) viewer.getStructuredSelection().getFirstElement();
 				int i = rules.indexOf(policy);
 				if (i > 0) {
 					rules.remove(i);
@@ -307,7 +307,7 @@ public class MigrateDialog extends ZTitleAreaDialog {
 		downButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				MigrationRule policy = (MigrationRule) ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				MigrationRule policy = (MigrationRule) viewer.getStructuredSelection().getFirstElement();
 				int i = rules.indexOf(policy);
 				if (i < rules.size() - 1) {
 					rules.remove(i);
@@ -333,7 +333,7 @@ public class MigrateDialog extends ZTitleAreaDialog {
 	}
 
 	private void updateButtons() {
-		IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		boolean enabled = !selection.isEmpty();
 		removePatternButton.setEnabled(enabled);
 		editPatternButton.setEnabled(enabled);
@@ -395,7 +395,7 @@ public class MigrateDialog extends ZTitleAreaDialog {
 					protected void buttonPressed(int buttonId) {
 						if (buttonId == 9999) {
 							TableViewer tableViewer = getTableViewer();
-							IStructuredSelection selection = (IStructuredSelection) tableViewer.getSelection();
+							IStructuredSelection selection = tableViewer.getStructuredSelection();
 							if (!selection.isEmpty()) {
 								MigrationPolicy policy = (MigrationPolicy) selection.getFirstElement();
 								tableViewer.remove(policy);

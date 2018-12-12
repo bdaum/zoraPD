@@ -32,8 +32,8 @@ import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.ICellEditorValidator;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TextCellEditor;
@@ -61,17 +61,22 @@ public class MediaDialog extends ZTitleAreaDialog {
 	private static final SimpleDateFormat sdf = new SimpleDateFormat(Messages.MediaDialog_import_date_mask);
 	private TableViewer viewer;
 	private List<LastDeviceImport> mediaList;
+	private String key;
+	private boolean newMedia;
 
-	public MediaDialog(Shell parentShell, List<LastDeviceImport> media) {
+	public MediaDialog(Shell parentShell, List<LastDeviceImport> media, String key, boolean newMedia) {
 		super(parentShell);
 		mediaList = media;
+		this.key = key;
+		this.newMedia = newMedia;
 	}
 
 	@Override
 	public void create() {
 		super.create();
-		setTitle(Messages.MediaDialog_manage_media);
-		setMessage(Messages.MediaDialog_manage_media_message);
+		setTitle(newMedia ? Messages.MediaDialog_register_new : Messages.MediaDialog_manage_media);
+		setMessage(newMedia ? Messages.MediaDialog_specify_owner : Messages.MediaDialog_manage_media_message);
+		fillValues();
 		updateButtons();
 	}
 
@@ -84,6 +89,7 @@ public class MediaDialog extends ZTitleAreaDialog {
 		viewer = new TableViewer(composite, SWT.FULL_SELECTION | SWT.SINGLE | SWT.V_SCROLL | SWT.BORDER);
 		viewer.getTable().setLinesVisible(true);
 		viewer.getTable().setHeaderVisible(true);
+		viewer.getTable().setLayoutData(new GridData(780, 250));
 		TableViewerColumn col1 = new TableViewerColumn(viewer, SWT.NONE);
 		col1.getColumn().setWidth(180);
 		col1.getColumn().setText(Messages.MediaDialog_volume_name);
@@ -107,7 +113,6 @@ public class MediaDialog extends ZTitleAreaDialog {
 			}
 		});
 		col2.setEditingSupport(new EditingSupport(viewer) {
-
 			@Override
 			protected void setValue(Object element, Object value) {
 				if (element instanceof LastDeviceImport && value instanceof String) {
@@ -139,8 +144,10 @@ public class MediaDialog extends ZTitleAreaDialog {
 		col3.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				if (element instanceof LastDeviceImport)
-					return sdf.format(new Date(((LastDeviceImport) element).getTimestamp()));
+				if (element instanceof LastDeviceImport) {
+					long timestamp = ((LastDeviceImport) element).getTimestamp();
+					return timestamp == 0L ? " - " : sdf.format(new Date(timestamp)); //$NON-NLS-1$
+				}
 				return element.toString();
 			}
 		});
@@ -204,7 +211,6 @@ public class MediaDialog extends ZTitleAreaDialog {
 			}
 		});
 		col4.setEditingSupport(new EditingSupport(viewer) {
-
 			@Override
 			protected void setValue(Object element, Object value) {
 				if (element instanceof LastDeviceImport && value instanceof String) {
@@ -247,13 +253,22 @@ public class MediaDialog extends ZTitleAreaDialog {
 				updateButtons();
 			}
 		});
-		viewer.setInput(mediaList);
 		return area;
+	}
+	
+	private void fillValues() {
+		viewer.setInput(mediaList);
+		if (key != null)
+			for (LastDeviceImport lastDeviceImport : mediaList)
+				if (key.equals(lastDeviceImport.getVolume())) {
+					viewer.setSelection(new StructuredSelection(lastDeviceImport));
+					break;
+				}
 	}
 
 	protected void updateButtons() {
 		getButton(REMOVE).setEnabled(
-				((IStructuredSelection) viewer.getSelection()).getFirstElement() instanceof LastDeviceImport);
+				viewer.getStructuredSelection().getFirstElement() instanceof LastDeviceImport);
 	}
 
 	@Override
@@ -265,8 +280,8 @@ public class MediaDialog extends ZTitleAreaDialog {
 	@Override
 	protected void buttonPressed(int buttonId) {
 		if (buttonId == REMOVE) {
-			if (((IStructuredSelection) viewer.getSelection()).getFirstElement() instanceof LastDeviceImport) {
-				mediaList.remove(((IStructuredSelection) viewer.getSelection()).getFirstElement());
+			if (viewer.getStructuredSelection().getFirstElement() instanceof LastDeviceImport) {
+				mediaList.remove(viewer.getStructuredSelection().getFirstElement());
 				viewer.setInput(mediaList);
 			}
 		}
@@ -276,14 +291,14 @@ public class MediaDialog extends ZTitleAreaDialog {
 	@Override
 	protected void okPressed() {
 		IDbManager dbManager = Core.getCore().getDbManager();
-		final Meta meta = dbManager.getMeta(true);
+		Meta meta = dbManager.getMeta(true);
 		Map<String, LastDeviceImport> imports = meta.getLastDeviceImport();
 		List<Object> toBeDeleted = null;
 		List<Object> toBeStored = new ArrayList<Object>(mediaList);
 		if (imports == null) {
 			meta.setLastDeviceImport(new HashMap<String, LastDeviceImport>(mediaList.size() * 3 / 2));
 			imports = meta.getLastDeviceImport();
-		} else {
+		} else if (!newMedia) {
 			toBeDeleted = new ArrayList<Object>(imports.values());
 			imports.clear();
 		}

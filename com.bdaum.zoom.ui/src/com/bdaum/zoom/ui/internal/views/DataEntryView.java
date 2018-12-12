@@ -74,7 +74,9 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.TabFolder;
@@ -354,7 +356,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(getControl(), HelpContextIds.DATAENTRY_VIEW);
 		makeActions();
-		installListeners(parent);
+		installListeners();
 		hookContextMenu();
 		contributeToActionBars();
 		final QueryField.Visitor qfvisitor = new QueryField.Visitor() {
@@ -877,9 +879,9 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			dateField.setData(UiConstants.LABEL, label);
 			layoutData.widthHint = widthHint;
 			dateField.setLayoutData(layoutData);
-			dateField.addSelectionListener(new SelectionAdapter() {
+			dateField.addListener(new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					if (!updateSet.contains(qfield))
 						putValue(qfield, dateField.getSelection());
 				}
@@ -996,7 +998,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 					public void selectionChanged(SelectionChangedEvent event) {
 						if (!comboViewer.getControl().isDisposed() && !updateSet.contains(qfield)
 								&& !QueryField.VALUE_MIXED.equals(comboViewer.getCombo().getText()))
-							putValue(qfield, ((IStructuredSelection) comboViewer.getSelection()).getFirstElement());
+							putValue(qfield, comboViewer.getStructuredSelection().getFirstElement());
 					}
 				});
 				widgetMap.put(qfield, comboViewer);
@@ -1276,7 +1278,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 
 	@Override
 	public void updateActions(boolean force) {
-		if (viewActive || force) {
+		if (isVisible() || force) {
 			saveAction.setEnabled(dirtyAssets != null);
 			restoreAction.setEnabled(dirtyAssets != null);
 			updateActions(-1, -1);

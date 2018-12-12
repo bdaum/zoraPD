@@ -160,7 +160,6 @@ public class ExportCsvOperation extends DbOperation {
 				sb.append('\n');
 				writer.write(sb.toString());
 				monitor.worked(1);
-
 			}
 		} catch (IOException e) {
 			return new Status(IStatus.ERROR, CsvActivator.PLUGIN_ID,

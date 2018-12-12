@@ -16,7 +16,6 @@ import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.ViewerFilter;
@@ -47,8 +46,8 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.codes.CodeParser;
-import com.bdaum.zoom.ui.internal.widgets.CriterionGroup.IdLabelTuple;
 import com.bdaum.zoom.ui.internal.widgets.CodeGroup;
+import com.bdaum.zoom.ui.internal.widgets.CriterionGroup.IdLabelTuple;
 import com.bdaum.zoom.ui.internal.widgets.GroupComboCatFilter;
 import com.bdaum.zoom.ui.internal.widgets.GroupComboLabelProvider;
 import com.bdaum.zoom.ui.internal.widgets.ProposalListener;
@@ -502,7 +501,7 @@ public class ColorCodeGroup {
 	private void fillFieldCombo() {
 		List<FieldDescriptor> fields = new ArrayList<FieldDescriptor>();
 		fieldDescriptors.clear();
-		Object g = ((IStructuredSelection) critGroupCombo.getSelection()).getFirstElement();
+		Object g = critGroupCombo.getStructuredSelection().getFirstElement();
 		for (String id : QueryField.getQueryFieldKeys()) {
 			QueryField mainField = QueryField.findQueryField(id);
 			if (mainField.belongsTo(g) && mainField.hasLabel() && mainField.isQuery() && !mainField.isStruct())

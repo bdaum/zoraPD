@@ -1,3 +1,4 @@
+//LEAFLET
 var map;
 var infowindow;
 var currentMarker;
@@ -13,6 +14,7 @@ var smarker;
 var draggedMarker;
 var selected;
 var mgr;
+var areaCircle;
 
 function markerDragStart(event) {
 	draggedMarker = event.target;
@@ -233,9 +235,9 @@ function setMarkers() {
 		for (i = 0; i < locCreated.length; i++) {
 			markerLocation = locCreated[i];
 			bearing = imgDirection ? imgDirection[i] : NaN;
-			if (bearing !== bearing) {
+			if (bearing !== bearing) 
 				arrowBatch.push(null);
-			} else if (!isClustered(mgr, batch[i]))
+			else if (!isClustered(mgr, batch[i]))
 				arrowBatch.push(createArrow(markerLocation, bearing));
 		}
 	}
@@ -268,10 +270,9 @@ function clearMarkers() {
 		mgr.clearLayers();
 	camCount = 0;
 	batch = [];
-	for (i = 0; i < arrowBatch.length; i++) {
+	for (i = 0; i < arrowBatch.length; i++)
 		if (arrowBatch[i])
 			arrowBatch[i].remove();
-	}
 	arrowBatch = [];
 }
 
@@ -324,18 +325,16 @@ function makeDragEndCallback(marker, ids, bearing, i) {
 	return function() {
 		if (draggedMarker) {
 			var markerPoint = draggedMarker.getLatLng();
-			if (typeof (ids) === "string") {
+			if (typeof (ids) === "string") 
 				locShown[i] = markerPoint;
-			} else {
+			else 
 				locCreated[i] = markerPoint;
-			}
 			setSelection(ids);
-			sendPosition('modify', markerPoint, map.getZoom(),
+			sendPosition('modify', markerPoint, map.getZoom(), 0,
 					typeof (ids) === "string" ? ids : ids.join());
-			if (i >= 0 && arrowBatch[i]) {
+			if (i >= 0 && arrowBatch[i]) 
 				arrowBatch[i].setLatLngs(computeArrowOutline(markerPoint,
 						bearing));
-			}
 			draggedMarker = null;
 		}
 	};
@@ -480,11 +479,10 @@ function applyCameraSet(pos) {
 	selected = flatten(locImage);
 	locImage = [ selected ];
 	imgDirection = [];
-	if (locShown && locShown.length > 0) {
+	if (locShown && locShown.length > 0) 
 		imgDirection.push(bearing(pos, locShown[0]));
-	} else {
+	else 
 		imgDirection.push(NaN);
-	}
 }
 
 function concatTitles(array) {
@@ -512,9 +510,8 @@ function flatten(array) {
 	var result = [];
 	for (var i = 0; i < array.length; i++) {
 		var subArray = array[i];
-		for (var j = 0; j < subArray.length; j++) {
+		for (var j = 0; j < subArray.length; j++) 
 			result.push(subArray[j]);
-		}
 	}
 	return result;
 }
@@ -535,11 +532,10 @@ function bearing(from, to) {
 
 function applyShownSet(pos) {
 	locShown.push(pos);
-	if (locTitles.length > 0) {
+	if (locTitles.length > 0) 
 		locShownTitles.push(locTitles[0]);
-	} else {
+	else 
 		locShownTitles.push("");
-	}
 	var uuid = generateQuickGuid();
 	selected = "shown=" + uuid;
 	locShownImage.push(selected);
@@ -548,9 +544,8 @@ function applyShownSet(pos) {
 }
 
 function applyDirectionSet(pos) {
-	if (imgDirection.length > 0 && locCreated.length > 0) {
+	if (imgDirection.length > 0 && locCreated.length > 0) 
 		imgDirection[0] = bearing(locCreated[0], pos);
-	}
 }
 
 function generateQuickGuid() {
@@ -585,18 +580,39 @@ function deleteSelected() {
 
 function removeItem(array, index) {
 	var newArray = [];
-	for (var i = 0; i < array.length; i++) {
-		if (i !== index) {
+	for (var i = 0; i < array.length; i++) 
+		if (i !== index) 
 			newArray.push(array[i]);
-		}
-	}
 	return newArray;
 }
+
 function findItem(array, item) {
-	for (var i = 0; i < array.length; i++) {
-		if (item == array[i]) {
+	for (var i = 0; i < array.length; i++) 
+		if (item == array[i]) 
 			return i;
-		}
-	}
 	return -1;
 }
+
+function setAreaCircle(position, diameter) {
+	if (areaCircle) {
+		areaCircle.setLatLng(position);
+		areaCircle.setRadius(diameter / 2);
+	} else {
+		areaCircle = L.circle(position, {
+			stroke: true,
+			color : '#00FF00',
+			opacity : 0.8,
+			weight : 2,
+			fill: true,
+			fillColor : '#00FF00',
+			fillOpacity : 0.35,
+			radius : diameter / 2,
+			draggable : true
+		});
+		areaCircle.addTo(map);
+		areaCircle.on('dragend', function() {
+			sendPosition('modify', areaCircle.getLatLng(), map.getZoom(), 4);
+		});
+	}
+}
+

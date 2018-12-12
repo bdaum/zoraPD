@@ -26,23 +26,18 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
@@ -121,7 +116,7 @@ public class CriterionGroup extends AbstractCriterionGroup {
 				enumComposite = createLayerComposite();
 				enumCombo = new Combo(enumComposite, SWT.READ_ONLY | style);
 				enumCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
-				enumCombo.addSelectionListener(selectionListener);
+				enumCombo.addListener(SWT.Selection, selectionListener);
 				dateComposite = createLayerComposite();
 				dateField = new DateInput(dateComposite, SWT.DATE | SWT.TIME | SWT.DROP_DOWN | style);
 				dateField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, true));
@@ -138,34 +133,34 @@ public class CriterionGroup extends AbstractCriterionGroup {
 			}
 		}
 
-		public void addFieldListeners(ModifyListener modifyListener, SelectionListener selectionListener) {
+		public void addFieldListeners(Listener modifyListener, Listener selectionListener) {
 			if (!readOnly) {
 				if (modifyListener != null) {
-					textField.addModifyListener(modifyListener);
-					codeField.getTextControl().addModifyListener(modifyListener);
-					valueCombo.addModifyListener(modifyListener);
+					textField.addListener(SWT.Modify, modifyListener);
+					codeField.addListener(modifyListener);
+					valueCombo.addListener(SWT.Modify, modifyListener);
 				}
 				if (selectionListener != null) {
-					valueCombo.addSelectionListener(selectionListener);
-					enumCombo.addSelectionListener(selectionListener);
-					dateField.addSelectionListener(selectionListener);
-					intField.addSelectionListener(selectionListener);
+					valueCombo.addListener(SWT.Selection, selectionListener);
+					enumCombo.addListener(SWT.Selection,selectionListener);
+					dateField.addListener(selectionListener);
+					intField.addListener(selectionListener);
 				}
 			}
 		}
 
-		public void removeFieldListeners(ModifyListener modifyListener, SelectionListener selectionListener) {
+		public void removeFieldListeners(Listener modifyListener, Listener selectionListener) {
 			if (!readOnly) {
 				if (modifyListener != null) {
-					textField.removeModifyListener(modifyListener);
-					codeField.getTextControl().removeModifyListener(modifyListener);
-					valueCombo.removeModifyListener(modifyListener);
+					textField.removeListener(SWT.Modify,modifyListener);
+					codeField.removeListener(modifyListener);
+					valueCombo.removeListener(SWT.Modify,modifyListener);
 				}
 				if (selectionListener != null) {
-					valueCombo.removeSelectionListener(selectionListener);
-					enumCombo.removeSelectionListener(selectionListener);
-					dateField.removeSelectionListener(selectionListener);
-					intField.removeSelectionListener(selectionListener);
+					valueCombo.removeListener(SWT.Selection, selectionListener);
+					enumCombo.removeListener(SWT.Selection, selectionListener);
+					dateField.removeListener(selectionListener);
+					intField.removeListener(selectionListener);
 				}
 			}
 		}
@@ -443,14 +438,15 @@ public class CriterionGroup extends AbstractCriterionGroup {
 		} else
 			initGroup(null);
 		if (groupCombo != null)
-			groupCombo.addSelectionChangedListener(new ISelectionChangedListener() {
-				public void selectionChanged(SelectionChangedEvent event) {
+			groupCombo.getCombo().addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
 					fillFieldCombo(crit);
 					fromStack.resetValues();
 					if (toStack != null)
 						toStack.resetValues();
 					validate();
-					signalModification();
+					signalModification(event);
 				}
 			});
 		if (relationCombo != null)
@@ -468,28 +464,28 @@ public class CriterionGroup extends AbstractCriterionGroup {
 		updateStacks(false, null, false, null, 0);
 		createButtons(parent);
 		if (fieldCombo != null)
-			fieldCombo.addSelectionListener(new SelectionAdapter() {
+			fieldCombo.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					fillRelationCombo(crit);
 					fromStack.resetValues();
 					if (toStack != null)
 						toStack.resetValues();
 					validate();
-					signalModification();
+					signalModification(e);
 				}
 			});
 		if (relationCombo != null)
-			relationCombo.addSelectionListener(new SelectionAdapter() {
+			relationCombo.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					updateValueFields(crit, true);
 					validate();
-					signalModification();
+					signalModification(e);
 				}
 			});
 		fillFieldCombo(crit);
-		signalModification();
+		signalModification(null);
 	}
 
 	private void updateStacks(boolean enumeration, String[] valueProposals, boolean range, FieldDescriptor fd,
@@ -517,36 +513,36 @@ public class CriterionGroup extends AbstractCriterionGroup {
 
 	private void createButtons(final Composite parent) {
 		orButton = createButton(parent, Messages.CriterionGroup_OR);
-		orButton.addSelectionListener(new SelectionAdapter() {
+		orButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				CriterionGroup.this.collectionEditGroup.addGroup(parent, CriterionGroup.this, null, false);
-				signalModification();
+				signalModification(e);
 			}
 		});
 		andButton = createButton(parent, Messages.CriterionGroup_AND);
-		andButton.addSelectionListener(new SelectionAdapter() {
+		andButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				CriterionGroup.this.collectionEditGroup.addGroup(parent, CriterionGroup.this, null, true);
-				signalModification();
+				signalModification(e);
 			}
 		});
 		clearButton = createButton(parent, Icons.delete.getImage());
-		clearButton.addSelectionListener(new SelectionAdapter() {
+		clearButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				CriterionGroup.this.collectionEditGroup.removeGroup(CriterionGroup.this);
-				signalModification();
+				signalModification(e);
 			}
 		});
 		clearButton.setVisible(enabled && groupNo > 0);
 	}
 
-	private ModifyListener modifyListener = new ModifyListener() {
-		public void modifyText(ModifyEvent e) {
+	private Listener modifyListener = new Listener() {
+		public void handleEvent(Event e) {
 			validate();
-			signalModification();
+			signalModification(e);
 		}
 	};
 

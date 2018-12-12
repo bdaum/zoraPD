@@ -37,13 +37,14 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.group.Criterion;
@@ -165,7 +166,7 @@ public class CollectionEditGroup {
 
 	private final boolean readOnly;
 
-	private ListenerList<ModifyListener> modifyListeners = new ListenerList<ModifyListener>();
+	private ListenerList<Listener> modifyListeners = new ListenerList<>();
 
 	private Map<QueryField, Set<String>> preparedValues = Collections.synchronizedMap(new HashMap<>());
 
@@ -288,8 +289,12 @@ public class CollectionEditGroup {
 		sizeChanged();
 	}
 
-	public void addModifyListener(ModifyListener modifyListener) {
-		modifyListeners.add(modifyListener);
+	public void addListener(Listener listener) {
+		modifyListeners.add(listener);
+	}
+	
+	public void removeListener(Listener listener) {
+		modifyListeners.remove(listener);
 	}
 
 	public void dispose() {
@@ -368,9 +373,9 @@ public class CollectionEditGroup {
 		result.setSortCriterion(sortcriteria);
 	}
 
-	public void fireModified() {
-		for (ModifyListener listener : modifyListeners)
-			listener.modifyText(null);
+	public void fireModified(Event ev) {
+		for (Listener listener : modifyListeners)
+			listener.handleEvent(ev);
 	}
 
 	public boolean hasPreparedValues(QueryField qfield) {

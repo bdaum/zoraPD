@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
+import com.bdaum.zoom.cat.model.SimilarityOptions_typeImpl;
+import com.bdaum.zoom.cat.model.TextSearchOptions_type;
 import com.bdaum.zoom.core.internal.ScoredString;
 import com.bdaum.zoom.core.internal.lire.ISearchHits;
 
@@ -48,14 +50,6 @@ public interface ILuceneService {
 	 */
 	void invalidateAllReaders(File indexPath);
 	
-
-	/**
-	 * Release reader for given index path
-	 * @param indexPath - index path
-	 * @param readerToken - index reader token
-	 */
-	void releaseIndexReader(File indexPath, Object readerToken);
-
 	/**
 	 * Releases all index readers and writers
 	 */
@@ -110,59 +104,6 @@ public interface ILuceneService {
 			throws IOException;
 
 	/**
-	 * Obtain index reader
-	 * @param indexPath - index path
-	 * @return - index reader token
-	 * @throws IOException
-	 */
-	Object getIndexReader(File indexPath) throws IOException;
-
-	/**
-	 * Obtain a document iterator for specified asset ID
-	 * @param readerToken - index reader token
-	 * @param assetId - asset ID of document
-	 * @return - document iterator
-	 * @throws IOException
-	 */
-	IDocumentIterator getDocumentIterator(Object readerToken, String assetId)
-			throws IOException;
-
-	/**
-	 * Search matching documents
-	 * @param readerToken - index reader token
-	 * @param docId - ID of document to match
-	 * @param algoId - algorithm ID
-	 * @param maxResults - maximum number of results
-	 * @return - search hits
-	 * @throws IOException
-	 */
-	ISearchHits search(Object readerToken, int docId, int algoId, int maxResults)
-			throws IOException;
-
-	/**
-	 * Search matching documents
-	 * @param readerToken - index reader token
-	 * @param image - image to match
-	 * @param algoId - algorithm ID
-	 * @param maxResults - maximum number of results
-	 * @return - search hits
-	 * @throws IOException
-	 */
-	ISearchHits search(Object readerToken, BufferedImage image, int algoId,
-			int maxResults) throws IOException;
-
-	/**
-	 * Search matching documents
-	 * @param readerToken - index reader token
-	 * @param queryString - query text
-	 * @param maxResults - maximum number of results
-	 * @return - search hits
-	 * @throws IOException
-	 * @throws ParseException
-	 */
-	ISearchHits search(Object readerToken, String queryString, int maxResults) throws IOException, ParseException;
-
-	/**
 	 * List all tags for the given index
 	 * @param indexPath - index path
 	 * @param maxItems - maximum number of tags to be returned
@@ -170,5 +111,26 @@ public interface ILuceneService {
 	 * @throws IOException
 	 */
 	List<ScoredString> listTags(File indexPath, int maxItems) throws IOException;
+
+
+	/**
+	 * Search for matching documents according to the specified similarity options
+	 * @param indexPath - index path
+	 * @param options - similarity options
+	 * @return - search hits
+	 * @throws IOException 
+	 */
+	ISearchHits search(File indexPath, SimilarityOptions_typeImpl options) throws IOException;
+
+
+	/**
+	 * Search for matching documents according to the specified text options
+	 * @param indexPath - index path
+	 * @param options - text options
+	 * @return - search hits
+	 * @throws IOException 
+	 * @throws ParseException 
+	 */
+	ISearchHits search(File indexPath, TextSearchOptions_type options) throws IOException, ParseException;
 
 }

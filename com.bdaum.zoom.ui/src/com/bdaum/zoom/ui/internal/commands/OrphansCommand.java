@@ -42,6 +42,7 @@ import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.ICollectionProcessor;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.dialogs.ZProgressMonitorDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -127,7 +128,7 @@ public class OrphansCommand extends AbstractCommandHandler {
 							true, false, true, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 					collection.addCriterion(
 							new CriterionImpl(ICollectionProcessor.ORPHANS, null, result, QueryField.XREF, false));
-					UiActivator.getDefault().getNavigationHistory(getActiveWorkbenchWindow())
+					Ui.getUi().getNavigationHistory(getActiveWorkbenchWindow())
 							.postSelection(new StructuredSelection(collection));
 				}
 			}

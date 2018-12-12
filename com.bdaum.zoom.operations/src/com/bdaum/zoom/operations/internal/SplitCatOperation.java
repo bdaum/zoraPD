@@ -131,7 +131,7 @@ public class SplitCatOperation extends AbstractCloneCatOperation {
 		Date now = new Date();
 		Utilities.initSystemCollections(newDbManager);
 		newDbManager.createLastImportCollection(now, false,
-				NLS.bind(Messages.getString("SplitCatOperation.initial_import"), dbManager.getFile())); //$NON-NLS-1$
+				NLS.bind(Messages.getString("SplitCatOperation.initial_import"), dbManager.getFile()), false); //$NON-NLS-1$
 		newMeta.setLastImport(now);
 		newDbManager.storeAndCommit(newMeta);
 		aMonitor.worked(1000);

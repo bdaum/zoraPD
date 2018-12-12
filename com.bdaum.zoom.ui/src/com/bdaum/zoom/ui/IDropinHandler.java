@@ -25,7 +25,7 @@ import java.io.File;
 import org.eclipse.core.runtime.IAdaptable;
 
 /**
- * Decribes a handler for drag-and-drop and cut-and-paste operations
+ * Describes a handler for drag-and-drop and cut-and-paste operations
  *
  */
 public interface IDropinHandler {

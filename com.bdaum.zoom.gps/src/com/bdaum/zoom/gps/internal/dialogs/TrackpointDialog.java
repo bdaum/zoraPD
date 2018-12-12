@@ -38,13 +38,14 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.Constants;
@@ -57,8 +58,7 @@ import com.bdaum.zoom.ui.widgets.DateInput;
 
 public class TrackpointDialog extends ZTitleAreaDialog {
 
-	public class EditDialog extends ZTitleAreaDialog implements
-			SelectionListener {
+	public class EditDialog extends ZTitleAreaDialog implements Listener {
 
 		private final SubTrack track;
 		private final boolean split;
@@ -70,8 +70,8 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 		private final String title;
 		private final List<SubTrack> subtracks;
 
-		public EditDialog(Shell shell, List<SubTrack> subtracks,
-				SubTrack track, boolean split, String title, String message) {
+		public EditDialog(Shell shell, List<SubTrack> subtracks, SubTrack track, boolean split, String title,
+				String message) {
 			super(shell);
 			this.subtracks = subtracks;
 			this.track = track;
@@ -88,6 +88,7 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 			setMessage(message);
 			fillValues();
 			validate();
+			getShell().pack();
 		}
 
 		private void fillValues() {
@@ -106,19 +107,14 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 		protected Control createDialogArea(Composite parent) {
 			Composite area = (Composite) super.createDialogArea(parent);
 			Composite composite = new Composite(area, SWT.NONE);
-			composite
-					.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 			composite.setLayout(new GridLayout(2, false));
-			new Label(composite, SWT.NONE)
-					.setText(Messages.TrackpointDialog_start);
-			startField = new DateInput(composite, SWT.DATE | SWT.TIME
-					| SWT.MEDIUM);
-			startField.addSelectionListener(this);
-			new Label(composite, SWT.NONE)
-					.setText(Messages.TrackpointDialog_end);
-			endField = new DateInput(composite, SWT.DATE | SWT.TIME
-					| SWT.MEDIUM);
-			endField.addSelectionListener(this);
+			new Label(composite, SWT.NONE).setText(Messages.TrackpointDialog_start);
+			startField = new DateInput(composite, SWT.DATE | SWT.TIME | SWT.MEDIUM);
+			startField.addListener(this);
+			new Label(composite, SWT.NONE).setText(Messages.TrackpointDialog_end);
+			endField = new DateInput(composite, SWT.DATE | SWT.TIME | SWT.MEDIUM);
+			endField.addListener(this);
 			return area;
 		}
 
@@ -130,22 +126,15 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 				errorMessage = Messages.TrackpointDialog_end_after_start;
 			else if (split) {
 				if (s <= track.getStart())
-					errorMessage = NLS
-							.bind(split ? Messages.TrackpointDialog_wrong_gap_start_value
-									: Messages.TrackpointDialog_start_after_x,
-									formatDate(track.getStart()));
+					errorMessage = NLS.bind(split ? Messages.TrackpointDialog_wrong_gap_start_value
+							: Messages.TrackpointDialog_start_after_x, formatDate(track.getStart()));
 				else if (e >= track.getEnd())
-					errorMessage = NLS
-							.bind(split ? Messages.TrackpointDialog_wrong_gap_end_value
-									: Messages.TrackpointDialog_end_before_x,
-									formatDate(track.getEnd()));
+					errorMessage = NLS.bind(split ? Messages.TrackpointDialog_wrong_gap_end_value
+							: Messages.TrackpointDialog_end_before_x, formatDate(track.getEnd()));
 			} else {
 				for (SubTrack t : subtracks)
-					if (s >= t.getStart() && s < t.getEnd()
-							|| e >= t.getStart() && e < t.getEnd()) {
-						errorMessage = NLS.bind(
-								Messages.TrackpointDialog_subtrack_overlaps,
-								formatTrack(t));
+					if (s >= t.getStart() && s < t.getEnd() || e >= t.getStart() && e < t.getEnd()) {
+						errorMessage = NLS.bind(Messages.TrackpointDialog_subtrack_overlaps, formatTrack(t));
 						break;
 					}
 			}
@@ -161,12 +150,8 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 			return end.getTime();
 		}
 
-		public void widgetSelected(SelectionEvent e) {
+		public void handleEvent(Event e) {
 			validate();
-		}
-
-		public void widgetDefaultSelected(SelectionEvent e) {
-			// do nothing
 		}
 
 		@Override
@@ -216,8 +201,7 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 		}
 	}
 
-	SimpleDateFormat sd = new SimpleDateFormat(
-			Messages.TrackpointDialog_tracktimeformat);
+	SimpleDateFormat sd = new SimpleDateFormat(Messages.TrackpointDialog_tracktimeformat);
 	private final List<SubTrack> subtracks = new LinkedList<TrackpointDialog.SubTrack>();
 	private TableViewer viewer;
 	private Button editButton;
@@ -229,8 +213,7 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 	private IMapComponent mapComponent;
 	private final long tolerance;
 
-	public TrackpointDialog(Shell shell, Trackpoint[] trackpoints,
-			long tolerance) {
+	public TrackpointDialog(Shell shell, Trackpoint[] trackpoints, long tolerance) {
 		super(shell, HelpContextIds.TRACKPOINTS);
 		this.trackpoints = trackpoints;
 		this.tolerance = tolerance;
@@ -257,8 +240,7 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 		super.create();
 		getShell().setText(Constants.APPLICATION_NAME);
 		setTitle(Messages.TrackpointDialog_edit_trackpoints);
-		setMessage(NLS.bind(Messages.TrackpointDialog_initial_message,
-				formatTime(tolerance)));
+		setMessage(NLS.bind(Messages.TrackpointDialog_initial_message, formatTime(tolerance)));
 		updateButtons();
 	}
 
@@ -275,8 +257,7 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 	}
 
 	private void createMapArea(Composite comp) {
-		mapComponent = GpsActivator.getMapComponent(GpsActivator
-				.findCurrentMappingSystem());
+		mapComponent = GpsActivator.getMapComponent(GpsActivator.findCurrentMappingSystem());
 		if (mapComponent != null) {
 			mapComponent.createComponent(comp, false);
 			GridData layoutData = new GridData(GridData.FILL_BOTH);
@@ -291,19 +272,15 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(1, false));
 		editButton = new Button(composite, SWT.PUSH);
-		editButton
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		editButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		editButton.setText(Messages.TrackpointDialog_edit);
 		editButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) viewer
-						.getSelection();
-				SubTrack track = (SubTrack) selection.getFirstElement();
-				EditDialog dialog = new EditDialog(getShell(), subtracks,
-						track, false, Messages.TrackpointDialog_edit_subtrack,
-						NLS.bind(Messages.TrackpointDialog_modify_start_end,
-								formatTrack(track)));
+				SubTrack track = (SubTrack) viewer.getStructuredSelection().getFirstElement();
+				EditDialog dialog = new EditDialog(getShell(), subtracks, track, false,
+						Messages.TrackpointDialog_edit_subtrack,
+						NLS.bind(Messages.TrackpointDialog_modify_start_end, formatTrack(track)));
 				if (dialog.open() == EditDialog.OK) {
 					track.setStart(dialog.getStart());
 					track.setEnd(dialog.getEnd());
@@ -312,15 +289,12 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 			}
 		});
 		removeButton = new Button(composite, SWT.PUSH);
-		removeButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false));
+		removeButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		removeButton.setText(Messages.TrackpointDialog_remove);
 		removeButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) viewer
-						.getSelection();
-				Iterator<?> it = selection.iterator();
+				Iterator<?> it = viewer.getStructuredSelection().iterator();
 				while (it.hasNext()) {
 					Object next = it.next();
 					subtracks.remove(next);
@@ -329,16 +303,13 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 			}
 		});
 		joinButton = new Button(composite, SWT.PUSH);
-		joinButton
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		joinButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		joinButton.setText(Messages.TrackpointDialog_join);
 		joinButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				SubTrack first = null;
-				IStructuredSelection selection = (IStructuredSelection) viewer
-						.getSelection();
-				Iterator<?> it = selection.iterator();
+				Iterator<?> it = viewer.getStructuredSelection().iterator();
 				while (it.hasNext()) {
 					SubTrack t = (SubTrack) it.next();
 					if (first == null)
@@ -354,19 +325,15 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 			}
 		});
 		splitButton = new Button(composite, SWT.PUSH);
-		splitButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false));
+		splitButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		splitButton.setText(Messages.TrackpointDialog_split);
 		splitButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) viewer
-						.getSelection();
-				SubTrack track = (SubTrack) selection.getFirstElement();
-				EditDialog dialog = new EditDialog(getShell(), subtracks,
-						track, true, Messages.TrackpointDialog_spli_subtrack,
-						NLS.bind(Messages.TrackpointDialog_split_subtrack_msg,
-								formatTrack(track)));
+				SubTrack track = (SubTrack) viewer.getStructuredSelection().getFirstElement();
+				EditDialog dialog = new EditDialog(getShell(), subtracks, track, true,
+						Messages.TrackpointDialog_spli_subtrack,
+						NLS.bind(Messages.TrackpointDialog_split_subtrack_msg, formatTrack(track)));
 				if (dialog.open() == EditDialog.OK) {
 					int index = subtracks.indexOf(track);
 					SubTrack newTrack = new SubTrack(dialog.getEnd());
@@ -374,16 +341,14 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 					track.setEnd(dialog.getStart());
 					subtracks.add(index + 1, newTrack);
 					viewer.setInput(subtracks);
-					viewer.setSelection(new StructuredSelection(new Object[] {
-							track, newTrack }));
+					viewer.setSelection(new StructuredSelection(new Object[] { track, newTrack }));
 				}
 			}
 		});
 	}
 
 	public void createViewer(Composite comp) {
-		viewer = new TableViewer(comp, SWT.V_SCROLL | SWT.FULL_SELECTION
-				| SWT.BORDER | SWT.MULTI);
+		viewer = new TableViewer(comp, SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER | SWT.MULTI);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.widthHint = 410;
 		layoutData.heightHint = 500;
@@ -437,9 +402,9 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 	}
 
 	protected void updateMap() {
-		IStructuredSelection selection = (IStructuredSelection) viewer
-				.getSelection();
-		double minLat = Double.MAX_VALUE, maxLat = Double.MIN_VALUE, minLng = Double.MAX_VALUE, maxLng = Double.MIN_VALUE;
+		IStructuredSelection selection = viewer.getStructuredSelection();
+		double minLat = Double.MAX_VALUE, maxLat = Double.MIN_VALUE, minLng = Double.MAX_VALUE,
+				maxLng = Double.MIN_VALUE;
 		Object[] tracks = selection.toArray();
 		LinkedList<Trackpoint> pnts = new LinkedList<Trackpoint>();
 		int start = 0;
@@ -473,10 +438,8 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 			Iterator<Trackpoint> it = pnts.iterator();
 			while (it.hasNext()) {
 				Trackpoint pnt = it.next();
-				if (previous != null
-						&& Math.abs(previous.getLatitude() - pnt.getLatitude()) < latDist
-						&& Math.abs(previous.getLongitude()
-								- pnt.getLongitude()) < lngDist) {
+				if (previous != null && Math.abs(previous.getLatitude() - pnt.getLatitude()) < latDist
+						&& Math.abs(previous.getLongitude() - pnt.getLongitude()) < lngDist) {
 					it.remove();
 					done = false;
 					continue;
@@ -484,13 +447,11 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 				previous = pnt;
 			}
 		}
-		mapComponent.setInput(null, 12, null, null,
-				pnts.toArray(new Trackpoint[pnts.size()]), IMapComponent.TRACK);
+		mapComponent.setInput(null, 12, null, null, pnts.toArray(new Trackpoint[pnts.size()]), IMapComponent.TRACK);
 	}
 
 	protected void updateButtons() {
-		IStructuredSelection selection = (IStructuredSelection) viewer
-				.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		int size = selection.size();
 		boolean single = size == 1;
 		boolean any = size > 0;

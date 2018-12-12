@@ -53,6 +53,7 @@ import com.bdaum.zoom.cat.model.Rgb_type;
 import com.bdaum.zoom.cat.model.Rgb_typeImpl;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.UiConstants;
 
 public class WebFontDialog extends ZTitleAreaDialog {
 
@@ -254,7 +255,7 @@ public class WebFontDialog extends ZTitleAreaDialog {
 		c.dispose();
 		gc.dispose();
 		button.setImage(image);
-		button.setData("rgb", rgb); //$NON-NLS-1$
+		button.setData(UiConstants.RGB, rgb);
 	}
 
 

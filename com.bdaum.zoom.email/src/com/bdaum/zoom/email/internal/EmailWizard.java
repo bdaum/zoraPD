@@ -53,8 +53,8 @@ public class EmailWizard extends AbstractAssetSelectionWizard implements IExport
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		super.init(workbench, selection);
 		setDialogSettings(Activator.getDefault(),SETTINGSID);
-		setAssets(workbench, selection, false);
 		int size = assets.size();
 		setWindowTitle(assets.isEmpty() ? Messages.EmailWizard_No_image_selected
 				: size == 1 ? Messages.EmailWizard_email_one_image : NLS.bind(

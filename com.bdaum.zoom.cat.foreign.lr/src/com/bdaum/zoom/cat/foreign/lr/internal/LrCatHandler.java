@@ -33,6 +33,7 @@ import com.bdaum.zoom.cat.foreign.internal.AbstractForeignCatHandler;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.ImportState;
+import com.bdaum.zoom.mtp.StorageObject;
 
 @SuppressWarnings("restriction")
 public class LrCatHandler extends AbstractForeignCatHandler {
@@ -79,7 +80,7 @@ public class LrCatHandler extends AbstractForeignCatHandler {
 			IMediaSupport mediaSupport = getMediaSupport(extension
 					.toUpperCase());
 			try {
-				return mediaSupport.importFile(file, extension, importState,
+				return mediaSupport.importFile(new StorageObject(file), extension, importState,
 						monitor, null);
 			} catch (Exception e) {
 				importState.operation.addError(

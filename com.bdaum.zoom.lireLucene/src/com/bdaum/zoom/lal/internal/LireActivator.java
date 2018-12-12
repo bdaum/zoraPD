@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2014 Berthold Daum  
+ * (c) 2014-2018 Berthold Daum  
  */
 package com.bdaum.zoom.lal.internal;
 
@@ -24,13 +24,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
@@ -56,6 +59,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.BundleContext;
 
+import com.bdaum.zoom.common.internal.Counter;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.ai.IAiService;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
@@ -112,7 +116,7 @@ public class LireActivator extends Plugin {
 			this.count = count;
 		}
 
-		public IndexWriter flushIndexWriter() throws CorruptIndexException, IOException {
+		public IndexWriter flushIndexWriter() throws IOException {
 			Directory directory = writer.getDirectory();
 			try {
 				writer.commit();
@@ -129,38 +133,38 @@ public class LireActivator extends Plugin {
 
 	private class IndexReaderEntry {
 		IndexReader currentReader;
-		Map<IndexReader, Integer> readerCounts = new HashMap<IndexReader, Integer>(8);
+		Map<IndexReader, Counter> readerCounts = new HashMap<IndexReader, Counter>(8);
 		List<IndexReader> obsoleteReaders = new LinkedList<IndexReader>();
 
 		public IndexReaderEntry(IndexReader indexReader) {
-			currentReader = indexReader;
-			readerCounts.put(indexReader, 1);
+			readerCounts.put(currentReader = indexReader, new Counter(1));
 		}
 
 		public IndexReader getReader(File indexPath) throws CorruptIndexException, IOException {
 			if (currentReader == null || obsoleteReaders.contains(currentReader)) {
-				IndexReader indexReader = createBaseIndexReader(indexPath);
-				currentReader = indexReader;
-				readerCounts.put(indexReader, 1);
-				return indexReader;
+				readerCounts.put(currentReader = createBaseIndexReader(indexPath), new Counter(1));
+				return currentReader;
 			}
 			IndexReader newReader = openIfChanged(currentReader);
 			if (newReader != null) {
-				Integer useCount = readerCounts.get(currentReader);
-				if (useCount == null || useCount.intValue() == 0) {
+				Counter useCount = readerCounts.get(currentReader);
+				if (useCount == null || useCount.equals(0)) {
 					closeIndexReader(currentReader);
 					readerCounts.remove(currentReader);
 				} else
 					obsoleteReaders.add(currentReader);
 				return currentReader = newReader;
 			}
-			Integer useCount = readerCounts.get(currentReader);
-			readerCounts.put(currentReader, new Integer(useCount == null ? 1 : useCount + 1));
+			Counter useCount = readerCounts.get(currentReader);
+			if (useCount == null)
+				readerCounts.put(currentReader, new Counter(1));
+			else
+				useCount.increment();
 			return currentReader;
 		}
 
 		public void releaseReader(IndexReader indexReader) {
-			Integer useCount = readerCounts.get(indexReader);
+			Counter useCount = readerCounts.get(indexReader);
 			if (useCount == null)
 				try {
 					closeIndexReader(indexReader);
@@ -169,15 +173,15 @@ public class LireActivator extends Plugin {
 				} catch (IOException e) {
 					// ignore
 				}
-			else if (useCount > 1)
-				readerCounts.put(indexReader, new Integer(Math.max(0, useCount - 1)));
+			else if (useCount.bigger(1))
+				useCount.decrement();
 			else
 				readerCounts.remove(indexReader);
 			Iterator<IndexReader> it = obsoleteReaders.iterator();
 			while (it.hasNext()) {
 				IndexReader reader = it.next();
-				Integer u = readerCounts.get(reader);
-				if (u == null || u.intValue() == 0) {
+				Counter u = readerCounts.get(reader);
+				if (u == null || u.equals(0)) {
 					try {
 						closeIndexReader(reader);
 						if (currentReader == reader)
@@ -195,8 +199,8 @@ public class LireActivator extends Plugin {
 		}
 
 		public void releaseAllReaders() {
-			for (Iterator<IndexReader> it = readerCounts.keySet().iterator();it.hasNext();)
-				releaseReader(it.next());
+			for (IndexReader reader : readerCounts.keySet())
+				releaseReader(reader);
 			readerCounts.clear();
 		}
 
@@ -218,6 +222,7 @@ public class LireActivator extends Plugin {
 	private Collection<String> algorithms;
 	private QueryParser queryParser;
 	private Hashtable<IndexReader, ImageSearcher> searcherMap = new Hashtable<IndexReader, ImageSearcher>();
+	private Set<String> fieldsToLoad = new HashSet<>(3);
 
 	@Override
 	public void start(BundleContext context) throws Exception {
@@ -285,27 +290,10 @@ public class LireActivator extends Plugin {
 	}
 
 	public Field createDocumentIdentifierField(String identifier) {
-		return new StringField(DocumentBuilder.FIELD_NAME_IDENTIFIER, identifier, Field.Store.YES);
+		return new StringField(DocumentBuilder.FIELD_NAME_IDENTIFIER, identifier, Store.YES);
 	}
 
-	public IndexWriter flushIndexWriter() throws CorruptIndexException, IOException {
-		synchronized (indexWriterMap) {
-			if (indexWriter != null) {
-				try {
-					indexWriter.commit();
-				} catch (OutOfMemoryError e) {
-					try {
-						indexWriter.close();
-					} finally {
-						indexWriter = createIndexWriter(indexWriter.getDirectory(), false);
-					}
-				}
-			}
-		}
-		return indexWriter;
-	}
-
-	public IndexWriter flushIndexWriter(File indexPath) throws CorruptIndexException, IOException {
+	public IndexWriter flushIndexWriter(File indexPath) throws IOException {
 		synchronized (indexWriterMap) {
 			IndexWriterEntry entry = indexWriterMap.get(indexPath);
 			if (entry != null)
@@ -314,24 +302,13 @@ public class LireActivator extends Plugin {
 		return null;
 	}
 
-	public IndexWriter getIndexWriter(Directory dir, boolean create)
-			throws CorruptIndexException, LockObtainFailedException, IOException, IllegalStateException {
-		synchronized (indexWriterMap) {
-			if (indexWriter != null)
-				throw new IllegalStateException(Messages.LireActivator_index_writer_in_use);
-			indexWriter = createIndexWriter(dir, create);
-		}
-		return indexWriter;
-	}
-
-	public IndexWriter getIndexWriter(File indexPath)
-			throws CorruptIndexException, LockObtainFailedException, IOException {
+	public IndexWriter getIndexWriter(File indexPath) throws LockObtainFailedException, IOException {
 		synchronized (indexWriterMap) {
 			IndexWriterEntry entry = indexWriterMap.get(indexPath);
 			if (entry == null) {
-				boolean create = !indexPath.exists();
-				Directory indexWriterDir = FSDirectory.open(indexPath.toPath());
-				IndexWriter writer = createIndexWriter(indexWriterDir, create);
+				String[] members = indexPath.list();
+				IndexWriter writer = createIndexWriter(FSDirectory.open(indexPath.toPath()),
+						members == null || members.length == 0);
 				indexWriterMap.put(indexPath, new IndexWriterEntry(writer, 1));
 				return writer;
 			}
@@ -501,7 +478,7 @@ public class LireActivator extends Plugin {
 			for (Algorithm aiAlgorithm : service.getLireAlgorithms())
 				if (supportsAlgorithm(aiAlgorithm.getId())) {
 					Class<? extends GlobalFeature> feature = (Class<? extends GlobalFeature>) service
-							.getFeature(aiAlgorithm.getProviderId());
+							.getFeature(aiAlgorithm.getProviderId(), aiAlgorithm);
 					if (feature != null)
 						cdb.addBuilder(new GlobalDocumentBuilder(feature));
 				}
@@ -550,8 +527,15 @@ public class LireActivator extends Plugin {
 		indexWriter.deleteDocuments(new Term(DocumentBuilder.FIELD_NAME_IDENTIFIER, assetId));
 	}
 
-	public ImageSearchHits search(IndexReader indexReader, int docId, int method, int maxResults) throws IOException {
-		return getImageSearcher(indexReader, method, maxResults).search(indexReader.document(docId), indexReader);
+	public ImageSearchHits search(IndexReader indexReader, Document document, int method, int maxResults)
+			throws IOException {
+		ImageSearcher imageSearcher = getImageSearcher(indexReader, method, maxResults);
+		if (imageSearcher instanceof GenericFastImageSearcher) {
+			fieldsToLoad.clear();
+			fieldsToLoad.add(((GenericFastImageSearcher) imageSearcher).getFieldName());
+			((GenericFastImageSearcher) imageSearcher).setFieldsToLoad(fieldsToLoad);
+		}
+		return imageSearcher.search(document, indexReader);
 	}
 
 	private ImageSearcher getImageSearcher(IndexReader indexReader, int method, int maxResults) {
@@ -631,7 +615,7 @@ public class LireActivator extends Plugin {
 					if (method == aiAlgorithm.getId()) {
 						@SuppressWarnings("unchecked")
 						Class<? extends GlobalFeature> feature = (Class<? extends GlobalFeature>) service
-								.getFeature(aiAlgorithm.getProviderId());
+								.getFeature(aiAlgorithm.getProviderId(), aiAlgorithm);
 						if (feature != null)
 							return new GenericFastImageSearcher(maxResults, feature, false, null, true);
 					}

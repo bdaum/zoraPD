@@ -27,7 +27,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -37,8 +36,8 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.Rgb_type;
 import com.bdaum.zoom.cat.model.Rgb_typeImpl;
@@ -47,7 +46,7 @@ import com.bdaum.zoom.ui.internal.UiConstants;
 public class WebColorGroup {
 	private Button button;
 	private Rgb_type rgb;
-	private ListenerList<SelectionListener> listeners = new ListenerList<>();
+	private ListenerList<Listener> listeners = new ListenerList<>();
 
 	public WebColorGroup(final Composite parent, final String text) {
 		Label label = null;
@@ -56,7 +55,7 @@ public class WebColorGroup {
 			label.setText(text);
 		}
 		button = new Button(parent, SWT.PUSH | SWT.BORDER);
-		button.setData(UiConstants.LABEL, label); 
+		button.setData(UiConstants.LABEL, label);
 		final GridData gd_bgButton = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
 		gd_bgButton.widthHint = 20;
 		gd_bgButton.heightHint = 20;
@@ -82,7 +81,7 @@ public class WebColorGroup {
 		});
 	}
 
-	public void setRGB(Rgb_type rgb) {
+	public Rgb_type setRGB(Rgb_type rgb) {
 		this.rgb = rgb;
 		Image image = button.getImage();
 		GC gc = new GC(image);
@@ -92,17 +91,9 @@ public class WebColorGroup {
 		c.dispose();
 		gc.dispose();
 		button.setImage(image);
-		fireSelectionEvent(rgb);
-	}
-
-	private void fireSelectionEvent(Rgb_type rgb) {
-		Event ev = new Event();
-		ev.time = (int) System.currentTimeMillis();
-		ev.widget = button;
-		ev.data = rgb;
-		SelectionEvent e = new SelectionEvent(ev);
-		for (SelectionListener selectionListener : listeners)
-			selectionListener.widgetSelected(e);
+		for (Listener listener : listeners)
+			listener.handleEvent(null);
+		return rgb;
 	}
 
 	public Rgb_type getRGB() {
@@ -114,16 +105,12 @@ public class WebColorGroup {
 			String colorSpec = dialogSettings.get(key);
 			if (colorSpec != null) {
 				java.awt.Color color = new java.awt.Color(Integer.parseInt(colorSpec));
-				Rgb_typeImpl rgb1 = new Rgb_typeImpl(color.getRed(), color.getGreen(), color.getBlue());
-				setRGB(rgb1);
-				return rgb1;
+				return setRGB(new Rgb_typeImpl(color.getRed(), color.getGreen(), color.getBlue()));
 			}
 		} catch (NumberFormatException e) {
 			// do nothing
 		}
-		Rgb_typeImpl rgb1 = new Rgb_typeImpl(r, g, b);
-		setRGB(rgb1);
-		return rgb1;
+		return setRGB(new Rgb_typeImpl(r, g, b));
 	}
 
 	public void saveSettings(IDialogSettings dialogSettings, String key) {
@@ -141,16 +128,21 @@ public class WebColorGroup {
 
 	public void setToolTipText(String text) {
 		button.setToolTipText(text);
-		Object data = button.getData(UiConstants.LABEL); 
+		Object data = button.getData(UiConstants.LABEL);
 		if (data instanceof Label)
 			((Label) data).setToolTipText(text);
 	}
 
-	public void addSelectionListener(SelectionListener listener) {
+	/**
+	 * Add listener. Tranmitted event maybe null
+	 * 
+	 * @param listener
+	 */
+	public void addListener(Listener listener) {
 		listeners.add(listener);
 	}
-	
-	public void removeSelectionListener(SelectionListener listener) {
+
+	public void removeListener(Listener listener) {
 		listeners.remove(listener);
 	}
 

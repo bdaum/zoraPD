@@ -614,6 +614,11 @@
 		<topic href="html/tasks/import.html" />
 		<topic href="html/concepts/raw.html" />
 	</entry>
+	<entry keyword="darktable">
+		<topic href="html/reference/importPrefs.html" />
+		<topic href="html/tasks/import.html" />
+		<topic href="html/concepts/raw.html" />
+	</entry>
 	<entry keyword="Status">
 		<topic href="html/tasks/import.html" />
 	</entry>
@@ -690,7 +695,8 @@
 	</entry>
 	<entry keyword="Gesichtserkennung">
 		<topic href="html/concepts/face.html" />
-		<topic href="html/reference/appearancePrefs.html" />
+		<topic href="html/reference/appearancePrefs.html" label="Gesichtsregionen anzeigen"/>
+		<topic href="html/reference/importPrefs.html" label="Gesichtsdaten von der Kamera importieren"/>
 	</entry>
 	<entry keyword="Personen">
 		<topic href="html/concepts/face.html" />
@@ -892,12 +898,18 @@
 		<topic href="html/reference/galleries.html#imagebuttons" label="Verwendung der Standortdaten-Nadel" />
 	</entry>
 	<entry keyword="Sprachnotizen">
-		<topic href="html/reference/galleries.html" label="Sprachnotizen abspielen" />
-		<topic href="html/reference/galleries.html" label="Sprachnotizen anhängen" />
-		<topic href="html/reference/galleries.html" label="Sprachnotizen entfernen" />
+		<topic href="html/reference/galleries.html#voicenote" label="Sprachnotizen abspielen" />
+		<topic href="html/reference/galleries.html#voicenote" label="Sprachnotizen anhängen" />
+		<topic href="html/reference/galleries.html#voicenote" label="Sprachnotizen entfernen" />
 		<topic href="html/reference/slideshow.html#properties" label="Sprachnotizen in Diashow abspielen" />
 		<topic href="html/reference/slideshow.html" label="Sprachnotizen in Diashow aufnehmen" />
 		<topic href="html/reference/slide.html" label="Sprachnotizen in einzelnen Dias unterdrücken" />
+	</entry>
+	<entry keyword="Textnotizen">
+		<topic href="html/reference/galleries.html#voicenote" label="Textnotizen bearbeiten" />
+	</entry>
+	<entry keyword="Zeichnung">
+		<topic href="html/reference/galleries.html#voicenote" label="Überlagerte Zeichnung" />
 	</entry>
 	<entry keyword="Regulärer Ausdruck">
 		<topic href="html/reference/regex.html" label="Syntax regulärer Ausdrücke" />
@@ -916,5 +928,38 @@
 	<entry keyword="Einheiten">
 		<topic href="html/reference/appearancePrefs.html" />
 	</entry>
-
+	<entry keyword="Kalender">
+		<topic href="html/reference/calendar.html" />
+	</entry>
+	<entry keyword="MTP">
+		<topic href="html/reference/importFromDevice.html" />
+	</entry>
+	<entry keyword="Mobile Transfer Protocol">
+		<topic href="html/reference/importFromDevice.html" />
+	</entry>
+	<entry keyword="MTP">
+		<topic href="html/reference/importFromDevice.html" />
+	</entry>
+		<entry keyword="Mobile Transfer Protocol">
+		<topic href="html/reference/importFromDevice.html" />
+	</entry>
+	<entry keyword="kabelgebundenes Fotografieren">
+		<topic href="html/reference/tethered.html" label="Grundlagen"/>
+		<topic href="html/reference/importPrefs.html" label="Beim Anschluss eines Geräts starten"/>
+	</entry>
+	<entry keyword="Vergleichen von Bildern">
+		<topic href="html/tasks/comparing.html" />
+	</entry>
+	<entry keyword="MTP">
+		<topic href="html/reference/importFromDevice.html" />
+	</entry>
+	<entry keyword="Media Transfer Protocol">
+		<topic href="html/reference/importFromDevice.html" />
+	</entry>
+	<entry keyword="PTP">
+		<topic href="html/reference/importFromDevice.html" />
+	</entry>
+	<entry keyword="Picture Transfer Protocol">
+		<topic href="html/reference/importFromDevice.html" />
+	</entry>
 </index>

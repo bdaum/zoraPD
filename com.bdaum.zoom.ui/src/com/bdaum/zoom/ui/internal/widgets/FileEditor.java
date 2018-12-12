@@ -27,8 +27,6 @@ import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -40,6 +38,7 @@ import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiUtilities;
@@ -49,7 +48,7 @@ public class FileEditor extends Composite {
 	private static final String FILEHISTORY = "fileHistory"; //$NON-NLS-1$
 	private static final String LASTFILENAME = "lastFilename"; //$NON-NLS-1$
 	private Combo fileNameField;
-	private ListenerList<ModifyListener> listeners = new ListenerList<ModifyListener>();
+	private ListenerList<Listener> listeners = new ListenerList<>();
 	private String path;
 	private Button clearButton;
 	private IDialogSettings settings;
@@ -156,22 +155,23 @@ public class FileEditor extends Composite {
 			fileNameField.setText(this.fileName = filenameProposal);
 			this.path = path;
 		}
-		fileNameField.addSelectionListener(new SelectionAdapter() {
+		fileNameField.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				int selectionIndex = fileNameField.getSelectionIndex();
 				if (!overwrite || !new File(fileNameField.getItem(selectionIndex)).exists() || MessageDialog
 						.openQuestion(getShell(), Messages.FileEditor_file_exists, Messages.FileEditor_overwrite))
 					lastSelectionIndex = selectionIndex;
 				else
 					fileNameField.select(lastSelectionIndex);
-				fireModifyEvent(createModifyEvent());
+				fireEvent(event);
 			}
 		});
 		if ((style & SWT.READ_ONLY) == 0)
-			fileNameField.addModifyListener(new ModifyListener() {
-				public void modifyText(ModifyEvent e) {
-					fireModifyEvent(e);
+			fileNameField.addListener(SWT.Modify, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					fireEvent(event);
 				}
 			});
 		Button button = new Button(this, SWT.PUSH);
@@ -188,34 +188,38 @@ public class FileEditor extends Composite {
 			clearButton = new Button(this, SWT.PUSH);
 			clearButton.setImage(Icons.delete.getImage());
 			clearButton.setToolTipText(Messages.FileEditor_clear_tooltip);
-			clearButton.addSelectionListener(new SelectionAdapter() {
+			clearButton.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					String text = getText();
 					setText(""); //$NON-NLS-1$
 					if (!text.isEmpty())
-						fireModifyEvent(createModifyEvent());
+						fireEvent(event);
 				}
 			});
-			addModifyListener(new ModifyListener() {
-				public void modifyText(ModifyEvent e) {
+			addListener(new Listener() {
+				public void handleEvent(Event e) {
 					clearButton.setEnabled(!getText().isEmpty());
 				}
 			});
 		}
 	}
 
-	public void addModifyListener(ModifyListener listener) {
+	/**
+	 * Add listener. Transmitted event maybe null
+	 * @param listener
+	 */
+	public void addListener(Listener listener) {
 		listeners.add(listener);
 	}
 
-	public void removeModifyListener(ModifyListener listener) {
+	public void removeListener(Listener listener) {
 		listeners.remove(listener);
 	}
 
-	public void fireModifyEvent(ModifyEvent e) {
-		for (ModifyListener o : listeners)
-			o.modifyText(e);
+	public void fireEvent(Event e) {
+		for (Listener listener : listeners)
+			listener.handleEvent(e);
 	}
 
 	public String getText() {
@@ -238,13 +242,6 @@ public class FileEditor extends Composite {
 
 	public String getFilterPath() {
 		return path;
-	}
-
-	private ModifyEvent createModifyEvent() {
-		Event ev = new Event();
-		ev.widget = this;
-		ev.display = getDisplay();
-		return new ModifyEvent(ev);
 	}
 
 	public void openBrowseDialog(final int style, final String lab, final String[] filterExtensions,
@@ -273,7 +270,7 @@ public class FileEditor extends Composite {
 				fileNameField.setItems(UiUtilities.addToHistoryList(fileNameField.getItems(), file));
 				fileNameField.setText(file);
 				this.path = dialog.getFilterPath();
-				fireModifyEvent(createModifyEvent());
+				fireEvent(null);
 			}
 		} else {
 			DirectoryDialog dialog = new DirectoryDialog(getShell());
@@ -291,7 +288,7 @@ public class FileEditor extends Composite {
 				fileNameField.setItems(UiUtilities.addToHistoryList(fileNameField.getItems(), folder));
 				fileNameField.setText(folder);
 				this.path = dialog.getFilterPath();
-				fireModifyEvent(createModifyEvent());
+				fireEvent(null);
 			}
 		}
 	}

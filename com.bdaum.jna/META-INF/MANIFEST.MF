@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Jna-Plugin
 Bundle-SymbolicName: com.bdaum.jna;singleton:=true
 Eclipse-ExtensibleAPI: true
-Bundle-Version: 3.3.0
+Bundle-Version: 3.5.0
 Bundle-Vendor: bdaum industrial communications
 Bundle-ClassPath: .,
  jna.jar,

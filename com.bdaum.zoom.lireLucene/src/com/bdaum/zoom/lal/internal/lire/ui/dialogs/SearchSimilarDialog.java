@@ -42,7 +42,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Shell;
 
@@ -66,8 +68,6 @@ import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.image.ZImage;
 import com.bdaum.zoom.image.internal.ImageActivator;
-import com.bdaum.zoom.lal.internal.ui.paint.PaintExample;
-import com.bdaum.zoom.lal.internal.ui.paint.ToolSettings;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -77,6 +77,8 @@ import com.bdaum.zoom.ui.internal.dialogs.FindWithinGroup;
 import com.bdaum.zoom.ui.internal.dialogs.KeywordVerifyListener;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.SearchResultGroup;
+import com.bdaum.zoom.ui.paint.PaintExample;
+import com.bdaum.zoom.ui.paint.ToolSettings;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
@@ -260,9 +262,9 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 			findWithinGroup = new FindWithinGroup(optionsGroup);
 		if (Core.getCore().isNetworked()) {
 			findInNetworkGroup = new FindInNetworkGroup(optionsGroup);
-			findInNetworkGroup.addSelectionListener(new SelectionAdapter() {
+			findInNetworkGroup.addListener(new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					validateAlgo();
 				}
 			});
@@ -302,7 +304,7 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 		paintExample.createGUI(paintGroup, w, h);
 		paintExample.setDefaults();
 		if (image != null)
-			paintExample.setInitialImage(image, w, h);
+			paintExample.setBackgroundImage(image, w, h);
 	}
 
 	@Override

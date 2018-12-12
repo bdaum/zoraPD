@@ -71,8 +71,7 @@ public class CommunityExportWizard extends AbstractCommunityExportWizard {
 	}
 
 	@Override
-	public void setInitializationData(IConfigurationElement cfig,
-			String propertyName, Object data) {
+	public void setInitializationData(IConfigurationElement cfig, String propertyName, Object data) {
 		super.setInitializationData(cfig, propertyName, data);
 		if (configElement != null)
 			api = CommunitiesActivator.getCommunitiesApi(configElement);
@@ -80,69 +79,50 @@ public class CommunityExportWizard extends AbstractCommunityExportWizard {
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		setDialogSettings(Ui.getUi().getDialogSettings(settingsId));
-		IWorkbenchWindow activeWorkbenchWindow = workbench
-				.getActiveWorkbenchWindow();
+		IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
 		AssetSelection assetSelection;
-		if (activeWorkbenchWindow != null)
-			assetSelection = Ui.getUi()
-					.getNavigationHistory(activeWorkbenchWindow)
-					.getSelectedAssets();
-		else
-			assetSelection = (selection instanceof AssetSelection) ? ((AssetSelection) selection)
-					: AssetSelection.EMPTY;
+		assetSelection = activeWorkbenchWindow != null
+				? Ui.getUi().getNavigationHistory(activeWorkbenchWindow).getSelectedAssets()
+				: (selection instanceof AssetSelection) ? ((AssetSelection) selection) : AssetSelection.EMPTY;
 		assets = assetSelection.getAssets();
 		if (assets.isEmpty()) {
 			if (activeWorkbenchWindow != null) {
 				IDbManager dbManager = Core.getCore().getDbManager();
-				INavigationHistory navigationHistory = Ui.getUi()
-						.getNavigationHistory(activeWorkbenchWindow);
-				IStructuredSelection sel = navigationHistory
-						.getOtherSelection();
+				INavigationHistory navigationHistory = Ui.getUi().getNavigationHistory(activeWorkbenchWindow);
+				IStructuredSelection sel = navigationHistory.getOtherSelection();
 				if (sel != null) {
 					Object first = sel.getFirstElement();
 					if (first instanceof SlideShowImpl) {
 						SlideShowImpl show = (SlideShowImpl) first;
 						String name = show.getName();
-						AlbumDescriptor currentAlbum = new AlbumDescriptor(
-								name, show.getDescription());
+						AlbumDescriptor currentAlbum = new AlbumDescriptor(name, show.getDescription());
 						AomList<String> entries = show.getEntry();
 						assets = new ArrayList<Asset>(entries.size());
-						List<AlbumDescriptor> albums = new ArrayList<AlbumDescriptor>(
-								entries.size());
-						List<String> titleList = new ArrayList<String>(
-								entries.size());
-						List<String> descriptionList = new ArrayList<String>(
-								entries.size());
+						List<AlbumDescriptor> albums = new ArrayList<AlbumDescriptor>(entries.size());
+						List<String> titleList = new ArrayList<String>(entries.size());
+						List<String> descriptionList = new ArrayList<String>(entries.size());
 						for (String slideId : entries) {
-							SlideImpl slide = dbManager.obtainById(
-									SlideImpl.class, slideId);
+							SlideImpl slide = dbManager.obtainById(SlideImpl.class, slideId);
 							if (slide != null) {
 								String assetId = slide.getAsset();
 								if (assetId != null) {
-									AssetImpl asset = dbManager
-											.obtainAsset(assetId);
+									AssetImpl asset = dbManager.obtainAsset(assetId);
 									if (asset != null) {
 										assets.add(asset);
 										albums.add(currentAlbum);
 										titleList.add(slide.getCaption());
-										descriptionList.add(slide
-												.getDescription());
-										currentAlbum
-												.addTags(asset.getKeyword());
+										descriptionList.add(slide.getDescription());
+										currentAlbum.addTags(asset.getKeyword());
 									} else {
-										currentAlbum = new AlbumDescriptor(name
-												+ ":" + slide.getCaption(), //$NON-NLS-1$
+										currentAlbum = new AlbumDescriptor(name + ":" + slide.getCaption(), //$NON-NLS-1$
 												slide.getDescription());
 									}
 								}
 							}
 						}
-						associatedAlbums = albums
-								.toArray(new AlbumDescriptor[albums.size()]);
-						titles = titleList
-								.toArray(new String[titleList.size()]);
-						descriptions = descriptionList
-								.toArray(new String[descriptionList.size()]);
+						associatedAlbums = albums.toArray(new AlbumDescriptor[albums.size()]);
+						titles = titleList.toArray(new String[titleList.size()]);
+						descriptions = descriptionList.toArray(new String[descriptionList.size()]);
 					} else if (first instanceof ExhibitionImpl) {
 						ExhibitionImpl show = (ExhibitionImpl) first;
 						String name = show.getName();
@@ -152,36 +132,29 @@ public class CommunityExportWizard extends AbstractCommunityExportWizard {
 						List<String> titleList = new ArrayList<String>();
 						List<String> descriptionList = new ArrayList<String>();
 						for (Wall wall : show.getWall()) {
-							AlbumDescriptor currentAlbum = new AlbumDescriptor(
-									name + ":" + wall.getLocation(), description); //$NON-NLS-1$
+							AlbumDescriptor currentAlbum = new AlbumDescriptor(name + ":" + wall.getLocation(), //$NON-NLS-1$
+									description);
 							AomList<String> exhibits = wall.getExhibit();
 							for (String exhibitId : exhibits) {
-								ExhibitImpl exhibit = dbManager.obtainById(
-										ExhibitImpl.class, exhibitId);
+								ExhibitImpl exhibit = dbManager.obtainById(ExhibitImpl.class, exhibitId);
 								if (exhibit != null) {
 									String assetId = exhibit.getAsset();
 									if (assetId != null) {
-										AssetImpl asset = dbManager
-												.obtainAsset(assetId);
+										AssetImpl asset = dbManager.obtainAsset(assetId);
 										if (asset != null) {
 											assets.add(asset);
 											albums.add(currentAlbum);
 											titleList.add(exhibit.getTitle());
-											descriptionList.add(exhibit
-													.getDescription());
-											currentAlbum.addTags(asset
-													.getKeyword());
+											descriptionList.add(exhibit.getDescription());
+											currentAlbum.addTags(asset.getKeyword());
 										}
 									}
 								}
 							}
 						}
-						associatedAlbums = albums
-								.toArray(new AlbumDescriptor[albums.size()]);
-						titles = titleList
-								.toArray(new String[titleList.size()]);
-						descriptions = descriptionList
-								.toArray(new String[descriptionList.size()]);
+						associatedAlbums = albums.toArray(new AlbumDescriptor[albums.size()]);
+						titles = titleList.toArray(new String[titleList.size()]);
+						descriptions = descriptionList.toArray(new String[descriptionList.size()]);
 					} else if (first instanceof WebGalleryImpl) {
 						WebGalleryImpl show = (WebGalleryImpl) first;
 						String name = show.getName();
@@ -190,38 +163,30 @@ public class CommunityExportWizard extends AbstractCommunityExportWizard {
 						List<String> titleList = new ArrayList<String>();
 						List<String> descriptionList = new ArrayList<String>();
 						for (Storyboard storyboard : show.getStoryboard()) {
-							AlbumDescriptor currentAlbum = new AlbumDescriptor(
-									name + ":" + storyboard.getTitle(), storyboard //$NON-NLS-1$
-											.getDescription());
+							AlbumDescriptor currentAlbum = new AlbumDescriptor(name + ":" + storyboard.getTitle(), //$NON-NLS-1$
+									storyboard.getDescription());
 							currentAlbum.addTags(show.getKeyword());
 							AomList<String> exhibits = storyboard.getExhibit();
 							for (String exhibitId : exhibits) {
-								WebExhibitImpl exhibit = dbManager.obtainById(
-										WebExhibitImpl.class, exhibitId);
+								WebExhibitImpl exhibit = dbManager.obtainById(WebExhibitImpl.class, exhibitId);
 								if (exhibit != null) {
 									String assetId = exhibit.getAsset();
 									if (assetId != null) {
-										AssetImpl asset = dbManager
-												.obtainAsset(assetId);
+										AssetImpl asset = dbManager.obtainAsset(assetId);
 										if (asset != null) {
 											assets.add(asset);
 											titleList.add(exhibit.getCaption());
-											descriptionList.add(exhibit
-													.getDescription());
+											descriptionList.add(exhibit.getDescription());
 											albums.add(currentAlbum);
-											currentAlbum.addTags(asset
-													.getKeyword());
+											currentAlbum.addTags(asset.getKeyword());
 										}
 									}
 								}
 							}
 						}
-						associatedAlbums = albums
-								.toArray(new AlbumDescriptor[albums.size()]);
-						titles = titleList
-								.toArray(new String[titleList.size()]);
-						descriptions = descriptionList
-								.toArray(new String[descriptionList.size()]);
+						associatedAlbums = albums.toArray(new AlbumDescriptor[albums.size()]);
+						titles = titleList.toArray(new String[titleList.size()]);
+						descriptions = descriptionList.toArray(new String[descriptionList.size()]);
 					}
 				}
 			}
@@ -233,11 +198,8 @@ public class CommunityExportWizard extends AbstractCommunityExportWizard {
 		assets = filteredAssets;
 		int size = assets.size();
 		setWindowTitle(size == 0 ? Messages.CommunityExportWizard_nothing_selected
-				: size == 1 ? NLS.bind(
-						Messages.CommunityExportWizard_export_one_image,
-						communityName) : NLS.bind(
-						Messages.CommunityExportWizard_export_n_images,
-						communityName, size));
+				: size == 1 ? NLS.bind(Messages.CommunityExportWizard_export_one_image, communityName)
+						: NLS.bind(Messages.CommunityExportWizard_export_n_images, communityName, size));
 	}
 
 	/*
@@ -247,13 +209,11 @@ public class CommunityExportWizard extends AbstractCommunityExportWizard {
 	@Override
 	public void addPages() {
 		super.addPages();
-		mainPage = new ExportToCommunityPage(configElement, assets,
-				associatedAlbums, titles, descriptions, communityId,
-				NLS.bind(Messages.CommunityExportWizard_export_to,
-						communityName), imageDescriptor);
+		mainPage = new ExportToCommunityPage(configElement, assets, associatedAlbums, titles, descriptions, communityId,
+				NLS.bind(Messages.CommunityExportWizard_export_to, communityName), imageDescriptor);
 		addPage(mainPage);
-		metaPage = new MetaSelectionPage(new QueryField[] {
-				QueryField.EXIF_ALL, QueryField.IPTC_ALL }, false, ExportXmpViewerFilter.INSTANCE, false);
+		metaPage = new MetaSelectionPage(new QueryField[] { QueryField.EXIF_ALL, QueryField.IPTC_ALL }, false,
+				ExportXmpViewerFilter.INSTANCE, false);
 		metaPage.setImageDescriptor(imageDescriptor);
 		addPage(metaPage);
 	}

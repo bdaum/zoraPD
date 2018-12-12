@@ -287,7 +287,7 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		blockButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection sel = (IStructuredSelection) incomingViewer.getSelection();
+				IStructuredSelection sel = incomingViewer.getStructuredSelection();
 				Object firstElement = sel.getFirstElement();
 				if (firstElement instanceof PeerDefinition) {
 					PeerDefinition peerDefinition = (PeerDefinition) firstElement;
@@ -444,7 +444,7 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		removeButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection sel = (IStructuredSelection) peerViewer.getSelection();
+				IStructuredSelection sel = peerViewer.getStructuredSelection();
 				Object firstElement = sel.getFirstElement();
 				if (firstElement instanceof PeerDefinition) {
 					@SuppressWarnings("unchecked")

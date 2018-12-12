@@ -28,7 +28,7 @@ import org.eclipse.jface.preference.PathEditor;
 import org.eclipse.swt.widgets.Composite;
 
 import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.core.IVolumeManager;
+import com.bdaum.zoom.mtp.IRootManager;
 
 /**
  * A field editor to edit directory paths.
@@ -68,7 +68,7 @@ public class VolumePathEditor extends PathEditor {
 
 	@Override
 	protected String createList(String[] items) {
-		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
+		IRootManager volumeManager = Core.getCore().getVolumeManager();
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < items.length; i++) {
 			String path = items[i];
@@ -88,7 +88,7 @@ public class VolumePathEditor extends PathEditor {
 	@Override
 	protected String getNewInputObject() {
 		String dir = super.getNewInputObject();
-		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
+		IRootManager volumeManager = Core.getCore().getVolumeManager();
 		String volume = volumeManager.rootToVolume(volumeManager.getRootFile(new File(dir)));
 		if (volume != null)
 			dir = new StringBuilder().append(dir).append(VOLSEP).append(volume).append(VOLEND).toString();
@@ -101,7 +101,7 @@ public class VolumePathEditor extends PathEditor {
 
 	@Override
 	protected String[] parseString(String stringList) {
-		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
+		IRootManager volumeManager = Core.getCore().getVolumeManager();
 		StringTokenizer st = new StringTokenizer(stringList, File.pathSeparator + "\n\r");//$NON-NLS-1$
 		ArrayList<String> v = new ArrayList<String>();
 		String dir = null;

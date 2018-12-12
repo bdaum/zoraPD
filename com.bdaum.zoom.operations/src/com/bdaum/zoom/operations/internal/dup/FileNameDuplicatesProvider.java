@@ -31,17 +31,20 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.db.IDbManager;
+import com.bdaum.zoom.program.BatchUtilities;
 
 public class FileNameDuplicatesProvider extends AbstractDuplicatesProvider {
 
 	private final boolean withExtension;
+	private int kind;
 
-	public FileNameDuplicatesProvider(IDbManager dbManager,
-			boolean withExtension) {
+	public FileNameDuplicatesProvider(IDbManager dbManager, boolean withExtension, int kind) {
 		super(dbManager);
 		this.withExtension = withExtension;
+		this.kind = kind;
 	}
 
 	@Override
@@ -49,12 +52,11 @@ public class FileNameDuplicatesProvider extends AbstractDuplicatesProvider {
 		super.findDuplicates(monitor);
 		Map<String, List<Asset>> assetMap = new HashMap<String, List<Asset>>();
 		for (AssetImpl asset : dbManager.obtainAssets()) {
-			String name = Core.getFileName(asset.getUri(), withExtension);
+			String name = kind == Constants.DUPES_BYFILENAME ? Core.getFileName(asset.getUri(), withExtension)
+					: BatchUtilities.getFileName(asset.getOriginalFileName(), withExtension);
 			List<Asset> duplicate = assetMap.get(name);
-			if (duplicate == null) {
-				duplicate = new LinkedList<Asset>();
-				assetMap.put(name, duplicate);
-			}
+			if (duplicate == null)
+				assetMap.put(name, duplicate = new LinkedList<Asset>());
 			duplicate.add(asset);
 			if (monitor.isCanceled())
 				return;
@@ -69,8 +71,7 @@ public class FileNameDuplicatesProvider extends AbstractDuplicatesProvider {
 			public int compare(List<Asset> o1, List<Asset> o2) {
 				String n1 = Core.getFileName(o1.get(0).getUri(), withExtension);
 				String n2 = Core.getFileName(o2.get(0).getUri(), withExtension);
-				return (n1 == n2) ? 0 : (n1 == null) ? -1 : (n2 == null) ? 1
-						: n1.compareTo(n2);
+				return (n1 == n2) ? 0 : (n1 == null) ? -1 : (n2 == null) ? 1 : n1.compareTo(n2);
 			}
 		});
 		monitor.done();

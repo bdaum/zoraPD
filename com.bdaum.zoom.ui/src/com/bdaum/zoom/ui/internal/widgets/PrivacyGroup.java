@@ -28,6 +28,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.QueryField;
@@ -67,6 +68,14 @@ public class PrivacyGroup {
 			privacyButtonGroup.setLayoutData(
 					new GridData(SWT.FILL, SWT.BEGINNING, true, false, ((GridLayout) layout).numColumns, 1));
 		updateButtons();
+	}
+
+	public void addListener(Listener listener) {
+		privacyButtonGroup.addListener(listener);
+	}
+
+	public void removeListener(Listener listener) {
+		privacyButtonGroup.removeListener(listener);
 	}
 
 	public void setSelection(int rating) {

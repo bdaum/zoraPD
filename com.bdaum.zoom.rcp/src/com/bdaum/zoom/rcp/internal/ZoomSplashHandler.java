@@ -21,6 +21,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Shell;
@@ -60,17 +61,18 @@ public class ZoomSplashHandler extends BasicSplashHandler {
 				if (traymode)
 					getSplash().setVisible(false);
 				else {
-					e.gc.setFont(font);
-					e.gc.setBackground(bgColor);
-					e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_GRAY));
-					e.gc.drawText(versionString, 335, 302, true);
-					e.gc.drawText(copyrightString, 5, 291, false);
+					GC gc = e.gc;
+					gc.setFont(font);
+					gc.setBackground(bgColor);
+					gc.setForeground(e.display.getSystemColor(SWT.COLOR_GRAY));
+					gc.drawText(versionString, 335, 302, true);
+					gc.drawText(copyrightString, 5, 291, false);
 					if (System.currentTimeMillis() % 7 == 0) {
 						for (String arg : Platform.getCommandLineArgs())
 							if ("-noBirdie".equals(arg)) //$NON-NLS-1$
 								return;
 						Image birdie = RcpActivator.getImageDescriptor("icons/intro/birdie.png").createImage(e.display); //$NON-NLS-1$
-						e.gc.drawImage(birdie, 30, 30);
+						gc.drawImage(birdie, 30, 30);
 						birdie.dispose();
 					}
 				}

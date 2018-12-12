@@ -25,7 +25,6 @@ public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.ai.clarifai.internal.core.messages"; //$NON-NLS-1$
 	public static String Clarifai_request_refused;
 	public static String Clarifai_service_disabled;
-	public static String ClarifaiServiceProvider_clarifai_expl;
 	public static String ClarifaiServiceProvider_download_failed;
 	public static String ClarifaiServiceProvider_image_rating;
 	public static String ClarifaiServiceProvider_loading_failed;

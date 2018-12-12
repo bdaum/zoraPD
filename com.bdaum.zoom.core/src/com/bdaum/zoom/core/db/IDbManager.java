@@ -645,9 +645,11 @@ public interface IDbManager {
 	 *            - true if import collection cumulates several background imports
 	 * @param description
 	 *            - description text of the new collection
+	 * @param tethered
+	 *            - true if import collection belongs to a tethered shooting session	
 	 * @return - date stamp of previous recent imports collection or null
 	 */
-	Date createLastImportCollection(Date importDate, boolean cumulate, String description);
+	Date createLastImportCollection(Date importDate, boolean cumulate, String description, boolean tethered);
 
 	/**
 	 * Removes the given collection from the database if it is empty

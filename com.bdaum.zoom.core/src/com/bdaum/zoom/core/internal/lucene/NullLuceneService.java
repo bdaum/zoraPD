@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
+import com.bdaum.zoom.cat.model.SimilarityOptions_typeImpl;
+import com.bdaum.zoom.cat.model.TextSearchOptions_type;
 import com.bdaum.zoom.core.internal.ScoredString;
 import com.bdaum.zoom.core.internal.lire.ISearchHits;
 
@@ -50,50 +52,29 @@ public class NullLuceneService implements ILuceneService {
 		return null;
 	}
 
-	public void deleteIndexEntry(Object writerToken, String assetId)
-			throws IOException {
+	public void deleteIndexEntry(Object writerToken, String assetId) throws IOException {
 		// do nothing
 	}
 
-	public void closeIndexWriter(Object writerToken, File indexPath)
-			throws IOException {
+	public void closeIndexWriter(Object writerToken, File indexPath) throws IOException {
 		// do nothing
 	}
 
-	public void addDocument(Object writerToken, BufferedImage image, String assetid)
-			throws IOException {
+	public void addDocument(Object writerToken, BufferedImage image, String assetid) throws IOException {
 		// do nothing
-	}
-
-	public Object getIndexReader(File indexPath) throws IOException {
-		return null;
-	}
-
-	public IDocumentIterator getDocumentIterator(Object readerToken,
-			String assetId) throws IOException {
-		return null;
-	}
-
-	public ISearchHits search(Object reader, int docId, int method,
-			int maxResults) throws IOException {
-		return null;
-	}
-
-	public ISearchHits search(Object reader, BufferedImage image, int method,
-			int maxResults) throws IOException {
-		return null;
-	}
-
-	public void releaseIndexReader(File indexPath, Object reader) {
-		// do nothing
-	}
-
-	public ISearchHits search(Object reader, String queryString, int maxResults)
-			throws IOException, ParseException {
-		return null;
 	}
 
 	public List<ScoredString> listTags(File indexPath, int maxItems) {
+		return null;
+	}
+
+	@Override
+	public ISearchHits search(File indexPath, SimilarityOptions_typeImpl options) throws IOException {
+		return null;
+	}
+
+	@Override
+	public ISearchHits search(File indexPath, TextSearchOptions_type options) throws IOException, ParseException {
 		return null;
 	}
 

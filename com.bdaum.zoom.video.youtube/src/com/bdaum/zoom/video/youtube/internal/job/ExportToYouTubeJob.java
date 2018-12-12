@@ -33,7 +33,6 @@ import com.bdaum.zoom.net.communities.CommunitiesActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.video.youtube.internal.Activator;
 import com.bdaum.zoom.video.youtube.internal.YouTubeUploadClient;
-import com.google.gdata.util.ServiceException;
 
 @SuppressWarnings("restriction")
 public class ExportToYouTubeJob extends CustomJob implements IErrorHandler {
@@ -147,9 +146,9 @@ public class ExportToYouTubeJob extends CustomJob implements IErrorHandler {
 			} catch (IOException e) {
 				addError(NLS.bind(Messages.ExportToYouTubeJob_io_error_upload, uri),
 						e);
-			} catch (ServiceException e) {
-				addError(NLS.bind(Messages.ExportToYouTubeJob_service_error_upload,
-						uri), e);
+//			} catch (ServiceException e) {
+//				addError(NLS.bind(Messages.ExportToYouTubeJob_service_error_upload,
+//						uri), e);
 			} catch (InterruptedException e) {
 				addError(NLS.bind(Messages.ExportToYouTubeJob_upload_interrupted, uri), e);
 			}

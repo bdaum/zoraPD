@@ -2,7 +2,6 @@ package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.Viewer;
@@ -85,7 +84,7 @@ public class IndexedMemberDialog extends ZTitleAreaDialog {
 		editButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IndexedMember member = (IndexedMember) ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				IndexedMember member = (IndexedMember) viewer.getStructuredSelection().getFirstElement();
 				StructEditDialog dialog = new StructEditDialog(editButton.getShell(), (AomObject) member.getValue(),
 						qfield);
 				if (dialog.open() == Window.OK) {
@@ -119,7 +118,7 @@ public class IndexedMemberDialog extends ZTitleAreaDialog {
 		removeButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IndexedMember member = (IndexedMember) ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				IndexedMember member = (IndexedMember) viewer.getStructuredSelection().getFirstElement();
 				for (int i = 0; i < members.length; i++) {
 					if (members[i] == member) {
 						IndexedMember[] newMembers = new IndexedMember[members.length - 1];

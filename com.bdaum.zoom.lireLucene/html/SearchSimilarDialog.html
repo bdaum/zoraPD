@@ -1,12 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en-us"><head>
-  <title>Search Similar Dialog</title>
+<html lang="en-us"><head><title>Search Similar Dialog</title>
+
+  
 
   
   
-  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css">
-
-</head><body>
+  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css"></head><body>
 <h2>Search Similar Dialog</h2>
 
 This dialog is used to specify example picture and search options for
@@ -18,7 +17,7 @@ are many&nbsp;known search&nbsp;methods (<span style="font-weight: bold;">algori
 modern search algorithms that seem to be suitable for photographic
 images. <br>
 
-None of these algorithms are actually able to retrieve the&nbsp;meaning
+None of these algorithms - with the exception of the <span style="font-style: italic;">Clarifai</span> algorithms - are actually able to retrieve the&nbsp;meaning
 of an image. For example, the algorithm does not see the
 trees within a forest picture, but evaluates low level features such as
 overall color, spatial distribution of color, color histograms,
@@ -26,6 +25,11 @@ textures, and so on. So, you should not expect too much from this
 function - it can certainly not replace a keyword search. However,
 in many situations it can be very useful, especially if you combine it
 with a keyword search.<br>
+The <span style="font-style: italic;">Clarifai</span>algorithms
+(general similarity and face similarity) in contrast do not test for
+visual similarity but for similarity of semantic image
+concepts or faces shown in the image. The test for face similarity
+works even for groups of people.<br>
 
 <br>
 

@@ -2,6 +2,11 @@
 Label#clink {color:rgb(180,240,255);background-color:transparent;}
 CLink {color:rgb(192,255,192);background-color:transparent;}
 Label#errors {color:red;background-color:transparent;}
+Label#sectionTitle {color:rgb(128, 0, 0);}
 Label#disabled {color:rgb(120,120,120);background-color:transparent;}
 Text#errors {color:red;background-color:rgb(212,212,212);}
 StyledText#hint {color:rgb(128,128,128);}
+ZPSWTCanvas#slideshow {color:rgb(144,144,144);foreground-color:rgb(144,144,144);title-color:rgb(64,64,64);}
+ZPSWTCanvas#exhibition {color:rgb(144,144,144);title-color:rgb(124,124,124);selected-background-color:rgb(224,224,124);}
+ZPSWTCanvas#webgallery {color:rgb(96,96,96);foreground-color:rgb(144,144,144);title-color:rgb(114,114,114);selected-color:black;}
+ZPSWTCanvas {color:rgb(128,128,128;offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);selected-offline-color:red;selected-remote-color:rgb(64, 64, 160);selected-background-color:rgb(200,200,200);selected-color:rgb(64,64,64);}

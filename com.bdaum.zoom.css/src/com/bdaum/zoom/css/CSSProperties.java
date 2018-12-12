@@ -28,4 +28,16 @@ public interface CSSProperties {
 	static final String TOOLTIPBACKGROUNDCOLOR = "tooltip-background-color"; //$NON-NLS-1$
 	static final String TOOLTIPFOREGROUNDCOLOR = "tooltip-color"; //$NON-NLS-1$
 	static final String DISABLEDFOREGROUNDCOLOR = "disabled-color"; //$NON-NLS-1$
+
+	// Widget differentiation
+	static final String ID = "id"; //$NON-NLS-1$
+	static final String ERRORS = "errors"; //$NON-NLS-1$
+	static final String SECTIONTITLE = "sectionTitle"; //$NON-NLS-1$
+	static final String EXHIBITION = "exhibition"; //$NON-NLS-1$
+	static final String SLIDESHOW = "slideshow"; //$NON-NLS-1$
+	static final String WEBGALLERY = "webgallery"; //$NON-NLS-1$
+	static final String DISABLED = "disabled"; //$NON-NLS-1$
+	static final String HINT =  "hint"; //$NON-NLS-1$
+	static final String CLINK = "clink"; //$NON-NLS-1$
+	static final String CSS = "css"; //$NON-NLS-1$
 }

@@ -38,14 +38,14 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
@@ -76,7 +76,6 @@ public class GeoNamesService extends AbstractGeocodingService {
 	private static final String FEATURE_CLASS_L = "&featureClass=L"; //$NON-NLS-1$
 	private static final String FEATURE_CLASS_H = "&featureClass=H"; //$NON-NLS-1$
 	private static final String FEATURE_CLASS_A = "&featureClass=A"; //$NON-NLS-1$
-	private static final String COM_BDAUM_ZOOM_GPS_NAMING_GEONAMING = "com.bdaum.zoom.gps.naming.geonaming"; //$NON-NLS-1$
 	private static boolean asked;
 
 	private CheckboxButton nameRequiredButton;
@@ -113,14 +112,13 @@ public class GeoNamesService extends AbstractGeocodingService {
 				new HierarchyParser(in).parse(place);
 			}
 		}
-		if ("US".equals(place.getCountryCode())) { //$NON-NLS-1$
+		if ("US".equals(place.getCountryCode())) //$NON-NLS-1$
 			try (InputStream in = openGeonamesService(
 					NLS.bind("http://ws.geonames.org/findNearestAddress?lat={0}&lng={1}&lang={2}", //$NON-NLS-1$
 							parms))) {
 				new AddressParser(in).parse(place);
 				return (place.getName() != null) ? place : null;
 			}
-		}
 		try (InputStream in = openGeonamesService(
 				NLS.bind("http://ws.geonames.org/findNearbyPostalCodes?lat={0}&lng={1}&lang={2}", //$NON-NLS-1$
 						parms))) {
@@ -132,14 +130,14 @@ public class GeoNamesService extends AbstractGeocodingService {
 	private static InputStream openGeonamesService(String query)
 			throws IOException, UnknownHostException, HttpException {
 		IPreferencesService preferencesService = Platform.getPreferencesService();
-		String parms = preferencesService.getString(COM_BDAUM_ZOOM_GPS_NAMING_GEONAMING,
+		String parms = preferencesService.getString(GeonamingActivator.PLUGIN_ID,
 				PreferenceConstants.GEONAMESPARMS, "", null); //$NON-NLS-1$
 		if ((parms == null || parms.isEmpty()) && !asked) {
 			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 			if (activeWorkbenchWindow != null) {
 				PreferencesUtil.createPreferenceDialogOn(activeWorkbenchWindow.getShell(), GpsPreferencePage.ID, null,
 						GpsPreferencePage.ACCOUNTS).open();
-				parms = preferencesService.getString(COM_BDAUM_ZOOM_GPS_NAMING_GEONAMING,
+				parms = preferencesService.getString(GeonamingActivator.PLUGIN_ID,
 						PreferenceConstants.GEONAMESPARMS, "", null); //$NON-NLS-1$
 				asked = true;
 			}
@@ -179,13 +177,13 @@ public class GeoNamesService extends AbstractGeocodingService {
 		modeCombo.setItems(Messages.getString("GeoNamesService.whole_text"), //$NON-NLS-1$
 				Messages.getString("GeoNamesService.contains"), Messages.getString("GeoNamesService.starts_with"), //$NON-NLS-1$ //$NON-NLS-2$
 				Messages.getString("GeoNamesService.equals")); //$NON-NLS-1$
-		SelectionAdapter selectionAdapter = new SelectionAdapter() {
+		Listener listener = new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				updateSettings();
 			}
 		};
-		modeCombo.addSelectionListener(selectionAdapter);
+		modeCombo.addListener(SWT.Selection, listener);
 		new Label(composite, SWT.NONE).setText(Messages.getString("GeoNamesService.continent")); //$NON-NLS-1$
 		contCombo = new Combo(composite, SWT.DROP_DOWN | SWT.READ_ONLY);
 		contCombo.setItems(Messages.getString("GeoNamesService.all"), Messages.getString("GeoNamesService.af"), //$NON-NLS-1$ //$NON-NLS-2$
@@ -193,7 +191,7 @@ public class GeoNamesService extends AbstractGeocodingService {
 				Messages.getString("GeoNamesService.na"), Messages.getString("GeoNamesService.oc"), //$NON-NLS-1$ //$NON-NLS-2$
 				Messages.getString("GeoNamesService.sa"), //$NON-NLS-1$
 				Messages.getString("GeoNamesService.an")); //$NON-NLS-1$
-		contCombo.addSelectionListener(selectionAdapter);
+		contCombo.addListener(SWT.Selection, listener);
 		nameRequiredButton = WidgetFactory.createCheckButton(composite,
 				Messages.getString("GeoNamesService.at_least_one"), //$NON-NLS-1$
 				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
@@ -204,24 +202,33 @@ public class GeoNamesService extends AbstractGeocodingService {
 		classGroup.setLayout(new GridLayout(2, true));
 		aButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.country"), //$NON-NLS-1$
 				null);
+		aButton.addListener(listener);
 		hButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.stream"), //$NON-NLS-1$
 				null);
+		hButton.addListener(listener);
 		lButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.parks"), //$NON-NLS-1$
 				null);
+		lButton.addListener(listener);
 		pButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.city"), //$NON-NLS-1$
 				null);
+		pButton.addListener(listener);
 		rButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.road"), //$NON-NLS-1$
 				null);
+		rButton.addListener(listener);
 		sButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.spot"), //$NON-NLS-1$
 				null);
+		sButton.addListener(listener);
 		tButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.mountain"), //$NON-NLS-1$
 				null);
+		tButton.addListener(listener);
 		uButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.undersea"), //$NON-NLS-1$
 				null);
+		uButton.addListener(listener);
 		vButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.forest"), //$NON-NLS-1$
 				null);
-		nameRequiredButton.addSelectionListener(selectionAdapter);
-		String searchParms = getSearchParms();
+		vButton.addListener(listener);
+		nameRequiredButton.addListener(listener);
+		searchParms = getSearchParms();
 		if (searchParms.startsWith("q")) //$NON-NLS-1$
 			modeCombo.select(0);
 		else if (searchParms.startsWith("name_startsWith")) //$NON-NLS-1$
@@ -246,11 +253,9 @@ public class GeoNamesService extends AbstractGeocodingService {
 			p += CONTINENT_CODE.length();
 			int q = searchParms.indexOf("&", p); //$NON-NLS-1$
 			String code = q < 0 ? searchParms.substring(p) : searchParms.substring(p, q);
-			for (int i = 0; i < CONTINENTCODES.length; i++) {
-				if (code.equals(CONTINENTCODES[i])) {
+			for (int i = 0; i < CONTINENTCODES.length; i++)
+				if (code.equals(CONTINENTCODES[i]))
 					contCombo.select(i + 1);
-				}
-			}
 		} else
 			contCombo.select(0);
 		return composite;
@@ -300,15 +305,23 @@ public class GeoNamesService extends AbstractGeocodingService {
 		int si = contCombo.getSelectionIndex();
 		if (si > 0)
 			sb.append(CONTINENT_CODE).append(CONTINENTCODES[si - 1]);
-		GeonamingActivator.getDefault().getDialogSettings().put(SEARCHPARMS, sb.toString());
+		searchParms = sb.toString();
+	}
+	
+
+	@Override
+	public void saveSearchParameters() {
+		if (searchParms != null)
+			GeonamingActivator.getDefault().getPreferenceStore().setValue(
+					PreferenceConstants.SEARCHPARAMETERS,
+					searchParms);
 	}
 
-	private static String getSearchParms() {
-		String searchParms = GeonamingActivator.getDefault().getDialogSettings().get(SEARCHPARMS);
-		if (searchParms == null)
-			return "name={0}&isNameRequired=true&featureClass=A&featureClass=P"; //$NON-NLS-1$
-		return searchParms;
+	protected String getSearchParms() {
+		return GeonamingActivator.getDefault().getPreferenceStore()
+				.getString(PreferenceConstants.SEARCHPARAMETERS);
 	}
+
 
 	@Override
 	public double getElevation(double lat, double lon) throws UnknownHostException, HttpException, IOException {

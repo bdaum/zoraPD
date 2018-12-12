@@ -91,9 +91,9 @@ public class GenericFastImageSearcher extends AbstractImageSearcher {
 
     protected LinkedBlockingQueue<Map.Entry<Integer, byte[]>> queue = new LinkedBlockingQueue<Map.Entry<Integer, byte[]>>(100);
     protected int numThreads = DocumentBuilder.NUM_OF_THREADS;
+    private Set<String> fieldsToLoad = null; //bd
 
-
-    public GenericFastImageSearcher(int maxHits, Class<? extends GlobalFeature> globalFeature) {
+	public GenericFastImageSearcher(int maxHits, Class<? extends GlobalFeature> globalFeature) {
         this.maxHits = maxHits;
         this.extractorItem = new ExtractorItem(globalFeature);
         this.fieldName = extractorItem.getFieldName();
@@ -261,7 +261,7 @@ public class GenericFastImageSearcher extends AbstractImageSearcher {
                 Document d;
                 for (int i = 0; i < docs; i++) {
                     if (!(reader.hasDeletions() && !liveDocs.get(i))) {
-                        d = reader.document(i);
+                        d = reader.document(i, fieldsToLoad); //bd
                         if (d.getField(fieldName) != null) {
                             cachedInstance.setByteArrayRepresentation(d.getField(fieldName).binaryValue().bytes, d.getField(fieldName).binaryValue().offset, d.getField(fieldName).binaryValue().length);
 //                        featureCache.put(i, new SearchItem(cachedInstance.getByteArrayRepresentation(), new SimpleResult(-1d, i, d.getValues(DocumentBuilder.FIELD_NAME_IDENTIFIER)[0])));
@@ -298,7 +298,7 @@ public class GenericFastImageSearcher extends AbstractImageSearcher {
             for (int i = 0; i < docs; i++) {
                 if (reader.hasDeletions() && !liveDocs.get(i)) continue; // if it is deleted, just ignore it.
 
-                d = reader.document(i);
+                d = reader.document(i, fieldsToLoad); //bd
                 tmpDistance = getDistance(d, lireFeature);
                 assert (tmpDistance >= 0);
                 // if the array is not full yet:
@@ -459,7 +459,8 @@ public class GenericFastImageSearcher extends AbstractImageSearcher {
         } else {
             logger.warning("No feature stored in this document! (" + extractorItem.getExtractorClass().getName() + ")");
         }
-        return 0d;
+//        return 0d; //bd
+		return 100d; //bd
     }
 
     /*
@@ -554,7 +555,7 @@ public class GenericFastImageSearcher extends AbstractImageSearcher {
 //        try {
 //            if (!IndexReader.indexExists(reader.directory()))
 //                throw new FileNotFoundException("No index found at this specific location.");
-        Document doc = reader.document(0);
+        Document doc = reader.document(0, fieldsToLoad); //bd
 
         LireFeature lireFeature = extractorItem.getFeatureInstance();
         IndexableField field = doc.getField(fieldName); // bd
@@ -572,7 +573,7 @@ public class GenericFastImageSearcher extends AbstractImageSearcher {
         for (int i = 0; i < docs; i++) {
             if (reader.hasDeletions() && !liveDocs.get(i)) continue; // if it is deleted, just ignore it.
 
-            Document d = reader.document(i);
+            Document d = reader.document(i, fieldsToLoad); //bd
             double distance = getDistance(d, lireFeature);
 
             if (!duplicates.containsKey(distance)) {
@@ -600,6 +601,17 @@ public class GenericFastImageSearcher extends AbstractImageSearcher {
         return simpleImageDuplicates;
 
     }
+    
+    public void setFieldsToLoad(Set<String> fieldsToLoad) { //bd
+		this.fieldsToLoad = fieldsToLoad;
+	}
+    
+	
+	public String getFieldName() { //bd
+		return fieldName;
+	}
+
+
 
     public String toString() {
         return "GenericSearcher using " + extractorItem.getExtractorClass().getName();

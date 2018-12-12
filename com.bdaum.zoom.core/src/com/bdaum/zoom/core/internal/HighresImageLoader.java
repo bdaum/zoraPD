@@ -275,8 +275,10 @@ public class HighresImageLoader {
 	}
 
 	private static ColorConvertOp computeColorConvertOp(File workfile, int cms) {
-		ICC_Profile sourceProfile = new ExifTool(workfile, true).getICCProfile();
-		return ImageActivator.getDefault().computeColorConvertOp(sourceProfile, cms);
+		try (ExifTool exifTool = new ExifTool(workfile, true)) {
+			ICC_Profile sourceProfile = exifTool.getICCProfile();
+			return ImageActivator.getDefault().computeColorConvertOp(sourceProfile, cms);
+		}
 	}
 
 	private boolean reportProgress(IProgressMonitor monitor, String profile, LoaderListener listener) {

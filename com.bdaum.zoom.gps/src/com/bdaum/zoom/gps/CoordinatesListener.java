@@ -21,6 +21,7 @@ public interface CoordinatesListener {
 	public static final int CAMPOS = 1;
 	public static final int IMGDIR = 2;
 	public static final int SHOWNLOC = 3;
+	public static final int AREA = 4;
 
 	/**
 	 * New coordinates

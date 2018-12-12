@@ -102,13 +102,8 @@ public class AcrDetector extends AbstractRecipeDetector {
 			}
 		}
 		try {
-			URI[] sidecarURIs = Core.getSidecarURIs(new URI(uri));
-			long modified = 0L;
-			for (URI xmpUri : sidecarURIs) {
-				File xmpFile = new File(xmpUri);
-				modified = Math.max(modified, xmpFile.lastModified());
-			}
-			return modified;
+			File[] sidecars = Core.getSidecarFiles(new URI(uri), false);
+			return (sidecars.length > 0) ? sidecars[sidecars.length - 1].lastModified() : 0L;
 		} catch (URISyntaxException e1) {
 			// should never happen
 		}
@@ -131,13 +126,12 @@ public class AcrDetector extends AbstractRecipeDetector {
 		} else {
 			File xmpFile;
 			try {
-				URI[] sidecarURIs = Core.getSidecarURIs(new URI(uri));
-				for (URI u : sidecarURIs) {
-					xmpFile = new File(u);
+				File[] sidecars = Core.getSidecarFiles(new URI(uri), true);
+				if (sidecars.length > 0) {
+					xmpFile = sidecars[0];
 					if (xmpFile.exists()) {
-						xmpUri = u.toString();
+						xmpUri = xmpFile.toURI().toString();
 						xmpIn = new FileInputStream(xmpFile);
-						break;
 					}
 				}
 			} catch (URISyntaxException e1) {
@@ -771,9 +765,9 @@ public class AcrDetector extends AbstractRecipeDetector {
 	public File[] getMetafiles(String uri) {
 		if (isRecipeEmbbedded(uri) < 0) {
 			try {
-				URI[] sidecarURIs = Core.getSidecarURIs(new URI(uri));
-				for (URI u : sidecarURIs) {
-					File xmpFile = new File(u);
+				File[] sidecars = Core.getSidecarFiles(new URI(uri), true);
+				if (sidecars.length > 0) {
+					File xmpFile = sidecars[0];
 					if (xmpFile.exists())
 						return new File[] { xmpFile };
 				}

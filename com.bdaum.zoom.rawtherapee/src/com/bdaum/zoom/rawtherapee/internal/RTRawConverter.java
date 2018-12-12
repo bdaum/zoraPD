@@ -62,18 +62,13 @@ public class RTRawConverter extends AbstractRawConverter {
 	}
 
 	public File setInput(File file, Options options) {
-		rawFile = file;
-		IFileHandler fileHandler = ImageConstants.findFileHandler(file);
+		IFileHandler fileHandler = ImageConstants.findFileHandler(rawFile = file);
 		if (fileHandler != null) {
 			rawFile = fileHandler.getImageFile(file);
 			if (rawFile == null)
 				return null;
 		}
-		String name = rawFile.getAbsolutePath();
-		int p = name.lastIndexOf('.');
-		if (p >= 0)
-			name = name.substring(0, p);
-		return outFile = new File(name + ".tif"); //$NON-NLS-1$
+		return outFile = new File(rawFile.getAbsolutePath() + ".tif"); //$NON-NLS-1$
 	}
 
 	public File getInputDirectory() {

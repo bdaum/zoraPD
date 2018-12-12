@@ -168,4 +168,42 @@
          </perspectiveShortcut>
       </perspectiveExtension>
    </extension>
+   <extension
+         point="com.bdaum.zoom.ui.perspectiveGallery">
+      <gallery
+            galleryId="com.bdaum.zoom.ui.views.HStripView"
+            perspectiveId="com.bdaum.zoom.rcp.DataEntryPerspective">
+      </gallery>
+      <gallery
+            galleryId="com.bdaum.zoom.ui.views.LightboxView"
+            isGalleryPerspective="true"
+            perspectiveId="com.bdaum.zoom.rcp.LightboxPerspective">
+      </gallery>
+      <gallery
+            galleryId="com.bdaum.zoom.ui.views.ZuiView"
+            isGalleryPerspective="true"
+            perspectiveId="com.bdaum.zoom.rcp.SleevesPerspective">
+      </gallery>
+      <gallery
+            galleryId="com.bdaum.zoom.ui.views.HStripView"
+            perspectiveId="com.bdaum.zoom.ExhibitionPerspective">
+      </gallery>
+      <gallery
+            galleryId="com.bdaum.zoom.ui.views.HStripView"
+            perspectiveId="com.bdaum.zoom.PresentationPerspective">
+      </gallery>
+      <gallery
+            galleryId="com.bdaum.zoom.ui.views.TableView"
+            isGalleryPerspective="true"
+            perspectiveId="com.bdaum.zoom.rcp.TablePerspective">
+      </gallery>
+      <gallery
+            galleryId="com.bdaum.zoom.ui.views.HStripView"
+            perspectiveId="com.bdaum.zoom.SlidesPerspective">
+      </gallery>
+      <gallery
+            galleryId="com.bdaum.zoom.ui.views.HStripView"
+            perspectiveId="com.bdaum.zoom.WebGalleryPerspective">
+      </gallery>
+   </extension>
 </plugin>

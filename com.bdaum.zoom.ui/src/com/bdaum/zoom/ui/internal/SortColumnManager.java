@@ -21,7 +21,6 @@ package com.bdaum.zoom.ui.internal;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.viewers.ColumnViewer;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.osgi.util.NLS;
@@ -57,7 +56,7 @@ public class SortColumnManager {
 							}
 					}
 					viewer.refresh();
-					Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+					Object firstElement = viewer.getStructuredSelection().getFirstElement();
 					if (firstElement != null)
 						viewer.reveal(firstElement);
 				}
@@ -90,7 +89,7 @@ public class SortColumnManager {
 					Object[] expandedElements = ((TreeViewer) viewer).getExpandedElements();
 					viewer.refresh();
 					((TreeViewer) viewer).setExpandedElements(expandedElements);
-					Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+					Object firstElement = viewer.getStructuredSelection().getFirstElement();
 					if (firstElement != null)
 						viewer.reveal(firstElement);
 				}

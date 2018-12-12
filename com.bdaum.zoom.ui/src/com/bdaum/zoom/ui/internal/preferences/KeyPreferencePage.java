@@ -78,65 +78,14 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.SortColumnManager;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 
 public class KeyPreferencePage extends AbstractPreferencePage {
 	public static final String ID = "com.bdaum.zoom.ui.preferences.KeywordPreferencePage"; //$NON-NLS-1$
 
-	private static final String[] hiddenCommands = new String[] { "org.eclipse.ui.help.dynamicHelp", //$NON-NLS-1$
-			"org.eclipse.ui.help.quickStartAction", //$NON-NLS-1$
-			"org.eclipse.ui.help.tipsAndTricksAction", //$NON-NLS-1$
-			"org.eclipse.ui.help.installationDialog", //$NON-NLS-1$
-			"org.eclipse.ui.newWizard", "org.eclipse.ui.file.close", //$NON-NLS-1$ //$NON-NLS-2$
-			"org.eclipse.ui.file.closeAll", "org.eclipse.ui.file.import", //$NON-NLS-1$ //$NON-NLS-2$
-			"org.eclipse.ui.file.save", "org.eclipse.ui.file.saveAs", //$NON-NLS-1$ //$NON-NLS-2$
-			"org.eclipse.ui.file.saveAll", "org.eclipse.ui.file.revert", //$NON-NLS-1$ //$NON-NLS-2$
-			"org.eclipse.ui.file.refresh", "org.eclipse.ui.file.properties", //$NON-NLS-1$ //$NON-NLS-2$
-			"org.eclipse.ui.window.maximizePart", "org.eclipse.ui.window.minimizePart", //$NON-NLS-1$ //$NON-NLS-2$
-			"org.eclipse.ui.file.restartWorkbench", //$NON-NLS-1$
-			"org.eclipse.ui.edit.cut", //$NON-NLS-1$
-			"org.eclipse.ui.edit.delete", //$NON-NLS-1$
-			"org.eclipse.ui.edit.text.contentAssist.proposals", //$NON-NLS-1$
-			"org.eclipse.ui.edit.text.contentAssist.contextInformation", //$NON-NLS-1$
-			"org.eclipse.ui.edit.move", "org.eclipse.ui.edit.rename", //$NON-NLS-1$ //$NON-NLS-2$
-			"org.eclipse.ui.edit.findReplace", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.goInto", "org.eclipse.ui.navigate.up", //$NON-NLS-1$ //$NON-NLS-2$
-			"org.eclipse.ui.navigate.next", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.backwardHistory", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.forwardHistory", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.previous", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.linkWithEditor", //$NON-NLS-1$
-			"org.eclipse.ui.window.newWindow", //$NON-NLS-1$
-			"org.eclipse.ui.window.newEditor", //$NON-NLS-1$
-			"org.eclipse.ui.window.openEditorDropDown", //$NON-NLS-1$
-			"org.eclipse.ui.window.quickAccess", //$NON-NLS-1$
-			"org.eclipse.ui.window.switchToEditor", //$NON-NLS-1$
-			"org.eclipse.ui.window.showSystemMenu", //$NON-NLS-1$
-			"org.eclipse.ui.window.activateEditor", //$NON-NLS-1$
-			"org.eclipse.ui.window.nextEditor", //$NON-NLS-1$
-			"org.eclipse.ui.window.previousEditor", //$NON-NLS-1$
-			"org.eclipse.ui.window.nextView", //$NON-NLS-1$
-			"org.eclipse.ui.window.previousView", //$NON-NLS-1$
-			"org.eclipse.ui.window.nextPerspective", //$NON-NLS-1$
-			"org.eclipse.ui.window.previousPerspective", //$NON-NLS-1$
-			"org.eclipse.ui.file.closePart", //$NON-NLS-1$
-			"org.eclipse.ui.window.hideShowEditors", //$NON-NLS-1$
-			"org.eclipse.ui.window.lockToolBar", //$NON-NLS-1$
-			"org.eclipse.ui.window.pinEditor", //$NON-NLS-1$
-			"org.eclipse.ui.file.closeOthers", "org.eclipse.ui.part.nextPage", //$NON-NLS-1$ //$NON-NLS-2$
-			"org.eclipse.ui.part.previousPage", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.nextSubTab", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.previousSubTab", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.nextTab", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.previousTab", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.collapseAll", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.back", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.forward", //$NON-NLS-1$
-			"org.eclipse.ui.navigate.showIn", //$NON-NLS-1$
-			"org.eclipse.ui.browser.openBundleResource", //$NON-NLS-1$
-			"org.eclipse.ui.dialogs.openMessageDialog", //$NON-NLS-1$
-			"org.eclipse.help.ui.indexcommand" }; //$NON-NLS-1$
+	private static Set<String> hidden;
 
 	private TableViewer bindingViewer;
 	private TableViewerColumn commandColumn;
@@ -156,6 +105,81 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 	private Map<TriggerSequence, Binding> userMap = new HashMap<TriggerSequence, Binding>();
 	private Map<String, Binding> commandMap = new HashMap<String, Binding>();
 	private Command[] definedCommands;
+	private Label userLabel;
+
+	static {
+		hidden = new HashSet<String>(Arrays.asList("org.eclipse.ui.help.dynamicHelp", //$NON-NLS-1$
+				"org.eclipse.ui.help.quickStartAction", //$NON-NLS-1$
+				"org.eclipse.ui.help.tipsAndTricksAction", //$NON-NLS-1$
+				"org.eclipse.ui.help.installationDialog", //$NON-NLS-1$
+				"org.eclipse.ui.newWizard", "org.eclipse.ui.file.close", //$NON-NLS-1$ //$NON-NLS-2$
+				"org.eclipse.ui.file.closeAll", "org.eclipse.ui.file.import", //$NON-NLS-1$ //$NON-NLS-2$
+				"org.eclipse.ui.file.save", "org.eclipse.ui.file.saveAs", //$NON-NLS-1$ //$NON-NLS-2$
+				"org.eclipse.ui.file.saveAll", "org.eclipse.ui.file.revert", //$NON-NLS-1$ //$NON-NLS-2$
+				"org.eclipse.ui.file.refresh", "org.eclipse.ui.file.properties", //$NON-NLS-1$ //$NON-NLS-2$
+				"org.eclipse.ui.window.maximizePart", "org.eclipse.ui.window.minimizePart", //$NON-NLS-1$ //$NON-NLS-2$
+				"org.eclipse.ui.file.restartWorkbench", //$NON-NLS-1$
+				"org.eclipse.ui.edit.cut", //$NON-NLS-1$
+				"org.eclipse.ui.edit.delete", //$NON-NLS-1$
+				"org.eclipse.ui.edit.text.contentAssist.proposals", //$NON-NLS-1$
+				"org.eclipse.ui.edit.text.contentAssist.contextInformation", //$NON-NLS-1$
+				"org.eclipse.ui.edit.move", "org.eclipse.ui.edit.rename", //$NON-NLS-1$ //$NON-NLS-2$
+				"org.eclipse.ui.edit.findReplace", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.goInto", "org.eclipse.ui.navigate.up", //$NON-NLS-1$ //$NON-NLS-2$
+				"org.eclipse.ui.navigate.next", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.backwardHistory", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.forwardHistory", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.previous", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.linkWithEditor", //$NON-NLS-1$
+				"org.eclipse.ui.window.newWindow", //$NON-NLS-1$
+				"org.eclipse.ui.window.newEditor", //$NON-NLS-1$
+				"org.eclipse.ui.window.openEditorDropDown", //$NON-NLS-1$
+				"org.eclipse.ui.window.quickAccess", //$NON-NLS-1$
+				"org.eclipse.ui.window.switchToEditor", //$NON-NLS-1$
+				"org.eclipse.ui.window.showSystemMenu", //$NON-NLS-1$
+				"org.eclipse.ui.window.activateEditor", //$NON-NLS-1$
+				"org.eclipse.ui.window.nextEditor", //$NON-NLS-1$
+				"org.eclipse.ui.window.previousEditor", //$NON-NLS-1$
+				"org.eclipse.ui.window.nextView", //$NON-NLS-1$
+				"org.eclipse.ui.window.previousView", //$NON-NLS-1$
+				"org.eclipse.ui.window.nextPerspective", //$NON-NLS-1$
+				"org.eclipse.ui.window.previousPerspective", //$NON-NLS-1$
+				"org.eclipse.ui.file.closePart", //$NON-NLS-1$
+				"org.eclipse.ui.window.hideShowEditors", //$NON-NLS-1$
+				"org.eclipse.ui.window.lockToolBar", //$NON-NLS-1$
+				"org.eclipse.ui.window.pinEditor", //$NON-NLS-1$
+				"org.eclipse.ui.file.closeOthers", "org.eclipse.ui.part.nextPage", //$NON-NLS-1$ //$NON-NLS-2$
+				"org.eclipse.ui.part.previousPage", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.nextSubTab", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.previousSubTab", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.nextTab", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.previousTab", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.collapseAll", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.back", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.forward", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.showIn", //$NON-NLS-1$
+				"org.eclipse.ui.browser.openBundleResource", //$NON-NLS-1$
+				"org.eclipse.ui.dialogs.openMessageDialog", //$NON-NLS-1$
+				"org.eclipse.help.ui.indexcommand", //$NON-NLS-1$
+				"org.eclipse.ui.navigate.expandAll", //$NON-NLS-1$
+				"org.eclipse.ui.activeContextInfo", //$NON-NLS-1$
+				"org.eclipse.ui.window.fullscreenmode", //$NON-NLS-1$
+				"org.eclipse.help.ui.ignoreMissingPlaceholders", //$NON-NLS-1$
+				"org.eclipse.ui.window.hidetrimbars", //$NON-NLS-1$
+				"org.eclipse.ui.window.togglestatusbar", //$NON-NLS-1$
+				"org.eclipse.ui.cheatsheets.openCheatSheetURL", //$NON-NLS-1$
+				"org.eclipse.ui.file.closeAllSaved", //$NON-NLS-1$
+				"org.eclipse.help.ui.closeTray", //$NON-NLS-1$
+				"org.eclipse.ui.window.spy", //$NON-NLS-1$
+				"org.eclipse.ui.dialogs.openInputDialog", //$NON-NLS-1$
+				"org.eclipse.ui.window.showContextMenu", //$NON-NLS-1$
+				"org.eclipse.ui.ToggleCoolbarAction", //$NON-NLS-1$
+				"org.eclipse.ui.window.splitEditor", //$NON-NLS-1$
+				"org.eclipse.ui.window.showViewMenu", //$NON-NLS-1$
+				"org.eclipse.ui.help.displayHelp", //$NON-NLS-1$
+				"org.eclipse.ui.cheatsheets.openCheatSheet", //$NON-NLS-1$
+				"com.bdaum.zoom.ui.command3")); //$NON-NLS-1$
+	}
 
 	public KeyPreferencePage() {
 		setDescription(Messages.getString("KeyPreferencePage.key_descr")); //$NON-NLS-1$
@@ -165,7 +189,6 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 	public void init(IWorkbench aWorkbench) {
 		super.init(aWorkbench);
 		ICommandService commandService = workbench.getService(ICommandService.class);
-		Set<String> hidden = new HashSet<String>(Arrays.asList(hiddenCommands));
 		Command[] cmds = commandService.getDefinedCommands();
 		List<Command> list = new ArrayList<Command>(cmds.length);
 		for (Command command : cmds)
@@ -209,10 +232,11 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 				if (element instanceof Command) {
 					Binding binding = commandMap.get(((Command) element).getId());
 					if (binding != null && binding.getType() == Binding.USER)
-						return JFaceResources.getBannerFont();
+						return JFaceResources.getFont(UiConstants.ITALICFONT);
 				}
 				return super.getFont(element);
 			}
+			
 		};
 		commandColumn.setLabelProvider(commandLabelProvider);
 		keyColumn = createColumn(bindingViewer, Messages.getString("KeyPreferencePage.keys"), 150); //$NON-NLS-1$
@@ -244,7 +268,7 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		};
 		catColumn.setLabelProvider(catLabelProvider);
 		bindingViewer.setContentProvider(ArrayContentProvider.getInstance());
-		new SortColumnManager(bindingViewer, new int[] {SWT.UP, SWT.UP, SWT.UP}, 0);
+		new SortColumnManager(bindingViewer, new int[] { SWT.UP, SWT.UP, SWT.UP }, 0);
 		bindingViewer.setComparator(ZViewerComparator.INSTANCE);
 		bindingViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -281,6 +305,7 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 						commandMap.remove(selectedCommand.getId());
 					}
 					refreshViewer();
+					doValidate();
 				}
 			}
 		});
@@ -291,10 +316,17 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 			@Override
 			public final void widgetSelected(final SelectionEvent event) {
 				if (selectedCommand != null) {
-					Binding b = commandMap.get(selectedCommand.getId());
+					String id = selectedCommand.getId();
+					Binding b = commandMap.get(id);
 					userMap.remove(b.getTriggerSequence());
-					commandMap.put(selectedCommand.getId(), systemMap.get(b.getTriggerSequence()));
+					for (Binding sb : systemMap.values()) {
+						if (sb.getParameterizedCommand() != null && sb.getParameterizedCommand().getId().equals(id)) {
+							commandMap.put(sb.getParameterizedCommand().getId(), sb);
+							break;
+						}
+					}
 					refreshViewer();
+					doValidate();
 				}
 			}
 		});
@@ -315,6 +347,7 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		createConflictsArea(comp);
 	}
 
+	@SuppressWarnings("unused")
 	private void createDefinitionArea(Composite parent) {
 		final Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -348,13 +381,16 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 					Binding newBinding;
 					Binding b = commandMap.get(selectedCommand.getId());
 					if (b != null) {
-						newBinding = new KeyBinding(keySequence, empty ? null : b.getParameterizedCommand(),
-								activeSchemeId, b.getContextId(), null, null, null, Binding.USER);
-						userMap.put(keySequence, newBinding);
-						if (empty)
-							commandMap.remove(selectedCommand.getId());
-						else
-							commandMap.put(selectedCommand.getId(), newBinding);
+						if (!keySequence.equals(b.getTriggerSequence())) {
+							newBinding = new KeyBinding(keySequence, empty ? null : b.getParameterizedCommand(),
+									activeSchemeId, b.getContextId(), null, null, null, Binding.USER);
+							userMap.remove(b.getTriggerSequence());
+							userMap.put(keySequence, newBinding);
+							if (empty)
+								commandMap.remove(selectedCommand.getId());
+							else
+								commandMap.put(selectedCommand.getId(), newBinding);
+						}
 					} else if (!empty) {
 						ParameterizedCommand pc = new ParameterizedCommand(selectedCommand, null);
 						newBinding = new KeyBinding(keySequence, pc, activeSchemeId, "org.eclipse.ui.contexts.window", //$NON-NLS-1$
@@ -363,7 +399,7 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 						commandMap.put(selectedCommand.getId(), newBinding);
 					}
 					refreshViewer();
-					validate();
+					doValidate();
 					keyField.setSelection(keyField.getTextLimit());
 				}
 			}
@@ -399,7 +435,6 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 			});
 		}
 		helpButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent selectionEvent) {
 				Point buttonLocation = helpButton.getLocation();
@@ -409,6 +444,9 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 				addKeyMenu.setVisible(true);
 			}
 		});
+		new Label(composite, SWT.NONE);
+		userLabel = new Label(composite, SWT.NONE);
+		userLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 	}
 
 	private void createConflictsArea(Composite parent) {
@@ -475,6 +513,9 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 			}
 		}
 		updateViewer();
+		ISelection selection = bindingViewer.getSelection();
+		if (selection.isEmpty())
+			bindingViewer.setSelection(new StructuredSelection(bindingViewer.getElementAt(0)), true);
 	}
 
 	private void updateViewer() {
@@ -501,7 +542,7 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 
 	@Override
 	protected String doValidate() {
-		Map<TriggerSequence, List<Binding>> conflictMap = new HashMap<TriggerSequence, List<Binding>>();
+		Map<TriggerSequence, List<Binding>> conflictMap = new HashMap<>();
 		for (Map.Entry<TriggerSequence, Binding> entry : systemMap.entrySet()) {
 			TriggerSequence key = entry.getKey();
 			Binding binding = userMap.get(key);
@@ -515,6 +556,24 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 					conflictMap.put(triggerSequence, list);
 				}
 				list.add(binding);
+			}
+		}
+		for (Map.Entry<TriggerSequence, Binding> entry : userMap.entrySet()) {
+			TriggerSequence key = entry.getKey();
+			Binding userBinding = entry.getValue();
+			Binding binding = systemMap.get(key);
+			if (binding != null && binding.getParameterizedCommand() != null
+					&& userBinding.getParameterizedCommand() != null
+					&& !binding.getParameterizedCommand().getId().equals(userBinding.getParameterizedCommand().getId())
+					&& binding.getSchemeId().equals(activeSchemeId)) {
+				TriggerSequence triggerSequence = binding.getTriggerSequence();
+				List<Binding> list = conflictMap.get(triggerSequence);
+				if (list == null) {
+					list = new ArrayList<Binding>();
+					conflictMap.put(triggerSequence, list);
+				}
+				if (!list.contains(binding))
+					list.add(binding);
 			}
 		}
 		List<Binding[]> conflicts = new ArrayList<Binding[]>();
@@ -538,6 +597,7 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		userMap.clear();
 		saveConfiguration(systemMap.values());
 		updateViewer();
+		validate();
 	}
 
 	private static void saveConfiguration(Collection<Binding> bindings) {
@@ -551,7 +611,7 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void updateDetails() {
-		selectedCommand = (Command) ((IStructuredSelection) bindingViewer.getSelection()).getFirstElement();
+		selectedCommand = (Command) bindingViewer.getStructuredSelection().getFirstElement();
 		if (selectedCommand != null) {
 			try {
 				String name = selectedCommand.getName();
@@ -566,8 +626,11 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 						keySequenceField.setKeySequence((KeySequence) triggerSequence);
 					else
 						keySequenceField.setKeySequence(null);
-				} else
+					userLabel.setText(binding.getType() == Binding.USER ? Messages.getString("KeyPreferencePage.user_defined") : ""); //$NON-NLS-1$ //$NON-NLS-2$
+				} else {
 					keySequenceField.setKeySequence(null);
+					userLabel.setText(""); //$NON-NLS-1$
+				}
 			} catch (NotDefinedException e) {
 				// ignore
 			}

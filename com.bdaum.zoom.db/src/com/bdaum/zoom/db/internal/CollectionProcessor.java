@@ -20,7 +20,6 @@
 
 package com.bdaum.zoom.db.internal;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
@@ -37,8 +36,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.imageio.ImageIO;
 
 import com.bdaum.aoModeling.runtime.AomMap;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
@@ -73,7 +70,6 @@ import com.bdaum.zoom.core.db.IDbFactory;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.lire.ISearchHits;
-import com.bdaum.zoom.core.internal.lucene.IDocumentIterator;
 import com.bdaum.zoom.core.internal.lucene.ILuceneService;
 import com.bdaum.zoom.core.internal.lucene.ParseException;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
@@ -127,29 +123,30 @@ public class CollectionProcessor implements ICollectionProcessor {
 	@SuppressWarnings("serial")
 	public static class GeographicPostProcessor extends PostProcessorImpl implements IPostProcessor {
 
-		private final Double latitude;
-		private final Double longitude;
-		private final Double distance;
+		private final double latitude;
+		private final double longitude;
+		private final double distance;
+		private char unit;
 
-		public GeographicPostProcessor(Double latitude, Double longitude, Double distance) {
+		public GeographicPostProcessor(double latitude, double longitude, double distance, char unit) {
 			this.latitude = latitude;
 			this.longitude = longitude;
 			this.distance = distance;
+			this.unit = unit != 0 ? unit : Core.getCore().getDbFactory().getDistanceUnit();
 		}
 
 		@Override
 		public IPostProcessor clone() {
-			return new GeographicPostProcessor(latitude, longitude, distance);
+			return new GeographicPostProcessor(latitude, longitude, distance, unit);
 		}
 
 		public List<Asset> process(List<Asset> set) {
-			char distanceUnit = Core.getCore().getDbFactory().getDistanceUnit();
 			List<Asset> result = new ArrayList<Asset>(set.size());
 			for (Asset asset : set) {
 				double lat = asset.getGPSLatitude();
 				double lon = asset.getGPSLongitude();
 				if (!Double.isNaN(lat) && !Double.isNaN(lon)) {
-					double dist = Core.distance(latitude, longitude, lat, lon, distanceUnit);
+					double dist = Core.distance(latitude, longitude, lat, lon, unit);
 					if (dist <= distance) {
 						asset.setScore((float) dist);
 						result.add(asset);
@@ -510,7 +507,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 					Set<String> idSet = null;
 					while (true) {
 						Constraint disjunction = null;
-						if (coll.getAlbum() && coll.getAsset().size() > MAXALBUMASSETS)
+						if (coll.getAlbum() && tempColl.getSubSelection().isEmpty() && coll.getAsset().size() > MAXALBUMASSETS)
 							disjunction = query.descend("album").constrain(coll.getName()); //$NON-NLS-1$
 						else
 							for (Criterion crit : tempColl.getCriterion()) {
@@ -637,9 +634,13 @@ public class CollectionProcessor implements ICollectionProcessor {
 											idSet = new HashSet<String>();
 									} else if (relation == QueryField.XREF) {
 										dynamic = true;
-										List<String> assetIds = tempColl.getAsset();
-										if (assetIds != null)
-											idSet = new HashSet<String>(assetIds);
+										if (tempColl.getAlbum() && !tempColl.getSubSelection().isEmpty())
+											collectAlbumAssetIds(tempColl, idSet = new HashSet<>(311));
+										else {
+											List<String> assetIds = tempColl.getAsset();
+											if (assetIds != null)
+												idSet = new HashSet<String>(assetIds);
+										}
 									} else if (relation == QueryField.UNDEFINED && value instanceof Double) {
 										constraint = query.descend(field).constrain(Double.NEGATIVE_INFINITY).greater()
 												.equal().not();
@@ -692,7 +693,8 @@ public class CollectionProcessor implements ICollectionProcessor {
 									? ((AssetFilter) assetFilter).getConstraint(dbManager, query)
 									: null;
 							if (filterConstraint != null)
-								conjunction = conjunction == null ? filterConstraint : conjunction.and(filterConstraint);
+								conjunction = conjunction == null ? filterConstraint
+										: conjunction.and(filterConstraint);
 						}
 					if (idSetAnd != null) {
 						if (conjunction != null || idSetAnd.size() > MAXIDS)
@@ -769,6 +771,14 @@ public class CollectionProcessor implements ICollectionProcessor {
 			if (ticket != null)
 				peerService.discardTask(ticket);
 		}
+	}
+
+	private void collectAlbumAssetIds(SmartCollection tempColl, Set<String> set) {
+		List<String> assetIds = tempColl.getAsset();
+		if (assetIds != null)
+			set.addAll(assetIds);
+		for (SmartCollection child : tempColl.getSubSelection())
+			collectAlbumAssetIds(child, set);
 	}
 
 	protected static Range compileSimilarRange(Object value, float tolerance) {
@@ -1000,7 +1010,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 	}
 
 	public List<Asset> select(boolean isSorted, boolean testExist) {
-//		 long time = System.currentTimeMillis();
+		// long time = System.currentTimeMillis();
 		if (coll == null || coll == EMPTYCOLLECTION)
 			return EMPTY;
 		if (coll.getCriterion().size() == 1) {
@@ -1047,8 +1057,8 @@ public class CollectionProcessor implements ICollectionProcessor {
 						set = processPostponedSorts(set, postponedSorts);
 				}
 				dbManager.resetErrorCount();
-//				 System.out.println(coll.getName() + ": "
-//				 + (System.currentTimeMillis() - time));
+				// System.out.println(coll.getName() + ": "
+				// + (System.currentTimeMillis() - time));
 				return set;
 			} catch (DatabaseClosedException e) {
 				break;
@@ -1186,7 +1196,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 					}
 				});
 			}
-//			 System.out.println(System.currentTimeMillis() - time);
+			// System.out.println(System.currentTimeMillis() - time);
 		}
 	}
 
@@ -1260,37 +1270,15 @@ public class CollectionProcessor implements ICollectionProcessor {
 			File indexPath = dbManager.getIndexPath();
 			if (indexPath == null)
 				return EMPTY;
-			ISearchHits hits = null;
-			Object reader = null;
 			try {
-				// Opening an IndexReader
-				reader = lucene.getIndexReader(indexPath);
-				if (reader != null) {
-					String assetId = options.getAssetId();
-					if (assetId != null) {
-						IDocumentIterator iterator = lucene.getDocumentIterator(reader, assetId);
-						if (iterator != null)
-							try {
-								int docId = iterator.next();
-								if (docId != IDocumentIterator.NO_MORE_DOCS)
-									hits = lucene.search(reader, docId, options.getMethod(), options.getMaxResults());
-							} finally {
-								iterator.close();
-							}
-					}
-					if (hits == null) {
-						byte[] pngImage = options.getPngImage();
-						if (pngImage != null)
-							// Search for similar images
-							hits = lucene.search(reader, ImageIO.read(new ByteArrayInputStream(pngImage)),
-									options.getMethod(), options.getMaxResults());
-					}
-				}
+				ISearchHits hits = lucene.search(indexPath, options);
 				if (hits == null)
 					return EMPTY;
 				List<Asset> result = new ArrayList<Asset>(hits.length());
 				for (int i = 0; i < hits.length(); i++) {
 					float score = hits.score(i);
+					if (Float.isNaN(score))
+						continue;
 					if (score < minScore)
 						break;
 					String id = hits.getAssetId(i);
@@ -1331,21 +1319,13 @@ public class CollectionProcessor implements ICollectionProcessor {
 			} catch (IOException e) {
 				DbActivator.getDefault().logError(Messages.CollectionProcessor_io_error_similarity, e);
 				return EMPTY;
-			} finally {
-				if (reader != null)
-					lucene.releaseIndexReader(indexPath, reader);
 			}
 		} else if (field == TEXTSEARCH) {
 			TextSearchOptions_type options = (TextSearchOptions_type) criterion.getValue();
 			float minScore = options.getMinScore();
 			File indexPath = dbManager.getIndexPath();
-			Object reader = null;
 			try {
-				// Opening an IndexReader
-				reader = indexPath == null ? null : factory.getLuceneService().getIndexReader(indexPath);
-				if (reader == null)
-					return EMPTY;
-				ISearchHits hits = lucene.search(reader, options.getQueryString(), options.getMaxResults());
+				ISearchHits hits = lucene.search(indexPath, options);
 				if (hits == null)
 					return EMPTY;
 				float maxScore = hits.getMaxScore();
@@ -1378,9 +1358,6 @@ public class CollectionProcessor implements ICollectionProcessor {
 				DbActivator.getDefault().logError(Messages.CollectionProcessor_io_error_text_search, e);
 			} catch (ParseException e) {
 				DbActivator.getDefault().logError(Messages.CollectionProcessor_parser_error_text_search, e);
-			} finally {
-				if (reader != null)
-					lucene.releaseIndexReader(indexPath, reader);
 			}
 		} else if (field == ORPHANS) {
 			@SuppressWarnings("unchecked")

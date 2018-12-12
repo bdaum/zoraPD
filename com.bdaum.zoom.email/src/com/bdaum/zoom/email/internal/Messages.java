@@ -59,14 +59,17 @@ public class Messages extends NLS {
 	public static String SendEmailPage_Adjust_size;
 	public static String SendEmailPage_attachments;
 	public static String SendEmailPage_email;
+	public static String SendEmailPage_exporting_multimedia;
 	public static String SendEmailPage_Estimated_size;
 	public static String SendEmailPage_Export_only;
 	public static String SendEmailPage_Image_size;
 	public static String SendEmailPage_Image_size_n;
+	public static String SendEmailPage_image;
 	public static String SendEmailPage_include_metadata;
 	public static String SendEmailPage_Mail_size;
 	public static String SendEmailPage_Matadata;
 	public static String SendEmailPage_Message;
+	public static String SendEmailPage_media;
 	public static String SendEmailPage_mixed;
 	public static String SendEmailPage_No_image_selected;
 	public static String SendEmailPage_pdf_file_n_attached;

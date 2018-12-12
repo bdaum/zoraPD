@@ -49,6 +49,7 @@ public class ImportConfiguration {
 	public final boolean isResetImage;
 	public final boolean isResetExif;
 	public final boolean makerNotes;
+	public final boolean faceData;
 	public final boolean archiveRecipes;
 	public boolean isResetFaceData;
 	public final String locations;
@@ -71,7 +72,7 @@ public class ImportConfiguration {
 			boolean dngUncompressed, boolean dngLinear, String deriveRelations,
 			boolean autoDerive, boolean applyXmp, String dngFolder,
 			boolean onPrompt, boolean onFinish, boolean inBackground,
-			boolean makerNotes, boolean archiveRecipes, boolean useWebP, int jpegQuality,
+			boolean makerNotes, boolean faceData, boolean archiveRecipes, boolean useWebP, int jpegQuality,
 			boolean showImported, IRelationDetector[] relationDetectors,
 			List<AutoRule> rules) {
 		this.info = info;
@@ -98,6 +99,7 @@ public class ImportConfiguration {
 		this.onFinish = onFinish;
 		this.inBackground = inBackground;
 		this.makerNotes = makerNotes;
+		this.faceData = faceData;
 		this.archiveRecipes = archiveRecipes;
 		this.useWebP = useWebP;
 		this.jpegQuality = jpegQuality;
@@ -105,5 +107,9 @@ public class ImportConfiguration {
 		this.relationDetectors = relationDetectors;
 		this.rules = rules;
 		this.rawConverter = BatchActivator.getDefault().getCurrentRawConverter(false);
+	}
+
+	public int getExifFastMode() {
+		return makerNotes || faceData ? 1 : 2;
 	}
 }

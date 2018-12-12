@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2015 Berthold Daum  
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
@@ -24,6 +24,7 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,6 +34,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWorkbench;
@@ -53,6 +55,7 @@ import com.bdaum.zoom.core.internal.IFileWatchListener;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
 import com.bdaum.zoom.job.OperationJob;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.operations.internal.ImportOperation;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
@@ -94,9 +97,6 @@ public class Startup implements IStartup, IAdaptable {
 		}
 
 		private File lastFileCreated = null;
-		private List<File> filesCreated = new ArrayList<File>(1);
-		private List<File> filesModified = new ArrayList<File>(1);
-		private List<File> filesDeleted = new ArrayList<File>(1);
 		private LinkedList<File> recentCreations = new LinkedList<File>();
 
 		public void fileCreated(File file) {
@@ -108,10 +108,14 @@ public class Startup implements IStartup, IAdaptable {
 				doCreateFile(lastFileCreated);
 				lastFileCreated = file;
 			}
-			Meta meta = Core.getCore().getDbManager().getMeta(true);
-			int folderWatchLatency = meta.getFolderWatchLatency();
-			new DelayedCreationDaemon(lastFileCreated)
-					.schedule(folderWatchLatency == 0 ? 30000L : folderWatchLatency * 1000L);
+			if (Core.getCore().isTetheredShootingActive())
+				new DelayedCreationDaemon(lastFileCreated).schedule(100L);
+			else {
+				Meta meta = Core.getCore().getDbManager().getMeta(true);
+				int folderWatchLatency = meta.getFolderWatchLatency();
+				new DelayedCreationDaemon(lastFileCreated)
+						.schedule(folderWatchLatency == 0 ? 30000L : folderWatchLatency * 1000L);
+			}
 			lastFileCreated = null;
 		}
 
@@ -120,10 +124,8 @@ public class Startup implements IStartup, IAdaptable {
 				if (Job.getJobManager().find(file).length > 0)
 					fileCreated(file);
 				else {
-					filesModified.clear();
-					filesModified.add(file);
-					new ChangeProcessor(null, filesModified, null, computeObservedFolder(file), -1L, null,
-							Constants.FOLDERWATCH, Startup.this).schedule(100);
+					new ChangeProcessor(null, Collections.singletonList(file), null, computeObservedFolder(file), -1L,
+							null, Constants.FOLDERWATCH, Startup.this).schedule(100);
 				}
 			}
 		}
@@ -132,18 +134,16 @@ public class Startup implements IStartup, IAdaptable {
 			if (file != null) {
 				Job.getJobManager().cancel(file);
 				if (recentCreations.remove(file)) {
-					filesDeleted.clear();
-					filesDeleted.add(file);
-					new ChangeProcessor(null, null, filesDeleted, computeObservedFolder(file), -1L, null,
-							Constants.FOLDERWATCH, Startup.this).schedule(100);
+					new ChangeProcessor(null, null, Collections.singletonList(file), computeObservedFolder(file), -1L,
+							null, Constants.FOLDERWATCH, Startup.this).schedule(100);
 				}
 			}
 		}
 
 		private void doCreateFile(File file) {
 			if (file != null) {
-				filesCreated.clear();
-				filesModified.clear();
+				List<File> filesCreated = new ArrayList<File>();
+				List<File> filesModified = new ArrayList<File>();
 				CoreActivator.getDefault().classifyFile(file, filesCreated, filesModified, null, null, 0L);
 				recentCreations.addAll(filesCreated);
 				while (recentCreations.size() > MAXRECENTCREATIONS)
@@ -166,6 +166,7 @@ public class Startup implements IStartup, IAdaptable {
 
 	public void earlyStartup() {
 		final IWorkbench workbench = PlatformUI.getWorkbench();
+		final Display display = workbench.getDisplay();
 		final Shell shell = (Shell) getAdapter(Shell.class);
 		String version = System.getProperty("java.runtime.version"); //$NON-NLS-1$
 		int p = version.indexOf('_');
@@ -183,16 +184,17 @@ public class Startup implements IStartup, IAdaptable {
 				PreferenceConstants.TRAY_MODE, PreferenceConstants.TRAY_DESK, null); // $NON-NLS-1$
 		if (ensureDbOpen(workbench, PreferenceConstants.TRAY_PROMPT.equals(traymode))) {
 			IWorkbenchWindow[] workbenchWindows = workbench.getWorkbenchWindows();
-			workbench.getDisplay().syncExec(() -> {
-				for (IWorkbenchWindow window : workbenchWindows)
-					window.getShell().setText(Constants.APPLICATION_NAME + " - " //$NON-NLS-1$
-							+ Core.getCore().getDbManager().getFileName());
-			});
+			if (!display.isDisposed())
+				display.syncExec(() -> {
+					for (IWorkbenchWindow window : workbenchWindows)
+						window.getShell().setText(Constants.APPLICATION_NAME + " - " //$NON-NLS-1$
+								+ Core.getCore().getDbManager().getFileName());
+				});
 
 			for (IWorkbenchWindow window : workbenchWindows)
 				Ui.getUi().getNavigationHistory(window);
-			if (PreferenceConstants.TRAY_TRAY.equalsIgnoreCase(traymode) && shell != null) // $NON-NLS-1$
-				shell.getDisplay().syncExec(() -> shell.setVisible(false));
+			if (PreferenceConstants.TRAY_TRAY.equalsIgnoreCase(traymode) && shell != null && !display.isDisposed()) // $NON-NLS-1$
+				display.syncExec(() -> shell.setVisible(false));
 			CoreActivator coreActivator = CoreActivator.getDefault();
 			try {
 				FileWatchManager manager = coreActivator.getFileWatchManager();
@@ -219,6 +221,12 @@ public class Startup implements IStartup, IAdaptable {
 			IPeerService peerService = Core.getCore().getDbFactory().getPeerService();
 			if (peerService != null)
 				peerService.checkListeningPort(this);
+			String errorMessage = coreActivator.getVolumeManager().getErrorMessage();
+			if (errorMessage != null && !display.isDisposed() && shell != null)
+				display.syncExec(() -> {
+					AcousticMessageDialog.openWarning(shell, Constants.APPLICATION_NAME,
+							errorMessage);
+				});
 			UiActivator.getDefault().setStarted();
 		}
 	}
@@ -298,7 +306,7 @@ public class Startup implements IStartup, IAdaptable {
 			}
 		}
 		if (!images.isEmpty())
-			OperationJob.executeOperation(new ImportOperation(new FileInput(images, false),
+			OperationJob.executeOperation(new ImportOperation(new FileInput(StorageObject.fromFile(images), false),
 					UiActivator.getDefault().createImportConfiguration(this), null,
 					folders.toArray(new File[folders.size()])), this);
 	}

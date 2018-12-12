@@ -99,9 +99,10 @@ public class GeonameAction extends AbstractViewAction {
 		Trackpoint[] pnts = new Trackpoint[0];
 		final GpsConfiguration gpsConfiguration = GpsActivator.getDefault().createGpsConfiguration();
 		if (files != null) {
+			gpsConfiguration.excludeNoGoAreas = true;
 			BusyIndicator.showWhile(shell.getDisplay(), () -> {
 				for (int i = 0; i < files.length; i++) {
-					if (gpsConfiguration.useWaypoints) {
+					if (gpsConfiguration.useWaypoints)
 						try {
 							IWaypointCollector collector = Ui.getUi().getWaypointCollector(files[i]);
 							if (collector != null) {
@@ -121,7 +122,6 @@ public class GeonameAction extends AbstractViewAction {
 							showError(shell, NLS.bind(Messages.getString("GeotagAction.parsing_error"), //$NON-NLS-1$
 									files[i]), e3);
 						}
-					}
 					try {
 						IGpsParser parser = Ui.getUi().getGpsParser(files[i]);
 						if (parser == null) {

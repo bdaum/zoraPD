@@ -81,6 +81,7 @@ import com.bdaum.aoModeling.runtime.UUIDgenerator;
 import com.bdaum.zoom.batch.internal.BatchActivator;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
+import com.bdaum.zoom.cat.model.asset.MediaExtension;
 import com.bdaum.zoom.cat.model.meta.LastDeviceImport;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.cat.model.meta.WatchedFolder;
@@ -93,8 +94,8 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IRecipeDetector;
-import com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter;
 import com.bdaum.zoom.core.IVolumeManager;
+import com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbErrorHandler;
 import com.bdaum.zoom.core.db.IDbFactory;
@@ -196,11 +197,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 
 	private Map<String, Theme> themes;
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.core.runtime.Plugins#start(org.osgi.framework.BundleContext)
-	 */
+	private boolean tetheredShooting;
 
 	@Override
 	public void start(BundleContext context) throws Exception {
@@ -233,6 +230,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 		}
 		if (Constants.WIN32)
 			ImageActivator.getDefault().deleteFileAfterShutdown(file);
+		volumeManager = new VolumeManager();
 		ImageActivator.getDefault().registerImageIOPlugins();
 	}
 
@@ -923,15 +921,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.bdaum.zoom.core.ICore#getVolumeManager()
-	 */
-
 	public IVolumeManager getVolumeManager() {
-		if (volumeManager == null)
-			volumeManager = new VolumeManager();
 		return volumeManager;
 	}
 
@@ -976,7 +966,8 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 					observedFolder.getTransfer() ? null : getFileWatchManager().getDefaultFilters(),
 					observedFolder.getTransfer(), observedFolder.getArtist(), observedFolder.getSkipDuplicates(),
 					observedFolder.getSkipPolicy(), observedFolder.getTargetDir(), observedFolder.getSubfolderPolicy(),
-					observedFolder.getSelectedTemplate(), observedFolder.getCue(), observedFolder.getFileSource());
+					observedFolder.getSelectedTemplate(), observedFolder.getCue(), observedFolder.getFileSource(),
+					observedFolder.getTethered());
 			observedMember.setStringId(id);
 			putObservedFolder(observedMember);
 		}
@@ -1223,49 +1214,37 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	public void classifyFile(File member, List<File> newFiles, List<File> outdatedFiles, Map<String, File> xmpMap,
 			List<IRecipeDetector> activeRecipeDetectors, long lastScan) {
 		long filedate = member.lastModified();
-		if (filedate == 0L)
-			return;
-		long xmpdate = Long.MIN_VALUE;
-		if (xmpMap != null) {
-			String filename = member.getName();
-			int p = filename.lastIndexOf('.');
-			File sidecar = xmpMap.get(p >= 0 ? filename.substring(0, p) : filename);
-			if (sidecar != null)
-				xmpdate = sidecar.lastModified();
-		}
-		if (filedate < lastScan && xmpdate < lastScan)
-			return;
-		URI uri = member.toURI();
-		List<AssetImpl> assets = dbManager.obtainAssetsForFile(uri);
-		Iterator<AssetImpl> ait = assets.iterator();
-		if (!ait.hasNext()) {
-			if (dbManager.obtainTrashForFile(uri).isEmpty() && dbManager.obtainGhostsForFile(uri).isEmpty())
-				newFiles.add(member);
-			return;
-		}
-		long lastmod = -1;
-		AssetImpl asset = ait.next();
-		Date lastModification = asset.getLastModification();
-		if (lastModification != null)
-			lastmod = lastModification.getTime();
-		if (lastmod < filedate) {
-			outdatedFiles.add(member);
-			return;
-		}
-		Date xmpModifiedAt = asset.getXmpModifiedAt();
-		if (xmpModifiedAt == null && lastmod < xmpdate || xmpModifiedAt != null && xmpModifiedAt.getTime() < xmpdate) {
-			outdatedFiles.add(member);
-			return;
-		}
-		if (activeRecipeDetectors != null) {
-			long recipeModified = -1;
-			IRawConverter currentRawConverter = BatchActivator.getDefault().getCurrentRawConverter(false);
-			long timestamp = currentRawConverter == null ? 0L
-					: currentRawConverter.getLastRecipeModification(uri.toString(), 0L, null);
-			if (timestamp > 0)
-				recipeModified = timestamp;
-			if (recipeModified > lastmod)
-				outdatedFiles.add(member);
+		if (filedate > 0L) {
+			long xmpdate = Long.MIN_VALUE, recipeModified = Long.MIN_VALUE;
+			if (xmpMap != null) {
+				String filename = member.getName();
+				int p = filename.lastIndexOf('.');
+				File sidecar = xmpMap.get(p >= 0 ? filename.substring(0, p) : filename);
+				if (sidecar != null)
+					xmpdate = sidecar.lastModified();
+			}
+			URI uri = member.toURI();
+			if (activeRecipeDetectors != null) {
+				IRawConverter currentRawConverter = BatchActivator.getDefault().getCurrentRawConverter(false);
+				if (currentRawConverter != null) {
+					long timestamp = currentRawConverter.getLastRecipeModification(uri.toString(), 0L, null);
+					if (timestamp > 0)
+						recipeModified = timestamp;
+				}
+			}
+			if (filedate >= lastScan || xmpdate >= lastScan || recipeModified >= lastScan) {
+				Iterator<AssetImpl> ait = dbManager.obtainAssetsForFile(uri).iterator();
+				if (ait.hasNext()) {
+					AssetImpl asset = ait.next();
+					Date lastModification = asset.getLastModification();
+					Date xmpModifiedAt = asset.getXmpModifiedAt();
+					long lastmod = lastModification != null ? lastModification.getTime() : Long.MIN_VALUE;
+					if (lastmod < filedate || xmpModifiedAt == null && lastmod < xmpdate
+							|| xmpModifiedAt != null && xmpModifiedAt.getTime() < xmpdate || recipeModified > lastmod)
+						outdatedFiles.add(member);
+				} else if (dbManager.obtainTrashForFile(uri).isEmpty() && dbManager.obtainGhostsForFile(uri).isEmpty())
+					newFiles.add(member);
+			}
 		}
 	}
 
@@ -1304,6 +1283,25 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 				if (theme.isDefault())
 					return theme;
 		return themes.get(themeID);
+	}
+
+	@Override
+	public boolean isTetheredShootingActive() {
+		return tetheredShooting;
+	}
+
+	public void setTetheredShooting(boolean tetheredShooting) {
+		this.tetheredShooting = tetheredShooting;
+	}
+
+	@Override
+	public boolean isMultiMedia(Collection<Asset> assets) {
+		for (Asset asset : assets) {
+			MediaExtension[] mediaExtension = asset.getMediaExtension();
+			if (mediaExtension != null && mediaExtension.length > 0)
+				return true;
+		}
+		return false;
 	}
 
 }

@@ -37,11 +37,5 @@ public class DataEntryPerspective extends AbstractPerspective {
 		addFastViews(layout, IPageLayout.RIGHT, 0.7f, DATAENTRY_FOLDER);
 		layout.setEditorAreaVisible(false);
 	}
-	
-	@Override
-	protected String getId() {
-		return ID;
-	}
-
 
 }

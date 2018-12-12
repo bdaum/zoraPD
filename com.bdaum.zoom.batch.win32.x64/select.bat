@@ -1,1 +1,0 @@
-Explorer /select,"%1"

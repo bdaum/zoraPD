@@ -39,7 +39,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ColumnViewer;
-import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.ILazyContentProvider;
 import org.eclipse.jface.viewers.ISelection;
@@ -383,7 +382,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		thumbsizeLowWatermark = thumbsize;
 		createGallery(parent, false);
 		makeActions(getViewSite().getActionBars());
-		installListeners(parent);
+		installListeners();
 		// Hover
 		installHoveringController();
 		addCueListener();
@@ -476,7 +475,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 				}
 			}
 		});
-		ColumnViewerToolTipSupport.enableFor(gallery);
+		ZColumnViewerToolTipSupport.enableFor(gallery);
 		addKeyListener();
 		addGestureListener(gallery.getTable());
 		addExplanationListener(false);
@@ -516,7 +515,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 			table.setSortColumn(column);
 			table.setSortDirection(sortDirection);
 		}
-		if (qfield.getEditable() != QueryField.EDIT_NEVER && qfield.getKey() != null
+		if (qfield.canEdit() && qfield.getKey() != null
 				&& !(qfield.isStruct() && qfield.getCard() != 1) && qfield.getType() != QueryField.T_NONE)
 			tableViewerColumn.setEditingSupport(new ViewEditingSupport(gallery, qfield));
 		return tableViewerColumn;
@@ -559,7 +558,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		gallery.getTable().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDoubleClick(MouseEvent e) {
-				IStructuredSelection sel = (IStructuredSelection) gallery.getSelection();
+				IStructuredSelection sel = gallery.getStructuredSelection();
 				Event event = new Event();
 				event.data = sel.getFirstElement();
 				event.stateMask = e.stateMask;
@@ -576,6 +575,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
+		updateActions(true);
 		boolean readOnly = dbIsReadonly();
 		fillEditAndSearchGroup(manager, readOnly);
 		fillRotateGroup(manager, readOnly);
@@ -726,7 +726,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 	}
 
 	@Override
-	protected void setAssetSelection(AssetSelection assetSelection) {
+	public void setAssetSelection(AssetSelection assetSelection) {
 		selection = assetSelection;
 		if (assetSelection.isPicked())
 			gallery.setSelection(assetSelection, true);
@@ -751,7 +751,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 	}
 
 	protected AssetSelection doGetAssetSelection() {
-		IStructuredSelection s = (IStructuredSelection) gallery.getSelection();
+		IStructuredSelection s = gallery.getStructuredSelection();
 		AssetSelection sel = new AssetSelection(s.size());
 		for (Object item : s.toArray())
 			sel.add((Asset) item);
@@ -763,7 +763,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		if (local) {
 			int i = 0;
 			@SuppressWarnings("unchecked")
-			Iterator<Object> iterator = ((IStructuredSelection) gallery.getSelection()).iterator();
+			Iterator<Object> iterator = gallery.getStructuredSelection().iterator();
 			while (iterator.hasNext()) {
 				Asset a = (Asset) iterator.next();
 				if (a.getFileState() != IVolumeManager.PEER && ++i >= 2)

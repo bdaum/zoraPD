@@ -35,6 +35,7 @@ public class GpsConfiguration {
 	public final boolean useWaypoints;
 	public final boolean edit;
 	public long interval;
+	public boolean excludeNoGoAreas;
 
 	public GpsConfiguration(int timeshift, int tolerance,boolean edit, boolean overwrite, boolean useWaypoints,
 			boolean includeCoordinates, boolean includeNames, FilterChain keywordFilter, boolean updateAltitude, long interval) {

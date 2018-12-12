@@ -45,9 +45,4 @@ public class FindUntaggedAction extends AbstractViewAction {
 					.postSelection(new StructuredSelection(dialog.getResult()));
 	}
 
-	@Override
-	public void setEnabled(boolean enabled) {
-		super.setEnabled(true);
-	}
-
 }

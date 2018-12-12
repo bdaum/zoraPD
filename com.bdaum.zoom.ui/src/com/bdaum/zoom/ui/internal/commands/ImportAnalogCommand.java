@@ -38,6 +38,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.image.ImageConstants;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.dialogs.ZProgressMonitorDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -109,8 +110,8 @@ public class ImportAnalogCommand extends AbstractCommandHandler {
 							|| !catRootFile.equals(core.getVolumeManager().getRootFile(parent));
 					ImportModeDialog imDialog = new ImportModeDialog(getShell(), foreignFolders);
 					if (imDialog.open() == ImportModeDialog.OK) {
-						ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(files.toArray(new File[files.size()]),
-								null, false, false, imDialog.isNewStructure(), null, true);
+						ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(StorageObject.fromFile(files), null,
+								false, false, imDialog.isNewStructure(), null, true);
 						WizardDialog wizardDialog = new WizardDialog(getShell(), wizard);
 						wizard.init(null, null);
 						wizardDialog.open();
@@ -130,23 +131,19 @@ public class ImportAnalogCommand extends AbstractCommandHandler {
 		dialog.getShell().setText(Constants.APPLICATION_NAME + " - " + Messages.ImportAnalogCommand_analog_import); //$NON-NLS-1$
 		dialog.run(true, true, new IRunnableWithProgress() {
 			public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
-				ExifTool exifTool = new ExifTool(null, false);
-				exifTool.setFast(2);
 				monitor.beginTask(Messages.ImportAnalogCommand_checking_files, fileNames.length);
-				try {
+				try (ExifTool exifTool = new ExifTool(null, false)) {
+					exifTool.setFast(3);
 					for (String fileName : fileNames) {
 						File f = new File(filterPath, fileName);
 						exifTool.reset(f);
 						Map<String, String> metadata = exifTool.getMetadata();
-						if (metadata.containsKey(QueryField.EXIF_MAKE.getExifToolKey())
-								|| metadata.containsKey(QueryField.EXIF_FOCALLENGTH.getExifToolKey()))
+						if (metadata.containsKey(QueryField.EXIF_MAKE.getExifToolKey()))
 							digitalFiles.add(f);
 						monitor.worked(1);
 						if (monitor.isCanceled())
 							throw new InterruptedException();
 					}
-				} finally {
-					exifTool.dispose();
 				}
 			}
 		});

@@ -118,6 +118,7 @@ import com.bdaum.zoom.core.IAssetFilter;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.Range;
+import com.bdaum.zoom.core.TetheredRange;
 import com.bdaum.zoom.core.db.ICollectionProcessor;
 import com.bdaum.zoom.core.db.IDbListener;
 import com.bdaum.zoom.core.db.IDbManager;
@@ -1545,7 +1546,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	 * @see com.bdaum.zoom.core.db.IDbManager#createLastImportCollection(java.util
 	 * .Date, boolean, java.lang.String)
 	 */
-	public Date createLastImportCollection(Date importDate, boolean cumulate, String description) {
+	public Date createLastImportCollection(Date importDate, boolean cumulate, String description, boolean tethered) {
 		Date previousImport = null;
 		GroupImpl group = getImportGroup();
 		GroupImpl subgroup = null;
@@ -1559,7 +1560,8 @@ public class DbManager implements IDbManager, IAdaptable {
 				if (value instanceof Range) {
 					Range range = (Range) value;
 					previousImport = (Date) range.getTo();
-					if (cumulate && (description == null || description.equals(coll.getDescription()))) {
+					if (range instanceof TetheredRange && tethered
+							|| cumulate && (description == null || description.equals(coll.getDescription()))) {
 						range.setTo(importDate);
 						store(range);
 						return previousImport;
@@ -1579,8 +1581,9 @@ public class DbManager implements IDbManager, IAdaptable {
 			labelTemplate = coll.getLabelTemplate();
 		}
 		SmartCollectionImpl newcoll = new SmartCollectionImpl(
-				cumulate ? Messages.DbManager_recent_bg_imports : Messages.DbManager_last_import, true, false, false,
-				false, description, 0, null, 0, null, showLabel, labelTemplate, 0, null);
+				tethered ? Messages.DbManager_tethered
+						: cumulate ? Messages.DbManager_recent_bg_imports : Messages.DbManager_last_import,
+				true, false, false, false, description, 0, null, 0, null, showLabel, labelTemplate, 0, null);
 		newcoll.setStringId(Constants.LAST_IMPORT_ID);
 		Criterion criterion = new CriterionImpl(QueryField.IMPORTDATE.getKey(), null, "", //$NON-NLS-1$
 				cumulate ? QueryField.BETWEEN : QueryField.DATEEQUALS, false);
@@ -1589,7 +1592,8 @@ public class DbManager implements IDbManager, IAdaptable {
 		newcoll.addSortCriterion(sortCrit);
 		newcoll.setGroup_rootCollection_parent(group.getStringId());
 		group.addRootCollection(Constants.LAST_IMPORT_ID);
-		criterion.setValue(cumulate ? new Range(importDate, importDate) : importDate);
+		criterion.setValue(tethered ? new TetheredRange(importDate, importDate)
+				: cumulate ? new Range(importDate, importDate) : importDate);
 		store(criterion);
 		store(sortCrit);
 		store(newcoll);
@@ -1670,7 +1674,7 @@ public class DbManager implements IDbManager, IAdaptable {
 						true);
 				int year = cal.get(Calendar.YEAR);
 				StringBuilder ksb = new StringBuilder(DATETIMEKEY);
-				ksb.append(String.valueOf(year));
+				ksb.append(year);
 				SmartCollectionImpl parentColl = createTimelineCollection(String.valueOf(year), null, timeLineGroup,
 						ksb.toString(), new GregorianCalendar(year, 0, 1),
 						new GregorianCalendar(year, 11, 31, 23, 59, 59), changeIndicator);

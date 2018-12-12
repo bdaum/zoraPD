@@ -38,11 +38,19 @@ public interface UiConstants {
 	String HOTSPOTS = "hotSpots"; //$NON-NLS-1$
 	String LABEL = "label"; //$NON-NLS-1$
 	String KEY = "key"; //$NON-NLS-1$
-
+	String DATA = "data"; //$NON-NLS-1$
+	String ID = "id"; //$NON-NLS-1$
+	String RGB = "rgb"; //$NON-NLS-1$
+	String CONTROL = "control"; //$NON-NLS-1$
+	String BUTTON = "button"; //$NON-NLS-1$
+	String MAP = "map"; //$NON-NLS-1$
+	String SELECTOR = "selector"; //$NON-NLS-1$
+	
 	//Fonts
 	String MESSAGEFONT = "com.bdaum.zoom.messageFont"; //$NON-NLS-1$
 	String MESSAGETITLEFONT = "com.bdaum.zoom.messageTitleFont"; //$NON-NLS-1$
 	String SELECTIONFONT = "com.bdaum.zoom.selectionFont"; //$NON-NLS-1$
+	String ITALICFONT = "com.bdaum.zoom.italicFont"; //$NON-NLS-1$
 	String VIEWERFONT = "com.bdaum.zoom.viewerFont"; //$NON-NLS-1$
 	String VIEWERTITLEFONT = "com.bdaum.zoom.viewerTitleFont"; //$NON-NLS-1$
 	String VIEWERBANNERFONT = "com.bdaum.zoom.viewerBannerFont"; //$NON-NLS-1$
@@ -60,5 +68,6 @@ public interface UiConstants {
 	String ALIGNMENT = "alignment"; //$NON-NLS-1$
 	String[] BOOLEANLABELS = new String[] { Messages.UiConstants_true, Messages.UiConstants_false };
 	String INFINITE = Messages.UiConstants_infinite;
+
 
 }

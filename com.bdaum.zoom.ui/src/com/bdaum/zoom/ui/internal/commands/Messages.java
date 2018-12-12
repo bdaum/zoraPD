@@ -17,6 +17,9 @@ public class Messages extends NLS {
 	public static String QuickFindControl_maxmin;
 	public static String QuickFindControl_search_impossible;
 	public static String QuickFindControl_text_similarity;
+	public static String TetheredShootingCommand_nothing_connected;
+	public static String TetheredShootingCommand_tethered;
+	public static String TetheredShootingCommand_tethered_active;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

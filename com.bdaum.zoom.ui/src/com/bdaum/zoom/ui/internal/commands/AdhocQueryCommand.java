@@ -26,6 +26,7 @@ import org.eclipse.swt.custom.BusyIndicator;
 
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.actions.Messages;
 import com.bdaum.zoom.ui.internal.dialogs.CollectionEditDialog;
@@ -46,7 +47,7 @@ public class AdhocQueryCommand extends AbstractCommandHandler {
 		if (dialog.open() == Window.OK) {
 			final SmartCollectionImpl coll = dialog.getResult();
 			activator.setLastAdhocQuery(coll);
-			BusyIndicator.showWhile(getShell().getDisplay(), () -> UiActivator.getDefault().getNavigationHistory(getActiveWorkbenchWindow())
+			BusyIndicator.showWhile(getShell().getDisplay(), () -> Ui.getUi().getNavigationHistory(getActiveWorkbenchWindow())
 					.postSelection(new StructuredSelection(coll)));
 		}
 	}

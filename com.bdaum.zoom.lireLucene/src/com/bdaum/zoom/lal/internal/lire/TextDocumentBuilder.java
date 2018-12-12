@@ -21,6 +21,8 @@ package com.bdaum.zoom.lal.internal.lire;
 
 import java.awt.image.BufferedImage;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -50,6 +52,7 @@ public class TextDocumentBuilder extends AbstractLocalDocumentBuilder {
 	private static final Field[] EMPTYFIELDS = new Field[0];
 	private final String fieldName;
 	private final Collection<String> textFields;
+	private final Set<String> terms = new HashSet<>();
 
 	public TextDocumentBuilder(String fieldName, Collection<String> textFields) {
 		this.fieldName = fieldName;
@@ -58,6 +61,7 @@ public class TextDocumentBuilder extends AbstractLocalDocumentBuilder {
 
 	public Document createDocument(BufferedImage image, String identifier) {
 		assert (identifier != null);
+		terms.clear();
 		Document doc = new Document();
 		String text = createTextDescriptorValue(identifier);
 		if (text != null) {
@@ -147,15 +151,17 @@ public class TextDocumentBuilder extends AbstractLocalDocumentBuilder {
 		return new Field[] { LireActivator.getDefault().createTextSearchField(fieldName, text) };
 	}
 
-	private static void addSentence(StringBuilder text, String v) {
+	private void addSentence(StringBuilder text, String v) {
 		if (v != null) {
 			v = v.trim();
-			if (v.length() > 1)
+			if (v.length() > 1 && !terms.contains(v)) {
+				terms.add(v);
 				text.append(v).append(". "); //$NON-NLS-1$
+			}
 		}
 	}
 
-	private static void serializeStruct(String id, StringBuilder text) {
+	private void serializeStruct(String id, StringBuilder text) {
 		IdentifiableObject obj = Core.getCore().getDbManager().obtainById(IdentifiableObject.class, id);
 		QueryField[] children = null;
 		if (obj instanceof LocationImpl)
@@ -170,31 +176,28 @@ public class TextDocumentBuilder extends AbstractLocalDocumentBuilder {
 					retrieveFieldValue(text, obj, qChild);
 	}
 
-	private static void retrieveFieldValue(StringBuilder text, Object obj, QueryField qfield) {
+	private void retrieveFieldValue(StringBuilder text, Object obj, QueryField qfield) {
 		if (qfield.getId() != qfield.getKey())
 			return;
 		Object value = qfield.obtainPlainFieldValue(obj);
 		String v = null;
-		if (value != null) {
-			if (value instanceof String[]) {
-				v = Core.toStringList((String[]) value, ";"); //$NON-NLS-1$
-				if (qfield == QueryField.IPTC_SUPPLEMENTALCATEGORIES)
-					v = v.replace('/', ';').replace('|', ';');
-			} else if (value instanceof Integer) {
-				int[] enumeration = (int[]) qfield.getEnumeration();
-				if (enumeration != null) {
-					int val = (Integer) value;
-					for (int i = 0; i < enumeration.length; i++)
-						if (val == enumeration[i]) {
-							v = qfield.getEnumLabels()[i];
-							break;
-						}
-				}
-			} else
-				v = value.toString();
-			if (v != null)
-				addSentence(text, v);
-		}
+		if (value instanceof String[]) {
+			v = Core.toStringList((String[]) value, ";"); //$NON-NLS-1$
+			if (qfield == QueryField.IPTC_SUPPLEMENTALCATEGORIES)
+				v = v.replace('/', ';').replace('|', ';');
+		} else if (value instanceof Integer) {
+			int[] enumeration = (int[]) qfield.getEnumeration();
+			if (enumeration != null) {
+				int val = (Integer) value;
+				for (int i = 0; i < enumeration.length; i++)
+					if (val == enumeration[i]) {
+						v = qfield.getEnumLabels()[i];
+						break;
+					}
+			}
+		} else if (value != null)
+			v = value.toString();
+		addSentence(text, v);
 	}
 
 }

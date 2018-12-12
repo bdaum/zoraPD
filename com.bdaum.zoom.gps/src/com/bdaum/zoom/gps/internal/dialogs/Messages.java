@@ -50,6 +50,10 @@ public class Messages extends NLS {
 	public static String TrackpointDialog_tracktimeformat;
 	public static String TrackpointDialog_wrong_gap_end_value;
 	public static String TrackpointDialog_wrong_gap_start_value;
+	public static String SearchDetailDialog_parameters;
+	public static String SearchDetailDialog_service;
+	public static String SearchDetailDialog_select_service_provider;
+	public static String SearchDetailDialog_loc_search_config;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

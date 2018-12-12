@@ -22,18 +22,19 @@ package com.bdaum.zoom.ui.internal.dialogs;
 
 import java.util.GregorianCalendar;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
@@ -46,6 +47,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.preferences.AutoPreferencePage;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
@@ -57,6 +59,8 @@ import com.bdaum.zoom.ui.widgets.CLink;
 
 public class GroupDialog extends ZTitleAreaDialog {
 
+	private static final String SETTINGSID = "groupDialog"; //$NON-NLS-1$
+	private static final String ACTIVETAB = "activeTab"; //$NON-NLS-1$
 	private static final String TIMELINE = "T"; //$NON-NLS-1$
 	private static final String LOCATIONS = "L"; //$NON-NLS-1$
 	private static final String IMPORTS = "I"; //$NON-NLS-1$
@@ -86,11 +90,13 @@ public class GroupDialog extends ZTitleAreaDialog {
 	private LabelConfigGroup labelConfigGroup;
 	private int showLabel;
 	private String labelTemplate;
+	private IDialogSettings settings;
 
 	public GroupDialog(Shell parentShell, final GroupImpl current, Group parent) {
 		super(parentShell, HelpContextIds.GROUP_DIALOG);
 		this.current = current;
 		this.parent = parent;
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 	}
 
 	@Override
@@ -173,7 +179,8 @@ public class GroupDialog extends ZTitleAreaDialog {
 		tabFolder = new CTabFolder(area, SWT.BORDER);
 		tabFolder.setLayoutData(new GridData(GridData.FILL_BOTH));
 		tabFolder.setSimple(false);
-		UiUtilities.createTabItem(tabFolder, Messages.GroupDialog_general, null).setControl(createGeneralGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.GroupDialog_general, null)
+				.setControl(createGeneralGroup(tabFolder));
 		if (isAuto() || isRating() || isImports() || isLocations() || isTimeline())
 			UiUtilities
 					.createTabItem(tabFolder,
@@ -181,6 +188,11 @@ public class GroupDialog extends ZTitleAreaDialog {
 					.setControl(createFilterGroup(tabFolder));
 		UiUtilities.createTabItem(tabFolder, Messages.GroupDialog_appearance, null)
 				.setControl(createAppearanceGroup(tabFolder));
+		try {
+			tabFolder.setSelection(settings.getInt(ACTIVETAB));
+		} catch (NumberFormatException e) {
+			// do nothing
+		}
 		return area;
 	}
 
@@ -190,9 +202,9 @@ public class GroupDialog extends ZTitleAreaDialog {
 		composite.setLayout(new GridLayout());
 
 		labelConfigGroup = new LabelConfigGroup(composite, true);
-		labelConfigGroup.addSelectionListener(new SelectionAdapter() {
+		labelConfigGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				validate();
 			}
 		});
@@ -213,9 +225,9 @@ public class GroupDialog extends ZTitleAreaDialog {
 			layout.marginWidth = 0;
 			autoArea.setLayout(layout);
 			overwriteButton = WidgetFactory.createCheckButton(autoArea, Messages.GroupDialog_overwrite, null);
-			overwriteButton.addSelectionListener(new SelectionAdapter() {
+			overwriteButton.addListener(new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					updateTable();
 					updateLink();
 				}
@@ -223,9 +235,9 @@ public class GroupDialog extends ZTitleAreaDialog {
 			link = new CLink(autoArea, SWT.NONE);
 			link.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 			link.setText(Messages.GroupDialog_configure);
-			link.addSelectionListener(new SelectionAdapter() {
+			link.addListener(new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					PreferencesUtil.createPreferenceDialogOn(getShell(), AutoPreferencePage.ID, new String[0],
 							AutoPreferencePage.RULES).open();
 				}
@@ -362,6 +374,7 @@ public class GroupDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
+		settings.put(ACTIVETAB, tabFolder.getSelectionIndex());
 		name = nameField.getText();
 		annotations = computeAnnotations();
 		showLabel = labelConfigGroup.getSelection();

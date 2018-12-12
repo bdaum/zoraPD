@@ -18,6 +18,8 @@ import com.bdaum.zoom.ui.internal.views.AbstractPropertiesView;
 
 @SuppressWarnings("restriction")
 public class GPSView extends AbstractPropertiesView {
+	
+	public static final String ID = "com.bdaum.zoom.ui.views.ExifView"; //$NON-NLS-1$
 
 	@Override
 	protected Object getFieldParent(QueryField element) {

@@ -30,7 +30,6 @@ public class Messages extends NLS {
 	public static String VideoViewer_n_of_m;
 	public static String VideoViewer_no_stream;
 	public static String VideoViewer_rights_not_sufficient;
-	public static String VideoViewer_video_viewer;
 	public static String VlcPlayingThread_error_initializing;
 	public static String VlcPlayingThread_error_playing;
 	static {

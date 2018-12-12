@@ -28,6 +28,7 @@ import org.eclipse.ui.operations.IWorkbenchOperationSupport;
 import com.bdaum.zoom.core.CatalogListener;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.actions.Messages;
 
@@ -50,7 +51,7 @@ public abstract class AbstractCatCommandHandler extends AbstractCommandHandler {
 	}
 
 	protected void resetNavigationHistory() {
-		UiActivator.getDefault().getNavigationHistory(getActiveWorkbenchWindow()).resetHistory();
+		Ui.getUi().getNavigationHistory(getActiveWorkbenchWindow()).resetHistory();
 	}
 
 	protected boolean preCatClose(boolean hideShell) {

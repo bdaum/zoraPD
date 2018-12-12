@@ -598,6 +598,11 @@
 		<topic href="html/tasks/import.html" />
 		<topic href="html/concepts/raw.html" />
 	</entry>
+	<entry keyword="darktable">
+		<topic href="html/reference/importPrefs.html" />
+		<topic href="html/tasks/import.html" />
+		<topic href="html/concepts/raw.html" />
+	</entry>
 	<entry keyword="Status">
 		<topic href="html/tasks/import.html" />
 	</entry>
@@ -662,7 +667,8 @@
 	</entry>
 	<entry keyword="Face detection">
 		<topic href="html/concepts/face.html" />
-		<topic href="html/reference/appearancePrefs.html" label="Catalog Properties - Face detection" />
+		<topic href="html/reference/appearancePrefs.html" label="Display of face regions" />
+		<topic href="html/reference/importPrefs.html" label="Import face data from camera" />
 	</entry>
 	<entry keyword="Persons">
 		<topic href="html/concepts/face.html" />
@@ -855,12 +861,18 @@
 		<topic href="html/reference/galleries.html#imagebuttons" label="Using the location pin" />
 	</entry>
 	<entry keyword="Voice notes">
-		<topic href="html/reference/galleries.html" label="Replay voice notes" />
-		<topic href="html/reference/galleries.html" label="Attach voice notes" />
-		<topic href="html/reference/galleries.html" label="Remove voice notes" />
-		<topic href="html/reference/slideshow.html#properties" label="Replay voice notes in slide show" />
-		<topic href="html/reference/slideshow.html" label="Record voice notes in slide show" />
+		<topic href="html/reference/galleries.html#voicenote" label="Replaying voice notes" />
+		<topic href="html/reference/galleries.html#voicenote" label="Attaching voice notes" />
+		<topic href="html/reference/galleries.html#voicenote" label="Removeing voice notes" />
+		<topic href="html/reference/slideshow.html#properties" label="Replaying voice notes in slide show" />
+		<topic href="html/reference/slideshow.html" label="Recording voice notes in slide show" />
 		<topic href="html/reference/slide.html" label="Suppress voice notes for individual slides" />
+	</entry>
+	<entry keyword="Text notes">
+		<topic href="html/reference/galleries.html#voicenote" label="Editing text notes" />
+	</entry>
+	<entry keyword="Drawing">
+		<topic href="html/reference/galleries.html#voicenote" label="Overlayed drawings" />
 	</entry>
 	<entry keyword="Regular expression">
 		<topic href="html/reference/regex.html" label="Regular expression syntax" />
@@ -879,5 +891,26 @@
 	<entry keyword="Units">
 		<topic href="html/reference/appearancePrefs.html" />
 	</entry>
-	
+	<entry keyword="Calendar">
+		<topic href="html/reference/calendar.html" />
+	</entry>
+	<entry keyword="Tethered Shooting">
+		<topic href="html/reference/tethered.html" label="Basics"/>
+		<topic href="html/reference/importPrefs.html" label="Starting on device insertion"/>
+	</entry>
+	<entry keyword="Comparing images">
+		<topic href="html/tasks/comparing.html" />
+	</entry>
+	<entry keyword="MTP">
+		<topic href="html/reference/importFromDevice.html" />
+	</entry>
+	<entry keyword="Media Transfer Protocol">
+		<topic href="html/reference/importFromDevice.html" />
+	</entry>
+	<entry keyword="PTP">
+		<topic href="html/reference/importFromDevice.html" />
+	</entry>
+	<entry keyword="Picture Transfer Protocol">
+		<topic href="html/reference/importFromDevice.html" />
+	</entry>
 </index>

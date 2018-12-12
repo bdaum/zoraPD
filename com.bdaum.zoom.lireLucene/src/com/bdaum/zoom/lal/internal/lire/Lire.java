@@ -56,8 +56,10 @@ import com.bdaum.zoom.lal.internal.LireActivator;
 import com.bdaum.zoom.lal.internal.lire.ui.dialogs.ConfigureSimilaritySearchDialog;
 import com.bdaum.zoom.lal.internal.lire.ui.dialogs.SearchSimilarDialog;
 import com.bdaum.zoom.lal.internal.lire.ui.dialogs.TextSearchDialog;
-import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.Ui;
 
+import net.semanticmetadata.lire.builders.DocumentBuilder;
+import net.semanticmetadata.lire.searchers.GenericFastImageSearcher;
 import net.semanticmetadata.lire.searchers.ImageDuplicates;
 import net.semanticmetadata.lire.searchers.ImageSearcher;
 
@@ -99,6 +101,7 @@ public class Lire implements ILireService {
 	public static Algorithm[] SupportedSimilarityAlgorithms;
 	
 	private Set<String> postponedIndexing = Collections.synchronizedSet(new HashSet<>(511));
+	private Set<String> fieldsToLoad = new HashSet<>(3);
 
 
 	/**
@@ -237,6 +240,12 @@ public class Lire implements ILireService {
 		ImageSearcher searcher = activator.getContentSearcher(method, Integer.MAX_VALUE);
 		if (searcher == null)
 			return null;
+		if (searcher instanceof GenericFastImageSearcher) {
+			fieldsToLoad.clear();
+			fieldsToLoad.add(((GenericFastImageSearcher)searcher).getFieldName());
+			fieldsToLoad.add(DocumentBuilder.FIELD_NAME_IDENTIFIER);
+			((GenericFastImageSearcher)searcher).setFieldsToLoad(fieldsToLoad);
+		}
 		IndexReader reader = null;
 		ArrayList<List<String>> duplicateList = null;
 		try {
@@ -278,12 +287,12 @@ public class Lire implements ILireService {
 		if (sm != null) {
 			IWorkbenchWindow window = adaptable.getAdapter(IWorkbenchWindow.class);
 			if (window != null)
-				UiActivator.getDefault().getNavigationHistory(window).postSelection(new StructuredSelection(sm));
+				Ui.getUi().getNavigationHistory(window).postSelection(new StructuredSelection(sm));
 		}
 	}
 
 	@Override
-	public boolean ShowConfigureSearch(IAdaptable adaptable, Point displayLocation) {
+	public boolean showConfigureSearch(IAdaptable adaptable, Point displayLocation) {
 		ConfigureSimilaritySearchDialog dialog = new ConfigureSimilaritySearchDialog(adaptable.getAdapter(Shell.class));
 		dialog.create();
 		if (displayLocation != null)

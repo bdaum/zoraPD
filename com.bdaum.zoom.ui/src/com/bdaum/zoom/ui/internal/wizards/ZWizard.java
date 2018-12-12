@@ -19,13 +19,29 @@
  */
 package com.bdaum.zoom.ui.internal.wizards;
 
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
-public abstract class ZWizard extends Wizard {
+public abstract class ZWizard extends Wizard implements IAdaptable {
 
 	private ZUiPlugin plugin;
+	protected IWorkbenchWindow window;
+	
+	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		if (workbench == null)
+			workbench = PlatformUI.getWorkbench();
+		window = workbench.getActiveWorkbenchWindow();
+		if (window == null)
+			window = workbench.getWorkbenchWindows()[0];
+	}
+
 
 	protected void setDialogSettings(ZUiPlugin plugin, String id) {
 		this.plugin = plugin;
@@ -35,6 +51,13 @@ public abstract class ZWizard extends Wizard {
 	protected void saveDialogSettings() {
 		if (plugin != null)
 			plugin.saveDialogSettings();
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public Object getAdapter(Class adapter) {
+		if (Shell.class.equals(adapter))
+			return window.getShell();
+		return null;
 	}
 
 }

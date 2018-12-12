@@ -19,15 +19,13 @@
  */
 package com.bdaum.zoom.ui.internal.commands;
 
-import java.io.File;
-import java.util.List;
-
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.custom.BusyIndicator;
 
-import com.bdaum.zoom.program.BatchUtilities;
+import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.actions.Messages;
 import com.bdaum.zoom.ui.internal.wizards.ImportFromDeviceWizard;
@@ -40,10 +38,10 @@ public class ImportDeviceCommand extends AbstractCommandHandler {
 	}
 
 	public void doRun() {
-		List<File> dcims;
+		StorageObject[] dcims;
 		while (true) {
-			dcims = BatchUtilities.findDCIMs();
-			if (!dcims.isEmpty())
+			dcims = Core.getCore().getVolumeManager().findDCIMs();
+			if (dcims.length > 0)
 				break;
 			MessageDialog dialog = new AcousticMessageDialog(getShell(),
 					Messages.ImportFromDeviceAction_Import_from_device, null,
@@ -52,8 +50,7 @@ public class ImportDeviceCommand extends AbstractCommandHandler {
 			if (dialog.open() > 0)
 				return;
 		}
-		ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(null, dcims.toArray(new File[dcims.size()]), true,
-				true, true, null, false);
+		ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(null, dcims, true, true, true, null, false);
 		WizardDialog wizardDialog = new WizardDialog(getShell(), wizard);
 		wizard.init(null, null);
 		wizardDialog.open();

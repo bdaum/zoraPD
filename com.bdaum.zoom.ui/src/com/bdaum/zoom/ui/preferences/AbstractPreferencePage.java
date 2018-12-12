@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -237,9 +238,9 @@ public abstract class AbstractPreferencePage extends PreferencePage implements I
 		link.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
 		link.setText(IDialogConstants.HELP_LABEL);
 		link.setToolTipText(IDialogConstants.HELP_LABEL);
-		link.addSelectionListener(new SelectionAdapter() {
+		link.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				helpPressed(parent);
 			}
 		});

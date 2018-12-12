@@ -89,6 +89,7 @@ import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.core.internal.VolumeManager;
+import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 
 @SuppressWarnings("restriction")
 public class MigrateOperation extends AbstractCloneCatOperation {
@@ -261,10 +262,11 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 						asset.setUri(migratedUri);
 						migratedVolume = extractVolume(migratedPath);
 						asset.setVolume(migratedVolume);
-						if (oldVoiceFileURI == null || !oldVoiceFileURI.startsWith("?")) { //$NON-NLS-1$
-							String migratedVoicePath = migrateUri(oldVoiceFileURI, oldVoiceVolume);
-							asset.setVoiceFileURI(migratedVoicePath.isEmpty() ? null : toUri(migratedVoicePath));
-							asset.setVoiceVolume(extractVolume(migratedVoicePath));
+						String voiceUri = AssetEnsemble.extractVoiceNote(asset);
+						if (voiceUri != null) {
+							String migratedVoicePath = migrateUri(voiceUri, oldVoiceVolume);
+							AssetEnsemble.insertVoiceNote(asset, extractVolume(migratedVoicePath),
+									migratedVoicePath.isEmpty() ? null : toUri(migratedVoicePath));
 						}
 					}
 					visited.add(assetId);
@@ -471,11 +473,11 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 				if (QueryField.URI.getKey().equals(crit.getField())) {
 					String uri = (String) value;
 					String path;
-					if (uri.startsWith(VolumeManager.FILE)) {
+					if (uri.startsWith(IVolumeManager.FILE)) {
 						try {
 							path = new File(new URI(uri)).getPath();
 						} catch (URISyntaxException e) {
-							path = uri.substring(VolumeManager.FILE.length()).replace('/', File.separatorChar);
+							path = uri.substring(IVolumeManager.FILE.length()).replace('/', File.separatorChar);
 						}
 						String migrated = migrate(path);
 						if (migrated.isEmpty()) {
@@ -538,7 +540,7 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 	}
 
 	private String migrateUri(String sourceUri, String volume) {
-		if (sourceUri == null || !sourceUri.startsWith(VolumeManager.FILE))
+		if (sourceUri == null || !sourceUri.startsWith(IVolumeManager.FILE))
 			return ""; //$NON-NLS-1$
 		try {
 			String path = new File(new URI(sourceUri)).getPath();

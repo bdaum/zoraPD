@@ -172,7 +172,7 @@ public class AutoRuleDialog extends ZTitleAreaDialog implements ModifyListener {
 		intervalField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		intervalField.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
-				QueryField qfield = (QueryField) ((IStructuredSelection) fieldCombo.getSelection()).getFirstElement();
+				QueryField qfield = (QueryField) fieldCombo.getStructuredSelection().getFirstElement();
 				if (qfield != null)
 					setResultingInterval(compileInterval(intervalField.getText(), qfield), qfield);
 				validate();
@@ -287,7 +287,7 @@ public class AutoRuleDialog extends ZTitleAreaDialog implements ModifyListener {
 
 	protected void fillFieldCombo() {
 		fields.clear();
-		Object g = ((IStructuredSelection) groupCombo.getSelection()).getFirstElement();
+		Object g = groupCombo.getStructuredSelection().getFirstElement();
 		for (String id : QueryField.getQueryFieldKeys()) {
 			QueryField mainField = QueryField.findQueryField(id);
 			if (mainField.belongsTo(g) && mainField.hasLabel() && mainField.getAutoPolicy() != 0)

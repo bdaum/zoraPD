@@ -25,11 +25,11 @@ import java.util.List;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
@@ -81,19 +81,19 @@ public class PDFTargetFilePage extends ColoredWizardPage {
 			fileName = "*.pdf"; //$NON-NLS-1$
 			fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY, Messages.PDFTargetFilePage_target_file,
 					true, filterExtensions, filterNames, path, fileName, true, dialogSettings);
-			fileEditor.addModifyListener(new ModifyListener() {
-				public void modifyText(ModifyEvent e) {
+			fileEditor.addListener(new Listener() {
+				public void handleEvent(Event event) {
 					path = fileEditor.getFilterPath();
 					validatePage();
 				}
 			});
 		} else {
 			outputTargetGroup = new OutputTargetGroup(composite,
-					new GridData(GridData.FILL, GridData.BEGINNING, true, false, 3, 1), new ModifyListener() {
-						public void modifyText(ModifyEvent e) {
+					new GridData(GridData.FILL, GridData.BEGINNING, true, false, 3, 1), new Listener() {
+						public void handleEvent(Event e) {
 							validatePage();
 						}
-					}, false, true);
+					}, false, true, false);
 			new Label(composite, SWT.NONE).setText(Messages.PDFTargetFilePage_weblink);
 			linkField = new Text(composite, SWT.BORDER);
 			linkField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));

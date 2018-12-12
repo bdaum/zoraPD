@@ -13,32 +13,62 @@ package com.bdaum.zoom.gps.internal.preferences;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
+import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.ISpellCheckingService;
+import com.bdaum.zoom.css.CSSProperties;
+import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.css.internal.CssActivator;
+import com.bdaum.zoom.gps.CoordinatesListener;
 import com.bdaum.zoom.gps.geonames.IGeocodingService;
 import com.bdaum.zoom.gps.geonames.IGeocodingService.Parameter;
+import com.bdaum.zoom.gps.geonames.Place;
+import com.bdaum.zoom.gps.internal.GeoArea;
 import com.bdaum.zoom.gps.internal.GpsActivator;
+import com.bdaum.zoom.gps.internal.GpsUtilities;
 import com.bdaum.zoom.gps.internal.HelpContextIds;
+import com.bdaum.zoom.gps.internal.dialogs.SearchDetailDialog;
+import com.bdaum.zoom.gps.widgets.IMapComponent;
+import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
@@ -46,9 +76,168 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.CLink;
+import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
 public class GpsPreferencePage extends AbstractPreferencePage {
+
+	public class EditNogoDialog extends ZTitleAreaDialog {
+
+		private static final String SETTINGSID = "com.bdaum.zoom.gps.nogoDialog"; //$NON-NLS-1$
+		private static final String LATITUDE = "latitude"; //$NON-NLS-1$
+		private static final String LONGITUDE = "longitude"; //$NON-NLS-1$
+		private static final String KM = "km"; //$NON-NLS-1$
+		private IMapComponent mapComponent;
+		private IDialogSettings dialogSettings;
+		private GeoArea area;
+		private double latitude = Double.NaN, longitude = Double.NaN, diameter = 0.1d;
+		private String areaName;
+		private Text nameField;
+		private NumericControl diameterScale;
+		private char unit;
+
+		public EditNogoDialog(Shell parentShell, GeoArea area) {
+			super(parentShell);
+			this.area = area;
+		}
+
+		@Override
+		public void create() {
+			super.create();
+			setTitle(Messages.getString("GpsPreferencePage.edit_nogo")); //$NON-NLS-1$
+			setMessage(Messages.getString("GpsPreferencePage.exempt_geotagging")); //$NON-NLS-1$
+			validateGeo();
+			getShell().pack();
+		}
+
+		private void validateGeo() {
+			String errorMessage = null;
+			if (nameField.getText().trim().isEmpty())
+				errorMessage = Messages.getString("GpsPreferencePage.specify_area_name"); //$NON-NLS-1$
+			else if (Double.isNaN(latitude) || Double.isNaN(longitude))
+				errorMessage = Messages.getString("GpsPreferencePage.define_center"); //$NON-NLS-1$
+			setErrorMessage(errorMessage);
+			getButton(OK).setEnabled(errorMessage == null);
+		}
+
+		@Override
+		protected Control createDialogArea(Composite parent) {
+			Composite dialogArea = (Composite) super.createDialogArea(parent);
+			dialogSettings = getDialogSettings(GpsActivator.getDefault(), SETTINGSID);
+			Composite composite = new Composite(dialogArea, SWT.NONE);
+			composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			composite.setLayout(new GridLayout());
+			mapComponent = GpsActivator.getMapComponent(GpsActivator.findCurrentMappingSystem());
+			Place mapPosition = null;
+			try {
+				if (area != null) {
+					latitude = area.getLatitude();
+					longitude = area.getLongitude();
+				} else {
+					latitude = dialogSettings.getDouble(LATITUDE);
+					longitude = dialogSettings.getDouble(LONGITUDE);
+				}
+				mapPosition = new Place(latitude, longitude);
+			} catch (NumberFormatException e) {
+				// do nothing
+			}
+			if (mapComponent != null) {
+				mapComponent.createComponent(composite, true);
+				mapComponent.addCoordinatesListener(new CoordinatesListener() {
+					public void setCoordinates(String[] assetId, double latitude, double longitude, int zoom, int type,
+							String uuid) {
+						EditNogoDialog.this.latitude = latitude;
+						EditNogoDialog.this.longitude = longitude;
+						mapComponent.setArea(latitude, longitude, Core.toKm(diameter, unit));
+						validateGeo();
+					}
+				});
+				mapComponent.getControl().setLayoutData(new GridData(800, 600));
+				mapComponent.setInput(mapPosition, 8, null, null, null, IMapComponent.AREA);
+				if (area != null)
+					dialogArea.getDisplay().timerExec(300,
+							() -> mapComponent.setArea(latitude, longitude, Core.toKm(diameter, unit)));
+			}
+			Composite controlGroup = new Composite(dialogArea, SWT.NONE);
+			controlGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+			controlGroup.setLayout(new GridLayout(4, false));
+			new Label(controlGroup, SWT.NONE).setText(Messages.getString("GpsPreferencePage.area_name")); //$NON-NLS-1$
+			nameField = new Text(controlGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
+			GridData layoutData = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
+			layoutData.widthHint = 250;
+			nameField.setLayoutData(layoutData);
+			nameField.addVerifyListener(new VerifyListener() {
+				@Override
+				public void verifyText(VerifyEvent e) {
+					if (e.keyCode == ',')
+						e.doit = false;
+				}
+			});
+			nameField.addModifyListener(new ModifyListener() {
+				@Override
+				public void modifyText(ModifyEvent e) {
+					validateGeo();
+				}
+			});
+			Label label = new Label(controlGroup, SWT.NONE);
+			layoutData = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
+			layoutData.horizontalIndent = 20;
+			label.setLayoutData(layoutData);
+			label.setText(Messages.getString("GpsPreferencePage.diameter")); //$NON-NLS-1$
+			unit = Core.getCore().getDbFactory().getDistanceUnit();
+			label.setText(NLS.bind(Messages.getString("GpsPreferencePage.diameter"), //$NON-NLS-1$
+					unit == 'm' ? "mi" : unit == 'n' ? "NM" : "km")); //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+			diameterScale = new NumericControl(controlGroup, SWT.NONE);
+			diameterScale.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+			diameterScale.setDigits(2);
+			diameterScale.setMinimum(2);
+			diameterScale.setMaximum(500);
+			diameterScale.setIncrement(2);
+			diameterScale.setPageIncrement(10);
+			diameterScale.setLogrithmic(true);
+			diameterScale.addListener(new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					diameter = diameterScale.getSelection() / 100d;
+					if (mapComponent != null)
+						mapComponent.setArea(latitude, longitude, Core.toKm(diameter, unit));
+				}
+			});
+			try {
+				if (area != null) {
+					nameField.setText(area.getName());
+					diameter = 2 * Core.fromKm(area.getKm(), unit);
+				} else
+					diameter = 2 * Core.fromKm(dialogSettings.getDouble(KM), unit);
+				diameterScale.setSelection((int) (diameter * 100));
+			} catch (NumberFormatException e1) {
+				diameterScale.setSelection(10);
+			}
+			return dialogArea;
+		}
+
+		@Override
+		protected void okPressed() {
+			areaName = nameField.getText();
+			diameter = diameterScale.getSelection() / 100d;
+			dialogSettings.put(KM, Core.toKm(diameter / 2, unit));
+			dialogSettings.put(LATITUDE, latitude);
+			dialogSettings.put(LONGITUDE, longitude);
+			super.okPressed();
+		}
+
+		public GeoArea getArea() {
+			double radius = Core.toKm(diameter / 2, unit);
+			if (area == null)
+				return new GeoArea(areaName, latitude, longitude, radius);
+			area.setKm(radius);
+			area.setLatitude(latitude);
+			area.setLongitude(longitude);
+			area.setName(areaName);
+			return area;
+		}
+
+	}
 
 	public static final String ID = "com.bdaum.zoom.gps.preferences.GpsPreferencePage"; //$NON-NLS-1$
 	public static final Object ACCOUNTS = "accounts"; //$NON-NLS-1$
@@ -69,6 +258,11 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 	private int dflt = -1;
 	private CheckboxButton editButton;
 	private Spinner reqhField;
+	private Button addButton;
+	private Button editNogoButton;
+	private Button deleteButton;
+	private TableViewer nogoViewer;
+	private List<GeoArea> nogoAreas = new ArrayList<>(5);
 
 	public GpsPreferencePage() {
 		setDescription(Messages.getString("GpsPreferencePage.how_gps_tracker_data_is_applied")); //$NON-NLS-1$
@@ -97,6 +291,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 				.setControl(createWebServiceGroup(tabFolder));
 		initTabFolder(0);
 		fillValues();
+		updateTableButtons();
 	}
 
 	private Composite createWebServiceGroup(Composite parent) {
@@ -110,8 +305,11 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 
 	private void createSelectionGroup(Composite composite) {
 		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("AdvancedPreferencePage.webservice")); //$NON-NLS-1$
-		combo = new Combo(group, SWT.DROP_DOWN);
-		combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		Composite comboGroup = new Composite(group, SWT.NONE);
+		comboGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
+		comboGroup.setLayout(new GridLayout(2, false));
+		combo = new Combo(comboGroup, SWT.DROP_DOWN);
+		combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		IGeocodingService[] namingServices = GpsActivator.getDefault().getNamingServices();
 		serviceNames = new String[namingServices.length];
 		for (int i = 0; i < namingServices.length; i++) {
@@ -133,6 +331,17 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 					combo.setToolTipText(""); //$NON-NLS-1$
 			}
 		});
+		Button button = new Button(comboGroup, SWT.PUSH);
+		button.setText(Messages.getString("GpsPreferencePage.details")); //$NON-NLS-1$
+		button.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				SearchDetailDialog dialog = new SearchDetailDialog(getShell(), combo.getText());
+				if (dialog.open() == SearchDetailDialog.OK)
+					setNamingServiceCombo(dialog.getResult());
+			}
+		});
+		
 		new Label(group, SWT.NONE).setText(Messages.getString("GpsPreferencePage.maxRequests")); //$NON-NLS-1$
 		reqhField = new Spinner(group, SWT.BORDER);
 		reqhField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
@@ -142,6 +351,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 		reqhField.setPageIncrement(100);
 	}
 
+	@SuppressWarnings("unused")
 	private void createPremiumGroup(Composite composite) {
 		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("AdvancedPreferencePage.premium")); //$NON-NLS-1$
 		Label label = new Label(group, SWT.NONE);
@@ -162,6 +372,11 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 				field.setToolTipText(parameter.getTooltip());
 				field.addModifyListener(modifyListener);
 				keyMap.put(parameter.getId(), field);
+				String explanation = parameter.getExplanation();
+				if (explanation != null && !explanation.isEmpty()) {
+					new Label(group, SWT.NONE);
+					new Label(group, SWT.WRAP).setText(explanation);
+				}
 			}
 			String link = service.getLink();
 			if (link != null && !link.isEmpty())
@@ -176,9 +391,9 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 		label.setText(NLS.bind(Messages.getString("GpsPreferencePage.website"), premium)); //$NON-NLS-1$
 		CLink clink = new CLink(group, SWT.NONE);
 		clink.setText(link);
-		clink.addSelectionListener(new SelectionAdapter() {
+		clink.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				try {
 					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(link));
 				} catch (PartInitException | MalformedURLException e1) {
@@ -211,10 +426,10 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 			}
 			if (msg != null && !msg.isEmpty()) {
 				label.setText(msg);
-				label.setData("id", "errors"); //$NON-NLS-1$//$NON-NLS-2$
+				label.setData(CSSProperties.ID, CSSProperties.ERRORS); 
 			} else {
 				label.setText(NLS.bind(Messages.getString("GpsPreferencePage.website"), name)); //$NON-NLS-1$
-				label.setData("id", null); //$NON-NLS-1$
+				label.setData(CSSProperties.ID, null); 
 			}
 			CssActivator.getDefault().setColors(label);
 		}
@@ -233,8 +448,20 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 		timeShiftField.setSelection(preferenceStore.getInt(PreferenceConstants.TIMESHIFT));
 		toleranceHourField.setSelection(preferenceStore.getInt(PreferenceConstants.TOLERANCE) / 60);
 		toleranceMinuteField.setSelection(preferenceStore.getInt(PreferenceConstants.TOLERANCE) % 60);
+		GpsUtilities.getGeoAreas(preferenceStore, nogoAreas);
+		nogoViewer.setInput(nogoAreas);
 		reqhField.setSelection(preferenceStore.getInt(PreferenceConstants.HOURLYLIMIT));
 		String nservice = preferenceStore.getString(PreferenceConstants.NAMINGSERVICE);
+		setNamingServiceCombo(nservice);
+		for (IGeocodingService service : GpsActivator.getDefault().getNamingServices())
+			for (Parameter parameter : service.getParameters()) {
+				CheckedText field = keyMap.get(parameter.getId());
+				field.setText(preferenceStore.getString(parameter.getId()));
+				field.setHint(parameter.getHint());
+			}
+	}
+
+	private void setNamingServiceCombo(String nservice) {
 		int select = dflt;
 		for (int i = 0; i < serviceNames.length; i++)
 			if (serviceNames[i].equals(nservice))
@@ -246,12 +473,6 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 			if (description != null && !description.isEmpty())
 				combo.setToolTipText(description);
 		}
-		for (IGeocodingService service : GpsActivator.getDefault().getNamingServices())
-			for (Parameter parameter : service.getParameters()) {
-				CheckedText field = keyMap.get(parameter.getId());
-				field.setText(preferenceStore.getString(parameter.getId()));
-				field.setHint(parameter.getHint());
-			}
 	}
 
 	@Override
@@ -272,6 +493,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 				preferenceStore.getDefaultInt(PreferenceConstants.TIMESHIFT));
 		preferenceStore.setValue(PreferenceConstants.TOLERANCE,
 				preferenceStore.getDefaultInt(PreferenceConstants.TOLERANCE));
+		preferenceStore.setValue(PreferenceConstants.NOGO, preferenceStore.getDefaultString(PreferenceConstants.NOGO));
 		preferenceStore.setValue(PreferenceConstants.NAMINGSERVICE,
 				preferenceStore.getDefaultString(PreferenceConstants.NAMINGSERVICE));
 		preferenceStore.setValue(PreferenceConstants.HOURLYLIMIT,
@@ -293,6 +515,14 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 		preferenceStore.setValue(PreferenceConstants.TIMESHIFT, timeShiftField.getSelection());
 		preferenceStore.setValue(PreferenceConstants.TOLERANCE,
 				toleranceHourField.getSelection() * 60 + toleranceMinuteField.getSelection());
+		NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+		nf.setMaximumFractionDigits(8);
+		StringBuilder sb = new StringBuilder();
+		for (GeoArea geoArea : nogoAreas)
+			sb.append(geoArea.getName()).append(',').append(nf.format(geoArea.getLatitude())).append(',')
+					.append(nf.format(geoArea.getLongitude())).append(',').append(nf.format(geoArea.getKm()))
+					.append(';');
+		preferenceStore.setValue(PreferenceConstants.NOGO, sb.toString());
 		preferenceStore.setValue(PreferenceConstants.NAMINGSERVICE, combo.getText());
 		preferenceStore.setValue(PreferenceConstants.HOURLYLIMIT, reqhField.getSelection());
 		for (IGeocodingService service : GpsActivator.getDefault().getNamingServices())
@@ -337,6 +567,75 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 				null);
 		altitudeButton = WidgetFactory.createCheckButton(group, Messages.getString("GpsPreferencePage.Update_altitude"), //$NON-NLS-1$
 				null);
+		new Label(group, SWT.NONE).setText(Messages.getString("GpsPreferencePage.nogo_areas")); //$NON-NLS-1$
+		Composite viewerGroup = new Composite(group, SWT.NONE);
+		viewerGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		GridLayout layout = new GridLayout(2, false);
+		layout.marginHeight = 0;
+		viewerGroup.setLayout(layout);
+		nogoViewer = new TableViewer(viewerGroup, SWT.SINGLE | SWT.BORDER | SWT.V_SCROLL);
+		GridData layoutData = new GridData(200, 100);
+		layoutData.horizontalIndent = 16;
+		nogoViewer.getControl().setLayoutData(layoutData);
+		TableViewerColumn col1 = new TableViewerColumn(nogoViewer, SWT.NONE);
+		col1.getColumn().setWidth(200);
+		col1.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
+		nogoViewer.setContentProvider(ArrayContentProvider.getInstance());
+		nogoViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				updateTableButtons();
+			}
+		});
+		Composite buttonGroup = new Composite(viewerGroup, SWT.NONE);
+		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.FILL, false, true));
+		buttonGroup.setLayout(new GridLayout(1, false));
+		addButton = new Button(buttonGroup, SWT.PUSH);
+		addButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+		addButton.setText(Messages.getString("GpsPreferencePage.add")); //$NON-NLS-1$
+		addButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				EditNogoDialog dialog = new EditNogoDialog(getShell(), null);
+				if (dialog.open() == EditNogoDialog.OK) {
+					GeoArea area = dialog.getArea();
+					nogoAreas.add(area);
+					nogoViewer.add(area);
+					nogoViewer.setSelection(new StructuredSelection(area), true);
+					updateTableButtons();
+				}
+			}
+		});
+		editNogoButton = new Button(buttonGroup, SWT.PUSH);
+		editNogoButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+		editNogoButton.setText(Messages.getString("GpsPreferencePage.edit")); //$NON-NLS-1$
+		editNogoButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				GeoArea area = (GeoArea) nogoViewer.getStructuredSelection().getFirstElement();
+				EditNogoDialog dialog = new EditNogoDialog(getShell(), area);
+				if (dialog.open() == EditNogoDialog.OK)
+					nogoViewer.update(area, null);
+			}
+		});
+		deleteButton = new Button(buttonGroup, SWT.PUSH);
+		deleteButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+		deleteButton.setText(Messages.getString("GpsPreferencePage.remove")); //$NON-NLS-1$
+		deleteButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				GeoArea area = (GeoArea) nogoViewer.getStructuredSelection().getFirstElement();
+				nogoAreas.remove(area);
+				nogoViewer.remove(area);
+				updateButtons();
+			}
+		});
+	}
+
+	protected void updateTableButtons() {
+		boolean enabled = !nogoViewer.getSelection().isEmpty();
+		editNogoButton.setEnabled(enabled);
+		deleteButton.setEnabled(enabled);
 	}
 
 	private void createKeywordGroup(Composite composite) {

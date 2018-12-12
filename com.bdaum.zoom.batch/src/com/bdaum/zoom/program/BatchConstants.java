@@ -30,12 +30,11 @@ public interface BatchConstants {
 	public static final String APPNAME = ImageConstants.APPNAME;
 	public static final String APP_PREFERENCES = "ZoraPD_Preferences.zpf"; //$NON-NLS-1$
 	// Platforms
-	public static final boolean WIN32 = Platform.getOS().equals(
-			Platform.OS_WIN32);
-	public static final boolean OSX = Platform.getOS().equals(
-			Platform.OS_MACOSX);
-	public static final boolean LINUX = Platform.getOS().equals(
-			Platform.OS_LINUX);
+	public static final boolean WIN32 = Platform.getOS().equals(Platform.OS_WIN32);
+	public static final boolean OSX = Platform.getOS().equals(Platform.OS_MACOSX);
+	public static final boolean LINUX = Platform.getOS().equals(Platform.OS_LINUX);
+	public static final boolean ARCH64 = Platform.getOSArch().equals(Platform.ARCH_X86_64)
+			|| Platform.getOSArch().equals(Platform.ARCH_IA64);
 	// Catalog
 	public static final String CATFILETYPE = "com.bdaum.zoom.cat"; //$NON-NLS-1$
 	public static final String CATEXTENSION = ".zdb"; //$NON-NLS-1$
@@ -44,7 +43,7 @@ public interface BatchConstants {
 	public static final int MAXPATHLENGTH = OSX ? 1023 : LINUX ? 4096 : 255;
 	// Jobs
 	public static final long MAXTEMPFILEAGE = 30 * 1000L;
-	public static final String DAEMONS = "com.bdaum.zoom.demon"; //$NON-NLS-1$;
+	public static final String DAEMONS = "com.bdaum.zoom.demon"; //$NON-NLS-1$ ;
 	public static final String DROPINFOLDER = "dropins"; //$NON-NLS-1$
 
 }

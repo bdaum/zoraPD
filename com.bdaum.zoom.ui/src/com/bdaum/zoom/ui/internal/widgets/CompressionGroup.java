@@ -22,11 +22,11 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
@@ -34,7 +34,6 @@ public class CompressionGroup {
 
 	private static final String QUALITY = "jpegQuality"; //$NON-NLS-1$
 	private static final String METHOD = "method"; //$NON-NLS-1$
-
 
 	private static final double[] sizeTab = new double[] { 0.62, 0.62, 0.62, 0.62, 0.62, 0.63, 0.63, 0.63, 0.63, 0.63,
 			0.64, 0.64, 0.64, 0.64, 0.64, 0.65, 0.65, 0.65, 0.65, 0.65, 0.66, 0.66, 0.66, 0.66, 0.66, 0.67, 0.67, 0.67,
@@ -128,12 +127,12 @@ public class CompressionGroup {
 		return sizeTab[getJpegQuality()];
 	}
 
-	public void addSelectionListener(SelectionListener listener) {
-		numControl.addSelectionListener(listener);
+	public void addListener(Listener listener) {
+		numControl.addListener(listener);
 	}
 
-	public void removeSelectionListener(SelectionListener listener) {
-		numControl.addSelectionListener(listener);
+	public void removeListener(Listener listener) {
+		numControl.addListener(listener);
 	}
 
 	public boolean getUseWebp() {

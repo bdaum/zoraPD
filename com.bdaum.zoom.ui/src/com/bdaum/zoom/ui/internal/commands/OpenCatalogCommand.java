@@ -81,7 +81,7 @@ public class OpenCatalogCommand extends AbstractCatCommandHandler {
 	}
 
 	public static void checkPausedFolderWatch(Shell shell, IDbManager dbManager) {
-		if (dbManager.getFile() != null && !shell.isDisposed()) {
+		if (dbManager.getFile() != null && shell != null && !shell.isDisposed()) {
 			Meta meta = dbManager.getMeta(true);
 			if (meta.getPauseFolderWatch() && AcousticMessageDialog.openQuestion(shell,
 					Messages.OpenCatalogCommand_paused, Messages.OpenCatalogCommand_resume_watch)) {

@@ -41,6 +41,7 @@ import com.bdaum.zoom.core.db.IDbErrorHandler;
 import com.bdaum.zoom.core.db.IDbFactory;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.DiskFullException;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
@@ -202,24 +203,17 @@ public class ArchiveCommand extends AbstractCommandHandler {
 											asset.setUri(targetFile.toURI().toString());
 											String volume = volumeManager.getVolumeForFile(targetFile);
 											asset.setVolume(volume);
-											if (asset.getVoiceFileURI() == null
-													|| !asset.getVoiceFileURI().startsWith("?")) { //$NON-NLS-1$
-												URI voiceUri = volumeManager.findVoiceFile(asset);
-												if (voiceUri != null) {
-													String voiceName = Core.getFileName(uri, false);
-													File voiceTargetFile = BatchUtilities.makeUniqueFile(output, name,
-															Core.getFileName(voiceUri, true)
-																	.substring(voiceName.length()));
-													BatchUtilities.copyFile(new File(voiceUri), voiceTargetFile, null);
-													if (fileReadOnly)
-														voiceTargetFile.setReadOnly();
-													asset.setVoiceFileURI(voiceTargetFile.toURI().toString());
-													asset.setVoiceVolume(volume);
-												} else {
-													asset.setVoiceFileURI(null);
-													asset.setVoiceVolume(null);
-												}
-											}
+											URI voiceUri = volumeManager.findVoiceFile(asset);
+											if (voiceUri != null) {
+												String voiceName = Core.getFileName(uri, false);
+												File voiceTargetFile = BatchUtilities.makeUniqueFile(output, name,
+														Core.getFileName(voiceUri, true).substring(voiceName.length()));
+												BatchUtilities.copyFile(new File(voiceUri), voiceTargetFile, null);
+												if (fileReadOnly)
+													voiceTargetFile.setReadOnly();
+												AssetEnsemble.insertVoiceNote(asset, volume, voiceTargetFile.toURI().toString());
+											} else
+												AssetEnsemble.insertVoiceNote(asset, null, null);
 											for (IRecipeDetector recipeDetector : recipeDetectors)
 												recipeDetector.archiveRecipes(output, uri.toString(), asset.getUri(),
 														fileReadOnly);

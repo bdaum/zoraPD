@@ -89,6 +89,7 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 	private String[] keywords;
 
 	public QuickFindControl() {
+		super();
 	}
 
 	public QuickFindControl(String id) {
@@ -177,7 +178,7 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 			else {
 				KeywordSearchDialog dialog = new KeywordSearchDialog(getWorkbenchWindow().getShell(), text);
 				if (dialog.open() == Window.OK)
-					UiActivator.getDefault().getNavigationHistory(getWorkbenchWindow())
+					Ui.getUi().getNavigationHistory(getWorkbenchWindow())
 							.postSelection(new StructuredSelection(dialog.getResult()));
 			}
 		} else {
@@ -341,7 +342,7 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 										Constants.INHERIT_LABEL, null, 0, null);
 								collection.addCriterion(new CriterionImpl(ICollectionProcessor.SIMILARITY, null,
 										newOptions, queryOptions.getScore(), false));
-								UiActivator.getDefault().getNavigationHistory(getWorkbenchWindow())
+								Ui.getUi().getNavigationHistory(getWorkbenchWindow())
 										.postSelection(new StructuredSelection(collection));
 							}
 						}
@@ -355,7 +356,7 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 		Point displayLocation = inputField.toDisplay(inputField.getLocation());
 		displayLocation.y += 15;
 		displayLocation.x += 20;
-		return Core.getCore().getDbFactory().getLireService(true).ShowConfigureSearch(this, displayLocation);
+		return Core.getCore().getDbFactory().getLireService(true).showConfigureSearch(this, displayLocation);
 	}
 
 	@Override

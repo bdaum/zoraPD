@@ -81,13 +81,13 @@ public class VirtualQueryComputer {
 			// Supports only NOTGREATER
 			@Override
 			protected Constraint computeConstraint(Query query, Object value, int rel, CollectionProcessor processor) {
-				Double[] values = (Double[]) value;
-				Point2D.Double p1 = locationFrom(values[0], values[1], values[2] * SQRT2, 45d,
-						Core.getCore().getDbFactory().getDistanceUnit());
+				Object[] values = (Object[]) value;
+				Point2D.Double p1 = locationFrom((Double) values[0], (Double) values[1], (Double) values[2] * SQRT2,
+						45d, Core.getCore().getDbFactory().getDistanceUnit());
 				double latmax = Math.min(90, p1.x);
-				double latmin = Math.max(-90, 2 * values[0] - p1.x);
+				double latmin = Math.max(-90, 2 * (Double) values[0] - p1.x);
 				double lonmax = p1.y;
-				double lonmin = 2 * values[1] - lonmax;
+				double lonmin = 2 * (Double) values[1] - lonmax;
 				Constraint latConstraint = query.descend(QueryField.EXIF_GPSLATITUDE.getKey()).constrain(latmin)
 						.smaller().not();
 				latConstraint = query.descend(QueryField.EXIF_GPSLATITUDE.getKey()).constrain(latmax).greater().not()
@@ -102,23 +102,13 @@ public class VirtualQueryComputer {
 				if (lonmax > 360)
 					lonConstraint = lonConstraint.or(query.descend(QueryField.EXIF_GPSLONGITUDE.getKey())
 							.constrain(lonmax - 360).greater().not().and(lonConstraint));
-				processor.addPostProcessor(new GeographicPostProcessor(values[0], values[1], values[2]));
+				processor.addPostProcessor(new GeographicPostProcessor((Double) values[0], (Double) values[1],
+						(Double) values[2], values.length > 3 ? (Character) values[3] : 0));
 				return latConstraint.and(lonConstraint);
 			}
 
 			private Point2D.Double locationFrom(double lat1, double lon1, double dist, double azimuth, char unit) {
-				switch (unit) {
-				case 'K':
-				case 'k':
-					break;
-				case 'N':
-				case 'n':
-					dist *= 1.852;
-					break;
-				default:
-					dist *= 1.609344;
-				}
-				double b = dist / EARTHRADIUS;
+				double b = Core.toKm(dist, unit) / EARTHRADIUS;
 				double az = Math.toRadians(azimuth);
 				double l1 = Math.toRadians(90 - lat1);
 				double sin_b = Math.sin(b);

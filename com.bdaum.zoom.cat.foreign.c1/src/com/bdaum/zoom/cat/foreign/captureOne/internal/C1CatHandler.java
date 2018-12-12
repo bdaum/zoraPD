@@ -34,6 +34,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.ImportState;
+import com.bdaum.zoom.mtp.StorageObject;
 
 @SuppressWarnings("restriction")
 public class C1CatHandler extends AbstractForeignCatHandler {
@@ -100,7 +101,7 @@ public class C1CatHandler extends AbstractForeignCatHandler {
 				if (caption != null && !caption.isEmpty())
 					importState.overlayMap.put(
 							QueryField.IPTC_HEADLINE.getExifToolKey(), caption);
-				return mediaSupport.importFile(file, extension, importState,
+				return mediaSupport.importFile(new StorageObject(file), extension, importState,
 						monitor, null);
 			} catch (Exception e) {
 				importState.operation.addError(

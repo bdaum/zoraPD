@@ -26,7 +26,6 @@ import java.util.Set;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnViewer;
-import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -62,6 +61,7 @@ import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.codes.CodeParser;
 import com.bdaum.zoom.ui.internal.codes.Topic;
+import com.bdaum.zoom.ui.internal.views.ZColumnViewerToolTipSupport;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.internal.widgets.FilterField;
 
@@ -263,7 +263,7 @@ public class CodesDialog extends ZTitleAreaDialog {
 		recentViewer.setFilters(new ViewerFilter[] { new TopicFilter(false, exclusions) });
 		recentViewer.addSelectionChangedListener(selectionChangedListener);
 		recentViewer.addDoubleClickListener(doubleClickListener);
-		ColumnViewerToolTipSupport.enableFor(recentViewer);
+		ZColumnViewerToolTipSupport.enableFor(recentViewer);
 	}
 
 	@SuppressWarnings("unused")
@@ -306,7 +306,7 @@ public class CodesDialog extends ZTitleAreaDialog {
 		topicViewer.setComparator(ZViewerComparator.INSTANCE);
 		topicViewer.setFilters(new ViewerFilter[] { new TopicFilter(true, exclusions) });
 		topicViewer.addSelectionChangedListener(selectionChangedListener);
-		ColumnViewerToolTipSupport.enableFor(topicViewer);
+		ZColumnViewerToolTipSupport.enableFor(topicViewer);
 	}
 
 	private void createTreeColumn(TreeViewer treeViewer, int width, String text, int index) {

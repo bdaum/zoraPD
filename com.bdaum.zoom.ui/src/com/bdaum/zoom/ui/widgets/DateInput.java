@@ -26,24 +26,24 @@ import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DateTime;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 
 /**
  * This class combines a date and a time input
  *
  */
-public class DateInput extends Composite implements SelectionListener {
+public class DateInput extends Composite implements Listener {
 
 	private DateTime dateField;
 	private DateTime timeField;
 
-	private List<SelectionListener> listeners = new ArrayList<SelectionListener>(3);
+	private List<Listener> listeners = new ArrayList<>(3);
 	private static GregorianCalendar cal = new GregorianCalendar();
 
 	/**
@@ -114,16 +114,20 @@ public class DateInput extends Composite implements SelectionListener {
 	 * @param listener
 	 *            - selection listener
 	 */
-	public void addSelectionListener(SelectionListener listener) {
+	public void addListener(Listener listener) {
 		checkWidget();
 		if (listener == null)
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		if (!listeners.contains(listener)) {
 			listeners.add(listener);
-			if (dateField != null)
-				dateField.addSelectionListener(this);
-			if (timeField != null)
-				timeField.addSelectionListener(this);
+			if (dateField != null) {
+				dateField.addListener(SWT.Selection,this);
+				dateField.addListener(SWT.DefaultSelection,this);
+			}
+			if (timeField != null) {
+				timeField.addListener(SWT.Selection,this);
+				timeField.addListener(SWT.DefaultSelection,this);
+			}
 		}
 	}
 
@@ -133,15 +137,19 @@ public class DateInput extends Composite implements SelectionListener {
 	 * @param listener
 	 *            - selection listener
 	 */
-	public void removeSelectionListener(SelectionListener listener) {
+	public void removeListener(Listener listener) {
 		checkWidget();
 		if (listener == null)
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		listeners.remove(listener);
-		if (dateField != null)
-			dateField.removeSelectionListener(this);
-		if (timeField != null)
-			timeField.removeSelectionListener(this);
+		if (dateField != null) {
+			dateField.removeListener(SWT.Selection,this);
+			dateField.removeListener(SWT.DefaultSelection,this);
+		}
+		if (timeField != null) {
+			timeField.removeListener(SWT.Selection,this);
+			timeField.removeListener(SWT.DefaultSelection,this);
+		}
 	}
 
 	/*
@@ -150,23 +158,10 @@ public class DateInput extends Composite implements SelectionListener {
 	 * @see org.eclipse.swt.events.SelectionListener#widgetDefaultSelected(org.
 	 * eclipse .swt.events.SelectionEvent)
 	 */
-	public void widgetDefaultSelected(SelectionEvent e) {
+	public void handleEvent(Event e) {
 		e.widget = this;
-		for (SelectionListener listener : listeners)
-			listener.widgetDefaultSelected(e);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.swt.events.SelectionListener#widgetSelected(org.eclipse.swt
-	 * .events.SelectionEvent)
-	 */
-	public void widgetSelected(SelectionEvent e) {
-		e.widget = this;
-		for (SelectionListener listener : listeners)
-			listener.widgetSelected(e);
+		for (Listener listener : listeners)
+			listener.handleEvent(e);
 	}
 
 	/*

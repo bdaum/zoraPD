@@ -58,7 +58,7 @@ import net.semanticmetadata.lire.builders.DocumentBuilder;
  * {@link ChainedDocumentBuilder#addBuilder(net.semanticmetadata.lire.DocumentBuilder)}
  * 
  * @author Mathias Lux, mathias@juggle.at, 20.02.2007
- * @author Berthold Daum, ported this class form Lire 0.7.0
+ * @author Berthold Daum, ported this class from Lire 0.7.0
  */
 public class ChainedDocumentBuilder extends AbstractLocalDocumentBuilder {
 	private LinkedList<DocumentBuilder> builders;

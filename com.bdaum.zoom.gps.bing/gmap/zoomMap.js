@@ -1,4 +1,6 @@
+// BING
 var apiKey = 'AgUeONf1WVotvtvwMsQsWD3SqMdlVRv2eT73rlCXYLRvRUApnb8PNG7JV7WPRVJ4';
+var MM = Microsoft.Maps;
 var minimapWidth = 200;
 var map;
 var draggedMarker;
@@ -17,6 +19,8 @@ var pinLayer;
 var trackLayer;
 var popup;
 var selected;
+var areaCircle;
+var areaDragHandlerId;
 
 function StyleChangeHandler(event) {
 	window.location.href = 'http://www.bdaum.de/zoom/gmap/maptype?'
@@ -108,8 +112,7 @@ function showInfo(json) {
 			subTitle : objJSON.subTitle,
 			anchor : new Microsoft.Maps.Point(-10, 160)
 		});
-		Microsoft.Maps.Events
-				.addOne(popup, "click", function() {
+		Microsoft.Maps.Events.addOne(popup, "click", function() {
 					closePopup();
 				});
 		pinLayer.add(popup);
@@ -598,9 +601,8 @@ function applyShownSet(pos) {
 }
 
 function applyDirectionSet(pos) {
-	if (imgDirection.length > 0 && locCreated.length > 0) {
+	if (imgDirection.length > 0 && locCreated.length > 0) 
 		imgDirection[0] = bearing(locCreated[0], pos);
-	}
 }
 
 function generateQuickGuid() {
@@ -635,20 +637,45 @@ function deleteSelected() {
 
 function removeItem(array, index) {
 	var newArray = [];
-	for (var i=0; i < array.length; i++) {
-		if (i !== index) {
+	for (var i=0; i < array.length; i++) 
+		if (i !== index) 
 			newArray.push(array[i]);
-		}
-	}
 	return newArray;
 }
 
 function findItem(array, item) {
-	for (var i=0; i < array.length; i++) {
-		if (item == array[i]) {
+	for (var i=0; i < array.length; i++) 
+		if (item == array[i])
 			return i;
-		}
-	}
 	return -1;
+}
+
+function setAreaCircle(position, diameter) {
+	if (areaDragHandlerId)
+		Microsoft.Maps.Events.removeHandler(areaDragHandlerId);
+	if (areaCircle) 
+		map.entities.pop();
+	var R = 6371; // earth's mean radius in km
+	var backgroundColor = new Microsoft.Maps.Color(30, 100, 0, 0);
+	var borderColor = new Microsoft.Maps.Color(150, 200, 0, 0);
+	var oneDeg = Math.PI / 180;
+	var lat = position.latitude * oneDeg;     
+	var lon = position.longitude * oneDeg;
+	var d = diameter / (2000 * R);
+	var circlePoints = [];
+	for (x = 0; x <= 360; x += 5) {
+	    var p2 = new Microsoft.Maps.Location(0, 0);
+	    var brng = x * oneDeg;
+	    p2.latitude = Math.asin(Math.sin(lat) * Math.cos(d) + Math.cos(lat) * Math.sin(d) * Math.cos(brng));
+	    p2.longitude = (lon + Math.atan2(Math.sin(brng) * Math.sin(d) * Math.cos(lat), 
+	                     Math.cos(d) - Math.sin(lat) * Math.sin(p2.latitude))) / oneDeg;
+	    p2.latitude /= oneDeg;
+	    circlePoints.push(p2);
+	}
+	areaCircle = new Microsoft.Maps.Polygon(circlePoints, { fillColor: backgroundColor, strokeColor: borderColor, strokeThickness: 1 });
+	map.entities.push(areaCircle);
+	areaDragHandlerId = Microsoft.Maps.Events.addHandler(areaCircle, "dragend", function() {
+		sendPosition('modify', position, map.getZoom(), 4);
+	});
 }
 

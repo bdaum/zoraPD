@@ -21,11 +21,11 @@ package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.ui.dialogs.ZInputDialog;
@@ -46,9 +46,10 @@ public class AddBookmarkDialog extends ZInputDialog {
 		CLink link = new CLink(area, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		link.setText(Messages.AddBookmarkDialog_show_bookmark_view);
-		link.addSelectionListener(new SelectionAdapter() {
+		link.addListener(new Listener() {
+			
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				UiUtilities.showView(BookmarkView.ID);
 			}
 		});

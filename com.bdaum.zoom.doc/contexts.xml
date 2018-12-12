@@ -188,6 +188,10 @@
     <description>Create and design a slideshow</description>
     <topic href="html/reference/slideshow.html" label="Slideshow editor view"/>
  </context>
+ <context id="calendar_view_context" title="Calendar">
+    <description>Calendar</description>
+    <topic href="html/reference/calendar.html" label="Calendar"/>
+ </context>
  <context id="exhibition_view_context" title="Exhibition designer view">
     <description>Design a photo exhibition</description>
     <topic href="html/reference/exhibition.html" label="Exhibition designer view"/>
@@ -455,6 +459,10 @@
  <context id="autoRating_dialog_context" title="Automatic Rating">
     <description>Rating images with the help of AI</description>
     <topic href="html/reference/rating.html" label="Automatic Rating"/>
+ </context>
+  <context id="tethered_dialog_context" title="Tethered shooting">
+    <description>Tethered shooting</description>
+    <topic href="html/reference/tethered.html" label="Tethered shooting"/>
  </context>
  
 </contexts>

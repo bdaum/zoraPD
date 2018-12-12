@@ -22,14 +22,10 @@ package com.bdaum.zoom.ui.internal.wizards;
 
 import java.util.Set;
 
-import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IExportWizard;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.job.OperationJob;
@@ -39,8 +35,7 @@ import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
 @SuppressWarnings("restriction")
-public class ExportMetaDataWizard extends AbstractAssetSelectionWizard implements IExportWizard,
-		IAdaptable {
+public class ExportMetaDataWizard extends AbstractAssetSelectionWizard implements IExportWizard {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.exportMetaProperties"; //$NON-NLS-1$
 
@@ -51,15 +46,12 @@ public class ExportMetaDataWizard extends AbstractAssetSelectionWizard implement
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-
-		setDialogSettings(UiActivator.getDefault(),SETTINGSID);
-		setAssets(workbench, selection, false);
+		super.init(workbench, selection);
+		setDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		int size = assets.size();
 		setWindowTitle(size == 0 ? Messages.ExportMetaDataWizard_noting_selected
 				: size == 1 ? Messages.ExportMetaDataWizard_export_one_image
-						: NLS.bind(
-								Messages.ExportMetaDataWizard_export_n_images,
-								size));
+						: NLS.bind(Messages.ExportMetaDataWizard_export_n_images, size));
 	}
 
 	/*
@@ -68,12 +60,11 @@ public class ExportMetaDataWizard extends AbstractAssetSelectionWizard implement
 
 	@Override
 	public void addPages() {
-		ImageDescriptor imageDescriptor = Icons.meta64.getDescriptor();
 		super.addPages();
 		metaPage = new MetaSelectionPage(
-				new QueryField[] { QueryField.IMAGE_ALL, QueryField.EXIF_ALL,
-						QueryField.IPTC_ALL }, false, ExportXmpViewerFilter.INSTANCE, true);
-		metaPage.setImageDescriptor(imageDescriptor);
+				new QueryField[] { QueryField.IMAGE_ALL, QueryField.EXIF_ALL, QueryField.IPTC_ALL }, false,
+				ExportXmpViewerFilter.INSTANCE, true);
+		metaPage.setImageDescriptor(Icons.meta64.getDescriptor());
 		addPage(metaPage);
 	}
 
@@ -87,21 +78,13 @@ public class ExportMetaDataWizard extends AbstractAssetSelectionWizard implement
 	@Override
 	public boolean performFinish() {
 		saveDialogSettings();
-		OperationJob.executeOperation(new ExportMetadataOperation(assets,
-				getFilter(), metaPage.isJpegSet(), false, true), this);
+		OperationJob.executeOperation(
+				new ExportMetadataOperation(assets, getFilter(), metaPage.isJpegSet(), false, true), this);
 		return true;
 	}
 
 	public Set<QueryField> getFilter() {
 		return metaPage.getFilter();
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public Object getAdapter(Class adapter) {
-		if (Shell.class.equals(adapter))
-			return PlatformUI.getWorkbench().getWorkbenchWindows()[0]
-					.getShell();
-		return null;
 	}
 
 }

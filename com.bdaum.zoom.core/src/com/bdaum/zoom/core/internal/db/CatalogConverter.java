@@ -49,12 +49,12 @@ import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.cat.model.meta.WatchedFolderImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.image.ImageConstants;
+import com.bdaum.zoom.mtp.IRootManager;
 
 public class CatalogConverter {
 
@@ -335,7 +335,7 @@ public class CatalogConverter {
 			List<Object> tobeStored = new ArrayList<Object>();
 			List<String> watchedFolders = meta.getWatchedFolder();
 			List<String> newWatchedFolders = new ArrayList<String>();
-			IVolumeManager volumeManager = Core.getCore().getVolumeManager();
+			IRootManager volumeManager = Core.getCore().getVolumeManager();
 			for (WatchedFolderImpl wf : db.obtainObjects(WatchedFolderImpl.class)) {
 				String oldId = wf.getStringId();
 				String uri = wf.getUri();

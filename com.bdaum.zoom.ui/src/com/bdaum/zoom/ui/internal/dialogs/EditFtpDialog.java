@@ -32,7 +32,6 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
@@ -40,7 +39,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
@@ -223,7 +224,7 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 		accountField = createTextField(group2, Messages.EditFtpDialog_account, 150, SWT.NONE);
 		anonymousButton = WidgetFactory.createCheckButton(group2, Messages.EditFtpDialog_anonymous,
 				new GridData(SWT.RIGHT, SWT.CENTER, false, false));
-		anonymousButton.addSelectionListener(selectionListener);
+		anonymousButton.addListener(selectionListener);
 		testFtpButton = new Button(group2, SWT.PUSH);
 		testFtpButton.setText(Messages.EditFtpDialog_test);
 		testFtpButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 3, 1));
@@ -261,10 +262,10 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 		}
 	};
 
-	private SelectionListener selectionListener = new SelectionAdapter() {
+	private Listener selectionListener = new Listener() {
 
 		@Override
-		public void widgetSelected(SelectionEvent e) {
+		public void handleEvent(Event e) {
 			updateButtons();
 		}
 	};
@@ -285,12 +286,12 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 		comp.setLayout(new GridLayout(2, false));
 		passiveButton = WidgetFactory.createCheckButton(comp, Messages.EditFtpDialog_passive_mode,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		passiveButton.addSelectionListener(selectionListener);
+		passiveButton.addListener(selectionListener);
 		Label label = new Label(comp, SWT.NONE);
 		label.setText(Messages.EditFtpDialog_port);
 		portField = new Spinner(comp, SWT.BORDER);
 		portField.setMaximum(9999);
-		portField.addSelectionListener(selectionListener);
+		portField.addListener(SWT.Selection, selectionListener);
 		portField.setEnabled(!adhoc);
 	}
 

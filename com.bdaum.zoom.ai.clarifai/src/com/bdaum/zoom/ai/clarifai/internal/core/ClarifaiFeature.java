@@ -31,7 +31,7 @@ import net.semanticmetadata.lire.utils.MetricsUtils;
 @SuppressWarnings("restriction")
 public class ClarifaiFeature implements GlobalFeature {
 
-	private float[] histogram;
+	public float[] histogram;
 
 	@Override
 	public String getFeatureName() {
@@ -52,7 +52,7 @@ public class ClarifaiFeature implements GlobalFeature {
 		return toByteArray(histogram);
 	}
 	
-    private static byte[] toByteArray(float[] data) {
+	protected byte[] toByteArray(float[] data) {
         byte[] result = new byte[data.length * 2];
         for (int i = 0, j = 0; i < data.length; i++) {
         	int val = Math.min(65535, Math.max(0, (int) (data[i] * 65535)));
@@ -67,7 +67,7 @@ public class ClarifaiFeature implements GlobalFeature {
 		histogram = toFloatArray(in, 0, in.length);
 	}
 	
-    public static float[] toFloatArray(byte[] data, int offset, int length) {
+	protected float[] toFloatArray(byte[] data, int offset, int length) {
         float[] result = new float[length / 2];
         for (int i = 0, j = offset; i < result.length; i++)
 			result[i] = (((data[j++] & 0xff) << 8) + (data[j++] & 0xff)) / 65535f;
@@ -84,7 +84,7 @@ public class ClarifaiFeature implements GlobalFeature {
 		if (!(vd instanceof ClarifaiFeature))
 			throw new UnsupportedOperationException("Wrong descriptor."); //$NON-NLS-1$
 		float[] histogram2 = ((ClarifaiFeature) vd).histogram;
-		if (histogram == null || histogram2 == null)
+		if (histogram == null || histogram2 == null || histogram.length != histogram2.length)
 			return 100d;
 		return MetricsUtils.distL1(histogram, histogram2);
 	}
@@ -103,7 +103,7 @@ public class ClarifaiFeature implements GlobalFeature {
 	@Override
 	public void extract(BufferedImage image) {
 		histogram = CoreActivator.getDefault().getAiService().getFeatureVector(image,
-				"com.bdaum.zoom.ai.provider.clarifai"); //$NON-NLS-1$
+				"com.bdaum.zoom.ai.provider.clarifai", 1001); //$NON-NLS-1$
 	}
 
 }

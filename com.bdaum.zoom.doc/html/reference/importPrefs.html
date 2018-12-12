@@ -7,6 +7,10 @@
 
 
 
+
+
+
+
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Import Preferences</title>
 
 
@@ -17,19 +21,44 @@
 
 
 <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
-<h2>Import Preferences</h2><h4>General</h4><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Import makernotes</span>.
+<h2>Import Preferences</h2><h4>General</h4><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Content</span><br>
+<span style="font-weight: bold;"></span></li>
+  <ul>
+    <li><span style="font-weight: bold;">Import makernotes</span>.
 If you are interested in the manufacturer specific maker notes embedded
 in the EXIF data of your images, mark this option. Otherwise, leave
 this entry unmarked. If you should later change your opinion, you can
-mark it then and refresh the EXIF-data of your images.<br>
-<span style="font-weight: bold;"></span></li><li><span style="font-weight: bold;">Show imported image after import.</span> Check the option to automatically show the imported images in the current gallery when an import is finished.<span style="font-weight: bold;"></span></li><li><span style="font-weight: bold;">Max. length of import list.</span> Entries that exceed the maximum length will be deleted (when empty system collections are removed).<br>
+mark it then and refresh the EXIF-data of your images.</li>
+    <li><span style="font-weight: bold;">Import face data from camera.</span> Mark this option if you want to import face data such as face regions from your camera.<br>
+  </li>
+  </ul>
+<li><span style="font-weight: bold;">Display</span><br>
+<span style="font-weight: bold;"></span></li>
+  <ul>
+    <li><span style="font-weight: bold;">Max. length of import list.</span> Entries that exceed the maximum length will be deleted (when empty system collections are removed).<br>
 <font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;"></span></font></li>
-  <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">Automatically invoke Import when a device is inserted.</span> When this option is set, the <span style="font-style: italic;">Import from Device</span> function is called when you connect a camera or a similar device.<br>
-    </font></li>
+  </ul>
 
-</ul><h4><a name="raw"></a>RAW conversion</h4><span style="font-weight: bold;"></span><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Raw converter.</span> Here you have the option to select between dcraw and RawTherapee.</li></ul><h4>dcraw</h4>The following options are availabe for <span style="font-style: italic;">dcraw</span>:<ul style="font-weight: normal;"><li><span style="font-weight: bold;">Converter</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">External DCRAW module</span>.
+  
+  <li><span style="font-weight: bold;">Events</span><br>
+<span style="font-weight: bold;"></span></li>
+  <ul>
+    <li><span style="font-weight: bold;">Show imported image after import.</span> Check the option to automatically show the imported images in the current gallery when an import is finished.<span style="font-weight: bold;"></span></li>
+    <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">On device insertion.</span> Set this option to <span style="font-weight: bold;">Import from Device</span> if you want this function to be invoked when a device or a removable medium is connected to the computer. Set this opiton to <span style="font-weight: bold;">Start tethered shooting</span> if you want to start <a href="tethered.html">tethered shooting</a> mode as soon as a device is inserted.</font></li>
+    <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">Show new tethered shot in</span>. Select how a new image obtained via tethered shooting should be shown:</font></li>
+    <ul>
+      <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">gallery</span>. The image appears as a thumbnail in the <span style="font-style: italic;">Last import</span> collection in the current gallery. It can be opened from there with a double click.</font></li>
+      <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">internal image viewer</span>. The image is immediately shown by the internal image viewer.</font></li>
+      <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">external image viewer</span>. The image is immediately shown by the <a href="fileAssociations.html">configured external image viewer</a>.<br>
+</font></li>
+    </ul>
+
+  </ul>
+
+
+</ul><h4><a name="raw"></a>RAW conversion</h4><span style="font-weight: bold;"></span><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Raw converter.</span> Here you have the option to select between <span style="font-weight: bold;">dcraw</span>, <span style="font-weight: bold;">RawTherapee</span>, and <span style="font-weight: bold;">darktable</span>.</li></ul><h4>dcraw</h4>The following options are availabe for <span style="font-style: italic;">dcraw</span>:<ul style="font-weight: normal;"><li><span style="font-weight: bold;">Converter</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">External DCRAW module</span>.
 Here you can specify a path to an <a href="dcraw.html">external DCRAW module</a>, i.e. an DCRAW
-converter located outside of the installation folder.<br><span style="font-weight: bold;">Tip: </span>If you use an Raw converter based on DCRAW, e.g. <span style="font-style: italic;">LightZone</span>, it makes sense to point to the DCRAW module of that converter. By doings so you can make sure that both the raw converter and <span style="font-style: italic;">ZoRa PhotoDirector</span> use the same version of DCRAW.</li></ul><li style="font-weight: bold;">Options<br><span style="font-weight: normal;">These options only apply when loading high-resolution images, not for generating thumbnails.</span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">White balance.</span> Selects different white balance methods:</li>
+converter located outside of the installation folder.<br><span style="font-weight: bold;">Tip: </span>If you use an Raw converter based on DCRAW, e.g. <span style="font-style: italic;">LightZone</span>, it makes sense to point to the DCRAW module of that converter. By doing so you can make sure that both the raw converter and <span style="font-style: italic;">ZoRa PhotoDirector</span> use the same version of DCRAW.</li></ul><li style="font-weight: bold;">Options<br><span style="font-weight: normal;">These options only apply when loading high-resolution images, not for generating thumbnails.</span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">White balance.</span> Selects different white balance methods:</li>
     <ul>
       <li><span style="font-style: italic;">D65</span> A gray card illumated with a D65 light source appears gray.<br>
 </li>
@@ -66,7 +95,13 @@ existing catalog entries.</li>
 
 
 </ul><br><h4>RawTherapee</h4>The following options are availabe for <span style="font-style: italic;">RawTherapee</span><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Converter</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">RawTherapee module</span>.
-Here you must specify a path to the <span style="font-style: italic;">RawTherapee</span> executable installed elsewhere on you system.</li></ul><li style="font-weight: bold;">Options<br><span style="font-weight: normal;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Consider .pp3 sidecar recipes.&nbsp;</span>Check this option if you want to apply existing conversion recipes created with <span style="font-style: italic;">RawTherapee</span> when importing, displaying, or exporting images.<span style="font-style: italic;">&nbsp;</span>The results will be 100% identical to conversion results created with <span style="font-style: italic;">RawTherapee</span> alone.</li></ul></ul>
+Here you must specify a path to the <span style="font-style: italic;">RawTherapee</span> executable installed elsewhere on your system.</li></ul><li style="font-weight: bold;">Options<br><span style="font-weight: normal;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Consider .pp3 sidecar recipes.&nbsp;</span>Check this option if you want to apply existing conversion recipes created with <span style="font-style: italic;">RawTherapee</span> when importing, displaying, or exporting images.<span style="font-style: italic;">&nbsp;</span>The results will be 100% identical to conversion results created with <span style="font-style: italic;">RawTherapee</span> alone.</li></ul></ul>
+<h4>darktable</h4>
+The following options are availabe for <span style="font-style: italic;">darktable</span>
+<ul style="font-weight: normal;">
+<li><span style="font-weight: bold;">Converter</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">darktable module</span>.
+Here you must specify a path to the <span style="font-style: italic;">darktable</span> executable installed elsewhere on your system.</li></ul>
+</ul>
 <h4><span style="font-weight: bold;">DNG conversion</span><small>&nbsp; (Only under Window and MacOS)</small></h4><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Basics</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">On Import of raw files</span>. Specify how RAW files are imported:&nbsp;</li></ul><ul style="font-weight: normal;"><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Convert
 to DNG and import both RAW and DNG files</span>. This is the safest import
 mode because images are kept in both original format and in the

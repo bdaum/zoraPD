@@ -20,29 +20,16 @@
 
 package com.bdaum.zoom.gps.bing.internal;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.osgi.framework.BundleContext;
 
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
-/**
- * The activator class controls the plug-in life cycle
- */
 @SuppressWarnings("restriction")
 public class BingActivator extends ZUiPlugin {
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.gps.bing"; //$NON-NLS-1$
 
-	// The shared instance
 	private static BingActivator plugin;
-
-	/**
-	 * The constructor
-	 */
-	public BingActivator() {
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -66,18 +53,8 @@ public class BingActivator extends ZUiPlugin {
 		super.stop(context);
 	}
 
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
 	public static BingActivator getDefault() {
 		return plugin;
-	}
-
-
-	public void logError(String message, Throwable e) {
-		getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, message, e));
 	}
 
 }

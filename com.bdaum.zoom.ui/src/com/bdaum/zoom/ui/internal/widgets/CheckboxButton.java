@@ -22,25 +22,20 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.internal.CssActivator;
 
+public class CheckboxButton extends Composite implements Listener {
 
-public class CheckboxButton extends Composite implements MouseListener, SelectionListener {
-
-	private static final String DISABLED = "disabled"; //$NON-NLS-1$
-
-	private ListenerList<SelectionListener> selectionListeners = new ListenerList<>();
+	private ListenerList<Listener> listeners = new ListenerList<>();
 
 	private Button button;
 
@@ -59,8 +54,8 @@ public class CheckboxButton extends Composite implements MouseListener, Selectio
 		GridData data = new GridData();
 		data.widthHint = button.getBounds().height + 4;
 		button.setLayoutData(data);
-		buttonlabel.addMouseListener(this);
-		button.addSelectionListener(this);
+		buttonlabel.addListener(SWT.MouseDown, this);
+		button.addListener(SWT.Selection, this);
 	}
 
 	public void setToolTipText(String tooltip) {
@@ -74,40 +69,21 @@ public class CheckboxButton extends Composite implements MouseListener, Selectio
 
 	public void setEnabled(boolean enabled) {
 		button.setEnabled(enabled);
-		buttonlabel.setData("id", enabled ? null : DISABLED); //$NON-NLS-1$
+		buttonlabel.setData(CSSProperties.ID, enabled ? null : CSSProperties.DISABLED);
 		CssActivator.getDefault().setColors(buttonlabel);
 	}
 
 	@Override
-	public void mouseDoubleClick(MouseEvent e) {
-		// do nothing
+	public void handleEvent(Event event) {
+		event.widget = this;
+		if (event.type == SWT.MouseDown)
+			setSelection(!getSelection());
+		fireEvent(event);
 	}
 
-	@Override
-	public void mouseUp(MouseEvent e) {
-		// do nothing
-	}
-
-	@Override
-	public void mouseDown(MouseEvent e) {
-		setSelection(!getSelection());
-		if (!selectionListeners.isEmpty()) {
-			Event event = new Event();
-			event.display = e.display;
-			event.widget = this;
-			event.time = e.time;
-			event.data = e.data;
-			event.x = e.x;
-			event.y = e.y;
-			event.stateMask = e.stateMask;
-			event.doit = true;
-			fireSelectionEvent(new SelectionEvent(event));
-		}
-	}
-
-	private void fireSelectionEvent(SelectionEvent e) {
-		for (SelectionListener selectionListener : selectionListeners)
-			selectionListener.widgetSelected(e);
+	private void fireEvent(Event event) {
+		for (Listener listener : listeners)
+			listener.handleEvent(event);
 	}
 
 	public void setSelection(boolean selected) {
@@ -122,23 +98,12 @@ public class CheckboxButton extends Composite implements MouseListener, Selectio
 		return button.getEnabled() && super.isEnabled();
 	}
 
-	public void addSelectionListener(SelectionListener selectionListener) {
-		selectionListeners.add(selectionListener);
+	public void addListener(Listener listener) {
+		listeners.add(listener);
 	}
 
-	public void removeSelectionListener(SelectionListener selectionListener) {
-		selectionListeners.remove(selectionListener);
-	}
-
-	@Override
-	public void widgetSelected(SelectionEvent e) {
-		e.widget = this;
-		fireSelectionEvent(e);
-	}
-
-	@Override
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
+	public void removeListener(Listener listener) {
+		listeners.remove(listener);
 	}
 
 }

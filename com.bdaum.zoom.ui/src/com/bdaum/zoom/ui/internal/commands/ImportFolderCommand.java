@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.DirectoryDialog;
 
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.ICore;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.actions.Messages;
@@ -64,14 +65,16 @@ public class ImportFolderCommand extends AbstractCommandHandler {
 						|| !catRootFile.equals(core.getVolumeManager().getRootFile(folder));
 				ImportModeDialog imDialog = new ImportModeDialog(getShell(), device || foreignFolders);
 				if (imDialog.open() == ImportModeDialog.OK) {
-					ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(null, new File[] { folder },
-							device && foreignFolders, false, imDialog.isNewStructure(), null, false);
+					ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(null,
+							new StorageObject[] { new StorageObject(folder) }, device && foreignFolders, false,
+							imDialog.isNewStructure(), null, false);
 					WizardDialog wizardDialog = new WizardDialog(getShell(), wizard);
 					wizard.init(null, null);
 					wizardDialog.open();
 				}
 			} else
-				AcousticMessageDialog.openInformation(getShell(), Messages.ImportFolderCommand_import_folder, Messages.ImportFolderCommand_folder_empty);
+				AcousticMessageDialog.openInformation(getShell(), Messages.ImportFolderCommand_import_folder,
+						Messages.ImportFolderCommand_folder_empty);
 		}
 	}
 

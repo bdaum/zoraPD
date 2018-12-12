@@ -71,6 +71,7 @@ public class Messages extends NLS {
 
 	public static String IndexingJob_error_creating_lucene_index;
 
+	public static String IndexingJob_index_corrupz;
 	public static String IndexingJob_indexed_elapsed;
 
 	public static String IndexingJob_indexing_stopped;

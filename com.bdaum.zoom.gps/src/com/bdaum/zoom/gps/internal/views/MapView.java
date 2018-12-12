@@ -136,7 +136,7 @@ public class MapView extends BasicView {
 		}
 
 		public IStructuredSelection getSelection() {
-			return (IStructuredSelection) viewer.getSelection();
+			return viewer.getStructuredSelection();
 		}
 
 		public void setSelection(IStructuredSelection selection) {
@@ -207,7 +207,7 @@ public class MapView extends BasicView {
 		IConfigurationElement conf = GpsActivator.findCurrentMappingSystem();
 		createMapComponent(parent, conf);
 		makeActions();
-		installListeners(parent);
+		installListeners();
 		contributeToActionBars();
 		showMap();
 		if (mapComponent != null)
@@ -680,7 +680,7 @@ public class MapView extends BasicView {
 
 	@Override
 	public void updateActions(boolean force) {
-		if (viewActive || force) {
+		if (isVisible() || force) {
 			webAction.setEnabled(currentConf != null && currentConf.getAttribute("query") != null); //$NON-NLS-1$
 			updateActions(-1, -1);
 		}

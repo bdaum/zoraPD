@@ -46,6 +46,7 @@ import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.FileInput;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.job.OperationJob;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.operations.internal.SynchronizeOperation;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -108,7 +109,7 @@ public class RefreshAction extends Action {
 					existingFiles.addAll(otherFiles);
 			}
 			SynchronizeOperation op = new SynchronizeOperation(
-					existingFiles == null ? null : new FileInput(existingFiles, false),
+					existingFiles == null ? null : new FileInput(StorageObject.fromFile(existingFiles), false),
 					UiActivator.getDefault().createImportConfiguration(adaptable, true, dialog.isResetImage(),
 							dialog.isResetStatus(), dialog.isResetExif(), dialog.isResetIptc(), dialog.isResetGps(),
 							dialog.isResetFaceData(), true, false),

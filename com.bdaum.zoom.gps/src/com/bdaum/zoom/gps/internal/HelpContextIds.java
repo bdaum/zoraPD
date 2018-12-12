@@ -44,4 +44,8 @@ public interface HelpContextIds extends IHelpContexts {
 	/* Views */
 	public static final String MAP_VIEW = PREFIX + "map" + VIEW_POSTFIX; //$NON-NLS-1$
 
+	public static final String KML_WIZARD = PREFIX + "kml" + WIZARD_POSTFIX; //$NON-NLS-1$
+
+	public static final String GPX_WIZARD = PREFIX + "gpx" + WIZARD_POSTFIX; //$NON-NLS-1$
+
 }

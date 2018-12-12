@@ -40,6 +40,8 @@
 #              27) Gregg Lee private communication
 #              28) http://wwwimages.adobe.com/www.adobe.com/content/dam/Adobe/en/devnet/cinemadng/pdfs/CinemaDNG_Format_Specification_v1_1.pdf
 #              29) http://www.libtiff.org
+#              30) http://geotiff.maptools.org/spec/geotiffhome.html
+#              31) https://android.googlesource.com/platform/external/dng_sdk/+/refs/heads/master/source/dng_tag_codes.h
 #              IB) Iliah Borg private communication (LibRaw)
 #              JD) Jens Duttke private communication
 #------------------------------------------------------------------------------
@@ -49,11 +51,11 @@ package Image::ExifTool::Exif;
 use strict;
 use vars qw($VERSION $AUTOLOAD @formatSize @formatName %formatNumber %intFormat
             %lightSource %flash %compression %photometricInterpretation %orientation
-            %subfileType);
+            %subfileType %saveForValidate);
 use Image::ExifTool qw(:DataAccess :Utils);
 use Image::ExifTool::MakerNotes;
 
-$VERSION = '3.98';
+$VERSION = '4.07';
 
 sub ProcessExif($$$);
 sub WriteExif($$$);
@@ -61,6 +63,7 @@ sub CheckExif($$$);
 sub RebuildMakerNotes($$$);
 sub EncodeExifText($$);
 sub ValidateIFD($;$);
+sub ValidateImageData($$$;$);
 sub ProcessTiffIFD($$$);
 sub PrintParameter($$$);
 sub GetOffList($$$$$);
@@ -217,8 +220,11 @@ sub BINARY_DATA_LIMIT { return 10 * 1024 * 1024; }
     32898 => 'IT8BL', #3
     32908 => 'PixarFilm', #3
     32909 => 'PixarLog', #3
+  # 32910,32911 - Pixar reserved
     32946 => 'Deflate', #3
     32947 => 'DCS', #3
+    33003 => 'Aperio JPEG 2000 YCbCr', #https://openslide.org/formats/aperio/
+    33005 => 'Aperio JPEG 2000 RGB', #https://openslide.org/formats/aperio/
     34661 => 'JBIG', #3
     34676 => 'SGILog', #3
     34677 => 'SGILog24', #3
@@ -228,7 +234,14 @@ sub BINARY_DATA_LIMIT { return 10 * 1024 * 1024; }
     34718 => 'Microsoft Document Imaging (MDI) Binary Level Codec', #18
     34719 => 'Microsoft Document Imaging (MDI) Progressive Transform Codec', #18
     34720 => 'Microsoft Document Imaging (MDI) Vector', #18
+    34887 => 'ESRI Lerc', #LibTiff
+  # 34888,34889 - ESRI reserved
     34892 => 'Lossy JPEG', # (DNG 1.4)
+    34925 => 'LZMA2', #LibTiff
+    34926 => 'Zstd', #LibTiff
+    34927 => 'WebP', #LibTiff
+    34933 => 'PNG', # (TIFF mail list)
+    34934 => 'JPEG XR', # (TIFF mail list)
     65000 => 'Kodak DCR Compressed', #PH
     65535 => 'Pentax PEF Compressed', #Jens
 );
@@ -247,6 +260,7 @@ sub BINARY_DATA_LIMIT { return 10 * 1024 * 1024; }
     32803 => 'Color Filter Array', #2
     32844 => 'Pixar LogL', #3
     32845 => 'Pixar LogLuv', #3
+    32892 => 'Sequential Color Filter', #JR (Sony ARQ)
     34892 => 'Linear Raw', #2
 );
 
@@ -311,6 +325,15 @@ my %sampleFormat = (
     4 => 'Undefined',
     5 => 'Complex int',     # complex integer (ref 3)
     6 => 'Complex float',   # complex IEEE floating point (ref 3)
+);
+
+# save the values of these tags for additional validation checks
+%saveForValidate = (
+    0x100 => 1, # ImageWidth
+    0x101 => 1, # ImageHeight
+    0x102 => 1, # BitsPerSample
+    0x103 => 1, # Compression
+    0x115 => 1, # SamplesPerPixel
 );
 
 # main EXIF tag table
@@ -1387,10 +1410,26 @@ my %sampleFormat = (
         },
     },
     # 0x7001 - int16u[1] (in SubIFD of Sony ARW images) - values: 0,1
-    # 0x7010 - int16u[4] (in SubIFD of Sony ARW images) - values: "0 9824 11512 16362","8000 10400 12900 14100"
+    0x7010 => { #IB
+        Name => 'SonyToneCurve',
+        # int16u[4] (in SubIFD of Sony ARW images -- don't allow writes for now)
+        # - only the middle 4 points are stored (lower comes from black level,
+        #   and upper from data maximum)
+    },
     # 0x7011 - int16u[4] (in SubIFD of Sony ARW images) - values: "0 4912 8212 12287","4000 7200 10050 12075"
     # 0x7020 - int32u[1] (in SubIFD of Sony ARW images) - values: 0,3
-    # 0x7031 - int16u[1] (in SubIFD of Sony ARW images) - values: 256,257
+    0x7031 => {
+        Name => 'VignettingCorrection',
+        Notes => 'found in Sony ARW images',
+        Protected => 1,
+        Writable => 'int16s',
+        WriteGroup => 'SubIFD',
+        PrintConv => {
+            256 => 'Off',
+            257 => 'Auto',
+            511 => 'No correction params available',
+        },
+    },
     0x7032 => {
         Name => 'VignettingCorrParams', #forum7640
         Notes => 'found in Sony ARW images',
@@ -1399,7 +1438,18 @@ my %sampleFormat = (
         WriteGroup => 'SubIFD',
         Count => 17,
     },
-    # 0x7034 - int16u[1] (in SubIFD of Sony ARW images) - values: 1
+    0x7034 => {
+        Name => 'ChromaticAberrationCorrection',
+        Notes => 'found in Sony ARW images',
+        Protected => 1,
+        Writable => 'int16s',
+        WriteGroup => 'SubIFD',
+        PrintConv => {
+            0 => 'Off',
+            1 => 'Auto',
+            255 => 'No correction params available',
+        },
+    },
     0x7035 => {
         Name => 'ChromaticAberrationCorrParams', #forum6509
         Notes => 'found in Sony ARW images',
@@ -1408,7 +1458,19 @@ my %sampleFormat = (
         WriteGroup => 'SubIFD',
         Count => 33,
     },
-    # 0x7036 - int16u[1] (in SubIFD of Sony ARW images) - values: 0,1,17
+    0x7036 => {
+        Name => 'DistortionCorrection',
+        Notes => 'found in Sony ARW images',
+        Protected => 1,
+        Writable => 'int16s',
+        WriteGroup => 'SubIFD',
+        PrintConv => {
+            0 => 'Off',
+            1 => 'Auto',
+            17 => 'Auto fixed by lens',
+            255 => 'No correction params available',
+        },
+    },
     0x7037 => {
         Name => 'DistortionCorrParams', #forum6509
         Notes => 'found in Sony ARW images',
@@ -1538,7 +1600,7 @@ my %sampleFormat = (
     0x82aa => 'MDPrepDate', #3
     0x82ab => 'MDPrepTime', #3
     0x82ac => 'MDFileUnits', #3
-    0x830e => 'PixelScale',
+    0x830e => 'PixelScale', #30
     0x8335 => 'AdventScale', #20
     0x8336 => 'AdventRevision', #20
     0x835c => 'UIC1Tag', #23
@@ -1565,9 +1627,9 @@ my %sampleFormat = (
     },
     0x847e => 'IntergraphPacketData', #3
     0x847f => 'IntergraphFlagRegisters', #3
-    0x8480 => 'IntergraphMatrix',
+    0x8480 => 'IntergraphMatrix', #30
     0x8481 => 'INGRReserved', #20
-    0x8482 => {
+    0x8482 => { #30
         Name => 'ModelTiePoint',
         Groups => { 2 => 'Location' },
     },
@@ -1632,7 +1694,7 @@ my %sampleFormat = (
     },
     0x85b8 => 'PixelMagicJBIGOptions', #20
     0x85d7 => 'JPLCartoIFD', #exifprobe (NC)
-    0x85d8 => {
+    0x85d8 => { #30
         Name => 'ModelTransform',
         Groups => { 2 => 'Location' },
     },
@@ -1711,7 +1773,7 @@ my %sampleFormat = (
     },
     0x8782 => 'T88Options', #20
     0x87ac => 'ImageLayer',
-    0x87af => {
+    0x87af => { #30
         Name => 'GeoTiffDirectory',
         Format => 'undef',
         Binary => 1,
@@ -1733,7 +1795,7 @@ my %sampleFormat = (
             return pack('v*',unpack('n*',$val));
         },
     },
-    0x87b0 => {
+    0x87b0 => { #30
         Name => 'GeoTiffDoubleParams',
         Format => 'undef',
         Binary => 1,
@@ -1751,7 +1813,7 @@ my %sampleFormat = (
             return pack('V*',unpack('N*',$val));
         },
     },
-    0x87b1 => {
+    0x87b1 => { #30
         Name => 'GeoTiffAsciiParams',
         Writable => 'string',
         WriteGroup => 'IFD0',
@@ -2194,12 +2256,13 @@ my %sampleFormat = (
         Binary => 1, # (just in case -- don't know what format this is)
     },
     0x935c => { #3/19
-        Name => 'ImageSourceData',
+        Name => 'ImageSourceData', # (writable directory!)
         Writable => 'undef',
         WriteGroup => 'IFD0',
-        Protected => 1,
+        SubDirectory => { TagTable => 'Image::ExifTool::Photoshop::DocumentData' },
         Binary => 1,
-        Protected => 1, # (because this can be hundreds of megabytes)
+        Protected => 1,     # (because this can be hundreds of megabytes)
+        ReadFromRAF => 1,   # don't load into memory when reading
     },
     0x9400 => {
         Name => 'AmbientTemperature',
@@ -2596,7 +2659,7 @@ my %sampleFormat = (
         Writable => 'rational64u',
         Count => 4,
         # convert to the form "12-20mm f/3.8-4.5" or "50mm f/1.4"
-        PrintConv => \&Image::ExifTool::Exif::PrintLensInfo,
+        PrintConv => \&PrintLensInfo,
         PrintConvInv => \&ConvertLensInfo,
     },
     0xa433 => { Name => 'LensMake',         Writable => 'string' }, #24
@@ -3086,7 +3149,7 @@ my %sampleFormat = (
             WriteGroup => 'IFD0',
             NestedHtmlDump => 1,
             SubDirectory => { TagTable => 'Image::ExifTool::DNG::AdobeData' },
-            Format => 'undef',  # written incorrectly as int8u (change to undef for speed)
+            Format => 'undef',  # but written as int8u (change to undef for speed)
         },
         {
             # Pentax/Samsung models that write AOC maker notes in JPG images:
@@ -3110,7 +3173,7 @@ my %sampleFormat = (
                 Base => '$start - 10',
                 ByteOrder => 'Unknown', # easier to do this than read byteorder word
             },
-            Format => 'undef',  # written incorrectly as int8u (change to undef for speed)
+            Format => 'undef',  # but written as int8u (change to undef for speed)
         },
         {
             # must duplicate the above tag with a different name for more recent
@@ -3133,7 +3196,7 @@ my %sampleFormat = (
             Name => 'DNGPrivateData',
             Flags => [ 'Binary', 'Protected' ],
             Format => 'undef',
-            Writable => 'undef',
+            Writable => 'int8u',
             WriteGroup => 'IFD0',
         },
     ],
@@ -3742,7 +3805,17 @@ my %sampleFormat = (
         WriteGroup => 'IFD0',
         Protected => 1,
     },
-    # 0xc7aa - undocumented DNG tag written by LR4 (int32u[1] - val=256, related to fast load data?)
+    # 0xc7a9 - CacheBlob (ref 31)
+    0xc7aa => { #31 undocumented DNG tag written by LR4 (val=256, related to fast load data?)
+        Name => 'CacheVersion',
+        Writable => 'int32u',
+        WriteGroup => 'SubIFD2',
+        Format => 'int8u',
+        Count => 4,
+        Protected => 1,
+        PrintConv => '$val =~ tr/ /./; $val',
+        PrintConvInv => '$val =~ tr/./ /; $val',
+    },
     0xc7b5 => { # DNG 1.4
         Name => 'DefaultUserCrop',
         Writable => 'rational64u',
@@ -3753,6 +3826,7 @@ my %sampleFormat = (
     0xea1c => { #13
         Name => 'Padding',
         Binary => 1,
+        Protected => 1,
         Writable => 'undef',
         # must start with 0x1c 0xea by the WM Photo specification
         # (not sure what should happen if padding is only 1 byte)
@@ -3762,6 +3836,7 @@ my %sampleFormat = (
     0xea1d => {
         Name => 'OffsetSchema',
         Notes => "Microsoft's ill-conceived maker note offset difference",
+        Protected => 1,
         Writable => 'int32s',
         # From the Microsoft documentation:
         #
@@ -4084,7 +4159,7 @@ my %subSecConv = (
             3 => 'FocusDistance',   # focus distance in metres (0 is infinity)
             4 => 'SubjectDistance',
             5 => 'ObjectDistance',
-            6 => 'ApproximateFocusDistance ',
+            6 => 'ApproximateFocusDistance',
             7 => 'FocusDistanceLower',
             8 => 'FocusDistanceUpper',
         },
@@ -4430,7 +4505,8 @@ my %subSecConv = (
             0 => 'GPSLatitude',
             1 => 'GPSLongitude',
         },
-        ValueConv => '"$val[0] $val[1]"',
+        Priority => 0,
+        ValueConv => '(length($val[0]) or length($val[1])) ? "$val[0] $val[1]" : undef',
         PrintConv => '"$prt[0], $prt[1]"',
     },
     LensID => {
@@ -5290,16 +5366,16 @@ sub ProcessExif($$$)
     my $validate = $et->Options('Validate');
     my $htmlDump = $$et{HTML_DUMP};
     my $success = 1;
-    my ($tagKey, $dirSize, $makerAddr, $strEnc);
+    my ($tagKey, $dirSize, $makerAddr, $strEnc, %offsetInfo);
     my $inMakerNotes = $$tagTablePtr{GROUPS}{0} eq 'MakerNotes';
+    my $isExif = ($tagTablePtr eq \%Image::ExifTool::Exif::Main);
 
     # set encoding to assume for strings
     $strEnc = $et->Options('CharsetEXIF') if $$tagTablePtr{GROUPS}{0} eq 'EXIF';
 
     # ignore non-standard EXIF while in strict MWG compatibility mode
     if (($validate or $Image::ExifTool::MWG::strict) and $dirName eq 'IFD0' and
-        $tagTablePtr eq \%Image::ExifTool::Exif::Main and
-        $$et{FILE_TYPE} =~ /^(JPEG|TIFF|PSD)$/)
+        $isExif and $$et{FILE_TYPE} =~ /^(JPEG|TIFF|PSD)$/)
     {
         my $path = $et->MetadataPath();
         unless ($path =~ /^(JPEG-APP1-IFD0|TIFF-IFD0|PSD-EXIFInfo-IFD0)$/) {
@@ -5317,8 +5393,8 @@ sub ProcessExif($$$)
     $dirName eq 'EXIF' and $dirName = $$dirInfo{DirName} = 'IFD0';
     $$dirInfo{Multi} = 1 if $dirName =~ /^(IFD0|SubIFD)$/ and not defined $$dirInfo{Multi};
     # get a more descriptive name for MakerNote sub-directories
-    my $name = $$dirInfo{Name};
-    $name = $dirName unless $name and $inMakerNotes and $name !~ /^MakerNote/;
+    my $dir = $$dirInfo{Name};
+    $dir = $dirName unless $dir and $inMakerNotes and $dir !~ /^MakerNote/;
 
     my ($numEntries, $dirEnd);
     if ($dirStart >= 0 and $dirStart <= $dataLen-2) {
@@ -5330,7 +5406,7 @@ sub ProcessExif($$$)
             if (($verbose > 0 or $validate) and not $$dirInfo{SubIFD}) {
                 my $short = $dirSize - $dirLen;
                 $$et{INDENT} =~ s/..$//; # keep indent the same
-                $et->Warn("Short directory size for $name (missing $short bytes)");
+                $et->Warn("Short directory size for $dir (missing $short bytes)");
                 $$et{INDENT} .= '| ';
             }
             undef $dirSize if $dirEnd > $dataLen; # read from file if necessary
@@ -5362,7 +5438,7 @@ sub ProcessExif($$$)
             }
         }
         unless ($success) {
-            $et->Warn("Bad $name directory");
+            $et->Warn("Bad $dir directory");
             return 0;
         }
         $numEntries = Get16u($dataPt, $dirStart);
@@ -5373,7 +5449,7 @@ sub ProcessExif($$$)
     my $bytesFromEnd = $dataLen - $dirEnd;
     if ($bytesFromEnd < 4) {
         unless ($bytesFromEnd==2 or $bytesFromEnd==0) {
-            $et->Warn("Illegal $name directory size ($numEntries entries)");
+            $et->Warn("Illegal $dir directory size ($numEntries entries)");
             return 0;
         }
     }
@@ -5387,7 +5463,7 @@ sub ProcessExif($$$)
         }
     }
     if ($htmlDump) {
-        my $longName = $name eq 'MakerNotes' ? ($$dirInfo{Name} || $name) : $name;
+        my $longName = $dir eq 'MakerNotes' ? ($$dirInfo{Name} || $dir) : $dir;
         if (defined $makerAddr) {
             my $hdrLen = $dirStart + $dataPos + $base - $makerAddr;
             $et->HDump($makerAddr, $hdrLen, "MakerNotes header", $longName) if $hdrLen > 0;
@@ -5398,7 +5474,7 @@ sub ProcessExif($$$)
         }
         my $tip;
         if ($bytesFromEnd >= 4) {
-            my $nxt = ($name =~ /^(.*?)(\d+)$/) ? $1 . ($2 + 1) : 'Next IFD';
+            my $nxt = ($dir =~ /^(.*?)(\d+)$/) ? $1 . ($2 + 1) : 'Next IFD';
             $tip = sprintf("$nxt offset: 0x%.4x", Get32u($dataPt, $dirEnd));
         }
         $et->HDump($dirEnd + $dataPos + $base, 4, "Next IFD", $tip, 0);
@@ -5428,7 +5504,7 @@ sub ProcessExif($$$)
     my ($warnCount, $lastID) = (0, -1);
     for ($index=0; $index<$numEntries; ++$index) {
         if ($warnCount > 10) {
-            $et->Warn("Too many warnings -- $name parsing aborted", 2) and return 0;
+            $et->Warn("Too many warnings -- $dir parsing aborted", 2) and return 0;
         }
         my $entry = $dirStart + 2 + 12 * $index;
         my $tagID = Get16u($dataPt, $entry);
@@ -5442,7 +5518,7 @@ sub ProcessExif($$$)
                            "Bad format type: $format", 1);
                 # warn unless the IFD was just padded with zeros
                 if ($format or $validate) {
-                    $et->Warn("Bad format ($format) for $name entry $index", $inMakerNotes);
+                    $et->Warn("Bad format ($format) for $dir entry $index", $inMakerNotes);
                     ++$warnCount;
                 }
                 # assume corrupted IFD if this is our first entry (except Sony ILCE-7M2 firmware 1.21)
@@ -5469,27 +5545,27 @@ sub ProcessExif($$$)
             }
         }
         $validate and not $inMakerNotes and Image::ExifTool::Validate::ValidateExif(
-            $et, $tagTablePtr, $tagID, $tagInfo, $lastID, $name, $count, $formatStr);
+            $et, $tagTablePtr, $tagID, $tagInfo, $lastID, $dir, $count, $formatStr);
         my $size = $count * $formatSize[$format];
         my $readSize = $size;
         if ($size > 4) {
             if ($size > 0x7fffffff) {
-                $et->Warn(sprintf("Invalid size (%u) for %s tag 0x%.4x", $size, $name, $tagID), $inMakerNotes);
+                $et->Warn(sprintf("Invalid size (%u) for %s tag 0x%.4x", $size, $dir, $tagID), $inMakerNotes);
                 ++$warnCount;
                 next;
             }
             $valuePtr = Get32u($dataPt, $valuePtr);
             if ($validate and not $inMakerNotes) {
-                $et->Warn(sprintf('Odd offset for %s tag 0x%.4x', $name, $tagID), 1) if $valuePtr & 0x01;
+                $et->Warn(sprintf('Odd offset for %s tag 0x%.4x', $dir, $tagID), 1) if $valuePtr & 0x01;
                 if ($valuePtr < 8 || ($valuePtr + $size > length($$dataPt) and
                                       $valuePtr + $size > $$et{VALUE}{FileSize}))
                 {
-                    $et->Warn(sprintf("Invalid offset for %s tag 0x%.4x", $name, $tagID));
+                    $et->Warn(sprintf("Invalid offset for %s tag 0x%.4x", $dir, $tagID));
                     ++$warnCount;
                     next;
                 }
                 if ($valuePtr + $size > $dirStart + $dataPos and $valuePtr < $dirEnd + $dataPos + 4) {
-                    $et->Warn(sprintf("Value for %s tag 0x%.4x overlaps IFD", $name, $tagID));
+                    $et->Warn(sprintf("Value for %s tag 0x%.4x overlaps IFD", $dir, $tagID));
                 }
             }
             # fix valuePtr if necessary
@@ -5518,13 +5594,12 @@ sub ProcessExif($$$)
                 my $buff;
                 if ($raf) {
                     # avoid loading large binary data unless necessary
-                    # (eg. ImageSourceData -- layers in Photoshop TIFF image)
                     while ($size > BINARY_DATA_LIMIT) {
                         if ($tagInfo) {
                             # make large unknown blocks binary data
                             $$tagInfo{Binary} = 1 if $$tagInfo{Unknown};
                             last unless $$tagInfo{Binary};      # must read non-binary data
-                            last if $$tagInfo{SubDirectory};    # must read SubDirectory data
+                            last if $$tagInfo{SubDirectory};
                             my $lcTag = lc($$tagInfo{Name});
                             if ($$et{OPTIONS}{Binary} and
                                 not $$et{EXCL_TAG_LOOKUP}{$lcTag})
@@ -5546,16 +5621,30 @@ sub ProcessExif($$$)
                         last;
                     }
                     # read from file if necessary
-                    unless (defined $buff or
-                            ($raf->Seek($base + $valuePtr + $dataPos,0) and
-                             $raf->Read($buff,$size) == $size))
-                    {
-                        $et->Warn("Error reading value for $name entry $index", $inMakerNotes);
-                        return 0 unless $inMakerNotes or $htmlDump;
-                        ++$warnCount;
-                        $buff = '' unless defined $buff;
-                        $readSize = length $buff;
-                        $bad = 1;
+                    unless (defined $buff) {
+                        my $wrn;
+                        my $readFromRAF = ($tagInfo and $$tagInfo{ReadFromRAF});
+                        if (not $raf->Seek($base + $valuePtr + $dataPos, 0)) {
+                            $wrn = "Invalid offset for $dir entry $index";
+                        } elsif ($readFromRAF and $size > BINARY_DATA_LIMIT and
+                            not $$et{REQ_TAG_LOOKUP}{lc $$tagInfo{Name}})
+                        {
+                            $buff = "$$tagInfo{Name} data $size bytes";
+                            $readSize = length $buff;
+                        } elsif ($raf->Read($buff,$size) != $size) {
+                            $wrn = "Error reading value for $dir entry $index";
+                        } elsif ($readFromRAF) {
+                            # seek back to the start of the value
+                            $raf->Seek($base + $valuePtr + $dataPos, 0);
+                        }
+                        if ($wrn) {
+                            $et->Warn($wrn, $inMakerNotes);
+                            return 0 unless $inMakerNotes or $htmlDump;
+                            ++$warnCount;
+                            $buff = '' unless defined $buff;
+                            $readSize = length $buff;
+                            $bad = 1;
+                        }
                     }
                     $valueDataLen = length $buff;
                     $valueDataPt = \$buff;
@@ -5605,7 +5694,7 @@ sub ProcessExif($$$)
                             };
                         }
                     } else {
-                        $et->Warn("Bad offset for $name $tagStr", $inMakerNotes);
+                        $et->Warn("Bad offset for $dir $tagStr", $inMakerNotes);
                         ++$warnCount;
                     }
                     unless (defined $buff) {
@@ -5620,7 +5709,7 @@ sub ProcessExif($$$)
             # warn about suspect offsets if they didn't already cause another warning
             if (defined $suspect and $suspect == $warnCount) {
                 my $tagStr = $tagInfo ? $$tagInfo{Name} : sprintf('tag 0x%.4x', $tagID);
-                if ($et->Warn("Suspicious $name offset for $tagStr", $inMakerNotes)) {
+                if ($et->Warn("Suspicious $dir offset for $tagStr", $inMakerNotes)) {
                     ++$warnCount;
                     next unless $verbose;
                 }
@@ -5630,7 +5719,7 @@ sub ProcessExif($$$)
         $formatStr = 'int8u' if $format == 7 and $count == 1;
 
         my ($val, $subdir, $wrongFormat);
-        if ($tagID > 0xf000 and $tagTablePtr eq \%Image::ExifTool::Exif::Main) {
+        if ($tagID > 0xf000 and $isExif) {
             my $oldInfo = $$tagTablePtr{$tagID};
             if ((not $oldInfo or (ref $oldInfo eq 'HASH' and $$oldInfo{Condition} and
                 not $$oldInfo{PSRaw})) and not $bad)
@@ -5693,7 +5782,11 @@ sub ProcessExif($$$)
             }
             # verify that offset-type values are integral
             if (($$tagInfo{IsOffset} or $$tagInfo{SubIFD}) and not $intFormat{$formatStr}) {
-                $et->Warn("Wrong format ($formatStr) for $name $$tagInfo{Name}");
+                $et->Warn(sprintf('Wrong format (%s) for %s 0x%.4x %s',$formatStr,$dir,$tagID,$$tagInfo{Name}));
+                if ($validate) {
+                    $$et{WrongFormat}{"$dir:$$tagInfo{Name}"} = 1;
+                    $offsetInfo{$tagID} = [ $tagInfo, '' ];
+                }
                 next unless $verbose;
                 $wrongFormat = 1;
             }
@@ -5731,7 +5824,7 @@ sub ProcessExif($$$)
                 } else {
                     $tagName = sprintf("Tag 0x%.4x",$tagID);
                 }
-                my $dname = sprintf("${name}-%.2d", $index);
+                my $dname = sprintf("${dir}-%.2d", $index);
                 # build our tool tip
                 $size < 0 and $size = $count * $formatSize[$format];
                 my $fstr = "$formatName[$format]\[$count]";
@@ -5798,7 +5891,12 @@ sub ProcessExif($$$)
                 }
             } else {
                 if ($tagID <= $lastID and not $inMakerNotes) {
-                    $et->Warn(sprintf('Tag ID 0x%.4x out of sequence in %s', $tagID, $dirName));
+                    my $str = $tagInfo ? ' '.$$tagInfo{Name} : '';
+                    if ($tagID == $lastID) {
+                        $et->Warn(sprintf('Duplicate tag 0x%.4x%s in %s', $tagID, $str, $dirName));
+                    } else {
+                        $et->Warn(sprintf('Tag ID 0x%.4x%s out of sequence in %s', $tagID, $str, $dirName));
+                    }
                 }
                 $lastID = $tagID;
                 if ($verbose > 0) {
@@ -5938,7 +6036,7 @@ sub ProcessExif($$$)
                                 $msg .= " (directory end is $end but EXIF size is only $subdirDataLen)";
                             }
                         }
-                        $et->Warn($msg);
+                        $et->Warn($msg, $inMakerNotes);
                         last;
                     }
                 }
@@ -6019,8 +6117,8 @@ sub ProcessExif($$$)
                 if ($doMaker and $doMaker eq '2') {
                     # extract maker notes without rebuilding (no fixup information)
                     delete $$et{MAKER_NOTE_FIXUP};
-                } elsif (not $$tagInfo{NotIFD}) {
-                    # this is a pain, but we must rebuild EXIF-typemaker notes to
+                } elsif (not $$tagInfo{NotIFD} or $$tagInfo{IsPhaseOne}) {
+                    # this is a pain, but we must rebuild EXIF-type maker notes to
                     # include all the value data if data was outside the maker notes
                     my %makerDirInfo = (
                         Name       => $tagStr,
@@ -6036,9 +6134,16 @@ sub ProcessExif($$$)
                         FixOffsets => $$subdir{FixOffsets},
                         TagInfo    => $tagInfo,
                     );
-                    $makerDirInfo{FixBase} = 1 if $$subdir{FixBase};
-                    # rebuild maker notes (creates $$et{MAKER_NOTE_FIXUP})
-                    my $val2 = RebuildMakerNotes($et, $newTagTable, \%makerDirInfo);
+                    my $val2;
+                    if ($$tagInfo{IsPhaseOne}) {
+                        $$et{DropTags} = 1;
+                        $val2 = Image::ExifTool::PhaseOne::WritePhaseOne($et, \%makerDirInfo, $newTagTable);
+                        delete $$et{DropTags};
+                    } else {
+                        $makerDirInfo{FixBase} = 1 if $$subdir{FixBase};
+                        # rebuild maker notes (creates $$et{MAKER_NOTE_FIXUP})
+                        $val2 = RebuildMakerNotes($et, \%makerDirInfo, $newTagTable);
+                    }
                     if (defined $val2) {
                         $val = $val2;
                     } elsif ($size > 4) {
@@ -6068,6 +6173,13 @@ sub ProcessExif($$$)
             }
             $val = join(' ', @vals);
         }
+        if ($validate) {
+            if ($$tagInfo{OffsetPair}) {
+                $offsetInfo{$tagID} = [ $tagInfo, $val ];
+            } elsif ($saveForValidate{$tagID} and $isExif) {
+                $offsetInfo{$tagID} = $val;
+            }
+        }
         # save the value of this tag
         $tagKey = $et->FoundTag($tagInfo, $val);
         if (defined $tagKey) {
@@ -6076,6 +6188,11 @@ sub ProcessExif($$$)
             # save original components of rational numbers (used when copying)
             $$et{RATIONAL}{$tagKey} = $rational if defined $rational;
         }
+    }
+
+    # validate image data offsets for this IFD
+    if ($validate and %offsetInfo) {
+        Image::ExifTool::Validate::ValidateOffsetInfo($et, \%offsetInfo, $$dirInfo{DirName}, $inMakerNotes)
     }
 
     # scan for subsequent IFD's if specified
@@ -6172,6 +6289,8 @@ under the same terms as Perl itself.
 =item L<http://tools.ietf.org/html/draft-ietf-fax-tiff-fx-extension1-01>
 
 =item L<http://wwwimages.adobe.com/www.adobe.com/content/dam/Adobe/en/devnet/cinemadng/pdfs/CinemaDNG_Format_Specification_v1_1.pdf>
+
+=item L<http://geotiff.maptools.org/spec/geotiffhome.html>
 
 =back
 

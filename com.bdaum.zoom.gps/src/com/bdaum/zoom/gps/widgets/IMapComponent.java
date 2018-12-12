@@ -131,6 +131,10 @@ public interface IMapComponent {
 	/**
 	 * No image with geo tags
 	 */
+	int AREA = -5;
+	/**
+	 * No image with geo tags
+	 */
 	int NONE = 0;
 	/**
 	 * One image with geo tags
@@ -252,7 +256,18 @@ public interface IMapComponent {
 	 */
 	void refresh();
 
+	/**
+	 * @return the most recent history item
+	 */
 	HistoryItem getLastHistoryItem();
+
+	/**
+	 * Shows a highlighted area around the specified coordinates with the specified diameter
+	 * @param latitude
+	 * @param longitude
+	 * @param km
+	 */
+	void setArea(double latitude, double longitude, double km);
 
 
 }

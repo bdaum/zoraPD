@@ -43,9 +43,9 @@ import org.eclipse.swt.graphics.ImageData;
 import com.bdaum.zoom.image.IExifLoader;
 import com.bdaum.zoom.image.ZImage;
 import com.bdaum.zoom.image.internal.swt.ImageLoader;
-import com.bdaum.zoom.program.BatchUtilities;
+import com.bdaum.zoom.program.HtmlEncoderDecoder;
 
-public class ExifTool implements IExifLoader {
+public class ExifTool implements IExifLoader, Closeable {
 
 	private static class IOStream implements Closeable {
 		private OutputStreamWriter writer;
@@ -81,13 +81,12 @@ public class ExifTool implements IExifLoader {
 		}
 	}
 
-	private static final String[] B_ICCPROFILE = new String[] { "-b", "-icc_profile"}; //$NON-NLS-1$ //$NON-NLS-2$
-	private static final String[] B_PREVIEWIMAGE_FAST = new String[] { "-b", //$NON-NLS-1$
-			"-previewimage", "-fast" }; //$NON-NLS-1$ //$NON-NLS-2$
+	private static final String[] B_ICCPROFILE = new String[] { "-b", "-icc_profile" }; //$NON-NLS-1$ //$NON-NLS-2$
+	private static final String[] B_PREVIEWIMAGE_FAST = new String[] { "-b", "-previewimage", "-fast" }; //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+	private static final String[] E_S_N_STRUCT = new String[] { "-E", "-S", "-n", "-g0", "-struct" }; //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 	private static final String[] E_S_N_FAST_STRUCT = new String[] { "-E", "-S", "-n", "-fast", "-g0", "-struct" }; //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 	private static final String[] E_S_N_FAST2_STRUCT = new String[] { "-E", "-S", "-n", "-fast2", "-g0", "-struct" }; //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-	private static final String[] E_S_N_FAST3_STRUCT = new String[] { "-E", "-S", "-n", "-fast2", "-g0", "-struct" }; //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-	private static final String[] E_S_N_STRUCT = new String[] { "-E", "-S", "-n", "-g0", "-struct" }; //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+	private static final String[] E_S_N_FAST3_STRUCT = new String[] { "-Make", "-S", "-n" }; //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
 	private static final String[] STAYOPEN = new String[] { "-stay_open", //$NON-NLS-1$
 			"True", "-@", "-" }; //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 	private static Process proc;
@@ -110,11 +109,12 @@ public class ExifTool implements IExifLoader {
 	private boolean abort;
 	private int fast;
 	private Daemon cleanupJob;
-	
+	private HtmlEncoderDecoder htmlEncoderDecoder;
+
 	private Thread shutdownHook = new Thread() {
 		@Override
 		public void run() {
-			ExifTool.this.dispose();
+			ExifTool.this.close();
 		}
 	};
 
@@ -131,7 +131,7 @@ public class ExifTool implements IExifLoader {
 			cleanupJob = new Daemon(Messages.ExifTool_exiftool_cleanup, CLEANUP_DELAY) {
 				@Override
 				protected void doRun(IProgressMonitor monitor) {
-					ExifTool.this.close();
+					ExifTool.this.closeStreams();
 				}
 			};
 			resetCleanupTask();
@@ -166,23 +166,23 @@ public class ExifTool implements IExifLoader {
 			String[] parms;
 			switch (fast) {
 			case 1:
-				parms =  E_S_N_FAST_STRUCT;
+				parms = E_S_N_FAST_STRUCT;
 				break;
 			case 2:
-				parms =  E_S_N_FAST2_STRUCT;
+				parms = E_S_N_FAST2_STRUCT;
 				break;
 			case 3:
-				parms =  E_S_N_FAST3_STRUCT;
+				parms = E_S_N_FAST3_STRUCT;
 				break;
-
 			default:
-				parms =  E_S_N_STRUCT;
+				parms = E_S_N_STRUCT;
 				break;
 			}
 			try {
 				String result = (String) connectToExifTool(parms, false);
 				if (result != null) {
 					StringTokenizer st = new StringTokenizer(result, "\n"); //$NON-NLS-1$
+					StringBuilder sb = new StringBuilder();
 					while (st.hasMoreTokens()) {
 						String line = st.nextToken().trim();
 						if (line.startsWith("-")) //$NON-NLS-1$
@@ -191,8 +191,8 @@ public class ExifTool implements IExifLoader {
 							int p = line.indexOf(':');
 							if (p >= 0) {
 								String key = line.substring(0, p);
-								StringBuilder sb = new StringBuilder();
-								BatchUtilities.decodeHTML(line.substring(p + 1).trim(), sb);
+								sb.setLength(0);
+								getHtmlEncoderDecoder().decodeHTML(line.substring(p + 1).trim(), sb);
 								metadata.put(key, sb.toString());
 								if (isMakerNote)
 									makerNotes.add(key);
@@ -293,7 +293,7 @@ public class ExifTool implements IExifLoader {
 		try {
 			ProcessBuilder processBuilder = new ProcessBuilder(args);
 			processBuilder.redirectErrorStream(true); // redirect error stream to avoid blocked input stream (and hope
-														// error messages - if any -  are sorted out in later stages)
+														// error messages - if any - are sorted out in later stages)
 			proc = processBuilder.start();
 		} catch (Exception e) {
 			throw new ConversionException(Messages.ExifTool_error_launching_error_tool, e);
@@ -301,7 +301,7 @@ public class ExifTool implements IExifLoader {
 		return new IOStream(proc.getInputStream(), new OutputStreamWriter(proc.getOutputStream()));
 	}
 
-	public void dispose() {
+	public void close() {
 		if (!once)
 			try {
 				Runtime.getRuntime().removeShutdownHook(shutdownHook);
@@ -315,7 +315,7 @@ public class ExifTool implements IExifLoader {
 		if (!once) {
 			if (cleanupJob != null)
 				cleanupJob.cancel();
-			close();
+			closeStreams();
 		}
 		if (proc != null) {
 			proc.destroy();
@@ -423,7 +423,7 @@ public class ExifTool implements IExifLoader {
 		return null;
 	}
 
-	protected void close() {
+	protected void closeStreams() {
 		if (streams == null)
 			return;
 		abort = true;
@@ -440,10 +440,19 @@ public class ExifTool implements IExifLoader {
 
 	/**
 	 * Sets the ExifTools -fast, -fast2, -fast3 parameters
-	 * @param fast - 0-3 (default 0)
+	 * 
+	 * @param fast
+	 *            - 0-3 (default 0) 0 = default operation 1 = don't check for a
+	 *            trailer 2 = don't process maker notes 3 = record only the Make tag
 	 */
 	public void setFast(int fast) {
 		this.fast = fast;
+	}
+
+	private HtmlEncoderDecoder getHtmlEncoderDecoder() {
+		if (htmlEncoderDecoder == null)
+			htmlEncoderDecoder = new HtmlEncoderDecoder();
+		return htmlEncoderDecoder;
 	}
 
 }

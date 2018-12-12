@@ -31,6 +31,7 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.FileWatchManager;
+import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.operations.DbOperation;
 import com.bdaum.zoom.operations.IProfiledOperation;
 import com.bdaum.zoom.program.DiskFullException;
@@ -38,22 +39,20 @@ import com.bdaum.zoom.program.DiskFullException;
 @SuppressWarnings("restriction")
 public abstract class AbstractRenamingOperation extends DbOperation {
 
-	protected FileWatchManager fileWatchManager = CoreActivator.getDefault()
-			.getFileWatchManager();
+	protected FileWatchManager fileWatchManager = CoreActivator.getDefault().getFileWatchManager();
 
 	public AbstractRenamingOperation(String label) {
 		super(label);
 	}
 
-	protected void renameAsset(Asset renamedAsset, File file, File dest,
-			IProgressMonitor aMonitor, FileWatchManager fwManager) {
-		URI[] xmpOrigURIs = Core.getSidecarURIs(file.toURI());
+	protected void renameAsset(Asset renamedAsset, File file, File dest, IProgressMonitor aMonitor,
+			FileWatchManager fwManager) {
+		File[] xmpOrigs = Core.getSidecarFiles(file.toURI(), false);
 		URI newURI = dest.toURI();
-		URI[] xmpTargetURIs = Core.getSidecarURIs(newURI);
+		File[] xmpTargets = Core.getSidecarFiles(newURI, false);
 		URI voiceOrigURI = null;
 		URI voiceTargetURI = null;
-		String voiceFileURI = renamedAsset.getVoiceFileURI();
-		if (".".equals(voiceFileURI)) { //$NON-NLS-1$
+		if (AssetEnsemble.hasCloseVoiceNote(renamedAsset)) {
 			voiceOrigURI = Core.getVoicefileURI(file);
 			voiceTargetURI = Core.getVoicefileURI(dest);
 		}
@@ -64,15 +63,14 @@ public abstract class AbstractRenamingOperation extends DbOperation {
 			renamedAsset.setName(Core.getFileName(nu, false));
 			dbManager.store(renamedAsset);
 			aMonitor.worked(1);
-			for (int i = 0; i < xmpOrigURIs.length; i++) {
-				File xmpFile = new File(xmpOrigURIs[i]);
+			for (int i = 0; i < xmpOrigs.length; i++) {
+				File xmpFile = xmpOrigs[i];
 				File xmpTarget = null;
 				if (xmpFile.exists()) {
-					xmpTarget = new File(xmpTargetURIs[i]);
+					xmpTarget = xmpTargets[i];
 					if (xmpTarget.exists())
 						xmpTarget.delete();
-					fwManager.moveFileSilently(xmpFile, xmpTarget, opId,
-							aMonitor);
+					fwManager.moveFileSilently(xmpFile, xmpTarget, opId, aMonitor);
 				}
 			}
 			if (voiceOrigURI != null) {
@@ -82,17 +80,13 @@ public abstract class AbstractRenamingOperation extends DbOperation {
 					voiceTarget = new File(voiceTargetURI);
 					if (voiceTarget.exists())
 						voiceTarget.delete();
-					fwManager.moveFileSilently(voiceFile, voiceTarget, opId,
-							aMonitor);
+					fwManager.moveFileSilently(voiceFile, voiceTarget, opId, aMonitor);
 				}
 			}
 		} catch (IOException e) {
-			addError(
-					NLS.bind(
-							Messages.getString("RenameAssetOperation.renaming_failed"), file), e); //$NON-NLS-1$
+			addError(NLS.bind(Messages.getString("RenameAssetOperation.renaming_failed"), file), e); //$NON-NLS-1$
 		} catch (DiskFullException e) {
-			addError(NLS.bind(
-					Messages.getString("RenameAssetOperation.renaming_failed"),//$NON-NLS-1$
+			addError(NLS.bind(Messages.getString("RenameAssetOperation.renaming_failed"), //$NON-NLS-1$
 					file), e);
 		}
 	}

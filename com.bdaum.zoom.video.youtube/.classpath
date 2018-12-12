@@ -1,27 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="guava-13.0.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="mailapi.jar"/>
-	<classpathentry exported="true" kind="lib" path="gdata-core-1.0.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="https://developers.google.com/gdata/javadoc/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry exported="true" kind="lib" path="gdata-media-1.0.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="https://developers.google.com/gdata/javadoc/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry exported="true" kind="lib" path="gdata-youtube-2.0.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="https://developers.google.com/gdata/javadoc/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry exported="true" kind="lib" path="gdata-client-1.0.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="https://developers.google.com/gdata/javadoc/"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="libs/google-http-client-jackson2-1.25.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-oauth-client-jetty-1.25.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-api-client-jackson2-1.25.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-api-client-1.25.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-api-client-gson-1.25.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-api-client-java6-1.25.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-api-client-servlet-1.25.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-http-client-1.25.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-http-client-gson-1.25.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-oauth-client-1.25.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-oauth-client-java6-1.25.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gson-2.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/httpclient-4.5.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/jsr305-3.0.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="google-api-services-youtube-v3-rev205-1.25.0.jar"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>

@@ -444,50 +444,46 @@ public class XMPUtilities {
 		return null;
 	}
 
-	private static byte[] APP1 = new byte[] { (byte) 0xff, (byte) 0xe1, 0, 0, // Marker
-			// (4)
-			(byte) 0x45, (byte) 0x78, (byte) 0x69, (byte) 0x66, 0, 0, // Exif
-			// header
-			// (6)
-			'M', 'M', 0, (byte) 0x2A, 0, 0, 0, 8, // TIFF header (Motorola byte
-			// order) (8)
+	private static byte[] APP1 = new byte[] { (byte) 0xff, (byte) 0xe1, 0, 0, // Marker (4)
+			'E', 'x', 'i', 'f', 0, 0, // Exif header (6)
+			'M', 'M', 0, '*', 0, 0, 0, 8, // TIFF header (Motorola byte order) (8)
 			0, 1, // IFD0 1 entry (2)
-			(byte) 0x02, (byte) 0xbc, 0, 1, 0, 0, 'c', 'c', 0, 0, 0, 0x16, // XMP
-			// entry,
-			// tag, byte,
-			// count, offset
-			// (12)
+			2, (byte) 0xbc, 0, 1, 0, 0, 'c', 'c', 0, 0, 0, 0x16, // XMP entry, tag, byte, count, offset (12)
 			0, 0, 0, 0 // Pointer to next IFD
 	};
 
+	public static byte[] getXmpFromJPEG(byte[] jpeg) {
+		if (hasExif(jpeg)) {
+			int ml = readWord(jpeg, 28);
+			if (ml > 0) {
+				byte[] metadata = new byte[ml];
+				System.arraycopy(jpeg, 2 + APP1.length, metadata, 0, ml);
+				return metadata;
+			}
+		}
+		return null;
+	}
+
 	public static byte[] insertXmpIntoJPEG(byte[] jpeg, byte[] metadata) {
 		int ml = metadata.length;
-		while (ml > 0) {
+		while (ml > 0)
 			if (metadata[--ml] != 0) {
 				++ml;
 				break;
 			}
-		}
 		int ml2 = (ml + 1) & 0xfffffffe;
 		int q = 2;
-		if (jpeg.length > APP1.length) {
-			if (jpeg[q + 4] == APP1[4] && jpeg[q + 5] == APP1[5] && jpeg[q + 6] == APP1[6] && jpeg[q + 7] == APP1[7]) {
-				// Has already an EXIF header
-				int oml = readWord(jpeg, q + 26);
-				q += APP1.length + oml + 1;
-			}
-		}
+		if (hasExif(jpeg))
+			q += APP1.length + readWord(jpeg, 28) + 1;
 		byte[] buf = new byte[jpeg.length - q + ml2 + APP1.length + 2];
 		buf[0] = jpeg[0];
 		buf[1] = jpeg[1];
-		int p = 2;
-		System.arraycopy(APP1, 0, buf, p, APP1.length);
-		writeWord(buf, p + 2, APP1.length - 2 + ml2);
-		writeWord(buf, p + 26, ml);
-		p += APP1.length;
+		System.arraycopy(APP1, 0, buf, 2, APP1.length);
+		writeWord(buf, 4, APP1.length - 2 + ml2);
+		writeWord(buf, 28, ml);
+		int p = 2 + APP1.length;
 		System.arraycopy(metadata, 0, buf, p, ml);
-		p += ml2;
-		System.arraycopy(jpeg, q, buf, p, jpeg.length - q);
+		System.arraycopy(jpeg, q, buf, p + ml2, jpeg.length - q);
 		return buf;
 	}
 
@@ -498,6 +494,10 @@ public class XMPUtilities {
 	private static void writeWord(byte[] buf, int i, int v) {
 		buf[i] = (byte) (v >> 8);
 		buf[i + 1] = (byte) v;
+	}
+
+	private static boolean hasExif(byte[] jpeg) {
+		return jpeg.length > APP1.length && jpeg[6] == 'E' && jpeg[7] == 'x' && jpeg[8] == 'i' && jpeg[9] == 'f';
 	}
 
 }

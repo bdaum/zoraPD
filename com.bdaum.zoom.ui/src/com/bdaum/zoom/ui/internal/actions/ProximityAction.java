@@ -37,8 +37,8 @@ import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.AssetSelection;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
-import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.dialogs.ProximityDialog;
 
 public class ProximityAction extends Action {
@@ -83,18 +83,18 @@ public class ProximityAction extends Action {
 			lat /= n;
 			lon /= n;
 			double mx = 0;
+			char unit = Core.getCore().getDbFactory().getDistanceUnit();
 			for (Asset asset : selection)
 				if (!Double.isNaN(asset.getGPSLatitude()) && !Double.isNaN(asset.getGPSLongitude()))
-					mx = Math.max(mx, Core.distance(lat, lon, asset.getGPSLatitude(), asset.getGPSLongitude(),
-							Core.getCore().getDbFactory().getDistanceUnit()));
-			Double[] values = new Double[] { lat, lon, (distance + mx) };
+					mx = Math.max(mx, Core.distance(lat, lon, asset.getGPSLatitude(), asset.getGPSLongitude(), unit));
+			Object[] values = new Object[] { lat, lon, (distance + mx), unit };
 			SmartCollectionImpl coll = new SmartCollectionImpl(Messages.ProximityAction_proximity_search, false, false,
 					true, dialog.isNetworked(), null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 			coll.addCriterion(new CriterionImpl(QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), null, values,
 					QueryField.NOTGREATER, false));
 			coll.addSortCriterion(new SortCriterionImpl(QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), null, false));
 			coll.setSmartCollection_subSelection_parent(dialog.getParentCollection());
-			UiActivator.getDefault().getNavigationHistory(adaptable.getAdapter(IWorkbenchWindow.class))
+			Ui.getUi().getNavigationHistory(adaptable.getAdapter(IWorkbenchWindow.class))
 					.postSelection(new StructuredSelection(coll));
 		}
 	}

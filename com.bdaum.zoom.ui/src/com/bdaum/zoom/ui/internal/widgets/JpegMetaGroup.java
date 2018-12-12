@@ -1,12 +1,14 @@
 package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
+
+import com.bdaum.zoom.css.CSSProperties;
 
 public class JpegMetaGroup extends Composite {
 
@@ -21,10 +23,10 @@ public class JpegMetaGroup extends Composite {
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 1, 1));
 		jpegRemark = new Label(parent, SWT.NONE);
 		jpegRemark.setText(Messages.JpegMetaGroup_xmp_warning);
-		jpegRemark.setData("id", "errors"); //$NON-NLS-1$//$NON-NLS-2$
-		jpegButton.addSelectionListener(new SelectionAdapter() {
+		jpegRemark.setData(CSSProperties.ID, CSSProperties.ERRORS);
+		jpegButton.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateLabel();
 			}
 		});

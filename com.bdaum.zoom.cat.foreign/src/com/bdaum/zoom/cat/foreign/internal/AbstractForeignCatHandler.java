@@ -46,9 +46,8 @@ public abstract class AbstractForeignCatHandler implements IForeignCatHandler {
 	protected ImportState importState;
 	private ImageMediaSupport imageMediaSupport;
 
-	protected ResultSet performQuery(IProgressMonitor monitor,
-			final ImportState importState, Statement statement, String query,
-			final String fileName) throws SQLException {
+	protected ResultSet performQuery(IProgressMonitor monitor, final ImportState importState, Statement statement,
+			String query, final String fileName) throws SQLException {
 		ResultSet rs1 = statement.executeQuery(query);
 		monitor.worked(1);
 		final IDbManager dbManager = importState.operation.getDbManager();
@@ -59,23 +58,17 @@ public abstract class AbstractForeignCatHandler implements IForeignCatHandler {
 		if (year != cal.get(Calendar.YEAR))
 			importState.meta.setLastYearSequenceNo(0);
 		if (importState.operation.storeSafely(() -> {
-			previousImport = dbManager.createLastImportCollection(
-					importState.importDate,
-					false,
-					NLS.bind(
-							Messages.AbstractForeignCatHandler_import_from_foreign,
-							fileName));
+			previousImport = dbManager.createLastImportCollection(importState.importDate, false,
+					NLS.bind(Messages.AbstractForeignCatHandler_import_from_foreign, fileName), false);
 			dbManager.store(importState.meta);
 		}, 1))
-			((ImportForeignCatOperation) importState.operation)
-					.fireStructureModified();
+			((ImportForeignCatOperation) importState.operation).fireStructureModified();
 		monitor.worked(1);
 		return rs1;
 	}
 
-	protected Statement initStatement(IProgressMonitor monitor,
-			Connection connection, String query, final ImportState importState)
-			throws SQLException {
+	protected Statement initStatement(IProgressMonitor monitor, Connection connection, String query,
+			final ImportState importState) throws SQLException {
 		Statement statement = connection.createStatement();
 		statement.setQueryTimeout(30); // set timeout to 30 sec.
 		int n = 0;
@@ -83,8 +76,7 @@ public abstract class AbstractForeignCatHandler implements IForeignCatHandler {
 		while (rs.next())
 			++n;
 		importState.nFiles = n;
-		((ImportForeignCatOperation) importState.operation).init(monitor,
-				IMediaSupport.IMPORTWORKSTEPS * n + 3);
+		((ImportForeignCatOperation) importState.operation).init(monitor, IMediaSupport.IMPORTWORKSTEPS * n + 3);
 		return statement;
 	}
 
@@ -95,9 +87,7 @@ public abstract class AbstractForeignCatHandler implements IForeignCatHandler {
 	}
 
 	protected void handleOutOfMemoryError(String fileName, OutOfMemoryError e) {
-		importState.operation.addError(
-				NLS.bind(Messages.AbstractForeignCatHandler_not_enough_memory,
-						fileName), e);
+		importState.operation.addError(NLS.bind(Messages.AbstractForeignCatHandler_not_enough_memory, fileName), e);
 	}
 
 	/**
@@ -108,8 +98,7 @@ public abstract class AbstractForeignCatHandler implements IForeignCatHandler {
 	}
 
 	protected IMediaSupport getMediaSupport(String format) {
-		IMediaSupport mediaSupport = CoreActivator.getDefault()
-				.getMediaSupport(format);
+		IMediaSupport mediaSupport = CoreActivator.getDefault().getMediaSupport(format);
 		if (mediaSupport != null)
 			return mediaSupport;
 		if (imageMediaSupport == null)

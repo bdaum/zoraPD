@@ -19,8 +19,6 @@
  */
 package com.bdaum.zoom.gps.naming.geonaming.internal;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.osgi.framework.BundleContext;
 
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
@@ -28,7 +26,7 @@ import com.bdaum.zoom.ui.internal.ZUiPlugin;
 @SuppressWarnings("restriction")
 public class GeonamingActivator extends ZUiPlugin {
 
-	private static final String PLUGIN_ID = "com.bdaum.zoom.gps.naming.geonaming"; //$NON-NLS-1$
+	public static final String PLUGIN_ID = "com.bdaum.zoom.gps.naming.geonaming"; //$NON-NLS-1$
 	private static GeonamingActivator plugin;
 
 	public static GeonamingActivator getDefault() {
@@ -45,9 +43,5 @@ public class GeonamingActivator extends ZUiPlugin {
 	public void stop(BundleContext context) throws Exception {
 		plugin = null;
 		super.stop(context);
-	}
-
-	public void logError(String message, Throwable e) {
-		getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, message, e));
 	}
 }

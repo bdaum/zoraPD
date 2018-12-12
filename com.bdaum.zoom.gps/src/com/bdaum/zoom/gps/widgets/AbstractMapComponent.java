@@ -45,7 +45,9 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.eclipse.core.runtime.ListenerList;
-import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
@@ -53,7 +55,6 @@ import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.browser.StatusTextListener;
-import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -70,7 +71,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.osgi.framework.Bundle;
@@ -91,99 +91,16 @@ import com.bdaum.zoom.gps.internal.GpsUtilities;
 import com.bdaum.zoom.gps.internal.Icons;
 import com.bdaum.zoom.gps.internal.Icons.Icon;
 import com.bdaum.zoom.gps.internal.dialogs.DirPinDialog;
+import com.bdaum.zoom.gps.internal.dialogs.SearchDetailDialog;
+import com.bdaum.zoom.gps.internal.preferences.PreferenceConstants;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
-import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.gps.Trackpoint;
 import com.bdaum.zoom.ui.gps.WaypointArea;
-import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
-public abstract class AbstractMapComponent implements IMapComponent {
-
-	public class SearchDetailDialog extends ZTitleAreaDialog {
-
-		private Combo combo;
-		private String[] serviceNames;
-		private int dflt = -1;
-		private String result;
-		private String current;
-		private StackLayout stackLayout;
-		private Map<String, Control> stackMap = new HashMap<>(5);
-		private CGroup parmGroup;
-
-		public SearchDetailDialog(Shell parentShell, String current) {
-			super(parentShell);
-			this.current = current;
-		}
-
-		@Override
-		public void create() {
-			super.create();
-			setTitle(Messages.AbstractMapComponent_loc_search_config);
-			setMessage(Messages.AbstractMapComponent_select_service_provider);
-		}
-
-		@Override
-		protected Control createDialogArea(Composite parent) {
-			Composite area = (Composite) super.createDialogArea(parent);
-			Composite composite = new Composite(area, SWT.NONE);
-			composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-			composite.setLayout(new GridLayout(2, false));
-			new Label(composite, SWT.NONE).setText(Messages.AbstractMapComponent_service);
-			combo = new Combo(composite, SWT.DROP_DOWN | SWT.READ_ONLY);
-			combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-			IGeocodingService[] namingServices = GpsActivator.getDefault().getNamingServices();
-			serviceNames = new String[namingServices.length];
-			int select = -1;
-			for (int i = 0; i < namingServices.length; i++) {
-				serviceNames[i] = namingServices[i].getName();
-				if (namingServices[i].isDefault())
-					dflt = i;
-				if (serviceNames[i].equals(current))
-					select = i;
-			}
-			if (select < 0)
-				select = dflt;
-			combo.setItems(serviceNames);
-			combo.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					updateStack(combo.getSelectionIndex());
-				}
-			});
-			GridData data = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
-			data.widthHint = 500;
-			data.heightHint = 250;
-			parmGroup = new CGroup(composite, SWT.NONE);
-			parmGroup.setLayoutData(data);
-			parmGroup.setText(Messages.AbstractMapComponent_parameters);
-			stackLayout = new StackLayout();
-			parmGroup.setLayout(stackLayout);
-			for (int i = 0; i < namingServices.length; i++)
-				stackMap.put(namingServices[i].getName(), namingServices[i].createParameterGroup(parmGroup));
-			combo.select(select);
-			updateStack(select);
-			return area;
-		}
-
-		public void updateStack(int index) {
-			stackLayout.topControl = stackMap.get(serviceNames[index]);
-			parmGroup.layout(true, true);
-		}
-
-		@Override
-		protected void okPressed() {
-			result = combo.getText();
-			super.okPressed();
-		}
-
-		public String getResult() {
-			return result;
-		}
-
-	}
+public abstract class AbstractMapComponent implements IMapComponent, IPreferenceChangeListener {
 
 	private static final String SHOWN = "shown="; //$NON-NLS-1$
 
@@ -294,7 +211,6 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	private static final String NOSCRIPT = "${noscript}"; //$NON-NLS-1$
 
 	private static final String MAP_HTML = "map.html"; //$NON-NLS-1$
-	private static final String SEARCHSERVICE = "searchService"; //$NON-NLS-1$
 
 	// private
 	private ListenerList<CoordinatesListener> coordinatesListeners = new ListenerList<>();
@@ -320,7 +236,6 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	private ToolBar deleteBar;
 	private ToolItem deleteButton;
 	private Button searchButton;
-	private IDialogSettings settings;
 
 	static {
 		usformat.setMaximumFractionDigits(5);
@@ -334,7 +249,6 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 */
 
 	public void createComponent(Composite parent, boolean header) {
-		settings = GpsActivator.getDefault().getDialogSettings();
 		area = new Composite(parent, SWT.NONE);
 		area.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		GridLayout layout = new GridLayout(1, false);
@@ -466,7 +380,7 @@ public abstract class AbstractMapComponent implements IMapComponent {
 			}
 		});
 		explanationLabel = new Label(header, SWT.WRAP);
-		explanationLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		explanationLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		explanationLabel.setText(Messages.AbstractMapComponent_explanation);
 		deleteBar = new ToolBar(header, SWT.HORIZONTAL);
 		deleteButton = new ToolItem(deleteBar, SWT.PUSH);
@@ -523,7 +437,8 @@ public abstract class AbstractMapComponent implements IMapComponent {
 							currentService == null ? null : currentService.getName());
 					if (dialog.open() == SearchDetailDialog.OK) {
 						String result = dialog.getResult();
-						settings.put(SEARCHSERVICE, result);
+						GpsActivator.getDefault().getPreferenceStore().setValue(PreferenceConstants.NAMINGSERVICE,
+								result);
 						updateSearchButton();
 					}
 				}
@@ -531,21 +446,28 @@ public abstract class AbstractMapComponent implements IMapComponent {
 			}
 		});
 		updateSearchButton();
+		InstanceScope.INSTANCE.getNode(GpsActivator.PLUGIN_ID).addPreferenceChangeListener(this);
 	}
 
-	private IGeocodingService getSearchService() {
-		return GpsActivator.getDefault().getNamingServiceByName(settings.get(SEARCHSERVICE));
+	public void preferenceChange(PreferenceChangeEvent event) {
+		if (event.getKey().equals(PreferenceConstants.NAMINGSERVICE))
+			updateSearchButton();
+	}
+
+	private static IGeocodingService getSearchService() {
+		return GpsActivator.getDefault().getNamingService();
 	}
 
 	private void updateSearchButton() {
-		IGeocodingService service = getSearchService();
-		if (service == null)
-			searchButton.setEnabled(false);
-		else {
-			searchButton.setEnabled(true);
-			searchButton.setText(NLS.bind(Messages.AbstractMapComponent_search_with, service.getName()));
+		if (searchButton != null) {
+			IGeocodingService service = getSearchService();
+			if (service == null)
+				searchButton.setEnabled(false);
+			else {
+				searchButton.setEnabled(true);
+				searchButton.setText(NLS.bind(Messages.AbstractMapComponent_search_with, service.getName()));
+			}
 		}
-
 	}
 
 	protected void deleteMarker() {
@@ -1207,6 +1129,7 @@ public abstract class AbstractMapComponent implements IMapComponent {
 		boolean pin2Visible = false;
 		boolean deleteEnabled = false;
 		boolean deleteVisible = true;
+		boolean disposeInvisible = false;
 		boolean blank = false;
 		Icon icon = Icons.pin;
 		pin1Button.setImage(Icons.pin.getImage());
@@ -1215,6 +1138,7 @@ public abstract class AbstractMapComponent implements IMapComponent {
 			expl = Messages.AbstractMapComponent_create_new_location;
 			pin1Enabled = true;
 			deleteVisible = false;
+			disposeInvisible = true;
 			break;
 		case LOCATION:
 			expl = ""; //$NON-NLS-1$
@@ -1224,11 +1148,18 @@ public abstract class AbstractMapComponent implements IMapComponent {
 			expl = ""; //$NON-NLS-1$
 			blank = true;
 			deleteVisible = false;
+			disposeInvisible = true;
 			break;
 		case BLANK:
 			expl = ""; //$NON-NLS-1$
 			blank = true;
 			deleteVisible = false;
+			break;
+		case AREA:
+			expl = Messages.AbstractMapComponent_define_center;
+			pin1Enabled = true;
+			deleteVisible = false;
+			disposeInvisible = true;
 			break;
 		case NONE:
 			expl = Messages.AbstractMapComponent_no_images;
@@ -1274,13 +1205,34 @@ public abstract class AbstractMapComponent implements IMapComponent {
 					pin2Button.setToolTipText(Messages.AbstractMapComponent_click_shown_loc);
 				}
 				pin2Button.setEnabled(true);
+			} else if (disposeInvisible) {
+				pinbar2.dispose();
+				pin2Button = null;
 			}
 		}
 		if (deleteButton != null) {
 			deleteButton.setEnabled(deleteEnabled);
 			deleteBar.setVisible(deleteVisible);
+			if (disposeInvisible && !deleteVisible) {
+				deleteBar.dispose();
+				deleteButton = null;
+			}
 		}
 		area.setVisible(!blank);
+		if (disposeInvisible)
+			area.layout(true, true);
+	}
+
+	/*
+	 * (nicht-Javadoc)
+	 * 
+	 * @see com.bdaum.zoom.gps.widgets.IMapComponent#setArea(double, double, double)
+	 */
+	@Override
+	public void setArea(double latitude, double longitude, double km) {
+		if (!(Double.isNaN(latitude) || Double.isNaN(longitude)))
+			browser.execute(NLS.bind("setAreaCircle({0},{1});", //$NON-NLS-1$
+					createLatLng(latitude, longitude), (int) (km * 1000)));
 	}
 
 	protected abstract String getMappingSystemName();
@@ -1461,6 +1413,7 @@ public abstract class AbstractMapComponent implements IMapComponent {
 	 */
 
 	public void dispose() {
+		InstanceScope.INSTANCE.getNode(GpsActivator.PLUGIN_ID).removePreferenceChangeListener(this);
 		getControl().dispose();
 	}
 

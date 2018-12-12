@@ -41,14 +41,16 @@ public interface IGeocodingService {
 		private String reqMsg;
 		private String hint;
 		private String tooltip;
+		private String explanation;
 		
-		public Parameter(String id, String label, String reqMsg, String hint, String tooltip) {
+		public Parameter(String id, String label, String reqMsg, String hint, String tooltip, String explanation) {
 			super();
 			this.id = id;
 			this.label = label;
 			this.reqMsg = reqMsg;
 			this.hint = hint;
 			this.tooltip = tooltip;
+			this.explanation = explanation;
 		}
 		
 		public String getId() {
@@ -69,6 +71,10 @@ public interface IGeocodingService {
 
 		public String getTooltip() {
 			return tooltip;
+		}
+		
+		public String getExplanation() {
+			return explanation;
 		}
 	}
 
@@ -109,4 +115,7 @@ public interface IGeocodingService {
 	void setDescription(String description);
 
 	double getElevation(double lat, double lon) throws UnknownHostException, HttpException, IOException;
+
+	void saveSearchParameters();
+
 }

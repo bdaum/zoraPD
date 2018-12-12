@@ -39,8 +39,10 @@ import javax.swing.filechooser.FileSystemView;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.osgi.util.NLS;
 
@@ -48,20 +50,36 @@ import com.bdaum.zoom.batch.internal.Daemon;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.core.DeviceInsertionListener;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
 import com.bdaum.zoom.image.internal.ImageActivator;
+import com.bdaum.zoom.mtp.DeviceInsertionListener;
+import com.bdaum.zoom.mtp.MtpManager;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.program.BatchUtilities;
 
 @SuppressWarnings("restriction")
 public class VolumeManager implements IVolumeManager {
 
+	private class InitJob extends Job {
+
+		public InitJob() {
+			super(Messages.VolumeManager_initialize);
+		}
+
+		@Override
+		protected IStatus run(IProgressMonitor monitor) {
+			mtpManager.updateVolumes();
+			errorMessage = null;
+			return Status.OK_STATUS;
+		}
+	}
+
 	private static final String VOLUME_PATTERNS_INI = "/volumePatterns.ini"; //$NON-NLS-1$
+	private static final StorageObject[] NULLSTORAGEOBECTS = new StorageObject[0];
 
 	private FileSystemView fileSystemView;
-
-	private File[] roots;
+	private File[] roots = new File[0];
 	private long[] timeStamps;
 	private String[] volumes;
 	private ListenerList<DeviceInsertionListener> deviceListeners = new ListenerList<DeviceInsertionListener>();
@@ -71,9 +89,26 @@ public class VolumeManager implements IVolumeManager {
 	private IPeerService peerService;
 	private Daemon monitorJob;
 	private Pattern[] volumePatterns;
+	private MtpManager mtpManager;
+	private String errorMessage;
+	private boolean peerRequested;
 
 	public VolumeManager() {
-		peerService = Core.getCore().getPeerService();
+		updateVolumes();
+		if (Constants.WIN32) {
+			errorMessage = Messages.VolumeManager_initialization_failed;
+			mtpManager = new MtpManager(VolumeManager.this);
+			new InitJob().schedule();
+		}
+		monitorJob = new Daemon(Messages.VolumeManager_monitor_volumes, 4000L) {
+			@Override
+			protected void doRun(IProgressMonitor monitor) {
+				updateVolumes();
+				if (errorMessage == null && mtpManager != null)
+					mtpManager.updateVolumes();
+			}
+		};
+		monitorJob.schedule(4000L);
 	}
 
 	public FileSystemView getFileSystemView() {
@@ -172,7 +207,6 @@ public class VolumeManager implements IVolumeManager {
 			}
 		}
 		try {
-			init();
 			File file = new File(new URI(uri));
 			File root = getRootFile(file);
 			if (Constants.WIN32 && root.getPath().equals("\\\\") && file.exists()) //$NON-NLS-1$
@@ -206,11 +240,19 @@ public class VolumeManager implements IVolumeManager {
 
 	private void updateVolumes() {
 		synchronized (this) {
-			boolean changed = false;
 			fileSystemView = null;
 			File[] list = File.listRoots();
-			if (roots == null || list.length != roots.length) {
-				changed = true;
+			if (list == null)
+				return;
+			if (list.length < roots.length) {
+				roots = list;
+				dcims = null;
+				fireDeviceEjected();
+				return;
+			}
+			boolean inserted = false;
+			if (list.length > roots.length) {
+				inserted = true;
 				roots = list;
 				timeStamps = new long[roots.length];
 				volumes = new String[roots.length];
@@ -222,13 +264,13 @@ public class VolumeManager implements IVolumeManager {
 				for (int i = 0; i < list.length; i++) {
 					long lastModified = list[i].lastModified();
 					if (timeStamps[i] != lastModified || !roots[i].equals(list[i])) {
-						changed = true;
+						inserted = true;
 						roots[i] = list[i];
 						timeStamps[i] = lastModified;
 						volumes[i] = obtainVolumeLabel(roots[i]);
 					}
 				}
-			if (changed)
+			if (inserted)
 				for (VolumeListener listener : volumeListeners)
 					listener.volumesChanged(roots);
 		}
@@ -239,14 +281,23 @@ public class VolumeManager implements IVolumeManager {
 				for (File file : newDcims)
 					if (dcims == null || !dcims.contains(file)) {
 						dcims = newDcims;
-						for (DeviceInsertionListener listener : deviceListeners)
-							listener.deviceInserted();
+						fireDeviceInserted();
 						break;
 					}
 				dcims = newDcims;
 			} finally {
 				deviceProcessing = false;
 			}
+	}
+
+	private void fireDeviceInserted() {
+		for (DeviceInsertionListener listener : deviceListeners)
+			listener.deviceInserted();
+	}
+
+	private void fireDeviceEjected() {
+		for (DeviceInsertionListener listener : deviceListeners)
+			listener.deviceEjected();
 	}
 
 	/*
@@ -271,12 +322,10 @@ public class VolumeManager implements IVolumeManager {
 	 */
 
 	public String rootToVolume(File root) {
-		if (root != null) {
-			init();
+		if (root != null)
 			for (int i = 0; i < roots.length; i++)
 				if (root.equals(roots[i]))
 					return volumes[i];
-		}
 		return null;
 	}
 
@@ -287,26 +336,11 @@ public class VolumeManager implements IVolumeManager {
 	 */
 
 	public File volumeToRoot(String volume) {
-		if (volume != null) {
-			init();
+		if (volume != null && volumes != null)
 			for (int i = 0; i < volumes.length; i++)
 				if (volume.equals(volumes[i]))
 					return roots[i];
-		}
 		return null;
-	}
-
-	private void init() {
-		if (roots == null) {
-			updateVolumes();
-			monitorJob = new Daemon(Messages.VolumeManager_monitor_volumes, 4000L) {
-				@Override
-				protected void doRun(IProgressMonitor monitor) {
-					updateVolumes();
-				}
-			};
-			monitorJob.schedule(4000L);
-		}
 	}
 
 	public void dispose() {
@@ -326,18 +360,25 @@ public class VolumeManager implements IVolumeManager {
 		if (asset != null) {
 			synchronized (this) {
 				String uri = asset.getVoiceFileURI();
-				if (uri != null && !uri.isEmpty() && !uri.startsWith("?")) { //$NON-NLS-1$
-					if (".".equals(uri)) { //$NON-NLS-1$
-						try {
-							uri = Core.getVoicefileURI(new File(new URI(asset.getUri()))).toString();
-						} catch (URISyntaxException e) {
-							return null;
+				if (uri != null) {
+					int p = uri.indexOf('\f');
+					if (p >= 0)
+						uri = uri.substring(0, p);
+					else if (uri.startsWith("?")) //$NON-NLS-1$
+						uri = null;
+					if (uri != null && !uri.isEmpty()) {
+						if (".".equals(uri)) { //$NON-NLS-1$
+							try {
+								uri = Core.getVoicefileURI(new File(new URI(asset.getUri()))).toString();
+							} catch (URISyntaxException e) {
+								return null;
+							}
+							return findExistingFile(asset, uri, true);
 						}
-						return findExistingFile(asset, uri, true);
-					}
-					if (uri.startsWith(FILE)) {
-						File file = findExistingFile(uri, asset.getVoiceVolume());
-						return file == null ? null : file.toURI();
+						if (uri.startsWith(FILE)) {
+							File file = findExistingFile(uri, asset.getVoiceVolume());
+							return file == null ? null : file.toURI();
+						}
 					}
 				}
 			}
@@ -354,7 +395,6 @@ public class VolumeManager implements IVolumeManager {
 	public boolean isOffline(String volume) {
 		if (volume == null)
 			return false;
-		init();
 		for (String v : volumes)
 			if (volume.equals(v))
 				return false;
@@ -362,8 +402,12 @@ public class VolumeManager implements IVolumeManager {
 	}
 
 	public boolean isRemote(Asset asset) {
-		return asset != null && (!asset.getUri().startsWith(FILE)
-				|| peerService != null && peerService.isOwnedByPeer(asset.getStringId()));
+		if (asset == null)
+			return false;
+		if (!asset.getUri().startsWith(FILE))
+			return true;
+		IPeerService peerService = getPeerService();
+		return peerService != null && peerService.isOwnedByPeer(asset.getStringId());
 	}
 
 	public String obtainVolumeLabel(String path) {
@@ -434,10 +478,14 @@ public class VolumeManager implements IVolumeManager {
 	public void addDeviceInsertionListener(DeviceInsertionListener listener) {
 		dcims = BatchUtilities.findDCIMs();
 		deviceListeners.add(listener);
+		if (mtpManager != null)
+			mtpManager.addDeviceInsertionListener(listener);
 	}
 
 	public void removeDeviceInsertionListener(DeviceInsertionListener listener) {
 		deviceListeners.remove(listener);
+		if (mtpManager != null)
+			mtpManager.removeDeviceInsertionListener(listener);
 	}
 
 	public void addVolumeListener(VolumeListener listener) {
@@ -452,11 +500,30 @@ public class VolumeManager implements IVolumeManager {
 		if (asset != null) {
 			if (!asset.getUri().startsWith(FILE))
 				return REMOTE;
+			IPeerService peerService = getPeerService();
 			if (peerService != null && peerService.isOwnedByPeer(asset.getStringId()))
 				return PEER;
-			return (findExistingFile(asset, true) != null ? ONLINE : OFFLINE);
+			return findExistingFile(asset, true) != null ? ONLINE : OFFLINE;
 		}
 		return OFFLINE;
+	}
+
+	private IPeerService getPeerService() {
+		if (!peerRequested) {
+			peerService = Core.getCore().getPeerService();
+			peerRequested = true;
+		}
+		return peerService;
+	}
+
+	@Override
+	public StorageObject[] findDCIMs() {
+		return mtpManager != null ? mtpManager.findDCIMs() : NULLSTORAGEOBECTS;
+	}
+
+	@Override
+	public String getErrorMessage() {
+		return errorMessage;
 	}
 
 }

@@ -24,7 +24,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.Ui;
 
 public class LastImportCommand extends AbstractCommandHandler {
 
@@ -33,7 +33,7 @@ public class LastImportCommand extends AbstractCommandHandler {
 		SmartCollectionImpl sm = Core.getCore().getDbManager().obtainById(SmartCollectionImpl.class,
 				Constants.LAST_IMPORT_ID);
 		if (sm != null)
-			UiActivator.getDefault().getNavigationHistory(getActiveWorkbenchWindow())
+			Ui.getUi().getNavigationHistory(getActiveWorkbenchWindow())
 					.postSelection(new StructuredSelection(sm));
 	}
 

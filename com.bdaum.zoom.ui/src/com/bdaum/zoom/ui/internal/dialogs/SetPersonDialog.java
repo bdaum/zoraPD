@@ -49,6 +49,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
+import com.bdaum.zoom.cat.model.asset.RegionImpl;
+import com.bdaum.zoom.cat.model.group.Group;
 import com.bdaum.zoom.cat.model.group.GroupImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
@@ -60,6 +62,7 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
+import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiUtilities;
@@ -69,6 +72,7 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 
 	private static final int NEWALBUM = 9999;
 	private static final int DELETEREGION = 9998;
+	private static final int DELETEALLREGIONS = 9997;
 	protected static final Object[] EMPTY = new Object[0];
 	private List<SmartCollectionImpl> albums;
 	private Collection<SmartCollectionImpl> selectedAlbums;
@@ -77,10 +81,14 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 	private Map<String, Image> faces = new HashMap<>();
 	private boolean deleteRegion = false;
 	protected boolean cntrlDwn;
+	private boolean deleteAllRegions;
+	private int regionCount;
 
-	public SetPersonDialog(Shell parentShell, String assignedAlbum) {
+	public SetPersonDialog(Shell parentShell, String assignedAlbum, String assetId) {
 		super(parentShell);
 		this.assignedAlbum = assignedAlbum;
+		regionCount = Core.getCore().getDbManager().obtainObjects(RegionImpl.class, "asset_person_parent", //$NON-NLS-1$
+				assetId, QueryField.EQUALS).size();
 	}
 
 	@Override
@@ -151,7 +159,7 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 		viewer.setContentProvider(new DeferredContentProvider(new Comparator<SmartCollection>() {
 			@Override
 			public int compare(SmartCollection e1, SmartCollection e2) {
-					return e1.getName().compareTo(e2.getName());
+				return e1.getName().compareTo(e2.getName());
 			}
 		}));
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
@@ -161,7 +169,7 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				if (cntrlDwn) {
-					SmartCollectionImpl sm = (SmartCollectionImpl) ((IStructuredSelection) viewer.getSelection())
+					SmartCollectionImpl sm = (SmartCollectionImpl) viewer.getStructuredSelection()
 							.getFirstElement();
 					if (sm != null) {
 						CollectionEditDialog dialog = new CollectionEditDialog(getShell(), sm,
@@ -202,7 +210,9 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		createButton(parent, DELETEREGION, Messages.AlbumSelectionDialog_delete_region, false);
-		if (Core.getCore().getDbManager().obtainById(GroupImpl.class, Constants.GROUP_ID_USER) != null)
+		if (regionCount > 1)
+			createButton(parent, DELETEALLREGIONS, Messages.SetPersonDialog_delete_all, false);
+		if (Core.getCore().getDbManager().obtainById(GroupImpl.class, Constants.GROUP_ID_PERSONS) != null)
 			createButton(parent, NEWALBUM, Messages.AlbumSelectionDialog_new_album, false);
 		super.createButtonsForButtonBar(parent);
 	}
@@ -214,6 +224,14 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 			okPressed();
 			return;
 		}
+		if (buttonId == DELETEALLREGIONS) {
+			if (AcousticMessageDialog.openQuestion(getShell(), Messages.SetPersonDialog_delete_all_regions,
+					Messages.SetPersonDialog_this_will_remove)) {
+				deleteAllRegions = true;
+				okPressed();
+			}
+			return;
+		}
 		if (buttonId == NEWALBUM) {
 			CollectionEditDialog dialog = new CollectionEditDialog(getShell(), null,
 					Messages.AlbumSelectionDialog_create_person, Messages.AlbumSelectionDialog_specify_person_name,
@@ -221,10 +239,10 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 			if (dialog.open() == Window.OK) {
 				final SmartCollectionImpl album = dialog.getResult();
 				if (album != null) {
-					final GroupImpl group = dbManager.obtainById(GroupImpl.class, Constants.GROUP_ID_USER);
+					Group group = dbManager.obtainById(GroupImpl.class, Constants.GROUP_ID_PERSONS);
 					album.addSortCriterion(new SortCriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, true));
 					group.addRootCollection(album.getStringId());
-					album.setGroup_rootCollection_parent(group.getStringId());
+					album.setGroup_rootCollection_parent(Constants.GROUP_ID_PERSONS);
 					Collection<Object> toBeStored = Utilities.storeCollection(album, true, null);
 					toBeStored.add(group);
 					dbManager.safeTransaction(null, toBeStored);
@@ -241,7 +259,7 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		SmartCollectionImpl sm = (SmartCollectionImpl) ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+		SmartCollectionImpl sm = (SmartCollectionImpl) viewer.getStructuredSelection().getFirstElement();
 		if (sm != null)
 			selectedAlbums = Collections.singletonList(sm);
 		super.okPressed();
@@ -255,18 +273,26 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 		IAssetProvider assetProvider = Core.getCore().getAssetProvider();
 		if (assetProvider != null)
 			albums.remove(assetProvider.getCurrentCollection());
-		IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		SetModel model = new SetModel();
 		model.addAll(albums);
 		viewer.setInput(model);
-		if (keep)
-			viewer.setSelection(selection);
-		else if (assignedAlbum != null)
-			for (SmartCollectionImpl sm : albums)
-				if (sm.getStringId().equals(assignedAlbum)) {
-					viewer.setSelection(new StructuredSelection(sm), true);
-					break;
+		viewer.getControl().getDisplay().timerExec(500, new Runnable() {
+			@Override
+			public void run() {
+				if (!viewer.getControl().isDisposed()) {
+					if (keep)
+						viewer.setSelection(selection);
+					else if (assignedAlbum != null)
+						for (SmartCollectionImpl sm : albums)
+							if (sm.getStringId().equals(assignedAlbum)) {
+								viewer.setSelection(new StructuredSelection(sm), true);
+								break;
+							}
 				}
+
+			}
+		});
 	}
 
 	public Collection<SmartCollectionImpl> getResult() {
@@ -283,6 +309,10 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 
 	public boolean isDeleteRegion() {
 		return deleteRegion;
+	}
+
+	public boolean isDeleteAllRegions() {
+		return deleteAllRegions;
 	}
 
 }

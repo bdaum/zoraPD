@@ -1,23 +1,42 @@
+/*
+ * This file is part of the ZoRa project: http://www.photozora.org.
+ *
+ * ZoRa is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ZoRa is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ZoRa; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c) 2009-2018 Berthold Daum  
+ */
 package com.bdaum.zoom.ui.internal.wizards;
 
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 
+import com.bdaum.zoom.cat.model.meta.LastDeviceImport;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.internal.ImportFromDeviceData;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.dialogs.RenamingTemplate;
+import com.bdaum.zoom.ui.internal.widgets.IFileProvider;
 import com.bdaum.zoom.ui.internal.widgets.RenameGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class ImportRenamingPage extends ColoredWizardPage {
+public class ImportRenamingPage extends ColoredWizardPage implements IFileProvider {
 
 	private final boolean media;
 	private RenameGroup renameGroup;
@@ -29,7 +48,7 @@ public class ImportRenamingPage extends ColoredWizardPage {
 
 	@Override
 	public void createControl(final Composite parent) {
-		renameGroup = new RenameGroup(parent, SWT.NONE, null, false,
+		renameGroup = new RenameGroup(parent, SWT.NONE, this, false,
 				new RenamingTemplate[] {
 						new RenamingTemplate(Messages.ImportRenamingPage_date_filename, "_" + Constants.TV_YYYY //$NON-NLS-1$
 								+ Constants.TV_MM + Constants.TV_DD + "-" //$NON-NLS-1$
@@ -41,20 +60,10 @@ public class ImportRenamingPage extends ColoredWizardPage {
 						new RenamingTemplate(Messages.ImportRenamingPage_filename_seq,
 								Constants.TV_FILENAME + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
 						new RenamingTemplate(Messages.ImportRenamingPage_orig_filename, Constants.TV_FILENAME, true) },
-				false);
-		renameGroup.addSelectionListener(new SelectionAdapter() {
+				Constants.TV_ALL);
+		renameGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				validatePage();
-			}
-		});
-		renameGroup.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				validatePage();
-			}
-		});
-		renameGroup.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
+			public void handleEvent(Event event) {
 				validatePage();
 			}
 		});
@@ -68,7 +77,15 @@ public class ImportRenamingPage extends ColoredWizardPage {
 	}
 
 	private void fillValues() {
-		renameGroup.fillValues(getWizard().getDialogSettings(), null, null);
+		ImportFromDeviceWizard wizard = (ImportFromDeviceWizard) getWizard();
+		IDialogSettings dialogSettings = wizard.getDialogSettings();
+		renameGroup.fillValues(dialogSettings, null, null);
+		updateValues(wizard.getCurrentDevice());
+	}
+	
+	public void updateValues(LastDeviceImport current) {
+		if (current != null && renameGroup != null)
+			renameGroup.updateValues(current.getSelectedTemplate(),  current.getCue());
 	}
 
 	@Override
@@ -79,12 +96,28 @@ public class ImportRenamingPage extends ColoredWizardPage {
 	}
 
 	public void performFinish(ImportFromDeviceData importData) {
-		renameGroup.saveSettings(getWizard().getDialogSettings());
+		ImportFromDeviceWizard wizard = (ImportFromDeviceWizard) getWizard();
+		IDialogSettings dialogSettings = wizard.getDialogSettings();
+		LastDeviceImport newDevice = wizard.getNewDevice();
+		renameGroup.saveSettings(dialogSettings);
 		RenamingTemplate selectedTemplate = renameGroup.getSelectedTemplate();
 		if (selectedTemplate != null) {
 			importData.setRenamingTemplate(selectedTemplate.getContent());
-			importData.setCue(renameGroup.getCue());
+			newDevice.setSelectedTemplate(selectedTemplate.getLabel());
+			String cue = renameGroup.getCue();
+			importData.setCue(cue);
+			newDevice.setCue(cue);
 		}
 	}
+
+	@Override
+	public StorageObject getFile() {
+		return ((ImportFromDeviceWizard) getWizard()).getFirstSelectedFile();
+	}
+
+	public void update() {
+		renameGroup.update();
+	}
+
 
 }

@@ -16,7 +16,7 @@ use strict;
 use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 
-$VERSION = '1.49';
+$VERSION = '1.51';
 
 sub ProcessID3v2($$$);
 sub ProcessPrivate($$$);
@@ -853,7 +853,12 @@ sub ConvertTimeStamp($)
     }
     my $m = int($time / 60);
     my $s = $time - $m * 60;
-    return sprintf('[%s%.2d:%05.2f]', $h, $m, $s) . substr($val, pos($val));
+    my $ss = sprintf('%05.2f', $s);
+    if ($ss >= 60) {
+        $ss = '00.00';
+        ++$m >= 60 and $m -= 60, ++$h;
+    }
+    return sprintf('[%s%.2d:%s]', $h, $m, $ss) . substr($val, pos($val));
 }
 
 #------------------------------------------------------------------------------
@@ -959,7 +964,7 @@ sub PrintGenre($)
         $genre{$1} or $genre{$1} = "Unknown ($1)";
     }
     $val =~ s/\((\d+)\)/\($genre{$1}\)/g;
-    $val =~ s/(^|\/)(\d+)(\/|$)/$1$genre{$2}$3/g;
+    $val =~ s/(^|\/)(\d+)(?=\/|$)/$1$genre{$2}$3/g;
     $val =~ s/^\(([^)]+)\)\1?$/$1/; # clean up by removing brackets and duplicates
     return $val;
 }

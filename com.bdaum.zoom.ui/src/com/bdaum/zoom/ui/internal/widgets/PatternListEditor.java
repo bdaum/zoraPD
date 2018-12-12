@@ -25,7 +25,6 @@ import java.util.StringTokenizer;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -200,7 +199,7 @@ public class PatternListEditor extends Composite implements SelectionListener, I
 	}
 
 	private int getSelectionIndex() {
-		String line = (String) ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+		String line = (String) viewer.getStructuredSelection().getFirstElement();
 		for (int i = 0; i < patterns.length; i++)
 			if (patterns[i].equals(line))
 				return i;

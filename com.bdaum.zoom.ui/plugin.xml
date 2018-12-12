@@ -9,6 +9,7 @@
    <extension-point id="relationDetector" name="%extension-point.name.relation_detector" schema="schema/relationDetector.exsd"/>
    <extension-point id="preferencePageExtension" name="%extension-point.name.page_extension" schema="schema/preferencePageExtension.exsd"/>
    <extension-point id="viewAction" name="%extension-point.name" schema="schema/com.bdaum.zoom.ui.viewAction.exsd"/>
+   <extension-point id="perspectiveGallery" name="%extension-point.name.perspectiveGallery" schema="schema/perspectiveGallery.exsd"/>
 
    <extension
          point="org.eclipse.ui.views">
@@ -242,6 +243,15 @@
             name="%view.name.tagcloud"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            category="com.bdaum.zoom.viewing"
+            class="com.bdaum.zoom.ui.internal.views.CalendarView"
+            icon="icons/calendar.png"
+            id="com.bdaum.zoom.ui.views.CalendarView"
+            name="%view.name.calendar"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.startup">
@@ -327,6 +337,9 @@
          <keywordReference
                id="com.bdaum.zoom.ui.keyword.backup">
          </keywordReference>
+         <keywordReference
+               id="com.bdaum.zoom.ui.keyword.viewer">
+         </keywordReference>
       </page>
       <page
             class="com.bdaum.zoom.ui.internal.preferences.ImportPreferencePage"
@@ -375,6 +388,9 @@
             class="com.bdaum.zoom.ui.internal.preferences.PerspectivesPreferencePage"
             id="org.eclipse.ui.internal.dialogs.PerspectivesPreferencePage"
             name="%page.name.perspectives">
+         <keywordReference
+               id="com.bdaum.zoom.ui.keyword.perspective">
+         </keywordReference>
       </page>
       <page
             class="com.bdaum.zoom.ui.internal.preferences.MetadataPreferencePage"
@@ -413,6 +429,9 @@
             class="com.bdaum.zoom.ui.internal.preferences.KeyPreferencePage"
             id="com.bdaum.zoom.ui.preferences.KeyPreferencePage"
             name="%page.name.keys">
+         <keywordReference
+               id="com.bdaum.zoom.ui.keyword.shortcuts">
+         </keywordReference>
       </page>
       <page
             class="com.bdaum.zoom.ui.internal.preferences.MousePreferencePage"
@@ -444,11 +463,17 @@
          <keywordReference
                id="com.bdaum.zoom.ui.keyword.thumbnail">
          </keywordReference>
+         <keywordReference
+               id="com.bdaum.zoom.ui.keyword.cat">
+         </keywordReference>
       </page>
       <page
             class="com.bdaum.zoom.ui.internal.preferences.VocabPreferencePage"
             id="com.bdaum.zoom.ui.preferences.VocabPreferencePage"
             name="%page.name.vocab">
+         <keywordReference
+               id="com.bdaum.zoom.ui.keyword.vocab">
+         </keywordReference>
       </page>
    </extension>
    <extension
@@ -682,10 +707,18 @@
             id="com.bdaum.zoom.ui.ImageCommands"
             name="%category.name.image_commands">
       </category>
-     <!--  <command
-             id="com.bdaum.zoom.ui.AddBookmarkCommand"
-             name="%command.name.add_bookmark">
-       </command> -->
+      <command
+            categoryId="com.bdaum.zoom.ui.ImageCommands"
+            description="%command.description.revert"
+            id="com.bdaum.zoom.ui.command.revertSelection"
+            name="%command.name.revert">
+      </command>
+      <command
+            categoryId="com.bdaum.zoom.ui.ImageCommands"
+            description="%command.description.deselect"
+            id="com.bdaum.zoom.ui.command.deselect"
+            name="%command.name.deselect">
+      </command>
       <command
             categoryId="com.bdaum.zoom.ui.ImageCommands"
             description="%command.description.rate"
@@ -813,13 +846,6 @@
             id="com.bdaum.zoom.ui.CopyMetadataCommand"
             name="%command.name.copymeta">
       </command>
-      <!--
-      <command
-            categoryId="com.bdaum.zoom.ui.category.window"
-            description="%command.description.fullScreen"
-            id="com.bdaum.zoom.ui.command.fullScreen"
-            name="%command.name.fullScreen">
-      </command>-->
       <category
             description="%category.description.window"
             id="com.bdaum.zoom.ui.category.window"
@@ -841,16 +867,7 @@
                id="org.eclipse.ui.commands.toggleState">
          </state>
       </command>
-      <!--
-       <command
-             categoryId="com.bdaum.zoom.ui.HelpCommands"
-             defaultHandler="com.bdaum.zoom.ui.internal.commands.ShortcutCommand"
-             description="Shows the key shortcuts active in the application"
-             id="org.eclipse.ui.window.showKeyAssist"
-             name="Key Assist">
-       </command>
-       -->
-       <command
+      <command
              categoryId="com.bdaum.zoom.ui.HelpCommands"
              defaultHandler="com.bdaum.zoom.ui.internal.commands.ReportProblemCommand"
              description="%command.description.report_problem"
@@ -864,45 +881,17 @@
              id="com.bdaum.zoom.ui.command.checkUpdates"
              name="%command.name.checkUpdates">
        </command>
-<!--
        <command
-             categoryId="com.bdaum.zoom.ui.NavigationCommands"
-             description="%command.description.showDerivatives"
-             id="com.bdaum.zoom.ui.command.showDerivatives"
-             name="%command.name.show_derivatives">
+             categoryId="com.bdaum.zoom.ui.FileCommands"
+             defaultHandler="com.bdaum.zoom.ui.internal.commands.TetheredShootingCommand"
+             description="%command.description.0"
+             id="com.bdaum.zoom.ui.command.tethered"
+             name="%command.name.0">
+          <state
+                class="org.eclipse.ui.handlers.RegistryToggleState:true"
+                id="org.eclipse.ui.commands.toggleState">
+          </state>
        </command>
-       <command
-             categoryId="com.bdaum.zoom.ui.NavigationCommands"
-             description="%command.description.showOriginals"
-             id="com.bdaum.zoom.ui.command.showOriginals"
-             name="%command.name.show_originals">
-       </command>
-       <command
-             categoryId="com.bdaum.zoom.ui.NavigationCommands"
-             description="%command.description.showComposites"
-             id="com.bdaum.zoom.ui.command.showComposites"
-             name="%command.name.show_composites">
-       </command>
-       <command
-             categoryId="com.bdaum.zoom.ui.NavigationCommands"
-             description="%command.description.showComponents"
-             id="com.bdaum.zoom.ui.command.showComponents"
-             name="%command.name.show_components">
-       </command>
-       <command
-             categoryId="com.bdaum.zoom.ui.NavigationCommands"
-             description="%command.description.show_trash"
-             id="com.bdaum.zoom.ui.command.showTrashcan"
-             name="%command.name.show_trash">
-       </command>
-       <command
-             categoryId="com.bdaum.zoom.ui.CatalogCommands"
-             defaultHandler="com.bdaum.zoom.ui.internal.commands.RenameCatalogCommand"
-             description="%command.description.renameCat"
-             id="com.bdaum.zoom.ui.RenameCatalogCommand"
-             name="%command.name.renameCat">
-       </command>
-       -->
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -1126,13 +1115,6 @@
             schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
             sequence="M1+F M1+P">
       </key>
-      <!--
-      <key
-            commandId="com.bdaum.zoom.ui.command.fullScreen"
-            contextId="org.eclipse.ui.contexts.window"
-            schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
-            sequence="F4">
-      </key>-->
       <key
             commandId="org.eclipse.ui.file.export"
             contextId="org.eclipse.ui.contexts.window"
@@ -1181,38 +1163,6 @@
             schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
             sequence="M1+M2+V M1+M2+P">
       </key>
-<!--
-     <key
-            commandId="com.bdaum.zoom.ui.command.showOriginals"
-            contextId="org.eclipse.ui.contexts.window"
-            schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
-            sequence="M1+H M1+O">
-      </key>
-     <key
-            commandId="com.bdaum.zoom.ui.command.showDerivatives"
-            contextId="org.eclipse.ui.contexts.window"
-            schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
-            sequence="M1+H M1+D">
-      </key>
-     <key
-            commandId="com.bdaum.zoom.ui.command.showComposites"
-            contextId="org.eclipse.ui.contexts.window"
-            schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
-            sequence="M1+H M1+C">
-      </key>
-     <key
-            commandId="com.bdaum.zoom.ui.command.showComponents"
-            contextId="org.eclipse.ui.contexts.window"
-            schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
-            sequence="M1+H M1+N">
-      </key>
-     <key
-            commandId="com.bdaum.zoom.ui.command.viewImage"
-            contextId="org.eclipse.ui.contexts.window"
-            schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
-            sequence="TAB">
-      </key>
-      -->
      <key
             commandId="com.bdaum.zoom.ui.command.removeFromAlbum"
             contextId="org.eclipse.ui.contexts.window"
@@ -1243,15 +1193,7 @@
            schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
            sequence="M1+B">
      </key>
-     <!--
-     <key
-           commandId="com.bdaum.zoom.ui.command.showTrashcan"
-           contextId="org.eclipse.ui.contexts.window"
-           schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
-           sequence="M1+M2+T">
-     </key>
-     -->
-     <key
+      <key
            commandId="com.bdaum.zoom.ui.command.addToAlbum"
            contextId="org.eclipse.ui.contexts.window"
            schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
@@ -1280,6 +1222,54 @@
            contextId="org.eclipse.ui.contexts.window"
            schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
            sequence="F8">
+     </key>
+     <key
+           commandId="com.bdaum.zoom.ui.command.revertSelection"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
+           sequence="M1+U">
+     </key>
+     <key
+           commandId="com.bdaum.zoom.ui.command.deselect"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
+           sequence="M1+M2+D">
+     </key>
+     <key
+           commandId="com.bdaum.zoom.ui.command.tethered"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
+           sequence="M1+T">
+     </key>
+     <key
+           commandId="com.bdaum.zoom.ui.command.viewImage"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
+           sequence="F4">
+     </key>
+     <key
+           commandId="com.bdaum.zoom.ui.command.viewImage"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
+           sequence="M2+F4">
+     </key>
+     <key
+           commandId="com.bdaum.zoom.ui.command.viewImage"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
+           sequence="M1+F4">
+     </key>
+     <key
+           commandId="com.bdaum.zoom.ui.command.viewImage"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
+           sequence="M3+F4">
+     </key>
+     <key
+           commandId="com.bdaum.zoom.ui.command.viewImage"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
+           sequence="M1+M3+F4">
      </key>
    </extension>
    <extension
@@ -1448,7 +1438,22 @@
             id="com.bdaum.zoom.ui.keyword.collection"
             label="%keyword.label.collection">
       </keyword>
-   </extension>
+      <keyword
+            id="com.bdaum.zoom.ui.keyword.perspective"
+            label="%keyword.label.persp">
+      </keyword>
+      <keyword
+            id="com.bdaum.zoom.ui.keyword.shortcuts"
+            label="%keyword.label.shortcuts">
+      </keyword>
+      <keyword
+            id="com.bdaum.zoom.ui.keyword.vocab"
+            label="%keyword.label.vocab">
+      </keyword>
+      <keyword
+            id="com.bdaum.zoom.ui.keyword.cat"
+            label="%keyword.label.cat">
+      </keyword>   </extension>
    <extension
          point="org.eclipse.ui.exportWizards">
       <wizard
@@ -1661,6 +1666,21 @@
       <menuContribution
             allPopups="false"
             locationURI="menu:file?after=fileStart">
+         <command
+               commandId="com.bdaum.zoom.ui.command.tethered"
+               icon="icons/tethered.png"
+               label="%command.label.36"
+               mnemonic="%command.mnemonic.32"
+               style="toggle"
+               tooltip="%command.tooltip.34">
+            <visibleWhen
+                  checkEnabled="false">
+               <systemTest
+                     property="com.bdaum.zoom.cat.access"
+                     value="write">
+               </systemTest>
+            </visibleWhen>
+         </command>
          <menu
                id="import"
                label="%menu.label.1"
@@ -2327,6 +2347,21 @@
             <toolbar
                   id="cat.import"
                   label="%toolbar.label">
+               <command
+                     commandId="com.bdaum.zoom.ui.command.tethered"
+                     icon="icons/tethered.png"
+                     label="%command.label.43"
+                     mnemonic="%command.mnemonic.38"
+                     style="push"
+                     tooltip="%command.tooltip.41">
+                  <visibleWhen
+                        checkEnabled="false">
+                     <systemTest
+                           property="com.bdaum.zoom.cat.access"
+                           value="write">
+                     </systemTest>
+                  </visibleWhen>
+               </command>
 	           <command
 	                  commandId="com.bdaum.zoom.ui.ImportFromDeviceCommand"
 	                  label="%command.label.53"

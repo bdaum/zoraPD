@@ -95,6 +95,7 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
+import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.css.internal.IExtendedColorModel2;
 import com.bdaum.zoom.image.ImageConstants;
@@ -260,6 +261,11 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 				eat--;
 				return;
 			}
+			int stateMask = event.isControlDown() ? SWT.CTRL : 0;
+			if (event.isAltDown())
+				stateMask |= SWT.ALT;
+			if (event.isShiftDown())
+				stateMask |= SWT.SHIFT;
 			PNode picked = event.getPickedNode();
 			if (picked.getParent() instanceof PGalleryItem) {
 				PGalleryItem currentSlide = (PGalleryItem) picked.getParent();
@@ -267,13 +273,14 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 					if (currentSlide.isRatingStar(picked)) {
 						Asset asset = currentSlide.getAsset();
 						if (asset != null) {
-							RatingDialog dialog = new RatingDialog(pcanvas.getShell(), asset.getRating(), 0.6d, true, true);
+							RatingDialog dialog = new RatingDialog(pcanvas.getShell(), asset.getRating(), 0.6d, true,
+									true);
 							initContextDialog(dialog, pcanvas, event);
 							event.setHandled(true);
 							eat++;
 							int rating = dialog.open();
 							if (rating != RatingDialog.ABORT)
-								fireOperationEvent(picked, 0, RATE, rating);
+								fireOperationEvent(picked, stateMask, RATE, rating);
 						}
 					} else if (currentSlide.isColorCodeRectangle(picked)) {
 						Asset asset = currentSlide.getAsset();
@@ -284,11 +291,11 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 							eat++;
 							int code = dialog.open();
 							if (code >= Constants.COLOR_UNDEFINED)
-								fireOperationEvent(picked, 0, CODE, code);
+								fireOperationEvent(picked, stateMask, CODE, code);
 						}
 					} else if (currentSlide.isLocationPin(picked)) {
 						event.setHandled(true);
-						fireOperationEvent(picked, 0, SHOWLOCATION, 0);
+						fireOperationEvent(picked, stateMask, SHOWLOCATION, 0);
 					} else if (currentSlide.isDoneMark(picked)) {
 						Asset asset = currentSlide.getAsset();
 						if (asset != null) {
@@ -297,22 +304,20 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 							event.setHandled(true);
 							eat++;
 							int status = dialog.open();
-							if (status > Constants.STATE_UNDEFINED) {
-								fireOperationEvent(picked, 0, STATUS, status);
-							}
+							if (status > Constants.STATE_UNDEFINED)
+								fireOperationEvent(picked, stateMask, STATUS, status);
 						}
 					} else if (currentSlide.isRotate90(picked)) {
 						event.setHandled(true);
-						fireOperationEvent(picked, 0, ROTATE, 90);
+						fireOperationEvent(picked, stateMask, ROTATE, 90);
 					} else if (currentSlide.isRotate270(picked)) {
 						event.setHandled(true);
-						fireOperationEvent(picked, 0, ROTATE, 270);
+						fireOperationEvent(picked, stateMask, ROTATE, 270);
 					} else if (currentSlide.isVoicenote(picked)) {
 						event.setHandled(true);
-						fireOperationEvent(picked, 0, VOICENOTE, 0);
+						fireOperationEvent(picked, stateMask, VOICENOTE, 0);
 					}
 				}
-
 			} else if (picked.getParent() == slideBar && picked instanceof PGalleryItem && !event.isHandled()
 					&& event.getButton() == MouseEvent.BUTTON1 && event.getClickCount() == 1 && !event.isAltDown()) {
 				picked.raiseToTop();
@@ -333,7 +338,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 						ImageRegion imageRegion = getBestFaceRegion((int) position.getX(), (int) position.getY(), false,
 								item.slide);
 						if (imageRegion != null)
-							fireRegionEvent(0, imageRegion);
+							fireRegionEvent(stateMask, imageRegion);
 						else
 							goToSlide(null);
 						lastSingleClick = null;
@@ -347,10 +352,10 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 					}
 					lastSingleClick = item;
 				}
-				fireSelectionEvent(1, picked, event.isControlDown() ? SWT.CTRL : 0);
+				fireSelectionEvent(1, picked, stateMask);
 			} else if (event.getClickCount() == 2) {
 				if (picked.getParent() == slideBar)
-					fireSelectionEvent(2, picked, event.isShiftDown() ? SWT.SHIFT : 0);
+					fireSelectionEvent(2, picked, stateMask);
 				else
 					resetPanAndZoom(event.getCamera());
 			}
@@ -579,7 +584,6 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 									: defaultFontSize),
 					UiUtilities.getAwtForeground(pswtCanvas, null), null, true,
 					SWT.SINGLE | (readOnly ? SWT.READ_ONLY : SWT.NONE));
-			caption.setSelectedPenColor(UiUtilities.getAwtForeground(pswtCanvas, selectionForegroundColor));
 			caption.setSelectedBgColor(UiUtilities.getAwtBackground(pswtCanvas, selectionBackgroundColor));
 			caption.setGreekThreshold(6);
 			caption.setOffset(x, y + height);
@@ -603,28 +607,22 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 				if (status == Constants.STATE_READY
 						|| status == Constants.STATE_CORRECTED && ImageConstants.IMAGE_X_RAW.equals(mimeType)) {
 					Image icon = Icons.done.getImage();
-					Rectangle iBounds = icon.getBounds();
-					doneMark = new ZPSWTImage(pswtCanvas, icon);
-					doneMark.setOffset(width + x, y - iBounds.height);
+					addChild(doneMark = new ZPSWTImage(pswtCanvas, icon));
+					doneMark.setOffset(width + x, y - icon.getBounds().height);
 					doneMark.setName(Messages.AnimatedGallery_raw_recipe_applies);
-					addChild(doneMark);
 				}
 			}
 		}
 
 		private void addVoiceNote(PSWTCanvas pswtCanvas, Asset anAsset, double width, double height) {
 			if (showVoicenoteButton && anAsset != null) {
-				String voiceFileURI = anAsset.getVoiceFileURI();
-				if (voiceFileURI != null && !voiceFileURI.isEmpty()) {
-					boolean isTextNote = voiceFileURI.startsWith("?"); //$NON-NLS-1$
-					Image speakerIcon = isTextNote ? Icons.note.getImage() : Icons.speaker.getImage();
+				Image speakerIcon = UiUtilities.getAnnotationIcon(anAsset);
+				if (speakerIcon != null) {
 					Rectangle ibounds = speakerIcon.getBounds();
-					speakerNode = new ZPSWTImage(pswtCanvas, speakerIcon);
+					addChild(speakerNode = new ZPSWTImage(pswtCanvas, speakerIcon));
 					speakerNode.setOffset((width - ibounds.width) / 2, height - ibounds.height);
-
-					speakerNode
-							.setName(isTextNote ? voiceFileURI.substring(1) : Messages.AnimatedGallery_play_voicenote);
-					addChild(speakerNode);
+					speakerNode.setName(AssetEnsemble.hasVoiceNote(anAsset) ? Messages.AnimatedGallery_play_voicenote
+							: AssetEnsemble.getNoteText(anAsset));
 				}
 			}
 		}
@@ -633,17 +631,15 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 			if (showRotateButtons && anAsset != null) {
 				Image rotate90icon = Icons.rotate90.getImage();
 				Rectangle bounds5 = rotate90icon.getBounds();
-				rotate90Arrow = new ZPSWTImage(pswtCanvas, rotate90icon);
+				addChild(rotate90Arrow = new ZPSWTImage(pswtCanvas, rotate90icon));
 				rotate90Arrow.setOffset(LOWER_THUMBNAIL_HMARGINS, height - bounds5.height - LOWER_THUMBNAIL_HMARGINS);
 				rotate90Arrow.setName(Messages.AnimatedGallery_rotate_right);
-				addChild(rotate90Arrow);
 				Image rotate270icon = Icons.rotate270.getImage();
 				Rectangle bounds6 = rotate270icon.getBounds();
-				rotate270Arrow = new ZPSWTImage(pswtCanvas, rotate270icon);
+				addChild(rotate270Arrow = new ZPSWTImage(pswtCanvas, rotate270icon));
 				rotate270Arrow.setOffset(width - bounds6.width - LOWER_THUMBNAIL_HMARGINS,
 						height - bounds6.height - LOWER_THUMBNAIL_HMARGINS);
 				rotate270Arrow.setName(Messages.AnimatedGallery_rotate_left);
-				addChild(rotate270Arrow);
 			}
 		}
 
@@ -659,11 +655,9 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 								break;
 							}
 				}
-				Image patch = Icons.toSwtColors(colorCode);
-				colorCodeRectangle = new ZPSWTImage(pswtCanvas, patch);
+				addChild(colorCodeRectangle = new ZPSWTImage(pswtCanvas, Icons.toSwtColors(colorCode)));
 				colorCodeRectangle.setOffset(UPPER_THUMBNAIL_HMARGINS, UPPER_THUMBNAIL_HMARGINS);
 				colorCodeRectangle.setName(Messages.AnimatedGallery_color_code);
-				addChild(colorCodeRectangle);
 				PBounds bounds = colorCodeRectangle.getBoundsReference();
 				return bounds.width + bounds.x;
 			}
@@ -676,12 +670,11 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 				if (!gps)
 					gps = !Core.getCore().getDbManager()
 							.obtainStructForAsset(LocationShownImpl.class, asset.getStringId(), false).isEmpty();
-				Image locationIcon = gps ? Icons.location.getImage() : Icons.nolocation.getImage();
-				locationPin = new ZPSWTImage(pswtCanvas, locationIcon);
+				addChild(locationPin = new ZPSWTImage(pswtCanvas,
+						gps ? Icons.location.getImage() : Icons.nolocation.getImage()));
 				locationPin.setOffset(x + UPPER_THUMBNAIL_HMARGINS, y + UPPER_THUMBNAIL_HMARGINS);
 				locationPin.setName(
 						gps ? Messages.AnimatedGallery_location_present : Messages.AnimatedGallery_no_location);
-				addChild(locationPin);
 			}
 		}
 
@@ -690,12 +683,20 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 				int rating = anAsset.getRating();
 				double rfactor;
 				Image icon;
-				if (rating > 0) {
+				if (rating > RatingDialog.UNDEF) {
 					if (RATING_SIZE == showRating) {
-						icon = Icons.rating61.getImage();
-						rfactor = (rating + 0.6d) / 5.6d;
+						if (rating > 0) {
+							rfactor = (rating + 0.6d) / 5.6d;
+							icon = Icons.rating61.getImage();
+						} else {
+							rfactor = 1.6d / 5.6d;
+							icon = Icons.rating60.getImage();
+						}
 					} else {
 						switch (rating) {
+						case 0:
+							icon = Icons.rating60.getImage();
+							break;
 						case 1:
 							icon = Icons.rating61.getImage();
 							break;
@@ -716,16 +717,12 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 					}
 				} else {
 					rfactor = 3.6d / 5.6d;
-					icon = Icons.rating60.getImage();
+					icon = Icons.rating6u.getImage();
 				}
-				Rectangle bounds4 = icon.getBounds();
-				double w = (bounds4.width * rfactor);
-				double x1 = width + x - w - UPPER_THUMBNAIL_HMARGINS;
-				ratingStar = new ZPSWTImage(pswtCanvas, icon);
+				addChild(ratingStar = new ZPSWTImage(pswtCanvas, icon));
 				ratingStar.scale(rfactor);
-				ratingStar.setOffset(x1, y);
+				ratingStar.setOffset(width + x - (icon.getBounds().width * rfactor) - UPPER_THUMBNAIL_HMARGINS, y);
 				ratingStar.setName(Messages.AnimatedGallery_rating);
-				addChild(ratingStar);
 			}
 		}
 
@@ -736,15 +733,12 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 				if (icon != null) {
 					double rfactor = 2.6d / 5.6d;
 					Rectangle bounds4 = icon.getBounds();
-					double w = (bounds4.width * rfactor);
-					double h = (bounds4.height * rfactor);
-					double x1 = width + x - w - UPPER_THUMBNAIL_HMARGINS;
-					mediaIcon = new ZPSWTImage(pswtCanvas, icon);
+					double h = bounds4.height * rfactor;
+					addChild(mediaIcon = new ZPSWTImage(pswtCanvas, icon));
 					mediaIcon.setPickable(false);
 					mediaIcon.scale(rfactor);
-					mediaIcon.setOffset(x1, y + 3 * h / 2);
+					mediaIcon.setOffset(width + x - bounds4.width * rfactor - UPPER_THUMBNAIL_HMARGINS, y + 3 * h / 2);
 					mediaIcon.setName(mediaSupport.getName());
-					addChild(mediaIcon);
 				}
 			}
 		}
@@ -1021,8 +1015,6 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 	private final int thumbSize;
 
 	protected TextEventHandler textEventHandler;
-
-	private org.eclipse.swt.graphics.Color selectionForegroundColor;
 
 	private org.eclipse.swt.graphics.Color selectionBackgroundColor;
 
@@ -1714,7 +1706,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 	}
 
 	public void setSelectionForegroundColor(org.eclipse.swt.graphics.Color selectionForegroundColor) {
-		this.selectionForegroundColor = selectionForegroundColor;
+		// do nothing
 	}
 
 	public void setSelectionBackgroundColor(org.eclipse.swt.graphics.Color selectionBackgroundColor) {

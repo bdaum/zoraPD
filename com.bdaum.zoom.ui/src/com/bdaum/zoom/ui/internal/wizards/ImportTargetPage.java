@@ -26,12 +26,18 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
+import com.bdaum.zoom.cat.model.meta.LastDeviceImport;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.ImportFromDeviceData;
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
+import com.bdaum.zoom.css.internal.CssActivator;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
@@ -45,13 +51,13 @@ public class ImportTargetPage extends ColoredWizardPage {
 	public class PreviewJob extends Job {
 
 		private final Date date = new Date();
-		private List<File> files;
+		private List<StorageObject> files;
 		private File rootFolder;
 		private int policy;
 		private TreeViewer viewer;
 		private boolean deep;
 
-		public PreviewJob(List<File> list, File rootFolder, int policy, boolean deep, TreeViewer viewer) {
+		public PreviewJob(List<StorageObject> list, File rootFolder, int policy, boolean deep, TreeViewer viewer) {
 			super(Messages.ImportTargetPage_generate_preview);
 			setSystem(true);
 			this.files = list;
@@ -88,7 +94,7 @@ public class ImportTargetPage extends ColoredWizardPage {
 			}
 			if (t != null) {
 				FolderNode root = new FolderNode(null, rootFolder.getName());
-				for (File file : files) {
+				for (StorageObject file : files) {
 					date.setTime(file.lastModified());
 					String name = new SimpleDateFormat(t).format(date);
 					FolderNode parentNode = root;
@@ -167,6 +173,9 @@ public class ImportTargetPage extends ColoredWizardPage {
 	private TreeViewer treeviewer;
 	private Label previewLabel;
 	private RadioButtonGroup depthGroup;
+	private String presetTargetDir;
+	private int presetSubfolder;
+	private int presetDeep;
 
 	public ImportTargetPage(String pageName, boolean media) {
 		super(pageName);
@@ -176,8 +185,6 @@ public class ImportTargetPage extends ColoredWizardPage {
 	@Override
 	public void createControl(final Composite parent) {
 		Composite targetComp = createComposite(parent, 3);
-		copyLabel = new Label(targetComp, SWT.NONE);
-		copyLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		Label transferToLabel = new Label(targetComp, SWT.NONE);
 		transferToLabel.setText(Messages.ImportFromDeviceWizard_transfer_to);
 
@@ -200,7 +207,6 @@ public class ImportTargetPage extends ColoredWizardPage {
 								dir += File.separator;
 							targetDirField.setText(dir);
 							updateSpaceLabel();
-							validatePage();
 							startPreviewJob();
 						}
 					}
@@ -224,9 +230,9 @@ public class ImportTargetPage extends ColoredWizardPage {
 		depthGroup = new RadioButtonGroup(targetComp, null, SWT.HORIZONTAL, Messages.ImportTargetPage_two_levels,
 				Messages.ImportTargetPage_three_levels);
 		depthGroup.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
-		depthGroup.addSelectionListener(new SelectionAdapter() {
+		depthGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				startPreviewJob();
 			}
 		});
@@ -236,7 +242,7 @@ public class ImportTargetPage extends ColoredWizardPage {
 		previewLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 		previewLabel.setFont(JFaceResources.getBannerFont());
 		previewLabel.setText(Messages.ImportTargetPage_preview);
-		treeviewer = new TreeViewer(targetComp, SWT.V_SCROLL);
+		treeviewer = new TreeViewer(targetComp, SWT.V_SCROLL | SWT.NO_SCROLL);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1);
 		layoutData.horizontalIndent = 15;
 		treeviewer.getControl().setLayoutData(layoutData);
@@ -282,6 +288,10 @@ public class ImportTargetPage extends ColoredWizardPage {
 
 		});
 		treeviewer.setComparator(ZViewerComparator.INSTANCE);
+		new Label(targetComp, SWT.SEPARATOR | SWT.HORIZONTAL)
+				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+		copyLabel = new Label(targetComp, SWT.NONE);
+		copyLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		setControl(targetComp);
 		setHelp(media ? HelpContextIds.IMPORT_FROM_DEVICE_WIZARD_TARGET_SELECTION
 				: HelpContextIds.IMPORT_NEW_STRUCTURE_WIZARD_TARGET_SELECTION);
@@ -293,18 +303,37 @@ public class ImportTargetPage extends ColoredWizardPage {
 	}
 
 	private void fillValues() {
-		IDialogSettings dialogSettings = ((ImportFromDeviceWizard) getWizard()).getDialogSettings();
+		ImportFromDeviceWizard wizard = (ImportFromDeviceWizard) getWizard();
+		IDialogSettings dialogSettings = wizard.getDialogSettings();
 		String targetDir = dialogSettings.get(TARGETDIR);
-		targetDirField.setText(targetDir == null ? "" : targetDir); //$NON-NLS-1$
+		targetDirField.setText(presetTargetDir = targetDir == null ? "" : targetDir); //$NON-NLS-1$
 		try {
-			subfolderCombo.select(dialogSettings.getInt(SUBFOLDERS));
+			subfolderCombo.select(presetSubfolder = dialogSettings.getInt(SUBFOLDERS));
 		} catch (NumberFormatException e) {
-			subfolderCombo.select(2);
+			subfolderCombo.select(presetSubfolder = 2);
 		}
-		depthGroup.setSelection(dialogSettings.getBoolean(DEEPSUBFOLDERS) ? 1 : 0);
-		updateSpaceLabel();
+		depthGroup.setSelection(presetDeep = dialogSettings.getBoolean(DEEPSUBFOLDERS) ? 1 : 0);
+		updateValues(wizard.getCurrentDevice());
 		updateDepthGroup();
+	}
+
+	public void updateValues(LastDeviceImport current) {
+		if (current != null && targetDirField != null) {
+			String tt = current.getTargetDir();
+			if (tt != null && !tt.isEmpty() && targetDirField.getText().equals(presetTargetDir))
+				targetDirField.setText(presetTargetDir = tt);
+			Integer ss = current.getSubfolders();
+			if (ss != null && subfolderCombo.getSelectionIndex() == presetSubfolder)
+				subfolderCombo.select(presetSubfolder = ss);
+			Boolean dd = current.getDeepSubfolders();
+			if (dd != null && depthGroup.getSelection() == presetDeep)
+				depthGroup.setSelection(presetDeep = dd ? 1 : 0);
+		}
+	}
+
+	public void update() {
 		startPreviewJob();
+		updateSpaceLabel();
 	}
 
 	protected void startPreviewJob() {
@@ -324,12 +353,14 @@ public class ImportTargetPage extends ColoredWizardPage {
 	}
 
 	private void updateSpaceLabel() {
-		List<File> selectedFiles = ((ImportFromDeviceWizard) getWizard()).getSelectedFiles();
+		validatePage();
+		List<StorageObject> selectedFiles = ((ImportFromDeviceWizard) getWizard()).getSelectedFiles();
 		if (selectedFiles == null) {
 			copyLabel.setText(Messages.ImportTargetPage_medium_offline);
-			copyLabel.setData("id", "errors"); //$NON-NLS-1$ //$NON-NLS-2$
+			copyLabel.setData(CSSProperties.ID, CSSProperties.ERRORS);
+			setErrorMessage(Messages.ImportTargetPage_medium_offline);
+			setPageComplete(false);
 		} else {
-			copyLabel.setData("id", null); //$NON-NLS-1$
 			long requiredSpace = 0;
 			int n = selectedFiles.size();
 			long freespace = 0;
@@ -339,28 +370,36 @@ public class ImportTargetPage extends ColoredWizardPage {
 				if (targetFile.exists())
 					freespace = CoreActivator.getDefault().getFreeSpace(targetFile);
 			}
-			if (freespace <= 0) {
+			if (freespace <= 0)
 				copyLabel.setText(""); //$NON-NLS-1$
-				return;
+			else {
+				for (StorageObject file : selectedFiles)
+					requiredSpace += file.size();
+				NumberFormat nf = NumberFormat.getNumberInstance();
+				nf.setMaximumFractionDigits(1);
+				switch (n) {
+				case 0:
+					copyLabel.setText(Messages.ImportTargetPage_no_files);
+					setErrorMessage(Messages.ImportTargetPage_no_files);
+					setPageComplete(false);
+					break;
+				case 1:
+					copyLabel.setText(NLS.bind(Messages.ImportTargetPage_one_image,
+							nf.format(requiredSpace / 1048576.0), nf.format(freespace / 1048576.0)));
+					break;
+				default:
+					copyLabel.setText(NLS.bind(Messages.ImportTargetPage_n_images, new Object[] { n,
+							nf.format(requiredSpace / 1048576.0), nf.format(freespace / 1048576.0) }));
+					break;
+				}
 			}
-			for (File file : selectedFiles)
-				requiredSpace += file.length();
-			NumberFormat nf = NumberFormat.getNumberInstance();
-			nf.setMaximumFractionDigits(1);
-			switch (n) {
-			case 0:
-				copyLabel.setText(Messages.ImportTargetPage_no_files);
-				break;
-			case 1:
-				copyLabel.setText(NLS.bind(Messages.ImportTargetPage_one_image, nf.format(requiredSpace / 1048576.0),
-						nf.format(freespace / 1048576.0)));
-				break;
-			default:
-				copyLabel.setText(NLS.bind(Messages.ImportTargetPage_n_images,
-						new Object[] { n, nf.format(requiredSpace / 1048576.0), nf.format(freespace / 1048576.0) }));
-				break;
+			copyLabel.setData(CSSProperties.ID, requiredSpace > freespace ? CSSProperties.ERRORS : null);
+			if (requiredSpace > freespace) {
+				setErrorMessage(Messages.ImportTargetPage_not_enough_disc_space);
+				setPageComplete(false);
 			}
 		}
+		CssActivator.getDefault().applyStyles(copyLabel, false);
 	}
 
 	@Override
@@ -379,16 +418,21 @@ public class ImportTargetPage extends ColoredWizardPage {
 	}
 
 	public void performFinish(ImportFromDeviceData importData) {
-		IDialogSettings dialogSettings = getWizard().getDialogSettings();
+		ImportFromDeviceWizard wizard = (ImportFromDeviceWizard) getWizard();
+		IDialogSettings dialogSettings = wizard.getDialogSettings();
+		LastDeviceImport newDevice = wizard.getNewDevice();
 		String targetDir = targetDirField.getText();
 		importData.setTargetDir(targetDir);
 		dialogSettings.put(TARGETDIR, targetDir);
+		newDevice.setTargetDir(targetDir);
 		int subfolderPolicy = subfolderCombo.getSelectionIndex();
 		importData.setSubfolderPolicy(subfolderPolicy);
 		dialogSettings.put(SUBFOLDERS, subfolderPolicy);
+		newDevice.setSubfolders(subfolderPolicy);
 		boolean deep = depthGroup.isEnabled() && depthGroup.getSelection() == 1;
 		importData.setDeepSubfolders(deep);
 		dialogSettings.put(DEEPSUBFOLDERS, deep);
+		newDevice.setDeepSubfolders(deep);
 	}
 
 	protected void updateDepthGroup() {

@@ -20,14 +20,10 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -37,14 +33,19 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.css.internal.CssActivator;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.program.BatchConstants;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiConstants;
@@ -57,36 +58,11 @@ import com.bdaum.zoom.ui.widgets.NumericControl;
 public class RenameGroup extends Composite {
 
 	public class TemplateLabelProvider extends ZColumnLabelProvider {
-
 		@Override
 		public String getText(Object element) {
 			if (element instanceof RenamingTemplate) {
 				RenamingTemplate template = (RenamingTemplate) element;
-				String cue = cueField.getText().trim();
-				int maxLength = BatchConstants.MAXPATHLENGTH;
-				String filename = "_1072417.JPG"; //$NON-NLS-1$
-				if (asset != null) {
-					File file;
-					try {
-						file = new File(new URI(asset.getUri()));
-						filename = file.getName();
-						String ext = ""; //$NON-NLS-1$
-						int p = filename.lastIndexOf('.');
-						if (p >= 0)
-							ext = filename.substring(p);
-						maxLength -= (file.getParent().length() + 1 + ext.length());
-					} catch (URISyntaxException e) {
-						// use default
-					}
-				}
-				return template.getLabel() + "  (" //$NON-NLS-1$
-						+ Utilities.evaluateTemplate(template.getContent(),
-								asset != null ? Constants.TV_RENAME
-										: transfer ? Constants.TV_TRANSFER : Constants.TV_ALL,
-								filename, new GregorianCalendar(), 1, start, 1,
-								!cue.isEmpty() ? cue : Messages.RenameGroup_cue2, asset, "", maxLength, //$NON-NLS-1$
-								QueryField.URI == field)
-						+ ")"; //$NON-NLS-1$
+				return NLS.bind("{0}  ({1})", template.getLabel(), computePreview(template)); //$NON-NLS-1$
 			}
 			return element.toString();
 		}
@@ -119,24 +95,34 @@ public class RenameGroup extends Composite {
 	private Combo cueField;
 	private RenamingTemplate selectedTemplate;
 	private ArrayList<RenamingTemplate> templates;
-	private ListenerList<SelectionListener> selectionListeners = new ListenerList<SelectionListener>();
-	private ListenerList<ModifyListener> modifyListeners = new ListenerList<ModifyListener>();
-	private ListenerList<ISelectionChangedListener> selectionChangedListeners = new ListenerList<ISelectionChangedListener>();
-	private final Asset asset;
+	private ListenerList<Listener> listeners = new ListenerList<>();
+	private Asset asset;
+	private StorageObject file;
 	protected QueryField field;
 	private ComboViewer fieldViewer;
 	private final RenamingTemplate[] systemTemplates;
-	private boolean transfer;
 	private int start = 1;
 	private NumericControl startField;
 	protected boolean cntrlDwn;
+	private Label preLabel;
+	private String[] tv;
+	private IFileProvider fileprovider;
+	private RenamingTemplate presetSelectedTemplate;
+	private String presetCue;
 
-	public RenameGroup(Composite parent, int style, Asset asset, boolean fieldSelection,
-			RenamingTemplate[] systemTemplates, boolean transfer) {
+	public RenameGroup(Composite parent, int style, Object assetOrFileOrProvider, boolean fieldSelection,
+			RenamingTemplate[] systemTemplates, String[] tv) {
 		super(parent, style);
-		this.asset = asset;
+		this.tv = tv;
+		if (assetOrFileOrProvider instanceof Asset)
+			this.asset = (Asset) assetOrFileOrProvider;
+		else if (assetOrFileOrProvider instanceof StorageObject)
+			this.file = (StorageObject) assetOrFileOrProvider;
+		else if (assetOrFileOrProvider instanceof File)
+			this.file = new StorageObject((File) assetOrFileOrProvider);
+		else if (assetOrFileOrProvider instanceof IFileProvider)
+			this.fileprovider = (IFileProvider) assetOrFileOrProvider;
 		this.systemTemplates = systemTemplates;
-		this.transfer = transfer;
 		setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		setLayout(new GridLayout(2, false));
 		Composite labelGroup = new Composite(this, SWT.NONE);
@@ -170,60 +156,46 @@ public class RenameGroup extends Composite {
 		}
 		new Label(labelGroup, SWT.NONE).setLayoutData(new GridData(100, -1));
 		startField = createNumericControl(labelGroup, Messages.RenameGroup_start_at);
-		startField.addSelectionListener(new SelectionAdapter() {
+		Listener listener = new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				start = startField.getSelection();
+			public void handleEvent(Event event) {
+				if (event.widget == startField)
+					start = startField.getSelection();
 				updateTemplateViewer();
-				fireSelection(e);
+				fireEvent(event);
 			}
-		});
+		};
+		startField.addListener(listener);
 		cueField = createHistoryCombo(labelGroup, Messages.RenameGroup_cue);
 		cueField.setLayoutData(new GridData(80, -1));
-		cueField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				updateTemplateViewer();
-				fireModify(e);
-			}
-		});
-		cueField.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateTemplateViewer();
-				fireSelection(e);
-			}
-		});
+		cueField.addListener(SWT.Modify, listener);
+		cueField.addListener(SWT.Selection, listener);
 		templateViewer = new TableViewer(this, SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, false);
 		layoutData.heightHint = 150;
 		templateViewer.getControl().setLayoutData(layoutData);
 		templateViewer.setContentProvider(ArrayContentProvider.getInstance());
 		templateViewer.setLabelProvider(new TemplateLabelProvider());
-		templateViewer.getControl().addKeyListener(new KeyAdapter() {
+		Listener tableListener = new Listener() {
 			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == SWT.CTRL)
-					cntrlDwn = true;
+			public void handleEvent(Event event) {
+				if (event.type == SWT.Selection) {
+					updateButtons();
+					if (cntrlDwn) {
+						if (editButton.isEnabled())
+							editTemplate();
+						cntrlDwn = false;
+					}
+					updateParameterFields();
+					updatePreview();
+					fireEvent(event);
+				} else if (event.keyCode == SWT.CTRL)
+					cntrlDwn = event.type == SWT.KeyDown;
 			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.keyCode == SWT.CTRL)
-					cntrlDwn = false;
-			}
-		});
-		templateViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-				if (cntrlDwn) {
-					if (editButton.isEnabled())
-						editTemplate();
-					cntrlDwn = false;
-				}
-				updateParameterFields();
-				fireSelectionChanged(event);
-			}
-		});
+		};
+		templateViewer.getTable().addListener(SWT.KeyDown, tableListener);
+		templateViewer.getTable().addListener(SWT.KeyUp, tableListener);
+		templateViewer.getTable().addListener(SWT.Selection, tableListener);
 
 		final Composite buttonComp = new Composite(this, SWT.NONE);
 		buttonComp.setLayout(new GridLayout());
@@ -248,7 +220,7 @@ public class RenameGroup extends Composite {
 		removeButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				templateViewer.remove(((IStructuredSelection) templateViewer.getSelection()).getFirstElement());
+				templateViewer.remove(templateViewer.getStructuredSelection().getFirstElement());
 			}
 		});
 		templateViewer.addDoubleClickListener(new IDoubleClickListener() {
@@ -256,11 +228,27 @@ public class RenameGroup extends Composite {
 				editTemplate();
 			}
 		});
+		Label sep = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
+		sep.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		Label label = new Label(this, SWT.NONE);
+		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		label.setFont(JFaceResources.getBannerFont());
+		label.setText(Messages.RenameGroup_preview);
+		preLabel = new Label(this, SWT.NONE);
+		layoutData = new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1);
+		layoutData.horizontalIndent = 15;
+		layoutData.widthHint = 500;
+		preLabel.setLayoutData(layoutData);
+	}
+
+	protected void updatePreview() {
+		RenamingTemplate template = (RenamingTemplate) templateViewer.getStructuredSelection().getFirstElement();
+		if (template != null)
+			preLabel.setText(computePreview(template));
 	}
 
 	private void editTemplate() {
-		RenamingTemplate t = (RenamingTemplate) ((IStructuredSelection) templateViewer.getSelection())
-				.getFirstElement();
+		RenamingTemplate t = (RenamingTemplate) templateViewer.getStructuredSelection().getFirstElement();
 		t = openEditDialog(getParent(), t);
 		if (t != null)
 			templateViewer.update(t, null);
@@ -269,12 +257,12 @@ public class RenameGroup extends Composite {
 	private NumericControl createNumericControl(Composite parent, String lab) {
 		Label label = new Label(parent, SWT.NONE);
 		label.setText(lab);
-		NumericControl startField = new NumericControl(parent, SWT.NONE);
-		startField.setData(UiConstants.KEY, START); 
-		startField.setData(UiConstants.LABEL, label); 
-		startField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		startField.setSelection(start);
-		return startField;
+		NumericControl field = new NumericControl(parent, SWT.NONE);
+		field.setData(UiConstants.KEY, START);
+		field.setData(UiConstants.LABEL, label);
+		field.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		field.setSelection(start);
+		return field;
 	}
 
 	private static Combo createHistoryCombo(Composite parent, String lab) {
@@ -282,7 +270,7 @@ public class RenameGroup extends Composite {
 		label.setText(lab);
 		Combo cueCombo = new Combo(parent, SWT.NONE);
 		cueCombo.setData(UiConstants.KEY, CUE);
-		cueCombo.setData(UiConstants.LABEL, label); 
+		cueCombo.setData(UiConstants.LABEL, label);
 		cueCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		return cueCombo;
 	}
@@ -293,7 +281,8 @@ public class RenameGroup extends Composite {
 	}
 
 	private RenamingTemplate openEditDialog(Composite parent, RenamingTemplate t) {
-		TemplateEditDialog dialog = new TemplateEditDialog(parent.getShell(), t, asset, field, transfer);
+		TemplateEditDialog dialog = new TemplateEditDialog(parent.getShell(), t, asset != null ? asset : file, field,
+				tv);
 		dialog.create();
 		Point location = getShell().getLocation();
 		dialog.getShell().setLocation(location.x + 50, location.y + 100);
@@ -302,15 +291,14 @@ public class RenameGroup extends Composite {
 
 	private void updateParameterFields() {
 		RenamingTemplate oldTemplate = selectedTemplate;
-		selectedTemplate = ((RenamingTemplate) ((IStructuredSelection) templateViewer.getSelection())
-				.getFirstElement());
+		selectedTemplate = ((RenamingTemplate) templateViewer.getStructuredSelection().getFirstElement());
 		if (oldTemplate != null)
 			templateViewer.update(oldTemplate, null);
 		if (selectedTemplate != null)
 			templateViewer.update(selectedTemplate, null);
 		boolean visible = selectedTemplate != null && selectedTemplate.getContent().indexOf(Constants.TV_CUE) >= 0;
 		cueField.setVisible(visible);
-		((Control) cueField.getData(UiConstants.LABEL)).setVisible(visible); 
+		((Control) cueField.getData(UiConstants.LABEL)).setVisible(visible);
 		if (visible)
 			CssActivator.getDefault().setColors(cueField);
 		visible = asset != null && selectedTemplate != null
@@ -320,14 +308,13 @@ public class RenameGroup extends Composite {
 						|| selectedTemplate.getContent().indexOf(Constants.TV_IMAGE_NO2) >= 0
 						|| selectedTemplate.getContent().indexOf(Constants.TV_IMAGE_NO1) >= 0);
 		startField.setVisible(visible);
-		((Control) startField.getData(UiConstants.LABEL)).setVisible(visible); 
+		((Control) startField.getData(UiConstants.LABEL)).setVisible(visible);
 		if (visible)
 			CssActivator.getDefault().setColors(startField);
 	}
 
 	private void updateButtons() {
-		RenamingTemplate sel = ((RenamingTemplate) ((IStructuredSelection) templateViewer.getSelection())
-				.getFirstElement());
+		RenamingTemplate sel = ((RenamingTemplate) templateViewer.getStructuredSelection().getFirstElement());
 		editButton.setEnabled(sel != null);
 		removeButton.setEnabled(sel != null && !sel.isSystem());
 	}
@@ -338,6 +325,31 @@ public class RenameGroup extends Composite {
 			if (content.indexOf(Constants.TV_CUE) >= 0)
 				templateViewer.update(template, null);
 		}
+	}
+
+	protected String computePreview(RenamingTemplate template) {
+		String cue = cueField.getText().trim();
+		int maxLength = BatchConstants.MAXPATHLENGTH;
+		String filename = "_1072417.JPG"; //$NON-NLS-1$
+		if (asset != null) {
+			try {
+				file = new StorageObject(new File(new URI(asset.getUri())));
+			} catch (URISyntaxException e) {
+				// use default
+			}
+		} else if (fileprovider != null)
+			file = fileprovider.getFile();
+		if (file != null) {
+			filename = file.getName();
+			int p = filename.lastIndexOf('.');
+			String ext = (p >= 0) ? filename.substring(p) : ""; //$NON-NLS-1$
+			maxLength -= (file.getAbsolutePath().length() - filename.length() + ext.length());
+		}
+		Meta meta = Core.getCore().getDbManager().getMeta(true);
+		return Utilities.evaluateTemplate(template.getContent(), tv, filename, new GregorianCalendar(), 1,
+				startField.isVisible() ? start : meta.getLastSequenceNo() + 1, meta.getLastYearSequenceNo() + 1,
+				!cue.isEmpty() ? cue : Messages.RenameGroup_cue2, asset, "", //$NON-NLS-1$
+				maxLength, QueryField.URI == field);
 	}
 
 	public void fillValues(IDialogSettings dialogSettings, String selTemplate, String cue) {
@@ -354,11 +366,7 @@ public class RenameGroup extends Composite {
 		if (selTemplate == null)
 			selTemplate = dialogSettings.get(SELECTEDTEMPLATE);
 		templateViewer.setInput(templates);
-		for (RenamingTemplate t : templates)
-			if (t.getContent().equals(selTemplate) || t.getLabel().equals(selTemplate)) {
-				templateViewer.setSelection(new StructuredSelection(t));
-				break;
-			}
+		setSelectedTemplate(selTemplate);
 		boolean visible = cueField.getVisible();
 		String[] items = dialogSettings.getArray(CUE);
 		if (items != null) {
@@ -367,11 +375,8 @@ public class RenameGroup extends Composite {
 			cueField.setVisibleItemCount(8);
 			cueField.setVisible(visible);
 		}
-		if (cue != null) {
-			cueField.setVisible(true);
-			cueField.setText(cue);
-			cueField.setVisible(visible);
-		}
+		if (cue != null)
+			setCue(cue);
 		try {
 			start = dialogSettings.getInt(START);
 		} catch (NumberFormatException e) {
@@ -380,8 +385,15 @@ public class RenameGroup extends Composite {
 		updateParameterFields();
 		if (fieldViewer != null) {
 			String id = dialogSettings.get(FIELD);
-			fieldViewer.setSelection(new StructuredSelection(field = id != null ? QueryField.findQueryField(id) : QueryField.URI));
+			fieldViewer.setSelection(
+					new StructuredSelection(field = id != null ? QueryField.findQueryField(id) : QueryField.URI));
 		}
+		updateButtons();
+	}
+
+	public void update() {
+		updateTemplateViewer();
+		updatePreview();
 	}
 
 	public void saveSettings(IDialogSettings dialogSettings) {
@@ -412,43 +424,17 @@ public class RenameGroup extends Composite {
 		return null;
 	}
 
-	public void addSelectionListener(SelectionListener listener) {
-		selectionListeners.add(listener);
+	public void addListener(Listener listener) {
+		listeners.add(listener);
 	}
 
-	public void removeSelectionListener(SelectionListener listener) {
-		selectionListeners.remove(listener);
+	public void removeListener(Listener listener) {
+		listeners.remove(listener);
 	}
 
-	public void addSelectionChangedListener(ISelectionChangedListener listener) {
-		selectionChangedListeners.add(listener);
-	}
-
-	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
-		selectionChangedListeners.remove(listener);
-	}
-
-	public void addModifyListener(ModifyListener listener) {
-		modifyListeners.add(listener);
-	}
-
-	public void removeModifyListener(ModifyListener listener) {
-		modifyListeners.remove(listener);
-	}
-
-	protected void fireSelection(SelectionEvent e) {
-		for (SelectionListener listener : selectionListeners)
-			listener.widgetSelected(e);
-	}
-
-	protected void fireSelectionChanged(SelectionChangedEvent e) {
-		for (ISelectionChangedListener listener : selectionChangedListeners)
-			listener.selectionChanged(e);
-	}
-
-	protected void fireModify(ModifyEvent e) {
-		for (ModifyListener listener : modifyListeners)
-			listener.modifyText(e);
+	protected void fireEvent(Event e) {
+		for (Listener listener : listeners)
+			listener.handleEvent(e);
 	}
 
 	public String getCue() {
@@ -461,6 +447,34 @@ public class RenameGroup extends Composite {
 
 	public int getStart() {
 		return start;
+	}
+
+	private void setSelectedTemplate(String tt) {
+		for (RenamingTemplate t : templates)
+			if (t.getContent().equals(tt) || t.getLabel().equals(tt)) {
+				templateViewer.setSelection(new StructuredSelection(presetSelectedTemplate = selectedTemplate = t));
+				break;
+			}
+	}
+
+	private void setCue(String cue) {
+		boolean visible = cueField.getVisible();
+		cueField.setVisible(true);
+		cueField.setText(presetCue = cue);
+		cueField.setVisible(visible);
+	}
+
+	public void updateValues(String tt, String cue) {
+		Object firstElement = templateViewer.getStructuredSelection().getFirstElement();
+		if (firstElement == null || firstElement.equals(presetSelectedTemplate) && tt != null && !tt.isEmpty())
+			setSelectedTemplate(tt);
+		if (cue != null && !cue.isEmpty()) {
+			boolean visible = cueField.getVisible();
+			cueField.setVisible(true);
+			if (cueField.getText().equals(presetCue))
+				setCue(cue);
+			cueField.setVisible(visible);
+		}
 	}
 
 }

@@ -69,8 +69,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseMoveListener;
@@ -96,9 +94,11 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.FontDialog;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
@@ -199,8 +199,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	private static String[] SEQUENCEITEMS = new String[] { Messages.ExhibitionEditDialog_capt_des_cred,
 			Messages.ExhibitionEditDialog_capt_cred_des, Messages.ExhibitionEditDialog_cred_capt_des };
 
-	private final ModifyListener modifyListener = new ModifyListener() {
-		public void modifyText(ModifyEvent e) {
+	private final Listener modifyListener = new Listener() {
+		public void handleEvent(Event e) {
 			updateButtons();
 		}
 	};
@@ -340,12 +340,12 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	private void createOutputGroup(Composite parent) {
 		parent.setLayout(new GridLayout(3, false));
 		outputTargetGroup = new OutputTargetGroup(parent,
-				new GridData(GridData.FILL, GridData.BEGINNING, true, false, 3, 1), modifyListener, false, true);
+				new GridData(GridData.FILL, GridData.BEGINNING, true, false, 3, 1), modifyListener, false, true, false);
 		// Link
 		new Label(parent, SWT.NONE).setText(Messages.ExhibitionEditDialog_web_link);
 		linkField = new Text(parent, SWT.BORDER);
 		linkField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		linkField.addModifyListener(modifyListener);
+		linkField.addListener(SWT.Modify, modifyListener);
 		// Keywords
 		final Label keywordLabel = new Label(parent, SWT.NONE);
 		keywordLabel.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
@@ -469,9 +469,10 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		comp.setLayout(new GridLayout(2, false));
 		showGridButton = WidgetFactory.createCheckButton(comp, Messages.ExhibitionEditDialog_show_grid,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		showGridButton.addSelectionListener(new SelectionAdapter() {
+		showCreditsButton.addListener(new Listener() {
+
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateButtons();
 			}
 		});
@@ -504,30 +505,30 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		varianceField = new NumericControl(heightGroup, SWT.NONE);
 		varianceField.setDigits(2);
 		varianceField.setMaximum(999);
-		viewingHeightField.addSelectionListener(new SelectionAdapter() {
+		Listener listener = new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				varianceField.setMaximum(2 * viewingHeightField.getSelection() - 1);
+			public void handleEvent(Event event) {
+				if (event.widget == viewingHeightField)
+					varianceField.setMaximum(2 * viewingHeightField.getSelection() - 1);
+				else if (event.widget == labelLayoutGroup)
+					validate();
+				else
+					updateColorGroups();
 			}
-		});
+		};
+		viewingHeightField.addListener(listener);
 		CGroup frameGroup = CGroup.create(comp, 1, Messages.ExhibitionEditDialog_mat_and_fram);
 		new Label(frameGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_matWidth + captionUnitcmin());
 		matWidthField = new NumericControl(frameGroup, SWT.NONE);
 		matWidthField.setMaximum(unit == 'i' ? 400 : 1000);
 		matWidthField.setDigits(1);
-		SelectionAdapter colorSelectionListener = new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateColorGroups();
-			}
-		};
-		matWidthField.addSelectionListener(colorSelectionListener);
+		matWidthField.addListener(listener);
 		matColorGroup = new WebColorGroup(frameGroup, Messages.ExhibitionEditDialog_matColor + captionUnitcmin());
 		new Label(frameGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_frameWidth);
 		frameWidthField = new NumericControl(frameGroup, SWT.NONE);
 		frameWidthField.setMaximum(unit == 'i' ? 40 : 100);
 		frameWidthField.setDigits(1);
-		frameWidthField.addSelectionListener(colorSelectionListener);
+		frameWidthField.addListener(listener);
 		frameColorGroup = new WebColorGroup(frameGroup, Messages.ExhibitionEditDialog_frameColor);
 		CGroup labelGroup = CGroup.create(comp, 1, Messages.ExhibitionEditDialog_label);
 		new Label(labelGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_label_font);
@@ -561,11 +562,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		labelTextField.setLayoutData(gd_descriptionField);
 		labelLayoutGroup = new LabelLayoutGroup(labelGroup, SWT.NONE, true);
 		labelLayoutGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
-		labelLayoutGroup.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				validate();
-			}
-		});
+		labelLayoutGroup.addListener(listener);
 	}
 
 	private void updateColorGroups() {
@@ -605,12 +602,18 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		xspinner.setMaximum(unit == 'i' ? 1500000 : 500000);
 		xspinner.setIncrement(unit == 'i' ? 30 : 10);
 		xspinner.setDigits(2);
-		xspinner.addSelectionListener(new SelectionAdapter() {
+		Listener listener = new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateItems(toMm(xspinner.getSelection()), -1, Double.NaN);
+			public void handleEvent(Event event) {
+				if (event.widget == xspinner)
+					updateItems(toMm(xspinner.getSelection()), -1, Double.NaN);
+				else if (event.widget == yspinner)
+					updateItems(-1, toMm(yspinner.getSelection()), Double.NaN);
+				else if (event.widget == aspinner)
+					updateItems(-1, -1, aspinner.getSelection() / 10d);
 			}
-		});
+		};
+		xspinner.addListener(listener);
 		Label ylabel = new Label(detailGroup, SWT.NONE);
 		ylabel.setText(Messages.ExhibitionEditDialog_ground_ypos + captionUnitmft());
 		yspinner = new NumericControl(detailGroup, NumericControl.LOGARITHMIC);
@@ -618,12 +621,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		yspinner.setMaximum(unit == 'i' ? 1500000 : 500000);
 		yspinner.setIncrement(unit == 'i' ? 30 : 10);
 		yspinner.setDigits(2);
-		yspinner.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateItems(-1, toMm(yspinner.getSelection()), Double.NaN);
-			}
-		});
+		yspinner.addListener(listener);
 		alabel = new Label(detailGroup, SWT.NONE);
 		alabel.setText(Messages.ExhibitionEditDialog_ground_angle);
 		aspinner = new NumericControl(detailGroup, SWT.NONE);
@@ -631,12 +629,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		aspinner.setMaximum(3600);
 		aspinner.setIncrement(10);
 		aspinner.setDigits(1);
-		aspinner.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateItems(-1, -1, aspinner.getSelection() / 10d);
-			}
-		});
+		aspinner.addListener(listener);
 
 		floorplan = new Canvas(comp, SWT.DOUBLE_BUFFERED);
 		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
@@ -868,7 +861,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 					updateFloorplanDetails();
 					return;
 				}
-				IStructuredSelection selection = (IStructuredSelection) itemViewer.getSelection();
+				IStructuredSelection selection = itemViewer.getStructuredSelection();
 				hotObject = null;
 				hotIndex = -1;
 				Object sel = selection.getFirstElement();
@@ -1018,7 +1011,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	}
 
 	protected void updateFloorplanDetails() {
-		IStructuredSelection selection = (IStructuredSelection) itemViewer.getSelection();
+		IStructuredSelection selection = itemViewer.getStructuredSelection();
 		Object firstElement = selection.getFirstElement();
 		if (firstElement instanceof Wall) {
 			Wall wall = (Wall) firstElement;
@@ -1207,7 +1200,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		new Label(exhGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_name);
 		nameField = new Text(exhGroup, SWT.BORDER);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		nameField.addModifyListener(modifyListener);
+		nameField.addListener(SWT.Modify, modifyListener);
 		final Label descriptionLabel = new Label(exhGroup, SWT.NONE);
 		descriptionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
 		descriptionLabel.setText(Messages.ExhibitionEditDialog_description);
@@ -1763,7 +1756,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			}
 			result.setName(nameField.getText());
 			if (itemViewer != null
-					&& !(((IStructuredSelection) itemViewer.getSelection()).getFirstElement() instanceof Wall)) {
+					&& !(itemViewer.getStructuredSelection().getFirstElement() instanceof Wall)) {
 				result.setStartX(toMm(xspinner.getSelection()));
 				result.setStartY(toMm(yspinner.getSelection()));
 			}

@@ -47,7 +47,6 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IActionBars;
@@ -97,7 +96,7 @@ import com.bdaum.zoom.ui.internal.hover.IHoverInfo;
 @SuppressWarnings("restriction")
 public abstract class ImageView extends BasicView implements CatalogListener, IDragHost, IDropHost {
 
-	public static class GalleryHover implements IGalleryHover {
+	public class GalleryHover implements IGalleryHover {
 
 		@SuppressWarnings("unchecked")
 		public IHoverInfo getHoverInfo(IHoverSubject viewer, MouseEvent event) {
@@ -118,10 +117,11 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 				String[] regionIds = asset.getPerson();
 				if (regionIds != null && regionIds.length > 0)
 					foundRegions = viewer.findAllRegions(event);
-				return new HoverInfo(ob, foundRegions, UiActivator.getDefault().getHoverNodes());
+				return new HoverInfo(ob, foundRegions, getHoverNodes());
 			}
 			return null;
 		}
+
 	}
 
 	private static final int THRESHHOLD = 3;
@@ -137,7 +137,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	protected IAction ratingAction;
 	protected IAction colorCodeAction;
 	protected IAction playVoiceNoteAction;
-	protected IAction selectAllAction;
+//	protected IAction selectAllAction;
 	protected IAction searchSimilarAction;
 	protected IAction timeSearchAction;
 	protected IAction proximitySearchAction;
@@ -161,6 +161,10 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	private IAction pasteAction;
 	private boolean dragging;
 	private int ignoreTab;
+	
+	protected QueryField[] getHoverNodes() {
+		return UiActivator.getDefault().getHoverNodes();
+	}
 
 	public void rotate(Asset asset, int degrees) {
 		OperationJob.executeOperation(new RotateOperation(Collections.singletonList(asset), degrees), this);
@@ -262,7 +266,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
-	protected void contributeToActionBars() {
+	protected IActionBars contributeToActionBars() {
 		IViewSite viewSite = getViewSite();
 		IActionBars bars = viewSite.getActionBars();
 		fillLocalPullDown(bars.getMenuManager());
@@ -273,8 +277,9 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		bars.setGlobalActionHandler(ActionFactory.COPY.getId(), copyAction);
 		bars.setGlobalActionHandler(ActionFactory.PASTE.getId(), pasteAction);
 		bars.setGlobalActionHandler(ActionFactory.PRINT.getId(), new PrintAction(viewSite.getWorkbenchWindow()));
-		if (selectAllAction != null)
-			bars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(), selectAllAction);
+//		if (selectAllAction != null)
+//			bars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(), selectAllAction);
+		return bars;
 	}
 
 	protected abstract void fillLocalToolBar(IToolBarManager toolBarManager);
@@ -388,13 +393,9 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		super.registerCommands();
 	}
 
-	protected abstract void selectAll();
-
-	protected abstract void selectNone();
-
 	@Override
 	public void updateActions(boolean force) {
-		if (viewActive || force) {
+		if (isVisible() || force) {
 			int count = getSelectionCount(false);
 			int localCount = getSelectionCount(true);
 			boolean writable = !dbIsReadonly();
@@ -421,7 +422,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 			addVoiceNoteAction.setEnabled(localOne && writable);
 			searchSimilarAction.setEnabled(count <= 1);
 			timeSearchAction.setEnabled(true);
-			viewImageAction.setEnabled(one);
+			viewImageAction.setEnabled(one || count == 2);
 			showComponentsAction.setEnabled(localOne);
 			showCompositesAction.setEnabled(localOne);
 			showDerivativesAction.setEnabled(localOne);
@@ -476,10 +477,18 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	}
 
 	@Override
-	protected void installListeners(Composite parent) {
-		super.installListeners(parent);
+	protected void installListeners() {
+		super.installListeners();
 		Core.getCore().addCatalogListener(this);
 	}
+	
+	@Override
+	protected void uninstallListeners() {
+		super.uninstallListeners();
+		Core.getCore().removeCatalogListener(this);
+	}
+	
+
 
 	@Override
 	public IGalleryHover getGalleryHover(MouseEvent event) {

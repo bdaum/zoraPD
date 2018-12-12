@@ -26,13 +26,13 @@ import java.net.URL;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
@@ -67,9 +67,9 @@ public class PagePart extends AbstractPreferencePagePart {
 		CLink link = new CLink(eGroup, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		link.setText(Messages.VideoPreferencePage_download);
-		link.addSelectionListener(new SelectionAdapter() {
+		link.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				String vlcDownload = System.getProperty(Messages.VideoPreferencePage_vlc_key);
 				try {
 					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));

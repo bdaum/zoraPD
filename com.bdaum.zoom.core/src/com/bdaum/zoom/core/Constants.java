@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
+import com.bdaum.zoom.mtp.ObjectFilter;
 import com.bdaum.zoom.program.BatchConstants;
 
 public class Constants {
@@ -274,7 +275,7 @@ public class Constants {
 	public static final int SLIDE_SNOONLY = 1;
 	public static final int SLIDE_TITLE_SNO = 2;
 
-	public static final FileNameExtensionFilter SOUNDFILEFILTER = new FileNameExtensionFilter(
+	public static final ObjectFilter SOUNDFILEFILTER = new FileNameExtensionFilter(
 			new String[] { "aif", "aifc", "au", "snd", "wav" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 
 	public static final String[] SupportedSoundFileExtensions = new String[] { "*.aif;*.aifc;*.au;*.snd;*.wav", "*.*" }; //$NON-NLS-1$ //$NON-NLS-2$
@@ -288,6 +289,7 @@ public class Constants {
 	public static final int DUPES_BYSIMILARITY = 2;
 	public static final int DUPES_COMBINED = 3;
 	public static final int DUPES_BYFILENAME = 40;
+	public static final int DUPES_BYORIGINAL = 41;
 
 	// JOBS
 	public static final String DAEMONS = BatchConstants.DAEMONS;
@@ -304,6 +306,8 @@ public class Constants {
 	public static final String UPDATING = "com.bdaum.zoom.updating"; //$NON-NLS-1$
 	public static final String CRITICAL = "com.bdaum.zoom.critical"; //$NON-NLS-1$
 	public static final String FILETRANSFER = "com.bdaum.zoom.fileTransfer"; //$NON-NLS-1$
+	public static final Object TETHEREDJOB = "com.bdaum.zoom.tethered"; //$NON-NLS-1$
+
 
 	// Merge duplicates
 	public static final int SKIP = 0;

@@ -40,13 +40,14 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DateTime;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.report.Report;
 import com.bdaum.zoom.core.QueryField;
@@ -63,7 +64,7 @@ import com.bdaum.zoom.ui.widgets.RangeControl;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class ValuePage extends ColoredWizardPage implements SelectionListener {
+public class ValuePage extends ColoredWizardPage implements Listener {
 
 	private class ViewerComp extends Composite {
 
@@ -143,9 +144,9 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 			setLayout(new GridLayout(1, false));
 			CheckboxButton essentialButton = WidgetFactory.createCheckButton(this, Messages.ValuePage_only_essential,
 					new GridData(SWT.END, SWT.CENTER, true, true));
-			essentialButton.addSelectionListener(new SelectionAdapter() {
+			essentialButton.addListener(new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					essential = essentialButton.getSelection();
 					setInput();
 				}
@@ -321,7 +322,7 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 		GridData data = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
 		data.verticalIndent = 20;
 		dayTimeButtonGroup.setLayoutData(data);
-		dayTimeButtonGroup.addSelectionListener(this);
+		dayTimeButtonGroup.addListener(this);
 		dayTimeButtonGroup.setSelection(0);
 		timeComposite = new Composite(stack, SWT.NONE);
 		timeComposite.setLayout(new GridLayout(4, false));
@@ -340,15 +341,15 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 		timeToField = new DateTime(timeComposite, SWT.CALENDAR | SWT.SHORT);
 		timeToField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		timeFromField.setDate(timeToField.getYear() - 4, 0, 1);
-		timeFromField.addSelectionListener(this);
-		timeToField.addSelectionListener(this);
+		timeFromField.addListener(SWT.Selection, this);
+		timeToField.addListener(SWT.Selection, this);
 		GregorianCalendar cal = new GregorianCalendar();
 		timeToField.setDate(cal.get(GregorianCalendar.YEAR), cal.get(GregorianCalendar.MONTH) + 1,
 				cal.get(GregorianCalendar.DAY_OF_MONTH));
-		timeButtonGroup = new RadioButtonGroup(timeComposite, Messages.ValuePage_interval, SWT.NONE, Messages.ValuePage_by_year, Messages.ValuePage_by_quarter, Messages.ValuePage_by_month,
+		timeButtonGroup = new RadioButtonGroup(timeComposite, Messages.ValuePage_interval, 2, Messages.ValuePage_by_year, Messages.ValuePage_by_quarter, Messages.ValuePage_by_month,
 				Messages.ValuePage_by_week, Messages.ValuePage_by_day);
 		timeButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 4, 1));
-		timeButtonGroup.addSelectionListener(this);
+		timeButtonGroup.addListener(this);
 		timeButtonGroup.setSelection(0);
 		numericComposite = new Composite(stack, SWT.NONE);
 		numericComposite.setLayout(new GridLayout(1, false));
@@ -369,7 +370,7 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 		rangeSlider = new RangeControl(rangeComp, SWT.BORDER);
 		rangeSlider.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1));
 		rangeSlider.setSelection(new Point(25, 75));
-		rangeSlider.addSelectionListener(this);
+		rangeSlider.addListener(this);
 		label = new Label(rangeComp, SWT.NONE);
 		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		label.setText(Messages.ValuePage_intervals);
@@ -378,7 +379,7 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 		intervalField.setMinimum(2);
 		intervalField.setMaximum(150);
 		intervalField.setSelection(50);
-		intervalField.addSelectionListener(this);
+		intervalField.addListener(this);
 		discreteComposite = new Composite(stack, SWT.NONE);
 		discreteComposite.setLayout(new GridLayout(1, false));
 		label = new Label(discreteComposite, SWT.NONE);
@@ -398,7 +399,7 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 		thresholdField.setIncrement(1);
 		thresholdField.setDigits(1);
 		thresholdField.setSelection(10);
-		thresholdField.addSelectionListener(this);
+		thresholdField.addListener(this);
 
 		hiddenLabel = new Label(discreteComposite, SWT.NONE);
 		hiddenLabel.setText(Messages.ValuePage_hidden);
@@ -441,9 +442,9 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 	}
 
 	protected void updateFields() {
-		if (stackLayout.topControl == daytimeComposite) {
+		if (stackLayout.topControl == daytimeComposite)
 			report.setField(QueryField.TIMEOFDAY.getKey());
-		} else if (stackLayout.topControl == timeComposite) {
+		else if (stackLayout.topControl == timeComposite) {
 			GregorianCalendar toCal = new GregorianCalendar(timeToField.getYear(), timeToField.getMonth(),
 					timeToField.getDay());
 			GregorianCalendar fromCal = new GregorianCalendar(timeFromField.getYear(), timeFromField.getMonth(),
@@ -485,7 +486,7 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 				if (!Float.isNaN(maxValue)) {
 					boolean log = (qfield.getAutoPolicy() & QueryField.AUTO_LOG) != 0 || Float.isInfinite(maxValue);
 					rangeLabel.setText(NLS.bind(log ? Messages.ValuePage_logar : Messages.ValuePage_linear, qfield.getLabel()));
-					rangeSlider.setLogrithmic(log);
+					rangeSlider.setLogarithmic(log);
 					int intMaxVlaue = Float.isFinite(maxValue) ? (int) maxValue : 1000000;
 					int type = qfield.getType();
 					if (type == QueryField.T_CURRENCY) {
@@ -615,7 +616,7 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 	}
 
 	@Override
-	public void widgetSelected(SelectionEvent e) {
+	public void handleEvent(Event e) {
 		updateFields();
 	}
 
@@ -651,11 +652,6 @@ public class ValuePage extends ColoredWizardPage implements SelectionListener {
 			report.setThreshold(thresholdField.getSelection() * 0.1f);
 			report.setMode(mode);
 		}
-	}
-
-	@Override
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
 	}
 
 }

@@ -42,10 +42,10 @@ import com.bdaum.zoom.core.IRecipeDetector;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
-import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
 import com.bdaum.zoom.core.internal.FileWatchManager;
 import com.bdaum.zoom.core.internal.IPreferenceUpdater;
 import com.bdaum.zoom.fileMonitor.internal.filefilter.FilterChain;
+import com.bdaum.zoom.mtp.ObjectFilter;
 import com.bdaum.zoom.ui.internal.PreferencesUpdater;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
@@ -55,7 +55,7 @@ public class FolderWatchJob extends SynchronizeCatJob {
 
 	private static final String XMPEXTENSION = ".xmp"; //$NON-NLS-1$
 	private static final int XMPEXTLEN = XMPEXTENSION.length();
-	private FileNameExtensionFilter filter;
+	private ObjectFilter filter;
 	private WatchedFolder[] watchedFolders;
 	private CoreActivator activator;
 
@@ -120,7 +120,7 @@ public class FolderWatchJob extends SynchronizeCatJob {
 				if (folderFile != null) {
 					FilterChain filterChain = null;
 					if (!observedFolder.getTransfer()) {
-						filterChain = new FilterChain(UiUtilities.getFilters(observedFolder), "-+", ";", true); //$NON-NLS-1$//$NON-NLS-2$
+						filterChain = new FilterChain(UiUtilities.getFilters(observedFolder), "-+_*", ";", true); //$NON-NLS-1$//$NON-NLS-2$
 						filterChain.setBaseLength(folderFile.getAbsolutePath().length() + 1);
 					}
 					watchFolder(folderFile, monitor, 1000000, System.currentTimeMillis(), observedFolder, filterChain,
@@ -148,6 +148,7 @@ public class FolderWatchJob extends SynchronizeCatJob {
 				List<File> newFiles = new ArrayList<File>();
 				int incr = work / members.length;
 				monitor.subTask(folder.getPath());
+				boolean initXmp = true;
 				Map<String, File> xmpMap = null;
 				for (File member : members) {
 					if (monitor.isCanceled())
@@ -167,20 +168,24 @@ public class FolderWatchJob extends SynchronizeCatJob {
 								&& (fileWatchManager == null || !fileWatchManager.isFileIgnored(member))
 								&& (filterChain == null || filterChain.accept(member, false))) {
 							yield();
-							if (xmpMap == null) {
-								xmpMap = new HashMap<String, File>(members.length * 3 / 2);
+							if (initXmp) {
+								initXmp = false;
 								for (File xmpCandidate : members)
 									if (xmpCandidate.isFile()) {
 										String xmpName = xmpCandidate.getName();
-										if (xmpName.toLowerCase().endsWith(XMPEXTENSION))
+										if (xmpName.toLowerCase().endsWith(XMPEXTENSION)) {
+											if (xmpMap == null)
+												xmpMap = new HashMap<String, File>(members.length * 3 / 2);
 											xmpMap.put(xmpName.substring(0, xmpName.length() - XMPEXTLEN),
 													xmpCandidate);
+										}
 									}
 							}
 							if (observedFolder.getTransfer())
 								newFiles.add(member);
 							else
-								activator.classifyFile(member, newFiles, outdatedFiles, xmpMap, activeRecipeDetectors, lastScan);
+								activator.classifyFile(member, newFiles, outdatedFiles, xmpMap, activeRecipeDetectors,
+										lastScan);
 						}
 					}
 					work -= incr;

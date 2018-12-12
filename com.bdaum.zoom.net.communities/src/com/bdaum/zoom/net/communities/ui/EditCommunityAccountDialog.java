@@ -29,12 +29,12 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
-import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
@@ -46,14 +46,15 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.scohen.juploadr.app.PhotoSet;
@@ -78,10 +79,12 @@ import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.job.OperationJob;
+import com.bdaum.zoom.net.communities.CommunitiesActivator;
 import com.bdaum.zoom.net.communities.CommunityAccount;
 import com.bdaum.zoom.net.communities.CommunityApi;
 import com.bdaum.zoom.net.communities.HelpContextIds;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.dialogs.KeywordGroup;
@@ -97,6 +100,7 @@ import com.bdaum.zoom.ui.widgets.NumericControl;
 public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErrorHandler {
 
 	private static final Object[] EMPTY = new Object[0];
+	private static final String SETTINGSID = "editCommunitiesAccountDialog"; //$NON-NLS-1$
 	private CommunityAccount account;
 	private Text nameField;
 	private CheckboxButton albumButton;
@@ -129,6 +133,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 	private Set<Category> externalUsedCat;
 	private boolean offline;
 	private final CommunityApi api;
+	private IDialogSettings settings;
 
 	public EditCommunityAccountDialog(Shell parentShell, CommunityAccount account, CommunityApi api) {
 		super(parentShell, HelpContextIds.COMMUNITYACCOUNT_DIALOG);
@@ -136,6 +141,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		this.api = api;
 		if (api != null)
 			api.setErrorHandler(this);
+		settings = getDialogSettings(CommunitiesActivator.getDefault(), SETTINGSID);
 	}
 
 	@Override
@@ -263,15 +269,16 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		createOverviewGroup(UiUtilities.createTabPage(tabFolder, Messages.EditCommunityAccountDialog_general, null));
 		if (api != null) {
 			if (api.isSupportsPhotosets())
-				createAlbumGroup(
-						UiUtilities.createTabPage(tabFolder, Messages.EditCommunityAccountDialog_photosets_albums, null));
+				createAlbumGroup(UiUtilities.createTabPage(tabFolder,
+						Messages.EditCommunityAccountDialog_photosets_albums, null));
 			if (api.isSupportsTagging())
 				createTagGroup(UiUtilities.createTabPage(tabFolder, Messages.EditCommunityAccountDialog_tags, null));
 			if (api.isSupportsCategories())
 				createCategoryGroup(
 						UiUtilities.createTabPage(tabFolder, Messages.EditCommunityAccountDialog_categories, null));
 		}
-		createCommunicationGroup(UiUtilities.createTabPage(tabFolder, Messages.EditCommunityAccountDialog_Capacity, null));
+		createCommunicationGroup(
+				UiUtilities.createTabPage(tabFolder, Messages.EditCommunityAccountDialog_Capacity, null));
 		return area;
 	}
 
@@ -280,9 +287,10 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		CGroup group1 = UiUtilities.createGroup(parent, 2, Messages.EditCommunityAccountDialog_bandwidth);
 		limitedButton = WidgetFactory.createCheckButton(group1, Messages.EditCommunityAccountDialog_limit_bandwidth,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		limitedButton.addSelectionListener(new SelectionAdapter() {
+		limitedButton.addListener(new Listener() {
+			
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				bandwidthField.setEnabled(limitedButton.getSelection());
 			}
 		});
@@ -305,9 +313,9 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		}
 	}
 
-	private SelectionListener accessTypeSelectionListener = new SelectionAdapter() {
+	private Listener accessTypeSelectionListener = new Listener() {
 		@Override
-		public void widgetSelected(org.eclipse.swt.events.SelectionEvent e) {
+		public void handleEvent(Event e) {
 			int index = accessButtonGroup.getSelection();
 			accessType = (String) accessButtonGroup.getData(index, "data"); //$NON-NLS-1$
 			for (int i = 0; i < accessButtonGroup.size(); i++) {
@@ -320,10 +328,10 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		}
 	};
 
-	private SelectionListener accessDetailSelectionListener = new SelectionAdapter() {
+	private Listener accessDetailSelectionListener = new Listener() {
 		@Override
-		public void widgetSelected(org.eclipse.swt.events.SelectionEvent e) {
-			String detail = (String) e.widget.getData("data"); //$NON-NLS-1$
+		public void handleEvent(Event e) {
+			String detail = (String) e.widget.getData(UiConstants.DATA);
 			if (((Button) e.widget).getSelection())
 				accessDetails.add(detail);
 			else
@@ -371,7 +379,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		if (children.length > 0) {
 			CGroup group2 = UiUtilities.createGroup(parent, 1, Messages.EditCommunityAccountDialog_privacy);
 			accessButtonGroup = new RadioButtonGroup(group2, null, SWT.NONE);
-			accessButtonGroup.addSelectionListener(accessTypeSelectionListener);
+			accessButtonGroup.addListener(accessTypeSelectionListener);
 			int k = 0;
 			for (IConfigurationElement child : children) {
 				accessButtonGroup.addButton(child.getAttribute("label")); //$NON-NLS-1$
@@ -400,7 +408,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 								layoutData);
 						dbutton.setEnabled(selected);
 						String key2 = grandchild.getAttribute("key"); //$NON-NLS-1$
-						dbutton.setData("data", key2); //$NON-NLS-1$
+						dbutton.setData(UiConstants.DATA, key2);
 						if (useDefaultDetails) {
 							String init = child.getAttribute("initValue"); //$NON-NLS-1$
 							if (init != null && Boolean.parseBoolean(init)) {
@@ -409,7 +417,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 							}
 						} else
 							dbutton.setSelection(accessDetails.contains(key2));
-						dbutton.addSelectionListener(accessDetailSelectionListener);
+						dbutton.addListener(accessDetailSelectionListener);
 						childButtons.add(dbutton);
 					}
 					accessButtonGroup.setData(k, "children", childButtons); //$NON-NLS-1$
@@ -447,7 +455,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		List<String> recentKeywords = new ArrayList<String>();
 		for (Tag tag : account.getRecentTags())
 			recentKeywords.add(tag.toDisplayString());
-		keywordGroup = new KeywordGroup(parent, selectedKeywords, userKeywords, recentKeywords, true);
+		keywordGroup = new KeywordGroup(parent, selectedKeywords, userKeywords, recentKeywords, true, settings);
 	}
 
 	private void createAlbumGroup(Composite parent) {

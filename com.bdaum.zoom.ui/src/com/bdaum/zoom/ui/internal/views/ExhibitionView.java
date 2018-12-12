@@ -111,6 +111,7 @@ import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.Utilities;
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.net.core.job.TransferJob;
@@ -181,6 +182,9 @@ public class ExhibitionView extends AbstractPresentationView {
 			to.setFrameWidth(from.getFrameWidth());
 			to.setFrameColor(from.getFrameColor());
 			to.setHideLabel(from.getHideLabel());
+			to.setLabelAlignment(from.getLabelAlignment());
+			to.setLabelDistance(from.getLabelDistance());
+			to.setLabelIndent(from.getLabelIndent());
 		}
 	}
 
@@ -794,7 +798,7 @@ public class ExhibitionView extends AbstractPresentationView {
 						p += eBounds.getWidth();
 						if (p > pos)
 							pos = p;
-						index++;
+						++index;
 					}
 				}
 			}
@@ -876,7 +880,7 @@ public class ExhibitionView extends AbstractPresentationView {
 								cand = pExhibit;
 							if (p > pos)
 								pos = p;
-							index++;
+							++index;
 						}
 					}
 				}
@@ -1101,7 +1105,6 @@ public class ExhibitionView extends AbstractPresentationView {
 					// caption
 					double ypos = INFOMARGINS;
 					Color penColor = new Color(32, 32, 32);
-					Color selectedPenColor = new Color(92, 92, 92);
 					Color background = (Color) pInfoPlate.getPaint();
 					GreekedPSWTText caption = new GreekedPSWTText(exhibition.getName(),
 							new Font(fontFamily, Font.BOLD, fontsize + 6));
@@ -1114,15 +1117,14 @@ public class ExhibitionView extends AbstractPresentationView {
 					pInfoPlate.addChild(caption);
 					ypos += caption.getFullBoundsReference().getHeight() + INFOMARGINS;
 					if (!exhibition.getHideCredits()) {
-						artistsField = createTextLine(pInfoPlate, getArtists(), INFOWIDTH - INFOMARGINS,
-								INFOMARGINS / 2, ypos, penColor, background, selectedPenColor, fontFamily, Font.PLAIN,
-								fontsize, ISpellCheckingService.NOSPELLING,
-								SWT.MULTI | SWT.WRAP | SWT.READ_ONLY | SWT.CENTER);
+						artistsField = createTextLine(pInfoPlate, getArtists(), 3, INFOWIDTH - INFOMARGINS,
+								INFOMARGINS / 2, ypos, penColor, background, fontFamily, Font.PLAIN, fontsize,
+								ISpellCheckingService.NOSPELLING, SWT.MULTI | SWT.WRAP | SWT.READ_ONLY | SWT.CENTER);
 						ypos += artistsField.getFullBoundsReference().getHeight() + INFOMARGINS;
 					}
 					// info
-					info = createTextLine(pInfoPlate, exhibition.getInfo(), INFOWIDTH - INFOMARGINS, INFOMARGINS / 2,
-							ypos, penColor, background, selectedPenColor, fontFamily, Font.PLAIN, fontsize,
+					info = createTextLine(pInfoPlate, exhibition.getInfo(), 3, INFOWIDTH - INFOMARGINS, INFOMARGINS / 2,
+							ypos, penColor, background, fontFamily, Font.PLAIN, fontsize,
 							ISpellCheckingService.DESCRIPTIONOPTIONS, SWT.MULTI | SWT.WRAP | SWT.CENTER);
 					ypos += info.getFullBoundsReference().getHeight();
 				}
@@ -1392,6 +1394,11 @@ public class ExhibitionView extends AbstractPresentationView {
 				public void mousePressed(PInputEvent event) {
 					setPickedNode(event.getPickedNode());
 				}
+				@Override
+				public void mouseReleased(PInputEvent event) {
+					if (getPickedNode() == imageLabel && event.getClickCount() == 2)
+						editLayout();
+				}
 			};
 			// Frame and Mat
 			if (frameWidth != 0)
@@ -1420,41 +1427,32 @@ public class ExhibitionView extends AbstractPresentationView {
 				PBounds iBounds = pImage.getFullBoundsReference();
 				imageLabel = new PPresentationPanel(0f, 0f, labelWidth, labelHeight, new Color(255, 255, 255),
 						new Color(192, 192, 192), inputEventHandler);
+				imageLabel.setPickable(true);
 				addChild(imageLabel);
 				double ypos = labelMargins;
 				Color penColor = new Color(92, 92, 92);
-				Color selectedPenColor = new Color(92, 92, 92);
 				Color background = (Color) pwall.getPaint();
 				switch (exhibition.getLabelSequence()) {
 				case Constants.EXHLABEL_TIT_CRED_DES:
-					ypos += createCaption(exhibit, fontFamily, fontsize, 0, ypos, penColor, selectedPenColor,
-							background);
-					ypos += createCredits(exhibit, fontFamily, fontsize, 0, ypos, penColor, selectedPenColor,
-							background);
-					ypos += createDescription(exhibit, fontFamily, fontsize, labelIndent, ypos, penColor,
-							selectedPenColor, background);
+					ypos += createCaption(exhibit, fontFamily, fontsize, 0, ypos, penColor, background);
+					ypos += createCredits(exhibit, fontFamily, fontsize, 0, ypos, penColor, background);
+					ypos += createDescription(exhibit, fontFamily, fontsize, labelIndent, ypos, penColor, background);
 					break;
 				case Constants.EXHLABEL_CRED_TIT_DES:
-					ypos += createCredits(exhibit, fontFamily, fontsize, 0, ypos, penColor, selectedPenColor,
-							background);
-					ypos += createCaption(exhibit, fontFamily, fontsize, 0, ypos, penColor, selectedPenColor,
-							background);
-					ypos += createDescription(exhibit, fontFamily, fontsize, labelIndent, ypos, penColor,
-							selectedPenColor, background);
+					ypos += createCredits(exhibit, fontFamily, fontsize, 0, ypos, penColor, background);
+					ypos += createCaption(exhibit, fontFamily, fontsize, 0, ypos, penColor, background);
+					ypos += createDescription(exhibit, fontFamily, fontsize, labelIndent, ypos, penColor, background);
 					break;
 				default:
-					ypos += createCaption(exhibit, fontFamily, fontsize, 0, ypos, penColor, selectedPenColor,
-							background);
-					ypos += createDescription(exhibit, fontFamily, fontsize, labelIndent, ypos, penColor,
-							selectedPenColor, background);
-					ypos += createCredits(exhibit, fontFamily, fontsize, labelIndent, ypos, penColor, selectedPenColor,
-							background);
+					ypos += createCaption(exhibit, fontFamily, fontsize, 0, ypos, penColor, background);
+					ypos += createDescription(exhibit, fontFamily, fontsize, labelIndent, ypos, penColor, background);
+					ypos += createCredits(exhibit, fontFamily, fontsize, labelIndent, ypos, penColor, background);
 					break;
 				}
 				// date
-				creationDate = createTextLine(imageLabel, exhibit.getDate(), labelWidth - labelMargins * 2,
-						labelMargins + labelIndent, ypos, penColor, background, selectedPenColor, fontFamily,
-						Font.PLAIN, fontsize, ISpellCheckingService.NOSPELLING, SWT.SINGLE | SWT.WRAP);
+				creationDate = createTextLine(imageLabel, exhibit.getDate(), 3, labelWidth - labelMargins * 2,
+						labelMargins + labelIndent, ypos, penColor, background, fontFamily, Font.PLAIN, fontsize,
+						ISpellCheckingService.NOSPELLING, SWT.SINGLE | SWT.WRAP);
 				ypos += creationDate.getFullBoundsReference().getHeight();
 				// warning
 				resolutionWarning = new PSWTText("", new Font(fontFamily, //$NON-NLS-1$
@@ -1477,8 +1475,10 @@ public class ExhibitionView extends AbstractPresentationView {
 				installHandleEventHandlers(pMat, false, false, this);
 			if (pFrame != null)
 				installHandleEventHandlers(pFrame, false, false, this);
-			if (imageLabel != null)
+			if (imageLabel != null) {
 				installHandleEventHandlers(imageLabel, true, true, this);
+				imageLabel.addInputEventListener(inputEventHandler);
+			}
 			pImage.addInputEventListener(inputEventHandler);
 
 			// size handle
@@ -1521,26 +1521,26 @@ public class ExhibitionView extends AbstractPresentationView {
 		}
 
 		private double createCredits(final ExhibitImpl exhibit, String fontFamily, int fontsize, int indent,
-				double ypos, Color penColor, Color selectedPenColor, Color background) {
-			credits = createTextLine(imageLabel, exhibit.getCredits(), labelWidth - labelMargins * 2,
-					labelMargins + indent, ypos, penColor, background, selectedPenColor, fontFamily, Font.PLAIN,
-					fontsize, ISpellCheckingService.NOSPELLING, SWT.SINGLE | SWT.WRAP);
+				double ypos, Color penColor, Color background) {
+			credits = createTextLine(imageLabel, exhibit.getCredits(), 3, labelWidth - labelMargins * 2,
+					labelMargins + indent, ypos, penColor, background, fontFamily, Font.PLAIN, fontsize,
+					ISpellCheckingService.NOSPELLING, SWT.SINGLE | SWT.WRAP);
 			return credits.getFullBoundsReference().getHeight();
 		}
 
 		private double createDescription(final ExhibitImpl exhibit, String fontFamily, int fontsize, int indent,
-				double ypos, Color penColor, Color selectedPenColor, Color background) {
-			description = createTextLine(imageLabel, exhibit.getDescription(), labelWidth - labelMargins * 2,
-					labelMargins + indent, ypos, penColor, background, selectedPenColor, fontFamily, Font.PLAIN,
-					fontsize, ISpellCheckingService.DESCRIPTIONOPTIONS, SWT.MULTI | SWT.WRAP);
+				double ypos, Color penColor, Color background) {
+			description = createTextLine(imageLabel, exhibit.getDescription(), 3, labelWidth - labelMargins * 2,
+					labelMargins + indent, ypos, penColor, background, fontFamily, Font.PLAIN, fontsize,
+					ISpellCheckingService.DESCRIPTIONOPTIONS, SWT.MULTI | SWT.WRAP);
 			return description.getFullBoundsReference().getHeight();
 		}
 
 		private double createCaption(final ExhibitImpl exhibit, String fontFamily, int fontsize, int indent,
-				double ypos, Color penColor, Color selectedPenColor, Color background) {
-			caption = createTextLine(imageLabel, exhibit.getTitle(), labelWidth - labelMargins * 2,
-					labelMargins + indent, ypos, penColor, background, selectedPenColor, fontFamily, Font.BOLD,
-					fontsize + 1, ISpellCheckingService.TITLEOPTIONS, SWT.SINGLE | SWT.WRAP);
+				double ypos, Color penColor, Color background) {
+			caption = createTextLine(imageLabel, exhibit.getTitle(), 3, labelWidth - labelMargins * 2,
+					labelMargins + indent, ypos, penColor, background, fontFamily, Font.BOLD, fontsize + 1,
+					ISpellCheckingService.TITLEOPTIONS, SWT.SINGLE | SWT.WRAP);
 			return caption.getFullBoundsReference().getHeight();
 		}
 
@@ -1745,20 +1745,6 @@ public class ExhibitionView extends AbstractPresentationView {
 	private Action deleteWallAction;
 	private Action editWallAction;
 
-	private static TextField createTextLine(PNode parent, String text, int textWidth, int indent, double ypos,
-			Color penColor, Color bgColor, Color selectedPenColor, String fontFamily, int fontStyle, int fontSize,
-			int spellingOptions, int style) {
-		TextField field = new TextField(text, textWidth, new Font(fontFamily, fontStyle, fontSize), penColor, bgColor,
-				true, style);
-		field.setSpellingOptions(10, spellingOptions);
-		field.setOffset(indent, ypos);
-		field.setSelectedPenColor(selectedPenColor);
-		field.setPickable(true);
-		parent.addChild(field);
-		field.setGreekThreshold(3);
-		return field;
-	}
-
 	public String getArtists() {
 		Set<String> artists = new HashSet<String>();
 		for (Exhibit exhibit : exhibits)
@@ -1832,7 +1818,7 @@ public class ExhibitionView extends AbstractPresentationView {
 	@Override
 	public void createPartControl(Composite parent) {
 		super.createPartControl(parent);
-		canvas.setData("id", "exhibition"); //$NON-NLS-1$ //$NON-NLS-2$
+		canvas.setData(CSSProperties.ID, CSSProperties.EXHIBITION); 
 		undoContext = new UndoContext() {
 			@Override
 			public String getLabel() {
@@ -1913,7 +1899,7 @@ public class ExhibitionView extends AbstractPresentationView {
 		installHoveringController();
 		// Actions
 		makeActions();
-		installListeners(parent);
+		installListeners();
 		hookContextMenu();
 		contributeToActionBars();
 		if (exhibition != null)
@@ -2072,7 +2058,7 @@ public class ExhibitionView extends AbstractPresentationView {
 
 	@Override
 	public void updateActions(boolean force) {
-		if (addWallAction != null && (viewActive || force)) {
+		if (addWallAction != null && (isVisible() || force)) {
 			super.updateActions(force);
 			addWallAction.setEnabled(!dbIsReadonly());
 		}
@@ -2097,7 +2083,7 @@ public class ExhibitionView extends AbstractPresentationView {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
-		updateActions(false);
+		updateActions(true);
 		manager.add(gotoExhibitAction);
 		PNode pickedNode = getPickedNode();
 		if (pickedNode instanceof PExhibit) {
@@ -2727,6 +2713,11 @@ public class ExhibitionView extends AbstractPresentationView {
 				bounds.height = b1.getHeight() + b1.getY() - bounds.y;
 		}
 		return bounds;
+	}
+
+	private void editLayout() {
+		textEventHandler.commit();
+		layoutAction.run();
 	}
 
 	private void setArtists() {

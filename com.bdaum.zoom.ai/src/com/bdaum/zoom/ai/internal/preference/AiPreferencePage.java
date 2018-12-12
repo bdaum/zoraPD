@@ -35,11 +35,11 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PartInitException;
@@ -47,6 +47,7 @@ import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.ai.internal.AiActivator;
 import com.bdaum.zoom.ai.internal.HelpContextIds;
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
@@ -81,14 +82,13 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.PREFERENCE_PAGE);
 		enableButton = WidgetFactory.createCheckButton(composite, Messages.AiPreferencePage_enable, null);
-		enableButton.addSelectionListener(new SelectionAdapter() {
+		enableButton.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				setEnabled(enableButton.getSelection());
 				updateFields();
 			}
 		});
-
 		// Tab folder
 		createTabFolder(composite, "Services"); //$NON-NLS-1$
 		createExtensions(tabFolder, "com.bdaum.zoom.ai.aiPrefPage"); //$NON-NLS-1$
@@ -134,9 +134,9 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 		CLink link = new CLink(eGroup, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		link.setText(Messages.AiPreferencePage_visit_account);
-		link.addSelectionListener(new SelectionAdapter() {
+		link.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				String url = System.getProperty("com.bdaum.zoom.msTranslation"); //$NON-NLS-1$
 				try {
 					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(url));
@@ -147,7 +147,6 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 				}
 			}
 		});
-
 		if (!tabinit)
 			initTabFolder(0);
 		fillValues();
@@ -200,7 +199,7 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 	}
 
 	private String getSelectedLanguage() {
-		Object element = ((IStructuredSelection) languageViewer.getSelection()).getFirstElement();
+		Object element = languageViewer.getStructuredSelection().getFirstElement();
 		return element == null ? null : ((Locale) element).getLanguage();
 	}
 
@@ -274,7 +273,7 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 
 	private void showStatus(String msg, boolean error) {
 		statusField.setText(msg);
-		statusField.setData("id", error ? "errors" : null); //$NON-NLS-1$//$NON-NLS-2$
+		statusField.setData(CSSProperties.ID, error ? CSSProperties.ERRORS : null);
 		CssActivator.getDefault().setColors(statusField);
 	}
 
@@ -290,7 +289,7 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 	}
 
 	public boolean canTranslate() {
-		return enabled && statusField.getData("id") == null; //$NON-NLS-1$
+		return enabled && statusField.getData(CSSProperties.ID) == null;
 	}
 
 }

@@ -21,9 +21,9 @@
 package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 
 public class AddToCatGroup {
 
@@ -37,9 +37,9 @@ public class AddToCatGroup {
 	public AddToCatGroup(Composite parent) {
 		addButton = WidgetFactory.createCheckButton(parent,
 				Messages.AddToCatGroup_add_exported_to_cat, null);
-		addButton.addSelectionListener(new SelectionAdapter() {
+		addButton.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateButtons();
 			}
 		});
@@ -47,10 +47,21 @@ public class AddToCatGroup {
 				Messages.AddToCatGroup_add_to_watched, null);
 		updateButtons();
 	}
+	
+	public void addListener(Listener listener) {
+		addButton.addListener(listener);
+		watchButton.addListener(listener);
+	}
+
+	public void removeListener(Listener listener) {
+		addButton.removeListener(listener);
+		watchButton.removeListener(listener);
+	}
+
 
 	public void setSelection(boolean add, boolean watch) {
 		addButton.setSelection(add);
-		addButton.setSelection(watch);
+		watchButton.setSelection(watch);
 		updateButtons();
 	}
 

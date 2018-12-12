@@ -187,6 +187,8 @@ public interface HelpContextIds extends IHelpContexts {
 	public static final String IMPORTMODE_DIALOG  = PREFIX
 			+ "importMode" + DIALOG_POSTFIX; //$NON-NLS-1$
 
+	public static final String TETHERED_DIALOG  = PREFIX
+			+ "tethered" + DIALOG_POSTFIX; //$NON-NLS-1$
 
 	/* Views */
 	public static final String LIGHTBOX_VIEW = PREFIX
@@ -223,6 +225,9 @@ public interface HelpContextIds extends IHelpContexts {
 			+ "bookmark" + VIEW_POSTFIX; //$NON-NLS-1$
 	public static final String TAGCLOUD_VIEW = PREFIX
 			+ "tagCloud" + VIEW_POSTFIX; //$NON-NLS-1$
+	public static final String CALENDAR_VIEW = PREFIX
+			+ "calendar" + VIEW_POSTFIX; //$NON-NLS-1$
+
 
 	// Wizards
 	public static final String EXPORTFOLDER_WIZARD = PREFIX

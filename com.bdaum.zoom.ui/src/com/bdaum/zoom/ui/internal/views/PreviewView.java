@@ -20,6 +20,8 @@
 
 package com.bdaum.zoom.ui.internal.views;
 
+import java.awt.geom.Rectangle2D;
+
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.action.Action;
@@ -73,7 +75,10 @@ import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.ui.AssetSelection;
+import com.bdaum.zoom.ui.IFrameListener;
+import com.bdaum.zoom.ui.IFrameProvider;
 import com.bdaum.zoom.ui.IZoomActionConstants;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -81,7 +86,7 @@ import com.bdaum.zoom.ui.internal.dialogs.ConfigureCaptionDialog;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class PreviewView extends ImageView implements PaintListener {
+public class PreviewView extends ImageView implements PaintListener, IFrameListener {
 
 	public static final String ID = "com.bdaum.zoom.ui.views.PreviewView"; //$NON-NLS-1$
 	private static final String CUE = "cue"; //$NON-NLS-1$
@@ -104,6 +109,8 @@ public class PreviewView extends ImageView implements PaintListener {
 	private Action configureAction;
 	private int alignment;
 	private AssetSelection assetSelection = AssetSelection.EMPTY;
+	private Composite composite;
+	private Rectangle2D currentFrame = new Rectangle2D.Double(0d, 0d, 1d, 1d);
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -126,8 +133,7 @@ public class PreviewView extends ImageView implements PaintListener {
 		super.saveState(memento);
 		memento.putBoolean(CUE, cue);
 		memento.putBoolean(BW, bw);
-		if (template != null)
-			memento.putString(TEMPLATE, template);
+		memento.putString(TEMPLATE, template);
 		memento.putInteger(ALIGNMENT, alignment);
 	}
 
@@ -135,32 +141,25 @@ public class PreviewView extends ImageView implements PaintListener {
 	public void createPartControl(Composite parent) {
 		filter = StringConverter.asRGB(Platform.getPreferencesService().getString(UiActivator.PLUGIN_ID,
 				PreferenceConstants.BWFILTER, null, null), new RGB(64, 128, 64));
-		Composite composite = new Composite(parent, SWT.NONE);
+		composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = 0;
 		composite.setLayout(layout);
-		canvas = new Canvas(composite, SWT.NONE);
+		canvas = new Canvas(composite, SWT.DOUBLE_BUFFERED);
 		canvas.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		caption = new Label(composite, SWT.NONE);
-		caption.setLayoutData(new GridData(SWT.FILL, SWT.END, true, false));
-		caption.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent e) {
-				configureAction.run();
-			}
-		});
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(canvas, HelpContextIds.PREVIEW_VIEW);
 		canvas.addPaintListener(this);
 		canvas.redraw();
 		addKeyListener();
 		addExplanationListener(true);
 		makeActions(getViewSite().getActionBars());
-		installListeners(parent);
+		installListeners();
 		hookContextMenu();
 		hookDoubleClickAction();
 		contributeToActionBars();
 		addDragDropSupport(false, false, true);
 		installHoveringController();
+		Ui.getUi().getFrameManager().addFrameListener(this);
 		updateActions(true);
 	}
 
@@ -287,6 +286,7 @@ public class PreviewView extends ImageView implements PaintListener {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
+		updateActions(true);
 		boolean readOnly = dbIsReadonly();
 		fillEditAndSearchGroup(manager, readOnly);
 		fillVoiceNote(manager, readOnly);
@@ -324,7 +324,7 @@ public class PreviewView extends ImageView implements PaintListener {
 
 	@Override
 	public void updateActions(boolean force) {
-		if (viewActive || force) {
+		if (isVisible() || force) {
 			boolean enabled = selectedItem != null;
 			bwToggleAction.setEnabled(enabled);
 			cueToggleAction.setEnabled(enabled);
@@ -369,8 +369,16 @@ public class PreviewView extends ImageView implements PaintListener {
 				gc.setAntialias(SWT.ON);
 				gc.setInterpolation(SWT.HIGH);
 			}
-			gc.drawImage(image, 0, 0, bounds.width, bounds.height, (clientArea.width - targetWidth) / 2,
-					(clientArea.height - targetHeight) / 2, targetWidth, targetHeight);
+			int offy = (clientArea.height - targetHeight) / 2;
+			int offx = (clientArea.width - targetWidth) / 2;
+			gc.drawImage(image, 0, 0, bounds.width, bounds.height, offx, offy, targetWidth, targetHeight);
+			if (currentFrame.getWidth() != 1d || currentFrame.getHeight() != 1d) {
+				gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_CYAN));
+				gc.setLineWidth(2);
+				gc.drawRectangle((int) (currentFrame.getX() * targetWidth + offx),
+						(int) (currentFrame.getY() * targetHeight + offy),
+						(int) (currentFrame.getWidth() * targetWidth), (int) (currentFrame.getHeight() * targetHeight));
+			}
 		}
 
 	}
@@ -441,16 +449,6 @@ public class PreviewView extends ImageView implements PaintListener {
 	}
 
 	@Override
-	protected void selectAll() {
-		// do nothing
-	}
-
-	@Override
-	protected void selectNone() {
-		// do nothing
-	}
-
-	@Override
 	public boolean collectionChanged() {
 		return false;
 	}
@@ -466,16 +464,37 @@ public class PreviewView extends ImageView implements PaintListener {
 		assetSelection = getNavigationHistory().getSelectedAssets();
 		selectedItem = currentItem = assetSelection.getFirstElement();
 		boolean changed = previous != currentItem;
-		if (changed)
+		if (changed) {
+			currentFrame.setFrame(0d, 0d, 1d, 1d);
 			updateCaption();
+		}
 		return changed;
 	}
 
 	protected void updateCaption() {
-		caption.setText(currentItem == null || template == null ? "" //$NON-NLS-1$
-				: Utilities.evaluateTemplate(template, Constants.TH_ALL, "", null, -1, -1, -1, null, currentItem, //$NON-NLS-1$
-						"", Integer.MAX_VALUE, false)); //$NON-NLS-1$
-		caption.setAlignment(alignment);
+		if (template.isEmpty()) {
+			if (caption != null) {
+				caption.dispose();
+				caption = null;
+				composite.layout(true, true);
+			}
+		} else {
+			if (caption == null) {
+				caption = new Label(composite, SWT.NONE);
+				caption.setLayoutData(new GridData(SWT.FILL, SWT.END, true, false));
+				caption.addMouseListener(new MouseAdapter() {
+					@Override
+					public void mouseUp(MouseEvent e) {
+						configureAction.run();
+					}
+				});
+				composite.layout(true, true);
+			}
+			caption.setText(currentItem == null ? "" //$NON-NLS-1$
+					: Utilities.evaluateTemplate(template, Constants.TH_ALL, "", null, -1, -1, -1, null, currentItem, //$NON-NLS-1$
+							"", Integer.MAX_VALUE, false)); //$NON-NLS-1$
+			caption.setAlignment(alignment);
+		}
 	}
 
 	@Override
@@ -535,6 +554,18 @@ public class PreviewView extends ImageView implements PaintListener {
 
 	public IAssetProvider getAssetProvider() {
 		return null;
+	}
+
+	@Override
+	public void frameChanged(IFrameProvider provider, String assetId, double x, double y, double w, double h) {
+		if (!canvas.isDisposed() && (currentFrame.getX() != x || currentFrame.getY() != y
+				|| currentFrame.getWidth() != w || currentFrame.getHeight() != h)) {
+			if (currentItem != null && (assetId == null || currentItem.getStringId().equals(assetId))) {
+				currentFrame.setFrame(x, y, w, h);
+				if (isVisible())
+					canvas.redraw();
+			}
+		}
 	}
 
 }

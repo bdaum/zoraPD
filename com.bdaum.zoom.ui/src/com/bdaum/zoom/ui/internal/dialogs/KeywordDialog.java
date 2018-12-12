@@ -58,6 +58,7 @@ public class KeywordDialog extends ZTitleAreaDialog {
 		this.selectedKeywords = keywords;
 		this.selectableKeywords = selectableKeywords;
 		this.selectedAssets = selectedAssets;
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 	}
 
 	@Override
@@ -72,7 +73,6 @@ public class KeywordDialog extends ZTitleAreaDialog {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		recentKeywords = null;
-		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		String recent = settings.get(RECENT);
 		if (recent != null && !recent.isEmpty()) {
 			recentKeywords = new LinkedList<String>();
@@ -82,7 +82,7 @@ public class KeywordDialog extends ZTitleAreaDialog {
 		}
 		Composite comp = (Composite) super.createDialogArea(parent);
 		group = new KeywordGroup(comp, selectedKeywords, selectableKeywords,
-				recentKeywords, false);
+				recentKeywords, false, settings);
 		return comp;
 	}
 

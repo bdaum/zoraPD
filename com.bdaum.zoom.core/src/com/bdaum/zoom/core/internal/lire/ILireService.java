@@ -122,6 +122,6 @@ public interface ILireService {
 	 * @param displayLocation - location where to show the dialog
 	 * @return - true if successful
 	 */
-	boolean ShowConfigureSearch(IAdaptable adaptable, Point displayLocation);
+	boolean showConfigureSearch(IAdaptable adaptable, Point displayLocation);
 
 }

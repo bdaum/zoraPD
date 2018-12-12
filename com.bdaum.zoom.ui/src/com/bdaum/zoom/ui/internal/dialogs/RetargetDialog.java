@@ -3,12 +3,12 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
@@ -17,7 +17,7 @@ import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 
-public class RetargetDialog extends ZTitleAreaDialog implements SelectionListener {
+public class RetargetDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String VALUE = "value"; //$NON-NLS-1$
 	private final IPath newPath;
@@ -57,7 +57,7 @@ public class RetargetDialog extends ZTitleAreaDialog implements SelectionListene
 		RadioButtonGroup retargetButtonGroup = new RadioButtonGroup(area, null, SWT.NONE, Messages.RetargetDialog_selected_image);
 		retargetButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		retargetButtonGroup.setData(0, VALUE, 0);
-		retargetButtonGroup.addSelectionListener(this);
+		retargetButtonGroup.addListener(this);
 		IPath path = oldPath.removeLastSegments(1);
 		IPath path2 = newPath.removeLastSegments(1);
 		int n = oldPath.segmentCount() - 1;
@@ -83,13 +83,9 @@ public class RetargetDialog extends ZTitleAreaDialog implements SelectionListene
 		return result;
 	}
 
-	public void widgetSelected(SelectionEvent e) {
+	public void handleEvent(Event e) {
 		result = (Integer) ((RadioButtonGroup) e.widget).getData(e.detail, VALUE);
 		updateButtons();
-	}
-
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
 	}
 
 	@Override

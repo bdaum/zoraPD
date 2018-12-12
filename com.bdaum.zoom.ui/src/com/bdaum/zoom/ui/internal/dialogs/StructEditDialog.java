@@ -31,15 +31,15 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.aoModeling.runtime.AomObject;
@@ -117,9 +117,9 @@ public class StructEditDialog extends ZTitleAreaDialog implements IAdaptable {
 		}
 		radioGroup = new FlatGroup(composite, SWT.NONE, settings, HIERARCHICAL_STRUCT + qfield.getType());
 		radioGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, false));
-		radioGroup.addSelectionListener(new SelectionAdapter() {
+		radioGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				structComponent.update();
 			}
 		});

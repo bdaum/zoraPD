@@ -55,7 +55,6 @@ import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.ai.Prediction;
 import com.bdaum.zoom.core.internal.ai.Prediction.Token;
-import com.bdaum.zoom.core.internal.lire.AiAlgorithm;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.ZImage;
@@ -67,11 +66,13 @@ import clarifai2.dto.ClarifaiStatus;
 import clarifai2.dto.input.ClarifaiImage;
 import clarifai2.dto.input.ClarifaiInput;
 import clarifai2.dto.input.Crop;
+import clarifai2.dto.model.DefaultModels;
 import clarifai2.dto.model.Model;
 import clarifai2.dto.model.output.ClarifaiOutput;
 import clarifai2.dto.prediction.Concept;
 import clarifai2.dto.prediction.Embedding;
 import clarifai2.dto.prediction.FaceConcepts;
+import clarifai2.dto.prediction.FaceEmbedding;
 import clarifai2.dto.prediction.Focus;
 
 @SuppressWarnings("restriction")
@@ -146,6 +147,7 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 										break lp;
 									}
 					}
+					List<Rectangle> rects = null;
 					if (checkCelebrities()) {
 						ClarifaiResponse<List<ClarifaiOutput<clarifai2.dto.prediction.Prediction>>> response4 = client
 								.predict(CELEBRITIES_ID).withInputs(ClarifaiInput.forInputValue(ClarifaiImage.of(jpeg)))
@@ -153,7 +155,6 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 						if (response4.isSuccessful()) {
 							int height = 0;
 							int width = 0;
-							List<Rectangle> rects = null;
 							if (checkFaces()) {
 								try (InputStream in = new ByteArrayInputStream(jpeg)) {
 									BufferedImage image = ImageIO.read(in);
@@ -183,16 +184,16 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 							if (rects != null)
 								prediction.setFaces(rects);
 						}
-					} else if (checkFaces()) {
+					}
+					if (rects == null && checkFaces()) {
 						Model<?> faceModel = client.getDefaultModels().faceDetectionModel();
-						ClarifaiResponse<?> response3 = faceModel.predict().withInputs(input)
-								.withMaxConcepts(maxConcepts).withMinValue(minConfidence).executeSync();
+						ClarifaiResponse<?> response3 = faceModel.predict().withInputs(input).executeSync();
 						if (response3.isSuccessful()) {
 							try (InputStream in = new ByteArrayInputStream(jpeg)) {
 								BufferedImage image = ImageIO.read(in);
 								int height = image.getHeight();
 								int width = image.getWidth();
-								List<Rectangle> rects = new ArrayList<>();
+								rects = new ArrayList<>();
 								for (ClarifaiOutput<clarifai2.dto.prediction.Prediction> clarifaiOutput : (List<ClarifaiOutput<clarifai2.dto.prediction.Prediction>>) response3
 										.get())
 									for (clarifai2.dto.prediction.Prediction p : clarifaiOutput.data()) {
@@ -210,7 +211,8 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 						}
 					}
 					return prediction;
-				}
+				} else if (status.networkErrorOccurred())
+					return new Prediction(getName(), null, null, getStatus(status));
 			}
 		}
 		return null;
@@ -353,14 +355,38 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public float[] getFeatureVector(BufferedImage image) {
+	public float[] getFeatureVector(BufferedImage image, int featureId) {
 		ClarifaiActivator activator = ClarifaiActivator.getDefault();
 		ClarifaiClient client = activator.getClient();
 		if (client != null)
 			try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 				ImageIO.write(image, "jpg", out); //$NON-NLS-1$
-				ClarifaiResponse<?> response = client.getDefaultModels().generalEmbeddingModel().predict()
-						.withInputs(ClarifaiInput.forInputValue(ClarifaiImage.of(out.toByteArray()))).executeSync();
+				DefaultModels defaultModels = client.getDefaultModels();
+				ClarifaiInput inputValue = ClarifaiInput.forInputValue(ClarifaiImage.of(out.toByteArray()));
+				if (featureId == 1002) {
+					ClarifaiResponse<?> response = defaultModels.faceEmbeddingModel().predict().withInputs(inputValue)
+							.executeSync();
+					if (response.isSuccessful())
+						for (ClarifaiOutput<FaceEmbedding> clarifaiOutput : (List<ClarifaiOutput<FaceEmbedding>>) response
+								.get())
+							for (FaceEmbedding emb : clarifaiOutput.data()) {
+								List<Embedding> embeddings = emb.embeddings();
+								int size = Math.min(20, embeddings.size());
+								float[] vv = null;
+								for (int i = 0; i < size; i++) {
+									float[] embedding = embeddings.get(i).embedding();
+									int length = embedding.length;
+									if (vv == null) {
+										vv = new float[1 + size * length];
+										vv[0] = size;
+									}
+									System.arraycopy(embedding, 0, vv, 1 + i * length, length);
+								}
+								return vv;
+							}
+				}
+				ClarifaiResponse<?> response = defaultModels.generalEmbeddingModel().predict().withInputs(inputValue)
+						.executeSync();
 				if (response.isSuccessful())
 					for (ClarifaiOutput<Embedding> clarifaiOutput : (List<ClarifaiOutput<Embedding>>) response.get())
 						for (Embedding emb : clarifaiOutput.data())
@@ -377,14 +403,13 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 	}
 
 	@Override
-	public Algorithm getAlgorithm() {
-		return new AiAlgorithm(getFeatureId(), "clarifai", "Clarifai", //$NON-NLS-1$ //$NON-NLS-2$
-				Messages.ClarifaiServiceProvider_clarifai_expl, true, ClarifaiActivator.PLUGIN_ID);
-	}
-
-	@Override
-	public Class<?> getFeature() {
-		return ClarifaiFeature.class;
+	public Class<?> getFeature(Algorithm algorithm) {
+		try {
+			return algorithm.getId() == 1002 ? ClarifaiFaceFeature.class : ClarifaiFeature.class;
+		} catch (NoClassDefFoundError e) {
+			// not installed
+			return null;
+		}
 	}
 
 }

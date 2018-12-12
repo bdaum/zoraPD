@@ -27,8 +27,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -36,7 +34,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
@@ -165,19 +165,19 @@ public class ConflictDialog extends ZTitleAreaDialog {
 				new GridData(SWT.FILL, SWT.CENTER, true, false));
 		resetIptcButton = WidgetFactory.createCheckButton(synchGroup, Messages.RefreshDialog_refresh_iptc,
 				new GridData(SWT.FILL, SWT.CENTER, true, false));
-		SelectionAdapter selectionListener = new SelectionAdapter() {
+		Listener selectionListener = new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				updateButtons();
 			}
 		};
-		conflictButtonGroup.addSelectionListener(selectionListener);
+		conflictButtonGroup.addListener(selectionListener);
 		if (multi) {
 			new Label(conflictButtonGroup, SWT.SEPARATOR | SWT.HORIZONTAL)
 					.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
 			allButton = WidgetFactory.createCheckButton(conflictButtonGroup, Messages.ConflictDialog_apply_to_all,
 					new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-			allButton.addSelectionListener(selectionListener);
+			allButton.addListener(selectionListener);
 			GridData gridData = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
 			gridData.horizontalIndent = 15;
 			newerButton = WidgetFactory.createCheckButton(parent, Messages.ConflictDialog_only_newer_items, gridData);
@@ -252,8 +252,9 @@ public class ConflictDialog extends ZTitleAreaDialog {
 					currentConfig.dngUncompressed, currentConfig.dngLinear, currentConfig.deriveRelations,
 					currentConfig.autoDerive, currentConfig.applyXmp, currentConfig.dngFolder, currentConfig.onPrompt,
 					currentConfig.onFinish, currentConfig.inBackground, currentConfig.makerNotes,
-					currentConfig.archiveRecipes, currentConfig.useWebP, currentConfig.jpegQuality,
-					currentConfig.showImported, currentConfig.relationDetectors, currentConfig.rules);
+					currentConfig.faceData, currentConfig.archiveRecipes, currentConfig.useWebP,
+					currentConfig.jpegQuality, currentConfig.showImported, currentConfig.relationDetectors,
+					currentConfig.rules);
 			settings.put(IPTC, resetIptcButton.getSelection());
 			settings.put(GPS, resetGpsButton.getSelection());
 			settings.put(STATUS, resetStatusButton.getSelection());

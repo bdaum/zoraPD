@@ -49,8 +49,6 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Point;
@@ -60,7 +58,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
@@ -200,9 +200,9 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 		findWithinGroup = new FindWithinGroup(composite);
 		if (Core.getCore().isNetworked()) {
 			findInNetworkGroup = new FindInNetworkGroup(composite);
-			findInNetworkGroup.addSelectionListener(new SelectionAdapter() {
+			findInNetworkGroup.addListener(new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					setKeywords();
 				}
 			});

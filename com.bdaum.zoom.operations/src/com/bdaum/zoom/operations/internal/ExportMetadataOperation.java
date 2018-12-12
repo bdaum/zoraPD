@@ -22,6 +22,7 @@ package com.bdaum.zoom.operations.internal;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -150,9 +151,9 @@ public class ExportMetadataOperation extends DbOperation {
 			boolean conflict = false;
 			boolean saveOriginal = false;
 			File xmpFile = null;
-			URI[] xuris = Core.getSidecarURIs(uri);
-			if (xuris.length > 0) {
-				xmpFile = new File(xuris[xuris.length - 1]);
+			File[] sidecars = Core.getSidecarFiles(uri, false);
+			if (sidecars.length > 0) {
+				xmpFile = sidecars[sidecars.length - 1];
 				if (xmpFile.exists()) {
 					long lastModified = xmpFile.lastModified();
 					Date xmpModifiedAt = asset.getXmpModifiedAt();
@@ -187,6 +188,7 @@ public class ExportMetadataOperation extends DbOperation {
 								switch (ret) {
 								case 1:
 									overwriteAll = true;
+									/* FALL-THROUGH */
 								case 0:
 									break;
 								case 3:
@@ -211,81 +213,93 @@ public class ExportMetadataOperation extends DbOperation {
 					}
 				}
 			}
-			if (xmpFile != null) {
-				File newFile = new File(xmpFile.getAbsoluteFile() + ".new"); //$NON-NLS-1$
-				fileWatcher.ignore(newFile, opId);
-				fileWatcher.ignore(xmpFile, opId);
-				newFile.delete();
-				try {
-					XMPUtilities.configureXMPFactory();
-					XMPMeta xmpMeta;
-					if (xmpFile.exists()) {
-						try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(xmpFile))) {
-							xmpMeta = XMPMetaFactory.parse(in);
-						}
-					} else {
-						xmpMeta = XMPMetaFactory.create();
-					}
-					try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(newFile))) {
-						XMPUtilities.writeProperties(xmpMeta, asset, xmpFilter, false);
-						XMPMetaFactory.serialize(xmpMeta, out);
-						if (jpeg && ImageConstants.isJpeg(Core.getFileExtension(uri.toString()))) {
-							File imageFile = new File(uri);
-							try (BufferedInputStream in1 = new BufferedInputStream(new FileInputStream(imageFile))) {
-								int l = -1;
-								byte[] bytes = new byte[(int) imageFile.length()];
-								l = in1.read(bytes);
-								if (l > 0)
-									try {
-										xmpMeta = XMPMetaFactory.create();
-										ByteArrayOutputStream mout = new ByteArrayOutputStream();
-										XMPUtilities.writeProperties(xmpMeta, asset, xmpFilter, false);
-										XMPMetaFactory.serialize(xmpMeta, mout);
-										byte[] metadata = mout.toByteArray();
-										bytes = XMPUtilities.insertXmpIntoJPEG(bytes, metadata);
-									} catch (XMPException e) {
-										addError(
-												NLS.bind(Messages.getString("ExportMetadataOperation.unable_to_export"), //$NON-NLS-1$
-														imageFile),
-												e);
+			for (int i = 0; i < sidecars.length; i++) {
+				xmpFile = sidecars[i];
+				if (xmpFile.exists() || i == sidecars.length - 1) {
+					File newFile = new File(xmpFile.getAbsoluteFile() + ".new"); //$NON-NLS-1$
+					fileWatcher.ignore(newFile, opId);
+					fileWatcher.ignore(xmpFile, opId);
+					newFile.delete();
+					try {
+						XMPUtilities.configureXMPFactory();
+						XMPMeta xmpMeta;
+						if (xmpFile.exists())
+							try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(xmpFile))) {
+								xmpMeta = XMPMetaFactory.parse(in);
+							} catch (XMPException e) {
+								addError(NLS.bind(Messages.getString("ExportMetadataOperation.invalid_xmp"), xmpFile), e); //$NON-NLS-1$
+								xmpMeta = XMPMetaFactory.create();
+							}
+						else
+							xmpMeta = XMPMetaFactory.create();
+						try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(newFile))) {
+							XMPUtilities.writeProperties(xmpMeta, asset, xmpFilter, false);
+							XMPMetaFactory.serialize(xmpMeta, out);
+							if (jpeg && ImageConstants.isJpeg(Core.getFileExtension(uri.toString()))) {
+								File imageFile = new File(uri);
+								try (BufferedInputStream in1 = new BufferedInputStream(
+										new FileInputStream(imageFile))) {
+									byte[] bytes = new byte[(int) imageFile.length()];
+									if (in1.read(bytes) > 0)
+										try {
+											byte[] oldXmp = XMPUtilities.getXmpFromJPEG(bytes);
+											if (oldXmp != null)
+												try (BufferedInputStream in = new BufferedInputStream(
+														new ByteArrayInputStream(oldXmp))) {
+													xmpMeta = XMPMetaFactory.parse(in);
+												} catch (XMPException e) {
+													addError(NLS.bind(Messages.getString("ExportMetadataOperation.invalid_inline_xmp"), imageFile), e); //$NON-NLS-1$
+													xmpMeta = XMPMetaFactory.create();
+												}
+											else
+												xmpMeta = XMPMetaFactory.create();
+											ByteArrayOutputStream mout = new ByteArrayOutputStream();
+											XMPUtilities.writeProperties(xmpMeta, asset, xmpFilter, false);
+											XMPMetaFactory.serialize(xmpMeta, mout);
+											bytes = XMPUtilities.insertXmpIntoJPEG(bytes, mout.toByteArray());
+										} catch (XMPException e) {
+											addError(NLS.bind(
+													Messages.getString("ExportMetadataOperation.unable_to_export"), //$NON-NLS-1$
+													imageFile), e);
+										}
+									fileWatcher.ignore(imageFile, opId);
+									try (BufferedOutputStream out1 = new BufferedOutputStream(
+											new FileOutputStream(imageFile))) {
+										out1.write(bytes);
 									}
-								fileWatcher.ignore(imageFile, opId);
-								try (BufferedOutputStream out1 = new BufferedOutputStream(
-										new FileOutputStream(imageFile))) {
-									out1.write(bytes);
 								}
 							}
 						}
-					}
-				} catch (IOException e) {
-					addError(Messages.getString("ExportMetadataOperation.IO_error_creating_XMP"), e); //$NON-NLS-1$
-				} catch (XMPException e) {
-					addError(Messages.getString("ExportMetadataOperation.XMP_parsing_error"), //$NON-NLS-1$
-							e);
-				} 
-				if (newFile.exists()) {
-					try {
-						if (saveOriginal) {
-							File backupFile = new File(xmpFile.getAbsolutePath() + ".original"); //$NON-NLS-1$
-							if (!backupFile.exists()) {
-								fileWatcher.ignore(backupFile, opId);
-								BatchUtilities.moveFile(xmpFile, backupFile, aMonitor);
-							}
-						}
-						BatchUtilities.moveFile(newFile, xmpFile, aMonitor);
-						asset.setXmpModifiedAt(new Date(xmpFile.lastModified()));
-						storeSafely(null, 1, asset);
 					} catch (IOException e) {
-						Core.getCore()
-								.logError(Messages.getString("ExportMetadataOperation.IO_error_exporting_metadata"), e); //$NON-NLS-1$
-					} catch (DiskFullException e) {
-						Core.getCore()
-								.logError(Messages.getString("ExportMetadataOperation.IO_error_exporting_metadata"), e); //$NON-NLS-1$
+						addError(Messages.getString("ExportMetadataOperation.IO_error_creating_XMP"), e); //$NON-NLS-1$
+					} catch (XMPException e) {
+						addError(Messages.getString("ExportMetadataOperation.XMP_parsing_error"), //$NON-NLS-1$
+								e);
+					}
+					if (newFile.exists()) {
+						try {
+							if (saveOriginal) {
+								File backupFile = new File(xmpFile.getAbsolutePath() + ".original"); //$NON-NLS-1$
+								if (!backupFile.exists()) {
+									fileWatcher.ignore(backupFile, opId);
+									BatchUtilities.moveFile(xmpFile, backupFile, aMonitor);
+								}
+							}
+							BatchUtilities.moveFile(newFile, xmpFile, aMonitor);
+							asset.setXmpModifiedAt(new Date(xmpFile.lastModified()));
+							storeSafely(null, 1, asset);
+						} catch (IOException e) {
+							Core.getCore().logError(
+									Messages.getString("ExportMetadataOperation.IO_error_exporting_metadata"), e); //$NON-NLS-1$
+						} catch (DiskFullException e) {
+							Core.getCore().logError(
+									Messages.getString("ExportMetadataOperation.IO_error_exporting_metadata"), e); //$NON-NLS-1$
+						}
+						if (firstExport == null)
+							firstExport = xmpFile;
 					}
 				}
 			}
-			if (firstExport == null && xmpFile != null && xmpFile.exists())
-				firstExport = xmpFile;
 		} else {
 			String volume = asset.getVolume();
 			if (volume != null && !volume.isEmpty())

@@ -47,6 +47,11 @@ public interface IUi {
 	 * @return - navigation history instance
 	 */
 	INavigationHistory getNavigationHistory(IWorkbenchWindow window);
+	
+	/**
+	 * @return the global frame manager
+	 */
+	IFrameManager getFrameManager();
 
 	/**
 	 * Returns the dialog settings with the specified ID
@@ -148,12 +153,5 @@ public interface IUi {
 	List<Asset> getAssetsFromPresentationItems(Collection<Object> presentationItems,
 			boolean pruneNonAssets);
 
-	/**
-	 * Tests if the applications workbench window is active
-	 * @return true if the applications workbench window is active
-	 * @deprecated - use static method Ui.isWorkbenchActive();
-	 */
-	@Deprecated
-	boolean isWorkbenchActive();
 
 }

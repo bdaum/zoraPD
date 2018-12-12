@@ -23,6 +23,7 @@ import java.awt.image.BufferedImage;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.internal.ai.Prediction;
+import com.bdaum.zoom.core.internal.lire.AiAlgorithm;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
 
 public interface IAiServiceProvider {
@@ -62,17 +63,15 @@ public interface IAiServiceProvider {
 	
 	boolean checkColor();
 
-	float[] getFeatureVector(BufferedImage image);
+	float[] getFeatureVector(BufferedImage image, int featureId);
 
 	boolean isAccountValid();
 
-	Algorithm getAlgorithm();
+	Algorithm[] getAlgorithms();
 
-	Class<?> getFeature();
+	Class<?> getFeature(Algorithm algorithm);
 
-	void setFeatureId(int featureId);
-
-	int getFeatureId();
+	void setFeatures(AiAlgorithm[] feature);
 
 	String[] getRatingModelIds();
 

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2013 Berthold Daum  
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal;
@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,12 +55,14 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
@@ -82,8 +83,12 @@ import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Monitor;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -111,6 +116,7 @@ import com.bdaum.zoom.cat.model.group.webGallery.WebExhibitImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.common.internal.FileLocator;
+import com.bdaum.zoom.core.CatalogAdapter;
 import com.bdaum.zoom.core.CatalogListener;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
@@ -124,6 +130,7 @@ import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
 import com.bdaum.zoom.core.internal.ImportState;
 import com.bdaum.zoom.core.internal.QueryOptions;
+import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.core.internal.lire.ILireService;
 import com.bdaum.zoom.core.internal.operations.AutoRule;
 import com.bdaum.zoom.core.internal.operations.IDngLocator;
@@ -133,10 +140,14 @@ import com.bdaum.zoom.core.internal.peer.ConnectionLostException;
 import com.bdaum.zoom.core.internal.peer.FileInfo;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
 import com.bdaum.zoom.css.internal.CssActivator;
+import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.job.OperationJob;
+import com.bdaum.zoom.mtp.ObjectFilter;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.net.core.internal.Base64;
 import com.bdaum.zoom.program.DiskFullException;
 import com.bdaum.zoom.ui.IDropinHandler;
+import com.bdaum.zoom.ui.IFrameManager;
 import com.bdaum.zoom.ui.ILocationDisplay;
 import com.bdaum.zoom.ui.INavigationHistory;
 import com.bdaum.zoom.ui.IUi;
@@ -145,9 +156,13 @@ import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.dialogs.TimedMessageDialog;
 import com.bdaum.zoom.ui.gps.IGpsParser;
 import com.bdaum.zoom.ui.gps.IWaypointCollector;
+import com.bdaum.zoom.ui.internal.actions.ViewImageAction;
 import com.bdaum.zoom.ui.internal.codes.CodeParser;
+import com.bdaum.zoom.ui.internal.commands.LastImportCommand;
+import com.bdaum.zoom.ui.internal.dialogs.TetheredDialog;
 import com.bdaum.zoom.ui.internal.job.FolderWatchJob;
 import com.bdaum.zoom.ui.internal.job.SyncPicasaJob;
+import com.bdaum.zoom.ui.internal.job.TetheredJob;
 import com.bdaum.zoom.ui.internal.preferences.FileAssociationsPreferencePage;
 import com.bdaum.zoom.ui.internal.preferences.FileEditorMapping;
 import com.bdaum.zoom.ui.internal.views.AssetDropTargetEffect;
@@ -155,9 +170,6 @@ import com.bdaum.zoom.ui.internal.views.IDragHost;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.views.IMediaViewer;
 
-/**
- * The activator class controls the plug-in life cycle
- */
 @SuppressWarnings("restriction")
 public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
@@ -198,8 +210,6 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	private Clipboard clipboard;
 
 	private boolean slideShowRunning;
-
-	// private AudioClip audioClip;
 
 	private boolean showHover = true;
 
@@ -255,7 +265,13 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
 	private boolean locationDisplayIntialized;
 
-	private String[] galleryperspectiveIds;
+	private List<String> galleryperspectiveIds = new ArrayList<>(4);
+
+	private IFrameManager frameManager;
+
+	private Map<String, String> perspectiveGalleries;
+
+	private Map<Rectangle, IKiosk> viewerMonitorMap = new HashMap<>(5);
 
 	/*
 	 * (non-Javadoc)
@@ -274,8 +290,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 				if (path.indexOf(".log") >= 0 && path.indexOf(".bak") >= 0) //$NON-NLS-1$ //$NON-NLS-2$
 					file.delete();
 			}
-		} catch (RuntimeException e1) {
-			// do nothing
+		} catch (RuntimeException e) {
+			// exit gracefully
 		}
 	}
 
@@ -294,23 +310,10 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		super.stop(context);
 	}
 
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
 	public static UiActivator getDefault() {
 		return plugin;
 	}
 
-	/**
-	 * Returns an image descriptor for the image file at the given plug-in relative
-	 * path
-	 *
-	 * @param path
-	 *            the path
-	 * @return the image descriptor
-	 */
 	public static ImageDescriptor getImageDescriptor(String path) {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
 	}
@@ -423,6 +426,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		boolean applyXmp = preferencesService.getBoolean(PLUGIN_ID, PreferenceConstants.APPLYXMPTODERIVATES, true,
 				null);
 		boolean makerNotes = preferencesService.getBoolean(PLUGIN_ID, PreferenceConstants.IMPORTMAKERNOTES, true, null);
+		boolean faceData = preferencesService.getBoolean(PLUGIN_ID, PreferenceConstants.IMPORTFACEDATA, true, null);
 		boolean archiveRecipes = preferencesService.getBoolean(PLUGIN_ID, PreferenceConstants.ARCHIVERECIPES, false,
 				null);
 		boolean showImported = preferencesService.getBoolean(PLUGIN_ID, PreferenceConstants.SHOWIMPORTED, false, null);
@@ -431,7 +435,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		return new ImportConfiguration(adaptable, meta.getTimeline(), meta.getLocationFolders(), isSynchronize,
 				ImportState.ASK, isResetImage, isResetStatus, isResetExif, isResetIptc, isResetGps, isResetFaceData,
 				processSidecars, rawimport, this, dnguncompressed, dnglinear, deriverelations, autoDerive, applyXmp,
-				dngfolder.trim(), alarmonprompt, alarmonfinish, inBackground, makerNotes, archiveRecipes,
+				dngfolder.trim(), alarmonprompt, alarmonfinish, inBackground, makerNotes, faceData, archiveRecipes,
 				meta.getWebpCompression(), meta.getJpegQuality(), showImported, getEnabledRelationDetectors(),
 				obtainAutoRules());
 	}
@@ -452,19 +456,18 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 			relationDetectors = new HashMap<String, IRelationDetector>(5);
 			for (IExtension ext : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "relationDetector") //$NON-NLS-1$
 					.getExtensions())
-				for (IConfigurationElement config : ext.getConfigurationElements()) {
-					String name = config.getAttribute("name"); //$NON-NLS-1$
+				for (IConfigurationElement config : ext.getConfigurationElements())
 					try {
 						IRelationDetector detector = (IRelationDetector) config.createExecutableExtension("class"); //$NON-NLS-1$
 						String id = config.getAttribute("id"); //$NON-NLS-1$
 						detector.setId(id);
-						detector.setName(name);
+						detector.setName(config.getAttribute("name")); //$NON-NLS-1$
 						detector.setDescription(config.getAttribute("description")); //$NON-NLS-1$
 						relationDetectors.put(id, detector);
 					} catch (CoreException e) {
-						logError(NLS.bind(Messages.UiActivator_cannot_create_relation_detector, name), e);
+						logError(NLS.bind(Messages.UiActivator_cannot_create_relation_detector,
+								config.getAttribute("name")), e); //$NON-NLS-1$
 					}
-				}
 		}
 		return relationDetectors.values();
 	}
@@ -472,8 +475,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	public IRelationDetector[] getEnabledRelationDetectors() {
 		getRelationDetectors();
 		List<IRelationDetector> enabledDetectors = new ArrayList<IRelationDetector>(3);
-		StringTokenizer st = new StringTokenizer(getPreferenceStore().getString(PreferenceConstants.RELATIONDETECTORS));
-		while (st.hasMoreTokens()) {
+		for (StringTokenizer st = new StringTokenizer(
+				getPreferenceStore().getString(PreferenceConstants.RELATIONDETECTORS)); st.hasMoreTokens();) {
 			IRelationDetector detector = relationDetectors.get(st.nextToken());
 			if (detector != null)
 				enabledDetectors.add(detector);
@@ -769,7 +772,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		return extList;
 	}
 
-	public FileNameExtensionFilter createGpsFileFormatFilter() {
+	public ObjectFilter createGpsFileFormatFilter() {
 		List<String> extList = new ArrayList<String>(5);
 		for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "gpsParser") //$NON-NLS-1$
 				.getExtensions())
@@ -836,15 +839,13 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
 	private void playRemoteVoiceNote(Asset asset, IPeerService peerService, AssetOrigin assetOrigin) {
 		try {
-			boolean valid = peerService.checkCredentials(IPeerService.VOICE, asset.getSafety(), assetOrigin);
-			if (valid) {
+			if (peerService.checkCredentials(IPeerService.VOICE, asset.getSafety(), assetOrigin))
 				try {
 					URI voiceOrigURI = null;
-					String voiceFileURI = asset.getVoiceFileURI();
+					String voiceFileURI = AssetEnsemble.extractVoiceNote(asset);
 					if (".".equals(voiceFileURI)) { //$NON-NLS-1$
 						FileInfo fileInfo = peerService.getFileInfo(assetOrigin, asset.getUri(), asset.getVolume());
-						voiceOrigURI = new URI(
-								Core.removeExtensionFromUri(fileInfo.getFile().toURI().toString()) + ".wav"); //$NON-NLS-1$
+						voiceOrigURI = Core.getVoicefileURI(fileInfo.getFile());
 					}
 					if (voiceOrigURI != null || voiceFileURI != null) {
 						File tempFile = Core.createTempFile("peerfile", Core.getFileExtension(voiceFileURI)); //$NON-NLS-1$
@@ -854,17 +855,14 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 						if (peerService.transferRemoteFile(new NullProgressMonitor(), assetOrigin, voiceInfo, tempFile))
 							playSoundfile(tempFile.toURI().toURL(), null);
 					}
-				} catch (URISyntaxException e) {
-					// ignore
 				} catch (IOException e) {
 					logError(Messages.UiActivator_io_error_playing_remote, e);
 				} catch (DiskFullException e) {
 					logError(Messages.UiActivator_disk_full_playing_remote, e);
 				}
-			} else {
+			else
 				AcousticMessageDialog.openWarning(null, Messages.UiActivator_access_restriction,
 						Messages.UiActivator_unsufficient_right_voice_note);
-			}
 		} catch (ConnectionLostException e) {
 			AcousticMessageDialog.openError(null, Messages.UiActivator_connection_lost, e.getLocalizedMessage());
 		}
@@ -930,9 +928,13 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		if (prefKey != null && !getPreferenceStore().getBoolean(prefKey))
 			return;
 		try {
-			URL url = FileLocator.findFileURL(getBundle(), "/sound/" + sound + ".wav", true); //$NON-NLS-1$ //$NON-NLS-2$
-			if (url != null)
-				playSoundfile(url, null);
+			for (String ext : ImageConstants.VOICEEXT) {
+				URL url = FileLocator.findFileURL(getBundle(), "/sound/" + sound + ext, true); //$NON-NLS-1$
+				if (url != null) {
+					playSoundfile(url, null);
+					break;
+				}
+			}
 		} catch (IOException e) {
 			// do nothing
 		}
@@ -940,7 +942,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
 	public long getSoundfileLengthInMicroseconds(URL clipURL) {
 		try (AudioInputStream ais = AudioSystem.getAudioInputStream(clipURL)) {
-			return ((Clip) AudioSystem.getLine(new DataLine.Info(Clip.class, ais.getFormat()))).getMicrosecondLength();
+			Clip clip = (Clip) AudioSystem.getLine(new DataLine.Info(Clip.class, ais.getFormat()));
+			return clip.getMicrosecondLength();
 		} catch (Exception e) {
 			return 0L;
 		}
@@ -1225,8 +1228,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 							Messages.UiActivator_restart_msg, MessageDialog.QUESTION,
 							new String[] { Messages.UiActivator_restart_now, Messages.UiActivator_restart_later }, 0);
 					if (dialog.open() == 0 && preCatClose(CatalogListener.SHUTDOWN, Messages.UiActivator_restart,
-							Messages.UiActivator_restart_question,
-							false))
+							Messages.UiActivator_restart_question, false))
 						PlatformUI.getWorkbench().restart();
 				}
 			});
@@ -1310,17 +1312,10 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		return false;
 	}
 
-	/**
-	 * @return previousCatUri
-	 */
 	public String getPreviousCatUri() {
 		return previousCatUri;
 	}
 
-	/**
-	 * @param previousCatUri
-	 *            das zu setzende Objekt previousCatUri
-	 */
 	public void setPreviousCatUri(String previousCatUri) {
 		this.previousCatUri = previousCatUri;
 	}
@@ -1373,12 +1368,11 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		int l1 = id.length();
 		while (p + l1 <= l2) {
 			boolean found = true;
-			for (int i = l1 - 1; i >= 0; i--) {
+			for (int i = l1 - 1; i >= 0; i--)
 				if (id.charAt(i) != idlist.charAt(p + i)) {
 					found = false;
 					break;
 				}
-			}
 			if (found)
 				return true;
 			int q = idlist.indexOf(' ', p);
@@ -1406,8 +1400,140 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		return false;
 	}
 
-	public void setGalleryPerspectiveIds(String[] galleryperspectiveIds) {
-		this.galleryperspectiveIds = galleryperspectiveIds;
+	public String getPerspectiveGallery(String perspId) {
+		if (perspectiveGalleries == null) {
+			perspectiveGalleries = new HashMap<>();
+			IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID,
+					"perspectiveGallery"); //$NON-NLS-1$
+			for (IExtension ext : extensionPoint.getExtensions())
+				for (IConfigurationElement config : ext.getConfigurationElements()) {
+					String pId = config.getAttribute("perspectiveId"); //$NON-NLS-1$
+					perspectiveGalleries.put(pId, config.getAttribute("galleryId")); //$NON-NLS-1$
+					if (Boolean.parseBoolean(config.getAttribute("isGalleryPerspective"))) //$NON-NLS-1$
+						galleryperspectiveIds.add(pId);
+				}
+		}
+		return perspectiveGalleries.get(perspId);
+	}
+
+	/* Tethered Shooting */
+
+	private CatalogListener shootingListener = new CatalogAdapter() {
+		public void assetsModified(com.bdaum.zoom.core.BagChange<Asset> changes, QueryField node) {
+			if (changes != null && !changes.getAdded().isEmpty()) {
+				LastImportCommand command = new LastImportCommand();
+				command.init((IWorkbenchWindow) getAdapter(IWorkbenchWindow.class));
+				command.run();
+				int tetheredShow = getPreferenceStore().getInt(PreferenceConstants.TETHEREDSHOW);
+				if (tetheredShow != PreferenceConstants.TETHEREDSHOW_NO)
+					for (Asset asset : changes.getAdded()) {
+						ViewImageAction action = new ViewImageAction("", null, null, UiActivator.this); //$NON-NLS-1$
+						Event event = new Event();
+						if (tetheredShow == PreferenceConstants.TETHEREDSHOW_INTERN)
+							event.stateMask = SWT.SHIFT;
+						event.data = asset;
+						Shell shell = (Shell) getAdapter(Shell.class);
+						shell.getDisplay().asyncExec(() -> {
+							if (!shell.isDisposed())
+								action.runWithEvent(event);
+						});
+					}
+			}
+		}
+	};
+
+	public boolean startTetheredShooting(StorageObject[] dcims, IJobChangeListener listener) {
+		if (!isTetheredShootingActive()) {
+			TetheredDialog dialog = new TetheredDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell());
+			if (dialog.open() == TetheredDialog.OK) {
+				Job.getJobManager().cancel(Constants.TETHEREDJOB);
+				CoreActivator act = CoreActivator.getDefault();
+				act.setTetheredShooting(true);
+				act.addCatalogListener(shootingListener);
+				TetheredJob tetheredJob = new TetheredJob(dcims, dialog.getFolder());
+				tetheredJob.addJobChangeListener(listener);
+				tetheredJob.schedule();
+			}
+		}
+		return isTetheredShootingActive();
+	}
+
+	public void endTetheredShooting() {
+		if (isTetheredShootingActive()) {
+			Job.getJobManager().cancel(Constants.TETHEREDJOB);
+			CoreActivator act = CoreActivator.getDefault();
+			act.setTetheredShooting(false);
+			act.removeCatalogListener(shootingListener);
+		}
+	}
+
+	public boolean isTetheredShootingActive() {
+		return Core.getCore().isTetheredShootingActive();
+	}
+
+	/** Kiosks **/
+
+	public void registerKiosk(IKiosk viewer, Rectangle mbounds) {
+		if (viewer == null)
+			viewerMonitorMap.remove(mbounds);
+		else {
+			IKiosk v = viewerMonitorMap.put(mbounds, viewer);
+			if (v != null)
+				v.close();
+		}
+	}
+
+	public Date occupiedSince(Rectangle mbounds) {
+		IKiosk v = viewerMonitorMap.get(mbounds);
+		return v == null ? null : v.getCreationDate();
+	}
+
+	public Rectangle getSecondaryMonitorBounds(Shell parentShell) {
+		Monitor primaryMonitor = parentShell.getDisplay().getPrimaryMonitor();
+		Rectangle mbounds = primaryMonitor.getBounds();
+		Monitor[] monitors = parentShell.getDisplay().getMonitors();
+		String mode = Platform.getPreferencesService().getString(UiActivator.PLUGIN_ID,
+				PreferenceConstants.SECONDARYMONITOR, "false", null); //$NON-NLS-1$
+		boolean alternate = PreferenceConstants.MON_ALTERNATE.equals(mode);
+		if (monitors.length > 1 && (alternate || Boolean.parseBoolean(mode))) {
+			Rectangle r = parentShell.getBounds();
+			if (mbounds.contains(r.x + r.width / 2, r.y + r.height / 2)) {
+				int max = 0;
+				long minTime = Long.MAX_VALUE;
+				Rectangle oldest = null;
+				Rectangle bestFree = null;
+				for (Monitor monitor : monitors)
+					if (!monitor.equals(primaryMonitor)) {
+						r = monitor.getBounds();
+						int d = r.width * r.width + r.height * r.height;
+						Date creationDate = occupiedSince(r);
+						if (creationDate == null || !alternate) {
+							if (d > max) {
+								max = d;
+								bestFree = r;
+							}
+						} else if (creationDate.getTime() < minTime) {
+							minTime = creationDate.getTime();
+							oldest = r;
+						}
+					}
+				if (bestFree != null)
+					return bestFree;
+				if (alternate) {
+					Date creationDate = occupiedSince(mbounds);
+					if (oldest != null && creationDate != null && creationDate.getTime() >= minTime)
+						return oldest;
+				}
+			}
+		}
+		return mbounds;
+	}
+
+	@Override
+	public IFrameManager getFrameManager() {
+		if (frameManager == null)
+			frameManager = new FrameManager();
+		return frameManager;
 	}
 
 }

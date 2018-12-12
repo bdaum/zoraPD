@@ -43,21 +43,16 @@ public class MakerSupport {
 	static {
 		new MakerSupport("FUJIFILM") { //$NON-NLS-1$
 			@Override
-			public void processFaceData(AssetEnsemble ensemble,
-					IExifLoader exifTool) throws NumberFormatException {
+			public void processFaceData(AssetEnsemble ensemble, IExifLoader exifTool) throws NumberFormatException {
 				Asset asset = ensemble.getAsset();
 				Map<String, String> metadata = exifTool.getMetadata();
 				String facePositions = metadata.get("FacePositions"); //$NON-NLS-1$
-				String width = metadata.get(QueryField.EXIF_IMAGEWIDTH
-						.getExifToolKey());
-				String height = metadata.get(QueryField.EXIF_IMAGEHEIGHT
-						.getExifToolKey());
-				if (facePositions != null && !facePositions.isEmpty()
-						&& width != null && height != null) {
+				String width = metadata.get(QueryField.EXIF_IMAGEWIDTH.getExifToolKey());
+				String height = metadata.get(QueryField.EXIF_IMAGEHEIGHT.getExifToolKey());
+				if (facePositions != null && !facePositions.isEmpty() && width != null && height != null) {
 					int imageWidth = Integer.parseInt(width);
 					int imageHeight = Integer.parseInt(height);
-					int i = 0;
-					int j = 0;
+					int i = 0, j = 0;
 					double x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 					StringTokenizer st = new StringTokenizer(facePositions);
 					while (st.hasMoreTokens()) {
@@ -74,15 +69,11 @@ public class MakerSupport {
 							break;
 						default:
 							y2 = d / imageHeight;
-							++j;
-							MWGRegion reg = ensemble.getRegion(
-									AssetEnsemble.CAMERA, j);
+							MWGRegion reg = ensemble.getRegion(AssetEnsemble.CAMERA, ++j);
 							reg.setRect(x1, y1, x2 - x1, y2 - y1);
-							String faceName = metadata.get(NLS.bind(
-									"Face{0}Name", (i / 4 + 1))); //$NON-NLS-1$
+							String faceName = metadata.get(NLS.bind("Face{0}Name", (i / 4 + 1))); //$NON-NLS-1$
 							if (faceName != null)
 								reg.setName(faceName);
-							break;
 						}
 						++i;
 					}
@@ -93,8 +84,7 @@ public class MakerSupport {
 
 		new MakerSupport("Panasonic") { //$NON-NLS-1$
 			@Override
-			public void processFaceData(AssetEnsemble ensemble,
-					IExifLoader exifTool) throws NumberFormatException {
+			public void processFaceData(AssetEnsemble ensemble, IExifLoader exifTool) throws NumberFormatException {
 				Asset asset = ensemble.getAsset();
 				Map<String, String> metadata = exifTool.getMetadata();
 				String numFaces = metadata.get("FacesRecognized"); //$NON-NLS-1$
@@ -103,14 +93,11 @@ public class MakerSupport {
 					faceMap = new HashMap<String, String>();
 					int fn = Integer.parseInt(numFaces);
 					for (int j = 1; j <= fn; j++) {
-						String name = metadata.get(NLS.bind(
-								"RecognizedFace{0}Name", j)); //$NON-NLS-1$
-						String region = metadata.get(NLS.bind(
-								"RecognizedFace{0}Position", j)); //$NON-NLS-1$
-						String age = metadata.get(NLS.bind(
-								"RecognizedFace{0}Age", j)); //$NON-NLS-1$
-						if (name != null && !name.isEmpty() && region != null
-								&& age != null && !age.startsWith("9999:")) //$NON-NLS-1$
+						String name = metadata.get(NLS.bind("RecognizedFace{0}Name", j)); //$NON-NLS-1$
+						String region = metadata.get(NLS.bind("RecognizedFace{0}Position", j)); //$NON-NLS-1$
+						String age = metadata.get(NLS.bind("RecognizedFace{0}Age", j)); //$NON-NLS-1$
+						if (name != null && !name.isEmpty() && region != null && age != null
+								&& !age.startsWith("9999:")) //$NON-NLS-1$
 							faceMap.put(region, name);
 					}
 				}
@@ -118,23 +105,21 @@ public class MakerSupport {
 				if (numPositions != null) {
 					int n = Integer.parseInt(numPositions);
 					for (int i = 1; i <= n; i++) {
-						String facePosition = metadata.get(NLS.bind(
-								"Face{0}Position", i)); //$NON-NLS-1$
+						String facePosition = metadata.get(NLS.bind("Face{0}Position", i)); //$NON-NLS-1$
 						if (facePosition != null)
 							parseRegion(i, ensemble, facePosition, faceMap);
 					}
 					if (faceMap != null) {
 						int i = n + 1;
-						for (String region : new ArrayList<String>(
-								faceMap.keySet()))
+						for (String region : new ArrayList<String>(faceMap.keySet()))
 							parseRegion(i++, ensemble, region, faceMap);
 					}
 					asset.setNoPersons(n);
 				}
 			}
 
-			private void parseRegion(int index, AssetEnsemble ensemble,
-					String facePosition, Map<String, String> faceMap) {
+			private void parseRegion(int index, AssetEnsemble ensemble, String facePosition,
+					Map<String, String> faceMap) {
 				StringTokenizer st = new StringTokenizer(facePosition);
 				int j = 0;
 				double x1 = 0, y1 = 0, w = 0, h = 0;
@@ -152,30 +137,26 @@ public class MakerSupport {
 						break;
 					default:
 						h = d;
-						MWGRegion region = ensemble.getRegion(
-								AssetEnsemble.CAMERA, index);
+						MWGRegion region = ensemble.getRegion(AssetEnsemble.CAMERA, index);
 						region.setRect(x1 - w / 2, y1 - h / 2, w, h);
-						String faceName = faceMap == null ? null : faceMap
-								.remove(facePosition);
+						String faceName = faceMap == null ? null : faceMap.remove(facePosition);
 						if (faceName != null)
 							region.setName(faceName);
-						break;
 					}
 				}
 			}
 		};
 
-		new MakerSupport("OLYMPUS IMAGING CORP.") { //$NON-NLS-1$
+		new MakerSupport("OLYMPUS IMAGING CORP.", "OLYMPUS CORPORATION", "SAMSUNG", "SEIKO EPSON CORP.", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+				"KONICA MINOLTA") { //$NON-NLS-1$
 			@Override
-			public void processFaceData(AssetEnsemble ensemble,
-					IExifLoader exifTool) throws NumberFormatException {
+			public void processFaceData(AssetEnsemble ensemble, IExifLoader exifTool) throws NumberFormatException {
 				Asset asset = ensemble.getAsset();
 				Map<String, String> metadata = exifTool.getMetadata();
 				String numPositions = metadata.get("FacesDetected"); //$NON-NLS-1$
 				if (numPositions != null) {
 					int n = 0;
-					List<String> facesDetected = Core.fromStringList(
-							numPositions, " "); //$NON-NLS-1$
+					List<String> facesDetected = Core.fromStringList(numPositions, " "); //$NON-NLS-1$
 					boolean newModels = facesDetected.size() > 2;
 					if (!facesDetected.isEmpty())
 						try {
@@ -184,25 +165,20 @@ public class MakerSupport {
 							// ignore
 						}
 					if (n > 0) {
-						double frameWidth = 640d;
-						double frameHeight = 480d;
+						double frameWidth = 640d, frameHeight = 480d;
 						String frameSize = metadata.get("FaceDetectFrameSize"); //$NON-NLS-1$
 						int p = frameSize.indexOf(' ');
 						if (p >= 0) {
 							int q = frameSize.indexOf(' ', p + 1);
 							if (q < 0)
 								q = frameSize.length();
-							frameWidth = Integer.parseInt(frameSize.substring(
-									0, p));
-							frameHeight = Integer.parseInt(frameSize.substring(
-									p + 1, q));
+							frameWidth = Integer.parseInt(frameSize.substring(0, p));
+							frameHeight = Integer.parseInt(frameSize.substring(p + 1, q));
 						}
-						byte[] binaryData = exifTool.getBinaryData(
-								"FaceDetectArea", false); //$NON-NLS-1$
+						byte[] binaryData = exifTool.getBinaryData("FaceDetectArea", false); //$NON-NLS-1$
 						if (binaryData != null) {
 							String faceDetectArea = new String(binaryData);
-							StringTokenizer st = new StringTokenizer(
-									faceDetectArea);
+							StringTokenizer st = new StringTokenizer(faceDetectArea);
 							int i = 0, j = 0, x = 0, y = 0, w = 0, h = 0;
 							while (st.hasMoreTokens()) {
 								if (i >= n)
@@ -227,21 +203,13 @@ public class MakerSupport {
 									h = v;
 									j = 0;
 									++i;
-									MWGRegion region = ensemble.getRegion(
-											AssetEnsemble.CAMERA, i);
+									MWGRegion region = ensemble.getRegion(AssetEnsemble.CAMERA, i);
 									if (newModels)
-										region.setRect(
-												(x - w / 2) / frameWidth,
-												(y - w / 2) / frameHeight, w
-														/ frameWidth, w
-														/ frameWidth);
+										region.setRect((x - w / 2) / frameWidth, (y - w / 2) / frameHeight,
+												w / frameWidth, w / frameWidth);
 									else
-										region.setRect(
-												(x - w / 2) / frameWidth,
-												(y - h / 2) / frameHeight, w
-														/ frameWidth, h
-														/ frameWidth);
-									break;
+										region.setRect((x - w / 2) / frameWidth, (y - h / 2) / frameHeight,
+												w / frameWidth, h / frameWidth);
 								}
 							}
 						}
@@ -253,8 +221,7 @@ public class MakerSupport {
 
 		new MakerSupport("Canon") { //$NON-NLS-1$
 			@Override
-			public void processFaceData(AssetEnsemble ensemble,
-					IExifLoader exifTool) throws NumberFormatException {
+			public void processFaceData(AssetEnsemble ensemble, IExifLoader exifTool) throws NumberFormatException {
 				Asset asset = ensemble.getAsset();
 				Map<String, String> metadata = exifTool.getMetadata();
 				String numPositions = metadata.get("FacesDetected"); //$NON-NLS-1$
@@ -267,14 +234,11 @@ public class MakerSupport {
 					int n = Integer.parseInt(numPositions);
 					if (frameSize != null) {
 						int p = frameSize.indexOf(' ');
-						frameWidth = Integer
-								.parseInt(frameSize.substring(0, p));
-						frameHeight = Integer.parseInt(frameSize
-								.substring(p + 1));
+						frameWidth = Integer.parseInt(frameSize.substring(0, p));
+						frameHeight = Integer.parseInt(frameSize.substring(p + 1));
 					}
 					for (int i = 1; i <= n; i++) {
-						String facePosition = metadata.get(NLS.bind(
-								"Face{0}Position", i)); //$NON-NLS-1$
+						String facePosition = metadata.get(NLS.bind("Face{0}Position", i)); //$NON-NLS-1$
 						if (facePosition == null)
 							continue;
 						int p = facePosition.indexOf(' ');
@@ -284,9 +248,7 @@ public class MakerSupport {
 						double x2 = x1 + frameWidth;
 						double y1 = imageHeigth / 2d + y;
 						double y2 = y1 + frameHeight;
-						MWGRegion region = ensemble.getRegion(
-								AssetEnsemble.CAMERA, i);
-						region.setRect(x1 / imageWidth, y1 / imageHeigth,
+						ensemble.getRegion(AssetEnsemble.CAMERA, i).setRect(x1 / imageWidth, y1 / imageHeigth,
 								(x2 - x1) / imageWidth, (y2 - y1) / imageHeigth);
 						break;
 					}
@@ -297,35 +259,29 @@ public class MakerSupport {
 
 		new MakerSupport("PENTAX") { //$NON-NLS-1$ /
 			@Override
-			public void processFaceData(AssetEnsemble ensemble,
-					IExifLoader exifTool) throws NumberFormatException {
+			public void processFaceData(AssetEnsemble ensemble, IExifLoader exifTool) throws NumberFormatException {
 				Asset asset = ensemble.getAsset();
 				Map<String, String> metadata = exifTool.getMetadata();
 				String numPositions = metadata.get("FacesDetected"); //$NON-NLS-1$
 				if (numPositions != null) {
 					int n = Integer.parseInt(numPositions);
 					for (int i = 1; i <= n; i++) {
-						String facePosition = metadata.get(NLS.bind(
-								"Face{0}Position", i)); //$NON-NLS-1$
-						String faceSize = metadata.get(NLS.bind(
-								"Face{0}Size", i)); //$NON-NLS-1$
-						if (facePosition == null || faceSize == null)
-							continue;
-						int p = facePosition.indexOf(' ');
-						int x = Integer.parseInt(facePosition.substring(0, p));
-						int y = Integer.parseInt(facePosition.substring(p + 1));
-						p = faceSize.indexOf(' ');
-						int w = Integer.parseInt(faceSize.substring(0, p));
-						int h = Integer.parseInt(faceSize.substring(p + 1));
-						double x1 = 50d + x;
-						double x2 = x1 + w;
-						double y1 = 50d + y;
-						double y2 = y1 + h;
-						MWGRegion region = ensemble.getRegion(
-								AssetEnsemble.CAMERA, i);
-						region.setRect(x1 / 100, y1 / 100, (x2 - x1) / 100,
-								(y2 - y1) / 100);
-						break;
+						String facePosition = metadata.get(NLS.bind("Face{0}Position", i)); //$NON-NLS-1$
+						String faceSize = metadata.get(NLS.bind("Face{0}Size", i)); //$NON-NLS-1$
+						if (facePosition != null && faceSize != null) {
+							int p = facePosition.indexOf(' ');
+							int x = Integer.parseInt(facePosition.substring(0, p));
+							int y = Integer.parseInt(facePosition.substring(p + 1));
+							int w = Integer.parseInt(faceSize.substring(0, p = faceSize.indexOf(' ')));
+							int h = Integer.parseInt(faceSize.substring(p + 1));
+							double x1 = 50d + x;
+							double x2 = x1 + w;
+							double y1 = 50d + y;
+							double y2 = y1 + h;
+							ensemble.getRegion(AssetEnsemble.CAMERA, i).setRect(x1 / 100, y1 / 100, (x2 - x1) / 100,
+									(y2 - y1) / 100);
+							break;
+						}
 					}
 					asset.setNoPersons(n);
 				}
@@ -334,8 +290,7 @@ public class MakerSupport {
 
 		new MakerSupport("RICOH IMAGING COMPANY, LTD.") { //$NON-NLS-1$
 			@Override
-			public void processFaceData(AssetEnsemble ensemble,
-					IExifLoader exifTool) throws NumberFormatException {
+			public void processFaceData(AssetEnsemble ensemble, IExifLoader exifTool) throws NumberFormatException {
 				Asset asset = ensemble.getAsset();
 				Map<String, String> metadata = exifTool.getMetadata();
 				String numPositions = metadata.get("FacesDetected"); //$NON-NLS-1$
@@ -346,8 +301,7 @@ public class MakerSupport {
 					int w = Integer.parseInt(frameSize.substring(0, p));
 					int h = Integer.parseInt(frameSize.substring(p + 1));
 					for (int i = 1; i <= n; i++) {
-						String facePosition = metadata.get(NLS.bind(
-								"Face{0}Position", i)); //$NON-NLS-1$
+						String facePosition = metadata.get(NLS.bind("Face{0}Position", i)); //$NON-NLS-1$
 						if (facePosition == null)
 							continue;
 						StringTokenizer st = new StringTokenizer(facePosition);
@@ -367,10 +321,7 @@ public class MakerSupport {
 								break;
 							default:
 								y2 = d / h;
-								MWGRegion region = ensemble.getRegion(
-										AssetEnsemble.CAMERA, i);
-								region.setRect(x1, y1, x2 - x1, y2 - y1);
-								break;
+								ensemble.getRegion(AssetEnsemble.CAMERA, i).setRect(x1, y1, x2 - x1, y2 - y1);
 							}
 						}
 					}
@@ -381,8 +332,7 @@ public class MakerSupport {
 
 		new MakerSupport("SONY", "NIKON CORPORATION") { //$NON-NLS-1$ //$NON-NLS-2$
 			@Override
-			public void processFaceData(AssetEnsemble ensemble,
-					IExifLoader exifTool) throws NumberFormatException {
+			public void processFaceData(AssetEnsemble ensemble, IExifLoader exifTool) throws NumberFormatException {
 				Asset asset = ensemble.getAsset();
 				Map<String, String> metadata = exifTool.getMetadata();
 				int imageWidth = asset.getImageWidth();
@@ -390,8 +340,7 @@ public class MakerSupport {
 				if (imageWidth > 0 && imageHeigth > 0) {
 					int i = 0;
 					while (true) {
-						String facePosition = metadata.get(NLS.bind(
-								"Face{0}Position", (++i))); //$NON-NLS-1$
+						String facePosition = metadata.get(NLS.bind("Face{0}Position", (++i))); //$NON-NLS-1$
 						if (facePosition == null)
 							break;
 						StringTokenizer st = new StringTokenizer(facePosition);
@@ -411,10 +360,7 @@ public class MakerSupport {
 								break;
 							default:
 								w = d * 65536 / imageWidth;
-								MWGRegion region = ensemble.getRegion(
-										AssetEnsemble.CAMERA, i);
-								region.setRect(x1, y1, w, h);
-								break;
+								ensemble.getRegion(AssetEnsemble.CAMERA, i).setRect(x1, y1, w, h);
 							}
 						}
 					}
@@ -436,8 +382,7 @@ public class MakerSupport {
 			makerMap.put(maker, this);
 	}
 
-	public void processFaceData(AssetEnsemble ensemble, IExifLoader exifTool)
-			throws NumberFormatException {
+	public void processFaceData(AssetEnsemble ensemble, IExifLoader exifTool) throws NumberFormatException {
 		// by default do nothing
 	}
 

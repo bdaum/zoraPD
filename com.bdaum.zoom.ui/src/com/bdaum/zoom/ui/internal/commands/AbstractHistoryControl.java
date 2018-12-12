@@ -23,9 +23,9 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.ui.HistoryListener;
 import com.bdaum.zoom.ui.INavigationHistory;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.Icons.Icon;
 import com.bdaum.zoom.ui.internal.NavigationHistory.HistoryItem;
-import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 
 public abstract class AbstractHistoryControl extends WorkbenchWindowControlContribution
@@ -67,7 +67,7 @@ public abstract class AbstractHistoryControl extends WorkbenchWindowControlContr
 	@Override
 	protected Control createControl(Composite parent) {
 		window = getWorkbenchWindow();
-		navigationHistory = UiActivator.getDefault().getNavigationHistory(window);
+		navigationHistory = Ui.getUi().getNavigationHistory(window);
 		navigationHistory.addHistoryListener(this);
 		if (parent != null && !parent.isDisposed()) {
 			label = new Label(parent, SWT.NONE);
@@ -160,6 +160,7 @@ public abstract class AbstractHistoryControl extends WorkbenchWindowControlContr
 
 	@Override
 	public void dispose() {
+		navigationHistory.removeHistoryListener(this);
 		disposeMenu();
 		super.dispose();
 	}

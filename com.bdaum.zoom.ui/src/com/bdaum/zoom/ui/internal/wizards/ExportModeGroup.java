@@ -25,15 +25,12 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Scale;
 
 import com.bdaum.zoom.batch.internal.BatchActivator;
@@ -63,22 +60,18 @@ public class ExportModeGroup {
 	private static final String SCALING = "scaling"; //$NON-NLS-1$
 	private static final String RAWCROPPING = "rawCropping"; //$NON-NLS-1$
 
-	private SelectionListener selectionListener = new SelectionAdapter() {
-
+	private Listener selectionListener = new Listener() {
 		@Override
-		public void widgetSelected(SelectionEvent e) {
+		public void handleEvent(Event e) {
 			updateControls();
-			fireSelectionChanged(e);
+			fireEvent(e);
 		}
 	};
 
 	private Label scaleLabel;
 	private Scale scale;
 	private NumericControl dimField;
-
-	private ListenerList<SelectionListener> selectionListeners = new ListenerList<SelectionListener>();
-
-	private ListenerList<ModifyListener> modifyListeners = new ListenerList<ModifyListener>();
+	private ListenerList<Listener> listeners = new ListenerList<>();
 	private CGroup modeGroup;
 	private QualityGroup qualityGroup;
 	private RadioButtonGroup cropButtonGroup;
@@ -97,12 +90,16 @@ public class ExportModeGroup {
 	private Composite dimComp;
 
 	public ExportModeGroup(Composite parent, int style) {
+		this(parent, style, Messages.ExportFolderPage_image);
+	}
+
+	public ExportModeGroup(Composite parent, int style, String label) {
 		GridLayout layout = (GridLayout) parent.getLayout();
-		modeGroup = CGroup.create(parent, layout.numColumns, Messages.ExportFolderPage_image);
+		modeGroup = CGroup.create(parent, layout.numColumns, label);
 		modeGroup.setLayout(new GridLayout(2, false));
 		modeButtonGroup = new RadioButtonGroup(modeGroup, null, SWT.NONE);
 		modeButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		modeButtonGroup.addSelectionListener(selectionListener);
+		modeButtonGroup.addListener(selectionListener);
 		int i = 0;
 		if ((style & ORIGINALS) != 0) {
 			modeButtonGroup.addButton(Messages.SendEmailPage_Send_originals);
@@ -138,11 +135,21 @@ public class ExportModeGroup {
 				s_fixed = i++;
 			}
 			sizeButtonGroup.setSelection(0);
-			sizeButtonGroup.addSelectionListener(selectionListener);
+			sizeButtonGroup.addListener(selectionListener);
 			stackComp = new Composite(modeGroup, SWT.NONE);
 			stackComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 			stackLayout = new StackLayout();
 			stackComp.setLayout(stackLayout);
+			Listener listener = null;
+			if ((style & (SCALE | FIXED)) != 0) {
+				listener = new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						fireEvent(event);
+						updateScale();
+					}
+				};
+			}
 			if ((style & SCALE) != 0) {
 				scaleComp = new Composite(stackComp, SWT.NONE);
 				scaleComp.setLayout(new GridLayout(2, false));
@@ -151,12 +158,7 @@ public class ExportModeGroup {
 				scale = new Scale(scaleComp, SWT.NONE);
 				scale.setLayoutData(new GridData());
 				scale.setMinimum(5);
-				scale.addSelectionListener(new SelectionAdapter() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						updateScale();
-					}
-				});
+				scale.addListener(SWT.Selection, listener);
 			}
 			if ((style & FIXED) != 0) {
 				dimComp = new Composite(stackComp, SWT.NONE);
@@ -167,12 +169,7 @@ public class ExportModeGroup {
 				dimField.setMinimum(16);
 				dimField.setIncrement(10);
 				dimField.setMaximum(32000);
-				dimField.addModifyListener(new ModifyListener() {
-					public void modifyText(ModifyEvent e) {
-						fireModifyChanged(e);
-						updateScale();
-					}
-				});
+				dimField.addListener(listener);
 			}
 		}
 		IRawConverter currentRawConverter = BatchActivator.getDefault().getCurrentRawConverter(false);
@@ -182,18 +179,16 @@ public class ExportModeGroup {
 					Messages.ExportModeGroup_cropped);
 			cropButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		}
-		qualityGroup = new QualityGroup(parent, false);
+		if (style != ORIGINALS) {
+			qualityGroup = new QualityGroup(parent, false);
+			qualityGroup.addListener(selectionListener);
+		}
 		updateControls();
 	}
 
-	protected void fireSelectionChanged(SelectionEvent e) {
-		for (SelectionListener listener : selectionListeners)
-			listener.widgetSelected(e);
-	}
-
-	protected void fireModifyChanged(ModifyEvent e) {
-		for (ModifyListener listener : modifyListeners)
-			listener.modifyText(e);
+	protected void fireEvent(Event e) {
+		for (Listener listener : listeners)
+			listener.handleEvent(e);
 	}
 
 	public void updateScale() {
@@ -215,32 +210,25 @@ public class ExportModeGroup {
 		}
 		if (qualityGroup != null)
 			qualityGroup.setVisible(visible);
+		if (cropButtonGroup != null)
+			cropButtonGroup.setVisible(visible);
 		if (sizeButtonGroup != null && visible) {
 			int sizing = sizeButtonGroup.getSelection();
 			if (sizing == s_scale || sizing == s_fixed) {
 				stackComp.setVisible(true);
 				stackLayout.topControl = sizing == s_scale ? scaleComp : dimComp;
 				stackComp.layout(true, true);
-			} else {
+			} else
 				stackComp.setVisible(false);
-			}
 		}
 	}
 
-	public void addSelectionListener(SelectionListener listener) {
-		selectionListeners.add(listener);
+	public void addListener(Listener listener) {
+		listeners.add(listener);
 	}
 
-	public void removeSelectionListener(SelectionListener listener) {
-		selectionListeners.remove(listener);
-	}
-
-	public void addModifyListener(ModifyListener listener) {
-		modifyListeners.add(listener);
-	}
-
-	public void removeModifyListener(ModifyListener listener) {
-		modifyListeners.remove(listener);
+	public void removeListener(Listener listener) {
+		listeners.remove(listener);
 	}
 
 	public void fillValues(IDialogSettings settings) {
@@ -272,26 +260,27 @@ public class ExportModeGroup {
 			} catch (NumberFormatException e) {
 				// do nothing
 			}
-			try {
-				int sizing = settings.getInt(SIZE);
-				switch (sizing) {
-				case Constants.SCALE_ORIGINAL:
-					sizeButtonGroup.setSelection(s_orig);
-					break;
-				case Constants.SCALE_SCALED:
-					sizeButtonGroup.setSelection(s_scale);
-					break;
-				case Constants.SCALE_FIXED:
-					sizeButtonGroup.setSelection(s_fixed);
-					break;
+			if (sizeButtonGroup != null)
+				try {
+					int sizing = settings.getInt(SIZE);
+					switch (sizing) {
+					case Constants.SCALE_ORIGINAL:
+						sizeButtonGroup.setSelection(s_orig);
+						break;
+					case Constants.SCALE_SCALED:
+						sizeButtonGroup.setSelection(s_scale);
+						break;
+					case Constants.SCALE_FIXED:
+						sizeButtonGroup.setSelection(s_fixed);
+						break;
+					}
+				} catch (NumberFormatException e) {
+					// do nothing
 				}
-			} catch (NumberFormatException e) {
-				// do nothing
-			}
 			if (scale != null) {
 				try {
 					scale.setSelection(settings.getInt(SCALING));
-					if (sizeButtonGroup.getSelection() == s_scale)
+					if (sizeButtonGroup != null && sizeButtonGroup.getSelection() == s_scale)
 						scale.setFocus();
 				} catch (NumberFormatException e) {
 					scale.setSelection(30);
@@ -301,7 +290,7 @@ public class ExportModeGroup {
 			if (dimField != null) {
 				try {
 					dimField.setSelection(settings.getInt(FIXEDSIZE));
-					if (sizeButtonGroup.getSelection() == s_fixed)
+					if (sizeButtonGroup != null && sizeButtonGroup.getSelection() == s_fixed)
 						dimField.setFocus();
 				} catch (NumberFormatException e) {
 					dimField.setSelection(1280);

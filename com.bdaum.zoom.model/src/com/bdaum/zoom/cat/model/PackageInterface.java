@@ -19,4 +19,5 @@ public interface PackageInterface {
 	public static final int Meta_indexedTextFields = 7;
 	public static final int Meta_vocabularies = 8;
 	public static final int Exhibition_keyword = 9;
+	public static final int LastDeviceImport_keywords = 10;
 }

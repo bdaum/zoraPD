@@ -59,6 +59,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
+import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.RenameAssetOperation;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -278,7 +279,7 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 		addCueListener();
 		// Actions
 		makeActions(getViewSite().getActionBars());
-		installListeners(parent);
+		installListeners();
 		hookContextMenu();
 		contributeToActionBars();
 		setDecorator(animatedGallery.getControl(), new ZuiGalleryDecorateJob(this, animatedGallery));
@@ -293,8 +294,7 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 				currentCustomCursor = null;
 			}
 		} else if (currentCustomCursor != customCursor || currentSystemCursor >= 0) {
-			animatedGallery
-					.setCursor(UiActivator.getDefault().getCursor(animatedGallery.getDisplay(), customCursor));
+			animatedGallery.setCursor(UiActivator.getDefault().getCursor(animatedGallery.getDisplay(), customCursor));
 			currentSystemCursor = -1;
 			currentCustomCursor = customCursor;
 		}
@@ -501,9 +501,13 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 						rotate(asset, value);
 						break;
 					case AnimatedGallery.VOICENOTE:
-						String voiceFileURI = asset.getVoiceFileURI();
-						if (voiceFileURI != null && !voiceFileURI.startsWith("?")) //$NON-NLS-1$
+						if (AssetEnsemble.hasVoiceNote(asset))
 							UiActivator.getDefault().playVoicenote(asset);
+						else {
+							String voiceFileURI = asset.getVoiceFileURI();
+							if (voiceFileURI != null && !voiceFileURI.isEmpty())
+								addVoiceNoteAction.run();
+						}
 						break;
 					case AnimatedGallery.STATUS:
 						setStatus(asset, value);
@@ -531,7 +535,7 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 	}
 
 	@Override
-	protected void setAssetSelection(AssetSelection assetSelection) {
+	public void setAssetSelection(AssetSelection assetSelection) {
 		animatedGallery.setSelection(assetSelection, getAssetProvider());
 		selection = assetSelection;
 		fireSelection();

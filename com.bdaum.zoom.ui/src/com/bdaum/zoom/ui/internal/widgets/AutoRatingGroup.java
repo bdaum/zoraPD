@@ -23,22 +23,16 @@ import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Widget;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.core.internal.ai.IAiService;
 import com.bdaum.zoom.ui.widgets.CGroup;
@@ -63,7 +57,7 @@ public class AutoRatingGroup extends Composite {
 	private String[] modelIds;
 	private String[] modelLabels;
 	private IDialogSettings dialogSettings;
-	private ListenerList<ModifyListener> listeners = new ListenerList<>();
+	private ListenerList<Listener> listeners = new ListenerList<>();
 
 	public AutoRatingGroup(Composite parent, IAiService aiService, IDialogSettings dialogSettings) {
 		super(parent, SWT.NONE);
@@ -77,15 +71,15 @@ public class AutoRatingGroup extends Composite {
 		group.setLayout(new GridLayout(3, false));
 		enableButton = WidgetFactory.createCheckButton(group, Messages.AutoRatingGroup_enable,
 				new GridData(SWT.FILL, SWT.BEGINNING, true, false, 3, 1));
-		enableButton.addSelectionListener(new SelectionAdapter() {
+		enableButton.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateControls();
-				fireModified(enableButton);
+				fireEvent(event);
 			}
 		});
 		Label label = new Label(group, SWT.NONE);
-		label.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
+		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		label.setText(Messages.AutoRatingGroup_provider);
 		if (ratingProviderIds.length > 1) {
 			providerViewer = new ComboViewer(group, SWT.NONE);
@@ -102,17 +96,17 @@ public class AutoRatingGroup extends Composite {
 					return super.getText(element);
 				}
 			});
-			providerViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			providerViewer.getCombo().addListener(SWT.Selection, new Listener() {
 				@Override
-				public void selectionChanged(SelectionChangedEvent event) {
-					selectedProvider = (String) ((StructuredSelection) providerViewer.getSelection()).getFirstElement();
+				public void handleEvent(Event event) {
+					selectedProvider = (String) providerViewer.getStructuredSelection().getFirstElement();
 					updateModelViewer();
-					fireModified(providerViewer.getControl());
+					fireEvent(event);
 				}
 			});
 		} else {
 			label = new Label(group, SWT.NONE);
-			label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+			label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 			label.setText(ratingProviderNames[0]);
 			selectedProvider = ratingProviderIds[0];
 		}
@@ -138,38 +132,37 @@ public class AutoRatingGroup extends Composite {
 				return super.getText(element);
 			}
 		});
-		modelViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+		modelViewer.getCombo().addListener(SWT.Selection, new Listener() {
 			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				fireModified(modelViewer.getControl());
+			public void handleEvent(Event event) {
+				fireEvent(event);
 			}
 		});
-		new Label(group, SWT.NONE).setText(Messages.AutoRatingGroup_rating);
-		maxField = new NumericControl(group, SWT.NONE);
+		Composite maxGroup = new Composite(group, SWT.NONE);
+		maxGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 3, 1));
+		layout = new GridLayout(3, false);
+		layout.marginHeight = layout.marginWidth = 0;
+		maxGroup.setLayout(layout);
+		new Label(maxGroup, SWT.NONE).setText(Messages.AutoRatingGroup_rating);
+		maxField = new NumericControl(maxGroup, SWT.NONE);
 		maxField.setMinimum(1);
 		maxField.setMaximum(5);
-		overwriteButton = WidgetFactory.createCheckButton(group, Messages.AutoRatingGroup_overwrite,
-				new GridData(SWT.END, SWT.CENTER, false, false));
+		maxField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+		overwriteButton = WidgetFactory.createCheckButton(maxGroup, Messages.AutoRatingGroup_overwrite,
+				new GridData(SWT.END, SWT.CENTER, true, false));
 	}
 
-	public void addModifyListener(ModifyListener listener) {
+	public void addListener(Listener listener) {
 		listeners.add(listener);
 	}
 
-	public void removeModifyListener(ModifyListener listener) {
+	public void removeListener(Listener listener) {
 		listeners.remove(listener);
 	}
 
-	protected void fireModified(Widget control) {
-		Event ev = new Event();
-		ev.item = control;
-		ev.display = this.getDisplay();
-		ev.doit = true;
-		ev.widget = this;
-		ModifyEvent e = new ModifyEvent(ev);
-		for (ModifyListener modifyListener : listeners)
-			modifyListener.modifyText(e);
-
+	protected void fireEvent(Event event) {
+		for (Listener listener : listeners)
+			listener.handleEvent(event);
 	}
 
 	protected void updateControls() {
@@ -183,7 +176,7 @@ public class AutoRatingGroup extends Composite {
 
 	private void updateModelViewer() {
 		if (selectedProvider != null) {
-			String selectedModel = (String) ((StructuredSelection) modelViewer.getSelection()).getFirstElement();
+			String selectedModel = (String) modelViewer.getStructuredSelection().getFirstElement();
 			if (selectedModel == null)
 				selectedModel = dialogSettings.get(MODEL);
 			modelLabels = aiService.getRatingModelLabels(selectedProvider);
@@ -223,7 +216,7 @@ public class AutoRatingGroup extends Composite {
 	}
 
 	public void saveValues() {
-		String selectedModel = (String) ((StructuredSelection) modelViewer.getSelection()).getFirstElement();
+		String selectedModel = (String) modelViewer.getStructuredSelection().getFirstElement();
 		boolean enabled = enableButton.getSelection();
 		dialogSettings.put(ENABLEAUTORATING, enabled);
 		if (enabled && selectedProvider != null && selectedModel != null) {
@@ -235,11 +228,11 @@ public class AutoRatingGroup extends Composite {
 	}
 
 	public String getProviderId() {
-		return selectedProvider;
+		return enableButton.getSelection() ? selectedProvider : null;
 	}
 
 	public String getModelId() {
-		return (String) ((StructuredSelection) modelViewer.getSelection()).getFirstElement();
+		return (String)  modelViewer.getStructuredSelection().getFirstElement();
 	}
 
 	public boolean getOverwrite() {

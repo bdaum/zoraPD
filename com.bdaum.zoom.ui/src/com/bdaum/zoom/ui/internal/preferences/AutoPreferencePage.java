@@ -147,7 +147,7 @@ public class AutoPreferencePage extends AbstractPreferencePage {
 			}
 		preferenceStore.setValue(PreferenceConstants.RELATIONDETECTORS, sb.toString());
 		if (relviewer != null) {
-			IStructuredSelection selection = (IStructuredSelection) relviewer.getSelection();
+			IStructuredSelection selection = relviewer.getStructuredSelection();
 			if (!selection.isEmpty())
 				preferenceStore.setValue(PreferenceConstants.DERIVERELATIONS, (String) selection.getFirstElement());
 		}

@@ -34,21 +34,17 @@ import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
-
-import ch.ethz.iks.r_osgi.RemoteOSGiException;
-import ch.ethz.iks.r_osgi.RemoteOSGiService;
-import ch.ethz.iks.r_osgi.RemoteServiceReference;
-import ch.ethz.iks.r_osgi.URI;
 
 import com.bdaum.zoom.batch.internal.Daemon;
 import com.bdaum.zoom.core.Constants;
@@ -59,6 +55,11 @@ import com.bdaum.zoom.peer.internal.model.PeerDefinition;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.widgets.CLink;
+
+import ch.ethz.iks.r_osgi.RemoteOSGiException;
+import ch.ethz.iks.r_osgi.RemoteOSGiService;
+import ch.ethz.iks.r_osgi.RemoteServiceReference;
+import ch.ethz.iks.r_osgi.URI;
 
 @SuppressWarnings("restriction")
 public class ROSGiManager {
@@ -151,13 +152,14 @@ public class ROSGiManager {
 								CLink link = new CLink(composite, SWT.NONE);
 								link.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
 								link.setText(Messages.ROSGiManager_configure_network);
-								link.addSelectionListener(new SelectionAdapter() {
+								link.addListener(new Listener() {
 									@Override
-									public void widgetSelected(org.eclipse.swt.events.SelectionEvent e) {
+									public void handleEvent(Event event) {
 										close();
 										PreferencesUtil.createPreferenceDialogOn(shell,
 												"com.bdaum.zoom.peer.PeerPreferencePage", //$NON-NLS-1$
 												new String[0], null).open();
+										
 									}
 								});
 								return composite;

@@ -60,7 +60,6 @@ import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.db.IDbErrorHandler;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.FileInput;
-import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.ImportFromDeviceData;
 import com.bdaum.zoom.core.internal.ImportState;
@@ -69,6 +68,8 @@ import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.core.internal.operations.AnalogProperties;
 import com.bdaum.zoom.core.internal.operations.ImportConfiguration;
 import com.bdaum.zoom.image.ImageConstants;
+import com.bdaum.zoom.mtp.ObjectFilter;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.operations.AbstractImportOperation;
 import com.bdaum.zoom.program.BatchUtilities;
 
@@ -77,22 +78,23 @@ public class ImportOperation extends AbstractImportOperation {
 	static final SimpleDateFormat dfYear = new SimpleDateFormat("yyyy"); //$NON-NLS-1$
 	static final SimpleDateFormat dfShort = new SimpleDateFormat("yyyy-MM"); //$NON-NLS-1$
 	static final SimpleDateFormat dfLong = new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
-	
-	private FileNameExtensionFilter filenameFilter;
+
+	private ObjectFilter filenameFilter;
 	private FileInput fileInput;
 	private URI[] uris;
 	private Date lastDeviceImportDate = new Date();
+	private String lastDevicePath;
 	private Date previousImport;
 	private final GregorianCalendar cal = new GregorianCalendar();
-	private File[] folders;
+	private File[] foldersToWatch;
 	private Set<IMediaSupport> contributors = new HashSet<IMediaSupport>(5);
 	private ImageMediaSupport imageMediaSupport;
 
 	public ImportOperation(FileInput fileInput, ImportConfiguration configuration, AnalogProperties properties,
-			File[] folders) {
+			File[] foldersToWatch) {
 		this(NLS.bind(Messages.getString("ImportOperation.Import_operation"), fileInput.getName(), //$NON-NLS-1$
 				fileInput.size() > 1 ? ",..." : ""), configuration, null, properties, Constants.FILESOURCE_UNKNOWN); //$NON-NLS-1$ //$NON-NLS-2$
-		this.folders = folders;
+		this.foldersToWatch = foldersToWatch;
 		this.fileInput = fileInput;
 	}
 
@@ -130,7 +132,7 @@ public class ImportOperation extends AbstractImportOperation {
 				n += fileInput.size();
 			if (uris != null)
 				n += uris.length;
-			List<URI> allFiles = new ArrayList<URI>(n);
+			List<StorageObject> allFiles = new ArrayList<>(n);
 			listFiles(fileInput, uris, allFiles);
 			if (allFiles.isEmpty() && !isSilent()) {
 				IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
@@ -141,14 +143,20 @@ public class ImportOperation extends AbstractImportOperation {
 			}
 			importState.nFiles = allFiles.size();
 			if (importState.importFromDeviceData != null) {
-				final int skipPolicy = importState.importFromDeviceData.getSkipPolicy();
-				if (skipPolicy == Constants.SKIP_RAW_IF_JPEG || skipPolicy == Constants.SKIP_JPEG_IF_RAW
-						|| importState.importFromDeviceData.getExifTransferPrefix() == null
-						|| !importState.importFromDeviceData.getExifTransferPrefix().isEmpty()) {
-					Collections.sort(allFiles, new Comparator<URI>() {
-						public int compare(URI o1, URI o2) {
-							String p1 = o1.toString();
-							String p2 = o2.toString();
+				if (allFiles.size() > 1) {
+					final int skipPolicy = importState.importFromDeviceData.getSkipPolicy();
+					boolean sortForSkip = skipPolicy == Constants.SKIP_RAW_IF_JPEG
+							|| skipPolicy == Constants.SKIP_JPEG_IF_RAW
+							|| importState.importFromDeviceData.getExifTransferPrefix() == null
+							|| !importState.importFromDeviceData.getExifTransferPrefix().isEmpty();
+					Collections.sort(allFiles, new Comparator<StorageObject>() {
+						public int compare(StorageObject o1, StorageObject o2) {
+							URI u1 = o1.toURI();
+							URI u2 = o2.toURI();
+							if (!sortForSkip)
+								return u1.compareTo(u2);
+							String p1 = u1.toString();
+							String p2 = u2.toString();
 							String e1 = ""; //$NON-NLS-1$
 							String e2 = ""; //$NON-NLS-1$
 							int q = p1.lastIndexOf('/');
@@ -173,8 +181,7 @@ public class ImportOperation extends AbstractImportOperation {
 							return e1.compareTo(e2);
 						}
 					});
-				} else
-					Collections.sort(allFiles);
+				}
 			}
 			final Meta meta = dbManager.getMeta(true);
 			if (!allFiles.isEmpty()) {
@@ -188,10 +195,11 @@ public class ImportOperation extends AbstractImportOperation {
 					cal.setTime(importState.importDate);
 					if (year != cal.get(Calendar.YEAR))
 						meta.setLastYearSequenceNo(0);
-					final String description = createImportDescription(userImport);
+					boolean tetheredShootingActive = CoreActivator.getDefault().isTetheredShootingActive();
+					final String description = createImportDescription(userImport, tetheredShootingActive);
 					if (storeSafely(() -> {
 						previousImport = dbManager.createLastImportCollection(importState.importDate, !userImport,
-								description);
+								description, tetheredShootingActive);
 						dbManager.store(meta);
 					}, 1))
 						fireStructureModified();
@@ -199,9 +207,10 @@ public class ImportOperation extends AbstractImportOperation {
 					init(aMonitor, work);
 				importFiles(aMonitor, allFiles, info);
 				List<Object> toBeStored = new ArrayList<Object>();
-				if (folders != null && meta.getAutoWatch())
+				if (foldersToWatch != null && meta.getAutoWatch())
 					updateWatchedFolders(meta, toBeStored);
-				if (importState.importFromDeviceData != null && fileInput.size() > 0 && lastDeviceImportDate != null) {
+				if (importState.importFromDeviceData != null && fileInput.size() > 0
+						&& (lastDeviceImportDate != null || lastDevicePath != null)) {
 					String key = importState.importFromDeviceData.isMedia() ? fileInput.getVolume()
 							: fileInput.getAbsolutePath();
 					if (key != null) {
@@ -209,9 +218,13 @@ public class ImportOperation extends AbstractImportOperation {
 							meta.setLastDeviceImport(new HashMap<String, LastDeviceImport>());
 						LastDeviceImport lastImport = meta.getLastDeviceImport(key);
 						if (lastImport == null)
-							meta.putLastDeviceImport(lastImport = new LastDeviceImportImpl(key, lastDeviceImportDate.getTime(), null, null));
-						else
-							lastImport.setTimestamp(lastDeviceImportDate.getTime());
+							meta.putLastDeviceImport(lastImport = new LastDeviceImportImpl(key,
+									lastDeviceImportDate == null ? 0L : lastDeviceImportDate.getTime(), null, null,
+									lastDevicePath, null, null, null, null, null, null, null, null, null, null));
+						else {
+							lastImport.setTimestamp(lastDeviceImportDate == null ? 0L : lastDeviceImportDate.getTime());
+							lastImport.setPath(lastDevicePath);
+						}
 						toBeStored.add(lastImport);
 					}
 				}
@@ -245,7 +258,7 @@ public class ImportOperation extends AbstractImportOperation {
 		return close(info);
 	}
 
-	private String createImportDescription(boolean userImport) {
+	private String createImportDescription(boolean userImport, boolean tethered) {
 		if (userImport) {
 			String user = System.getProperty("user.name"); //$NON-NLS-1$
 			if (importState.importFromDeviceData != null) {
@@ -255,27 +268,29 @@ public class ImportOperation extends AbstractImportOperation {
 			}
 			return NLS.bind(Messages.getString("ImportOperation.user_import"), user); //$NON-NLS-1$
 		}
-		SimpleDateFormat df = null;
 		Date importDate = importState.importDate;
 		if (importState.importFromDeviceData != null) {
-			File[] dcims = importState.importFromDeviceData.getDcims();
-			if (dcims.length > 0) {
-				df = new SimpleDateFormat(Messages.getString("ImportOperation.MMM_dd_yyyy")); //$NON-NLS-1$
+			if (tethered)
+				return NLS.bind(Messages.getString("ImportOperation.tethered"), //$NON-NLS-1$
+						new SimpleDateFormat(Messages.getString("ImportOperation.mm_dd_yy_hh_mm")).format(importDate)); //$NON-NLS-1$
+			String owner = importState.importFromDeviceData.getDcimOwner();
+			if (owner != null)
 				return NLS.bind(Messages.getString("ImportOperation.import_transfer"), //$NON-NLS-1$
-						dcims[0].getParent(), df.format(importDate));
-			}
+						owner,
+						new SimpleDateFormat(Messages.getString("ImportOperation.MMM_dd_yyyy")).format(importDate)); //$NON-NLS-1$
 			return ""; //$NON-NLS-1$
 		}
-		String timeline = importState.getConfiguration().timeline;
-		if (timeline.equals(Meta_type.timeline_year))
+		String timeline = importState.getConfiguration().timeline.intern();
+		SimpleDateFormat df = null;
+		if (timeline == Meta_type.timeline_year)
 			df = new SimpleDateFormat("yyyy"); //$NON-NLS-1$
-		else if (timeline.equals(Meta_type.timeline_month))
+		else if (timeline == Meta_type.timeline_month)
 			df = new SimpleDateFormat(Messages.getString("ImportOperation.MMM_yyyy")); //$NON-NLS-1$
-		else if (timeline.equals(Meta_type.timeline_day))
+		else if (timeline == Meta_type.timeline_day)
 			df = new SimpleDateFormat(Messages.getString("ImportOperation.MMM_dd_yyyy")); //$NON-NLS-1$
-		else if (timeline.equals(Meta_type.timeline_week))
+		else if (timeline == Meta_type.timeline_week)
 			df = new SimpleDateFormat(Messages.getString("ImportOperation.ww_yyyy")); //$NON-NLS-1$
-		else if (timeline.equals(Meta_type.timeline_weekAndDay))
+		else if (timeline == Meta_type.timeline_weekAndDay)
 			df = new SimpleDateFormat(Messages.getString("ImportOperation.EEE_ww_yyyy")); //$NON-NLS-1$
 		if (df != null)
 			return NLS.bind(Messages.getString("ImportOperation.watched_folder_imports_for"), df.format(importDate)); //$NON-NLS-1$
@@ -285,7 +300,7 @@ public class ImportOperation extends AbstractImportOperation {
 	private void updateWatchedFolders(Meta meta, List<Object> toBeStored) {
 		CoreActivator activator = CoreActivator.getDefault();
 		IVolumeManager volumeManager = activator.getVolumeManager();
-		lp: for (File folder : folders) {
+		lp: for (File folder : foldersToWatch) {
 			for (String folderId : meta.getWatchedFolder()) {
 				WatchedFolder observedFolder = activator.getObservedFolder(folderId);
 				if (observedFolder != null) {
@@ -312,45 +327,46 @@ public class ImportOperation extends AbstractImportOperation {
 			}
 			WatchedFolderImpl newWatchedFolder = new WatchedFolderImpl(folder.toURI().toString(),
 					volumeManager.getVolumeForFile(folder), importState.importDate.getTime(), true, null, false, null,
-					false, 0, null, 2, null, null, Constants.FILESOURCE_DIGITAL_CAMERA);
+					false, 0, null, 2, null, null, Constants.FILESOURCE_DIGITAL_CAMERA, false);
 			toBeStored.add(newWatchedFolder);
 			meta.addWatchedFolder(newWatchedFolder.getStringId());
 			activator.putObservedFolder(newWatchedFolder);
 		}
 	}
 
-	private void listFiles(FileInput in, URI[] allUris, List<URI> allFiles) {
+	private void listFiles(FileInput in, URI[] allUris, List<StorageObject> allFiles) {
 		if (in != null)
-			in.getURIs(filenameFilter, allFiles);
+			in.getObjects(filenameFilter, allFiles);
 		if (allUris != null)
 			for (URI uri : allUris)
-				allFiles.add(uri);
+				allFiles.add(new StorageObject(uri));
 	}
 
-	private void importFiles(IProgressMonitor aMonitor, List<URI> allUris, IAdaptable info) {
+	private void importFiles(IProgressMonitor aMonitor, List<StorageObject> allObjects, IAdaptable info) {
 		int cnt = 0;
-		importState.importedAssets = new HashSet<Asset>(allUris.size());
-		File tempFile = null;
+		importState.importedAssets = new HashSet<Asset>(allObjects.size());
+		StorageObject tempFile = null;
 		try (Ticketbox box = new Ticketbox()) {
-			for (URI uri : allUris) {
+			for (StorageObject object : allObjects) {
 				if (tempFile != null)
 					tempFile.delete();
 				URI remote = null;
-				File file = null;
-				if (Constants.FILESCHEME.equals(uri.getScheme())) {
-					file = new File(uri);
-					lastDeviceImportDate.setTime(file.lastModified() + 1);
-				} else {
+				StorageObject file = null;
+				if (object.isRemote()) {
 					try {
-						tempFile = file = box.download(remote = uri);
+						tempFile = file = new StorageObject(box.download(remote = object.toURI()));
 					} catch (MalformedURLException e) {
-						addError(NLS.bind(Messages.getString("ImportOperation.not_a_valid_url"), uri), e); //$NON-NLS-1$
+						addError(NLS.bind(Messages.getString("ImportOperation.not_a_valid_url"), object), e); //$NON-NLS-1$
 					} catch (IOException e) {
-						addError(NLS.bind(Messages.getString("ImportOperation.transfer_from_url_failed"), uri), e); //$NON-NLS-1$
+						addError(NLS.bind(Messages.getString("ImportOperation.transfer_from_url_failed"), object), e); //$NON-NLS-1$
 					}
+				} else {
+					file = object;
+					lastDeviceImportDate.setTime(file.lastModified() + 1);
+					lastDevicePath = file.getAbsolutePath();
 				}
 				if (file != null) {
-					String extension = Core.getFileExtension(file.toURI().toString());
+					String extension = file.getExtension();
 					if (importState.skipFile(file, extension))
 						aMonitor.worked(IMediaSupport.IMPORTWORKSTEPS);
 					else {
@@ -363,6 +379,7 @@ public class ImportOperation extends AbstractImportOperation {
 							cnt += Math.abs(icnt);
 							importState.nextPicture(icnt);
 						} catch (Exception e) {
+							URI uri = object.toURI();
 							addError(
 									NLS.bind(
 											importState.isSilent()
@@ -385,8 +402,8 @@ public class ImportOperation extends AbstractImportOperation {
 			for (Asset a : importState.allDeletedAssets)
 				dbManager.markSystemCollectionsForPurge(a);
 			if (cnt == 0 && previousImport != null) {
-				final List<Object> toBeStored = new ArrayList<Object>();
-				final Set<Object> toBeDeleted = new HashSet<Object>();
+				List<Object> toBeStored = new ArrayList<Object>();
+				Set<Object> toBeDeleted = new HashSet<Object>();
 				boolean changed = Utilities.popLastImport(toBeStored, toBeDeleted, previousImport, false);
 				storeSafely(toBeDeleted.toArray(), 1, toBeStored.toArray());
 				previousImport = null;

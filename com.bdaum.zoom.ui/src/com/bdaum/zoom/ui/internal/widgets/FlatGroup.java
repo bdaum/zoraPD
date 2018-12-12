@@ -21,9 +21,9 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.ui.widgets.Messages;
 
@@ -43,12 +43,12 @@ public class FlatGroup extends Composite {
 		modeButtonGroup.setSelection(settings.getBoolean(field) ? 1 : 0);
 	}
 
-	public void addSelectionListener(SelectionListener listener) {
-		modeButtonGroup.addSelectionListener(listener);
+	public void addListener(Listener listener) {
+		modeButtonGroup.addListener(listener);
 	}
 
-	public void removeSelectionListener(SelectionListener listener) {
-		modeButtonGroup.removeSelectionListener(listener);
+	public void removeListener(Listener listener) {
+		modeButtonGroup.removeListener(listener);
 	}
 
 	public void saveSettings() {

@@ -23,14 +23,13 @@ package com.bdaum.zoom.ui.internal.widgets;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
@@ -42,7 +41,7 @@ public class QualityGroup {
 
 	private Combo qualityField;
 	private SharpeningGroup sharpenGroup;
-	private ListenerList<SelectionListener> selectionListeners = new ListenerList<SelectionListener>();
+	private ListenerList<Listener> selectionListeners = new ListenerList<>();
 
 	private CompressionGroup compressionGroup;
 
@@ -51,20 +50,17 @@ public class QualityGroup {
 	public QualityGroup(Composite parent, boolean resolution) {
 		group = new CGroup(parent, SWT.NONE);
 		GridLayout layout = (GridLayout) parent.getLayout();
-		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true,
-				false, layout.numColumns, 1));
+		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, layout.numColumns, 1));
 		group.setText(Messages.QualityGroup_output_quality);
 		group.setLayout(new GridLayout(4, false));
 		if (resolution) {
 			new Label(group, SWT.NONE).setText(Messages.QualityGroup_resolution);
 			qualityField = new Combo(group, SWT.READ_ONLY);
-			qualityField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
-					false));
-			qualityField.setItems(new String[] { Messages.QualityGroup_screen,
-					Messages.QualityGroup_printer });
-			qualityField.addSelectionListener(new SelectionAdapter() {
+			qualityField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+			qualityField.setItems(new String[] { Messages.QualityGroup_screen, Messages.QualityGroup_printer });
+			qualityField.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					fireSelectionEvent(e);
 				}
 			});
@@ -78,9 +74,9 @@ public class QualityGroup {
 		sharpenGroup = new SharpeningGroup(group);
 	}
 
-	protected void fireSelectionEvent(SelectionEvent e) {
-		for (SelectionListener listener : selectionListeners)
-			listener.widgetSelected(e);
+	protected void fireSelectionEvent(Event e) {
+		for (Listener listener : selectionListeners)
+			listener.handleEvent(e);
 	}
 
 	public void saveSettings(IDialogSettings settings) {
@@ -91,13 +87,11 @@ public class QualityGroup {
 	}
 
 	public int getQuality() {
-		return qualityField == null ? Constants.SCREEN_QUALITY : qualityField
-				.getSelectionIndex();
+		return qualityField == null ? Constants.SCREEN_QUALITY : qualityField.getSelectionIndex();
 	}
 
 	public int getJpegQuality() {
-		return compressionGroup == null ? -1 : compressionGroup
-				.getJpegQuality();
+		return compressionGroup == null ? -1 : compressionGroup.getJpegQuality();
 	}
 
 	public UnsharpMask getUnsharpMask() {
@@ -116,12 +110,16 @@ public class QualityGroup {
 		}
 	}
 
-	public void addSelectionListener(SelectionListener listener) {
+	public void addListener(Listener listener) {
 		selectionListeners.add(listener);
+		compressionGroup.addListener(listener);
+		sharpenGroup.addListener(listener);
 	}
 
-	public void removeSelectionListener(SelectionListener listener) {
+	public void removeListener(Listener listener) {
 		selectionListeners.remove(listener);
+		compressionGroup.removeListener(listener);
+		sharpenGroup.removeListener(listener);
 	}
 
 	/**
@@ -156,20 +154,19 @@ public class QualityGroup {
 		return sharpenGroup.getThreshold();
 	}
 
-	public void fillValues(Boolean applySharpening, float radius, float amount,
-			int threshold, int jpegQuality, int scalingMethod) {
-			sharpenGroup.fillValues(applySharpening, radius, amount, threshold);
-			compressionGroup.fillValues(jpegQuality, false);
+	public void fillValues(Boolean applySharpening, float radius, float amount, int threshold, int jpegQuality,
+			int scalingMethod) {
+		sharpenGroup.fillValues(applySharpening, radius, amount, threshold);
+		compressionGroup.fillValues(jpegQuality, false);
 	}
 
 	public void setEnabled(boolean enabled) {
-			sharpenGroup.setEnabled(enabled);
-			compressionGroup.setEnabled(enabled);
+		sharpenGroup.setEnabled(enabled);
+		compressionGroup.setEnabled(enabled);
 	}
 
 	public double getSizeFactor() {
-		return compressionGroup.isEnabled() ? compressionGroup
-				.getSizeFactor() : 1d;
+		return compressionGroup.isEnabled() ? compressionGroup.getSizeFactor() : 1d;
 	}
 
 	public void setVisible(boolean visible) {

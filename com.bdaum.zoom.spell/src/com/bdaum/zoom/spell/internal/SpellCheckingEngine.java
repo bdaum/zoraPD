@@ -135,7 +135,6 @@ public class SpellCheckingEngine {
 					if (hunSpellDictionary.misspelled(str)) {
 						final int offset = distance;
 						ISpellIncident incident = new ISpellIncident() {
-
 							public String getWrongWord() {
 								return str;
 							}
@@ -181,9 +180,7 @@ public class SpellCheckingEngine {
 			userDict.add(word);
 			try (RandomAccessFile file = new RandomAccessFile(userFile, "rw")) { //$NON-NLS-1$
 				file.seek(file.length());
-				String s = word + "\n\r"; //$NON-NLS-1$
-				byte[] bytes = s.getBytes("UTF-8"); //$NON-NLS-1$
-				file.write(bytes);
+				file.write((word + "\n\r").getBytes("UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
 			} catch (IOException e) {
 				SpellActivator.getDefault().logError(Messages.CombinedSpellChecker_io_error_writing_word, e);
 			} 
@@ -202,26 +199,16 @@ public class SpellCheckingEngine {
 		if (str.isEmpty() || str.matches("\\s+")) //$NON-NLS-1$
 			return false;
 		// option rules
-		if ((options & ISpellCheckingService.IGNORESINGLELETTER) > 0) {
-			if (str.length() == 1)
-				return false;
-		}
-		if ((options & ISpellCheckingService.IGNORNEUPPERCASE) > 0) {
-			if (str.toUpperCase().equals(str))
-				return false;
-		}
-		if ((options & ISpellCheckingService.IGNOREWIDTHDIGITS) > 0) {
-			if (str.matches(".*[\\d]+.*")) //$NON-NLS-1$
-				return false;
-		}
-		if ((options & ISpellCheckingService.IGNOREMIXEDCASE) > 0) {
-			if (str.toUpperCase().equals(str.toLowerCase()))
-				return false;
-		}
-		if ((options & ISpellCheckingService.IGNOREWITHNONLETTERS) > 0) {
-			if (str.matches("[^\\p{L}]+")) //$NON-NLS-1$
-				return false;
-		}
+		if ((options & ISpellCheckingService.IGNORESINGLELETTER) > 0 && str.length() == 1)
+			return false;
+		if ((options & ISpellCheckingService.IGNORNEUPPERCASE) > 0 && str.toUpperCase().equals(str))
+			return false;
+		if ((options & ISpellCheckingService.IGNOREWIDTHDIGITS) > 0 && str.matches(".*[\\d]+.*")) //$NON-NLS-1$
+			return false;
+		if ((options & ISpellCheckingService.IGNOREMIXEDCASE) > 0 && str.toUpperCase().equals(str.toLowerCase()))
+			return false;
+		if ((options & ISpellCheckingService.IGNOREWITHNONLETTERS) > 0 && str.matches("[^\\p{L}]+")) //$NON-NLS-1$
+			return false;
 		return true;
 	}
 

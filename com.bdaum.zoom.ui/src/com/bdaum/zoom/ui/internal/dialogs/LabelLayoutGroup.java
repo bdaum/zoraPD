@@ -25,21 +25,19 @@ import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
-public class LabelLayoutGroup extends Composite implements ModifyListener {
+public class LabelLayoutGroup extends Composite implements Listener {
 
 	private static NumberFormat nf = NumberFormat.getNumberInstance();
 	static {
@@ -52,7 +50,7 @@ public class LabelLayoutGroup extends Composite implements ModifyListener {
 			Messages.LabelLayoutGroup_center, Messages.LabelLayoutGroup_right,
 			Messages.LabelLayoutGroup_top, Messages.LabelLayoutGroup_middle,
 			Messages.LabelLayoutGroup_bottom };
-	private ListenerList<ModifyListener> listeners = new ListenerList<ModifyListener>();
+	private ListenerList<Listener> listeners = new ListenerList<>();
 	private final boolean dontHide;
 	private char unit = Core.getCore().getDbFactory().getDimUnit();
 
@@ -63,9 +61,9 @@ public class LabelLayoutGroup extends Composite implements ModifyListener {
 		hideButton = WidgetFactory.createCheckButton(this,
 				Messages.LabelLayoutGroup_hide, null);
 		if (!dontHide)
-			hideButton.addSelectionListener(new SelectionAdapter() {
+			hideButton.addListener(new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					updateFields();
 				}
 			});
@@ -120,14 +118,14 @@ public class LabelLayoutGroup extends Composite implements ModifyListener {
 		distField = new NumericControl(composite, SWT.NONE);
 		distField.setDigits(1);
 		distField.setMaximum(unit == 'i' ? 1000 : 2500);
-		distField.addModifyListener(this);
+		distField.addListener(this);
 		new Label(composite, SWT.NONE)
 				.setText(Messages.LabelLayoutGroup_indent + captionUnitcmin());
 		indentField = new NumericControl(composite, SWT.NONE);
 		indentField.setDigits(1);
 		indentField.setMaximum(unit == 'i' ? 400 : 1000);
 		indentField.setMinimum(unit == 'i' ? -400 : -1000);
-		indentField.addModifyListener(this);
+		indentField.addListener(this);
 	}
 
 	public void fillValues(boolean hide, int alignment, int distance, int indent) {
@@ -174,16 +172,16 @@ public class LabelLayoutGroup extends Composite implements ModifyListener {
 		return toMm(indentField.getSelection());
 	}
 
-	public void modifyText(ModifyEvent e) {
-		for (ModifyListener listener : listeners)
-			listener.modifyText(e);
+	public void handleEvent(Event e) {
+		for (Listener listener : listeners)
+			listener.handleEvent(e);
 	}
 
-	public void addModifyListener(ModifyListener listener) {
+	public void addListener(Listener listener) {
 		listeners.add(listener);
 	}
 
-	public void removeModifyListener(ModifyListener listener) {
+	public void removeListener(Listener listener) {
 		listeners.remove(listener);
 	}
 

@@ -7,7 +7,7 @@
             clientClustering="true"
             default="true"
             id="com.bdaum.zoom.gps.mappingSystem.googleMaps3"
-            mapComponent="com.bdaum.zoom.gps.gmap3.internal.views.MapComponent"
+            mapComponent="com.bdaum.zoom.gps.google.internal.views.MapComponent"
             name="%mappingSystem.name"
             query="https://www.google.com/maps/place/@{0},{1},{2}z">
       </mappingSystem>
@@ -18,6 +18,32 @@
             file="toc.xml"
             primary="false">
       </toc>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.gps.geonamingService">
+      <geonamingService
+            class="com.bdaum.zoom.gps.naming.google.internal.GoogleGeonamingService"
+            default="true"
+            description="%geonamingService.description"
+            id="Google"
+            link="https://cloud.google.com/maps-platform/"
+            name="%geonamingService.name">
+        <parameter
+              explanation="%parameter.explanation.apikey"
+              hint="%parameter.hint.id"
+              id="com.bdaum.zoom.gps.googleClientId"
+              label="%parameter.label.id"
+              reqMsg="%parameter.reqMsg"
+              tooltip="%parameter.tooltip.id">
+         </parameter>
+       </geonamingService>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml"
+            plugin="com.bdaum.zoom.gps">
+      </contexts>
    </extension>
 
 </plugin>

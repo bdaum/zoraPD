@@ -39,7 +39,6 @@ import com.bdaum.zoom.image.recipe.Vignette;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.DiskFullException;
 
-@SuppressWarnings("restriction")
 public class RTDetector extends AbstractRecipeDetector {
 
 	private static final RGB FILL_COLOR = new RGB(128, 128, 128);

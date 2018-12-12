@@ -34,18 +34,20 @@ import com.bdaum.zoom.ui.Ui;
 public abstract class AbstractAssetSelectionWizard extends ZWizard {
 
 	protected List<Asset> assets;
+	
+	@Override
+	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		super.init(workbench, selection);
+		setAssets(workbench, selection, false);
+	}
+
 	protected List<Object> setAssets(IWorkbench workbench, IStructuredSelection selection, boolean prune) {
-		IWorkbenchWindow activeWorkbenchWindow = workbench
-				.getActiveWorkbenchWindow();
+		IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
 		AssetSelection assetSelection;
 		IUi ui = Ui.getUi();
-		if (activeWorkbenchWindow != null) {
-			assetSelection = ui
-					.getNavigationHistory(activeWorkbenchWindow)
-					.getSelectedAssets();
-		} else
-			assetSelection = (selection instanceof AssetSelection) ? ((AssetSelection) selection)
-					: AssetSelection.EMPTY;
+		assetSelection = activeWorkbenchWindow != null
+				? ui.getNavigationHistory(activeWorkbenchWindow).getSelectedAssets()
+				: (selection instanceof AssetSelection) ? ((AssetSelection) selection) : AssetSelection.EMPTY;
 		assets = assetSelection.getAssets();
 		if (assets.isEmpty()) {
 			List<Object> presentationItems = ui.getPresentationItems();

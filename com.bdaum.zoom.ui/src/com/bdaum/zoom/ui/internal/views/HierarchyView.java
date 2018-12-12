@@ -101,6 +101,7 @@ import com.bdaum.zoom.operations.internal.RelationDescription;
 import com.bdaum.zoom.operations.internal.UnlinkOperation;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.IZoomActionConstants;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
@@ -579,7 +580,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		addDragSupport();
 		// Other actions
 		makeActions(getViewSite().getActionBars());
-		installListeners(parent);
+		installListeners();
 		hookContextMenu();
 		contributeToActionBars();
 		// Hover
@@ -620,6 +621,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
+		updateActions(true);
 		boolean readOnly = dbIsReadonly();
 		manager.add(descriptionAction);
 		if (!readOnly)
@@ -814,7 +816,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 			collection.addCriterion(new CriterionImpl(QueryField.LASTMOD.getKey(), null, asset.getLastModification(),
 					originals ? QueryField.SMALLER : QueryField.GREATER, true));
 			collection.addSortCriterion(new SortCriterionImpl(QueryField.LASTMOD.getKey(), null, originals));
-			UiActivator.getDefault().getNavigationHistory(getSite().getWorkbenchWindow())
+			Ui.getUi().getNavigationHistory(getSite().getWorkbenchWindow())
 					.postSelection(new StructuredSelection(collection));
 		}
 	}
@@ -885,7 +887,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 
 	@Override
 	public void updateActions(boolean force) {
-		if (showPossibleDerivativesAction != null && (viewActive || force) && !viewer.getControl().isDisposed()) {
+		if (showPossibleDerivativesAction != null && (isVisible() || force) && !viewer.getControl().isDisposed()) {
 			boolean writable = !dbIsReadonly();
 			super.updateActions(force);
 			boolean enabled = false;
@@ -946,16 +948,6 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 	@Override
 	public void refresh() {
 		updateView();
-	}
-
-	@Override
-	protected void selectAll() {
-		// do nothing
-	}
-
-	@Override
-	protected void selectNone() {
-		// do nothing
 	}
 
 	@Override

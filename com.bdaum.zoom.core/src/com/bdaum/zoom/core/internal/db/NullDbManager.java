@@ -332,7 +332,7 @@ public class NullDbManager implements IDbManager {
 	 * com.bdaum.zoom.core.db.IDbManager#createLastImportCollection(java.util.
 	 * Date, boolean, java.lang.String)
 	 */
-	public Date createLastImportCollection(Date importDate, boolean cumulate, String description) {
+	public Date createLastImportCollection(Date importDate, boolean cumulate, String description, boolean tethered) {
 		return null;
 	}
 

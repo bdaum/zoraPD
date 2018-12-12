@@ -23,18 +23,15 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.internal.Icons;
@@ -49,8 +46,7 @@ public class ColorCodeGroup extends Composite implements PaintListener {
 
 	private Canvas canvas;
 	private int code;
-
-	private ListenerList<SelectionListener> listeners = new ListenerList<SelectionListener>();
+	private ListenerList<Listener> listeners = new ListenerList<>();
 
 	public ColorCodeGroup(Composite parent, int style, int code) {
 		super(parent, style);
@@ -59,12 +55,12 @@ public class ColorCodeGroup extends Composite implements PaintListener {
 		canvas.setBounds(0, 0, cwidth, cheight);
 		setBounds(0, 0, cwidth, cheight);
 		canvas.addPaintListener(this);
-		canvas.addMouseListener(new MouseAdapter() {
+		canvas.addListener(SWT.MouseDown, new Listener() {
 			@Override
-			public void mouseDown(final MouseEvent e) {
-				ColorCodeGroup.this.code = e.x / width - 1;
+			public void handleEvent(Event event) {
+				ColorCodeGroup.this.code = event.x / width - 1;
 				canvas.redraw();
-				fireSelection(e);
+				fireSelection(event);
 			}
 		});
 		canvas.redraw();
@@ -85,25 +81,17 @@ public class ColorCodeGroup extends Composite implements PaintListener {
 		return canvas.setFocus();
 	}
 
-	public void addSelectionListener(SelectionListener listener) {
+	public void addListener(Listener listener) {
 		listeners.add(listener);
 	}
 
-	public void removeSelectionListener(SelectionListener listener) {
+	public void removeListener(Listener listener) {
 		listeners.remove(listener);
 	}
 
-	private void fireSelection(MouseEvent e) {
-		Event e2 = new Event();
-		e2.display = e.display;
-		e2.item = this;
-		e2.widget = this;
-		e2.x = e.x;
-		e2.y = e.y;
-		e2.stateMask = e.stateMask;
-		SelectionEvent ev = new SelectionEvent(e2);
-		for (SelectionListener listener : listeners)
-			listener.widgetSelected(ev);
+	private void fireSelection(Event event) {
+		for (Listener listener : listeners)
+			listener.handleEvent(event);
 	}
 
 	public void paintControl(PaintEvent e) {
@@ -125,9 +113,6 @@ public class ColorCodeGroup extends Composite implements PaintListener {
 		gc.drawImage(Icons.tri.getImage(), width * (code + 1), height);
 	}
 
-	/**
-	 * @return code
-	 */
 	public int getCode() {
 		return code;
 	}

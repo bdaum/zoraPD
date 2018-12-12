@@ -28,7 +28,6 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
@@ -72,14 +71,13 @@ public class ExportToYouTubePage extends AbstractExportToCommunityPage {
 
 	private Map<String, String> categories;
 
-	public ExportToYouTubePage(IConfigurationElement configElement,
-			List<Asset> assets, String id, String title,
+	public ExportToYouTubePage(IConfigurationElement configElement, List<Asset> assets, String id, String title,
 			ImageDescriptor titleImage) {
 		super(configElement, assets, id, title, titleImage);
 		int size = assets.size();
 		msg = size == 0 ? Messages.ExportToYouTubePage_no_video_to_export
-				: (size == 1) ? Messages.ExportToYouTubePage_exporting_one_video : NLS.bind(
-						Messages.ExportToYouTubePage_exporting_n_video, size);
+				: (size == 1) ? Messages.ExportToYouTubePage_exporting_one_video
+						: NLS.bind(Messages.ExportToYouTubePage_exporting_n_video, size);
 	}
 
 	@SuppressWarnings("unused")
@@ -93,8 +91,7 @@ public class ExportToYouTubePage extends AbstractExportToCommunityPage {
 		catViewer = new ComboViewer(group);
 		catViewer.setContentProvider(new IStructuredContentProvider() {
 
-			public void inputChanged(Viewer viewer, Object oldInput,
-					Object newInput) {
+			public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 				// do nothing
 			}
 
@@ -117,23 +114,19 @@ public class ExportToYouTubePage extends AbstractExportToCommunityPage {
 			}
 		});
 		catViewer.setComparator(ZViewerComparator.INSTANCE);
-		YouTubeUploadClient api = (YouTubeUploadClient) ((AbstractCommunityExportWizard) getWizard())
-				.getApi();
+		YouTubeUploadClient api = (YouTubeUploadClient) ((AbstractCommunityExportWizard) getWizard()).getApi();
 		try {
 			categories = api.getCategories();
 		} catch (IOException e) {
-			setErrorMessage(NLS.bind(Messages.ExportToYouTubePage_error_fetching_category,
-					api.getSiteName(), e));
+			setErrorMessage(NLS.bind(Messages.ExportToYouTubePage_error_fetching_category, api.getSiteName(), e));
 		}
 		if (categories != null)
 			catViewer.setInput(categories);
-		keywordsButton = WidgetFactory.createCheckButton(group,
-				Messages.ExportToYouTubePage_include_keywords, new GridData(SWT.BEGINNING, SWT.CENTER,
-						false, false, 2, 1));
+		keywordsButton = WidgetFactory.createCheckButton(group, Messages.ExportToYouTubePage_include_keywords,
+				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		keywordsButton.setSelection(true);
-		geoButton = WidgetFactory.createCheckButton(group,
-				Messages.ExportToYouTubePage_include_geo, new GridData(SWT.BEGINNING,
-						SWT.CENTER, false, false, 2, 1));
+		geoButton = WidgetFactory.createCheckButton(group, Messages.ExportToYouTubePage_include_geo,
+				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		geoButton.setSelection(true);
 		setTitle(Messages.ExportToYouTubePage_exporting);
 		setMessage(msg);
@@ -160,8 +153,7 @@ public class ExportToYouTubePage extends AbstractExportToCommunityPage {
 	protected void saveSettings() {
 		super.saveSettings();
 		IDialogSettings settings = getDialogSettings();
-		String firstElement = (String) ((IStructuredSelection) catViewer
-				.getSelection()).getFirstElement();
+		String firstElement = (String) catViewer.getStructuredSelection().getFirstElement();
 		if (firstElement != null)
 			settings.put(SELECTED_CAT, firstElement);
 		settings.put(HIDE_KEYWORDS, !keywordsButton.getSelection());
@@ -170,27 +162,22 @@ public class ExportToYouTubePage extends AbstractExportToCommunityPage {
 
 	@Override
 	protected void validatePage() {
-		String message = assets.isEmpty() ? Messages.ExportToYouTubePage_no_video_selected
-				: checkAccount();
+		String message = assets.isEmpty() ? Messages.ExportToYouTubePage_no_video_selected : checkAccount();
 		setErrorMessage(message);
 		setPageComplete(message == null);
 	}
 
 	@Override
 	protected boolean doFinish(CommunityAccount acc) {
-		YouTubeUploadClient api = (YouTubeUploadClient) ((AbstractCommunityExportWizard) getWizard())
-				.getApi();
+		YouTubeUploadClient api = (YouTubeUploadClient) ((AbstractCommunityExportWizard) getWizard()).getApi();
 		try {
 			Session session = new Session(api, acc);
 			try {
 				session.init();
 				if (api.authenticate(session)) {
-					String category = (String) ((IStructuredSelection) catViewer
-							.getSelection()).getFirstElement();
-					ExportToYouTubeJob job = new ExportToYouTubeJob(
-							configElement, assets, session, category,
-							keywordsButton.getSelection(),
-							geoButton.getSelection(), this);
+					String category = (String) catViewer.getStructuredSelection().getFirstElement();
+					ExportToYouTubeJob job = new ExportToYouTubeJob(configElement, assets, session, category,
+							keywordsButton.getSelection(), geoButton.getSelection(), this);
 					job.schedule();
 					return true;
 				}

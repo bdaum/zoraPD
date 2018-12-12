@@ -37,7 +37,6 @@ import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebParameter;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.operations.internal.gen.AbstractGalleryGenerator;
-import com.bdaum.zoom.program.BatchUtilities;
 
 @SuppressWarnings("restriction")
 public class GallerifficGenerator extends AbstractGalleryGenerator {
@@ -162,11 +161,11 @@ public class GallerifficGenerator extends AbstractGalleryGenerator {
 		varmap.put("thumbnail", encodeURL(thumbnail)); //$NON-NLS-1$
 		String altText = exhibit.getAltText();
 		if (altText != null && !altText.isEmpty())
-			varmap.put("alt", BatchUtilities.encodeHTML(altText, false)); //$NON-NLS-1$
+			varmap.put("alt", getHtmlEncoderDecoder().encodeHTML(altText, false)); //$NON-NLS-1$
 		if (storyboard.getShowCaptions()) {
 			String caption = exhibit.getCaption();
 			if (caption != null && !caption.isEmpty()) {
-				String c = BatchUtilities.encodeHTML(caption, true);
+				String c = getHtmlEncoderDecoder().encodeHTML(caption, true);
 				varmap.put("title", c); //$NON-NLS-1$
 				varmap.put("image-title", c); //$NON-NLS-1$
 			}
@@ -175,13 +174,13 @@ public class GallerifficGenerator extends AbstractGalleryGenerator {
 			String description = exhibit.getDescription();
 			if (description != null && !description.isEmpty())
 				varmap.put("description", //$NON-NLS-1$
-						exhibit.getHtmlDescription() ? description : BatchUtilities.encodeHTML(description, true));
+						exhibit.getHtmlDescription() ? description : getHtmlEncoderDecoder().encodeHTML(description, true));
 		}
 		WebGalleryImpl show = getShow();
 		if (exhibit.getDownloadable() && original != null && needsOriginals())
 			varmap.put("downloaddiv", "<div class=\"download\"> <a href=\"" //$NON-NLS-1$ //$NON-NLS-2$
 					+ encodeURL(original) + "\">" //$NON-NLS-1$
-					+ BatchUtilities.encodeHTML(show.getDownloadText(), false) + "</a> </div>"); //$NON-NLS-1$
+					+ getHtmlEncoderDecoder().encodeHTML(show.getDownloadText(), false) + "</a> </div>"); //$NON-NLS-1$
 		String exifdiv = getExifDiv(storyboard, exhibit, asset, "meta"); //$NON-NLS-1$
 		if (exifdiv != null)
 			varmap.put("exifdiv", exifdiv); //$NON-NLS-1$

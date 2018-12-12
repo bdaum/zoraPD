@@ -49,12 +49,15 @@ public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExp
 	private SendEmailPage mainPage;
 	private File pdfFile;
 
+	public EmailPDFWizard() {
+		setHelpAvailable(true);
+	}
+
 	@Override
 	public IWizardPage getNextPage(IWizardPage page) {
 		if (assets.isEmpty())
 			return null;
-		IWizardPage nextPage = super.getNextPage(page);
-		return nextPage;
+		return super.getNextPage(page);
 	}
 
 	@Override
@@ -71,14 +74,10 @@ public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExp
 		return finish;
 	}
 
-	public EmailPDFWizard() {
-		setHelpAvailable(true);
-	}
-
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		super.init(workbench, selection);
 		CoreActivator coreActivator = CoreActivator.getDefault();
 		setDialogSettings(Activator.getDefault(),SETTINGSID);
-		setAssets(workbench, selection, false);
 		Iterator<Asset> it = assets.iterator();
 		while (it.hasNext()) {
 			IMediaSupport mediaSupport = coreActivator.getMediaSupport(it.next().getFormat());
@@ -95,7 +94,6 @@ public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExp
 
 	@Override
 	public void addPages() {
-		super.addPages();
 		ImageDescriptor imageDescriptor = AbstractUIPlugin
 				.imageDescriptorFromPlugin(Activator.PLUGIN_ID,
 						"icons/banner/pdfemail64.png"); //$NON-NLS-1$

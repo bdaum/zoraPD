@@ -65,9 +65,9 @@ public class PDFWizard extends AbstractAssetSelectionWizard implements IExportWi
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		super.init(workbench, selection);
 		CoreActivator coreActivator = CoreActivator.getDefault();
 		setDialogSettings(Activator.getDefault(),settingsId);
-		setAssets(workbench, selection, false);
 		Iterator<Asset> it = assets.iterator();
 		while (it.hasNext()) {
 			IMediaSupport mediaSupport = coreActivator.getMediaSupport(it.next()

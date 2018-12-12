@@ -22,13 +22,10 @@ package com.bdaum.zoom.report.internal.wizards;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWizard;
 
 import com.bdaum.zoom.cat.model.report.Report;
@@ -41,7 +38,7 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.wizards.ZWizard;
 
 @SuppressWarnings("restriction")
-public class ReportWizard extends ZWizard implements IWorkbenchWizard, IAdaptable {
+public class ReportWizard extends ZWizard implements IWorkbenchWizard {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.reportProperties"; //$NON-NLS-1$
 	public static final int NAME = 1;
@@ -70,7 +67,6 @@ public class ReportWizard extends ZWizard implements IWorkbenchWizard, IAdaptabl
 	public static final int T_QUARTER = 4;
 	public static final int T_YEAR = 5;
 
-	private IWorkbenchWindow window;
 	private SourcePage sourcePage;
 	private ModePage modePage;
 	private ValuePage valuePage;
@@ -94,11 +90,9 @@ public class ReportWizard extends ZWizard implements IWorkbenchWizard, IAdaptabl
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		super.init(workbench, selection);
 		setDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		setWindowTitle(Constants.APPLICATION_NAME);
-		window = workbench.getActiveWorkbenchWindow();
-		if (window == null)
-			window = workbench.getWorkbenchWindows()[0];
 		SimpleDateFormat sdf = new SimpleDateFormat(Messages.ReportWizard_yyyyMMddhhmmaa);
 		String title = NLS.bind(Messages.ReportWizard_report_from_x, sdf.format(new Date()));
 		IDbManager dbManager = Core.getCore().getDbManager();
@@ -141,13 +135,6 @@ public class ReportWizard extends ZWizard implements IWorkbenchWizard, IAdaptabl
 	@Override
 	public boolean performFinish() {
 		return reportPage.finish();
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public Object getAdapter(Class adapter) {
-		if (Shell.class.equals(adapter))
-			return window.getShell();
-		return null;
 	}
 
 	public void setReport(Report report) {

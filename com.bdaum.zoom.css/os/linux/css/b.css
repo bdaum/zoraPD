@@ -1,11 +1,13 @@
 /* Black */
 JFace {HYPERLINK_COLOR:red;ACTIVE_HYPERLINK_COLOR:rgb(255,128,128);}
-Label#clink {color:rgb(180,240,255);background-color:transparent;}
 CLink {color:rgb(192,255,192);background-color:transparent;}
-Label#errors {color:red;background-color:transparent;}
-Label {color:rgb(224,224,224);background-color:transparent;}
-Button[style='SWT.CHECK'] {color:rgb(90,90,90);background-color:black;} 
-Button[style='SWT.RADIO'] {color:rgb(90,90,90);background-color:black;}
+Label#clink {color:rgb(180,240,255);}
+Label#errors {color:red;}
+Label#sectionTitle {color:rgb(128, 0, 0);}
+Label#disabled {color:rgb(120,120,120);}
+Label {background-color:transparent;}
+Button[style='SWT.CHECK'] {color:rgb(90,90,90);} 
+Button[style='SWT.RADIO'] {color:rgb(90,90,90);}
 Button {color:black;background-color:rgb(160,160,160);}
 Spinner {color:black;background-color:rgb(240,240,240);}
 Text#errors {color:red;background-color:rgb(30,30,30);}
@@ -22,23 +24,24 @@ Combo[enabled=false] {color:rgb(212,212,212);background-color:rgb(64,64,64);}
 Combo {color:black;background-color:rgb(240,240,240);}
 CCombo[enabled=false] {color:rgb(212,212,212);background-color:rgb(64,64,64);}
 CCombo {color:black;background-color:rgb(240,240,240);}
-Tree {color:rgb(224,224,224);background-color:black;selected-background-color:rgb(32,32,32);selected-color:rgb(240,240,240);disabled-color:rgb(128,128,128);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);}
-Table {color:rgb(224,224,224);background-color:black;offline-color:rgb(128, 160, 0);remote-color:rgb(128, 128, 240);selected-background-color:rgb(32,32,32);selected-color:rgb(240,240,240);disabled-color:rgb(128,128,128);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);}
-Gallery {color:rgb(128,128,128);background-color:black;selected-background-color:rgb(128,128,128);selected-color:black;offline-color:rgb(128, 160, 0);remote-color:rgb(128, 128, 240);selected-offline-color:red;selected-remote-color:rgb(64, 64, 128);}
-CGroup {color:rgb(224,224,224);background-color:transparent;}
-Composite {background-color:black;}
-Shell#slideshow {color:rgb(224,224,224);background-color:black;}
-Shell {color:rgb(128,128,128);background-color:black;}
-CBanner {background-color:black;}
-Coolbar {background-color:black;}
-Toolbar {background-color:black;}
-ToolItem {background-color:black;}
-Scale {background-color:black;}
-Statusline {background-color:black;}
-CLabel {background-color:black;}
-TrimCommonUIHandle {background-color:black;}
-ZPSWTCanvas#slideshow {color:rgb(144,144,144);foreground-color:rgb(144,144,144);title-color:rgb(164,164,164);background-color:black;selected-background-color:rgb(64,64,64);offline-color:rgb(128, 160, 0);remote-color:rgb(128, 128, 240);selected-offline-color:red;selected-remote-color:rgb(64, 64, 128);}
-ZPSWTCanvas#exhibition {color:rgb(144,144,144);title-color:rgb(164,164,164);background-color:black;selected-background-color:rgb(224,224,124);offline-color:rgb(128, 160, 0);remote-color:rgb(128, 128, 240);selected-offline-color:red;selected-remote-color:rgb(64, 64, 128);}
-ZPSWTCanvas#webgallery {color:rgb(255, 255, 250);foreground-color:rgb(144,144,144);title-color:rgb(114,114,114);background-color:black;selected-background-color:rgb(64,64,64);offline-color:rgb(128, 160, 0);remote-color:rgb(128, 128, 240);selected-offline-color:red;selected-remote-color:rgb(64, 64, 128);}
-ZPSWTCanvas {color:rgb(128,128,128);background-color:black;offline-color:rgb(128, 160, 0);remote-color:rgb(128, 128, 240);selected-offline-color:red;selected-remote-color:rgb(64, 64, 128);selected-background-color:rgb(64,64,64);selected-color:rgb(224,224,224);}
+Tree {selected-background-color:rgb(32,32,32);selected-color:rgb(240,240,240);disabled-color:rgb(128,128,128);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);}
+Table {offline-color:rgb(128, 160, 0);remote-color:rgb(128, 128, 240);selected-background-color:rgb(32,32,32);selected-color:rgb(240,240,240);disabled-color:rgb(128,128,128);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);}
+Gallery {color:rgb(128,128,128);selected-background-color:rgb(128,128,128);selected-color:black;offline-color:rgb(128, 160, 0);remote-color:rgb(128, 128, 240);selected-offline-color:red;selected-remote-color:rgb(64, 64, 128);}
+CGroup {background-color:transparent;}
+Shell#slideshow {color:rgb(224,224,224);}
+Shell {color:rgb(128,128,128);}
+CBanner {}
+Coolbar {}
+Toolbar {}
+ToolItem {}
+Scale {}
+Statusline {}
+CLabel#selection {color:rgb(255,128,0);}
+CLabel {}
+TrimCommonUIHandle {}
+ZPSWTCanvas#slideshow {color:rgb(144,144,144);foreground-color:rgb(144,144,144);title-color:rgb(244, 244, 222);selected-background-color:rgb(64,64,64);}
+ZPSWTCanvas#exhibition {color:rgb(144,144,144);title-color:rgb(164,164,164);selected-background-color:rgb(224,224,124);}
+ZPSWTCanvas#webgallery {color:rgb(255, 255, 250);foreground-color:rgb(144,144,144);title-color:rgb(222, 255, 255);selected-background-color:rgb(64,64,64);selected-color:rgb(244,244,244);}
+ZPSWTCanvas {color:rgb(128,128,128);offline-color:rgb(128, 160, 0);remote-color:rgb(128, 128, 240);selected-offline-color:red;selected-remote-color:rgb(64, 64, 128);selected-background-color:rgb(64,64,64);selected-color:rgb(224,224,224);}
+Composite {}
 * {color:rgb(224,224,224);background-color:black;}

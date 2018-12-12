@@ -32,7 +32,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -46,6 +48,7 @@ import com.bdaum.zoom.batch.internal.BatchActivator;
 import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.image.IRecipeProvider;
+import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.program.BatchUtilities;
@@ -61,7 +64,34 @@ public class Core {
 	private static final double EARTHRADIUS = 6371.01;
 	private static final String XMP = ".xmp"; //$NON-NLS-1$
 	private static final ICore core = CoreActivator.getDefault();
-	private static final URI[] EMPTYURIS = new URI[0];
+	private static final File[] EMPTYFILES = new File[0];
+
+	private static final Comparator<File> sidecarComparator1 = new Comparator<File>() {
+		@Override
+		public int compare(File f1, File f2) {
+			long m1 = f1.lastModified();
+			long m2 = f2.lastModified();
+			if (m1 == m2) {
+				m1 = f1.getName().length();
+				m2 = f2.getName().length();
+				return m1 == m2 ? 0 : m1 > m2 ? -1 : 1;
+			}
+			return m1 > m2 ? -1 : 1;
+		}
+	};
+	private static final Comparator<File> sidecarComparator2 = new Comparator<File>() {
+		@Override
+		public int compare(File f1, File f2) {
+			long m1 = f1.lastModified();
+			long m2 = f2.lastModified();
+			if (m1 == m2) {
+				m1 = f1.getName().length();
+				m2 = f2.getName().length();
+				return m1 == m2 ? 0 : m1 > m2 ? -1 : 1;
+			}
+			return m1 < m2 ? -1 : 1;
+		}
+	};
 
 	/**
 	 * @return singleton instance of the core root class
@@ -105,13 +135,12 @@ public class Core {
 		if (tokens == null)
 			return null;
 		StringBuilder sb = new StringBuilder();
-		for (Object t : tokens) {
+		for (Object t : tokens)
 			if (t != null) {
 				if (sb.length() > 0)
 					sb.append(sep);
 				sb.append(t);
 			}
-		}
 		return sb.toString();
 	}
 
@@ -158,15 +187,32 @@ public class Core {
 		double lam2 = Math.toRadians(lon2);
 		double dist = EARTHRADIUS
 				* Math.acos(Math.sin(phi1) * Math.sin(phi2) + Math.cos(phi1) * Math.cos(phi2) * Math.cos(lam2 - lam1));
+		return fromKm(dist, unit);
+	}
+
+	public static double fromKm(double km, char unit) {
 		switch (unit) {
 		case 'K':
 		case 'k':
-			return dist;
+			return km;
 		case 'N':
 		case 'n':
-			return dist / 1.852;
+			return km / 1.852;
 		default:
-			return dist / 1.609344;
+			return km / 1.609344;
+		}
+	}
+
+	public static double toKm(double value, char unit) {
+		switch (unit) {
+		case 'K':
+		case 'k':
+			return value;
+		case 'N':
+		case 'n':
+			return value * 1.852;
+		default:
+			return value * 1.609344;
 		}
 	}
 
@@ -491,21 +537,27 @@ public class Core {
 	}
 
 	/**
-	 * Returns the URI of an associated XMP file
+	 * Returns the possibly associated XMP files
 	 *
 	 * @param uri
-	 *            - image file
-	 * @return possible URIs of associated XMP file. The most specific URI is given
-	 *         first
+	 *            - image file URI
+	 * @param latestFirst
+	 *            - determines if the files are sorted by modification date in
+	 *            ascending or descending order
+	 * @return possible sidecar files. Results are ordered by modification date,
+	 *         secondarily by descending file name length
 	 */
-	public static URI[] getSidecarURIs(URI uri) {
+	public static File[] getSidecarFiles(URI uri, boolean latestFirst) {
 		String u = uri.toString();
 		try {
-			return new URI[] { new URI(u + XMP), new URI(removeExtensionFromUri(u) + XMP) };
+			File[] files = new File[] { new File(new URI(u + XMP)),
+					new File(new URI(removeExtensionFromUri(u) + XMP)) };
+			Arrays.sort(files, latestFirst ? sidecarComparator1 : sidecarComparator2);
+			return files;
 		} catch (URISyntaxException e1) {
 			// should not happen
 		}
-		return EMPTYURIS;
+		return EMPTYFILES;
 	}
 
 	/**
@@ -516,9 +568,8 @@ public class Core {
 	 * @return - output URI fragment
 	 */
 	public static String removeExtensionFromUri(String uri) {
-		int p = uri.lastIndexOf('/');
 		int q = uri.lastIndexOf('.');
-		return (q > p) ? uri.substring(0, q) : uri;
+		return (q > uri.lastIndexOf('/')) ? uri.substring(0, q) : uri;
 	}
 
 	/**
@@ -529,10 +580,11 @@ public class Core {
 	 * @return URI of associated WAV file
 	 */
 	public static URI getVoicefileURI(File file) {
-		try {
-			return new URI(removeExtensionFromUri(file.toURI().toString()) + ".wav"); //$NON-NLS-1$
-		} catch (URISyntaxException e) {
-			// should not happen
+		String trunc = removeExtensionFromUri(file.getAbsolutePath());
+		for (String ext : ImageConstants.VOICEEXT) {
+			File voiceFile = new File(trunc + ext);
+			if (voiceFile.exists())
+				return voiceFile.toURI();
 		}
 		return null;
 	}

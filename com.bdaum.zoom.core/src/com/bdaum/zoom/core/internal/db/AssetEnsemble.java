@@ -15,13 +15,15 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2015 Berthold Daum  
+ * (c) 2009-2018 Berthold Daum  
  */
 
 package com.bdaum.zoom.core.internal.db;
 
 import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -276,6 +278,7 @@ public class AssetEnsemble {
 	private final IDbManager dbManager;
 	private MWGRegion[][] regions = new MWGRegion[5][];
 	private final ImportState importState;
+	private ExifParser exifParser;
 
 	public static List<AssetEnsemble> getAllAssets(IDbManager dbManager, URI uri, ImportState importState) {
 		List<AssetImpl> assets = dbManager.obtainAssetsForFile(uri);
@@ -300,7 +303,7 @@ public class AssetEnsemble {
 		this.dbManager = dbManager;
 		this.asset = asset;
 		this.importState = importState;
-		this.configuration = importState.getConfiguration();
+		this.configuration = importState == null ? null : importState.getConfiguration();
 	}
 
 	public AssetEnsemble(IDbManager dbManager, ImportState importState, String id) {
@@ -310,7 +313,7 @@ public class AssetEnsemble {
 		if (id != null)
 			asset.setStringId(id);
 		asset.setAlbum(EMPTYSTRINGARRAY);
-		this.configuration = importState.getConfiguration();
+		this.configuration = importState == null ? null : importState.getConfiguration();
 	}
 
 	public void resetEnsemble(int status) {
@@ -1037,6 +1040,8 @@ public class AssetEnsemble {
 		asset.setLv(Double.NaN);
 		asset.setCircleOfConfusion(Double.NaN);
 		asset.setMakerNotes(EMPTYSTRINGARRAY);
+		asset.setDateTime(null);
+		asset.setDateTimeOriginal(null);
 		for (IMediaSupport support : CoreActivator.getDefault().getMediaSupport())
 			support.resetExtension(asset);
 	}
@@ -1089,6 +1094,7 @@ public class AssetEnsemble {
 		asset.setOwner(EMPTYSTRINGARRAY);
 		asset.setSceneCode(EMPTYSTRINGARRAY);
 		asset.setSubjectCode(EMPTYSTRINGARRAY);
+		asset.setDateCreated(null);
 		resetIptc = true;
 	}
 
@@ -1179,9 +1185,15 @@ public class AssetEnsemble {
 			resetGps();
 		// Replace invalid image creation date
 		Date dateCreated = asset.getDateTimeOriginal();
-		if (dateCreated == null || DATE1900.compareTo(dateCreated) > 0 || now.compareTo(dateCreated) < 0) {
+		if (dateCreated == null || DATE1900.after(dateCreated) || now.before(dateCreated)) {
 			Date dateTime = asset.getDateTime();
-			asset.setDateTimeOriginal((dateTime == null) ? now : dateTime);
+			if (dateTime == null)
+				try {
+					dateTime = new Date(new File(new URI(asset.getUri())).lastModified());
+				} catch (URISyntaxException e) {
+					dateTime = now;
+				}
+			asset.setDateTimeOriginal(dateTime);
 		}
 		if (asset.getDateCreated() == null)
 			asset.setDateCreated(asset.getDateTimeOriginal());
@@ -1291,8 +1303,7 @@ public class AssetEnsemble {
 	@SuppressWarnings("unchecked")
 	public void setProperty(QueryField qfield, String rawValue)
 			throws SecurityException, IllegalArgumentException, XMPException {
-		ExifParser parser = new ExifParser(rawValue);
-		Object exifValue = parser.parse();
+		Object exifValue = getExifParser().parse(rawValue);
 		if (exifValue instanceof String) {
 			String v = (String) exifValue;
 			// Legacy Location created
@@ -1605,6 +1616,12 @@ public class AssetEnsemble {
 		}
 	}
 
+	private ExifParser getExifParser() {
+		if (exifParser == null)
+			exifParser = new ExifParser();
+		return exifParser;
+	}
+
 	private static Object adaptValue(QueryField qfield, Object value) {
 		if (qfield.getCard() == 1 || value instanceof String[])
 			return value;
@@ -1617,6 +1634,72 @@ public class AssetEnsemble {
 			if (uri != null)
 				trashed.addAll(dbManager.obtainTrashForFile(uri));
 		}
+	}
+
+	public static String extractVoiceNote(Asset asset) {
+		String voiceFileURI = asset.getVoiceFileURI();
+		if (voiceFileURI == null)
+			return null;
+		int p = voiceFileURI.indexOf('\f');
+		if (p == 0)
+			return null;
+		if (p > 0)
+			return voiceFileURI.substring(0, p);
+		if (voiceFileURI.startsWith("?")) //$NON-NLS-1$
+			return null;
+		return voiceFileURI;
+	}
+
+	public static void insertVoiceNote(Asset asset, String volume, String uri) {
+		asset.setVoiceVolume(volume);
+		String voiceFileURI = asset.getVoiceFileURI();
+		if (voiceFileURI == null) {
+			if (uri == null || uri.isEmpty())
+				return;
+			asset.setVoiceFileURI(uri + "\f\f"); //$NON-NLS-1$
+		} else {
+			int p = voiceFileURI.indexOf('\f');
+			if (p < 0) {
+				if (voiceFileURI.startsWith("?")) //$NON-NLS-1$
+					asset.setVoiceFileURI(uri == null || uri.isEmpty() ? '\f' + voiceFileURI.substring(1) + '\f'
+							: uri + '\f' + voiceFileURI.substring(1) + '\f');
+				else
+					asset.setVoiceFileURI(uri == null || uri.isEmpty() ? null : uri + "\f\f"); //$NON-NLS-1$
+			} else
+				asset.setVoiceFileURI(
+						uri == null || uri.isEmpty() ? voiceFileURI.substring(p) : uri + voiceFileURI.substring(p));
+		}
+	}
+
+	public static boolean hasCloseVoiceNote(Asset asset) {
+		String voiceFileURI = asset.getVoiceFileURI();
+		return voiceFileURI != null && (voiceFileURI.startsWith(".\f") || ".".equals(voiceFileURI)); //$NON-NLS-1$//$NON-NLS-2$
+	}
+
+	public static boolean hasVoiceNote(Asset asset) {
+		String voiceFileURI = asset.getVoiceFileURI();
+		return voiceFileURI != null && voiceFileURI.indexOf('\f') != 0 && !voiceFileURI.startsWith("?"); //$NON-NLS-1$
+	}
+
+	public static String getNoteText(Asset anAsset) {
+		StringBuilder sb = new StringBuilder();
+		String voiceFileURI = anAsset.getVoiceFileURI();
+		if (voiceFileURI != null) {
+			int p = voiceFileURI.indexOf('\f');
+			if (p >= 0) {
+				int q = voiceFileURI.indexOf('\f', p + 1);
+				if (q >= 0) {
+					sb.append(voiceFileURI.substring(p + 1, q));
+					if (q < voiceFileURI.length() - 1) {
+						if (sb.length() > 0)
+							sb.append('\n');
+						sb.append(Messages.AssetEnsemble_drawing_present);
+					}
+				}
+			} else if (voiceFileURI.startsWith("?")) //$NON-NLS-1$
+				sb.append(voiceFileURI.substring(1));
+		}
+		return sb.toString();
 	}
 
 }

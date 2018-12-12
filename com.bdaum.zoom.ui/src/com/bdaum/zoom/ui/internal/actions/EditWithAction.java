@@ -41,12 +41,12 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 
@@ -251,9 +251,9 @@ public class EditWithAction extends Action {
 				protected void createClientContent(Composite comp) {
 					CLink link = new CLink(comp, SWT.NONE);
 					link.setText(Messages.EditWithAction_Configure_file_assos);
-					link.addSelectionListener(new SelectionAdapter() {
+					link.addListener(new Listener() {
 						@Override
-						public void widgetSelected(SelectionEvent e) {
+						public void handleEvent(Event event) {
 							PreferencesUtil.createPreferenceDialogOn(getShell(), FileAssociationsPreferencePage.ID,
 									new String[0], ext).open();
 							getTableViewer().setInput(

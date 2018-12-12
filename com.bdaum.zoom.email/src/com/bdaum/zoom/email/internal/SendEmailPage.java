@@ -30,13 +30,11 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.wizard.IWizard;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
@@ -49,7 +47,7 @@ import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.email.internal.job.EmailJob;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
-import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
@@ -76,11 +74,12 @@ public class SendEmailPage extends ColoredWizardPage {
 	private PrivacyGroup privacyGroup;
 	private ExportModeGroup exportModeGroup;
 	private QualityGroup qualityGroup;
+	private boolean multiMedia;
 
 	public SendEmailPage(List<Asset> assets, boolean pdf) {
 		super("main", pdf ? Messages.SendEmailPage_send_pdf_per_email //$NON-NLS-1$
 				: Messages.SendEmailPage_Send_per_email, null);
-		this.assets = assets;
+		multiMedia = Core.getCore().isMultiMedia(this.assets = assets);
 		this.pdf = pdf;
 	}
 
@@ -95,31 +94,28 @@ public class SendEmailPage extends ColoredWizardPage {
 		if (size > 0) {
 			if (pdf) {
 				qualityGroup = new QualityGroup(composite, true);
-				qualityGroup.addSelectionListener(new SelectionAdapter() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
+				qualityGroup.addListener(new Listener() {
+					public void handleEvent(Event event) {
 						computePdfSize();
 					}
 				});
 			} else {
 				boolean raw = Core.getCore().containsRawImage(assets, true);
-				exportModeGroup = new ExportModeGroup(composite, ExportModeGroup.ORIGINALS | ExportModeGroup.JPEG
-						| ExportModeGroup.SIZING | (raw ? ExportModeGroup.RAWCROP : 0)) {
+				exportModeGroup = new ExportModeGroup(composite,
+						multiMedia ? ExportModeGroup.ORIGINALS
+								: ExportModeGroup.ORIGINALS | ExportModeGroup.JPEG | ExportModeGroup.SIZING
+										| (raw ? ExportModeGroup.RAWCROP : 0),
+						multiMedia ? Messages.SendEmailPage_media : Messages.SendEmailPage_image) {
 					@Override
 					public void updateScale() {
 						super.updateScale();
 						updateScaling();
 					}
 				};
-				exportModeGroup.addSelectionListener(new SelectionAdapter() {
+				exportModeGroup.addListener(new Listener() {
 					@Override
-					public void widgetSelected(SelectionEvent e) {
+					public void handleEvent(Event e) {
 						updateControls();
-						checkImages();
-					}
-				});
-				exportModeGroup.addModifyListener(new ModifyListener() {
-					public void modifyText(ModifyEvent e) {
 						checkImages();
 					}
 				});
@@ -151,18 +147,19 @@ public class SendEmailPage extends ColoredWizardPage {
 		data.heightHint = 70;
 		messageField.setLayoutData(data);
 		final CGroup metaGroup = UiUtilities.createGroup(composite, 2, Messages.SendEmailPage_Matadata);
-		if (!pdf && size > 0) {
-			metaButton = WidgetFactory.createCheckButton(metaGroup, Messages.SendEmailPage_include_metadata, null);
-			metaButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(final SelectionEvent e) {
-					getWizard().getContainer().updateButtons();
-				}
-			});
+		if (!multiMedia) {
+			if (!pdf && size > 0) {
+				metaButton = WidgetFactory.createCheckButton(metaGroup, Messages.SendEmailPage_include_metadata, null);
+				metaButton.addListener(new Listener() {
+					public void handleEvent(Event event) {
+						getWizard().getContainer().updateButtons();
+					}
+				});
+			}
+			watermarkGroup = new WatermarkGroup(metaGroup);
+			trackExportButton = WidgetFactory.createCheckButton(metaGroup, Messages.SendEmailPage_Track_exports,
+					new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		}
-		watermarkGroup = new WatermarkGroup(metaGroup);
-		trackExportButton = WidgetFactory.createCheckButton(metaGroup, Messages.SendEmailPage_Track_exports,
-				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		privacyGroup = new PrivacyGroup(metaGroup, Messages.SendEmailPage_Export_only, assets);
 		fillValues();
 		updateControls();
@@ -170,10 +167,15 @@ public class SendEmailPage extends ColoredWizardPage {
 		setControl(composite);
 		setHelp(HelpContextIds.EMAIL_WIZARD);
 		setTitle(Messages.SendEmailPage_title);
-		String msg = size == 0 ? Messages.SendEmailPage_No_image_selected
-				: (size == 1) ? Messages.SendEmailPage_Send_one : NLS.bind(Messages.SendEmailPage_Send_n, size);
-		if (size > 0)
+		String msg;
+		if (size == 0)
+			msg = Messages.SendEmailPage_No_image_selected;
+		else if (multiMedia)
+			msg = Messages.SendEmailPage_exporting_multimedia;
+		else {
+			msg = (size == 1) ? Messages.SendEmailPage_Send_one : NLS.bind(Messages.SendEmailPage_Send_n, size);
 			msg += pdf ? Messages.SendEmailPage_select_quality : Messages.SendEmailPage_Adjust_size;
+		}
 		setMessage(msg);
 		super.createControl(parent);
 	}
@@ -288,17 +290,24 @@ public class SendEmailPage extends ColoredWizardPage {
 
 	private void fillValues() {
 		IDialogSettings settings = getDialogSettings();
-		if (exportModeGroup != null)
-			exportModeGroup.fillValues(settings);
-		if (qualityGroup != null)
-			qualityGroup.fillValues(settings);
-		if (privacyGroup != null)
-			privacyGroup.fillValues(settings);
 		if (settings != null) {
-			if (metaButton != null)
-				metaButton.setSelection(settings.getBoolean(EmailWizard.INCLUDEMETA));
-			watermarkGroup.fillValues(settings);
-			trackExportButton.setSelection(settings.getBoolean(EmailWizard.TRACKEXPORTS));
+			if (multiMedia) {
+				if (privacyGroup != null)
+					privacyGroup.fillValues(settings);
+			} else {
+				if (exportModeGroup != null)
+					exportModeGroup.fillValues(settings);
+				if (qualityGroup != null)
+					qualityGroup.fillValues(settings);
+				if (privacyGroup != null)
+					privacyGroup.fillValues(settings);
+				if (metaButton != null)
+					metaButton.setSelection(settings.getBoolean(EmailWizard.INCLUDEMETA));
+				if (watermarkGroup != null)
+					watermarkGroup.fillValues(settings);
+				if (trackExportButton != null)
+					trackExportButton.setSelection(settings.getBoolean(EmailWizard.TRACKEXPORTS));
+			}
 		}
 	}
 
@@ -311,8 +320,7 @@ public class SendEmailPage extends ColoredWizardPage {
 		List<String> to = null;
 		IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		if (activeWorkbenchWindow != null) {
-			SmartCollectionImpl coll = UiActivator.getDefault().getNavigationHistory(activeWorkbenchWindow)
-					.getSelectedCollection();
+			SmartCollectionImpl coll = Ui.getUi().getNavigationHistory(activeWorkbenchWindow).getSelectedCollection();
 			if (coll.getAlbum() && coll.getSystem()) {
 				String description = coll.getDescription();
 				int p = description.indexOf('\n');
@@ -329,8 +337,9 @@ public class SendEmailPage extends ColoredWizardPage {
 		new EmailJob(assets, to, getMode(), getSizing(), exportModeGroup.getScalingFactor(),
 				exportModeGroup.getDimension(), exportModeGroup.getCropMode(), exportModeGroup.getUnsharpMask(),
 				exportModeGroup.getJpegQuality(), subjectField.getText(), messageField.getText(), filter,
-				watermarkGroup.getCreateWatermark(), watermarkGroup.getCopyright(), privacyGroup.getSelection(),
-				trackExportButton.getSelection(), this).schedule();
+				watermarkGroup == null ? false : watermarkGroup.getCreateWatermark(),
+				watermarkGroup == null ? "" : watermarkGroup.getCopyright(), privacyGroup.getSelection(), //$NON-NLS-1$
+				trackExportButton == null ? false : trackExportButton.getSelection(), this).schedule();
 		return true;
 	}
 
@@ -348,8 +357,10 @@ public class SendEmailPage extends ColoredWizardPage {
 			privacyGroup.saveSettings(settings);
 		if (metaButton != null)
 			settings.put(EmailWizard.INCLUDEMETA, getIncludeMeta());
-		watermarkGroup.saveSettings(settings);
-		settings.put(EmailWizard.TRACKEXPORTS, trackExportButton.getSelection());
+		if (watermarkGroup != null)
+			watermarkGroup.saveSettings(settings);
+		if (trackExportButton != null)
+			settings.put(EmailWizard.TRACKEXPORTS, trackExportButton.getSelection());
 	}
 
 	private int getMode() {
@@ -377,7 +388,8 @@ public class SendEmailPage extends ColoredWizardPage {
 			int mode = getMode();
 			if (metaButton != null)
 				metaButton.setEnabled(mode != Constants.FORMAT_ORIGINAL);
-			watermarkGroup.setEnabled(mode != Constants.FORMAT_ORIGINAL);
+			if (watermarkGroup != null)
+				watermarkGroup.setEnabled(mode != Constants.FORMAT_ORIGINAL);
 		}
 	}
 
@@ -396,7 +408,11 @@ public class SendEmailPage extends ColoredWizardPage {
 		for (Asset a : assets)
 			if (a.getSafety() <= privacy)
 				++n;
-		String errorMessage = n == 0 ? Messages.no_images_pass_privacy0 : watermarkGroup.validate();
+		String errorMessage = null;
+		if (n == 0)
+			errorMessage = Messages.no_images_pass_privacy0;
+		else if (watermarkGroup != null)
+			errorMessage = watermarkGroup.validate();
 		setErrorMessage(errorMessage);
 		setPageComplete(errorMessage == null);
 	}

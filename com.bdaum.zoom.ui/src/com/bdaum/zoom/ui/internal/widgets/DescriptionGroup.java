@@ -3,14 +3,14 @@ package com.bdaum.zoom.ui.internal.widgets;
 import org.eclipse.jface.text.Document;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
-import com.bdaum.zoom.program.BatchUtilities;
+import com.bdaum.zoom.program.HtmlEncoderDecoder;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.html.HtmlContentAssistant;
 import com.bdaum.zoom.ui.internal.html.HtmlSourceViewer;
@@ -24,6 +24,7 @@ public class DescriptionGroup {
 	private CheckedText descriptionField;
 	private HtmlSourceViewer descriptionHtmlViewer;
 	private RadioButtonGroup formatButtonGroup;
+	private HtmlEncoderDecoder htmlEncoderDecoder;
 
 	@SuppressWarnings("unused")
 	public DescriptionGroup(final Composite parent, int style) {
@@ -34,9 +35,9 @@ public class DescriptionGroup {
 		formatGroup.setLayout(new GridLayout(2, false));
 		formatButtonGroup = new RadioButtonGroup(formatGroup, null, SWT.HORIZONTAL,
 				Messages.DescriptionGroup_plain_text, "HTML"); //$NON-NLS-1$
-		formatButtonGroup.addSelectionListener(new SelectionAdapter() {
+		formatButtonGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateDescriptionStack(parent);
 			}
 		});
@@ -65,12 +66,12 @@ public class DescriptionGroup {
 
 	private void updateDescriptionStack(final Composite parent) {
 		if (formatButtonGroup.getSelection() == 1) {
-			descriptionHtmlViewer.getDocument().set(BatchUtilities.encodeHTML(descriptionField.getText(), true));
+			descriptionHtmlViewer.getDocument().set(getHtmlEncoderDecoder().encodeHTML(descriptionField.getText(), true));
 			descriptionStack.topControl = descriptionHtmlViewer.getControl();
 			descriptionHtmlViewer.setFocus();
 		} else {
 			StringBuilder sb = new StringBuilder();
-			if (BatchUtilities.decodeHTML(descriptionHtmlViewer.getDocument().get(), sb)
+			if (getHtmlEncoderDecoder().decodeHTML(descriptionHtmlViewer.getDocument().get(), sb)
 					&& !AcousticMessageDialog.openConfirm(parent.getShell(), Messages.DescriptionGroup_html_to_plain,
 							Messages.DescriptionGroup_existing_markup_will_be_deleted)) {
 				formatButtonGroup.setSelection(1);
@@ -114,6 +115,12 @@ public class DescriptionGroup {
 
 	private void updateHelpLabel() {
 		descriptionHelpLabel.setVisible(formatButtonGroup.isEnabled(1) && formatButtonGroup.getSelection() == 1);
+	}
+	
+	private HtmlEncoderDecoder getHtmlEncoderDecoder() {
+		if (htmlEncoderDecoder == null)
+			htmlEncoderDecoder = new HtmlEncoderDecoder();
+		return htmlEncoderDecoder;
 	}
 
 }

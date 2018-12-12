@@ -62,6 +62,8 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.core.internal.operations.Backup;
 import com.bdaum.zoom.gps.geonames.WebServiceException;
+import com.bdaum.zoom.gps.internal.GeoArea;
+import com.bdaum.zoom.gps.internal.GpsActivator;
 import com.bdaum.zoom.gps.internal.GpsConfiguration;
 import com.bdaum.zoom.gps.internal.GpsUtilities;
 import com.bdaum.zoom.job.OperationJob;
@@ -99,6 +101,7 @@ public class GeotagOperation extends DbOperation {
 	protected boolean removeTag;
 	private boolean lastAccessFailed;
 	private long lastAccess;
+	private List<GeoArea> noGoAreas;
 
 	public GeotagOperation(GpsConfiguration gpsConfiguration) {
 		super(Messages.getString("GeotagOperation.Geonaming")); //$NON-NLS-1$
@@ -113,6 +116,10 @@ public class GeotagOperation extends DbOperation {
 		this.trackpoints = trackpoints;
 		removeTag = trackpoints.length == 1
 				&& (Double.isNaN(trackpoints[0].getLatitude()) || Double.isNaN(trackpoints[0].getLongitude()));
+		if (gpsConfiguration.excludeNoGoAreas) {
+			noGoAreas = new ArrayList<>();
+			GpsUtilities.getGeoAreas(GpsActivator.getDefault().getPreferenceStore(), noGoAreas);
+		}
 	}
 
 	protected GeotagOperation(String label, GpsConfiguration gpsConfiguration) {
@@ -478,15 +485,16 @@ public class GeotagOperation extends DbOperation {
 					lower = upper;
 			}
 		}
+		double longitude = Double.NaN;
+		double latitude = Double.NaN;
+		double altitude = Double.NaN;
+		double speed = Double.NaN;
+
 		if (lower == upper) {
-			if (!Double.isNaN(lower.getLongitude()))
-				asset.setGPSLongitude(lower.getLongitude());
-			if (!Double.isNaN(lower.getLatitude()))
-				asset.setGPSLatitude(lower.getLatitude());
-			if (!Double.isNaN(lower.getAltitude()))
-				asset.setGPSAltitude(lower.getAltitude());
-			if (!Double.isNaN(lower.getSpeed()))
-				asset.setGPSSpeed(lower.getSpeed());
+			longitude = lower.getLongitude();
+			latitude = lower.getLatitude();
+			altitude = lower.getAltitude();
+			speed = lower.getSpeed();
 		} else {
 			long diff = lowerdiff + upperdiff;
 			if (diff == 0) {
@@ -504,18 +512,29 @@ public class GeotagOperation extends DbOperation {
 					else
 						upperLongitude -= 360;
 				}
-				double longitude = lowerLongitude * fac1 + upperLongitude * fac2;
+				longitude = lowerLongitude * fac1 + upperLongitude * fac2;
 				if (longitude < 0)
 					longitude += 360;
-				asset.setGPSLongitude(longitude);
 			}
 			if (!Double.isNaN(lower.getLatitude()) && !Double.isNaN(upper.getLatitude()))
-				asset.setGPSLatitude((lower.getLatitude() * fac1 + upper.getLatitude() * fac2));
+				latitude = lower.getLatitude() * fac1 + upper.getLatitude() * fac2;
 			if (!Double.isNaN(lower.getAltitude()) && !Double.isNaN(upper.getAltitude()))
-				asset.setGPSAltitude((lower.getAltitude() * fac1 + upper.getAltitude() * fac2));
+				altitude = lower.getAltitude() * fac1 + upper.getAltitude() * fac2;
 			if (!Double.isNaN(lower.getSpeed()) && !Double.isNaN(upper.getSpeed()))
-				asset.setGPSSpeed((lower.getSpeed() * fac1 + upper.getSpeed() * fac2));
+				speed = lower.getSpeed() * fac1 + upper.getSpeed() * fac2;
 		}
+		if (noGoAreas != null)
+			for (GeoArea area : noGoAreas)
+				if (Core.distance(latitude, longitude, area.getLatitude(), area.getLongitude(), 'k') <= area.getKm())
+					return !updateMonitor(1);
+		if (!Double.isNaN(longitude))
+			asset.setGPSLongitude(longitude);
+		if (!Double.isNaN(latitude))
+			asset.setGPSLatitude(latitude);
+		if (!Double.isNaN(altitude))
+			asset.setGPSAltitude(altitude);
+		if (!Double.isNaN(speed))
+			asset.setGPSSpeed(speed);
 		if (gpsConfiguration.updateAltitude && !Double.isNaN(asset.getGPSLatitude())
 				&& !Double.isNaN(asset.getGPSLongitude())) {
 			double elevation = getElevation(asset.getGPSLatitude(), asset.getGPSLongitude(), monitor);

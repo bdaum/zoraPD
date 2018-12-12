@@ -12,6 +12,7 @@
 #               3) http://www.libpng.org/pub/mng/
 #               4) http://www.libpng.org/pub/png/spec/register/
 #               5) ftp://ftp.simplesystems.org/pub/png/documents/pngext-1.4.0-pdg.html
+#               6) ftp://ftp.simplesystems.org/pub/png/documents/pngext-1.5.0.html
 #
 # Notes:        Writing meta information in PNG images is a pain in the butt
 #               for a number of reasons:  One biggie is that you have to
@@ -26,7 +27,7 @@ use strict;
 use vars qw($VERSION $AUTOLOAD %stdCase);
 use Image::ExifTool qw(:DataAccess :Utils);
 
-$VERSION = '1.45';
+$VERSION = '1.46';
 
 sub ProcessPNG_tEXt($$$);
 sub ProcessPNG_iTXt($$$);
@@ -236,7 +237,7 @@ $Image::ExifTool::PNG::colorType = -1;
     tXMP => {
         Name => 'XMP',
         Notes => 'obsolete location specified by a September 2001 XMP draft',
-        NonStandard => 1,
+        NonStandard => 'XMP',
         SubDirectory => { TagTable => 'Image::ExifTool::XMP::Main' },
     },
     vpAg => { # private imagemagick chunk
@@ -257,7 +258,7 @@ $Image::ExifTool::PNG::colorType = -1;
             TagTable => 'Image::ExifTool::PNG::AnimationControl',
         },
     },
-    # eXIf
+    # eXIf (ref 6)
     $stdCase{exif} => {
         Name => $stdCase{exif},
         Notes => 'this is where ExifTool will create new EXIF',
@@ -271,6 +272,7 @@ $Image::ExifTool::PNG::colorType = -1;
     $stdCase{zxif} => {
         Name => $stdCase{zxif},
         Notes => 'a once-proposed chunk for compressed EXIF',
+        NonStandard => 'EXIF',
         SubDirectory => {
             TagTable => 'Image::ExifTool::Exif::Main',
             DirName => 'EXIF', # (to write as a block)
@@ -450,7 +452,7 @@ my %unreg = ( Notes => 'unregistered' );
         Groups => { 2 => 'Time' },
         Shift => 'Time',
         Notes => 'stored in RFC-1123 format and converted to/from EXIF format by ExifTool',
-        ValueConv => \&ConvertPNGDate,
+        RawConv => \&ConvertPNGDate,
         ValueConvInv => \&InversePNGDate,
         PrintConv => '$self->ConvertDateTime($val)',
         PrintConvInv => '$self->InverseDateTime($val,undef,1)',
@@ -510,7 +512,7 @@ my %unreg = ( Notes => 'unregistered' );
             # (No condition because this is just for BuildTagLookup)
             Name => 'APP1_Profile',
             %unreg,
-            NonStandard => 1,
+            NonStandard => 'EXIF',
             SubDirectory => {
                 TagTable => 'Image::ExifTool::Exif::Main',
                 ProcessProc => \&ProcessProfile,
@@ -518,7 +520,7 @@ my %unreg = ( Notes => 'unregistered' );
         },
         {
             Name => 'APP1_Profile',
-            NonStandard => 1,
+            NonStandard => 'XMP',
             SubDirectory => {
                 TagTable => 'Image::ExifTool::XMP::Main',
                 ProcessProc => \&ProcessProfile,
@@ -528,7 +530,7 @@ my %unreg = ( Notes => 'unregistered' );
    'Raw profile type exif' => {
         Name => 'EXIF_Profile',
         %unreg,
-        NonStandard => 1,
+        NonStandard => 'EXIF',
         SubDirectory => {
             TagTable => 'Image::ExifTool::Exif::Main',
             ProcessProc => \&ProcessProfile,
@@ -564,7 +566,7 @@ my %unreg = ( Notes => 'unregistered' );
    'Raw profile type xmp' => {
         Name => 'XMP_Profile',
         %unreg,
-        NonStandard => 1,
+        NonStandard => 'XMP',
         SubDirectory => {
             TagTable => 'Image::ExifTool::XMP::Main',
             ProcessProc => \&ProcessProfile,
@@ -649,22 +651,25 @@ my %tzConv = (
 );
 sub ConvertPNGDate($$)
 {
-    my $val = shift;
-    # standard format is like "Mon, 1 Jan 2018 12:10:22 EST"
-    if ($val =~ /(\d+)\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s*(\d+)\s+(\d+):(\d{2})(:\d{2})?\s*(\S*)/i) {
+    my ($val, $et) = @_;
+    # standard format is like "Mon, 1 Jan 2018 12:10:22 EST" (RFC-1123 section 5.2.14)
+    while ($val =~ /(\d+)\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s*(\d+)\s+(\d+):(\d{2})(:\d{2})?\s*(\S*)/i) {
         my ($day,$mon,$yr,$hr,$min,$sec,$tz) = ($1,$2,$3,$4,$5,$6,$7);
         $yr += $yr > 70 ? 1900 : 2000 if $yr < 100;     # boost year to 4 digits if necessary
         $mon = $monthNum{ucfirst lc $mon} or return $val;
         if (not $tz) {
             $tz = '';
-        } elsif ($tzConv{$tz}) {
-            $tz = $tzConv{$tz};
+        } elsif ($tzConv{uc $tz}) {
+            $tz = $tzConv{uc $tz};
         } elsif ($tz =~ /^([-+]\d+):?(\d{2})/) {
             $tz = $1 . ':' . $2;
         } else {
-            return $val;    # (non-standard date)
+            last;       # (non-standard date)
         }
-        $val = sprintf("%.4d:%.2d:%.2d %.2d:%.2d%s%s",$yr,$mon,$day,$hr,$min,$sec||':00',$tz);
+        return sprintf("%.4d:%.2d:%.2d %.2d:%.2d%s%s",$yr,$mon,$day,$hr,$min,$sec||':00',$tz);
+    }
+    if (($et->Options('StrictDate') and not $$et{TAGS_FROM_FILE}) or $et->Options('Validate')) {
+        $et->Warn('Non standard PNG date/time format', 1);
     }
     return $val;
 }
@@ -676,19 +681,24 @@ sub ConvertPNGDate($$)
 sub InversePNGDate($$)
 {
     my ($val, $et) = @_;
-    my $err;
-    if ($val =~ /^(\d{4}):(\d{2}):(\d{2}) (\d{2})(:\d{2})(:\d{2})?(?:\.\d*)?\s*(\S*)/) {
-        my ($yr,$mon,$day,$hr,$min,$sec,$tz) = ($1,$2,$3,$4,$5,$6,$7);
-        $sec or $sec = '';
-        my %monName = map { $monthNum{$_} => $_ } keys %monthNum;
-        $mon = $monName{$mon + 0} or $err = 1;
-        $tz =~ /^(Z|[-+]\d{2}:?\d{2})/ or $err = 1 if length $tz;
-        $tz =~ tr/://d;
-        $val = "$day $mon $yr $hr$min$sec $tz" unless $err;
-    }
-    if ($err and $et->Options('StrictDate')) {
-        warn "Invalid date/time (use YYYY:mm:dd HH:MM:SS[.ss][+/-HH:MM|Z])\n";
-        undef $val;
+    if ($et->Options('StrictDate')) {
+        my $err;
+        if ($val =~ /^(\d{4}):(\d{2}):(\d{2}) (\d{2})(:\d{2})(:\d{2})?(?:\.\d*)?\s*(\S*)/) {
+            my ($yr,$mon,$day,$hr,$min,$sec,$tz) = ($1,$2,$3,$4,$5,$6,$7);
+            $sec or $sec = '';
+            my %monName = map { $monthNum{$_} => $_ } keys %monthNum;
+            $mon = $monName{$mon + 0} or $err = 1;
+            if (length $tz) {
+                $tz =~ /^(Z|[-+]\d{2}:?\d{2})/ or $err = 1;
+                $tz =~ tr/://d;
+                $tz = ' ' . $tz;
+            }
+            $val = "$day $mon $yr $hr$min$sec$tz" unless $err;
+        }
+        if ($err) {
+            warn "Invalid date/time (use YYYY:mm:dd HH:MM:SS[.ss][+/-HH:MM|Z])\n";
+            undef $val;
+        }
     }
     return $val;
 }
@@ -720,7 +730,7 @@ sub FoundPNG($$$$;$$$$)
     my ($et, $tagTablePtr, $tag, $val, $compressed, $outBuff, $enc, $lang) = @_;
     return 0 unless defined $val;
     my $verbose = $et->Options('Verbose');
-    my $id = $tag;  # generate tag ID which include language code
+    my $id = $tag;  # generate tag ID which includes language code
     if ($lang) {
         # case of language code must be normalized since they are case insensitive
         $lang = StandardLangCase($lang);
@@ -781,6 +791,9 @@ sub FoundPNG($$$$;$$$$)
         my $tagName = $$tagInfo{Name};
         my $processed;
         if ($$tagInfo{SubDirectory}) {
+            if ($$et{OPTIONS}{Validate} and $$tagInfo{NonStandard}) {
+                $et->Warn("Non-standard $$tagInfo{NonStandard} in PNG $tag chunk", 1);
+            }
             my $subdir = $$tagInfo{SubDirectory};
             my $dirName = $$subdir{DirName} || $tagName;
             if (not $compressed) {
@@ -1225,6 +1238,8 @@ sub ProcessPNG($$)
 
     # check to be sure this is a valid PNG/MNG/JNG image
     return 0 unless $raf->Read($sig,8) == 8 and $pngLookup{$sig};
+
+    $$raf{NoBuffer} = 1 if $et->Options('FastScan'); # disable buffering in FastScan mode
 
     my $earlyXMP = $et->Options('PNGEarlyXMP');
     if ($outfile) {

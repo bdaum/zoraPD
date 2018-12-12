@@ -32,11 +32,9 @@ public class FilterChain {
 	private WildCardFilter[] filters;
 	private int baseLength = -1;
 
-	public FilterChain(String exclusions, String prefixes, String sep,
-			boolean includeDirs) {
+	public FilterChain(String exclusions, String prefixes, String sep, boolean includeDirs) {
 		List<String> elements = fromStringList(exclusions, sep);
-		init(elements.toArray(new String[elements.size()]), prefixes,
-				includeDirs);
+		init(elements.toArray(new String[elements.size()]), prefixes, includeDirs);
 	}
 
 	public static List<String> fromStringList(String stringlist, String seps) {
@@ -57,8 +55,7 @@ public class FilterChain {
 		filters = new WildCardFilter[l];
 		if (exclusions != null)
 			for (int i = 0; i < l; i++)
-				filters[i] = new WildCardFilter(exclusions[i], prefixes,
-						includeDirs);
+				filters[i] = new WildCardFilter(exclusions[i], prefixes, includeDirs);
 	}
 
 	public boolean accept(String keyword) {
@@ -69,16 +66,20 @@ public class FilterChain {
 	}
 
 	public boolean accept(File file, boolean isDir) {
-		for (int i = 0; i < filters.length; i++)
-			if (baseLength >= 0 && filters[i].isPath()) {
+		for (int i = 0; i < filters.length; i++) {
+			WildCardFilter filter = filters[i];
+			if (baseLength >= 0 && filter.isPath()) {
 				String path = file.getAbsolutePath();
 				if (path.length() < baseLength)
-					return !filters[i].isRejecting();
-				path = path.substring(baseLength).replace('\\', '/');
-				if (filters[i].accept(path, isDir))
-					return !filters[i].isRejecting();
-			} else if (filters[i].accept(file.getName(), isDir))
-				return !filters[i].isRejecting();
+					return !filter.isRejecting();
+				path = path.substring(baseLength);
+				if (File.separatorChar == '\\')
+					path = path.replace('\\', '/');
+				if (filter.accept(path, isDir))
+					return !filter.isRejecting();
+			} else if (filter.accept(file.getName(), isDir))
+				return !filter.isRejecting();
+		}
 		return true;
 	}
 

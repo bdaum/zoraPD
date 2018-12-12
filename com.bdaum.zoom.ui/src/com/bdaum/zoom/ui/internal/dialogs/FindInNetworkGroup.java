@@ -23,11 +23,11 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
@@ -99,16 +99,16 @@ public class FindInNetworkGroup {
 	 * @param listener
 	 * @see org.eclipse.swt.widgets.Button#addSelectionListener(org.eclipse.swt.events.SelectionListener)
 	 */
-	public void addSelectionListener(SelectionListener listener) {
-		checkButton.addSelectionListener(listener);
+	public void addListener(Listener listener) {
+		checkButton.addListener(listener);
 	}
 
 	/**
 	 * @param listener
 	 * @see org.eclipse.swt.widgets.Button#removeSelectionListener(org.eclipse.swt.events.SelectionListener)
 	 */
-	public void removeSelectionListener(SelectionListener listener) {
-		checkButton.removeSelectionListener(listener);
+	public void removeListener(Listener listener) {
+		checkButton.removeListener(listener);
 	}
 
 }

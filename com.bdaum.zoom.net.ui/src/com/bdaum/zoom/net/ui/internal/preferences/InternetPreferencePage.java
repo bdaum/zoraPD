@@ -16,7 +16,6 @@ import java.util.List;
 import org.eclipse.core.net.proxy.IProxyData;
 import org.eclipse.core.net.proxy.IProxyService;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -34,7 +33,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 
@@ -62,6 +63,7 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 	private Button editButton;
 	private Button removeButton;
 	private RadioButtonGroup proxyGroup;
+	private Composite configGroup;
 
 	public InternetPreferencePage() {
 		setDescription(Messages.InternetPreferencePage_Common_Internet_settings);
@@ -70,8 +72,7 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
+	 * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */
 
 	@Override
@@ -90,10 +91,11 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.INTERNET_PREFERENCE_PAGE);
 		createTabFolder(composite, "Internet"); //$NON-NLS-1$
-		UiUtilities.createTabItem(tabFolder, Messages.InternetPreferencePage_http_ftp, Messages.InternetPreferencePage_http_tooltip).setControl(createHttpGroup(tabFolder));
-		initTabFolder(0);
+		UiUtilities.createTabItem(tabFolder, Messages.InternetPreferencePage_http_ftp,
+				Messages.InternetPreferencePage_http_tooltip).setControl(createHttpGroup(tabFolder));
 		createExtensions(tabFolder, "com.bdaum.zoom.net.preferences.InternetPreferencePage"); //$NON-NLS-1$
 		fillValues();
+		initTabFolder(0);
 	}
 
 	private Control createHttpGroup(Composite parent) {
@@ -140,10 +142,9 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 		editButton = createPushButton(buttonGroup, Messages.InternetPreferencePage_edit,
 				Messages.InternetPreferencePage_edit_tooltip);
 		editButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) ftpViewer.getSelection();
+				IStructuredSelection selection = ftpViewer.getStructuredSelection();
 				Object firstElement = selection.getFirstElement();
 				if (firstElement instanceof FtpAccount) {
 					EditFtpDialog dialog = new EditFtpDialog(getShell(), (FtpAccount) firstElement, false, null);
@@ -156,10 +157,9 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 		removeButton = createPushButton(buttonGroup, Messages.InternetPreferencePage_remove,
 				Messages.InternetPreferencePage_remove_tooltip);
 		removeButton.addSelectionListener(new SelectionAdapter() {
-
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				Object firstElement = ((IStructuredSelection) ftpViewer.getSelection()).getFirstElement();
+				Object firstElement = ftpViewer.getStructuredSelection().getFirstElement();
 				if (firstElement instanceof FtpAccount) {
 					int i = ftpAccounts.indexOf(firstElement);
 					FtpAccount sibling = (i < ftpAccounts.size() - 1) ? ftpAccounts.get(i + 1)
@@ -197,18 +197,18 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 	@SuppressWarnings("unused")
 	private void createProxyGroup(Composite parent) {
 		CGroup group = UiUtilities.createGroup(parent, 2, Messages.InternetPreferencePage_http_proxy);
-		proxyGroup = new RadioButtonGroup(group, null, SWT.NONE,
-				Messages.InternetPreferencePage_System_proxy_config, Messages.InternetPreferencePage_Direct_connection, Messages.InternetPreferencePage_Manual_config);
-		proxyGroup.addSelectionListener(new SelectionAdapter() {
+		proxyGroup = new RadioButtonGroup(group, null, SWT.NONE, Messages.InternetPreferencePage_System_proxy_config,
+				Messages.InternetPreferencePage_Direct_connection, Messages.InternetPreferencePage_Manual_config);
+		proxyGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateFields();
 				if (proxyField.getEnabled())
 					proxyField.setFocus();
 			}
 		});
 		new Label(group, SWT.NONE);
-		createConfigGroup(group);
+		configGroup = createConfigGroup(group);
 	}
 
 	@Override
@@ -218,15 +218,8 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 			proxyGroup.setEnabled(false);
 		} else {
 			proxyGroup.setEnabled(0, proxyService.hasSystemProxies());
-			if (proxyService.isProxiesEnabled()) {
-				if (proxyService.isSystemProxiesEnabled()) {
-					proxyGroup.setSelection(0);
-				} else {
-					proxyGroup.setSelection(2);
-				}
-			} else {
-				proxyGroup.setSelection(1);
-			}
+			proxyGroup
+					.setSelection(proxyService.isProxiesEnabled() ? proxyService.isSystemProxiesEnabled() ? 0 : 2 : 1);
 			IProxyData proxyData = proxyService.getProxyData(IProxyData.HTTP_PROXY_TYPE);
 			if (proxyData != null) {
 				proxyField.setText(safeValue(proxyData.getHost()));
@@ -244,43 +237,35 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 	}
 
 	private static String safeValue(String text) {
-		return (text == null) ? "" : text; //$NON-NLS-1$
+		return text == null ? "" : text; //$NON-NLS-1$
 	}
 
 	private void updateFields() {
-		boolean enabled =proxyGroup.getSelection() == 2;
-		proxyField.setEnabled(enabled);
-		portField.setEnabled(enabled);
+		configGroup.setVisible(proxyGroup.getSelection() == 2);
 	}
 
-	private void createConfigGroup(Composite comp) {
+	private Composite createConfigGroup(Composite comp) {
 		Composite grp = new Composite(comp, SWT.NONE);
 		GridData data = new GridData(GridData.FILL_HORIZONTAL);
 		data.horizontalIndent = 15;
 		grp.setLayoutData(data);
 		grp.setLayout(new GridLayout(4, false));
-		Label label = new Label(grp, SWT.NONE);
-		label.setText(Messages.InternetPreferencePage_HTTP_Proxy);
+		new Label(grp, SWT.NONE).setText(Messages.InternetPreferencePage_HTTP_Proxy);
 		proxyField = new Text(grp, SWT.BORDER);
-		data = new GridData();
-		data.widthHint = 150;
-		proxyField.setLayoutData(data);
-		label = new Label(grp, SWT.NONE);
-		label.setText(Messages.InternetPreferencePage_Port);
+		proxyField.setLayoutData(new GridData(150, SWT.DEFAULT));
+		new Label(grp, SWT.NONE).setText(Messages.InternetPreferencePage_Port);
 		portField = new Text(grp, SWT.BORDER);
-		data = new GridData();
-		data.widthHint = 50;
-		portField.setLayoutData(data);
+		portField.setLayoutData(new GridData(50, SWT.DEFAULT));
 		portField.addVerifyListener(new VerifyListener() {
 			public void verifyText(VerifyEvent e) {
-				for (int i = 0; i < e.text.length(); i++) {
+				for (int i = 0; i < e.text.length(); i++)
 					if (!Character.isDigit(e.text.charAt(i))) {
 						e.doit = false;
 						break;
 					}
-				}
 			}
 		});
+		return grp;
 	}
 
 	private void createTimeoutGroup(Composite comp) {
@@ -293,9 +278,8 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 
 	@Override
 	protected void doPerformDefaults() {
-		IPreferenceStore preferenceStore = getPreferenceStore();
-		preferenceStore.setValue(PreferenceConstants.TIMEOUT,
-				preferenceStore.getDefaultInt(PreferenceConstants.TIMEOUT));
+		getPreferenceStore().setValue(PreferenceConstants.TIMEOUT,
+				getPreferenceStore().getDefaultInt(PreferenceConstants.TIMEOUT));
 	}
 
 	@Override

@@ -24,14 +24,7 @@ import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -40,6 +33,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Spinner;
 
 /**
@@ -47,28 +41,19 @@ import org.eclipse.swt.widgets.Spinner;
  * small synchronous slider below the spinner
  *
  */
-public class RangeControl extends Composite
-		implements PaintListener, SelectionListener, FocusListener, MouseListener, MouseMoveListener {
+public class RangeControl extends Composite implements Listener, FocusListener {
 
 	private static final String TOOLTIP = Messages.RangeControl_click_to_set;
 	private Spinner lowSpinner;
 	private Canvas canvas;
 	private Point selection;
-	private ListenerList<SelectionListener> selectionListeners = new ListenerList<SelectionListener>();
-	private ListenerList<FocusListener> focusListeners = new ListenerList<FocusListener>();
+	private ListenerList<Listener> selectionListeners = new ListenerList<>();
+	private ListenerList<FocusListener> focusListeners = new ListenerList<>();
 	private Spinner highSpinner;
 	private boolean lowDown = false;
 	private boolean highDown = false;
 	private boolean logarithmic;
 
-	/**
-	 * Constructor
-	 * 
-	 * @param parent
-	 *            - parent container
-	 * @param style
-	 *            - style bits
-	 */
 	public RangeControl(Composite parent, int style) {
 		super(parent, style & SWT.BORDER);
 		GridLayout layout = new GridLayout(3, false);
@@ -76,7 +61,9 @@ public class RangeControl extends Composite
 		setLayout(layout);
 		lowSpinner = new Spinner(this, style | SWT.BORDER);
 		lowSpinner.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
-		lowSpinner.addSelectionListener(this);
+		lowSpinner.addListener(SWT.Selection, this);
+		lowSpinner.addListener(SWT.DefaultSelection, this);
+		lowSpinner.addListener(SWT.Modify, this);
 		lowSpinner.addFocusListener(this);
 		lowSpinner.pack();
 		Point size = lowSpinner.computeSize(SWT.DEFAULT, SWT.DEFAULT);
@@ -84,13 +71,17 @@ public class RangeControl extends Composite
 		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
 		layoutData.heightHint = size.y;
 		canvas.setLayoutData(layoutData);
-		canvas.addPaintListener(this);
-		canvas.addMouseListener(this);
-		canvas.addMouseMoveListener(this);
+		canvas.addListener(SWT.Paint, this);
+		canvas.addListener(SWT.MouseDoubleClick, this);
+		canvas.addListener(SWT.MouseDown, this);
+		canvas.addListener(SWT.MouseUp, this);
+		canvas.addListener(SWT.MouseMove, this);
 		canvas.setToolTipText(TOOLTIP);
 		highSpinner = new Spinner(this, style | SWT.BORDER);
 		highSpinner.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, false));
-		highSpinner.addSelectionListener(this);
+		highSpinner.addListener(SWT.Selection, this);
+		highSpinner.addListener(SWT.DefaultSelection, this);
+		highSpinner.addListener(SWT.Modify, this);
 		highSpinner.addFocusListener(this);
 
 	}
@@ -159,32 +150,8 @@ public class RangeControl extends Composite
 	 *            - selection listener
 	 * @see org.eclipse.swt.widgets.Spinner#addSelectionListener(org.eclipse.swt.events.SelectionListener)
 	 */
-	public void addSelectionListener(SelectionListener listener) {
+	public void addListener(Listener listener) {
 		selectionListeners.add(listener);
-	}
-
-	/**
-	 * Adds a modify listener
-	 * 
-	 * @param listener
-	 *            - modify listener
-	 * @see org.eclipse.swt.widgets.Spinner#addModifyListener(org.eclipse.swt.events.ModifyListener)
-	 */
-	public void addModifyListener(ModifyListener listener) {
-		lowSpinner.addModifyListener(listener);
-		highSpinner.addModifyListener(listener);
-	}
-
-	/**
-	 * Removes a modify listener
-	 * 
-	 * @param listener
-	 *            - modify listener
-	 * @see org.eclipse.swt.widgets.Spinner#removeModifyListener(org.eclipse.swt.events.ModifyListener)
-	 */
-	public void removeModifyListener(ModifyListener listener) {
-		lowSpinner.removeModifyListener(listener);
-		highSpinner.removeModifyListener(listener);
 	}
 
 	/**
@@ -194,7 +161,7 @@ public class RangeControl extends Composite
 	 *            - selection listener
 	 * @see org.eclipse.swt.widgets.Spinner#removeSelectionListener(org.eclipse.swt.events.SelectionListener)
 	 */
-	public void removeSelectionListener(SelectionListener listener) {
+	public void removeListener(Listener listener) {
 		selectionListeners.remove(listener);
 	}
 
@@ -410,52 +377,83 @@ public class RangeControl extends Composite
 		canvas.setVisible(enabled);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.SelectionListener#widgetSelected(org.eclipse.swt.
-	 * events.SelectionEvent)
-	 */
-	public void widgetSelected(SelectionEvent e) {
-		fireSelectionChanged(e);
-		canvas.redraw();
+	@Override
+	public void handleEvent(Event event) {
+		switch (event.type) {
+		case SWT.MouseDown:
+		case SWT.Paint:
+			Rectangle clientArea = canvas.getClientArea();
+			double minimum = getMinimum();
+			double maximum = getMaximum();
+			double v1 = lowSpinner.getSelection();
+			double v2 = highSpinner.getSelection();
+			if (logarithmic) {
+				maximum = toLog(maximum);
+				minimum = toLog(minimum);
+				v1 = toLog(v1);
+				v2 = toLog(v2);
+			}
+			double range = maximum - minimum;
+			int x1 = (int) (range <= 0 ? 0 : clientArea.width * (v1 - minimum) / range + 0.5d);
+			int x2 = (int) (range <= 0 ? 0 : clientArea.width * (v2 - minimum) / range + 0.5d);
+			if (event.type == SWT.MouseDown) {
+				int x = event.x - clientArea.x;
+				int dist1 = Math.abs(x1 - x);
+				int dist2 = Math.abs(x2 - x);
+				if (dist1 < dist2)
+					lowDown = true;
+				else
+					highDown = true;
+				processMouseEvent(event);
+			} else {
+				GC gc = event.gc;
+				if (x2 < clientArea.width) {
+					gc.setBackground(getBackground());
+					gc.fillRectangle(clientArea.x + x2, clientArea.y, clientArea.width - x2, clientArea.height);
+				}
+				if (x1 > 0) {
+					gc.setBackground(getBackground());
+					gc.fillRectangle(clientArea.x, clientArea.y, x1, clientArea.height);
+				}
+				if (x2 > x1) {
+					gc.setBackground(getForeground());
+					gc.fillRectangle(clientArea.x + x1, clientArea.y, x2 - x1, clientArea.height);
+				}
+			}
+			break;
+		case SWT.MouseUp:
+			lowDown = false;
+			highDown = false;
+			break;
+		case SWT.MouseDoubleClick:
+			lowDown = false;
+			highDown = false;
+			lowSpinner.setSelection(selection.x);
+			highSpinner.setSelection(selection.y);
+			canvas.redraw();
+			break;
+		case SWT.MouseMove:
+			if (lowDown || highDown)
+				processMouseEvent(event);
+			break;
+		case SWT.Selection:
+		case SWT.DefaultSelection:
+		case SWT.Modify:
+			fireEvent(event);
+			canvas.redraw();
+			break;
+		}
 	}
 
-	private void fireSelectionChanged(SelectionEvent e) {
-		for (SelectionListener l : selectionListeners)
-			l.widgetSelected(e);
+	private void fireEvent(Event e) {
+		for (Listener l : selectionListeners)
+			l.handleEvent(e);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.swt.events.SelectionListener#widgetDefaultSelected(org.
-	 * eclipse.swt.events.SelectionEvent)
-	 */
-	public void widgetDefaultSelected(SelectionEvent e) {
-		for (SelectionListener l : selectionListeners)
-			l.widgetDefaultSelected(e);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.FocusListener#focusGained(org.eclipse.swt.events.
-	 * FocusEvent)
-	 */
 	public void focusGained(FocusEvent e) {
 		fireFocusGained(e);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.FocusListener#focusLost(org.eclipse.swt.events.
-	 * FocusEvent)
-	 */
 	public void focusLost(FocusEvent e) {
 		fireFocusLost(e);
 	}
@@ -470,66 +468,7 @@ public class RangeControl extends Composite
 			l.focusLost(e);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.MouseMoveListener#mouseMove(org.eclipse.swt.events
-	 * .MouseEvent)
-	 */
-	public void mouseMove(MouseEvent e) {
-		if (lowDown || highDown)
-			processMouseEvent(e);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.
-	 * events.MouseEvent)
-	 */
-	public void mouseDoubleClick(MouseEvent e) {
-		lowDown = false;
-		highDown = false;
-		lowSpinner.setSelection(selection.x);
-		highSpinner.setSelection(selection.y);
-		canvas.redraw();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.
-	 * MouseEvent)
-	 */
-	public void mouseDown(MouseEvent e) {
-		Rectangle clientArea = canvas.getClientArea();
-		double minimum = getMinimum();
-		double maximum = getMaximum();
-		double v1 = lowSpinner.getSelection();
-		double v2 = highSpinner.getSelection();
-		if (logarithmic) {
-			maximum = toLog(maximum);
-			minimum = toLog(minimum);
-			v1 = toLog(v1);
-			v2 = toLog(v2);
-		}
-		double range = maximum - minimum;
-		int x1 = (int) (range <= 0 ? 0 : clientArea.width * (v1 - minimum) / range + 0.5d);
-		int x2 = (int) (range <= 0 ? 0 : clientArea.width * (v2 - minimum) / range + 0.5d);
-		int x = e.x - clientArea.x;
-		int dist1 = Math.abs(x1 - x);
-		int dist2 = Math.abs(x2 - x);
-		if (dist1 < dist2)
-			lowDown = true;
-		else
-			highDown = true;
-		processMouseEvent(e);
-	}
-
-	private void processMouseEvent(MouseEvent e) {
+	private void processMouseEvent(Event e) {
 		if (lowSpinner.isEnabled()) {
 			Rectangle clientArea = canvas.getClientArea();
 			double minimum = getMinimum();
@@ -559,30 +498,12 @@ public class RangeControl extends Composite
 		}
 	}
 
-	protected void fireSelectionEvent(MouseEvent e) {
-		Event ev = new Event();
-		ev.time = e.time;
-		ev.stateMask = e.stateMask;
-		ev.widget = e.widget;
-		ev.x = e.x;
-		ev.y = e.y;
-		ev.button = e.button;
+	protected void fireSelectionEvent(Event ev) {
 		canvas.redraw();
-		fireSelectionChanged(new SelectionEvent(ev));
+		fireEvent(ev);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.
-	 * MouseEvent)
-	 */
-	public void mouseUp(MouseEvent e) {
-		lowDown = false;
-		highDown = false;
-	}
-
-	public void setLogrithmic(boolean logarithmic) {
+	public void setLogarithmic(boolean logarithmic) {
 		this.logarithmic = logarithmic;
 		canvas.redraw();
 	}

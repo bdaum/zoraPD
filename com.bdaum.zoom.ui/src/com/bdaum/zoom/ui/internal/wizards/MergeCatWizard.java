@@ -22,14 +22,11 @@ package com.bdaum.zoom.ui.internal.wizards;
 
 import java.util.Set;
 
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWizard;
 
 import com.bdaum.zoom.core.CatalogListener;
@@ -45,7 +42,7 @@ import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
 @SuppressWarnings("restriction")
-public class MergeCatWizard extends ZWizard implements IWorkbenchWizard, IAdaptable {
+public class MergeCatWizard extends ZWizard implements IWorkbenchWizard {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.exportFolderProperties"; //$NON-NLS-1$
 	public static final String INCLUDEMETA = "includeMeta"; //$NON-NLS-1$
@@ -54,13 +51,13 @@ public class MergeCatWizard extends ZWizard implements IWorkbenchWizard, IAdapta
 	private MergeCatPage mainPage;
 	private MetaSelectionPage metaPage;
 	private String filename;
-	private IWorkbenchWindow window;
 
 	public MergeCatWizard() {
 		setHelpAvailable(true);
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		super.init(workbench, selection);
 		setDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		setWindowTitle(Constants.APPLICATION_NAME);
 		if (selection != null) {
@@ -68,9 +65,6 @@ public class MergeCatWizard extends ZWizard implements IWorkbenchWizard, IAdapta
 			if (firstElement instanceof String)
 				filename = (String) firstElement;
 		}
-		window = workbench.getActiveWorkbenchWindow();
-		if (window == null)
-			window = workbench.getWorkbenchWindows()[0];
 	}
 
 	/*
@@ -134,13 +128,6 @@ public class MergeCatWizard extends ZWizard implements IWorkbenchWizard, IAdapta
 			return true;
 		externalDb.close(CatalogListener.NORMAL);
 		return super.performCancel();
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public Object getAdapter(Class adapter) {
-		if (Shell.class.equals(adapter))
-			return window.getShell();
-		return null;
 	}
 
 	public Set<QueryField> getFilter() {

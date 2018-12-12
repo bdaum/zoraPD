@@ -38,7 +38,9 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWTError;
+import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.widgets.Control;
@@ -74,20 +76,23 @@ import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.ILocationDisplay;
 import com.bdaum.zoom.ui.INavigationHistory;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.dialogs.AddBookmarkDialog;
+import com.bdaum.zoom.ui.internal.dialogs.AutomatedRatingDialog;
 import com.bdaum.zoom.ui.internal.dialogs.ColorCodeDialog;
 import com.bdaum.zoom.ui.internal.dialogs.PasteMetaDialog;
 import com.bdaum.zoom.ui.internal.dialogs.RatingDialog;
-import com.bdaum.zoom.ui.internal.dialogs.AddBookmarkDialog;
-import com.bdaum.zoom.ui.internal.dialogs.AutomatedRatingDialog;
 import com.bdaum.zoom.ui.internal.views.BasicView;
 import com.bdaum.zoom.ui.internal.views.BookmarkView;
 import com.bdaum.zoom.ui.internal.views.CatalogView;
 import com.bdaum.zoom.ui.internal.views.LightboxView;
+import com.bdaum.zoom.ui.internal.views.SelectionActionClusterProvider;
 import com.bdaum.zoom.ui.internal.views.TableView;
+import com.bdaum.zoom.ui.internal.views.TrashcanView;
 import com.bdaum.zoom.ui.internal.views.ZuiView;
 
 @SuppressWarnings("restriction")
@@ -196,25 +201,29 @@ public abstract class ZoomActionFactory {
 	private static void showInGallery(final IAdaptable adaptable, final Asset asset, SmartCollection sm) {
 		if (sm != null) {
 			try {
+				IViewPart gallery = null;
 				BasicView currentView = adaptable.getAdapter(BasicView.class);
 				IWorkbenchPage page = adaptable.getAdapter(IWorkbenchPage.class);
-				String viewId = null;
-				for (IViewReference ref : page.getViewReferences()) {
-					String id = ref.getId();
-					if (id.equals(LightboxView.ID) || id.equals(ZuiView.ID) || id.equals(TableView.ID)
-							|| id.equals(LightboxView.VSTRIPVIEW) || id.equals(LightboxView.HSTRIPVIEW)) {
-						viewId = id;
-						break;
+				if (currentView instanceof LightboxView && !(currentView instanceof TrashcanView)
+						|| currentView instanceof ZuiView || currentView instanceof TableView)
+					gallery = currentView;
+				else {
+					String viewId = null;
+					for (IViewReference ref : page.getViewReferences()) {
+						String id = ref.getId();
+						if (id.equals(LightboxView.ID) || id.equals(ZuiView.ID) || id.equals(TableView.ID)
+								|| id.equals(LightboxView.VSTRIPVIEW) || id.equals(LightboxView.HSTRIPVIEW)) {
+							viewId = id;
+							break;
+						}
 					}
+					if (viewId == null)
+						viewId = LightboxView.ID;
+					if (currentView == null || !viewId.equals(currentView.getViewSite().getId()))
+						gallery = page.showView(viewId);
 				}
-				if (viewId == null)
-					viewId = LightboxView.ID;
-				IViewPart gallery = null;
-				if (currentView == null || !viewId.equals(currentView.getViewSite().getId()))
-					gallery = page.showView(viewId);
 				((CatalogView) page.showView(CatalogView.ID)).setSelection(new StructuredSelection(sm), true);
-				INavigationHistory navigationHistory = UiActivator.getDefault()
-						.getNavigationHistory(page.getWorkbenchWindow());
+				INavigationHistory navigationHistory = Ui.getUi().getNavigationHistory(page.getWorkbenchWindow());
 				navigationHistory.postSelection(AssetSelection.EMPTY);
 				navigationHistory.postSelection(new AssetSelection(asset));
 				if (gallery != null)
@@ -363,7 +372,7 @@ public abstract class ZoomActionFactory {
 						}
 					});
 			action.run();
-		} else if (rate >= 0)
+		} else if (rate >= RatingDialog.UNDEF)
 			OperationJob.executeOperation(new RateOperation(assets, rate), adaptable);
 	}
 
@@ -726,19 +735,34 @@ public abstract class ZoomActionFactory {
 					List<Asset> localAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
 					if (localAssets != null && !localAssets.isEmpty()) {
 						Shell shell = adaptable.getAdapter(Shell.class);
-						Object contents = UiActivator.getDefault().getClipboard(shell.getDisplay())
-								.getContents(TextTransfer.getInstance());
-						if (contents instanceof String)
+						Clipboard clipboard = UiActivator.getDefault().getClipboard(shell.getDisplay());
+						Object contents = clipboard.getContents(TextTransfer.getInstance());
+						Object fileContents = clipboard.getContents(FileTransfer.getInstance());
+						if (contents instanceof String) {
+							String s = (String) contents;
+							int p = s.indexOf('\f');
+							String note = null;
+							if (p >= 0) {
+								note = s.substring(p + 1);
+								s = s.substring(0, p);
+							}
 							try {
+								File voiceFile = null;
+								if (fileContents instanceof String[]) {
+									String[] arr = (String[]) fileContents;
+									if (arr.length > 0)
+										voiceFile = new File(arr[0]);
+								}
 								new PasteMetaDialog(shell, localAssets,
-										XMPUtilities.readXMP(new ByteArrayInputStream(((String) contents).getBytes("UTF-8"))), //$NON-NLS-1$
-										adaptable).open();
+										XMPUtilities.readXMP(new ByteArrayInputStream(s.getBytes("UTF-8"))), //$NON-NLS-1$
+										note, voiceFile, adaptable).open();
 							} catch (UnsupportedEncodingException e) {
 								// should never happen
 							} catch (XMPException e) {
 								UiActivator.getDefault()
 										.logError(Messages.PasteMetadataAction_xmp_error_reading_from_clipboard, e);
 							}
+						}
 					}
 
 				}
@@ -773,10 +797,22 @@ public abstract class ZoomActionFactory {
 							XMPUtilities.writeProperties(xmpMeta, asset, filter, true);
 							ByteArrayOutputStream out = new ByteArrayOutputStream();
 							XMPMetaFactory.serialize(xmpMeta, out);
-							activator.getClipboard(shell.getDisplay()).setContents(
-									new Object[] { new String(out.toByteArray(), "UTF-8") }, //$NON-NLS-1$
-									new Transfer[] { TextTransfer.getInstance() });
-
+							String s = new String(out.toByteArray(), "UTF-8"); //$NON-NLS-1$
+							File voiceFile = null;
+							String voiceFileURI = asset.getVoiceFileURI();
+							if (voiceFileURI != null) {
+								s += '\f' + voiceFileURI;
+								URI uri = Core.getCore().getVolumeManager().findVoiceFile(asset);
+								if (uri != null)
+									voiceFile = new File(uri);
+							}
+							Clipboard clipboard = activator.getClipboard(shell.getDisplay());
+							if (voiceFile == null)
+								clipboard.setContents(new Object[] { s },
+										new Transfer[] { TextTransfer.getInstance() });
+							else
+								clipboard.setContents(new Object[] { s, new String[] { voiceFile.toString() } },
+										new Transfer[] { TextTransfer.getInstance(), FileTransfer.getInstance() });
 						} catch (SWTError ex) {
 							if (ex.code != DND.ERROR_CANNOT_SET_CLIPBOARD)
 								activator.logError(Messages.CopyMetadataAction_Error_when_copying_metadata, ex);
@@ -820,6 +856,11 @@ public abstract class ZoomActionFactory {
 
 	private static Asset getFirstLocalAsset(IAdaptable adaptable) {
 		return adaptable.getAdapter(AssetSelection.class).getFirstLocalAsset();
+	}
+
+	public static SelectionActionCluster createSelectionActionCluster(SelectionActionClusterProvider provider,
+			IAdaptable adaptable) {
+		return new SelectionActionCluster(provider, adaptable);
 	}
 
 }

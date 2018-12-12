@@ -35,6 +35,7 @@ import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
 import com.bdaum.zoom.core.internal.Utilities;
+import com.bdaum.zoom.mtp.ObjectFilter;
 import com.bdaum.zoom.program.BatchConstants;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.DiskFullException;
@@ -55,7 +56,7 @@ public class RestoreCatalogCommand extends AbstractCatCommandHandler {
 			String backupLocation = dbManager.getMeta(true).getBackupLocation();
 			if (backupLocation != null && !backupLocation.isEmpty()) {
 				File generationFolder = new File(Utilities.computeBackupLocation(catFile, backupLocation)[1]);
-				FileNameExtensionFilter filter = new FileNameExtensionFilter(new String[] { Constants.BACKUPEXT },
+				ObjectFilter filter = new FileNameExtensionFilter(new String[] { Constants.BACKUPEXT },
 						false);
 				File[] backups = generationFolder.listFiles();
 				if (backups != null && backups.length > 0) {

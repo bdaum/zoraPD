@@ -97,7 +97,8 @@ public class FindDuplicatesJob extends CustomJob {
 		AbstractDuplicatesProvider duplicatesProvider;
 		switch (kind) {
 		case Constants.DUPES_BYFILENAME:
-			duplicatesProvider = new FileNameDuplicatesProvider(dbManager, withExtension);
+		case Constants.DUPES_BYORIGINAL:
+			duplicatesProvider = new FileNameDuplicatesProvider(dbManager, withExtension, kind);
 			break;
 		case Constants.DUPES_BYEXPOSUREDATA:
 			duplicatesProvider = new ExposureDataDuplicatesProvider(dbManager);

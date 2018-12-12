@@ -7,6 +7,8 @@
 
 
 
+
+
   
   <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Mit RAW-Dateien arbeiten</title>
   
@@ -50,7 +52,7 @@ Normalerweise<span style="font-style: italic;"> ZoRa Photo Director</span> verwe
 Das ist jedes Mal erforderlich, wenn ein Thumbnail von einem Bild
 erzeugt wird, wenn die Bilder angesehen oder exportiert werden.
 Normalerweise dauert die Konvertierung ein paar Sekunden. Da ständig
-neue Digitalkameras am Markt erscheinen, ändert DCRAW seine Versionen häufig - häufiger als <span style="font-style: italic;">ZoRa Photo Director</span>. <a href="../reference/dcraw.html">Neue DCRAW-Versionen</a> können Sie aber einfach in den Unterordner <code>dropins/</code> im Installationsordner von <span style="font-style: italic;">ZoRa Photo Director</span>  ablegen, um den Import von neuen Kameramodellen zu gewährleisten. <br><br>Als Alternative zu DCRAW kann <span style="font-style: italic;">ZoRa Photo Director</span> auch <span style="font-weight: bold;">RawTherapee</span> im Batch-Modus verwenden. Die Ergebnisse sind qualitativ besser als bei DCRAW und falls Sie <span style="font-style: italic;">RawTherapee</span> überwiegend als Raw-Konverter verwenden, ist es sinnvoll ihn auch in&nbsp;<span style="font-style: italic;">ZoRa Photo Director</span> zu integrieren, um die Konvertierungsergebnisse konsistent zu halten. Außerdem sind neuere Versionen von <span style="font-style: italic;">RawTherapee</span> auf OS X Plattformen leichter erhältlich als neuere DCRAW-Versionen. <span style="font-style: italic;">RawTherapee</span> bietet sogar die Möglichkeit auch neue Kameratypen relativ einfach zu unterstützen - siehe <a target="_blank" href="http://rawpedia.rawtherapee.com/Adding_Support_for_New_Raw_Formats">hier</a>!<br><br>Hier richten Sie die RAW-und DNG-Konvertierung ein:&nbsp; <acronym>Fenster&gt;Benutzervorgaben&gt;Importieren&gt; RAW-Konvertierung<sup>*</sup></acronym>. <br>
+neue Digitalkameras am Markt erscheinen, ändert DCRAW seine Versionen häufig - häufiger als <span style="font-style: italic;">ZoRa Photo Director</span>. <a href="../reference/dcraw.html">Neue DCRAW-Versionen</a> können Sie aber einfach in den Unterordner <code>dropins/</code> im Installationsordner von <span style="font-style: italic;">ZoRa Photo Director</span>  ablegen, um den Import von neuen Kameramodellen zu gewährleisten. <br><br>Als Alternative zu DCRAW kann <span style="font-style: italic;">ZoRa Photo Director</span> auch <span style="font-weight: bold;">RawTherapee</span> oder <span style="font-weight: bold;">darktable</span> im Batch-Modus verwenden. Die Ergebnisse sind qualitativ besser als bei DCRAW und falls Sie <span style="font-style: italic;">RawTherapee</span> <span style="font-weight: bold;"></span> oder <span style="font-style: italic;">darktable</span><span style="font-weight: bold;"> </span>überwiegend als Raw-Konverter verwenden, ist es sinnvoll ihn auch in&nbsp;<span style="font-style: italic;">ZoRa Photo Director</span> zu integrieren, um die Konvertierungsergebnisse konsistent zu halten. Außerdem sind neuere Versionen von <span style="font-style: italic;">RawTherapee</span> <span style="font-weight: bold;"></span> oder <span style="font-style: italic;">darktable</span><span style="font-weight: bold;"> </span>auf OS X Plattformen leichter erhältlich als neuere DCRAW-Versionen. <span style="font-style: italic;">RawTherapee</span> bietet sogar die Möglichkeit auch neue Kameratypen relativ einfach zu unterstützen - siehe <a target="_blank" href="http://rawpedia.rawtherapee.com/Adding_Support_for_New_Raw_Formats">hier</a>!<br><br>Hier richten Sie die RAW-und DNG-Konvertierung ein:&nbsp; <acronym>Fenster&gt;Benutzervorgaben&gt;Importieren&gt; RAW-Konvertierung<sup>*</sup></acronym>. <br>
 <br>
 <span style="font-style: italic;">ZoRa Photo Director</span> kann automatisch die Beziehungen zwischen RAW-Bildern und abgeleiteten Bildern verfolgen. Sie können diese Beziehungen mit dem <a href="../reference/hierarchy.html">Hierarchie-Sichtfenster</a> visualisieren.<br>
 <br>
@@ -89,82 +91,84 @@ proprietäre CHDK-RAW-Format ist sehr begrenzt.)  </li>
   <li>Richten Sie die Kamera so ein,&nbsp; dass Bildnamen mit dem Präfix <code>IMG_</code> versehen werden (CHDK-Menü). </li>
   <li>Beim Import der Bilder von der Speicherkarte mit dem <span style="font-style: italic;">ZoRa Photo Director</span> aktivieren Sie die Option <span style="font-weight: bold;">Präfix für EXIF-Transfer</span> unter <span style="font-weight: bold;">Fortgeschrittene Optionen</span> (siehe auch <a href="../reference/importFromDevice.html">Import-vom-Gerät-Dialog</a>). <span style="font-style: italic;">ZoRa Photo Director</span>  importiert daraufhin das Bild aus der DNG-Datei und die EXIF-Daten aus der zugehörigen JPEG-Datei.</li>
 </ul><br>
-<h4>Unterstützte RAW-Formate</h4>
+<h4><a name="formats"></a>Unterstützte RAW-Formate</h4>
 Die von <span style="font-style: italic;">ZoRa Photo Director</span> unterstützten RAW-Formate sind in Datei <code>raw.ini</code> im Plugin <code>com.bdaum.zoom.image</code> festgelegt. Bei Bedarf kann diese Datei geändert werden.<br>
 <br>
-<div style="margin-left: 80px;"><small><code>[3fr]</code></small><br>
-<small><code>name=Hasselblad</code></small><br>
-<small><code>[arw]</code></small><br>
-<small><code>name=Sony</code></small><br>
-<small><code>[bay]</code></small><br>
-<small><code>name=Casio</code></small><br>
-<small><code>[cap]</code></small><br>
-<small><code>name=PhaseOne</code></small><br>
-<small><code>[cr2]</code></small><br>
-<small><code>name=Canon</code></small><br>
-<small><code>[crw]</code></small><br>
-<small><code>name=Canon</code></small><br>
-<small><code>[cs1]</code></small><br>
-<small><code>name=Sinar</code></small><br>
-<small><code>[dcr]</code></small><br>
-<small><code>name=Kodak</code></small><br>
-<small><code>[dcs]</code></small><br>
-<small><code>name=Kodak</code></small><br>
-<small><code>[drf]</code></small><br>
-<small><code>name=Kodak</code></small><br>
-<small><code>[eip]</code></small><br>
-<small><code>name=PhaseOne</code></small><br>
-<small><code>[erf]</code></small><br>
-<small><code>name=Epson</code></small><br>
-<small><code>[fff]</code></small><br>
-<small><code>name=Imacon</code></small><br>
-<small><code>[gpr]</code></small><br>
-<small><code>name=GoPro</code></small><br>
-<small><code>unsupportedBy=DCRAW;RawTherapee</code></small><br>
-<small><code>[iiq]</code></small><br>
-<small><code>name=PhaseOne</code></small><br>
-<small><code>[k25]</code></small><br>
-<small><code>name=Kodak</code></small><br>
-<small><code>[kdc]</code></small><br>
-<small><code>name=Kodak</code></small><br>
-<small><code>[mdc]</code></small><br>
-<small><code>name=Minolta RD-175</code></small><br>
-<small><code>[mef]</code></small><br>
-<small><code>name=Mamiya</code></small><br>
-<small><code>[mos]</code></small><br>
-<small><code>name=Leaf</code></small><br>
-<small><code>[mrw]</code></small><br>
-<small><code>name=Minolta</code></small><br>
-<small><code>[nef]</code></small><br>
-<small><code>name=Nikon</code></small><br>
-<small><code>[nrw]</code></small><br>
-<small><code>name=Nikon</code></small><br>
-<small><code>[orf]</code></small><br>
-<small><code>name=Olympus</code></small><br>
-<small><code>[pef]</code></small><br>
-<small><code>name=Pentax</code></small><br>
-<small><code>[pxn]</code></small><br>
-<small><code>name=Logitech</code></small><br>
-<small><code>[ptx]</code></small><br>
-<small><code>name=Pentax</code></small><br>
-<small><code>[r3d]</code></small><br>
-<small><code>name=Red</code></small><br>
-<small><code>[raf]</code></small><br>
-<small><code>name=Fuji</code></small><br>
-<small><code>[raw]</code></small><br>
-<small><code>name=Panasonic</code></small><br>
-<small><code>[rw1]</code></small><br>
-<small><code>name=Leica</code></small><br>
-<small><code>[rw2]</code></small><br>
-<small><code>name=Panasonic</code></small><br>
-<small><code>[sr2]</code></small><br>
-<small><code>name=Sony</code></small><br>
-<small><code>[srf]</code></small><br>
-<small><code>name=Sony</code></small><br>
-<small><code>[srw]</code></small><br>
-<small><code>name=Samsung</code></small><br>
-<small><code>[x3f]</code></small><br>
-<small><code>name=Sigma</code></small><br>
+<div style="margin-left: 80px;"><small><code>[3fr]<br>
+name=Hasselblad<br>
+[arw]<br>
+name=Sony<br>
+[bay]<br>
+name=Casio<br>
+[cap]<br>
+name=PhaseOne<br>
+[cr2]<br>
+name=Canon<br>
+[crw]<br>
+name=Canon<br>
+[cs1]<br>
+name=Sinar<br>
+[dcr]<br>
+name=Kodak<br>
+[dcs]<br>
+name=Kodak<br>
+[drf]<br>
+name=Kodak<br>
+[eip]<br>
+name=PhaseOne<br>
+[erf]<br>
+name=Epson<br>
+[fff]<br>
+name=Imacon<br>
+[gpr]<br>
+name=GoPro<br>
+unsupportedBy=DCRAW;RawTherapee;darktable<br>
+[iiq]<br>
+name=PhaseOne<br>
+[k25]<br>
+name=Kodak<br>
+[kdc]<br>
+name=Kodak<br>
+[mdc]<br>
+name=Minolta RD-175<br>
+[mef]<br>
+name=Mamiya<br>
+[mos]<br>
+name=Leaf<br>
+[mrw]<br>
+name=Minolta<br>
+[nef]<br>
+name=Nikon<br>
+[nrw]<br>
+name=Nikon<br>
+[orf]<br>
+name=Olympus<br>
+[pef]<br>
+name=Pentax<br>
+[pxn]<br>
+name=Logitech<br>
+[ptx]<br>
+name=Pentax<br>
+[r3d]<br>
+name=Red<br>
+[raf]<br>
+name=Fuji<br>
+[raw]<br>
+name=Panasonic<br>
+[rw1]<br>
+name=Leica<br>
+[rw2]<br>
+name=Panasonic<br>
+[sr2]<br>
+name=Sony<br>
+[srf]<br>
+name=Sony<br>
+[srw]<br>
+name=Samsung<br>
+[x3f]<br>
+name=Sigma<br>
+unsupportedBy=darktable</code></small><span id="result_box" class="" tabindex="-1" lang="en"><span><small><code></code></small></span></span><br>
+
 </div>
 <br>
 Wie sie sehen, wird die Raw-Konvertierung von GoPro-RAW-Dateien von

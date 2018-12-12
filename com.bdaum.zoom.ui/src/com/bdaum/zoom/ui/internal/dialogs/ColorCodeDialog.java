@@ -24,10 +24,10 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.ui.internal.widgets.ZDialog;
@@ -49,16 +49,15 @@ public class ColorCodeDialog extends ZDialog {
 		Shell shell = getShell();
 		colorCodeGroup = new ColorCodeGroup(parent, SWT.NONE, code);
 		colorCodeGroup.addFocusListener(new FocusAdapter() {
-
 			@Override
 			public void focusLost(FocusEvent e) {
 				code = -2;
 				close();
 			}
 		});
-		colorCodeGroup.addSelectionListener(new SelectionAdapter() {
+		colorCodeGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				code = colorCodeGroup.getCode();
 				shell.getDisplay().timerExec(100, () -> {
 					if (!shell.isDisposed())

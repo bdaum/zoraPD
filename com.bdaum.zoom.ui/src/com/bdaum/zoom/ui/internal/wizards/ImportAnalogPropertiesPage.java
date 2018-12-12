@@ -14,8 +14,6 @@ import java.util.StringTokenizer;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -25,7 +23,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DateTime;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.core.Core;
@@ -293,23 +293,23 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage {
 		layout.marginWidth = 0;
 		focalGroup.setLayout(layout);
 		focalLengthField = createSpinner(focalGroup, null, 70, 10, 0, 100000, 1, true);
-		SelectionAdapter flListener = new SelectionAdapter() {
+		Listener listener = new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				setF35();
+			public void handleEvent(Event e) {
+				if (e.type == SWT.Modify)
+					validatePage();
+				else if (e.widget == focalLength35Field) {
+					int fac = factorField.getSelection();
+					focalLengthField.setSelection((1000 * focalLength35Field.getSelection() + fac / 2) / fac);
+				} else
+					setF35();
 			}
 		};
-		focalLengthField.addSelectionListener(flListener);
+		focalLengthField.addListener(listener);
 		factorField = createSpinner(focalGroup, "x", 60, 10, 1, 1000, 2, false); //$NON-NLS-1$
-		factorField.addSelectionListener(flListener);
+		factorField.addListener(listener);
 		focalLength35Field = createSpinner(focalGroup, "=", 80, 1, 3, 10000, 0, true); //$NON-NLS-1$
-		focalLength35Field.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				int fac = factorField.getSelection();
-				focalLengthField.setSelection((1000 * focalLength35Field.getSelection() + fac / 2) / fac);
-			}
-		});
+		focalLength35Field.addListener(listener);
 		new Label(focalGroup, SWT.NONE).setText("@35mm"); //$NON-NLS-1$
 		CGroup exposureGroup = CGroup.create(right, 1, Messages.ImportAnalogPropertiesPage_exposure);
 		dateField = createDateInput(exposureGroup, QueryField.EXIF_DATETIMEORIGINAL.getLabel(),
@@ -318,16 +318,11 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage {
 		lightSourceField = createCombo(exposureGroup, QueryField.EXIF_LIGHTSOURCE.getLabel(), 200, SWT.READ_ONLY,
 				QueryField.EXIF_LIGHTSOURCE.getEnumLabels());
 		lvField = createText(exposureGroup, QueryField.EXIF_LV.getLabel(), 15);
-		ModifyListener mlistener = new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				validatePage();
-			}
-		};
-		lvField.addModifyListener(mlistener);
+		lvField.addListener(SWT.Modify, listener);
 		exposureTimeField = createText(exposureGroup, QueryField.EXIF_EXPOSURETIME.getLabel(), 25);
-		exposureTimeField.addModifyListener(mlistener);
+		exposureTimeField.addListener(SWT.Modify, listener);
 		fnumberTimeField = createText(exposureGroup, QueryField.EXIF_FNUMBER.getLabel(), 15);
-		fnumberTimeField.addModifyListener(mlistener);
+		fnumberTimeField.addListener(SWT.Modify, listener);
 		CGroup iptcGroup = CGroup.create(left, 1, Messages.ImportAnalogPropertiesPage_rights);
 		artistField = createCombo(iptcGroup, QueryField.IPTC_BYLINE.getLabel(), 200, SWT.NONE, null);
 		copyrightField = createCombo(iptcGroup, QueryField.EXIF_COPYRIGHT.getLabel(), 200, SWT.NONE, null);
@@ -347,9 +342,9 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage {
 		privacyGroup = new RadioButtonGroup(iptcGroup, null, SWT.HORIZONTAL, QueryField.SAFETY.getEnumLabels());
 		if (aiService != null && aiService.isEnabled() && aiService.getRatingProviderIds().length > 0) {
 			autoGroup = new AutoRatingGroup(right, aiService, settings);
-			autoGroup.addModifyListener(new ModifyListener() {
+			autoGroup.addListener(new Listener() {
 				@Override
-				public void modifyText(ModifyEvent e) {
+				public void handleEvent(Event event) {
 					validatePage();
 				}
 			});

@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.Label;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
 import com.bdaum.zoom.image.ImageConstants;
+import com.bdaum.zoom.mtp.ObjectFilter;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
@@ -51,7 +52,7 @@ import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 public class UrlPreviewPage extends ColoredWizardPage {
 
 	private Browser browser;
-	private FileNameExtensionFilter filter;
+	private ObjectFilter filter;
 	private Label urlLabel;
 	private URL url;
 	private Button backButton;

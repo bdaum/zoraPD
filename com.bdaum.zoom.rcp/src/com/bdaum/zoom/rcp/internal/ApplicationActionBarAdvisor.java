@@ -46,6 +46,7 @@ import org.eclipse.ui.IWindowListener;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchCommandConstants;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -390,7 +391,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		hookUndoMessenger();
 	}
 
-	public void hookUndoMessenger() {
+	private void hookUndoMessenger() {
 		IPartListener partListener = new IPartListener() {
 			@Override
 			public void partOpened(IWorkbenchPart part) {
@@ -399,7 +400,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 
 			@Override
 			public void partDeactivated(IWorkbenchPart part) {
-				activePart = null;
 				updateStatusLineItems();
 			}
 
@@ -415,7 +415,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 
 			@Override
 			public void partActivated(IWorkbenchPart part) {
-				activePart = part;
 				updateStatusLineItems();
 			}
 		};
@@ -441,41 +440,46 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 				window.getPartService().addPartListener(partListener);
 			}
 		});
-		workbench.getOperationSupport().getOperationHistory().addOperationHistoryListener(new IOperationHistoryListener() {
-			public void historyNotification(OperationHistoryEvent event) {
-				updateStatusLineItems();
-			}
-		});
+		workbench.getOperationSupport().getOperationHistory()
+				.addOperationHistoryListener(new IOperationHistoryListener() {
+					public void historyNotification(OperationHistoryEvent event) {
+						updateStatusLineItems();
+					}
+				});
+		updateStatusLineItems();
 	}
 
 	protected void updateStatusLineItems() {
-		if (activePart != null) {
-			Shell shell = activePart.getSite().getShell();
-			if (shell != null && !shell.isDisposed()) {
-				shell.getDisplay().asyncExec(() -> {
-					if (!shell.isDisposed()) {
-						String undoLabel = ""; //$NON-NLS-1$
-						String redoLabel = ""; //$NON-NLS-1$
-						if (activePart instanceof IUndoHost) {
-							IUndoContext undoContext = ((IUndoHost) activePart).getUndoContext();
-							if (undoContext != null) {
-								IOperationHistory history = PlatformUI.getWorkbench().getOperationSupport()
-										.getOperationHistory();
-								IUndoableOperation undoOperation = history.getUndoOperation(undoContext);
-								IUndoableOperation redoOperation = history.getRedoOperation(undoContext);
-								if (undoOperation != null)
-									undoLabel = NLS.bind(Messages.getString("ApplicationActionBarAdvisor.undo"), //$NON-NLS-1$
-											undoOperation.getLabel());
-								if (redoOperation != null)
-									redoLabel = NLS.bind(Messages.getString("ApplicationActionBarAdvisor.redo"), //$NON-NLS-1$
-											redoOperation.getLabel());
-							}
+		activePart = null;
+		IWorkbenchWindow window = getActionBarConfigurer().getWindowConfigurer().getWindow();
+		IWorkbenchPage activePage = window.getActivePage();
+		if (activePage != null)
+			activePart = activePage.getActivePart();
+		Shell shell = window.getShell();
+		if (shell != null && !shell.isDisposed()) {
+			shell.getDisplay().asyncExec(() -> {
+				if (!shell.isDisposed()) {
+					String undoLabel = ""; //$NON-NLS-1$
+					String redoLabel = ""; //$NON-NLS-1$
+					if (activePart instanceof IUndoHost) {
+						IUndoContext undoContext = ((IUndoHost) activePart).getUndoContext();
+						if (undoContext != null) {
+							IOperationHistory history = PlatformUI.getWorkbench().getOperationSupport()
+									.getOperationHistory();
+							IUndoableOperation undoOperation = history.getUndoOperation(undoContext);
+							IUndoableOperation redoOperation = history.getRedoOperation(undoContext);
+							if (undoOperation != null)
+								undoLabel = NLS.bind(Messages.getString("ApplicationActionBarAdvisor.undo"), //$NON-NLS-1$
+										undoOperation.getLabel());
+							if (redoOperation != null)
+								redoLabel = NLS.bind(Messages.getString("ApplicationActionBarAdvisor.redo"), //$NON-NLS-1$
+										redoOperation.getLabel());
 						}
-						undoStatusLineItem.setText(undoLabel);
-						redoStatusLineItem.setText(redoLabel);
 					}
-				});
-			}
+					undoStatusLineItem.setText(undoLabel);
+					redoStatusLineItem.setText(redoLabel);
+				}
+			});
 		}
 	}
 

@@ -23,12 +23,12 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
@@ -134,19 +134,18 @@ public class RefreshDialog extends ZTitleAreaDialog {
 		gd_uptoDateButton.horizontalIndent = 15;
 		uptoDateButton = WidgetFactory.createCheckButton(comp,
 				Messages.RefreshDialog_include_up_to_date, gd_uptoDateButton);
-		uptoDateButton.addSelectionListener(new SelectionAdapter() {
-
+		Listener selectionListener = new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateButtons();
 			}
-		});
+		};
+		uptoDateButton.addListener(selectionListener);
 		final GridData gd_resetImageButton = new GridData(SWT.FILL, SWT.CENTER,
 				true, false);
 		gd_resetImageButton.horizontalIndent = 15;
 		resetImageButton = WidgetFactory.createCheckButton(comp,
 				Messages.RefreshDialog_refresh_image, gd_resetImageButton);
-
 		final GridData gd_resetFaceButton = new GridData(SWT.FILL, SWT.CENTER,
 				true, false);
 		gd_resetFaceButton.horizontalIndent = 15;
@@ -174,12 +173,7 @@ public class RefreshDialog extends ZTitleAreaDialog {
 		gd_resetIptcButton.horizontalIndent = 15;
 		resetIptcButton = WidgetFactory.createCheckButton(comp,
 				Messages.RefreshDialog_refresh_iptc, gd_resetIptcButton);
-		existingButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateButtons();
-			}
-		});
+		existingButton.addListener(selectionListener);
 		remoteButton = WidgetFactory.createCheckButton(comp,
 				NLS.bind(Messages.RefreshDialog_include_remote, remote),
 				new GridData(SWT.FILL, SWT.CENTER, true, false));

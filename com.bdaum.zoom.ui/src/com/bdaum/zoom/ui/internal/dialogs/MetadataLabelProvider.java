@@ -37,6 +37,7 @@ public class MetadataLabelProvider extends ZColumnLabelProvider {
 			int p = s.indexOf(':');
 			if (p > 0)
 				return s.substring(0, p);
+			return s;
 		}
 		return element.toString();
 	}

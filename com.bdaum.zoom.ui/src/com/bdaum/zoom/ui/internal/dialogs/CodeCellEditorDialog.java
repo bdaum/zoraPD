@@ -1,7 +1,6 @@
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ListViewer;
@@ -48,7 +47,7 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 	}
 
 	private void updateButtons() {
-		ISelection selection = viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.isEmpty()) {
 			removeButton.setEnabled(false);
 			upButton.setEnabled(false);
@@ -56,7 +55,7 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 		} else {
 			removeButton.setEnabled(true);
 			String[] old = (String[]) value;
-			String element = (String) ((IStructuredSelection) selection).getFirstElement();
+			String element = (String) selection.getFirstElement();
 			for (int i = 0; i < old.length; i++)
 				if (element.equals(old[i])) {
 					upButton.setEnabled(i > 0);
@@ -120,9 +119,9 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 		removeButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				ISelection selection = viewer.getSelection();
+				IStructuredSelection selection = viewer.getStructuredSelection();
 				if (!selection.isEmpty()) {
-					String element = (String) ((IStructuredSelection) selection).getFirstElement();
+					String element = (String) selection.getFirstElement();
 					String[] old = (String[]) value;
 					for (int i = 0; i < old.length; i++) {
 						if (element.equals(old[i])) {
@@ -143,9 +142,9 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 		upButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				ISelection selection = viewer.getSelection();
+				IStructuredSelection selection = viewer.getStructuredSelection();
 				if (!selection.isEmpty()) {
-					String element = (String) ((IStructuredSelection) selection).getFirstElement();
+					String element = (String) selection.getFirstElement();
 					String[] old = (String[]) value;
 					for (int i = 0; i < old.length; i++) {
 						if (element.equals(old[i])) {
@@ -169,9 +168,9 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 		downButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				ISelection selection = viewer.getSelection();
+				IStructuredSelection selection = viewer.getStructuredSelection();
 				if (!selection.isEmpty()) {
-					String element = (String) ((IStructuredSelection) selection).getFirstElement();
+					String element = (String) selection.getFirstElement();
 					String[] old = (String[]) value;
 					for (int i = 0; i < old.length; i++) {
 						if (element.equals(old[i])) {

@@ -61,6 +61,7 @@ public class Messages extends NLS {
 	public static String Format_pm;
 	public static String Format_time_invalid;
 	public static String Format_undefined;
+	public static String Format_unexpected;
 	public static String QueryField_owner_id;
 	public static String QueryField_35_panorama;
 	public static String QueryField_4_5x6;

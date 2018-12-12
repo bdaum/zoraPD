@@ -28,12 +28,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
-import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ControlContribution;
 import org.eclipse.jface.action.IAction;
@@ -52,7 +47,6 @@ import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseMoveListener;
-import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Rectangle;
@@ -72,6 +66,7 @@ import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchCommandConstants;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.actions.ActionFactory;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
@@ -87,6 +82,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetFilter;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.IScoreFormatter;
+import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IColorCodeFilter;
 import com.bdaum.zoom.core.db.IDbManager;
@@ -100,6 +96,7 @@ import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.INavigationHistory;
 import com.bdaum.zoom.ui.IZoomActionConstants;
 import com.bdaum.zoom.ui.IZoomCommandIds;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.dialogs.ZInputDialog;
 import com.bdaum.zoom.ui.internal.Icons;
@@ -107,6 +104,7 @@ import com.bdaum.zoom.ui.internal.Icons.Icon;
 import com.bdaum.zoom.ui.internal.StartListener;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.actions.SelectionActionCluster;
 import com.bdaum.zoom.ui.internal.actions.ZoomActionFactory;
 import com.bdaum.zoom.ui.internal.dialogs.AlbumSelectionDialog;
 import com.bdaum.zoom.ui.internal.dialogs.ColorCodeDialog;
@@ -115,115 +113,13 @@ import com.bdaum.zoom.ui.internal.dialogs.RatingDialog;
 import com.bdaum.zoom.ui.internal.dialogs.RetargetDialog;
 import com.bdaum.zoom.ui.internal.dialogs.SelectTargetDialog;
 import com.bdaum.zoom.ui.internal.dialogs.SetPersonDialog;
-import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public abstract class AbstractGalleryView extends ImageView
-		implements SelectAllHandler, SelectAllActionProvider, StartListener {
+public abstract class AbstractGalleryView extends ImageView implements StartListener, SelectionActionClusterProvider {
+
 
 	private static final int DEFAULTTHUMBSIZE = 128;
 
-	protected final class GalleryMouseWheelListener implements MouseWheelListener, IPreferenceChangeListener {
-
-		private double zoomSpeed = 0;
-		private double lag = 0.8d;
-		private int softness;
-		private int wheelkey;
-		private ScheduledFuture<?> zoomTask;
-
-		public GalleryMouseWheelListener() {
-			setSoftness();
-			setWheelkey();
-			InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID).addPreferenceChangeListener(this);
-		}
-
-		private void setWheelkey() {
-			wheelkey = UiActivator.getDefault().getPreferenceStore().getInt(PreferenceConstants.WHEELKEY);
-		}
-
-		private void setSoftness() {
-			softness = UiActivator.getDefault().getPreferenceStore().getInt(PreferenceConstants.WHEELSOFTNESS);
-			lag = softness * 0.003d + 0.65d;
-			if (softness == 0)
-				cancel();
-		}
-
-		public void mouseScrolled(final MouseEvent e) {
-			if (softness == 0) {
-				zoomSpeed = e.count;
-				performWheelAction(wheelkey, e.stateMask);
-				return;
-			}
-			zoomSpeed += 3 * e.count;
-			if (zoomTask == null && zoomSpeed != 0) {
-				setFocussedItem(e);
-				zoomTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(() -> {
-					if (!e.display.isDisposed())
-						e.display.syncExec(() -> performWheelAction(wheelkey, e.stateMask));
-					zoomSpeed = zoomSpeed * lag;
-					if (zoomSpeed < lag) {
-						GalleryMouseWheelListener.this.cancel();
-						setFocussedItem(null);
-					}
-				}, 0L, 100L, TimeUnit.MILLISECONDS);
-			}
-		}
-
-		private void performWheelAction(final int wKey, int stateMask) {
-			int speed = (int) (zoomSpeed + 0.5d);
-			switch (wKey) {
-			case PreferenceConstants.WHEELSHIFTPANS:
-				if ((stateMask & SWT.SHIFT) != 0)
-					scroll(speed);
-				else if ((stateMask & (SWT.SHIFT | SWT.ALT)) == 0)
-					zoom(speed);
-				break;
-			case PreferenceConstants.WHEELALTPANS:
-				if ((stateMask & SWT.ALT) != 0)
-					scroll(speed);
-				else if ((stateMask & (SWT.SHIFT | SWT.ALT)) == 0)
-					zoom(speed);
-				break;
-			case PreferenceConstants.WHEELSHIFTZOOMS:
-				if ((stateMask & SWT.SHIFT) != 0)
-					zoom(speed);
-				else if ((stateMask & (SWT.SHIFT | SWT.ALT)) == 0)
-					scroll(speed);
-				break;
-			case PreferenceConstants.WHEELALTZOOMS:
-				if ((stateMask & SWT.ALT) != 0)
-					zoom(speed);
-				else if ((stateMask & (SWT.SHIFT | SWT.ALT)) == 0)
-					scroll(speed);
-				break;
-			case PreferenceConstants.WHEELZOOMONLY:
-				zoom(speed);
-				break;
-			case PreferenceConstants.WHEELSCROLLONLY:
-				scroll(speed);
-				break;
-			}
-		}
-
-		public void cancel() {
-			if (zoomTask != null) {
-				zoomTask.cancel(true);
-				zoomTask = null;
-			}
-		}
-
-		public void preferenceChange(PreferenceChangeEvent event) {
-			if (event.getKey().equals(PreferenceConstants.WHEELSOFTNESS))
-				setSoftness();
-			else if (event.getKey().equals(PreferenceConstants.WHEELKEY))
-				setWheelkey();
-		}
-
-		public void dispose() {
-			cancel();
-			InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID).removePreferenceChangeListener(this);
-		}
-	}
 
 	protected class ScaleContributionItem extends ControlContribution {
 
@@ -322,7 +218,8 @@ public abstract class AbstractGalleryView extends ImageView
 	protected static final String THUMBNAIL_SIZE = "com.bdaum.zoom.currentThumbnailSize"; //$NON-NLS-1$
 	protected static final int MAXTHUMBSIZE = 512;
 	protected static final int MINTHUMBSIZE = 48;
-	private static final int MAXSELECTALL = 500;
+	private static final List<Asset> EMPTYLIST = new ArrayList<>(0);
+
 	private static final String LAST_SELECTION = "com.bdaum.zoom.lastSelection"; //$NON-NLS-1$
 	protected IStructuredSelection selection;
 	private IAction removeFromAlbumAction;
@@ -331,7 +228,7 @@ public abstract class AbstractGalleryView extends ImageView
 	private IAction saveQueryAction;
 	private String initialSelection;
 	protected int thumbsize = DEFAULTTHUMBSIZE;
-	protected GalleryMouseWheelListener mouseWheelListener;
+//	protected GalleryMouseWheelListener mouseWheelListener;
 	protected IScoreFormatter scoreFormatter;
 	protected int refreshing;
 	protected IAction collapseAction;
@@ -345,6 +242,7 @@ public abstract class AbstractGalleryView extends ImageView
 	private IAction renameAction;
 	private IAction stackAction;
 	private IAction splitCatAction;
+	protected SelectionActionCluster selectionActionCluster;
 
 	public IAssetProvider getAssetProvider() {
 		return Core.getCore().getAssetProvider();
@@ -354,20 +252,7 @@ public abstract class AbstractGalleryView extends ImageView
 		// do nothing
 	}
 
-	/**
-	 * Subclasses may overwrite
-	 */
 	protected void fireSizeChanged() {
-		// do nothing
-	}
-
-	/**
-	 * Scroll
-	 *
-	 * @param dist
-	 *            scrolling distance Subclasses may overwrite
-	 */
-	protected void scroll(int dist) {
 		// do nothing
 	}
 
@@ -476,7 +361,7 @@ public abstract class AbstractGalleryView extends ImageView
 		saveQueryAction.setToolTipText(Messages.getString("AbstractGalleryView.adds_the_current_query")); //$NON-NLS-1$
 		removeFromAlbumAction = addAction(ZoomActionFactory.REMOVEFROMALBUM.create(bars, this));
 		selectRatingAction = new Action(Messages.getString("AbstractGalleryView.show_all_images"), //$NON-NLS-1$
-				Icons.ratingAllSmall.getDescriptor()) {
+				Icons.ratingAll.getDescriptor()) {
 
 			@Override
 			public void runWithEvent(Event event) {
@@ -512,7 +397,10 @@ public abstract class AbstractGalleryView extends ImageView
 					switch (newRating) {
 					case QueryField.SELECTALL:
 						tooltip = Messages.getString("AbstractGalleryView.show_all_images"); //$NON-NLS-1$
-						icon = Icons.ratingAllSmall;
+						icon = Icons.ratingAll;
+						break;
+					case 0:
+						icon = Icons.rating0;
 						break;
 					case 1:
 						icon = Icons.rating1;
@@ -696,7 +584,6 @@ public abstract class AbstractGalleryView extends ImageView
 				.setToolTipText(Messages.getString("AbstractGalleryView.show_all_images_independent_of_format")); //$NON-NLS-1$
 
 		retargetAction = new Action(Messages.getString("AbstractGalleryView.retarget")) { //$NON-NLS-1$
-
 			@Override
 			public void runWithEvent(Event event) {
 				AssetSelection sel = (AssetSelection) getSelection();
@@ -754,7 +641,11 @@ public abstract class AbstractGalleryView extends ImageView
 		renameAction = addAction(ZoomActionFactory.BULKRENAME.create(bars, this));
 		stackAction = addAction(ZoomActionFactory.STACK.create(bars, this));
 		splitCatAction = addAction(ZoomActionFactory.SPLITCATALOG.create(null, this));
-		createSelectallAction();
+		selectionActionCluster = ZoomActionFactory.createSelectionActionCluster(this, this);
+	}
+
+	public SelectionActionCluster getSelectActionCluster() {
+		return selectionActionCluster;
 	}
 
 	@Override
@@ -768,7 +659,7 @@ public abstract class AbstractGalleryView extends ImageView
 			manager.add(collapseAction);
 		if (configureCollapseAction != null)
 			manager.add(configureCollapseAction);
-		manager.add(selectAllAction);
+		selectionActionCluster.addToMenuManager(manager);
 		manager.add(new Separator());
 		manager.add(addBookmarkAction);
 		manager.add(saveQueryAction);
@@ -801,7 +692,7 @@ public abstract class AbstractGalleryView extends ImageView
 		manager.add(showInTimeLineAction);
 		manager.add(new Separator());
 		if (!readOnly) {
-			manager.add(getSelectAllAction());
+			// manager.add(getSelectAllAction());
 			manager.add(addBookmarkAction);
 			manager.add(addToAlbumAction);
 			IAssetProvider assetProvider = getAssetProvider();
@@ -839,6 +730,13 @@ public abstract class AbstractGalleryView extends ImageView
 		manager.add(addBookmarkAction);
 		manager.add(saveQueryAction);
 		manager.add(new Separator());
+	}
+
+	protected IActionBars contributeToActionBars() {
+		IActionBars bars = super.contributeToActionBars();
+		bars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(),
+				selectionActionCluster.getAction(SelectionActionCluster.SELECTALL));
+		return bars;
 	}
 
 	public ISelection getSelection() {
@@ -884,11 +782,115 @@ public abstract class AbstractGalleryView extends ImageView
 	}
 
 	@Override
-	protected void selectNone() {
+	public void selectNone() {
 		setAssetSelection(AssetSelection.EMPTY);
 	}
 
-	protected abstract void setAssetSelection(AssetSelection assetSelection);
+	@Override
+	public void revertSelection() {
+		IAssetProvider assetProvider = getAssetProvider();
+		if (assetProvider != null) {
+			Set<Asset> allAssets = new HashSet<>(assetProvider.getAssets());
+			allAssets.removeAll(getAssetSelection().getAssets());
+			setSelection(new AssetSelection(new ArrayList<>(allAssets)));
+		}
+	}
+
+	@Override
+	public void select(int type, boolean shift, boolean alt) {
+		if (alt || shift) {
+			Set<Asset> currentSelection = new HashSet<>(getAssetSelection().getAssets());
+			if (alt)
+				currentSelection.removeAll(select(type));
+			else
+				currentSelection.addAll(select(type));
+			setAssetSelection(new AssetSelection(new ArrayList<>(currentSelection)));
+		} else
+			setAssetSelection(new AssetSelection(select(type)));
+	}
+
+	private List<Asset> select(int type) {
+		List<Asset> result = EMPTYLIST;
+		IAssetProvider assetProvider = getAssetProvider();
+		if (assetProvider != null) {
+			List<Asset> assets = assetProvider.getAssets();
+			result = new ArrayList<>(assets.size());
+			for (Asset asset : assets)
+				if (testAsset(type, asset))
+					result.add(asset);
+		}
+		return result;
+	}
+
+	protected boolean testAsset(int type, Asset asset) {
+		boolean selected = false;
+		switch (type) {
+		case SelectionActionCluster.UNRATED:
+			selected = asset.getRating() < 0;
+			break;
+		case SelectionActionCluster.RATED0:
+		case SelectionActionCluster.RATED1:
+		case SelectionActionCluster.RATED2:
+		case SelectionActionCluster.RATED3:
+		case SelectionActionCluster.RATED4:
+		case SelectionActionCluster.RATED5:
+			selected = asset.getRating() == type;
+			break;
+		case SelectionActionCluster.UNCODED:
+			selected = asset.getColorCode() < 0;
+			break;
+		case SelectionActionCluster.CODEDBLACK:
+			selected = asset.getColorCode() == Constants.COLOR_BLACK;
+			break;
+		case SelectionActionCluster.CODEDBLUE:
+			selected = asset.getColorCode() == Constants.COLOR_BLUE;
+			break;
+		case SelectionActionCluster.CODEDCYAN:
+			selected = asset.getColorCode() == Constants.COLOR_CYAN;
+			break;
+		case SelectionActionCluster.CODEGREEN:
+			selected = asset.getColorCode() == Constants.COLOR_GREEN;
+			break;
+		case SelectionActionCluster.CODEDMAGENTA:
+			selected = asset.getColorCode() == Constants.COLOR_MAGENTA;
+			break;
+		case SelectionActionCluster.CODEDORANGE:
+			selected = asset.getColorCode() == Constants.COLOR_ORANGE;
+			break;
+		case SelectionActionCluster.CODEDPINK:
+			selected = asset.getColorCode() == Constants.COLOR_PINK;
+			break;
+		case SelectionActionCluster.CODEDRED:
+			selected = asset.getColorCode() == Constants.COLOR_RED;
+			break;
+		case SelectionActionCluster.CODEDVIOLET:
+			selected = asset.getColorCode() == Constants.COLOR_VIOLET;
+			break;
+		case SelectionActionCluster.CODEDWHITE:
+			selected = asset.getColorCode() == Constants.COLOR_WHITE;
+			break;
+		case SelectionActionCluster.CODEDYELLOW:
+			selected = asset.getColorCode() == Constants.COLOR_YELLOW;
+			break;
+		case SelectionActionCluster.NOTGEODED:
+			selected = Double.isNaN(asset.getGPSLatitude()) || Double.isNaN(asset.getGPSLongitude());
+			break;
+		case SelectionActionCluster.GEOCODED:
+			selected = !Double.isNaN(asset.getGPSLatitude()) && !Double.isNaN(asset.getGPSLongitude());
+			break;
+		case SelectionActionCluster.LOCAL:
+			selected = asset.getFileState() != IVolumeManager.PEER;
+			break;
+		case SelectionActionCluster.PEER:
+			selected = asset.getFileState() == IVolumeManager.PEER;
+			break;
+		case SelectionActionCluster.ORPHAN:
+			selected = asset.getFileState() != IVolumeManager.PEER
+					&& Core.getCore().getVolumeManager().determineFileState(asset) == IVolumeManager.OFFLINE;
+			break;
+		}
+		return selected;
+	}
 
 	@Override
 	public void assetsModified(final BagChange<Asset> changes, final QueryField node) {
@@ -981,38 +983,19 @@ public abstract class AbstractGalleryView extends ImageView
 			if (assetProvider != null) {
 				SmartCollectionImpl coll = assetProvider.loadCollection(initialSelection);
 				if (coll != null)
-					UiActivator.getDefault().getNavigationHistory(getSite().getWorkbenchWindow())
+					Ui.getUi().getNavigationHistory(getSite().getWorkbenchWindow())
 							.selectionChanged(new SelectionChangedEvent(this, new StructuredSelection(coll)));
 				initialSelection = null;
 			}
 		}
 	}
 
-	protected void createSelectallAction() {
-		selectAllAction = new Action(Messages.getString("AbstractGalleryView.select_all"), //$NON-NLS-1$
-				Icons.selectAll.getDescriptor()) {
-
-			@Override
-			public void run() {
-				IAssetProvider assetProvider = getAssetProvider();
-				if (assetProvider != null) {
-					int assetCount = assetProvider.getAssetCount();
-					if (assetCount > MAXSELECTALL && !AcousticMessageDialog.openConfirm(getSite().getShell(),
-							Messages.getString("AbstractGalleryView.select_all"), //$NON-NLS-1$
-							NLS.bind(Messages.getString("AbstractGalleryView.selecting_a_large_number"), //$NON-NLS-1$
-									assetCount)))
-						return;
-					selectAll();
-				}
-			}
-
-		};
-		selectAllAction.setToolTipText(Messages.getString("AbstractGalleryView.select_all_images_in_gallery")); //$NON-NLS-1$
-	}
-
 	@Override
 	protected void registerCommands() {
-		registerCommand(selectAllAction, IWorkbenchCommandConstants.EDIT_SELECT_ALL);
+		registerCommand(selectionActionCluster.getAction(SelectionActionCluster.SELECTALL),
+				IWorkbenchCommandConstants.EDIT_SELECT_ALL);
+		registerCommand(selectionActionCluster.getAction(SelectionActionCluster.SELECTNONE), IZoomCommandIds.Deselect);
+		registerCommand(selectionActionCluster.getAction(SelectionActionCluster.REVERT), IZoomCommandIds.Revert);
 		registerCommand(removeFromAlbumAction, IZoomCommandIds.RemoveFromAlbum);
 		registerCommand(splitCatAction, IZoomCommandIds.SplitCatalogCommand);
 		super.registerCommands();
@@ -1020,18 +1003,19 @@ public abstract class AbstractGalleryView extends ImageView
 
 	@Override
 	public void updateActions(boolean force) {
-		if (removeFromAlbumAction != null && (viewActive || force)) {
+		if (removeFromAlbumAction != null && (isVisible() || force)) {
 			super.updateActions(force);
 			boolean writable = !dbIsReadonly();
 			int localCount = getSelectionCount(true);
-			removeFromAlbumAction.setEnabled(localCount > 0 && writable);
-			renameAction.setEnabled(localCount > 0 && writable);
-			stackAction.setEnabled(localCount > 1 && writable);
+			boolean localSel = localCount > 0 && writable;
+			removeFromAlbumAction.setEnabled(localSel);
+			renameAction.setEnabled(localSel);
+			stackAction.setEnabled(localSel && localCount > 1);
 			splitCatAction.setEnabled(true);
 			IAssetProvider assetProvider = getAssetProvider();
-			if (selectAllAction != null)
-				selectAllAction.setEnabled(assetProvider != null);
-			SmartCollectionImpl currentCollection = assetProvider == null ? null : assetProvider.getCurrentCollection();
+			boolean hasProvider = assetProvider != null;
+			selectionActionCluster.updateActions();
+			SmartCollectionImpl currentCollection = hasProvider ? assetProvider.getCurrentCollection() : null;
 			boolean canSave = false;
 			if (currentCollection != null) {
 				if (currentCollection.getAdhoc() && !currentCollection.getSystem())
@@ -1043,10 +1027,6 @@ public abstract class AbstractGalleryView extends ImageView
 			}
 			saveQueryAction.setEnabled(canSave && writable);
 		}
-	}
-
-	protected void addMouseWheelListener(Composite composite) {
-		composite.addMouseWheelListener(mouseWheelListener = new GalleryMouseWheelListener());
 	}
 
 	protected void addCueListener() {
@@ -1062,24 +1042,6 @@ public abstract class AbstractGalleryView extends ImageView
 					getNavigationHistory().postCueChanged(cue = ob);
 			}
 		});
-	}
-
-	private void zoom(int zoomSpeed) {
-		if (scaleContributionItem != null && !scaleContributionItem.isDisposed())
-			scaleContributionItem.increment(zoomSpeed);
-	}
-
-	@Override
-	public void dispose() {
-		if (mouseWheelListener != null) {
-			mouseWheelListener.dispose();
-			mouseWheelListener = null;
-		}
-		super.dispose();
-	}
-
-	public IAction getSelectAllAction() {
-		return selectAllAction;
 	}
 
 	protected void setAppStarting(final Control control) {
@@ -1119,10 +1081,13 @@ public abstract class AbstractGalleryView extends ImageView
 			region.setStringId(regionId);
 			region.setAsset_person_parent(asset.getStringId());
 		}
-		SetPersonDialog dialog = new SetPersonDialog(getSite().getShell(), assignedAlbums);
-		if (dialog.open() == AlbumSelectionDialog.OK)
-			OperationJob.executeOperation(new AddAlbumOperation(dialog.getResult(), Collections.singletonList(asset),
-					region, dialog.isDeleteRegion()), this);
+		SetPersonDialog dialog = new SetPersonDialog(getSite().getShell(), assignedAlbums, asset.getStringId());
+		if (dialog.open() == AlbumSelectionDialog.OK) {
+			boolean deleteRegion = dialog.isDeleteRegion();
+			boolean deleteAll = dialog.isDeleteAllRegions();
+			OperationJob.executeOperation(new AddAlbumOperation(deleteAll ? null : dialog.getResult(), Collections.singletonList(asset),
+					deleteAll ? null : region, deleteRegion || deleteAll), this);
+		}
 	}
 
 }

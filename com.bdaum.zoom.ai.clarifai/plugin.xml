@@ -37,7 +37,6 @@
          point="com.bdaum.zoom.ai.serviceProvider">
       <provider
             class="com.bdaum.zoom.ai.clarifai.internal.core.ClarifaiServiceProvider"
-            featureId="1001"
             id="com.bdaum.zoom.ai.provider.clarifai"
             latency="1000"
             name="Clarifai">
@@ -53,6 +52,19 @@
                id="c2cf7cecd8a6427da375b9f35fcd2381"
                label="%ratingModel.label.focus">
          </ratingModel>
+         <feature
+               description="%general_similarity_expl"
+               essential="true"
+               id="1001"
+               label="%general"
+               name="clarifai">
+         </feature>
+         <feature
+               description="%face_similarity_expl"
+               id="1002"
+               label="%face"
+               name="clarifaiFace">
+         </feature>
       </provider>
    </extension>
    <extension

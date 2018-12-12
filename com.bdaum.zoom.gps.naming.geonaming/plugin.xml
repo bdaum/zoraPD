@@ -26,5 +26,11 @@
             plugin="com.bdaum.zoom.gps">
       </contexts>
    </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.bdaum.zoom.gps.naming.geonaming.internal.PreferenceInitializer">
+      </initializer>
+   </extension>
 
 </plugin>

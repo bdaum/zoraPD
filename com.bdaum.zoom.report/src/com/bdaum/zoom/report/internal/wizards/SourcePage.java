@@ -35,12 +35,13 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -67,7 +68,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class SourcePage extends ColoredWizardPage implements SelectionListener {
+public class SourcePage extends ColoredWizardPage implements Listener {
 
 	public class ReportSelectionDialog extends ZListDialog {
 
@@ -114,7 +115,7 @@ public class SourcePage extends ColoredWizardPage implements SelectionListener {
 		@Override
 		protected void buttonPressed(int buttonId) {
 			if (buttonId == DELETE) {
-				Object firstElement = ((IStructuredSelection) getTableViewer().getSelection()).getFirstElement();
+				Object firstElement = getTableViewer().getStructuredSelection().getFirstElement();
 				if (firstElement != null) {
 					Core.getCore().getDbManager().safeTransaction(firstElement, null);
 					getTableViewer().remove(firstElement);
@@ -196,7 +197,7 @@ public class SourcePage extends ColoredWizardPage implements SelectionListener {
 		sourceComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1));
 		sourceComp.setLayout(new GridLayout(1, false));
 		sourceButtonGroup = new RadioButtonGroup(sourceComp, null, SWT.NONE, Messages.SourcePage_all, Messages.SourcePage_collection);
-		sourceButtonGroup.addSelectionListener(this);
+		sourceButtonGroup.addListener(this);
 		sourceButtonGroup.setSelection(1);
 		new Label(sourceComp, SWT.NONE);
 		collViewer = new TreeViewer(sourceComp, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
@@ -290,14 +291,9 @@ public class SourcePage extends ColoredWizardPage implements SelectionListener {
 		validatePage();
 	}
 
-	public void widgetSelected(SelectionEvent e) {
+	public void handleEvent(Event e) {
 		updateFields();
 	}
 	
-	@Override
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
-	}
-
 
 }

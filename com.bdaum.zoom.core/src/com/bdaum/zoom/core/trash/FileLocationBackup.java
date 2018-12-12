@@ -44,6 +44,7 @@ import com.bdaum.zoom.core.Messages;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.FileWatchManager;
+import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.program.DiskFullException;
 
 /**
@@ -147,19 +148,18 @@ public class FileLocationBackup extends HistoryItem {
 				FileWatchManager fileWatchManager = activator.getFileWatchManager();
 				try {
 					fileWatchManager.moveFileSilently(file, newFile, anOpId, monitor);
-					URI[] xmpURIs = Core.getSidecarURIs(file.toURI());
-					URI[] xmpTargetURIs = Core.getSidecarURIs(newFile.toURI());
+					File[] xmps = Core.getSidecarFiles(file.toURI(), false);
+					File[] xmpTargets = Core.getSidecarFiles(newFile.toURI(), false);
 					URI voiceOrigURI = null;
 					URI voiceTargetURI = null;
-					String voiceFileURI = asset.getVoiceFileURI();
-					if (".".equals(voiceFileURI)) { //$NON-NLS-1$
+					if (AssetEnsemble.hasCloseVoiceNote(asset)) { 
 						voiceOrigURI = Core.getVoicefileURI(file);
 						voiceTargetURI = Core.getVoicefileURI(newFile);
 					}
-					for (int i = 0; i < xmpURIs.length; i++) {
-						File xmpFile = new File(xmpURIs[i]);
+					for (int i = 0; i < xmps.length; i++) {
+						File xmpFile = xmps[i];
 						if (xmpFile.exists())
-							fileWatchManager.moveFileSilently(xmpFile, new File(xmpTargetURIs[i]), anOpId, monitor);
+							fileWatchManager.moveFileSilently(xmpFile, xmpTargets[i], anOpId, monitor);
 					}
 					if (voiceOrigURI != null) {
 						File voiceFile = new File(voiceOrigURI);
@@ -187,12 +187,12 @@ public class FileLocationBackup extends HistoryItem {
 
 	private static void deleteFile(Asset asset, File file) {
 		file.delete();
-		URI[] xmpURIs = Core.getSidecarURIs(file.toURI());
+		File[] xmps = Core.getSidecarFiles(file.toURI(), false);
 		URI voiceOrigURI = null;
-		if (".".equals(asset.getVoiceFileURI())) //$NON-NLS-1$
+		if (AssetEnsemble.hasCloseVoiceNote(asset))
 			voiceOrigURI = Core.getVoicefileURI(file);
-		for (int i = 0; i < xmpURIs.length; i++)
-			new File(xmpURIs[i]).delete();
+		for (int i = 0; i < xmps.length; i++)
+			xmps[i].delete();
 		if (voiceOrigURI != null)
 			new File(voiceOrigURI).delete();
 	}

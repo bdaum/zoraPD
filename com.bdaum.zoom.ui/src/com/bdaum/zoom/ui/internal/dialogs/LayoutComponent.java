@@ -98,7 +98,7 @@ public class LayoutComponent implements IInputValidator {
 		protected void buttonPressed(int buttonId) {
 			if (buttonId == DELETE) {
 				TableViewer tableViewer = getTableViewer();
-				IStructuredSelection selection = (IStructuredSelection) tableViewer.getSelection();
+				IStructuredSelection selection = tableViewer.getStructuredSelection();
 				Core.getCore().getDbManager().safeTransaction(selection.toList(), null);
 				tableViewer.remove(selection.toArray());
 				return;

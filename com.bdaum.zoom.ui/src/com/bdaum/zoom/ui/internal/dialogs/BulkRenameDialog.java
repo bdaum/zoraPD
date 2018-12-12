@@ -20,17 +20,13 @@
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
@@ -43,7 +39,7 @@ import com.bdaum.zoom.ui.internal.widgets.RenameGroup;
 
 public class BulkRenameDialog extends ZTitleAreaDialog {
 
-	private static final String SETTINGSID = "com.bdaum.zoom.bulkRenameProperties"; //$NON-NLS-1$;
+	private static final String SETTINGSID = "com.bdaum.zoom.bulkRenameProperties"; //$NON-NLS-1$ ;
 	private RenameGroup renameGroup;
 	private IDialogSettings settings;
 	private final Asset asset;
@@ -67,8 +63,9 @@ public class BulkRenameDialog extends ZTitleAreaDialog {
 	}
 
 	private void fillValues() {
-		settings = getDialogSettings(UiActivator.getDefault(),SETTINGSID);
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		renameGroup.fillValues(settings, null, null);
+		renameGroup.update();
 	}
 
 	@Override
@@ -77,42 +74,25 @@ public class BulkRenameDialog extends ZTitleAreaDialog {
 		Composite comp = new Composite(area, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new GridLayout());
-		renameGroup = new RenameGroup(comp, SWT.NONE, asset, true, new RenamingTemplate[] {
-				new RenamingTemplate(
-						Messages.BulkRenameDialog_date_filename, "_" + Constants.TV_YYYY //$NON-NLS-1$
+		renameGroup = new RenameGroup(comp, SWT.NONE, asset, true,
+				new RenamingTemplate[] {
+						new RenamingTemplate(Messages.BulkRenameDialog_date_filename, "_" + Constants.TV_YYYY //$NON-NLS-1$
 								+ Constants.TV_MM + Constants.TV_DD + "-" //$NON-NLS-1$
 								+ Constants.TV_FILENAME, true),
-				new RenamingTemplate(
-						Messages.BulkRenameDialog_user_year_seq, Constants.TV_USER
-								+ Constants.TV_YYYY + "-" + Constants.TV_IMAGE_NO5, true), //$NON-NLS-1$
-				new RenamingTemplate(
-						Messages.BulkRenameDialog_cue_year_seq,
-						Constants.TV_CUE
-								+ "_" + Constants.TV_YYYY + "-" + Constants.TV_IMAGE_NO5, true), //$NON-NLS-1$ //$NON-NLS-2$
-				new RenamingTemplate(
-						Messages.BulkRenameDialog_filename_seq, Constants.TV_FILENAME
-								+ "-" + Constants.TV_IMAGE_NO5, true), //$NON-NLS-1$
-				new RenamingTemplate(
-						Messages.BulkRenameDialog_orig_filename, Constants.TV_FILENAME, true)
-		}, false);
-		renameGroup.addSelectionListener(new SelectionAdapter() {
+						new RenamingTemplate(Messages.BulkRenameDialog_user_year_seq,
+								Constants.TV_USER + Constants.TV_YYYY + "-" + Constants.TV_IMAGE_NO5, true), //$NON-NLS-1$
+						new RenamingTemplate(Messages.BulkRenameDialog_cue_year_seq,
+								Constants.TV_CUE + "_" + Constants.TV_YYYY + "-" + Constants.TV_IMAGE_NO5, true), //$NON-NLS-1$ //$NON-NLS-2$
+						new RenamingTemplate(Messages.BulkRenameDialog_filename_seq,
+								Constants.TV_FILENAME + "-" + Constants.TV_IMAGE_NO5, true), //$NON-NLS-1$
+						new RenamingTemplate(Messages.BulkRenameDialog_orig_filename, Constants.TV_FILENAME, true) },
+				Constants.TV_RENAME);
+		renameGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				validate();
 			}
 		});
-		renameGroup.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				validate();
-			}
-		});
-		renameGroup
-				.addSelectionChangedListener(new ISelectionChangedListener() {
-					public void selectionChanged(SelectionChangedEvent event) {
-						validate();
-					}
-				});
-
 		return area;
 	}
 
@@ -151,7 +131,7 @@ public class BulkRenameDialog extends ZTitleAreaDialog {
 	}
 
 	public int getStart() {
-		return start ;
+		return start;
 	}
 
 }

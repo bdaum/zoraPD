@@ -29,7 +29,6 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -41,8 +40,10 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -134,12 +135,11 @@ public class SearchResultGroup {
 			link = new CLink(methodGroup, SWT.NONE);
 			link.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 			link.setText(Messages.SearchResultGroup_configure);
-			link.addSelectionListener(new SelectionAdapter() {
+			link.addListener(new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					BusyIndicator.showWhile(link.getDisplay(), () -> {
-						IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench()
-								.getActiveWorkbenchWindow();
+						IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 						if (activeWorkbenchWindow != null) {
 							IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
 							if (activePage != null) {
@@ -156,7 +156,6 @@ public class SearchResultGroup {
 					});
 				}
 			});
-
 		}
 		if (scoreAndHits) {
 			Label numberlabel = new Label(composite, SWT.NONE);
@@ -164,7 +163,8 @@ public class SearchResultGroup {
 			numberField = new NumericControl(composite, NumericControl.LOGARITHMIC);
 			numberField.setMaximum(1000);
 			numberField.setMinimum(3);
-			new Label(composite, SWT.NONE).setText(com.bdaum.zoom.ui.internal.widgets.Messages.SearchResultGroup_minScore);
+			new Label(composite, SWT.NONE)
+					.setText(com.bdaum.zoom.ui.internal.widgets.Messages.SearchResultGroup_minScore);
 			scoreField = new NumericControl(composite, SWT.NONE);
 			scoreField.setMaximum(99);
 			scoreField.setMinimum(1);
@@ -206,7 +206,8 @@ public class SearchResultGroup {
 
 	private void compileOptions() {
 		opts = new ArrayList<Algorithm>();
-		for (Algorithm algorithm : Core.getCore().getDbFactory().getLireService(true).getSupportedSimilarityAlgorithms())
+		for (Algorithm algorithm : Core.getCore().getDbFactory().getLireService(true)
+				.getSupportedSimilarityAlgorithms())
 			if (supportedAlgorithms.contains(algorithm.getName()))
 				opts.add(algorithm);
 	}
@@ -216,9 +217,9 @@ public class SearchResultGroup {
 			okButton.setEnabled(true);
 			return;
 		}
-		Algorithm algo = (Algorithm) ((IStructuredSelection) algoViewer.getSelection()).getFirstElement();
+		Algorithm algo = (Algorithm) algoViewer.getStructuredSelection().getFirstElement();
 		if (algo != null) {
-			if (algoExplanation != null)
+			if (algoExplanation != null && algo.getDescription() != null)
 				algoExplanation.setText(algo.getDescription());
 			if (okButton != null)
 				okButton.setEnabled(true);
@@ -327,7 +328,7 @@ public class SearchResultGroup {
 	}
 
 	public Algorithm getSelectedAlgorithm() {
-		return (algoViewer != null) ? (Algorithm) ((IStructuredSelection) algoViewer.getSelection()).getFirstElement()
+		return (algoViewer != null) ? (Algorithm) algoViewer.getStructuredSelection().getFirstElement()
 				: null;
 	}
 

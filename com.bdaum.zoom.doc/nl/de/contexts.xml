@@ -190,6 +190,10 @@
     <description>Diashows entwerfen und bearbeiten</description>
     <topic href="html/reference/slideshow.html" label="Diashow-Designer"/>
  </context>
+ <context id="calendar_view_context" title="Kalender">
+    <description>Kalender</description>
+    <topic href="html/reference/calendar.html" label="Kalender"/>
+ </context>
  <context id="exhibition_view_context" title="Ausstellungs-Designer">
     <description>Fotoausstellungen entwerfen</description>
     <topic href="html/reference/exhibition.html" label="Ausstellungs-Designer"/>
@@ -457,5 +461,9 @@
  <context id="autoRating_dialog_context" title="Automatische Bildbewertung">
     <description>Mehrere Bilder mit Hilfe von KI bewerten</description>
     <topic href="html/reference/rating.html" label="Automatische Bildbewertung"/>
+ </context>
+ <context id="tethered_dialog_context" title="Kabelgebundenes Fotografieren">
+    <description>Kabelgebundenes Fotografieren</description>
+    <topic href="html/reference/tethered.html" label="Kabelgebundenes Fotografieren"/>
  </context>
 </contexts>

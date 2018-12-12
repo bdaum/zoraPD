@@ -32,12 +32,12 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
-import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -57,6 +57,8 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.location.LocationImpl;
@@ -71,9 +73,10 @@ import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
-import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.VocabManager;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.operations.ModifyMetaOperation;
+import com.bdaum.zoom.ui.internal.views.ZColumnViewerToolTipSupport;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
@@ -173,11 +176,9 @@ public class KeywordGroup implements IAdaptable {
 				Arrays.sort(availables = filterKeywords(availableKeywords), UiUtilities.stringComparator);
 			return availables;
 		}
-
 	}
 
 	private static final int LIMIT = 8;
-	private static final String SETTINGSID = "com.bdaum.zoom.keyGroup"; //$NON-NLS-1$
 	private static final String AVAILABLE = Messages.KeywordGroup_available;
 	private static final String APPLIED = Messages.KeywordGroup_applied;
 	private static final String[] ROOT = new String[] { APPLIED, AVAILABLE };
@@ -203,7 +204,7 @@ public class KeywordGroup implements IAdaptable {
 	private String replacement;
 
 	public KeywordGroup(Composite area, String[] selectedKeywords, Set<String> predefinedKeywords,
-			List<String> recentKeywords, boolean tags) {
+			List<String> recentKeywords, boolean tags, IDialogSettings settings) {
 		this.selectedKeywords = selectedKeywords;
 		this.recentKeywords = recentKeywords;
 		this.tags = tags;
@@ -231,7 +232,7 @@ public class KeywordGroup implements IAdaptable {
 				recentViewer.setContentProvider(ArrayContentProvider.getInstance());
 				recentViewer.setComparator(ZViewerComparator.INSTANCE);
 				recentViewer.setLabelProvider(new KeywordLabelProvider(vocabManager, null));
-				ColumnViewerToolTipSupport.enableFor(recentViewer);
+				ZColumnViewerToolTipSupport.enableFor(recentViewer);
 				recentViewer.setInput(recentSet);
 				if (selectedKeywords != null)
 					for (String kw : selectedKeywords)
@@ -257,12 +258,11 @@ public class KeywordGroup implements IAdaptable {
 		keywordsGroup.setText(tags ? Messages.KeywordGroup_all_tags : Messages.KeywordGroup_all_keywords);
 		keywordsGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		keywordsGroup.setLayout(new GridLayout(3, false));
-		radioGroup = new FlatGroup(keywordsGroup, SWT.NONE, UiActivator.getDefault().getDialogSettings(SETTINGSID),
-				"hierarchicalKeywords"); //$NON-NLS-1$
+		radioGroup = new FlatGroup(keywordsGroup, SWT.NONE, settings, "hierarchicalKeywords"); //$NON-NLS-1$
 		radioGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
-		radioGroup.addSelectionListener(new SelectionAdapter() {
+		radioGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateKeywordViewer(((IStructuredSelection) viewer.getSelection()).getFirstElement());
 			}
 		});
@@ -280,9 +280,9 @@ public class KeywordGroup implements IAdaptable {
 		if (!tags) {
 			final CheckboxButton excludeButton = WidgetFactory.createCheckButton(keywordsGroup,
 					Messages.KeywordGroup_exclude_geographic, new GridData(SWT.END, SWT.CENTER, true, false));
-			excludeButton.addSelectionListener(new SelectionAdapter() {
+			excludeButton.addListener(new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					excludeGeographic = excludeButton.getSelection();
 					updateKeywordViewer(null);
 				}
@@ -313,7 +313,7 @@ public class KeywordGroup implements IAdaptable {
 			}
 		} });
 		UiUtilities.installDoubleClickExpansion(viewer);
-		ColumnViewerToolTipSupport.enableFor(viewer);
+		ZColumnViewerToolTipSupport.enableFor(viewer);
 		availableKeywords = new HashSet<String>(predefinedKeywords);
 		if (selectedKeywords != null)
 			for (String kw : selectedKeywords)

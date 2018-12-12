@@ -90,7 +90,7 @@ public class Assetbox extends Ticketbox implements Iterable<File>, Iterator<File
 
 	@Override
 	public boolean hasNext() {
-		return assetIterator == null ? false : assetIterator.hasNext();
+		return assetIterator != null && assetIterator.hasNext();
 	}
 
 	@Override

@@ -21,7 +21,6 @@ package com.bdaum.zoom.ui.internal.views;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jface.wizard.WizardDialog;
@@ -42,6 +41,7 @@ import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.job.OperationJob;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.operations.internal.RetargetOperation;
 import com.bdaum.zoom.operations.internal.VoiceNoteOperation;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -165,18 +165,12 @@ public final class ImageDropTargetListener extends EffectDropTargetListener {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void importSound(int x, int y, File sound) {
 		Point coord = control.toControl(x, y);
 		Object obj = host.findObject(coord.x, coord.y);
-		List<Asset> assets = null;
-		if (obj instanceof Asset)
-			assets = Collections.singletonList((Asset) obj);
-		else if (obj instanceof List<?>)
-			assets = (List<Asset>) obj;
-		if (assets != null) {
+		if (obj instanceof Asset && ((Asset) obj).getFileState() != IVolumeManager.PEER) {
 			String uri = sound.toURI().toString();
-			OperationJob.executeOperation(new VoiceNoteOperation(assets, uri, uri, null), host);
+			OperationJob.executeOperation(new VoiceNoteOperation((Asset) obj, uri, uri, null, null), host);
 		}
 	}
 
@@ -224,8 +218,8 @@ public final class ImageDropTargetListener extends EffectDropTargetListener {
 		Shell shell = host.getAdapter(Shell.class);
 		ImportModeDialog dialog = new ImportModeDialog(shell, foreignFolders || device);
 		if (dialog.open() == ImportModeDialog.OK) {
-			ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(images.toArray(new File[images.size()]),
-					folders.toArray(new File[folders.size()]), device && foreignFolders, false, dialog.isNewStructure(),
+			ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(StorageObject.fromFile(images),
+					StorageObject.fromFile(folders), device && foreignFolders, false, dialog.isNewStructure(),
 					host.getSelectedCollection(), false);
 			WizardDialog wizardDialog = new WizardDialog(shell, wizard);
 			wizard.init(null, null);

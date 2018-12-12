@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE"
       label="ZoRa Photo Director Feature"
-      version="3.3.0"
+      version="3.5.0"
       provider-name="bdaum industrial communications"
       plugin="com.bdaum.zoom.rcp">
 
@@ -1300,6 +1300,20 @@ your option) any later version.
 
    <plugin
          id="com.bdaum.zoom.web.skitter"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.darktable"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.bdaum.zoom.mtp"
          download-size="0"
          install-size="0"
          version="0.0.0"

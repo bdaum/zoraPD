@@ -47,11 +47,13 @@ import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.locationCreated.LocationCreatedImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.Messages;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.sun.jna.platform.FileUtils;
 
@@ -321,20 +323,16 @@ public class Trash extends HistoryItem {
 	public void deleteFiles() {
 		if (files) {
 			List<File> toBeDeleted = new ArrayList<File>(3);
-			CoreActivator activator = CoreActivator.getDefault();
+			ICore activator = CoreActivator.getDefault();
 			IVolumeManager volumeManager = activator.getVolumeManager();
 			URI uri = volumeManager.findExistingFile(asset, true);
 			if (uri != null && Constants.FILESCHEME.equals(uri.getScheme()))
 				toBeDeleted.add(new File(uri));
-			if (asset.getXmpModifiedAt() != null) {
-				URI[] sidecarURIs = Core.getSidecarURIs(uri);
-				for (URI sidecarURI : sidecarURIs) {
-					File xmpFile = new File(sidecarURI);
-					if (xmpFile.exists() && xmpFile.lastModified() == asset.getXmpModifiedAt().getTime())
-						toBeDeleted.add(xmpFile);
-				}
-			}
-			if (".".equals(asset.getVoiceFileURI())) { //$NON-NLS-1$
+			if (asset.getXmpModifiedAt() != null)
+				for (File sidecar : Core.getSidecarFiles(uri, false))
+					if (sidecar.exists() && sidecar.lastModified() == asset.getXmpModifiedAt().getTime())
+						toBeDeleted.add(sidecar);
+			if (AssetEnsemble.hasCloseVoiceNote(asset)) { 
 				URI voiceFileUri = volumeManager.findVoiceFile(asset);
 				if (voiceFileUri != null && Constants.FILESCHEME.equals(voiceFileUri.getScheme()))
 					toBeDeleted.add(new File(voiceFileUri));
@@ -356,12 +354,11 @@ public class Trash extends HistoryItem {
 						String[] cmd = new String[] { "trash", null }; //$NON-NLS-1$
 						for (File file : toBeDeleted) {
 							cmd[1] = file.getAbsolutePath();
-							BatchUtilities.executeCommand(
-									cmd,
-									null, Messages.Trash_send_to_trash, IStatus.OK, IStatus.ERROR, -1, 1500L, "UTF-8"); //$NON-NLS-1$
+							BatchUtilities.executeCommand(cmd, null, Messages.Trash_send_to_trash, IStatus.OK,
+									IStatus.ERROR, -1, 1500L, "UTF-8"); //$NON-NLS-1$
 						}
 						return;
-					} catch (IOException|ExecutionException e) {
+					} catch (IOException | ExecutionException e) {
 						activator.logError(Messages.Trash_install_trash_cli, e);
 					}
 				else if (exc == null)

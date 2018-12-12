@@ -59,6 +59,7 @@ import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.DeleteOperation;
 import com.bdaum.zoom.ui.AssetSelection;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
@@ -82,7 +83,7 @@ public class DeleteAction extends Action {
 
 	@Override
 	public void run() {
-		SmartCollectionImpl selectedCollection = UiActivator.getDefault()
+		SmartCollectionImpl selectedCollection = Ui.getUi()
 				.getNavigationHistory(adaptable.getAdapter(IWorkbenchWindow.class)).getSelectedCollection();
 		boolean inAlbum = selectedCollection.getAlbum() && !selectedCollection.getSystem();
 		AssetSelection selection = adaptable.getAdapter(AssetSelection.class);

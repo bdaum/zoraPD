@@ -156,7 +156,7 @@ public class PerspectivesPreferencePage extends AbstractPreferencePage {
 		deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				IPerspectiveDescriptor desc = (IPerspectiveDescriptor) ((IStructuredSelection) viewer.getSelection())
+				IPerspectiveDescriptor desc = (IPerspectiveDescriptor) viewer.getStructuredSelection()
 						.getFirstElement();
 				if (desc != null) {
 					if (event.widget == deleteButton && !isPredefined(desc) && !perspToDelete.contains(desc)
@@ -216,7 +216,7 @@ public class PerspectivesPreferencePage extends AbstractPreferencePage {
 
 	@Override
 	protected void doUpdateButtons() {
-		IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
+		IStructuredSelection sel = viewer.getStructuredSelection();
 		deleteButton.setEnabled(!sel.isEmpty() && !isPredefined((IPerspectiveDescriptor) sel.getFirstElement()));
 	}
 

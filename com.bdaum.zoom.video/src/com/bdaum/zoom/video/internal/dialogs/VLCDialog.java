@@ -27,15 +27,13 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -92,17 +90,18 @@ public class VLCDialog extends ZTitleAreaDialog {
 				Constants.EXEFILTERNAMES, null, vlcLocation == null ? "" //$NON-NLS-1$
 						: vlcLocation.getAbsolutePath(),
 				false, false, getDialogSettings(UiActivator.getDefault(), SETTINGSID));
-		fileEditor.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+		fileEditor.addListener(new Listener() {
+			@Override
+			public void handleEvent(Event event) {
 				updateButtons();
 			}
 		});
 		CLink link = new CLink(composite, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		link.setText(Messages.VLCDialog_download);
-		link.addSelectionListener(new SelectionAdapter() {
+		link.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				String vlcDownload = System.getProperty(Messages.VLCDialog_vlckey);
 				try {
 					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));

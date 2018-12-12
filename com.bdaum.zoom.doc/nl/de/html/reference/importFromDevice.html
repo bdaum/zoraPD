@@ -7,6 +7,9 @@
 
 
 
+
+
+
 <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Import von Gerät/Speicherkarte</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
 <h2>Import von Gerät/Speicherkarte</h2>
 <br>
@@ -17,19 +20,23 @@ bereitgestellt
 ist. Das Laufwerk
 muss den&nbsp;Unterordner <code>DCIM/</code>
 enthalten. Geeignete
-Geräte sind beispielsweise  über
-einen USB-Anschluss verbundene
-Digitalkameras oder Speicherkarten, die
-in ein Kartenlesegerät eingelegt wurden.<br>
-Die Optionen des Import-Prozesses werden mit Hilfe eines Wizards spezifiziert:<br>
+Geräte sind beispielsweise  Speicherkarten, die
+in ein Kartenlesegerät eingelegt wurden, oder Digitalkameras, die über
+einen USB-Anschluss angeschlossen wurden und als Massenspeicher konfiguriert wurden.<br>
 <br>
+Beginnend mit Version 3.5 werden auf Windows-Plattformen auch mit <span style="font-weight: bold;">MTP</span> (<span style="font-style: italic;">Mobile Transfer Protocol</span>)
+oder <span style="font-weight: bold;">PTP</span> (<span style="font-style: italic;">Picture Transfer Protocol</span>) ausgerüstete Geräte wie Smartphones und bestimmte Kameras unterstützt.
+Allerdings gibt es dabei eine Einschränkung: Während bei
+Android-Smartphones die Dateien nach Aufnahmedatum gruppiert und
+sortiert werden können, erfolgt die Gruppierung und Sortierung bei
+anderen Geräten nur nach Dateinamen (Android-Geräte enthalten das
+Aufnahmedatum in Dateinamen). Deshalb sollten Sie, wenn Ihre Kamera die Wahl zwischen <span style="font-weight: bold;">Speicher</span> und <span style="font-weight: bold;">MTP</span> oder <span style="font-weight: bold;">PTP</span> anbietet, <span style="font-weight: bold;">Speicher</span> wählen.<br>
+<br>
+Die Optionen des Import-Prozesses werden mit Hilfe eines Wizards spezifiziert:<br>
 <h4><a name="1"></a>Schritt 1, Auswahl der Bilder</h4>
 Der
 obere Abschnitt dieser Wizardseite<span style="font-style: italic;"> </span> enthält einen Baum,&nbsp;der
-die&nbsp;Dateien basierend auf ihrem jeweiligen <span style="font-weight: bold;"> Änderungsdatum </span>organisiert.
-Auf
-diese Weise können Bilder anhand des Erstellungsdatums
-auswählt werden. Nur
+die&nbsp;Dateien basierend auf ihrem jeweiligen <span style="font-weight: bold;"> Änderungsdatum </span>oder <span style="font-weight: bold;">Dateinamen</span> organisiert. Nur
 unterstützte Dateitypen können importiert werden.<br>
 <ul style="font-weight: normal;">
 <li><span style="font-weight: bold;">Keine Duplikate importieren</span>. Markieren

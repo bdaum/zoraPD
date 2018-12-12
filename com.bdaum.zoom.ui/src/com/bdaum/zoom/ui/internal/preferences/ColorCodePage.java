@@ -111,7 +111,7 @@ public class ColorCodePage extends AbstractPreferencePagePart {
 	@Override
 	public void performOk() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		IStructuredSelection selection = (IStructuredSelection) colorCodeViewer.getSelection();
+		IStructuredSelection selection = colorCodeViewer.getStructuredSelection();
 		if (!selection.isEmpty())
 			preferenceStore.setValue(PreferenceConstants.SHOWCOLORCODE, (String) selection.getFirstElement());
 		StringBuilder sb = new StringBuilder();
@@ -135,7 +135,7 @@ public class ColorCodePage extends AbstractPreferencePagePart {
 
 	protected void updateAutoGroup() {
 		autoGroup.setVisible(PreferenceConstants.COLORCODE_AUTO
-				.equals(((IStructuredSelection) colorCodeViewer.getSelection()).getFirstElement()));
+				.equals(colorCodeViewer.getStructuredSelection().getFirstElement()));
 	}
 
 	@SuppressWarnings("unused")

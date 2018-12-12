@@ -39,7 +39,6 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -75,7 +74,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -110,6 +111,7 @@ import com.bdaum.zoom.ui.internal.hover.IHoverInfo;
 import com.bdaum.zoom.ui.internal.views.EffectDropTargetListener;
 import com.bdaum.zoom.ui.internal.views.IHoverSubject;
 import com.bdaum.zoom.ui.internal.views.ImageRegion;
+import com.bdaum.zoom.ui.internal.views.ZColumnViewerToolTipSupport;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
@@ -250,7 +252,6 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 			}
 			return Status.OK_STATUS;
 		}
-
 	}
 
 	public class ProposalDropTargetListener extends EffectDropTargetListener {
@@ -379,8 +380,8 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		}
 
 		public void dragStart(DragSourceEvent event) {
-			ISelection selection = viewer.getSelection();
-			Object firstElement = ((IStructuredSelection) selection).getFirstElement();
+			IStructuredSelection selection = viewer.getStructuredSelection();
+			Object firstElement = selection.getFirstElement();
 			if (firstElement != null) {
 				event.doit = true;
 				selectionTransfer.setSelection(selection);
@@ -897,7 +898,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		proposalViewer.addDragSupport(DND.DROP_MOVE | DND.DROP_COPY, new Transfer[] { selectionTransfer },
 				new ProposalDragSourceListener(proposalViewer));
 		proposalViewer.addSelectionChangedListener(selectionChangedListener);
-		ColumnViewerToolTipSupport.enableFor(proposalViewer);
+		ZColumnViewerToolTipSupport.enableFor(proposalViewer);
 
 		Composite buttonArea = new Composite(propComp, SWT.NONE);
 		buttonArea.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, false));
@@ -1002,9 +1003,9 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		CLink aiLink = new CLink(proposalArea, SWT.NONE);
 		aiLink.setText(Messages.CategorizeDialog_configure);
 		aiLink.setToolTipText(Messages.CategorizeDialog_user_preferences);
-		aiLink.addSelectionListener(new SelectionAdapter() {
+		aiLink.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				if (aiService != null) {
 					boolean wasEnabled = aiService.isEnabled();
 					if (wasEnabled)
@@ -1103,9 +1104,10 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		catLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
 		catLink.setText(Messages.CategorizeDialog_configure);
 		catLink.setToolTipText(Messages.CategorizeDialog_configure_tooltip);
-		catLink.addSelectionListener(new SelectionAdapter() {
+		catLink.addListener(new Listener() {
+
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				final Shell shell = getShell();
 				BusyIndicator.showWhile(shell.getDisplay(), () -> {
 					IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
@@ -1135,9 +1137,9 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		acceptLink.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		acceptLink.setText(Messages.CategorizeDialog_accept_proposals);
 		acceptLink.setToolTipText(Messages.CategorizeDialog_accept_proposals_tooltip);
-		acceptLink.addSelectionListener(new SelectionAdapter() {
+		acceptLink.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				root.acceptProposals(root.has(CHECKED));
 				drawCat();
 				updateButtons();

@@ -25,23 +25,12 @@ import org.osgi.framework.BundleContext;
 
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
-/**
- * The activator class controls the plug-in life cycle
- */
 @SuppressWarnings("restriction")
 public class Activator extends ZUiPlugin {
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.video.youtube"; //$NON-NLS-1$
 
-	// The shared instance
 	private static Activator plugin;
-
-	/**
-	 * The constructor
-	 */
-	public Activator() {
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -63,11 +52,6 @@ public class Activator extends ZUiPlugin {
 		super.stop(context);
 	}
 
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
 	public static Activator getDefault() {
 		return plugin;
 	}

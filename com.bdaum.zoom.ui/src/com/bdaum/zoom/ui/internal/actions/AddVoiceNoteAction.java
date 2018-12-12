@@ -20,8 +20,6 @@
 
 package com.bdaum.zoom.ui.internal.actions;
 
-import java.util.List;
-
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -50,19 +48,13 @@ public class AddVoiceNoteAction extends Action {
 
 	@Override
 	public void run() {
-		List<Asset> localAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
-		if (!localAssets.isEmpty()) {
+		Asset asset = adaptable.getAdapter(AssetSelection.class).getFirstElement();
+		if (asset != null) {
 			UiActivator.getDefault().stopAudio();
-			VoiceNoteDialog dialog = new VoiceNoteDialog(window.getShell(), localAssets, true);
-			if (dialog.open() == VoiceNoteDialog.OK) {
-				String noteText = dialog.getNoteText();
-				String sourceURI = dialog.getSourceUri();
-				String targetURI = dialog.getTargetUri();
-				if (sourceURI != null && targetURI != null || noteText != null || dialog.isDeleteVoiceNote())
-					OperationJob.executeOperation(new VoiceNoteOperation(localAssets, sourceURI, targetURI, noteText),
+			VoiceNoteDialog dialog = new VoiceNoteDialog(window.getShell(), asset);
+			if (dialog.open() == VoiceNoteDialog.OK)
+				OperationJob.executeOperation(new VoiceNoteOperation(asset, dialog.getSourceUri(), dialog.getTargetUri(), dialog.getNoteText(), dialog.getSvg()),
 							adaptable);
-			}
 		}
 	}
-
 }

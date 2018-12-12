@@ -59,6 +59,7 @@ import org.eclipse.ui.PlatformUI;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.core.ISpellCheckingService.ISpellIncident;
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
@@ -281,7 +282,12 @@ public class CheckedText extends Composite
 	private IOperationHistory getHistory() {
 		if (history == null) {
 			history = PlatformUI.getWorkbench().getOperationSupport().getOperationHistory();
-			context = new UndoContext();
+			context = new UndoContext() {
+				@Override
+				public String getLabel() {
+					return Messages.CheckedText_text_operation;
+				}
+			};
 			history.setLimit(context,
 					UiActivator.getDefault().getPreferenceStore().getInt(PreferenceConstants.UNDOLEVELS));
 		}
@@ -335,7 +341,7 @@ public class CheckedText extends Composite
 			String text = control.getText();
 			if (text.isEmpty()) {
 				removeAllListeners();
-				control.setData("id", "hint"); //$NON-NLS-1$ //$NON-NLS-2$
+				control.setData(CSSProperties.ID, CSSProperties.HINT); 
 				control.setText(hint);
 				CssActivator.getDefault().applyStyles(control, false);
 				hintShown = true;
@@ -345,7 +351,7 @@ public class CheckedText extends Composite
 
 	protected void removeHint() {
 		if (hintShown) {
-			control.setData("id", null); //$NON-NLS-1$
+			control.setData(CSSProperties.ID, null);
 			control.setText(""); //$NON-NLS-1$
 			hintShown = false;
 			CssActivator.getDefault().applyStyles(control, false);

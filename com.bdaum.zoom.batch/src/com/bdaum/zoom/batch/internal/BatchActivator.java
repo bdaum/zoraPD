@@ -12,6 +12,7 @@
 package com.bdaum.zoom.batch.internal;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -112,23 +113,11 @@ public class BatchActivator extends Plugin {
 	private IRawConverter currentRawConverter;
 	private boolean rawQuestionAsked;
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.core.runtime.Plugins#start(org.osgi.framework.BundleContext)
-	 */
-
 	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
 	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.core.runtime.Plugin#stop(org.osgi.framework.BundleContext)
-	 */
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
@@ -136,11 +125,6 @@ public class BatchActivator extends Plugin {
 		super.stop(context);
 	}
 
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
 	public static BatchActivator getDefault() {
 		return plugin;
 	}
@@ -166,6 +150,8 @@ public class BatchActivator extends Plugin {
 			if (serviceReferences != null && serviceReferences.length > 0) {
 				reference = serviceReferences[0];
 				IConverter c = (IConverter) bundleContext.getService(reference);
+				if (c == null)
+					throw new ConversionException(NLS.bind(Messages.BatchActivator_not_instantiated, converter));
 				c.setConverterLocation(location);
 				File out = c.setInput(file, options);
 				if (out == null)
@@ -293,10 +279,13 @@ public class BatchActivator extends Plugin {
 		return null;
 	}
 
-	public void runScript(String[] parms) throws IOException, ExecutionException {
+	public void runScript(String[] parms, boolean wait) throws IOException, ExecutionException {
 		parms[0] = locate(parms[0]);
-		BatchUtilities.executeCommand(parms, null, Messages.BatchActivator_run_script, IStatus.OK, IStatus.ERROR, 2,
-				1000L, "UTF-8"); //$NON-NLS-1$
+		if (wait)
+			BatchUtilities.executeCommand(parms, null, Messages.BatchActivator_run_script, IStatus.OK, IStatus.ERROR, 2,
+					1000L, "UTF-8"); //$NON-NLS-1$
+		else
+			Runtime.getRuntime().exec(parms, null, null);
 	}
 
 	public String locate(String path) {
@@ -312,7 +301,9 @@ public class BatchActivator extends Plugin {
 			try {
 				exifToolLocation = BatchConstants.WIN32
 						? new String[] { FileLocator.findAbsolutePath(getBundle(), "/exiftool.exe") } //$NON-NLS-1$
-						: new String[] { "perl", FileLocator.findAbsolutePath(getBundle(), "/exiftool/exiftool") };  //$NON-NLS-1$//$NON-NLS-2$
+						: new String[] { "perl", FileLocator.findAbsolutePath(getBundle(), "/exiftool/exiftool") }; //$NON-NLS-1$//$NON-NLS-2$
+				if (exifToolLocation == null)
+					throw new FileNotFoundException();
 			} catch (IOException e) {
 				logError(Messages.BatchActivator_could_not_locate_exiftool, e);
 			}
@@ -320,17 +311,10 @@ public class BatchActivator extends Plugin {
 		return exifToolLocation;
 	}
 
-	/**
-	 * @return fastExit
-	 */
 	public static boolean isFastExit() {
 		return fastExit;
 	}
 
-	/**
-	 * @param fastExit
-	 *            das zu setzende Objekt fastExit
-	 */
 	public static void setFastExit(boolean fastExit) {
 		BatchActivator.fastExit = fastExit;
 	}

@@ -30,7 +30,7 @@ public class DngConverter implements IConverter {
 	}
 
 	public File setInput(File in, Options options) {
-		String name = in.getAbsolutePath();
+		String path = in.getAbsolutePath();
 		IFileHandler fileHandler = ImageConstants.findFileHandler(in);
 		if (fileHandler != null) {
 			file = fileHandler.getImageFile(in);
@@ -38,13 +38,15 @@ public class DngConverter implements IConverter {
 				return null;
 		} else
 			file = in;
-		name = file.getAbsolutePath();
-		int p = name.lastIndexOf('.');
+		path = file.getAbsolutePath();
+		int p = path.lastIndexOf('.');
 		if (p >= 0)
-			name = name.substring(0, p);
-		name += ".dng";  //$NON-NLS-1$
+			path = path.substring(0, p);
+		path += ".dng";  //$NON-NLS-1$
 		String folder = (String) options.get("outputFolder"); //$NON-NLS-1$
-		return (folder != null) ? new File(folder, name) : new File(name);
+		if (folder != null)
+			return new File(folder, new File(path).getName());
+		return new File(path);
 	}
 
 	public String[] getParms(Options options) {

@@ -23,6 +23,7 @@ import java.awt.image.BufferedImage;
 
 import com.bdaum.zoom.ai.internal.services.IAiServiceProvider;
 import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.core.internal.lire.AiAlgorithm;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
 
 public abstract class AbstractAiServiceProvider implements IAiServiceProvider {
@@ -30,9 +31,9 @@ public abstract class AbstractAiServiceProvider implements IAiServiceProvider {
 	private String id;
 	private String name;
 	private int latency;
-	private int featureId;
 	private String[] ratingModelIds;
 	private String[] ratingModelLabels;
+	private AiAlgorithm[] features;
 
 	@Override
 	public int rate(Asset asset, String opId, int maxRating, String modelId) {
@@ -98,28 +99,18 @@ public abstract class AbstractAiServiceProvider implements IAiServiceProvider {
 	}
 
 	@Override
-	public float[] getFeatureVector(BufferedImage image) {
+	public float[] getFeatureVector(BufferedImage image, int featureId) {
 		return null;
 	}
 
 	@Override
-	public Algorithm getAlgorithm() {
+	public Algorithm[] getAlgorithms() {
+		return features;
+	}
+
+	@Override
+	public Class<?> getFeature(Algorithm algorithm) {
 		return null;
-	}
-
-	@Override
-	public Class<?> getFeature() {
-		return null;
-	}
-
-	@Override
-	public int getFeatureId() {
-		return featureId;
-	}
-
-	@Override
-	public void setFeatureId(int featureId) {
-		this.featureId = featureId;
 	}
 
 	public void setRatingModelIds(String[] ratingModelIds) {
@@ -140,4 +131,8 @@ public abstract class AbstractAiServiceProvider implements IAiServiceProvider {
 		return ratingModelLabels;
 	}
 
+	public void setFeatures(AiAlgorithm[] features) {
+		this.features = features;
+	}
+	
 }

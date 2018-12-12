@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Shell;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.lal.internal.lire.ui.dialogs.TextSearchDialog;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.commands.AbstractCommandHandler;
 
@@ -49,7 +50,7 @@ public class TextQueryCommand extends AbstractCommandHandler {
 			TextSearchDialog dialog = new TextSearchDialog(shell, null, null);
 			if (dialog.open() == Window.OK) {
 				SmartCollection collection = dialog.getResult();
-				UiActivator.getDefault().getNavigationHistory(getActiveWorkbenchWindow())
+				Ui.getUi().getNavigationHistory(getActiveWorkbenchWindow())
 						.postSelection(new StructuredSelection(collection));
 			}
 		}

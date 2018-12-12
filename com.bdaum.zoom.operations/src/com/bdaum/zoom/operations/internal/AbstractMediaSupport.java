@@ -20,7 +20,6 @@
 package com.bdaum.zoom.operations.internal;
 
 import java.io.File;
-import java.net.URI;
 import java.util.Date;
 import java.util.List;
 
@@ -44,11 +43,8 @@ public abstract class AbstractMediaSupport implements IMediaSupport {
 		long imported = importDate == null ? 0L : importDate.getTime();
 		if (imported < lastModified)
 			return true;
-		URI[] sidecarURIs = ImportState.getXmpURIs(asset);
-		for (URI sUri : sidecarURIs)
-			if (imported < new File(sUri).lastModified())
-				return true;
-		return false;
+		File[] sidecars = ImportState.getXmpURIs(asset);
+		return sidecars.length > 0 && imported < sidecars[sidecars.length - 1].lastModified();
 	}
 
 	protected GroupImpl getMediaGroup(IDbManager dbManager) {

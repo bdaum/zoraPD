@@ -77,8 +77,6 @@ import com.bdaum.zoom.operations.internal.ImportOperation;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.IRawConverter;
 import com.bdaum.zoom.rcp.internal.perspective.LightboxPerspective;
-import com.bdaum.zoom.rcp.internal.perspective.SleevesPerspective;
-import com.bdaum.zoom.rcp.internal.perspective.TablePerspective;
 import com.bdaum.zoom.ui.IUi;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
@@ -299,9 +297,6 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 		configurer.setSaveAndRestore(true);
 		workbenchHelper = new WorkbenchHelper(this, true);
 		workbenchHelper.restoreWorkbenchState();
-		UiActivator.getDefault().setGalleryPerspectiveIds(new String[] {
-				LightboxPerspective.ID, SleevesPerspective.ID, TablePerspective.ID
-		});
 	}
 
 	@Override
@@ -321,7 +316,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 			final Tray tray = workbench.getDisplay().getSystemTray();
 			if (tray != null) {
 				trayItem = new TrayItem(tray, SWT.NONE);
-				trayItem.setData("id", RcpActivator.PLUGIN_ID + "_" + System.currentTimeMillis()); //$NON-NLS-1$ //$NON-NLS-2$
+				trayItem.setData(UiConstants.ID, RcpActivator.PLUGIN_ID + "_" + System.currentTimeMillis()); //$NON-NLS-1$
 				setTrayVisible(true, APPSTARTING);
 				trayItem.addListener(SWT.Show, new Listener() {
 					public void handleEvent(Event event) {
@@ -457,6 +452,8 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 				new FontData[] { new FontData(fontData.getName(), fontData.getHeight() + 4, fontData.getStyle()) });
 		fontRegistry.put(UiConstants.SELECTIONFONT,
 				new FontData[] { new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD) });
+		fontRegistry.put(UiConstants.ITALICFONT,
+				new FontData[] { new FontData(fontData.getName(), fontData.getHeight(), SWT.ITALIC) });
 		fontRegistry.put(UiConstants.VIEWERFONT,
 				new FontData[] { new FontData(fontData.getName(), 18, fontData.getStyle()) });
 		fontRegistry.put(UiConstants.VIEWERTITLEFONT,

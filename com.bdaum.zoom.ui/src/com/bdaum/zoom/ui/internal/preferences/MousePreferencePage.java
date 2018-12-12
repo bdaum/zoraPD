@@ -22,11 +22,7 @@ package com.bdaum.zoom.ui.internal.preferences;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
@@ -40,42 +36,9 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 
 public class MousePreferencePage extends AbstractPreferencePage {
 
-	private static String[] zoomLabels = new String[] { Messages.getString("MousePreferencePage.alt"), //$NON-NLS-1$
-			Messages.getString("MousePreferencePage.shift"), //$NON-NLS-1$
-			Messages.getString("MousePreferencePage.right_mouse_button"), //$NON-NLS-1$
-			Messages.getString("MousePreferencePage.no_zoom") }; //$NON-NLS-1$
-	private static String[] wheelLabels = new String[] { Messages.getString("MousePreferencePage.shiftscrolls"), //$NON-NLS-1$
-			Messages.getString("MousePreferencePage.altscrolls"), //$NON-NLS-1$
-			Messages.getString("MousePreferencePage.shiftzooms"), //$NON-NLS-1$
-			Messages.getString("MousePreferencePage.altzooms"), //$NON-NLS-1$
-			Messages.getString("MousePreferencePage.zoom_only"), //$NON-NLS-1$
-			Messages.getString("MousePreferencePage.scroll_only")//$NON-NLS-1$
-	};
-
 	private RadioButtonGroup zoomGroup;
-	private RadioButtonGroup wheelGroup;
 	private Scale wheelScale;
 	private Scale speedScale;
-
-	@Override
-	protected void contributeButtons(Composite parent) {
-		super.contributeButtons(parent);
-		if (getShell().getDisplay().getTouchEnabled()) {
-			Button touchButton = new Button(parent, SWT.PUSH);
-			((GridLayout) parent.getLayout()).numColumns++;
-			touchButton.setText(Messages.getString("MousePreferencePage.touch_settings")); //$NON-NLS-1$
-			touchButton.setToolTipText(Messages.getString("MousePreferencePage.touch_settings_tooltip")); //$NON-NLS-1$
-			touchButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					IPreferenceStore store = getPreferenceStore();
-					store.setValue(PreferenceConstants.WHEELKEY, PreferenceConstants.WHEELZOOMONLY);
-					store.setValue(PreferenceConstants.ZOOMKEY, PreferenceConstants.NOZOOM);
-					fillValues();
-				}
-			});
-		}
-	}
 
 	@SuppressWarnings("unused")
 	@Override
@@ -95,13 +58,16 @@ public class MousePreferencePage extends AbstractPreferencePage {
 		wheelScale.setMaximum(100);
 		wheelScale.setIncrement(0);
 		CGroup keyGroup = CGroup.create(comp, 1, Messages.getString("MousePreferencePage.control_keys"));//$NON-NLS-1$
-		zoomGroup = new RadioButtonGroup(keyGroup, Messages.getString("MousePreferencePage.zoom_key"), SWT.VERTICAL, zoomLabels); //$NON-NLS-1$
+		String[] zoomLabels = new String[] { Messages.getString("MousePreferencePage.alt"), //$NON-NLS-1$
+				Messages.getString("MousePreferencePage.shift"), //$NON-NLS-1$
+				Messages.getString("MousePreferencePage.right_mouse_button"), //$NON-NLS-1$
+				getShell().getDisplay().getTouchEnabled() ? Messages.getString("MousePreferencePage.zoom_by_touch") //$NON-NLS-1$
+						: Messages.getString("MousePreferencePage.no_zoom") }; //$NON-NLS-1$
+		zoomGroup = new RadioButtonGroup(keyGroup, Messages.getString("MousePreferencePage.zoom_key"), 2, zoomLabels); //$NON-NLS-1$
 		zoomGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
-		wheelGroup = new RadioButtonGroup(keyGroup, Messages.getString("MousePreferencePage.mouse_wheel_behavior"), SWT.VERTICAL, wheelLabels); //$NON-NLS-1$
-		wheelGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		fillValues();
 	}
-	
+
 	@Override
 	protected IPreferenceStore doGetPreferenceStore() {
 		return UiActivator.getDefault().getPreferenceStore();
@@ -113,9 +79,8 @@ public class MousePreferencePage extends AbstractPreferencePage {
 		speedScale.setSelection(preferenceStore.getInt(PreferenceConstants.MOUSE_SPEED));
 		wheelScale.setSelection(preferenceStore.getInt(PreferenceConstants.WHEELSOFTNESS));
 		zoomGroup.setSelection(preferenceStore.getInt(PreferenceConstants.ZOOMKEY));
-		wheelGroup.setSelection(preferenceStore.getInt(PreferenceConstants.WHEELKEY));
 	}
-	
+
 	@Override
 	protected void doPerformDefaults() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
@@ -125,17 +90,14 @@ public class MousePreferencePage extends AbstractPreferencePage {
 				preferenceStore.getDefaultInt(PreferenceConstants.WHEELSOFTNESS));
 		preferenceStore.setValue(PreferenceConstants.ZOOMKEY,
 				preferenceStore.getDefaultInt(PreferenceConstants.ZOOMKEY));
-		preferenceStore.setValue(PreferenceConstants.WHEELKEY,
-				preferenceStore.getDefaultInt(PreferenceConstants.WHEELKEY));
 	}
-	
+
 	@Override
 	protected void doPerformOk() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		preferenceStore.setValue(PreferenceConstants.MOUSE_SPEED, speedScale.getSelection());
 		preferenceStore.setValue(PreferenceConstants.WHEELSOFTNESS, wheelScale.getSelection());
 		preferenceStore.setValue(PreferenceConstants.ZOOMKEY, zoomGroup.getSelection());
-		preferenceStore.setValue(PreferenceConstants.WHEELKEY, wheelGroup.getSelection());
 	}
 
 }

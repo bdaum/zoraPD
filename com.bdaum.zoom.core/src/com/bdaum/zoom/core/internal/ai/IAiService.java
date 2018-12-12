@@ -60,7 +60,7 @@ public interface IAiService {
 
 	boolean getMarkKnownOnly(String providerId);
 
-	float[] getFeatureVector(BufferedImage image, String serviceId);
+	float[] getFeatureVector(BufferedImage image, String serviceId, int featureId);
 
 	boolean hasProvider(String id);
 
@@ -68,7 +68,7 @@ public interface IAiService {
 
 	Algorithm[] getLireAlgorithms();
 
-	Class<?> getFeature(String providerId);
+	Class<?> getFeature(String providerId, Algorithm aiAlgorithm);
 
 	String[] getRatingProviderIds();
 

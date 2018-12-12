@@ -35,13 +35,13 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -107,9 +107,9 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		CLink link = new CLink(eGroup, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		link.setText(Messages.PagePart_visit_account_page);
-		link.addSelectionListener(new SelectionAdapter() {
+		link.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				String vlcDownload = System.getProperty("com.bdaum.zoom.clarifai"); //$NON-NLS-1$
 				try {
 					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));
@@ -120,7 +120,6 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 				}
 			}
 		});
-
 		CGroup tGroup = CGroup.create(composite, 1, Messages.PagePart_limits);
 		new Label(tGroup, SWT.NONE).setText(Messages.PagePart_model);
 		modelCombo = new ComboViewer(tGroup, SWT.READ_ONLY);
@@ -284,12 +283,12 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		preferenceStore.setValue(PreferenceConstants.CELEBRITIES, celebrityButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.TRANSLATE,
 				translateButton.isEnabled() && translateButton.getSelection());
-		Theme theme = (Theme) ((StructuredSelection) modelCombo.getSelection()).getFirstElement();
+		Theme theme = (Theme) modelCombo.getStructuredSelection().getFirstElement();
 		if (theme != null)
 			preferenceStore.setValue(PreferenceConstants.THEME, theme.getId());
 		String lang = null;
 		if (languageCombo.getControl().isEnabled())
-			lang = (String) ((StructuredSelection) languageCombo.getSelection()).getFirstElement();
+			lang = (String) languageCombo.getStructuredSelection().getFirstElement();
 		preferenceStore.setValue(PreferenceConstants.LANGUAGE, lang != null ? lang : "en"); //$NON-NLS-1$
 	}
 
@@ -362,11 +361,11 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		updating = true;
 		try {
 			if (languageCombo.getControl().isEnabled()) {
-				String lang = (String) ((StructuredSelection) languageCombo.getSelection()).getFirstElement();
+				String lang = (String) languageCombo.getStructuredSelection().getFirstElement();
 				if (lang != null)
 					currentLanguage = lang;
 			}
-			Theme theme = (Theme) ((StructuredSelection) modelCombo.getSelection()).getFirstElement();
+			Theme theme = (Theme) modelCombo.getStructuredSelection().getFirstElement();
 			boolean multilingual = true;
 			boolean maytranslate = true;
 			if (theme != null)
@@ -376,7 +375,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 					languageCombo.getControl().setEnabled(true);
 					languageCombo.setSelection(new StructuredSelection(currentLanguage));
 				}
-				String lang = (String) ((StructuredSelection) languageCombo.getSelection()).getFirstElement();
+				String lang = (String) languageCombo.getStructuredSelection().getFirstElement();
 				maytranslate = (lang == null || "en".equals(lang)); //$NON-NLS-1$
 			} else if (languageCombo.getControl().isEnabled()) {
 				languageCombo.setSelection(new StructuredSelection("en")); //$NON-NLS-1$

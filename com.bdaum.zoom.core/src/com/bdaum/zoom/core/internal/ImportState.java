@@ -43,6 +43,7 @@ import com.bdaum.zoom.core.internal.db.AssetEnsemble;
 import com.bdaum.zoom.core.internal.operations.AnalogProperties;
 import com.bdaum.zoom.core.internal.operations.ImportConfiguration;
 import com.bdaum.zoom.image.ZImage;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.operations.AbstractImportOperation;
 import com.bdaum.zoom.operations.IProfiledOperation;
 import com.bdaum.zoom.operations.internal.xmp.XMPField;
@@ -66,7 +67,7 @@ public class ImportState {
 	public static final int ASK = 8;
 	public static final int MCUWidth = 16;
 
-	private static final URI[] EMPTYURIS = new URI[0];
+	private static final File[] EMPTYFILES = new File[0];
 	private static final int FLASH_VALUE_FIRED = 0x1;
 	private static final int FLASH_VALUE_NO_FLASH_FUNCTION = 0x20;
 	private static final int RESOLUTION_UNIT_VALUE_CM = 3;
@@ -75,9 +76,9 @@ public class ImportState {
 	private static final int FOCAL_PLANE_RESOLUTION_UNIT_VALUE_UM = 5;
 	private final GregorianCalendar cal = new GregorianCalendar();
 
-	public File skipFile;
+	public StorageObject skipFile;
 	public boolean reimport;
-	private ImportConfiguration configuration;
+	public AbstractImportOperation operation;
 	public ImportFromDeviceData importFromDeviceData;
 	public AnalogProperties analogProperties;
 	public int fileSource;
@@ -89,17 +90,19 @@ public class ImportState {
 	public Set<DerivedBy> allDeletedRelations = new HashSet<>();
 	public List<Ghost_typeImpl> allDeletedGhosts = new ArrayList<>();
 	public boolean canUndo = true;
-	private String volumeLabel;
-	private ExifTool exifTool;
-	public AbstractImportOperation operation;
-	private ImportConfiguration tempConfiguration;
 	public Map<String, String> overlayMap = new HashMap<String, String>(49);
 	public String[] recipeDetectorIds;
 	public int importNo = 1;
 	public Date importDate = new Date();
-	private boolean changed;
 	public Set<Asset> added = new HashSet<>();
 	public Set<Asset> modified = new HashSet<>();
+
+	private ImportConfiguration configuration;
+	private String volumeLabel;
+	private ExifTool exifTool;
+	private File exifFile;
+	private ImportConfiguration tempConfiguration;
+	private boolean changed;
 	private Set<String> errorSet = new HashSet<>();
 	private int i = 0;
 
@@ -133,16 +136,17 @@ public class ImportState {
 		return profile;
 	}
 
-	public ExifTool getExifTool(File file, boolean fast) {
+	public ExifTool getExifTool(File file, int fast) {
 		if (exifTool == null)
 			exifTool = new ExifTool(file, false);
-		else
+		else if (!file.equals(exifFile))
 			exifTool.reset(file);
-		exifTool.setFast(1);
+		exifTool.setFast(fast);
+		exifFile = file;
 		return exifTool;
 	}
 
-	public boolean processExifData(AssetEnsemble ensemble, File file, boolean fast) {
+	public boolean processExifData(AssetEnsemble ensemble, File file, int fast) {
 		ExifTool tool = getExifTool(file, fast);
 		Map<String, String> metaData = tool.getMetadata();
 		if (metaData.isEmpty())
@@ -173,7 +177,7 @@ public class ImportState {
 			asset.setMakerNotes(n);
 		}
 		String flash = metaData.get("Flash"); //$NON-NLS-1$
-		if (flash != null) {
+		if (flash != null)
 			try {
 				int v = BatchUtilities.parseInt(flash);
 				asset.setFlashFired((v & FLASH_VALUE_FIRED) != 0);
@@ -183,9 +187,8 @@ public class ImportState {
 			} catch (NumberFormatException e) {
 				// ignore
 			}
-		}
 		String units = metaData.get("ResolutionUnit"); //$NON-NLS-1$
-		if (units != null) {
+		if (units != null)
 			try {
 				double f = BatchUtilities.parseInt(units) == RESOLUTION_UNIT_VALUE_CM ? 2.54d : 1d;
 				asset.setXResolution(asset.getXResolution() * f);
@@ -193,7 +196,6 @@ public class ImportState {
 			} catch (NumberFormatException e) {
 				// ignore
 			}
-		}
 		units = metaData.get("FocalPlaneResolutionUnit"); //$NON-NLS-1$
 		if (units != null)
 			try {
@@ -245,17 +247,8 @@ public class ImportState {
 				isoSpeedRatings != null && isoSpeedRatings.length > 0 ? isoSpeedRatings[0] : CANCEL);
 		if (importFromDeviceData != null) {
 			String artist = importFromDeviceData.getArtist();
-			if (artist != null && !artist.isEmpty()) {
-				String[] artists = asset.getArtist();
-				if (artists != null) {
-					for (String a : artists)
-						if (a.equals(artist)) {
-							artist = null;
-							break;
-						}
-					asset.setArtist(Utilities.addToStringArray(artist, artists, true));
-				}
-			}
+			if (artist != null && !artist.isEmpty())
+				asset.setArtist(Utilities.addToStringArray(artist, asset.getArtist(), true));
 			if (asset.getEvent() == null || asset.getEvent().isEmpty())
 				asset.setEvent(importFromDeviceData.getEvent());
 			String[] kw = importFromDeviceData.getKeywords();
@@ -352,7 +345,7 @@ public class ImportState {
 		meta = null;
 		skipFile = null;
 		if (exifTool != null) {
-			exifTool.dispose();
+			exifTool.close();
 			exifTool = null;
 		}
 	}
@@ -361,9 +354,9 @@ public class ImportState {
 		return getConfiguration().inBackground;
 	}
 
-	public static URI[] getXmpURIs(Asset asset) {
+	public static File[] getXmpURIs(Asset asset) {
 		URI uri = Core.getCore().getVolumeManager().findFile(asset);
-		return Constants.FILESCHEME.equals(uri.getScheme()) ? Core.getSidecarURIs(uri) : EMPTYURIS;
+		return Constants.FILESCHEME.equals(uri.getScheme()) ? Core.getSidecarFiles(uri, false) : EMPTYFILES;
 	}
 
 	public void safeReadXmp(AssetEnsemble ensemble, Asset asset, URI xmpURI) {
@@ -384,8 +377,7 @@ public class ImportState {
 
 	public void readXMP(InputStream in, String file, AssetEnsemble ensemble) {
 		try {
-			List<XMPField> fieldList = XMPUtilities.readXMP(in);
-			for (XMPField field : fieldList)
+			for (XMPField field : XMPUtilities.readXMP(in))
 				if (!overlayMap.containsKey(field.getQfield().getExifToolKey()))
 					assignValue(field, ensemble, file);
 		} catch (XMPException e) {
@@ -494,7 +486,7 @@ public class ImportState {
 				importDate, QueryField.EQUALS));
 	}
 
-	public File transferFile(File file, int importNo, IProgressMonitor monitor) throws DiskFullException {
+	public File[] transferFile(StorageObject file, int importNo, IProgressMonitor monitor) throws DiskFullException {
 		long lastModified = file.lastModified();
 		cal.setTimeInMillis(lastModified);
 		String filename = file.getName();
@@ -533,26 +525,39 @@ public class ImportState {
 			}
 		}
 		int p = filename.lastIndexOf('.');
-		String ext = (p >= 0) ? filename.substring(p) : ""; //$NON-NLS-1$
+		String ext = (p > filename.lastIndexOf('/')) ? filename.substring(p) : ""; //$NON-NLS-1$
 		String newFilename = Utilities.evaluateTemplate(importFromDeviceData.getRenamingTemplate(),
 				importFromDeviceData.getWatchedFolder() != null ? Constants.TV_TRANSFER : Constants.TV_ALL, filename,
 				cal, importNo, meta.getLastSequenceNo() + 1, meta.getLastYearSequenceNo() + 1,
 				importFromDeviceData.getCue(), null, "", //$NON-NLS-1$
 				BatchConstants.MAXPATHLENGTH - subFolder.getAbsolutePath().length() - 1 - ext.length(), true);
 		File target = BatchUtilities.makeUniqueFile(subFolder, newFilename, ext);
+		File voiceTarget = null;
 		try {
 			CoreActivator.getDefault().getFileWatchManager().copyFileSilently(file, target, lastModified,
 					operation.getOpId(), monitor);
-			if (!importFromDeviceData.isMedia())
+			if (importFromDeviceData.isMedia()) {
+				StorageObject voiceAttachment = file.getVoiceAttachment();
+				if (voiceAttachment != null) {
+					String targetPath = target.getAbsolutePath();
+					String name = voiceAttachment.getName();
+					voiceTarget = new File(targetPath.substring(0, targetPath.length() - ext.length())
+							+ name.substring(name.lastIndexOf('.')));
+					if (!voiceTarget.exists())
+						CoreActivator.getDefault().getFileWatchManager().copyFileSilently(voiceAttachment, voiceTarget,
+								lastModified, operation.getOpId(), monitor);
+				}
+			} else if (file.isLocal())
 				for (IRelationDetector detector : configuration.relationDetectors)
-					detector.transferFile(file, target, importNo == 1, info, operation.getOpId());
+					detector.transferFile(file.resolve(), target, importNo == 1, info, operation.getOpId());
+
 		} catch (IOException e) {
-			operation.addError(NLS.bind("IO-error while importing file {0} from device", file), e); //$NON-NLS-1$
+			operation.addError(NLS.bind(Messages.ImportState_IO_error_importing, file), e);
 		}
-		return target;
+		return voiceTarget == null ? new File[] { target } : new File[] { target, voiceTarget };
 	}
 
-	public boolean skipFile(File file, String extension) {
+	public boolean skipFile(StorageObject file, String extension) {
 		if (file.equals(skipFile)) {
 			skipFile = null;
 			return true;
@@ -565,11 +570,15 @@ public class ImportState {
 		return false;
 	}
 
-	public boolean skipDuplicates(String originalFileName, Date lastModified) {
+	public boolean skipDuplicates(File file, String originalFileName, Date lastModified) {
 		if (importFromDeviceData != null && importFromDeviceData.isDetectDuplicates()) {
+			String exifOriginalFile = getExifTool(file, getConfiguration().getExifFastMode()).getMetadata()
+					.get(QueryField.EXIF_ORIGINALFILENAME.getExifToolKey());
+			if (exifOriginalFile == null)
+				exifOriginalFile = originalFileName;
 			if (Core.getCore().getDbManager()
 					.obtainObjects(AssetImpl.class, false, QueryField.LASTMOD.getKey(), lastModified, QueryField.EQUALS,
-							QueryField.EXIF_ORIGINALFILENAME.getKey(), originalFileName, QueryField.EQUALS)
+							QueryField.EXIF_ORIGINALFILENAME.getKey(), exifOriginalFile, QueryField.EQUALS)
 					.iterator().hasNext()) {
 				operation.addWarning(NLS.bind(Messages.ImportState_already_in_cat, originalFileName), null);
 				return true;
@@ -579,9 +588,9 @@ public class ImportState {
 	}
 
 	public void processXmpSidecars(URI uri, IProgressMonitor monitor, AssetEnsemble ensemble) {
-		URI[] sidecarURIs = Core.getSidecarURIs(uri);
-		for (int i = sidecarURIs.length - 1; i > 0 & !monitor.isCanceled(); i--) {
-			File xmpFile = new File(sidecarURIs[i]);
+		File[] sidecars = Core.getSidecarFiles(uri, false);
+		for (int i = 0; i < sidecars.length & !monitor.isCanceled(); i++) {
+			File xmpFile = sidecars[i];
 			if (xmpFile.exists()) {
 				if (reimport) {
 					File backupFile = new File(xmpFile.getAbsolutePath() + ".original"); //$NON-NLS-1$

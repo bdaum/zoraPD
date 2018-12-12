@@ -34,6 +34,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PreferencesUtil;
@@ -57,6 +58,7 @@ import org.osgi.framework.Version;
 
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.ISpellCheckingService;
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.rcp.internal.RcpActivator;
 import com.bdaum.zoom.ui.internal.commands.AbstractCommandHandler;
 import com.bdaum.zoom.ui.internal.commands.CheckUpdateCommand;
@@ -262,6 +264,9 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 	private Section createSection(FormToolkit toolkit, Composite parent, String title, String tooltip, String text,
 			int style) {
 		Section section = toolkit.createSection(parent, Section.TITLE_BAR | Section.TREE_NODE | style);
+		for (Control control : section.getChildren())
+			if (control instanceof Label)
+				control.setData(CSSProperties.ID, CSSProperties.SECTIONTITLE); 
 		ColumnLayoutData layoutData = new ColumnLayoutData();
 		layoutData.widthHint = 400;
 		section.setLayoutData(layoutData);
@@ -296,12 +301,11 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 	private void displayHelp(String href) {
 		form.setBusy(true);
 		try {
-			String helpId = href.substring(HELP.length());
 			IWorkbenchHelpSystem helpSystem = getIntroSite().getWorkbenchWindow().getWorkbench().getHelpSystem();
-			if (helpId.isEmpty())
+			if (href.length() <= HELP.length())
 				helpSystem.displayHelp();
 			else
-				helpSystem.displayHelp(helpId);
+				helpSystem.displayHelp(href.substring(HELP.length()));
 		} finally {
 			form.setBusy(false);
 		}
@@ -314,29 +318,40 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 
 	public void standbyStateChanged(boolean sb) {
 		this.standby = sb;
-		sectionGroupLayout.minNumColumns = sb ? 1 : 2;
-		sectionGroupLayout.maxNumColumns = sb ? 1 : 4;
-		sectionGroupLayout.bottomMargin = sectionGroupLayout.leftMargin = sectionGroupLayout.topMargin = sectionGroupLayout.rightMargin = sb
-				? 3
-				: 10;
-		buttonCanvas.setVisible(!sb);
-		boolean firstOpen = false;
-		for (Section section : sections) {
-			if (sb && section.isExpanded())
-				if (firstOpen)
-					section.setExpanded(false);
-				else
-					firstOpen = true;
-			((ColumnLayoutData) section.getLayoutData()).widthHint = sb ? 250 : 400;
-			((FormText) section.getClient())
-					.setFont(sb ? JFaceResources.getDefaultFont() : JFaceResources.getDialogFont());
+		if (sb) {
+			sectionGroupLayout.minNumColumns = sectionGroupLayout.maxNumColumns = 1;
+			sectionGroupLayout.bottomMargin = sectionGroupLayout.leftMargin = sectionGroupLayout.topMargin = sectionGroupLayout.rightMargin = 3;
+			buttonCanvas.setVisible(false);
+			boolean firstOpen = false;
+			for (Section section : sections) {
+				if (section.isExpanded())
+					if (firstOpen)
+						section.setExpanded(false);
+					else
+						firstOpen = true;
+				((ColumnLayoutData) section.getLayoutData()).widthHint = 250;
+				((FormText) section.getClient()).setFont(JFaceResources.getDefaultFont());
+			}
+			form.setText(Constants.APPLICATION_NAME);
+			form.setImage(titleImage32);
+			form.setSeparatorVisible(false);
+			form.setHeadClient(null);
+			((TableWrapLayout) form.getBody().getLayout()).topMargin = 3;
+		} else {
+			sectionGroupLayout.minNumColumns = 2;
+			sectionGroupLayout.maxNumColumns = 4;
+			sectionGroupLayout.bottomMargin = sectionGroupLayout.leftMargin = sectionGroupLayout.topMargin = sectionGroupLayout.rightMargin = 10;
+			buttonCanvas.setVisible(true);
+			for (Section section : sections) {
+				((ColumnLayoutData) section.getLayoutData()).widthHint = 400;
+				((FormText) section.getClient()).setFont(JFaceResources.getDialogFont());
+			}
+			form.setText(NLS.bind('\n' + Messages.Intro_welcome, Constants.APPLICATION_NAME));
+			form.setImage(titleImage64);
+			form.setSeparatorVisible(true);
+			form.setHeadClient(subtitle);
+			((TableWrapLayout) form.getBody().getLayout()).topMargin = 10;
 		}
-		form.setText(
-				NLS.bind(sb ? Constants.APPLICATION_NAME : '\n' + Messages.Intro_welcome, Constants.APPLICATION_NAME));
-		form.setImage(sb ? titleImage32 : titleImage64);
-		form.setSeparatorVisible(!sb);
-		form.setHeadClient(sb ? null : subtitle);
-		((TableWrapLayout) form.getBody().getLayout()).topMargin = sb ? 3 : 10;
 		form.getBody().layout();
 		form.redraw();
 	}

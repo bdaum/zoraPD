@@ -68,7 +68,7 @@ public interface IAssetProvider {
 	String getLastSelection();
 
 	/**
-	 * Evaluates the current collection querz
+	 * Evaluates the current collection query
 	 */
 	void selectAssets();
 
@@ -80,9 +80,9 @@ public interface IAssetProvider {
 	int getAssetCount();
 
 	/**
-	 * Tests if the collection is emptz
+	 * Tests if the collection is empty
 	 *
-	 * @return true if emptz
+	 * @return true if empty
 	 */
 	boolean isEmpty();
 

@@ -22,20 +22,17 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.Meta_type;
@@ -107,8 +104,9 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 		fileEditor = new FileEditor(comp, SWT.SAVE | SWT.READ_ONLY, Messages.EditMetaDialog_file_name, true,
 				activator.getCatFileExtensions(), activator.getSupportedCatFileNames(), null,
 				'*' + Constants.CATALOGEXTENSION, true, getDialogSettings(UiActivator.getDefault(), SETTINGSID));
-		fileEditor.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+		fileEditor.addListener(new Listener() {
+			@Override
+			public void handleEvent(Event event) {
 				updateButtons();
 			}
 		});
@@ -162,9 +160,9 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 				new StructuredSelection(locationOption == null ? Meta_type.locationFolders_no : locationOption), true);
 		deleteButton = WidgetFactory.createCheckButton(header, Messages.SplitCatDialog_remove_extracted_entries,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
-		deleteButton.addSelectionListener(new SelectionAdapter() {
+		deleteButton.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				if (deleteButton.getSelection() && !AcousticMessageDialog.openQuestion(getShell(),
 						Messages.SplitCatDialog_delete_exported, Messages.SplitCatDialog_delete_exported_msg))
 					deleteButton.setSelection(false);
@@ -176,10 +174,10 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 	protected void okPressed() {
 		filename = fileEditor.getText();
 		description = descriptionField.getText();
-		timeline = (String) ((IStructuredSelection) timelineViewer.getSelection()).getFirstElement();
+		timeline = (String) timelineViewer.getStructuredSelection().getFirstElement();
 		if (timeline == null)
 			timeline = Meta_type.timeline_no;
-		locationOption = (String) ((IStructuredSelection) locationViewer.getSelection()).getFirstElement();
+		locationOption = (String) locationViewer.getStructuredSelection().getFirstElement();
 		if (locationOption == null)
 			locationOption = Meta_type.locationFolders_no;
 		delete = deleteButton.getSelection();

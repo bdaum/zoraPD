@@ -40,6 +40,7 @@ public class FilterPage extends ColoredWizardPage {
 		String pattern;
 		boolean folder = false;
 		boolean rejects = false;
+		boolean caseSensitive = false;
 
 		Filter(String s) {
 			if (s.endsWith("/")) { //$NON-NLS-1$
@@ -51,6 +52,13 @@ public class FilterPage extends ColoredWizardPage {
 			else if (s.startsWith("-")) { //$NON-NLS-1$
 				s = s.substring(1);
 				rejects = true;
+			} else if (s.startsWith("*")) { //$NON-NLS-1$
+				s = s.substring(1);
+				caseSensitive = true;
+			} else if (s.startsWith("_")) { //$NON-NLS-1$
+				s = s.substring(1);
+				rejects = true;
+				caseSensitive = true;
 			}
 			pattern = s.isEmpty() ? "*" : s; //$NON-NLS-1$
 		}
@@ -58,7 +66,7 @@ public class FilterPage extends ColoredWizardPage {
 		@Override
 		public String toString() {
 			StringBuilder sb = new StringBuilder();
-			sb.append(rejects ? '-' : '+').append(pattern);
+			sb.append(rejects ? (caseSensitive ? '_' : '-') : (caseSensitive ? '*' : '+')).append(pattern);
 			if (folder)
 				sb.append('/');
 			return sb.toString();
@@ -145,7 +153,6 @@ public class FilterPage extends ColoredWizardPage {
 			}
 		});
 		col2.setEditingSupport(new EditingSupport(viewer) {
-
 			@Override
 			protected void setValue(Object element, Object value) {
 				if (element instanceof Filter && value instanceof Boolean) {
@@ -181,13 +188,7 @@ public class FilterPage extends ColoredWizardPage {
 				return element.toString();
 			}
 		});
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
 		col3.setEditingSupport(new EditingSupport(viewer) {
-
 			@Override
 			protected void setValue(Object element, Object value) {
 				if (element instanceof Filter && value instanceof Boolean) {
@@ -213,7 +214,47 @@ public class FilterPage extends ColoredWizardPage {
 				return true;
 			}
 		});
+		TableViewerColumn col4 = createColumn(Messages.FilterPage_case_sensitive, 100);
+		col4.setLabelProvider(new ZColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				if (element instanceof Filter)
+					return ((Filter) element).caseSensitive ? Messages.FilterPage_yes : Messages.FilterPage_no;
+				return element.toString();
+			}
+		});
+		col4.setEditingSupport(new EditingSupport(viewer) {
+			@Override
+			protected void setValue(Object element, Object value) {
+				if (element instanceof Filter && value instanceof Boolean) {
+					((Filter) element).caseSensitive = ((Boolean) value);
+					viewer.update(element, null);
+				}
+			}
+
+			@Override
+			protected Object getValue(Object element) {
+				if (element instanceof Filter)
+					return ((Filter) element).caseSensitive;
+				return Boolean.TRUE;
+			}
+
+			@Override
+			protected CellEditor getCellEditor(Object element) {
+				return new CheckboxCellEditor(viewer.getTable());
+			}
+
+			@Override
+			protected boolean canEdit(Object element) {
+				return true;
+			}
+		});
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			public void selectionChanged(SelectionChangedEvent event) {
+				updateButtons();
+			}
+		});
 		Composite buttonGroup = new Composite(composite, SWT.NONE);
 		buttonGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.END, true, false));
 		buttonGroup.setLayout(new GridLayout(1, false));
@@ -257,7 +298,7 @@ public class FilterPage extends ColoredWizardPage {
 		removeButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+				IStructuredSelection selection = viewer.getStructuredSelection();
 				if (!selection.isEmpty()) {
 					Filter f = (Filter) selection.getFirstElement();
 					filters.remove(f);
@@ -271,7 +312,7 @@ public class FilterPage extends ColoredWizardPage {
 		upButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+				IStructuredSelection selection = viewer.getStructuredSelection();
 				if (!selection.isEmpty()) {
 					Filter f = (Filter) selection.getFirstElement();
 					int index = filters.indexOf(f);
@@ -289,7 +330,7 @@ public class FilterPage extends ColoredWizardPage {
 		downButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+				Object firstElement = viewer.getStructuredSelection().getFirstElement();
 				if (firstElement instanceof Filter) {
 					Filter f = (Filter) firstElement;
 					int index = filters.indexOf(f);
@@ -338,7 +379,7 @@ public class FilterPage extends ColoredWizardPage {
 	}
 
 	protected void updateButtons() {
-		Object first = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+		Object first = viewer.getStructuredSelection().getFirstElement();
 		if (first == null) {
 			removeButton.setEnabled(false);
 			upButton.setEnabled(false);

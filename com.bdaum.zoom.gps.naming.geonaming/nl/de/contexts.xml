@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <contexts>
-   <context id="advancedPref_page_context" title="Bing preferences">
+   <context id="pref_page_context" title="Bing preferences">
       <description>GeoNames-Premium-Webdienst</description>
       <topic href="html/GeoNamesPreferences.html" label="GeoNames-Premium-Webdienst"/>
    </context>

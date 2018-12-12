@@ -41,8 +41,8 @@ public abstract class ZResizableDialog extends ZTrayDialog {
 	private final static String DIALOG_BOUNDS_KEY = "ResizableDialogBounds."; //$NON-NLS-1$
 	private static final String X = "x"; //$NON-NLS-1$
 	private static final String Y = "y"; //$NON-NLS-1$
-	private static final String WIDTH = "width"; //$NON-NLS-1$
-	private static final String HEIGHT = "height"; //$NON-NLS-1$
+	protected static final String WIDTH = "width"; //$NON-NLS-1$
+	protected static final String HEIGHT = "height"; //$NON-NLS-1$
 	private static final String SETTINGSID = "com.bdaum.zoom.ui.resizableDialog"; //$NON-NLS-1$
 
 	Rectangle fNewBounds;
@@ -57,9 +57,8 @@ public abstract class ZResizableDialog extends ZTrayDialog {
 	public ZResizableDialog(Shell parent, String helpId) {
 		super(parent, helpId);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
-		fSettings =  UiActivator.getDefault().getDialogSettings(SETTINGSID);
+		fSettings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 	}
-	
 
 	@Override
 	public void create() {
@@ -87,22 +86,30 @@ public abstract class ZResizableDialog extends ZTrayDialog {
 
 	@Override
 	protected Point getInitialSize() {
-
-		int width = 0;
-		int height = 0;
 		final Shell s = getShell();
 		if (s != null) {
 			s.addControlListener(new ControlListener() {
 				public void controlMoved(ControlEvent arg0) {
-					fNewBounds = s.getBounds();
+					updateBounds(s);
 				}
 
 				public void controlResized(ControlEvent arg0) {
-					fNewBounds = s.getBounds();
+					updateBounds(s);
 				}
 			});
 		}
+		return doGetInitialSize();
+	}
+	
 
+	protected void updateBounds(final Shell s) {
+		fNewBounds = s.getBounds();
+	}
+
+
+	protected Point doGetInitialSize() {
+		int width = 0;
+		int height = 0;
 		IDialogSettings bounds = fSettings.getSection(getBoundsKey());
 		if (bounds == null) {
 			Shell shell = getParentShell();
@@ -130,9 +137,9 @@ public abstract class ZResizableDialog extends ZTrayDialog {
 				height = initialHeight;
 			}
 		}
-
 		return new Point(width, height);
 	}
+
 
 	protected Point getDefaultSize() {
 		return null;
@@ -142,14 +149,13 @@ public abstract class ZResizableDialog extends ZTrayDialog {
 	 * @return the bounds key
 	 */
 	private String getBoundsKey() {
-		return DIALOG_BOUNDS_KEY+getId();
+		return DIALOG_BOUNDS_KEY + getId();
 	}
 
 	/**
 	 * @return the id
 	 */
 	protected abstract String getId();
-
 
 	@Override
 	protected Point getInitialLocation(Point initialSize) {
@@ -170,19 +176,18 @@ public abstract class ZResizableDialog extends ZTrayDialog {
 		return loc;
 	}
 
-
 	@Override
 	public boolean close() {
 		boolean closed = super.close();
 		if (closed && fNewBounds != null)
-			saveBounds(fNewBounds);
+			saveBounds(fSettings, getBoundsKey(), fNewBounds);
 		return closed;
 	}
 
-	private void saveBounds(Rectangle bounds) {
-		IDialogSettings dialogBounds = fSettings.getSection(getBoundsKey());
+	protected void saveBounds(IDialogSettings settings, String key, Rectangle bounds) {
+		IDialogSettings dialogBounds = settings.getSection(key);
 		if (dialogBounds == null)
-			fSettings.addSection(dialogBounds = new DialogSettings(getBoundsKey()));
+			settings.addSection(dialogBounds = new DialogSettings(key));
 		dialogBounds.put(X, bounds.x);
 		dialogBounds.put(Y, bounds.y);
 		dialogBounds.put(WIDTH, bounds.width);

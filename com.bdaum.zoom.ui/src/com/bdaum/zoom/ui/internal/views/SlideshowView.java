@@ -85,6 +85,7 @@ import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -300,7 +301,7 @@ public class SlideshowView extends AbstractPresentationView {
 					trail.add(pslide);
 				else {
 					pos += pslide.slide.getDelay() + pslide.slide.getDuration();
-					index++;
+					++index;
 				}
 			}
 			int oldPos = pos;
@@ -440,7 +441,7 @@ public class SlideshowView extends AbstractPresentationView {
 						trail.add(pslide);
 					else {
 						pos += pslide.slide.getDelay() + pslide.slide.getDuration();
-						index++;
+						++index;
 					}
 				}
 				int oldPos = pos;
@@ -525,7 +526,7 @@ public class SlideshowView extends AbstractPresentationView {
 					trail.add(pslide);
 				else {
 					pos += pslide.slide.getDelay() + pslide.slide.getDuration();
-					index++;
+					++index;
 				}
 			}
 			int oldPos = pos;
@@ -600,7 +601,7 @@ public class SlideshowView extends AbstractPresentationView {
 							x -= cand.getFullBoundsReference().width;
 							continue lp;
 						}
-						index++;
+						++index;
 						pos += pslide.slide.getDelay() + pslide.slide.getDuration();
 					}
 				}
@@ -694,15 +695,7 @@ public class SlideshowView extends AbstractPresentationView {
 
 	public class SlideShowDecorateJob extends DecorateJob {
 
-		private Color onlineColor;
 		private Color penColor;
-
-		private Runnable colorRunnable = new Runnable() {
-			public void run() {
-				if (!canvas.isDisposed())
-					onlineColor = UiUtilities.getAwtForeground(canvas, null);
-			}
-		};
 
 		public SlideShowDecorateJob() {
 			super(Messages.getString("SlideshowView.decorate_slideshow")); //$NON-NLS-1$
@@ -716,7 +709,6 @@ public class SlideshowView extends AbstractPresentationView {
 		@Override
 		protected void doRun(IProgressMonitor monitor) {
 			final Display display = canvas.getDisplay();
-			display.syncExec(colorRunnable);
 			IDbManager dbManager = Core.getCore().getDbManager();
 			for (Object child : slideBar.getChildrenReference().toArray()) {
 				if (child instanceof PSlide && isVisible() && mayRun()) {
@@ -738,7 +730,7 @@ public class SlideshowView extends AbstractPresentationView {
 										penColor = offlineColor;
 									break;
 								default:
-									penColor = onlineColor;
+									penColor = titleForegroundColor;
 									break;
 								}
 								display.asyncExec(() -> {
@@ -1072,24 +1064,17 @@ public class SlideshowView extends AbstractPresentationView {
 			// caption
 			RGB rgb = canvas.getForeground().getRGB();
 			Color penColor = new Color(rgb.red, rgb.green, rgb.blue);
-			rgb = canvas.getBackground().getRGB();
-			Color selectedPenColor = new Color(rgb.red, rgb.green, rgb.blue);
 			seqNo = new GreekedPSWTText(createSequenceNo(slide), new Font("Arial", //$NON-NLS-1$
 					Font.BOLD, 9));
 			seqNo.setGreekThreshold(5);
 			seqNo.setTransparent(true);
 			seqNo.setPenColor(penColor);
 			seqNo.setOffset(csize, slideSize + csize);
-			seqNo.setPickable(false);
+			seqNo.setPickable(true);
 			addChild(seqNo);
-			caption = new TextField(slide.getCaption(), (int) (w - 2 * csize - seqNo.getWidth()),
-					new Font("Arial", Font.BOLD, 9), penColor, null, true, SWT.SINGLE); //$NON-NLS-1$
-			caption.setSpellingOptions(10, ISpellCheckingService.TITLEOPTIONS);
-			caption.setSelectedPenColor(selectedPenColor);
-			caption.setGreekThreshold(5);
-			caption.setOffset(seqNo.getWidth() + csize, slideSize + csize);
-			caption.setPickable(true);
-			addChild(caption);
+			caption = createTextLine(this, slide.getCaption(), 5, (int) (w - 2 * csize - seqNo.getWidth()),
+					(int) (seqNo.getWidth() + csize), slideSize + csize, titleForegroundColor, null, "Arial", Font.BOLD, //$NON-NLS-1$
+					9, ISpellCheckingService.TITLEOPTIONS, SWT.SINGLE);
 			// legend
 			legend = new GreekedPSWTText(createLegendText(slide), new Font("Arial", //$NON-NLS-1$
 					Font.PLAIN, 9));
@@ -1238,12 +1223,13 @@ public class SlideshowView extends AbstractPresentationView {
 		}
 
 		public void setPenColor(Color color) {
-			caption.setPenColor(color);
+			seqNo.setPenColor(color);
 			legend.setPenColor(color);
 		}
 
 		public void setTitleColor(Color color) {
 			caption.setPenColor(color);
+			caption.setSelectedBgColor(selectionBackgroundColor);
 		}
 
 		public void setBackgroundColor(Color color) {
@@ -1301,9 +1287,8 @@ public class SlideshowView extends AbstractPresentationView {
 	@Override
 	public void createPartControl(Composite parent) {
 		super.createPartControl(parent);
-		canvas.setData("id", "slideshow"); //$NON-NLS-1$ //$NON-NLS-2$
+		canvas.setData(CSSProperties.ID, CSSProperties.SLIDESHOW);
 		undoContext = new UndoContext() {
-
 			@Override
 			public String getLabel() {
 				return Messages.getString("SlideshowView.slideshow_undo_context"); //$NON-NLS-1$
@@ -1417,7 +1402,7 @@ public class SlideshowView extends AbstractPresentationView {
 		installHoveringController();
 		// Actions
 		makeActions();
-		installListeners(parent);
+		installListeners();
 		hookContextMenu();
 		contributeToActionBars();
 		if (slideshow != null)
@@ -1536,7 +1521,7 @@ public class SlideshowView extends AbstractPresentationView {
 
 	@Override
 	public void updateActions(boolean force) {
-		if (playAction != null && (viewActive || force)) {
+		if (playAction != null && (isVisible() || force)) {
 			super.updateActions(force);
 			playAction.setEnabled(!slides.isEmpty());
 		}
@@ -1556,7 +1541,7 @@ public class SlideshowView extends AbstractPresentationView {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
-		updateActions(false);
+		updateActions(true);
 		boolean writable = !dbIsReadonly();
 		manager.add(setTimerCursorAction);
 		manager.add(new Separator());
@@ -1582,8 +1567,9 @@ public class SlideshowView extends AbstractPresentationView {
 		playAction = new Action(Messages.getString("SlideshowView.play"), Icons.play.getDescriptor()) { //$NON-NLS-1$
 			@Override
 			public void run() {
-				new SlideShowPlayer(getSite().getWorkbenchWindow(), slideshow, slides, false)
-						.open((int) (timeCursor.getOffset().getX() / slideSize * defaultDuration));
+				SlideShowPlayer player = new SlideShowPlayer();
+				player.init(getSite().getWorkbenchWindow(), slideshow, slides, false);
+				player.open((int) (timeCursor.getOffset().getX() / slideSize * defaultDuration));
 			}
 		};
 		playAction.setToolTipText(Messages.getString("SlideshowView.play_slideshow")); //$NON-NLS-1$
@@ -1658,7 +1644,6 @@ public class SlideshowView extends AbstractPresentationView {
 					performOperation(
 							new EditSlideOperation(pslide, slide, backup, EditSlideOperation.EDIT_SECTION_BREAK));
 			}
-
 		};
 		editBreakAction.setToolTipText(Messages.getString("SlideshowView.edit_section_break_tooltip")); //$NON-NLS-1$
 		exhibitPropertiesAction = new Action(Messages.getString("SlideshowView.slide_properties")) { //$NON-NLS-1$
@@ -1680,18 +1665,13 @@ public class SlideshowView extends AbstractPresentationView {
 
 	@Override
 	protected void setColor(Control control) {
+		CssActivator.getDefault().applyExtendedStyle(control, this);
 		Color newPaint = UiUtilities.getAwtBackground(control, null);
 		surface.setPaint(newPaint);
 		slideBar.setPaint(newPaint);
 		timeBar.setPaint(newPaint);
-		selectionBackgroundColor = UiUtilities.getAwtForeground(control, null);
-		titleForegroundColor = selectionBackgroundColor;
-		foregroundColor = selectionBackgroundColor;
-		CssActivator.getDefault().applyExtendedStyle(control, this);
 		slideBar.setStrokeColor(selectionBackgroundColor);
-		timeBar.setStrokeColor(selectionBackgroundColor);
-		ListIterator<?> it = timeBar.getChildrenIterator();
-		while (it.hasNext()) {
+		for (ListIterator<?> it = slideBar.getChildrenIterator(); it.hasNext();) {
 			Object child = it.next();
 			if (child instanceof PSWTText)
 				((PSWTText) child).setPenColor(selectionBackgroundColor);
@@ -1701,6 +1681,12 @@ public class SlideshowView extends AbstractPresentationView {
 				((PSlide) child).setPenColor(foregroundColor);
 				((PSlide) child).setTitleColor(titleForegroundColor);
 			}
+		}
+		timeBar.setStrokeColor(selectionBackgroundColor);
+		for (ListIterator<?> it = timeBar.getChildrenIterator(); it.hasNext();) {
+			Object child = it.next();
+			if (child instanceof PSWTText)
+				((PSWTText) child).setPenColor(selectionBackgroundColor);
 		}
 	}
 
@@ -1779,8 +1765,7 @@ public class SlideshowView extends AbstractPresentationView {
 	public void removeSlides(List<SlideImpl> slideList) {
 		for (SlideImpl slide : slideList) {
 			PSlide pSlide = slideMap.get(slide);
-			Point2D offset = pSlide.getOffset();
-			deleteSlide(pSlide, offset);
+			deleteSlide(pSlide, pSlide.getOffset());
 		}
 	}
 

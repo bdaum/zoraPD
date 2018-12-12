@@ -73,6 +73,7 @@ import com.bdaum.zoom.cat.model.group.exhibition.ExhibitionImpl;
 import com.bdaum.zoom.cat.model.group.exhibition.Wall;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.db.IDbManager;
@@ -86,9 +87,9 @@ import com.bdaum.zoom.image.internal.swt.ImageLoader;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.job.CustomJob;
 import com.bdaum.zoom.job.OperationJob;
-import com.bdaum.zoom.operations.internal.gen.AbstractGalleryGenerator;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.DiskFullException;
+import com.bdaum.zoom.program.HtmlEncoderDecoder;
 
 @SuppressWarnings("restriction")
 public class ExhibitionJob extends CustomJob implements LoaderListener {
@@ -131,6 +132,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 	private GC entryGC;
 	private List<Point> lights = new ArrayList<Point>();
 	private int jpegQuality;
+	private HtmlEncoderDecoder htmlEncoderDecoder;
 
 	public ExhibitionJob(ExhibitionImpl gallery, String exhibitionId, IAdaptable adaptable, boolean makeDefault) {
 		super(Messages.ExhibitionJob_generate_exhibition);
@@ -311,7 +313,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 		web = formatWebUrl(web);
 		String copyright = gallery.getCopyright();
 		if (copyright != null && !copyright.isEmpty())
-			sb.append("&copy; ").append(BatchUtilities.encodeHTML(copyright, false)); //$NON-NLS-1$
+			sb.append("&copy; ").append(getHtmlEncoderDecoder().encodeHTML(copyright, false)); //$NON-NLS-1$
 		String contact = gallery.getContactName();
 		String email = gallery.getEmail();
 		if (contact == null || contact.isEmpty())
@@ -321,9 +323,9 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 				sb.append("<br/>"); //$NON-NLS-1$
 			if (email != null && !email.isEmpty())
 				sb.append("<a href='mailto:").append(email).append("'>") //$NON-NLS-1$ //$NON-NLS-2$
-						.append(BatchUtilities.encodeHTML(contact, false)).append("</a>"); //$NON-NLS-1$
+						.append(getHtmlEncoderDecoder().encodeHTML(contact, false)).append("</a>"); //$NON-NLS-1$
 			else
-				sb.append(BatchUtilities.encodeHTML(contact, false));
+				sb.append(getHtmlEncoderDecoder().encodeHTML(contact, false));
 		}
 		if (web != null && !web.isEmpty()) {
 			if (sb.length() > 0)
@@ -333,7 +335,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 			if (label.startsWith(HTTPS))
 				label = label.substring(HTTPS.length());
 			generateLink(web, sb);
-			sb.append(BatchUtilities.encodeHTML(label, false)).append("</a>"); //$NON-NLS-1$
+			sb.append(getHtmlEncoderDecoder().encodeHTML(label, false)).append("</a>"); //$NON-NLS-1$
 		}
 		if (sb.length() > 0)
 			sb.append("<br/>"); //$NON-NLS-1$
@@ -464,7 +466,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 		} catch (IOException e1) {
 			// ignore
 		}
-		CoreActivator activator = CoreActivator.getDefault();
+		ICore activator = CoreActivator.getDefault();
 		IVolumeManager volumeManager = activator.getVolumeManager();
 		IDbManager dbManager = activator.getDbManager();
 		double zoom = 0.24d;
@@ -1353,7 +1355,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 	}
 
 	private static String generateColor(Rgb_type color) {
-		return AbstractGalleryGenerator.toHtmlColors(color.getR(), color.getG(), color.getB());
+		return Utilities.toHtmlColors(color.getR(), color.getG(), color.getB());
 	}
 
 	private int updateConfig(File resFile) throws FileNotFoundException, IOException {
@@ -1438,6 +1440,12 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 
 	public boolean progress(int total, int worked) {
 		return monitor.isCanceled();
+	}
+
+	private HtmlEncoderDecoder getHtmlEncoderDecoder() {
+		if (htmlEncoderDecoder == null)
+			htmlEncoderDecoder = new HtmlEncoderDecoder();
+		return htmlEncoderDecoder;
 	}
 
 }

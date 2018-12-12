@@ -28,13 +28,13 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -90,9 +90,9 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		CLink link = new CLink(eGroup, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		link.setText(Messages.PagePart_visit_account);
-		link.addSelectionListener(new SelectionAdapter() {
+		link.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				String url = System.getProperty("com.bdaum.zoom.msVision"); //$NON-NLS-1$
 				try {
 					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(url));
@@ -103,7 +103,6 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 				}
 			}
 		});
-
 		CGroup tGroup = UiUtilities.createGroup(composite, 2, Messages.PagePart_usage);
 		new Label(tGroup, SWT.NONE).setText(Messages.PagePart_max_proposals);
 		conceptField = new NumericControl(tGroup, SWT.BORDER);
@@ -134,9 +133,9 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 				Messages.PagePart_celebs_tooltip);
 		descriptionButton = WidgetFactory.createCheckButton(buttonArea1, Messages.PagePart_description, null,
 				Messages.PagePart_description_tooltip);
-		descriptionButton.addSelectionListener(new SelectionAdapter() {
+		descriptionButton.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateButtons();
 			}
 		});

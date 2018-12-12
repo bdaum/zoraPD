@@ -5,13 +5,13 @@ import java.io.File;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.Constants;
@@ -101,11 +101,11 @@ public class SpaceDialog extends ZTitleAreaDialog {
 		new Label(comp, SWT.NONE).setText(Format.sizeFormatter
 				.toString(imageSize + catSize));
 		output = new OutputTargetGroup(comp, new GridData(SWT.FILL,
-				SWT.CENTER, true, false, 2, 1), new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+				SWT.CENTER, true, false, 2, 1), new Listener() {
+			public void handleEvent(Event e) {
 				validate();
 			}
-		}, false, false);
+		}, false, false, false);
 		catReadonlyButton = WidgetFactory.createCheckButton(comp,
 				Messages.ArchiveAction_cat_readonly, null);
 		fileReadonlyButton = WidgetFactory.createCheckButton(comp,

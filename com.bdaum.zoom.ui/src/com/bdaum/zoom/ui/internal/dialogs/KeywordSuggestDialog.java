@@ -35,12 +35,13 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.SimilarityOptions_typeImpl;
@@ -61,7 +62,7 @@ import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 
 @SuppressWarnings("restriction")
-public class KeywordSuggestDialog extends ZProgressDialog implements SelectionListener {
+public class KeywordSuggestDialog extends ZProgressDialog implements Listener {
 
 	public class SuggestJob extends Job {
 
@@ -185,7 +186,7 @@ public class KeywordSuggestDialog extends ZProgressDialog implements SelectionLi
 		Algorithm algorithm = lireService.getAlgorithmById(method);
 		if (algorithm != null && CoreActivator.getDefault().getCbirAlgorithms().contains(algorithm.getName()))
 			validMethod = method;
-		if (validMethod < 0 && lireService.ShowConfigureSearch(this, null))
+		if (validMethod < 0 && lireService.showConfigureSearch(this, null))
 			validMethod = queryOptions.getMethod();
 		options = new SimilarityOptions_typeImpl(validMethod, queryOptions.getMaxHits(), queryOptions.getScore() / 100f,
 				0, 0, 0, 0, null, queryOptions.getKeywordWeight());
@@ -217,7 +218,7 @@ public class KeywordSuggestDialog extends ZProgressDialog implements SelectionLi
 		sortButtonGroup = new RadioButtonGroup(comp, Messages.KeywordSuggestDialog_sort_by, SWT.HORIZONTAL,
 				Messages.KeywordSuggestDialog_score, Messages.KeywordSuggestDialog_alpha);
 		sortButtonGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
-		sortButtonGroup.addSelectionListener(this);
+		sortButtonGroup.addListener(this);
 		Composite viewerComp = new Composite(comp, SWT.NONE);
 		viewerComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewerComp.setLayout(new GridLayout(2, false));
@@ -256,7 +257,7 @@ public class KeywordSuggestDialog extends ZProgressDialog implements SelectionLi
 			configureButton.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					if (lireService.ShowConfigureSearch(KeywordSuggestDialog.this, null)) {
+					if (lireService.showConfigureSearch(KeywordSuggestDialog.this, null)) {
 						Job.getJobManager().cancel(KeywordSuggestDialog.this);
 						QueryOptions queryOptions = UiActivator.getDefault().getQueryOptions();
 						options.setMaxResults(queryOptions.getMaxHits());
@@ -274,13 +275,9 @@ public class KeywordSuggestDialog extends ZProgressDialog implements SelectionLi
 		return suggestedKeywords;
 	}
 
-	public void widgetSelected(SelectionEvent e) {
+	public void handleEvent(Event e) {
 		if (allKeywords != null)
 			viewer.setInput(allKeywords.values());
-	}
-
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
 	}
 
 }

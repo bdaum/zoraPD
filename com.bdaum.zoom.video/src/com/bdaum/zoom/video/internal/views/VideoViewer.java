@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.jobs.Job;
@@ -32,32 +31,25 @@ import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.meta.Meta;
@@ -72,21 +64,20 @@ import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.image.ZImage;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.UpdateThumbnailOperation;
+import com.bdaum.zoom.ui.IStateListener;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiConstants;
-import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.views.AbstractMediaViewer;
 import com.bdaum.zoom.ui.internal.widgets.FadingShell;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
-import com.bdaum.zoom.ui.views.IMediaViewer;
-import com.bdaum.zoom.video.internal.Icons;
 import com.bdaum.zoom.video.internal.VideoActivator;
 import com.bdaum.zoom.video.internal.widgets.VideoControl;
 
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 
 @SuppressWarnings("restriction")
-public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IAdaptable, DisposeListener {
+public class VideoViewer extends AbstractMediaViewer implements PaintListener {
 
 	private static final String[] VLC_ARGS = { // "--intf", "dummy", /* no
 			// interface */
@@ -102,21 +93,14 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 
 	public boolean running;
 	static final int TICK = 17;
-	private Display display;
-	private RGB bwmode;
 	private Canvas topCanvas;
-	private Asset asset;
 	private Shell topShell;
 	private Image image;
-	private boolean keyDown;
 	private TextLayout tlayout;
 	private String message;
 	private String errorMessage;
-	private Cursor transparentCursor;
 	private FadingShell controlShell;
 	private int mouseMovements;
-	private String name;
-	private String id;
 	private PlayingThread playingThread;
 	private byte[] thumbnailJpeg;
 	private Job transferJob;
@@ -126,14 +110,9 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 	private boolean soundOn = true;
 	private int currentVolume = 100;
 	private MediaPlayerFactory factory;
-	private Shell shell;
 
-	public void init(IWorkbenchWindow window, RGB bw, int cropmode) {
-		this.shell = window.getShell();
-		shell.addDisposeListener(this);
-		this.display = shell.getDisplay();
-		this.bwmode = bw;
-		keyDown = false;
+	public void init(IWorkbenchWindow window, int kind, RGB bw, int cropmode) {
+		super.init(window, kind, bw, cropmode);
 		errorMessage = null;
 		message = null;
 		mouseMovements = 0;
@@ -152,16 +131,11 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 	}
 
 	public void create() {
-		Rectangle mbounds = UiUtilities.getSecondaryMonitorBounds(shell);
-		topShell = new Shell(display, SWT.NO_TRIM);
-		topShell.setImage(Icons.zoraShell.getImage());
-		topShell.setText(Constants.APPNAME + Messages.VideoViewer_video_viewer);
-		topShell.setFullScreen(true);
-		topShell.setLayout(new FillLayout());
-		topCanvas = new Canvas(topShell.getShell(), SWT.DOUBLE_BUFFERED);
+		super.create();
+		topShell = createKioskShell(getName());
+		topCanvas = new Canvas(topShell, SWT.DOUBLE_BUFFERED);
 		topCanvas.addPaintListener(this);
 		topCanvas.addKeyListener(this);
-		topShell.setBounds(mbounds);
 		createTransparentCursor();
 		topCanvas.setCursor(transparentCursor);
 		topCanvas.addMouseMoveListener(new MouseMoveListener() {
@@ -188,16 +162,16 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 		}
 	}
 
-	public void open(Asset a) throws IOException {
-		this.asset = a;
-		URI uri = Core.getCore().getVolumeManager().findExistingFile(a, false);
+	public void open(Asset[] assets) throws IOException {
+		asset = assets[0];
+		URI uri = Core.getCore().getVolumeManager().findExistingFile(asset, false);
 		if (uri != null) {
 			if (Constants.FILESCHEME.equals(uri.getScheme())) {
 				IPeerService peerService = Core.getCore().getPeerService();
 				AssetOrigin assetOrigin = peerService != null ? peerService.getAssetOrigin(asset.getStringId()) : null;
 				if (peerService != null && assetOrigin != null) {
 					try {
-						if (peerService.checkCredentials(IPeerService.VIEW, a.getSafety(), assetOrigin)) {
+						if (peerService.checkCredentials(IPeerService.VIEW, asset.getSafety(), assetOrigin)) {
 							transferJob = peerService.scheduleTransferJob(asset, assetOrigin);
 							if (transferJob != null) {
 								try {
@@ -236,7 +210,6 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 		if (factory == null)
 			return;
 		playingThread = new PlayingThread(uri, factory, new ThreadUINotifier() {
-
 			public void updateFrame(ImageData imageData, long position, long seek) {
 				message = null;
 				running = true;
@@ -271,7 +244,8 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 		}
 	}
 
-	public void close() {
+	public boolean close() {
+		fireStateEvent(IStateListener.CLOSED);
 		if (playingThread != null)
 			playingThread.stopPlaying();
 		if (transferJob != null)
@@ -296,14 +270,11 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 			tlayout.dispose();
 			tlayout = null;
 		}
-		if (transparentCursor != null) {
-			transparentCursor.dispose();
-			transparentCursor = null;
-		}
 		if (thumbnailJpeg != null) {
 			OperationJob.executeOperation(new UpdateThumbnailOperation(asset, thumbnailJpeg), VideoViewer.this);
 			thumbnailJpeg = null;
 		}
+		return super.close();
 	}
 
 	public void paintControl(PaintEvent e) {
@@ -347,18 +318,7 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 		}
 	}
 
-	public void keyPressed(KeyEvent e) {
-		if (keyDown)
-			releaseKey(e);
-		keyDown = true;
-	}
-
-	public void keyReleased(KeyEvent e) {
-		releaseKey(e);
-		keyDown = false;
-	}
-
-	private void releaseKey(KeyEvent e) {
+	public void releaseKey(KeyEvent e) {
 		switch (e.character) {
 		case ' ':
 			if (playingThread != null && playingThread.isPaused())
@@ -377,13 +337,6 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 		}
 	}
 
-	private void createTransparentCursor() {
-		ImageData cursorData = new ImageData(16, 16, 1, new PaletteData(new RGB[] {
-				display.getSystemColor(SWT.COLOR_WHITE).getRGB(), display.getSystemColor(SWT.COLOR_BLACK).getRGB() }));
-		cursorData.transparentPixel = 0;
-		transparentCursor = new Cursor(display, cursorData, 0, 0);
-	}
-
 	private void doShowControl() {
 		topCanvas.setCursor(null);
 		final Shell shell = new Shell(topShell, SWT.TOOL);
@@ -398,10 +351,10 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 			videoControl.setSound(soundOn);
 			updateInfo(videoControl, currentPosition, duration);
 		}
-		videoControl.addSelectionListener(new SelectionAdapter() {
+		videoControl.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				switch (e.detail & VideoControl.EVENTTYPES) {
+			public void handleEvent(Event event) {
+				switch (event.detail & VideoControl.EVENTTYPES) {
 				case VideoControl.PLAY:
 					closeControl();
 					if (playingThread != null && playingThread.isPaused())
@@ -416,8 +369,7 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 						int width = ImportState.computeThumbnailWidth(meta.getThumbnailResolution());
 						int height = width / 4 * 3;
 						ZImage zImage = new ZImage(image, null);
-						int origWidth = zImage.width;
-						if (zImage.height > origWidth) {
+						if (zImage.height > zImage.width) {
 							int www = height;
 							height = width;
 							width = www;
@@ -436,26 +388,22 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 					break;
 				case VideoControl.SOUND:
 					if (playingThread != null) {
-						soundOn = (e.detail & VideoControl.VOLUMEMASK) > 0;
+						soundOn = (event.detail & VideoControl.VOLUMEMASK) > 0;
 						playingThread.setVolume(soundOn ? currentVolume : 0);
 					}
 					break;
 				case VideoControl.LOUDNESS:
-					if (playingThread != null) {
-						currentVolume = e.detail & VideoControl.VOLUMEMASK;
-						playingThread.setVolume(currentVolume);
-					}
+					if (playingThread != null)
+						playingThread.setVolume(currentVolume = event.detail & VideoControl.VOLUMEMASK);
 					break;
 				default:
 					if (playingThread != null) {
 						long duration = playingThread.getDuration();
-						playingThread.seek((long) (e.detail / 1000d * duration + 0.5d));
+						playingThread.seek((long) (event.detail / 1000d * duration + 0.5d));
 						updateInfo(videoControl, playingThread.getCurrentPosition(), duration);
 					}
 					break;
-				}
-				super.widgetSelected(e);
-			}
+				}			}
 		});
 		shell.setText(asset.getName());
 		shell.addKeyListener(new KeyAdapter() {
@@ -476,7 +424,7 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 		controlShell.setFocus();
 		for (int i = 1; i <= 10; i++) {
 			if (i > 1)
-				sleepTick();
+				sleepTick(TICK);
 			controlShell.setAlpha(i * 15);
 		}
 	}
@@ -506,63 +454,28 @@ public class VideoViewer implements IMediaViewer, PaintListener, KeyListener, IA
 		return sb.append('.').append(String.valueOf(time + 1000).substring(1)).toString();
 	}
 
-	void sleepTick() {
-		try {
-			Thread.sleep(TICK);
-		} catch (InterruptedException e) {
-			// do nothing
-		}
-	}
-
 	protected void closeControl() {
 		if (controlShell != null && !controlShell.isDisposed()) {
 			int alpha = controlShell.getAlpha();
 			while (alpha > 15) {
-				alpha -= 15;
-				controlShell.setAlpha(alpha);
-				sleepTick();
+				controlShell.setAlpha(alpha -= 15);
+				sleepTick(TICK);
 			}
 			controlShell.close();
 			for (int i = 0; i < 60; i++)
-				sleepTick();
+				sleepTick(TICK);
 			controlShell = null;
 		}
 		mouseMovements = 0;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public boolean canHandleRemote() {
 		return true;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public Object getAdapter(Class adapter) {
-		if (Shell.class.equals(adapter)) {
-			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-			if (activeWorkbenchWindow != null)
-				return activeWorkbenchWindow.getShell();
-		}
-		return null;
-	}
-
 	@Override
-	public void widgetDisposed(DisposeEvent e) {
-		close();
+	public boolean isDisposed() {
+		return topShell == null;
 	}
-
+	
 }

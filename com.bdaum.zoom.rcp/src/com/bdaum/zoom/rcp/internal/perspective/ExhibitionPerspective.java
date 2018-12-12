@@ -38,9 +38,4 @@ public class ExhibitionPerspective extends AbstractPerspective {
 		layout.setEditorAreaVisible(false);
 	}
 
-	@Override
-	protected String getId() {
-		return ID;
-	}
-
 }

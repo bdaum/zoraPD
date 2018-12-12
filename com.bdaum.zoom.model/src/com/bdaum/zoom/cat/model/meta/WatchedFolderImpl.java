@@ -40,15 +40,16 @@ public class WatchedFolderImpl extends WatchedFolder_typeImpl implements
 	 * @param selectedTemplate - Property
 	 * @param cue - Property
 	 * @param fileSource - Property
+	 * @param tethered - Property
 	 */
 	public WatchedFolderImpl(String uri, String volume, long lastObservation,
 			boolean recursive, String filters, boolean transfer, String artist,
 			boolean skipDuplicates, int skipPolicy, String targetDir,
 			int subfolderPolicy, String selectedTemplate, String cue,
-			int fileSource) {
+			int fileSource, boolean tethered) {
 		super(uri, volume, lastObservation, recursive, filters, transfer,
 				artist, skipDuplicates, skipPolicy, targetDir, subfolderPolicy,
-				selectedTemplate, cue, fileSource);
+				selectedTemplate, cue, fileSource, tethered);
 
 	}
 

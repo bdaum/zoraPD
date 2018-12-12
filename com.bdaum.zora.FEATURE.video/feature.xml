@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE.video"
       label="Video feature"
-      version="3.3.0"
+      version="3.5.0"
       provider-name="bdaum industrial communications">
 
    <description>
@@ -28,13 +28,6 @@ your option) any later version.
 
    <plugin
          id="com.bdaum.zoom.video"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="com.bdaum.zoom.video.youtube"
          download-size="0"
          install-size="0"
          version="0.0.0"

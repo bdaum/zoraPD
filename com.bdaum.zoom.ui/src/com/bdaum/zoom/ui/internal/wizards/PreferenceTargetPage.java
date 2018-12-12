@@ -2,10 +2,10 @@ package com.bdaum.zoom.ui.internal.wizards;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.program.BatchConstants;
 import com.bdaum.zoom.ui.internal.widgets.FileEditor;
@@ -32,8 +32,9 @@ public class PreferenceTargetPage extends ColoredWizardPage {
 				new String[] { Messages.PreferenceTargetPage_user_preferences }, path,
 				path == null ? BatchConstants.APP_PREFERENCES : path, true, dialogSettings);
 		fileEditor.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
-		fileEditor.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+		fileEditor.addListener(new Listener() {
+			@Override
+			public void handleEvent(Event event) {
 				path = getTargetFile();
 				validatePage();
 			}

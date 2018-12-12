@@ -50,7 +50,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewer;
-import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -244,10 +243,8 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 				int type = qfield.getType();
 				if (qfield.getKey() != null && type != QueryField.T_NONE) {
 					if (qfield.getCard() == QueryField.CARD_MODIFIABLEBAG) {
-						if (value instanceof BagChange) {
-							oldvalue = getFieldValue(qfield);
-							updateAssets(value, oldvalue, qfield);
-						}
+						if (value instanceof BagChange)
+							updateAssets(value, oldvalue = getFieldValue(qfield), qfield);
 						return;
 					}
 					if (indexedMember == null)
@@ -322,19 +319,17 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 							&& text != Format.MISSINGENTRYSTRING) {
 						String unit = qfield.getUnit();
 						if (unit != null)
-							text = new StringBuilder(text).append(' ').append(unit).toString();
-						else if (value instanceof String[] && ((String[]) value).length > 0)
-							text = UiUtilities.addExplanation(qfield, (String[]) value, text);
+							return new StringBuilder(text).append(' ').append(unit).toString();
+						if (value instanceof String[] && ((String[]) value).length > 0)
+							return UiUtilities.addExplanation(qfield, (String[]) value, text);
 					}
 					return text;
 				}
-			} else if (element instanceof IndexedMember) {
-				String s = QueryField.serializeStruct(((IndexedMember) element).getValue(), CLICK_TO_VIEW_DETAILS);
-				if (s != null)
-					return s;
-			} else if (element instanceof TrackRecord) {
+			} else if (element instanceof IndexedMember)
+				return QueryField.serializeStruct(((IndexedMember) element).getValue(), CLICK_TO_VIEW_DETAILS);
+			else if (element instanceof TrackRecord)
 				return QueryField.TRACK.getFormatter().toString(element);
-			} else if (element instanceof String) {
+			else if (element instanceof String) {
 				String s = (String) element;
 				int p = s.indexOf(':');
 				if (p > 0)
@@ -705,7 +700,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		viewer.setContentProvider(new MetadataContentProvider());
 		viewer.setComparator(ZViewerComparator.INSTANCE);
 		viewer.setFilters(new ViewerFilter[] { new DetailsViewerFilter(), new ContentTypeViewerFilter() });
-		ColumnViewerToolTipSupport.enableFor(viewer);
+		ZColumnViewerToolTipSupport.enableFor(viewer);
 		viewer.setInput(getRootElement());
 		parent.getDisplay().asyncExec(() -> {
 			if (!parent.isDisposed()) {
@@ -769,7 +764,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), HelpContextIds.METADATA_VIEW);
 		makeActions();
-		installListeners(parent);
+		installListeners();
 		hookContextMenu();
 		contributeToActionBars();
 		final QueryField.Visitor qfVisitor = new QueryField.Visitor() {
@@ -816,6 +811,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 	}
 
 	protected void fillContextMenu(IMenuManager manager) {
+		updateActions(true);
 		Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
 		if (firstElement instanceof QueryField) {
 			Icon icon = null;
@@ -1051,7 +1047,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 
 	@Override
 	public void updateActions(boolean force) {
-		if (viewActive || force && !viewer.getControl().isDisposed()) {
+		if ((isVisible() || force) && !viewer.getControl().isDisposed()) {
 			if (deleteAction != null) {
 				Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
 				deleteAction.setEnabled((firstElement instanceof IndexedMember

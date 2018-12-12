@@ -258,7 +258,7 @@ public class AutoRuleComponent {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				@SuppressWarnings("unchecked")
-				Iterator<AutoRule> it = ((IStructuredSelection) ruleViewer.getSelection()).iterator();
+				Iterator<AutoRule> it = ruleViewer.getStructuredSelection().iterator();
 				while (it.hasNext()) {
 					AutoRule rule = it.next();
 					int index = autoRules.indexOf(rule);
@@ -283,7 +283,7 @@ public class AutoRuleComponent {
 			@SuppressWarnings("unchecked")
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection sel = (IStructuredSelection) ruleViewer.getSelection();
+				IStructuredSelection sel = ruleViewer.getStructuredSelection();
 				if (!sel.isEmpty())
 					OperationJob.executeSlaveOperation(
 							new AutoRuleOperation(new ArrayList<AutoRule>(sel.toList()), null, null), info, false);
@@ -308,7 +308,7 @@ public class AutoRuleComponent {
 
 	protected void updateButtons() {
 		if (ruleViewer.getControl().isEnabled()) {
-			IStructuredSelection selection = (IStructuredSelection) ruleViewer.getSelection();
+			IStructuredSelection selection = ruleViewer.getStructuredSelection();
 			editAutoButton.setEnabled(selection.size() == 1);
 			removeAutoButton.setEnabled(!selection.isEmpty());
 			applyButton.setEnabled(!selection.isEmpty());
@@ -322,7 +322,7 @@ public class AutoRuleComponent {
 	}
 
 	protected void editRule() {
-		AutoRule rule = (AutoRule) ((IStructuredSelection) ruleViewer.getSelection()).getFirstElement();
+		AutoRule rule = (AutoRule) ruleViewer.getStructuredSelection().getFirstElement();
 		List<AutoRule> otherRules = new ArrayList<AutoRule>(autoRules);
 		otherRules.remove(rule);
 		AutoRuleDialog dialog = new AutoRuleDialog(composite.getShell(), rule, otherRules);

@@ -28,7 +28,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,7 +38,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
@@ -55,8 +53,6 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.HelpEvent;
 import org.eclipse.swt.events.HelpListener;
 import org.eclipse.swt.events.KeyAdapter;
@@ -70,13 +66,9 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.graphics.TextStyle;
@@ -113,6 +105,7 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.image.IFocalLengthProvider;
 import com.bdaum.zoom.image.ImageConstants;
@@ -131,10 +124,10 @@ import com.bdaum.zoom.program.IRawConverter;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.internal.AbstractKiosk;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiConstants;
-import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.AlbumSelectionDialog;
 import com.bdaum.zoom.ui.internal.dialogs.RatingDialog;
 import com.bdaum.zoom.ui.internal.dialogs.SelectSlideDialog;
@@ -148,7 +141,7 @@ import com.bdaum.zoom.ui.internal.widgets.FadingShell;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, DisposeListener {
+public class SlideShowPlayer extends AbstractKiosk implements MouseListener, KeyListener {
 
 	static final int TICK = 17;
 	static final int LONGTICK = 60;
@@ -321,11 +314,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 								albumList.add(asset);
 							}
 						}
-						String sourceURI = request.getSourceURI();
-						String targetURI = request.getTargetURI();
-						if (sourceURI != null && targetURI != null || request.isDeleteVoiceNote())
-							voice.put(asset, new VoiceNoteOperation(Collections.singletonList(asset), sourceURI,
-									targetURI, null));
+						if (request.annotationChanged())
+							voice.put(asset, new VoiceNoteOperation(asset, request.getSourceURI(),
+									request.getTargetURI(), request.getNoteText(), request.getSvg()));
 					}
 					if (request.isRemoveFromShow())
 						removeFromShow.add(request.getSlide());
@@ -336,7 +327,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				if (!shell.isDisposed()) {
 					shell.getDisplay().asyncExec(() -> {
 						if (!shell.isDisposed())
-							UiActivator.getDefault().getNavigationHistory(parentWindow).postSelection(assetSelection);
+							Ui.getUi().getNavigationHistory(parentWindow).postSelection(assetSelection);
 					});
 				}
 			}
@@ -988,7 +979,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				controller.install();
 				for (int i = 1; i <= 10; i++) {
 					if (i > 1)
-						sleepTick();
+						sleepTick(TICK);
 					controlShell.setAlpha(i * 15);
 				}
 			}
@@ -1002,7 +993,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 					int alpha = controlShell.getAlpha();
 					while (alpha > 15) {
 						controlShell.setAlpha(alpha -= 15);
-						sleepTick();
+						sleepTick(TICK);
 					}
 					controlShell.close();
 					controlShell = null;
@@ -1270,7 +1261,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 					if (startFrom < diff) {
 						final int delaySteps = computeSteps(diff - startFrom);
 						delLoop: for (int i = 0; i < delaySteps; i++) {
-							sleepTick();
+							sleepTick(TICK);
 							if (i % NTICKS == 0) {
 								switch (checkStatus(monitor)) {
 								case ABORT:
@@ -1361,7 +1352,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 								}
 								if (!displ.isDisposed())
 									displ.asyncExec(runnable);
-								sleepTick();
+								sleepTick(TICK);
 								if (i % NTICKS == 0) {
 									switch (checkStatus(monitor)) {
 									case ABORT:
@@ -1408,7 +1399,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 					}
 					durLoop: for (int i = 0; i < dursteps; i++) {
 						if (startFrom <= 0)
-							sleepTick();
+							sleepTick(TICK);
 						if (i % NTICKS == 0) {
 							switch (checkStatus(monitor)) {
 							case ABORT:
@@ -1456,7 +1447,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 								transitionValue = (double) i / outsteps;
 								if (!displ.isDisposed())
 									displ.asyncExec(runnable);
-								sleepTick();
+								sleepTick(TICK);
 								if (i % NTICKS == 0) {
 									int ret = checkStatus(monitor);
 									if (ret == ABORT || ret == IGNORE)
@@ -1572,7 +1563,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			if (result != NOOP)
 				return result;
 			while (request.isPaused()) {
-				sleepLong();
+				sleepTick(LONGTICK);
 				result = doCheckStatus(monitor);
 				if (result != NOOP)
 					return result;
@@ -1789,20 +1780,15 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 		protected void recordVoiceNote(int xoff, SlideRequest request) {
 			if (request != null) {
 				Asset asset = request.getAsset();
-				if (asset != null) {
+				if (asset != null && asset.getFileState() != IVolumeManager.PEER) {
 					UiActivator.getDefault().stopAudio();
-					VoiceNoteDialog dialog = new VoiceNoteDialog(fadingShell.getShell(),
-							Collections.singletonList(asset), false);
+					VoiceNoteDialog dialog = new VoiceNoteDialog(fadingShell.getShell(), asset);
 					dialog.create();
 					Point p = slideControl.getLocation();
 					dialog.getShell().setLocation(p.x + xoff, p.y - dialog.getShell().getSize().y);
-					if (dialog.open() == VoiceNoteDialog.OK) {
-						String sourceURI = dialog.getSourceUri();
-						String targetURI = dialog.getTargetUri();
-						boolean deleteVoiceNote = dialog.isDeleteVoiceNote();
-						if (sourceURI != null && targetURI != null || deleteVoiceNote)
-							request.setVoiceNote(sourceURI, targetURI, deleteVoiceNote);
-					}
+					if (dialog.open() == VoiceNoteDialog.OK)
+						request.setVoiceNote(dialog.getSourceUri(), dialog.getTargetUri(), dialog.getNoteText(),
+								dialog.getSvg());
 				}
 			}
 		}
@@ -2031,7 +2017,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 									case RESTART:
 										if (receipt != null)
 											receipt.setPaused(false);
-										sleepTick();
+										sleepTick(TICK);
 										if (slide != null && receipt != null)
 											new SingleSlideJob(receipt, slide.getDelay(),
 													slide.getDuration() - receipt.getOverlap(), shell, mbounds, true,
@@ -2078,7 +2064,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 									}
 								});
 								for (int i = computeSteps(slide.getFadeOut() + 500) - 1; i >= 0; i--) {
-									sleepTick();
+									sleepTick(TICK);
 									if (checkStatus(request, monitor))
 										break;
 								}
@@ -2100,7 +2086,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 						Messages.getString("SlideShowPlayer.internal_error"), e); //$NON-NLS-1$
 			} finally {
 				if (exifTool != null) {
-					exifTool.dispose();
+					exifTool.close();
 					exifTool = null;
 				}
 				if (answer != null)
@@ -2152,7 +2138,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				if (op == ABORT || op == IGNORE || monitor.isCanceled())
 					return true;
 				while (req.isPaused())
-					sleepTick();
+					sleepTick(TICK);
 			}
 			return false;
 		}
@@ -2180,7 +2166,9 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 		private int voiceLength;
 		private String sourceURI;
 		private String targetURI;
-		private boolean deleteVoiceNote;
+		private String noteText;
+		private String svg;
+		private boolean annotationChanged;
 
 		public SlideRequest(int seqno, SlideImpl slide, URI uri, int rotation, int rating, int previewSize) {
 			this.seqno = seqno;
@@ -2191,10 +2179,12 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			this.previewSize = previewSize;
 		}
 
-		public void setVoiceNote(String sourceURI, String targetURI, boolean deleteVoiceNote) {
+		public void setVoiceNote(String sourceURI, String targetURI, String noteText, String svg) {
 			this.sourceURI = sourceURI;
 			this.targetURI = targetURI;
-			this.deleteVoiceNote = deleteVoiceNote;
+			this.noteText = noteText;
+			this.svg = svg;
+			annotationChanged = true;
 		}
 
 		public void setVoiceLength(int voiceLength) {
@@ -2316,76 +2306,52 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			return removeFromShow;
 		}
 
-		/**
-		 * @return the albums
-		 */
 		public SmartCollectionImpl[] getAlbums() {
 			return albums;
 		}
 
-		/**
-		 * @param albums
-		 *            the albums to set
-		 */
 		public void setAlbums(SmartCollectionImpl[] albums) {
 			this.albums = albums;
 		}
 
-		/**
-		 * @return selected
-		 */
 		public boolean isSelected() {
 			return selected;
 		}
 
-		/**
-		 * @param selected
-		 *            das zu setzende Objekt selected
-		 */
 		public void setSelected(boolean selected) {
 			this.selected = selected;
 		}
 
-		/**
-		 * @return asset
-		 */
 		public Asset getAsset() {
 			return assets.isEmpty() ? null : assets.get(0);
 		}
 
-		/**
-		 * @return voiceUri
-		 */
 		public URL getVoiceUri() {
 			return voiceUrl;
 		}
 
-		/**
-		 * @return voiceLength
-		 */
 		public int getVoiceLength() {
 			return voiceLength;
 		}
 
-		/**
-		 * @return sourceURI
-		 */
 		public String getSourceURI() {
 			return sourceURI;
 		}
 
-		/**
-		 * @return targetURI
-		 */
 		public String getTargetURI() {
 			return targetURI;
 		}
 
-		/**
-		 * @return deleteVoiceNote
-		 */
-		public boolean isDeleteVoiceNote() {
-			return deleteVoiceNote;
+		public String getNoteText() {
+			return noteText;
+		}
+
+		public String getSvg() {
+			return svg;
+		}
+
+		public boolean annotationChanged() {
+			return annotationChanged;
 		}
 
 	}
@@ -2424,23 +2390,19 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 	BlockingQueue<SlideRequest> answers;
 	BlockingQueue<SlideRequest> done;
 	private SlideShowImpl slideshow;
-	private Display display;
 	private Shell bottomShell;
 	private Canvas bottomCanvas;
 	private TextLayout text;
 	private List<SlideImpl> slides;
 	private boolean advanced;
-	private Rectangle mbounds;
 	private List<SlideRequest> requestList;
-	private IWorkbenchWindow parentWindow;
 	private int cms;
 	private int total;
 	private int offline;
 	private int duration;
 	private int firstSlide;
 	private int positionFirstSlide;
-	protected Cursor transparentCursor;
-	protected final boolean adhoc;
+	protected boolean adhoc;
 	private PreparationJob prepJob;
 	protected SingleSlideJob singleSlideJob;
 	private long startTime;
@@ -2451,16 +2413,18 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 
 	// State
 
-	public SlideShowPlayer(IWorkbenchWindow window, SlideShowImpl slideshow, List<SlideImpl> slides, boolean adhoc) {
-		this.parentWindow = window;
+	public void init(IWorkbenchWindow parentWindow, SlideShowImpl slideshow, List<SlideImpl> slides, boolean adhoc) {
+		super.init(parentWindow, PRIMARY);
 		this.adhoc = adhoc;
-		Shell shell = window.getShell();
-		shell.addDisposeListener(this);
-		this.display = shell.getDisplay();
 		this.slideshow = slideshow;
 		this.slides = slides;
+		IPreferencesService preferencesService = Platform.getPreferencesService();
+		advanced = preferencesService.getBoolean(UiActivator.PLUGIN_ID, PreferenceConstants.ADVANCEDGRAPHICS, false,
+				null);
+		cms = preferencesService.getInt(UiActivator.PLUGIN_ID, PreferenceConstants.COLORPROFILE, ImageConstants.SRGB,
+				null);
 	}
-
+	
 	public void promptForSave(List<SlideRequest> reqList) {
 		final Set<String> deleted = new HashSet<String>();
 		for (SlideRequest request : reqList)
@@ -2525,17 +2489,8 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 	}
 
 	public void create() {
-		IPreferencesService preferencesService = Platform.getPreferencesService();
-		advanced = preferencesService.getBoolean(UiActivator.PLUGIN_ID, PreferenceConstants.ADVANCEDGRAPHICS, false,
-				null);
-		cms = preferencesService.getInt(UiActivator.PLUGIN_ID, PreferenceConstants.COLORPROFILE, ImageConstants.SRGB,
-				null);
-		mbounds = UiUtilities.getSecondaryMonitorBounds(parentWindow.getShell());
-		bottomShell = new Shell(display, SWT.NO_TRIM);
-		bottomShell.setText(Constants.APPNAME + Messages.getString("SlideShowPlayer.slideshow")); //$NON-NLS-1$
-		bottomShell.setFullScreen(true);
-		bottomShell.setLayout(new FillLayout());
-		bottomShell.setBounds(mbounds);
+		super.create();
+		bottomShell = createKioskShell(Messages.getString("SlideShowPlayer.slideshow")); //$NON-NLS-1$
 		bottomCanvas = new Canvas(bottomShell, SWT.DOUBLE_BUFFERED);
 		bottomCanvas.addKeyListener(this);
 		bottomCanvas.addMouseListener(this);
@@ -2556,7 +2511,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				text.draw(gc, (sbounds.width - tbounds.width) / 2, (sbounds.height - tbounds.height) / 2);
 			}
 		});
-		bottomShell.setData("id", "slideshow"); //$NON-NLS-1$ //$NON-NLS-2$
+		bottomShell.setData(CSSProperties.ID, CSSProperties.SLIDESHOW); 
 		CssActivator.getDefault().setColors(bottomShell);
 		text.setText(NLS.bind(slideshow.getAdhoc() ? Messages.getString("SlideShowPlayer.preparing") //$NON-NLS-1$
 				: Messages.getString("SlideShowPlayer.preparing_slideshow"), //$NON-NLS-1$
@@ -2591,13 +2546,6 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 			}
 		});
 		prepJob.schedule();
-	}
-
-	private void createTransparentCursor() {
-		ImageData cursorData = new ImageData(16, 16, 1, new PaletteData(new RGB[] {
-				display.getSystemColor(SWT.COLOR_WHITE).getRGB(), display.getSystemColor(SWT.COLOR_BLACK).getRGB() }));
-		cursorData.transparentPixel = 0;
-		transparentCursor = new Cursor(display, cursorData, 0, 0);
 	}
 
 	private static String formatPeriod(int dur) {
@@ -2688,17 +2636,16 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 		bottomCanvas.redraw();
 	}
 
-	public void close() {
+	public boolean close() {
 		requests.add(FINALREQUEST);
 		if (transferJob != null)
 			Job.getJobManager().cancel(transferJob);
 		Job.getJobManager().cancel(Constants.SLIDESHOW);
-		if (transparentCursor != null)
-			transparentCursor.dispose();
 		if (text != null)
 			text.dispose();
 		if (!bottomShell.isDisposed())
 			bottomShell.close();
+		return super.close();
 	}
 
 	public void mouseDoubleClick(MouseEvent e) {
@@ -2755,9 +2702,7 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 				changes = true;
 				break;
 			}
-			String sourceURI = request.getSourceURI();
-			String targetURI = request.getTargetURI();
-			if (sourceURI != null && targetURI != null || request.isDeleteVoiceNote()) {
+			if (request.annotationChanged()) {
 				changes = true;
 				break;
 			}
@@ -2771,39 +2716,17 @@ public class SlideShowPlayer implements MouseListener, KeyListener, IAdaptable, 
 								Messages.getString("SlideShowPlayer.close_cancel") }, //$NON-NLS-1$
 				CLOSE_CLOSE);
 		dialog.create();
-		dialog.setReturnCode(changes ? 2 : 1);
 		int ret = dialog.open();
-		return changes && ret == 2 || ret == 1 ? CLOSE_CANCEL : ret;
-	}
-
-	void sleepTick() {
-		try {
-			Thread.sleep(TICK);
-		} catch (InterruptedException e) {
-			// do nothing
-		}
-	}
-
-	void sleepLong() {
-		try {
-			Thread.sleep(LONGTICK);
-		} catch (InterruptedException e) {
-			// do nothing
-		}
+		return ret == (changes ? 2 : 1) ? CLOSE_CANCEL : ret;
 	}
 
 	int computeSteps(int dur) {
 		return (dur + TICK - 1) / TICK;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public Object getAdapter(Class adapter) {
-		return (Shell.class.equals(adapter)) ? parentWindow.getShell() : null;
-	}
-
 	@Override
-	public void widgetDisposed(DisposeEvent e) {
-		close();
+	public boolean isDisposed() {
+		return bottomShell.isDisposed();
 	}
 
 }

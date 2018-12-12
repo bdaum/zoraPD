@@ -306,9 +306,9 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 
 		rememberLastButton = WidgetFactory.createCheckButton(optionsGroup,
 				Messages.getString("FileAssociationsPreferencePage.remember_last"), null); //$NON-NLS-1$
-		rememberLastButton.addSelectionListener(new SelectionAdapter() {
+		rememberLastButton.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				FileEditorMapping selectedResourceType = getSelectedResourceType();
 				selectedResourceType.setRememberLast(rememberLastButton.getSelection());
 			}

@@ -34,10 +34,8 @@ public abstract class ZUiPlugin extends AbstractUIPlugin implements IAdaptable {
 		IDialogSettings settings = getDialogSettings();
 		if (settings != null) {
 			IDialogSettings section = settings.getSection(id);
-			if (section == null) {
-				section = new DialogSettings(id);
-				settings.addSection(section);
-			}
+			if (section == null)
+				settings.addSection(section = new DialogSettings(id));
 			return section;
 		}
 		return new DialogSettings(id);
@@ -50,14 +48,18 @@ public abstract class ZUiPlugin extends AbstractUIPlugin implements IAdaptable {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Object getAdapter(Class adapter) {
-		if (Shell.class.equals(adapter)) {
+		if (IWorkbenchWindow.class.equals(adapter)) {
 			IWorkbench workbench = PlatformUI.getWorkbench();
 			IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
 			if (activeWorkbenchWindow != null)
-				return activeWorkbenchWindow.getShell();
+				return activeWorkbenchWindow;
 			IWorkbenchWindow[] workbenchWindows = workbench.getWorkbenchWindows();
 			if (workbenchWindows.length > 0)
-				return workbenchWindows[0].getShell();
+				return workbenchWindows[0];
+		} else if (Shell.class.equals(adapter)) {
+			IWorkbenchWindow window = (IWorkbenchWindow) getAdapter(IWorkbenchWindow.class);
+			if (window != null)
+				return window.getShell();
 		}
 		return null;
 	}

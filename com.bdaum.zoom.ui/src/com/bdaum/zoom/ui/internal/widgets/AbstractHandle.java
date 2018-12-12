@@ -24,9 +24,6 @@ import org.piccolo2d.extras.swt.PSWTHandle;
 
 public class AbstractHandle extends PSWTHandle {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -1135985390089278150L;
 	private final int cursorType;
 	private String tooltip;

@@ -21,11 +21,11 @@
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.QueryField;
@@ -56,7 +56,7 @@ public class StatusDialog extends ZDialog {
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
 		area.setLayout(new FillLayout());
-		RadioButtonGroup stateButtonGroup = new RadioButtonGroup(area, null, SWT.BORDER);
+		RadioButtonGroup stateButtonGroup = new RadioButtonGroup(area, null, SWT.BORDER | 2);
 		final int[] states = (int[]) QueryField.STATUS.getEnumeration();
 		String[] labels = QueryField.STATUS.getEnumLabels();
 		int k = 0;
@@ -69,10 +69,10 @@ public class StatusDialog extends ZDialog {
 				stateButtonGroup.setSelection(k);
 			stateButtonGroup.setData(k++, "index", index); //$NON-NLS-1$
 		}
-		stateButtonGroup.addSelectionListener(new SelectionAdapter() {
+		stateButtonGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				status = states[(Integer) stateButtonGroup.getData(e.detail, "index")];  //$NON-NLS-1$
+			public void handleEvent(Event event) {
+				status = states[(Integer) stateButtonGroup.getData(event.detail, "index")]; //$NON-NLS-1$
 			}
 		});
 		return area;

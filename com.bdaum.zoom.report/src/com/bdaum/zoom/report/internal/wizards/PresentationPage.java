@@ -22,10 +22,10 @@ package com.bdaum.zoom.report.internal.wizards;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.report.Report;
 import com.bdaum.zoom.report.internal.HelpContextIds;
@@ -37,7 +37,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class PresentationPage extends ColoredWizardPage implements SelectionListener {
+public class PresentationPage extends ColoredWizardPage implements Listener {
 
 	private static final int PREVIEWLIMIT = 50;
 	private CheckboxButton threeButton;
@@ -59,17 +59,17 @@ public class PresentationPage extends ColoredWizardPage implements SelectionList
 		setControl(composite);
 		setHelp(HelpContextIds.REPORT_WIZARD);
 		CGroup chartTypeGroup = UiUtilities.createGroup(composite, 2, Messages.PresentationPage_chartType);
-		chartButtonGroup = new RadioButtonGroup(chartTypeGroup, null, SWT.NONE, Messages.PresentationPage_pie,
+		chartButtonGroup = new RadioButtonGroup(chartTypeGroup, null, 2, Messages.PresentationPage_pie,
 				Messages.PresentationPage_bar, Messages.PresentationPage_line, Messages.PresentationPage_step,
 				Messages.PresentationPage_area);
-		chartButtonGroup.addSelectionListener(this);
+		chartButtonGroup.addListener(this);
 		CGroup optionsGroup = UiUtilities.createGroup(composite, 1, Messages.PresentationPage_options);
 		threeButton = WidgetFactory.createCheckButton(optionsGroup, Messages.PresentationPage_threeD, null);
-		threeButton.addSelectionListener(this);
+		threeButton.addListener(this);
 		cylinderButton = WidgetFactory.createCheckButton(optionsGroup, Messages.PresentationPage_cylindric, null);
-		cylinderButton.addSelectionListener(this);
+		cylinderButton.addListener(this);
 		cumulateButton = WidgetFactory.createCheckButton(optionsGroup, Messages.PresentationPage_cumulate, null);
-		cumulateButton.addSelectionListener(this);
+		cumulateButton.addListener(this);
 		CGroup previewGroup = UiUtilities.createGroup(composite, 1,
 				NLS.bind(Messages.PresentationPage_preview, PREVIEWLIMIT));
 		reportComponent = new ReportComponent(previewGroup, SWT.NONE, PREVIEWLIMIT);
@@ -167,7 +167,7 @@ public class PresentationPage extends ColoredWizardPage implements SelectionList
 	}
 
 	@Override
-	public void widgetSelected(SelectionEvent e) {
+	public void handleEvent(Event e) {
 		reportComponent.setReport(null);
 		if (e.widget == cylinderButton && cylinderButton.getSelection())
 			threeButton.setSelection(true);
@@ -177,11 +177,6 @@ public class PresentationPage extends ColoredWizardPage implements SelectionList
 		validatePage();
 		if (isPageComplete())
 			reportComponent.setReport(report);
-	}
-
-	@Override
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
 	}
 
 }

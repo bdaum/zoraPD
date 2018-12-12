@@ -5,6 +5,7 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.core.internal.db.messages"; //$NON-NLS-1$
 	public static String AssetEnsemble_bad_face_data;
+	public static String AssetEnsemble_drawing_present;
 	public static String AssetEnsemble_persons;
 	public static String CatalogConverter_consolidate_album_count;
 	public static String CatalogConverter_duplicated_relationships;

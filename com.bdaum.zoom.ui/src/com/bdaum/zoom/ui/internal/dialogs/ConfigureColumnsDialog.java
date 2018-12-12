@@ -55,8 +55,7 @@ import com.bdaum.zoom.ui.internal.views.Messages;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
-public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
-		SelectionListener {
+public class ConfigureColumnsDialog extends ZTitleAreaDialog implements SelectionListener {
 
 	List<QueryField> columnFields = new ArrayList<QueryField>();
 	private Button addButton;
@@ -79,10 +78,8 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 	}
 
 	private void fillValues() {
-		IPreferenceStore preferenceStore = UiActivator.getDefault()
-				.getPreferenceStore();
-		String s = preferenceStore.getString(PreferenceConstants.TABLECOLUMNS);
-		StringTokenizer st = new StringTokenizer(s, "\n"); //$NON-NLS-1$
+		IPreferenceStore preferenceStore = UiActivator.getDefault().getPreferenceStore();
+		StringTokenizer st = new StringTokenizer(preferenceStore.getString(PreferenceConstants.TABLECOLUMNS), "\n"); //$NON-NLS-1$
 		while (st.hasMoreTokens())
 			columnFields.add(QueryField.findQueryField(st.nextToken()));
 		columnsViewer.setInput(columnFields);
@@ -90,8 +87,7 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 
 	private void updateButtons() {
 		boolean fieldSelected = false;
-		IStructuredSelection selection = (IStructuredSelection) metaViewer
-				.getSelection();
+		IStructuredSelection selection = (IStructuredSelection) metaViewer.getSelection();
 		Iterator<?> iterator = selection.iterator();
 		while (iterator.hasNext()) {
 			QueryField qfield = (QueryField) iterator.next();
@@ -101,7 +97,7 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 			}
 		}
 		addButton.setEnabled(fieldSelected);
-		selection = (IStructuredSelection) columnsViewer.getSelection();
+		selection = columnsViewer.getStructuredSelection();
 		boolean colSelected = !selection.isEmpty();
 		removeButton.setEnabled(colSelected);
 		if (colSelected) {
@@ -109,8 +105,7 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 			int max = -1;
 			iterator = selection.iterator();
 			while (iterator.hasNext()) {
-				QueryField qfield = (QueryField) iterator.next();
-				int index = columnFields.indexOf(qfield);
+				int index = columnFields.indexOf(iterator.next());
 				min = Math.min(min, index);
 				max = Math.max(max, index);
 			}
@@ -139,23 +134,19 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(composite, SWT.NONE);
 		new Label(composite, SWT.NONE);
 		new Label(composite, SWT.NONE);
-		final TreeViewer viewer = new TreeViewer(composite, SWT.MULTI
-				| SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
+		final TreeViewer viewer = new TreeViewer(composite, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
 		expandCollapseGroup.setViewer(viewer);
-		viewer.getControl().setLayoutData(
-				new GridData(SWT.FILL, SWT.FILL, true, true));
+		viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewer.setLabelProvider(new MetadataLabelProvider());
 		viewer.setContentProvider(new MetadataContentProvider());
 		viewer.setComparator(ZViewerComparator.INSTANCE);
 		UiUtilities.installDoubleClickExpansion(viewer);
 		viewer.addFilter(new ViewerFilter() {
 			@Override
-			public boolean select(Viewer aViewer, Object parentElement,
-					Object element) {
+			public boolean select(Viewer aViewer, Object parentElement, Object element) {
 				if (element instanceof QueryField) {
 					QueryField qfield = (QueryField) element;
-					return qfield.hasChildren() || element != QueryField.EXIF_MAKERNOTES
-							&& qfield.isUiField()
+					return qfield.hasChildren() || element != QueryField.EXIF_MAKERNOTES && qfield.isUiField()
 							&& !columnFields.contains(element);
 				}
 				return false;
@@ -173,22 +164,14 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 
 	private void createButtonGroup(Composite composite) {
 		Composite buttonComp = new Composite(composite, SWT.NONE);
-		buttonComp.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false,
-				false));
+		buttonComp.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
 		buttonComp.setLayout(new GridLayout(1, false));
-		addButton = createButton(buttonComp, SWT.RIGHT,
-				Messages.getString("ConfigureColumnsDialog.add_new_columns")); //$NON-NLS-1$
-		removeButton = createButton(
-				buttonComp,
-				SWT.LEFT,
+		addButton = createButton(buttonComp, SWT.RIGHT, Messages.getString("ConfigureColumnsDialog.add_new_columns")); //$NON-NLS-1$
+		removeButton = createButton(buttonComp, SWT.LEFT,
 				Messages.getString("ConfigureColumnsDialog.remove_selected_columns")); //$NON-NLS-1$
-		upButton = createButton(
-				buttonComp,
-				SWT.UP,
+		upButton = createButton(buttonComp, SWT.UP,
 				Messages.getString("ConfigureColumnsDialog.move_selected_columns_forward")); //$NON-NLS-1$
-		downButton = createButton(
-				buttonComp,
-				SWT.DOWN,
+		downButton = createButton(buttonComp, SWT.DOWN,
 				Messages.getString("ConfigureColumnsDialog.move_selected_columns_back")); //$NON-NLS-1$
 	}
 
@@ -200,10 +183,8 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 	}
 
 	private TableViewer createColumnTable(Composite composite) {
-		final TableViewer viewer = new TableViewer(composite, SWT.MULTI
-				| SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
-		viewer.getControl().setLayoutData(
-				new GridData(SWT.FILL, SWT.FILL, true, true));
+		final TableViewer viewer = new TableViewer(composite, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
+		viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewer.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -219,10 +200,7 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 		StringBuilder sb = new StringBuilder();
 		for (QueryField qfield : columnFields)
 			sb.append(qfield.getId()).append('\n');
-		IPreferenceStore preferenceStore = UiActivator.getDefault()
-				.getPreferenceStore();
-		preferenceStore.setValue(PreferenceConstants.TABLECOLUMNS,
-				sb.toString());
+		UiActivator.getDefault().getPreferenceStore().setValue(PreferenceConstants.TABLECOLUMNS, sb.toString());
 		super.okPressed();
 	}
 
@@ -232,11 +210,9 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 
 	public void widgetSelected(SelectionEvent e) {
 		if (e.widget == addButton) {
-			IStructuredSelection selection = (IStructuredSelection) metaViewer
-					.getSelection();
-			@SuppressWarnings("rawtypes")
-			Iterator iterator = selection.iterator();
-			while (iterator.hasNext()) {
+			IStructuredSelection selection = (IStructuredSelection) metaViewer.getSelection();
+			for (@SuppressWarnings("rawtypes")
+			Iterator iterator = selection.iterator(); iterator.hasNext();) {
 				QueryField qfield = (QueryField) iterator.next();
 				if (!qfield.hasChildren())
 					columnFields.add(qfield);
@@ -245,18 +221,15 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 			columnsViewer.setSelection(selection);
 			metaViewer.refresh();
 		} else if (e.widget == removeButton) {
-			IStructuredSelection selection = (IStructuredSelection) columnsViewer
-					.getSelection();
+			IStructuredSelection selection = columnsViewer.getStructuredSelection();
 			columnFields.removeAll(selection.toList());
 			columnsViewer.setInput(columnFields);
 			metaViewer.refresh();
 			metaViewer.setSelection(selection);
 		} else if (e.widget == upButton) {
-			IStructuredSelection selection = (IStructuredSelection) columnsViewer
-					.getSelection();
-			@SuppressWarnings("rawtypes")
-			Iterator iterator = selection.iterator();
-			while (iterator.hasNext()) {
+			IStructuredSelection selection = columnsViewer.getStructuredSelection();
+			for (@SuppressWarnings("rawtypes")
+			Iterator iterator = selection.iterator();iterator.hasNext();) {
 				QueryField qfield = (QueryField) iterator.next();
 				int index = columnFields.indexOf(qfield);
 				if (index > 0) {
@@ -266,11 +239,9 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements
 			}
 			columnsViewer.setInput(columnFields);
 		} else if (e.widget == downButton) {
-			IStructuredSelection selection = (IStructuredSelection) columnsViewer
-					.getSelection();
-			@SuppressWarnings("rawtypes")
-			Iterator iterator = selection.iterator();
-			while (iterator.hasNext()) {
+			IStructuredSelection selection = columnsViewer.getStructuredSelection();
+			for (@SuppressWarnings("rawtypes")
+			Iterator iterator = selection.iterator(); iterator.hasNext();) {
 				QueryField qfield = (QueryField) iterator.next();
 				int index = columnFields.indexOf(qfield);
 				if (index < columnFields.size() - 1) {

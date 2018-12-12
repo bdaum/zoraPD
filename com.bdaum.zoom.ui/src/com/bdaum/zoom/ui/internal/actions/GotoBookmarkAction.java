@@ -24,9 +24,9 @@ import com.bdaum.zoom.core.internal.peer.ConnectionLostException;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.INavigationHistory;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.Icons;
-import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.views.AbstractGalleryView;
 import com.bdaum.zoom.ui.internal.views.CatalogView;
 
@@ -72,8 +72,7 @@ public class GotoBookmarkAction extends Action {
 				asset = dbManager.obtainAsset(bookmark.getAssetId());
 			if (asset != null) {
 				IWorkbenchPage page = adaptable.getAdapter(IWorkbenchPage.class);
-				INavigationHistory navigationHistory = UiActivator.getDefault()
-						.getNavigationHistory(page.getWorkbenchWindow());
+				INavigationHistory navigationHistory = Ui.getUi().getNavigationHistory(page.getWorkbenchWindow());
 				AbstractGalleryView aView = null;
 				SmartCollection localCollection = null;
 				boolean shown = false;

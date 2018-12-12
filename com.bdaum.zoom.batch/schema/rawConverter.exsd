@@ -164,6 +164,8 @@
                   </enumeration>
                   <enumeration value="int">
                   </enumeration>
+                  <enumeration value="label">
+                  </enumeration>
                </restriction>
             </simpleType>
          </attribute>

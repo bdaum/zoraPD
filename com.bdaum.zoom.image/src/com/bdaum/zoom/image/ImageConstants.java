@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Berthold Daum.
+ * Copyright (c) 2009-2018 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -100,26 +100,6 @@ public class ImageConstants {
 	public static final String DNG = "DNG"; //$NON-NLS-1$
 	public static final String[] JPEGEXTENSIONS = new String[] { ".jpg", ".jpe", ".jpeg", ".jfif" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	public static final String[] VIDEOEXTENSIONS = new String[] { ".aiv", ".mov", ".mp4", ".avchd" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	// public static final String[] RAWNAMES = new String[] { "3fr (Hasselblad)",
-	// //$NON-NLS-1$
-	// "arw (Sony)", "bay (Casio)", "cap (PhaseOne)", "cr2 (Canon)", //$NON-NLS-1$
-	// //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	// "crw (Canon)", "cs1 (Sinar)", "dcr (Kodak)", "dcs (Kodak)", "drf (Kodak)",
-	// //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-	// "eip (PhaseOne)", "erf (Epson)", "fff (Imacon)", "gpr (GoPro)", "iiq
-	// (PhaseOne)", "k25 (Kodak)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	// //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-	// "kdc (Kodak)", "mdc (Minolta RD-175)", "mef (Mamiya)", "mos (Leaf)", "mrw
-	// (Minolta)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	// //$NON-NLS-5$
-	// "nef (Nikon)", "nrw (Nikon)", "orf (Olympus)", "pef (Pentax)", //$NON-NLS-1$
-	// //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	// "pxn (Logitech)", "ptx (Pentax)", "r3d (Red)", "raf (Fuji)", //$NON-NLS-1$
-	// //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	// "raw (Panasonic)", "rw1 (Leica)", "rw2 (Panasonic)", "sr2 (Sony)", "srf
-	// (Sony)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	// //$NON-NLS-5$
-	// "srw (Samsung)", "x3f (Sigma)" }; //$NON-NLS-1$ //$NON-NLS-2$
 
 	private static String[] PredefinedImageFileExtensions = new String[] { "*.bmp", "*.dcm;*.dc3;*.dic;*.dicm", //$NON-NLS-1$ //$NON-NLS-2$
 			"*.dcx;*.pcx", "*.dng", "*.fits", "*.fpx", "*.gif", "*.hdr;*.pfm", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
@@ -173,6 +153,9 @@ public class ImageConstants {
 	public static final int SHARPEN_LIGHT = 20;
 	public static final int SHARPEN_MEDIUM = 40;
 	public static final int SHARPEN_HEAVY = 60;
+	
+	// Voicenote file extensions
+	public static final String[] VOICEEXT = new String[] {".WAV", ".wav"};  //$NON-NLS-1$//$NON-NLS-2$
 
 	public static List<String> getNonRawImageFileExtensions() {
 		Map<String, String> mimeMap = getMimeMap();
@@ -364,7 +347,7 @@ public class ImageConstants {
 				String[] newExt = new String[l + 1];
 				System.arraycopy(PredefinedImageFileExtensions, 0, newExt, 0, j + 1);
 				System.arraycopy(PredefinedImageFileExtensions, j + 1, newExt, j + 2, l - j - 1);
-				newExt[j + 1] = "*.jp2"; //$NON-NLS-1$
+				newExt[j + 1] = "*.jp2;*.j2k;*.jpf;*.jpg2;*.jpx"; //$NON-NLS-1$
 				PredefinedImageFileExtensions = newExt;
 				String[] newMime = new String[l + 1];
 				System.arraycopy(PredefinedMimeTypes, 0, newMime, 0, j + 1);
@@ -374,7 +357,7 @@ public class ImageConstants {
 				String[] newNames = new String[l + 1];
 				System.arraycopy(PredefinedImageFileNames, 0, newNames, 0, j + 1);
 				System.arraycopy(PredefinedImageFileNames, j + 1, newNames, j + 2, l - j - 1);
-				newNames[j + 1] = "JPEG 2000 (*.jp2)"; //$NON-NLS-1$
+				newNames[j + 1] = "JPEG 2000 (*.jp2,*.j2k,*.jpf,*.jpg2,*.jpx)"; //$NON-NLS-1$
 				PredefinedImageFileNames = newNames;
 			}
 		}

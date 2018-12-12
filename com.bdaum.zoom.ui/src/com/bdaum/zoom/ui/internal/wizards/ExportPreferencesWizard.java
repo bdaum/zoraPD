@@ -40,6 +40,7 @@ public class ExportPreferencesWizard extends ZWizard implements IExportWizard {
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		super.init(workbench, selection);
 		setDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		setWindowTitle(Messages.ExportPreferencesWizard_export_preferences);
 	}

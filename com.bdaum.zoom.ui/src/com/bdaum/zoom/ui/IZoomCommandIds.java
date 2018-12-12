@@ -135,11 +135,15 @@ public interface IZoomCommandIds {
 
 	String FullscreenCommand = "org.ugosan.eclipse.fullscreen.fullscreenCommand"; //$NON-NLS-1$
 
-//	String AddBookmarkCommand = "com.bdaum.zoom.ui.AddBookmarkCommand"; //$NON-NLS-1$
+//	String AddBookmarkCommand = "com.bdaum.zoom.ui.AddBookmarkCommand"; //$NON-NLS-1$ // already defined in platform
 
 	String AddToAlbumCommand = "com.bdaum.zoom.ui.command.addToAlbum"; //$NON-NLS-1$
 
 	String CategorizeCommand = "com.bdaum.zoom.ui.command.categorize"; //$NON-NLS-1$
+
+	String Deselect = "com.bdaum.zoom.ui.command.deselect"; //$NON-NLS-1$
+
+	String Revert = "com.bdaum.zoom.ui.command.revertSelection"; //$NON-NLS-1$
 
 
 }

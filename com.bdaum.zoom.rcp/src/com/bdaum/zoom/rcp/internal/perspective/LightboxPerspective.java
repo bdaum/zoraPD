@@ -15,6 +15,7 @@ import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPlaceholderFolderLayout;
 
+import com.bdaum.zoom.ui.internal.views.CalendarView;
 import com.bdaum.zoom.ui.internal.views.ExifView;
 import com.bdaum.zoom.ui.internal.views.HistogramView;
 import com.bdaum.zoom.ui.internal.views.IPTCView;
@@ -32,7 +33,7 @@ public class LightboxPerspective extends AbstractPerspective {
 		super.createInitialLayout(layout);
 		IFolderLayout folder = layout.createFolder(LIGHTBOX_FOLDER, IPageLayout.RIGHT, 0.7f,
 				IPageLayout.ID_EDITOR_AREA);
-		fillMainFolder(folder, LightboxView.ID, MAP_VIEW);
+		fillMainFolder(folder, LightboxView.ID, MAP_VIEW, CalendarView.ID);
 		IPlaceholderFolderLayout pfolder = layout.createPlaceholderFolder(HIERARCHY_FOLDER, IPageLayout.RIGHT, 0.8f,
 				LIGHTBOX_FOLDER);
 		pfolder.addPlaceholder(COMPONENTS_VIEW);
@@ -49,11 +50,6 @@ public class LightboxPerspective extends AbstractPerspective {
 		addCheatSheets(layout, LIGHTBOX_FOLDER);
 		addFastViews(layout, IPageLayout.RIGHT, 0.7f, LIGHTBOX_FOLDER);
 		layout.setEditorAreaVisible(false);
-	}
-
-	@Override
-	protected String getId() {
-		return ID;
 	}
 
 }

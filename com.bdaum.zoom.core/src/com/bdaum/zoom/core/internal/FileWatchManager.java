@@ -33,13 +33,13 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.ListenerList;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.osgi.util.NLS;
 
 import com.bdaum.zoom.batch.internal.IFileWatcher;
 import com.bdaum.zoom.batch.internal.SerializingDaemon;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.meta.WatchedFolder;
+import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IRecipeDetector;
 import com.bdaum.zoom.core.IRecipeDetector.RecipeFolder;
 import com.bdaum.zoom.core.db.IDbManager;
@@ -48,21 +48,15 @@ import com.bdaum.zoom.fileMonitor.internal.filefilter.FilterChain;
 import com.bdaum.zoom.fileMonitor.internal.watcher.FileMonitor;
 import com.bdaum.zoom.fileMonitor.internal.watcher.FileWatchListener;
 import com.bdaum.zoom.image.ImageConstants;
+import com.bdaum.zoom.mtp.ObjectFilter;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.DiskFullException;
 
 @SuppressWarnings("restriction")
 public class FileWatchManager implements IFileWatcher {
-	private static final String PROCESSFILECHANGES = "com.bdaum.zoom.core.internal.FileWatchManager.processFileChanges"; //$NON-NLS-1$
 	private SerializingDaemon fileChangedDaemon = new SerializingDaemon(
 			Messages.FileWatchManager_process_file_changes) {
-		@Override
-		public boolean belongsTo(Object family) {
-			if (PROCESSFILECHANGES == family)
-				return true;
-			return super.belongsTo(family);
-		}
-
 		@Override
 		protected void doRun(IProgressMonitor monitor) {
 			processFileChanges(monitor);
@@ -77,7 +71,7 @@ public class FileWatchManager implements IFileWatcher {
 			15);
 	private Map<String, FilterChain> filters = new Hashtable<String, FilterChain>(5);
 	ListenerList<IFileWatchListener> listeners = new ListenerList<IFileWatchListener>();
-	private FileNameExtensionFilter mediaFilter;
+	private ObjectFilter mediaFilter;
 	private int activeWindows = 0;
 	private File todo;
 	private int todoKind;
@@ -104,10 +98,11 @@ public class FileWatchManager implements IFileWatcher {
 					try {
 						if (!paused.isEmpty() || isFileIgnored(file))
 							return;
-						Job.getJobManager().cancel(PROCESSFILECHANGES);
+						fileChangedDaemon.cancel();
 						Set<File> imageFiles = new HashSet<File>(3);
 						IRecipeDetector recipeDetector = findImageFiles(findRecipeDetectors(file), file, imageFiles);
-						if (kind == previousKind)
+						if (kind == previousKind || previousKind == CREATED && kind == MODIFIED)
+							kind = previousKind;
 							previousFiles.removeAll(imageFiles);
 						processFileChanges(null);
 						previousKind = kind;
@@ -177,7 +172,7 @@ public class FileWatchManager implements IFileWatcher {
 
 	protected void processFileChanges(IProgressMonitor monitor) {
 		IDbManager dbManager = CoreActivator.getDefault().getDbManager();
-		if (!dbManager.getMeta(true).getPauseFolderWatch())
+		if (!dbManager.getMeta(true).getPauseFolderWatch() || Core.getCore().isTetheredShootingActive())
 			for (File file : previousFiles) {
 				if (monitor != null && monitor.isCanceled())
 					return;
@@ -314,7 +309,7 @@ public class FileWatchManager implements IFileWatcher {
 	}
 
 	public void stopIgnoring(String opId) {
-		Job.getJobManager().cancel(PROCESSFILECHANGES);
+		fileChangedDaemon.cancel();
 		if (!previousFiles.isEmpty())
 			processFileChanges(null);
 		Set<Entry<File, String>> entrySet = ignoredFiles.entrySet();
@@ -364,16 +359,14 @@ public class FileWatchManager implements IFileWatcher {
 		BatchUtilities.moveFile(source, target, monitor);
 	}
 
-	public void copyFileSilently(File source, File target, long lastModified, String opId, IProgressMonitor monitor)
-			throws IOException, DiskFullException {
+	public void copyFileSilently(StorageObject source, File target, long lastModified, String opId,
+			IProgressMonitor monitor) throws IOException, DiskFullException {
 		ignore(target, opId);
-		BatchUtilities.copyFile(source, target, monitor);
-		if (lastModified > 0)
-			target.setLastModified(lastModified);
+		source.copy(target, monitor);
 	}
-
+	
 	public void dispose() {
-		Job.getJobManager().cancel(PROCESSFILECHANGES);
+		fileChangedDaemon.cancel();
 		if (fileMonitor != null)
 			fileMonitor.dispose();
 	}
@@ -407,7 +400,7 @@ public class FileWatchManager implements IFileWatcher {
 			return null;
 		FilterChain filterChain = filters.get(spec);
 		if (filterChain == null) {
-			filterChain = new FilterChain(spec, "-+", ";", true); //$NON-NLS-1$//$NON-NLS-2$
+			filterChain = new FilterChain(spec, "-+_*", ";", true); //$NON-NLS-1$//$NON-NLS-2$
 			File folderFile = CoreActivator.getDefault().getVolumeManager().findExistingFile(watchedFolder.getUri(),
 					watchedFolder.getVolume());
 			filterChain.setBaseLength(folderFile == null ? 0 : folderFile.getAbsolutePath().length() + 1);

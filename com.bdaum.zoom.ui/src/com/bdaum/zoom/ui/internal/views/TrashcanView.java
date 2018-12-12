@@ -20,9 +20,13 @@
 
 package com.bdaum.zoom.ui.internal.views;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
@@ -57,6 +61,8 @@ import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiConstants;
+import com.bdaum.zoom.ui.internal.actions.ZoomActionFactory;
 
 @SuppressWarnings("restriction")
 public class TrashcanView extends LightboxView {
@@ -72,7 +78,7 @@ public class TrashcanView extends LightboxView {
 			GalleryItem item = (GalleryItem) e.item;
 			if (item.isDisposed() || item.getImage() == null)
 				return;
-			Trash trash = (Trash) item.getData("trash"); //$NON-NLS-1$
+			Trash trash = (Trash) item.getData(UiConstants.TRASH);
 			if (trash == null)
 				return;
 			if (item.getImage().isDisposed())
@@ -87,6 +93,8 @@ public class TrashcanView extends LightboxView {
 	}
 
 	public static final String ID = "com.bdaum.zoom.ui.views.TrashcanView"; //$NON-NLS-1$
+
+	private static final GalleryItem[] EMPTYITEMS = new GalleryItem[0];
 
 	private Action restoreAction;
 	private Action emptyTrashcanAction;
@@ -174,7 +182,7 @@ public class TrashcanView extends LightboxView {
 	@Override
 	protected void makeActions(IActionBars bars) {
 		createScaleContributionItem(MINTHUMBSIZE, MAXTHUMBSIZE);
-		createSelectallAction();
+		selectionActionCluster = ZoomActionFactory.createSelectionActionCluster(this, this);
 
 		sortModeAction = new Action(Messages.getString("TrashcanView.sort_by_name"), IAction.AS_CHECK_BOX) { //$NON-NLS-1$
 			@Override
@@ -238,7 +246,7 @@ public class TrashcanView extends LightboxView {
 
 	@Override
 	public void updateActions(boolean force) {
-		if (restoreAction != null && (viewActive || force)) {
+		if (restoreAction != null && (isVisible() || force)) {
 			restoreAction.setEnabled(gallery.getSelection().length > 0 && !dbIsReadonly());
 			emptyTrashcanAction.setEnabled(trashSet != null && !trashSet.isEmpty());
 		}
@@ -260,11 +268,12 @@ public class TrashcanView extends LightboxView {
 		manager.add(restoreAction);
 		manager.add(emptyTrashcanAction);
 		manager.add(new Separator());
-		manager.add(selectAllAction);
+		selectionActionCluster.addToMenuManager(manager);
 	}
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
+		updateActions(true);
 		if (!dbIsReadonly()) {
 			manager.add(restoreAction);
 			manager.add(removeAction);
@@ -277,7 +286,7 @@ public class TrashcanView extends LightboxView {
 		GalleryItem[] sel = gallery.getSelection();
 		HistoryItem[] items = new HistoryItem[sel.length];
 		for (int i = 0; i < sel.length; i++)
-			items[i] = (HistoryItem) sel[i].getData("trash"); //$NON-NLS-1$
+			items[i] = (HistoryItem) sel[i].getData(UiConstants.TRASH);
 		selection = new StructuredSelection(items);
 		fireSelection();
 	}
@@ -285,18 +294,77 @@ public class TrashcanView extends LightboxView {
 	@Override
 	public void selectAll() {
 		BusyIndicator.showWhile(getSite().getShell().getDisplay(), () -> {
-			GalleryItem[] items = new GalleryItem[trashSet == null ? 0 : trashSet.size()];
-			HistoryItem[] hist = new HistoryItem[items.length];
 			GalleryItem group = gallery.getItem(0);
-			for (int i = 0; i < items.length; i++) {
-				items[i] = group.getItem(i);
-				hist[i] = (HistoryItem) items[i].getData("trash"); //$NON-NLS-1$
-			}
+			GalleryItem[] items = group.getItems();
+			HistoryItem[] hist = new HistoryItem[items.length];
+			for (int i = 0; i < items.length; i++)
+				hist[i] = (HistoryItem) items[i].getData(UiConstants.TRASH);
 			gallery.setSelection(items);
 			if (items.length > 0)
 				gallery.showItem(items[0]);
 			selection = new StructuredSelection(hist);
 		});
+	}
+
+	@Override
+	public void selectNone() {
+		gallery.setSelection(EMPTYITEMS);
+		selection = StructuredSelection.EMPTY;
+	}
+
+	@Override
+	public void revertSelection() {
+		GalleryItem[] selectedItems = gallery.getSelection();
+		GalleryItem group = gallery.getItem(0);
+		GalleryItem[] items = group.getItems();
+		Set<GalleryItem> all = new HashSet<>(Arrays.asList(items));
+		for (GalleryItem galleryItem : selectedItems)
+			all.remove(galleryItem);
+		GalleryItem[] newItems = all.toArray(new GalleryItem[all.size()]);
+		HistoryItem[] hist = new HistoryItem[newItems.length];
+		for (int i = 0; i < newItems.length; i++)
+			hist[i] = (HistoryItem) newItems[i].getData(UiConstants.TRASH);
+		gallery.setSelection(newItems);
+		if (newItems.length > 0)
+			gallery.showItem(newItems[0]);
+		selection = new StructuredSelection(hist);
+	}
+
+	@Override
+	public void select(int type, boolean shift, boolean alt) {
+		GalleryItem[] newItems;
+		if (alt || shift) {
+			GalleryItem[] selectedItems = gallery.getSelection();
+			Set<GalleryItem> currentSelection = new HashSet<>(Arrays.asList(selectedItems));
+			if (alt)
+				currentSelection.removeAll(select(type));
+			else
+				currentSelection.addAll(select(type));
+			newItems = currentSelection.toArray(new GalleryItem[currentSelection.size()]);
+		} else {
+			List<GalleryItem> select = select(type);
+			newItems = select.toArray(new GalleryItem[select.size()]);
+		}
+		HistoryItem[] hist = new HistoryItem[newItems.length];
+		for (int i = 0; i < newItems.length; i++)
+			hist[i] = (HistoryItem) newItems[i].getData(UiConstants.TRASH);
+		gallery.setSelection(newItems);
+		if (newItems.length > 0)
+			gallery.showItem(newItems[0]);
+		selection = new StructuredSelection(hist);
+	}
+
+	private List<GalleryItem> select(int type) {
+		GalleryItem group = gallery.getItem(0);
+		GalleryItem[] items = group.getItems();
+		List<GalleryItem> result = new ArrayList<>(items.length);
+		for (GalleryItem item : items) {
+			Trash trash = (Trash) item.getData(UiConstants.TRASH);
+			Asset asset = trash.getAsset();
+			if (asset != null && testAsset(type, asset))
+				result.add(item);
+		}
+		return result;
 	}
 
 	@Override
@@ -321,7 +389,7 @@ public class TrashcanView extends LightboxView {
 			Trash trashItem = trashSet.get(index);
 			item.setImage(getImage(trashItem.getAsset()));
 			item.setText(trashItem.getName());
-			item.setData("trash", trashItem); //$NON-NLS-1$
+			item.setData(UiConstants.TRASH, trashItem);
 		}
 	}
 

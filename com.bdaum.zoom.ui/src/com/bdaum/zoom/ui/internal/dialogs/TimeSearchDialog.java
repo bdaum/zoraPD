@@ -28,13 +28,13 @@ import java.util.GregorianCalendar;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
@@ -99,9 +99,9 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 		new Label(timeGroup, SWT.NONE).setText(Messages.TimeSearchDialog_from);
 		fromField = new DateInput(timeGroup, SWT.DATE | SWT.TIME | SWT.DROP_DOWN | SWT.BORDER);
 		fromField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, false, false));
-		fromField.addSelectionListener(new SelectionAdapter() {
+		fromField.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				Date to = toField.getDate();
 				if (fromField.getDate().compareTo(to) > 0)
 					fromField.setDate(new Date(to.getTime()));
@@ -110,9 +110,9 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 		new Label(timeGroup, SWT.NONE).setText(Messages.TimeSearchDialog_to);
 		toField = new DateInput(timeGroup, SWT.DATE | SWT.TIME | SWT.DROP_DOWN | SWT.BORDER);
 		toField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, false, false));
-		toField.addSelectionListener(new SelectionAdapter() {
+		toField.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				Date from = fromField.getDate();
 				if (from.compareTo(toField.getDate()) > 0)
 					toField.setDate(new Date(from.getTime()));
@@ -127,7 +127,7 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 		intervalComp.setLayoutData(layoutData);
 		intervalComp.setText(Messages.TimeSearchDialog_derived_interval);
 		intervalComp.setLayout(new GridLayout(2, false));
-		intervalRadioGroup = new RadioButtonGroup(intervalComp, null, SWT.VERTICAL,
+		intervalRadioGroup = new RadioButtonGroup(intervalComp, null, 2,
 				Messages.TimeSearchDialog_exactly_same_time, Messages.TimeSearchDialog_within_same_hour,
 				Messages.TimeSearchDialog_within_4_hours, Messages.TimeSearchDialog_same_day,
 				Messages.TimeSearchDialog_same_week, Messages.TimeSearchDialog_same_month,

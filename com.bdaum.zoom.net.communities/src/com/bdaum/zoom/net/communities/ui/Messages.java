@@ -71,9 +71,12 @@ public class Messages extends NLS {
 	public static String ExportToCommunityPage_cannot_send_orginals;
 	public static String ExportToCommunityPage_create_new_account;
 	public static String ExportToCommunityPage_edit;
+	public static String ExportToCommunityPage_exporting_multimedia;
 	public static String ExportToCommunityPage_exporting_n_images;
 	public static String ExportToCommunityPage_exporting_one_image;
+	public static String ExportToCommunityPage_image;
 	public static String ExportToCommunityPage_include_metadata;
+	public static String ExportToCommunityPage_media;
 	public static String ExportToCommunityPage_metadata;
 	public static String ExportToCommunityPage_no_images_selected;
 	public static String ExportToCommunityPage_nothing_to_export;

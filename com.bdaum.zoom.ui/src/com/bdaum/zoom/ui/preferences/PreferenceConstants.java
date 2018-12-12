@@ -57,13 +57,6 @@ public interface PreferenceConstants {
 	int ZOOMSHIFT = 1;
 	int ZOOMRIGHT = 2;
 	int NOZOOM = 3;
-	String WHEELKEY = "com.bdaum.zoom.wheelKey"; //$NON-NLS-1$
-	int WHEELSHIFTPANS = 0;
-	int WHEELALTPANS = 1;
-	int WHEELSHIFTZOOMS = 2;
-	int WHEELALTZOOMS = 3;
-	int WHEELZOOMONLY = 4;
-	int WHEELSCROLLONLY = 5;
 	String WHEELSOFTNESS = "com.bdaum.zoom.wheelSoftness"; //$NON-NLS-1$
 
 	// Raw import
@@ -82,8 +75,14 @@ public interface PreferenceConstants {
 	String AUTODERIVE = "com.bdaum.zoom.autoDerive"; //$NON-NLS-1$
 	String APPLYXMPTODERIVATES = "com.bdaum.zoom.applyXmpToDerivates"; //$NON-NLS-1$
 	String IMPORTMAKERNOTES = "com.bdaum.zoom.importMakerNotes"; //$NON-NLS-1$
+	String IMPORTFACEDATA = "com.bdaum.zoom.importFaceData"; //$NON-NLS-1$
 	String MAXIMPORTS = "com.bdaum.zoom.maxImports"; //$NON-NLS-1$
 	String DEVICEWATCH = "com.bdaum.zoom.deviceWatch"; //$NON-NLS-1$
+	String TETHEREDSHOW = "com.bdaum.zoom.tetheredShow"; //$NON-NLS-1$
+	int TETHEREDSHOW_NO = 0;
+	int TETHEREDSHOW_INTERN = 1;
+	int TETHEREDSHOW_EXTERN = 2;
+	String TETHERED = "tethered"; //$NON-NLS-1$
 	String ARCHIVERECIPES = "com.bdaum.zoom.archiveRecipes"; //$NON-NLS-1$
 	String SHOWIMPORTED = "com.bdaum.zoom.showImported"; //$NON-NLS-1$
 	String RELATIONDETECTORS = "com.bdaum.zoom.relationDetectors"; //$NON-NLS-1$
@@ -117,11 +116,13 @@ public interface PreferenceConstants {
 
 	// Watched folders
 	String WATCHFILTER = "com.bdaum.zoom.watchFilter"; //$NON-NLS-1$
+	
 	// Update
 	String UPDATEPOLICY = "com.bdaum.zoom.updatePolicy"; //$NON-NLS-1$
 	String UPDATEPOLICY_WITHBACKUP = "withBackup"; //$NON-NLS-1$
 	String UPDATEPOLICY_ONSTART = "onStart"; //$NON-NLS-1$
 	String UPDATEPOLICY_MANUAL = "manual"; //$NON-NLS-1$
+	
 	// General
 	String INACTIVITYINTERVAL = "com.bdaum.zoom.inactivityInterval"; //$NON-NLS-1$
 	String BACKUPINTERVAL = "com.bdaum.zoom.backupInterval"; //$NON-NLS-1$
@@ -136,6 +137,7 @@ public interface PreferenceConstants {
 	String ADDNOISE = "com.bdaum.zoom.addNoise"; //$NON-NLS-1$;
 	String ENLARGESMALL = "com.bdaum.zoom.enlargeSmall"; //$NON-NLS-1$
 	String SECONDARYMONITOR = "com.bdaum.zoom.secondaryMonitor"; //$NON-NLS-1$
+	String MON_ALTERNATE = "alternate"; //$NON-NLS-1$
 
 	// Faces
 	String MAXREGIONS = "com.bdaum.zoom.maxRegions"; //$NON-NLS-1$

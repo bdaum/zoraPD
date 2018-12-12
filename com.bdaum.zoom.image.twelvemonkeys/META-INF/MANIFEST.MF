@@ -4,7 +4,7 @@ Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.image.twelvemonkeys;singleton:=true
 Bundle-Version: 3.0.2
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: com.bdaum.zoom.image;bundle-version="3.3.0"
+Require-Bundle: com.bdaum.zoom.image;bundle-version="3.5.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .

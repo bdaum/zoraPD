@@ -23,7 +23,7 @@ package com.bdaum.zoom.ui.internal.commands;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 
-import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.dialogs.KeywordSearchDialog;
 
 /**
@@ -36,7 +36,7 @@ public class KeywordQueryCommand extends AbstractCommandHandler {
 	public void run() {
 		KeywordSearchDialog dialog = new KeywordSearchDialog(getShell(), null);
 		if (dialog.open() == Window.OK)
-			UiActivator.getDefault().getNavigationHistory(getActiveWorkbenchWindow())
+			Ui.getUi().getNavigationHistory(getActiveWorkbenchWindow())
 					.postSelection(new StructuredSelection(dialog.getResult()));
 	}
 

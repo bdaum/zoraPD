@@ -2,13 +2,6 @@ package com.bdaum.zoom.video.internal.widgets;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
@@ -19,6 +12,7 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Scale;
 
 import com.bdaum.zoom.video.internal.Icons;
@@ -39,110 +33,89 @@ public class VideoControl extends Composite {
 	private Label infoLabel;
 	private Button soundButton;
 	private Canvas loudnessCanvas;
-	private ListenerList<SelectionListener> listeners = new ListenerList<SelectionListener>();
+	private ListenerList<Listener> listeners = new ListenerList<>();
 	private int loudness;
 	private Button snapButton;
+	private boolean soundOn = true;
 
 	public VideoControl(Composite parent, int style) {
 		super(parent, style);
+		final Image image = Icons.volume.getImage();
+		final Rectangle ibounds = image.getBounds();
 		setLayout(new GridLayout(6, false));
+		Listener listener = new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				if (event.widget == scale)
+					fireSelection(event, POSITION, getPosition());
+				else if (event.widget == playButton)
+					fireSelection(event, PLAY, 0);
+				else if (event.widget == stopButton)
+					fireSelection(event, STOP, 0);
+				else if (event.widget == snapButton)
+					fireSelection(event, SNAP, 0);
+				else if (event.widget == soundButton) {
+					setSound(soundOn = !soundOn);
+					fireSelection(event, SOUND, soundOn ? 1 : 0);
+				} else if (event.widget == loudnessCanvas) {
+					if (event.type == SWT.Paint) {
+						GC gc = event.gc;
+						Rectangle area = loudnessCanvas.getClientArea();
+						gc.drawImage(getSound() ? image : Icons.volume_d.getImage(), 0, 0,
+								ibounds.width * loudness / 200, ibounds.height, 0, 0, area.width * loudness / 200,
+								area.height);
+						gc.setForeground(event.display.getSystemColor(SWT.COLOR_WHITE));
+						gc.drawRectangle(area.x, area.y, area.width - 1, area.height - 1);
+					} else if (getSound()) {
+						setLoudness(event.x * 200 / loudnessCanvas.getClientArea().width);
+						event.type = SWT.Selection;
+						fireSelection(event, LOUDNESS, loudness);
+					}
+				}
+			}
+		};
 		scale = new Scale(this, SWT.HORIZONTAL);
 		scale.setMaximum(1000);
 		scale.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 6, 1));
-		scale.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				fireSelection(e, POSITION, getPosition());
-			}
-		});
+		scale.addListener(SWT.Selection, listener);
 		playButton = new Button(this, SWT.PUSH);
 		playButton.setImage(Icons.play.getImage());
 		playButton.setToolTipText(Messages.VideoControl_continue);
-		playButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				fireSelection(e, PLAY, 0);
-			}
-		});
+		playButton.addListener(SWT.Selection, listener);
 		stopButton = new Button(this, SWT.PUSH);
 		stopButton.setImage(Icons.stop.getImage());
 		stopButton.setToolTipText(Messages.VideoControl_stop);
-		stopButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				fireSelection(e, STOP, 0);
-			}
-		});
+		stopButton.addListener(SWT.Selection, listener);
 		snapButton = new Button(this, SWT.PUSH);
 		snapButton.setImage(Icons.snapshot.getImage());
 		snapButton.setToolTipText(Messages.VideoControl_snapshot);
-		snapButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				fireSelection(e, SNAP, 0);
-			}
-		});
+		snapButton.addListener(SWT.Selection, listener);
 		infoLabel = new Label(this, SWT.NONE);
 		infoLabel.setLayoutData(new GridData(250, SWT.DEFAULT));
 		infoLabel.setAlignment(SWT.CENTER);
-		soundButton = new Button(this, SWT.CHECK);
+		soundButton = new Button(this, SWT.PUSH);
 		soundButton.setImage(Icons.sound.getImage());
 		soundButton.setToolTipText(Messages.VideoControl_toggle_sound);
-		soundButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				loudnessCanvas.redraw();
-				boolean on = soundButton.getSelection();
-				soundButton.setImage(on ? Icons.sound.getImage() : Icons.soundMute.getImage());
-				loudnessCanvas.redraw();
-				fireSelection(e, SOUND, on ? 1 : 0);
-			}
-		});
-		final Image image = Icons.volume.getImage();
-		final Image image_d = Icons.volume_d.getImage();
-		final Rectangle ibounds = image.getBounds();
+		soundButton.addListener(SWT.Selection, listener);
 		loudnessCanvas = new Canvas(this, SWT.DOUBLE_BUFFERED);
 		loudnessCanvas.setToolTipText(Messages.VideoControl_volume);
 		loudnessCanvas.setLayoutData(new GridData(ibounds.width, ibounds.height));
-		loudnessCanvas.addPaintListener(new PaintListener() {
-			public void paintControl(PaintEvent e) {
-				GC gc = e.gc;
-				Rectangle area = loudnessCanvas.getClientArea();
-				gc.drawImage(soundButton.getSelection() ? image : image_d, 0, 0, ibounds.width * loudness / 200,
-						ibounds.height, 0, 0, area.width * loudness / 200, area.height);
-				gc.setForeground(e.display.getSystemColor(SWT.COLOR_WHITE));
-				gc.drawRectangle(area.x, area.y, area.width - 1, area.height - 1);
-			}
-		});
-		loudnessCanvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				if (soundButton.getSelection()) {
-					Rectangle area = loudnessCanvas.getClientArea();
-					setLoudness(e.x * 200 / area.width);
-					Event ev = new Event();
-					ev.display = e.display;
-					ev.widget = e.widget;
-					ev.time = e.time;
-					ev.stateMask = e.stateMask;
-					fireSelection(new SelectionEvent(ev), LOUDNESS, loudness);
-				}
-			}
-		});
+		loudnessCanvas.addListener(SWT.Paint, listener);
+		loudnessCanvas.addListener(SWT.MouseDown, listener);
 	}
 
-	public void addSelectionListener(SelectionListener listener) {
+	public void addListener(Listener listener) {
 		listeners.add(listener);
 	}
 
-	public void removeSelectionListener(SelectionListener listener) {
+	public void removeListener(Listener listener) {
 		listeners.remove(listener);
 	}
 
-	private void fireSelection(SelectionEvent e, int type, int value) {
+	private void fireSelection(Event e, int type, int value) {
 		e.detail = type | value;
-		for (SelectionListener listener : listeners)
-			listener.widgetSelected(e);
+		for (Listener listener : listeners)
+			listener.handleEvent(e);
 	}
 
 	/**
@@ -163,7 +136,6 @@ public class VideoControl extends Composite {
 	}
 
 	public void setSound(boolean on) {
-		soundButton.setSelection(on);
 		soundButton.setImage(on ? Icons.sound.getImage() : Icons.soundMute.getImage());
 		loudnessCanvas.redraw();
 	}
@@ -177,7 +149,7 @@ public class VideoControl extends Composite {
 	}
 
 	public boolean getSound() {
-		return soundButton.getSelection();
+		return soundOn;
 	}
 
 }

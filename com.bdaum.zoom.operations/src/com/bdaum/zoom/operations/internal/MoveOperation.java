@@ -223,48 +223,45 @@ public class MoveOperation extends DbOperation {
 			fileWatchManager.ignore(newFile, opId);
 			URI uri = file.toURI();
 			peerService.transferRemoteFile(sub, assetOrigin, fileInfo, newFile);
-			URI[] xmpOrigURIs = Core.getSidecarURIs(uri);
+			File[] xmpOrigs = Core.getSidecarFiles(uri, false);
 			URI newURI = newFile.toURI();
-			URI[] xmpTargetURIs = Core.getSidecarURIs(newURI);
+			File[] xmpTargets = Core.getSidecarFiles(newURI, false);
 			String volume = movedAsset.getVolume();
 			long modmax = -1;
-			for (int i = 0; i < xmpOrigURIs.length; i++) {
-				File xmpTarget = new File(xmpTargetURIs[i]);
+			for (int i = 0; i < xmpOrigs.length; i++) {
+				File xmpTarget = xmpTargets[i];
 				xmpTarget.delete();
 				fileWatchManager.ignore(xmpTarget, opId);
 				sub = SubMonitor.convert(aMonitor, 1);
-				FileInfo xmpInfo = peerService.getFileInfo(assetOrigin, xmpOrigURIs[i].toString(), volume);
+				FileInfo xmpInfo = peerService.getFileInfo(assetOrigin, xmpOrigs[i].toString(), volume);
 				peerService.transferRemoteFile(sub, assetOrigin, xmpInfo, xmpTarget);
 				modmax = Math.max(modmax, xmpTarget.lastModified());
 			}
 			movedAsset.setXmpModifiedAt(modmax < 0 ? null : new Date(modmax));
 			if (peerService.checkCredentials(IPeerService.VOICE, movedAsset.getSafety(), assetOrigin)) {
-				String voiceFileURI = movedAsset.getVoiceFileURI();
 				String voiceOrigURI = null;
 				URI voiceTargetURI = null;
-				if (".".equals(voiceFileURI)) { //$NON-NLS-1$
+				if (AssetEnsemble.hasCloseVoiceNote(movedAsset)) {
 					URI u = Core.getVoicefileURI(file);
 					voiceOrigURI = u == null ? null : u.toString();
 					voiceTargetURI = Core.getVoicefileURI(newFile);
 				} else {
-					voiceOrigURI = voiceFileURI;
+					voiceOrigURI = AssetEnsemble.extractVoiceNote(movedAsset);
 					volume = movedAsset.getVoiceVolume();
 				}
 				if (voiceOrigURI != null) {
-					if (!voiceOrigURI.startsWith("?")) { //$NON-NLS-1$
-						File voiceTarget = null;
-						voiceTarget = new File(voiceTargetURI);
-						voiceTarget.delete();
-						fileWatchManager.ignore(voiceTarget, opId);
-						sub = SubMonitor.convert(aMonitor, 1);
-						FileInfo voiceInfo = peerService.getFileInfo(assetOrigin, voiceOrigURI, volume);
-						peerService.transferRemoteFile(sub, assetOrigin, voiceInfo, voiceTarget);
-						movedAsset.setVoiceFileURI("."); //$NON-NLS-1$
-					}
+					File voiceTarget = null;
+					voiceTarget = new File(voiceTargetURI);
+					voiceTarget.delete();
+					fileWatchManager.ignore(voiceTarget, opId);
+					sub = SubMonitor.convert(aMonitor, 1);
+					FileInfo voiceInfo = peerService.getFileInfo(assetOrigin, voiceOrigURI, volume);
+					peerService.transferRemoteFile(sub, assetOrigin, voiceInfo, voiceTarget);
+					AssetEnsemble.insertVoiceNote(movedAsset, movedAsset.getVolume(), "."); //$NON-NLS-1$
 				} else
-					movedAsset.setVoiceFileURI(null);
+					AssetEnsemble.insertVoiceNote(movedAsset, null, null);
 			} else
-				movedAsset.setVoiceFileURI(null);
+				AssetEnsemble.insertVoiceNote(movedAsset, null, null);
 			return newFile;
 		} catch (IOException e) {
 			addError(NLS.bind(Messages.getString("MoveOperation.io_error_remote_file"), //$NON-NLS-1$
@@ -430,7 +427,7 @@ public class MoveOperation extends DbOperation {
 			meta.setLastYearSequenceNo(0);
 		if (storeSafely(() -> {
 			previousImport = dbManager.createLastImportCollection(now, false,
-					Messages.getString("MoveOperation.import_caused")); //$NON-NLS-1$
+					Messages.getString("MoveOperation.import_caused"), false); //$NON-NLS-1$
 			dbManager.store(meta);
 		}, 1))
 			fireStructureModified();
@@ -469,13 +466,12 @@ public class MoveOperation extends DbOperation {
 						return;
 					}
 				}
-				URI[] xmpOrigURIs = Core.getSidecarURIs(uri);
+				File[] xmpOrigs = Core.getSidecarFiles(uri, false);
 				URI newURI = newFile.toURI();
-				URI[] xmpTargetURIs = Core.getSidecarURIs(newURI);
+				File[] xmpTargets = Core.getSidecarFiles(newURI, false);
 				URI voiceOrigURI = null;
 				URI voiceTargetURI = null;
-				String voiceFileURI = movedAsset.getVoiceFileURI();
-				if (".".equals(voiceFileURI)) { //$NON-NLS-1$
+				if (AssetEnsemble.hasCloseVoiceNote(movedAsset)) {
 					voiceOrigURI = Core.getVoicefileURI(file);
 					voiceTargetURI = Core.getVoicefileURI(newFile);
 				}
@@ -483,11 +479,11 @@ public class MoveOperation extends DbOperation {
 					fwManager.moveFileSilently(file, newFile, opId, aMonitor);
 					movedAsset.setUri(newURI.toString());
 					toBeStored.add(movedAsset);
-					for (int i = 0; i < xmpOrigURIs.length; i++) {
-						File xmpFile = new File(xmpOrigURIs[i]);
+					for (int i = 0; i < xmpOrigs.length; i++) {
+						File xmpFile = xmpOrigs[i];
 						File xmpTarget = null;
 						if (xmpFile.exists()) {
-							xmpTarget = new File(xmpTargetURIs[i]);
+							xmpTarget = xmpTargets[i];
 							xmpTarget.delete();
 							fwManager.moveFileSilently(xmpFile, xmpTarget, opId, aMonitor);
 						}

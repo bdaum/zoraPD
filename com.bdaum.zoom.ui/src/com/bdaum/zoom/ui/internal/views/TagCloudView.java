@@ -466,6 +466,7 @@ public class TagCloudView extends ViewPart implements IDbListener {
 	}
 
 	protected void fillContextMenu(IMenuManager manager) {
+		updateActions();
 		if (mouseData != null) {
 			manager.add(selection.toList().contains(mouseData) ? deselectAction : selectAction);
 			manager.add(new Separator());

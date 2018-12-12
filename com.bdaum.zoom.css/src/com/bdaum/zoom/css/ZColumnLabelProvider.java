@@ -87,7 +87,7 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider
 			colItem = ((TableViewerColumn) column).getColumn();
 		super.initialize(viewer, column);
 	}
-	
+
 	@Override
 	public void dispose() {
 		CssActivator.getDefault().removeThemeListener(this);
@@ -123,15 +123,17 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider
 	}
 
 	protected Color getSelectedBackground(Object element) {
-		return selectedBackgroundColor;
+		return selectedBackgroundColor == null ? viewerControl.getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION)
+				: selectedBackgroundColor;
 	}
 
 	protected Color getSelectedForeground(Object element) {
-		return selectedForegroundColor;
+		return selectedForegroundColor == null ? viewerControl.getForeground() : selectedForegroundColor;
 	}
 
 	protected Color getDisabledForeground(Object element) {
-		return disabledForegroundColor;
+		return disabledForegroundColor == null ? viewerControl.getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY)
+				: disabledForegroundColor;
 	}
 
 	protected Color getBackground(Object element) {
@@ -307,7 +309,7 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider
 
 	@Override
 	public void setDisabledForegroundColor(Color c) {
-		disabledForegroundColor = c != null ? c : viewerControl.getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
+		disabledForegroundColor = c;
 	}
 
 	@Override
@@ -322,25 +324,23 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider
 
 	@Override
 	public void setSelectedBackgroundColor(Color c) {
-		selectedBackgroundColor = c != null ? c : viewerControl.getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION);
+		selectedBackgroundColor = c;
 
 	}
 
 	@Override
 	public void setSelectedForegroundColor(Color c) {
-		selectedForegroundColor = c != null ? c : viewerControl.getForeground();
+		selectedForegroundColor = c;
 	}
 
 	@Override
 	public boolean applyColorsTo(Object element) {
 		return element instanceof Tree || element instanceof Table;
 	}
-	
 
 	@Override
 	public void themeChanged() {
 		CssActivator.getDefault().applyExtendedStyle(viewerControl, this);
 	}
-
 
 }

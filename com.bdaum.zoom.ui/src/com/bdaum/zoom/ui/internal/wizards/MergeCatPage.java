@@ -29,16 +29,13 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
@@ -65,6 +62,8 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 	protected IDbManager externalDb = CoreActivator.NULLDBMANAGER;
 	private final String filename;
 	protected String exception;
+	private FileEditor fileEditor;
+	private RadioButtonGroup policyButtonGroup;
 
 	public MergeCatPage(String filename) {
 		super("main", Messages.MergeCatPage_merge_catalogs, null); //$NON-NLS-1$
@@ -216,22 +215,13 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 		fileEditor = new FileEditor(header, SWT.OPEN | SWT.READ_ONLY, Messages.MergeCatPage_file_name, true,
 				activator.getCatFileExtensions(), activator.getSupportedCatFileNames(), null,
 				'*' + Constants.CATALOGEXTENSION, true, getWizard().getDialogSettings());
-		fileEditor.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+		fileEditor.addListener(new Listener() {
+			@Override
+			public void handleEvent(Event event) {
 				validatePage();
 			}
 		});
 	}
-
-	private SelectionListener selectionListener = new SelectionAdapter() {
-
-		@Override
-		public void widgetSelected(SelectionEvent e) {
-			getWizard().getContainer().updateButtons();
-		}
-	};
-	private FileEditor fileEditor;
-	private RadioButtonGroup policyButtonGroup;
 
 	private void createOptionsGroup(Composite comp) {
 		final CGroup header = new CGroup(comp, SWT.NONE);
@@ -241,7 +231,12 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 		policyButtonGroup = new RadioButtonGroup(header, null, SWT.NONE, Messages.MergeCatPage_skip,
 				Messages.MergeCatPage_replace, Messages.MergeCatPage_merge);
 		policyButtonGroup.setSelection(2);
-		policyButtonGroup.addSelectionListener(selectionListener);
+		policyButtonGroup.addListener(new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				getWizard().getContainer().updateButtons();
+			}
+		});
 	}
 
 	@SuppressWarnings("rawtypes")

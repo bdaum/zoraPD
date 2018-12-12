@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
@@ -43,7 +44,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -52,6 +55,7 @@ import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
+import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
@@ -63,6 +67,10 @@ import com.bdaum.zoom.ui.internal.widgets.ISizeHandler;
 import com.bdaum.zoom.ui.internal.widgets.LabelConfigGroup;
 
 public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandler {
+
+	private static final String SETTINGSID = "collectionEditDialog"; //$NON-NLS-1$
+
+	private static final String ACTIVETAB = "activeTab"; //$NON-NLS-1$
 
 	private SmartCollectionImpl result;
 
@@ -104,6 +112,8 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 
 	private LabelConfigGroup labelConfigGroup;
 
+	private IDialogSettings settings;
+
 	public CollectionEditDialog(Shell parentShell, SmartCollection current, String title, String message, boolean adhoc,
 			boolean album, boolean person, boolean networkPossible) {
 		super(parentShell, HelpContextIds.COLLECTION_EDIT_DIALOG);
@@ -115,6 +125,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		this.adhoc = adhoc;
 		this.album = album;
 		this.networkPossible = networkPossible;
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		readonly &= !adhoc;
 	}
 
@@ -133,6 +144,8 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		getShell().layout();
 		getShell().pack();
 		collectionEditGroup.prepare();
+		if (nameField instanceof Text && nameField.isEnabled())
+			nameField.setFocus();
 	}
 
 	@Override
@@ -141,9 +154,17 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		tabFolder = new CTabFolder(area, SWT.BORDER);
 		tabFolder.setLayoutData(new GridData(GridData.FILL_BOTH));
 		tabFolder.setSimple(false);
-		UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_general, null).setControl(createGeneralGroup(tabFolder));
-		UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_query, null).setControl(createQueryGroup(tabFolder));
-		UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_appearance, null).setControl(createApperanceGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_general, null)
+				.setControl(createGeneralGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_query, null)
+				.setControl(createQueryGroup(tabFolder));
+		UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_appearance, null)
+				.setControl(createApperanceGroup(tabFolder));
+		try {
+			tabFolder.setSelection(settings.getInt(ACTIVETAB));
+		} catch (NumberFormatException e) {
+			// do nothing
+		}
 		Shell shell = getShell();
 		Point size = shell.getSize();
 		shell.setSize(size.x, size.y + 12);
@@ -178,7 +199,9 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 				});
 				nameField.setEnabled(!readonly);
 			}
-			if (current == null || !isSystem || current.getAlbum()) {
+			if (current == null || !isSystem || current.getAlbum()
+					|| current.getStringId().equals(Constants.LAST_IMPORT_ID)
+					|| current.getStringId().startsWith(IDbManager.IMPORTKEY)) {
 				boolean showDescription = current == null
 						|| current.getDescription() != null && !current.getDescription().isEmpty();
 				if (isSystem) {
@@ -207,7 +230,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 					}
 				}
 				if (descriptionField != null) {
-					GridData data = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
+					GridData data = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1);
 					data.widthHint = 240;
 					data.heightHint = 50;
 					descriptionField.setLayoutData(data);
@@ -243,9 +266,9 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 			findInNetworkGroup = new FindInNetworkGroup(netComp);
 			if (current != null)
 				findInNetworkGroup.setSelection(current.getNetwork());
-			findInNetworkGroup.addSelectionListener(new SelectionAdapter() {
+			findInNetworkGroup.addListener(new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					collectionEditGroup.setNetworked(findInNetworkGroup.getSelection());
 				}
 			});
@@ -258,9 +281,9 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		apperanceComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		apperanceComp.setLayout(new GridLayout(1, false));
 		labelConfigGroup = new LabelConfigGroup(apperanceComp, true);
-		labelConfigGroup.addSelectionListener(new SelectionAdapter() {
+		labelConfigGroup.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				validate();
 			}
 		});
@@ -279,8 +302,8 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 
 		collectionEditGroup = new CollectionEditGroup(critComp, current, album, readonly,
 				findInNetworkGroup != null && findInNetworkGroup.getSelection(), this);
-		collectionEditGroup.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+		collectionEditGroup.addListener(new Listener() {
+			public void handleEvent(Event e) {
 				updateButtons();
 			}
 		});
@@ -298,7 +321,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		composite.setFont(parent.getFont());
 		errorLabel = new Label(composite, SWT.NONE);
-		errorLabel.setData("id", "errors"); //$NON-NLS-1$ //$NON-NLS-2$
+		errorLabel.setData(CSSProperties.ID, CSSProperties.ERRORS);
 		errorLabel.setForeground(errorLabel.getDisplay().getSystemColor(SWT.COLOR_RED));
 		GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		layoutData.horizontalIndent = 10;
@@ -365,6 +388,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 
 	@Override
 	protected void okPressed() {
+		settings.put(ACTIVETAB, tabFolder.getSelectionIndex());
 		// Must create a new instance
 		String name = (nameField != null)
 				? (nameField instanceof Text) ? ((Text) nameField).getText() : ((Label) nameField).getText()

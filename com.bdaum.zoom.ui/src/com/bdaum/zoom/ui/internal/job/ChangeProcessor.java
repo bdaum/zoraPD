@@ -42,6 +42,7 @@ import com.bdaum.zoom.core.internal.FileInput;
 import com.bdaum.zoom.core.internal.ImportFromDeviceData;
 import com.bdaum.zoom.core.internal.operations.ImportConfiguration;
 import com.bdaum.zoom.job.ProfiledSchedulingRule;
+import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.operations.IProfiledOperation;
 import com.bdaum.zoom.operations.internal.DeleteOperation;
 import com.bdaum.zoom.operations.internal.ImportOperation;
@@ -59,24 +60,19 @@ public class ChangeProcessor extends Job {
 	private final List<File> deletedFiles;
 	private final String parentFamily;
 
-	public ChangeProcessor(List<File> newFiles, List<File> outdatedFiles,
-			List<File> deletedFiles, WatchedFolder observedFolder,
-			long timeOfUpdate, ImportConfiguration config, String parentFamily,
+	public ChangeProcessor(List<File> newFiles, List<File> outdatedFiles, List<File> deletedFiles,
+			WatchedFolder observedFolder, long timeOfUpdate, ImportConfiguration config, String parentFamily,
 			IAdaptable adaptable) {
 		super(Messages.FolderWatchJob_processing_folder_changes);
 		this.parentFamily = parentFamily;
 		this.adaptable = adaptable;
-		this.config = (config != null) ? config : UiActivator.getDefault()
-				.createImportConfiguration(adaptable, true, true, false, true,
-						false, false, true, true, true);
-		setRule(new ProfiledSchedulingRule(
-				ImportOperation.class,
-				config != null
-						&& config.rawOptions.equals(Constants.RAWIMPORT_BOTH) ? IProfiledOperation.CONTENT
-						| IProfiledOperation.SYNCHRONIZE
-						| IProfiledOperation.FILE
-						: IProfiledOperation.CONTENT
-								| IProfiledOperation.SYNCHRONIZE));
+		this.config = (config != null) ? config
+				: UiActivator.getDefault().createImportConfiguration(adaptable, true, true, false, true, false, false,
+						true, true, true);
+		setRule(new ProfiledSchedulingRule(ImportOperation.class,
+				config != null && config.rawOptions.equals(Constants.RAWIMPORT_BOTH)
+						? IProfiledOperation.CONTENT | IProfiledOperation.SYNCHRONIZE | IProfiledOperation.FILE
+						: IProfiledOperation.CONTENT | IProfiledOperation.SYNCHRONIZE));
 		setPriority(Job.DECORATE);
 		setSystem(true);
 		this.newFiles = newFiles;
@@ -96,35 +92,27 @@ public class ChangeProcessor extends Job {
 
 	@Override
 	public boolean belongsTo(Object family) {
-		return Constants.DAEMONS == family
-				|| Constants.OPERATIONJOBFAMILY == family
-				|| parentFamily == family;
+		return Constants.DAEMONS == family || Constants.OPERATIONJOBFAMILY == family || parentFamily == family;
 	}
 
 	@Override
 	protected IStatus run(final IProgressMonitor monitor) {
-		MultiStatus mstatus = new MultiStatus(UiActivator.PLUGIN_ID, 0,
-				Messages.FolderWatchJob_folder_update_report, null);
-		int completeWork = (outdatedFiles != null ? outdatedFiles.size() : 0)
-				+ (newFiles != null ? newFiles.size() : 0)
+		MultiStatus mstatus = new MultiStatus(UiActivator.PLUGIN_ID, 0, Messages.FolderWatchJob_folder_update_report,
+				null);
+		int completeWork = (outdatedFiles != null ? outdatedFiles.size() : 0) + (newFiles != null ? newFiles.size() : 0)
 				+ (deletedFiles != null ? deletedFiles.size() : 0);
 		if (completeWork > 0) {
 			SubMonitor progress = SubMonitor.convert(monitor, 100);
-			if (outdatedFiles != null && !outdatedFiles.isEmpty()) {
+			if (outdatedFiles != null && !outdatedFiles.isEmpty())
 				try {
-					mstatus.addAll(new ImportOperation(new FileInput(
-							outdatedFiles, false), config, null, null).execute(
-							progress.newChild(outdatedFiles.size() * 100
-									/ completeWork), adaptable));
+					mstatus.addAll(new ImportOperation(new FileInput(StorageObject.fromFile(outdatedFiles), false),
+							config, null, null).execute(progress.newChild(outdatedFiles.size() * 100 / completeWork),
+									adaptable));
 				} catch (ExecutionException e) {
-					mstatus.add(new Status(IStatus.ERROR,
-							UiActivator.PLUGIN_ID,
-							Messages.FolderWatchJob_updating_of_images_failed,
-							e));
+					mstatus.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
+							Messages.FolderWatchJob_updating_of_images_failed, e));
 				}
-			}
-			if (newFiles != null && !newFiles.isEmpty()
-					&& !monitor.isCanceled()) {
+			if (newFiles != null && !newFiles.isEmpty() && !monitor.isCanceled())
 				try {
 					ImportOperation op = null;
 					config.isSynchronize = false;
@@ -134,63 +122,47 @@ public class ChangeProcessor extends Job {
 					config.isResetFaceData = true;
 					config.silent = true;
 					if (observedFolder != null && observedFolder.getTransfer()) {
-						ImportFromDeviceData deviceData = new ImportFromDeviceData(
-								newFiles.toArray(new File[newFiles.size()]),
+						ImportFromDeviceData deviceData = new ImportFromDeviceData(StorageObject.fromFile(newFiles),
 								false, observedFolder);
 						deviceData.setArtist(observedFolder.getArtist());
 						deviceData.setCue(observedFolder.getCue());
-						deviceData.setDetectDuplicates(observedFolder
-								.getSkipDuplicates());
-						deviceData.setFileInput(new FileInput(newFiles, true));
-						deviceData.setRenamingTemplate(observedFolder
-								.getSelectedTemplate());
-						deviceData
-								.setSkipPolicy(observedFolder.getSkipPolicy());
-						deviceData.setSubfolderPolicy(observedFolder
-								.getSubfolderPolicy());
+						deviceData.setDetectDuplicates(observedFolder.getSkipDuplicates());
+						deviceData.setFileInput(new FileInput(StorageObject.fromFile(newFiles), true));
+						deviceData.setRenamingTemplate(observedFolder.getSelectedTemplate());
+						deviceData.setSkipPolicy(observedFolder.getSkipPolicy());
+						deviceData.setSubfolderPolicy(observedFolder.getSubfolderPolicy());
 						deviceData.setTargetDir(observedFolder.getTargetDir());
 						if (!monitor.isCanceled())
-							op = new ImportOperation(deviceData, config,
-									observedFolder.getFileSource());
+							op = new ImportOperation(deviceData, config, observedFolder.getFileSource());
 					} else if (!monitor.isCanceled())
-						op = new ImportOperation(
-								new FileInput(newFiles, false), config, null,
+						op = new ImportOperation(new FileInput(StorageObject.fromFile(newFiles), false), config, null,
 								null);
 					if (op != null)
 						try {
-							mstatus.addAll(op.execute(
-									progress.newChild(newFiles.size() * 100
-											/ completeWork), adaptable));
+							mstatus.addAll(
+									op.execute(progress.newChild(newFiles.size() * 100 / completeWork), adaptable));
 						} catch (ExecutionException e) {
-							mstatus.add(new Status(
-									IStatus.ERROR,
-									UiActivator.PLUGIN_ID,
-									Messages.FolderWatchJob_import_of_new_images_failed,
-									e));
+							mstatus.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
+									Messages.FolderWatchJob_import_of_new_images_failed, e));
 						}
 				} catch (RuntimeException e) {
 					// ignore
 				}
-			}
 			if (deletedFiles != null && !deletedFiles.isEmpty()) {
 				List<Asset> assets = new ArrayList<Asset>();
 				IDbManager dbManager = Core.getCore().getDbManager();
 				for (File file : deletedFiles)
 					assets.addAll(dbManager.obtainAssetsForFile(file.toURI()));
 				try {
-					mstatus.addAll(new DeleteOperation(assets, false, null,
-							null, null, config).execute(
-							progress.newChild(outdatedFiles.size() * 100
-									/ completeWork), adaptable));
+					mstatus.addAll(new DeleteOperation(assets, false, null, null, null, config)
+							.execute(progress.newChild(outdatedFiles.size() * 100 / completeWork), adaptable));
 				} catch (ExecutionException e) {
-					mstatus.add(new Status(IStatus.ERROR,
-							UiActivator.PLUGIN_ID,
+					mstatus.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
 							Messages.ChangeProcessor_deletion_failed, e));
 				}
 			}
 		}
-		if (timeOfUpdate > 0 && observedFolder != null && !monitor.isCanceled()
-				&& mstatus.isOK())
+		if (timeOfUpdate > 0 && observedFolder != null && !monitor.isCanceled() && mstatus.isOK())
 			observedFolder.setLastObservation(timeOfUpdate);
 		return mstatus;
 	}

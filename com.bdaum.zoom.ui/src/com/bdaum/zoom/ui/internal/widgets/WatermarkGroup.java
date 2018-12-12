@@ -25,16 +25,17 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 public class WatermarkGroup {
@@ -44,9 +45,9 @@ public class WatermarkGroup {
 	private CheckboxButton createWatermarkButton;
 	private Text copyrightField;
 	private Button fileButton;
+	private ListenerList<Listener> listeners = new ListenerList<>();
 
 	public WatermarkGroup(Composite parent) {
-
 		int columns = -1;
 		Layout layout = parent.getLayout();
 		if (layout instanceof GridLayout)
@@ -60,34 +61,55 @@ public class WatermarkGroup {
 		composite.setLayout(gridlayout);
 		createWatermarkButton = WidgetFactory.createCheckButton(composite, Messages.WatermarkGroup_create_watermark,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		createWatermarkButton.addSelectionListener(new SelectionAdapter() {
+		createWatermarkButton.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event event) {
 				updateButtons();
 				if (copyrightField.getEnabled())
 					copyrightField.setFocus();
+				fireEvent(event);
 			}
 		});
 		copyrightField = new Text(composite, SWT.BORDER);
 		GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		data.widthHint = 150;
 		copyrightField.setLayoutData(data);
+		createWatermarkButton.addListener(new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				fireEvent(event);
+			}
+		});
 		fileButton = new Button(composite, SWT.PUSH);
 		fileButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		fileButton.setText(Messages.WatermarkGroup_select_file);
-		fileButton.addSelectionListener(new SelectionAdapter() {
+		fileButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				FileDialog dialog = new FileDialog(composite.getShell());
 				dialog.setFilterExtensions(new String[] { "*.bmp;*.png" }); //$NON-NLS-1$
 				dialog.setFilterNames(new String[] { Messages.WatermarkGroup_watermark_files });
 				String path = dialog.open();
-				if (path != null)
+				if (path != null) {
 					copyrightField.setText(path);
+					fireEvent(e);
+				}
 			}
 		});
-
 		updateButtons();
+	}
+
+	protected void fireEvent(Event event) {
+		for (Listener listener : listeners)
+			listener.handleEvent(event);
+	}
+
+	public void addListener(Listener listener) {
+		listeners.add(listener);
+	}
+
+	public void removeListener(Listener listener) {
+		listeners.remove(listener);
 	}
 
 	private static boolean testYear(String s) {

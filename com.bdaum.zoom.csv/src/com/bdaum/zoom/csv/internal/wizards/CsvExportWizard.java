@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.dialogs.IPageChangeProvider;
 import org.eclipse.jface.dialogs.IPageChangedListener;
 import org.eclipse.jface.dialogs.PageChangedEvent;
@@ -33,10 +32,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardContainer;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IExportWizard;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.csv.internal.CsvActivator;
@@ -49,7 +46,7 @@ import com.bdaum.zoom.ui.internal.wizards.MetaSelectionPage;
 
 @SuppressWarnings("restriction")
 public class CsvExportWizard extends AbstractAssetSelectionWizard implements
-		IExportWizard, IAdaptable, IPageChangedListener {
+		IExportWizard, IPageChangedListener {
 
 	private static final String CSVSETTINGSID = "com.bdaum.zoom.csvProperties"; //$NON-NLS-1$
 	private CsvTargetFilePage filePage;
@@ -58,8 +55,8 @@ public class CsvExportWizard extends AbstractAssetSelectionWizard implements
 
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		super.init(workbench, selection);
 		setDialogSettings(CsvActivator.getDefault(), CSVSETTINGSID);
-		setAssets(workbench, selection, false);
 		int size = assets.size();
 		String msg = (size == 0) ? Messages.CsvExportWizard_nothing_selected
 				: (size == 1) ? Messages.CsvExportWizard_one_image : NLS.bind(
@@ -141,16 +138,6 @@ public class CsvExportWizard extends AbstractAssetSelectionWizard implements
 							targetFile), e);
 			return null;
 		}
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
-	public Object getAdapter(Class adapter) {
-		if (Shell.class.equals(adapter)) {
-			return PlatformUI.getWorkbench().getWorkbenchWindows()[0]
-					.getShell();
-		}
-		return null;
 	}
 
 	@Override

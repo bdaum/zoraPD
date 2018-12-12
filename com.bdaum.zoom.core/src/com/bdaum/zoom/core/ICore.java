@@ -228,5 +228,18 @@ public interface ICore {
 	 */
 	boolean containsRawImage(List<Asset> assets, boolean includeDng);
 
+	/**
+	 * Tests if tethered shooting is active
+	 * @return - true if tethered shooting is active
+	 */
+	boolean isTetheredShootingActive();
+
+	/**
+	 * Tests if the list of assets contains other media than images
+	 * @param assets - collection of assets
+	 * @return - true if at least one asset is not an image
+	 */
+	boolean isMultiMedia(Collection<Asset> assets);
+
 
 }

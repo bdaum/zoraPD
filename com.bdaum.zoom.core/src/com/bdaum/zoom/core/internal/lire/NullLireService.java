@@ -88,7 +88,7 @@ public class NullLireService implements ILireService {
 	}
 
 	@Override
-	public boolean ShowConfigureSearch(IAdaptable adaptable, Point displayLocation) {
+	public boolean showConfigureSearch(IAdaptable adaptable, Point displayLocation) {
 		return false;
 	}
 

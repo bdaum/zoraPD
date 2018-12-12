@@ -23,11 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.IAdaptable;
@@ -42,230 +38,144 @@ import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.db.IDbErrorHandler;
-import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.operations.DbOperation;
 import com.bdaum.zoom.operations.IProfiledOperation;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.DiskFullException;
 
-@SuppressWarnings("restriction")
 public class VoiceNoteOperation extends DbOperation {
 
-	private boolean undo;
-	private File[] oldFiles;
-	private String[] oldVolumes;
-	private String[] oldUris;
-	private List<Asset> assets;
+	private String oldVolume;
+	private String oldUri;
+	private Asset asset;
 	private String sourceUri;
 	private String targetUri;
 	private String noteText;
+	private String svg;
+	private File renameSource;
+	private File renameTarget;
+	private File fileToDelete;
 
-	public VoiceNoteOperation(List<Asset> assets, String sourceUri, String targetUri, String noteText) {
+	public VoiceNoteOperation(Asset asset, String sourceUri, String targetUri, String noteText, String svg) {
 		super(Messages.getString("VoiceNoteOperation.add_remove_voicenote")); //$NON-NLS-1$
-		this.assets = assets;
+		this.asset = asset;
 		this.sourceUri = sourceUri;
 		this.targetUri = targetUri;
 		this.noteText = noteText;
+		this.svg = svg;
 	}
 
 	@Override
 	public IStatus execute(IProgressMonitor aMonitor, IAdaptable info) throws ExecutionException {
-		savePreviousState();
-		return noteText != null ? addTextNote(aMonitor, info)
-				: targetUri == null ? deleteVoiceNote(aMonitor, info) : addVoiceFile(aMonitor, info);
-	}
-
-	private IStatus addTextNote(IProgressMonitor aMonitor, IAdaptable info) {
-		init(aMonitor, assets.size());
-		for (Asset asset : assets) {
-			if (asset.getFileState() != IVolumeManager.PEER) {
-				asset.setVoiceFileURI(noteText);
-				asset.setVoiceVolume(null);
-				if (storeSafely(null, 1, asset))
-					fireAssetsModified(new BagChange<>(null, Collections.singleton(asset), null, null), null);
-			}
-		}
-		return close(info);
-	}
-
-	private IStatus addVoiceFile(IProgressMonitor aMonitor, IAdaptable info) {
+		init(aMonitor, 1);
+		oldVolume = asset.getVoiceVolume();
+		oldUri = asset.getVoiceFileURI();
 		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
-		init(aMonitor, assets.size());
+		StringBuilder sb = new StringBuilder();
 		String volumeLabel = null;
-		if (targetUri.startsWith("file:/")) { //$NON-NLS-1$
-			try {
-				volumeLabel = volumeManager.getVolumeForFile(new File(new URI(targetUri)));
-			} catch (URISyntaxException e) {
-				// should never happen
-			}
-		}
-		for (Asset asset : assets) {
-			if (asset.getFileState() != IVolumeManager.PEER) {
-				if (!targetUri.equals(sourceUri)) {
-					String uri = targetUri;
-					try {
-						if (".".equals(uri)) //$NON-NLS-1$
-							uri = Core.getVoicefileURI(new File(new URI(asset.getUri()))).toString();
-						BatchUtilities.moveFile(new File(new URI(sourceUri)), new File(new URI(uri)), null);
-					} catch (URISyntaxException e) {
-						addError(Messages.getString("AddVoiceNoteOperation.bad_uri_transfer"), e); //$NON-NLS-1$
-						continue;
-					} catch (IOException e) {
-						addError(Messages.getString("AddVoiceNoteOperation.io_error_transfer"), e); //$NON-NLS-1$
-						continue;
-					} catch (DiskFullException e) {
-						addError(Messages.getString("AddVoiceNoteOperation.disk_full_transfer"), e); //$NON-NLS-1$
-						return close(info);
-					}
+		if (targetUri != null) {
+			if (targetUri.startsWith("file:/")) { //$NON-NLS-1$
+				try {
+					volumeLabel = volumeManager.getVolumeForFile(new File(new URI(targetUri)));
+				} catch (URISyntaxException e) {
+					// should never happen
 				}
-				asset.setVoiceFileURI(targetUri);
-				asset.setVoiceVolume(volumeLabel);
 			}
-			if (storeSafely(null, 1, asset))
-				fireAssetsModified(new BagChange<>(null, Collections.singleton(asset), null, null), null);
-		}
-		return close(info);
-	}
-
-	public IStatus deleteVoiceNote(IProgressMonitor aMonitor, final IAdaptable info) {
-		final Set<String> volumes = new HashSet<String>();
-		final List<String> errands = new ArrayList<String>();
-		init(aMonitor, assets.size() + 2);
-		boolean deleted = false;
-		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
-		for (Asset asset : assets) {
-			if (asset.getFileState() != IVolumeManager.PEER) {
-				if (".".equals(asset.getVoiceFileURI())) { //$NON-NLS-1$
-					URI uri = volumeManager.findFile(asset);
-					if (uri != null) {
-						if (volumeManager.findExistingFile(asset, true) != null) {
-							deleted |= deleteVoiceNote(asset);
-						} else {
-							String volume = asset.getVolume();
-							if (volume != null && !volume.isEmpty())
-								volumes.add(volume);
-							errands.add(uri.toString());
+			if (!targetUri.equals(sourceUri)) {
+				String uri = targetUri;
+				try {
+					if (".".equals(uri)) { //$NON-NLS-1$
+						uri = Core.getVoicefileURI(new File(new URI(asset.getUri()))).toString();
+						volumeLabel = asset.getVolume();
+					}
+					File source = new File(new URI(sourceUri));
+					File target = new File(new URI(uri));
+					if (!source.equals(target)) {
+						if (target.exists()) {
+							File tempFile = Core.createTempFile("Voice", "wav"); //$NON-NLS-1$//$NON-NLS-2$
+							BatchUtilities.moveFile(renameSource = target, renameTarget = tempFile, null);
+						}
+						BatchUtilities.moveFile(source, target, null);
+					}
+					if (".".equals(uri)) //$NON-NLS-1$
+						fileToDelete = target;
+				} catch (URISyntaxException e) {
+					addError(Messages.getString("AddVoiceNoteOperation.bad_uri_transfer"), e); //$NON-NLS-1$
+					return close(info);
+				} catch (IOException e) {
+					addError(Messages.getString("AddVoiceNoteOperation.io_error_transfer"), e); //$NON-NLS-1$
+					return close(info);
+				} catch (DiskFullException e) {
+					addError(Messages.getString("AddVoiceNoteOperation.disk_full_transfer"), e); //$NON-NLS-1$
+					return close(info);
+				}
+			}
+			sb.append(targetUri);
+		} else {
+			String voiceFileURI = asset.getVoiceFileURI();
+			if (voiceFileURI != null && (voiceFileURI.startsWith("\f.") || ".".equals(voiceFileURI))) { //$NON-NLS-1$ //$NON-NLS-2$
+				URI uri = volumeManager.findVoiceFile(asset);
+				if (uri != null && Constants.FILESCHEME.equals(uri.getScheme())) {
+					String voiceVolume = asset.getVoiceVolume();
+					File file = volumeManager.findExistingFile(uri.toString(), voiceVolume);
+					if (file != null) {
+						try {
+							File tempFile = Core.createTempFile("Voice", "wav"); //$NON-NLS-1$//$NON-NLS-2$
+							BatchUtilities.moveFile(renameSource = file, renameTarget = tempFile, null);
+						} catch (IOException e) {
+							addError(Messages.getString("VoiceNoteOperation.io_error_deleting"), e);  //$NON-NLS-1$
+							return close(info);
+						} catch (DiskFullException e) {
+							addError(Messages.getString("VoiceNoteOperation.disk_full_deleting"), e);  //$NON-NLS-1$
+							return close(info);
+						}
+					} else {
+						final IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
+						if (errorHandler != null) {
+							String onVolume = voiceVolume == null || voiceVolume.isEmpty() ? "" //$NON-NLS-1$
+									: NLS.bind(Messages.getString("VoiceNoteOperation.on_volume"), voiceVolume); //$NON-NLS-1$
+							String msg = NLS.bind(Messages.getString("VoiceNoteOperation.already_deleted"), uri, onVolume); //$NON-NLS-1$
+							errorHandler.showInformation(Messages.getString("VoiceNoteOperation.unable_to_delete"), msg, info); //$NON-NLS-1$
 						}
 					}
-				} else
-					deleted |= deleteVoiceNote(asset);
-				if (aMonitor.isCanceled())
-					return abort();
-			}
-		}
-		if (deleted)
-			fireAssetsModified(new BagChange<>(null, assets, null, null), null);
-		if (!errands.isEmpty()) {
-			final IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
-			if (errorHandler != null) {
-				String msg;
-				if (errands.size() == 1) {
-					msg = NLS.bind(Messages.getString("DeleteVoicenoteOperation.File_offline"), //$NON-NLS-1$
-							errands.get(0), volumes.toArray()[0]);
-				} else {
-					StringBuffer sb = new StringBuffer();
-					for (String volume : volumes) {
-						if (sb.length() > 0)
-							sb.append(", "); //$NON-NLS-1$
-						sb.append(volume);
-					}
-					msg = NLS.bind(Messages.getString("DeleteVoicenoteOperation.Files_offline"), //$NON-NLS-1$
-							errands.size(), sb.toString());
-
 				}
-				errorHandler.showInformation(Messages.getString("DeleteVoicenoteOperation.Unable_to_delete"), //$NON-NLS-1$
-						msg, info);
 			}
 		}
+		sb.append('\f');
+		if (noteText != null)
+			sb.append(noteText);
+		sb.append('\f');
+		if (svg != null)
+			sb.append(svg);
+		asset.setVoiceFileURI(sb.toString());
+		asset.setVoiceVolume(volumeLabel);
+		if (storeSafely(null, 1, asset))
+			fireAssetsModified(new BagChange<>(null, Collections.singleton(asset), null, null), null);
 		return close(info);
-	}
-
-	private boolean deleteVoiceNote(Asset asset) {
-		String voiceFileURI = asset.getVoiceFileURI();
-		if (voiceFileURI != null && !voiceFileURI.isEmpty()) {
-			if (".".equals(voiceFileURI)) { //$NON-NLS-1$
-				URI uri = Core.getCore().getVolumeManager().findVoiceFile(asset);
-				if (uri != null && Constants.FILESCHEME.equals(uri.getScheme()))
-					new File(uri).delete();
-			}
-			asset.setVoiceFileURI(null);
-			storeSafely(null, 1, asset);
-			return true;
-		}
-		return false;
-	}
-
-	protected void savePreviousState() {
-		int size = assets.size();
-		oldFiles = new File[size];
-		oldVolumes = new String[size];
-		oldUris = new String[size];
-		int i = 0;
-		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
-		for (Asset asset : assets) {
-			oldVolumes[i] = asset.getVoiceVolume();
-			oldUris[i] = asset.getVoiceFileURI();
-			if (".".equals(oldUris[i])) { //$NON-NLS-1$
-				URI voiceFileUri = volumeManager.findVoiceFile(asset);
-				if (voiceFileUri != null) {
-					try {
-						File outputFile = ImageActivator.getDefault().createTempFile("Voice", ".wav"); //$NON-NLS-1$ //$NON-NLS-2$
-						BatchUtilities.moveFile(new File(voiceFileUri), outputFile, null);
-						oldFiles[i] = outputFile;
-					} catch (IOException e) {
-						addError(Messages.getString("VoiceNoteOperation.io_error_creating_backup"), //$NON-NLS-1$
-								e);
-						return;
-					} catch (DiskFullException e) {
-						addError(Messages.getString("VoiceNoteOperation.disk_full_creating_backup"), //$NON-NLS-1$
-								e);
-						return;
-					}
-				}
-			}
-			++i;
-		}
-		undo = true;
-	}
-
-	@Override
-	public boolean canRedo() {
-		return undo;
-	}
-
-	@Override
-	public boolean canUndo() {
-		return undo;
 	}
 
 	@Override
 	public IStatus undo(IProgressMonitor aMonitor, IAdaptable info) throws ExecutionException {
-		initUndo(aMonitor, assets.size());
-		if (undo) {
-			int i = 0;
-			for (Asset asset : assets) {
-				if (oldFiles[i] != null) {
-					try {
-						String uri = Core.getVoicefileURI(new File(new URI(asset.getUri()).toString())).toString();
-						BatchUtilities.moveFile(oldFiles[i], new File(new URI(uri)), null);
-					} catch (URISyntaxException e) {
-						addError(Messages.getString("VoiceNoteOperation.bad_uri_undo"), e); //$NON-NLS-1$
-						return close(info);
-					} catch (IOException e) {
-						addError(Messages.getString("VoiceNoteOperation.io_error_undo"), e); //$NON-NLS-1$
-						return close(info);
-					} catch (DiskFullException e) {
-						addError(Messages.getString("VoiceNoteOperation.disk_full_undo"), e); //$NON-NLS-1$
-						return close(info);
-					}
-				}
-				asset.setVoiceFileURI(oldUris[i]);
-				asset.setVoiceVolume(oldVolumes[i]);
-				if (storeSafely(null, 1, asset))
-					fireAssetsModified(new BagChange<>(null, Collections.singleton(asset), null, null), null);
-				++i;
+		initUndo(aMonitor, 1);
+		if (renameSource != null) {
+			try {
+				BatchUtilities.moveFile(renameTarget, renameSource, null);
+			} catch (IOException e) {
+				addError(Messages.getString("VoiceNoteOperation.io_error_undo"), e); //$NON-NLS-1$
+				return close(info);
+			} catch (DiskFullException e) {
+				addError(Messages.getString("VoiceNoteOperation.disk_full_undo"), e); //$NON-NLS-1$
+				return close(info);
 			}
 		}
+		asset.setVoiceFileURI(oldUri);
+		asset.setVoiceVolume(oldVolume);
+		if (fileToDelete != null) {
+			fileToDelete.delete();
+			fileToDelete = null;
+		}
+		if (storeSafely(null, 1, asset))
+			fireAssetsModified(new BagChange<>(null, Collections.singleton(asset), null, null), null);
 		return close(info);
 	}
 
@@ -279,7 +189,7 @@ public class VoiceNoteOperation extends DbOperation {
 
 	@Override
 	public int getPriority() {
-		return assets.size() > 3 ? Job.LONG : Job.SHORT;
+		return Job.SHORT;
 	}
 
 	@Override
@@ -289,9 +199,8 @@ public class VoiceNoteOperation extends DbOperation {
 
 	@Override
 	public void dispose() {
-		for (File file : oldFiles)
-			if (file != null)
-				file.delete();
+		if (renameTarget != null)
+			renameTarget.delete();
 	}
 
 }

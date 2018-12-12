@@ -22,13 +22,12 @@ package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.db.ITypeFilter;
@@ -38,7 +37,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.internal.widgets.ZDialog;
 
 @SuppressWarnings("restriction")
-public class FileFormatDialog extends ZDialog implements SelectionListener {
+public class FileFormatDialog extends ZDialog implements Listener {
 
 	public static final int ABORT = -1;
 	private int formats;
@@ -71,41 +70,39 @@ public class FileFormatDialog extends ZDialog implements SelectionListener {
 		area.setLayout(new FillLayout());
 		Composite comp = new Composite(area, SWT.BORDER);
 		comp.setLayout(new GridLayout(2, false));
-		allField = WidgetFactory.createCheckButton(comp,
-				Messages.FileFormatDialog_all, null);
-		allField.addSelectionListener(new SelectionAdapter() {
+		allField = WidgetFactory.createCheckButton(comp, Messages.FileFormatDialog_all, null);
+		allField.addListener(new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				rawField.setSelection(true);
-				dngField.setSelection(true);
-				jpgField.setSelection(true);
-				tifField.setSelection(true);
-				othersField.setSelection(true);
-				getButton(IDialogConstants.OK_ID).setEnabled(true);
+			public void handleEvent(Event event) {
+				boolean sel = allField.getSelection();
+				rawField.setSelection(sel);
+				dngField.setSelection(sel);
+				jpgField.setSelection(sel);
+				tifField.setSelection(sel);
+				othersField.setSelection(sel);
+				mediaField.setSelection(sel);
+				getButton(IDialogConstants.OK_ID).setEnabled(sel);
 			}
 		});
 		rawField = WidgetFactory.createCheckButton(comp, "RAW", null); //$NON-NLS-1$
-		rawField.addSelectionListener(this);
+		rawField.addListener(this);
 		dngField = WidgetFactory.createCheckButton(comp, "DNG", null); //$NON-NLS-1$
-		dngField.addSelectionListener(this);
+		dngField.addListener(this);
 		jpgField = WidgetFactory.createCheckButton(comp, "JPEG", null); //$NON-NLS-1$
-		jpgField.addSelectionListener(this);
+		jpgField.addListener(this);
 		tifField = WidgetFactory.createCheckButton(comp, "TIFF", null); //$NON-NLS-1$
-		tifField.addSelectionListener(this);
-		othersField = WidgetFactory.createCheckButton(comp,
-				Messages.FileFormatDialog_Other, null);
-		othersField.addSelectionListener(this);
+		tifField.addListener(this);
+		othersField = WidgetFactory.createCheckButton(comp, Messages.FileFormatDialog_Other, null);
+		othersField.addListener(this);
 		rawField.setSelection((formats & ITypeFilter.RAW) != 0);
 		dngField.setSelection((formats & ITypeFilter.DNG) != 0);
 		jpgField.setSelection((formats & ITypeFilter.JPEG) != 0);
 		tifField.setSelection((formats & ITypeFilter.TIFF) != 0);
 		othersField.setSelection((formats & ITypeFilter.OTHER) != 0);
 		if (!CoreActivator.getDefault().getMediaSupportMap().isEmpty()) {
-			mediaField = WidgetFactory.createCheckButton(comp, Messages.FileFormatDialog_other_media,
-					null);
-			mediaField.addSelectionListener(this);
-			mediaField
-					.setSelection((formats & ITypeFilter.MEDIA) != 0);
+			mediaField = WidgetFactory.createCheckButton(comp, Messages.FileFormatDialog_other_media, null);
+			mediaField.addListener(this);
+			mediaField.setSelection((formats & ITypeFilter.MEDIA) != 0);
 		}
 		return area;
 	}
@@ -136,24 +133,17 @@ public class FileFormatDialog extends ZDialog implements SelectionListener {
 		return formats;
 	}
 
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
-	}
-
-	public void widgetSelected(SelectionEvent e) {
+	public void handleEvent(Event e) {
 		updateButtons();
 	}
 
 	private void updateButtons() {
-		allField.setSelection(rawField.getSelection()
-				&& dngField.getSelection() && jpgField.getSelection()
-				&& tifField.getSelection() && othersField.getSelection()
-				&& (mediaField == null || mediaField.getSelection()));
+		allField.setSelection(
+				rawField.getSelection() && dngField.getSelection() && jpgField.getSelection() && tifField.getSelection()
+						&& othersField.getSelection() && (mediaField == null || mediaField.getSelection()));
 		getButton(IDialogConstants.OK_ID).setEnabled(
-				rawField.getSelection() || dngField.getSelection()
-						|| jpgField.getSelection() || tifField.getSelection()
-						|| othersField.getSelection()
-						|| (mediaField != null && mediaField.getSelection()));
+				rawField.getSelection() || dngField.getSelection() || jpgField.getSelection() || tifField.getSelection()
+						|| othersField.getSelection() || (mediaField != null && mediaField.getSelection()));
 
 	}
 
