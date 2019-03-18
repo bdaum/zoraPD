@@ -33,11 +33,8 @@ public class Icons {
 		private final String key;
 
 		public Icon(String path) {
-			key = prefix + (++counter);
-			JFaceResources.getImageRegistry().put(
-					key,
-					AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID,
-							path));
+			JFaceResources.getImageRegistry().put(key = prefix + (++counter),
+					AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, path));
 		}
 
 		public ImageDescriptor getDescriptor() {
@@ -50,8 +47,7 @@ public class Icons {
 
 	}
 
-	public static final Icon pdfemail64 = new Icon(
-			"icons/banner/pdfemail64.png"); //$NON-NLS-1$
+	public static final Icon pdfemail64 = new Icon("icons/banner/pdfemail64.png"); //$NON-NLS-1$
 	public static final Icon email64 = new Icon("icons/banner/email64.png"); //$NON-NLS-1$
 	public static final Icon pdf64 = new Icon("icons/banner/pdf64.png"); //$NON-NLS-1$
 }

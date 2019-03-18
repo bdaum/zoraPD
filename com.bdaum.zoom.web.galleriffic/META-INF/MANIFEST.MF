@@ -2,9 +2,9 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %gallerific_plugin
 Bundle-SymbolicName: com.bdaum.zoom.web.galleriffic;singleton:=true
-Bundle-Version: 3.5.0
+Bundle-Version: 3.5.1
 Bundle-Activator: com.bdaum.zoom.web.galleriffic.Activator
 Bundle-Vendor: %bdaum
-Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.5.0"
+Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.5.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

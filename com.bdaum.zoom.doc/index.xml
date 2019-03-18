@@ -913,4 +913,23 @@
 	<entry keyword="Picture Transfer Protocol">
 		<topic href="html/reference/importFromDevice.html" />
 	</entry>
+	<entry keyword="rating">
+		<entry keyword="automated ~">
+			<topic href="html/reference/rating.html" />
+		</entry>
+		<entry keyword="~ images">
+			<topic href="html/tasks/rating.html" />
+		</entry>
+	</entry>
+	<entry keyword="Hover">
+		<entry keyword="~ Preferences">
+			<topic href="html/reference/hoverPrefs.html" />
+		</entry>
+		<entry keyword="~ Templates">
+			<topic href="html/reference/hoverPrefs.html" />
+		</entry>
+		<entry keyword="~ Timing">
+			<topic href="html/reference/hoverPrefs.html" />
+		</entry>
+	</entry>
 </index>

@@ -91,23 +91,20 @@ public class CollectionProcessor implements ICollectionProcessor {
 
 	public static class GenericScoreFormatter implements IScoreFormatter {
 
+		private NumberFormat nf = NumberFormat.getNumberInstance();
 		private final float factor;
 		private final String suffix;
 		private final String label;
-		private int fractionDigits;
 
 		public GenericScoreFormatter(int fractionDigits, float factor, String suffix, String label) {
-			this.fractionDigits = fractionDigits;
 			this.factor = factor;
 			this.suffix = suffix;
 			this.label = label;
+			nf.setMaximumFractionDigits(fractionDigits);
 		}
 
 		public String format(float score) {
-			NumberFormat nf = NumberFormat.getNumberInstance();
-			nf.setMaximumFractionDigits(fractionDigits);
-			return (Float.isNaN(score)) ? "" : //$NON-NLS-1$
-					nf.format(factor * score) + suffix;
+			return (Float.isNaN(score)) ? "" : nf.format(factor * score) + suffix; //$NON-NLS-1$
 		}
 
 		public String getLabel() {
@@ -507,7 +504,8 @@ public class CollectionProcessor implements ICollectionProcessor {
 					Set<String> idSet = null;
 					while (true) {
 						Constraint disjunction = null;
-						if (coll.getAlbum() && tempColl.getSubSelection().isEmpty() && coll.getAsset().size() > MAXALBUMASSETS)
+						if (coll.getAlbum() && tempColl.getSubSelection().isEmpty()
+								&& coll.getAsset().size() > MAXALBUMASSETS)
 							disjunction = query.descend("album").constrain(coll.getName()); //$NON-NLS-1$
 						else
 							for (Criterion crit : tempColl.getCriterion()) {
@@ -522,18 +520,23 @@ public class CollectionProcessor implements ICollectionProcessor {
 									return EMPTY;
 								Object value = crit.getValue();
 								Constraint constraint = null;
-								if (relation == QueryField.DATEEQUALS || relation == QueryField.DATENOTEQUAL) {
-									long t = ((Date) value).getTime() / 1000 * 1000;
-									value = new Range(new Date(t), new Date(t + 999));
-									relation = (relation == QueryField.DATEEQUALS) ? QueryField.BETWEEN
-											: QueryField.NOTBETWEEN;
-								} else if (relation == QueryField.SIMILAR) {
-									float tolerance = getTolerance(field);
-									if (tolerance != 0f) {
-										relation = QueryField.BETWEEN;
-										value = compileSimilarRange(value, tolerance);
-									} else
-										relation = QueryField.EQUALS;
+								if (value != null) {
+									if (relation == QueryField.DATEEQUALS || relation == QueryField.DATENOTEQUAL) {
+										long t = ((Date) value).getTime() / 1000 * 1000;
+										value = new Range(new Date(t), new Date(t + 999));
+										relation = relation == QueryField.DATEEQUALS ? QueryField.BETWEEN
+												: QueryField.NOTBETWEEN;
+									} else if (qsubfield != null && qsubfield.getType() != QueryField.T_STRING
+											&& (relation == QueryField.SIMILAR || relation == QueryField.NOTSIMILAR)) {
+										float tolerance = getTolerance(field);
+										if (tolerance != 0f) {
+											relation = relation == QueryField.NOTSIMILAR ? QueryField.NOTBETWEEN
+													: QueryField.BETWEEN;
+											value = compileSimilarRange(value, tolerance);
+										} else
+											relation = relation == QueryField.NOTSIMILAR ? QueryField.NOTEQUAL
+													: QueryField.EQUALS;
+									}
 								}
 								Class<? extends MediaExtension> mediaClazz = null;
 								String vField = null;
@@ -641,11 +644,30 @@ public class CollectionProcessor implements ICollectionProcessor {
 											if (assetIds != null)
 												idSet = new HashSet<String>(assetIds);
 										}
-									} else if (relation == QueryField.UNDEFINED && value instanceof Double) {
-										constraint = query.descend(field).constrain(Double.NEGATIVE_INFINITY).greater()
-												.equal().not();
-									} else if (relation == QueryField.UNDEFINED && value instanceof Date) {
-										constraint = query.descend(field).constrain(null);
+									} else if (relation == QueryField.UNDEFINED) {
+										switch (qsubfield.getType()) {
+										case QueryField.T_CURRENCY:
+										case QueryField.T_FLOAT:
+										case QueryField.T_FLOATB:
+										case QueryField.T_POSITIVEFLOAT:
+											constraint = query.descend(field).constrain(Double.NEGATIVE_INFINITY)
+													.greater().equal().not();
+											break;
+										case QueryField.T_POSITIVEINTEGER:
+										case QueryField.T_POSITIVELONG:
+											constraint = query.descend(field).constrain(0).smaller();
+											break;
+										case QueryField.T_STRING:
+											if (qsubfield.getCard() != 1) {
+												constraint = query.descend(field).constrain("\b").greater().equal() //$NON-NLS-1$
+														.not();
+												break;
+											}
+											//$FALL-THROUGH$
+										default:
+											constraint = query.descend(field).constrain(null);
+											break;
+										}
 									} else {
 										constraint = applyRelation(tempColl.getSystem() ? dbManager : null, field,
 												field, relation, value, query.descend(field).constrain(value), query);
@@ -882,6 +904,10 @@ public class CollectionProcessor implements ICollectionProcessor {
 			Constraint constraint, Query aQuery) {
 		try {
 			switch (rel) {
+			case QueryField.SIMILAR:
+				return constraint.like();
+			case QueryField.NOTSIMILAR:
+				return constraint.like().not();
 			case QueryField.NOTEQUAL:
 				return constraint.not();
 			case QueryField.GREATER:
@@ -1161,7 +1187,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 						Integer index2 = assetMap.get(o2.getStringId());
 						int i1 = (index1 == null) ? Integer.MAX_VALUE : index1.intValue();
 						int i2 = (index2 == null) ? Integer.MAX_VALUE : index2.intValue();
-						return i1 > i2 ? 1 : (i1 < i2) ? -1 : 0;
+						return i1 - i2;
 					}
 				});
 			} else if (qfield == QueryField.IPTC_CONTACT) {
@@ -1192,7 +1218,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 						Integer index2 = assetMap.get(o2.getStringId());
 						int i1 = (index1 == null) ? Integer.MAX_VALUE : index1.intValue();
 						int i2 = (index2 == null) ? Integer.MAX_VALUE : index2.intValue();
-						return i1 > i2 ? 1 : (i1 < i2) ? -1 : 0;
+						return i1 - i2;
 					}
 				});
 			}
@@ -1374,7 +1400,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 								break;
 							}
 					if (accepted && rel != QueryField.XREF)
-						accepted = dbManager.obtainAsset(asset.getStringId()) != null;
+						accepted = dbManager.exists(AssetImpl.class, asset.getStringId());
 					if (accepted)
 						result.add(asset);
 				}

@@ -30,7 +30,6 @@ import java.security.ProviderException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -51,14 +50,11 @@ import org.eclipse.osgi.util.NLS;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.core.Constants;
-import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.job.ProfiledSchedulingRule;
 import com.bdaum.zoom.lal.internal.LireActivator;
 import com.bdaum.zoom.operations.IProfiledOperation;
-import com.bdaum.zoom.program.BatchUtilities;
-import com.bdaum.zoom.program.DiskFullException;
 
 import net.semanticmetadata.lire.builders.DocumentBuilder;
 
@@ -84,8 +80,8 @@ public class IndexingJob extends Job {
 	private int totalWork = -1;
 	private int worked = 0;
 	private boolean reset;
-	private File indexBackup;
-	private Date lastBackup;
+//	private File indexBackup;
+//	private Date lastBackup;
 	private boolean noIndex = false;
 	private long startTime;
 	private Set<String> postponed;
@@ -143,25 +139,25 @@ public class IndexingJob extends Job {
 		}
 	}
 
-	/**
-	 * Constructor
-	 *
-	 * This constructor is used only for the special purpose of restoring a crashed
-	 * Lucene index from a previous backup
-	 *
-	 * @param indexBackup
-	 *            - location of old Lucene index folder (backup)
-	 * @param lastBackup
-	 *            - Date of last backup
-	 * @param postponed
-	 */
-	protected IndexingJob(File indexBackup, Date lastBackup, Set<String> postponed) {
-		super(Messages.IndexingJob_Indexing);
-		this.indexBackup = indexBackup;
-		this.lastBackup = lastBackup;
-		this.postponed = postponed;
-		init();
-	}
+//	/**
+//	 * Constructor
+//	 *
+//	 * This constructor is used only for the special purpose of restoring a crashed
+//	 * Lucene index from a previous backup
+//	 *
+//	 * @param indexBackup
+//	 *            - location of old Lucene index folder (backup)
+//	 * @param lastBackup
+//	 *            - Date of last backup
+//	 * @param postponed
+//	 */
+//	protected IndexingJob(File indexBackup, Date lastBackup, Set<String> postponed) {
+//		super(Messages.IndexingJob_Indexing);
+//		this.indexBackup = indexBackup;
+//		this.lastBackup = lastBackup;
+//		this.postponed = postponed;
+//		init();
+//	}
 
 	private void init() {
 		setPriority(Job.DECORATE);
@@ -193,19 +189,19 @@ public class IndexingJob extends Job {
 		File indexPath = dbManager.getIndexPath();
 		if (indexPath == null)
 			return status;
-		if (indexBackup != null && indexPath.exists()) {
-			BatchUtilities.deleteFileOrFolder(indexPath);
-			try {
-				BatchUtilities.copyFolder(indexBackup, indexPath, monitor);
-				extractAssedIds(dbManager.obtainObjects(AssetImpl.class, QueryField.LASTMOD.getKey(), lastBackup,
-						QueryField.GREATER));
-			} catch (IOException e) {
-				return new Status(IStatus.ERROR, LireActivator.PLUGIN_ID, Messages.IndexingJob_ioerror_restoring_folder,
-						e);
-			} catch (DiskFullException e) {
-				return new Status(IStatus.ERROR, LireActivator.PLUGIN_ID, Messages.IndexingJob_disk_full);
-			}
-		}
+//		if (indexBackup != null && indexPath.exists()) {
+//			BatchUtilities.deleteFileOrFolder(indexPath);
+//			try {
+//				BatchUtilities.copyFolder(indexBackup, indexPath, monitor);
+//				extractAssedIds(dbManager.obtainObjects(AssetImpl.class, QueryField.LASTMOD.getKey(), lastBackup,
+//						QueryField.GREATER));
+//			} catch (IOException e) {
+//				return new Status(IStatus.ERROR, LireActivator.PLUGIN_ID, Messages.IndexingJob_ioerror_restoring_folder,
+//						e);
+//			} catch (DiskFullException e) {
+//				return new Status(IStatus.ERROR, LireActivator.PLUGIN_ID, Messages.IndexingJob_disk_full);
+//			}
+//		}
 		boolean createDocs = !reimport || !indexPath.exists();
 		int size = 0;
 		IndexWriter iw = null;
@@ -344,7 +340,7 @@ public class IndexingJob extends Job {
 			monitor.worked(1);
 			if (bi == null) {
 				addWarningStatus(NLS.bind(Messages.IndexingJob_thumbnail_corrupt, asset.getName()));
-				return false;
+				return monitor.isCanceled();
 			}
 			Document doc;
 			try {

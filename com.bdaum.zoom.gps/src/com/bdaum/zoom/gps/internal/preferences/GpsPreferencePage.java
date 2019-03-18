@@ -24,7 +24,6 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -58,7 +57,7 @@ import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.css.internal.CssActivator;
-import com.bdaum.zoom.gps.CoordinatesListener;
+import com.bdaum.zoom.gps.MapAdapter;
 import com.bdaum.zoom.gps.geonames.IGeocodingService;
 import com.bdaum.zoom.gps.geonames.IGeocodingService.Parameter;
 import com.bdaum.zoom.gps.geonames.Place;
@@ -70,6 +69,7 @@ import com.bdaum.zoom.gps.internal.dialogs.SearchDetailDialog;
 import com.bdaum.zoom.gps.widgets.IMapComponent;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.dialogs.ComputeTimeshiftDialog;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
@@ -130,25 +130,19 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 			mapComponent = GpsActivator.getMapComponent(GpsActivator.findCurrentMappingSystem());
 			Place mapPosition = null;
 			try {
-				if (area != null) {
-					latitude = area.getLatitude();
-					longitude = area.getLongitude();
-				} else {
-					latitude = dialogSettings.getDouble(LATITUDE);
-					longitude = dialogSettings.getDouble(LONGITUDE);
-				}
-				mapPosition = new Place(latitude, longitude);
+				mapPosition = area != null ? new Place(latitude = area.getLatitude(), longitude = area.getLongitude())
+						: new Place(latitude = dialogSettings.getDouble(LATITUDE),
+								longitude = dialogSettings.getDouble(LONGITUDE));
 			} catch (NumberFormatException e) {
 				// do nothing
 			}
 			if (mapComponent != null) {
 				mapComponent.createComponent(composite, true);
-				mapComponent.addCoordinatesListener(new CoordinatesListener() {
+				mapComponent.addMapListener(new MapAdapter() {
 					public void setCoordinates(String[] assetId, double latitude, double longitude, int zoom, int type,
 							String uuid) {
-						EditNogoDialog.this.latitude = latitude;
-						EditNogoDialog.this.longitude = longitude;
-						mapComponent.setArea(latitude, longitude, Core.toKm(diameter, unit));
+						mapComponent.setArea(EditNogoDialog.this.latitude = latitude,
+								EditNogoDialog.this.longitude = longitude, Core.toKm(diameter, unit));
 						validateGeo();
 					}
 				});
@@ -246,7 +240,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 	private CheckboxButton tagButton;
 	private CheckboxButton waypointButton;
 	private CheckboxButton altitudeButton;
-	private Spinner timeShiftField;
+	private Spinner timeShiftMinuteField;
 	private Spinner toleranceHourField;
 	private Spinner toleranceMinuteField;
 	private Combo combo;
@@ -341,7 +335,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 					setNamingServiceCombo(dialog.getResult());
 			}
 		});
-		
+
 		new Label(group, SWT.NONE).setText(Messages.getString("GpsPreferencePage.maxRequests")); //$NON-NLS-1$
 		reqhField = new Spinner(group, SWT.BORDER);
 		reqhField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
@@ -426,10 +420,10 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 			}
 			if (msg != null && !msg.isEmpty()) {
 				label.setText(msg);
-				label.setData(CSSProperties.ID, CSSProperties.ERRORS); 
+				label.setData(CSSProperties.ID, CSSProperties.ERRORS);
 			} else {
 				label.setText(NLS.bind(Messages.getString("GpsPreferencePage.website"), name)); //$NON-NLS-1$
-				label.setData(CSSProperties.ID, null); 
+				label.setData(CSSProperties.ID, null);
 			}
 			CssActivator.getDefault().setColors(label);
 		}
@@ -445,7 +439,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 		editButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.EDIT));
 		tagButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.OVERWRITE));
 		waypointButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.USEWAYPOINTS));
-		timeShiftField.setSelection(preferenceStore.getInt(PreferenceConstants.TIMESHIFT));
+		timeShiftMinuteField.setSelection(preferenceStore.getInt(PreferenceConstants.TIMESHIFT));
 		toleranceHourField.setSelection(preferenceStore.getInt(PreferenceConstants.TOLERANCE) / 60);
 		toleranceMinuteField.setSelection(preferenceStore.getInt(PreferenceConstants.TOLERANCE) % 60);
 		GpsUtilities.getGeoAreas(preferenceStore, nogoAreas);
@@ -512,11 +506,12 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 		preferenceStore.setValue(PreferenceConstants.EDIT, editButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.OVERWRITE, tagButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.USEWAYPOINTS, waypointButton.getSelection());
-		preferenceStore.setValue(PreferenceConstants.TIMESHIFT, timeShiftField.getSelection());
+		preferenceStore.setValue(PreferenceConstants.TIMESHIFT, timeShiftMinuteField.getSelection());
 		preferenceStore.setValue(PreferenceConstants.TOLERANCE,
 				toleranceHourField.getSelection() * 60 + toleranceMinuteField.getSelection());
 		NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
 		nf.setMaximumFractionDigits(8);
+		nf.setGroupingUsed(false);
 		StringBuilder sb = new StringBuilder();
 		for (GeoArea geoArea : nogoAreas)
 			sb.append(geoArea.getName()).append(',').append(nf.format(geoArea.getLatitude())).append(',')
@@ -531,17 +526,36 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createTimingGroup(Composite composite) {
-		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("GpsPreferencePage.timing")); //$NON-NLS-1$
+		CGroup group = UiUtilities.createGroup(composite, 4, Messages.getString("GpsPreferencePage.timing")); //$NON-NLS-1$
 		new Label(group, SWT.NONE).setText(Messages.getString("GpsPreferencePage.Timeshift")); //$NON-NLS-1$
-		timeShiftField = new Spinner(group, SWT.BORDER);
-		timeShiftField.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
-		timeShiftField.setMaximum(12 * 60);
-		timeShiftField.setMinimum(-12 * 60);
-		timeShiftField.setIncrement(1);
-		timeShiftField.setPageIncrement(60);
+		timeShiftMinuteField = new Spinner(group, SWT.BORDER);
+		timeShiftMinuteField.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
+		timeShiftMinuteField.setMaximum(3660 * 24 * 60);
+		timeShiftMinuteField.setMinimum(-3660 * 24 * 60);
+		timeShiftMinuteField.setIncrement(1);
+		timeShiftMinuteField.setPageIncrement(60);
+		Button computeButton = new Button(group, SWT.PUSH);
+		computeButton.setText(Messages.getString("GpsPreferencePage.compute")); //$NON-NLS-1$
+		computeButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				ComputeTimeshiftDialog dialog = new ComputeTimeshiftDialog(getShell(),
+						timeShiftMinuteField.getSelection(), Messages.getString("GpsPreferencePage.enter_current_time"), //$NON-NLS-1$
+						Messages.getString("GpsPreferencePage.tracker_time"), //$NON-NLS-1$
+						Messages.getString("GpsPreferencePage.camera_time")); //$NON-NLS-1$
+				dialog.create();
+				dialog.getShell().setLocation(timeShiftMinuteField.toDisplay(40, 20));
+				if (dialog.open() == ComputeTimeshiftDialog.OK)
+					timeShiftMinuteField.setSelection(dialog.getResult());
+			}
+		});
+		Label label = new Label(group, SWT.CENTER);
+		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
+		label.setText(Messages.getString("GpsPreferencePage.not_needed")); //$NON-NLS-1$
+		
 		new Label(group, SWT.NONE).setText(Messages.getString("GpsPreferencePage.Tolerance")); //$NON-NLS-1$
 		Composite sub = new Composite(group, SWT.NONE);
-		sub.setLayoutData(new GridData(SWT.END, SWT.FILL, false, false));
+		sub.setLayoutData(new GridData(SWT.BEGINNING, SWT.FILL, false, false, 2, 1));
 		GridLayout layout = new GridLayout(2, false);
 		layout.marginHeight = layout.marginWidth = 0;
 		sub.setLayout(layout);

@@ -22,25 +22,14 @@
             id="com.bdaum.zoom.video"
             name="%imageViewer.name.video">
       </imageViewer>
-   </extension>
-   <extension
-         point="org.eclipse.ui.views">
-               <view
-            category="com.bdaum.zoom.meta"
-            class="com.bdaum.zoom.video.internal.views.VideoView"
-            icon="icons/video.png"
-            id="com.bdaum.zoom.ui.views.VideoView"
-            name="%view.name.video"
-            restorable="true">
-      </view>
-   </extension>
+   </extension>nsion>
    <extension
          point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension
             targetID="com.bdaum.zoom.rcp.LightboxPerspective">
          <view
                closeable="true"
-               id="com.bdaum.zoom.ui.views.VideoView"
+               id="com.bdaum.zoom.video.view"
                minimized="false"
                moveable="true"
                ratio="1.0"
@@ -62,14 +51,6 @@
             file="tocconcepts.xml"
             primary="false">
       </toc>
-      <toc
-            file="tocviewer.xml"
-            primary="false">
-      </toc>
-      <toc
-            file="tocprefs.xml"
-            primary="false">
-      </toc>
    </extension>
    <extension
          point="org.eclipse.help.index">
@@ -77,13 +58,6 @@
             file="index.xml">
       </index>
    </extension>
-   <!--<extension
-         point="com.bdaum.zoom.core.configuratorExtension">
-      <configurator
-            class="com.bdaum.zoom.video.internal.DbConfigurator"
-            id="com.bdaum.zoom.video.dbconfigurator">
-      </configurator>
-   </extension>-->
    <extension
          point="org.eclipse.ui.exportWizards">
       <category
@@ -94,19 +68,26 @@
    <extension
          point="org.eclipse.help.contexts">
       <contexts
-            file="contexts.xml"
-            plugin="com.bdaum.zoom.doc">
-      </contexts>
-      <contexts
             file="introContexts.xml">
       </contexts>
    </extension>
    <extension
-         point="com.bdaum.zoom.ui.preferencePageExtension">
-      <preferencePageExtension
-            class="com.bdaum.zoom.video.internal.preferences.PagePart"
-            pageId="com.bdaum.zoom.ui.preferences.ImportPreferencePage">
-      </preferencePageExtension>
+         point="org.eclipse.ui.views">
+      <view
+            category="com.bdaum.zoom.meta"
+            class="com.bdaum.zoom.video.internal.views.VideoView"
+            icon="icons/video.png"
+            id="com.bdaum.zoom.video.view"
+            name="Video"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.ui.hoverContribution">
+      <hoverContribution
+            class="com.bdaum.zoom.video.internal.VideoHoverContribution"
+            id="com.bdaum.zoom.ui.hover.galleryItem.video">
+      </hoverContribution>
    </extension>
 
 </plugin>

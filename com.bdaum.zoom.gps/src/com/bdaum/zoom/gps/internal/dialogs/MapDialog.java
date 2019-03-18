@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.location.Location;
 import com.bdaum.zoom.cat.model.location.LocationImpl;
-import com.bdaum.zoom.gps.CoordinatesListener;
+import com.bdaum.zoom.gps.MapAdapter;
 import com.bdaum.zoom.gps.geonames.Place;
 import com.bdaum.zoom.gps.internal.GpsActivator;
 import com.bdaum.zoom.gps.internal.HelpContextIds;
@@ -69,8 +69,7 @@ public class MapDialog extends ZResizableDialog {
 		mapComponent = GpsActivator.getMapComponent(GpsActivator.findCurrentMappingSystem());
 		if (mapComponent != null) {
 			mapComponent.createComponent(area, true);
-			mapComponent.addCoordinatesListener(new CoordinatesListener() {
-
+			mapComponent.addMapListener(new MapAdapter() {
 				public void setCoordinates(String[] assetId, double latitude, double longitude, int zoom, int type,
 						String uuid) {
 					if (result == null)

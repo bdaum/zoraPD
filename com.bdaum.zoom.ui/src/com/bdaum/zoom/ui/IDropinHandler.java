@@ -34,7 +34,7 @@ public interface IDropinHandler {
 	 * Handles a Cut&Paste or Drop-in action
 	 * @param dropins - dropped files
 	 * @param assetIds - selected assets
-	 * @param info - adaptable answering at least to Shell.class
+	 * @param info - adaptable answering at least to Shell.class and AssetSelection.class
 	 */
-	void handleDropin(File[] dropins, String[] assetIds, IAdaptable info);
+	void handleDropin(File[] dropins, IAdaptable info);
 }

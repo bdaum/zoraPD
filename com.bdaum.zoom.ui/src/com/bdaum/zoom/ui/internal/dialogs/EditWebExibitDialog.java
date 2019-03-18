@@ -53,8 +53,7 @@ public class EditWebExibitDialog extends ZTitleAreaDialog {
 	private Text imageField;
 	private DescriptionGroup descriptionGroup;
 
-	public EditWebExibitDialog(Shell parentShell, WebExhibitImpl current,
-			String title, WebGallery gallery) {
+	public EditWebExibitDialog(Shell parentShell, WebExhibitImpl current, String title, WebGallery gallery) {
 		super(parentShell, HelpContextIds.EDITWEBEXHIBIT_DIALOG);
 		this.current = current;
 		this.title = title;
@@ -77,25 +76,20 @@ public class EditWebExibitDialog extends ZTitleAreaDialog {
 		comp.setLayout(new GridLayout(2, false));
 		new Label(comp, SWT.NONE).setText(Messages.EditWebExibitDialog_caption);
 		captionField = new Text(comp, SWT.BORDER);
-		captionField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false));
+		captionField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		new Label(comp, SWT.NONE).setText(Messages.EditWebExibitDialog_image);
 		imageField = new Text(comp, SWT.BORDER | SWT.READ_ONLY);
-		imageField
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		imageField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		descriptionGroup = new DescriptionGroup(comp, SWT.NONE);
 		new Label(comp, SWT.NONE).setText(Messages.EditWebExibitDialog_html_alt_text);
 		altField = new Text(comp, SWT.BORDER);
 		altField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		downloadableButton = WidgetFactory.createCheckButton(comp,
-				Messages.EditWebExibitDialog_downloadable, new GridData(
-						SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
-		downloadableButton.setEnabled(gallery.getDownloadText() != null
-				&& !gallery.getDownloadText().isEmpty()
+		downloadableButton = WidgetFactory.createCheckButton(comp, Messages.EditWebExibitDialog_downloadable,
+				new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
+		downloadableButton.setEnabled(gallery.getDownloadText() != null && !gallery.getDownloadText().isEmpty()
 				&& !gallery.getHideDownload());
-		includeMetadataButton = WidgetFactory.createCheckButton(comp,
-				Messages.EditWebExibitDialog_include_metadata, new GridData(
-						SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
+		includeMetadataButton = WidgetFactory.createCheckButton(comp, Messages.EditWebExibitDialog_include_metadata,
+				new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
 		fillValues();
 		return area;
 	}
@@ -111,12 +105,8 @@ public class EditWebExibitDialog extends ZTitleAreaDialog {
 		if (assetID == null)
 			imageName = " - "; //$NON-NLS-1$
 		else {
-			AssetImpl asset = Core.getCore().getDbManager()
-					.obtainAsset(assetID);
-			if (asset != null)
-				imageName = asset.getName();
-			else
-				imageName = Messages.EditWebExibitDialog_deleted;
+			AssetImpl asset = Core.getCore().getDbManager().obtainAsset(assetID);
+			imageName = asset != null ? asset.getName() : Messages.EditWebExibitDialog_deleted;
 		}
 		imageField.setText(imageName);
 		captionField.selectAll();

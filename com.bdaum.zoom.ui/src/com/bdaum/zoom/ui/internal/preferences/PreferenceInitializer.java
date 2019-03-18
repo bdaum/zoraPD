@@ -32,6 +32,7 @@ import org.eclipse.swt.graphics.RGB;
 
 import com.bdaum.zoom.batch.internal.BatchActivator;
 import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.program.IRawConverter;
@@ -63,6 +64,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.putInt(PreferenceConstants.LABELFONTSIZE,
 				JFaceResources.getDefaultFont().getFontData()[0].getHeight());
 		defaultNode.putInt(PreferenceConstants.SHOWLABEL, Constants.TITLE_LABEL);
+		defaultNode.putInt(PreferenceConstants.HOVERDELAY, 200);
+		defaultNode.putInt(PreferenceConstants.HOVERBASETIME, 1000);
+		defaultNode.putInt(PreferenceConstants.HOVERCHARTIME, 25);
 		defaultNode.put(PreferenceConstants.WATCHFILTER, DEFAULTWATCHFILTER);
 		defaultNode.put(PreferenceConstants.KEYWORDFILTER, DEFAULTKEYWORDFILTER);
 		defaultNode.put(PreferenceConstants.RAWIMPORT,
@@ -101,18 +105,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.put(PreferenceConstants.HOVERMETADATA, sbh.toString());
 		defaultNode.put(PreferenceConstants.METADATATOLERANCES, sbt.toString());
 		defaultNode.put(PreferenceConstants.EXPORTMETADATA, sbe.toString());
-		sb.setLength(0);
-		sb.append(QueryField.NAME.getKey()).append('\n').append(QueryField.EXIF_ORIGINALFILENAME.getKey()).append('\n')
-				.append(QueryField.URI.getKey()).append('\n').append(QueryField.VOLUME.getKey()).append('\n')
-				.append(QueryField.LASTMOD.getKey()).append('\n').append(QueryField.EXIF_DATETIMEORIGINAL.getKey())
-				.append('\n').append(QueryField.IPTC_DATECREATED.getKey()).append('\n')
-				.append(QueryField.IMPORTDATE.getKey()).append('\n').append(QueryField.ALBUM.getKey()).append('\n')
-				.append(QueryField.IPTC_KEYWORDS.getKey()).append('\n').append(QueryField.IPTC_CATEGORY.getKey())
-				.append('\n').append(QueryField.EXIF_GPSLATITUDE.getKey()).append('\n')
-				.append(QueryField.EXIF_GPSLONGITUDE.getKey()).append('\n').append(QueryField.FORMAT.getKey())
-				.append('\n').append(QueryField.MIMETYPE.getKey()).append('\n').append(QueryField.RATING.getKey())
-				.append('\n');
-		defaultNode.put(PreferenceConstants.METADATATUNING, sb.toString());
+		defaultNode.put(PreferenceConstants.METADATATUNING,Core.getCore().getDbFactory().getDefaultTuning());
 		sb.setLength(0);
 		sb.append(QueryField.NAME.getKey()).append('\n').append(QueryField.FORMAT.getKey()).append('\n')
 				.append(QueryField.EXIF_DATETIMEORIGINAL.getKey()).append('\n').append(QueryField.IPTC_TITLE.getKey())

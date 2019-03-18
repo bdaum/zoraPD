@@ -37,6 +37,7 @@ import org.eclipse.nebula.widgets.gallery.AbstractGridGroupRenderer;
 import org.eclipse.nebula.widgets.gallery.DefaultGalleryGroupRenderer;
 import org.eclipse.nebula.widgets.gallery.Gallery;
 import org.eclipse.nebula.widgets.gallery.GalleryItem;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
@@ -459,8 +460,11 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 				return Messages.getString("AbstractLightboxView.raw_recipe_applies"); //$NON-NLS-1$
 			if (isExpandCollapse(x, y))
 				return Messages.getString("AbstractLightboxView.toggle_state"); //$NON-NLS-1$
-			if (isRating(x, y))
-				return Messages.getString("AbstractLightboxView.rating"); //$NON-NLS-1$
+			if (isRating(x, y)) {
+				int r = asset.getRating();
+				return r >= 0 ? NLS.bind(Messages.getString("AbstractLightboxView.rating_n"), r) //$NON-NLS-1$
+						: Messages.getString("AbstractLightboxView.rating"); //$NON-NLS-1$
+			}
 			if (isRotate270(x, y))
 				return Messages.getString("AbstractLightboxView.rotate_left"); //$NON-NLS-1$
 			if (isRotate90(x, y))

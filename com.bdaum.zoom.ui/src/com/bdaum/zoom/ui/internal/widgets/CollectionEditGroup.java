@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2011-2017 Berthold Daum  
+ * (c) 2011-2019 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -31,6 +31,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.ListenerList;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.resource.JFaceResources;
@@ -46,7 +47,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 
-import com.bdaum.zoom.cat.model.asset.AssetImpl;
+import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.group.Criterion;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
@@ -56,6 +57,7 @@ import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
+import com.bdaum.zoom.fileMonitor.internal.filefilter.FilterChain;
 import com.bdaum.zoom.ui.internal.dialogs.Messages;
 
 public class CollectionEditGroup {
@@ -63,10 +65,12 @@ public class CollectionEditGroup {
 	public class PrepareJob extends Job implements DisposeListener {
 
 		private Control control;
+		private SmartCollection coll;
 
-		public PrepareJob(Control control) {
+		public PrepareJob(Control control, SmartCollection coll) {
 			super(Messages.CollectionEditDialog_prepare_field_values);
 			this.control = control;
+			this.coll = coll;
 			setSystem(true);
 			setPriority(Job.INTERACTIVE);
 		}
@@ -79,19 +83,15 @@ public class CollectionEditGroup {
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
 			asyncExec(() -> {
-				if (!control.isDisposed()) {
+				if (!control.isDisposed())
 					control.addDisposeListener(PrepareJob.this);
-					// control.setCursor(control.getDisplay().getSystemCursor(SWT.CURSOR_APPSTARTING));
-				}
 			});
 			try {
 				doRun(monitor);
 			} finally {
 				asyncExec(() -> {
-					if (!control.isDisposed()) {
+					if (!control.isDisposed())
 						control.removeDisposeListener(PrepareJob.this);
-						// control.setCursor(control.getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
-					}
 				});
 			}
 			return Status.OK_STATUS;
@@ -108,10 +108,20 @@ public class CollectionEditGroup {
 
 		protected void doRun(IProgressMonitor monitor) {
 			int i = 0;
-			for (AssetImpl asset : Core.getCore().getDbManager().obtainAssets()) {
+			preparedValues.clear();
+			FilterChain keywordFilter = QueryField.getKeywordFilter();
+			IDbManager dbManager = Core.getCore().getDbManager();
+			List<? extends Asset> assets = coll != null ? dbManager.createCollectionProcessor(coll).select(false)
+					: dbManager.obtainAssets();
+			for (Asset asset : assets) {
 				for (QueryField qfield : EXPLORABLES) {
 					Object v = qfield.obtainFieldValue(asset);
-					if (v instanceof String[]) {
+					if (qfield == QueryField.IPTC_KEYWORDS) {
+						if (v instanceof String[])
+							for (String s : (String[]) v)
+								if (s != null && !s.isEmpty() && keywordFilter.accept(s))
+									saveProposal(preparedValues, qfield, s);
+					} else if (v instanceof String[]) {
 						for (String s : (String[]) v)
 							if (s != null && !s.isEmpty())
 								saveProposal(preparedValues, qfield, s);
@@ -147,10 +157,11 @@ public class CollectionEditGroup {
 	}
 
 	protected static final QueryField[] EXPLORABLES = new QueryField[] { QueryField.EMULSION, QueryField.USERFIELD1,
-			QueryField.USERFIELD2, QueryField.IMPORTEDBY, QueryField.EXIF_COPYRIGHT, QueryField.EXIF_LENS,
-			QueryField.EXIF_MAKE, QueryField.EXIF_MODEL, QueryField.EXIF_SOFTWARE, QueryField.IPTC_BYLINE,
-			QueryField.IPTC_EVENT, QueryField.IPTC_NAMEOFORG, QueryField.IPTC_OWNER, QueryField.IPTC_USAGE,
-			QueryField.IPTC_WRITEREDITOR };
+			QueryField.USERFIELD2, QueryField.FORMAT, QueryField.IMPORTEDBY, QueryField.EXIF_COPYRIGHT,
+			QueryField.EXIF_LENS, QueryField.EXIF_MAKE, QueryField.EXIF_MODEL, QueryField.EXIF_SOFTWARE,
+			QueryField.IPTC_BYLINE, QueryField.IPTC_EVENT, QueryField.IPTC_NAMEOFORG, QueryField.IPTC_OWNER,
+			QueryField.IPTC_USAGE, QueryField.IPTC_WRITEREDITOR, QueryField.IPTC_CATEGORY,
+			QueryField.IPTC_SUPPLEMENTALCATEGORIES, QueryField.IPTC_KEYWORDS };
 
 	private Composite sortComp;
 
@@ -204,13 +215,13 @@ public class CollectionEditGroup {
 		} else {
 			Composite rowComp = new Composite(parent, SWT.NONE);
 			rowComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-			rowComp.setLayout(new GridLayout(10, false));
+			rowComp.setLayout(new GridLayout(8, false));
 			new Label(rowComp, SWT.NONE);
 			createLabel(rowComp, Messages.CollectionEditDialog_group);
 			createLabel(rowComp, Messages.CollectionEditDialog_field);
 			createLabel(rowComp, Messages.CollectionEditDialog_relation);
 			createLabel(rowComp, Messages.CollectionEditDialog_value)
-					.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 6, 1));
+					.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1));
 			if (current == null || current.getCriterion().isEmpty())
 				addGroup(rowComp, null, null, false);
 			else
@@ -292,7 +303,7 @@ public class CollectionEditGroup {
 	public void addListener(Listener listener) {
 		modifyListeners.add(listener);
 	}
-	
+
 	public void removeListener(Listener listener) {
 		modifyListeners.remove(listener);
 	}
@@ -408,9 +419,16 @@ public class CollectionEditGroup {
 			});
 	}
 
-	public void prepare() {
-		if (!readOnly && !isSystem && !album)
-			new PrepareJob(comp).schedule();
+	public void prepare(SmartCollection coll) {
+		if (!readOnly && !isSystem && !album) {
+			Job.getJobManager().cancel(this);
+			try {
+				Job.getJobManager().join(this, null);
+			} catch (OperationCanceledException | InterruptedException e) {
+				// should not happen
+			}
+			new PrepareJob(comp, coll).schedule();
+		}
 	}
 
 }

@@ -386,8 +386,7 @@ public class BatchUtilities {
 	public static void ejectMedia(String file) throws IOException {
 		String[] parms = null;
 		if (BatchConstants.WIN32) {
-			String ejectMedia = BatchActivator.getDefault()
-					.locate(BatchConstants.ARCH64 ? "/EjectMedia64.exe" : "/EjectMedia.exe"); //$NON-NLS-1$ //$NON-NLS-2$
+			String ejectMedia = BatchActivator.getDefault().locate("/EjectMedia.exe"); //$NON-NLS-1$
 			if (ejectMedia != null)
 				parms = new String[] { ejectMedia, new Path(file).getDevice(), "-w:300" }; //$NON-NLS-1$
 		} else if (BatchConstants.OSX) {

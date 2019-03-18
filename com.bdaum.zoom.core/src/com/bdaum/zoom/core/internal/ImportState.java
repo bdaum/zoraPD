@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,13 +75,12 @@ public class ImportState {
 	private static final int FOCAL_PLANE_RESOLUTION_UNIT_VALUE_CM = 3;
 	private static final int FOCAL_PLANE_RESOLUTION_UNIT_VALUE_MM = 4;
 	private static final int FOCAL_PLANE_RESOLUTION_UNIT_VALUE_UM = 5;
+
 	private final GregorianCalendar cal = new GregorianCalendar();
 
 	public StorageObject skipFile;
 	public boolean reimport;
 	public AbstractImportOperation operation;
-	public ImportFromDeviceData importFromDeviceData;
-	public AnalogProperties analogProperties;
 	public int fileSource;
 	public Meta meta = Core.getCore().getDbManager().getMeta(true);
 	public IAdaptable info;
@@ -96,6 +96,7 @@ public class ImportState {
 	public Date importDate = new Date();
 	public Set<Asset> added = new HashSet<>();
 	public Set<Asset> modified = new HashSet<>();
+	public int thumbnailRaster;
 
 	private ImportConfiguration configuration;
 	private String volumeLabel;
@@ -105,6 +106,8 @@ public class ImportState {
 	private boolean changed;
 	private Set<String> errorSet = new HashSet<>();
 	private int i = 0;
+	private ImportFromDeviceData importFromDeviceData;
+	private AnalogProperties analogProperties;
 
 	public ImportState(ImportConfiguration configuration, ImportFromDeviceData importFromDeviceData,
 			AnalogProperties analogProperties, AbstractImportOperation operation, int fileSource) {
@@ -113,6 +116,7 @@ public class ImportState {
 		this.analogProperties = analogProperties;
 		this.operation = operation;
 		this.fileSource = fileSource;
+		this.thumbnailRaster = configuration.useWebP ? 0 : MCUWidth;
 		if (analogProperties != null) {
 			if (analogProperties.type == Constants.ANALOGTYPE_NEGATIVE
 					|| analogProperties.type == Constants.ANALOGTYPE_TRANSPARENCY)
@@ -124,14 +128,14 @@ public class ImportState {
 
 	public int getExecuteProfile() {
 		int profile = IProfiledOperation.CONTENT | IProfiledOperation.SYNCHRONIZE;
-		if (getConfiguration().rawOptions.equals(Constants.RAWIMPORT_BOTH) || importFromDeviceData != null)
+		if (getConfiguration().rawOptions.equals(Constants.RAWIMPORT_BOTH) || transferNeeded())
 			profile |= IProfiledOperation.FILE;
 		return profile;
 	}
 
 	public int getUndoProfile() {
 		int profile = IProfiledOperation.CONTENT | IProfiledOperation.INDEX;
-		if (getConfiguration().rawOptions.equals(Constants.RAWIMPORT_BOTH) || importFromDeviceData != null)
+		if (getConfiguration().rawOptions.equals(Constants.RAWIMPORT_BOTH) || transferNeeded())
 			profile |= IProfiledOperation.FILE;
 		return profile;
 	}
@@ -151,9 +155,10 @@ public class ImportState {
 		Map<String, String> metaData = tool.getMetadata();
 		if (metaData.isEmpty())
 			return false;
-		Set<String> makerNotes = getConfiguration().makerNotes ? tool.getMakerNotes() : null;
-
 		Asset asset = ensemble.getAsset();
+		String lensInfo = metaData.get("LensInfo"); //$NON-NLS-1$
+		asset.setNoLensInfo(lensInfo != null && lensInfo.indexOf("undef") >= 0); //$NON-NLS-1$
+		Set<String> makerNotes = getConfiguration().makerNotes ? tool.getMakerNotes() : null;
 		for (Map.Entry<String, String> entry : metaData.entrySet()) {
 			String exifKey = entry.getKey();
 			if (!overlayMap.containsKey(exifKey)) {
@@ -335,6 +340,53 @@ public class ImportState {
 		return volumeLabel;
 	}
 
+	public boolean transferNeeded() {
+		return importFromDeviceData != null && importFromDeviceData.getTargetDir() != null;
+	}
+
+	public boolean isMedia() {
+		return importFromDeviceData != null && importFromDeviceData.isMedia();
+	}
+
+	public String getDcimOwner() {
+		return importFromDeviceData == null ? null : importFromDeviceData.getDcimOwner();
+	}
+
+	public int getTimeshift() {
+		return importFromDeviceData == null ? 0 : importFromDeviceData.getTimeshift();
+	}
+
+	public int getSkipPolicy() {
+		return importFromDeviceData == null ? Constants.SKIP_NONE : importFromDeviceData.getSkipPolicy();
+	}
+
+	public String getExifTransferPrefix() {
+		if (importFromDeviceData == null)
+			return null;
+		String prefix = importFromDeviceData.getExifTransferPrefix();
+		return prefix == null || prefix.isEmpty() ? null : prefix;
+	}
+
+	public boolean fromTransferFolder() {
+		return importFromDeviceData != null && importFromDeviceData.getTargetDir() != null
+				&& importFromDeviceData.getWatchedFolder() != null; // from transfer folder
+	}
+
+	public void deleteTransferredFile(Asset asset) {
+		if (transferNeeded())
+			try {
+				URI uri = new URI(asset.getUri());
+				if (uri.getPath().startsWith(importFromDeviceData.getTargetDir()))
+					new File(uri).delete();
+			} catch (URISyntaxException e) {
+				// ignore
+			}
+	}
+
+	public boolean removeMedia() {
+		return importFromDeviceData != null && importFromDeviceData.isRemoveMedia();
+	}
+
 	public void importFinished() {
 		if (!added.isEmpty() || !modified.isEmpty())
 			Core.getCore().fireAssetsModified(new BagChange<>(added, modified, null, null), null);
@@ -486,7 +538,7 @@ public class ImportState {
 				importDate, QueryField.EQUALS));
 	}
 
-	public File[] transferFile(StorageObject file, int importNo, IProgressMonitor monitor) throws DiskFullException {
+	public File[] transferFile(StorageObject file, IProgressMonitor monitor) throws DiskFullException {
 		long lastModified = file.lastModified();
 		cal.setTimeInMillis(lastModified);
 		String filename = file.getName();
@@ -530,13 +582,13 @@ public class ImportState {
 				importFromDeviceData.getWatchedFolder() != null ? Constants.TV_TRANSFER : Constants.TV_ALL, filename,
 				cal, importNo, meta.getLastSequenceNo() + 1, meta.getLastYearSequenceNo() + 1,
 				importFromDeviceData.getCue(), null, "", //$NON-NLS-1$
-				BatchConstants.MAXPATHLENGTH - subFolder.getAbsolutePath().length() - 1 - ext.length(), true);
+				BatchConstants.MAXPATHLENGTH - subFolder.getAbsolutePath().length() - 1 - ext.length(), true, false);
 		File target = BatchUtilities.makeUniqueFile(subFolder, newFilename, ext);
 		File voiceTarget = null;
 		try {
 			CoreActivator.getDefault().getFileWatchManager().copyFileSilently(file, target, lastModified,
 					operation.getOpId(), monitor);
-			if (importFromDeviceData.isMedia()) {
+			if (!file.isRemote()) {
 				StorageObject voiceAttachment = file.getVoiceAttachment();
 				if (voiceAttachment != null) {
 					String targetPath = target.getAbsolutePath();
@@ -547,10 +599,10 @@ public class ImportState {
 						CoreActivator.getDefault().getFileWatchManager().copyFileSilently(voiceAttachment, voiceTarget,
 								lastModified, operation.getOpId(), monitor);
 				}
-			} else if (file.isLocal())
-				for (IRelationDetector detector : configuration.relationDetectors)
-					detector.transferFile(file.resolve(), target, importNo == 1, info, operation.getOpId());
-
+				if (file.isLocal())
+					for (IRelationDetector detector : configuration.relationDetectors)
+						detector.transferFile(file.resolve(), target, importNo == 1, info, operation.getOpId());
+			}
 		} catch (IOException e) {
 			operation.addError(NLS.bind(Messages.ImportState_IO_error_importing, file), e);
 		}
@@ -577,8 +629,9 @@ public class ImportState {
 			if (exifOriginalFile == null)
 				exifOriginalFile = originalFileName;
 			if (Core.getCore().getDbManager()
-					.obtainObjects(AssetImpl.class, false, QueryField.LASTMOD.getKey(), lastModified, QueryField.EQUALS,
-							QueryField.EXIF_ORIGINALFILENAME.getKey(), exifOriginalFile, QueryField.EQUALS)
+					.obtainObjects(AssetImpl.class, false, QueryField.EXIF_DATETIME.getKey(), lastModified,
+							QueryField.EQUALS, QueryField.EXIF_ORIGINALFILENAME.getKey(), exifOriginalFile,
+							QueryField.EQUALS)
 					.iterator().hasNext()) {
 				operation.addWarning(NLS.bind(Messages.ImportState_already_in_cat, originalFileName), null);
 				return true;
@@ -692,6 +745,20 @@ public class ImportState {
 	public void addErrorOnce(String message, Throwable t) {
 		if (errorSet.add(message))
 			operation.addError(message, t);
+	}
+
+	public AnalogProperties getAnalogProperties() {
+		return analogProperties;
+	}
+
+	public boolean showImported() {
+		ImportConfiguration conf = getConfiguration();
+		return conf.showImported && (!conf.inBackground && !conf.isSynchronize || fromTransferFolder());
+	}
+
+	public boolean isUserImport() {
+		ImportConfiguration conf = getConfiguration();
+		return !conf.inBackground && conf.isSynchronize;
 	}
 
 }

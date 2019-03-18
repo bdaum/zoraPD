@@ -349,7 +349,7 @@ public class RenameGroup extends Composite {
 		return Utilities.evaluateTemplate(template.getContent(), tv, filename, new GregorianCalendar(), 1,
 				startField.isVisible() ? start : meta.getLastSequenceNo() + 1, meta.getLastYearSequenceNo() + 1,
 				!cue.isEmpty() ? cue : Messages.RenameGroup_cue2, asset, "", //$NON-NLS-1$
-				maxLength, QueryField.URI == field);
+				maxLength, QueryField.URI == field, false);
 	}
 
 	public void fillValues(IDialogSettings dialogSettings, String selTemplate, String cue) {

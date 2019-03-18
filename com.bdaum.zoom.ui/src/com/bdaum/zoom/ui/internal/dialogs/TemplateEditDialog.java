@@ -248,7 +248,7 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 		exampleField.setText(Utilities.evaluateTemplate(templateField.getText(), variables, filename,
 				new GregorianCalendar(), 1, meta.getLastSequenceNo() + 1, meta.getLastYearSequenceNo() + 1,
 				Messages.TemplateEditDialog_exmp, asset, "", maxLength, //$NON-NLS-1$
-				QueryField.URI == field));
+				QueryField.URI == field, false));
 	}
 
 	protected void updateButtons() {

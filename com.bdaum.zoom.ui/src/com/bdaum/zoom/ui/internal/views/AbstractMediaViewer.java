@@ -86,6 +86,10 @@ public abstract class AbstractMediaViewer extends AbstractKiosk implements IMedi
 		keyDown = false;
 	}
 
+	@Override
+	public boolean isDummy() {
+		return false;
+	}
 
 
 

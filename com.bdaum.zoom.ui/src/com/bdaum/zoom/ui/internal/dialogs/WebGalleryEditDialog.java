@@ -1442,34 +1442,31 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 				NumericControl spinner = new NumericControl(genComp, SWT.NONE);
 				spinner.setLayoutData(new GridData(50, SWT.DEFAULT));
 				spinner.setMaximum(Integer.MAX_VALUE);
-				if (max != null) {
+				if (max != null)
 					try {
 						spinner.setMaximum(Integer.parseInt(max));
 					} catch (NumberFormatException e) {
 						// do nothing
 					}
-				}
-				if (min != null) {
+				if (min != null)
 					try {
 						spinner.setMinimum(Integer.parseInt(min));
 					} catch (NumberFormatException e) {
 						// do nothing
 					}
-				}
-				if (dflt != null) {
+				if (dflt != null)
 					try {
 						spinner.setSelection(Integer.parseInt(dflt));
 					} catch (NumberFormatException e) {
 						// do nothing
 					}
-				}
 				spinner.addListener(listener);
 				control = spinner;
 			} else if ("double".equals(type)) { //$NON-NLS-1$
 				NumericControl spinner = new NumericControl(genComp, SWT.NONE);
 				spinner.setLayoutData(new GridData(50, SWT.DEFAULT));
 				int digits = 1;
-				if (dflt != null) {
+				if (dflt != null)
 					try {
 						int p = dflt.indexOf('.');
 						if (p < 0)
@@ -1480,22 +1477,19 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 					} catch (NumberFormatException e) {
 						// do nothing
 					}
-				}
 				spinner.setMaximum(Integer.MAX_VALUE);
-				if (max != null) {
+				if (max != null)
 					try {
 						spinner.setMaximum((int) (Integer.parseInt(max) * Math.pow(10, digits)));
 					} catch (NumberFormatException e) {
 						// do nothing
 					}
-				}
-				if (min != null) {
+				if (min != null)
 					try {
 						spinner.setMinimum((int) (Integer.parseInt(min) * Math.pow(10, digits)));
 					} catch (NumberFormatException e) {
 						// do nothing
 					}
-				}
 				spinner.setDigits(digits);
 				spinner.addListener(listener);
 				control = spinner;

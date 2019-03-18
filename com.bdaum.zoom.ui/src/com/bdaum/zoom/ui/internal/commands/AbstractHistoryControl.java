@@ -45,7 +45,7 @@ public abstract class AbstractHistoryControl extends WorkbenchWindowControlContr
 	}
 
 	private static String composeName(SmartCollection sm) {
-		String name = sm.getAdhoc() ? UiUtilities.composeContentDescription(sm, " - ", true) //$NON-NLS-1$
+		String name = sm.getAdhoc() ? UiUtilities.composeContentDescription(sm, " - ", true, false) //$NON-NLS-1$
 				: sm.getName();
 		while (true) {
 			SmartCollection parent = sm.getSmartCollection_subSelection_parent();

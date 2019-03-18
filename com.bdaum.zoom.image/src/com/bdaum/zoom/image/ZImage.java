@@ -13,8 +13,6 @@ package com.bdaum.zoom.image;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferInt;
 import java.awt.image.ShortLookupTable;
 import java.awt.image.VolatileImage;
 import java.io.File;
@@ -127,6 +125,8 @@ public class ZImage {
 	 *            - the image file
 	 * @param imageFormat
 	 *            - image format (file extension), null for converted raw files
+	 * @param maxDim
+	 *            - maximum of height and width
 	 * @return the loaded image
 	 * @throws Exception
 	 */
@@ -239,17 +239,18 @@ public class ZImage {
 		return Math.min((double) width / iWidth, (double) height / iHeight);
 	}
 
-	private boolean preferSwt(int format) {
-		if (format == AWTIMAGE)
-			return false;
-		if (format == SWTIMAGE)
-			return true;
-		return !thumbnail && (colorConvertOp == null
-				|| bw != null && (recipe == null || recipe.getSplitTone() == null) && (scale == 1d)); // ||
-																										// scalingMethod
-																										// ==
-																										// SCALE_DEFAULT));
-	}
+	// private boolean preferSwt(int format) {
+	// if (format == AWTIMAGE)
+	// return false;
+	// if (format == SWTIMAGE)
+	// return true;
+	// return !thumbnail && (colorConvertOp == null
+	// || bw != null && (recipe == null || recipe.getSplitTone() == null) && (scale
+	// == 1d)); // ||
+	// // scalingMethod
+	// // ==
+	// // SCALE_DEFAULT));
+	// }
 
 	private static ZImage loadViaImageIO(File file, long maxPix) throws Exception {
 		try {
@@ -589,7 +590,7 @@ public class ZImage {
 		}
 		if (swtImage == null) {
 			if (develop)
-				develop(null, device, cropMode, preferredWidth, preferredHeight);
+				develop(null, device, cropMode, preferredWidth, preferredHeight, SWTIMAGE);
 			if (swtImage != null)
 				return swtImage;
 			if (swtImageData == null) {
@@ -628,20 +629,22 @@ public class ZImage {
 	 *            - preferred image width
 	 * @param preferredHeight
 	 *            - preferred image height
+	 * @param targetSystem
+	 *            - ANY, SWTIMAGE or AWTIMAGE
 	 */
 	public synchronized void develop(IProgressMonitor monitor, Device device, int cropMode, int preferredWidth,
-			int preferredHeight) {
+			int preferredHeight, int targetSystem) {
 		if (!developed) {
 			boolean cropping = cropMode == CROPPED && recipe != null && recipe.getCropping() != null;
 			if (scale < 1d && !cropping) {
-				downscale();
+				downscale(targetSystem);
 				if (reportProgress(monitor))
 					return;
 			}
 			if (recipe != null) {
 				Vignette vignette = recipe.getVignette();
 				if (vignette != null && vignette.type == Vignette.RGB) {
-					convertToRGBData();
+					convertToRGBData(targetSystem);
 					if (bufferedImage != null)
 						bufferedImage = ImageUtilities.applyVignette(bufferedImage, vignette);
 					else if (swtImageData != null)
@@ -823,50 +826,53 @@ public class ZImage {
 		}
 	}
 
-	private final static int ANY = 0;
-	private final static int SWTIMAGE = 1;
-	private final static int AWTIMAGE = 2;
+	public final static int ANY = 0;
+	public final static int SWTIMAGE = 1;
+	public final static int AWTIMAGE = 2;
 
-	private void convertToRGB(int format) {
+	private void convertToRGB(int format) { // format ignored at the moment
+
 		if (hslImage != null) {
-			if (preferSwt(format)) {
-				swtImageData = hslImage.toSwtData();
-				hslImage = null;
-			} else {
-				bufferedImage = hslImage.toBufferedImage();
-				hslImage = null;
-			}
+			// if (preferSwt(format)) {
+			swtImageData = hslImage.toSwtData();
+			hslImage = null;
+			// } else {
+			// bufferedImage = hslImage.toBufferedImage();
+			// hslImage = null;
+			// }
 		} else if (labImage != null) {
-			if (preferSwt(format)) {
-				swtImageData = labImage.toSwtData();
-				labImage = null;
-			} else {
-				bufferedImage = labImage.toBufferedImage();
-				labImage = null;
-			}
+			// if (preferSwt(format)) {
+			swtImageData = labImage.toSwtData();
+			labImage = null;
+			// } else {
+			// bufferedImage = labImage.toBufferedImage();
+			// labImage = null;
+			// }
 		} else if (bufferedImage != null) {
 			if (bufferedImage.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_CMYK)
 				convertBufferedImageToRGB(format);
-			else {
-				DataBuffer dataBuffer = bufferedImage.getRaster().getDataBuffer();
-				if (!(dataBuffer instanceof DataBufferInt))
-					convertBufferedImageToRGB(format);
-				else {
-					int[] componentSize = bufferedImage.getColorModel().getComponentSize();
-					for (int size : componentSize)
-						if (size != 8) {
-							convertBufferedImageToRGB(format);
-							break;
-						}
-				}
-			}
+			else
+				bufferedImage2Swt(); // our own SWT routines are faster
+			// if (bufferedImage.getColorModel().getColorSpace().getType() ==
+			// ColorSpace.TYPE_CMYK)
+			// convertBufferedImageToRGB(format);
+			// else if (!(bufferedImage.getRaster().getDataBuffer() instanceof
+			// DataBufferInt))
+			// convertBufferedImageToRGB(format);
+			// else
+			// for (int size : bufferedImage.getColorModel().getComponentSize())
+			// if (size != 8) {
+			// convertBufferedImageToRGB(format); // terribly slow for AWTIMAGE and 16 bit
+			// TIFF
+			// break;
+			// }
 		}
 	}
 
 	private void convertBufferedImageToRGB(int format) {
-		if (preferSwt(format))
-			bufferedImage2Swt();
-		else
+//		if (preferSwt(format))
+//			bufferedImage2Swt();
+//		else
 			bufferedImage = ImageUtilities.convertToDirectColor(bufferedImage, thumbnail);
 	}
 
@@ -877,8 +883,8 @@ public class ZImage {
 		bufferedImage = null;
 	}
 
-	private void convertToRGBData() {
-		convertToRGB(ANY);
+	private void convertToRGBData(int format) {
+		convertToRGB(format);
 		makeDeviceIndependent();
 	}
 
@@ -1016,21 +1022,24 @@ public class ZImage {
 		}
 	}
 
-	private void downscale() {
+	private void downscale(int format) {
 		int nwidth = (int) (scale * width + 0.5d);
 		int nheight = (int) (scale * height + 0.5d);
-		convertToRGBData();
+		convertToRGBData(format);
 		if (bufferedImage != null)
-			downScaleBufferedImage(nwidth, nheight);
+			downScaleBufferedImage(nwidth, nheight, format);
 		else if (swtImageData != null) {
-			bufferedImage = ImageUtilities.swtImage2buffered(swtImageData, colorSpace);
-			swtImageData = null;
-			downScaleBufferedImage(nwidth, nheight);
+			ImageData data = ImageUtilities.downSample(swtImageData, nwidth, nheight, 0);
+			if (data != null) {
+				swtImageData = data;
+				width = data.width;
+				height = data.height;
+			}
 		}
 	}
 
-	private void downScaleBufferedImage(int nwidth, int nheight) {
-		convertToRGB(AWTIMAGE);
+	private void downScaleBufferedImage(int nwidth, int nheight, int format) {
+		convertToRGB(format);
 		BufferedImage downscaled = ImageUtilities.downSample(bufferedImage, nwidth, nheight, raster, advanced);
 		if (downscaled != null) {
 			bufferedImage = downscaled;
@@ -1164,7 +1173,7 @@ public class ZImage {
 		if (develop && !developed) {
 			final Display display = Display.getDefault();
 			if (!display.isDisposed())
-				display.syncExec(() -> develop(monitor, display, cropMode, preferredWidth, pheight));
+				display.syncExec(() -> develop(monitor, display, cropMode, preferredWidth, pheight, ANY));
 		}
 		if (preferredHeight != 0 || format == IMAGE_WEBP) {
 			if (format == IMAGE_WEBP)

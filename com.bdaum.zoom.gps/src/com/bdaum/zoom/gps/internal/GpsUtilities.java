@@ -130,6 +130,7 @@ public class GpsUtilities {
 	public static void getGeoAreas(IPreferenceStore preferenceStore, Collection<GeoArea> areas) {
 		NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
 		nf.setMaximumFractionDigits(8);
+		nf.setGroupingUsed(false);
 		String nogo = preferenceStore.getString(PreferenceConstants.NOGO);
 		if (nogo != null) {
 			int i = 0;

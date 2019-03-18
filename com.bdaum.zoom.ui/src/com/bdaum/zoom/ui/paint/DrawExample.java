@@ -287,6 +287,7 @@ public class DrawExample extends PaintExample {
 			if (figure instanceof PolylineFigure) {
 				NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
 				nf.setMaximumFractionDigits(3);
+				nf.setGroupingUsed(false);
 				PolylineFigure pf = (PolylineFigure) figure;
 				double[] points = pf.getPoints();
 				if (points.length >= 4) {
@@ -322,6 +323,7 @@ public class DrawExample extends PaintExample {
 					throws SAXException {
 				if (SVG.equals(qName)) {
 					nf.setMaximumFractionDigits(3);
+					nf.setGroupingUsed(false);
 					String w = attributes.getValue("width"); //$NON-NLS-1$
 					String h = attributes.getValue("height"); //$NON-NLS-1$
 					try {

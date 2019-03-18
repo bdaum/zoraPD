@@ -20,10 +20,15 @@
 package com.bdaum.zoom.core.internal;
 
 public class ImportException extends RuntimeException {
-
-	/**
-	 *
-	 */
+	
 	private static final long serialVersionUID = -5892961081402924328L;
+	
+	public ImportException() {
+		super();
+	}
+	
+	public ImportException(String msg) {
+		super(msg);
+	}
 
 }

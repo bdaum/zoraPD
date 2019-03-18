@@ -33,6 +33,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.jobs.Job;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.asset.RegionImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
@@ -89,38 +90,37 @@ public class RemoveAlbumOperation extends DbOperation {
 
 	private void removeAssetFromAlbum(SmartCollection album, List<Object> toBeStored, boolean force) {
 		toBeStored.add(album);
+		String name = album.getName();
+		String personAlbumId = null;
+		if (album.getAlbum() && album.getSystem())
+			dbManager.addDirtyCollection(personAlbumId = album.getStringId());
+		List<String> assetIds = album.getAsset();
+		if (assetIds != null)
+			for (Iterator<String> it = assetIds.iterator(); it.hasNext();) {
+				String id = it.next();
+				if (id == null || !dbManager.exists(AssetImpl.class, id))
+					it.remove();
+			}
 		oldAssetIds.put(album.getStringId(), new ArrayList<String>(album.getAsset()));
 		for (Asset asset : assets)
 			if (asset.getFileState() != IVolumeManager.PEER) {
 				String[] albums = asset.getAlbum();
 				if (albums != null && (force || !containedInSubAlbum(album, albums))) {
-					String name = album.getName();
 					if (name != null)
 						asset.setAlbum(Utilities.removeFromStringArray(name, albums));
 					String assetId = asset.getStringId();
-					List<String> assetIds = album.getAsset();
-					if (assetIds != null) {
-						Iterator<String> it = assetIds.iterator();
-						while (it.hasNext()) {
-							String id = it.next();
-							if (id == null || assetId.equals(id) || dbManager.obtainAsset(id) == null)
+					if (assetIds != null)
+						for (Iterator<String> it = assetIds.iterator(); it.hasNext();)
+							if (assetId.equals(it.next()))
 								it.remove();
+					if (personAlbumId != null && asset.getPerson() != null)
+						for (RegionImpl region : dbManager.obtainObjects(RegionImpl.class, false,
+								"asset_person_parent", //$NON-NLS-1$
+								assetId, QueryField.EQUALS, "album", personAlbumId, QueryField.EQUALS)) { //$NON-NLS-1$
+							oldRegionAlbums.put(region, personAlbumId);
+							region.setAlbum(null);
+							toBeStored.add(region);
 						}
-					}
-					if (album.getAlbum() && album.getSystem()) {
-						String albumId = album.getStringId();
-						dbManager.addDirtyCollection(albumId);
-						if (asset.getPerson() != null) {
-							List<RegionImpl> regions = dbManager.obtainObjects(RegionImpl.class, false,
-									"asset_person_parent", //$NON-NLS-1$
-									assetId, QueryField.EQUALS, "album", albumId, QueryField.EQUALS); //$NON-NLS-1$
-							for (RegionImpl region : regions) {
-								oldRegionAlbums.put(region, albumId);
-								region.setAlbum(null);
-								toBeStored.add(region);
-							}
-						}
-					}
 				}
 			}
 	}

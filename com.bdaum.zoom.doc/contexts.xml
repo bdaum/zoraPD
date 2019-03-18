@@ -464,5 +464,9 @@
     <description>Tethered shooting</description>
     <topic href="html/reference/tethered.html" label="Tethered shooting"/>
  </context>
+  <context id="hover_page_context" title="Hover Preferences">
+    <description>Hover Preferences</description>
+    <topic href="html/reference/hoverPrefs.html" label="Hover Preferences"/>
+ </context>
  
 </contexts>

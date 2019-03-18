@@ -92,7 +92,6 @@ import com.bdaum.zoom.cat.model.Bookmark;
 import com.bdaum.zoom.cat.model.BookmarkImpl;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
-import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.CatalogListener;
@@ -113,14 +112,12 @@ import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.actions.GotoBookmarkAction;
 import com.bdaum.zoom.ui.internal.actions.ZoomActionFactory;
-import com.bdaum.zoom.ui.internal.hover.HoverInfo;
-import com.bdaum.zoom.ui.internal.hover.IGalleryHover;
-import com.bdaum.zoom.ui.internal.hover.IHoverInfo;
+import com.bdaum.zoom.ui.internal.hover.HoverManager;
 
 @SuppressWarnings("restriction")
 public class BookmarkView extends ViewPart implements CatalogListener, IDragHost, IDropHost {
 
-	private static final SimpleDateFormat SDF = new SimpleDateFormat(Messages.getString("BookmarkView.dateformat")); //$NON-NLS-1$
+	public static final SimpleDateFormat DATEFORMAT = new SimpleDateFormat(Messages.getString("BookmarkView.dateformat")); //$NON-NLS-1$
 
 	private final class BookmarkDropTargetListener extends EffectDropTargetListener {
 		private final FileTransfer fileTransfer;
@@ -194,7 +191,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 	}
 
 	private static class BookmarkToolTipSupport extends DefaultToolTip {
-		private final SimpleDateFormat sf = new SimpleDateFormat(Messages.getString("BookmarkView.date_format")); //$NON-NLS-1$
+//		private final SimpleDateFormat sf = new SimpleDateFormat(Messages.getString("BookmarkView.date_format")); //$NON-NLS-1$
 		private final ColumnViewer viewer;
 		private Image image;
 		private Color bgColor;
@@ -217,38 +214,9 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 		@Override
 		protected Composite createToolTipContentArea(Event event, Composite parent) {
 			Bookmark b = findObject(event.x, event.y);
-			ICore core = Core.getCore();
-			IDbManager dbManager = core.getDbManager();
-			StringBuilder sb = new StringBuilder(512);
-			Asset asset = dbManager.obtainAsset(b.getAssetId());
-			if (asset != null) {
-				SmartCollectionImpl sm = dbManager.obtainById(SmartCollectionImpl.class, b.getCollectionId());
-				if (sm != null) {
-					StringBuilder path = new StringBuilder(64);
-					path.append(sm.getName());
-					SmartCollection parColl = sm.getSmartCollection_subSelection_parent();
-					while (parColl != null) {
-						path.insert(0, '/').insert(0, parColl.getName());
-						parColl = parColl.getSmartCollection_subSelection_parent();
-					}
-					sb.append(Messages.getString("BookmarkView.collection_label")) //$NON-NLS-1$
-							.append("\n  ").append(path); //$NON-NLS-1$
-					sb.append('\n').append(Messages.getString("BookmarkView.image")).append(' ').append( //$NON-NLS-1$
-							asset.getName()).append(' ');
-					switch (core.getVolumeManager().determineFileState(asset)) {
-					case IVolumeManager.REMOTE:
-						sb.append(Messages.getString("BookmarkView.is_remote")); //$NON-NLS-1$
-						break;
-					case IVolumeManager.OFFLINE:
-						sb.append(Messages.getString("BookmarkView.is_offline")); //$NON-NLS-1$
-						break;
-					default:
-						sb.append(Messages.getString("BookmarkView.is_online")); //$NON-NLS-1$
-						break;
-					}
-				}
-			} else
-				sb.append(Messages.getString("BookmarkView.does_not_exist")); //$NON-NLS-1$
+			HoverManager hoverManager = UiActivator.getDefault().getHoverManager();
+			String text = hoverManager.getHoverText("com.bdaum.zoom.ui.hover.bookmark", b, null); //$NON-NLS-1$
+			String title = hoverManager.getHoverTitle("com.bdaum.zoom.ui.hover.bookmark", b, null); //$NON-NLS-1$
 			Composite area = new Composite(parent, SWT.NONE);
 			area.setBackground(bgColor);
 			area.setLayout(new GridLayout(2, false));
@@ -268,19 +236,12 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 			rightArea.setLayout(new GridLayout(1, false));
 			CLabel titleLabel = new CLabel(rightArea, getStyle(event));
 			titleLabel.setBackground(bgColor);
-			titleLabel.setText(b.getLabel());
+			titleLabel.setText(title);
 			titleLabel.setFont(JFaceResources.getBannerFont());
-			CLabel dateLabel = new CLabel(rightArea, getStyle(event));
-			dateLabel.setBackground(bgColor);
-			StringBuilder dsb = new StringBuilder();
-			dsb.append(Messages.getString("BookmarkView.created_at")) //$NON-NLS-1$
-					.append(' ').append(sf.format(b.getCreatedAt()));
-			dateLabel.setText(dsb.toString());
-
-			CLabel description = new CLabel(area, getStyle(event));
+			CLabel description = new CLabel(rightArea, getStyle(event));
 			description.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 			description.setBackground(bgColor);
-			description.setText(sb.toString());
+			description.setText(text);
 			return area;
 		}
 
@@ -302,16 +263,6 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 				image = null;
 			}
 			super.deactivate();
-		}
-	}
-
-	public static class BookmarkHover implements IGalleryHover {
-
-		public IHoverInfo getHoverInfo(IHoverSubject viewer, MouseEvent event) {
-			Object ob = viewer.findObject(event);
-			if (ob instanceof Bookmark)
-				return new HoverInfo(ob, null, UiActivator.getDefault().getHoverNodes());
-			return null;
 		}
 	}
 
@@ -512,7 +463,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 			public String getText(Object element) {
 				if (element instanceof Bookmark) {
 					Date createdAt = ((Bookmark) element).getCreatedAt();
-					return createdAt == null ? "" : SDF.format(createdAt); //$NON-NLS-1$
+					return createdAt == null ? "" : DATEFORMAT.format(createdAt); //$NON-NLS-1$
 				}
 				return super.getText(element);
 			}
@@ -539,7 +490,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 				for (BookmarkImpl bookmark : bookmarks) {
 					if (bookmark.getCatFile() != null && !bookmark.getCatFile().isEmpty())
 						existingBookmarks.add(bookmark);
-					else if (dbManager.obtainAsset(bookmark.getAssetId()) == null)
+					else if (!dbManager.exists(AssetImpl.class, bookmark.getAssetId()))
 						tobeDeleted.add(bookmark);
 					else
 						existingBookmarks.add(bookmark);

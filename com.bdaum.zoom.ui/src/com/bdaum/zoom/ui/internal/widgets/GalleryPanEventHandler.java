@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
@@ -39,9 +39,6 @@ import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 public class GalleryPanEventHandler extends PPanEventHandler implements
 		PInputEventListener, IPreferenceChangeListener {
 
-	private static final double PAN_SENSITIVITY = 0.2d;
-	private static final double ACCEL = 10d;
-	private double speed = PAN_SENSITIVITY;
 	public static final int HOR = 1;
 	public static final int VER = 2;
 	public static final int BOTH = 3;
@@ -55,10 +52,14 @@ public class GalleryPanEventHandler extends PPanEventHandler implements
 	private int right;
 	private int bottom;
 	private final double speedOffset;
+	private double speed;
+	private double sensitivity;
+	private double horizontalAcceleration;
+	private double verticalAccelaration;
 
 	public GalleryPanEventHandler(IPresentationHandler presentationHandler,
 			PNode[] workarea, int left, int top, int right, int bottom,
-			int dir, int forcePanMask, double speedOffset) {
+			int dir, int forcePanMask, double speedOffset, double sensitivity, double horizontalAcceleration, double verticalAccelaration) {
 		this.presentationHandler = presentationHandler;
 		this.workarea = workarea;
 		this.left = left;
@@ -68,13 +69,17 @@ public class GalleryPanEventHandler extends PPanEventHandler implements
 		this.dir = dir;
 		this.forcePanMask = forcePanMask;
 		this.speedOffset = speedOffset;
+		this.horizontalAcceleration = horizontalAcceleration;
+		this.verticalAccelaration = verticalAccelaration;
+		this.speed = this.sensitivity =sensitivity;
 		setMouseSpeed();
+		setAutopan(false);
 		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID)
 				.addPreferenceChangeListener(this);
 	}
 
 	private void setMouseSpeed() {
-		speed = PAN_SENSITIVITY
+		speed = sensitivity
 				* Math.pow(
 						2d,
 						(Platform.getPreferencesService().getInt(
@@ -101,8 +106,8 @@ public class GalleryPanEventHandler extends PPanEventHandler implements
 		double deltaY = ((dir & VER) != 0 || (ctrl && shft)) ? d.height * speed
 				: 0;
 		if (ctrl && !shft) {
-			deltaX *= ACCEL;
-			deltaY *= ACCEL;
+			deltaX *= horizontalAcceleration;
+			deltaY *= verticalAccelaration;
 		}
 		PCamera camera = e.getCamera();
 		PBounds viewBounds = camera.getViewBounds();

@@ -1557,9 +1557,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				}
 				Collections.sort(exhibits, new Comparator<ExhibitImpl>() {
 					public int compare(ExhibitImpl e1, ExhibitImpl e2) {
-						int x1 = ((Exhibit) e1).getX();
-						int x2 = ((Exhibit) e2).getX();
-						return x1 == x2 ? 0 : x1 < x2 ? -1 : 1;
+						return ((Exhibit) e1).getX() - ((Exhibit) e2).getX();
 					}
 				});
 				int no = 1;
@@ -1683,9 +1681,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			}
 			Collections.sort(exhibits, new Comparator<ExhibitImpl>() {
 				public int compare(ExhibitImpl e1, ExhibitImpl e2) {
-					int x1 = ((Exhibit) e1).getX();
-					int x2 = ((Exhibit) e2).getX();
-					return x1 == x2 ? 0 : x1 < x2 ? -1 : 1;
+					return ((Exhibit) e1).getX() - ((Exhibit) e2).getX();
 				}
 			});
 			int no = 1;

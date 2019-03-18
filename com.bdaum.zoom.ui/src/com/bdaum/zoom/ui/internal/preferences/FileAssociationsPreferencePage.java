@@ -748,7 +748,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 			TableItem item = resourceTypeTable.getItem(i);
 			String itemText = item.getText();
 			StringTokenizer st = new StringTokenizer(itemText, ";"); //$NON-NLS-1$
-			if (st.hasMoreTokens()) {
+			while (st.hasMoreTokens()) {
 				String token = st.nextToken().toLowerCase();
 				if (token.endsWith(ext)) {
 					tabFolder.setSelection(1);

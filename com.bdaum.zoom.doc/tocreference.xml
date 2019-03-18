@@ -95,9 +95,9 @@
   <topic href="html/reference/fileAssociations.html" label="External programs">
   </topic>
 		<topic label="General" href="html/reference/generalPrefs.html" />
-  <topic href="html/reference/importPrefs.html" label="Import">
+  <topic href="html/reference/hoverPrefs.html" label="Hover">
   </topic>
-  <topic href="html/reference/vocabPrefs.html" label="Wortschatz">
+  <topic href="html/reference/importPrefs.html" label="Import">
   </topic>
   <topic href="html/reference/keyPrefs.html" label="Key shortcuts">
   </topic>
@@ -105,9 +105,11 @@
   </topic>
   <topic href="html/reference/mousePrefs.html" label="Mouse">
   </topic>
-  <topic href="html/reference/keywordPrefs.html" label="Keywords">
-  </topic>
   <topic href="html/reference/perspectivePrefs.html" label="Perspectives">
+  </topic>
+  <topic href="html/reference/vocabPrefs.html" label="Vocabularies">
+  </topic>
+  <topic href="html/reference/keywordPrefs.html" label="Keywords">
   </topic>
   <anchor id="preferences"/> 
 	</topic>

@@ -40,6 +40,7 @@ import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.exhibition.ExhibitImpl;
 import com.bdaum.zoom.cat.model.group.exhibition.Exhibition;
@@ -85,7 +86,15 @@ public class DeleteAction extends Action {
 	public void run() {
 		SmartCollectionImpl selectedCollection = Ui.getUi()
 				.getNavigationHistory(adaptable.getAdapter(IWorkbenchWindow.class)).getSelectedCollection();
-		boolean inAlbum = selectedCollection.getAlbum() && !selectedCollection.getSystem();
+		boolean inAlbum = false;
+		SmartCollection sm = selectedCollection;
+		while (sm != null) {
+			if (sm.getAlbum() && !sm.getSystem()) {
+				inAlbum = true;
+				break;
+			}
+			sm = sm.getSmartCollection_subSelection_parent();
+		}
 		AssetSelection selection = adaptable.getAdapter(AssetSelection.class);
 		List<SlideImpl> slides = null;
 		List<ExhibitImpl> exhibits = null;

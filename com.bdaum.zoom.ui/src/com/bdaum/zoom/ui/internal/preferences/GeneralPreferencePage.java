@@ -15,20 +15,26 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
 
+import java.io.File;
+
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Monitor;
 
@@ -59,6 +65,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 	private ComboViewer backupGenerationsField;
 	private CheckboxButton enlargeButton;
 	private RadioButtonGroup displayGroup;
+	private String customFile;
 
 	@Override
 	protected void createPageContents(Composite composite) {
@@ -79,14 +86,36 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 	private void createDisplayGroup(Composite composite) {
 		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("GeneralPreferencePage.display")); //$NON-NLS-1$
 		final String[] options = new String[] { String.valueOf(ImageConstants.NOCMS),
-				String.valueOf(ImageConstants.SRGB), String.valueOf(ImageConstants.ARGB) };
+				String.valueOf(ImageConstants.SRGB), String.valueOf(ImageConstants.ARGB),
+				String.valueOf(ImageConstants.REC709), String.valueOf(ImageConstants.REC2002),
+				String.valueOf(ImageConstants.DCIP3), String.valueOf(ImageConstants.DCIP60),
+				String.valueOf(ImageConstants.DCIP65), String.valueOf(ImageConstants.CUSTOM) };
 
 		final String[] labels = new String[] { Messages.getString("GeneralPreferencePage.disableCMS"), //$NON-NLS-1$
 				"sRGB", //$NON-NLS-1$
-				"Adobe RGB" }; //$NON-NLS-1$
+				"Adobe RGB", "Rec. 709", "Rec. 2020", "DCI-P3", "P3-60", "P3-D65", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+				Messages.getString("GeneralPreferencePage.custom") }; //$NON-NLS-1$
 
 		iccViewer = createComboViewer(group, Messages.getString("GeneralPreferencePage.icc_profile"), options, //$NON-NLS-1$
 				labels, false);
+		iccViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				String selection = (String) iccViewer.getStructuredSelection().getFirstElement();
+				if (Integer.parseInt(selection) == ImageConstants.CUSTOM) {
+					FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
+					if (customFile != null) {
+						File file = new File(customFile);
+						dialog.setFilterPath(file.getParent());
+						dialog.setFileName(file.getName());
+					}
+					dialog.setFilterExtensions(new String[] { "*.icc;*.icm" }); //$NON-NLS-1$
+					dialog.setFilterNames(new String[] { Messages.getString("GeneralPreferencePage.icc_profiles") }); //$NON-NLS-1$
+					customFile = dialog.open();
+				}
+			}
+		});
 		advancedButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("GeneralPreferencePage.use_quality_interpolation"), //$NON-NLS-1$
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
@@ -175,6 +204,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 		backupGenerationsField.setSelection(
 				new StructuredSelection(preferenceStore.getString(PreferenceConstants.BACKUPGENERATIONS)));
 		iccViewer.setSelection(new StructuredSelection(preferenceStore.getString(PreferenceConstants.COLORPROFILE)));
+		customFile = preferenceStore.getString(PreferenceConstants.CUSTOMPROFILE);
 		advancedButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ADVANCEDGRAPHICS));
 		previewButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.PREVIEW));
 		noiseButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ADDNOISE));
@@ -198,6 +228,8 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 				preferenceStore.getDefaultInt(PreferenceConstants.BACKUPINTERVAL));
 		preferenceStore.setValue(PreferenceConstants.BACKUPGENERATIONS,
 				preferenceStore.getDefaultInt(PreferenceConstants.BACKUPGENERATIONS));
+		preferenceStore.setValue(PreferenceConstants.CUSTOMPROFILE,
+				preferenceStore.getDefaultInt(PreferenceConstants.CUSTOMPROFILE));
 		preferenceStore.setValue(PreferenceConstants.COLORPROFILE,
 				preferenceStore.getDefaultInt(PreferenceConstants.COLORPROFILE));
 		preferenceStore.setValue(PreferenceConstants.ADVANCEDGRAPHICS,
@@ -232,8 +264,12 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 			preferenceStore.setValue(PreferenceConstants.BACKUPGENERATIONS,
 					Integer.parseInt(selection.getFirstElement().toString()));
 		selection = iccViewer.getStructuredSelection();
-		if (!selection.isEmpty())
-			preferenceStore.setValue(PreferenceConstants.COLORPROFILE, (String) selection.getFirstElement());
+		if (!selection.isEmpty()) {
+			String iccno = (String) selection.getFirstElement();
+			preferenceStore.setValue(PreferenceConstants.COLORPROFILE, iccno);
+			if (Integer.parseInt(iccno) == ImageConstants.CUSTOM && customFile != null)
+				preferenceStore.setValue(PreferenceConstants.CUSTOMPROFILE, customFile);
+		}
 		preferenceStore.setValue(PreferenceConstants.ADVANCEDGRAPHICS, advancedButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.PREVIEW, previewButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.ADDNOISE, noiseButton.getSelection());
@@ -248,6 +284,18 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 		if (!sel.isEmpty())
 			preferenceStore.setValue(PreferenceConstants.UPDATEPOLICY, sel.getFirstElement().toString());
 		preferenceStore.setValue(PreferenceConstants.NOPROGRESS, noProgressButton.getSelection());
+	}
+	
+	@Override
+	protected String doValidate() {
+		String selection = (String) iccViewer.getStructuredSelection().getFirstElement();
+		if (selection != null && Integer.parseInt(selection) == ImageConstants.CUSTOM) {
+			if (customFile == null)
+				return Messages.getString("GeneralPreferencePage.no_icc_file"); //$NON-NLS-1$
+			if (!new File(customFile).exists())
+				return NLS.bind(Messages.getString("GeneralPreferencePage.icc_file_does_not_exist"), customFile); //$NON-NLS-1$
+		}
+		return null;
 	}
 
 }

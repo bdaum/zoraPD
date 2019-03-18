@@ -25,8 +25,7 @@ import org.eclipse.swt.browser.StatusTextListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-import com.bdaum.zoom.gps.CoordinatesListener;
-import com.bdaum.zoom.gps.MaptypeChangedListener;
+import com.bdaum.zoom.gps.MapListener;
 import com.bdaum.zoom.gps.geonames.Place;
 import com.bdaum.zoom.ui.gps.Trackpoint;
 
@@ -223,25 +222,13 @@ public interface IMapComponent {
 	 * @param listener
 	 *            - listener for coordinate changes
 	 */
-	void addCoordinatesListener(CoordinatesListener listener);
+	void addMapListener(MapListener listener);
 
 	/**
 	 * @param listener
 	 *            - listener for coordinate changes
 	 */
-	void removeCoordinatesListener(CoordinatesListener listener);
-
-	/**
-	 * @param listener
-	 *            - listener for maptype changes
-	 */
-	void addMaptypeListener(MaptypeChangedListener listener);
-
-	/**
-	 * @param listener
-	 *            - listener for maptype changes
-	 */
-	void removeMaptypeListener(MaptypeChangedListener listener);
+	void removeMapListener(MapListener listener);
 
 	/**
 	 * Sets the initial map type
@@ -268,6 +255,4 @@ public interface IMapComponent {
 	 * @param km
 	 */
 	void setArea(double latitude, double longitude, double km);
-
-
 }

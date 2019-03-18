@@ -466,4 +466,8 @@
     <description>Kabelgebundenes Fotografieren</description>
     <topic href="html/reference/tethered.html" label="Kabelgebundenes Fotografieren"/>
  </context>
+ <context id="hover_page_context" title="Hover-Einstellungen">
+    <description>Hover-Einstellungen</description>
+    <topic href="html/reference/hoverPrefs.html" label="Hover-Einstellungen"/>
+ </context>
 </contexts>

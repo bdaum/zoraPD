@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -90,10 +89,11 @@ public class ImportOperation extends AbstractImportOperation {
 	private Set<IMediaSupport> contributors = new HashSet<IMediaSupport>(5);
 	private ImageMediaSupport imageMediaSupport;
 
-	public ImportOperation(FileInput fileInput, ImportConfiguration configuration, AnalogProperties properties,
-			File[] foldersToWatch) {
+	public ImportOperation(FileInput fileInput, ImportConfiguration configuration, ImportFromDeviceData importData,
+			AnalogProperties properties, File[] foldersToWatch) {
 		this(NLS.bind(Messages.getString("ImportOperation.Import_operation"), fileInput.getName(), //$NON-NLS-1$
-				fileInput.size() > 1 ? ",..." : ""), configuration, null, properties, Constants.FILESOURCE_UNKNOWN); //$NON-NLS-1$ //$NON-NLS-2$
+				fileInput.size() > 1 ? ",..." : ""), configuration, importData, properties, //$NON-NLS-1$ //$NON-NLS-2$
+				Constants.FILESOURCE_UNKNOWN);
 		this.foldersToWatch = foldersToWatch;
 		this.fileInput = fileInput;
 	}
@@ -142,13 +142,11 @@ public class ImportOperation extends AbstractImportOperation {
 							info);
 			}
 			importState.nFiles = allFiles.size();
-			if (importState.importFromDeviceData != null) {
+			if (importState.transferNeeded()) {
 				if (allFiles.size() > 1) {
-					final int skipPolicy = importState.importFromDeviceData.getSkipPolicy();
+					final int skipPolicy = importState.getSkipPolicy();
 					boolean sortForSkip = skipPolicy == Constants.SKIP_RAW_IF_JPEG
-							|| skipPolicy == Constants.SKIP_JPEG_IF_RAW
-							|| importState.importFromDeviceData.getExifTransferPrefix() == null
-							|| !importState.importFromDeviceData.getExifTransferPrefix().isEmpty();
+							|| skipPolicy == Constants.SKIP_JPEG_IF_RAW || importState.getExifTransferPrefix() == null;
 					Collections.sort(allFiles, new Comparator<StorageObject>() {
 						public int compare(StorageObject o1, StorageObject o2) {
 							URI u1 = o1.toURI();
@@ -186,7 +184,7 @@ public class ImportOperation extends AbstractImportOperation {
 			final Meta meta = dbManager.getMeta(true);
 			if (!allFiles.isEmpty()) {
 				int work = IMediaSupport.IMPORTWORKSTEPS * allFiles.size();
-				final boolean userImport = !importState.getConfiguration().isSynchronize && !isSilent();
+				final boolean userImport = importState.isUserImport();
 				if (userImport || meta.getCumulateImports()) {
 					init(aMonitor, work + 1);
 					cal.setTime(meta.getLastImport());
@@ -209,10 +207,10 @@ public class ImportOperation extends AbstractImportOperation {
 				List<Object> toBeStored = new ArrayList<Object>();
 				if (foldersToWatch != null && meta.getAutoWatch())
 					updateWatchedFolders(meta, toBeStored);
-				if (importState.importFromDeviceData != null && fileInput.size() > 0
+				if (importState.transferNeeded() && fileInput.size() > 0
 						&& (lastDeviceImportDate != null || lastDevicePath != null)) {
-					String key = importState.importFromDeviceData.isMedia() ? fileInput.getVolume()
-							: fileInput.getAbsolutePath();
+					String key = importState.fromTransferFolder() ? null
+							: importState.isMedia() ? fileInput.getVolume() : fileInput.getAbsolutePath();
 					if (key != null) {
 						if (meta.getLastDeviceImport() == null)
 							meta.setLastDeviceImport(new HashMap<String, LastDeviceImport>());
@@ -231,7 +229,7 @@ public class ImportOperation extends AbstractImportOperation {
 				toBeStored.add(meta);
 				if (storeSafely(null, 1, toBeStored.toArray())) {
 					fireAssetsModified(null, null);
-					if (importState.getConfiguration().showImported && !isSilent()) {
+					if (importState.showImported()) {
 						SmartCollectionImpl coll = dbManager.obtainById(SmartCollectionImpl.class,
 								Constants.LAST_IMPORT_ID);
 						if (coll != null)
@@ -241,8 +239,7 @@ public class ImportOperation extends AbstractImportOperation {
 			} else
 				init(aMonitor, 0);
 		} finally {
-			if (importState.importFromDeviceData != null && importState.importFromDeviceData.isRemoveMedia()
-					&& fileInput.size() > 0)
+			if (importState.removeMedia() && fileInput.size() > 0)
 				try {
 					BatchUtilities.ejectMedia(fileInput.getAbsolutePath());
 					final IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
@@ -261,24 +258,22 @@ public class ImportOperation extends AbstractImportOperation {
 	private String createImportDescription(boolean userImport, boolean tethered) {
 		if (userImport) {
 			String user = System.getProperty("user.name"); //$NON-NLS-1$
-			if (importState.importFromDeviceData != null) {
-				if (importState.importFromDeviceData.isMedia())
+			if (importState.transferNeeded()) {
+				if (importState.isMedia() || importState.fromTransferFolder())
 					return NLS.bind(Messages.getString("ImportOperation.user_import_device"), user); //$NON-NLS-1$
 				return NLS.bind(Messages.getString("ImportOperation.user_import_new_structure"), user); //$NON-NLS-1$
 			}
 			return NLS.bind(Messages.getString("ImportOperation.user_import"), user); //$NON-NLS-1$
 		}
 		Date importDate = importState.importDate;
-		if (importState.importFromDeviceData != null) {
+		if (importState.transferNeeded()) {
 			if (tethered)
 				return NLS.bind(Messages.getString("ImportOperation.tethered"), //$NON-NLS-1$
 						new SimpleDateFormat(Messages.getString("ImportOperation.mm_dd_yy_hh_mm")).format(importDate)); //$NON-NLS-1$
-			String owner = importState.importFromDeviceData.getDcimOwner();
-			if (owner != null)
-				return NLS.bind(Messages.getString("ImportOperation.import_transfer"), //$NON-NLS-1$
-						owner,
-						new SimpleDateFormat(Messages.getString("ImportOperation.MMM_dd_yyyy")).format(importDate)); //$NON-NLS-1$
-			return ""; //$NON-NLS-1$
+			String owner = importState.getDcimOwner();
+			return owner == null ? "" //$NON-NLS-1$
+					: NLS.bind(Messages.getString("ImportOperation.import_transfer"), owner, //$NON-NLS-1$
+							new SimpleDateFormat(Messages.getString("ImportOperation.MMM_dd_yyyy")).format(importDate)); //$NON-NLS-1$
 		}
 		String timeline = importState.getConfiguration().timeline.intern();
 		SimpleDateFormat df = null;
@@ -444,8 +439,7 @@ public class ImportOperation extends AbstractImportOperation {
 			for (Asset asset : assets) {
 				// Delete transmitted files, too, when import from camera is
 				// undone.
-				if (importState.importFromDeviceData != null)
-					deletePhysicalFile(asset);
+				importState.deleteTransferredFile(asset);
 				new AssetEnsemble(dbManager, asset, importState).delete(toBeDeleted, toBeStored);
 				// Perform specific media type undo
 				for (IMediaSupport contributor : contributors)
@@ -481,16 +475,6 @@ public class ImportOperation extends AbstractImportOperation {
 			fireStructureModified();
 		}
 		return close(info);
-	}
-
-	private void deletePhysicalFile(Asset asset) {
-		try {
-			URI uri = new URI(asset.getUri());
-			if (uri.getPath().startsWith(importState.importFromDeviceData.getTargetDir()))
-				new File(uri).delete();
-		} catch (URISyntaxException e) {
-			// ignore
-		}
 	}
 
 	@Override

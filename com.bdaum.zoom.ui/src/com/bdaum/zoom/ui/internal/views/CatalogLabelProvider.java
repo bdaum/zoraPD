@@ -22,13 +22,11 @@ package com.bdaum.zoom.ui.internal.views;
 import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Shell;
 
-import com.bdaum.aoModeling.runtime.AomList;
 import com.bdaum.zoom.cat.model.SimilarityOptions_type;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.group.Criterion;
@@ -36,13 +34,11 @@ import com.bdaum.zoom.cat.model.group.Group;
 import com.bdaum.zoom.cat.model.group.GroupImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
-import com.bdaum.zoom.cat.model.group.SortCriterion;
 import com.bdaum.zoom.cat.model.group.exhibition.Exhibition;
 import com.bdaum.zoom.cat.model.group.slideShow.SlideShow;
 import com.bdaum.zoom.cat.model.group.webGallery.WebGallery;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.ICollectionProcessor;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
@@ -52,6 +48,7 @@ import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.Icons.Icon;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.hover.HoverManager;
 
 public class CatalogLabelProvider extends ZColumnLabelProvider {
 
@@ -86,6 +83,25 @@ public class CatalogLabelProvider extends ZColumnLabelProvider {
 		return obj.toString();
 	}
 
+//	private static String getTooltipTitle(Object obj) {
+//		if (obj instanceof SmartCollection) {
+//			SmartCollection sm = (SmartCollection) obj;
+//			return NLS.bind(sm.getAlbum()
+//					? sm.getSystem() ? Messages.getString("CatalogLabelProvider.person_album") //$NON-NLS-1$
+//							: Messages.getString("CatalogLabelProvider.album") //$NON-NLS-1$
+//					: Messages.getString("CatalogLabelProvider.collection"), sm.getName()); //$NON-NLS-1$
+//		}
+//		if (obj instanceof SlideShow)
+//			return NLS.bind(Messages.getString("CatalogLabelProvider.slideshow"), ((SlideShow) obj).getName()); //$NON-NLS-1$
+//		if (obj instanceof Exhibition)
+//			return NLS.bind(Messages.getString("CatalogLabelProvider.exhibition"), ((Exhibition) obj).getName()); //$NON-NLS-1$
+//		if (obj instanceof WebGallery)
+//			return NLS.bind(Messages.getString("CatalogLabelProvider.web_gallery"), ((WebGallery) obj).getName()); //$NON-NLS-1$
+//		if (obj instanceof GroupImpl)
+//			return NLS.bind(Messages.getString("CatalogLabelProvider.group"), ((GroupImpl) obj).getName()); //$NON-NLS-1$
+//		return obj.toString();
+//	}
+	
 	@Override
 	public Image getToolTipImage(Object element) {
 		disposeThumb();
@@ -147,77 +163,17 @@ public class CatalogLabelProvider extends ZColumnLabelProvider {
 	public String getToolTipText(Object element) {
 		if (!UiActivator.getDefault().getShowHover())
 			return null;
-		StringBuilder tooltip = new StringBuilder();
-		if (element instanceof Group) {
-			if (element == CatalogView.WASTEBASKET)
-				return Messages.getString("CatalogLabelProvider.deleted_entries_go_here"); //$NON-NLS-1$
-			String anno = ((Group) element).getAnnotations();
-			if (anno != null && !anno.isEmpty()) {
-				if (Constants.GROUP_ID_AUTO.equals(((Group) element).getStringId()))
-					tooltip.append(Messages.getString("CatalogLabelProvider.rules_defined")); //$NON-NLS-1$
-				else
-					tooltip.append(Messages.getString("CatalogLabelProvider.filter_set")); //$NON-NLS-1$
-			}
-		} else if (element instanceof SmartCollection) {
-			SmartCollection sm = (SmartCollection) element;
-			if (sm.getSystem()) {
-				List<Criterion> crits = sm.getCriterion();
-				if (!crits.isEmpty()) {
-					Criterion criterion = crits.get(0);
-					if (criterion.getField().equals(QueryField.RATING.getKey()))
-						return QueryField.RATING.formatScalarValue(criterion.getValue());
-				}
-			}
-			appendDescription(tooltip, sm.getDescription());
-			if (sm.getAlbum()) {
-				if (tooltip.length() > 0)
-					tooltip.append('\n');
-				tooltip.append(NLS.bind(Messages.getString("CatalogView.album_with_n_images"), sm.getAsset().size())); //$NON-NLS-1$
-			} else if (!sm.getSystem() && !UiUtilities.isImport(sm)) {
-				if (tooltip.length() > 0)
-					tooltip.append('\n');
-				tooltip.append(UiUtilities.composeContentDescription(sm, "\n", false)); //$NON-NLS-1$
-			}
-			AomList<SortCriterion> sortCriteria = sm.getSortCriterion();
-			if (!sortCriteria.isEmpty()) {
-				StringBuilder sb = new StringBuilder();
-				for (SortCriterion sortCriterion : sortCriteria) {
-					QueryField qf = QueryField.findQueryField(sortCriterion.getField());
-					if (qf != null) {
-						if (sb.length() > 0)
-							sb.append(", "); //$NON-NLS-1$
-						sb.append(qf.getLabel());
-					}
-				}
-				if (tooltip.length() > 0)
-					tooltip.append('\n');
-				tooltip.append(NLS.bind(Messages.getString("CatalogView.sorted_by"), sb)); //$NON-NLS-1$
-			}
-			if (sm.getNetwork()) {
-				if (tooltip.length() > 0)
-					tooltip.append('\n');
-				tooltip.append(Messages.getString("CatalogView.network_search")); //$NON-NLS-1$
-			}
-		} else if (element instanceof SlideShow)
-			appendDescription(tooltip, ((SlideShow) element).getDescription());
-		else if (element instanceof Exhibition) {
-			String description = ((Exhibition) element).getDescription();
-			if (description == null)
-				description = ((Exhibition) element).getInfo();
-			appendDescription(tooltip, description);
-		} else if (element instanceof WebGallery)
-			appendDescription(tooltip, ((WebGallery) element).getDescription());
-		if (tooltip.length() > 0) {
-			tooltip.insert(0, '\n');
-			tooltip.insert(0, getText(element));
-			return tooltip.toString();
-		}
-		return null;
-	}
-
-	private static void appendDescription(StringBuilder tooltip, String des) {
-		if (des != null)
-			tooltip.append(des.trim());
+		if (element == CatalogView.WASTEBASKET)
+			return Messages.getString("CatalogLabelProvider.deleted_entries_go_here"); //$NON-NLS-1$
+		HoverManager hoverManager = UiActivator.getDefault().getHoverManager();
+		String hoverId = null;
+		if (element instanceof Group)
+			hoverId = "com.bdaum.zoom.ui.hover.catalog.group"; //$NON-NLS-1$
+		else if (element instanceof SmartCollection)
+			hoverId = "com.bdaum.zoom.ui.hover.catalog.collection"; //$NON-NLS-1$
+		else if (element instanceof SlideShow || element instanceof Exhibition || element instanceof WebGallery)
+			hoverId = "com.bdaum.zoom.ui.hover.catalog.presentation"; //$NON-NLS-1$
+		return hoverId == null ? super.getToolTipText(element) : hoverManager.getHoverText(hoverId, element, null); 
 	}
 
 	@Override

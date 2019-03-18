@@ -76,11 +76,13 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 	private List<String> assignedAlbums;
 	private boolean deleteRegion = false;
 	protected boolean cntrlDwn;
+	private SmartCollectionImpl[] preselection;
 
-	public AlbumSelectionDialog(Shell parentShell, boolean small, List<String> assignedAlbums) {
+	public AlbumSelectionDialog(Shell parentShell, boolean small, List<String> assignedAlbums, SmartCollectionImpl[] preselection) {
 		super(parentShell);
 		this.small = small;
 		this.assignedAlbums = assignedAlbums;
+		this.preselection = preselection;
 	}
 
 	@Override
@@ -308,6 +310,8 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 		((AbstractTreeViewer) viewer).expandAll();
 		if (keep)
 			viewer.setCheckedElements(checkedElements);
+		else if (preselection != null)
+			viewer.setCheckedElements(preselection);
 	}
 
 	public Collection<SmartCollectionImpl> getResult() {

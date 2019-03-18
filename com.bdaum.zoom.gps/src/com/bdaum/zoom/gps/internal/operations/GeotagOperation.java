@@ -304,7 +304,7 @@ public class GeotagOperation extends DbOperation {
 		return false;
 	}
 
-	private void yieldWebservice(IProgressMonitor aMonitor) {
+	private boolean yieldWebservice(IProgressMonitor aMonitor) {
 		long interval = gpsConfiguration.interval;
 		int hourly = (int) (ONEHOUR / interval);
 		long time = System.currentTimeMillis();
@@ -318,6 +318,8 @@ public class GeotagOperation extends DbOperation {
 			if (alreadyDone >= allowedQueries) {
 				long delay = Math.min((alreadyDone + 1) * interval - passedTime, interval * 11 / 10);
 				while (delay > 0 && !aMonitor.isCanceled()) {
+					if (aMonitor.isCanceled())
+						return true;
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {
@@ -329,6 +331,7 @@ public class GeotagOperation extends DbOperation {
 		}
 		++alreadyDone;
 		lastAccess = time;
+		return false;
 	}
 
 	private void createBackup(final Asset asset, final int i, boolean geoname) {
@@ -611,10 +614,11 @@ public class GeotagOperation extends DbOperation {
 		if (elevation != null)
 			return elevation;
 		try {
-			yieldWebservice(aMonitor);
-			double v = GpsUtilities.fetchElevation(lat, lon);
-			elevationMap.put(coord, v);
-			return v;
+			if (!yieldWebservice(aMonitor)) {
+				double v = GpsUtilities.fetchElevation(lat, lon);
+				elevationMap.put(coord, v);
+				return v;
+			}
 		} catch (MalformedURLException e) {
 			// should never happen
 		} catch (IOException e) {
@@ -631,8 +635,8 @@ public class GeotagOperation extends DbOperation {
 		if (place != null)
 			return place;
 		try {
-			if (!lastAccessFailed)
-				yieldWebservice(aMonitor);
+			if (!lastAccessFailed && yieldWebservice(aMonitor))
+				return null;
 			lastAccessFailed = true;
 			place = GpsUtilities.fetchPlaceInfo(lat, lon);
 			if (place != null && !Double.isNaN(place.getLat()) && !Double.isNaN(place.getLon())) {
@@ -657,7 +661,7 @@ public class GeotagOperation extends DbOperation {
 				if (aMonitor != null)
 					aMonitor.setCanceled(true);
 			} else
-				addError(Messages.getString("GeotagOperation.http_exception"), //$NON-NLS-1$
+				addError(NLS.bind(Messages.getString("GeotagOperation.http_exception"), message), //$NON-NLS-1$
 						null);
 		} catch (IOException e) {
 			if (e instanceof UnknownHostException)

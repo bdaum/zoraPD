@@ -32,7 +32,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.runtime.Platform;
@@ -78,7 +77,6 @@ import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterion;
 import com.bdaum.zoom.cat.model.location.LocationImpl;
-import com.bdaum.zoom.cat.model.meta.Category;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.cat.model.meta.WatchedFolder;
 import com.bdaum.zoom.core.Constants;
@@ -326,7 +324,7 @@ public class UiUtilities {
 		StringBuilder sb;
 		if (template != null) {
 			String s = Utilities.evaluateTemplate(template, Constants.TH_ALL, "", null, -1, -1, -1, null, asset, //$NON-NLS-1$
-					"", Integer.MAX_VALUE, false); //$NON-NLS-1$
+					"", Integer.MAX_VALUE, false, true); //$NON-NLS-1$
 			if (scoreFormatter == null)
 				return s;
 			sb = new StringBuilder(s);
@@ -600,26 +598,27 @@ public class UiUtilities {
 		return errorMessage;
 	}
 
-	private static void compileCategories(Map<String, Category> categories, Set<String> result) {
-		for (Category cat : categories.values())
-			if (cat != null) {
-				String label = cat.getLabel();
-				result.add(label);
-				result.add(label);
-				compileCategories(cat.getSubCategory(), result);
-			}
-	}
-
+//	private static void compileCategories(Map<String, Category> categories, Set<String> result) {
+//		for (Category cat : categories.values())
+//			if (cat != null) {
+//				String label = cat.getLabel();
+//				result.add(label);
+//				result.add(label);
+//				compileCategories(cat.getSubCategory(), result);
+//			}
+//	}
+//
 	public static Set<String> getValueProposals(IDbManager db, String field, String subfield) {
 		Set<String> result = null;
 		Meta meta = db.getMeta(false);
 		if (meta != null) {
 			QueryField qfield = QueryField.findQuerySubField(field, subfield);
-			if (qfield == QueryField.IPTC_KEYWORDS)
-				return meta.getKeywords();
-			if (qfield == QueryField.IPTC_CATEGORY || qfield == QueryField.IPTC_SUPPLEMENTALCATEGORIES)
-				compileCategories(meta.getCategory(), result = new HashSet<String>(30));
-			else if (qfield == QueryField.LOCATION_WORLDREGION) {
+//			if (qfield == QueryField.IPTC_KEYWORDS)
+//				return meta.getKeywords();
+//			if (qfield == QueryField.IPTC_CATEGORY || qfield == QueryField.IPTC_SUPPLEMENTALCATEGORIES)
+//				compileCategories(meta.getCategory(), result = new HashSet<String>(30));
+//			else
+			if (qfield == QueryField.LOCATION_WORLDREGION) {
 				result = new HashSet<String>(10);
 				for (LocationImpl loc : db.obtainObjects(LocationImpl.class)) {
 					String worldRegion = loc.getWorldRegion();
@@ -787,7 +786,7 @@ public class UiUtilities {
 		}
 	}
 
-	public static String composeContentDescription(SmartCollection sm, String sep, boolean compact) {
+	public static String composeContentDescription(SmartCollection sm, String sep, boolean compact, boolean sort) {
 		StringBuilder sb = new StringBuilder();
 		AomList<Criterion> criteria = sm.getCriterion();
 		for (Criterion crit : criteria) {
@@ -849,33 +848,36 @@ public class UiUtilities {
 				sb.append('"');
 			}
 		}
-		if (!compact) {
-			List<SortCriterion> sortCriterion = sm.getSortCriterion();
-			if (!sortCriterion.isEmpty()) {
-				sb.append(Messages.UiUtilities_sorted_by);
-				boolean and = false;
-				for (SortCriterion sc : sortCriterion) {
-					String field = sc.getField();
-					QueryField qfield = QueryField.findQueryField(field);
-					if (qfield != null) {
-						if (and)
-							sb.append(Messages.UiUtilities_and);
-						else
-							and = true;
-						sb.append(qfield.getLabel());
-						String subfield = sc.getSubfield();
-						if (subfield != null) {
-							QueryField qsub = QueryField.findQuerySubField(field, subfield);
-							if (qsub != null)
-								sb.append(' ').append(qsub.getLabel());
-						}
-						sb.append(
-								sc.getDescending() ? Messages.UiUtilities_descending : Messages.UiUtilities_ascending);
+		if (sort) 
+			composeSortDescription(sm, sb);
+		return sb.toString();
+	}
+
+	public static void composeSortDescription(SmartCollection sm, StringBuilder sb) {
+		List<SortCriterion> sortCriterion = sm.getSortCriterion();
+		if (!sortCriterion.isEmpty()) {
+			sb.append(Messages.UiUtilities_sorted_by);
+			boolean and = false;
+			for (SortCriterion sc : sortCriterion) {
+				String field = sc.getField();
+				QueryField qfield = QueryField.findQueryField(field);
+				if (qfield != null) {
+					if (and)
+						sb.append(Messages.UiUtilities_and);
+					else
+						and = true;
+					sb.append(qfield.getLabel());
+					String subfield = sc.getSubfield();
+					if (subfield != null) {
+						QueryField qsub = QueryField.findQuerySubField(field, subfield);
+						if (qsub != null)
+							sb.append(' ').append(qsub.getLabel());
 					}
+					sb.append(
+							sc.getDescending() ? Messages.UiUtilities_descending : Messages.UiUtilities_ascending);
 				}
 			}
 		}
-		return sb.toString();
 	}
 
 	public static Icon getSmartCollectionIcon(SmartCollection coll) {
@@ -1153,6 +1155,23 @@ public class UiUtilities {
 				return Icons.drawing.getImage();
 		}
 		return null;
+	}
+	
+	public static Date getCreationDate(Asset asset) {
+		Date date = asset.getDateCreated();
+		if (date == null)
+			date = asset.getDateTimeOriginal();
+		if (date == null)
+			date = asset.getDateTime();
+		return date;
+	}
+	
+	private static final String ELLIPSIS = "..."; //$NON-NLS-1$
+
+	public static String shortenText(String s, int maxchars) {
+		if (s == null || s.length() <= maxchars)
+			return s;
+		return s.substring(0,maxchars)+ELLIPSIS;
 	}
 
 }

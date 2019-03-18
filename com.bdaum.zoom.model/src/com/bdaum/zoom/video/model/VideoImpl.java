@@ -62,11 +62,13 @@ public class VideoImpl extends MediaExtensionImpl implements Video {
 	 *            - Property
 	 * @param videoStreamType
 	 *            - Property
+	 * @param 	avgBitrate
+	 *            - Property
 	 */
 	public VideoImpl(int audioBitrate, int audioBitsPerSample,
 			int audioChannels, int audioSampleRate, int surroundMode,
 			int audioStreamType, double duration, int bitDepth,
-			double videoFrameRate, int videoStreamType) {
+			double videoFrameRate, int videoStreamType, int avgBitrate) {
 		super();
 		this.audioBitrate = audioBitrate;
 		this.audioBitsPerSample = audioBitsPerSample;
@@ -78,6 +80,7 @@ public class VideoImpl extends MediaExtensionImpl implements Video {
 		this.bitDepth = bitDepth;
 		this.videoFrameRate = videoFrameRate;
 		this.videoStreamType = videoStreamType;
+		this.avgBitrate = avgBitrate;
 
 	}
 
@@ -384,6 +387,31 @@ public class VideoImpl extends MediaExtensionImpl implements Video {
 	public int getVideoStreamType() {
 		return videoStreamType;
 	}
+	
+	/* *** Property avgBitrate *** */
+
+	private int avgBitrate;
+
+	/**
+	 * Set value of property avgBitrate
+	 *
+	 * @param _value
+	 *            - new field value
+	 */
+	public void setAvgBitrate(int _value) {
+		avgBitrate = _value;
+	}
+
+	/**
+	 * Get value of property avgBitrate
+	 *
+	 * @return - value of field videoStreamType
+	 */
+	public int getAvgBitrate() {
+		return avgBitrate;
+	}
+
+
 
 	/* ----- Equality ----- */
 
@@ -421,6 +449,8 @@ public class VideoImpl extends MediaExtensionImpl implements Video {
 
 		&& getVideoStreamType() == other.getVideoStreamType()
 
+		&& getAvgBitrate() == other.getAvgBitrate()
+
 		;
 	}
 
@@ -455,6 +485,8 @@ public class VideoImpl extends MediaExtensionImpl implements Video {
 		hashCode = 31 * hashCode + (new Double(getVideoFrameRate()).hashCode());
 
 		hashCode = 31 * hashCode + getVideoStreamType();
+		
+		hashCode = 31 * hashCode + getAvgBitrate();
 
 		return hashCode;
 	}

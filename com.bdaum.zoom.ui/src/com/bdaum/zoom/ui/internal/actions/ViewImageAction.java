@@ -123,8 +123,10 @@ public class ViewImageAction extends Action {
 		RGB filter = StringConverter.asRGB(
 				preferencesService.getString(UiActivator.PLUGIN_ID, PreferenceConstants.BWFILTER, null, null),
 				new RGB(64, 128, 64));
-		if (asset2 == null && !shift && !alt && !ctrl
-				&& (isFile || imageViewer == null || !imageViewer.canHandleRemote())) {
+		boolean extrnRqrd = asset2 == null && !shift && !alt && !ctrl
+				&& (isFile || imageViewer == null || !imageViewer.canHandleRemote());
+		boolean isDummy = imageViewer != null && imageViewer.isDummy();
+		if (extrnRqrd || isDummy) {
 			String viewerPath = preferencesService.getString(UiActivator.PLUGIN_ID,
 					imageViewer == null ? PreferenceConstants.EXTERNALVIEWER
 							: PreferenceConstants.EXTERNALMEDIAVIEWER + imageViewer.getId(),
@@ -173,8 +175,17 @@ public class ViewImageAction extends Action {
 					}
 					return;
 				}
+				if (isDummy) {
+					AcousticMessageDialog.openError(window.getShell(), Messages.ViewImageAction_viewer_missing, NLS
+							.bind(Messages.ViewImageAction_reconfigure, viewerPath));
+					return;
+				}
 				AcousticMessageDialog.openError(window.getShell(), Messages.ViewImageAction_viewer_missing,
 						NLS.bind(Messages.ViewImageAction_configured_external_viewer, viewerPath));
+			} else if (isDummy) {
+				AcousticMessageDialog.openError(window.getShell(), Messages.ViewImageAction_viewer_missing,
+						Messages.ViewImageAction_configure);
+				return;
 			}
 		}
 		if (imageViewer == null)

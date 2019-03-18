@@ -224,13 +224,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 				if (qfield == QueryField.SCORE)
 					return (scoreFormatter != null) ? scoreFormatter.format(a.getScore()) : ""; //$NON-NLS-1$
 				String text = qfield.value2text(qfield.obtainFieldValue(a), ""); //$NON-NLS-1$
-				if (text != null) {
-					String unit = qfield.getUnit();
-					if (unit != null)
-						text += ' ' + unit;
-					return text;
-				}
-				return null;
+				return qfield.addUnit(text, " ", ""); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			return element.toString();
 		}
@@ -515,8 +509,8 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 			table.setSortColumn(column);
 			table.setSortDirection(sortDirection);
 		}
-		if (qfield.canEdit() && qfield.getKey() != null
-				&& !(qfield.isStruct() && qfield.getCard() != 1) && qfield.getType() != QueryField.T_NONE)
+		if (qfield.canEdit() && qfield.getKey() != null && !(qfield.isStruct() && qfield.getCard() != 1)
+				&& qfield.getType() != QueryField.T_NONE)
 			tableViewerColumn.setEditingSupport(new ViewEditingSupport(gallery, qfield));
 		return tableViewerColumn;
 	}

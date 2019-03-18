@@ -214,6 +214,7 @@ public class Messages extends NLS {
 	public static String CollectionEditDialog_sort_group;
 	public static String CollectionEditDialog_specify_name;
 	public static String CollectionEditDialog_value;
+	public static String ComputeTimeshiftDialog_compute_time_diff;
 	public static String ConfigureCaptionDialog_alignment;
 	public static String ConfigureCaptionDialog_center;
 	public static String ConfigureCaptionDialog_configure_caption;
@@ -562,6 +563,7 @@ public class Messages extends NLS {
 	public static String EditSlideDialog_fadeout_err;
 	public static String EditSlideDialog_image;
 	public static String EditSlideDialog_please_specify_inidividual;
+	public static String EditSlideDialog_reset;
 	public static String EditSlideDialog_slide_properties;
 	public static String EditSlideDialog_suppress_voicenote;
 	public static String EditSlideDialog_title;
@@ -1096,6 +1098,7 @@ public class Messages extends NLS {
 	public static String SlideshowEditDialog_blend_bottomRight;
 	public static String SlideshowEditDialog_caption_only;
 	public static String SlideshowEditDialog_caption_seqno;
+	public static String SlideshowEditDialog_captions_unequal;
 	public static String SlideshowEditDialog_content;
 	public static String SlideshowEditDialog_expand;
 	public static String SlideshowEditDialog_name;

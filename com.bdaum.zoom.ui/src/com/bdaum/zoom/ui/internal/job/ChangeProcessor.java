@@ -106,8 +106,8 @@ public class ChangeProcessor extends Job {
 			if (outdatedFiles != null && !outdatedFiles.isEmpty())
 				try {
 					mstatus.addAll(new ImportOperation(new FileInput(StorageObject.fromFile(outdatedFiles), false),
-							config, null, null).execute(progress.newChild(outdatedFiles.size() * 100 / completeWork),
-									adaptable));
+							config, null, null, null)
+									.execute(progress.newChild(outdatedFiles.size() * 100 / completeWork), adaptable));
 				} catch (ExecutionException e) {
 					mstatus.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
 							Messages.FolderWatchJob_updating_of_images_failed, e));
@@ -136,7 +136,7 @@ public class ChangeProcessor extends Job {
 							op = new ImportOperation(deviceData, config, observedFolder.getFileSource());
 					} else if (!monitor.isCanceled())
 						op = new ImportOperation(new FileInput(StorageObject.fromFile(newFiles), false), config, null,
-								null);
+								null, null);
 					if (op != null)
 						try {
 							mstatus.addAll(

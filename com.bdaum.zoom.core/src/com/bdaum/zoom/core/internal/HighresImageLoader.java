@@ -11,12 +11,10 @@
 
 package com.bdaum.zoom.core.internal;
 
-import java.awt.color.ICC_Profile;
 import java.awt.image.ColorConvertOp;
 import java.io.File;
 import java.util.Hashtable;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -43,7 +41,6 @@ import com.bdaum.zoom.image.recipe.Recipe;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.program.BatchConstants;
 import com.bdaum.zoom.program.BatchUtilities;
-import com.bdaum.zoom.program.IConverter;
 import com.bdaum.zoom.program.IRawConverter;
 
 @SuppressWarnings("restriction")
@@ -80,7 +77,6 @@ public class HighresImageLoader {
 		public long getLastAccess() {
 			return lastAccess;
 		}
-
 	}
 
 	public class ImageKey {
@@ -91,10 +87,9 @@ public class HighresImageLoader {
 		private final String rawConverterId;
 
 		public ImageKey(File original, Options options, String rawConverterId) {
-			this.original = original;
 			this.options = options;
 			this.rawConverterId = rawConverterId;
-			lastModified = BatchUtilities.getImageFileModificationTimestamp(original);
+			lastModified = BatchUtilities.getImageFileModificationTimestamp(this.original = original);
 		}
 
 		@Override
@@ -219,20 +214,17 @@ public class HighresImageLoader {
 					rawRecipe = null;
 			}
 			Options options = new Options();
-			int resolution;
-			if (bounds != null || scalingFactor >= 0.5d || scalingFactor == 0
-					|| (rawRecipe != null && rawRecipe.getCropping() != null))
-				resolution = IRawConverter.HIGH;
-			else
-				resolution = IRawConverter.MEDIUM;
-			int factor = rawConverter.deriveOptions(rawRecipe, options, resolution);
+			int factor = rawConverter.deriveOptions(rawRecipe, options,
+					bounds != null || scalingFactor >= 0.5d || scalingFactor == 0
+							|| (rawRecipe != null && rawRecipe.getCropping() != null) ? IRawConverter.HIGH
+									: IRawConverter.MEDIUM);
 			scalingFactor *= factor;
 			if (rawRecipe != null) {
 				rawRecipe.setScaling(scalingFactor > 0 ? (float) scalingFactor : 1f);
 				rawRecipe.setSampleFactor(factor);
 			}
-			if (cms == ImageConstants.ARGB)
-				options.put(IConverter.ADOBE_RGB, Boolean.TRUE);
+			// if (cms == ImageConstants.ARGB) // better to work in the camera color space, not all raw converts support color conversion
+			// options.put(IConverter.ADOBE_RGB, Boolean.TRUE);
 			workfile = null;
 			ImageKey key = new ImageKey(file, options, rawConverter.getId());
 			ImageEntry entry = imageDirectory.get(key);
@@ -261,7 +253,7 @@ public class HighresImageLoader {
 			}
 			extension = "tif"; //$NON-NLS-1$
 		}
-		ColorConvertOp cop = (cms != ImageConstants.NOCMS && !isRawOrDng) ? computeColorConvertOp(workfile, cms) : null;
+		ColorConvertOp cop = cms != ImageConstants.NOCMS ? computeColorConvertOp(workfile, cms) : null;
 		try {
 			return ZImage.loadImage(workfile, extension, rotation, bounds, scalingFactor, maxFactor, advanced, bw,
 					umask, cop, rawRecipe);
@@ -276,8 +268,7 @@ public class HighresImageLoader {
 
 	private static ColorConvertOp computeColorConvertOp(File workfile, int cms) {
 		try (ExifTool exifTool = new ExifTool(workfile, true)) {
-			ICC_Profile sourceProfile = exifTool.getICCProfile();
-			return ImageActivator.getDefault().computeColorConvertOp(sourceProfile, cms);
+			return ImageActivator.getDefault().computeColorConvertOp(exifTool.getICCProfile(), cms);
 		}
 	}
 
@@ -288,13 +279,10 @@ public class HighresImageLoader {
 		worked += incr;
 		if (monitor != null)
 			monitor.worked(incr);
-		if (listener != null) {
-			boolean cancel = listener.progress(total, worked);
-			if (cancel) {
-				if (monitor != null)
-					monitor.setCanceled(true);
-				return true;
-			}
+		if (listener != null && listener.progress(total, worked)) {
+			if (monitor != null)
+				monitor.setCanceled(true);
+			return true;
 		}
 		if (monitor != null)
 			return monitor.isCanceled();
@@ -313,12 +301,11 @@ public class HighresImageLoader {
 		status.add(new Status(IStatus.ERROR, BatchActivator.PLUGIN_ID, message, t));
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void cleanDirectory() {
-		Set<Entry<ImageKey, ImageEntry>> entrySet = imageDirectory.entrySet();
-		@SuppressWarnings("unchecked")
-		Entry<ImageKey, ImageEntry>[] entries = entrySet.toArray(new Entry[entrySet.size()]);
 		long maxAge = System.currentTimeMillis() - BatchConstants.MAXTEMPFILEAGE;
-		for (Entry<ImageKey, ImageEntry> entry : entries) {
+		for (Entry<ImageKey, ImageEntry> entry : imageDirectory.entrySet()
+				.toArray(new Entry[imageDirectory.entrySet().size()])) {
 			ImageEntry imageEntry = entry.getValue();
 			if (imageEntry.getLastAccess() < maxAge) {
 				File converted = imageEntry.getConverted();

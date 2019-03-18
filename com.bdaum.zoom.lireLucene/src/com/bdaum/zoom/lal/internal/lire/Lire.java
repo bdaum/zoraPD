@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -207,10 +206,10 @@ public class Lire implements ILireService {
 		return new IndexingJob(assetIds, postponedIndexing);
 	}
 
-	public Job createIndexingJob(File indexBackup, Date lastBackup) {
-		return new IndexingJob(indexBackup, lastBackup, postponedIndexing);
-	}
-
+//	public Job createIndexingJob(File indexBackup, Date lastBackup) {
+//		return new IndexingJob(indexBackup, lastBackup, postponedIndexing);
+//	}
+//
 	public Job createIndexingJob(Collection<Asset> assets, boolean reimport, int totalWork, int worked,
 			boolean system) {
 		return new IndexingJob(assets, reimport, totalWork, worked, system, postponedIndexing);

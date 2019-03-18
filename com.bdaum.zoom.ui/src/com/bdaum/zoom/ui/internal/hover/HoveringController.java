@@ -39,13 +39,14 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.ToolTip;
 
 import com.bdaum.zoom.batch.internal.Daemon;
+import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.views.IHoverSubject;
 import com.bdaum.zoom.ui.internal.views.ImageRegion;
 
 /**
- * A text hovering controller. The controller registers with the text widget's
- * control as a <code>MouseTrackListener<code>. When
+ * A hovering controller. The controller registers with its subject
+ * as a <code>MouseTrackListener<code>. When
  * receiving a mouse hover event, it opens a popup window using the
  * appropriate <code>IGalleryHover</code> to initialize the window's display
  * information. The controller closes the window if the mouse pointer leaves the
@@ -55,23 +56,19 @@ import com.bdaum.zoom.ui.internal.views.ImageRegion;
 @SuppressWarnings("restriction")
 public class HoveringController extends MouseTrackAdapter {
 
-	private static final int MINDURATION = 1000;
-	private static final int ADDITIONALHOVERTIMEPERCHARACTER = 25;
-
-	/**
-	 * The window closer.
-	 */
-	class WindowCloser extends MouseTrackAdapter
+	class WindowManager extends MouseTrackAdapter
 			implements MouseListener, MouseMoveListener, ControlListener, KeyListener, FocusListener {
 
 		private Object fCoveredObject;
 		private ImageRegion[] fCoveredRegions;
 		private Control control;
+		private Daemon stopper;
+		private Daemon delayer;
 
 		/**
-		 * Creates a new window closer for the given area.
+		 * Creates a new window manager for the given area.
 		 */
-		public WindowCloser(Control control, Object coveredObject, ImageRegion[] coveredRegions) {
+		public WindowManager(Control control, Object coveredObject, ImageRegion[] coveredRegions) {
 			this.control = control;
 			fCoveredObject = coveredObject;
 			if (coveredRegions != null) {
@@ -92,28 +89,49 @@ public class HoveringController extends MouseTrackAdapter {
 			control.addControlListener(this);
 			control.addKeyListener(this);
 			control.addFocusListener(this);
-			toolTip.setVisible(true);
-			if (MINDURATION > 0) {
-				final int msecs = MINDURATION + (toolTip.getMessage().length() + toolTip.getText().length())
-						* ADDITIONALHOVERTIMEPERCHARACTER;
-				new Daemon(Messages.HoveringController_hover_control, -1L) {
-					@Override
-					protected void doRun(IProgressMonitor monitor) {
-						if (!control.isDisposed())
-							control.getDisplay().asyncExec(() -> {
-								if (!control.isDisposed())
-									stop();
-							});
+			delayer = new Daemon(Messages.HoveringController_hover_control, -1L) {
+				@Override
+				protected void doRun(IProgressMonitor monitor) {
+					delayer = null;
+					if (!control.isDisposed())
+						control.getDisplay().asyncExec(() -> {
+							if (!control.isDisposed())
+								show();
+						});
+				}
+			};
+			delayer.schedule(CommonUtilities.getHoverDelay());	
+		}
 
-					}
-				}.schedule(msecs);
-			}
+		protected void show() {
+			toolTip.setVisible(true);
+			stopper = new Daemon(Messages.HoveringController_hover_control, -1L) {
+				@Override
+				protected void doRun(IProgressMonitor monitor) {
+					stopper = null;
+					if (!control.isDisposed())
+						control.getDisplay().asyncExec(() -> {
+							if (!control.isDisposed())
+								stop();
+						});
+				}
+			};
+			stopper.schedule(
+					CommonUtilities.computeHoverTime(toolTip.getMessage().length() + toolTip.getText().length()));
 		}
 
 		/**
 		 * Closes the popup window and stops watching.
 		 */
 		void stop() {
+			if (delayer != null) {
+				delayer.cancel();
+				delayer = null;
+			}
+			if (stopper != null) {
+				stopper.cancel();
+				stopper = null;
+			}
 			control.removeMouseListener(this);
 			control.removeMouseMoveListener(this);
 			control.removeMouseTrackListener(this);
@@ -127,7 +145,6 @@ public class HoveringController extends MouseTrackAdapter {
 		/*
 		 * @see MouseMoveListener#mouseMove
 		 */
-
 		public void mouseMove(MouseEvent event) {
 			Object foundItem = subject.findObject(event);
 			ImageRegion[] foundRegions = subject.findAllRegions(event);
@@ -138,7 +155,6 @@ public class HoveringController extends MouseTrackAdapter {
 		/*
 		 * @see MouseListener#mouseUp(MouseEvent)
 		 */
-
 		public void mouseUp(MouseEvent event) {
 			// do nothing
 		}
@@ -146,7 +162,6 @@ public class HoveringController extends MouseTrackAdapter {
 		/*
 		 * @see MouseListener#mouseDown(MouseEvent)
 		 */
-
 		public void mouseDown(MouseEvent event) {
 			stop();
 		}
@@ -154,7 +169,6 @@ public class HoveringController extends MouseTrackAdapter {
 		/*
 		 * @see MouseListener#mouseDoubleClick(MouseEvent)
 		 */
-
 		public void mouseDoubleClick(MouseEvent event) {
 			stop();
 		}
@@ -162,7 +176,6 @@ public class HoveringController extends MouseTrackAdapter {
 		/*
 		 * @see MouseTrackAdapter#mouseExit(MouseEvent)
 		 */
-
 		@Override
 		public void mouseExit(MouseEvent event) {
 			stop();
@@ -171,7 +184,6 @@ public class HoveringController extends MouseTrackAdapter {
 		/*
 		 * @see ControlListener#controlResized(ControlEvent)
 		 */
-
 		public void controlResized(ControlEvent event) {
 			stop();
 		}
@@ -179,7 +191,6 @@ public class HoveringController extends MouseTrackAdapter {
 		/*
 		 * @see ControlListener#controlMoved(ControlEvent)
 		 */
-
 		public void controlMoved(ControlEvent event) {
 			stop();
 		}
@@ -187,7 +198,6 @@ public class HoveringController extends MouseTrackAdapter {
 		/*
 		 * @see KeyListener#keyReleased(KeyEvent)
 		 */
-
 		public void keyReleased(KeyEvent event) {
 			// do nothing
 		}
@@ -195,7 +205,6 @@ public class HoveringController extends MouseTrackAdapter {
 		/*
 		 * @see KeyListener#keyPressed(KeyEvent)
 		 */
-
 		public void keyPressed(KeyEvent event) {
 			stop();
 		}
@@ -203,7 +212,6 @@ public class HoveringController extends MouseTrackAdapter {
 		/*
 		 * @see FocusListener#focusLost(FocusEvent)
 		 */
-
 		public void focusLost(FocusEvent event) {
 			if (subject.getControl() == event.widget) {
 				event.display.asyncExec(() -> {
@@ -216,17 +224,11 @@ public class HoveringController extends MouseTrackAdapter {
 		/*
 		 * @see FocusListener#focusGained(FocusEvent)
 		 */
-
 		public void focusGained(FocusEvent event) {
 			// do nothing
 		}
 	}
 
-	/** The popup window shell */
-	// Shell fWindowShell;
-	/** The label shown in the popup window shell */
-
-	// private Canvas fWindowLabel;
 	/** Remembers the previous mouse hover location */
 	private Object fHoverObject = null;
 
@@ -328,20 +330,25 @@ public class HoveringController extends MouseTrackAdapter {
 	 * @param control
 	 */
 	private void showWindow(Control control, Object coveredObject, ImageRegion[] coveredRegions, Point location) {
-		toolTip.setText(info.getTitle());
+		String title = info.getTitle();
+		if (title != null)
+			toolTip.setText(title);
 		toolTip.setMessage(info.getText());
 		toolTip.setLocation(location);
-		new WindowCloser(control, coveredObject, coveredRegions).start();
+		new WindowManager(control, coveredObject, coveredRegions).start();
 		uninstall();
 	}
 
 	/**
-	 * Uninstalls this hovering controller from its text viewer.
+	 * Uninstalls this hovering controller from its subject.
 	 */
 	public void uninstall() {
-		Control canvas = subject.getControl();
-		if (canvas != null && !canvas.isDisposed())
-			canvas.removeMouseTrackListener(this);
+		Control control = subject.getControl();
+		if (control != null)
+			control.removeMouseTrackListener(this);
+		else
+			for (Control c : subject.getControls())
+				c.removeMouseTrackListener(this);
 	}
 
 }

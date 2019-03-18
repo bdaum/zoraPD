@@ -117,7 +117,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 				String[] regionIds = asset.getPerson();
 				if (regionIds != null && regionIds.length > 0)
 					foundRegions = viewer.findAllRegions(event);
-				return new HoverInfo(ob, foundRegions, getHoverNodes());
+				return new HoverInfo(ob, foundRegions);
 			}
 			return null;
 		}
@@ -591,6 +591,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 			manager.add(addBookmarkAction);
 			manager.add(addToAlbumAction);
 			manager.add(refreshAction);
+			manager.add(ratingAction);
 			manager.add(deleteAction);
 		}
 	}

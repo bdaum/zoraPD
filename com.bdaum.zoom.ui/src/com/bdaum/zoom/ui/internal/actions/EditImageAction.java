@@ -15,55 +15,45 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.actions;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.program.Program;
 
 import com.bdaum.zoom.ui.internal.preferences.EditorDescriptor;
-import com.bdaum.zoom.ui.internal.preferences.FileEditorMapping;
 
 public class EditImageAction extends EditWithAction {
 
-	public EditImageAction(String label, String tooltip, ImageDescriptor image,
-			IAdaptable adaptable) {
+	public EditImageAction(String label, String tooltip, ImageDescriptor image, IAdaptable adaptable) {
 		super(label, tooltip, image, adaptable);
 	}
 
-	protected Set<EditorDescriptor> computeDefaultEditors(
-			Set<EditorDescriptor> defaultEditors, FileEditorMapping mapping) {
-		if (defaultEditors == null) 
-			defaultEditors = getValidEditors(mapping.getDeclaredDefaultEditors());
-		else 
-			defaultEditors.retainAll(Arrays.asList(mapping
-					.getDeclaredDefaultEditors()));
-		return defaultEditors;
+	protected void selectAndLaunchEditor(List<String> parms) {
+		if (lastEditor != null && lastEditor != MIXED) {
+			EditorDescriptor editor = null;
+			if (lastEditor.startsWith(">")) { //$NON-NLS-1$
+				String pname = lastEditor.substring(1);
+				Program[] programs = Program.getPrograms();
+				for (Program program : programs)
+					if (pname.equals(program.getName())) {
+						editor = EditorDescriptor.createForProgram(program);
+						break;
+					}
+			} else
+				editor = EditorDescriptor.createForProgram(lastEditor);
+			if (editor != null)
+				launchEditor(editor, parms, assetSelection.getAssets());
+		} else
+			super.selectAndLaunchEditor(parms);
 	}
 
-	protected Set<EditorDescriptor> computeEditors(
-			Set<EditorDescriptor> editors,
-			Set<EditorDescriptor> allowedEditors, FileEditorMapping mapping) {
-		if (editors == null) 
-			editors = getValidEditors(mapping.getEditors());
-		else {
-			List<EditorDescriptor> defaultEditors = Arrays.asList(mapping
-					.getDeclaredDefaultEditors());
-			defaultEditors.retainAll(allowedEditors);
-			editors.addAll(defaultEditors);
-		}
-		return editors;
-	}
-
-	
-	@Override
-	protected boolean isDefault() {
-		return true;
+	protected EditorDescriptor showDialog(final String ext) {
+		return defaultEditors.size() == 1 ? (EditorDescriptor) defaultEditors.toArray()[0] : super.showDialog(ext);
 	}
 }

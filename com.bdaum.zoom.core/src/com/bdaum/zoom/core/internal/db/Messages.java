@@ -10,6 +10,7 @@ public class Messages extends NLS {
 	public static String CatalogConverter_consolidate_album_count;
 	public static String CatalogConverter_duplicated_relationships;
 	public static String CatalogConverter_fast_album_access;
+	public static String CatalogConverter_fix_raw_file_properties;
 	public static String CatalogConverter_fix_watched_folder_ids;
 	public static String CatalogConverter_full_text;
 	public static String CatalogConverter_image_ID;

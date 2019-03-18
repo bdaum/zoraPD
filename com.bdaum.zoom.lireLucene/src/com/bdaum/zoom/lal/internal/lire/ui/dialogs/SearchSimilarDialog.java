@@ -64,7 +64,6 @@ import com.bdaum.zoom.core.db.ICollectionProcessor;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
-import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.image.ZImage;
 import com.bdaum.zoom.image.internal.ImageActivator;
@@ -313,8 +312,7 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 		int method = selectedAlgorithm == null ? CoreActivator.getDefault().getDefaultCbirAlgorithm().getId()
 				: selectedAlgorithm.getId();
 		Image hardcopy = paintExample.getHardcopy();
-		ColorConvertOp op = (profile == ImageConstants.ARGB) ? ImageActivator.getDefault().getCOLORCONVERTOP_ARGB2SRGB()
-				: null;
+		ColorConvertOp op = ImageActivator.getDefault().getCOLORCONVERTOP_ICC2SRGB(profile);
 		try {
 			ImageData imageData = hardcopy.getImageData();
 			ZImage zimage = new ZImage(imageData, null);

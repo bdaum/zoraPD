@@ -49,6 +49,7 @@ import com.bdaum.zoom.peer.internal.services.ROSGiManager;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
+import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
 public class PeerDefinitionDialog extends ZTitleAreaDialog {
@@ -67,11 +68,9 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 	private Combo ipCombo;
 	private Text nickField;
 
-	public PeerDefinitionDialog(Shell parentShell,
-			PeerDefinition currentDefiniton, boolean location,
+	public PeerDefinitionDialog(Shell parentShell, PeerDefinition currentDefiniton, boolean location,
 			boolean withRights, boolean showIncoming) {
-		super(parentShell, withRights ? HelpContextIds.RESTRICTION_DIALOG
-				: HelpContextIds.PEER_DIALOG);
+		super(parentShell, withRights ? HelpContextIds.RESTRICTION_DIALOG : HelpContextIds.PEER_DIALOG);
 		this.currentDefiniton = currentDefiniton;
 		this.location = location;
 		this.withRights = withRights;
@@ -84,8 +83,9 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 		fillValues();
 		setTitle(withRights ? Messages.PeerDefinitionDialog_access_restrictions
 				: Messages.PeerDefinitionDialog_peer_location);
-		setMessage(withRights ? (location ? Messages.PeerDefinitionDialog_define_name_and_rights
-				: Messages.PeerDefinitionDialog_specify_operations)
+		setMessage(withRights
+				? (location ? Messages.PeerDefinitionDialog_define_name_and_rights
+						: Messages.PeerDefinitionDialog_specify_operations)
 				: Messages.PeerDefinitionDialog_define_computer_name);
 	}
 
@@ -96,22 +96,17 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(2, false));
 		if (location) {
-			Map<String, PeerDefinition> incomingCalls = showIncoming ? PeerActivator
-					.getDefault().getIncomingCalls() : null;
+			Map<String, PeerDefinition> incomingCalls = showIncoming ? PeerActivator.getDefault().getIncomingCalls()
+					: null;
 			if (incomingCalls == null || incomingCalls.isEmpty()) {
 				if (!withRights) {
 					new Label(composite, SWT.NONE).setText(Messages.PeerDefinitionDialog_nickname);
-					nickField = new Text(composite, SWT.SINGLE | SWT.LEAD
-							| SWT.BORDER);
-					nickField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER,
-							true, false));
+					nickField = new Text(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
+					nickField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 				}
-				new Label(composite, SWT.NONE)
-						.setText(Messages.PeerDefinitionDialog_computer_name);
-				ipField = new Text(composite, SWT.SINGLE | SWT.LEAD
-						| SWT.BORDER);
-				ipField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-						false));
+				new Label(composite, SWT.NONE).setText(Messages.PeerDefinitionDialog_computer_name);
+				ipField = new Text(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
+				ipField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 				ipField.addModifyListener(new ModifyListener() {
 					public void modifyText(ModifyEvent e) {
 						validate();
@@ -120,15 +115,12 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 				ipField.selectAll();
 				ipField.setFocus();
 			} else {
-				new Label(composite, SWT.NONE)
-						.setText(Messages.PeerDefinitionDialog_computer_name);
+				new Label(composite, SWT.NONE).setText(Messages.PeerDefinitionDialog_computer_name);
 				ipCombo = new Combo(composite, SWT.DROP_DOWN);
-				ipCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-						false));
+				ipCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 				ipCombo.setVisibleItemCount(8);
 				Set<String> itemList = new HashSet<String>();
-				for (Map.Entry<String, PeerDefinition> entry : incomingCalls
-						.entrySet())
+				for (Map.Entry<String, PeerDefinition> entry : incomingCalls.entrySet())
 					if (!entry.getValue().isBlocked())
 						itemList.add(entry.getValue().getHost());
 				String[] array = itemList.toArray(new String[itemList.size()]);
@@ -147,11 +139,9 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 				});
 			}
 			if (!withRights) {
-				new Label(composite, SWT.NONE)
-						.setText(Messages.PeerDefinitionDialog_port);
+				new Label(composite, SWT.NONE).setText(Messages.PeerDefinitionDialog_port);
 				portField = new Spinner(composite, SWT.BORDER);
-				portField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-						false, false));
+				portField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 				portField.setMaximum(65535);
 				portField.setIncrement(1);
 				portField.addSelectionListener(new SelectionAdapter() {
@@ -163,25 +153,17 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 			}
 		}
 		if (withRights) {
-			new Label(composite, SWT.NONE)
-					.setText(Messages.PeerDefinitionDialog_rights);
-			Composite buttonGroup = new Composite(composite, SWT.NONE);
-			buttonGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING,
-					true, false));
-			GridLayout layout = new GridLayout(4, false);
-			layout.marginHeight = layout.marginWidth = 0;
-			buttonGroup.setLayout(layout);
-			searchButton = WidgetFactory.createCheckButton(buttonGroup,
-					Messages.PeerDefinitionDialog_search, null,
+			CGroup rightsGroup = new CGroup(composite, SWT.NONE);
+			rightsGroup.setText(Messages.PeerDefinitionDialog_rights);
+			rightsGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+			rightsGroup.setLayout(new GridLayout(2, false));
+			searchButton = WidgetFactory.createCheckButton(rightsGroup, Messages.PeerDefinitionDialog_search, null,
 					Messages.PeerDefinitionDialog_search_tooltip);
-			viewButton = WidgetFactory.createCheckButton(buttonGroup,
-					Messages.PeerDefinitionDialog_view, null,
+			viewButton = WidgetFactory.createCheckButton(rightsGroup, Messages.PeerDefinitionDialog_view, null,
 					Messages.PeerDefinitionDialog_view_tooltip);
-			voiceButton = WidgetFactory.createCheckButton(buttonGroup,
-					Messages.PeerDefinitionDialog_voice_notes, null,
+			voiceButton = WidgetFactory.createCheckButton(rightsGroup, Messages.PeerDefinitionDialog_voice_notes, null,
 					Messages.PeerDefinitionDialog_voice_notes_tooltip);
-			copyButton = WidgetFactory.createCheckButton(buttonGroup,
-					Messages.PeerDefinitionDialog_copy, null,
+			copyButton = WidgetFactory.createCheckButton(rightsGroup, Messages.PeerDefinitionDialog_copy, null,
 					Messages.PeerDefinitionDialog_copy_tooltip);
 		}
 		return area;
@@ -197,8 +179,7 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 				if (portField != null)
 					portField.setSelection(currentDefiniton.getPort());
 				if (nickField != null)
-					nickField
-							.setText(currentDefiniton.getNickname() == null ? "" : currentDefiniton.getNickname()); //$NON-NLS-1$
+					nickField.setText(currentDefiniton.getNickname() == null ? "" : currentDefiniton.getNickname()); //$NON-NLS-1$
 			}
 			if (withRights) {
 				int rights = currentDefiniton.getRights();
@@ -226,17 +207,16 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		result = location ? new PeerDefinition(nickField != null ? nickField
-				.getText().trim() : null, ipField != null ? ipField.getText()
-				: ipCombo.getText(),
-				portField != null ? portField.getSelection() : -1)
-				: currentDefiniton != null ? new PeerDefinition(
-						currentDefiniton.getNickname(),
-						currentDefiniton.getHost(), currentDefiniton.getPort())
+		result = location
+				? new PeerDefinition(nickField != null ? nickField.getText().trim() : null,
+						ipField != null ? ipField.getText() : ipCombo.getText(),
+						portField != null ? portField.getSelection() : -1)
+				: currentDefiniton != null
+						? new PeerDefinition(currentDefiniton.getNickname(), currentDefiniton.getHost(),
+								currentDefiniton.getPort())
 						: null;
 		if (viewButton != null && result != null)
-			result.setRights((searchButton.getSelection() ? IPeerService.SEARCH
-					: 0)
+			result.setRights((searchButton.getSelection() ? IPeerService.SEARCH : 0)
 					+ (viewButton.getSelection() ? IPeerService.VIEW : 0)
 					+ (voiceButton.getSelection() ? IPeerService.VOICE : 0)
 					+ (copyButton.getSelection() ? IPeerService.COPY : 0));
@@ -248,25 +228,21 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 		String errorMessage = null;
 		if (location) {
 			try {
-				String host = ipField != null ? ipField.getText() : ipCombo
-						.getText();
+				String host = ipField != null ? ipField.getText() : ipCombo.getText();
 				new URI(ROSGiManager.PROTOCOL + "://" + host); //$NON-NLS-1$
 				if (portField != null) {
 					int port = portField.getSelection();
 					PeerActivator activator = PeerActivator.getDefault();
 					if (activator.getLocation().equals(host + ":" + port)) //$NON-NLS-1$
 						errorMessage = Messages.PeerDefinitionDialog_own_location_as_peer;
-					else if (currentDefiniton == null
-							|| !currentDefiniton.getHost().equals(host)
+					else if (currentDefiniton == null || !currentDefiniton.getHost().equals(host)
 							|| currentDefiniton.getPort() != port) {
 						List<PeerDefinition> peers = activator.getPeers();
-						for (PeerDefinition peerDefinition : peers) {
-							if (peerDefinition.getHost().equals(host)
-									&& peerDefinition.getPort() == port) {
+						for (PeerDefinition peerDefinition : peers)
+							if (peerDefinition.getHost().equals(host) && peerDefinition.getPort() == port) {
 								errorMessage = Messages.PeerDefinitionDialog_peerDef_already_exists;
 								break;
 							}
-						}
 					}
 				}
 			} catch (URISyntaxException e) {

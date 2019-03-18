@@ -117,9 +117,7 @@ import com.bdaum.zoom.ui.internal.dialogs.SetPersonDialog;
 @SuppressWarnings("restriction")
 public abstract class AbstractGalleryView extends ImageView implements StartListener, SelectionActionClusterProvider {
 
-
 	private static final int DEFAULTTHUMBSIZE = 128;
-
 
 	protected class ScaleContributionItem extends ControlContribution {
 
@@ -228,7 +226,7 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 	private IAction saveQueryAction;
 	private String initialSelection;
 	protected int thumbsize = DEFAULTTHUMBSIZE;
-//	protected GalleryMouseWheelListener mouseWheelListener;
+	// protected GalleryMouseWheelListener mouseWheelListener;
 	protected IScoreFormatter scoreFormatter;
 	protected int refreshing;
 	protected IAction collapseAction;
@@ -243,6 +241,7 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 	private IAction stackAction;
 	private IAction splitCatAction;
 	protected SelectionActionCluster selectionActionCluster;
+	private long lastActivated;
 
 	public IAssetProvider getAssetProvider() {
 		return Core.getCore().getAssetProvider();
@@ -707,6 +706,7 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 					manager.add(refreshAction);
 			}
 			manager.add(renameAction);
+			manager.add(ratingAction);
 			manager.add(stackAction);
 			manager.add(deleteAction);
 		}
@@ -932,7 +932,7 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 			setPartName(currentCollection.getName());
 			StringBuilder des = new StringBuilder(128);
 			if (currentCollection.getAdhoc())
-				des.append(UiUtilities.composeContentDescription(currentCollection, " - ", false)); //$NON-NLS-1$
+				des.append(UiUtilities.composeContentDescription(currentCollection, " - ", false, true)); //$NON-NLS-1$
 			SortCriterion currentSort = assetProvider.getCurrentSort();
 			if (currentSort != null) {
 				QueryField qfield = QueryField.findQueryField(currentSort.getField());
@@ -1085,9 +1085,22 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 		if (dialog.open() == AlbumSelectionDialog.OK) {
 			boolean deleteRegion = dialog.isDeleteRegion();
 			boolean deleteAll = dialog.isDeleteAllRegions();
-			OperationJob.executeOperation(new AddAlbumOperation(deleteAll ? null : dialog.getResult(), Collections.singletonList(asset),
-					deleteAll ? null : region, deleteRegion || deleteAll), this);
+			OperationJob.executeOperation(new AddAlbumOperation(deleteAll ? null : dialog.getResult(),
+					Collections.singletonList(asset), deleteAll ? null : region, deleteRegion || deleteAll), this);
 		}
+	}
+
+	@Override
+	protected void setVisible(boolean visible) {
+		if (isVisible() != visible) {
+			super.setVisible(visible);
+			if (visible)
+				lastActivated = System.currentTimeMillis();
+		}
+	}
+
+	public long getLastActivated() {
+		return lastActivated;
 	}
 
 }

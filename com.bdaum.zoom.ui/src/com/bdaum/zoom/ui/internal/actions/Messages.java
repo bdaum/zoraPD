@@ -215,10 +215,12 @@ public class Messages extends NLS {
 	public static String RestoreCatActionDelegate_restore_cat;
 	public static String RestoreCatActionDelegate_select_backup;
 	public static String RestoreCatActionDelegate_target_dir;
+	public static String ViewImageAction_configure;
 	public static String ViewImageAction_configured_external_viewer;
 	public static String ViewImageAction_error_launching;
 	public static String ViewImageAction_error_launching_internal_viewer;
 	public static String ViewImageAction_error_viewing_remote_image;
+	public static String ViewImageAction_reconfigure;
 	public static String ViewImageAction_run_viewer;
 	public static String ViewImageAction_viewer_missing;
 	public static String ZoomActionFactory_search_images_in_vincinity;

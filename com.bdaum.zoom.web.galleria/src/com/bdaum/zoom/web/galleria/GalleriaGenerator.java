@@ -59,6 +59,7 @@ public class GalleriaGenerator extends AbstractGalleryGenerator {
 				.valueOf((int) (1000d * getParamDouble(show.getParameter(Activator.PLUGIN_ID + ".autoplay"), 0d)))); //$NON-NLS-1$
 		NumberFormat nf = (NumberFormat.getNumberInstance(Locale.US));
 		nf.setMaximumFractionDigits(2);
+		nf.setGroupingUsed(false);
 		varmap.put("opacity", nf.format(show.getOpacity() / 100d)); //$NON-NLS-1$
 		varmap.put("jquery", getDeployResourceFolder().getName() //$NON-NLS-1$
 				+ "/jquery-2.2.4.min.js"); //$NON-NLS-1$

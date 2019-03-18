@@ -21,7 +21,6 @@ package com.bdaum.zoom.core.internal.lire;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -65,13 +64,13 @@ public interface ILireService {
 	 */
 	Job createIndexingJob(String[] assetIds);
 
-	/**
-	 * Restore index from backup
-	 * @param indexBackup - index backup location
-	 * @param lastBackup - date of last backup
-	 * @return - indexing job
-	 */
-	Job createIndexingJob(File indexBackup, Date lastBackup);
+//	/**
+//	 * Restore index from backup
+//	 * @param indexBackup - index backup location
+//	 * @param lastBackup - date of last backup
+//	 * @return - indexing job
+//	 */
+//	Job createIndexingJob(File indexBackup, Date lastBackup);
 
 	/**
 	 * Create job for resuming indexing

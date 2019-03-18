@@ -43,6 +43,7 @@ public class ExportGeoOperation extends DbOperation {
 	public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		monitor.beginTask(NLS.bind(Messages.getString("ExportGeoOperation.export_file"), type.toUpperCase()), assets.size()); //$NON-NLS-1$
 		NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+		nf.setGroupingUsed(false);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX"); //$NON-NLS-1$
 		nf.setMaximumFractionDigits(6);
 		try (Writer writer = new FileWriter(targetFile)) {

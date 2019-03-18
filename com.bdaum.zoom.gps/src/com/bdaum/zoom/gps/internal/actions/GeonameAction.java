@@ -56,10 +56,6 @@ import com.bdaum.zoom.ui.gps.RasterCoordinate;
 import com.bdaum.zoom.ui.gps.Trackpoint;
 import com.bdaum.zoom.ui.gps.Waypoint;
 
-/**
- * @author berth
- *
- */
 public class GeonameAction extends AbstractViewAction {
 
 	private static final String[] EMPTY = new String[0];
@@ -144,9 +140,9 @@ public class GeonameAction extends AbstractViewAction {
 					}
 				}
 			});
+			pnts = trackpoints.toArray(new Trackpoint[trackpoints.size()]);
+			Arrays.sort(pnts);
 			if (!trackpoints.isEmpty() && info != null && gpsConfiguration.edit) {
-				pnts = trackpoints.toArray(new Trackpoint[trackpoints.size()]);
-				Arrays.sort(pnts);
 				TrackpointDialog tdialog = new TrackpointDialog(shell, pnts, gpsConfiguration.tolerance * ONEMINUTE);
 				if (tdialog.open() != TrackpointDialog.OK)
 					return;

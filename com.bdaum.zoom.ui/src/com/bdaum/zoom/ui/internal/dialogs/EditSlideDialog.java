@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -39,15 +39,19 @@ import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.group.slideShow.SlideImpl;
+import com.bdaum.zoom.cat.model.group.slideShow.SlideShow;
+import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
+import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 public class EditSlideDialog extends ZTitleAreaDialog {
 
+	private static final int RESET = 9999;
 	private final SlideImpl slide;
 	private Text titleField;
 	private Text durationField;
@@ -57,15 +61,13 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 	private Text delayField;
 	private NumericControl zoomField;
 
-	public static final String[] EFFECTS = new String[] { Messages.SlideshowEditDialog_Fade,
-			Messages.SlideshowEditDialog_move_left, Messages.SlideshowEditDialog_move_right,
-			Messages.SlideshowEditDialog_move_up, Messages.SlideshowEditDialog_move_down };
-
 	private static NumberFormat af = (NumberFormat.getNumberInstance());
+	private SlideShow show;
 
-	public EditSlideDialog(Shell parentShell, SlideImpl slide) {
+	public EditSlideDialog(Shell parentShell, SlideImpl slide, SlideShow show) {
 		super(parentShell, HelpContextIds.SLIDE_DIALOG);
 		this.slide = slide;
+		this.show = show;
 	}
 
 	@Override
@@ -85,6 +87,8 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 	private CheckboxButton voiceButton;
 	private NumericControl zoomXField;
 	private NumericControl zoomYField;
+	private CheckedText descriptionField;
+	private Combo thumbnailField;
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
@@ -96,9 +100,23 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 		titleField = new Text(comp, SWT.BORDER);
 		titleField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 4, 1));
 		titleField.addModifyListener(modifyListener);
-		new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_image);
-		imageField = new Text(comp, SWT.BORDER | SWT.READ_ONLY);
-		imageField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 4, 1));
+		if (slide.getAsset() != null) {
+			new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_image);
+			imageField = new Text(comp, SWT.BORDER | SWT.READ_ONLY);
+			imageField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 4, 1));
+		} else {
+			Label label = new Label(comp, SWT.NONE);
+			label.setText(Messages.SectionBreakDialog_description);
+			descriptionField = new CheckedText(comp, SWT.MULTI | SWT.LEAD | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
+			GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, false, false, 4, 1);
+			layoutData.widthHint = 400;
+			layoutData.heightHint = 100;
+			descriptionField.setLayoutData(layoutData);
+			new Label(comp, SWT.NONE).setText(Messages.SectionBreakDialog_thumbnails);
+			thumbnailField = new Combo(comp, SWT.DROP_DOWN);
+			thumbnailField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1));
+			thumbnailField.setItems(SectionBreakDialog.THUMBNAILS);
+		}
 		new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_delay);
 		delayField = new Text(comp, SWT.BORDER);
 		delayField.addModifyListener(modifyListener);
@@ -116,7 +134,7 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 		data = new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1);
 		data.widthHint = 170;
 		effectField.setLayoutData(data);
-		effectField.setItems(EFFECTS);
+		effectField.setItems(SlideshowEditDialog.EFFECTS);
 		new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_zoom_in);
 		zoomField = new NumericControl(comp, SWT.NONE);
 		zoomField.setMaximum(100);
@@ -143,9 +161,40 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 		data = new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1);
 		data.widthHint = 40;
 		fadoutField.setLayoutData(data);
-		voiceButton = WidgetFactory.createCheckButton(comp, Messages.EditSlideDialog_suppress_voicenote, null);
+		if (slide.getAsset() != null)
+			voiceButton = WidgetFactory.createCheckButton(comp, Messages.EditSlideDialog_suppress_voicenote, null);
 		fillValues();
 		return area;
+	}
+
+	@Override
+	protected void createButtonsForButtonBar(Composite parent) {
+		if (!readonly)
+			createButton(parent, RESET, Messages.EditSlideDialog_reset, false);
+		super.createButtonsForButtonBar(parent);
+	}
+
+	@Override
+	protected void buttonPressed(int buttonId) {
+		if (buttonId == RESET) {
+			if (slide.getAsset() == null)
+				durationField.setText(af.format(Math.max(show.getDuration(),
+						CommonUtilities.computeHoverTime(slide.getCaption().length() + slide.getDescription().length()))
+						/ 1000d));
+			else {
+				durationField.setText(af.format(show.getDuration() / 1000d));
+				voiceButton.setSelection(false);
+			}
+			effectField.select(show.getEffect());
+			zoomField.setSelection(show.getZoom());
+			zoomXField.setSelection(0);
+			zoomYField.setSelection(0);
+			delayField.setText(af.format(show.getFading() / 1000d));
+			fadinField.setText(af.format(show.getFading() / 1000d));
+			fadoutField.setText(af.format(show.getFading() / 1000d));
+			return;
+		}
+		super.buttonPressed(buttonId);
 	}
 
 	private void fillValues() {
@@ -158,16 +207,16 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 		delayField.setText(af.format(slide.getDelay() / 1000d));
 		fadinField.setText(af.format(slide.getFadeIn() / 1000d));
 		fadoutField.setText(af.format(slide.getFadeOut() / 1000d));
-		voiceButton.setSelection(slide.getNoVoice());
-		String imageName;
+		if (voiceButton != null)
+			voiceButton.setSelection(slide.getNoVoice());
 		String assetID = slide.getAsset();
-		if (assetID == null)
-			imageName = " - "; //$NON-NLS-1$
-		else {
+		if (assetID != null) {
 			AssetImpl asset = Core.getCore().getDbManager().obtainAsset(assetID);
-			imageName = asset != null ? asset.getName() : Messages.EditSlideDialog_deleted;
+			imageField.setText(asset != null ? asset.getName() : Messages.EditSlideDialog_deleted);
+		} else {
+			descriptionField.setText(slide.getDescription());
+			thumbnailField.select(slide.getLayout());
 		}
-		imageField.setText(imageName);
 	}
 
 	private void updateButtons() {
@@ -218,7 +267,12 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 		slide.setZoom(zoomField.getSelection());
 		slide.setZoomX(zoomXField.getSelection());
 		slide.setZoomY(zoomYField.getSelection());
-		slide.setNoVoice(voiceButton.getSelection());
+		if (slide.getAsset() != null)
+			slide.setNoVoice(voiceButton.getSelection());
+		else {
+			slide.setDescription(descriptionField.getText());
+			slide.setLayout(Math.max(0, thumbnailField.getSelectionIndex()));
+		}
 		Core.getCore().getDbManager().safeTransaction(null, slide);
 		super.okPressed();
 	}

@@ -348,7 +348,7 @@ public class AutoRuleOperation extends DbOperation {
 						store.add(subgroup);
 						sm = new SmartCollectionImpl(name.toString(), false, false, false, false,
 								NLS.bind(Messages.getString("AutoRuleOperation.automatically_created"), //$NON-NLS-1$
-										qfield.getLabel()),
+										qfield.getLabel(), autoRule.getName()),
 								-1, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
 						sm.setStringId(ids);
 						sm.addCriterion(new CriterionImpl(qfield.getId(), null, value,

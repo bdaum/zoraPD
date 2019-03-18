@@ -10,6 +10,7 @@
    <extension-point id="preferencePageExtension" name="%extension-point.name.page_extension" schema="schema/preferencePageExtension.exsd"/>
    <extension-point id="viewAction" name="%extension-point.name" schema="schema/com.bdaum.zoom.ui.viewAction.exsd"/>
    <extension-point id="perspectiveGallery" name="%extension-point.name.perspectiveGallery" schema="schema/perspectiveGallery.exsd"/>
+   <extension-point id="hoverContribution" name="%extension-point.name.hover" schema="schema/hoverContribution.exsd"/>
 
    <extension
          point="org.eclipse.ui.views">
@@ -473,6 +474,14 @@
             name="%page.name.vocab">
          <keywordReference
                id="com.bdaum.zoom.ui.keyword.vocab">
+         </keywordReference>
+      </page>
+      <page
+            class="com.bdaum.zoom.ui.internal.preferences.HoverPreferencePage"
+            id="com.bdaum.zoom.ui.preferences.HoverPreferencePage"
+            name="%page.name.hover">
+         <keywordReference
+               id="com.bdaum.zoom.ui.keyword.hover">
          </keywordReference>
       </page>
    </extension>
@@ -1453,6 +1462,10 @@
       <keyword
             id="com.bdaum.zoom.ui.keyword.cat"
             label="%keyword.label.cat">
+      </keyword>
+      <keyword
+            id="com.bdaum.zoom.ui.keyword.hover"
+            label="%keyword.hover.label">
       </keyword>   </extension>
    <extension
          point="org.eclipse.ui.exportWizards">
@@ -1859,7 +1872,6 @@
                </visibleWhen>
             </command>
          </menuContribution>
-<!-- Navigation -->
          <menuContribution
                allPopups="false"
                locationURI="menu:navigate?after=navStart">
@@ -1978,8 +1990,6 @@
                </visibleWhen>
             </command>
          </menuContribution>
-         
-<!-- Image -->
          <menuContribution
                allPopups="false"
                locationURI="menu:image?after=imageStart">
@@ -2159,7 +2169,6 @@
                </visibleWhen>
              </command>
          </menuContribution>
-<!-- Meta -->
         <menuContribution
                allPopups="false"
                locationURI="menu:meta?after=metaStart">
@@ -2249,7 +2258,6 @@
                   tooltip="%command.tooltip.46">
              </command>
          </menuContribution>
-<!-- Window -->
         <menuContribution
                allPopups="false"
                locationURI="menu:window?after=windowExt">
@@ -2262,7 +2270,6 @@
                   tooltip="%command.tooltip.72">
            </command>
         </menuContribution>
-<!-- Help -->
         <menuContribution
                allPopups="false"
                locationURI="menu:help?after=helpExt">
@@ -2301,7 +2308,6 @@
                   tooltip="%command.tooltip.50">
              </command>
          </menuContribution>
-<!-- Toolbar Catalog -->
         <menuContribution
                allPopups="false"
                locationURI="toolbar:org.eclipse.ui.main.toolbar">
@@ -2442,8 +2448,6 @@
 	           </command>
             </toolbar>
         </menuContribution>
-<!-- Toolbar Navigation --> 
-<!-- Toolbar Image -->
         <menuContribution
                allPopups="false"
                locationURI="toolbar:org.eclipse.ui.main.toolbar">
@@ -2673,7 +2677,6 @@
               </command>
            </toolbar>
         </menuContribution>
-<!-- Toolbar Help -->
         <menuContribution
                allPopups="false"
                locationURI="toolbar:org.eclipse.ui.main.toolbar">
@@ -2693,5 +2696,40 @@
                </control>
             </toolbar>
         </menuContribution>        
+   </extension>
+   <extension
+         point="com.bdaum.zoom.ui.hoverContribution">
+      <hoverContribution
+            class="com.bdaum.zoom.ui.internal.hover.GalleryItemHoverContribution"
+            id="com.bdaum.zoom.ui.hover.galleryItem.photo">
+      </hoverContribution>
+      <hoverContribution
+            class="com.bdaum.zoom.ui.internal.hover.BookmarkHoverContribution"
+            id="com.bdaum.zoom.ui.hover.bookmark">
+      </hoverContribution>
+      <hoverContribution
+            class="com.bdaum.zoom.ui.internal.hover.SlideHoverContribution"
+            id="com.bdaum.zoom.ui.hover.slideshow.slide">
+      </hoverContribution>
+      <hoverContribution
+            class="com.bdaum.zoom.ui.internal.hover.ExhibitHoverContribution"
+            id="com.bdaum.zoom.ui.hover.exhibition.exhibit">
+      </hoverContribution>
+      <hoverContribution
+            class="com.bdaum.zoom.ui.internal.hover.WebExhibitHoverContribution"
+            id="com.bdaum.zoom.ui.hover.webexhibition.exhibit">
+      </hoverContribution>
+      <hoverContribution
+            class="com.bdaum.zoom.ui.internal.hover.CatalogGroupHoverContribution"
+            id="com.bdaum.zoom.ui.hover.catalog.group">
+      </hoverContribution>
+      <hoverContribution
+            class="com.bdaum.zoom.ui.internal.hover.CatalogCollectionHoverContribution"
+            id="com.bdaum.zoom.ui.hover.catalog.collection">
+      </hoverContribution>
+      <hoverContribution
+            class="com.bdaum.zoom.ui.internal.hover.CatalogPresentationHoverContribution"
+            id="com.bdaum.zoom.ui.hover.catalog.presentation">
+      </hoverContribution>
    </extension>
 </plugin>

@@ -77,8 +77,14 @@ public class Messages extends NLS {
 	public static String ImportAddMetadataPage_add_metadata;
 	public static String ImportAddMetadataPage_add_to_album;
 	public static String ImportAddMetadataPage_advanced_options;
+	public static String ImportAddMetadataPage_camera_time;
+	public static String ImportAddMetadataPage_compute;
+	public static String ImportAddMetadataPage_enter_current_time;
 	public static String ImportAddMetadataPage_metadata_options_chdk;
 	public static String ImportAddMetadataPage_specify_metadata;
+	public static String ImportAddMetadataPage_system_time;
+	public static String ImportAddMetadataPage_timeshift;
+	public static String ImportAddMetadataPage_timeshift_hint;
 	public static String ImportAnalogPropertiesPage_analog_props;
 	public static String ImportAnalogPropertiesPage_camera;
 	public static String ImportAnalogPropertiesPage_exposure;

@@ -177,6 +177,7 @@ public class AssetImpl extends Asset_typeImpl implements Asset {
 	 * @param noPersons - Property
 	 * @param dateRegionsValid - Property
 	 * @param lastPicasaIniEntry - Property
+	 * @param noLensInfo - Property
 	 */
 	public AssetImpl(String name, String uri, String volume, int fileState,
 			long fileSize, String comments, String format, String mimeType,
@@ -224,7 +225,7 @@ public class AssetImpl extends Asset_typeImpl implements Asset {
 			String emulsion, int analogType, int analogFormat,
 			String analogProcessing, String lastEditor, float score, int sales,
 			double price, double earnings, int noPersons,
-			Date dateRegionsValid, String lastPicasaIniEntry) {
+			Date dateRegionsValid, String lastPicasaIniEntry, boolean noLensInfo) {
 		super(name, uri, volume, fileState, fileSize, comments, format,
 				mimeType, safety, contentType, height, width, ori, previewSize,
 				isProgressive, colorType, xmpModifiedAt, voiceFileURI,
@@ -257,7 +258,7 @@ public class AssetImpl extends Asset_typeImpl implements Asset {
 				modelInformation, modelAge, event, lastEdited, maxAvailHeight,
 				maxAvailWidth, emulsion, analogType, analogFormat,
 				analogProcessing, lastEditor, score, sales, price, earnings,
-				noPersons, dateRegionsValid, lastPicasaIniEntry);
+				noPersons, dateRegionsValid, lastPicasaIniEntry, noLensInfo);
 
 	}
 

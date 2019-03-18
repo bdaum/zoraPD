@@ -157,7 +157,7 @@ public class SpellCheckingEngine {
 							}
 
 							public boolean happensAt(int x) {
-								return x >= offset && x < offset + str.length();
+								return x >= offset && x < offset + strLength;
 							}
 
 							public void addWord() {
@@ -183,7 +183,7 @@ public class SpellCheckingEngine {
 				file.write((word + "\n\r").getBytes("UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
 			} catch (IOException e) {
 				SpellActivator.getDefault().logError(Messages.CombinedSpellChecker_io_error_writing_word, e);
-			} 
+			}
 		}
 	}
 
@@ -196,20 +196,13 @@ public class SpellCheckingEngine {
 	}
 
 	private static boolean checkOptions(String str, int options) {
-		if (str.isEmpty() || str.matches("\\s+")) //$NON-NLS-1$
-			return false;
-		// option rules
-		if ((options & ISpellCheckingService.IGNORESINGLELETTER) > 0 && str.length() == 1)
-			return false;
-		if ((options & ISpellCheckingService.IGNORNEUPPERCASE) > 0 && str.toUpperCase().equals(str))
-			return false;
-		if ((options & ISpellCheckingService.IGNOREWIDTHDIGITS) > 0 && str.matches(".*[\\d]+.*")) //$NON-NLS-1$
-			return false;
-		if ((options & ISpellCheckingService.IGNOREMIXEDCASE) > 0 && str.toUpperCase().equals(str.toLowerCase()))
-			return false;
-		if ((options & ISpellCheckingService.IGNOREWITHNONLETTERS) > 0 && str.matches("[^\\p{L}]+")) //$NON-NLS-1$
-			return false;
-		return true;
+		return !str.isEmpty() && !str.matches("\\s+") //$NON-NLS-1$
+				&& ((options & ISpellCheckingService.IGNORESINGLELETTER) == 0 || str.length() != 1)
+				&& ((options & ISpellCheckingService.IGNORNEUPPERCASE) == 0 || !str.toUpperCase().equals(str))
+				&& ((options & ISpellCheckingService.IGNOREWIDTHDIGITS) == 0 || !str.matches(".*[\\d]+.*")) //$NON-NLS-1$
+				&& ((options & ISpellCheckingService.IGNOREMIXEDCASE) == 0
+						|| !str.toUpperCase().equals(str.toLowerCase()))
+				&& ((options & ISpellCheckingService.IGNOREWITHNONLETTERS) == 0 || !str.matches("[^\\p{L}]+")); //$NON-NLS-1$
 	}
 
 }

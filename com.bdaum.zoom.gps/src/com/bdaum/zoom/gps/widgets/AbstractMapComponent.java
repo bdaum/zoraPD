@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 
 package com.bdaum.zoom.gps.widgets;
@@ -81,8 +81,7 @@ import com.bdaum.zoom.common.internal.FileLocator;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.gps.CoordinatesListener;
-import com.bdaum.zoom.gps.MaptypeChangedListener;
+import com.bdaum.zoom.gps.MapListener;
 import com.bdaum.zoom.gps.geonames.IGeocodingService;
 import com.bdaum.zoom.gps.geonames.Place;
 import com.bdaum.zoom.gps.geonames.WebServiceException;
@@ -98,17 +97,19 @@ import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.gps.Trackpoint;
 import com.bdaum.zoom.ui.gps.WaypointArea;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 
 @SuppressWarnings("restriction")
 public abstract class AbstractMapComponent implements IMapComponent, IPreferenceChangeListener {
 
+	private static final String GMAP_ICONS = "gmap/icons/"; //$NON-NLS-1$
 	private static final String SHOWN = "shown="; //$NON-NLS-1$
 
 	public class PositionAndZoom {
 		public double lat = Double.NaN;
 		public double lng = Double.NaN;
 		public int zoom = 12;
-		public int type = CoordinatesListener.ADDLOC;
+		public int type = MapListener.ADDLOC;
 		public String uuid;
 
 		public PositionAndZoom(double lat, double lng, int zoom, int type) {
@@ -212,9 +213,23 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 
 	private static final String MAP_HTML = "map.html"; //$NON-NLS-1$
 
+	private static final String[] picNames = new String[] { "pinUrl", "camPinUrl", "dirPinUrl", "shownPinUrl", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			"primaryIconUrl", "secondaryIconUrl", "primaryIconSelUrl", "secondaryIconSelUrl" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+
+	private static final String[] picFiles = new String[] { "pin.png", "campin.png", "dirpin.png", "shownpin.png", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			"camicon.png", "shownicon.png", "camiconsel.png", "showniconsel.png" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+
+	private static final String[] picUrls = new String[picFiles.length];
+
+	static {
+		URL url = findUrl(GpsActivator.getDefault().getBundle(), GMAP_ICONS);
+		String folderUrl = url == null ? GMAP_ICONS : url.toString();
+		for (int i = 0; i < picFiles.length; i++)
+			picUrls[i] = folderUrl + picFiles[i];
+	}
+
 	// private
-	private ListenerList<CoordinatesListener> coordinatesListeners = new ListenerList<>();
-	private ListenerList<MaptypeChangedListener> maptypeListeners = new ListenerList<>();
+	private ListenerList<MapListener> mapListeners = new ListenerList<>();
 	private LinkedList<HistoryItem> history = new LinkedList<HistoryItem>();
 	private int historyPosition = 0;
 	private String maptype;
@@ -239,6 +254,7 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 
 	static {
 		usformat.setMaximumFractionDigits(5);
+		usformat.setGroupingUsed(false);
 	}
 
 	/*
@@ -256,7 +272,6 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 		area.setLayout(layout);
 		if (header)
 			createHeader();
-		findResources();
 		comp = new Composite(area, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new FillLayout());
@@ -294,7 +309,7 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 							data = data.substring(0, p);
 							PositionAndZoom pz = new PositionAndZoom(data);
 							if (assetIds.startsWith(SHOWN)) {
-								pz.type = CoordinatesListener.SHOWNLOC;
+								pz.type = MapListener.SHOWNLOC;
 								assetIds = assetIds.substring(SHOWN.length());
 							}
 							List<String> assetList = Core.fromStringList(assetIds, ", "); //$NON-NLS-1$
@@ -476,7 +491,7 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 			PositionAndZoom pz = new PositionAndZoom(""); //$NON-NLS-1$
 			if (selectedMarker.startsWith(SHOWN)) {
 				selectedMarker = selectedMarker.substring(SHOWN.length());
-				pz.type = CoordinatesListener.SHOWNLOC;
+				pz.type = MapListener.SHOWNLOC;
 			}
 			List<String> items = Core.fromStringList(selectedMarker, ", "); //$NON-NLS-1$
 			fireCoordinatesChanged(items.toArray(new String[items.size()]), pz);
@@ -549,24 +564,9 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 			String oldText = searchCombo.getText();
 			if (!oldText.isEmpty()) {
 				GpsActivator activator = GpsActivator.getDefault();
-				String[] history = activator.getSearchHistory();
-				for (String item : history) {
-					if (item.equals(name)) {
-						searchCombo.setText(name);
-						return;
-					}
-				}
-				if (history.length >= GpsActivator.MAXHISTORYLENGTH) {
-					System.arraycopy(history, 0, history, 1, history.length - 1);
-					history[0] = oldText;
-					searchCombo.setItems(history);
-				} else {
-					String[] newHistory = new String[history.length + 1];
-					System.arraycopy(history, 0, newHistory, 1, history.length);
-					newHistory[0] = oldText;
-					activator.setSearchHistory(newHistory);
-					searchCombo.setItems(newHistory);
-				}
+				String[] newHist = UiUtilities.addToHistoryList(activator.getSearchHistory(), oldText);
+				searchCombo.setItems(newHist);
+				activator.setSearchHistory(newHist);
 			}
 			searchCombo.setText(name);
 		}
@@ -575,12 +575,23 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 	/**
 	 * Notifies listener about coordinate changes
 	 *
+	 * @param assetIds
+	 * @param pz
+	 */
+	protected void fireCoordinatesChanged(String[] assetIds, PositionAndZoom pz) {
+		for (MapListener listener : mapListeners)
+			listener.setCoordinates(assetIds, pz.lat, pz.lng, pz.zoom, pz.type, pz.uuid);
+	}
+
+	/**
+	 * Notifies listener about searches
+	 *
 	 * @param latitude
 	 * @param longitude
 	 */
-	protected void fireCoordinatesChanged(String[] assetIds, PositionAndZoom pz) {
-		for (CoordinatesListener listener : coordinatesListeners)
-			listener.setCoordinates(assetIds, pz.lat, pz.lng, pz.zoom, pz.type, pz.uuid);
+	protected void fireHistoryChanged(double lat, double lon, int zoom) {
+		for (MapListener listener : mapListeners)
+			listener.historyChanged(lat, lon, zoom);
 	}
 
 	/**
@@ -589,7 +600,7 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 	 * @param newType
 	 */
 	protected void fireMaptypeChanged(String newType) {
-		for (MaptypeChangedListener listener : maptypeListeners)
+		for (MapListener listener : mapListeners)
 			listener.setMaptype(newType);
 	}
 
@@ -614,6 +625,7 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 			longitude = parseDouble(st.nextToken());
 		if (st.hasMoreElements())
 			detail = parseInt(st.nextToken(), detail);
+		fireHistoryChanged(latitude, longitude, detail);
 		if (add) {
 			if (!Double.isNaN(latitude) && !Double.isNaN(longitude)) {
 				while (historyPosition < history.size())
@@ -687,7 +699,8 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 		}
 		if (shown) {
 			LocationShownImpl rel = Core.getCore().getDbManager().obtainById(LocationShownImpl.class, id);
-			id = rel.getAsset();
+			if (rel != null)
+				id = rel.getAsset();
 		}
 		AssetImpl asset = Core.getCore().getDbManager().obtainAsset(id);
 		if (asset != null) {
@@ -703,11 +716,7 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 				double factor = 160d / Math.max(asset.getWidth(), asset.getHeight());
 				int w = (int) (factor * asset.getWidth());
 				int h = (int) (factor * asset.getHeight());
-				Date date = asset.getDateCreated();
-				if (date == null)
-					date = asset.getDateTimeOriginal();
-				if (date == null)
-					date = asset.getDateTime();
+				Date date = UiUtilities.getCreationDate(asset);
 				browser.execute(createShowInfoCall(format, img.toURI(), title, w, h,
 						date == null ? "" : Constants.DFDT.format(date))); //$NON-NLS-1$
 			} catch (IOException e) {
@@ -742,13 +751,7 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 				.append("</small></div></div>');").toString(); //$NON-NLS-1$
 	}
 
-	protected abstract void findResources();
-
-	private URL findUrl(String path) {
-		return findUrl(GpsActivator.getDefault().getBundle(), path);
-	}
-
-	protected URL findUrl(Bundle bundle, String path) {
+	protected static URL findUrl(Bundle bundle, String path) {
 		try {
 			return FileLocator.findFileURL(bundle, "/$nl$/" + path, true); //$NON-NLS-1$
 		} catch (IOException e) {
@@ -765,19 +768,8 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 	 * .zoom.gps.CoordinatesListener)
 	 */
 
-	public void addCoordinatesListener(CoordinatesListener listener) {
-		coordinatesListeners.add(listener);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.bdaum.zoom.gps.widgets.IMapComponent#addMaptypeListener(com.bdaum
-	 * .zoom.gps.MaptypeChangedListener)
-	 */
-
-	public void addMaptypeListener(MaptypeChangedListener listener) {
-		maptypeListeners.add(listener);
+	public void addMapListener(MapListener listener) {
+		mapListeners.add(listener);
 	}
 
 	/*
@@ -787,19 +779,8 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 	 * .bdaum.zoom.gps.CoordinatesListener)
 	 */
 
-	public void removeCoordinatesListener(CoordinatesListener listener) {
-		coordinatesListeners.remove(listener);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.bdaum.zoom.gps.widgets.IMapComponent#removeMaptypeListener(com.bdaum
-	 * .zoom.gps.MaptypeChangedListener)
-	 */
-
-	public void removeMaptypeListener(MaptypeChangedListener listener) {
-		maptypeListeners.remove(listener);
+	public void removeMapListener(MapListener listener) {
+		mapListeners.remove(listener);
 	}
 
 	/**
@@ -915,16 +896,10 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 		updateControls();
 		try {
 			StringBuilder sb = new StringBuilder(3000);
-			URL url = findMapPage(MAP_HTML);
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
-				while (true) {
-					String line = reader.readLine();
-					if (line == null)
-						break;
-					if (sb.length() > 0)
-						sb.append('\n');
-					sb.append(line);
-				}
+			try (BufferedReader reader = new BufferedReader(
+					new InputStreamReader(findMapPage(MAP_HTML).openStream()))) {
+				char[] cbuf = new char[2000];
+				sb.append(cbuf, 0, reader.read(cbuf));
 			}
 			replaceText(sb, FORMATVAR, "body{font-family:Arial;font-size:small;background-color:" //$NON-NLS-1$
 					+ createHtmlColor(browser.getBackground()) + "color:" //$NON-NLS-1$
@@ -943,23 +918,9 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 				cb.append("=").append(appkey).append("'"); //$NON-NLS-1$ //$NON-NLS-2$
 			cb.append(";\nvar initialDetail=").append(computeInitialDetail(initialZoomLevel, markerPositions))//$NON-NLS-1$
 					.append(";\nvar initialMapType, locCreated, locTitles, locImage, imgDirection, track, initialPosition;\n"); //$NON-NLS-1$
-			cb.append("var pinUrl = \"").append(findUrl("/gmap/icons/pin.png")) //$NON-NLS-1$ //$NON-NLS-2$
-					.append("\";\n"); //$NON-NLS-1$
-			cb.append("var camPinUrl = \"").append(findUrl("/gmap/icons/campin.png")) //$NON-NLS-1$ //$NON-NLS-2$
-					.append("\";\n"); //$NON-NLS-1$
-			cb.append("var dirPinUrl = \"").append(findUrl("/gmap/icons/dirpin.png")) //$NON-NLS-1$ //$NON-NLS-2$
-					.append("\";\n"); //$NON-NLS-1$
-			cb.append("var shownPinUrl = \"").append(findUrl("/gmap/icons/shownpin.png")) //$NON-NLS-1$ //$NON-NLS-2$
-					.append("\";\n"); //$NON-NLS-1$
-			cb.append("var primaryIconUrl = \"").append(findUrl("/gmap/icons/camicon.png")) //$NON-NLS-1$ //$NON-NLS-2$
-					.append("\";\n"); //$NON-NLS-1$
-			cb.append("var secondaryIconUrl = \"").append(findUrl("/gmap/icons/shownicon.png")) //$NON-NLS-1$ //$NON-NLS-2$
-					.append("\";\n"); //$NON-NLS-1$
-			cb.append("var primaryIconSelUrl = \"").append(findUrl("/gmap/icons/camiconsel.png")) //$NON-NLS-1$ //$NON-NLS-2$
-					.append("\";\n"); //$NON-NLS-1$
-			cb.append("var secondaryIconSelUrl = \"").append(findUrl("/gmap/icons/showniconsel.png")) //$NON-NLS-1$ //$NON-NLS-2$
-					.append("\";\n"); //$NON-NLS-1$
-
+			for (int i = 0; i < picNames.length; i++)
+				cb.append("var ").append(picNames[i]).append(" = \"").append(picUrls[i]) //$NON-NLS-1$ //$NON-NLS-2$
+						.append("\";\n"); //$NON-NLS-1$
 			String addons = createAdditionalVariables();
 			if (addons != null)
 				cb.append(addons);
@@ -968,24 +929,22 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 			cb.append("locCreated = ["); //$NON-NLS-1$
 			if (markerPositions != null && markerPositions.length > 0) {
 				int j = 0;
-				for (Place place : markerPositions) {
+				for (Place place : markerPositions)
 					if (place != null) {
 						if (j++ > 0)
 							cb.append(",\n"); //$NON-NLS-1$
 						cb.append(createLatLng(place.getLat(), place.getLon()));
 					}
-				}
 			}
 			cb.append("];\nlocTitles = ["); //$NON-NLS-1$
 			if (markerPositions != null && markerPositions.length > 0) {
 				int j = 0;
-				for (Place place : markerPositions) {
+				for (Place place : markerPositions)
 					if (place != null) {
 						if (j++ > 0)
 							cb.append(",\n"); //$NON-NLS-1$
 						cb.append('"').append(place.getImageName()).append('"');
 					}
-				}
 			}
 			cb.append("];\nlocImage = ["); //$NON-NLS-1$
 			if (markerPositions != null && markerPositions.length > 0) {
@@ -1009,7 +968,7 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 			cb.append("];\nimgDirection = ["); //$NON-NLS-1$
 			if (markerPositions != null && markerPositions.length > 0) {
 				int j = 0;
-				for (Place place : markerPositions) {
+				for (Place place : markerPositions)
 					if (place != null) {
 						if (j++ > 0)
 							cb.append(",\n"); //$NON-NLS-1$
@@ -1018,45 +977,41 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 						else
 							cb.append("NaN"); //$NON-NLS-1$
 					}
-				}
 			}
 			cb.append("];\ntrack = ["); //$NON-NLS-1$
 			if (trackpoints != null && trackpoints.length > 0) {
 				int j = 0;
-				for (Trackpoint pnt : trackpoints) {
+				for (Trackpoint pnt : trackpoints)
 					if (pnt != null) {
 						if (j++ > 0)
 							cb.append(",\n"); //$NON-NLS-1$
 						cb.append(createLatLng(pnt.getLatitude(), pnt.getLongitude()));
 					}
-				}
 			}
 			cb.append("];\nlocShown= ["); //$NON-NLS-1$
 			if (shownPositions != null && shownPositions.length > 0) {
 				int j = 0;
-				for (Place place : shownPositions) {
+				for (Place place : shownPositions)
 					if (place != null) {
 						if (j++ > 0)
 							cb.append(",\n"); //$NON-NLS-1$
 						cb.append(createLatLng(place.getLat(), place.getLon()));
 					}
-				}
 			}
 			cb.append("];\nlocShownTitles = ["); //$NON-NLS-1$
 			if (shownPositions != null && shownPositions.length > 0) {
 				int j = 0;
-				for (Place place : shownPositions) {
+				for (Place place : shownPositions)
 					if (place != null) {
 						if (j++ > 0)
 							cb.append(",\n"); //$NON-NLS-1$
 						cb.append('"').append(place.getImageName()).append('"');
 					}
-				}
 			}
 			cb.append("];\nlocShownImage = ["); //$NON-NLS-1$
 			if (shownPositions != null && shownPositions.length > 0) {
 				int j = 0;
-				for (Place place : shownPositions) {
+				for (Place place : shownPositions)
 					if (place != null) {
 						if (j++ > 0)
 							cb.append(",\n"); //$NON-NLS-1$
@@ -1070,7 +1025,6 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 						}
 						cb.append('"');
 					}
-				}
 			}
 			cb.append("];\n"); //$NON-NLS-1$
 			if (mapPosition != null) {
@@ -1245,7 +1199,7 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 	 * @return map page URL
 	 */
 	protected URL findMapPage(String mapPage) {
-		return findUrl("gmap/" + mapPage); //$NON-NLS-1$
+		return findUrl(GpsActivator.getDefault().getBundle(), "gmap/" + mapPage); //$NON-NLS-1$
 	}
 
 	/**
@@ -1364,7 +1318,7 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 	 *            - script URL
 	 * @return - HTML script link
 	 */
-	protected String createScriptEntry(URL url) {
+	protected String createScriptEntry(String url) {
 		return new StringBuilder().append("<script src=\"").append(url).append("\" type=\"text/javascript\"></script>") //$NON-NLS-1$ //$NON-NLS-2$
 				.toString();
 	}
@@ -1376,7 +1330,7 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 	 *            - css URL
 	 * @return - HTML style link
 	 */
-	protected String createStyleEntry(URL url) {
+	protected String createStyleEntry(String url) {
 		return new StringBuilder().append("<link rel=\"stylesheet\" href=\"").append(url).append("\"></link>") //$NON-NLS-1$ //$NON-NLS-2$
 				.toString();
 	}

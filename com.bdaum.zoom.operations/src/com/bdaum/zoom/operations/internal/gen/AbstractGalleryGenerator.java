@@ -1111,9 +1111,8 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 						Object value = qf.obtainFieldValue(asset);
 						if (value != null && value != QueryField.VALUE_NOTHING && value != QueryField.VALUE_MIXED) {
 							String text = qf.value2text(value, ""); //$NON-NLS-1$
-							if (qf.getUnit() != null)
-								text += ' ' + qf.getUnit();
 							if (text != Format.MISSINGENTRYSTRING) {
+								text = qf.addUnit(text, " ", ""); //$NON-NLS-1$ //$NON-NLS-2$
 								if (multi || single) {
 									sb.append(qf.getLabel()).append(": ") //$NON-NLS-1$
 											.append(text);

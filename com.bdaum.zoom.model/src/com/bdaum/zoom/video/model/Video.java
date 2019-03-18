@@ -198,6 +198,20 @@ public interface Video extends IAsset, MediaExtension {
 	 * @return - value of field videoStreamType
 	 */
 	public int getVideoStreamType();
+	
+	/**
+	 * Set value of property avgBitrate
+	 *
+	 * @param _value - new element value
+	 */
+	
+	public void setAvgBitrate(int _value);
+	/**
+	 * Get value of property avgBitrate();
+	 *
+	 * @return - value of field avgBitrate
+	 */
+	public int getAvgBitrate();
 
 	/* ----- Validation ----- */
 

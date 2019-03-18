@@ -24,8 +24,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -59,14 +59,10 @@ public class LocationSelectionDialog extends ZDialog {
 				close();
 			}
 		});
-		viewer.getControl().addFocusListener(new FocusListener() {
+		viewer.getControl().addFocusListener(new FocusAdapter() {
 			public void focusLost(FocusEvent e) {
 				result = null;
 				close();
-			}
-
-			public void focusGained(FocusEvent e) {
-				//do nothing
 			}
 		});
 		Shell shell = getShell();

@@ -99,7 +99,7 @@ public class PasteAction extends RetargetAction implements IAdaptable {
 					if (!images.isEmpty())
 						OperationJob.executeOperation(
 								new ImportOperation(new FileInput(StorageObject.fromFile(images), false),
-										activator.createImportConfiguration(this), null,
+										activator.createImportConfiguration(this), null, null,
 										folders.toArray(new File[folders.size()])),
 								this);
 				}

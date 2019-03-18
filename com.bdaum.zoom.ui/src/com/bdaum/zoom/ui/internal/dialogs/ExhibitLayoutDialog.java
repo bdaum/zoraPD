@@ -81,13 +81,20 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 		imageGroup.setText(Messages.ExhibitLayoutDialog_image);
 		new Label(imageGroup, SWT.NONE).setText(Messages.ExhibitLayoutDialog_size + captionUnitcmin());
 		Listener listener = new Listener() {
+			boolean updating = false;
 			@Override
 			public void handleEvent(Event event) {
 				if (event.widget == matWidthField || event.widget == frameWidthField) {
 					updateColorGroups();
 					updateTotal();
-				} else
+				} else if (!updating) {
+					updating = true;
+					try {
 					updateSizeFields(event.widget);
+					} finally {
+						updating = false;
+					}
+				}
 			}
 		};
 		imageWidthField = new NumericControl(imageGroup, SWT.NONE);

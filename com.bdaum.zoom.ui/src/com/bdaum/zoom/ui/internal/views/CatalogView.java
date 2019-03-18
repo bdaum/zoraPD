@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.eclipse.core.commands.operations.UndoContext;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -209,6 +210,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 	}
 
 	public final class CatalogDropTargetListener extends EffectDropTargetListener {
+
 		public CatalogDropTargetListener(Control control) {
 			super(control);
 		}
@@ -262,13 +264,12 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 						event.detail = DND.DROP_MOVE;
 					return;
 				}
-				if (selectionTransfer.isSupportedType(event.currentDataType))
-					if (canBeDropped(event))
-						if ((detail & OPERATIONS) != 0 || detail == DND.DROP_NONE)
-							event.detail = DND.DROP_COPY;
-						else if (fileTransfer.isSupportedType(event.currentDataType) && gpxCanBeDropped(event))
-							if ((detail & OPERATIONS) != 0 || detail == DND.DROP_NONE)
-								event.detail = DND.DROP_COPY;
+				if (selectionTransfer.isSupportedType(event.currentDataType) && canBeDropped(event)) {
+					if ((detail & OPERATIONS) != 0 || detail == DND.DROP_NONE)
+						event.detail = DND.DROP_COPY;
+				} else if (fileTransfer.isSupportedType(event.currentDataType) && gpxCanBeDropped(event))
+					if ((detail & OPERATIONS) != 0 || detail == DND.DROP_NONE)
+						event.detail = DND.DROP_COPY;
 			}
 		}
 
@@ -525,15 +526,20 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 						gpx.add(file);
 				}
 				if (!gpx.isEmpty() && gpxCanBeDropped(event)) {
-					SmartCollectionImpl collection = (SmartCollectionImpl) event.item.getData();
-					List<String> ids = new ArrayList<String>(3000);
-					for (Asset asset : Core.getCore().getDbManager().createCollectionProcessor(collection)
-							.select(false))
-						ids.add(asset.getStringId());
 					IDropinHandler handler = UiActivator.getDefault().getDropinHandler("gps"); //$NON-NLS-1$
-					if (handler != null)
-						handler.handleDropin(gpx.toArray(new File[gpx.size()]), ids.toArray(new String[ids.size()]),
-								CatalogView.this);
+					if (handler != null) {
+						final SmartCollectionImpl currentCollection = (SmartCollectionImpl) event.item.getData();
+						handler.handleDropin(gpx.toArray(new File[gpx.size()]), new IAdaptable() {
+							@SuppressWarnings("unchecked")
+							@Override
+							public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
+								if (AssetSelection.class.equals(adapter))
+									return new AssetSelection(Core.getCore().getDbManager()
+											.createCollectionProcessor(currentCollection).select(false));
+								return CatalogView.this.getAdapter(adapter);
+							}
+						});
+					}
 				}
 			}
 		}
@@ -572,9 +578,9 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 					return -1;
 				return c1.getName().compareToIgnoreCase(c2.getName());
 			} else if (e1 instanceof Group && e2 instanceof SmartCollection)
-				return ((SmartCollection)e2).getStringId().equals(Constants.LAST_IMPORT_ID) ? 1 : -1;
+				return ((SmartCollection) e2).getStringId().equals(Constants.LAST_IMPORT_ID) ? 1 : -1;
 			else if (e1 instanceof SmartCollection && e2 instanceof Group)
-				return ((SmartCollection)e1).getStringId().equals(Constants.LAST_IMPORT_ID) ? -1 : 1;
+				return ((SmartCollection) e1).getStringId().equals(Constants.LAST_IMPORT_ID) ? -1 : 1;
 			return super.compare(viewer, e1, e2);
 		}
 	}
@@ -621,8 +627,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 	private int colorCode = -1;
 	protected boolean catOpen;
 	protected boolean selectionChanged;
-	private Point findingPoint = new Point(0,0);
-
+	private Point findingPoint = new Point(0, 0);
 
 	private ViewerFilter userFilter = new ViewerFilter() {
 		@Override
@@ -697,7 +702,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		viewer.setComparer(IdentifiedElementComparer.getInstance());
 		UiUtilities.installDoubleClickExpansion((TreeViewer) viewer);
 		ZColumnViewerToolTipSupport.enableFor(viewer);
-		// setInput();
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), HelpContextIds.CATALOG_VIEW);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(final SelectionChangedEvent event) {
@@ -1074,7 +1078,6 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			if (visible && !initialized)
 				refresh();
 		}
-
 	}
 
 	@Override
@@ -1528,7 +1531,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		registerCommand(refreshAction, IZoomCommandIds.RefreshCommand);
 		super.registerCommands();
 	}
-	
+
 	private static boolean hasChildren(final GroupImpl group) {
 		return group.getSubgroup() != null && !group.getSubgroup().isEmpty()
 				|| group.getExhibition() != null && !group.getExhibition().isEmpty()
@@ -1655,8 +1658,12 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		Object sibling = doDeleteCollection(collection, toBeDeleted, toBeStored, dbManager);
 		dbManager.safeTransaction(toBeDeleted, toBeStored);
 		refresh();
-		if (sibling != null)
-			setViewerSelection(new StructuredSelection(sibling), true);
+		if (sibling != null) {
+			StructuredSelection selection = new StructuredSelection(sibling);
+			setViewerSelection(selection, true);
+			cancelJobs(this);
+			new SelectionJob(viewer, new SelectionChangedEvent(this, selection)).schedule();
+		}
 		tellHistoryView(collection);
 	}
 

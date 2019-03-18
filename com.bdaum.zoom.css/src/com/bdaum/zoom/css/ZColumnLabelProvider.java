@@ -41,6 +41,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 
+import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.css.internal.IColumnLabelColorModel;
 import com.bdaum.zoom.css.internal.IThemeListener;
@@ -63,8 +64,6 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider
 	}
 
 	private static final String ELLIPSIS = "..."; //$NON-NLS-1$
-	private static final int MSECPERCHAR = 50;
-	private static final int MINTOOLTIPTIME = 500;
 	private Item colItem;
 	private Composite viewerControl;
 	private String tooltip;
@@ -296,7 +295,7 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider
 	@Override
 	public int getToolTipTimeDisplayed(Object element) {
 		String text = getToolTipText(element);
-		return text == null ? 0 : Math.max(MINTOOLTIPTIME, text.length() * MSECPERCHAR);
+		return text == null ? 0 : CommonUtilities.computeHoverTime(text.length());
 	}
 
 	public String getText(Object element) {

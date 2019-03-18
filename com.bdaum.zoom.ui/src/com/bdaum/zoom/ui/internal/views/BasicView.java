@@ -626,7 +626,6 @@ public abstract class BasicView extends ViewPart
 		if (partRef.getPart(false) == this) {
 			deregisterCommands(); // Just to be sure
 			registerCommands();
-			// viewActive = true;
 			setVisible(true);
 			Display display = getSite().getShell().getDisplay();
 			Image image = getTitleImage();

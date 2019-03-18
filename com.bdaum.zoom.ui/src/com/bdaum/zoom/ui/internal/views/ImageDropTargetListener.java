@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTarget;
@@ -176,18 +177,25 @@ public final class ImageDropTargetListener extends EffectDropTargetListener {
 
 	private void importGpx(List<File> gpx) {
 		AssetSelection assetSelection = host.getAssetSelection();
-		String[] assetIds = null;
-		if (assetSelection != null && !assetSelection.isEmpty())
-			assetIds = assetSelection.getAssetIds();
-		else {
+		if (assetSelection == null || assetSelection.isEmpty()) {
 			IAssetProvider assetProvider = host.getAssetProvider();
 			if (assetProvider != null)
-				assetIds = assetProvider.getAssetIds();
+				assetSelection = new AssetSelection(assetProvider.getAssets());
 		}
-		if (assetIds != null && assetIds.length > 0) {
+		if (assetSelection != null && !assetSelection.isEmpty()) {
 			IDropinHandler handler = UiActivator.getDefault().getDropinHandler("gps"); //$NON-NLS-1$
-			if (handler != null)
-				handler.handleDropin(gpx.toArray(new File[gpx.size()]), assetIds, host);
+			if (handler != null) {
+				final AssetSelection currentAssetSelection = assetSelection;
+				handler.handleDropin(gpx.toArray(new File[gpx.size()]), new IAdaptable() {
+					@SuppressWarnings("unchecked")
+					@Override
+					public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
+						if (AssetSelection.class.equals(adapter))
+							return currentAssetSelection;
+						return host.getAdapter(adapter);
+					}
+				});
+			}
 		}
 	}
 
@@ -226,5 +234,6 @@ public final class ImageDropTargetListener extends EffectDropTargetListener {
 			wizardDialog.open();
 		}
 	}
+
 
 }

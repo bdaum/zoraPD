@@ -95,6 +95,8 @@
   </topic>
   <topic href="html/reference/importPrefs.html" label="Import">
   </topic>
+  <topic href="html/reference/hoverPrefs.html" label="Hover">
+  </topic>
   <topic href="html/reference/catPrefs.html" label="Katalog">
   </topic>
   <topic href="html/reference/metadataPrefs.html" label="Metadaten">
@@ -107,7 +109,7 @@
   </topic>
   <topic href="html/reference/keyPrefs.html" label="Tastenkürzel">
   </topic>
-  <topic href="html/reference/vocabPrefs.html" label="Vocabulary">
+  <topic href="html/reference/vocabPrefs.html" label="Wortschatz">
   </topic>
   <anchor id="preferences"/>
  </topic>

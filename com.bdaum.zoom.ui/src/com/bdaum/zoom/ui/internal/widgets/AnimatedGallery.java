@@ -968,6 +968,11 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 	private static final int RATING_NO = 0;
 	private static final int RATING_SIZE = 1;
 	private static final int RATING_COUNT = 2;
+	
+	private static final double PAN_SENSITIVITY = 0.2d;
+	private static final double VACCEL = 5d;
+	private static final double HACCEL = 2.5d;
+
 
 	private Color offlineColor;
 	private Color remoteColor;
@@ -1104,7 +1109,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		canvas.removeInputEventListener(canvas.getPanEventHandler());
 		canvas.addInputEventListener(panHandler = new GalleryPanEventHandler(this, workArea, surfaceBounds.x,
 				surfaceBounds.y, surfaceBounds.width + surfaceBounds.x, surfaceBounds.height + surfaceBounds.y,
-				GalleryPanEventHandler.BOTH, InputEvent.ALT_MASK | InputEvent.BUTTON1_MASK, -3));
+				GalleryPanEventHandler.BOTH, InputEvent.ALT_MASK | InputEvent.BUTTON1_MASK, -3, PAN_SENSITIVITY, HACCEL, VACCEL));
 		canvas.removeInputEventListener(canvas.getZoomEventHandler());
 		canvas.addInputEventListener(zoomHandler = new GalleryZoomEventHandler(this, workArea, -10));
 		canvas.addMouseWheelListener(wheelListener = new InertiaMouseWheelListener());
@@ -1538,8 +1543,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 	public void setSelection(AssetSelection assetSelection, IAssetProvider provider) {
 		oldAssetSelection = assetSelection;
 		if (assetSelection.isPicked()) {
-			Iterator<Asset> iterator = selectedSlides.iterator();
-			while (iterator.hasNext()) {
+			for (Iterator<Asset> iterator = selectedSlides.iterator(); iterator.hasNext();) {
 				Asset asset = iterator.next();
 				if (!assetSelection.isSelected(asset)) {
 					Integer index = galleryMap.get(asset);
@@ -1553,23 +1557,28 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 					iterator.remove();
 				}
 			}
-			for (Asset asset : assetSelection.getAssets()) {
+			int cnt = 0;
+			for (Asset asset : assetSelection) {
 				if (!selectedSlides.contains(asset)) {
 					Integer i = galleryMap.get(asset);
 					int index = -1;
 					if (i != null)
-						index = i.intValue();
+						index = i;
 					else if (provider != null) {
 						index = provider.indexOf(asset);
 						if (index >= 0)
 							makeSlide(columns, index, asset);
 					}
 					if (index >= 0 && slides[index] != null) {
+						if (cnt == 0)
+							revealSlide(asset);
 						select(slides[index], 1000);
 						continue;
 					}
 					selectedSlides.add(asset);
-				}
+				} else if (cnt == 0)
+					revealSlide(asset);
+				++cnt;
 			}
 		} else
 			for (Asset asset : galleryMap.keySet()) {
@@ -1579,6 +1588,20 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 						select(slides[index], 1000);
 				}
 			}
+	}
+
+	private void revealSlide(Asset asset) {
+		Integer i = galleryMap.get(asset);
+		if (i != null) {
+			PGalleryItem slide = slides[i];
+			Point2D r1c = slide.getBounds().getCenter2D();
+			slide.localToGlobal(r1c);
+			PCamera camera = canvas.getCamera();
+			Point2D r2c = camera.getBounds().getCenter2D();
+			camera.localToGlobal(r2c);
+			pan(canvas, (int) (r2c.getX() - r1c.getX()), (int) (r2c.getY() - r1c.getY()));
+			slide.raiseToTop();
+		}
 	}
 
 	private boolean isSelected(Asset asset) {

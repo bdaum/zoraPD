@@ -2590,6 +2590,20 @@ public interface Asset_type extends AomValueChangedNotifier,
 	 */
 	public String getLastPicasaIniEntry();
 
+	/**
+	 * Set value of property noLensInfo
+	 *
+	 * @param _value - new element value
+	 */
+	public void setNoLensInfo(boolean _value);
+
+	/**
+	 * Get value of property noLensInfo
+	 *
+	 * @return - value of field noLensInfo
+	 */
+	public boolean getNoLensInfo();
+
 	/* ----- Validation ----- */
 
 	/**

@@ -157,7 +157,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 
 		@Override
 		public String getToolTipText(Object element) {
-			if (element instanceof Token) {
+			if (element instanceof Token && UiActivator.getDefault().getShowHover()) {
 				Token token = (Token) element;
 				String title;
 				switch (token.getMatch()) {
@@ -170,17 +170,14 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 				default:
 					title = Messages.CategorizeDialog_no_match;
 				}
-				String warning = ""; //$NON-NLS-1$
 				String label = token.getLabel();
 				String mapped = vManager.getVocab(label);
-				if (mapped == null)
-					warning = Messages.CategorizeDialog_not_contained_in_vocab;
-				else if (!mapped.equals(label))
-					warning = NLS.bind(Messages.CategorizeDialog_will_be_replaced, mapped);
+				String warning = mapped == null ? Messages.CategorizeDialog_not_contained_in_vocab
+						: mapped.equals(label) ? "" : NLS.bind(Messages.CategorizeDialog_will_be_replaced, mapped); //$NON-NLS-1$
 				return NLS.bind(Messages.CategorizeDialog_proposal_hover, new Object[] { label, title,
 						predictions.get(currentAsset.getStringId()).getServiceName(), warning });
 			}
-			return null;
+			return super.getToolTipText(element);
 		}
 
 		@Override
@@ -455,7 +452,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		@Override
 		public IHoverInfo getHoverInfo(IHoverSubject viewer, MouseEvent event) {
 			if (event.widget == imageCanvas)
-				return new HoverInfo(currentAsset, null, UiActivator.getDefault().getHoverNodes());
+				return new HoverInfo(currentAsset, (ImageRegion[]) null);
 			Node found = root.findNode(event.x, event.y);
 			if (found != null)
 				return new CatHoverInfo(found);

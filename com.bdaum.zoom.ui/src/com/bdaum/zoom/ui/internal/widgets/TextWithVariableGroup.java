@@ -39,8 +39,8 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.ui.internal.FieldDescriptor;
+import com.bdaum.zoom.ui.internal.dialogs.AddVariablesDialog;
 import com.bdaum.zoom.ui.internal.dialogs.TemplateFieldSelectionDialog;
-import com.bdaum.zoom.ui.internal.dialogs.TemplateMessages;
 
 @SuppressWarnings("restriction")
 public class TextWithVariableGroup implements ModifyListener {
@@ -104,71 +104,6 @@ public class TextWithVariableGroup implements ModifyListener {
 
 	}
 
-	static class AddVariablesDialog extends ZDialog {
-		String var = null;
-		private List list;
-		private String[] vlist;
-		private final String title;
-
-		public AddVariablesDialog(Shell parentShell, String title, String[] vlist) {
-			super(parentShell);
-			this.title = title;
-			this.vlist = vlist;
-		}
-
-		@Override
-		public void create() {
-			super.create();
-			validate();
-		}
-
-		public String getResult() {
-			return var;
-		}
-
-		@Override
-		protected void configureShell(Shell newShell) {
-			super.configureShell(newShell);
-			newShell.setText(title);
-		}
-
-		@Override
-		protected Control createDialogArea(Composite parent) {
-			Composite area = (Composite) super.createDialogArea(parent);
-			area.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-			list = new List(area, SWT.V_SCROLL | SWT.BORDER | SWT.SINGLE);
-			list.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					int i = list.getSelectionIndex();
-					var = i < 0 ? null : vlist[i];
-					validate();
-				}
-
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e) {
-					if (var != null)
-						okPressed();
-				}
-			});
-			list.setLayoutData(new GridData(250, 200));
-			String[] compList = new String[vlist.length];
-			for (int i = 0; i < vlist.length; i++) {
-				String varName = vlist[i];
-				if (varName.startsWith("{") && varName.endsWith("}")) { //$NON-NLS-1$//$NON-NLS-2$
-					varName = varName.substring(1, varName.length() - 1);
-					compList[i] = vlist[i] + TemplateMessages.getString(TemplateMessages.PREFIX + varName);
-				}
-			}
-			list.setItems(compList);
-			return area;
-		}
-
-		protected void validate() {
-			getButton(OK).setEnabled(var != null);
-		}
-	}
-
 	private Text textField;
 	private Button addVariableButton;
 	private Button addMetadataButon;
@@ -213,7 +148,7 @@ public class TextWithVariableGroup implements ModifyListener {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				AddVariablesDialog dialog = new AddVariablesDialog(composite.getShell(),
-						Messages.TextWithVariableGroup_add_variable, variables);
+						Messages.TextWithVariableGroup_add_variable, variables, null);
 				Point loc = textField.toDisplay(20, 10);
 				dialog.create();
 				dialog.getShell().setLocation(loc);
@@ -268,7 +203,7 @@ public class TextWithVariableGroup implements ModifyListener {
 			String text = textField.getText();
 			if (!text.isEmpty())
 				setToolTipText(Utilities.evaluateTemplate(text, Constants.PI_ALL, null, null, 0, 1, 1, null, asset,
-						collection, Integer.MAX_VALUE, false));
+						collection, Integer.MAX_VALUE, false, false));
 		}
 	}
 

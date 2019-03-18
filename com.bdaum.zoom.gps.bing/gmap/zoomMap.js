@@ -69,11 +69,7 @@ function clickCallback(event) {
 
 function setSelection(marker) {
 	var i = marker.metadata;
-	if (i < 0) {
-		selected = locShownImage[-i-1];
-	} else {
-		selected = locImage[i].join();
-	}
+	selected = i < 0 ? locShownImage[-i-1] :  locImage[i].join();
 	sendSelection();
 	setMarkers();
 }
@@ -92,7 +88,7 @@ function DoubleClickHandler(event) {
 					pending = true;
 					sendMessage('info', locShownImage[-i-1] + "&json");
 				}
-			} else if (locImage[i].length > 0) {
+			} else if (locImage[i].length) {
 				currentMarker = marker;
 				pending = true;
 				sendMessage('info', locImage[i].join() + "&json");
@@ -142,7 +138,7 @@ function setupMap() {
 			zoom : initialDetail
 		});
 	}
-	Microsoft.Maps.registerModule('HtmlPushpinLayerModule', 'HtmlPushpinLayerModule.js');
+	
 	window.addEventListener("keyup", function (e) {
     	if (draggedMarker) {
 			var code = (e.keyCode ? e.keyCode : e.which);
@@ -175,17 +171,18 @@ function setupMap() {
 }
 
 function performDrawings(redraw) {
+
 	var bounds = map.getBounds();
 	diagonal = distance(bounds.getNorthwest(), bounds.getSoutheast());
-	if (track.length > 0) {
+	if (track.length) {
 		setTrack();
-		if (!redraw && track.length > 0)
+		if (!redraw && track.length)
 			map.setView({
 				bounds : track
 			});
 	} else {
 		setMarkers();
-		if (!redraw && (locCreated.length > 0 || locShown.length > 0)) {
+		if (!redraw && (locCreated.length || locShown.length)) {
 			var allPos = locCreated.concat(locShown);
 			if (allPos.length > 1)
 				map.setView({
@@ -398,7 +395,7 @@ function EndDragHandler(event) {
 				sendPosition('drag', markerPoint, map.getZoom(), 3, uuid);
 				releaseLocationShown();
 				setMarkers();
-			} else if (draggedMarker.metadata) {
+			} else if (draggedMarker.metadata !== undefined) {
 				var i = draggedMarker.metadata;
 				var ids;
 				if (i < 0) {
@@ -533,18 +530,17 @@ function applyCameraSet(pos) {
 	locImage = [];
 	locImage.push(selected);
 	imgDirection = [];
-	if (locShown && locShown.length > 0) {
+	if (locShown && locShown.length)
 		imgDirection.push(bearing(pos, locShown[0]));
-	} else {
+	else
 		imgDirection.push(NaN);
-	}
 }
 
 function concatTitles(array) {
 	var l = array.length;
-	if (l == 0)
+	if (l === 0)
 		return "";
-	if (l == 1)
+	if (l === 1)
 		return array[0];
 	var newTitle = "";
 	for (var i = 0; i < array.length; i++) {
@@ -553,7 +549,7 @@ function concatTitles(array) {
 			var t = titles[j];
 			if (newTitle != "" && newTitle.length + t.length > 40 || t == "...")
 				return newTitle + ",...";
-			if (newTitle != "")
+			if (newTitle.length)
 				newTitle += ",";
 			newTitle += t;
 		}
@@ -588,11 +584,7 @@ function bearing(from, to) {
 
 function applyShownSet(pos) {
 	locShown.push(pos);
-	if (locTitles.length > 0) {
-		locShownTitles.push(locTitles[0]);
-	} else {
-		locShownTitles.push("");
-	}
+	locShownTitles.push(locTitles.length ? locTitles[0] : "");
 	var uuid = generateQuickGuid();
 	selected = "shown="+uuid;
 	locShownImage.push(selected);
@@ -601,7 +593,7 @@ function applyShownSet(pos) {
 }
 
 function applyDirectionSet(pos) {
-	if (imgDirection.length > 0 && locCreated.length > 0) 
+	if (imgDirection.length && locCreated.length) 
 		imgDirection[0] = bearing(locCreated[0], pos);
 }
 

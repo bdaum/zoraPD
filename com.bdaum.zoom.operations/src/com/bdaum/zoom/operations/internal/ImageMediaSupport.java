@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,7 +70,6 @@ import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.IPreferenceUpdater;
 import com.bdaum.zoom.core.internal.ImportException;
-import com.bdaum.zoom.core.internal.ImportFromDeviceData;
 import com.bdaum.zoom.core.internal.ImportState;
 import com.bdaum.zoom.core.internal.MakerSupport;
 import com.bdaum.zoom.core.internal.db.AssetEnsemble;
@@ -90,6 +90,7 @@ import com.bdaum.zoom.program.IRawConverter;
 @SuppressWarnings("restriction")
 public class ImageMediaSupport extends AbstractMediaSupport {
 
+	private static final SimpleDateFormat EXIFTOOL_DATE_FORMAT = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss Z"); //$NON-NLS-1$
 	private static final String PICASA_INI = ".picasa.ini"; //$NON-NLS-1$
 	private ImportState importState;
 	private int twidth;
@@ -124,23 +125,27 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 		}
 		long lastMod = object.lastModified();
 
+		Map<String, String> overlayMap = importState.overlayMap;
+		overlayMap.put(QueryField.EXIF_ORIGINALFILENAME.getExifToolKey(), originalFileName);
+		overlayMap.put(QueryField.FILESIZE.getExifToolKey(), String.valueOf(object.size()));
+		Date lastModified = new Date(lastMod);
+		overlayMap.put(QueryField.EXIF_DATETIME.getExifToolKey(), EXIFTOOL_DATE_FORMAT.format(lastModified));
 		CoreActivator coreActivator = CoreActivator.getDefault();
 		IDbManager dbManager = coreActivator.getDbManager();
 		URI uri = object.toURI();
 		String uriAsString = uri.toString();
-		if (importState.importFromDeviceData == null && rc != null)
-			lastMod = rc.getLastRecipeModification(uriAsString, lastMod, importState.recipeDetectorIds);
-		Date lastModified = new Date(lastMod);
+		if (!importState.isMedia() && !importState.fromTransferFolder() && rc != null)
+			lastModified = new Date(
+					lastMod = rc.getLastRecipeModification(uriAsString, lastMod, importState.recipeDetectorIds));
 		boolean isDng = ImageConstants.isDng(uriAsString);
 		boolean isRaw = ImageConstants.isRaw(uriAsString, false);
 		boolean isJpeg = ImageConstants.isJpeg(extension);
-		ImportFromDeviceData importFromDeviceData = importState.importFromDeviceData;
 		File[] files = null;
-		if (importFromDeviceData != null) {
-			int skipPolicy = importFromDeviceData.getSkipPolicy();
+		if (importState.transferNeeded()) {
+			int skipPolicy = importState.getSkipPolicy();
 			if (skipPolicy == Constants.SKIP_JPEG && isJpeg || skipPolicy == Constants.SKIP_RAW && (isDng || isRaw))
 				return 0;
-			files = importState.transferFile(originalFile = object, importState.importNo, aMonitor);
+			files = importState.transferFile(originalFile = object, aMonitor);
 			if (files == null || !files[0].exists())
 				return 0;
 			if (importState.skipDuplicates(files[0], originalFileName, lastModified)) {
@@ -150,7 +155,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 			}
 			uriAsString = files[0].toURI().toString();
 		} else if (object.isLocal())
-			files = new File[] {(File) object.getNativeObject()};
+			files = new File[] { (File) object.getNativeObject() };
 		else
 			return 0;
 		ImportConfiguration configuration = importState.getConfiguration();
@@ -180,17 +185,16 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 			List<AssetEnsemble> existing = null;
 			List<AssetEnsemble> existingDng = null;
 			if (importRaw || !isRaw)
-				existing = AssetEnsemble.getAllAssets(dbManager, remote != null ? remote : files[0].toURI(), importState);
+				existing = AssetEnsemble.getAllAssets(dbManager, remote != null ? remote : files[0].toURI(),
+						importState);
 			String dngUriAsString = null;
 			URI dngURI = null;
 			if (importDng && isRaw) {
 				dngUriAsString = Core.removeExtensionFromUri(uriAsString) + ".dng"; //$NON-NLS-1$
 				try {
-					int p = dngUriAsString.lastIndexOf('/');
-					StringBuilder sb = new StringBuilder();
-					sb.append(dngUriAsString, 0, p + 1);
-					File targetFolder = importState.importFromDeviceData == null ? new File(new URI(sb.toString()))
-							: null;
+					int p = uriAsString.lastIndexOf('/');
+					StringBuilder sb = new StringBuilder().append(uriAsString, 0, p + 1);
+					File targetFolder = importState.transferNeeded() ? null : new File(new URI(sb.toString()));
 					if (targetFolder != null && !targetFolder.canWrite()) {
 						importState.operation.addError(
 								NLS.bind(Messages.getString("ImageMediaSupport.dng_read_only"), targetFolder.getName()), //$NON-NLS-1$
@@ -211,8 +215,8 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 				}
 			}
 			Meta meta = importState.meta;
-			if (importFromDeviceData == null) {
-				Asset asset = null;
+			Asset asset = null;
+			if (!importState.transferNeeded()) {
 				if (existing != null && !existing.isEmpty()) {
 					asset = existing.get(0).getAsset();
 					oldId = asset.getStringId();
@@ -223,7 +227,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 					oldDngId = asset.getStringId();
 					oldDngThumbnail = importState.useOldThumbnail(asset.getJpegThumbnail());
 				}
-				if (asset != null) {
+				if (asset != null) { // conflict detected
 					if (configuration.conflictPolicy == ImportState.IGNOREALL)
 						return 0;
 					if (configuration.isSynchronize || (oldId == null && oldDngId != null && importState.isSilent()
@@ -268,7 +272,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 				if (ensemble == null)
 					ensemble = new AssetEnsemble(dbManager, importState, oldId);
 			}
-			Asset asset = importState.resetEnsemble(ensemble, remote != null ? remote : files[0].toURI(), files[0],
+			asset = importState.resetEnsemble(ensemble, remote != null ? remote : files[0].toURI(), files[0],
 					lastModified, originalFileName, importState.importDate);
 			if (files.length > 1)
 				AssetEnsemble.insertVoiceNote(asset, asset.getVolume(), "."); //$NON-NLS-1$
@@ -321,16 +325,25 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 						if (files.length > 1 && dngFolder != null) {
 							String name = files[1].getName();
 							int p = name.lastIndexOf('.');
-							File target = new File(Core.removeExtensionFromUri(dngFile.getAbsolutePath()) + name.substring(p));
-							CoreActivator.getDefault().getFileWatchManager().ignore(target, importState.operation.getOpId());
+							File target = new File(
+									Core.removeExtensionFromUri(dngFile.getAbsolutePath()) + name.substring(p));
+							CoreActivator.getDefault().getFileWatchManager().ignore(target,
+									importState.operation.getOpId());
 							BatchUtilities.copyFile(files[1], target, null);
 							AssetEnsemble.insertVoiceNote(dngAsset, dngAsset.getVolume(), "."); //$NON-NLS-1$
 						}
 						List<Ghost_typeImpl> ghosts = dbManager.obtainGhostsForFile(dngURI);
 						importState.allDeletedGhosts.addAll(ghosts);
 						toBeDeleted.addAll(ghosts);
-						dngAsset.setLastModification(new Date(dngFile.lastModified()));
-						dngAsset.setFileSize(dngFile.length());
+						Date dngLastmod = new Date(dngFile.lastModified());
+						dngAsset.setLastModification(dngLastmod);
+						long dngsize = dngFile.length();
+						dngAsset.setFileSize(dngsize);
+						String oldFileSize = overlayMap.get(QueryField.FILESIZE.getExifToolKey());
+						String oldLastmod = overlayMap.get(QueryField.EXIF_DATETIME.getExifToolKey());
+						overlayMap.put(QueryField.FILESIZE.getExifToolKey(), String.valueOf(dngsize));
+						overlayMap.put(QueryField.EXIF_DATETIME.getExifToolKey(),
+								EXIFTOOL_DATE_FORMAT.format(dngLastmod));
 						IExifLoader etool = importState.getExifTool(dngFile,
 								importState.getConfiguration().getExifFastMode());
 						Recipe dngRecipe = null;
@@ -339,7 +352,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 								dngImage = loadPreviewImage(etool, meta, dngAsset);
 							if (dngImage == null) {
 								dngRecipe = rc == null ? null
-										: rc.getRecipe(dngUriAsString, false, etool, importState.overlayMap,
+										: rc.getRecipe(dngUriAsString, false, etool, overlayMap,
 												importState.recipeDetectorIds);
 								try {
 									convert = rawConvert(dngFile, dngRecipe, aMonitor);
@@ -369,6 +382,8 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 								icnt++;
 							}
 						}
+						overlayMap.put(QueryField.FILESIZE.getExifToolKey(), oldFileSize);
+						overlayMap.put(QueryField.EXIF_DATETIME.getExifToolKey(), oldLastmod);
 					} else
 						dngAsset = null;
 				} else
@@ -385,21 +400,22 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 					etool = new ExifToolSubstitute(files[0]);
 				else {
 					exifObject = new StorageObject(files[0]);
-					if (importFromDeviceData != null && originalFile != null) {
+					if (importState.isMedia() && originalFile != null) {
 						String originalUri = (remote != null ? remote : originalFile.toURI()).toString();
 						if (isRaw || isDng) {
 							StorageObject jpegFile = remote != null ? null : findJpegSibling(originalFile);
-							if (jpegFile != null && importFromDeviceData.getSkipPolicy() == Constants.SKIP_JPEG_IF_RAW)
+							if (jpegFile != null && importState.getSkipPolicy() == Constants.SKIP_JPEG_IF_RAW)
 								importState.skipFile = jpegFile;
-							if (!importFromDeviceData.getExifTransferPrefix().isEmpty()) {
+							String prefix = importState.getExifTransferPrefix();
+							if (prefix != null) {
 								int q = originalUri.lastIndexOf('/');
 								String name = (q < 0) ? originalUri : originalUri.substring(q + 1);
-								if (jpegFile != null && name.startsWith(importFromDeviceData.getExifTransferPrefix()))
+								if (jpegFile != null && name.startsWith(prefix))
 									exifObject = jpegFile;
 							}
 						} else if (isJpeg) {
 							StorageObject rawFile = remote != null ? null : findRawSibling(originalFile);
-							if (rawFile != null && importFromDeviceData.getSkipPolicy() == Constants.SKIP_RAW_IF_JPEG)
+							if (rawFile != null && importState.getSkipPolicy() == Constants.SKIP_RAW_IF_JPEG)
 								importState.skipFile = rawFile;
 						}
 					}
@@ -415,7 +431,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 						if (image == null)
 							try {
 								rawRecipe = rc == null ? null
-										: rc.getRecipe(uriAsString, false, etool, importState.overlayMap,
+										: rc.getRecipe(uriAsString, false, etool, overlayMap,
 												importState.recipeDetectorIds);
 								convert = rawConvert(files[0], rawRecipe, aMonitor);
 								if (convert != null)
@@ -436,8 +452,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 					setRawFormat(asset, null);
 				} else if (isRaw) {
 					rawRecipe = rc == null ? null
-							: rc.getRecipe(uriAsString, false, etool, importState.overlayMap,
-									importState.recipeDetectorIds);
+							: rc.getRecipe(uriAsString, false, etool, overlayMap, importState.recipeDetectorIds);
 					if ((dngImage != null || oldDngThumbnail != null) && dngEnsemble != null && dngAsset != null
 							&& ensemble != null && rawRecipe == null) {
 						dngEnsemble.transferTo(ensemble);
@@ -445,6 +460,15 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 						oldThumbnail = oldDngThumbnail;
 						asset.setUri(imageURI);
 						asset.setFileSize(files[0].length());
+						asset.setDateTime(
+								EXIFTOOL_DATE_FORMAT.parse(overlayMap.get(QueryField.EXIF_DATETIME.getExifToolKey())));
+						ExifTool tool = importState.getExifTool(files[0],
+								importState.getConfiguration().getExifFastMode());
+						String software = tool.getMetadata().get(QueryField.EXIF_SOFTWARE.getExifToolKey());
+						if (software != null)
+							asset.setSoftware(software);
+						if (Constants.STATE_CONVERTED == asset.getStatus())
+							asset.setStatus(Constants.STATE_RAW);
 						setRawFormat(asset, extension);
 						AssetEnsemble.deleteAll(existing, deletedAssets, toBeDeleted, toBeStored);
 						ensemble.store(toBeDeleted, toBeStored);
@@ -488,7 +512,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 					if (oldThumbnail == null) {
 						if (fromImportFilter)
 							image = ((ExifToolSubstitute) etool).loadThumbnail(twidth, twidth / 4 * 3,
-									ImportState.MCUWidth, 0f);
+									importState.thumbnailRaster, 0f);
 						else
 							try {
 								image = ZImage.loadThumbnail(files[0], extension, twidth);
@@ -502,11 +526,14 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 							} catch (Exception e) {
 								if (e instanceof IndexOutOfBoundsException
 										|| e.getCause() instanceof ArrayIndexOutOfBoundsException)
-									importState.reportError(NLS.bind(
-											Messages.getString("ImageMediaSupport.error_when_reading_swt"), files[0]), e); //$NON-NLS-1$
+									importState.reportError(
+											NLS.bind(Messages.getString("ImageMediaSupport.error_when_reading_swt"), //$NON-NLS-1$
+													files[0]),
+											e);
 								else
 									importState.reportError(
-											NLS.bind(Messages.getString("ImageMediaSupport.error_reading"), files[0]), e); //$NON-NLS-1$
+											NLS.bind(Messages.getString("ImageMediaSupport.error_reading"), files[0]), //$NON-NLS-1$
+											e);
 								return 0;
 							}
 					}
@@ -514,8 +541,8 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 				aMonitor.worked(1);
 				--work;
 				if (asset != null && ensemble != null) {
-					if (createImageEntry(files[0], uri, extension, convert != null, ensemble, image, oldThumbnail, etool,
-							rawRecipe, importState.importDate, toBeStored, toBeDeleted, aMonitor)) {
+					if (createImageEntry(files[0], uri, extension, convert != null, ensemble, image, oldThumbnail,
+							etool, rawRecipe, importState.importDate, toBeStored, toBeDeleted, aMonitor)) {
 						if (isRaw)
 							setRawFormat(asset, extension);
 						else if (isDng)
@@ -598,13 +625,12 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 						configuration.info, configuration.silent);
 			--work;
 			boolean changed = importState.operation.updateFolderHierarchies(asset, true, configuration.timeline,
-					configuration.locations, false);
-			changed |= importState.operation.updateFolderHierarchies(dngAsset, true, configuration.timeline,
-					configuration.locations, false);
-			if (importFromDeviceData != null && importFromDeviceData.getWatchedFolder() != null && originalFile != null
+					configuration.locations, false)
+					|| importState.operation.updateFolderHierarchies(dngAsset, true, configuration.timeline,
+							configuration.locations, false);
+			if (originalFile != null && importState.fromTransferFolder()
 					&& !files[0].equals(originalFile.getNativeObject()))
-				originalFile.delete();
-			// from transfer folder. Delete original file
+				originalFile.delete(); // the file in the transfer folder must be deleted
 			return (changed) ? -icnt : icnt;
 		} catch (ImportException e) {
 			return 0;
@@ -613,7 +639,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 				convert.delete();
 			if (exifObject != null)
 				exifObject.dispose();
-			if (importFromDeviceData != null && isRaw
+			if (importState.transferNeeded() && isRaw
 					&& (configuration.rawOptions.equals(Constants.RAWIMPORT_DNGEMBEDDEDRAW)
 							|| configuration.rawOptions.equals(Constants.RAWIMPORT_ONLYDNG)))
 				// When importing from camera, the transmitted raw file can be
@@ -637,8 +663,8 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 						theight = twidth;
 						twidth = www;
 					}
-					previewImage.setScaling(twidth, theight, false, ImportState.MCUWidth, null); // ,
-																									// ZImage.SCALE_DEFAULT);
+					previewImage.setScaling(twidth, theight, false, importState.thumbnailRaster, null); // ,
+					// ZImage.SCALE_DEFAULT);
 					String s = tool.getMetadata().get(QueryField.EXIF_ORIENTATION.getExifToolKey());
 					if (s != null) {
 						try {
@@ -680,8 +706,13 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 
 	private static void setRawFormat(Asset asset, String ext) {
 		if (asset != null) {
-			asset.setFormat(ext == null ? ImageConstants.DNG_ADOBE_DIGITAL_NEGATIVE
-					: ImageConstants.getRawFormatDescription(ext));
+			if (ext == null || "dng".equals(ext)) { //$NON-NLS-1$
+				asset.setFormat(ImageConstants.DNG_ADOBE_DIGITAL_NEGATIVE);
+				asset.setMimeType(ImageConstants.IMAGE_X_DNG);
+			} else {
+				asset.setFormat(ImageConstants.getRawFormatDescription(ext));
+				asset.setMimeType(ImageConstants.IMAGE_X_RAW);
+			}
 			asset.setDigitalZoomRatio(Double.NaN);
 		}
 	}
@@ -837,12 +868,10 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 					deriv = sibling;
 					orig = asset;
 				}
-			} else {
-				if (sIsDng || sIsRaw) {
-					deriv = asset;
-					derivEnsemble = ensemble;
-					orig = sibling;
-				}
+			} else if (sIsDng || sIsRaw) {
+				deriv = asset;
+				derivEnsemble = ensemble;
+				orig = sibling;
 			}
 			if (deriv != null && orig != null) {
 				detected = true;
@@ -976,8 +1005,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 		} else if (assetStatus == Constants.STATE_RAW && recipe != null)
 			asset.setStatus(assetStatus = Constants.STATE_CORRECTED);
 		ensemble.resetEnsemble(assetStatus);
-		if (importState.analogProperties != null)
-			ensemble.setAnalogProperties(importState.analogProperties);
+		ensemble.setAnalogProperties(importState.getAnalogProperties());
 		if (recipe == Recipe.NULL)
 			recipe = null;
 		if (recipe != null) {
@@ -1032,7 +1060,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 					asset.getName()), e);
 		}
 		processPicasaFaceData(originalFile, ensemble);
-		ensemble.cleanUp(now);
+		ensemble.cleanUp(now, importState.getTimeshift());
 		if (oldThumbnail != null) {
 			asset.setJpegThumbnail(oldThumbnail);
 			return true;
@@ -1051,7 +1079,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 					height = twidth;
 					twidth = www;
 				}
-				double scale = image.setScaling(twidth, height, false, ImportState.MCUWidth, null);
+				double scale = image.setScaling(twidth, height, false, importState.thumbnailRaster, null);
 				if (recipe != null)
 					recipe.setScaling((float) scale);
 				if (angle != 0)
@@ -1219,6 +1247,11 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 	@Override
 	public void setCollectionId(String collectionID) {
 		// not for images
+	}
+
+	@Override
+	public String getGalleryHoverId() {
+		return "com.bdaum.zoom.ui.hover.galleryItem.photo"; //$NON-NLS-1$
 	}
 
 }

@@ -40,8 +40,7 @@ public class Icons {
 
 		private String getKey() {
 			if (key == null) {
-				key = prefix + (++counter);
-				JFaceResources.getImageRegistry().put(key,
+				JFaceResources.getImageRegistry().put(key = prefix + (++counter),
 						VideoActivator.getImageDescriptor(path));
 				path = null;
 			}
@@ -58,11 +57,4 @@ public class Icons {
 	}
 
 	public static final Icon video40 = new Icon("icons/video40.png"); //$NON-NLS-1$
-	public static final Icon volume = new Icon("/icons/banner/loudness.png"); //$NON-NLS-1$
-	public static final Icon volume_d = new Icon("/icons/banner/loudness_d.png"); //$NON-NLS-1$
-	public static final Icon play = new Icon("/icons/play.png"); //$NON-NLS-1$
-	public static final Icon stop = new Icon("/icons/stop.png"); //$NON-NLS-1$
-	public static final Icon sound = new Icon("/icons/sound.png"); //$NON-NLS-1$
-	public static final Icon soundMute = new Icon("/icons/sound_mute.png"); //$NON-NLS-1$
-	public static final Icon snapshot = new Icon("/icons/snapshot.png"); //$NON-NLS-1$
 }

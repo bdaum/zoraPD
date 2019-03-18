@@ -1756,9 +1756,9 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 		simViewer.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getToolTipText(Object element) {
-				if (element instanceof Algorithm)
+				if (element instanceof Algorithm && UiActivator.getDefault().getShowHover())
 					return ((Algorithm) element).getDescription();
-				return super.getText(element);
+				return super.getToolTipText(element);
 			}
 
 			@Override
@@ -2922,12 +2922,12 @@ public class EditMetaDialog extends ZTitleAreaDialog {
 
 			@Override
 			public String getToolTipText(Object element) {
-				if (element instanceof String) {
+				if (element instanceof String && UiActivator.getDefault().getShowHover()) {
 					File file = new File((String) element);
 					if (!file.exists())
 						return Messages.EditMetaDialog_file_does_not_exist;
 				}
-				return null;
+				return super.getToolTipText(element);
 			}
 
 			@Override

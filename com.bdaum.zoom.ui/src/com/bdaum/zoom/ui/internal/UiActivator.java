@@ -160,6 +160,7 @@ import com.bdaum.zoom.ui.internal.actions.ViewImageAction;
 import com.bdaum.zoom.ui.internal.codes.CodeParser;
 import com.bdaum.zoom.ui.internal.commands.LastImportCommand;
 import com.bdaum.zoom.ui.internal.dialogs.TetheredDialog;
+import com.bdaum.zoom.ui.internal.hover.HoverManager;
 import com.bdaum.zoom.ui.internal.job.FolderWatchJob;
 import com.bdaum.zoom.ui.internal.job.SyncPicasaJob;
 import com.bdaum.zoom.ui.internal.job.TetheredJob;
@@ -176,6 +177,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	public static final String PLUGIN_ID = "com.bdaum.zoom.ui"; //$NON-NLS-1$
 
 	private static final String CONTACTFILE = "contacts/contacts.xml"; //$NON-NLS-1$
+
+	public static int MAXHISTORYLENGTH = 8;
 
 	private static final long ONEDAY = 86400000L;
 
@@ -249,7 +252,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
 	private String previousCatUri;
 
-	private boolean hasStarted;
+	private boolean startListenersDone;
 
 	private File picasaDb3;
 
@@ -272,6 +275,14 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	private Map<String, String> perspectiveGalleries;
 
 	private Map<Rectangle, IKiosk> viewerMonitorMap = new HashMap<>(5);
+	
+	private IPreferenceChangeListener preferenceListener = new IPreferenceChangeListener() {
+		public void preferenceChange(PreferenceChangeEvent event) {
+			if (PreferenceConstants.FILEASSOCIATION.equals(event.getKey()))
+				fileEditorMappings = null;
+		}
+	};
+
 
 	/*
 	 * (non-Javadoc)
@@ -368,13 +379,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 			for (FileEditorMapping mapping : FileAssociationsPreferencePage.loadFileEditorMappings())
 				for (String ext : mapping.getExtensions())
 					fileEditorMappings.put(ext.toLowerCase(), mapping);
-			addPreferenceChangeListener(new IPreferenceChangeListener() {
-				public void preferenceChange(PreferenceChangeEvent event) {
-					if (PreferenceConstants.FILEASSOCIATION.equals(event.getKey()))
-						fileEditorMappings = null;
-				}
-			});
-
+			addPreferenceChangeListener(preferenceListener);
 		}
 		return fileEditorMappings.get(extension.toLowerCase());
 	}
@@ -792,6 +797,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		String filename = file.getName();
 		int p = filename.lastIndexOf('.');
 		String ext = (p >= 0) ? filename.substring(p + 1) : ""; //$NON-NLS-1$
+		ext = ext.toLowerCase();
 		for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "gpsParser") //$NON-NLS-1$
 				.getExtensions())
 			for (IConfigurationElement conf : extension.getConfigurationElements()) {
@@ -964,6 +970,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 			clip.addLineListener(new LineListener() {
 				public void update(LineEvent event) {
 					if (event.getType() == LineEvent.Type.STOP) {
+						clip.removeLineListener(this);
 						if (clip.isOpen())
 							clip.close();
 						clip = null;
@@ -978,6 +985,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 				}
 			});
 			clip.start();
+			return;
 		} catch (IOException e) {
 			// do nothing
 		} catch (LineUnavailableException e) {
@@ -987,6 +995,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		} catch (NullPointerException e) {
 			// do nothing
 		}
+		if (onStop != null)
+			onStop.run();
 	}
 
 	public int getDisplayCMS() {
@@ -1298,14 +1308,14 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	}
 
 	public void fireStartListeners() {
-		hasStarted = true;
+		startListenersDone = true;
 		for (StartListener listener : startListeners)
 			listener.hasStarted();
 		startListeners.clear();
 	}
 
 	public boolean addStartListener(StartListener listener) {
-		if (!hasStarted) {
+		if (!startListenersDone) {
 			startListeners.add(listener);
 			return true;
 		}
@@ -1442,6 +1452,9 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		}
 	};
 
+	private HoverManager hoverManager;
+
+
 	public boolean startTetheredShooting(StorageObject[] dcims, IJobChangeListener listener) {
 		if (!isTetheredShootingActive()) {
 			TetheredDialog dialog = new TetheredDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell());
@@ -1534,6 +1547,12 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		if (frameManager == null)
 			frameManager = new FrameManager();
 		return frameManager;
+	}
+
+	public HoverManager getHoverManager() {
+		if (hoverManager == null)
+			hoverManager = new HoverManager();
+		return hoverManager;
 	}
 
 }

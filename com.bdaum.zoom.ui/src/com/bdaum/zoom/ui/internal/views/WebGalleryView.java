@@ -15,14 +15,14 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.views;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Paint;
-import java.awt.geom.AffineTransform;
+import java.awt.event.InputEvent;
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.net.MalformedURLException;
@@ -30,7 +30,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -83,15 +82,14 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
-import org.piccolo2d.PCamera;
 import org.piccolo2d.PNode;
 import org.piccolo2d.event.PBasicInputEventHandler;
 import org.piccolo2d.event.PInputEvent;
 import org.piccolo2d.extras.swt.PSWTCanvas;
-import org.piccolo2d.extras.swt.PSWTImage;
 import org.piccolo2d.extras.swt.PSWTText;
 import org.piccolo2d.util.PBounds;
 
+import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
@@ -99,7 +97,9 @@ import com.bdaum.zoom.cat.model.group.webGallery.Storyboard;
 import com.bdaum.zoom.cat.model.group.webGallery.StoryboardImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebExhibit;
 import com.bdaum.zoom.cat.model.group.webGallery.WebExhibitImpl;
+import com.bdaum.zoom.cat.model.group.webGallery.WebGallery;
 import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IGalleryGenerator;
 import com.bdaum.zoom.core.ISpellCheckingService;
@@ -130,22 +130,23 @@ import com.bdaum.zoom.ui.internal.dialogs.EditWebExibitDialog;
 import com.bdaum.zoom.ui.internal.dialogs.SaveTemplateDialog;
 import com.bdaum.zoom.ui.internal.dialogs.SelectWebExhibitDialog;
 import com.bdaum.zoom.ui.internal.dialogs.WebGalleryEditDialog;
+import com.bdaum.zoom.ui.internal.hover.IHoverContext;
 import com.bdaum.zoom.ui.internal.job.DecorateJob;
 import com.bdaum.zoom.ui.internal.operations.ExhibitionPropertiesOperation;
 import com.bdaum.zoom.ui.internal.operations.WebGalleryPropertiesOperation;
+import com.bdaum.zoom.ui.internal.views.SlideshowView.PSlide;
 import com.bdaum.zoom.ui.internal.widgets.GalleryPanEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.GreekedPSWTText;
 import com.bdaum.zoom.ui.internal.widgets.IAugmentedTextField;
 import com.bdaum.zoom.ui.internal.widgets.PPanel;
 import com.bdaum.zoom.ui.internal.widgets.PSWTAssetThumbnail;
 import com.bdaum.zoom.ui.internal.widgets.PSWTButton;
-import com.bdaum.zoom.ui.internal.widgets.PTextHandler;
 import com.bdaum.zoom.ui.internal.widgets.TextEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.TextField;
 import com.bdaum.zoom.ui.internal.widgets.ZPSWTImage;
 
 @SuppressWarnings("restriction")
-public class WebGalleryView extends AbstractPresentationView {
+public class WebGalleryView extends AbstractPresentationView implements IHoverContext {
 
 	public class SelectStoryBoardDialog extends ZTitleAreaDialog {
 
@@ -257,8 +258,9 @@ public class WebGalleryView extends AbstractPresentationView {
 							w.offset(0, -ydiff);
 					}
 				}
-				storyboards.remove(pStoryboard);
+				storyMap.remove(storyboard.getStringId());
 				setPanAndZoomHandlers();
+				updateStatusLine();
 			}
 			return Status.OK_STATUS;
 		}
@@ -284,6 +286,7 @@ public class WebGalleryView extends AbstractPresentationView {
 				tobeStored.add(storyboard);
 				tobeStored.add(show);
 				storeSafelyAndUpdateIndex(null, tobeStored, assetIds);
+				updateStatusLine();
 			}
 			return Status.OK_STATUS;
 		}
@@ -313,8 +316,10 @@ public class WebGalleryView extends AbstractPresentationView {
 				toBeStored.add(storyboard);
 				toBeStored.add(show);
 				storeSafelyAndUpdateIndex(null, toBeStored, null);
+				updateStatusLine();
+				return Status.OK_STATUS;
 			}
-			return Status.OK_STATUS;
+			return Status.CANCEL_STATUS;
 		}
 
 		@Override
@@ -327,15 +332,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			WebGalleryImpl show = getGallery();
 			if (show != null) {
 				show.removeStoryboard(storyboard);
-				List<Object> toBeDeleted = new ArrayList<Object>(storyboard.getExhibit().size() + 1);
-				List<String> assetIds = new ArrayList<String>(storyboard.getExhibit().size());
-				for (WebExhibitImpl obj : Core.getCore().getDbManager().obtainByIds(WebExhibitImpl.class,
-						storyboard.getExhibit())) {
-					toBeDeleted.add(obj);
-					assetIds.add(obj.getAsset());
-				}
-				toBeDeleted.add(storyboard);
-				storeSafelyAndUpdateIndex(toBeDeleted, show, assetIds);
+				storeSafelyAndUpdateIndex(storyboard, show, null);
 				Point2D offset = added.getOffset();
 				double ydiff = added.getHeight() + 15;
 				surface.removeChild(added);
@@ -345,8 +342,9 @@ public class WebGalleryView extends AbstractPresentationView {
 						if (((PStoryboard) obj).getOffset().getY() > offset.getY())
 							((PStoryboard) obj).offset(0, -ydiff);
 				}
-				storyboards.remove(added);
+				storyMap.remove(storyboard.getStringId());
 				setPanAndZoomHandlers();
+				updateStatusLine();
 			}
 			return Status.OK_STATUS;
 		}
@@ -575,111 +573,50 @@ public class WebGalleryView extends AbstractPresentationView {
 	public class MoveExhibitOperation extends AbstractOperation {
 
 		private final PWebExhibit moved;
-		private final Point2D oldOffset;
 		private final Point2D newOffset;
 		private PStoryboard oldStoryboard;
-		private final PStoryboard target;
-		private boolean toFront;
 		private int oldSeqno;
 
-		public MoveExhibitOperation(PWebExhibit moved, Point2D oldOffset, PStoryboard target, Point2D newOffset) {
+		public MoveExhibitOperation(PWebExhibit moved, Point2D newOffset) {
 			super(Messages.getString("WebGalleryView.move_exh_undo")); //$NON-NLS-1$
-			toFront = (target != moved.getParent() || newOffset.getX() < oldOffset.getX());
 			this.moved = moved;
-			this.oldOffset = oldOffset;
-			this.target = target;
 			this.newOffset = newOffset;
 			this.oldSeqno = moved.exhibit.getSequenceNo();
 		}
 
 		@Override
 		public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-			oldStoryboard = doMove(newOffset, target, -1);
-			return (oldStoryboard == null) ? Status.CANCEL_STATUS : Status.OK_STATUS;
-		}
-
-		private PStoryboard doMove(Point2D to, PStoryboard toStoryboard, int ix) {
-			PStoryboard fromStoryboard = doRemoveExhibit(moved);
-			if (fromStoryboard == null)
-				return null;
-			Storyboard targetStoryboard = toStoryboard.getStoryboard();
-			Storyboard sourceStoryboard = fromStoryboard.getStoryboard();
-			if (ix < 0) {
-				ix = computeSequenceNumber(to.getX());
-				if (toFront)
-					++ix;
-				else
-					ix = (Math.max(1, ix));
-			}
-			WebExhibitImpl exhibit = moved.exhibit;
-			String exhibitId = exhibit.getStringId();
-			List<String> exhibits = targetStoryboard.getExhibit();
-			if (ix > exhibits.size()) {
-				exhibits.add(exhibitId);
-				moved.setSequenceNo(exhibits.size());
-			} else {
-				exhibits.add(ix - 1, exhibitId);
-				moved.setSequenceNo(ix);
-			}
-			moved.setOffset(computePos(exhibit), 0);
-			ListIterator<?> it = toStoryboard.getChildrenIterator();
-			while (it.hasNext()) {
-				Object next = it.next();
-				if (next instanceof PWebExhibit) {
-					PWebExhibit pExhibit = (PWebExhibit) next;
-					int sequenceNo = pExhibit.exhibit.getSequenceNo();
-					if (sequenceNo >= ix) {
-						pExhibit.setSequenceNo(sequenceNo + 1);
-						pExhibit.setOffset(computePos(pExhibit.exhibit), pExhibit.getOffset().getY());
+			final WebGallery gal = getGallery();
+			if (gal != null) {
+				PWebExhibit target = (PWebExhibit) findExhibit(newOffset);
+				if (target != null) {
+					List<Storyboard> storyboards = new ArrayList<>(2);
+					String sbid = target.exhibit.getStoryboard_exhibit_parent();
+					PStoryboard targetpStoryboard = storyMap.get(sbid);
+					int newSeqNo = target == null ? targetpStoryboard.getChildrenCount() + 1
+							: target.exhibit.getSequenceNo();
+					sbid = moved.exhibit.getStoryboard_exhibit_parent();
+					oldStoryboard = storyMap.get(sbid);
+					storyboards.add(oldStoryboard.getStoryboard());
+					if (oldStoryboard != targetpStoryboard)
+						storyboards.add(targetpStoryboard.getStoryboard());
+					oldSeqno = moved.exhibit.getSequenceNo();
+					if (oldSeqno != newSeqNo || targetpStoryboard != oldStoryboard) {
+						if (oldSeqno > newSeqNo || targetpStoryboard != oldStoryboard)
+							++newSeqNo;
+						removeExhibit(oldStoryboard.getStoryboard(), oldSeqno);
+						moved.setSequenceNo(newSeqNo);
+						insertExhibit(targetpStoryboard.getStoryboard(), moved);
+						for (Storyboard sb : storyboards)
+							updateSequenceNumbers(sb);
+						newSeqNo = moved.exhibit.getSequenceNo();
+						Core.getCore().getDbManager().safeTransaction(null, storyboards);
+						updateActions(false);
+						return Status.OK_STATUS;
 					}
 				}
 			}
-			toStoryboard.addChild(moved);
-			PBounds bounds = toStoryboard.getBoundsReference();
-			int w = toStoryboard.getChildrenCount() * CELLSIZE;
-			if (w > bounds.getWidth())
-				toStoryboard.setWidth(w);
-			List<Object> tobeStored = new ArrayList<Object>(3);
-			tobeStored.add(exhibit);
-			tobeStored.add(targetStoryboard);
-			tobeStored.add(sourceStoryboard);
-			storeSafelyAndUpdateIndex(null, tobeStored, null);
-			updateActions(false);
-			return fromStoryboard;
-		}
-
-		@Override
-		public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-			return (doMove(newOffset, target, -1) == null) ? Status.CANCEL_STATUS : Status.OK_STATUS;
-		}
-
-		@Override
-		public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-			return (doMove(oldOffset, oldStoryboard, oldSeqno) == null) ? Status.CANCEL_STATUS : Status.OK_STATUS;
-		}
-	}
-
-	public class DeleteExhibitOperation extends AbstractOperation {
-
-		private PWebExhibit deleted;
-		private PStoryboard pstoryboard;
-		private Point2D offset;
-		private WebExhibitImpl exhibit;
-
-		public DeleteExhibitOperation(PWebExhibit deleted, Point2D oldOffset) {
-			super(Messages.getString("WebGalleryView.delete_exh_undo")); //$NON-NLS-1$
-			this.deleted = deleted;
-			pstoryboard = (PStoryboard) deleted.getParent();
-			offset = oldOffset;
-		}
-
-		@Override
-		public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-			exhibit = deleted.exhibit;
-			doRemoveExhibit(deleted);
-			storeSafelyAndUpdateIndex(exhibit, pstoryboard.getStoryboard(), exhibit.getAsset());
-			updateActions(false);
-			return Status.OK_STATUS;
+			return Status.CANCEL_STATUS;
 		}
 
 		@Override
@@ -689,48 +626,105 @@ public class WebGalleryView extends AbstractPresentationView {
 
 		@Override
 		public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-			StoryboardImpl storyboard = (StoryboardImpl) pstoryboard.getStoryboard();
-			double x = offset.getX() - pstoryboard.getOffset().getX();
-			double pos = 0;
-			int index = 0;
-			List<PWebExhibit> trail = new ArrayList<PWebExhibit>(storyboard.getExhibit().size());
-			for (ListIterator<?> it = pstoryboard.getChildrenIterator(); it.hasNext();) {
-				Object next = it.next();
-				if (next instanceof PWebExhibit) {
-					PWebExhibit pExhibit = (PWebExhibit) next;
-					PBounds eBounds = pExhibit.getFullBoundsReference();
-					double p = eBounds.getX();
-					if (p >= x)
-						trail.add(pExhibit);
-					else {
-						p += eBounds.getWidth();
-						if (p > pos)
-							pos = p;
-						index++;
+			final WebGallery gal = getGallery();
+			if (gal != null) {
+				List<Storyboard> storyboards = new ArrayList<>(2);
+				String sbid = moved.exhibit.getStoryboard_exhibit_parent();
+				PStoryboard sourcepStoryboard = storyMap.get(sbid);
+				removeExhibit(sourcepStoryboard.getStoryboard(), moved.exhibit.getSequenceNo());
+				moved.setSequenceNo(oldSeqno);
+				insertExhibit(oldStoryboard.getStoryboard(), moved);
+				storyboards.add(oldStoryboard.getStoryboard());
+				if (oldStoryboard != sourcepStoryboard)
+					storyboards.add(sourcepStoryboard.getStoryboard());
+				for (Storyboard sb : storyboards)
+					updateSequenceNumbers(sb);
+				Core.getCore().getDbManager().safeTransaction(null, storyboards);
+				updateActions(false);
+			}
+			return Status.OK_STATUS;
+		}
+	}
+
+	public class DeleteExhibitOperation extends AbstractOperation {
+
+		private List<PWebExhibit> deleted;
+		private boolean cut;
+
+		public DeleteExhibitOperation(List<PWebExhibit> deleted, boolean cut) {
+			super(Messages.getString("WebGalleryView.delete_exh_undo")); //$NON-NLS-1$
+			this.deleted = deleted;
+			this.cut = cut;
+		}
+
+		@Override
+		public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+			WebGalleryImpl gal = getGallery();
+			if (gal != null) {
+				if (cut && !deleted.isEmpty())
+					clipboard.clear();
+				List<IIdentifiableObject> toBeDeleted = new ArrayList<>(deleted.size());
+				Set<IIdentifiableObject> storyboards = new HashSet<>(deleted.size());
+				List<String> toBeIndexed = new ArrayList<>(deleted.size());
+				List<WebExhibit> clipped = null;
+				for (int i = deleted.size() - 1; i >= 0; i--) {
+					WebExhibitImpl exhibit = deleted.get(i).exhibit;
+					if (cut) {
+						if (clipped == null)
+							clipped = new ArrayList<>(deleted.size());
+						clipped.add(exhibit);
 					}
+					toBeDeleted.add(exhibit);
+					String sbid = exhibit.getStoryboard_exhibit_parent();
+					Storyboard storyboard = storyMap.get(sbid).getStoryboard();
+					storyboards.add(storyboard);
+					toBeIndexed.add(exhibit.getAsset());
+					removeExhibit(storyboard, exhibit.getSequenceNo());
 				}
+				for (IIdentifiableObject storyboard : storyboards)
+					updateSequenceNumbers((Storyboard) storyboard);
+				updateSelectionMarkers();
+				storeSafelyAndUpdateIndex(toBeDeleted, storyboards, toBeIndexed);
+				if (clipped != null) {
+					clipboard.clear();
+					clipboard.addAll(clipped);
+				}
+				updateActions(false);
+				updateStatusLine();
+				return Status.OK_STATUS;
 			}
-			double oldPos = pos;
-			int oldIndex = index;
-			if (index >= storyboard.getExhibit().size())
-				storyboard.addExhibit(exhibit.getStringId());
-			else
-				storyboard.getExhibit().add(index, exhibit.getStringId());
-			exhibit.setStoryboard_exhibit_parent(storyboard.getStringId());
-			deleted = makeExhibit(pstoryboard, exhibit);
-			PBounds eBounds = deleted.getFullBoundsReference();
-			pos = eBounds.getX() + eBounds.getWidth();
-			double iWidth = (pos - oldPos);
-			int diff = index - oldIndex;
-			for (PWebExhibit pExhibit : trail) {
-				pExhibit.offset(iWidth, 0);
-				pExhibit.setSequenceNo(pExhibit.exhibit.getSequenceNo() + diff);
+			return Status.CANCEL_STATUS;
+		}
+
+		@Override
+		public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+			return execute(monitor, info);
+		}
+
+		@Override
+		public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+			WebGalleryImpl gal = getGallery();
+			if (gal != null) {
+				List<IIdentifiableObject> toBeStored = new ArrayList<>(deleted.size() + 10);
+				Set<Storyboard> storyboards = new HashSet<Storyboard>(15);
+				List<String> toBeIndexed = new ArrayList<>(deleted.size());
+				for (PWebExhibit pexhibit : deleted) {
+					WebExhibit exhibit = pexhibit.exhibit;
+					String sbid = exhibit.getStoryboard_exhibit_parent();
+					Storyboard storyboard = storyMap.get(sbid).getStoryboard();
+					insertExhibit(storyboard, pexhibit);
+					toBeStored.add(exhibit);
+					toBeIndexed.add(exhibit.getAsset());
+					storyboards.add(storyboard);
+				}
+				for (Storyboard sb : storyboards) {
+					updateSequenceNumbers(sb);
+					toBeStored.add(sb);
+				}
+				storeSafelyAndUpdateIndex(null, toBeStored, toBeIndexed);
+				updateActions(false);
+				updateStatusLine();
 			}
-			List<Object> toBeStored = new ArrayList<Object>(2);
-			toBeStored.add(exhibit);
-			toBeStored.add(storyboard);
-			storeSafelyAndUpdateIndex(null, toBeStored, exhibit.getAsset());
-			updateActions(false);
 			return Status.OK_STATUS;
 		}
 	}
@@ -742,7 +736,7 @@ public class WebGalleryView extends AbstractPresentationView {
 		private List<PWebExhibit> added;
 		private PStoryboard pstoryboard;
 		private final boolean replace;
-		private com.bdaum.zoom.ui.internal.views.WebGalleryView.DeleteExhibitOperation deleteOp;
+		private PWebExhibit deleted;
 
 		public DropAssetOperation(AssetSelection selection, Point2D position, boolean replace) {
 			super(Messages.getString("ExhibitionView.drop_images_undo")); //$NON-NLS-1$
@@ -750,78 +744,62 @@ public class WebGalleryView extends AbstractPresentationView {
 			this.position = position;
 			this.replace = replace;
 			added = new ArrayList<PWebExhibit>(selection.size());
-			RECT1.x = (int) position.getX();
-			RECT1.y = (int) position.getY();
-			for (PStoryboard w : storyboards)
-				if (w.fullIntersects(RECT1)) {
-					pstoryboard = w;
-					break;
-				}
+			pstoryboard = findStoryboard(position);
 		}
 
 		@Override
 		public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-			if (pstoryboard != null) {
-				StoryboardImpl storyboard = (StoryboardImpl) pstoryboard.getStoryboard();
-				int rawIx = computeSequenceNumber(position.getX() - pstoryboard.getOffset().getX());
-				int ix = Math.max(1, Math.min(rawIx, storyboard.getExhibit().size() + 1));
-				int oldIndex = ix;
-				PWebExhibit cand = null;
-				List<PWebExhibit> trail = new ArrayList<PWebExhibit>(storyboard.getExhibit().size());
-				ListIterator<?> it = pstoryboard.getChildrenIterator();
-				while (it.hasNext()) {
-					Object next = it.next();
-					if (next instanceof PWebExhibit) {
-						PWebExhibit pExhibit = (PWebExhibit) next;
-						int sequenceNo = pExhibit.exhibit.getSequenceNo();
-						if (replace && sequenceNo == rawIx)
-							cand = pExhibit;
-						else if (sequenceNo >= oldIndex)
-							trail.add(pExhibit);
-					}
-				}
-				WebGalleryImpl show = null;
-				List<Object> toBeStored = new ArrayList<Object>(selection.size());
+			WebGallery gal = getGallery();
+			if (gal != null && pstoryboard != null) {
+				Storyboard storyboard = pstoryboard.getStoryboard();
+				PWebExhibit target = (PWebExhibit) findExhibit(position);
 				List<String> assetIds = new ArrayList<String>(selection.size());
+				int seqNo = target == null ? pstoryboard.getChildrenCount() + 1 : target.exhibit.getSequenceNo();
+				WebExhibit replaced = null;
+				if (replace && target != null) {
+					replaced = target.exhibit;
+					assetIds.add(replaced.getAsset());
+					deleted = removeExhibit(storyboard, seqNo);
+					--seqNo;
+				}
+				boolean cleared = false;
+				Set<IIdentifiableObject> toBeStored = new HashSet<>(selection.size() * 2);
 				for (Asset asset : selection) {
 					if (!accepts(asset))
 						continue;
-					show = getGallery();
-					if (show == null)
-						break;
-					Date dateCreated = asset.getDateTimeOriginal();
-					if (dateCreated == null)
-						dateCreated = asset.getDateTime();
+					if (!cleared) {
+						clearSelection();
+						cleared = true;
+					}
 					String assetId = asset.getStringId();
-					WebExhibitImpl exhibit = new WebExhibitImpl(UiUtilities.createSlideTitle(asset), ix, "", false, //$NON-NLS-1$
-							asset.getName(), true, true, assetId);
-					if (ix > storyboard.getExhibit().size())
-						storyboard.addExhibit(exhibit.getStringId());
-					else
-						storyboard.getExhibit().add(ix - 1, exhibit.getStringId());
-					exhibit.setStoryboard_exhibit_parent(storyboard.getStringId());
+					int rawIx = computeSequenceNumber(position.getX() - pstoryboard.getOffset().getX());
+					int ix = Math.max(1, Math.min(rawIx, storyboard.getExhibit().size() + 1));
+					WebExhibitImpl exhibit = replaced != null
+							? new WebExhibitImpl(UiUtilities.createSlideTitle(asset), ix, "", //$NON-NLS-1$
+									replaced.getHtmlDescription(), asset.getName(), replaced.getDownloadable(),
+									replaced.getIncludeMetadata(), assetId)
+							:
+
+							new WebExhibitImpl(UiUtilities.createSlideTitle(asset), ix, "", false, //$NON-NLS-1$
+									asset.getName(), true, true, assetId);
+					replaced = null;
+					insertIntoStoryboard(storyboard, exhibit, ix - 1);
+					PWebExhibit pexhibit = makeExhibit(pstoryboard, exhibit);
+					pexhibit.setSelected(true);
+					lastSelection = recentSelection = pexhibit;
+					added.add(pexhibit);
 					toBeStored.add(exhibit);
 					assetIds.add(assetId);
-					if (cand != null) {
-						deleteOp = new DeleteExhibitOperation(cand, cand.getOffset());
-						deleteOp.execute(monitor, info);
-						cand = null;
-					}
-					added.add(makeExhibit(pstoryboard, exhibit));
 					ix++;
 				}
-				int diff = ix - oldIndex;
-				for (PWebExhibit pExhibit : trail) {
-					pExhibit.setSequenceNo(pExhibit.exhibit.getSequenceNo() + diff);
-					pExhibit.setOffset(computePos(pExhibit.exhibit), pExhibit.getOffset().getY());
-				}
-				if (show != null) {
-					toBeStored.add(storyboard);
-					storeSafelyAndUpdateIndex(null, toBeStored, assetIds);
-				}
+				toBeStored.add(storyboard);
+				updateSequenceNumbers(storyboard);
+				storeSafelyAndUpdateIndex(null, toBeStored, assetIds);
 				updateActions(false);
+				updateStatusLine();
+				return Status.OK_STATUS;
 			}
-			return Status.OK_STATUS;
+			return Status.CANCEL_STATUS;
 		}
 
 		@Override
@@ -832,17 +810,107 @@ public class WebGalleryView extends AbstractPresentationView {
 
 		@Override
 		public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-			List<Object> toBeDeleted = new ArrayList<Object>(selection.size());
-			List<String> assetIds = new ArrayList<String>(selection.size());
-			for (PWebExhibit exhibit : added) {
-				doRemoveExhibit(exhibit);
-				toBeDeleted.add(exhibit.exhibit);
-				assetIds.add(exhibit.exhibit.getAsset());
+			WebGallery gal = getGallery();
+			if (gal != null) {
+				List<IIdentifiableObject> toBeDeleted = new ArrayList<>(added.size());
+				Set<IIdentifiableObject> toBeStored = new HashSet<>(5);
+				List<String> assetIds = new ArrayList<>(added.size());
+				for (int i = added.size() - 1; i >= 0; i--) {
+					PWebExhibit pexhibit = added.get(i);
+					WebExhibitImpl exhibit = pexhibit.exhibit;
+					String sbid = exhibit.getStoryboard_exhibit_parent();
+					Storyboard storyboard = storyMap.get(sbid).getStoryboard();
+					removeExhibit(storyboard, exhibit.getSequenceNo());
+					toBeDeleted.add(exhibit);
+					toBeStored.add(storyboard);
+					assetIds.add(exhibit.getAsset());
+				}
+				if (deleted != null) {
+					String sbid = deleted.exhibit.getStoryboard_exhibit_parent();
+					Storyboard storyboard = storyMap.get(sbid).getStoryboard();
+					insertExhibit(storyboard, deleted);
+				}
+				updateSequenceNumbers(pstoryboard.getStoryboard());
+				updateSelectionMarkers();
+				storeSafelyAndUpdateIndex(toBeDeleted, toBeStored, assetIds);
+				updateActions(false);
+				updateStatusLine();
 			}
-			if (deleteOp != null)
-				deleteOp.undo(monitor, info);
-			storeSafelyAndUpdateIndex(toBeDeleted, pstoryboard.getStoryboard(), assetIds);
-			updateActions(false);
+			return Status.OK_STATUS;
+
+		}
+	}
+
+	public class PasteExhibitsOperation extends AbstractOperation {
+
+		private Point2D position;
+		private List<PWebExhibit> added;
+		private PStoryboard pstoryboard;
+
+		public PasteExhibitsOperation(Point2D position) {
+			super(Messages.getString("WebGalleryView.paste_exhibits")); //$NON-NLS-1$
+			this.position = position;
+			added = new ArrayList<>(clipboard.size());
+			pstoryboard = findStoryboard(position);
+		}
+
+		@Override
+		public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+			WebGallery gal = getGallery();
+			if (gal != null && !clipboard.isEmpty() && pstoryboard != null) {
+				PWebExhibit target = (PWebExhibit) findExhibit(position);
+				List<String> assetIds = new ArrayList<String>(clipboard.size());
+				int seqNo = target == null ? pstoryboard.getChildrenCount() + 1 : target.exhibit.getSequenceNo();
+				if (!clipboard.isEmpty())
+					clearSelection();
+				List<IIdentifiableObject> toBeStored = new ArrayList<>(clipboard.size() + 1);
+				for (IIdentifiableObject exhibit : clipboard) {
+					WebExhibitImpl copy = cloneExhibit((WebExhibitImpl) exhibit);
+					insertIntoStoryboard(pstoryboard.getStoryboard(), copy, seqNo);
+					PWebExhibit pexhibit = makeExhibit(pstoryboard, copy);
+					pexhibit.setSelected(true);
+					lastSelection = recentSelection = pexhibit;
+					added.add(pexhibit);
+					toBeStored.add(copy);
+					assetIds.add(copy.getAsset());
+					++seqNo;
+				}
+				updateSequenceNumbers(pstoryboard.getStoryboard());
+				toBeStored.add(pstoryboard.getStoryboard());
+				storeSafelyAndUpdateIndex(null, toBeStored, assetIds);
+				updateActions(false);
+				updateStatusLine();
+				return Status.OK_STATUS;
+			}
+			return Status.CANCEL_STATUS;
+		}
+
+		@Override
+		public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+			added.clear();
+			return execute(monitor, info);
+		}
+
+		@Override
+		public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+			WebGallery gal = getGallery();
+			if (gal != null && pstoryboard != null) {
+				List<IIdentifiableObject> toBeDeleted = new ArrayList<>(added.size());
+				List<String> assetIds = new ArrayList<String>(added.size());
+				Storyboard storyboard = pstoryboard.getStoryboard();
+				for (int i = added.size() - 1; i >= 0; i--) {
+					PWebExhibit pexhibit = added.get(i);
+					WebExhibitImpl exhibit = pexhibit.exhibit;
+					removeExhibit(storyboard, exhibit.getSequenceNo());
+					toBeDeleted.add(exhibit);
+					assetIds.add(exhibit.getAsset());
+				}
+				updateSequenceNumbers(pstoryboard.getStoryboard());
+				updateSelectionMarkers();
+				storeSafelyAndUpdateIndex(toBeDeleted, storyboard, assetIds);
+				updateActions(false);
+				updateStatusLine();
+			}
 			return Status.OK_STATUS;
 		}
 	}
@@ -861,7 +929,7 @@ public class WebGalleryView extends AbstractPresentationView {
 
 		@Override
 		protected boolean mayRun() {
-			return storyboards != null && !storyboards.isEmpty();
+			return !storyMap.isEmpty();
 		}
 
 		@Override
@@ -869,7 +937,7 @@ public class WebGalleryView extends AbstractPresentationView {
 			final Display display = canvas.getDisplay();
 			IDbManager dbManager = Core.getCore().getDbManager();
 			offline.clear();
-			for (PStoryboard storyboard : storyboards)
+			for (PStoryboard storyboard : storyMap.values())
 				for (Object child : storyboard.getChildrenReference().toArray()) {
 					if (child instanceof PWebExhibit && isVisible() && mayRun()) {
 						final PWebExhibit pexhibit = (PWebExhibit) child;
@@ -915,24 +983,25 @@ public class WebGalleryView extends AbstractPresentationView {
 	}
 
 	@SuppressWarnings("serial")
-	public class PWebExhibit extends PNode implements PTextHandler, IPresentationItem {
+	public class PWebExhibit extends PPresentationItem {
 
 		private WebExhibitImpl exhibit;
-		private PSWTImage pImage;
-		private TextField caption;
 		private TextField description;
 		private PSWTButton propButton;
 		private GreekedPSWTText seqNo;
 
-		public PWebExhibit(final PSWTCanvas canvas, PStoryboard pstoryboard, WebExhibitImpl exhibit, int pos, int y) {
+		public PWebExhibit(final PSWTCanvas canvas, PStoryboard pstoryboard, WebExhibitImpl exhibit, int y) {
 			this.exhibit = exhibit;
 			setPickable(false);
 			// Image
 			pImage = new PSWTAssetThumbnail(canvas, WebGalleryView.this,
 					Core.getCore().getDbManager().obtainAsset(exhibit.getAsset()));
+			PBounds bounds = pImage.getBoundsReference();
 			addChild(pImage);
 			configureImage();
 			setBounds(0, 0, CELLSIZE, STORYBOARDHEIGHT);
+			// select frame
+			pImage.addChild(createSelectionFrame(bounds));
 			// prop button
 			Image propImage = Icons.smallProperties.getImage();
 			propButton = new PSWTButton(canvas, propImage, Messages.getString("WebGalleryView.slide_properties")); //$NON-NLS-1$
@@ -954,30 +1023,41 @@ public class WebGalleryView extends AbstractPresentationView {
 			// caption
 			caption = createTextLine(this, exhibit.getCaption(), 5,
 					(int) (IMAGESIZE - 2 * textHorMargins - seqNo.getWidth()),
-					(int) (textHorMargins + seqNo.getWidth()), textYPos, titleForegroundColor, null, "Arial", Font.BOLD, //$NON-NLS-1$
-					9, ISpellCheckingService.TITLEOPTIONS, SWT.SINGLE);
+					(int) (textHorMargins + seqNo.getWidth()), textYPos, titleForegroundColor, null, CAPTIONFONT,
+					ISpellCheckingService.TITLEOPTIONS, SWT.SINGLE);
 			// legend
 			description = createTextLine(this, getDescription(exhibit), 5, IMAGESIZE - 2 * textHorMargins - 2 * CSIZE,
-					textHorMargins + CSIZE, textYPos + 2 * CSIZE, foregroundColor, null, "Arial", Font.PLAIN, 9, //$NON-NLS-1$
+					textHorMargins + CSIZE, textYPos + 2 * CSIZE, foregroundColor, null, DESCRIPTIONFONT,
 					ISpellCheckingService.DESCRIPTIONOPTIONS, SWT.SINGLE);
 			// position and bounds
-			setOffset(pos, y);
+			setOffset(0, y);
 			installHandleEventHandlers(pImage, false, false, this);
-			PBasicInputEventHandler listener = new PBasicInputEventHandler() {
+			addInputEventListener(new PBasicInputEventHandler() {
 				@Override
 				public void mousePressed(PInputEvent event) {
 					setPickedNode(event.getPickedNode());
+					if (getAdapter(IPresentationItem.class) instanceof PSlide)
+						event.getPickedNode().raiseToTop();
 				}
 
 				@Override
 				public void mouseReleased(PInputEvent event) {
 					PNode pickedNode = getPickedNode();
-					if (pickedNode == propButton || pickedNode == seqNo || event.getClickCount() == 2)
+					if (pickedNode == propButton || pickedNode == seqNo || event.getClickCount() == 1)
 						editExhibitProperties();
 				}
-			};
-			addInputEventListener(listener);
-			pImage.addInputEventListener(listener);
+			});
+			pImage.addInputEventListener(new PBasicInputEventHandler() {
+				@Override
+				public void mousePressed(PInputEvent event) {
+					PNode pickedNode = event.getPickedNode();
+					setPickedNode(pickedNode);
+					if (event.isLeftMouseButton() && !event.isShiftDown() && !event.isAltDown()
+							&& (pickedNode instanceof PSWTAssetThumbnail))
+						selectExhibit((PWebExhibit) pickedNode.getParent(), event.getModifiers(),
+								event.getClickCount());
+				}
+			});
 		}
 
 		@Override
@@ -1010,9 +1090,9 @@ public class WebGalleryView extends AbstractPresentationView {
 
 		private String getDescription(WebExhibit exh) {
 			String des = exh.getDescription();
-			if (des == null || des.isEmpty())
-				des = Messages.getString("WebGalleryView.description"); //$NON-NLS-1$
-			return des;
+			if (des != null && !des.isEmpty())
+				return des;
+			return Messages.getString("WebGalleryView.description"); //$NON-NLS-1$
 		}
 
 		public void processTextEvent(TextField focus) {
@@ -1033,7 +1113,8 @@ public class WebGalleryView extends AbstractPresentationView {
 			Image image = ImageUtilities.loadThumbnail(canvas.getDisplay(), asset.getJpegThumbnail(),
 					Ui.getUi().getDisplayCMS(), SWT.IMAGE_JPEG, true);
 			images.add(image);
-			addChild(0, pImage = new ZPSWTImage(canvas, image));
+			pImage = new ZPSWTImage(canvas, image);
+			addChild(0, pImage);
 			configureImage();
 			pImage.lowerToBottom();
 			setCaptionAndDescription(exh);
@@ -1050,11 +1131,12 @@ public class WebGalleryView extends AbstractPresentationView {
 			pImage.scale(scale);
 		}
 
-		public void setSequenceNo(int i) {
-			exhibit.setSequenceNo(i);
+		public void setSequenceNo(int no) {
+			exhibit.setSequenceNo(no);
 			seqNo.setText(createSequenceNo(exhibit));
 			Rectangle propbounds = propButton.getImage().getBounds();
 			caption.setOffset(2 * STORYBOARDMARGINS + propbounds.width + seqNo.getWidth(), caption.getOffset().getY());
+			setOffset((no - 1) * CELLSIZE + 2 * LARGEBUTTONSIZE, 0);
 		}
 
 		private String createSequenceNo(WebExhibit exh) {
@@ -1080,11 +1162,6 @@ public class WebGalleryView extends AbstractPresentationView {
 			return exhibit.getAsset();
 		}
 
-		@Override
-		public void updateColors(Color selectedPaint) {
-			// do nothing
-		}
-
 	}
 
 	@SuppressWarnings("serial")
@@ -1102,8 +1179,9 @@ public class WebGalleryView extends AbstractPresentationView {
 			bounds = propButton.getImage().getBounds();
 			propButton.setOffset(STORYBOARDMARGINS, STORYBOARDHEIGHT - 2 * (bounds.height / 2 + STORYBOARDMARGINS));
 			// Title
-			createTitle(canvas, storyboard.getTitle(), STORYBOARDMARGINS, STORYBOARDMARGINS, titleForegroundColor, 
+			createTitle(canvas, storyboard.getTitle(), STORYBOARDMARGINS, STORYBOARDMARGINS, titleForegroundColor,
 					(Color) getPaint(), 18);
+			setPickable(true);
 		}
 
 		public Storyboard getStoryboard() {
@@ -1190,12 +1268,16 @@ public class WebGalleryView extends AbstractPresentationView {
 	private static final int IMAGESIZE = CELLSIZE - 2 * STORYBOARDMARGINS;
 	protected static final int STORYBOARDDIST = STORYBOARDHEIGHT + CSIZE;
 	private static final int LARGEBUTTONSIZE = 64;
-	private Color wallPaint = new Color(255, 255, 250);
+	private Map<String, PStoryboard> storyMap = new HashMap<>(13);
+	private Map<String, PWebExhibit> exhibitMap = new HashMap<>(521);
+	protected Color wallPaint = new Color(255, 255, 250);
+	protected static final Font CAPTIONFONT = new Font("Arial", Font.BOLD, 9); //$NON-NLS-1$
+	protected static final Font DESCRIPTIONFONT = new Font("Arial", Font.PLAIN, 9); //$NON-NLS-1$
+
 	private WebGalleryImpl gallery;
 	private Action addStoryBoardAction;
 	private Action generateAction;
 	private Action saveAction;
-	private List<PStoryboard> storyboards = new ArrayList<PStoryboard>();
 	private Action deleteStoryboardAction;
 	private Action editStoryboardAction;
 
@@ -1210,6 +1292,12 @@ public class WebGalleryView extends AbstractPresentationView {
 		}
 	}
 
+	public WebExhibitImpl cloneExhibit(WebExhibitImpl original) {
+		return new WebExhibitImpl(original.getCaption(), original.getSequenceNo(), original.getDescription(),
+				original.getHtmlDescription(), original.getAltText(), original.getDownloadable(),
+				original.getDownloadable(), original.getAsset());
+	}
+
 	@Override
 	public void saveState(IMemento memento) {
 		if (memento != null && gallery != null)
@@ -1222,6 +1310,24 @@ public class WebGalleryView extends AbstractPresentationView {
 		if (gallery.getStoryboard().isEmpty())
 			gallery.addStoryboard(new StoryboardImpl(Messages.getString("WebGalleryView.storyboard_1"), 1, false, "", //$NON-NLS-1$ //$NON-NLS-2$
 					0, false, true, true, true));
+	}
+
+	@Override
+	protected String createHoverText(PNode thumbnail) {
+		PNode parent = thumbnail.getParent();
+		if (parent instanceof PWebExhibit)
+			return UiActivator.getDefault().getHoverManager().getHoverText(
+					"com.bdaum.zoom.ui.hover.webexhibition.exhibit", ((PWebExhibit) parent).exhibit, this); //$NON-NLS-1$
+		return ""; //$NON-NLS-1$
+	}
+
+	@Override
+	protected String createHoverTitle(PNode thumbnail) {
+		PNode parent = thumbnail.getParent();
+		if (parent instanceof PWebExhibit)
+			return UiActivator.getDefault().getHoverManager().getHoverTitle(
+					"com.bdaum.zoom.ui.hover.webexhibition.exhibit", ((PWebExhibit) parent).exhibit, this); //$NON-NLS-1$
+		return ""; //$NON-NLS-1$
 	}
 
 	@Override
@@ -1240,6 +1346,9 @@ public class WebGalleryView extends AbstractPresentationView {
 		addWheelListener(0.1d, 10d);
 		textEventHandler = new TextEventHandler(selectionBackgroundColor);
 		PBasicInputEventHandler eventHandler = new PBasicInputEventHandler() {
+
+			private boolean dragged;
+
 			@Override
 			public void keyPressed(PInputEvent event) {
 				if (textEventHandler.hasFocus())
@@ -1249,30 +1358,40 @@ public class WebGalleryView extends AbstractPresentationView {
 			}
 
 			@Override
+			public void mouseMoved(PInputEvent event) {
+				currentMousePosition = event.getPosition();
+			}
+
+			@Override
 			public void mousePressed(PInputEvent event) {
+				dragged = false;
 				setPickedNode(event.getPickedNode());
 			}
 
 			@Override
 			public void mouseDragged(PInputEvent event) {
+				dragged = true;
 				textEventHandler.mouseDragged(event);
 			}
 
 			@Override
 			public void mouseReleased(PInputEvent event) {
-				textEventHandler.mouseReleased(event);
-				if (event.getClickCount() == 2) {
-					PCamera camera = event.getCamera();
-					if (oldTransform == null) {
-						oldTransform = camera.getViewTransform();
-						camera.setViewTransform(new AffineTransform());
-					} else {
-						camera.setViewTransform(oldTransform);
-						resetTransform();
+				positionX = null;
+				if (!dragged) {
+					textEventHandler.mouseReleased(event);
+					if (event.getClickCount() == 2)
+						toggleTransform(event.getCamera());
+					else if (event.isRightMouseButton()) {
+						positionX = event.getPosition();
+						positionRelativeToCamera = event.getPositionRelativeTo(canvas.getCamera());
+					} else if (event.isControlDown()) {
+						PNode picked = getPickedNode();
+						if (picked == surface)
+							propertiesAction.run();
+						else if (picked instanceof PStoryboard)
+							editStoryboardAction.run();
 					}
 				}
-				if (event.isRightMouseButton())
-					positionRelativeToCamera = event.getPositionRelativeTo(canvas.getCamera());
 			}
 		};
 		canvas.getRoot().getDefaultInputManager().setKeyboardFocus(eventHandler);
@@ -1317,19 +1436,29 @@ public class WebGalleryView extends AbstractPresentationView {
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
 		updateActions(true);
-		manager.add(gotoExhibitAction);
+		boolean writable = !dbIsReadonly();
 		PNode pickedNode = getPickedNode();
-		if (pickedNode != null && pickedNode.getParent() instanceof PWebExhibit)
+		if (pickedNode != null && pickedNode.getParent() instanceof PWebExhibit) {
+			if (writable) {
+				manager.add(cutAction);
+				manager.add(new Separator());
+			}
 			addCommonContextActions(manager);
-		else {
+		} else {
 			if (pickedNode != null && pickedNode.getParent() instanceof PStoryboard)
 				pickedNode = pickedNode.getParent();
 			if (pickedNode instanceof PStoryboard) {
+				if (writable)
+					manager.add(pasteAction);
 				manager.add(new Separator());
 				manager.add(editStoryboardAction);
 				manager.add(deleteStoryboardAction);
 			}
 		}
+		manager.add(new Separator());
+		manager.add(gotoExhibitAction);
+		if (gotoLastSelectedAction.isEnabled())
+			manager.add(gotoLastSelectedAction);
 		super.fillContextMenu(manager);
 	}
 
@@ -1338,12 +1467,12 @@ public class WebGalleryView extends AbstractPresentationView {
 		Map<String, Asset> amap = new HashMap<String, Asset>(assets.size());
 		for (Asset a : assets)
 			amap.put(a.getStringId(), a);
-		for (PStoryboard pstoryboard : storyboards)
+		for (PStoryboard pstoryboard : storyMap.values())
 			for (ListIterator<?> it = pstoryboard.getChildrenIterator(); it.hasNext();) {
 				Object next = it.next();
 				if (next instanceof PWebExhibit) {
 					PWebExhibit pexhibit = (PWebExhibit) next;
-					Asset asset = amap.get(pexhibit.exhibit.getAsset());
+					Asset asset = amap.get(pexhibit.getAssetId());
 					if (asset != null) {
 						pexhibit.update(pexhibit.exhibit, asset);
 						break;
@@ -1376,7 +1505,7 @@ public class WebGalleryView extends AbstractPresentationView {
 	@Override
 	protected void cleanUp() {
 		try {
-			for (PStoryboard pstoryboard : storyboards) {
+			for (PStoryboard pstoryboard : storyMap.values()) {
 				pstoryboard.removeAllChildren();
 				PNode parent = pstoryboard.getParent();
 				if (parent != null)
@@ -1385,7 +1514,7 @@ public class WebGalleryView extends AbstractPresentationView {
 		} catch (SWTException e) {
 			// do nothing
 		}
-		storyboards.clear();
+		storyMap.clear();
 		super.cleanUp();
 	}
 
@@ -1393,7 +1522,7 @@ public class WebGalleryView extends AbstractPresentationView {
 	protected void setColor(Control control) {
 		CssActivator.getDefault().applyExtendedStyle(control, this);
 		surface.setPaint(wallPaint = UiUtilities.getAwtBackground(control, null));
-		for (PStoryboard pstoryboard : storyboards) {
+		for (PStoryboard pstoryboard : storyMap.values()) {
 			pstoryboard.setPaint(wallPaint);
 			pstoryboard.setStrokeColor(selectionBackgroundColor);
 		}
@@ -1451,41 +1580,30 @@ public class WebGalleryView extends AbstractPresentationView {
 		gotoExhibitAction = new Action(Messages.getString("WebGalleryView.goto_exhibit")) { //$NON-NLS-1$
 			@Override
 			public void run() {
-				List<WebExhibitImpl> exhibits = new ArrayList<WebExhibitImpl>(300);
-				for (PStoryboard sb : storyboards)
-					for (ListIterator<?> it = sb.getChildrenIterator(); it.hasNext();) {
-						Object next = it.next();
-						if (next instanceof PWebExhibit && ((PWebExhibit) next).exhibit != null)
-							exhibits.add(((PWebExhibit) next).exhibit);
-					}
-				SelectWebExhibitDialog dialog = new SelectWebExhibitDialog(getSite().getShell(), exhibits);
-				dialog.create();
-				org.eclipse.swt.graphics.Point pos = canvas.toDisplay((int) positionRelativeToCamera.getX(),
-						(int) positionRelativeToCamera.getY());
-				pos.x += 10;
-				pos.y += 10;
-				dialog.getShell().setLocation(pos);
-				if (dialog.open() == Window.OK) {
-					WebExhibitImpl selectedExhibit = dialog.getResult();
-					for (PStoryboard sb : storyboards)
-						for (ListIterator<?> it = sb.getChildrenIterator(); it.hasNext();) {
-							Object next = it.next();
-							if (next instanceof PWebExhibit) {
-								PWebExhibit pexhibit = (PWebExhibit) next;
-								if (pexhibit.exhibit == selectedExhibit) {
-									Point2D offset = pexhibit.getOffset();
-									Point2D storyBoardOffset = sb.getOffset();
-									PCamera camera = canvas.getCamera();
-									double x = offset.getX() + storyBoardOffset.getX() - CELLSIZE / 2;
-									double y = offset.getY() + storyBoardOffset.getY() - CELLSIZE / 2;
-									double scale = surface.getScale();
-									PBounds viewBounds = camera.getViewBounds();
-									camera.translateView(viewBounds.getX() - x * scale, viewBounds.getY() - y * scale);
-									return;
-								}
-							}
-						}
+				WebGallery gal = getGallery();
+				if (gal != null) {
+					List<WebExhibitImpl> exhibits = getAllExhibits(gal);
+					SelectWebExhibitDialog dialog = new SelectWebExhibitDialog(getSite().getShell(), exhibits);
+					dialog.create();
+					org.eclipse.swt.graphics.Point pos = canvas.toDisplay((int) positionRelativeToCamera.getX(),
+							(int) positionRelativeToCamera.getY());
+					pos.x += 10;
+					pos.y += 10;
+					dialog.getShell().setLocation(pos);
+					if (dialog.open() == Window.OK)
+						revealExhibit(dialog.getResult());
 				}
+			}
+
+			private List<WebExhibitImpl> getAllExhibits(WebGallery gal) {
+				List<WebExhibitImpl> exhibits = new ArrayList<WebExhibitImpl>(300);
+				for (Storyboard sb : gal.getStoryboard()) {
+					for (String id : sb.getExhibit()) {
+						PWebExhibit pexhibit = exhibitMap.get(id);
+						exhibits.add(pexhibit.exhibit);
+					}
+				}
+				return exhibits;
 			}
 		};
 		gotoExhibitAction.setToolTipText(Messages.getString("WebGalleryView.goto_exhibit_tooltip")); //$NON-NLS-1$
@@ -1540,16 +1658,22 @@ public class WebGalleryView extends AbstractPresentationView {
 	protected PStoryboard addStoryboard(Storyboard storyboard, double y, ProgressIndicator progrBar) {
 		IDbManager dbManager = Core.getCore().getDbManager();
 		PStoryboard pstoryboard = new PStoryboard(storyboard);
+		storyMap.put(storyboard.getStringId(), pstoryboard);
 		surface.addChild(pstoryboard);
-		storyboards.add(pstoryboard);
 		pstoryboard.setOffset(0, y);
 		int i = 0;
-		for (WebExhibitImpl exhibit : dbManager.obtainByIds(WebExhibitImpl.class, storyboard.getExhibit())) {
-			exhibit.setSequenceNo(++i);
-			makeExhibit(pstoryboard, exhibit);
-			if (progrBar != null)
-				progrBar.worked(1);
+		List<String> ids = new ArrayList<String>(storyboard.getExhibit().size());
+		for (String id : storyboard.getExhibit()) {
+			WebExhibitImpl exhibit = dbManager.obtainById(WebExhibitImpl.class, id);
+			if (exhibit != null) {
+				ids.add(id);
+				PWebExhibit pexhibit = makeExhibit(pstoryboard, exhibit);
+				pexhibit.setSequenceNo(++i);
+				if (progrBar != null)
+					progrBar.worked(1);
+			}
 		}
+		storyboard.setExhibit(ids);
 		setColor(canvas);
 		pstoryboard.updateColors();
 		setPanAndZoomHandlers();
@@ -1561,56 +1685,193 @@ public class WebGalleryView extends AbstractPresentationView {
 	}
 
 	protected PWebExhibit makeExhibit(PStoryboard pstoryboard, WebExhibitImpl exhibit) {
-		PWebExhibit pExhibit = new PWebExhibit(canvas, pstoryboard, exhibit, computePos(exhibit), 0);
+		PWebExhibit pExhibit = new PWebExhibit(canvas, pstoryboard, exhibit, 0);
 		PBounds bounds = pstoryboard.getBoundsReference();
 		int w = pstoryboard.getChildrenCount() * CELLSIZE;
 		if (w > bounds.getWidth())
 			pstoryboard.setWidth(w);
 		pstoryboard.addChild(pExhibit);
+		exhibitMap.put(pExhibit.exhibit.getStringId(), pExhibit);
 		return pExhibit;
-	}
-
-	private static int computePos(WebExhibitImpl exhibit) {
-		return (exhibit.getSequenceNo() - 1) * CELLSIZE + 2 * LARGEBUTTONSIZE;
 	}
 
 	private static int computeSequenceNumber(double x) {
 		return Math.max(0, (int) ((x - 2 * LARGEBUTTONSIZE) / CELLSIZE + 1));
 	}
 
-	protected void moveExhibit(PWebExhibit moved, PStoryboard target, Point2D oldOffset, Point2D newOffset) {
-		performOperation(new MoveExhibitOperation(moved, oldOffset, target, newOffset));
+	protected void moveExhibit(PWebExhibit moved, Point2D newOffset) {
+		performOperation(new MoveExhibitOperation(moved, newOffset));
 	}
 
-	protected void deleteExhibit(PWebExhibit moved, Point2D oldOffset) {
+	@Override
+	protected void pastePresentationItems() {
 		if (getGallery() != null)
-			performOperation(new DeleteExhibitOperation(moved, oldOffset));
+			performOperation(new PasteExhibitsOperation(positionX));
 	}
 
-	protected PStoryboard doRemoveExhibit(PWebExhibit moved) {
-		PNode node = moved.getParent();
-		if (node instanceof PStoryboard) {
-			PStoryboard pstoryboard = (PStoryboard) node;
-			pstoryboard.removeChild(moved);
-			WebExhibitImpl exhibit = moved.exhibit;
-			int sequenceNo = exhibit.getSequenceNo();
-			for (ListIterator<?> it = pstoryboard.getChildrenIterator(); it.hasNext();) {
-				Object next = it.next();
-				if (next instanceof PWebExhibit) {
-					PWebExhibit pExhibit = (PWebExhibit) next;
-					WebExhibitImpl exh = pExhibit.exhibit;
-					int q = exh.getSequenceNo();
-					if (q >= sequenceNo) {
-						pExhibit.setSequenceNo(q - 1);
-						pExhibit.setOffset(computePos(exh), pExhibit.getOffset().getY());
+	private PStoryboard findStoryboard(Point2D position) {
+		RECT1.x = (int) position.getX();
+		RECT1.y = (int) position.getY();
+		for (PStoryboard w : storyMap.values())
+			if (w.fullIntersects(RECT1))
+				return w;
+		return null;
+	}
+
+	@Override
+	protected void deletePresentationItem(IPresentationItem picked, boolean cut, boolean multiple) {
+		if (getGallery() != null)
+			performOperation(new DeleteExhibitOperation(getSelectedExhibits((PWebExhibit) picked, multiple), cut));
+	}
+
+	protected void selectExhibit(PWebExhibit pExhibit, int modifiers, int clicks) {
+		if ((modifiers & InputEvent.CTRL_MASK) != 0) {
+			pExhibit.setSelected(!pExhibit.isSelected());
+			if (pExhibit.isSelected())
+				recentSelection = pExhibit;
+			else
+				updateSelectionMarkers();
+		} else if ((modifiers & InputEvent.SHIFT_MASK) != 0) {
+			PStoryboard pStory = (PStoryboard) pExhibit.getParent();
+			List<String> entries = pStory.getStoryboard().getExhibit();
+			int index = pExhibit.exhibit.getSequenceNo() - 1;
+			if (pExhibit.isSelected()) {
+				int lastIndex = -1;
+				for (int i = 0; i < entries.size(); i++)
+					if (exhibitMap.get(entries.get(i)) == lastSelection) {
+						lastIndex = i;
+						break;
+					}
+				if (lastIndex < 0) {
+					int lower = 0;
+					int upper = entries.size() - 1;
+					for (int i = index - 1; i >= 0; i--) {
+						if (!exhibitMap.get(entries.get(i)).isSelected())
+							break;
+						lower = i;
+					}
+					for (int i = index + 1; i < entries.size(); i++) {
+						if (!exhibitMap.get(entries.get(i)).isSelected())
+							break;
+						upper = i;
+					}
+					if (index - lower < upper - index)
+						lastIndex = lower;
+					else
+						lastIndex = upper;
+				}
+				if (lastIndex < index)
+					for (int i = index - 1; i >= lastIndex; i--)
+						exhibitMap.get(entries.get(i)).setSelected(false);
+				else
+					for (int i = index + 1; i <= lastIndex; i++)
+						exhibitMap.get(entries.get(i)).setSelected(false);
+			} else {
+				recentSelection = pExhibit;
+				for (int i = index - 1; i >= 0; i--)
+					if (exhibitMap.get(entries.get(i)).isSelected()) {
+						for (int j = i + 1; j <= index; j++)
+							exhibitMap.get(entries.get(j)).setSelected(true);
+						lastSelection = pExhibit;
+						return;
+					}
+				for (int i = index + 1; i < entries.size(); i++)
+					if (exhibitMap.get(entries.get(i)).isSelected()) {
+						for (int j = i - 1; j >= index; j--)
+							exhibitMap.get(entries.get(j)).setSelected(true);
+					}
+			}
+			lastSelection = pExhibit;
+		} else {
+			clearSelection();
+			recentSelection = pExhibit;
+			if (clicks == 2) {
+				PStoryboard pStory = (PStoryboard) pExhibit.getParent();
+				for (ListIterator<?> iterator = pStory.getChildrenIterator(); iterator.hasNext();) {
+					Object next = iterator.next();
+					if (next instanceof PWebExhibit)
+						((PWebExhibit) next).setSelected(true);
+				}
+			} else
+				pExhibit.setSelected(true);
+		}
+	}
+
+	private void clearSelection() {
+		for (PStoryboard sb : storyMap.values())
+			for (ListIterator<?> childrenIterator = sb.getChildrenIterator(); childrenIterator.hasNext();) {
+				Object next = childrenIterator.next();
+				if (next instanceof PWebExhibit)
+					((PWebExhibit) next).setSelected(false);
+			}
+		lastSelection = recentSelection = null;
+	}
+
+	public void updateSelectionMarkers() {
+		for (PStoryboard sb : storyMap.values())
+			for (ListIterator<?> childrenIterator = sb.getChildrenIterator(); childrenIterator.hasNext();) {
+				Object next = childrenIterator.next();
+				if (next instanceof PWebExhibit && ((PWebExhibit) next).isSelected())
+					return;
+			}
+		lastSelection = recentSelection = null;
+	}
+
+	protected List<PWebExhibit> getSelectedExhibits(PWebExhibit picked, boolean multiple) {
+		boolean hit = false;
+		List<PWebExhibit> selected = new ArrayList<>();
+		if (gallery != null) {
+			if (multiple)
+				for (Storyboard storyboard : gallery.getStoryboard()) {
+					for (String id : storyboard.getExhibit()) {
+						PWebExhibit pExhibit = exhibitMap.get(id);
+						if (pExhibit.isSelected()) {
+							selected.add(pExhibit);
+							hit |= picked == pExhibit;
+						}
 					}
 				}
+			if (!hit) {
+				selected.clear();
+				selected.add(picked);
+				selectExhibit(picked, 0, 1);
 			}
-			Storyboard storyboard = pstoryboard.getStoryboard();
-			storyboard.removeExhibit(exhibit.getStringId());
-			return pstoryboard;
 		}
-		return null;
+		return selected;
+	}
+
+	protected PWebExhibit removeExhibit(Storyboard storyboard, int seqNo) {
+		String id = storyboard.getExhibit().remove(seqNo - 1);
+		PPresentationItem pexibit = exhibitMap.remove(id);
+		PStoryboard pStoryboard = storyMap.get(storyboard.getStringId());
+		return (PWebExhibit) pStoryboard.removeChild(pexibit);
+	}
+
+	protected void insertExhibit(Storyboard storyboard, PWebExhibit pexhibit) {
+		int seqNo = pexhibit.exhibit.getSequenceNo();
+		PStoryboard pStoryboard = storyMap.get(storyboard.getStringId());
+		pStoryboard.addChild(pexhibit);
+		WebExhibitImpl exhibit = pexhibit.exhibit;
+		exhibitMap.put(exhibit.getStringId(), pexhibit);
+		insertIntoStoryboard(storyboard, exhibit, seqNo - 1);
+	}
+
+	private static void insertIntoStoryboard(Storyboard storyboard, WebExhibit exhibit, int index) {
+		if (index >= storyboard.getExhibit().size())
+			storyboard.addExhibit(exhibit.getStringId());
+		else
+			storyboard.getExhibit().add(index, exhibit.getStringId());
+		exhibit.setStoryboard_exhibit_parent(storyboard.getStringId());
+	}
+
+	protected void updateSequenceNumbers(Storyboard storyboard) {
+		int i = 1;
+		for (String id : storyboard.getExhibit()) {
+			PWebExhibit pexhibit = exhibitMap.get(id);
+			if (pexhibit.exhibit.getSequenceNo() != i)
+				pexhibit.setSequenceNo(i);
+			++i;
+		}
 	}
 
 	protected WebGalleryImpl getGallery() {
@@ -1641,6 +1902,7 @@ public class WebGalleryView extends AbstractPresentationView {
 							- STORYBOARDDIST);
 			setColor(canvas);
 			updateActions(false);
+			updateStatusLine();
 			endTask();
 		} else
 			setPartName(Messages.getString("WebGalleryView.web_gallery")); //$NON-NLS-1$
@@ -1885,7 +2147,8 @@ public class WebGalleryView extends AbstractPresentationView {
 
 	@Override
 	protected PNode[] getWorkArea() {
-		return storyboards.toArray(new PNode[storyboards.size()]);
+		Collection<PStoryboard> values = storyMap.values();
+		return values.toArray(new PNode[values.size()]);
 	}
 
 	@Override
@@ -1917,18 +2180,17 @@ public class WebGalleryView extends AbstractPresentationView {
 			protected void drop(PInputEvent event, PNode pnode) {
 				PWebExhibit pexhibit = (PWebExhibit) pnode.getParent();
 				if (event.getCanvasPosition().getY() < 0)
-					deleteExhibit(pexhibit, oldOffset);
+					deletePresentationItem(pexhibit, false, false);
 				else {
-					Point2D newOffset = pexhibit.getOffset();
+					Point2D newOffset = event.getPosition();
 					Point2D parentOffset = ((PStoryboard) pexhibit.getParent()).getOffset();
-					Point2D point = new Point2D.Double(newOffset.getX() + parentOffset.getX(),
-							event.getPosition().getY());
+					Point2D point = new Point2D.Double(newOffset.getX() + parentOffset.getX(), newOffset.getY());
 					surface.parentToLocal(point);
-					for (PStoryboard pstoryboard : storyboards) {
+					for (PStoryboard pstoryboard : storyMap.values()) {
 						double y = point.getY() - pstoryboard.getOffset().getY();
 						PBounds bounds = pstoryboard.getBoundsReference();
 						if (bounds.getY() <= y && bounds.getY() + bounds.getHeight() >= y) {
-							moveExhibit(pexhibit, pstoryboard, oldOffset, newOffset);
+							moveExhibit(pexhibit, newOffset);
 							return;
 						}
 					}
@@ -1946,7 +2208,7 @@ public class WebGalleryView extends AbstractPresentationView {
 	@Override
 	protected PBounds getClientAreaReference() {
 		PBounds bounds = new PBounds(0, 0, 0, 0);
-		for (PStoryboard stb : storyboards) {
+		for (PStoryboard stb : storyMap.values()) {
 			PBounds b1 = stb.getBoundsReference();
 			if (b1.getX() < bounds.x)
 				bounds.x = b1.getX();
@@ -1973,34 +2235,68 @@ public class WebGalleryView extends AbstractPresentationView {
 			setInput(gallery);
 	}
 
-	@Override
-	protected PNode findExhibit(Point point, Point2D position) {
+	protected PNode findExhibit(Point2D position) {
 		PStoryboard pstoryboard = null;
 		RECT1.x = (int) position.getX();
 		RECT1.y = (int) position.getY();
-		for (PStoryboard w : storyboards)
+		for (PStoryboard w : storyMap.values())
 			if (w.fullIntersects(RECT1)) {
 				pstoryboard = w;
 				break;
 			}
 		if (pstoryboard != null) {
 			int rawIx = computeSequenceNumber(position.getX() - pstoryboard.getOffset().getX());
-			if (rawIx >= 1 && rawIx <= pstoryboard.getStoryboard().getExhibit().size())
-				for (ListIterator<?> it = pstoryboard.getChildrenIterator(); it.hasNext();) {
-					Object next = it.next();
-					if (next instanceof PWebExhibit) {
-						PWebExhibit pExhibit = (PWebExhibit) next;
-						if (pExhibit.exhibit.getSequenceNo() == rawIx)
-							return pExhibit;
-					}
-				}
+			String id = pstoryboard.getStoryboard().getExhibit(rawIx - 1);
+			return exhibitMap.get(id);
 		}
 		return null;
+	}
+
+	protected void revealItem(PPresentationItem item) {
+		if (item != null) {
+			PBounds gfb = item.getGlobalFullBounds();
+			double w = gfb.getWidth();
+			double h = gfb.getHeight();
+			gfb.setRect(gfb.getX() - w * 0.4d, gfb.getY() - h * 0.4d, 1.8d * w, 1.8d * h);
+			canvas.getCamera().setViewBounds(gfb);
+		}
+	}
+
+	private void revealExhibit(WebExhibit selectedExhibit) {
+		revealItem(exhibitMap.get(selectedExhibit.getStringId()));
 	}
 
 	@Override
 	public String getId() {
 		return ID;
+	}
+
+	@Override
+	public String getValue(String key, Object object) {
+		if (object instanceof WebExhibit) {
+			if (Constants.HV_TOTAL.equals(key)) {
+				int total = 0;
+				for (PStoryboard sb : storyMap.values())
+					total += sb.getStoryboard().getExhibit().size();
+				return String.valueOf(total);
+			}
+			if (Constants.HV_STORYBOARD.equals(key)) {
+				String sbId = ((WebExhibit) object).getStoryboard_exhibit_parent();
+				PStoryboard pstoryboard = storyMap.get(sbId);
+				return pstoryboard.getStoryboard().getTitle();
+			}
+		}
+		return null;
+	}
+
+	@Override
+	protected String getStatusMessage() {
+		WebGalleryImpl gal = getGallery();
+		if (gal != null)
+			return NLS.bind(storyMap.size() == 1 ? Messages.getString("WebGalleryView.n_exh_one_storyboard") //$NON-NLS-1$
+					: Messages.getString("WebGalleryView.n_exh_m_storyboards"), //$NON-NLS-1$
+					exhibitMap.size(), storyMap.size());
+		return null;
 	}
 
 }

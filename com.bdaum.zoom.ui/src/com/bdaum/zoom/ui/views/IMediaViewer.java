@@ -98,5 +98,12 @@ public interface IMediaViewer extends IKiosk {
 	 * @param e - key event
 	 */
 	void releaseKey(KeyEvent e);
+	
+	/**
+	 * True if this viewer is not a valid internal viewer
+	 * Default: false
+	 * @return
+	 */
+	boolean isDummy();
 
 }

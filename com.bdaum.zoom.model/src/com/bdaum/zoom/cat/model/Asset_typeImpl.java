@@ -167,6 +167,7 @@ public class Asset_typeImpl extends AomObject implements Asset_type {
 	 * @param noPersons - Property
 	 * @param dateRegionsValid - Property
 	 * @param lastPicasaIniEntry - Property
+	 * @param noLensInfo - Property
 	 */
 	public Asset_typeImpl(String name, String uri, String volume,
 			int fileState, long fileSize, String comments, String format,
@@ -214,7 +215,7 @@ public class Asset_typeImpl extends AomObject implements Asset_type {
 			String emulsion, int analogType, int analogFormat,
 			String analogProcessing, String lastEditor, float score, int sales,
 			double price, double earnings, int noPersons,
-			Date dateRegionsValid, String lastPicasaIniEntry) {
+			Date dateRegionsValid, String lastPicasaIniEntry, boolean noLensInfo) {
 		super();
 		this.name = name;
 		this.uri = uri;
@@ -358,6 +359,7 @@ public class Asset_typeImpl extends AomObject implements Asset_type {
 		this.noPersons = noPersons;
 		this.dateRegionsValid = dateRegionsValid;
 		this.lastPicasaIniEntry = lastPicasaIniEntry;
+		this.noLensInfo = noLensInfo;
 
 	}
 
@@ -4336,6 +4338,28 @@ public class Asset_typeImpl extends AomObject implements Asset_type {
 	 */
 	public String getLastPicasaIniEntry() {
 		return lastPicasaIniEntry;
+	}
+
+	/* *** Property noLensInfo *** */
+
+	private boolean noLensInfo;
+
+	/**
+	 * Set value of property noLensInfo
+	 *
+	 * @param _value - new field value
+	 */
+	public void setNoLensInfo(boolean _value) {
+		noLensInfo = _value;
+	}
+
+	/**
+	 * Get value of property noLensInfo
+	 *
+	 * @return - value of field noLensInfo
+	 */
+	public boolean getNoLensInfo() {
+		return noLensInfo;
 	}
 
 	/* ----- Equality ----- */

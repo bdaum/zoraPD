@@ -39,6 +39,7 @@ public abstract class AbstractGeocodingService implements IGeocodingService {
 
 	static {
 		usformat.setMaximumFractionDigits(5);
+		usformat.setGroupingUsed(false);
 	}
 
 	public AbstractGeocodingService() {

@@ -274,28 +274,29 @@ public class QueryField {
 	public static final int XREF = 1 << 18;
 	public static final int WILDCARDS = 1 << 19;
 	public static final int NOTWILDCARDS = 1 << 20;
+	public static final int NOTSIMILAR = 1 << 21;
 
 	public static final int[] ALLRELATIONS = new int[] { EQUALS, NOTEQUAL, GREATER, NOTGREATER, SMALLER, NOTSMALLER,
 			STARTSWITH, DOESNOTSTARTWITH, ENDSWITH, DOESNOTENDWITH, CONTAINS, DOESNOTCONTAIN, BETWEEN, NOTBETWEEN,
-			SIMILAR, DATEEQUALS, DATENOTEQUAL, UNDEFINED, WILDCARDS, NOTWILDCARDS };
+			SIMILAR, NOTSIMILAR, DATEEQUALS, DATENOTEQUAL, UNDEFINED, WILDCARDS, NOTWILDCARDS };
 	public static final String[] ALLRELATIONLABELS = new String[] { Messages.QueryField_equals,
 			Messages.QueryField_unequal, Messages.QueryField_greater, Messages.QueryField_not_greater,
 			Messages.QueryField_less, Messages.QueryField_not_less, Messages.QueryField_starts_with,
 			Messages.QueryField_does_not_start_with, Messages.QueryField_ends_with,
 			Messages.QueryField_does_not_end_with, Messages.QueryField_contains, Messages.QueryField_does_not_contain,
 			Messages.QueryField_between, Messages.QueryField_not_between, Messages.QueryField_similar,
-			Messages.QueryField_equals, Messages.QueryField_unequal, Messages.QueryField_undefined,
-			Messages.QueryField_wildcards, Messages.QueryField_wildcard_exclude };
+			Messages.QueryField_not_similar, Messages.QueryField_equals, Messages.QueryField_unequal,
+			Messages.QueryField_undefined, Messages.QueryField_wildcards, Messages.QueryField_wildcard_exclude };
 	public static final int STRINGRELATIONS = EQUALS | NOTEQUAL | STARTSWITH | DOESNOTSTARTWITH | ENDSWITH
-			| DOESNOTENDWITH | CONTAINS | DOESNOTCONTAIN | WILDCARDS | NOTWILDCARDS;
+			| DOESNOTENDWITH | CONTAINS | DOESNOTCONTAIN | WILDCARDS | NOTWILDCARDS | SIMILAR | NOTSIMILAR;
 	public static final int STRINGARRAYRELATIONS = EQUALS | NOTEQUAL | STARTSWITH | DOESNOTSTARTWITH | ENDSWITH
-			| DOESNOTENDWITH | CONTAINS | DOESNOTCONTAIN | WILDCARDS | NOTWILDCARDS | UNDEFINED;
+			| DOESNOTENDWITH | CONTAINS | DOESNOTCONTAIN | WILDCARDS | NOTWILDCARDS | UNDEFINED | SIMILAR | NOTSIMILAR;
 	public static final int SIZERELATIONS = EQUALS | NOTEQUAL | GREATER | NOTGREATER | SMALLER | NOTSMALLER;
 	public static final int NUMERICRELATIONS = SIZERELATIONS | BETWEEN | NOTBETWEEN;
-	public static final int APPROXRELATIONS = NUMERICRELATIONS | SIMILAR;
+	public static final int APPROXRELATIONS = NUMERICRELATIONS | SIMILAR | NOTSIMILAR;
 	public static final int DATERELATIONS = DATEEQUALS | DATENOTEQUAL | GREATER | NOTGREATER | SMALLER | NOTSMALLER
 			| BETWEEN | NOTBETWEEN | UNDEFINED;
-	public static final int APPROXDATERELATIONS = DATERELATIONS | SIMILAR;
+	public static final int APPROXDATERELATIONS = DATERELATIONS | SIMILAR | NOTSIMILAR;
 	public static final int NORELATIONS = 0;
 	// Field Cardinalities
 	public static final int CARD_LIST = -1;
@@ -454,9 +455,9 @@ public class QueryField {
 		}
 	};
 	public static final QueryField FILESIZE = new QueryField(IMAGE_FILE, "fileSize", //$NON-NLS-1$
-			null, null, null, Messages.QueryField_File_size, ACTION_QUERY, PHOTO | EDIT_NEVER | QUERY | AUTO_LOG,
-			CATEGORY_ASSET, T_POSITIVELONG, 1, 12, Format.sizeFormatter, 0f, 9.999e11f,
-			ISpellCheckingService.NOSPELLING) {
+			"--fileSize--", null, null, Messages.QueryField_File_size, ACTION_QUERY, //$NON-NLS-1$
+			PHOTO | EDIT_NEVER | QUERY | AUTO_LOG, CATEGORY_ASSET, T_POSITIVELONG, 1, 12, Format.sizeFormatter, 0f,
+			9.999e11f, ISpellCheckingService.NOSPELLING) {
 
 		@Override
 		protected int getInt(Asset asset) {
@@ -1332,6 +1333,17 @@ public class QueryField {
 		protected double getDouble(Asset asset) {
 			return asset.getFNumber();
 		}
+
+		public String appendQuestionMark(Asset asset, String text) {
+			if (asset.getNoLensInfo() && text != null && !text.isEmpty() && text != Format.MISSINGENTRYSTRING && text != VALUE_MIXED)
+				return text + '?';
+			return text;
+		}
+
+		public boolean isUnknown(Asset asset) {
+			return asset.getNoLensInfo() || isNeutralValue(obtainFieldValue(asset));
+		}
+
 	};
 	public static final QueryField EXIF_EXPOSUREPROGRAM = new QueryField(EXIF_CAMERA, "exposureProgram", //$NON-NLS-1$
 			"ExposureProgram", //$NON-NLS-1$
@@ -1621,6 +1633,17 @@ public class QueryField {
 		public String getUnit() {
 			return "mm"; //$NON-NLS-1$
 		}
+
+		public String appendQuestionMark(Asset asset, String text) {
+			if (asset.getNoLensInfo() && text != null && !text.isEmpty() && text != Format.MISSINGENTRYSTRING && text != VALUE_MIXED)
+				return text + '?';
+			return text;
+		}
+
+		public boolean isUnknown(Asset asset) {
+			return asset.getNoLensInfo() || isNeutralValue(obtainFieldValue(asset));
+		}
+
 	};
 	public static final QueryField EXIF_FLASHENERGY = new QueryField(EXIF_FLASH, "flashEnergy", //$NON-NLS-1$
 			"FlashEnergy", //$NON-NLS-1$
@@ -1781,6 +1804,16 @@ public class QueryField {
 		@Override
 		public String getUnit() {
 			return "mm"; //$NON-NLS-1$
+		}
+
+		public String appendQuestionMark(Asset asset, String text) {
+			if (asset.getNoLensInfo() && text != null && !text.isEmpty() && text != Format.MISSINGENTRYSTRING && text != VALUE_MIXED)
+				return text + '?';
+			return text;
+		}
+
+		public boolean isUnknown(Asset asset) {
+			return asset.getNoLensInfo() || isNeutralValue(obtainFieldValue(asset));
 		}
 	};
 	public static final QueryField EXIF_FOCALLENGTHFACTOR = new QueryField(EXIF_CAMERA, "focalLengthFactor", //$NON-NLS-1$
@@ -3456,12 +3489,7 @@ public class QueryField {
 	 * @return label suffixed with unit
 	 */
 	public String getLabelWithUnit() {
-		if (hasLabel()) {
-			String unit = getUnit();
-			return ((unit == null) ? getLabel()
-					: new StringBuilder().append(getLabel()).append(" (").append(unit).append(')').toString()); //$NON-NLS-1$
-		}
-		return null;
+		return hasLabel() ? addUnit(getLabel(), " (", ")") : null; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
@@ -3501,11 +3529,14 @@ public class QueryField {
 			if (this == QueryField.EXIF_GPSLOCATIONDISTANCE)
 				return SIZERELATIONS;
 		case T_POSITIVELONG:
+			return NUMERICRELATIONS | UNDEFINED;
 		case T_POSITIVEINTEGER:
 		case T_FLOAT:
 		case T_CURRENCY:
 		case T_FLOATB:
 			return (tolerance == 0f ? NUMERICRELATIONS : APPROXRELATIONS) | UNDEFINED;
+		case T_LONG:
+			return NUMERICRELATIONS;
 		case T_INTEGER:
 			return tolerance == 0f ? NUMERICRELATIONS : APPROXRELATIONS;
 		case T_DATE:
@@ -3650,9 +3681,13 @@ public class QueryField {
 				return asset.getFileSource() != Constants.FILESOURCE_FILMSCANNER
 						&& asset.getFileSource() != Constants.FILESOURCE_REFLECTIVE_SCANNER;
 			case EDIT_UNKNOWN:
-				return isNeutralValue(obtainFieldValue(asset));
+				return isUnknown(asset);
 			}
 		return false;
+	}
+
+	public boolean isUnknown(Asset asset) {
+		return isNeutralValue(obtainFieldValue(asset));
 	}
 
 	/**
@@ -4624,6 +4659,18 @@ public class QueryField {
 				return Format.MISSINGENTRYSTRING;
 			break;
 		case QueryField.T_POSITIVEFLOAT:
+			if (value instanceof Double) {
+				Double d = (Double) value;
+				if (d.isInfinite())
+					return Messages.QueryField_infinite;
+				if (d.isNaN())
+					return Format.MISSINGENTRYSTRING;
+				NumberFormat nf = inLocale != null ? NumberFormat.getNumberInstance(inLocale)
+						: NumberFormat.getNumberInstance();
+				nf.setMaximumFractionDigits(getMaxlength());
+				return nf.format(value);
+			}
+			break;
 		case QueryField.T_FLOAT:
 		case QueryField.T_FLOATB:
 			if (value instanceof Double) {
@@ -4751,6 +4798,26 @@ public class QueryField {
 	 */
 	public String getUnit() {
 		return null;
+	}
+
+	/**
+	 * Appends a unit to a text string
+	 * 
+	 * @param text
+	 *            - orginal text string
+	 * @param sep1
+	 *            - separation string
+	 * @param sep2
+	 *            - closing string
+	 * @return - text with unit
+	 */
+	public String addUnit(String text, String sep1, String sep2) {
+		if (text != null && !text.isEmpty() && text != Format.MISSINGENTRYSTRING && text != VALUE_MIXED) {
+			String unit = getUnit();
+			if (unit != null)
+				return new StringBuilder(text).append(sep1).append(unit).append(sep2).toString();
+		}
+		return text;
 	}
 
 	/**
@@ -5031,6 +5098,20 @@ public class QueryField {
 	 */
 	public boolean isVirtual() {
 		return key == null || key.startsWith("$"); //$NON-NLS-1$
+	}
+
+	/**
+	 * Appends a question mark if lens info is undefined Overwritten by FNUMBER,
+	 * FOCALLENGTH, and 35MMFOCALLENGTH
+	 * 
+	 * @param asset
+	 *            - asset containing the lens information
+	 * @param text
+	 *            - text to be appended
+	 * @return - appended or original text
+	 */
+	public String appendQuestionMark(Asset asset, String text) {
+		return text;
 	}
 
 }

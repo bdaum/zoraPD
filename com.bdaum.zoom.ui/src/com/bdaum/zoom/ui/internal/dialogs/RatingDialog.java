@@ -72,6 +72,7 @@ public class RatingDialog extends ZDialog implements PaintListener, MouseMoveLis
 	private boolean select;
 	private boolean focusWatch = true;
 	private boolean ai;
+	private int timeout = 0;
 
 	public RatingDialog(Shell parentShell, int rating, double scale, boolean focusWatch, boolean ai) {
 		super(parentShell);
@@ -141,6 +142,16 @@ public class RatingDialog extends ZDialog implements PaintListener, MouseMoveLis
 
 	@Override
 	public int open() {
+		if (timeout > 0) {
+			Shell shell = getShell();
+			shell.getDisplay().timerExec(timeout, new Runnable() {
+				@Override
+				public void run() {
+					if (!shell.isDisposed())
+						close();
+				}
+			});
+		}
 		return (super.open() != Window.CANCEL) ? rating : select ? SELECTABORT : ABORT;
 	}
 
@@ -295,6 +306,10 @@ public class RatingDialog extends ZDialog implements PaintListener, MouseMoveLis
 	@Override
 	public void keyPressed(KeyEvent e) {
 		// do nothing
+	}
+
+	public void setTimeout(int timeout) {
+		this.timeout = timeout;
 	}
 
 }

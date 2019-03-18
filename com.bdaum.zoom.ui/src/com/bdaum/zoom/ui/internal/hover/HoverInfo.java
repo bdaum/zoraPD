@@ -15,45 +15,40 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.hover;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.bdaum.zoom.cat.model.Bookmark;
 import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.asset.Region;
 import com.bdaum.zoom.cat.model.asset.RegionImpl;
-import com.bdaum.zoom.cat.model.asset.TrackRecordImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.core.Format;
-import com.bdaum.zoom.core.IFormatter;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.peer.AssetOrigin;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
-import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.views.ImageRegion;
 
+//@SuppressWarnings("restriction")
 @SuppressWarnings("restriction")
-public class HoverInfo implements IHoverInfo {
+public class HoverInfo implements IHoverInfo, IHoverContext {
 
 	private Object object;
 	private ImageRegion[] regions;
-	private QueryField[] queryFields;
+	// private QueryField[] queryFields;
 	private String info;
+	private String title;
 
 	/**
 	 * @param object
@@ -62,10 +57,10 @@ public class HoverInfo implements IHoverInfo {
 	 *            - regionIds
 	 * @param queryFields
 	 */
-	public HoverInfo(Object object, ImageRegion[] regions, QueryField[] queryFields) {
+	public HoverInfo(Object object, ImageRegion[] regions) { // , QueryField[] queryFields) {
 		this.object = object;
 		this.regions = regions;
-		this.queryFields = queryFields;
+		// this.queryFields = queryFields;
 	}
 
 	/**
@@ -76,6 +71,18 @@ public class HoverInfo implements IHoverInfo {
 	 */
 	public HoverInfo(Object object, String tooltip) {
 		this.object = object;
+		info = tooltip;
+	}
+
+	/**
+	 * @param object
+	 *            - asset, list of assets
+	 * @param tooltip
+	 *            - hover text
+	 */
+	public HoverInfo(Object object, String title, String tooltip) {
+		this.object = object;
+		this.title = title;
 		info = tooltip;
 	}
 
@@ -96,24 +103,42 @@ public class HoverInfo implements IHoverInfo {
 	@Override
 	public String getText() {
 		if (info == null) {
-			if (object instanceof Asset || object instanceof List<?>) {
-				StringBuilder sb = new StringBuilder(512);
-				if (object instanceof Asset)
-					compileOrigin(sb);
-				if (regions != null)
-					compileRegionData(regions, sb);
-				compileAssetData(object, sb);
-				info = sb.toString();
-			}
+			String hoverId = computeHoverId();
+			if (hoverId != null)
+				info = UiActivator.getDefault().getHoverManager().getHoverText(hoverId, object, this); // $NON-NLS-1$
 		}
 		return info;
 	}
 
-	private void compileOrigin(StringBuilder sb) {
+	@SuppressWarnings("unchecked")
+	private String computeHoverId() {
+		String hoverId = null;
+		if (object instanceof Asset || object instanceof List<?>) {
+			if (object instanceof Asset) {
+				IMediaSupport mediaSupport = CoreActivator.getDefault().getMediaSupport(((Asset) object).getFormat());
+				hoverId = mediaSupport != null ? mediaSupport.getGalleryHoverId()
+						: "com.bdaum.zoom.ui.hover.galleryItem.photo"; //$NON-NLS-1$
+			} else {
+				for (Asset asset : (List<Asset>) object) {
+					IMediaSupport mediaSupport = CoreActivator.getDefault().getMediaSupport(asset.getFormat());
+					String id = mediaSupport != null ? mediaSupport.getGalleryHoverId()
+							: "com.bdaum.zoom.ui.hover.galleryItem.photo"; //$NON-NLS-1$
+					if (hoverId == null)
+						hoverId = id;
+					else if (!hoverId.equals(id))
+						hoverId = "com.bdaum.zoom.ui.hover.galleryItem.photo"; //$NON-NLS-1$
+				}
+			}
+		}
+		return hoverId;
+	}
+
+	private String compileOrigin() {
 		IPeerService peerService = Core.getCore().getPeerService();
 		if (peerService != null) {
 			AssetOrigin assetOrigin = peerService.getAssetOrigin(((Asset) object).getStringId());
 			if (assetOrigin != null) {
+				StringBuilder sb = new StringBuilder();
 				sb.append(Messages.HoverInfo_origin);
 				String peer = assetOrigin.getLocation();
 				File catFile = assetOrigin.getCatFile();
@@ -122,11 +147,15 @@ public class HoverInfo implements IHoverInfo {
 				else
 					sb.append(peer).append(", ").append(catFile.getName()); //$NON-NLS-1$
 				sb.append('\n');
+				return sb.toString();
 			}
 		}
+		return null;
 	}
 
-	private static void compileRegionData(ImageRegion[] imageRegions, StringBuilder sb) {
+	private static String compileRegionData(ImageRegion[] imageRegions) {
+		if (imageRegions == null)
+			return null;
 		LinkedList<String> lines = new LinkedList<String>();
 		IDbManager dbManager = Core.getCore().getDbManager();
 		for (ImageRegion imageRegion : imageRegions) {
@@ -154,7 +183,8 @@ public class HoverInfo implements IHoverInfo {
 				}
 				StringBuilder lsb = new StringBuilder();
 				lsb.append(name);
-				if (!description.isEmpty())
+				if (!description.isEmpty() && !(description.endsWith(name)
+						&& description.charAt(description.length() - name.length() - 2) == ':'))
 					lsb.append(" - ").append(description); //$NON-NLS-1$
 				String line = lsb.toString();
 				lines.remove(line);
@@ -162,70 +192,13 @@ public class HoverInfo implements IHoverInfo {
 			}
 			Collections.sort(lines);
 		}
-		for (String line : lines)
-			sb.append("  [").append(line).append("]\n"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-	@SuppressWarnings("unchecked")
-	private void compileAssetData(Object o, StringBuilder sb) {
-		int flags = 0;
-		if (o instanceof Asset)
-			flags |= collectFlags((Asset) o);
-		else
-			for (Asset asset : (List<Asset>) o)
-				flags |= collectFlags(asset);
-		IDbManager dbManager = Core.getCore().getDbManager();
-		for (QueryField qfield : queryFields) {
-			if (!qfield.testFlags(flags))
-				continue;
-			Object value = (o instanceof Asset) ? qfield.obtainFieldValue((Asset) o)
-					: qfield.obtainFieldValue((List<Asset>) o, null);
-			String text;
-			if (qfield == QueryField.TRACK && value != null) {
-				StringBuilder sbt = new StringBuilder();
-				String[] ids = (String[]) value;
-				List<TrackRecordImpl> records = new ArrayList<TrackRecordImpl>(ids.length);
-				for (int i = 0; i < ids.length; i++) {
-					TrackRecordImpl record = dbManager.obtainById(TrackRecordImpl.class, ids[i]);
-					if (record != null)
-						records.add(record);
-				}
-				if (records.size() > 1)
-					Collections.sort(records, new Comparator<TrackRecordImpl>() {
-						public int compare(TrackRecordImpl t1, TrackRecordImpl t2) {
-							return t2.getExportDate().compareTo(t1.getExportDate());
-						}
-					});
-				int j = 0;
-				for (TrackRecordImpl t : records) {
-					if (sbt.length() > 0)
-						sbt.append('\n');
-					IFormatter formatter = QueryField.TRACK.getFormatter();
-					sbt.append('\t').append(formatter.toString(t));
-					if (++j > 16)
-						break;
-				}
-				text = sbt.toString();
-			} else
-				text = qfield.value2text(value, ""); //$NON-NLS-1$
-			if (text != null && !text.isEmpty() && text != Format.MISSINGENTRYSTRING) {
-				if (sb.length() > 0)
-					sb.append('\n');
-				String label = qfield.getLabel();
-				if (!text.isEmpty()) {
-					if (qfield.getUnit() != null)
-						text += ' ' + qfield.getUnit();
-					else if (value instanceof String[] && ((String[]) value).length > 0)
-						text = UiUtilities.addExplanation(qfield, (String[]) value, text);
-				}
-				sb.append(label).append(": ").append(text); //$NON-NLS-1$
-			}
+		if (!lines.isEmpty()) {
+			StringBuilder sb = new StringBuilder();
+			for (String line : lines)
+				sb.append('[').append(line).append("]\n"); //$NON-NLS-1$
+			return sb.toString();
 		}
-	}
-
-	private static int collectFlags(Asset asset) {
-		IMediaSupport mediaSupport = CoreActivator.getDefault().getMediaSupport(asset.getFormat());
-		return (mediaSupport != null) ? mediaSupport.getPropertyFlags() : QueryField.PHOTO;
+		return null;
 	}
 
 	/*
@@ -235,11 +208,12 @@ public class HoverInfo implements IHoverInfo {
 	 */
 	@Override
 	public String getTitle() {
-		if (object instanceof AssetImpl)
-			return ((AssetImpl) object).getName();
-		if (object instanceof Bookmark)
-			return ((Bookmark) object).getLabel();
-		return ""; //$NON-NLS-1$
+		if (title == null) {
+			String hoverId = computeHoverId();
+			if (hoverId != null)
+				return UiActivator.getDefault().getHoverManager().getHoverTitle(hoverId, object, this);
+		}
+		return title;
 	}
 
 	@Override
@@ -250,6 +224,15 @@ public class HoverInfo implements IHoverInfo {
 	@Override
 	public ImageRegion[] getRegions() {
 		return regions;
+	}
+
+	@Override
+	public String getValue(String tv, Object object) {
+		if (Constants.HV_ORIGIN.equals(tv))
+			return compileOrigin();
+		if (Constants.HV_IMAGE_REGIONS.equals(tv))
+			return compileRegionData(regions);
+		return null;
 	}
 
 }

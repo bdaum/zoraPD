@@ -321,7 +321,7 @@ public class Utilities {
 
 	public static String evaluateTemplate(String template, String[] variables, String filename, GregorianCalendar cal,
 			int importNo, int imageNo, int sequenceNo, String cue, Asset asset, String collection, int maxLength,
-			boolean toFilename) {
+			boolean toFilename, boolean withQuestionMark) {
 		if (cal == null && asset != null) {
 			Date crDate = asset.getDateTimeOriginal();
 			if (crDate == null)
@@ -353,9 +353,9 @@ public class Utilities {
 					break;
 				String text = qpath[1].value2text(QueryField.obtainFieldValue(asset, qpath[0], qpath[1]), ""); //$NON-NLS-1$
 				if (text != null) {
-					String unit = qpath[1].getUnit();
-					if (unit != null)
-						text += ' ' + unit;
+					text = qpath[1].addUnit(text, " ", "");  //$NON-NLS-1$//$NON-NLS-2$
+					if (withQuestionMark)
+						text = qpath[1].appendQuestionMark(asset, text);
 				} else
 					text = ""; //$NON-NLS-1$
 				sb.replace(p, q + 1, removeBadChars(text, toFilename));
@@ -533,7 +533,6 @@ public class Utilities {
 				else if (filter == null || filter.accept(f))
 					result.add(f);
 	}
-
 
 	public static void collectFolders(String[] fileNames, List<File> result) {
 		for (String fileName : fileNames) {
@@ -990,11 +989,8 @@ public class Utilities {
 
 	public static void sortForSimilarity(String[] array, final String ref) {
 		Arrays.sort(array, new Comparator<String>() {
-
 			public int compare(String o1, String o2) {
-				int ld1 = LD(o1, ref);
-				int ld2 = LD(o2, ref);
-				return (ld1 == ld2) ? 0 : (ld1 < ld2) ? -1 : 1;
+				return LD(o1, ref) - LD(o2, ref);
 			}
 		});
 	}

@@ -29,6 +29,8 @@ public class Activator extends Plugin {
 
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.dcraw"; //$NON-NLS-1$
+	
+	public final static String DCRAW = BatchConstants.WIN32 ? "dcraw.exe" : "dcraw"; //$NON-NLS-1$//$NON-NLS-2$
 
 	// The shared instance
 	private static Activator plugin;
@@ -47,20 +49,19 @@ public class Activator extends Plugin {
 	}
 
 	public File locateDCRAW() {
-		String dcraw = BatchConstants.WIN32 ? "dcraw.exe" : "dcraw"; //$NON-NLS-1$ //$NON-NLS-2$
 		File installFolder = new File(Platform.getInstallLocation().getURL()
 				.getPath());
 		File dcrawFile = new File(new File(installFolder,
-				BatchConstants.DROPINFOLDER), dcraw);
+				BatchConstants.DROPINFOLDER), DCRAW);
 		if (dcrawFile.exists())
 			return dcrawFile;
 		dcrawFile = new File(new File(installFolder.getParent(),
-				BatchConstants.DROPINFOLDER), dcraw);
+				BatchConstants.DROPINFOLDER), DCRAW);
 		if (dcrawFile.exists())
 			return dcrawFile;
 		if (!BatchConstants.LINUX) {
 			try {
-				return FileLocator.findFile(getBundle(), "/" + dcraw); //$NON-NLS-1$
+				return FileLocator.findFile(getBundle(), "/" + DCRAW); //$NON-NLS-1$
 			} catch (Exception e) {
 				logError(Messages.getString("Activator.Error_locating"), e); //$NON-NLS-1$
 			}

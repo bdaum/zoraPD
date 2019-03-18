@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -27,12 +27,11 @@ import org.eclipse.swt.SWT;
 import org.piccolo2d.event.PBasicInputEventHandler;
 import org.piccolo2d.event.PInputEvent;
 import org.piccolo2d.extras.swt.PSWTCanvas;
-import org.piccolo2d.extras.swt.PSWTPath;
 
 import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.ui.internal.Icons.Icon;
 
-public abstract class PPanel extends PSWTPath implements PTextHandler {
+public abstract class PPanel extends PContainer implements PTextHandler {
 
 	private static final long serialVersionUID = -1896974701502837715L;
 	protected TextField title;
@@ -41,8 +40,8 @@ public abstract class PPanel extends PSWTPath implements PTextHandler {
 	protected Object data;
 
 	public PPanel(Object data, int width, int height) {
+		super(width, height);
 		this.data = data;
-		setPathToRectangle(0, 0, width, height);
 		addInputEventListener(new PBasicInputEventHandler() {
 			@Override
 			public void mouseReleased(PInputEvent event) {

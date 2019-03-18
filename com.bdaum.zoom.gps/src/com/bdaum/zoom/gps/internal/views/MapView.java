@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Berthold Daum.
+ * Copyright (c) 2009-2019 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -61,8 +61,7 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
-import com.bdaum.zoom.gps.CoordinatesListener;
-import com.bdaum.zoom.gps.MaptypeChangedListener;
+import com.bdaum.zoom.gps.MapListener;
 import com.bdaum.zoom.gps.geonames.Place;
 import com.bdaum.zoom.gps.internal.GeoService;
 import com.bdaum.zoom.gps.internal.GpsActivator;
@@ -84,7 +83,7 @@ import com.bdaum.zoom.ui.internal.views.BasicView;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class MapView extends BasicView {
+public class MapView extends BasicView implements StatusTextListener, MapListener {
 
 	private class ComboContributionItem extends ControlContribution implements ISelectionChangedListener {
 
@@ -153,6 +152,7 @@ public class MapView extends BasicView {
 	private static final String LAST_ZOOM = "lastZoom"; //$NON-NLS-1$
 	private double lastLongitude = Double.NaN;
 	private double lastLatitude = Double.NaN;
+	protected int lastZoom = 12;
 	private AssetSelection lastSelection = AssetSelection.EMPTY;
 	private Map<RasterCoordinate, Place> placeMap = new HashMap<RasterCoordinate, Place>();
 	private Map<RasterCoordinate, Place> shownMap = new HashMap<RasterCoordinate, Place>();
@@ -164,7 +164,6 @@ public class MapView extends BasicView {
 	private Composite viewParent;
 	private boolean clientClustering = false;
 	private Action webAction;
-	protected int lastZoom = 12;
 	private IConfigurationElement currentConf;
 	private Action refreshAction;
 
@@ -252,30 +251,9 @@ public class MapView extends BasicView {
 			currentConf = conf;
 			clientClustering = Boolean.parseBoolean(conf.getAttribute("clientClustering")); //$NON-NLS-1$
 			mapComponent.createComponent(parent, true);
-			mapComponent.addCoordinatesListener(new CoordinatesListener() {
-				public void setCoordinates(String[] assetIds, double latitude, double longitude, int zoom, int type,
-						String uuid) {
-					updateGeoPosition(assetIds, latitude, longitude, type, uuid);
-					if (Double.isNaN(latitude) && Double.isNaN(longitude)) {
-						lastLatitude = latitude;
-						lastLongitude = longitude;
-						lastZoom = zoom;
-					}
-				}
-			});
-			mapComponent.addMaptypeListener(new MaptypeChangedListener() {
-				public void setMaptype(String maptype) {
-					IStructuredSelection sel = comboContributionItem.getSelection();
-					if (!sel.isEmpty())
-						GpsActivator.setCurrentMapType((IConfigurationElement) sel.getFirstElement(), maptype);
-				}
-			});
 			PlatformUI.getWorkbench().getHelpSystem().setHelp(mapComponent.getControl(), HelpContextIds.MAP_VIEW);
-			mapComponent.addStatusTextListener(new StatusTextListener() {
-				public void changed(StatusTextEvent event) {
-					setStatusMessage(event.text, false);
-				}
-			});
+			mapComponent.addMapListener(this);
+			mapComponent.addStatusTextListener(this);
 		}
 		addKeyListener();
 	}
@@ -319,10 +297,10 @@ public class MapView extends BasicView {
 				IProfiledOperation op;
 				Trackpoint trackpoint = new Trackpoint(latitude, longitude, false);
 				switch (type) {
-				case CoordinatesListener.IMGDIR:
+				case MapListener.IMGDIR:
 					op = new GeodirOperation(trackpoint, ids[0]);
 					break;
-				case CoordinatesListener.SHOWNLOC:
+				case MapListener.SHOWNLOC:
 					op = new GeoshownOperation(trackpoint, modify, ids, uuid, gpsConfig);
 					break;
 				default:
@@ -448,16 +426,16 @@ public class MapView extends BasicView {
 		case 0:
 			if (!Double.isNaN(lastLatitude) && !Double.isNaN(lastLongitude)) {
 				mapPosition = new Place(lastLatitude, lastLongitude);
-				initialZoomLevel = 12;
+				initialZoomLevel = getLastZoom(12);
 			} else {
 				mapPosition = new Place();
 				String country = Locale.getDefault().getCountry();
 				if (country.isEmpty()) {
 					mapPosition.setCountryCode("DE"); //$NON-NLS-1$
-					initialZoomLevel = 2;
+					initialZoomLevel = getLastZoom(2);
 				} else {
 					mapPosition.setCountryCode(country);
-					initialZoomLevel = 6;
+					initialZoomLevel = getLastZoom(6);
 				}
 			}
 			mode = (lastSelection.isEmpty()) ? IMapComponent.NONE : IMapComponent.ONE;
@@ -465,16 +443,19 @@ public class MapView extends BasicView {
 		case 1:
 			Collection<Place> values = placeMap.values();
 			mapPosition = values.toArray(new Place[values.size()])[0];
-			initialZoomLevel = 12;
+			initialZoomLevel = getLastZoom(12);
 			mode = lastSelection.size() > 1 ? IMapComponent.CLUSTER : IMapComponent.ONE;
 			break;
 		default:
-			mapPosition = new Place();
-			initialZoomLevel = computeZoomLevel(markerPositions, mapPosition);
+			initialZoomLevel = computeZoomLevel(markerPositions, mapPosition = new Place());
 			mode = IMapComponent.MULTI;
 			break;
 		}
 		showMap(markerPositions, shownMap.values().toArray(new Place[size]), mode);
+	}
+
+	private int getLastZoom(int dflt) {
+		return lastZoom >= 0 ? lastZoom : dflt;
 	}
 
 	private void showMap(Place[] markerPositions, Place[] shownPositions, int mode) {
@@ -547,7 +528,7 @@ public class MapView extends BasicView {
 		extractLocationsShown(selectedAssets);
 		if (refresh) {
 			Shell shell = getSite().getShell();
-			if (!shell.isDisposed())
+			if (shell != null && !shell.isDisposed())
 				shell.getDisplay().asyncExec(() -> {
 					if (!shell.isDisposed())
 						refreshBusy();
@@ -601,7 +582,7 @@ public class MapView extends BasicView {
 	private void extractLocationsShown(AssetSelection selectedAssets) {
 		IDbManager dbManager = Core.getCore().getDbManager();
 		shownMap.clear();
-		for (Asset asset : selectedAssets.getAssets()) {
+		for (Asset asset : selectedAssets.getAssets())
 			for (LocationShownImpl locationShown : dbManager.obtainStructForAsset(LocationShownImpl.class,
 					asset.getStringId(), false)) {
 				LocationImpl loc = dbManager.obtainById(LocationImpl.class, locationShown.getLocation());
@@ -629,7 +610,6 @@ public class MapView extends BasicView {
 					}
 				}
 			}
-		}
 	}
 
 	@Override
@@ -650,14 +630,9 @@ public class MapView extends BasicView {
 			for (LocationImpl loc2 : Core.getCore().getDbManager().findLocation(loc))
 				if (loc2.getLatitude() != null && !Double.isNaN(loc2.getLatitude()) && loc2.getLongitude() != null
 						&& !Double.isNaN(loc2.getLongitude())) {
-					Place mapPosition = new Place(loc2.getLatitude(), loc2.getLongitude());
-					int initialZoomLevel = 12;
-					if (loc.getCity() == null) {
-						initialZoomLevel = 8;
-						if (loc.getProvinceOrState() == null)
-							initialZoomLevel = 6;
-					}
-					mapComponent.setInput(mapPosition, initialZoomLevel, null, null, null, IMapComponent.NONE);
+					mapComponent.setInput(new Place(loc2.getLatitude(), loc2.getLongitude()),
+							loc.getCity() != null ? 12 : loc.getProvinceOrState() != null ? 8 : 6, null, null, null,
+							IMapComponent.NONE);
 					break;
 				}
 		}
@@ -702,6 +677,32 @@ public class MapView extends BasicView {
 
 	public void setSelection(ISelection selection) {
 		// do nothing
+	}
+
+	@Override
+	public void historyChanged(double lat, double lon, int zoom) {
+		lastLatitude = lat;
+		lastLongitude = lon;
+		lastZoom = zoom;
+	}
+
+	public void setMaptype(String maptype) {
+		IStructuredSelection sel = comboContributionItem.getSelection();
+		if (!sel.isEmpty())
+			GpsActivator.setCurrentMapType((IConfigurationElement) sel.getFirstElement(), maptype);
+	}
+
+	public void changed(StatusTextEvent event) {
+		setStatusMessage(event.text, false);
+	}
+
+	public void setCoordinates(String[] assetIds, double latitude, double longitude, int zoom, int type, String uuid) {
+		updateGeoPosition(assetIds, latitude, longitude, type, uuid);
+		if (Double.isNaN(latitude) && Double.isNaN(longitude)) {
+			lastLatitude = latitude;
+			lastLongitude = longitude;
+			lastZoom = zoom;
+		}
 	}
 
 }

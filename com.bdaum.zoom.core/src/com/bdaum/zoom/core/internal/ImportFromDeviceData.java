@@ -51,6 +51,7 @@ public class ImportFromDeviceData {
 	private WatchedFolder watchedFolder;
 	private int privacy;
 	private boolean deepSubfolders;
+	private int timeshift;
 
 	public ImportFromDeviceData(StorageObject[] dcims, boolean media, WatchedFolder watchedFolder) {
 		this.dcims = dcims;
@@ -200,6 +201,14 @@ public class ImportFromDeviceData {
 		if (dcims != null && dcims.length > 0)
 			return dcims[0].getParentName();
 		return null;
+	}
+
+	public void setTimeshift(int timeshift) {
+		this.timeshift = timeshift;
+	}
+	
+	public int getTimeshift() {
+		return timeshift;
 	}
 
 }

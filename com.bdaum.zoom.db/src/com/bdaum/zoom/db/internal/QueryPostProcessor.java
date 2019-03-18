@@ -120,6 +120,21 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 										break;
 									}
 								break;
+							case QueryField.SIMILAR:
+								for (String v : array)
+									if (svalue.equalsIgnoreCase(v)) {
+										result = true;
+										break;
+									}
+								break;
+							case QueryField.NOTSIMILAR:
+								result = true;
+								for (String v : array)
+									if (svalue.equalsIgnoreCase(v)) {
+										result = false;
+										break;
+									}
+								break;
 							case QueryField.STARTSWITH:
 								for (String v : array) {
 									if (v != null && v.startsWith(svalue)) {
@@ -189,12 +204,11 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 							int v1 = (Integer) fieldValue;
 							int from = 0, to = 0;
 							switch (relation) {
+							case QueryField.NOTSIMILAR:
 							case QueryField.SIMILAR: {
 								float tolerance = getTolerance(field);
-								if (tolerance == 0)
-									relation = QueryField.EQUALS;
-								else {
-									int v2 = ((Integer) value);
+								if (tolerance != 0f) {
+									int v2 = (Integer) value;
 									if (tolerance < 0) {
 										from = v2 + (int) tolerance;
 										to = v2 - (int) tolerance;
@@ -202,7 +216,8 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 										from = (int) (v2 * (double) ((100 - tolerance) / 100) + 0.5d);
 										to = (int) (v2 * (double) ((100 + tolerance) / 100) + 0.5d);
 									}
-									relation = QueryField.BETWEEN;
+									relation = relation == QueryField.NOTSIMILAR ? QueryField.NOTBETWEEN
+											: QueryField.BETWEEN;
 								}
 							}
 								break;
@@ -215,9 +230,11 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 							}
 							switch (relation) {
 							case QueryField.EQUALS:
+							case QueryField.SIMILAR:
 								result = v1 == (Integer) value;
 								break;
 							case QueryField.NOTEQUAL:
+							case QueryField.NOTSIMILAR:
 								result = v1 != (Integer) value;
 								break;
 							case QueryField.GREATER:
@@ -251,6 +268,7 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 								result = v1 == (Long) value;
 								break;
 							case QueryField.NOTEQUAL:
+							case QueryField.NOTSIMILAR:
 								result = v1 != (Long) value;
 								break;
 							case QueryField.GREATER:
@@ -279,11 +297,10 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 						case QueryField.T_CURRENCY: {
 							double from = 0, to = 0;
 							switch (relation) {
-							case QueryField.SIMILAR: {
+							case QueryField.SIMILAR:
+							case QueryField.NOTSIMILAR: {
 								float tolerance = getTolerance(field);
-								if (tolerance == 0)
-									relation = QueryField.EQUALS;
-								else {
+								if (tolerance != 0f) {
 									double v2 = (Double) value;
 									if (tolerance < 0) {
 										from = v2 + tolerance;
@@ -292,7 +309,8 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 										from = v2 * ((100 - tolerance) / 100);
 										to = v2 * ((100 + tolerance) / 100);
 									}
-									relation = QueryField.BETWEEN;
+									relation = relation == QueryField.NOTSIMILAR ? QueryField.NOTBETWEEN
+											: QueryField.BETWEEN;
 								}
 							}
 								break;
@@ -306,9 +324,11 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 							double v1 = (Double) fieldValue;
 							switch (relation) {
 							case QueryField.EQUALS:
+							case QueryField.SIMILAR:
 								result = v1 == (Double) value;
 								break;
 							case QueryField.NOTEQUAL:
+							case QueryField.NOTSIMILAR:
 								result = v1 != (Double) value;
 								break;
 							case QueryField.GREATER:
@@ -351,15 +371,15 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 							Date v1 = (Date) fieldValue;
 							Date from = null, to = null;
 							switch (relation) {
+							case QueryField.NOTSIMILAR:
 							case QueryField.SIMILAR: {
 								float tolerance = getTolerance(field);
-								if (tolerance == 0)
-									relation = QueryField.DATEEQUALS;
-								else {
+								if (tolerance != 0f) {
 									long time = ((Date) value).getTime();
 									from = new Date(time + (int) tolerance);
 									to = new Date(time - (int) tolerance);
-									relation = QueryField.BETWEEN;
+									relation = relation == QueryField.NOTSIMILAR ? QueryField.NOTBETWEEN
+											: QueryField.BETWEEN;
 								}
 							}
 								break;
@@ -372,11 +392,13 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 							}
 							switch (relation) {
 							case QueryField.DATEEQUALS:
+							case QueryField.SIMILAR:
 								long fromtime = ((Date) value).getTime() / 1000 * 1000;
 								long t1 = v1.getTime();
 								result = t1 >= fromtime && t1 <= fromtime + 999;
 								break;
 							case QueryField.DATENOTEQUAL:
+							case QueryField.NOTSIMILAR:
 								fromtime = ((Date) value).getTime() / 1000 * 1000;
 								t1 = v1.getTime();
 								result = t1 < fromtime || t1 > fromtime + 999;
@@ -411,6 +433,12 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 								break;
 							case QueryField.NOTEQUAL:
 								result = !v1.equals(value);
+								break;
+							case QueryField.SIMILAR:
+								result = value instanceof String && v1.equalsIgnoreCase((String) value);
+								break;
+							case QueryField.NOTSIMILAR:
+								result = !(value instanceof String) || !v1.equalsIgnoreCase((String) value);
 								break;
 							case QueryField.STARTSWITH:
 								result = v1.startsWith((String) value);
@@ -469,13 +497,14 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 				long t = ((Date) value).getTime() / 1000 * 1000;
 				value = new Range(new Date(t), new Date(t + 999));
 				relation = (relation == QueryField.DATEEQUALS) ? QueryField.BETWEEN : QueryField.NOTBETWEEN;
-			} else if (relation == QueryField.SIMILAR) {
+			} else if (qfield.getType() != QueryField.T_STRING
+					&& (relation == QueryField.SIMILAR || relation == QueryField.NOTSIMILAR)) {
 				float tolerance = getTolerance(field);
 				if (tolerance != 0f) {
-					relation = QueryField.BETWEEN;
+					relation = relation == QueryField.NOTSIMILAR ? QueryField.NOTBETWEEN : QueryField.BETWEEN;
 					value = CollectionProcessor.compileSimilarRange(value, tolerance);
 				} else
-					relation = QueryField.EQUALS;
+					relation = relation == QueryField.NOTSIMILAR ? QueryField.NOTEQUAL : QueryField.EQUALS;
 			}
 			if (relation == QueryField.BETWEEN || relation == QueryField.NOTBETWEEN)
 				constraint = CollectionProcessor.applyBetween(query, field, field, relation, ((Range) value).getFrom(),
@@ -483,6 +512,10 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 			else if (relation != QueryField.EQUALS && relation != QueryField.NOTEQUAL && qfield.getCard() != 1
 					&& qfield.getType() == QueryField.T_STRING)
 				constraint = query.constrain(new StringArrayEvaluation(qfield, relation, (String) value));
+			else if (relation == QueryField.SIMILAR)
+				constraint = query.descend(field).constrain(value).like();
+			else if (relation == QueryField.NOTSIMILAR)
+				constraint = query.descend(field).constrain(value).like().not();
 			else if (relation == QueryField.WILDCARDS)
 				query.constrain(new WildcardEvaluation(qfield, (String) value, false));
 			else if (relation == QueryField.NOTWILDCARDS)

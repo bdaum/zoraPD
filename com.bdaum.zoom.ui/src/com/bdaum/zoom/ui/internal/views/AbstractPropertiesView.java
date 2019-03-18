@@ -1173,12 +1173,10 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 	protected void deleteSubentry() {
 		Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
 		List<Asset> assets = getNavigationHistory().getSelectedAssets().getAssets();
-		if (firstElement instanceof IndexedMember) {
-			IndexedMember indexedMember = (IndexedMember) firstElement;
-			OperationJob.executeOperation(
-					new MultiModifyAssetOperation(indexedMember.getQfield(), null, indexedMember.getValue(), assets),
-					this);
-		} else if (firstElement instanceof QueryField) {
+		if (firstElement instanceof IndexedMember)
+			OperationJob.executeOperation(new MultiModifyAssetOperation(((IndexedMember) firstElement).getQfield(),
+					null, ((IndexedMember) firstElement).getValue(), assets), this);
+		else if (firstElement instanceof QueryField) {
 			QueryField qfield = (QueryField) firstElement;
 			if (qfield.isStruct()) {
 				IDbManager dbManager = Core.getCore().getDbManager();

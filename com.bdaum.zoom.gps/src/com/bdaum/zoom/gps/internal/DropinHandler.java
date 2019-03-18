@@ -30,7 +30,7 @@ import com.bdaum.zoom.ui.IDropinHandler;
 
 public class DropinHandler implements IDropinHandler {
 
-	public void handleDropin(File[] dropings, String[] assetIds, IAdaptable info) {
+	public void handleDropin(File[] dropings, IAdaptable info) {
 		if (!Core.getCore().getDbManager().isReadOnly())
 			new GeonameAction().run(dropings, info);
 	}

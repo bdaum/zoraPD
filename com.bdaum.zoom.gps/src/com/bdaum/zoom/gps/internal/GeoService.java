@@ -79,6 +79,7 @@ public class GeoService implements IGeoService {
 			if (query != null && !query.isEmpty()) {
 				NumberFormat nf = NumberFormat.getInstance(Locale.US);
 				nf.setMaximumFractionDigits(5);
+				nf.setGroupingUsed(false);
 				browser.openURL(new URL(NLS.bind(query, new Object[] { nf.format(lat), nf.format(lon), zoom })));
 			}
 		}

@@ -20,7 +20,7 @@
 
 package com.bdaum.zoom.core.db;
 
-import java.util.List;
+import java.util.Set;
 
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.core.IPostProcessor2;
@@ -192,7 +192,7 @@ public interface IDbFactory {
 	 * Returns the set of indexed fields
 	 * @return set of indexed field keys
 	 */
-	List<String> getIndexedFields();
+	Set<String> getIndexedFields();
 
 	/**
 	 * returns the unit for distances
@@ -218,5 +218,10 @@ public interface IDbFactory {
 	 */
 
 	void setDimUnit(String unit);
+
+	/**
+	 * Returns the names of the default index fields separated by line break
+	 */
+	String getDefaultTuning();
 
 }

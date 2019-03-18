@@ -21,10 +21,10 @@
 package com.bdaum.zoom.db.internal;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.eclipse.core.runtime.ListenerList;
@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.ListenerList;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IPostProcessor2;
+import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IColorCodeFilter;
 import com.bdaum.zoom.core.db.IDbErrorHandler;
 import com.bdaum.zoom.core.db.IDbFactory;
@@ -57,7 +58,7 @@ public class DbFactory implements IDbFactory, IDbListener {
 	private IPostProcessor2[] autoColoringPostProcessors;
 	private ILireService lireService;
 	private ILuceneService luceneService;
-	private List<String> indexedFields = new ArrayList<String>();
+	private Set<String> indexedFields = new HashSet<String>(51);
 	private char distanceUnit = 'k';
 	private char dimUnit = 'c';
 
@@ -290,14 +291,15 @@ public class DbFactory implements IDbFactory, IDbListener {
 	}
 
 	@Override
-	public List<String> getIndexedFields() {
+	public Set<String> getIndexedFields() {
 		return indexedFields;
 	}
 
 	@Override
 	public void setIndexedFields(String fields) {
 		indexedFields.clear();
-		for (String key :  Core.fromStringList(fields, "\n")) { //$NON-NLS-1$
+		indexedFields.addAll(Core.fromStringList(getDefaultTuning(), "\n")); //$NON-NLS-1$
+		for (String key : Core.fromStringList(fields, "\n")) { //$NON-NLS-1$
 			String[] basedOn = VirtualQueryComputer.getBasedOn(key);
 			if (basedOn != null)
 				for (String k : basedOn)
@@ -305,6 +307,7 @@ public class DbFactory implements IDbFactory, IDbListener {
 			else
 				indexedFields.add(key);
 		}
+		
 	}
 
 	@Override
@@ -331,6 +334,21 @@ public class DbFactory implements IDbFactory, IDbListener {
 			dimUnit = unit.charAt(0);
 			Core.getCore().fireAssetsModified(null, null);
 		}
+	}
+
+	@Override
+	public String getDefaultTuning() {
+		return new StringBuilder(1024).append(QueryField.NAME.getKey()).append('\n')
+				.append(QueryField.EXIF_ORIGINALFILENAME.getKey()).append('\n').append(QueryField.URI.getKey())
+				.append('\n').append(QueryField.VOLUME.getKey()).append('\n').append(QueryField.LASTMOD.getKey())
+				.append('\n').append(QueryField.EXIF_DATETIMEORIGINAL.getKey()).append('\n')
+				.append(QueryField.IPTC_DATECREATED.getKey()).append('\n').append(QueryField.EXIF_DATETIME.getKey())
+				.append('\n').append(QueryField.IMPORTDATE.getKey()).append('\n').append(QueryField.ALBUM.getKey())
+				.append('\n').append(QueryField.IPTC_KEYWORDS.getKey()).append('\n')
+				.append(QueryField.IPTC_CATEGORY.getKey()).append('\n').append(QueryField.EXIF_GPSLATITUDE.getKey())
+				.append('\n').append(QueryField.EXIF_GPSLONGITUDE.getKey()).append('\n')
+				.append(QueryField.FORMAT.getKey()).append('\n').append(QueryField.MIMETYPE.getKey()).append('\n')
+				.append(QueryField.RATING.getKey()).append('\n').toString();
 	}
 
 }

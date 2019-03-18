@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009-2018 Berthold Daum.
+ * Copyright (c) 2009-2019 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -84,6 +84,21 @@ public class ImageConstants {
 	public static final int NOCMS = 0;
 	public static final int SRGB = 1;
 	public static final int ARGB = 2;
+	public static final int REC709 = 3;
+	public static final int REC2002 = 4;
+	public static final int DCIP3 = 5;
+	public static final int DCIP60 = 6;
+	public static final int DCIP65 = 7;
+	public static final int CUSTOM = 8;
+	
+	public static final String[] ICCFILES = new String[] { null, "/icc/sRGB Color Space Profile.icm", //$NON-NLS-1$
+			"/icc/AdobeRGB1998.icc", //$NON-NLS-1$
+			"/icc/Rec709-Rec1886.icc", //$NON-NLS-1$
+			"/icc/Rec2020-Rec1886.icc", //$NON-NLS-1$
+			"/icc/P3DCI.icc", //$NON-NLS-1$
+			"/icc/P3D60.icc", //$NON-NLS-1$
+			"/icc/P3D65.icc", null //$NON-NLS-1$
+	};
 
 	private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
 
@@ -93,6 +108,7 @@ public class ImageConstants {
 	public final static String APPLICATION_NAME = Platform.getProduct().getName();
 
 	public static final String IMAGE_X_RAW = "image/x-raw"; //$NON-NLS-1$
+	public static final String IMAGE_X_DNG = "image/x-adobe-dng"; //$NON-NLS-1$
 	public static final String IMAGE_JPEG = "image/jpeg"; //$NON-NLS-1$
 	public static final String DNG_ADOBE_DIGITAL_NEGATIVE = "DNG Adobe Digital Negative"; //$NON-NLS-1$
 	public static final String JPEG = "JPEG"; //$NON-NLS-1$

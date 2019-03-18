@@ -225,34 +225,61 @@ public class ImageUtilities {
 	}
 
 	private static void flipImage(int from, int to, ImageData image, float scaleX, float scaleY, ImageData newData) {
+		byte[] sd = image.data;
+		byte[] td = newData.alphaData;
+		int bytesPerLine = image.bytesPerLine;
+		int tx, sx;
 		int w = image.width;
-		int[] sourceline = new int[w];
+		// int[] sourceline = new int[w];
 		if (scaleY < 0) {
 			int h1 = image.height - 1;
 			if (scaleX < 0) {
-				int[] scanline = new int[w];
+				// int[] scanline = new int[w];
 				for (int y = to - 1; y >= from; y--) {
-					image.getPixels(0, y, w, sourceline, 0);
-					for (int x = w - 1, xt = 0; x >= xt; x--, xt++) {
-						scanline[xt] = sourceline[x];
-						scanline[x] = sourceline[xt];
+					tx = (h1 - y) * bytesPerLine;
+					sx = y * bytesPerLine + w * 3 - 3;
+					for (int x = 0; x < w; x++) {
+						td[tx++] = sd[sx++];
+						td[tx++] = sd[sx++];
+						td[tx++] = sd[sx++];
+						sx -= 6;
 					}
-					newData.setPixels(0, h1 - y, w, scanline, 0);
+					// image.getPixels(0, y, w, sourceline, 0);
+					// for (int x = w - 1, xt = 0; x >= xt; x--, xt++) {
+					// scanline[xt] = sourceline[x];
+					// scanline[x] = sourceline[xt];
+					// }
+					// newData.setPixels(0, h1 - y, w, scanline, 0);
 				}
 			} else
 				for (int y = to - 1; y >= from; y--) {
-					image.getPixels(0, y, w, sourceline, 0);
-					newData.setPixels(0, h1 - y, w, sourceline, 0);
+					sx = y * bytesPerLine;
+					tx = (h1 - y) * bytesPerLine;
+					for (int x = 0; x < w; x++) {
+						td[tx++] = sd[sx++];
+						td[tx++] = sd[sx++];
+						td[tx++] = sd[sx++];
+					}
+					// image.getPixels(0, y, w, sourceline, 0);
+					// newData.setPixels(0, h1 - y, w, sourceline, 0);
 				}
 		} else {
-			int[] scanline = new int[w];
+			// int[] scanline = new int[w];
 			for (int y = from; y < to; y++) {
-				image.getPixels(0, y, w, sourceline, 0);
-				for (int x = w - 1, xt = 0; x >= xt; x--, xt++) {
-					scanline[xt] = sourceline[x];
-					scanline[x] = sourceline[xt];
+				tx = y * bytesPerLine;
+				sx = tx + w * 3 - 3;
+				// image.getPixels(0, y, w, sourceline, 0);
+				for (int x = 0; x < w; x++) {
+					td[tx++] = sd[sx++];
+					td[tx++] = sd[sx++];
+					td[tx++] = sd[sx++];
+					sx -= 6;
 				}
-				newData.setPixels(0, y, w, scanline, 0);
+				// for (int x = w - 1, xt = 0; x >= xt; x--, xt++) {
+				// scanline[xt] = sourceline[x];
+				// scanline[x] = sourceline[xt];
+				// }
+				// newData.setPixels(0, y, w, scanline, 0);
 			}
 		}
 	}
@@ -476,8 +503,8 @@ public class ImageUtilities {
 	private static final int ULTRA_QUALITY = 3;
 
 	/**
-	 * Rotates a JPEG image losslessly. The image dimensions must be multiples
-	 * of the MCU size
+	 * Rotates a JPEG image losslessly. The image dimensions must be multiples of
+	 * the MCU size
 	 *
 	 * @param angle
 	 *            - rotation angle in degrees (0, 90, 180, 270)
@@ -646,7 +673,6 @@ public class ImageUtilities {
 				gc.setAntialias(SWT.ON);
 				gc.setInterpolation(SWT.HIGH);
 			}
-			// gc.setAdvanced(advanced);
 			if (frameColor != null) {
 				gc.setBackground(frameColor);
 				gc.fillRectangle(0, 0, nw, nh);
@@ -671,7 +697,7 @@ public class ImageUtilities {
 	 * @param height
 	 *            - max height - negative for min height
 	 * @param raster
-	 *            - enforce output width a multiple of raster
+	 *            - enforce output width a multiple of raster, 0 = no raster
 	 * @return scaled image
 	 */
 	public static ImageData downSample(final ImageData original, int width, int height, int raster) {
@@ -689,12 +715,13 @@ public class ImageUtilities {
 		}
 		if (origWidth <= newWidth && origHeight <= newHeight)
 			return original;
+
 		final PaletteData palette = original.palette;
 		PaletteData newPalette = palette;
 		boolean isDirect = palette.isDirect;
 		int depth = original.depth;
 		if (!isDirect) {
-			newPalette = new PaletteData(0x000000ff, 0x0000ff00, 0x00ff0000);
+			newPalette = new PaletteData(0xff, 0xff00, 0xff0000);
 			depth = 24;
 		}
 		final ImageData newData = new ImageData(newWidth, newHeight, depth, newPalette);
@@ -739,10 +766,7 @@ public class ImageUtilities {
 		int b;
 		int ly;
 		int uy;
-		int lx;
-		int ux;
 		int n;
-		int nx;
 		int ny;
 		int ux1;
 		int uy1;
@@ -753,7 +777,6 @@ public class ImageUtilities {
 		int origHeight_1 = origHeight - 1;
 		int wx2 = wx / 2;
 		int wy2 = wy / 2;
-		int[] scanline = new int[newWidth];
 		int sampleSize = incx * incy;
 		PaletteData newPalette = newData.palette;
 		int redMask = newPalette.redMask;
@@ -762,38 +785,46 @@ public class ImageUtilities {
 		int redShift = newPalette.redShift;
 		int greenShift = newPalette.greenShift;
 		int blueShift = newPalette.blueShift;
-
+		int tx = from * newWidth * 3;
+		int[] lxi = new int[newWidth];
+		int[] uxi = new int[newWidth];
+		int[] nxi = new int[newWidth];
+		for (int x = 0; x < newWidth; x++) {
+			lxi[x] = (x * origWidth / newWidth) - wx2;
+			uxi[x] = lxi[x] + wx;
+			if (lxi[x] < 0) {
+				lxi[x] = 0;
+				if (uxi[x] < 1)
+					uxi[x] = 1;
+			} else if (uxi[x] > origWidth) {
+				uxi[x] = origWidth;
+				if (lxi[x] >= origWidth)
+					lxi[x] = origWidth_1;
+			}
+			nxi[x] = ((uxi[x] - lxi[x]) / incx);
+		}
+		int bytesPerLine = newData.bytesPerLine;
 		for (int y = from; y < to; y++) {
+			ly = (y * origHeight / newHeight) - wy2;
+			uy = ly + wy;
+			if (ly < 0) {
+				ly = 0;
+				if (uy < 1)
+					uy = 1;
+			} else if (uy > origHeight) {
+				uy = origHeight;
+				if (ly >= origHeight)
+					ly = origHeight_1;
+			}
+			ny = ((uy - ly) / incy);
+			uy1 = uy - incy;
+			tx = bytesPerLine * y;
 			for (int x = 0; x < newWidth; x++) {
-				ly = (y * origHeight / newHeight) - wy2;
-				uy = ly + wy;
-				if (ly < 0) {
-					ly = 0;
-					if (uy < 1)
-						uy = 1;
-				} else if (uy > origHeight) {
-					uy = origHeight;
-					if (ly >= origHeight)
-						ly = origHeight_1;
-				}
-				lx = (x * origWidth / newWidth) - wx2;
-				ux = lx + wx;
-				if (lx < 0) {
-					lx = 0;
-					if (ux < 1)
-						ux = 1;
-				} else if (ux > origWidth) {
-					ux = origWidth;
-					if (lx >= origWidth)
-						lx = origWidth_1;
-				}
-				ny = ((uy - ly) / incy);
-				nx = ((ux - lx) / incx);
-				n = nx * ny;
+				n = nxi[x] * ny;
 				r = g = b = n / 2;
 				if (sampleSize == 1)
 					for (int oy = ly; oy < uy; oy++)
-						for (int ox = lx; ox < ux; ox++) {
+						for (int ox = lxi[x]; ox < uxi[x]; ox++) {
 							int pixel = original.getPixel(ox, oy);
 							if (!isDirect) {
 								RGB rgb = palette.getRGB(pixel);
@@ -809,10 +840,9 @@ public class ImageUtilities {
 							}
 						}
 				else {
-					uy1 = uy - incy;
-					ux1 = ux - incx;
+					ux1 = uxi[x] - incx;
 					for (int oy = ly; oy <= uy1; oy += incy)
-						for (int ox = lx; ox <= ux1; ox += incx) {
+						for (int ox = lxi[x]; ox <= ux1; ox += incx) {
 							int rr = randomNumberGenerator.nextInt(sampleSize);
 							int pixel = original.getPixel(ox + rr % incx, oy + rr / incx);
 							if (!isDirect) {
@@ -829,14 +859,10 @@ public class ImageUtilities {
 							}
 						}
 				}
-				r /= n;
-				g /= n;
-				b /= n;
-				scanline[x] = ((redShift < 0 ? r << -redShift : r >>> redShift) & redMask)
-						| ((greenShift < 0 ? g << -greenShift : g >>> greenShift) & greenMask)
-						| ((blueShift < 0 ? b << -blueShift : b >>> blueShift) & blueMask);
+				newData.data[tx++] = (byte) (b /= n);
+				newData.data[tx++] = (byte) (g /= n);
+				newData.data[tx++] = (byte) (r /= n);
 			}
-			newData.setPixels(0, y, newWidth, scanline, 0);
 		}
 	}
 
@@ -942,18 +968,14 @@ public class ImageUtilities {
 			return bufferedImage;
 		int w = bufferedImage.getWidth();
 		int h = bufferedImage.getHeight();
-		BufferedImage result;
-		if (forceSRGB || colorModel.getColorSpace().getType() == ColorSpace.TYPE_CMYK) {
-			int type = (bufferedImage.getTransparency() == Transparency.OPAQUE ? BufferedImage.TYPE_INT_RGB
-					: BufferedImage.TYPE_INT_ARGB);
-			result = new BufferedImage(w, h, type);
-		} else {
-			WritableRaster raster = colorModel.createCompatibleWritableRaster(w, h);
-			result = new BufferedImage(colorModel, raster, false, null);
-		}
+		BufferedImage result = forceSRGB || colorModel.getColorSpace().getType() == ColorSpace.TYPE_CMYK
+				? new BufferedImage(w, h,
+						(bufferedImage.getTransparency() == Transparency.OPAQUE ? BufferedImage.TYPE_INT_RGB
+								: BufferedImage.TYPE_INT_ARGB))
+				: new BufferedImage(colorModel, colorModel.createCompatibleWritableRaster(w, h), false, null);
 		// Render the src image into our new optimal source.
 		Graphics g = result.getGraphics();
-		g.drawImage(bufferedImage, 0, 0, null);
+		g.drawImage(bufferedImage, 0, 0, null); //TODO dead slow
 		g.dispose();
 		bufferedImage.flush();
 		return result;
@@ -971,9 +993,9 @@ public class ImageUtilities {
 		int colors[] = new int[rgBs.length];
 		for (int i = 0; i < rgBs.length; i++) {
 			RGB rgb = rgBs[i];
-			colors[i] = rgb.red << 16 | rgb.green << 8 | rgb.blue;
+			colors[i] = rgb.red | rgb.green << 8 | rgb.blue << 16;
 		}
-		final ImageData copy = new ImageData(w, h, 24, new PaletteData(0xFF0000, 0xFF00, 0xFF));
+		final ImageData copy = new ImageData(w, h, 24, new PaletteData(0xFF, 0xFF00, 0xFF0000));
 		if (nP == 1)
 			convertToDirectColor(0, h, data, w, colors, copy, tPixel);
 		else
@@ -1032,8 +1054,8 @@ public class ImageUtilities {
 		if (oriImage != oriThumb) {
 			double f = (double) Math.min(w, h) / Math.max(w, h);
 			int ww = w;
-			w = (int) (h * f);
-			h = (int) (ww * f);
+			w = (int) (h * f + 0.5d);
+			h = (int) (ww * f + 0.5d);
 		}
 		double xscale = (double) w / iWidth;
 		double yscale = (double) h / iHeight;
@@ -1052,7 +1074,7 @@ public class ImageUtilities {
 		int h = bufferedImage.getHeight();
 		ColorModel model = bufferedImage.getColorModel();
 		if (model instanceof DirectColorModel) {
-			final PaletteData palette = new PaletteData(0xff0000, 0xff00, 0xff);
+			final PaletteData palette = new PaletteData(0xff, 0xff00, 0xff0000);
 			final ImageData data = new ImageData(w, h, 24, palette);
 			final WritableRaster raster = bufferedImage.getRaster();
 			if (nP == 1)
@@ -1064,8 +1086,8 @@ public class ImageUtilities {
 		}
 		if (model instanceof IndexColorModel) {
 			/*
-			 * We convert to direct color model because of a bug in the SWT
-			 * ImageData constructor for indexed colors with a depth of 16
+			 * We convert to direct color model because of a bug in the SWT ImageData
+			 * constructor for indexed colors with a depth of 16
 			 */
 			IndexColorModel colorModel = (IndexColorModel) model;
 			int size = colorModel.getMapSize();
@@ -1075,7 +1097,7 @@ public class ImageUtilities {
 			colorModel.getReds(reds);
 			colorModel.getGreens(greens);
 			colorModel.getBlues(blues);
-			final PaletteData palette = new PaletteData(0xff0000, 0xff00, 0xff);
+			final PaletteData palette = new PaletteData(0xff, 0xff00, 0xff0000);
 			final ImageData data = new ImageData(w, h, 24, palette);
 			final WritableRaster raster = bufferedImage.getRaster();
 			int transparentPixel = colorModel.getTransparentPixel();
@@ -1087,7 +1109,7 @@ public class ImageUtilities {
 			return data;
 		}
 		if (model instanceof ComponentColorModel) {
-			PaletteData palette = new PaletteData(0xff0000, 0xff00, 0xff);
+			PaletteData palette = new PaletteData(0xff, 0xff00, 0xff0000);
 			final ImageData data = new ImageData(w, h, 24, palette);
 			if (model.getColorSpace().getType() == ColorSpace.TYPE_CMYK) {
 				if (nP == 1)
@@ -1110,10 +1132,19 @@ public class ImageUtilities {
 
 	private static void fromCMYKComponentModel(int from, int to, ImageData data, BufferedImage bufferedImage) {
 		int w = data.width;
+		int tx;
 		int[] scanLine = new int[w];
+		byte[] datadata = data.data;
+		int bytesPerLine = data.bytesPerLine;
 		for (int y = from; y < to; y++) {
+			tx = bytesPerLine * y;
 			bufferedImage.getRGB(0, y, w, 1, scanLine, 0, w);
-			data.setPixels(0, y, w, scanLine, 0);
+			for (int i : scanLine) {
+				int pix = scanLine[i];
+				datadata[tx++] = (byte) pix;
+				datadata[tx++] = (byte) (pix >> 8);
+				datadata[tx++] = (byte) (pix >> 16);
+			}
 		}
 	}
 
@@ -1123,8 +1154,10 @@ public class ImageUtilities {
 		int bands = raster.getNumBands();
 		int nColors = bands - (hasAlpha ? 1 : 0);
 		int w = data.width;
+		int bytesPerLine = data.bytesPerLine;
+		int tx;
 		int[] nbits = model.getComponentSize();
-		int[] scanLine = new int[w];
+		byte[] datadata = data.data;
 		switch (nColors) {
 		case 1: {
 			DataBuffer dataBuffer = raster.getDataBuffer();
@@ -1134,20 +1167,20 @@ public class ImageUtilities {
 					int alphashift = nbits[1] - 8;
 					byte[] alphas = new byte[w];
 					for (int y = from; y < to; y++) {
+						tx = bytesPerLine * y;
 						for (int x = 0; x < w; x++) {
-							scanLine[x] = ((raster.getSample(x, y, 0) >> shift) & 0xff) * 0x10101;
-							if (hasAlpha)
-								alphas[x] = (byte) (raster.getSample(x, y, 1) >> alphashift);
+							datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) ((raster.getSample(x, y,
+									0) >> shift));
+							alphas[x] = (byte) (raster.getSample(x, y, 1) >> alphashift);
 						}
-						data.setPixels(0, y, w, scanLine, 0);
-						if (hasAlpha)
-							data.setAlphas(0, y, w, alphas, 0);
+						data.setAlphas(0, y, w, alphas, 0);
 					}
 				} else
 					for (int y = from; y < to; y++) {
+						tx = bytesPerLine * y;
 						for (int x = 0; x < w; x++)
-							scanLine[x] = ((raster.getSample(x, y, 0) >> shift) & 0xff) * 0x10101;
-						data.setPixels(0, y, w, scanLine, 0);
+							datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) ((raster.getSample(x, y,
+									0) >> shift));
 					}
 			} else {
 				int shift = 8 - nbits[0];
@@ -1156,26 +1189,25 @@ public class ImageUtilities {
 					byte[] alphas = new byte[w];
 					int alphashift = 8 - nbits[1];
 					for (int y = from; y < to; y++) {
+						tx = bytesPerLine * y;
 						raster.getPixels(0, y, w, 1, pixelArray);
 						for (int x = 0, xi = 0; x < w; x++) {
-							scanLine[x] = (shift < 0 ? (pixelArray[xi++] >> (-shift)) : (pixelArray[xi++] << shift))
-									* 0x10101;
-							if (hasAlpha)
-								alphas[x] = (byte) (alphashift < 0 ? pixelArray[xi++] >> -alphashift
-										: pixelArray[xi++] << alphashift);
+							datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) (shift < 0
+									? (pixelArray[xi++] >> (-shift))
+									: (pixelArray[xi++] << shift));
+							alphas[x] = (byte) (alphashift < 0 ? pixelArray[xi++] >> -alphashift
+									: pixelArray[xi++] << alphashift);
 						}
-						data.setPixels(0, y, w, scanLine, 0);
-						if (hasAlpha)
-							data.setAlphas(0, y, w, alphas, 0);
+						data.setAlphas(0, y, w, alphas, 0);
 					}
 				} else
 					for (int y = from; y < to; y++) {
+						tx = bytesPerLine * y;
 						raster.getPixels(0, y, w, 1, pixelArray);
-						for (int x = 0, xi = 0; x < w; x++) {
-							scanLine[x] = (shift < 0 ? (pixelArray[xi++] >> (-shift)) : (pixelArray[xi++] << shift))
-									* 0x10101;
-						}
-						data.setPixels(0, y, w, scanLine, 0);
+						for (int x = 0, xi = 0; x < w; x++)
+							datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) (shift < 0
+									? (pixelArray[xi++] >> (-shift))
+									: (pixelArray[xi++] << shift));
 					}
 			}
 			break;
@@ -1187,123 +1219,126 @@ public class ImageUtilities {
 				int alphashift = 8 - nbits[2];
 				byte[] alphas = new byte[w];
 				for (int y = from; y < to; y++) {
+					tx = bytesPerLine * y;
 					raster.getPixels(0, y, w, 1, pixelArray);
 					for (int x = 0, xi = 0; x < w; x++) {
 						int v = pixelArray[xi++] + pixelArray[xi++];
-						scanLine[x] = (shift < 0 ? (v >> (-shift)) : (v << shift)) * 0x10101;
-						if (hasAlpha)
-							alphas[x] = (byte) (alphashift < 0 ? pixelArray[xi++] >> -alphashift
-									: pixelArray[xi++] << alphashift);
+						datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) (shift < 0 ? (v >> (-shift))
+								: (v << shift));
+						alphas[x] = (byte) (alphashift < 0 ? pixelArray[xi++] >> -alphashift
+								: pixelArray[xi++] << alphashift);
 					}
-					data.setPixels(0, y, w, scanLine, 0);
-					if (hasAlpha)
-						data.setAlphas(0, y, w, alphas, 0);
+					data.setAlphas(0, y, w, alphas, 0);
 				}
 			} else
 				for (int y = from; y < to; y++) {
+					tx = bytesPerLine * y;
 					raster.getPixels(0, y, w, 1, pixelArray);
 					for (int x = 0, xi = 0; x < w; x++) {
 						int v = pixelArray[xi++] + pixelArray[xi++];
-						scanLine[x] = (shift < 0 ? (v >> (-shift)) : (v << shift)) * 0x10101;
+						datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) (shift < 0 ? (v >> (-shift))
+								: (v << shift));
 					}
-					data.setPixels(0, y, w, scanLine, 0);
 				}
 			break;
 		}
 		case 3: {
 			DataBuffer dataBuffer = raster.getDataBuffer();
 			if (dataBuffer instanceof DataBufferFloat) {
-				int red, green, blue;
 				if (hasAlpha) {
 					byte[] alphas = new byte[w];
 					for (int y = from; y < to; y++) {
+						tx = bytesPerLine * y;
 						for (int x = 0; x < w; x++) {
-							red = (int) (255f * raster.getSampleFloat(x, y, 0) + 0.5f);
-							green = (int) (255f * raster.getSampleFloat(x, y, 1) + 0.5f);
-							blue = (int) (255f * raster.getSampleFloat(x, y, 2) + 0.5f);
-							scanLine[x] = (red << 16) | (green << 8) | blue;
-							if (hasAlpha)
-								alphas[x] = (byte) (255f * raster.getSampleFloat(x, y, 3) + 0.5f);
+							datadata[tx++] = (byte) (255f * raster.getSampleFloat(x, y, 2) + 0.5f);
+							datadata[tx++] = (byte) (255f * raster.getSampleFloat(x, y, 1) + 0.5f);
+							datadata[tx++] = (byte) (255f * raster.getSampleFloat(x, y, 0) + 0.5f);
+							alphas[x] = (byte) (255f * raster.getSampleFloat(x, y, 3) + 0.5f);
 						}
-						data.setPixels(0, y, w, scanLine, 0);
-						if (hasAlpha)
-							data.setAlphas(0, y, w, alphas, 0);
-					}
-				} else
-					for (int y = from; y < to; y++) {
-						for (int x = 0; x < w; x++) {
-							red = (int) (255f * raster.getSampleFloat(x, y, 0) + 0.5f);
-							green = (int) (255f * raster.getSampleFloat(x, y, 1) + 0.5f);
-							blue = (int) (255f * raster.getSampleFloat(x, y, 2) + 0.5f);
-							scanLine[x] = (red << 16) | (green << 8) | blue;
-						}
-						data.setPixels(0, y, w, scanLine, 0);
-					}
-			} else if (dataBuffer instanceof DataBufferDouble) {
-				int red, green, blue;
-				if (hasAlpha) {
-					byte[] alphas = new byte[w];
-					for (int y = from; y < to; y++) {
-						for (int x = 0; x < w; x++) {
-							red = (int) (255d * raster.getSampleDouble(x, y, 0) + 0.5f);
-							green = (int) (255d * raster.getSampleDouble(x, y, 1) + 0.5f);
-							blue = (int) (255d * raster.getSampleDouble(x, y, 2) + 0.5f);
-							scanLine[x] = (red << 16) | (green << 8) | blue;
-							if (hasAlpha)
-								alphas[x] = (byte) (255d * raster.getSampleDouble(x, y, 3) + 0.5f);
-						}
-						data.setPixels(0, y, w, scanLine, 0);
-						if (hasAlpha)
-							data.setAlphas(0, y, w, alphas, 0);
-					}
-				} else
-					for (int y = from; y < to; y++) {
-						for (int x = 0; x < w; x++) {
-							red = (int) (255d * raster.getSampleDouble(x, y, 0) + 0.5f);
-							green = (int) (255d * raster.getSampleDouble(x, y, 1) + 0.5f);
-							blue = (int) (255d * raster.getSampleDouble(x, y, 2) + 0.5f);
-							scanLine[x] = (red << 16) | (green << 8) | blue;
-						}
-						data.setPixels(0, y, w, scanLine, 0);
-					}
-			} else {
-				int redshift = nbits[0] - 24;
-				int greenshift = nbits[1] - 16;
-				int blueshift = nbits[2] - 8;
-				int[] pixelArray = new int[bands * w];
-				int pix;
-				if (hasAlpha) {
-					byte[] alphas = new byte[w];
-					int alphashift = nbits[3] - 8;
-					for (int y = from; y < to; y++) {
-						raster.getPixels(0, y, w, 1, pixelArray);
-						for (int x = 0, xi = 0; x < w; x++) {
-							pix = (redshift > 0 ? pixelArray[xi++] >> redshift : pixelArray[xi++] << -redshift)
-									& 0xff0000;
-							pix |= (greenshift > 0 ? pixelArray[xi++] >> greenshift : pixelArray[xi++] << -greenshift)
-									& 0xff00;
-							scanLine[x] = pix
-									| (blueshift > 0 ? pixelArray[xi++] >> blueshift : pixelArray[xi++] << -blueshift)
-											& 0xff;
-							alphas[x] = (byte) (alphashift > 0 ? pixelArray[xi++] >> alphashift
-									: pixelArray[xi++] << -alphashift);
-						}
-						data.setPixels(0, y, w, scanLine, 0);
 						data.setAlphas(0, y, w, alphas, 0);
 					}
 				} else
 					for (int y = from; y < to; y++) {
+						tx = bytesPerLine * y;
+						for (int x = 0; x < w; x++) {
+							datadata[tx++] = (byte) (int) (255f * raster.getSampleFloat(x, y, 2) + 0.5f);
+							datadata[tx++] = (byte) (int) (255f * raster.getSampleFloat(x, y, 1) + 0.5f);
+							datadata[tx++] = (byte) (int) (255f * raster.getSampleFloat(x, y, 0) + 0.5f);
+						}
+					}
+			} else if (dataBuffer instanceof DataBufferDouble) {
+				if (hasAlpha) {
+					byte[] alphas = new byte[w];
+					for (int y = from; y < to; y++) {
+						tx = bytesPerLine * y;
+						for (int x = 0; x < w; x++) {
+							datadata[tx++] = (byte) (255d * raster.getSampleDouble(x, y, 2) + 0.5f);
+							datadata[tx++] = (byte) (255d * raster.getSampleDouble(x, y, 1) + 0.5f);
+							datadata[tx++] = (byte) (255d * raster.getSampleDouble(x, y, 0) + 0.5f);
+							alphas[x] = (byte) (255d * raster.getSampleDouble(x, y, 3) + 0.5f);
+						}
+						data.setAlphas(0, y, w, alphas, 0);
+					}
+				} else
+					for (int y = from; y < to; y++) {
+						tx = bytesPerLine * y;
+						for (int x = 0; x < w; x++) {
+							datadata[tx++] = (byte) (255d * raster.getSampleDouble(x, y, 0) + 0.5f);
+							datadata[tx++] = (byte) (255d * raster.getSampleDouble(x, y, 1) + 0.5f);
+							datadata[tx++] = (byte) (255d * raster.getSampleDouble(x, y, 2) + 0.5f);
+						}
+					}
+			} else {
+				int redshift = nbits[0] - 8;
+				int greenshift = nbits[1] - 8;
+				int blueshift = nbits[2] - 8;
+				int[] pixelArray = new int[bands * w];
+				if (redshift == 0 && greenshift == 0 && blueshift == 0 && !hasAlpha) {
+					for (int y = from; y < to; y++) {
+						tx = bytesPerLine * y;
 						raster.getPixels(0, y, w, 1, pixelArray);
 						for (int x = 0, xi = 0; x < w; x++) {
-							pix = (redshift > 0 ? pixelArray[xi++] >> redshift : pixelArray[xi++] << -redshift)
-									& 0xff0000;
-							pix |= (greenshift > 0 ? pixelArray[xi++] >> greenshift : pixelArray[xi++] << -greenshift)
-									& 0xff00;
-							scanLine[x] = pix
-									| (blueshift > 0 ? pixelArray[xi++] >> blueshift : pixelArray[xi++] << -blueshift)
-											& 0xff;
+							byte red = (byte) pixelArray[xi++];
+							byte green = (byte) pixelArray[xi++];
+							datadata[tx++] = (byte) pixelArray[xi++];
+							datadata[tx++] = green;
+							datadata[tx++] = red;
 						}
-						data.setPixels(0, y, w, scanLine, 0);
+					}
+				} else if (hasAlpha) {
+					byte[] alphas = new byte[w];
+					int alphashift = nbits[3] - 8;
+					for (int y = from; y < to; y++) {
+						tx = bytesPerLine * y;
+						raster.getPixels(0, y, w, 1, pixelArray);
+						for (int x = 0, xi = 0; x < w; x++) {
+							byte red = (byte) (redshift > 0 ? pixelArray[xi++] >> redshift
+									: pixelArray[xi++] << -redshift);
+							byte green = (byte) (greenshift > 0 ? pixelArray[xi++] >> greenshift
+									: pixelArray[xi++] << -greenshift);
+							datadata[tx++] = (byte) (blueshift > 0 ? pixelArray[xi++] >> blueshift
+									: pixelArray[xi++] << -blueshift);
+							datadata[tx++] = green;
+							datadata[tx++] = red;
+							alphas[x] = (byte) (alphashift > 0 ? pixelArray[xi++] >> alphashift
+									: pixelArray[xi++] << -alphashift);
+						}
+						data.setAlphas(0, y, w, alphas, 0);
+					}
+				} else
+					for (int y = from; y < to; y++) {
+						tx = bytesPerLine * y;
+						raster.getPixels(0, y, w, 1, pixelArray);
+						for (int x = 0, xi = 0; x < w; x++) {
+							byte red = (byte) (redshift > 0 ? pixelArray[xi++] >> redshift
+									: pixelArray[xi++] << -redshift);
+							byte green = (byte) (greenshift > 0 ? pixelArray[xi++] >> greenshift
+									: pixelArray[xi++] << -greenshift);
+							datadata[tx++] = (byte) (blueshift > 0 ? pixelArray[xi++] >> blueshift
+									: pixelArray[xi++] << -blueshift);
+							datadata[tx++] = green;
+							datadata[tx++] = red;
+						}
 					}
 			}
 			break;
@@ -1314,28 +1349,33 @@ public class ImageUtilities {
 	private static void fromIndexedModel(int from, int to, ImageData data, WritableRaster raster, int transparentPixel,
 			byte[] reds, byte[] greens, byte[] blues) {
 		int w = data.width;
+		int bytesPerLine = data.bytesPerLine;
+		int tx;
 		int[] pixel = new int[1];
-		int[] scanline = new int[w];
 		if (transparentPixel >= 0) {
 			byte[] alphas = new byte[w];
 			for (int y = from; y < to; y++) {
+				tx = bytesPerLine * y;
 				for (int x = 0; x < w; x++) {
 					raster.getPixel(x, y, pixel);
 					int index = pixel[0];
 					alphas[x] = (byte) (index == transparentPixel ? 0 : 255);
-					scanline[x] = (reds[index] << 16) & 0xff0000 | (greens[index] << 8) & 0xff00 | blues[index] & 0xff;
+					data.data[tx++] = blues[index];
+					data.data[tx++] = greens[index];
+					data.data[tx++] = reds[index];
 				}
-				data.setPixels(0, y, w, scanline, 0);
 				data.setAlphas(0, y, w, alphas, 0);
 			}
 		} else
 			for (int y = from; y < to; y++) {
+				tx = bytesPerLine * y;
 				for (int x = 0; x < w; x++) {
 					raster.getPixel(x, y, pixel);
 					int index = pixel[0];
-					scanline[x] = (reds[index] << 16) & 0xff0000 | (greens[index] << 8) & 0xff00 | blues[index] & 0xff;
+					data.data[tx++] = blues[index];
+					data.data[tx++] = greens[index];
+					data.data[tx++] = reds[index];
 				}
-				data.setPixels(0, y, w, scanline, 0);
 			}
 	}
 
@@ -1400,27 +1440,35 @@ public class ImageUtilities {
 	}
 
 	private static void directToBuffered(int from, int to, ImageData data, WritableRaster raster) {
-		PaletteData palette = data.palette;
-		int redMask = palette.redMask;
-		int greenMask = palette.greenMask;
-		int blueMask = palette.blueMask;
-		int redShift = palette.redShift;
-		int greenShift = palette.greenShift;
-		int blueShift = palette.blueShift;
+		byte[] datadata = data.data;
+		int bytesPerLine = data.bytesPerLine;
+		int sx;
+		// PaletteData palette = data.palette;
+		// int redMask = palette.redMask;
+		// int greenMask = palette.greenMask;
+		// int blueMask = palette.blueMask;
+		// int redShift = palette.redShift;
+		// int greenShift = palette.greenShift;
+		// int blueShift = palette.blueShift;
 		int bands = raster.getNumBands();
 		int w = data.width;
 		int[] pixelArray = new int[w * bands];
-		int[] scanLine = new int[w];
-		int pixel;
+		// int[] scanLine = new int[w];
+		// int pixel;
 		for (int y = from; y < to; y++) {
-			data.getPixels(0, y, w, scanLine, 0);
+			sx = bytesPerLine * y;
+			// data.getPixels(0, y, w, scanLine, 0);
 			for (int x = 0, k = 0; x < w; x++, k += bands) {
-				pixel = scanLine[x];
-				pixelArray[k] = ((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel & redMask) << redShift);
-				pixelArray[k + 1] = ((greenShift < 0) ? (pixel & greenMask) >>> -greenShift
-						: (pixel & greenMask) << greenShift);
-				pixelArray[k + 2] = ((blueShift < 0) ? (pixel & blueMask) >>> -blueShift
-						: (pixel & blueMask) << blueShift);
+				pixelArray[k + 2] = datadata[sx++];
+				pixelArray[k + 1] = datadata[sx++];
+				pixelArray[k] = datadata[sx++];
+				// pixel = scanLine[x];
+				// pixelArray[k] = ((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel &
+				// redMask) << redShift);
+				// pixelArray[k + 1] = ((greenShift < 0) ? (pixel & greenMask) >>> -greenShift
+				// : (pixel & greenMask) << greenShift);
+				// pixelArray[k + 2] = ((blueShift < 0) ? (pixel & blueMask) >>> -blueShift
+				// : (pixel & blueMask) << blueShift);
 			}
 			raster.setPixels(0, y, w, 1, pixelArray);
 		}
@@ -1438,8 +1486,8 @@ public class ImageUtilities {
 	 * @param formatHint
 	 *            - SWT image format constant or SWT.DEFAULT
 	 * @param dflt
-	 *            - true if a default image is to be generated when image
-	 *            loading fails
+	 *            - true if a default image is to be generated when image loading
+	 *            fails
 	 * @return - output image
 	 */
 	public static Image loadThumbnail(Device device, byte[] thumbnailData, int cms, int formatHint, boolean dflt) {
@@ -1468,11 +1516,11 @@ public class ImageUtilities {
 		if (thumbnailData != null) {
 			ByteArrayInputStream is = new ByteArrayInputStream(thumbnailData);
 			try {
-				if (cms == ImageConstants.ARGB) {
+				if (cms != ImageConstants.NOCMS && cms != ImageConstants.SRGB) {
 					BufferedImage bi = ImageIO.read(is);
 					if (bi == null)
 						return null;
-					ImageActivator.getDefault().getCOLORCONVERTOP_SRGB2ARGB().filter(bi, bi);
+					ImageActivator.getDefault().getCOLORCONVERTOP_SRGB2ICC(cms).filter(bi, bi);
 					return bufferedImage2swt(bi);
 				}
 				ImageData[] iData = new ImageLoader().load(is, formatHint);
@@ -1481,8 +1529,7 @@ public class ImageUtilities {
 			} catch (Exception e) {
 				try {
 					is.reset();
-					BufferedImage bi = ImageIO.read(is);
-					return bufferedImage2swt(bi);
+					return bufferedImage2swt(ImageIO.read(is));
 				} catch (Exception e1) {
 					// ignore
 				}
@@ -1615,36 +1662,49 @@ public class ImageUtilities {
 		int greenFilter = bwmode.green;
 		int blueFilter = bwmode.blue;
 		int fsum = redFilter + greenFilter + blueFilter;
+		int fsum2 = fsum / 2;
 		PaletteData palette = data.palette;
 		int w = data.width;
-		int[] scanLine = new int[w];
+		// int[] scanLine = new int[w];
 		if (palette.isDirect) {
-			int redMask = palette.redMask;
-			int greenMask = palette.greenMask;
-			int blueMask = palette.blueMask;
-			int redShift = palette.redShift;
-			int greenShift = palette.greenShift;
-			int blueShift = palette.blueShift;
-			int pixel, grey;
+			byte[] datadata = data.data;
+			int bytesPerLine = data.bytesPerLine;
+			int tx;
+			// int redMask = palette.redMask;
+			// int greenMask = palette.greenMask;
+			// int blueMask = palette.blueMask;
+			// int redShift = palette.redShift;
+			// int greenShift = palette.greenShift;
+			// int blueShift = palette.blueShift;
+			// int pixel;
+			// int grey;
 			for (int y = 0; y < data.height; y++) {
-				data.getPixels(0, y, w, scanLine, 0);
+				tx = bytesPerLine * y;
+				// data.getPixels(0, y, w, scanLine, 0);
 				for (int x = 0; x < w; x++) {
-					pixel = scanLine[x];
-					grey = ((redShift < 0 ? (pixel & redMask) >>> -redShift : (pixel & redMask) << redShift) * redFilter
-							+ (greenShift < 0 ? (pixel & greenMask) >>> -greenShift : (pixel & greenMask) << greenShift)
-									* greenFilter
-							+ (blueShift < 0 ? (pixel & blueMask) >>> -blueShift : (pixel & blueMask) << blueShift)
-									* blueFilter)
-							/ fsum;
-					scanLine[x] = (redShift < 0 ? grey << -redShift : grey >>> redShift) & redMask
-							| ((greenShift < 0 ? grey << -greenShift : grey >>> greenShift) & greenMask)
-							| ((blueShift < 0 ? grey << -blueShift : grey >>> blueShift) & blueMask);
+					datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) ((fsum2
+							+ (datadata[tx + 2] & 0xff) * redFilter + (datadata[tx + 1] & 0xff) * greenFilter
+							+ (datadata[tx] & 0xff) * blueFilter) / fsum);
+					// pixel = scanLine[x];
+					// grey = ((redShift < 0 ? (pixel & redMask) >>> -redShift : (pixel & redMask)
+					// << redShift) * redFilter
+					// + (greenShift < 0 ? (pixel & greenMask) >>> -greenShift : (pixel & greenMask)
+					// << greenShift)
+					// * greenFilter
+					// + (blueShift < 0 ? (pixel & blueMask) >>> -blueShift : (pixel & blueMask) <<
+					// blueShift)
+					// * blueFilter)
+					// / fsum;
+					// scanLine[x] = (redShift < 0 ? grey << -redShift : grey >>> redShift) &
+					// redMask
+					// | ((greenShift < 0 ? grey << -greenShift : grey >>> greenShift) & greenMask)
+					// | ((blueShift < 0 ? grey << -blueShift : grey >>> blueShift) & blueMask);
 				}
-				data.setPixels(0, y, w, scanLine, 0);
+				// data.setPixels(0, y, w, scanLine, 0);
 			}
 		} else
 			for (RGB rgb : palette.getRGBs())
-				rgb.red = rgb.green = rgb.blue = (rgb.red * redFilter + rgb.green * greenFilter + rgb.blue * blueFilter)
+				rgb.red = rgb.green = rgb.blue = (fsum2 + rgb.red * redFilter + rgb.green * greenFilter + rgb.blue * blueFilter)
 						/ fsum;
 	}
 
@@ -1838,10 +1898,10 @@ public class ImageUtilities {
 		if (palette.isDirect) {
 			int h = data.height;
 			if (nP == 1)
-				applyCurve(0, h, data, ltred, ltgreen, ltblue, palette);
+				applyCurve(0, h, data, ltred, ltgreen, ltblue);
 			else
 				IntStream.range(0, nP).parallel()
-						.forEach(p -> applyCurve(h * p / nP, h * (p + 1) / nP, data, ltred, ltgreen, ltblue, palette));
+						.forEach(p -> applyCurve(h * p / nP, h * (p + 1) / nP, data, ltred, ltgreen, ltblue));
 		} else
 			for (RGB rgb : palette.getRGBs()) {
 				int red = ltred[rgb.red];
@@ -1854,30 +1914,38 @@ public class ImageUtilities {
 		return data;
 	}
 
-	private static void applyCurve(int from, int to, ImageData data, short[] ltred, short[] ltgreen, short[] ltblue,
-			PaletteData palette) {
-		int pixel, red, green, blue;
-		int redMask = palette.redMask;
-		int greenMask = palette.greenMask;
-		int blueMask = palette.blueMask;
-		int redShift = palette.redShift;
-		int greenShift = palette.greenShift;
-		int blueShift = palette.blueShift;
+	private static void applyCurve(int from, int to, ImageData data, short[] ltred, short[] ltgreen, short[] ltblue) {
+		
+//	},			PaletteData palette) {
+		byte[] datadata = data.alphaData;
+		int bytesPerLine = data.bytesPerLine;
+		int tx;
+//		int pixel, red, green, blue;
+//		int redMask = palette.redMask;
+//		int greenMask = palette.greenMask;
+//		int blueMask = palette.blueMask;
+//		int redShift = palette.redShift;
+//		int greenShift = palette.greenShift;
+//		int blueShift = palette.blueShift;
 		int w = data.width;
-		int[] scanLine = new int[w];
+//		int[] scanLine = new int[w];
 		for (int y = from; y < to; y++) {
-			data.getPixels(0, y, w, scanLine, 0);
+			tx = bytesPerLine*y;
+//			data.getPixels(0, y, w, scanLine, 0);
 			for (int x = 0; x < w; x++) {
-				pixel = scanLine[x];
-				red = ltred[((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel & redMask) << redShift)];
-				green = ltgreen[((greenShift < 0) ? (pixel & greenMask) >>> -greenShift
-						: (pixel & greenMask) << greenShift)];
-				blue = ltblue[((blueShift < 0) ? (pixel & blueMask) >>> -blueShift : (pixel & blueMask) << blueShift)];
-				scanLine[x] = ((redShift < 0 ? red << -redShift : red >>> redShift) & redMask)
-						| ((greenShift < 0 ? green << -greenShift : green >>> greenShift) & greenMask)
-						| ((blueShift < 0 ? blue << -blueShift : blue >>> blueShift) & blueMask);
+				datadata[tx++] = (byte) ltblue[datadata[tx] & 0xff];
+				datadata[tx++] = (byte) ltgreen[datadata[tx] & 0xff];
+				datadata[tx++] = (byte) ltred[datadata[tx] & 0xff];
+//				pixel = scanLine[x];
+//				red = ltred[((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel & redMask) << redShift)];
+//				green = ltgreen[((greenShift < 0) ? (pixel & greenMask) >>> -greenShift
+//						: (pixel & greenMask) << greenShift)];
+//				blue = ltblue[((blueShift < 0) ? (pixel & blueMask) >>> -blueShift : (pixel & blueMask) << blueShift)];
+//				scanLine[x] = ((redShift < 0 ? red << -redShift : red >>> redShift) & redMask)
+//						| ((greenShift < 0 ? green << -greenShift : green >>> greenShift) & greenMask)
+//						| ((blueShift < 0 ? blue << -blueShift : blue >>> blueShift) & blueMask);
 			}
-			data.setPixels(0, y, w, scanLine, 0);
+//			data.setPixels(0, y, w, scanLine, 0);
 		}
 	}
 
@@ -2090,7 +2158,7 @@ public class ImageUtilities {
 			int h = data.height;
 			int n = ImageConstants.NPROCESSORS;
 			if (n == 1)
-				applySplitTone(0, h, data, rh, gh, bh, rs, gs, bs, balance, palette);
+				applySplitTone(0, h, data, rh, gh, bh, rs, gs, bs, balance);
 			else {
 				final int rh1 = rh;
 				final int gh1 = gh;
@@ -2099,7 +2167,7 @@ public class ImageUtilities {
 				final int gs1 = gs;
 				final int bs1 = bs;
 				IntStream.range(0, nP).parallel().forEach(p -> applySplitTone(h * p / nP, h * (p + 1) / nP, data, rh1,
-						gh1, bh1, rs1, gs1, bs1, balance, palette));
+						gh1, bh1, rs1, gs1, bs1, balance));
 			}
 		} else {
 			int red, green, blue, bal, ibal;
@@ -2121,28 +2189,36 @@ public class ImageUtilities {
 	}
 
 	private static void applySplitTone(int from, int to, ImageData data, int rh, int gh, int bh, int rs, int gs, int bs,
-			short[] balance, PaletteData palette) {
-		int pixel;
+			short[] balance) {
+//		, PaletteData palette) {
+		byte[] datadata = data.alphaData;
+		int bytesPerLine = data.bytesPerLine;
+		int tx;
+//		int pixel;
 		int red;
 		int green;
 		int blue;
 		int bal;
 		int ibal;
 		int w = data.width;
-		int[] scanLine = new int[w];
-		int redMask = palette.redMask;
-		int greenMask = palette.greenMask;
-		int blueMask = palette.blueMask;
-		int redShift = palette.redShift;
-		int greenShift = palette.greenShift;
-		int blueShift = palette.blueShift;
+//		int[] scanLine = new int[w];
+//		int redMask = palette.redMask;
+//		int greenMask = palette.greenMask;
+//		int blueMask = palette.blueMask;
+//		int redShift = palette.redShift;
+//		int greenShift = palette.greenShift;
+//		int blueShift = palette.blueShift;
 		for (int y = from; y < to; y++) {
-			data.getPixels(0, y, w, scanLine, 0);
+			tx = bytesPerLine*y;
+//			data.getPixels(0, y, w, scanLine, 0);
 			for (int x = 0; x < w; x++) {
-				pixel = scanLine[x];
-				red = ((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel & redMask) << redShift);
-				green = ((greenShift < 0) ? (pixel & greenMask) >>> -greenShift : (pixel & greenMask) << greenShift);
-				blue = ((blueShift < 0) ? (pixel & blueMask) >>> -blueShift : (pixel & blueMask) << blueShift);
+				blue = datadata[tx] & 0xff;
+				green = datadata[tx+1] & 0xff;
+				red = datadata[tx+2] & 0xff;
+//				pixel = scanLine[x];
+//				red = ((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel & redMask) << redShift);
+//				green = ((greenShift < 0) ? (pixel & greenMask) >>> -greenShift : (pixel & greenMask) << greenShift);
+//				blue = ((blueShift < 0) ? (pixel & blueMask) >>> -blueShift : (pixel & blueMask) << blueShift);
 				bal = balance[(red + green + blue) / 3];
 				ibal = 255 - bal;
 				red += (ibal * rs - bal * rh) / 255;
@@ -2151,11 +2227,14 @@ public class ImageUtilities {
 				red = red < 0 ? 0 : red > 255 ? 255 : red;
 				green = green < 0 ? 0 : green > 255 ? 255 : green;
 				blue = blue < 0 ? 0 : blue > 255 ? 255 : blue;
-				scanLine[x] = ((redShift < 0 ? red << -redShift : red >>> redShift) & redMask)
-						| ((greenShift < 0 ? green << -greenShift : green >>> greenShift) & greenMask)
-						| ((blueShift < 0 ? blue << -blueShift : blue >>> blueShift) & blueMask);
+				datadata[tx++] = (byte) blue;
+				datadata[tx++] = (byte) green;
+				datadata[tx++] = (byte) red;
+//				scanLine[x] = ((redShift < 0 ? red << -redShift : red >>> redShift) & redMask)
+//						| ((greenShift < 0 ? green << -greenShift : green >>> greenShift) & greenMask)
+//						| ((blueShift < 0 ? blue << -blueShift : blue >>> blueShift) & blueMask);
 			}
-			data.setPixels(0, y, w, scanLine, 0);
+//			data.setPixels(0, y, w, scanLine, 0);
 		}
 	}
 
@@ -3012,7 +3091,7 @@ public class ImageUtilities {
 			}
 		}
 	}
-	
+
 	public static void waitUntilFileIsReady(File file) throws AccessDeniedException {
 		int i = 20;
 		while (--i > 0) {
@@ -3026,7 +3105,5 @@ public class ImageUtilities {
 		}
 		throw new AccessDeniedException(file.getAbsolutePath());
 	}
-
-
 
 }

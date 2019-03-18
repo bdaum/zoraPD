@@ -232,6 +232,22 @@ public class Constants {
 			PI_CREATIONYEAR, PT_COLLECTION, PI_SEQUENCENO, PI_PAGEITEM, PI_SIZE, PI_FORMAT };
 	public static final String[] TH_ALL = new String[] { PI_TITLE, PI_NAME, PI_FORMAT, PI_SIZE, PI_CREATIONDATE,
 			TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_MM, TV_YY, TV_YYYY };
+	
+	public static final String HV_NAME = "{name}"; //$NON-NLS-1$
+	public static final String HV_TYPE = "{type}"; //$NON-NLS-1$
+	public static final String HV_DESCRIPTION = "{description}"; //$NON-NLS-1$
+	public static final String HV_STATISTICS = "{statistics}"; //$NON-NLS-1$
+	public static final String HV_ANNOTATIONS = "{annotations}"; //$NON-NLS-1$
+	public static final String HV_METADATA = "{metadata}"; //$NON-NLS-1$
+	public static final String HV_TITLE = "{title}"; //$NON-NLS-1$
+	public static final String HV_TOTAL = "{total}"; //$NON-NLS-1$
+	public static final String HV_WALL = "{wall}"; //$NON-NLS-1$
+	public static final String HV_WALLPOS = "{wallPosition}"; //$NON-NLS-1$
+	public static final String HV_STORYBOARD = "{storyboard}"; //$NON-NLS-1$
+	public static final String HV_STORYBOARDPOS = "{storyboardPosition}"; //$NON-NLS-1$
+	public static final String HV_IMAGE_REGIONS = "{imageRegions}"; //$NON-NLS-1$
+	public static final String HV_ORIGIN = "{origin}"; //$NON-NLS-1$
+
 
 	public final static String RAWIMPORT_ONLYRAW = "raw"; //$NON-NLS-1$
 	public final static String RAWIMPORT_ONLYDNG = "dng"; //$NON-NLS-1$
@@ -274,6 +290,7 @@ public class Constants {
 	public static final int SLIDE_TITLEONLY = 0;
 	public static final int SLIDE_SNOONLY = 1;
 	public static final int SLIDE_TITLE_SNO = 2;
+	public static final int SLIDE_TITLE_NE = 3;
 
 	public static final ObjectFilter SOUNDFILEFILTER = new FileNameExtensionFilter(
 			new String[] { "aif", "aifc", "au", "snd", "wav" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$

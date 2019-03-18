@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<contexts>
-      <context id="import_page_context" title="Video preferences">
-      <description>Video preferences</description>
-      <topic href="html/videoPrefs.html" label="Video preferences"/>
-   </context>
-   
-</contexts>

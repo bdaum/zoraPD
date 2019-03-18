@@ -49,6 +49,7 @@ import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.cat.model.meta.WatchedFolderImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.core.db.IDbManager;
@@ -92,8 +93,7 @@ public class CatalogConverter {
 				}
 				if (update) {
 					db.store(asset);
-					++c;
-					if (c % 100 == 0)
+					if (++c % 100 == 0)
 						db.commit();
 				}
 			}
@@ -161,7 +161,7 @@ public class CatalogConverter {
 					continue;
 				}
 				for (String compId : rel.getComponent())
-					if (db.obtainAsset(compId) == null) {
+					if (!db.exists(AssetImpl.class, compId)) {
 						db.delete(rel);
 						db.commit();
 						break;
@@ -320,7 +320,7 @@ public class CatalogConverter {
 				if (assetIds != null && !assetIds.isEmpty()) {
 					List<String> newIds = new ArrayList<String>(assetIds.size());
 					for (String id : assetIds)
-						if (db.obtainAsset(id) != null)
+						if (!db.exists(AssetImpl.class, id))
 							newIds.add(id);
 					if (newIds.size() < assetIds.size()) {
 						album.setAsset(newIds);
@@ -373,7 +373,7 @@ public class CatalogConverter {
 				db.createFolderHierarchy(asset);
 			String locationOption = db.getMeta(true).getLocationFolders();
 			for (LocationImpl loc : db.obtainObjects(LocationImpl.class)) {
-				if (Utilities.completeLocation(db, loc)) 
+				if (Utilities.completeLocation(db, loc))
 					db.storeAndCommit(loc);
 				db.createLocationFolders(loc, locationOption);
 			}
@@ -386,6 +386,32 @@ public class CatalogConverter {
 					Utilities.deleteCollection(sm, true, toBeDeleted);
 			db.safeTransaction(toBeDeleted, null);
 			db.pruneEmptySystemCollections(monitor, true);
+		}
+		if (version <= 14) {
+			int c = 0;
+			IVolumeManager volumeManager = Core.getCore().getVolumeManager();
+			monitor.subTask(Messages.CatalogConverter_fix_raw_file_properties);
+			List<AssetImpl> assets = db.obtainAssets();
+			for (AssetImpl asset : assets) {
+				String uri = asset.getUri();
+				boolean isDng = ImageConstants.isDng(uri);
+				boolean isRaw = ImageConstants.isRaw(uri, false);
+				if (isDng || isRaw) {
+					File file = volumeManager.findExistingFile(uri, asset.getVolume());
+					if (file != null) {
+						asset.setDateTime(new Date(file.lastModified()));
+						asset.setFileSize(file.length());
+					}
+					asset.setMimeType(isDng ? ImageConstants.IMAGE_X_DNG : ImageConstants.IMAGE_X_RAW);
+					asset.setDigitalZoomRatio(Double.NaN);
+					if (isRaw && Constants.STATE_CONVERTED == asset.getStatus()) 
+						asset.setStatus(Constants.STATE_RAW);
+					db.store(asset);
+					if (++c % 500 == 0)
+						db.commit();
+				}
+			}
+
 		}
 		meta.setVersion(db.getVersion());
 		db.storeAndCommit(meta);

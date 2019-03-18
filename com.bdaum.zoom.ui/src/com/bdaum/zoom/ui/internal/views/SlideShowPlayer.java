@@ -324,12 +324,11 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 			}
 			if (!assetSelection.isEmpty()) {
 				final Shell shell = parentWindow.getShell();
-				if (!shell.isDisposed()) {
+				if (!shell.isDisposed())
 					shell.getDisplay().asyncExec(() -> {
 						if (!shell.isDisposed())
 							Ui.getUi().getNavigationHistory(parentWindow).postSelection(assetSelection);
 					});
-				}
 			}
 			if (!removeFromShow.isEmpty() && !slideshow.getAdhoc()) {
 				SlideshowView editor = null;
@@ -418,9 +417,10 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 						request = requests.take();
 						if (shell.isDisposed() || request == FINALREQUEST || monitor.isCanceled())
 							break;
-						int z = request.getSlide().getZoom();
-						int preferredWidth = (int) (bounds.width * (1f + z / 100f));
-						int preferredHeight = (int) (bounds.height * (1f + z / 100f));
+						int zoom = request.getSlide().getZoom();
+						float zp = zoom == 0 ? 1f :  (1f + zoom / 100f)*0.631f;
+						int preferredWidth = (int) (bounds.width * zp);
+						int preferredHeight = (int) (bounds.height * zp);
 						ZImage image = null;
 						URI uri = request.getUri();
 						if (uri == null)
@@ -485,7 +485,8 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 												ExifTool.fixOrientation(image, 0, request.getRotation());
 												Rectangle nbounds = image.getBounds();
 												image.setScaling(nbounds.width, nbounds.height, true, 0, null);
-												image.develop(monitor, display, ZImage.UNCROPPED, -1, -1);
+												image.develop(monitor, display, ZImage.UNCROPPED, -1, -1,
+														ZImage.SWTIMAGE);
 											}
 										} catch (Exception e) {
 											// ignore and use full size image
@@ -522,7 +523,8 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 							}
 						}
 						if (image != null)
-							image.develop(monitor, display, ZImage.CROPPED, preferredWidth, preferredHeight);
+							image.develop(monitor, display, ZImage.CROPPED, preferredWidth, preferredHeight,
+									ZImage.SWTIMAGE);
 						else
 							image = createIntermediatePlate(shell, request,
 									Messages.getString("SlideShowPlayer.image_unavail"), //$NON-NLS-1$
@@ -703,9 +705,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 						(int) (thBounds.height * f));
 				thImage.dispose();
 			});
-
 		}
-
 	}
 
 	public interface FadingListener {
@@ -717,6 +717,8 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 
 		void fadeoutEnded();
 	}
+
+	public SmartCollectionImpl[] selectedAlbums;
 
 	public class SingleSlideJob extends Job implements HelpListener {
 
@@ -798,21 +800,26 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 				shell.addMouseListener(new MouseAdapter() {
 					@Override
 					public void mouseDown(MouseEvent e) {
-						if (controlShell != null && !controlShell.isDisposed())
+						if (controlShell != null)
 							controlShell.setAlpha(225);
 						int button = ((int) (e.x / factor + 0.5d)) / 80;
 						int seqno = request.getSeqno();
 						switch (button) {
 						case C_BACK:
 							if (seqno > 0)
-								startButtonTimer(BACK, 0);
+								startButtonTimer(BACK, slideControl.getLocation());
 							break;
 						case C_FORWARD:
-							if (seqno < requestList.size() - 1)
-								startButtonTimer(FORWARD, 3 * buttonWidth);
+							if (seqno < requestList.size() - 1) {
+								Point p = slideControl.getLocation();
+								p.x += 3 * buttonWidth;
+								startButtonTimer(FORWARD, p);
+							}
 							break;
 						case C_JUMP:
-							gotoSlide(button * buttonWidth, request, RESTART);
+							Point p = slideControl.getLocation();
+							p.x += button * buttonWidth;
+							gotoSlide(p, request, RESTART);
 							break;
 						}
 					}
@@ -854,15 +861,17 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 								break;
 							case C_RATE:
 								if (request.getImage() != null)
-									rateSlide(controlShell.getShell(), e, RatingDialog.ABORT);
+									rateSlide(controlShell.getShell(), e, RatingDialog.ABORT, false);
 								break;
 							case C_ALBUM:
-								if (request.getImage() != null)
-									addToAlbums(controlShell.getShell(), e);
+								if (request.getImage() != null) {
+									Shell sh = controlShell.getShell();
+									addToAlbums(sh, sh.toDisplay(e.x, e.y));
+								}
 								break;
 							case C_SELECTION:
 								if (request.getImage() != null)
-									addToSelection(request);
+									addToSelection(request, !request.isSelected());
 								break;
 							case C_VOICE:
 								request.setPaused(true);
@@ -883,9 +892,6 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 							request.setOperation(CONTINUE);
 							closeControl();
 							break;
-						case 13:
-							addToSelection(request);
-							break;
 						case SWT.TAB:
 							setPaused(true);
 							int cret = showClosePrompt(bottomShell);
@@ -903,13 +909,28 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 						case '4':
 						case '5':
 							if (request.getImage() != null)
-								rateSlide(controlShell.getShell(), null, e.character - '0');
+								rateSlide(controlShell.getShell(), null, e.character - '0', true);
+							break;
+						case 'a':
+							setPaused(true);
+							Point p = slideControl.getLocation();
+							p.x += 4 * buttonWidth;
+							addToAlbums(controlShell.getShell(), p);
+							setPaused(false);
 							break;
 						case 'r':
 							rotateClockwise(270);
 							break;
 						case 'R':
 							rotateClockwise(90);
+							break;
+						case 's':
+							if (request.getImage() != null)
+								addToSelection(request, true);
+							break;
+						case 'S':
+							if (request.getImage() != null)
+								addToSelection(request, false);
 							break;
 						case 'v':
 						case 'V':
@@ -954,15 +975,22 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 								}
 								break;
 							case SWT.ARROW_UP:
-								gotoSlide(4 * buttonWidth, request, RESTART);
+								setPaused(true);
+								p = slideControl.getLocation();
+								p.x += 4 * buttonWidth;
+								gotoSlide(p, request, RESTART);
+								setPaused(false);
 								break;
 							case SWT.DEL:
-								processDelete(bottomShell, controlShell.getShell().getBounds());
+								if ((e.stateMask & (SWT.CONTROL | SWT.ALT)) != 0 && request.getImage() != null)
+									processDelete(bottomShell, controlShell.getShell().getBounds());
 								break;
 							case SWT.F2:
-								Asset asset = request.getAsset();
-								if (asset != null)
-									metadataRequested(asset);
+								if (request.getImage() != null) {
+									Asset asset = request.getAsset();
+									if (asset != null)
+										metadataRequested(asset);
+								}
 							}
 							break;
 						}
@@ -1068,6 +1096,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 		private Rectangle mbounds;
 		private boolean inhibitTimer;
 		private float zoom = 1f;
+		private int ticks;
 
 		public SingleSlideJob(SlideRequest request, int startFrom, int startNext, Shell parent, Rectangle mbounds,
 				boolean pauseAt, FadingListener listener) {
@@ -1093,142 +1122,165 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 		@Override
 		protected IStatus run(final IProgressMonitor monitor) {
 			finishedRequest = null;
-			displ.syncExec(new Runnable() {
-				public void run() {
-					final Shell shell = new Shell(parent, SWT.NO_TRIM);
-					effect = slide.getEffect();
-					if (effect == Constants.SLIDE_TRANSITION_RANDOM)
-						effect = (int) (Math.random() * Constants.SLIDE_TRANSITION_N);
-					fadingShell = new FadingShell(shell, true, effect);
-					shell.setText(slide.getCaption());
-					shell.setLayout(new FillLayout());
-					imageCanvas = new Canvas(shell, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
-					imageCanvas.setCursor(transparentCursor);
-					imageCanvas.addPaintListener(new PaintListener() {
-						public void paintControl(PaintEvent e) {
-							ZImage image = request.getImage();
-							Rectangle sbounds = imageCanvas.getClientArea();
-							GC gc = e.gc;
-							gc.setBackground(shell.getBackground());
-							gc.fillRectangle(sbounds);
-							if (image != null && !image.isDisposed()) {
-								Rectangle ibounds = image.getBounds();
-								if (slide.getZoom() == 0)
-									image.draw(gc, (sbounds.width - ibounds.width) / 2,
-											(sbounds.height - ibounds.height) / 2, ZImage.CROPPED, sbounds.width,
-											sbounds.height);
-								else {
-									double f = Math.min((double) sbounds.width / ibounds.width,
-											(double) sbounds.height / ibounds.height);
-									int iwidth = (int) (ibounds.width * f + 0.5d);
-									int iheight = (int) (ibounds.height * f + 0.5d);
-									int w = (int) (ibounds.width * zoom + 0.5f);
-									int h = (int) (ibounds.height * zoom + 0.5f);
-									int offx = Math.max(0, Math.min(ibounds.width - w,
-											ibounds.width * (slide.getZoomX() + 100) / 200 - w / 2));
-									int offy = Math.max(0, Math.min(ibounds.height - h,
-											ibounds.height * (slide.getZoomY() + 100) / 200 - h / 2));
-									image.draw(gc, offx, offy, w, h, (sbounds.width - iwidth) / 2,
-											(sbounds.height - iheight) / 2, iwidth, iheight, ZImage.CROPPED,
-											sbounds.width, sbounds.height, true);
-								}
-								if (request.isRemoveFromShow()) {
-									String txt = Messages.getString("SlideShowPlayer.deleted"); //$NON-NLS-1$
-									gc.setFont(JFaceResources.getFont(UiConstants.VIEWERBANNERFONT));
-									int x = gc.textExtent(txt).x;
-									gc.setForeground(displ.getSystemColor(SWT.COLOR_WHITE));
-									gc.drawText(txt, sbounds.width - x - 5, 5, true);
-									gc.setForeground(displ.getSystemColor(SWT.COLOR_RED));
-									gc.drawText(txt, sbounds.width - x - 4, 4, true);
-								}
+			displ.syncExec(() -> {
+				final Shell shell = new Shell(parent, SWT.NO_TRIM);
+				effect = slide.getEffect();
+				if (effect == Constants.SLIDE_TRANSITION_RANDOM)
+					effect = (int) (Math.random() * Constants.SLIDE_TRANSITION_N);
+				fadingShell = new FadingShell(shell, true, effect);
+				shell.setText(slide.getCaption());
+				shell.setLayout(new FillLayout());
+				imageCanvas = new Canvas(shell, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
+				imageCanvas.setCursor(transparentCursor);
+				imageCanvas.addPaintListener(new PaintListener() {
+					public void paintControl(PaintEvent e) {
+						ZImage image = request.getImage();
+						Rectangle sbounds = imageCanvas.getClientArea();
+						GC gc = e.gc;
+						gc.setBackground(shell.getBackground());
+						gc.fillRectangle(sbounds);
+						if (image != null && !image.isDisposed()) {
+							Rectangle ibounds = image.getBounds();
+							if (slide.getZoom() == 0)
+								image.draw(gc, (sbounds.width - ibounds.width) / 2,
+										(sbounds.height - ibounds.height) / 2, ZImage.CROPPED, sbounds.width,
+										sbounds.height);
+							else {
+								double f = Math.min((double) sbounds.width / ibounds.width,
+										(double) sbounds.height / ibounds.height);
+								double iwidth = ibounds.width * f;
+								double iheight = ibounds.height * f;
+								double w = ibounds.width * zoom;
+								double h = ibounds.height * zoom;
+								double offx = Math.max(0, Math.min(ibounds.width - w,
+										ibounds.width * (slide.getZoomX() + 100) / 200 - w / 2));
+								double offy = Math.max(0, Math.min(ibounds.height - h,
+										ibounds.height * (slide.getZoomY() + 100) / 200 - h / 2));
+								image.draw(gc, (int) (offx + 0.5d), (int) (offy + 0.5d), (int) (w + 0.5d),
+										(int) (h + 0.5d), (int) ((sbounds.width - iwidth) / 2 + 0.5d),
+										(int) ((sbounds.height - iheight) / 2 + 0.5d), (int) (iwidth + 0.5d),
+										(int) (iheight + 0.5d), ZImage.CROPPED, sbounds.width, sbounds.height, true);
+							}
+							if (request.isRemoveFromShow()) {
+								String txt = Messages.getString("SlideShowPlayer.deleted"); //$NON-NLS-1$
+								gc.setFont(JFaceResources.getFont(UiConstants.VIEWERBANNERFONT));
+								int x = gc.textExtent(txt).x;
+								gc.setForeground(displ.getSystemColor(SWT.COLOR_WHITE));
+								gc.drawText(txt, sbounds.width - x - 5, 5, true);
+								gc.setForeground(displ.getSystemColor(SWT.COLOR_RED));
+								gc.drawText(txt, sbounds.width - x - 4, 4, true);
 							}
 						}
-					});
-					imageCanvas.addMouseMoveListener(new MouseMoveListener() {
-						public void mouseMove(MouseEvent e) {
-							if (panelTask == null && !pauseAt && !ignoreMouseMovements)
-								mouseMovements++;
-						}
-					});
-					KeyAdapter keyListener = new KeyAdapter() {
-						@Override
-						public void keyReleased(KeyEvent e) {
-							switch (e.character) {
-							case SWT.TAB:
-								setPaused(true);
-								int ret = showClosePrompt(bottomShell);
-								if (ret != CLOSE_CANCEL)
-									request.setOperation(ret == CLOSE_CLOSE ? ABORT : IGNORE);
-								else
-									setPaused(false);
-								break;
-							case ' ':
-								if (request.isPaused())
-									request.setOperation(CONTINUE);
-								request.setPaused(!request.isPaused());
-								closeControl();
-								break;
-							case '0':
-							case '1':
-							case '2':
-							case '3':
-							case '4':
-							case '5':
+					}
+				});
+				imageCanvas.addMouseMoveListener(new MouseMoveListener() {
+					public void mouseMove(MouseEvent e) {
+						if (panelTask == null && !pauseAt && !ignoreMouseMovements)
+							mouseMovements++;
+					}
+				});
+				KeyAdapter keyListener = new KeyAdapter() {
+					@Override
+					public void keyReleased(KeyEvent e) {
+						switch (e.character) {
+						case SWT.TAB:
+							setPaused(true);
+							int ret = showClosePrompt(bottomShell);
+							if (ret != CLOSE_CANCEL)
+								request.setOperation(ret == CLOSE_CLOSE ? ABORT : IGNORE);
+							else
+								setPaused(false);
+							break;
+						case ' ':
+							if (request.isPaused())
+								request.setOperation(CONTINUE);
+							request.setPaused(!request.isPaused());
+							closeControl();
+							if (request.isPaused())
+								showMessage(Messages.getString("SlideShowPlayer.pause"), 1500, SWT.CENTER, //$NON-NLS-1$
+										UiConstants.VIEWERBANNERFONT, 5);
+							break;
+						case '0':
+						case '1':
+						case '2':
+						case '3':
+						case '4':
+						case '5':
+							if (request.getImage() != null) {
 								request.setPaused(true);
 								ZImage image = request.getImage();
 								if (image != null)
-									rateSlide(shell, null, e.character - '0');
+									rateSlide(shell, null, e.character - '0', true);
 								closeControl();
 								request.setPaused(false);
+							}
+							break;
+						case 'a':
+							setPaused(true);
+							addToAlbums(shell, null);
+							setPaused(false);
+							break;
+						case 'r':
+							rotateClockwise(270);
+							break;
+						case 'R':
+							rotateClockwise(90);
+							break;
+						case 's':
+							if (request.getImage() != null)
+								addToSelection(request, true);
+							break;
+						case 'S':
+							if (request.getImage() != null)
+								addToSelection(request, false);
+							break;
+						default:
+							switch (e.keyCode) {
+							case SWT.ESC:
+								setPaused(true);
+								int cret = showClosePrompt(bottomShell);
+								if (cret != CLOSE_CANCEL)
+									request.setOperation(cret == CLOSE_CLOSE ? ABORT : IGNORE);
+								else
+									setPaused(false);
 								break;
-							case 'r':
-								rotateClockwise(270);
+							case SWT.ARROW_LEFT:
+								if ((e.stateMask & SWT.CONTROL) == SWT.CONTROL) {
+									rotateClockwise(270);
+									break;
+								}
+								if (request.getSeqno() > 0) {
+									request.setOperation(BACK);
+									closeControl();
+									request.setPaused(true);
+								}
 								break;
-							case 'R':
-								rotateClockwise(90);
+							case SWT.ARROW_RIGHT:
+								if ((e.stateMask & SWT.CONTROL) == SWT.CONTROL) {
+									rotateClockwise(90);
+									break;
+								}
+								if (request.getSeqno() < requestList.size() - 1) {
+									request.setOperation(FORWARD);
+									closeControl();
+									request.setPaused(true);
+								}
 								break;
-							default:
-								switch (e.keyCode) {
-								case SWT.ESC:
-									setPaused(true);
-									int cret = showClosePrompt(bottomShell);
-									if (cret != CLOSE_CANCEL)
-										request.setOperation(cret == CLOSE_CLOSE ? ABORT : IGNORE);
-									else
-										setPaused(false);
-									break;
-								case SWT.ARROW_LEFT:
-									if ((e.stateMask & SWT.CONTROL) == SWT.CONTROL) {
-										rotateClockwise(270);
-										break;
-									}
-									if (request.getSeqno() > 0) {
-										request.setOperation(BACK);
-										closeControl();
-										request.setPaused(true);
-									}
-									break;
-								case SWT.ARROW_RIGHT:
-									if ((e.stateMask & SWT.CONTROL) == SWT.CONTROL) {
-										rotateClockwise(90);
-										break;
-									}
-									if (request.getSeqno() < requestList.size() - 1) {
-										request.setOperation(FORWARD);
-										closeControl();
-										request.setPaused(true);
-									}
-									break;
-								case SWT.ARROW_UP:
-									gotoSlide(4 * buttonWidth, request, RESTART);
-									break;
-								case SWT.DEL:
+							case SWT.ARROW_UP:
+								setPaused(true);
+								gotoSlide(null, request, RESTART);
+								setPaused(false);
+								break;
+							case SWT.DEL:
+								if ((e.stateMask & (SWT.CONTROL | SWT.ALT)) != 0 && request.getImage() != null) {
 									request.setPaused(true);
 									processDelete(shell, null);
 									closeControl();
 									request.setPaused(false);
-									break;
-								case SWT.F2:
+								}
+								break;
+							case SWT.F2:
+								if (request.getImage() != null) {
 									Asset asset = request.getAsset();
 									if (asset != null) {
 										request.setPaused(true);
@@ -1236,22 +1288,22 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 										request.setPaused(false);
 									}
 								}
-								break;
 							}
+							break;
 						}
-					};
-					imageCanvas.addKeyListener(keyListener);
-					imageCanvas.addHelpListener(SingleSlideJob.this);
-					shell.setFullScreen(true);
-					shell.setBackground(parent.getBackground());
-					shell.setForeground(parent.getForeground());
-					shell.setBounds(mbounds);
-					fadingShell.layout();
-					fadingShell.open();
-					fadingShell.forceActive();
-					fadingShell.forceFocus();
-					imageCanvas.setFocus();
-				}
+					}
+				};
+				imageCanvas.addKeyListener(keyListener);
+				imageCanvas.addHelpListener(SingleSlideJob.this);
+				shell.setFullScreen(true);
+				shell.setBackground(parent.getBackground());
+				shell.setForeground(parent.getForeground());
+				shell.setBounds(mbounds);
+				fadingShell.layout();
+				fadingShell.open();
+				fadingShell.forceActive();
+				fadingShell.forceFocus();
+				imageCanvas.setFocus();
 			});
 			try {
 				int delay = slide.getDelay();
@@ -1279,59 +1331,57 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 				}
 				Runnable runnable = new Runnable() {
 					public void run() {
-						if (!fadingShell.isDisposed()) {
-							Rectangle bounds = fadingShell.getShell().getParent().getBounds();
-							switch (effect) {
-							case Constants.SLIDE_TRANSITION_MOVE_LEFT:
-								double d = 1 - transitionValue;
-								fadingShell.setLocation((int) (bounds.x + bounds.width * d + 0.5d), bounds.y);
-								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
-								break;
-							case Constants.SLIDE_TRANSITION_MOVE_RIGHT:
-								d = transitionValue - 1;
-								fadingShell.setLocation((int) (bounds.x + bounds.width * d + 0.5d), bounds.y);
-								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
-								break;
-							case Constants.SLIDE_TRANSITION_MOVE_UP:
-								d = 1 - transitionValue;
-								fadingShell.setLocation(bounds.x, (int) (bounds.y + bounds.height * d + 0.5d));
-								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
-								break;
-							case Constants.SLIDE_TRANSITION_MOVE_DOWN:
-								d = transitionValue - 1;
-								fadingShell.setLocation(bounds.x, (int) (bounds.y + bounds.height * d + 0.5d));
-								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
-								break;
-							case Constants.SLIDE_TRANSITION_MOVE_TOPLEFT:
-								d = 1 - transitionValue;
-								fadingShell.setLocation((int) (bounds.x + bounds.width * d + 0.5d),
-										(int) (bounds.y + bounds.height * d + 0.5d));
-								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
-								break;
-							case Constants.SLIDE_TRANSITION_MOVE_TOPRIGHT:
-								double dx = transitionValue - 1;
-								double dy = 1 - transitionValue;
-								fadingShell.setLocation((int) (bounds.x + bounds.width * dx + 0.5d),
-										(int) (bounds.y + bounds.height * dy + 0.5d));
-								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
-								break;
-							case Constants.SLIDE_TRANSITION_MOVE_BOTTOMLEFT:
-								dx = 1 - transitionValue;
-								dy = transitionValue - 1;
-								fadingShell.setLocation((int) (bounds.x + bounds.width * dx + 0.5d),
-										(int) (bounds.y + bounds.height * dy + 0.5d));
-								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
-								break;
-							case Constants.SLIDE_TRANSITION_MOVE_BOTTOMRIGHT:
-								d = transitionValue - 1;
-								fadingShell.setLocation((int) (bounds.x + bounds.width * d + 0.5d),
-										(int) (bounds.y + bounds.height * d + 0.5d));
-								fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
-								break;
-							default:
-								fadingShell.setAlpha((int) (255 * transitionValue + 0.5d));
-								break;
-							}
+						Rectangle bounds = fadingShell.getShell().getParent().getBounds();
+						switch (effect) {
+						case Constants.SLIDE_TRANSITION_MOVE_LEFT:
+							double d = 1 - transitionValue;
+							fadingShell.setLocation((int) (bounds.x + bounds.width * d + 0.5d), bounds.y);
+							fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
+							break;
+						case Constants.SLIDE_TRANSITION_MOVE_RIGHT:
+							d = transitionValue - 1;
+							fadingShell.setLocation((int) (bounds.x + bounds.width * d + 0.5d), bounds.y);
+							fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
+							break;
+						case Constants.SLIDE_TRANSITION_MOVE_UP:
+							d = 1 - transitionValue;
+							fadingShell.setLocation(bounds.x, (int) (bounds.y + bounds.height * d + 0.5d));
+							fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
+							break;
+						case Constants.SLIDE_TRANSITION_MOVE_DOWN:
+							d = transitionValue - 1;
+							fadingShell.setLocation(bounds.x, (int) (bounds.y + bounds.height * d + 0.5d));
+							fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
+							break;
+						case Constants.SLIDE_TRANSITION_MOVE_TOPLEFT:
+							d = 1 - transitionValue;
+							fadingShell.setLocation((int) (bounds.x + bounds.width * d + 0.5d),
+									(int) (bounds.y + bounds.height * d + 0.5d));
+							fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
+							break;
+						case Constants.SLIDE_TRANSITION_MOVE_TOPRIGHT:
+							double dx = transitionValue - 1;
+							double dy = 1 - transitionValue;
+							fadingShell.setLocation((int) (bounds.x + bounds.width * dx + 0.5d),
+									(int) (bounds.y + bounds.height * dy + 0.5d));
+							fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
+							break;
+						case Constants.SLIDE_TRANSITION_MOVE_BOTTOMLEFT:
+							dx = 1 - transitionValue;
+							dy = transitionValue - 1;
+							fadingShell.setLocation((int) (bounds.x + bounds.width * dx + 0.5d),
+									(int) (bounds.y + bounds.height * dy + 0.5d));
+							fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
+							break;
+						case Constants.SLIDE_TRANSITION_MOVE_BOTTOMRIGHT:
+							d = transitionValue - 1;
+							fadingShell.setLocation((int) (bounds.x + bounds.width * d + 0.5d),
+									(int) (bounds.y + bounds.height * d + 0.5d));
+							fadingShell.setAlpha(transitionValue > 0 ? 255 : 0);
+							break;
+						default:
+							fadingShell.setAlpha((int) (255 * transitionValue + 0.5d));
+							break;
 						}
 					}
 				};
@@ -1392,14 +1442,46 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 						if (titleDur > 0)
 							if (!fadingShell.isDisposed()) {
 								displ.syncExec(() -> {
-									if (!fadingShell.isDisposed())
-										showTitle(titleDur);
+									if (!fadingShell.isDisposed()) {
+										final String title;
+										switch (slideshow.getTitleContent()) {
+										case Constants.SLIDE_TITLE_SNO:
+											title = NLS.bind("{2} ({0}/{1})", //$NON-NLS-1$
+													new Object[] { slide.getSequenceNo(), slideshow.getEntry().size(),
+															slide.getCaption() });
+											break;
+										case Constants.SLIDE_SNOONLY:
+											title = NLS.bind("{0}/{1}", slide.getSequenceNo(), slideshow //$NON-NLS-1$
+													.getEntry().size());
+											break;
+										case Constants.SLIDE_TITLE_NE:
+											String caption = slide.getCaption();
+											Asset asset = request.getAsset();
+											if (asset != null) {
+												String fileName = Core.getFileName(asset.getUri(), true);
+												if (caption.equals(fileName)) {
+													title = null;
+													break;
+												}
+											}
+											title = caption;
+											break;
+										default:
+											title = slide.getCaption();
+											break;
+										}
+										if (title != null)
+											showMessage(title, titleDur, SWT.END, UiConstants.VIEWERTITLEFONT, 2);
+									}
 								});
 							}
 					}
-					durLoop: for (int i = 0; i < dursteps; i++) {
+					long t1 = System.currentTimeMillis();
+					ticks = 1;
+					int sleep = TICK;
+					durLoop: for (int i = 0; i < dursteps; i+=ticks) {
 						if (startFrom <= 0)
-							sleepTick(TICK);
+							sleepTick(sleep);
 						if (i % NTICKS == 0) {
 							switch (checkStatus(monitor)) {
 							case ABORT:
@@ -1417,6 +1499,13 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 								if (!fadingShell.isDisposed())
 									imageCanvas.redraw();
 							});
+							long t2 = System.currentTimeMillis();
+							int interval = (int) (t2-t1);
+							t1 = t2;
+							ticks = (interval+TICK-1) / TICK;
+							if (ticks < 1)
+								ticks = 1;
+							sleep = Math.max(2,TICK * ticks - interval);
 						}
 						startFrom -= TICK;
 						if (i * TICK >= startNext && !next) {
@@ -1470,10 +1559,8 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 					listener.fadeoutEnded();
 			} finally {
 				displ.syncExec(() -> {
-					if (!fadingShell.isDisposed()) {
-						fadingShell.setAlpha(0);
-						fadingShell.close();
-					}
+					fadingShell.setAlpha(0);
+					fadingShell.close();
 					if (request.operation != RESTART)
 						request.dispose();
 				});
@@ -1485,41 +1572,38 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 			return Status.OK_STATUS;
 		}
 
-		protected void showTitle(final int titleDur) {
+		protected void showMessage(String msg, final int titleDur, int valign, String font, int margins) {
 			Rectangle pBounds = fadingShell.getBounds();
 			Shell shell = new Shell(fadingShell.getShell(), SWT.NO_TRIM);
 			titleShell = new FadingShell(shell, true, Constants.SLIDE_TRANSITION_FADE);
-			final String title;
-			switch (slideshow.getTitleContent()) {
-			case Constants.SLIDE_TITLE_SNO:
-				title = NLS.bind("{2} ({0}/{1})", //$NON-NLS-1$
-						new Object[] { slide.getSequenceNo(), slideshow.getEntry().size(), slide.getCaption() });
-				break;
-			case Constants.SLIDE_SNOONLY:
-				title = NLS.bind("{0}/{1}", slide.getSequenceNo(), slideshow //$NON-NLS-1$
-						.getEntry().size());
-				break;
-			default:
-				title = slide.getCaption();
-				break;
-			}
-			shell.setText(title);
+			shell.setText(msg);
 			shell.setLayout(new FillLayout());
-			final int margins = 2;
 			final Canvas titleCanvas = new Canvas(shell, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
 			GC gc = new GC(titleCanvas);
-			gc.setFont(JFaceResources.getFont(UiConstants.VIEWERTITLEFONT));
-			Point tx = gc.textExtent(title);
+			gc.setFont(JFaceResources.getFont(font));
+			Point tx = gc.textExtent(msg);
 			gc.dispose();
 			titleCanvas.addPaintListener(new PaintListener() {
 				public void paintControl(PaintEvent e) {
-					e.gc.setFont(JFaceResources.getFont(UiConstants.VIEWERTITLEFONT));
-					e.gc.drawText(title, margins, margins);
+					e.gc.setFont(JFaceResources.getFont(font));
+					e.gc.drawText(msg, margins, margins);
 				}
 			});
 			titleCanvas.addHelpListener(SingleSlideJob.this);
-			shell.setBounds(pBounds.x + (pBounds.width - tx.x) / 2 - margins,
-					pBounds.y + pBounds.height - tx.y - margins, tx.x + 2 * margins, tx.y + 2 * margins);
+			int y = pBounds.y;
+			switch (valign) {
+			case SWT.BEGINNING:
+				y += margins;
+				break;
+			case SWT.CENTER:
+				y += (pBounds.height - tx.y) / 2 - margins;
+				break;
+			default:
+				y += pBounds.height - tx.y - margins;
+				break;
+			}
+			shell.setBounds(pBounds.x + (pBounds.width - tx.x) / 2 - margins, y, tx.x + 2 * margins,
+					tx.y + 2 * margins);
 			titleShell.layout();
 			titleShell.setAlpha(0);
 			titleShell.open();
@@ -1528,34 +1612,25 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 			imageCanvas.setFocus();
 			titleTime = 0;
 			final int fade = Math.min(500, titleDur / 4);
-			titleTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(new Runnable() {
-				public void run() {
-					titleTime += TICK;
-					if (titleTime >= titleDur) {
-						if (titleShell != null && !titleShell.isDisposed())
-							displ.syncExec(() -> {
-								titleTask.cancel(true);
-								if (!titleShell.isDisposed())
-									titleShell.close();
-							});
-					} else if (titleTime <= fade) {
-						if (titleShell != null && !titleShell.isDisposed())
-							displ.syncExec(() -> {
-								if (!titleShell.isDisposed())
-									titleShell.setAlpha(
-											Math.min(255, titleShell.getAlpha() + (255 * TICK + fade - 1) / fade));
-							});
-					} else if (titleTime > titleDur - fade) {
-						if (titleShell != null && !titleShell.isDisposed())
-							displ.syncExec(() -> {
-								if (!titleShell.isDisposed())
-									titleShell.setAlpha(
-											Math.max(0, titleShell.getAlpha() - ((255 * TICK + fade - 1) / fade)));
-							});
-					}
+			final int dur = Math.max(fade * 2 + 100, titleDur);
+			titleTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(() -> {
+				titleTime += TICK;
+				if (titleShell != null && !titleShell.isDisposed()) {
+					if (titleTime >= dur)
+						displ.syncExec(() -> {
+							titleTask.cancel(true);
+							titleShell.close();
+						});
+					else if (titleTime <= fade)
+						displ.syncExec(() -> {
+							titleShell.setAlpha(Math.min(255, titleShell.getAlpha() + (255 * TICK + fade - 1) / fade));
+						});
+					else if (titleTime > dur - fade)
+						displ.syncExec(() -> {
+							titleShell.setAlpha(Math.max(0, titleShell.getAlpha() - ((255 * TICK + fade - 1) / fade)));
+						});
 				}
 			}, 0L, TICK, TimeUnit.MILLISECONDS);
-
 		}
 
 		private int checkStatus(IProgressMonitor monitor) {
@@ -1593,18 +1668,18 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 		}
 
 		private void showControl() {
-			if (!fadingShell.isDisposed()) {
+			if (!fadingShell.isDisposed())
 				displ.syncExec(() -> {
-					if (!fadingShell.isDisposed())
-						doShowControl();
+					doShowControl();
 				});
-			}
 		}
 
 		private void doShowControl() {
-			imageCanvas.setCursor(null);
-			slideControl = new SlideControl(fadingShell);
-			startTimer();
+			if (!fadingShell.isDisposed()) {
+				imageCanvas.setCursor(null);
+				slideControl = new SlideControl(fadingShell);
+				startTimer();
+			}
 		}
 
 		private boolean canBeSelected(SlideRequest request) {
@@ -1622,36 +1697,31 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 
 		private void startTimer() {
 			stopTimer();
-			if (!inhibitTimer) {
-				panelTask = UiActivator.getScheduledExecutorService().schedule(new Runnable() {
-					public void run() {
-						if (!displ.isDisposed())
-							displ.syncExec(() -> closeControl());
-						if (!displ.isDisposed())
-							displ.syncExec(() -> {
-								if (imageCanvas != null && !imageCanvas.isDisposed()) {
-									imageCanvas.setCursor(transparentCursor);
-									imageCanvas.setFocus();
-								}
-							});
-						panelTask = null;
-					}
+			if (!inhibitTimer)
+				panelTask = UiActivator.getScheduledExecutorService().schedule(() -> {
+					if (!displ.isDisposed())
+						displ.syncExec(() -> closeControl());
+					if (!displ.isDisposed())
+						displ.syncExec(() -> {
+							if (imageCanvas != null && !imageCanvas.isDisposed()) {
+								imageCanvas.setCursor(transparentCursor);
+								imageCanvas.setFocus();
+							}
+						});
+					panelTask = null;
 				}, CONTROLTIMEOUT, TimeUnit.MILLISECONDS);
-			}
 		}
 
-		private void startButtonTimer(final int operation, final int xoff) {
+		private void startButtonTimer(final int operation, final Point pos) {
 			stopTimer();
 			stopButtonTimer();
-			buttonTask = UiActivator.getScheduledExecutorService().schedule(new Runnable() {
-				public void run() {
-					if (!displ.isDisposed())
-						displ.syncExec(() -> gotoSlide(xoff, request, operation));
-				}
+			buttonTask = UiActivator.getScheduledExecutorService().schedule(() -> {
+				if (!displ.isDisposed())
+					displ.syncExec(() -> gotoSlide(pos, request, operation));
 			}, 700L, TimeUnit.MILLISECONDS);
 		}
 
-		private void gotoSlide(int xoff, SlideRequest current, int operation) {
+		private void gotoSlide(Point pos, SlideRequest current, int operation) {
 			inhibitTimer = true;
 			try {
 				stopTimer();
@@ -1678,27 +1748,28 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 					for (SlideRequest r : requestList)
 						slideList.add(r.getSlide());
 				}
-				if (slideControl != null && !slideControl.isDisposed()) {
-					selectSlideDialog = new SelectSlideDialog(slideControl.getShell(), slideList);
-					selectSlideDialog.create();
-					Point p = slideControl.getLocation();
-					selectSlideDialog.getShell().setLocation(p.x + xoff,
-							p.y - selectSlideDialog.getShell().getSize().y);
-					if (operation != BACK && operation != FORWARD)
-						selectSlideDialog.setSelection(current.getSlide());
-					int ret = selectSlideDialog.open();
-					startTimer();
-					if (ret == Window.OK) {
-						SlideImpl selectedSlide = selectSlideDialog.getResult();
-						for (SlideRequest r : requestList) {
-							if (r.getSlide() == selectedSlide) {
-								restartAt(r.getSeqno());
-								break;
-							}
+				Shell sh = slideControl != null && !slideControl.isDisposed() ? slideControl.getShell()
+						: new Shell(parent, SWT.NO_TRIM);
+				selectSlideDialog = new SelectSlideDialog(sh, slideList, false);
+				selectSlideDialog.create();
+				if (pos != null) {
+					pos.y -= selectSlideDialog.getShell().getSize().y;
+					selectSlideDialog.getShell().setLocation(pos);
+				}
+				if (operation != BACK && operation != FORWARD)
+					selectSlideDialog.setSelection(current.getSlide());
+				int ret = selectSlideDialog.open();
+				startTimer();
+				if (ret == Window.OK) {
+					SlideImpl selectedSlide = selectSlideDialog.getResult();
+					for (SlideRequest r : requestList) {
+						if (r.getSlide() == selectedSlide) {
+							restartAt(r.getSeqno());
+							break;
 						}
 					}
-					selectSlideDialog = null;
 				}
+				selectSlideDialog = null;
 			} finally {
 				inhibitTimer = false;
 			}
@@ -1744,15 +1815,17 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 			pnt.y = bounds.height / 2;
 			toolTip.setLocation(pnt);
 			toolTip.setText(NLS.bind(Messages.getString("SlideShowPlayer.metadata"), asset.getName())); //$NON-NLS-1$
-			toolTip.setMessage(new HoverInfo(asset, null, UiActivator.getDefault().getHoverNodes()).getText());
+			toolTip.setMessage(new HoverInfo(asset, (ImageRegion[]) null).getText());
 			toolTip.setVisible(true);
 		}
 
-		private void rateSlide(final Control control, MouseEvent event, int rating) {
+		private void rateSlide(final Control control, MouseEvent event, int rating, boolean autoClose) {
 			stopTimer();
 			Shell shell = control instanceof Shell ? (Shell) control : control.getShell();
 			RatingDialog ratingDialog = new RatingDialog(shell, rating != RatingDialog.ABORT ? rating
 					: request.isRemoveFromShow() ? RatingDialog.DELETE : request.getRating(), 1d, false, false);
+			if (autoClose)
+				ratingDialog.setTimeout(3000);
 			ratingDialog.create();
 			if (event != null)
 				ratingDialog.getShell().setLocation(control.toDisplay(event.x, event.y));
@@ -1793,7 +1866,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 			}
 		}
 
-		private void addToAlbums(final Control control, MouseEvent event) {
+		private void addToAlbums(final Control control, Point pos) {
 			stopTimer();
 			Shell shell = control instanceof Shell ? (Shell) control : control.getShell();
 			IDbManager dbManager = Core.getCore().getDbManager();
@@ -1805,22 +1878,22 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 					albums = asset.getAlbum();
 			}
 			AlbumSelectionDialog addAlbumDialog = new AlbumSelectionDialog(shell, true,
-					(albums != null) ? Arrays.asList(albums) : null);
+					(albums != null) ? Arrays.asList(albums) : null, selectedAlbums);
 			addAlbumDialog.create();
-			if (event != null) {
-				Shell dialogShell = addAlbumDialog.getShell();
-				Point size = dialogShell.getSize();
-				dialogShell.setLocation(control.toDisplay(event.x, event.y - size.y));
+			if (pos != null) {
+				pos.y -= addAlbumDialog.getShell().getSize().y;
+				addAlbumDialog.getShell().setLocation(pos);
 			}
 			if (addAlbumDialog.open() == AlbumSelectionDialog.OK) {
 				Collection<SmartCollectionImpl> checkedAlbums = addAlbumDialog.getResult();
-				request.setAlbums(checkedAlbums.toArray(new SmartCollectionImpl[checkedAlbums.size()]));
+				request.setAlbums(
+						selectedAlbums = checkedAlbums.toArray(new SmartCollectionImpl[checkedAlbums.size()]));
 			}
 		}
 
-		private void addToSelection(SlideRequest request) {
+		private void addToSelection(SlideRequest request, boolean select) {
 			if (request.getImage() != null && request.getSlide().getAsset() != null) {
-				request.setSelected(!request.isSelected());
+				request.setSelected(select);
 				closeControl();
 				request.setPaused(true);
 				doShowControl();
@@ -2353,7 +2426,6 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 		public boolean annotationChanged() {
 			return annotationChanged;
 		}
-
 	}
 
 	// Status
@@ -2424,7 +2496,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 		cms = preferencesService.getInt(UiActivator.PLUGIN_ID, PreferenceConstants.COLORPROFILE, ImageConstants.SRGB,
 				null);
 	}
-	
+
 	public void promptForSave(List<SlideRequest> reqList) {
 		final Set<String> deleted = new HashSet<String>();
 		for (SlideRequest request : reqList)
@@ -2511,7 +2583,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 				text.draw(gc, (sbounds.width - tbounds.width) / 2, (sbounds.height - tbounds.height) / 2);
 			}
 		});
-		bottomShell.setData(CSSProperties.ID, CSSProperties.SLIDESHOW); 
+		bottomShell.setData(CSSProperties.ID, CSSProperties.SLIDESHOW);
 		CssActivator.getDefault().setColors(bottomShell);
 		text.setText(NLS.bind(slideshow.getAdhoc() ? Messages.getString("SlideShowPlayer.preparing") //$NON-NLS-1$
 				: Messages.getString("SlideShowPlayer.preparing_slideshow"), //$NON-NLS-1$
@@ -2688,14 +2760,16 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 				break;
 			}
 			Asset asset = request.getAsset();
-			int rating = request.getRating();
-			if (rating != RatingDialog.ABORT && rating != asset.getRating()) {
-				changes = true;
-				break;
-			}
-			if ((request.getRotation() - asset.getRotation()) % 360 != 0) {
-				changes = true;
-				break;
+			if (asset != null) {
+				int rating = request.getRating();
+				if (rating != RatingDialog.ABORT && rating != asset.getRating()) {
+					changes = true;
+					break;
+				}
+				if ((request.getRotation() - asset.getRotation()) % 360 != 0) {
+					changes = true;
+					break;
+				}
 			}
 			SmartCollectionImpl[] albums = request.getAlbums();
 			if (albums != null && albums.length > 0) {

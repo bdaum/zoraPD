@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -143,7 +143,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		updateButtons();
 		getShell().layout();
 		getShell().pack();
-		collectionEditGroup.prepare();
+		collectionEditGroup.prepare(findWithinGroup != null ? findWithinGroup.getParentCollection() : null);
 		if (nameField instanceof Text && nameField.isEnabled())
 			nameField.setFocus();
 	}
@@ -183,7 +183,8 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 				GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
 				data.widthHint = 150;
 				nameField.setLayoutData(data);
-				((Label) nameField).setText(current.getName());
+				if (current != null)
+					((Label) nameField).setText(current.getName());
 			} else {
 				new Label(generalComp, SWT.NONE).setText(Messages.CollectionEditDialog_name);
 				nameField = new Text(generalComp, SWT.BORDER);
@@ -258,6 +259,12 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 			Composite findComp = new Composite(generalComp, SWT.NONE);
 			findComp.setLayout(new GridLayout());
 			findWithinGroup = new FindWithinGroup(findComp);
+			findWithinGroup.addListener(new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					collectionEditGroup.prepare(findWithinGroup.getParentCollection());
+				}
+			});
 		}
 		if (networkPossible) {
 			Composite netComp = new Composite(generalComp, SWT.NONE);
@@ -300,14 +307,17 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		critComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		critComp.setLayout(new GridLayout(1, false));
 
-		collectionEditGroup = new CollectionEditGroup(critComp, current, album, readonly,
-				findInNetworkGroup != null && findInNetworkGroup.getSelection(), this);
+		collectionEditGroup = new CollectionEditGroup(critComp, current, album, readonly, findInNetwork(), this);
 		collectionEditGroup.addListener(new Listener() {
 			public void handleEvent(Event e) {
 				updateButtons();
 			}
 		});
 		return queryComp;
+	}
+
+	protected boolean findInNetwork() {
+		return findInNetworkGroup != null && findInNetworkGroup.getSelection();
 	}
 
 	@Override

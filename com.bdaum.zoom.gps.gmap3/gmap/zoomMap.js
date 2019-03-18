@@ -116,13 +116,13 @@ function MapClickHandler(event) {
 function performDrawing(redraw) {
 	var bounds = map.getBounds();
 	diagonal = distance(bounds.getNorthEast(), bounds.getSouthWest());
-	if (track.length > 0) {
+	if (track.length) {
 		setTrack();
-		if (!redraw && track.length > 0)
+		if (!redraw && track.length)
 			setBoundsForShape(track);
 	} else {
 		setMarkers();
-		if (!redraw && (locCreated.length > 0 || locShown.length > 0))
+		if (!redraw && (locCreated.length || locShown.length))
 			setBoundsForShape(locCreated.concat(locShown));
 	}
 }
@@ -305,7 +305,7 @@ function setTrack() {
 }
 
 function setBoundsForShape(positions) {
-	if (positions.length > 0) {
+	if (positions.length) {
 		var bounds;
 		for (var i = 0; i < positions.length; i++) {
 			var location = positions[i];
@@ -347,7 +347,7 @@ function makeDoubleClickCallback(marker, ids) {
 					currentMarker = marker;
 					sendMessage('info', ids);
 				}
-			} else if (ids.length > 0) {
+			} else if (ids.length) {
 				currentMarker = marker;
 				sendMessage('info', ids.join());
 			}
@@ -644,9 +644,9 @@ function applyCameraSet(pos) {
 
 function concatTitles(array) {
 	var l = array.length;
-	if (l == 0)
+	if (l === 0)
 		return "";
-	if (l == 1)
+	if (l === 1)
 		return array[0];
 	var newTitle = "";
 	for (var i = 0; i < array.length; i++) {
@@ -655,7 +655,7 @@ function concatTitles(array) {
 			var t = titles[j];
 			if (newTitle != "" && newTitle.length + t.length > 40 || t == "...")
 				return newTitle + ",...";
-			if (newTitle != "")
+			if (newTitle.length)
 				newTitle += ",";
 			newTitle += t;
 		}
@@ -698,7 +698,7 @@ function applyShownSet(pos) {
 }
 
 function applyDirectionSet(pos) {
-	if (imgDirection.length > 0 && locCreated.length > 0)
+	if (imgDirection.length && locCreated.length)
 		imgDirection[0] = bearing(locCreated[0], pos);
 }
 

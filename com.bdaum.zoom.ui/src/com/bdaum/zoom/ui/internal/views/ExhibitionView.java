@@ -22,6 +22,7 @@ package com.bdaum.zoom.ui.internal.views;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.event.InputEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.io.File;
@@ -33,12 +34,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.commands.ExecutionException;
@@ -86,7 +88,6 @@ import org.piccolo2d.event.PBasicInputEventHandler;
 import org.piccolo2d.event.PInputEvent;
 import org.piccolo2d.extras.swt.PSWTCanvas;
 import org.piccolo2d.extras.swt.PSWTHandle;
-import org.piccolo2d.extras.swt.PSWTImage;
 import org.piccolo2d.extras.swt.PSWTPath;
 import org.piccolo2d.extras.swt.PSWTText;
 import org.piccolo2d.extras.util.PLocator;
@@ -94,6 +95,7 @@ import org.piccolo2d.util.PBounds;
 import org.piccolo2d.util.PDimension;
 import org.piccolo2d.util.PPaintContext;
 
+import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.Rgb_type;
 import com.bdaum.zoom.cat.model.Rgb_typeImpl;
@@ -108,6 +110,7 @@ import com.bdaum.zoom.cat.model.group.exhibition.WallImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.ISpellCheckingService;
+import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.Utilities;
@@ -119,11 +122,13 @@ import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
+import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.EditWallDialog;
 import com.bdaum.zoom.ui.internal.dialogs.ExhibitLayoutDialog;
 import com.bdaum.zoom.ui.internal.dialogs.ExhibitionEditDialog;
 import com.bdaum.zoom.ui.internal.dialogs.SelectExhibitDialog;
+import com.bdaum.zoom.ui.internal.hover.IHoverContext;
 import com.bdaum.zoom.ui.internal.operations.ExhibitionPropertiesOperation;
 import com.bdaum.zoom.ui.internal.widgets.AbstractHandle;
 import com.bdaum.zoom.ui.internal.widgets.GalleryPanEventHandler;
@@ -131,15 +136,13 @@ import com.bdaum.zoom.ui.internal.widgets.GreekedPSWTText;
 import com.bdaum.zoom.ui.internal.widgets.IAugmentedTextField;
 import com.bdaum.zoom.ui.internal.widgets.PPanel;
 import com.bdaum.zoom.ui.internal.widgets.PSWTAssetThumbnail;
-import com.bdaum.zoom.ui.internal.widgets.PTextHandler;
 import com.bdaum.zoom.ui.internal.widgets.TextEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.TextField;
 import com.bdaum.zoom.vr.internal.ExhibitionJob;
 
 @SuppressWarnings("restriction")
-public class ExhibitionView extends AbstractPresentationView {
+public class ExhibitionView extends AbstractPresentationView implements IHoverContext {
 
-	private static final Point DRAGTOLERANCE = new Point(0, 0);
 	private static final java.awt.Rectangle RECT1 = new java.awt.Rectangle(0, 0, 1, 1);
 
 	public class LayoutOperation extends AbstractOperation {
@@ -254,20 +257,12 @@ public class ExhibitionView extends AbstractPresentationView {
 			}
 			toBeDeleted.add(wall);
 			storeSafelyAndUpdateIndex(toBeDeleted, exhibition, assetIds);
-			Point2D offset = pWall.getOffset();
 			double ydiff = pWall.getHeight() + 15;
 			surface.removeChild(pWall);
-			ListIterator<?> it = surface.getChildrenIterator();
-			while (it.hasNext()) {
-				Object obj = it.next();
-				if (obj instanceof PWall) {
-					PWall w = (PWall) obj;
-					if (w.getOffset().getY() > offset.getY())
-						w.offset(0, -ydiff);
-				}
-			}
-			walls.remove(pWall);
+			pWall.positionSubsequentWalls(-ydiff);
+			walls.remove(index);
 			setPanAndZoomHandlers();
+			updateStatusLine();
 			return Status.OK_STATUS;
 		}
 
@@ -286,17 +281,13 @@ public class ExhibitionView extends AbstractPresentationView {
 				else
 					allWalls.add(wall);
 				double ydiff = pWall.getHeight() + 15;
-				ListIterator<?> it = surface.getChildrenIterator();
-				while (it.hasNext()) {
-					Object obj = it.next();
-					if (obj instanceof PWall) {
-						PWall w = (PWall) obj;
-						if (w.getOffset().getY() + w.getHeight() >= y)
-							w.offset(0, ydiff);
-					}
-				}
 				surface.addChild(pWall);
 				pWall.setOffset(0, y);
+				if (index < walls.size())
+					walls.add(index, pWall);
+				else
+					walls.add(pWall);
+				pWall.positionSubsequentWalls(ydiff);
 				setColor(canvas);
 				List<Object> tobeStored = new ArrayList<Object>(deletedExhibits);
 				List<String> assetIds = new ArrayList<String>(deletedExhibits.size());
@@ -305,6 +296,7 @@ public class ExhibitionView extends AbstractPresentationView {
 				tobeStored.add(wall);
 				tobeStored.add(show);
 				storeSafelyAndUpdateIndex(null, tobeStored, assetIds);
+				updateStatusLine();
 			}
 			return Status.OK_STATUS;
 		}
@@ -334,8 +326,10 @@ public class ExhibitionView extends AbstractPresentationView {
 				toBeStored.add(wall);
 				toBeStored.add(show);
 				storeSafelyAndUpdateIndex(null, toBeStored, null);
+				updateStatusLine();
+				return Status.OK_STATUS;
 			}
-			return Status.OK_STATUS;
+			return Status.CANCEL_STATUS;
 		}
 
 		@Override
@@ -348,29 +342,19 @@ public class ExhibitionView extends AbstractPresentationView {
 			ExhibitionImpl show = getExhibition();
 			if (show != null) {
 				show.removeWall(wall);
-				List<Object> toBeDeleted = new ArrayList<Object>(wall.getExhibit().size() + 1);
-				List<String> assetIds = new ArrayList<String>(wall.getExhibit().size());
-				for (ExhibitImpl obj : Core.getCore().getDbManager().obtainByIds(ExhibitImpl.class,
-						wall.getExhibit())) {
-					toBeDeleted.add(obj);
-					assetIds.add(obj.getAsset());
-				}
-				toBeDeleted.add(wall);
-				storeSafelyAndUpdateIndex(toBeDeleted, exhibition, assetIds);
+				storeSafelyAndUpdateIndex(wall, exhibition, null);
 				Point2D offset = added.getOffset();
 				double ydiff = added.getHeight() + 15;
 				surface.removeChild(added);
-				ListIterator<?> it = surface.getChildrenIterator();
-				while (it.hasNext()) {
-					Object obj = it.next();
-					if (obj instanceof PWall) {
-						PWall w = (PWall) obj;
-						if (w.getOffset().getY() > offset.getY())
-							w.offset(0, -ydiff);
-					}
+				int index = walls.indexOf(added);
+				for (int i = index + 1; i < walls.size(); i++) {
+					PWall w = walls.get(i);
+					if (w.getOffset().getY() > offset.getY())
+						w.offset(0, -ydiff);
 				}
-				walls.remove(added);
+				walls.remove(index);
 				setPanAndZoomHandlers();
+				updateStatusLine();
 			}
 			return Status.OK_STATUS;
 		}
@@ -691,16 +675,9 @@ public class ExhibitionView extends AbstractPresentationView {
 			double x = to.getX();
 			double y = to.getY();
 			int index = 0;
-			ListIterator<?> it = toWall.getChildrenIterator();
-			while (it.hasNext()) {
-				Object next = it.next();
-				if (next instanceof PExhibit) {
-					PExhibit pExhibit = (PExhibit) next;
-					Point2D offset = pExhibit.getOffset();
-					if (offset.getX() < x)
-						index++;
-				}
-			}
+			for (PExhibit pExhibit : getSortedExhibits(toWall))
+				if (pExhibit.getOffset().getX() < x)
+					index++;
 			int globalIndex = index;
 			ExhibitImpl exhibit = moved.exhibit;
 			Wall targetWall = toWall.getWall();
@@ -720,7 +697,6 @@ public class ExhibitionView extends AbstractPresentationView {
 			toWall.addChild(moved);
 			int newX = (int) (undo ? x : (x - xdif));
 			int newY = (int) (undo ? y : (y - ydif));
-			// Exhibition exhibition = targetWall.getExhibition_wall_parent();
 			if (!undo && exhibition.getShowGrid() && exhibition.getSnapToGrid()) {
 				org.eclipse.swt.graphics.Point pnt = UiUtilities.snapToGrid(newX, newY, exhibit.getWidth(),
 						exhibit.getHeight(), targetWall.getHeight(), exhibition.getGridSize(), gridTolerance);
@@ -754,26 +730,51 @@ public class ExhibitionView extends AbstractPresentationView {
 
 	public class DeleteExhibitOperation extends AbstractOperation {
 
-		private PExhibit deleted;
-		private PWall wallPanel;
-		private Point2D offset;
-		private ExhibitImpl exhibit;
+		private List<PExhibit> deleted;
+		private List<PWall> walls;
+		private boolean cut;
 
-		public DeleteExhibitOperation(PExhibit deleted, Point2D oldOffset) {
+		public DeleteExhibitOperation(List<PExhibit> deleted, boolean cut) {
 			super(Messages.getString("ExhibitionView.delete_exh_undo")); //$NON-NLS-1$
 			this.deleted = deleted;
-			offset = oldOffset;
+			this.cut = cut;
+			walls = new ArrayList<>(deleted.size());
 		}
 
 		@Override
 		public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-			exhibit = deleted.exhibit;
-			wallPanel = doRemoveExhibit(deleted);
-			if (wallPanel == null)
-				return Status.CANCEL_STATUS;
-			storeSafelyAndUpdateIndex(exhibit, wallPanel.getWall(), exhibit.getAsset());
+			if (cut && !deleted.isEmpty())
+				clipboard.clear();
+			List<IIdentifiableObject> toBeDeleted = new ArrayList<>();
+			List<String> toBeIndexed = new ArrayList<>();
+			Set<Wall> toBeStored = new HashSet<>();
+			List<Exhibit> clipped = null;
+			for (Iterator<PExhibit> it = deleted.iterator(); it.hasNext();) {
+				PExhibit pexhibit = it.next();
+				ExhibitImpl exhibit = pexhibit.exhibit;
+				if (cut) {
+					if (clipped == null)
+						clipped = new ArrayList<>(deleted.size());
+					clipped.add(exhibit);
+				}
+				PWall wallPanel = doRemoveExhibit(pexhibit);
+				if (wallPanel == null) {
+					it.remove();
+					continue;
+				}
+				toBeStored.add(wallPanel.getWall());
+				walls.add(wallPanel);
+				toBeDeleted.add(exhibit);
+				toBeIndexed.add(exhibit.getAsset());
+			}
+			storeSafelyAndUpdateIndex(toBeDeleted, toBeStored, toBeIndexed);
+			if (clipped != null) {
+				clipboard.clear();
+				clipboard.addAll(clipped);
+			}
 			updateActions(false);
-			return Status.OK_STATUS;
+			updateStatusLine();
+			return deleted.isEmpty() ? Status.CANCEL_STATUS : Status.OK_STATUS;
 		}
 
 		@Override
@@ -783,16 +784,23 @@ public class ExhibitionView extends AbstractPresentationView {
 
 		@Override
 		public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-			WallImpl wall = (WallImpl) wallPanel.getWall();
-			double x = offset.getX() - wallPanel.getOffset().getX();
-			double pos = 0;
-			int index = 0;
-			ListIterator<?> it = wallPanel.getChildrenIterator();
-			while (it.hasNext()) {
-				Object next = it.next();
-				if (next instanceof PExhibit) {
-					PExhibit pExhibit = (PExhibit) next;
-					PBounds eBounds = pExhibit.getFullBoundsReference();
+			List<IIdentifiableObject> toBeStored = new ArrayList<>();
+			List<String> toBeIndexed = new ArrayList<>();
+			Set<Wall> wallsBeStored = new HashSet<>();
+			for (int i = deleted.size() - 1; i >= 0; i--) {
+				PExhibit pExhibit = deleted.get(i);
+				ExhibitImpl exhibit = pExhibit.exhibit;
+				toBeIndexed.add(exhibit.getAsset());
+				toBeStored.add(exhibit);
+				PWall wallPanel = walls.get(i);
+				WallImpl wall = (WallImpl) wallPanel.getWall();
+				wallsBeStored.add(wall);
+				double x = pExhibit.getOffset().getX() - wallPanel.getOffset().getX();
+				double pos = 0;
+				int index = 0;
+				List<PExhibit> sortedExhibits = getSortedExhibits(wallPanel);
+				for (PExhibit pex : sortedExhibits) {
+					PBounds eBounds = pex.getFullBoundsReference();
 					double p = eBounds.getX();
 					if (p < x) {
 						p += eBounds.getWidth();
@@ -801,28 +809,28 @@ public class ExhibitionView extends AbstractPresentationView {
 						++index;
 					}
 				}
+				int globalIndex = index;
+				for (Wall w : exhibition.getWall()) {
+					if (w == wall)
+						break;
+					globalIndex += w.getExhibit().size();
+				}
+				if (globalIndex >= exhibits.size())
+					exhibits.add(exhibit);
+				else
+					exhibits.add(globalIndex, exhibit);
+				if (index >= wall.getExhibit().size())
+					wall.addExhibit(exhibit.getStringId());
+				else
+					wall.getExhibit().add(index, exhibit.getStringId());
+				wallPanel.addChild(pExhibit);
+				toBeStored.add(exhibit);
+				toBeStored.add(wall);
 			}
-			int globalIndex = index;
-			for (Wall w : exhibition.getWall()) {
-				if (w == wall)
-					break;
-				globalIndex += w.getExhibit().size();
-			}
-			if (globalIndex >= exhibits.size())
-				exhibits.add(exhibit);
-			else
-				exhibits.add(globalIndex, exhibit);
-			if (index >= wall.getExhibit().size())
-				wall.addExhibit(exhibit.getStringId());
-			else
-				wall.getExhibit().add(index, exhibit.getStringId());
-			wallPanel.addChild(deleted);
-			deleted.setOffset(offset);
-			List<Object> toBeStored = new ArrayList<Object>(2);
-			toBeStored.add(exhibit);
-			toBeStored.add(wall);
-			storeSafelyAndUpdateIndex(null, toBeStored, exhibit.getAsset());
+			toBeStored.addAll(wallsBeStored);
+			storeSafelyAndUpdateIndex(null, toBeStored, toBeIndexed);
 			updateActions(false);
+			updateStatusLine();
 			return Status.OK_STATUS;
 		}
 	}
@@ -835,6 +843,8 @@ public class ExhibitionView extends AbstractPresentationView {
 		private PWall wallPanel;
 		private final boolean replace;
 		private DeleteExhibitOperation deleteOp;
+		private List<PExhibit> trail = new ArrayList<PExhibit>();
+		private double iWidth;
 
 		public DropAssetOperation(AssetSelection selection, Point2D position, boolean replace) {
 			super(Messages.getString("ExhibitionView.drop_images_undo")); //$NON-NLS-1$
@@ -864,9 +874,7 @@ public class ExhibitionView extends AbstractPresentationView {
 				double pos = 0;
 				int index = 0;
 				PExhibit cand = null;
-				List<PExhibit> trail = new ArrayList<PExhibit>(exhibits.size());
-				ListIterator<?> it = wallPanel.getChildrenIterator();
-				while (it.hasNext()) {
+				for (ListIterator<?> it = wallPanel.getChildrenIterator(); it.hasNext();) {
 					Object next = it.next();
 					if (next instanceof PExhibit) {
 						PExhibit pExhibit = (PExhibit) next;
@@ -960,7 +968,7 @@ public class ExhibitionView extends AbstractPresentationView {
 					pos += horizontalGap;
 					if (cand != null) {
 						pos = cand.getFullBoundsReference().getX();
-						deleteOp = new DeleteExhibitOperation(cand, cand.getOffset());
+						deleteOp = new DeleteExhibitOperation(Collections.singletonList(cand), false);
 						deleteOp.execute(monitor, info);
 						cand = null;
 					}
@@ -972,49 +980,173 @@ public class ExhibitionView extends AbstractPresentationView {
 					added.add(pExhibit);
 				}
 				setArtists();
-				double iWidth = (pos - oldPos);
-				for (PExhibit pExhibit : trail)
+				iWidth = (pos - oldPos);
+				for (PExhibit pExhibit : trail) {
 					pExhibit.offset(iWidth, 0);
+					pExhibit.exhibit.setX((int) (pExhibit.exhibit.getX() + iWidth));
+					toBeStored.add(pExhibit.exhibit);
+				}
 				toBeStored.add(wall);
 				storeSafelyAndUpdateIndex(null, toBeStored, assetIds);
 			}
 			updateActions(false);
+			updateStatusLine();
 			return Status.OK_STATUS;
 		}
 
 		@Override
 		public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 			added.clear();
+			trail.clear();
 			return execute(monitor, info);
 		}
 
 		@Override
 		public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-			List<Object> toBeDeleted = new ArrayList<Object>(selection.size());
+			List<IIdentifiableObject> toBeDeleted = new ArrayList<>(selection.size());
+			List<IIdentifiableObject> toBeStored = new ArrayList<>(selection.size());
 			List<String> assetIds = new ArrayList<String>(selection.size());
 			for (PExhibit exhibit : added) {
 				doRemoveExhibit(exhibit);
 				toBeDeleted.add(exhibit.exhibit);
-				assetIds.add(exhibit.exhibit.getAsset());
+				assetIds.add(exhibit.getAssetId());
+			}
+			for (PExhibit pExhibit : trail) {
+				pExhibit.offset(-iWidth, 0);
+				pExhibit.exhibit.setX((int) (pExhibit.exhibit.getX() - iWidth));
+				toBeStored.add(pExhibit.exhibit);
 			}
 			if (deleteOp != null)
 				deleteOp.undo(monitor, info);
-			storeSafelyAndUpdateIndex(toBeDeleted, wallPanel.getWall(), assetIds);
+			toBeStored.add(wallPanel.getWall());
+			storeSafelyAndUpdateIndex(toBeDeleted, toBeStored, assetIds);
 			updateActions(false);
+			updateStatusLine();
 			return Status.OK_STATUS;
 		}
 	}
 
-	private static final int labelWidth = 140;
-	private static final int labelHeight = 70;
-	private static final int labelMargins = 10;
-	private static final int soldMarkDiameter = labelMargins;
-	private static final int labelIndent = 10;
-	private static final int handleSize = 10;
-	protected static final double horizontalGap = 80;
-	protected static final Color GridColor = new Color(224, 224, 224);
-	protected static final Color DoorColor = new Color(0, 255, 255);
-	protected static final Color GuideColor = new Color(64, 192, 192);
+	public class PasteExhibitsOperation extends AbstractOperation {
+
+		private final Point2D position;
+		private List<PExhibit> added;
+		private PWall wallPanel;
+		private double iWidth;
+		private List<PExhibit> trail = new ArrayList<PExhibit>();
+
+		public PasteExhibitsOperation(Point2D position) {
+			super(Messages.getString("ExhibitionView.paste_exhibits")); //$NON-NLS-1$
+			this.position = position;
+			added = new ArrayList<>(clipboard.size());
+			wallPanel = findWall(position);
+		}
+
+		@Override
+		public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+			if (wallPanel != null) {
+				ExhibitionImpl show = null;
+				if (!clipboard.isEmpty())
+					show = getExhibition();
+				if (show == null)
+					return Status.CANCEL_STATUS;
+				double pos = 0;
+				int index = 0;
+				PWall wallPanel = findWall(position);
+				if (wallPanel != null) {
+					double x = position.getX() - wallPanel.getOffset().getX();
+					for (PExhibit pExhibit : getSortedExhibits(wallPanel)) {
+						PBounds globalBounds = pExhibit.getGlobalBounds();
+						double p = globalBounds.getX() + globalBounds.getWidth();
+						if (p < x) {
+							PBounds eBounds = pExhibit.getFullBoundsReference();
+							pos = Math.max(pos, eBounds.getX() + eBounds.getWidth());
+							++index;
+						} else {
+							trail.add(pExhibit);
+						}
+					}
+				}
+				double oldPos = pos;
+				int globalIndex = index;
+				Wall wall = wallPanel.getWall();
+				for (Wall w1 : exhibition.getWall()) {
+					if (w1 == wall)
+						break;
+					globalIndex += w1.getExhibit().size();
+				}
+				List<Object> toBeStored = new ArrayList<Object>(clipboard.size() + 1);
+				List<String> assetIds = new ArrayList<String>(clipboard.size());
+				if (!clipboard.isEmpty())
+					clearSelection();
+				for (IIdentifiableObject item : clipboard) {
+					ExhibitImpl exhibit = (ExhibitImpl) item;
+					ExhibitImpl copy = cloneExhibit(exhibit);
+					++index;
+					++globalIndex;
+					String assetId = copy.getAsset();
+					if (globalIndex >= exhibits.size())
+						exhibits.add(copy);
+					else
+						exhibits.add(globalIndex, copy);
+					if (index >= wall.getExhibit().size())
+						wall.addExhibit(copy.getStringId());
+					else
+						wall.getExhibit().add(index, copy.getStringId());
+					copy.setWall_exhibit_parent(wall.getStringId());
+					pos += horizontalGap;
+					PExhibit pExhibit = makeExhibit(wallPanel, (int) pos, copy);
+					PBounds eBounds = pExhibit.getFullBoundsReference();
+					pos = eBounds.getX() + eBounds.getWidth();
+					toBeStored.add(exhibit);
+					assetIds.add(assetId);
+					added.add(pExhibit);
+					pExhibit.setSelected(true);
+					lastSelection = recentSelection = pExhibit;
+				}
+				setArtists();
+				iWidth = (pos - oldPos);
+				for (PExhibit pExhibit : trail) {
+					pExhibit.offset(iWidth, 0);
+					pExhibit.exhibit.setX((int) (pExhibit.exhibit.getX() + iWidth));
+					toBeStored.add(pExhibit.exhibit);
+				}
+				toBeStored.add(wall);
+				storeSafelyAndUpdateIndex(null, toBeStored, assetIds);
+			}
+			updateActions(false);
+			updateStatusLine();
+			return Status.OK_STATUS;
+		}
+
+		@Override
+		public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+			added.clear();
+			trail.clear();
+			return execute(monitor, info);
+		}
+
+		@Override
+		public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+			List<IIdentifiableObject> toBeDeleted = new ArrayList<>(added.size());
+			List<IIdentifiableObject> toBeStored = new ArrayList<>(added.size());
+			List<String> assetIds = new ArrayList<String>(added.size());
+			for (PExhibit exhibit : added) {
+				doRemoveExhibit(exhibit);
+				toBeDeleted.add(exhibit.exhibit);
+				assetIds.add(exhibit.getAssetId());
+			}
+			for (PExhibit pExhibit : trail) {
+				pExhibit.offset(-iWidth, 0);
+				pExhibit.exhibit.setX((int) (pExhibit.exhibit.getX() - iWidth));
+				toBeStored.add(pExhibit.exhibit);
+			}
+			toBeStored.add(wallPanel.getWall());
+			storeSafelyAndUpdateIndex(toBeDeleted, toBeStored, assetIds);
+			updateActions(false);
+			updateStatusLine();
+			return Status.OK_STATUS;
+		}
+	}
 
 	private static class GridLine extends PSWTPath {
 		private static final long serialVersionUID = 8838795470028525193L;
@@ -1135,8 +1267,8 @@ public class ExhibitionView extends AbstractPresentationView {
 					Messages.getString("ExhibitionView.wall_properties")); //$NON-NLS-1$
 			Rectangle bounds = positionButtons(height);
 			// Location
-			createTitle(canvas, wall.getLocation(), 11 * bounds.width / 4, height - bounds.height,
-					new Color(128, 128, 128), (Color) getPaint(), 18);
+			createTitle(canvas, wall.getLocation(), 11 * bounds.width / 4, height - bounds.height, LOCATIONTITLECOLOR,
+					(Color) getPaint(), 18);
 		}
 
 		public void setArtists() {
@@ -1165,15 +1297,8 @@ public class ExhibitionView extends AbstractPresentationView {
 		}
 
 		private void positionSubsequentWalls(double ydiff) {
-			ListIterator<?> it = surface.getChildrenIterator();
-			boolean passed = false;
-			while (it.hasNext()) {
-				Object w = it.next();
-				if (w == this)
-					passed = true;
-				else if (passed)
-					((PWall) w).offset(0, ydiff);
-			}
+			for (int i = walls.indexOf(this) + 1; i < walls.size(); i++)
+				walls.get(i).offset(0, ydiff);
 		}
 
 		private void positionImages(double xdiff, double ydiff) {
@@ -1183,7 +1308,6 @@ public class ExhibitionView extends AbstractPresentationView {
 				if (obj instanceof PExhibit)
 					((PExhibit) obj).offset(xdiff, ydiff);
 			}
-
 		}
 
 		private Rectangle positionButtons(int h) {
@@ -1227,7 +1351,7 @@ public class ExhibitionView extends AbstractPresentationView {
 		}
 	}
 
-	class PExhibit extends PNode implements PTextHandler, IPresentationItem {
+	class PExhibit extends PPresentationItem {
 
 		private static final long serialVersionUID = -8619376689449783925L;
 
@@ -1258,7 +1382,7 @@ public class ExhibitionView extends AbstractPresentationView {
 				super(SWT.CURSOR_SIZENESW, Messages.getString("ExhibitionView.size_tooltip")); //$NON-NLS-1$
 				setLocator(new ExhibitLocator());
 				this.size = size;
-				setPaint(new Color(0, 224, 0));
+				setPaint(HANDLECOLOR);
 				setStrokeColor(null);
 			}
 
@@ -1290,8 +1414,8 @@ public class ExhibitionView extends AbstractPresentationView {
 					int iHeight = (int) (backup.getHeight() * f);
 					exhibit.setHeight(iHeight);
 					pImage.setScale(oldScale * f);
-					if (pFrame != null)
-						pFrame.setPathToRectangle(0f, 0f, iWidth + 2 * (frameWidth + matWidth),
+					if (pOuterFrame != null)
+						pOuterFrame.setPathToRectangle(0f, 0f, iWidth + 2 * (frameWidth + matWidth),
 								iHeight + 2 * (frameWidth + matWidth));
 					if (pMat != null)
 						pMat.setPathToRectangle(frameWidth, frameWidth, iWidth + 2 * matWidth, iHeight + 2 * matWidth);
@@ -1342,9 +1466,7 @@ public class ExhibitionView extends AbstractPresentationView {
 		}
 
 		private ExhibitImpl exhibit;
-		private PSWTImage pImage;
 		private PSWTHandle midPoint;
-		private TextField caption;
 		private double imageWidth;
 		private double imageHeight;
 		private PSWTPath imageLabel;
@@ -1352,7 +1474,7 @@ public class ExhibitionView extends AbstractPresentationView {
 		private TextField credits;
 		private TextField creationDate;
 		private PSWTText resolutionWarning;
-		private PPresentationPanel pFrame;
+		private PPresentationPanel pOuterFrame;
 		private PPresentationPanel pMat;
 		private final PSWTCanvas canvas;
 		private final PWall pwall;
@@ -1377,6 +1499,7 @@ public class ExhibitionView extends AbstractPresentationView {
 			imageHeight = exhibit.getHeight();
 			Integer i = exhibit.getMatWidth();
 			int matWidth = (i == null) ? exhibition.getMatWidth() : i;
+			// Colors
 			Rgb_type matColor = exhibit.getMatColor();
 			if (matColor == null)
 				matColor = exhibition.getMatColor();
@@ -1384,16 +1507,18 @@ public class ExhibitionView extends AbstractPresentationView {
 				matColor = new Rgb_typeImpl(255, 255, 252);
 			i = exhibit.getFrameWidth();
 			int frameWidth = (i == null) ? exhibition.getFrameWidth() : i;
-			Rgb_type frameColor = exhibit.getFrameColor();
-			if (frameColor == null)
-				frameColor = exhibition.getFrameColor();
-			if (frameColor == null)
-				frameColor = new Rgb_typeImpl(8, 8, 8);
+			Rgb_type outerFrameColor = exhibit.getFrameColor();
+			if (outerFrameColor == null)
+				outerFrameColor = exhibition.getFrameColor();
+			if (outerFrameColor == null)
+				outerFrameColor = new Rgb_typeImpl(8, 8, 8);
+			// Events
 			PBasicInputEventHandler inputEventHandler = new PBasicInputEventHandler() {
 				@Override
 				public void mousePressed(PInputEvent event) {
 					setPickedNode(event.getPickedNode());
 				}
+
 				@Override
 				public void mouseReleased(PInputEvent event) {
 					if (getPickedNode() == imageLabel && event.getClickCount() == 2)
@@ -1402,9 +1527,10 @@ public class ExhibitionView extends AbstractPresentationView {
 			};
 			// Frame and Mat
 			if (frameWidth != 0)
-				addChild(pFrame = new PPresentationPanel(0, 0, (float) (imageWidth + 2 * (frameWidth + matWidth)),
+				addChild(pOuterFrame = new PPresentationPanel(0, 0, (float) (imageWidth + 2 * (frameWidth + matWidth)),
 						(float) (imageHeight + 2 * (frameWidth + matWidth)),
-						new Color(frameColor.getR(), frameColor.getG(), frameColor.getB()), null, inputEventHandler));
+						new Color(outerFrameColor.getR(), outerFrameColor.getG(), outerFrameColor.getB()), null,
+						inputEventHandler));
 			if (matWidth != 0)
 				addChild(pMat = new PPresentationPanel(frameWidth, frameWidth, (float) (imageWidth + 2 * matWidth),
 						(float) (imageHeight + 2 * matWidth),
@@ -1420,17 +1546,19 @@ public class ExhibitionView extends AbstractPresentationView {
 			setBounds(0, 0, imageWidth, imageHeight);
 			pImage.scale(scale);
 			pImage.setOffset(frameWidth + matWidth, frameWidth + matWidth);
+			// Select frame
+			pImage.addChild(createSelectionFrame(bounds));
 			// Label
 			Boolean b = exhibit.getHideLabel();
 			boolean hideLabel = b == null ? exhibition.getHideLabel() : b.booleanValue();
 			if (!hideLabel) {
 				PBounds iBounds = pImage.getFullBoundsReference();
-				imageLabel = new PPresentationPanel(0f, 0f, labelWidth, labelHeight, new Color(255, 255, 255),
-						new Color(192, 192, 192), inputEventHandler);
+				imageLabel = new PPresentationPanel(0f, 0f, labelWidth, labelHeight, Color.white, Color.LIGHT_GRAY,
+						inputEventHandler);
 				imageLabel.setPickable(true);
 				addChild(imageLabel);
 				double ypos = labelMargins;
-				Color penColor = new Color(92, 92, 92);
+				Color penColor = LABELTEXTCOLOR;
 				Color background = (Color) pwall.getPaint();
 				switch (exhibition.getLabelSequence()) {
 				case Constants.EXHLABEL_TIT_CRED_DES:
@@ -1473,13 +1601,22 @@ public class ExhibitionView extends AbstractPresentationView {
 			installHandleEventHandlers(pImage, false, false, this);
 			if (pMat != null)
 				installHandleEventHandlers(pMat, false, false, this);
-			if (pFrame != null)
-				installHandleEventHandlers(pFrame, false, false, this);
+			if (pOuterFrame != null)
+				installHandleEventHandlers(pOuterFrame, false, false, this);
 			if (imageLabel != null) {
 				installHandleEventHandlers(imageLabel, true, true, this);
 				imageLabel.addInputEventListener(inputEventHandler);
 			}
-			pImage.addInputEventListener(inputEventHandler);
+			pImage.addInputEventListener(new PBasicInputEventHandler() {
+				@Override
+				public void mousePressed(PInputEvent event) {
+					PNode pickedNode = event.getPickedNode();
+					setPickedNode(pickedNode);
+					if (event.isLeftMouseButton() && !event.isShiftDown() && !event.isAltDown()
+							&& (pickedNode instanceof PSWTAssetThumbnail))
+						selectExhibit((PExhibit) pickedNode.getParent(), event.getModifiers(), event.getClickCount());
+				}
+			});
 
 			// size handle
 			midPoint = new ExhibitHandle(handleSize);
@@ -1503,16 +1640,13 @@ public class ExhibitionView extends AbstractPresentationView {
 		public void rescale() {
 			imageWidth = exhibit.getWidth();
 			imageHeight = exhibit.getHeight();
-			PBounds bounds = pImage.getBoundsReference();
-			double width = bounds.getWidth();
-			double scale = imageWidth / width;
-			pImage.setScale(scale);
+			pImage.setScale(imageWidth / pImage.getBoundsReference().getWidth());
 			Integer i = exhibit.getMatWidth();
 			int matWidth = (i == null) ? exhibition.getMatWidth() : i;
 			i = exhibit.getFrameWidth();
 			int frameWidth = (i == null) ? exhibition.getFrameWidth() : i;
-			if (pFrame != null)
-				pFrame.setPathToRectangle(0f, 0f, (float) (imageWidth + 2 * (frameWidth + matWidth)),
+			if (pOuterFrame != null)
+				pOuterFrame.setPathToRectangle(0f, 0f, (float) (imageWidth + 2 * (frameWidth + matWidth)),
 						(float) (imageHeight + 2 * (frameWidth + matWidth)));
 			if (pMat != null)
 				pMat.setPathToRectangle(frameWidth, frameWidth, (float) (imageWidth + 2 * matWidth),
@@ -1639,7 +1773,7 @@ public class ExhibitionView extends AbstractPresentationView {
 			removeAllChildren();
 			pImage.getImage().dispose();
 			pImage = null;
-			pFrame = null;
+			pOuterFrame = null;
 			pMat = null;
 			createContent(canvas, pwall, exhibit, pos, y);
 		}
@@ -1681,8 +1815,7 @@ public class ExhibitionView extends AbstractPresentationView {
 				imageLabel.setBounds(childrenBounds);
 			}
 			PBounds bounds = getUnionOfChildrenBounds(null);
-			bounds.x = 0;
-			bounds.y = 0;
+			bounds.x = bounds.y = 0;
 			setBounds(bounds);
 		}
 
@@ -1698,19 +1831,7 @@ public class ExhibitionView extends AbstractPresentationView {
 			// ignore
 		}
 
-		public void setBackgroundColor(Color color) {
-			// ignore
-		}
-
 		public void setPenColor(Color color) {
-			// ignore
-		}
-
-		public void setSequenceNo(int i) {
-			// ignore
-		}
-
-		public void updateColors(Color selectedPaint) {
 			// ignore
 		}
 
@@ -1733,6 +1854,23 @@ public class ExhibitionView extends AbstractPresentationView {
 	private static final int INFOGAP = 50;
 	private static final int INFOHEIGHT = 1333;
 	private static NumberFormat dimFormat = NumberFormat.getNumberInstance();
+	private static final int labelWidth = 140;
+	private static final int labelHeight = 70;
+	private static final int labelMargins = 10;
+	private static final int soldMarkDiameter = labelMargins;
+	private static final int labelIndent = 10;
+	private static final int handleSize = 10;
+	protected static final double horizontalGap = 80;
+
+	protected static final Color GridColor = new Color(224, 224, 224);
+	protected static final Color DoorColor = new Color(0, 255, 255);
+	protected static final Color GuideColor = new Color(64, 192, 192);
+	protected static final Color WALLBGCOLOR = new Color(255, 255, 250);
+	protected static final Color SELECTIONBGCOLOR = new Color(224, 224, 124);
+	protected static final Point DRAGTOLERANCE = new Point(0, 0);
+	protected static final Color LOCATIONTITLECOLOR = new Color(128, 128, 128);
+	protected static final Color LABELTEXTCOLOR = new Color(92, 92, 92);
+	protected static final Color HANDLECOLOR = new Color(0, 224, 0);
 
 	private ExhibitionImpl exhibition;
 	private List<PWall> walls = new ArrayList<PWall>(5);
@@ -1816,9 +1954,27 @@ public class ExhibitionView extends AbstractPresentationView {
 	}
 
 	@Override
+	protected String createHoverText(PNode thumbnail) {
+		PNode parent = thumbnail.getParent();
+		if (parent instanceof PExhibit)
+			return UiActivator.getDefault().getHoverManager().getHoverText("com.bdaum.zoom.ui.hover.exhibition.exhibit", //$NON-NLS-1$
+					((PExhibit) parent).exhibit, this);
+		return ""; //$NON-NLS-1$
+	}
+
+	@Override
+	protected String createHoverTitle(PNode thumbnail) {
+		PNode parent = thumbnail.getParent();
+		if (parent instanceof PExhibit)
+			return UiActivator.getDefault().getHoverManager()
+					.getHoverTitle("com.bdaum.zoom.ui.hover.exhibition.exhibit", ((PExhibit) parent).exhibit, this); //$NON-NLS-1$
+		return ""; //$NON-NLS-1$
+	}
+
+	@Override
 	public void createPartControl(Composite parent) {
 		super.createPartControl(parent);
-		canvas.setData(CSSProperties.ID, CSSProperties.EXHIBITION); 
+		canvas.setData(CSSProperties.ID, CSSProperties.EXHIBITION);
 		undoContext = new UndoContext() {
 			@Override
 			public String getLabel() {
@@ -1829,6 +1985,9 @@ public class ExhibitionView extends AbstractPresentationView {
 		addWheelListener(0.1d, 100d);
 		textEventHandler = new TextEventHandler(selectionBackgroundColor);
 		PBasicInputEventHandler eventHandler = new PBasicInputEventHandler() {
+
+			private boolean dragged;
+
 			@Override
 			public void keyPressed(PInputEvent event) {
 				if (textEventHandler.hasFocus())
@@ -1838,52 +1997,69 @@ public class ExhibitionView extends AbstractPresentationView {
 			}
 
 			@Override
+			public void mouseMoved(PInputEvent event) {
+				currentMousePosition = event.getPosition();
+			}
+
+			@Override
 			public void mousePressed(PInputEvent event) {
+				dragged = false;
 				setPickedNode(event.getPickedNode());
 			}
 
 			@Override
 			public void mouseDragged(PInputEvent event) {
+				dragged = true;
 				textEventHandler.mouseDragged(event);
 			}
 
 			@Override
 			public void mouseReleased(PInputEvent event) {
-				PNode picked = getPickedNode();
-				textEventHandler.mouseReleased(event);
-				if (event.getClickCount() == 2) {
-					PCamera camera = event.getCamera();
-					if (oldTransform == null) {
-						oldTransform = camera.getViewTransform();
-						if (picked instanceof PExhibit)
-							camera.scaleViewAboutPoint(15d / camera.getViewScale(), event.getPosition().getX(),
-									event.getPosition().getY());
-						else {
-							if (picked instanceof PWall) {
-								PWall pwall = (PWall) picked;
-								PSWTPath infoPlate = pwall.getpInfoPlate();
-								if (infoPlate != null) {
-									Point2D offset = infoPlate.getOffset();
-									Point2D position = event.getPositionRelativeTo(pwall);
-									if (position.getX() >= offset.getX() && position.getX() <= offset.getX() + INFOWIDTH
-											&& position.getY() >= offset.getY()
-											&& position.getY() <= offset.getY() + INFOHEIGHT) {
-										camera.scaleViewAboutPoint(7.5d / camera.getViewScale(),
-												event.getPosition().getX(), event.getPosition().getY());
-										return;
+				positionX = null;
+				if (!dragged) {
+					PNode picked = getPickedNode();
+					textEventHandler.mouseReleased(event);
+					if (event.getClickCount() == 2) {
+						PCamera camera = event.getCamera();
+						if (oldTransform == null) {
+							oldTransform = camera.getViewTransform();
+							if (picked instanceof PExhibit)
+								camera.scaleViewAboutPoint(15d / camera.getViewScale(), event.getPosition().getX(),
+										event.getPosition().getY());
+							else {
+								if (picked instanceof PWall) {
+									PWall pwall = (PWall) picked;
+									PSWTPath infoPlate = pwall.getpInfoPlate();
+									if (infoPlate != null) {
+										Point2D offset = infoPlate.getOffset();
+										Point2D position = event.getPositionRelativeTo(pwall);
+										if (position.getX() >= offset.getX()
+												&& position.getX() <= offset.getX() + INFOWIDTH
+												&& position.getY() >= offset.getY()
+												&& position.getY() <= offset.getY() + INFOHEIGHT) {
+											camera.scaleViewAboutPoint(7.5d / camera.getViewScale(),
+													event.getPosition().getX(), event.getPosition().getY());
+											return;
+										}
 									}
 								}
+								if (!(picked instanceof PSWTText))
+									event.getCamera().setViewTransform(new AffineTransform());
 							}
-							if (!(picked instanceof PSWTText))
-								event.getCamera().setViewTransform(new AffineTransform());
+						} else {
+							camera.setViewTransform(oldTransform);
+							resetTransform();
 						}
-					} else {
-						camera.setViewTransform(oldTransform);
-						resetTransform();
+					} else if (event.isRightMouseButton()) {
+						positionX = event.getPosition();
+						positionRelativeToCamera = event.getPositionRelativeTo(canvas.getCamera());
+					} else if (event.isControlDown()) {
+						if (picked == surface)
+							propertiesAction.run();
+						else if (picked instanceof PWall)
+							editWallAction.run();
 					}
 				}
-				if (event.isRightMouseButton())
-					positionRelativeToCamera = event.getPositionRelativeTo(canvas.getCamera());
 			}
 		};
 		canvas.getRoot().getDefaultInputManager().setKeyboardFocus(eventHandler);
@@ -1996,29 +2172,17 @@ public class ExhibitionView extends AbstractPresentationView {
 				dialog.getShell().setLocation(pos);
 				if (dialog.open() == Window.OK) {
 					ExhibitImpl selectedExhibit = dialog.getResult();
-					for (PWall w : walls) {
-						ListIterator<?> it = w.getChildrenIterator();
-						while (it.hasNext()) {
+					for (PWall w : walls)
+						for (ListIterator<?> it = w.getChildrenIterator(); it.hasNext();) {
 							Object next = it.next();
 							if (next instanceof PExhibit) {
 								PExhibit pexhibit = (PExhibit) next;
 								if (pexhibit.exhibit == selectedExhibit) {
-									Point2D offset = pexhibit.getOffset();
-									PBounds bounds = pexhibit.getBounds();
-									w.localToParent(offset);
-									w.localToParent(bounds);
-									surface.localToParent(offset);
-									surface.localToParent(bounds);
-									PCamera camera = canvas.getCamera();
-									double x = offset.getX();
-									double y = offset.getY();
-									camera.setViewTransform(new AffineTransform());
-									camera.translateView(bounds.width / 3 - x, bounds.height / 2 - y);
+									revealItem(pexhibit);
 									return;
 								}
 							}
 						}
-					}
 				}
 			}
 		};
@@ -2083,13 +2247,17 @@ public class ExhibitionView extends AbstractPresentationView {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
+		boolean writable = !dbIsReadonly();
 		updateActions(true);
-		manager.add(gotoExhibitAction);
 		PNode pickedNode = getPickedNode();
 		if (pickedNode instanceof PExhibit) {
 			addSoldAction(manager, (PExhibit) pickedNode);
 			manager.add(layoutAction);
 		} else if (pickedNode != null && pickedNode.getParent() instanceof PExhibit) {
+			if (writable) {
+				manager.add(cutAction);
+				manager.add(new Separator());
+			}
 			addCommonContextActions(manager);
 			manager.add(new Separator());
 			addSoldAction(manager, (PExhibit) pickedNode.getParent());
@@ -2098,11 +2266,17 @@ public class ExhibitionView extends AbstractPresentationView {
 			if (pickedNode != null && pickedNode.getParent() instanceof PWall)
 				pickedNode = pickedNode.getParent();
 			if (pickedNode instanceof PWall) {
+				if (writable)
+					manager.add(pasteAction);
 				manager.add(new Separator());
 				manager.add(editWallAction);
 				manager.add(deleteWallAction);
 			}
 		}
+		manager.add(new Separator());
+		manager.add(gotoExhibitAction);
+		if (gotoLastSelectedAction.isEnabled())
+			manager.add(gotoLastSelectedAction);
 		super.fillContextMenu(manager);
 	}
 
@@ -2117,19 +2291,17 @@ public class ExhibitionView extends AbstractPresentationView {
 
 	@Override
 	protected void updatePresentation(Collection<? extends Asset> assets) {
-		Map<String, Asset> amap = new HashMap<String, Asset>(assets.size());
-		for (Asset a : assets)
-			amap.put(a.getStringId(), a);
-		for (PNode wall : walls) {
-			ListIterator<?> it = wall.getChildrenIterator();
-			while (it.hasNext()) {
-				Object next = it.next();
-				if (next instanceof PExhibit) {
-					PExhibit pexhibit = (PExhibit) next;
-					Asset asset = amap.get(pexhibit.exhibit.getAsset());
-					if (asset != null) {
-						pexhibit.update(asset);
-						break;
+		for (Asset asset : assets) {
+			String assetId = asset.getStringId();
+			lp: for (PNode wall : walls) {
+				for (ListIterator<?> it = wall.getChildrenIterator(); it.hasNext();) {
+					Object next = it.next();
+					if (next instanceof PExhibit) {
+						String id = ((PExhibit) next).getAssetId();
+						if (id.equals(assetId)) {
+							((PExhibit) next).update(asset);
+							break lp;
+						}
 					}
 				}
 			}
@@ -2142,10 +2314,16 @@ public class ExhibitionView extends AbstractPresentationView {
 		return pExhibit;
 	}
 
-	protected void deleteExhibit(PExhibit moved, Point2D oldOffset) {
+	@Override
+	protected void pastePresentationItems() {
 		if (getExhibition() != null)
-			performOperation(new DeleteExhibitOperation(moved, oldOffset));
+			performOperation(new PasteExhibitsOperation(positionX));
+	}
 
+	@Override
+	protected void deletePresentationItem(IPresentationItem picked, boolean cut, boolean multiple) {
+		if (getExhibition() != null)
+			performOperation(new DeleteExhibitOperation(getSelectedExhibits((PExhibit) picked, multiple), cut));
 	}
 
 	protected PWall doRemoveExhibit(PExhibit moved) {
@@ -2176,7 +2354,7 @@ public class ExhibitionView extends AbstractPresentationView {
 	@Override
 	protected void setColor(Control control) {
 		Color newPaint = UiUtilities.getAwtBackground(control, null);
-		selectionBackgroundColor = new Color(224, 224, 124);
+		selectionBackgroundColor = SELECTIONBGCOLOR;
 		CssActivator.getDefault().applyExtendedStyle(control, this);
 		surface.setPaint(newPaint);
 		for (PWall pwall : walls) {
@@ -2187,14 +2365,20 @@ public class ExhibitionView extends AbstractPresentationView {
 
 	@Override
 	public void setSelectionBackgroundColor(org.eclipse.swt.graphics.Color color) {
-		RGB rgb = color != null ? color.getRGB() : new RGB(224, 224, 124);
-		selectionBackgroundColor = new Color(rgb.red, rgb.green, rgb.blue);
+		if (color != null) {
+			RGB rgb = color.getRGB();
+			selectionBackgroundColor = new Color(rgb.red, rgb.green, rgb.blue);
+		} else
+			selectionBackgroundColor = SELECTIONBGCOLOR;
+
 	}
 
 	protected void setColor(PSWTPath path, Wall wall) {
 		Rgb_type bgColor = wall.getColor();
-		path.setPaint((bgColor == null) ? new Color(255, 255, 250)
-				: new Color(bgColor.getR(), bgColor.getG(), bgColor.getB()));
+		if (bgColor == null)
+			path.setPaint(WALLBGCOLOR);
+		else
+			path.setPaint(new Color(bgColor.getR(), bgColor.getG(), bgColor.getB()));
 	}
 
 	@Override
@@ -2217,9 +2401,137 @@ public class ExhibitionView extends AbstractPresentationView {
 			setArtists();
 			setColor(canvas);
 			updateActions(false);
+			updateStatusLine();
 			endTask();
 		} else
 			setPartName(Messages.getString("ExhibitionView.exhibition")); //$NON-NLS-1$
+	}
+
+	protected void selectExhibit(PExhibit pExhibit, int modifiers, int clicks) {
+		if ((modifiers & InputEvent.CTRL_MASK) != 0) {
+			pExhibit.setSelected(!pExhibit.isSelected());
+			if (pExhibit.isSelected())
+				recentSelection = pExhibit;
+			else
+				updateSelectionMarkers();
+		} else if ((modifiers & InputEvent.SHIFT_MASK) != 0) {
+			PWall pwall = (PWall) pExhibit.getParent();
+			List<PExhibit> exhibits = getSortedExhibits(pwall);
+			int index = exhibits.indexOf(pExhibit);
+			if (pExhibit.isSelected()) {
+				int lastIndex = lastSelection == null ? -1 : exhibits.indexOf(lastSelection);
+				if (lastIndex < 0) {
+					int lower = 0;
+					int upper = exhibits.size() - 1;
+					for (int i = index - 1; i >= 0; i--) {
+						if (!exhibits.get(i).isSelected())
+							break;
+						lower = i;
+					}
+					for (int i = index + 1; i < exhibits.size(); i++) {
+						if (!exhibits.get(i).isSelected())
+							break;
+						upper = i;
+					}
+					if (index - lower < upper - index)
+						lastIndex = lower;
+					else
+						lastIndex = upper;
+				}
+				if (lastIndex < index)
+					for (int i = index - 1; i >= lastIndex; i--)
+						exhibits.get(i).setSelected(false);
+				else
+					for (int i = index + 1; i <= lastIndex; i++)
+						exhibits.get(i).setSelected(false);
+			} else {
+				recentSelection = pExhibit;
+				for (int i = index - 1; i >= 0; i--)
+					if (exhibits.get(i).isSelected()) {
+						for (int j = i + 1; j <= index; j++)
+							exhibits.get(j).setSelected(true);
+						lastSelection = pExhibit;
+						return;
+					}
+				for (int i = index + 1; i < exhibits.size(); i++)
+					if (exhibits.get(i).isSelected()) {
+						for (int j = i - 1; j >= index; j--)
+							exhibits.get(j).setSelected(true);
+					}
+			}
+			lastSelection = pExhibit;
+		} else {
+			clearSelection();
+			recentSelection = pExhibit;
+			if (clicks == 2) {
+				PWall pwall = (PWall) pExhibit.getParent();
+				for (ListIterator<?> iterator = pwall.getChildrenIterator(); iterator.hasNext();) {
+					Object next = iterator.next();
+					if (next instanceof PExhibit)
+						((PExhibit) next).setSelected(true);
+				}
+			} else {
+				pExhibit.setSelected(true);
+			}
+		}
+	}
+
+	private void clearSelection() {
+		for (PWall pwall : walls)
+			for (ListIterator<?> iterator2 = pwall.getChildrenIterator(); iterator2.hasNext();) {
+				Object exhibit = iterator2.next();
+				if (exhibit instanceof PExhibit)
+					((PExhibit) exhibit).setSelected(false);
+			}
+		lastSelection = recentSelection = null;
+	}
+
+	public void updateSelectionMarkers() {
+		for (PWall pwall : walls)
+			for (ListIterator<?> iterator = pwall.getChildrenIterator(); iterator.hasNext();) {
+				Object exhibit = iterator.next();
+				if (exhibit instanceof PExhibit && ((PExhibit) exhibit).isSelected())
+					return;
+			}
+		lastSelection = recentSelection = null;
+	}
+
+	protected List<PExhibit> getSelectedExhibits(PExhibit picked, boolean multiple) {
+		List<PExhibit> selected = new ArrayList<>();
+		if (exhibition != null) {
+			boolean hit = false;
+			if (multiple)
+				for (PWall pwall : walls)
+					for (PExhibit pExhibit : getSortedExhibits(pwall))
+						if (pExhibit.isSelected()) {
+							selected.add(pExhibit);
+							hit |= picked == pExhibit;
+						}
+			if (!hit) {
+				selected.clear();
+				selected.add(picked);
+				selectExhibit(picked, 0, 1);
+			}
+		}
+		return selected;
+	}
+
+	protected List<PExhibit> getSortedExhibits(PWall pwall) {
+		List<PExhibit> exhibits = new ArrayList<>(pwall.getChildrenCount());
+		for (ListIterator<?> iterator2 = pwall.getChildrenIterator(); iterator2.hasNext();) {
+			Object exhibit = iterator2.next();
+			if (exhibit instanceof PExhibit)
+				exhibits.add((PExhibit) exhibit);
+		}
+		Collections.sort(exhibits, new Comparator<PExhibit>() {
+			@Override
+			public int compare(PExhibit e1, PExhibit e2) {
+				double x1 = e1.getBounds().getX();
+				double x2 = e2.getBounds().getX();
+				return x1 == x2 ? 0 : x1 > x2 ? 1 : -1;
+			}
+		});
+		return exhibits;
 	}
 
 	private PWall addWall(Wall wall, double y, boolean reposition, ProgressIndicator bar) {
@@ -2228,15 +2540,22 @@ public class ExhibitionView extends AbstractPresentationView {
 		walls.add(pwall);
 		pwall.setOffset(0, y);
 		int pos = 0;
-		for (ExhibitImpl exhibit : Core.getCore().getDbManager().obtainByIds(ExhibitImpl.class, wall.getExhibit())) {
-			exhibits.add(exhibit);
-			if (reposition)
-				pos += exhibit.getWidth() / 2;
-			else
-				pos = exhibit.getX();
-			makeExhibit(pwall, pos, exhibit);
-			pos += exhibit.getWidth();
+		List<String> ids = new ArrayList<String>(wall.getExhibit().size());
+		IDbManager dbManager = Core.getCore().getDbManager();
+		for (String id : wall.getExhibit()) {
+			ExhibitImpl exhibit = dbManager.obtainById(ExhibitImpl.class, id);
+			if (exhibit != null) {
+				ids.add(id);
+				exhibits.add(exhibit);
+				if (reposition)
+					pos += exhibit.getWidth() / 2;
+				else
+					pos = exhibit.getX();
+				makeExhibit(pwall, pos, exhibit);
+				pos += exhibit.getWidth();
+			}
 		}
+		wall.setExhibit(ids);
 		if (bar != null)
 			bar.worked(1);
 		setupExhibition(getViewSite(), exhibition, pos);
@@ -2305,33 +2624,12 @@ public class ExhibitionView extends AbstractPresentationView {
 		getSite().getPage().activate(this);
 	}
 
-	@Override
-	protected PNode findExhibit(Point point, Point2D position) {
+	private PWall findWall(Point2D position) {
 		RECT1.x = (int) position.getX();
 		RECT1.y = (int) position.getY();
-		PWall wallPanel = null;
 		for (PWall w : walls)
-			if (w.fullIntersects(RECT1)) {
-				wallPanel = w;
-				break;
-			}
-		if (wallPanel != null) {
-			double x = position.getX() - wallPanel.getOffset().getX();
-			ListIterator<?> it = wallPanel.getChildrenIterator();
-			while (it.hasNext()) {
-				Object next = it.next();
-				if (next instanceof PExhibit) {
-					PExhibit pExhibit = (PExhibit) next;
-					PBounds eBounds = pExhibit.getFullBoundsReference();
-					double p = eBounds.getX();
-					if (p < x) {
-						p += eBounds.getWidth();
-						if (p >= x)
-							return pExhibit;
-					}
-				}
-			}
-		}
+			if (w.fullIntersects(RECT1))
+				return w;
 		return null;
 	}
 
@@ -2381,7 +2679,7 @@ public class ExhibitionView extends AbstractPresentationView {
 				Point2D canvasPosition = event.getCanvasPosition();
 				if (canvasPosition.getY() < 0) {
 					if (!relative)
-						deleteExhibit(pExhibit, oldOffset);
+						deletePresentationItem(pExhibit, false, false);
 				} else if (relative) {
 					Point2D newOffset = pnode.getOffset();
 					moveLabel(pnode, oldOffset, newOffset);
@@ -2414,7 +2712,7 @@ public class ExhibitionView extends AbstractPresentationView {
 
 	protected void moveLabel(PNode pnode, Point2D oldOffset, Point2D newOffset) {
 		PExhibit pExhibit = (PExhibit) pnode.getParent();
-		PNode pFrame = pExhibit.pFrame;
+		PNode pFrame = pExhibit.pOuterFrame;
 		if (pFrame == null)
 			pFrame = pExhibit.pMat;
 		if (pFrame == null)
@@ -2532,11 +2830,7 @@ public class ExhibitionView extends AbstractPresentationView {
 		double d1 = (lBounds.y + lBounds.height / 2 - iy) * (lBounds.y + lBounds.height / 2 - iy) + dx2;
 		double d2 = (lBounds.y + lBounds.height - iy) * (lBounds.y + lBounds.height - iy) + dx2;
 		double min = Math.min(d0, Math.min(d1, d2));
-		if (d1 == min)
-			return 1;
-		if (d0 == min)
-			return 0;
-		return 2;
+		return (d1 == min) ? 1 : (d0 == min) ? 0 : 2;
 	}
 
 	private static int getClosestHorizontal(double ix, double iy, double ly, PBounds lBounds) {
@@ -2545,12 +2839,7 @@ public class ExhibitionView extends AbstractPresentationView {
 		double d1 = (lBounds.x + lBounds.width / 2 - ix) * (lBounds.x + lBounds.width / 2 - ix) + dy2;
 		double d2 = (lBounds.x + lBounds.width - ix) * (lBounds.x + lBounds.width - ix) + dy2;
 		double min = Math.min(d0, Math.min(d1, d2));
-		if (d1 == min)
-			return 1;
-		if (d0 == min)
-			return 0;
-		return 2;
-
+		return (d1 == min) ? 1 : (d0 == min) ? 0 : 2;
 	}
 
 	private static ExhibitImpl cloneExhibit(Exhibit exhibit) {
@@ -2675,6 +2964,7 @@ public class ExhibitionView extends AbstractPresentationView {
 						showExhibition(start);
 				}
 			}
+
 		});
 		job.schedule();
 	}
@@ -2747,4 +3037,33 @@ public class ExhibitionView extends AbstractPresentationView {
 		return ID;
 	}
 
+	@Override
+	public String getValue(String key, Object object) {
+		if (object instanceof Exhibit) {
+			if (Constants.HV_TOTAL.equals(key))
+				return String.valueOf(exhibits.size());
+			String exhibitId = ((Exhibit) object).getStringId();
+			if (Constants.HV_WALL.equals(key)) {
+				for (int i = 0; i < walls.size(); i++)
+					if (walls.get(i).getWall().getExhibit().contains(exhibitId))
+						return String.valueOf(i + 1);
+			} else if (Constants.HV_WALLPOS.equals(key))
+				for (int i = 0; i < walls.size(); i++) {
+					int index = walls.get(i).getWall().getExhibit().indexOf(exhibitId);
+					if (index >= 0)
+						return String.valueOf(index + 1);
+				}
+		}
+		return null;
+	}
+
+	@Override
+	protected String getStatusMessage() {
+		Exhibition exh = getExhibition();
+		if (exh != null)
+			return NLS.bind(walls.size() == 1 ? Messages.getString("ExhibitionView.n_exh_one_wall") //$NON-NLS-1$
+					: Messages.getString("ExhibitionView.n_exh_m_walls"), //$NON-NLS-1$
+					exhibits.size(), walls.size());
+		return null;
+	}
 }

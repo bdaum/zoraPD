@@ -47,7 +47,6 @@ public class AddBookmarkDialog extends ZInputDialog {
 		link.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		link.setText(Messages.AddBookmarkDialog_show_bookmark_view);
 		link.addListener(new Listener() {
-			
 			@Override
 			public void handleEvent(Event event) {
 				UiUtilities.showView(BookmarkView.ID);

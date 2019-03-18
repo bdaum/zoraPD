@@ -101,26 +101,26 @@ public class GeoNamesService extends AbstractGeocodingService {
 			ParserConfigurationException, WebServiceException, UnknownHostException, HttpException {
 		Place place = new Place();
 		try (InputStream in = openGeonamesService(
-				NLS.bind("http://ws.geonames.org/findNearbyPlaceName?lat={0}&lng={1}&lang={2}", //$NON-NLS-1$
+				NLS.bind("http://api.geonames.org/findNearbyPlaceName?lat={0}&lng={1}&lang={2}", //$NON-NLS-1$
 						parms))) {
 			new PlaceParser(in).parse(place);
 		}
 		if (place.getId() != null) {
 			try (InputStream in = openGeonamesService(
-					NLS.bind("http://ws.geonames.org/hierarchy?geonameId={0}&lang={1}", //$NON-NLS-1$
+					NLS.bind("http://api.geonames.org/hierarchy?geonameId={0}&lang={1}", //$NON-NLS-1$
 							place.getId(), lang))) {
 				new HierarchyParser(in).parse(place);
 			}
 		}
 		if ("US".equals(place.getCountryCode())) //$NON-NLS-1$
 			try (InputStream in = openGeonamesService(
-					NLS.bind("http://ws.geonames.org/findNearestAddress?lat={0}&lng={1}&lang={2}", //$NON-NLS-1$
+					NLS.bind("http://api.geonames.org/findNearestAddress?lat={0}&lng={1}&lang={2}", //$NON-NLS-1$
 							parms))) {
 				new AddressParser(in).parse(place);
 				return (place.getName() != null) ? place : null;
 			}
 		try (InputStream in = openGeonamesService(
-				NLS.bind("http://ws.geonames.org/findNearbyPostalCodes?lat={0}&lng={1}&lang={2}", //$NON-NLS-1$
+				NLS.bind("http://api.geonames.org/findNearbyPostalCodes?lat={0}&lng={1}&lang={2}", //$NON-NLS-1$
 						parms))) {
 			new PostcodeParser(in).parse(place);
 			return (place.getName() != null) ? place : null;
@@ -159,7 +159,7 @@ public class GeoNamesService extends AbstractGeocodingService {
 			throws IOException, WebServiceException, SAXException, ParserConfigurationException, HttpException {
 		List<WaypointArea> pnts = new ArrayList<WaypointArea>();
 		Locale locale = Locale.getDefault();
-		String template = "http://ws.geonames.org/search?" + getSearchParms() + "&countryBias={1}&lang={2}&maxRows={3}"; //$NON-NLS-1$ //$NON-NLS-2$
+		String template = "http://api.geonames.org/search?" + getSearchParms() + "&countryBias={1}&lang={2}&maxRows={3}"; //$NON-NLS-1$ //$NON-NLS-2$
 		String query = NLS.bind(template, new Object[] { URLEncoder.encode(address, "UTF-8"), locale.getCountry(), //$NON-NLS-1$
 				locale.getLanguage(), GeoCodeParser.MAXRESULTS });
 		try (InputStream in = openGeonamesService(query)) {
@@ -327,7 +327,8 @@ public class GeoNamesService extends AbstractGeocodingService {
 	public double getElevation(double lat, double lon) throws UnknownHostException, HttpException, IOException {
 		NumberFormat usformat = NumberFormat.getInstance(Locale.US);
 		usformat.setMaximumFractionDigits(5);
-		InputStream in = openGeonamesService(NLS.bind("http://ws.geonames.org/srtm3?lat={0}&lng={1}", //$NON-NLS-1$
+		usformat.setGroupingUsed(false);
+		InputStream in = openGeonamesService(NLS.bind("http://api.geonames.org/srtm3?lat={0}&lng={1}", //$NON-NLS-1$
 				usformat.format(lat), usformat.format(lon)));
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 			String readLine = reader.readLine();

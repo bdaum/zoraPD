@@ -86,6 +86,7 @@ import com.bdaum.zoom.ui.internal.dialogs.AutomatedRatingDialog;
 import com.bdaum.zoom.ui.internal.dialogs.ColorCodeDialog;
 import com.bdaum.zoom.ui.internal.dialogs.PasteMetaDialog;
 import com.bdaum.zoom.ui.internal.dialogs.RatingDialog;
+import com.bdaum.zoom.ui.internal.views.AbstractGalleryView;
 import com.bdaum.zoom.ui.internal.views.BasicView;
 import com.bdaum.zoom.ui.internal.views.BookmarkView;
 import com.bdaum.zoom.ui.internal.views.CatalogView;
@@ -208,19 +209,22 @@ public abstract class ZoomActionFactory {
 						|| currentView instanceof ZuiView || currentView instanceof TableView)
 					gallery = currentView;
 				else {
-					String viewId = null;
 					for (IViewReference ref : page.getViewReferences()) {
 						String id = ref.getId();
 						if (id.equals(LightboxView.ID) || id.equals(ZuiView.ID) || id.equals(TableView.ID)
 								|| id.equals(LightboxView.VSTRIPVIEW) || id.equals(LightboxView.HSTRIPVIEW)) {
-							viewId = id;
-							break;
+							if (currentView == null || !id.equals(currentView.getViewSite().getId())) {
+								IViewPart view = page.findView(id);
+								if (view instanceof AbstractGalleryView
+										&& ((AbstractGalleryView) view).isVisible()) {
+									gallery = page.showView(id);
+									break;
+								}
+							}
 						}
 					}
-					if (viewId == null)
-						viewId = LightboxView.ID;
-					if (currentView == null || !viewId.equals(currentView.getViewSite().getId()))
-						gallery = page.showView(viewId);
+					if (gallery == null && (currentView == null || !LightboxView.ID.equals(currentView.getViewSite().getId())))
+						gallery = page.showView(LightboxView.ID);
 				}
 				((CatalogView) page.showView(CatalogView.ID)).setSelection(new StructuredSelection(sm), true);
 				INavigationHistory navigationHistory = Ui.getUi().getNavigationHistory(page.getWorkbenchWindow());

@@ -32,7 +32,7 @@ import com.bdaum.zoom.cat.model.group.slideShow.SlideImpl;
 public class SelectSlideDialog extends AbstractSelectExhibitDialog {
 
 	public SelectSlideDialog(Shell parentShell,
-			List<? extends IdentifiableObject> slides) {
+			List<? extends IdentifiableObject> slides, boolean sections) {
 		super(parentShell, slides);
 	}
 

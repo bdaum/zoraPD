@@ -36,24 +36,15 @@ import com.stibocatalog.hunspell.Hunspell;
 @SuppressWarnings("restriction")
 public class SpellActivator extends ZUiPlugin {
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.spell"; //$NON-NLS-1$
 
 	private static SpellActivator plugin;
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext
-	 * )
-	 */
 	@Override
 	public void start(BundleContext bundleContext) throws Exception {
 		super.start(bundleContext);
 		plugin = this;
-		URL resource = FileLocator.find(getBundle(),
-				new Path('/' + Hunspell.libName()), null);
+		URL resource = FileLocator.find(getBundle(), new Path('/' + Hunspell.libName()), null);
 		try {
 			resource = FileLocator.toFileURL(resource);
 		} catch (IOException e) {
@@ -62,27 +53,15 @@ public class SpellActivator extends ZUiPlugin {
 		String hunPath = new File(resource.getPath()).getParent().toString();
 		String libPath = System.getProperty("jna.library.path", ""); //$NON-NLS-1$//$NON-NLS-2$
 		if (libPath.indexOf(hunPath) < 0)
-			System.setProperty(
-					"jna.library.path", libPath.isEmpty() ? hunPath : hunPath + ';' + libPath); //$NON-NLS-1$
+			System.setProperty("jna.library.path", libPath.isEmpty() ? hunPath : hunPath + ';' + libPath); //$NON-NLS-1$
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-	 */
 	@Override
 	public void stop(BundleContext bundleContext) throws Exception {
 		plugin = null;
 		super.stop(bundleContext);
 	}
 
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
 	public static SpellActivator getDefault() {
 		return plugin;
 	}

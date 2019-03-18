@@ -53,8 +53,6 @@ public class GpsActivator extends ZUiPlugin {
 
 	private static GpsActivator plugin;
 
-	public static int MAXHISTORYLENGTH = 8;
-
 	private String fileLocation;
 
 	private int filterIndex;

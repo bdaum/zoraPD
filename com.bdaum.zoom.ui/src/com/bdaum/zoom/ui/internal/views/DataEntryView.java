@@ -850,11 +850,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 
 	private Object createField(final Composite parent, final QueryField qfield, int style, int horSpan, int widthHint) {
 		Label label = new Label(parent, SWT.NONE);
-		String lab = qfield.getLabel();
-		String unit = qfield.getUnit();
-		if (unit != null)
-			lab = new StringBuilder(lab).append('(').append(unit).append(')').toString();
-		label.setText(lab);
+		label.setText(qfield.getLabelWithUnit());
 		label.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false));
 		GridData layoutData = new GridData(SWT.LEFT, SWT.CENTER, true, false, Math.abs(horSpan), 1);
 		layoutData.horizontalIndent = 12;

@@ -513,12 +513,16 @@ public class LabImage {
 	}
 
 	private void toSwtData(int from, int to, ImageData data) {
-		int[] scanLine = new int[width];
+//		int[] scanLine = new int[width];
+		int bytesPerLine = data.bytesPerLine;
+		int tx;
+		byte[] datadata = data.data;
 		int k = from * width;
 		short[] ltl = LChannel;
 		short[] lta = aChannel;
 		short[] ltb = bChannel;
 		for (int j = from; j < to; j++) {
+			tx = bytesPerLine * j;
 			for (int i = 0; i < width; i++, k++) {
 				// Value range -32000 : 32000
 				// Scaling factor: 51
@@ -560,9 +564,12 @@ public class LabImage {
 				// Scaling factor = 51 * P6;
 
 				// convert to 0..255
-				scanLine[i] = red * 5 + P5 >> 6 | green * 5 + P5 >> 6 << 8 | blue * 5 + P5 >> 6 << 16;
+				datadata[tx++] = (byte) (blue * 5 + P5 >> 6);
+				datadata[tx++] = (byte) (green * 5 + P5 >> 6);
+				datadata[tx++] = (byte) (red * 5 + P5 >> 6);
+//				scanLine[i] = red * 5 + P5 >> 6 | green * 5 + P5 >> 6 << 8 | blue * 5 + P5 >> 6 << 16;
 			}
-			data.setPixels(0, j, width, scanLine, 0);
+//			data.setPixels(0, j, width, scanLine, 0);
 		}
 	}
 

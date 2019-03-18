@@ -326,6 +326,8 @@ public class XMPUtilities {
 					}
 				} else {
 					Object value = getFieldValue(queryField, asset);
+					if (value instanceof Double && queryField.getType() == QueryField.T_POSITIVEFLOAT)
+						value = new Double(Math.abs(((Double)value).doubleValue()));
 					int p = path.indexOf('/');
 					if (p >= 0) {
 						String group = path.substring(0, p);

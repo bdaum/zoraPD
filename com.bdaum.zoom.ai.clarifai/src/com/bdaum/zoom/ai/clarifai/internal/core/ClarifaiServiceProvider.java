@@ -207,7 +207,6 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 							} catch (IOException e) {
 								// should never happen
 							}
-
 						}
 					}
 					return prediction;

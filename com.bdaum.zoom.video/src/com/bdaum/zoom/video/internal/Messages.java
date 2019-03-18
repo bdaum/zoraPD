@@ -5,19 +5,25 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.video.internal.messages"; //$NON-NLS-1$
 	public static String Activator_cannot_create_filter;
-	public static String Activator_invalid_libary;
-	public static String VideoActivator_invalid_library_64;
+	public static String VideoHoverContribution_gallery;
+	public static String VideoHoverContribution_meta_block;
+	public static String VideoHoverContribution_network_orig;
+	public static String VideoHoverContribution_origin;
+	public static String VideoHoverContribution_videos;
+	public static String VideoHoverContribution_videos_expl;
+	public static String VideoSupport_avgbitrate;
 	public static String VideoSupport_bad_duration_value;
+	public static String VideoSupport_bad_fps;
 	public static String VideoSupport_convert_to_streaming;
 	public static String VideoSupport_convert_video_file;
 	public static String VideoSupport_no;
-	public static String VideoSupport_non_enough_memory_for_thumbnail;
-	public static String VideoSupport_unable_to_decode;
+	public static String VideoSupport_reserved;
+	public static String VideoSupport_taking_snapshot_failed;
+	public static String VideoSupport_unknown;
 	public static String VideoSupport_Videos;
 
 	public static String VideoSupport_yes;
 	public static String VideoSupport_yes_to_all;
-	public static String VlcVideoSupport_timeout;
 	public static String QueryField_cat_video;
 	public static String QueryField_audio;
 	public static String QueryField_audio_bitrate;

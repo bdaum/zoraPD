@@ -472,7 +472,7 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 	}
 
 	protected void updateCaption() {
-		if (template.isEmpty()) {
+		if (template == null || template.isEmpty()) {
 			if (caption != null) {
 				caption.dispose();
 				caption = null;
@@ -492,7 +492,7 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 			}
 			caption.setText(currentItem == null ? "" //$NON-NLS-1$
 					: Utilities.evaluateTemplate(template, Constants.TH_ALL, "", null, -1, -1, -1, null, currentItem, //$NON-NLS-1$
-							"", Integer.MAX_VALUE, false)); //$NON-NLS-1$
+							"", Integer.MAX_VALUE, false, true)); //$NON-NLS-1$
 			caption.setAlignment(alignment);
 		}
 	}

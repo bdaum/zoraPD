@@ -557,7 +557,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 					dbManager.setReadOnly(readOnly);
 					fireQueryHistoryChanged(obj);
 				} else
-					o = (dbManager.obtainById(IdentifiableObject.class, obj.getStringId()) != null) ? obj.getStringId()
+					o = (dbManager.exists(IdentifiableObject.class, obj.getStringId())) ? obj.getStringId()
 							: obj;
 				IAssetFilter[] oldfilters = previousStack.isEmpty() ? null : previousStack.peek().getFilters();
 				SortCriterion oldSort = previousStack.isEmpty() ? null : previousStack.peek().getSort();

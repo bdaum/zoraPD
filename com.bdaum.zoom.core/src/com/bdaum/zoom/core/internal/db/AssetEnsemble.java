@@ -1174,7 +1174,7 @@ public class AssetEnsemble {
 		return null;
 	}
 
-	public void cleanUp(Date now) {
+	public void cleanUp(Date now, int timeshift) {
 		setOrientation(asset);
 		int focalLengthIn35MmFilm = asset.getFocalLengthIn35MmFilm();
 		double focalLength = asset.getFocalLength();
@@ -1185,6 +1185,8 @@ public class AssetEnsemble {
 			resetGps();
 		// Replace invalid image creation date
 		Date dateCreated = asset.getDateTimeOriginal();
+		if (dateCreated != null)
+			dateCreated.setTime(dateCreated.getTime() + timeshift * 60000L);
 		if (dateCreated == null || DATE1900.after(dateCreated) || now.before(dateCreated)) {
 			Date dateTime = asset.getDateTime();
 			if (dateTime == null)
@@ -1256,47 +1258,49 @@ public class AssetEnsemble {
 	}
 
 	public void setAnalogProperties(AnalogProperties props) {
-		asset.setAnalogFormat(props.format);
-		asset.setEmulsion(props.emulsion);
-		asset.setAnalogProcessing(props.processingNotes);
-		asset.setAnalogType(props.type);
-		asset.setScalarSpeedRatings(props.scalarSpeedRatings);
-		if (props.make != null)
-			asset.setMake(props.make);
-		if (props.model != null)
-			asset.setModel(props.model);
-		if (props.serial != null)
-			asset.setMake(props.serial);
-		if (props.lens != null)
-			asset.setLens(props.lens);
-		if (props.lensSerial != null)
-			asset.setLensSerial(props.lensSerial);
-		asset.setFocalLength(props.focalLength);
-		asset.setFocalLengthFactor(props.focalLengthFactor);
-		asset.setFocalLengthIn35MmFilm(props.focalLengthIn35MmFilm);
-		if (props.creationDate != null) {
-			asset.setDateTime(props.creationDate);
-			asset.setDateTimeOriginal(props.creationDate);
-		}
-		asset.setLightSource(props.lightSource);
-		asset.setLv(props.lv);
-		asset.setExposureTime(props.exposureTime);
-		asset.setFNumber(props.fNumber);
-		if (props.artist != null) {
-			List<String> list = Core.fromStringList(props.artist, ",;"); //$NON-NLS-1$
-			asset.setArtist(list.toArray(new String[list.size()]));
-		}
-		if (props.copyright != null)
-			asset.setCopyright(props.copyright);
-		if (props.event != null)
-			asset.setEvent(props.event);
-		asset.setSafety(props.safety);
-		if (props.keywords != null) {
-			Set<String> set = new HashSet<>(Arrays.asList(asset.getKeyword()));
-			set.addAll(props.keywords);
-			String[] newKeywords = set.toArray(new String[set.size()]);
-			Arrays.sort(newKeywords);
-			asset.setKeyword(newKeywords);
+		if (props != null) {
+			asset.setAnalogFormat(props.format);
+			asset.setEmulsion(props.emulsion);
+			asset.setAnalogProcessing(props.processingNotes);
+			asset.setAnalogType(props.type);
+			asset.setScalarSpeedRatings(props.scalarSpeedRatings);
+			if (props.make != null)
+				asset.setMake(props.make);
+			if (props.model != null)
+				asset.setModel(props.model);
+			if (props.serial != null)
+				asset.setMake(props.serial);
+			if (props.lens != null)
+				asset.setLens(props.lens);
+			if (props.lensSerial != null)
+				asset.setLensSerial(props.lensSerial);
+			asset.setFocalLength(props.focalLength);
+			asset.setFocalLengthFactor(props.focalLengthFactor);
+			asset.setFocalLengthIn35MmFilm(props.focalLengthIn35MmFilm);
+			if (props.creationDate != null) {
+				asset.setDateTime(props.creationDate);
+				asset.setDateTimeOriginal(props.creationDate);
+			}
+			asset.setLightSource(props.lightSource);
+			asset.setLv(props.lv);
+			asset.setExposureTime(props.exposureTime);
+			asset.setFNumber(props.fNumber);
+			if (props.artist != null) {
+				List<String> list = Core.fromStringList(props.artist, ",;"); //$NON-NLS-1$
+				asset.setArtist(list.toArray(new String[list.size()]));
+			}
+			if (props.copyright != null)
+				asset.setCopyright(props.copyright);
+			if (props.event != null)
+				asset.setEvent(props.event);
+			asset.setSafety(props.safety);
+			if (props.keywords != null) {
+				Set<String> set = new HashSet<>(Arrays.asList(asset.getKeyword()));
+				set.addAll(props.keywords);
+				String[] newKeywords = set.toArray(new String[set.size()]);
+				Arrays.sort(newKeywords);
+				asset.setKeyword(newKeywords);
+			}
 		}
 	}
 

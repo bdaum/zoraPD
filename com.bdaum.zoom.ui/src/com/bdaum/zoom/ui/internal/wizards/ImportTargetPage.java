@@ -22,6 +22,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -29,7 +30,6 @@ import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.cat.model.meta.LastDeviceImport;
 import com.bdaum.zoom.core.internal.CoreActivator;
@@ -40,6 +40,7 @@ import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
@@ -162,11 +163,12 @@ public class ImportTargetPage extends ColoredWizardPage {
 	}
 
 	private static final String TARGETDIR = "targetDir"; //$NON-NLS-1$
+	private static final String TARGETHIST = "targetHist"; //$NON-NLS-1$
 	private static final String SUBFOLDERS = "subfolder"; //$NON-NLS-1$
 	private static final Object[] EMPTY = new Object[0];
 	private static final String DEEPSUBFOLDERS = "deepSubfolders"; //$NON-NLS-1$
 
-	private Text targetDirField;
+	private Combo targetDirField;
 	private Combo subfolderCombo;
 	private final boolean media;
 	private Label copyLabel;
@@ -185,14 +187,16 @@ public class ImportTargetPage extends ColoredWizardPage {
 	@Override
 	public void createControl(final Composite parent) {
 		Composite targetComp = createComposite(parent, 3);
-		Label transferToLabel = new Label(targetComp, SWT.NONE);
-		transferToLabel.setText(Messages.ImportFromDeviceWizard_transfer_to);
-
-		targetDirField = new Text(targetComp, SWT.READ_ONLY | SWT.BORDER);
-		final GridData gd_text = new GridData(SWT.FILL, SWT.CENTER, true, false);
-		gd_text.widthHint = 200;
-		targetDirField.setLayoutData(gd_text);
-		WidgetFactory.createPushButton(targetComp, Messages.ImportFromDeviceWizard_browse, SWT.BEGINNING)
+		new Label(targetComp, SWT.NONE).setText(Messages.ImportFromDeviceWizard_transfer_to);
+		Composite fileComp = new Composite(targetComp, SWT.NONE);
+		fileComp.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
+		GridLayout layout = new GridLayout(2, false);
+		layout.marginWidth = 0;
+		fileComp.setLayout(layout);
+		targetDirField = new Combo(fileComp, SWT.READ_ONLY | SWT.BORDER);
+		targetDirField.setFont(JFaceResources.getBannerFont());
+		targetDirField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		WidgetFactory.createPushButton(fileComp, Messages.ImportFromDeviceWizard_browse, SWT.END)
 				.addSelectionListener(new SelectionAdapter() {
 					@Override
 					public void widgetSelected(SelectionEvent e) {
@@ -205,6 +209,9 @@ public class ImportTargetPage extends ColoredWizardPage {
 						if (dir != null) {
 							if (!dir.endsWith(File.separator))
 								dir += File.separator;
+							String[] items = targetDirField.getItems();
+							items = UiUtilities.addToHistoryList(items, dir);
+							targetDirField.setItems(items);
 							targetDirField.setText(dir);
 							updateSpaceLabel();
 							startPreviewJob();
@@ -236,8 +243,8 @@ public class ImportTargetPage extends ColoredWizardPage {
 				startPreviewJob();
 			}
 		});
-		Label sep = new Label(targetComp, SWT.SEPARATOR | SWT.HORIZONTAL);
-		sep.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+		new Label(targetComp, SWT.SEPARATOR | SWT.HORIZONTAL)
+				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		previewLabel = new Label(targetComp, SWT.NONE);
 		previewLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 		previewLabel.setFont(JFaceResources.getBannerFont());
@@ -306,6 +313,13 @@ public class ImportTargetPage extends ColoredWizardPage {
 		ImportFromDeviceWizard wizard = (ImportFromDeviceWizard) getWizard();
 		IDialogSettings dialogSettings = wizard.getDialogSettings();
 		String targetDir = dialogSettings.get(TARGETDIR);
+		String[] items = dialogSettings.getArray(TARGETHIST);
+		if (items == null)
+			items = new String[0];
+		targetDirField.setVisibleItemCount(8);
+		if (targetDir != null)
+			items = UiUtilities.addToHistoryList(items, targetDir);
+		targetDirField.setItems(items);
 		targetDirField.setText(presetTargetDir = targetDir == null ? "" : targetDir); //$NON-NLS-1$
 		try {
 			subfolderCombo.select(presetSubfolder = dialogSettings.getInt(SUBFOLDERS));
@@ -424,6 +438,7 @@ public class ImportTargetPage extends ColoredWizardPage {
 		String targetDir = targetDirField.getText();
 		importData.setTargetDir(targetDir);
 		dialogSettings.put(TARGETDIR, targetDir);
+		dialogSettings.put(TARGETHIST, UiUtilities.getComboHistory(targetDirField, '*'));
 		newDevice.setTargetDir(targetDir);
 		int subfolderPolicy = subfolderCombo.getSelectionIndex();
 		importData.setSubfolderPolicy(subfolderPolicy);

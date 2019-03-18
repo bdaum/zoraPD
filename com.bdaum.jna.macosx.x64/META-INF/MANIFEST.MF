@@ -2,9 +2,9 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: JN A X86_64 Fragment
 Bundle-SymbolicName: com.bdaum.jna.macosx.x64
-Bundle-Version: 3.5.0
+Bundle-Version: 3.5.1
 Bundle-Vendor: bdaum industrial communications
-Fragment-Host: com.bdaum.jna;bundle-version="3.5.0"
+Fragment-Host: com.bdaum.jna;bundle-version="3.5.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: .
 Export-Package: com.bdaum.jna.ext,

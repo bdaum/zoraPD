@@ -224,8 +224,7 @@ public class Startup implements IStartup, IAdaptable {
 			String errorMessage = coreActivator.getVolumeManager().getErrorMessage();
 			if (errorMessage != null && !display.isDisposed() && shell != null)
 				display.syncExec(() -> {
-					AcousticMessageDialog.openWarning(shell, Constants.APPLICATION_NAME,
-							errorMessage);
+					AcousticMessageDialog.openWarning(shell, Constants.APPLICATION_NAME, errorMessage);
 				});
 			UiActivator.getDefault().setStarted();
 		}
@@ -307,7 +306,7 @@ public class Startup implements IStartup, IAdaptable {
 		}
 		if (!images.isEmpty())
 			OperationJob.executeOperation(new ImportOperation(new FileInput(StorageObject.fromFile(images), false),
-					UiActivator.getDefault().createImportConfiguration(this), null,
+					UiActivator.getDefault().createImportConfiguration(this), null, null,
 					folders.toArray(new File[folders.size()])), this);
 	}
 }

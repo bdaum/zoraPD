@@ -81,15 +81,16 @@ public class HSLimage {
 		final short[] ltblue = (lt == null) ? null : (nc == 1) ? ltred : lt.getTable()[2];
 		final WritableRaster src = image.getRaster();
 		final short[] ltgray = (src.getNumBands() < 3 && ltred != null && ltgreen != null && ltblue != null)
-				? new short[ltred.length] : null;
+				? new short[ltred.length]
+				: null;
 		if (ltgray != null)
 			for (int i = 0; i < ltgray.length; i++)
 				ltgray[i] = (short) (((ltred[i] & 0xffff) + (ltgreen[i] & 0xffff) + (ltblue[i] & 0xffff)) / 3);
 		if (nP == 1)
 			fromBufferedImage(0, height, useHSV, ltred, ltgreen, ltblue, ltgray, src);
 		else
-			IntStream.range(0, nP).parallel()
-			.forEach(p -> fromBufferedImage(height * p / nP, height * (p + 1) / nP, useHSV, ltred, ltgreen, ltblue, ltgray, src));
+			IntStream.range(0, nP).parallel().forEach(p -> fromBufferedImage(height * p / nP, height * (p + 1) / nP,
+					useHSV, ltred, ltgreen, ltblue, ltgray, src));
 	}
 
 	private void fromBufferedImage(int from, int to, boolean hsv, short[] ltred, short[] ltgreen, short[] ltblue,
@@ -196,8 +197,8 @@ public class HSLimage {
 			if (nP == 1)
 				fromDirectImageData(0, height, swtImageData, useHSV, ltred, ltgreen, ltblue, palette);
 			else
-				IntStream.range(0, nP).parallel()
-				.forEach(p -> fromDirectImageData(height * p / nP, height * (p + 1) / nP, swtImageData, useHSV, ltred, ltgreen, ltblue, palette));
+				IntStream.range(0, nP).parallel().forEach(p -> fromDirectImageData(height * p / nP,
+						height * (p + 1) / nP, swtImageData, useHSV, ltred, ltgreen, ltblue, palette));
 		} else {
 			int pixel, red, green, blue, max, min, hue, sat, lum2, diff;
 			RGB[] rgBs = palette.getRGBs();
@@ -379,7 +380,7 @@ public class HSLimage {
 			toBufferedImage(0, mh, raster);
 		else
 			IntStream.range(0, nP).parallel()
-			.forEach(p -> toBufferedImage(height * p / nP, height * (p + 1) / nP, raster));
+					.forEach(p -> toBufferedImage(height * p / nP, height * (p + 1) / nP, raster));
 		return image;
 	}
 
@@ -485,14 +486,16 @@ public class HSLimage {
 		if (nP == 1)
 			toSwtData(0, height, data);
 		else
-			IntStream.range(0, nP).parallel()
-			.forEach(p -> toSwtData(height * p / nP, height * (p + 1) / nP, data));
+			IntStream.range(0, nP).parallel().forEach(p -> toSwtData(height * p / nP, height * (p + 1) / nP, data));
 		return data;
 	}
 
 	private void toSwtData(int from, int to, ImageData data) {
 		int hue, sat, lum, red, green, blue, p, q, d, t, t1, t3;
-		int[] scanLine = new int[width];
+		int bytesPerLine = data.bytesPerLine;
+		int tx;
+		byte[] datadata = data.data;
+//		int[] scanLine = new int[width];
 		int k = from * width;
 		byte[] _h = h;
 		byte[] _s = s;
@@ -500,12 +503,14 @@ public class HSLimage {
 
 		if (useHSV)
 			for (int y = from; y < to; y++) {
+				tx = bytesPerLine * y;
 				for (int x = 0; x < width; x++, k++) {
 					// To RGB
 					sat = (_s[k] & 0xff) << 4;
 					if (sat == 0) {
 						int lu = _l[k] & 0xff;
-						scanLine[x] = lu << 16 | lu << 8 | lu;
+						datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) lu;
+//						scanLine[x] = lu << 16 | lu << 8 | lu;
 					} else {
 						hue = (_h[k] & 0xff) * 96; // 16 * 6;
 						int v = _l[k] & 0xff;
@@ -517,36 +522,56 @@ public class HSLimage {
 						int v_3 = lum * (_1F - sat * (_1F - res) / _1F) / _1F;
 						switch (sector) {
 						case 0:
-							scanLine[x] = v | v_3 + 8 >> 4 << 8 | v_1 + 8 >> 4 << 16;
+							datadata[tx++] = (byte) (v_1 + 8 >> 4);
+							datadata[tx++] = (byte) (v_3 + 8 >> 4);
+							datadata[tx++] = (byte) (v);
+							// scanLine[x] = v | v_3 + 8 >> 4 << 8 | v_1 + 8 >> 4 << 16;
 							break;
 						case 1:
-							scanLine[x] = v_2 + 8 >> 4 | v << 8 | v_1 + 8 >> 4 << 16;
+							datadata[tx++] = (byte) (v_1 + 8 >> 4);
+							datadata[tx++] = (byte) (v);
+							datadata[tx++] = (byte) (v_2 + 8 >> 4);
+							// scanLine[x] = v_2 + 8 >> 4 | v << 8 | v_1 + 8 >> 4 << 16;
 							break;
 						case 2:
-							scanLine[x] = v_1 + 8 >> 4 | v << 8 | v_3 + 8 >> 4 << 16;
+							datadata[tx++] = (byte) (v_3 + 8 >> 4);
+							datadata[tx++] = (byte) (v);
+							datadata[tx++] = (byte) (v_1 + 8 >> 4);
+							// scanLine[x] = v_1 + 8 >> 4 | v << 8 | v_3 + 8 >> 4 << 16;
 							break;
 						case 3:
-							scanLine[x] = v_1 + 8 >> 4 | v_2 + 8 >> 4 << 8 | v << 16;
+							datadata[tx++] = (byte) (v);
+							datadata[tx++] = (byte) (v_2 + 8 >> 4);
+							datadata[tx++] = (byte) (v_1 + 8 >> 4);
+							// scanLine[x] = v_1 + 8 >> 4 | v_2 + 8 >> 4 << 8 | v << 16;
 							break;
 						case 4:
-							scanLine[x] = v | v_1 + 8 >> 4 << 8 | v_2 + 8 >> 4 << 16;
+							datadata[tx++] = (byte) (v_2 + 8 >> 4);
+							datadata[tx++] = (byte) (v_1 + 8 >> 4);
+							datadata[tx++] = (byte) (v);
+							// scanLine[x] = v | v_1 + 8 >> 4 << 8 | v_2 + 8 >> 4 << 16;
 							break;
 						default:
-							scanLine[x] = v_3 + 8 >> 4 | v_1 + 8 >> 4 << 8 | v << 16;
+							datadata[tx++] = (byte) (v);
+							datadata[tx++] = (byte) (v_1 + 8 >> 4);
+							datadata[tx++] = (byte) (v_3 + 8 >> 4);
+//							scanLine[x] = v_3 + 8 >> 4 | v_1 + 8 >> 4 << 8 | v << 16;
 							break;
 						}
 					}
 				}
-				data.setPixels(0, y, width, scanLine, 0);
+//				data.setPixels(0, y, width, scanLine, 0);
 			}
 		else
 			for (int y = from; y < to; y++) {
+				tx = bytesPerLine * y;
 				for (int x = 0; x < width; x++, k++) {
 					sat = (_s[k] & 0xff) << 4;
 					// To RGB
 					if (sat == 0) {
 						int lu = _l[k] & 0xff;
-						scanLine[x] = lu << 16 | lu << 8 | lu;
+						datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) lu;
+//						scanLine[x] = lu << 16 | lu << 8 | lu;
 					} else {
 						hue = (_h[k] & 0xff) << 4;
 						lum = (_l[k] & 0xff) << 4;
@@ -568,10 +593,13 @@ public class HSLimage {
 							blue = (t3 < _1F) ? p + d * t3 / _1F : q;
 						else if (t3 < _4F)
 							blue += d * (_4F - t3) / _1F;
-						scanLine[x] = red + 8 >> 4 | green + 8 >> 4 << 8 | blue + 8 >> 4 << 16;
+						datadata[tx++] = (byte) ( blue + 8 >> 4);
+						datadata[tx++] = (byte) ( green + 8 >> 4);
+						datadata[tx++] = (byte) ( red + 8 >> 4);
+//						scanLine[x] = red + 8 >> 4 | green + 8 >> 4 << 8 | blue + 8 >> 4 << 16;
 					}
 				}
-				data.setPixels(0, y, width, scanLine, 0);
+//				data.setPixels(0, y, width, scanLine, 0);
 			}
 	}
 
@@ -581,8 +609,7 @@ public class HSLimage {
 		if (nP == 1)
 			applyLookup(0, len, lt);
 		else
-			IntStream.range(0, nP).parallel()
-			.forEach(p -> applyLookup(height * p / nP, height * (p + 1) / nP, lt));
+			IntStream.range(0, nP).parallel().forEach(p -> applyLookup(height * p / nP, height * (p + 1) / nP, lt));
 	}
 
 	private void applyLookup(int from, int to, ShortLookupTable lt) {
@@ -637,7 +664,7 @@ public class HSLimage {
 			applyGrayConvert(0, len, lumlt);
 		else
 			IntStream.range(0, nP).parallel()
-			.forEach(p -> applyGrayConvert(height * p / nP, height * (p + 1) / nP, lumlt));
+					.forEach(p -> applyGrayConvert(height * p / nP, height * (p + 1) / nP, lumlt));
 	}
 
 	private void applyGrayConvert(int from, int to, short[] lumlt) {
@@ -672,9 +699,8 @@ public class HSLimage {
 			applyColorShift(0, len, glob, sectors, vibrance, globH, globH2, globS, globL, cs.satMode, cs.isPreserving,
 					huemod);
 		else
-			IntStream.range(0, nP).parallel()
-			.forEach(p -> applyColorShift(height * p / nP, height * (p + 1) / nP, glob, sectors, vibrance, globH, globH2, globS, globL, cs.satMode,
-					cs.isPreserving, huemod));
+			IntStream.range(0, nP).parallel().forEach(p -> applyColorShift(height * p / nP, height * (p + 1) / nP, glob,
+					sectors, vibrance, globH, globH2, globS, globL, cs.satMode, cs.isPreserving, huemod));
 	}
 
 	private void applyColorShift(int from, int to, boolean glob, Sector[] sectors, int vibrance, int globH, int globH2,
@@ -766,8 +792,8 @@ public class HSLimage {
 		if (nP == 1)
 			applySplitTone(0, len, shadowHue, shadowSaturation, highlightHue, highlightSaturation, balance);
 		else
-			IntStream.range(0, nP).parallel()
-			.forEach(p -> applySplitTone(height * p / nP, height * (p + 1) / nP, shadowHue, shadowSaturation, highlightHue, highlightSaturation, balance));
+			IntStream.range(0, nP).parallel().forEach(p -> applySplitTone(height * p / nP, height * (p + 1) / nP,
+					shadowHue, shadowSaturation, highlightHue, highlightSaturation, balance));
 	}
 
 	private void applySplitTone(int from, int to, int shadowHue, int shadowSaturation, int highlightHue,
@@ -809,8 +835,8 @@ public class HSLimage {
 		if (nP == 1)
 			applyUnsharpMask(0, height, c1, work1, toneTable, a, threshold);
 		else
-			IntStream.range(0, nP).parallel()
-			.forEach(p -> applyUnsharpMask(height * p / nP, height * (p + 1) / nP, c1, work1, toneTable, a, threshold));
+			IntStream.range(0, nP).parallel().forEach(
+					p -> applyUnsharpMask(height * p / nP, height * (p + 1) / nP, c1, work1, toneTable, a, threshold));
 	}
 
 	private void applyUnsharpMask(int from, int to, int c1, byte[] work, short[] toneTable, int a, int threshold) {
@@ -888,8 +914,8 @@ public class HSLimage {
 		if (nP == 1)
 			applyVignette(0, height, amount, aa, hlow, wlow, whigh, fSquare);
 		else
-			IntStream.range(0, nP).parallel()
-			.forEach(p -> applyVignette(height * p / nP, height * (p + 1) / nP,  amount, aa, hlow, wlow, whigh, fSquare));
+			IntStream.range(0, nP).parallel().forEach(
+					p -> applyVignette(height * p / nP, height * (p + 1) / nP, amount, aa, hlow, wlow, whigh, fSquare));
 	}
 
 	private void applyVignette(int from, int to, float amount, float aa, int hlow, int wlow, int whigh, float fSquare) {
@@ -922,7 +948,7 @@ public class HSLimage {
 				applyMaskedLookup(0, len, lt, array);
 			else
 				IntStream.range(0, nP).parallel()
-				.forEach(p -> applyMaskedLookup(height * p / nP, height * (p + 1) / nP, lt, array));
+						.forEach(p -> applyMaskedLookup(height * p / nP, height * (p + 1) / nP, lt, array));
 		}
 	}
 
@@ -944,8 +970,7 @@ public class HSLimage {
 			if (nP == 1)
 				toHSL(0, len);
 			else
-				IntStream.range(0, nP).parallel()
-				.forEach(p -> toHSL(height * p / nP, height * (p + 1) / nP));
+				IntStream.range(0, nP).parallel().forEach(p -> toHSL(height * p / nP, height * (p + 1) / nP));
 			useHSV = false;
 		}
 	}
@@ -972,8 +997,7 @@ public class HSLimage {
 			if (nP == 1)
 				toHSL(0, len);
 			else
-				IntStream.range(0, nP).parallel()
-				.forEach(p -> toHSV(height * p / nP, height * (p + 1) / nP));
+				IntStream.range(0, nP).parallel().forEach(p -> toHSV(height * p / nP, height * (p + 1) / nP));
 			useHSV = true;
 		}
 	}

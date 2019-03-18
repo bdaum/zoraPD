@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE"
       label="ZoRa Photo Director Feature"
-      version="3.5.0"
+      version="3.5.1"
       provider-name="bdaum industrial communications"
       plugin="com.bdaum.zoom.rcp">
 

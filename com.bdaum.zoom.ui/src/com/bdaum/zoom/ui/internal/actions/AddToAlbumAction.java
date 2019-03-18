@@ -45,7 +45,7 @@ public class AddToAlbumAction extends Action {
 	public void run() {
 		List<Asset> localAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
 		if (localAssets != null && !localAssets.isEmpty()) {
-			AlbumSelectionDialog dialog = new AlbumSelectionDialog(adaptable.getAdapter(Shell.class), false, null);
+			AlbumSelectionDialog dialog = new AlbumSelectionDialog(adaptable.getAdapter(Shell.class), false, null, null);
 			if (dialog.open() == AlbumSelectionDialog.OK)
 				OperationJob.executeOperation(new AddAlbumOperation(dialog.getResult(), localAssets, null, false),
 						adaptable);

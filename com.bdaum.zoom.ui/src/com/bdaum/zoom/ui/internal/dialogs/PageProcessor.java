@@ -402,7 +402,7 @@ public class PageProcessor {
 	public static String computeCaption(String template, String[] variables, Asset asset, String collection,
 			int sequenceNo, int pageItem) {
 		return Utilities.evaluateTemplate(template, Constants.PI_ALL, null, null, 0, pageItem, sequenceNo, null, asset,
-				collection, Integer.MAX_VALUE, false);
+				collection, Integer.MAX_VALUE, false, false);
 	}
 
 	private static Font createFont(Device device, int size, int style) {

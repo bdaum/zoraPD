@@ -49,6 +49,9 @@ public interface PreferenceConstants {
 	String LABELFONTSIZE ="com.bdaum.zoom.labelFontSize"; //$NON-NLS-1$
 	String DISTANCEUNIT = "com.bdaum.zoom.distanceUnit"; //$NON-NLS-1$
 	String DIMUNIT = "com.bdaum.zoom.dimUnit"; //$NON-NLS-1$
+	String HOVERBASETIME = "com.bdaum.zoom.hoverBaseTime"; //$NON-NLS-1$
+	String HOVERCHARTIME = "com.bdaum.zoom.hoverCharTime"; //$NON-NLS-1$
+	String HOVERDELAY = "com.bdaum.zoom.hoverDelay"; //$NON-NLS-1$
 
 	// Mouse
 	String MOUSE_SPEED = "com.bdaum.zoom.mouseSpeed"; //$NON-NLS-1$
@@ -132,6 +135,7 @@ public interface PreferenceConstants {
 	String NOPROGRESS = "com.bdaum.zoom.noProgress"; //$NON-NLS-1$
 	String ADVANCEDGRAPHICS = "com.bdaum.zoom.advancedGraphics"; //$NON-NLS-1$
 	String COLORPROFILE = "com.bdaum.zoom.colorProfile"; //$NON-NLS-1$
+	String CUSTOMPROFILE = "com.bdaum.zoom.customProfile"; //$NON-NLS-1$
 	String BWFILTER = "com.bdaum.zoom.bwFilter"; //$NON-NLS-1$
 	String TABLECOLUMNS = "com.bdaum.zoom.tableColumns"; //$NON-NLS-1$
 	String ADDNOISE = "com.bdaum.zoom.addNoise"; //$NON-NLS-1$;

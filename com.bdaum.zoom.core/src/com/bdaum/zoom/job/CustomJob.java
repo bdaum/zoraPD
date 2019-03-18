@@ -116,17 +116,18 @@ public abstract class CustomJob extends Job {
 		int n = 0;
 		double complet = 0d;
 		CustomJob[] tasks = taskBarJobs.toArray(new CustomJob[taskBarJobs.size()]);
-		for (CustomJob job : tasks) {
-			if (job.twork == IProgressMonitor.UNKNOWN) {
-				complet = Double.POSITIVE_INFINITY;
-				++n;
-				break;
+		for (CustomJob job : tasks)
+			if (job != null) {
+				if (job.twork == IProgressMonitor.UNKNOWN) {
+					complet = Double.POSITIVE_INFINITY;
+					++n;
+					break;
+				}
+				if (job.twork > 0) {
+					complet += (double) job.cwork / job.twork;
+					++n;
+				}
 			}
-			if (job.twork > 0) {
-				complet += (double) job.cwork / job.twork;
-				++n;
-			}
-		}
 		final int state = n == 0 ? SWT.DEFAULT : Double.isInfinite(complet) ? SWT.INDETERMINATE : SWT.NORMAL;
 		final int percent = n == 0 ? 0 : Double.isInfinite(complet) ? -1 : (int) (complet / n * 100);
 		IWorkbench workbench = PlatformUI.getWorkbench();

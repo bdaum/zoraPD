@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Image;
 
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.internal.Icons;
+import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.VocabManager;
 
 public class KeywordLabelProvider extends ZColumnLabelProvider {
@@ -64,7 +65,7 @@ public class KeywordLabelProvider extends ZColumnLabelProvider {
 
 	@Override
 	public String getToolTipText(Object element) {
-		if (vManager != null && element instanceof String) {
+		if (vManager != null && element instanceof String && UiActivator.getDefault().getShowHover()) {
 			if (isNoImg(element))
 				return null;
 			String mapped = vManager.getVocab((String) element);
@@ -73,7 +74,7 @@ public class KeywordLabelProvider extends ZColumnLabelProvider {
 			if (!mapped.equals(element))
 				return NLS.bind(Messages.EditMetaDialog_better_use_x, mapped, element);
 		}
-		return null;
+		return getToolTipText(element);
 	}
 
 	@Override

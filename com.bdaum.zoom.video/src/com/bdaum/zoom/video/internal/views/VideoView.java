@@ -26,7 +26,7 @@ import com.bdaum.zoom.video.internal.VideoSupport;
 @SuppressWarnings("restriction")
 public class VideoView extends AbstractPropertiesView {
 
-	public static final String ID = "com.bdaum.zoom.ui.views.VideoView"; //$NON-NLS-1$
+	public static final String ID = "com.bdaum.zoom.video.view"; //$NON-NLS-1$
 
 	@Override
 	protected Object getFieldParent(QueryField element) {
@@ -48,7 +48,6 @@ public class VideoView extends AbstractPropertiesView {
 	protected int[] getColumnMaxWidths() {
 		return new int[] { 250, Integer.MAX_VALUE, 30 };
 	}
-
 
 	@Override
 	protected int getExpandLevel() {

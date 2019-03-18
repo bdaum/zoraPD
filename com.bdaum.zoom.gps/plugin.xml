@@ -187,7 +187,7 @@
       </parser>
       <parser
             class="com.bdaum.zoom.gps.internal.nmea.NmeaParser"
-            extensions="nmea;log"
+            extensions="nmea log"
             name="%parser.name.nmea">
          <type
                name="%type.name.nmea">

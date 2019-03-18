@@ -27,6 +27,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
@@ -53,6 +54,14 @@ public class FindWithinGroup {
 		checkButton = WidgetFactory.createCheckButton(composite,
 				Messages.FindWithinGroup_find_within_current_collection, null);
 		checkButton.setEnabled(canFindWithin());
+	}
+	
+	/**
+	 * @param listener
+	 * @see org.eclipse.swt.widgets.Button#addSelectionListener(org.eclipse.swt.events.SelectionListener)
+	 */
+	public void addListener(Listener listener) {
+		checkButton.addListener(listener);
 	}
 
 	private boolean canFindWithin() {

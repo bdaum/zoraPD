@@ -41,6 +41,7 @@ import org.eclipse.ui.operations.IWorkbenchOperationSupport;
 import com.bdaum.zoom.batch.internal.BatchActivator;
 import com.bdaum.zoom.cat.model.group.Criterion;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
+import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IPostProcessor2;
@@ -50,6 +51,7 @@ import com.bdaum.zoom.core.db.IDbFactory;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.fileMonitor.internal.filefilter.FilterChain;
+import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.mtp.DeviceInsertionListener;
 import com.bdaum.zoom.rcp.internal.perspective.DataEntryPerspective;
 import com.bdaum.zoom.rcp.internal.perspective.ExhibitionPerspective;
@@ -135,6 +137,13 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 	private void configureInfrastructure(final IWorkbenchWindowConfigurer configurer) {
 		final IWorkbenchWindow window = configurer.getWindow();
 		final IPreferencesService preferencesService = Platform.getPreferencesService();
+		int dt = preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.HOVERDELAY, 200, null);
+		int bt = preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.HOVERBASETIME, 1000, null);
+		int ct = preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.HOVERCHARTIME, 25, null);
+		CommonUtilities.setHoverTiming(dt, bt, ct);
+		String customProfile = preferencesService.getString(UI_NAMESPACE, PreferenceConstants.CUSTOMPROFILE, null,
+				null);
+		ImageActivator.getDefault().resetCustomProfile(customProfile);
 		setTheme(preferencesService.getString(UI_NAMESPACE, PreferenceConstants.BACKGROUNDCOLOR,
 				PreferenceConstants.BACKGROUNDCOLOR_DARKGREY, null));
 		final CoreActivator activator = CoreActivator.getDefault();
@@ -162,7 +171,19 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 				.addPreferenceChangeListener(new IEclipsePreferences.IPreferenceChangeListener() {
 					public void preferenceChange(PreferenceChangeEvent event) {
 						String key = event.getKey().intern();
-						if (key == PreferenceConstants.BACKGROUNDCOLOR) {
+						if (key == PreferenceConstants.HOVERBASETIME || key == PreferenceConstants.HOVERCHARTIME) {
+							int dt = preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.HOVERDELAY, 200, null);
+							int bt = preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.HOVERBASETIME, 1000,
+									null);
+							int ct = preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.HOVERCHARTIME, 25,
+									null);
+							CommonUtilities.setHoverTiming(dt, bt, ct);
+						} else if (key == PreferenceConstants.CUSTOMPROFILE) {
+							String customProfile = preferencesService.getString(UI_NAMESPACE,
+									PreferenceConstants.CUSTOMPROFILE, null, null);
+							if (customProfile != null)
+								ImageActivator.getDefault().resetCustomProfile(customProfile);
+						} else if (key == PreferenceConstants.BACKGROUNDCOLOR) {
 							String bgColor = preferencesService.getString(UI_NAMESPACE,
 									PreferenceConstants.BACKGROUNDCOLOR, PreferenceConstants.BACKGROUNDCOLOR_DARKGREY,
 									null);

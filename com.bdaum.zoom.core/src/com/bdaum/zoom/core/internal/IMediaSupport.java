@@ -269,4 +269,9 @@ public interface IMediaSupport {
 	 */
 	void setCollectionId(String collectionID);
 
+	/**
+	 * @return the ID of the hover contribution for this type of asset
+	 */
+	String getGalleryHoverId();
+
 }

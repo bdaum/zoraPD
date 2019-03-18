@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2017 Berthold Daum  
+ * (c) 2017-2019 Berthold Daum  
  */
 package com.bdaum.zoom.gps.leaflet.internal.views;
 
@@ -31,44 +31,43 @@ import com.bdaum.zoom.gps.widgets.AbstractMapComponent;
 
 public class MapComponent extends AbstractMapComponent implements IExecutableExtension {
 
-	private URL leafletUrl;
-	private URL zoomMapUrl;
-	private URL leafletCss;
-	private URL providersUrl;
-	private URL minimapUrl;
-	private URL minimapCss;
-	private String mapProvider;
-	private URL markerClusterGroupUrl;
-	private URL markerClusterGroupCss;
-	private URL markerClusterGroupDefaultCss;
+	private static final String GMAP = "gmap/"; //$NON-NLS-1$
+	private static String leafletUrl;
+	private static String zoomMapUrl;
+	private static String leafletCss;
+	private static String providersUrl;
+	private static String minimapUrl;
+	private static String minimapCss;
+	private static String markerClusterGroupUrl;
+	private static String markerClusterGroupCss;
+	private static String markerClusterGroupDefaultCss;
+	private static String scriptEntries;
+	private String additionalVariables;
+
+	static {
+		URL url = findUrl(LeafletActivator.getDefault().getBundle(), GMAP);
+		String folderUrl = url == null ? GMAP : url.toString();
+		providersUrl = folderUrl + "leaflet-providers.js"; //$NON-NLS-1$
+		leafletCss = folderUrl + "leaflet.css"; //$NON-NLS-1$
+		leafletUrl = folderUrl + "leaflet.js"; //$NON-NLS-1$
+		zoomMapUrl = folderUrl + "zoomMap.js"; //$NON-NLS-1$
+		minimapUrl = folderUrl + "Control.MiniMap.min.js"; //$NON-NLS-1$
+		minimapCss = folderUrl + "Control.MiniMap.min.css"; //$NON-NLS-1$
+		markerClusterGroupUrl = folderUrl + "leaflet.markercluster.js"; //$NON-NLS-1$
+		markerClusterGroupCss = folderUrl + "MarkerCluster.css"; //$NON-NLS-1$
+		markerClusterGroupDefaultCss = folderUrl + "MarkerCluster.Default.css"; //$NON-NLS-1$
+	}
 
 	public void setInitializationData(IConfigurationElement config, String propertyName, Object data)
 			throws CoreException {
-		if (data instanceof String)
-			mapProvider = (String) data;
-	}
-
-	@Override
-	protected void findResources() {
-		leafletUrl = findUrl("/gmap/leaflet-src.js"); //$NON-NLS-1$
-		providersUrl = findUrl("/gmap/leaflet-providers.js"); //$NON-NLS-1$
-		leafletCss = findUrl("/gmap/leaflet.css"); //$NON-NLS-1$
-		zoomMapUrl = findUrl("/gmap/zoomMap.js"); //$NON-NLS-1$
-		minimapUrl = findUrl("/gmap/Control.MiniMap.js"); //$NON-NLS-1$
-		minimapCss = findUrl("/gmap/Control.MiniMap.css"); //$NON-NLS-1$
-		markerClusterGroupUrl = findUrl("/gmap/leaflet.markercluster.js"); //$NON-NLS-1$
-		markerClusterGroupCss = findUrl("/gmap/MarkerCluster.css"); //$NON-NLS-1$
-		markerClusterGroupDefaultCss = findUrl("/gmap/MarkerCluster.Default.css"); //$NON-NLS-1$
+		additionalVariables = new StringBuilder().append("var selectedProvider = \"").append(data) //$NON-NLS-1$
+				.append("\";\n").toString(); //$NON-NLS-1$
 	}
 
 	@Override
 	protected String createSetPosDetailScript(HistoryItem item) {
 		return NLS.bind("map.setZoom({0});\nmap.panTo({1});", (int) item.getDetail(), //$NON-NLS-1$
 				createLatLng(item.getLatitude(), item.getLongitude()));
-	}
-
-	private URL findUrl(String path) {
-		return super.findUrl(LeafletActivator.getDefault().getBundle(), path);
 	}
 
 	@Override
@@ -83,21 +82,20 @@ public class MapComponent extends AbstractMapComponent implements IExecutableExt
 
 	@Override
 	protected String createAdditionalVariables() {
-		return new StringBuilder().append("var selectedProvider = \"").append(mapProvider) //$NON-NLS-1$
-				.append("\";\n") //$NON-NLS-1$
-				.toString();
+		return additionalVariables;
 	}
 
 	@Override
 	protected String createScriptEntries() {
-		return new StringBuilder().append(createStyleEntry(leafletCss)).append('\n')
-				.append(createStyleEntry(minimapCss)).append('\n').append(createScriptEntry(leafletUrl)).append('\n')
-				.append(createScriptEntry(providersUrl))
-				.append('\n').append(createScriptEntry(minimapUrl)).append('\n')
-				.append(createScriptEntry(markerClusterGroupUrl)).append('\n')
-				.append(createStyleEntry(markerClusterGroupCss)).append('\n')
-				.append(createStyleEntry(markerClusterGroupDefaultCss)).append('\n')
-				.append(createScriptEntry(zoomMapUrl)).toString();
+		if (scriptEntries == null)
+			scriptEntries = new StringBuilder().append(createStyleEntry(leafletCss)).append('\n')
+					.append(createStyleEntry(minimapCss)).append('\n').append(createScriptEntry(leafletUrl))
+					.append('\n').append(createScriptEntry(providersUrl)).append('\n')
+					.append(createScriptEntry(minimapUrl)).append('\n').append(createScriptEntry(markerClusterGroupUrl))
+					.append('\n').append(createStyleEntry(markerClusterGroupCss)).append('\n')
+					.append(createStyleEntry(markerClusterGroupDefaultCss)).append('\n')
+					.append(createScriptEntry(zoomMapUrl)).toString();
+		return scriptEntries;
 	}
 
 	@Override

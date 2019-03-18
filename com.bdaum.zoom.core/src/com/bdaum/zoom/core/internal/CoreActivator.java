@@ -544,13 +544,13 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 				if (errorHandler != null)
 					errorHandler.showInformation(Constants.APPLICATION_NAME,
 							NLS.bind(Messages.CoreActivator_index_file_does_not_exist, indexPath), this);
-				String lastBackupFolder = meta.getLastBackupFolder();
-				if (lastBackupFolder != null) {
-					File indexBackup = new File(lastBackupFolder, indexPath.getName());
-					if (indexBackup.isDirectory() && !new File(indexBackup, "write.lock") //$NON-NLS-1$
-							.exists())
-						job = dbFactory.getLireService(true).createIndexingJob(indexBackup, meta.getLastBackup());
-				}
+//				String lastBackupFolder = meta.getLastBackupFolder();
+//				if (lastBackupFolder != null) {
+//					File indexBackup = new File(lastBackupFolder, indexPath.getName());
+//					if (indexBackup.isDirectory() && !new File(indexBackup, "write.lock") //$NON-NLS-1$
+//							.exists())
+//						job = dbFactory.getLireService(true).createIndexingJob(indexBackup, meta.getLastBackup());
+//				}
 				if (job == null)
 					job = dbFactory.getLireService(true).createIndexingJob();
 			}

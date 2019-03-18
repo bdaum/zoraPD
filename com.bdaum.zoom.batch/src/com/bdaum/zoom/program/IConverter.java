@@ -13,6 +13,7 @@ package com.bdaum.zoom.program;
 
 import java.io.File;
 
+import com.bdaum.zoom.batch.internal.ConversionException;
 import com.bdaum.zoom.batch.internal.Options;
 
 /**
@@ -23,7 +24,7 @@ public interface IConverter {
 
 	static final String CONVERTER = "converter"; //$NON-NLS-1$´
 	//Options
-	static final String ADOBE_RGB = "AdobeRGB"; //$NON-NLS-1$
+//	static final String ADOBE_RGB = "AdobeRGB"; //$NON-NLS-1$
 	static final String EXPOSURE = "exposure"; //$NON-NLS-1$
 	static final String GAMMA= "gamma"; //$NON-NLS-1$
 	static final String DENOISE = "denoise"; //$NON-NLS-1$
@@ -47,8 +48,9 @@ public interface IConverter {
 	 * @param file - input file
 	 * @param options - conversion options
 	 * @return output file
+	 * @throws ConversionException 
 	 */
-	File setInput(File file, Options options);
+	File setInput(File file, Options options) throws ConversionException;
 
 	/**
 	 * This method can be called after setInput to obtain the real input directory

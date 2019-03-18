@@ -92,6 +92,8 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements ModifyListe
 		groupField = new Combo(composite, SWT.DROP_DOWN);
 		groupField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		List<GroupImpl> set = Core.getCore().getDbManager().obtainObjects(GroupImpl.class);
+		int slideshowGroup = -1;
+		int i = 0;
 		List<String> items = new ArrayList<String>(set.size());
 		for (GroupImpl group : set) {
 			boolean exhibition = !group.getExhibition().isEmpty();
@@ -102,6 +104,8 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements ModifyListe
 				String groupId = group.getStringId();
 				exhibition = Constants.GROUP_ID_EXHIBITION.equals(groupId);
 				slideshow = Constants.GROUP_ID_SLIDESHOW.equals(groupId);
+				if (slideshow)
+					slideshowGroup = i;
 				webgallery = Constants.GROUP_ID_WEBGALLERY.equals(groupId);
 				if (!exhibition && !slideshow && !webgallery)
 					slideshow = true;
@@ -110,13 +114,16 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements ModifyListe
 				String n = group.getName();
 				groupMap.put(n, group);
 				items.add(n);
+				++i;
 			}
 		}
 		String[] array = items.toArray(new String[items.size()]);
 		Arrays.sort(array);
 		groupField.setItems(array);
+		if (slideshowGroup >= 0)
+			groupField.select(slideshowGroup);
 		if (array.length > 0)
-			groupField.setText(array[0]);
+			groupField.setText(array[slideshowGroup >= 0 ? slideshowGroup : 0]);
 		groupField.addModifyListener(this);
 		groupField.addSelectionListener(this);
 		openButton = WidgetFactory.createCheckButton(composite, Messages.SlideShowSaveDialog_open_editor,

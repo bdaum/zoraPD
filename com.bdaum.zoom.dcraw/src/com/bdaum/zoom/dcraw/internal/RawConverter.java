@@ -32,7 +32,6 @@ import com.bdaum.zoom.image.IFocalLengthProvider;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.recipe.Recipe;
 import com.bdaum.zoom.program.AbstractRawConverter;
-import com.bdaum.zoom.program.BatchConstants;
 import com.bdaum.zoom.program.IConverter;
 import com.bdaum.zoom.program.IRawConverter;
 
@@ -49,8 +48,11 @@ public class RawConverter extends AbstractRawConverter {
 	private static final String WB_METHOD = "com.bdaum.zoom.wbMethod"; //$NON-NLS-1$
 	private static final String SHOW_INFO = "com.bdaum.zoom.dcraw.property.showInfo"; //$NON-NLS-1$
 
-	private final static String Dcraw = BatchConstants.WIN32 ? "dcraw.exe" : "dcraw"; //$NON-NLS-1$//$NON-NLS-2$
 	private final static NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+
+	static {
+		nf.setGroupingUsed(false);
+	}
 
 	private File dcraw;
 	private boolean external = false;
@@ -147,10 +149,8 @@ public class RawConverter extends AbstractRawConverter {
 				parms.add(nf.format(wf[2]));
 				parms.add(nf.format(wf[wf.length < 4 ? 1 : 3]));
 			}
-			if (getOption(options, ADOBE_RGB)) {
-				parms.add("-o"); //$NON-NLS-1$
-				parms.add("2"); //$NON-NLS-1$
-			}
+//			parms.add("-o"); //$NON-NLS-1$
+//			parms.add(getOption(options, ADOBE_RGB) ? "2" : "1"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		parms.add("-T"); //$NON-NLS-1$
 		parms.add(rawFile.getName());
@@ -233,7 +233,7 @@ public class RawConverter extends AbstractRawConverter {
 
 	public File findModule(File parentFile) {
 		if (parentFile != null) {
-			File dcraw = new File(parentFile, Dcraw);
+			File dcraw = new File(parentFile, Activator.DCRAW);
 			if (dcraw.exists())
 				return dcraw;
 			File[] members = parentFile.listFiles();
@@ -278,10 +278,10 @@ public class RawConverter extends AbstractRawConverter {
 						int p1 = d1.isRecipeXMPembbedded(uri);
 						int p2 = d2.isRecipeXMPembbedded(uri);
 						if (p1 >= 0 && p2 >= 0)
-							return p1 == p2 ? 0 : p1 < p2 ? -1 : 1;
+							return p1 - p2;
 						return 0;
 					}
-					return t1 > t2 ? -1 : 1;
+					return (int) (t2 - t1);
 				}
 			});
 			for (IRecipeDetector detector : detectors)

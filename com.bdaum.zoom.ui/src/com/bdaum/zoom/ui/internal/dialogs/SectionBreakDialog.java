@@ -37,7 +37,7 @@ import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 
 public class SectionBreakDialog extends ZTitleAreaDialog {
 
-	private static final String[] THUMBNAILS = new String[] {
+	public static final String[] THUMBNAILS = new String[] {
 			Messages.SectionBreakDialog_no_thumbnails,
 			Messages.SectionBreakDialog_left,
 			Messages.SectionBreakDialog_right, Messages.SectionBreakDialog_top,
@@ -84,10 +84,12 @@ public class SectionBreakDialog extends ZTitleAreaDialog {
 		label.setText(Messages.SectionBreakDialog_description);
 		descriptionField = new CheckedText(comp, SWT.MULTI | SWT.LEAD
 				| SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
-		descriptionField.setLayoutData(new GridData(SWT.FILL,
-				SWT.FILL, true, true, 200, 50));
-		label = new Label(comp, SWT.NONE);
-		label.setText(Messages.SectionBreakDialog_thumbnails);
+		GridData layoutData = new GridData(SWT.FILL,
+				SWT.FILL, true, true);
+		layoutData.widthHint = 400;
+		layoutData.heightHint = 100;
+		descriptionField.setLayoutData(layoutData);
+		new Label(comp, SWT.NONE).setText(Messages.SectionBreakDialog_thumbnails);
 		thumbnailField = new Combo(comp, SWT.DROP_DOWN);
 		thumbnailField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
 				false, false));

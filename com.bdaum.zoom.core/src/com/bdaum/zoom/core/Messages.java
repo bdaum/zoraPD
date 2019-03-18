@@ -308,6 +308,7 @@ public class Messages extends NLS {
 	public static String QueryField_not_between;
 	public static String QueryField_not_greater;
 	public static String QueryField_not_less;
+	public static String QueryField_not_similar;
 	public static String QueryField_OneChip;
 	public static String QueryField_Orange;
 	public static String QueryField_Orientation;

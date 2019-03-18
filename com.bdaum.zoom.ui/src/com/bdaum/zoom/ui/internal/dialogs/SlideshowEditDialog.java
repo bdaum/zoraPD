@@ -105,7 +105,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	public static final String EFFECT = "effect"; //$NON-NLS-1$
 
 	private static final String[] TITLECONTENTITEMS = new String[] { Messages.SlideshowEditDialog_caption_only,
-			Messages.SlideshowEditDialog_seqno_only, Messages.SlideshowEditDialog_caption_seqno };
+			Messages.SlideshowEditDialog_seqno_only, Messages.SlideshowEditDialog_caption_seqno, Messages.SlideshowEditDialog_captions_unequal};
 
 	private static NumberFormat af = (NumberFormat.getNumberInstance());
 
@@ -396,13 +396,14 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 		titleContentField.select(titleContent);
 		fromPreviewButton.setSelection(fromPreview);
 		voiceButton.setSelection(voiceNotes);
-		try {
-			skipDublettes = settings.getBoolean(SKIP_DUBLETTES);
-		} catch (NumberFormatException e) {
-			skipDublettes = true;
-			// ignore
+		if (skipDubletteswButton != null) {
+			try {
+				skipDublettes = settings.getBoolean(SKIP_DUBLETTES);
+			} catch (NumberFormatException e) {
+				skipDublettes = true;
+			}
+			skipDubletteswButton.setSelection(skipDublettes);
 		}
-		skipDubletteswButton.setSelection(skipDublettes);
 		if (adhoc)
 			privacyGroup.setSelection(QueryField.SAFETY_RESTRICTED);
 	}

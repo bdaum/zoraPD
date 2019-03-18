@@ -6,7 +6,7 @@
 	<key>CFBundleExecutable</key>
 		<string>ZoRaPD</string>
 	<key>CFBundleGetInfoString</key>
-		<string>ZoRa Photo Director 3.5.0 for Mac OS X, Copyright Berthold Daum and others 2009-2018. All rights reserved.</string>
+		<string>ZoRa Photo Director 3.5.1 for Mac OS X, Copyright Berthold Daum and others 2009-2018. All rights reserved.</string>
 	<key>CFBundleIconFile</key>
 		<string>zora.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -22,7 +22,7 @@
 	<key>CFBundleSignature</key>
 		<string>????</string>
 	<key>CFBundleVersion</key>
-		<string>3.5.0</string>
+		<string>3.5.1</string>
 	<key>CFBundleDevelopmentRegion</key>
 		<string>English</string>
 	<key>CFBundleLocalizations</key>

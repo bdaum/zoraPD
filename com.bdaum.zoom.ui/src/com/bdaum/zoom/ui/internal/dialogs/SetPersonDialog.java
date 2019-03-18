@@ -212,7 +212,7 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 		createButton(parent, DELETEREGION, Messages.AlbumSelectionDialog_delete_region, false);
 		if (regionCount > 1)
 			createButton(parent, DELETEALLREGIONS, Messages.SetPersonDialog_delete_all, false);
-		if (Core.getCore().getDbManager().obtainById(GroupImpl.class, Constants.GROUP_ID_PERSONS) != null)
+		if (Core.getCore().getDbManager().exists(GroupImpl.class, Constants.GROUP_ID_PERSONS))
 			createButton(parent, NEWALBUM, Messages.AlbumSelectionDialog_new_album, false);
 		super.createButtonsForButtonBar(parent);
 	}

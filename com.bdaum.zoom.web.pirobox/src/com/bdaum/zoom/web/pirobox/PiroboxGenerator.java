@@ -182,6 +182,7 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 		}
 		NumberFormat nf = (NumberFormat.getNumberInstance(Locale.US));
 		nf.setMaximumFractionDigits(2);
+		nf.setGroupingUsed(false);
 		varmap.put("opacity", nf.format(show.getOpacity() / 100d)); //$NON-NLS-1$
 		varmap.put("floatThumbs", getParamString(show.getParameter(Activator.PLUGIN_ID + ".floatThumbs"), "none")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		varmap.put("jquery", getDeployResourceFolder().getName() //$NON-NLS-1$

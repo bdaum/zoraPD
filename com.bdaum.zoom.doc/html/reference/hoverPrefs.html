@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Hover preferences</title>
+
+
+
+
+
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Hover preferences </h2>
+<p></p>The preference page allows you configuring the application wide
+hover behaviour. Please note that you can switch hover off and on using
+the menu function <acronym>Help&gt;Show hover</acronym> or by pressing <abbr>F2</abbr>.<br>
+<br>
+<h4>Templates</h4>
+In this section you can configure the texts that pop-up
+when the mouse hovers over an image, a slide, a collection, etc. You
+can do this for each item individually.<br>
+<br>
+The hover texts are controlled via templates. Templates are constructed from constant text parts
+and variables. You can type in both, but it is much more comfortable
+and safe to select the variables from a list by clicking the button <abbr>Insert variable..</abbr>. or <abbr>Insert metadata...</abbr><abbr></abbr>. The later refers to the different fields defined with an image such as EXIF and IPTC data.<br>
+<br>
+A special case is the variable<code> {metadata}</code>. This variable will create a whole metadata block, containing all metadata fields as configured in the <acronym><a href="metadataPrefs.html">Metadata</a></acronym> preferences in section <acronym>Hover</acronym>.<br>
+<br>
+When a variable or metadata cannot be resolved (e.g. a field is
+undefined) the variable is simply deleted from the template. This is
+sometimes not sufficient: you may want to delete some extra text with
+it. For this purpose a special syntax is provided:<br>
+<br>
+<table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-weight: bold; width: 20%;"><code>?<br>
+      </code></td>
+      <td style="vertical-align: top;">A question mark at the beginning of a line. The whole line will be deleted when <span style="font-weight: bold;">all</span> variables within that line remain unresolved.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-weight: bold;"><code>??<br>
+      </code></td>
+      <td style="vertical-align: top;">Two question marks at the beginning of a line. The whole line will be deleted when at least <span style="font-weight: bold;">one</span> variable within that line remains unresolved.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-weight: bold;"><code>(? ... ?)<br>
+      </code></td>
+      <td style="vertical-align: top;">The complete expression between the parantheses will be deleted if <span style="font-weight: bold;">all</span> variables within the paranthesis remain unresolved. This works across line breaks, too.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-weight: bold;"><code>(?? ... ?)<br>
+      </code></td>
+      <td style="vertical-align: top;">The complete expression between the parantheses will be deleted if at least <span style="font-weight: bold;">one</span> variable within the paranthesis remains unresolved. This works across line breaks, too.</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+This mark-up is finally removed from the template when the hover text is generated.<br>
+<br>
+<h4>Timing</h4>
+In this section you can configure the hover timing:<br>
+<br>
+<ul>
+  <li><span style="font-weight: bold;">Delay.</span> This is the time
+between the detection of a mouse hover event and the actual pop-up of
+the hover text. Increase this time if hover pop-ups regularly conflict
+with normal mouse operation.</li>
+  <li><span style="font-weight: bold;">Base time.</span> The minimum time the hover texts are shown.</li>
+  <li><span style="font-weight: bold;">Time per character.</span> This
+is the time added to the base time for each character in the hover
+title and hover text. This allows you to adaapt the hover behaviour to
+your reading speed.<br>
+  </li>
+</ul>
+
+<br>
+<p> </p>
+</body></html>

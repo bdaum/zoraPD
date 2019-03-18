@@ -113,6 +113,7 @@ public class GallerifficGenerator extends AbstractGalleryGenerator {
 		}
 		NumberFormat nf = (NumberFormat.getNumberInstance(Locale.US));
 		nf.setMaximumFractionDigits(2);
+		nf.setGroupingUsed(false);
 		varmap.put("opacity", nf.format(show.getOpacity() / 100d)); //$NON-NLS-1$
 		varmap.put("jquery", getDeployResourceFolder().getName() //$NON-NLS-1$
 				+ "/jquery.packed.js"); //$NON-NLS-1$

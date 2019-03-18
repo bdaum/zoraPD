@@ -94,11 +94,11 @@ public class FadingShell {
 	public boolean isDisposed() {
 		return shell.isDisposed();
 	}
-	
+
 	public boolean isVisible() {
 		return shell.isVisible();
 	}
-	
+
 	public void setMinimized(boolean minimized) {
 		shell.setMinimized(minimized);
 	}
@@ -112,9 +112,10 @@ public class FadingShell {
 	}
 
 	public void setAlpha(int alpha) {
+		if (isDisposed())
+			return;
 		this.alpha = alpha;
-		if (supportsTransparency
-				&& blendingEffect == Constants.SLIDE_TRANSITION_FADE)
+		if (supportsTransparency && blendingEffect == Constants.SLIDE_TRANSITION_FADE)
 			shell.setAlpha(alpha);
 		else {
 			shell.setAlpha(255);
@@ -203,7 +204,8 @@ public class FadingShell {
 	}
 
 	public void setLocation(int x, int y) {
-		shell.setLocation(x, y);
+		if (!isDisposed())
+			shell.setLocation(x, y);
 	}
 
 	public void setFocus() {

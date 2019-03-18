@@ -33,11 +33,8 @@ public class Icons {
 		private final String key;
 
 		public Icon(String path) {
-			key = prefix + (++counter);
-			JFaceResources.getImageRegistry().put(
-					key,
-					AbstractUIPlugin.imageDescriptorFromPlugin(CsvActivator.PLUGIN_ID,
-							path));
+			JFaceResources.getImageRegistry().put(key = prefix + (++counter),
+					AbstractUIPlugin.imageDescriptorFromPlugin(CsvActivator.PLUGIN_ID, path));
 		}
 
 		public ImageDescriptor getDescriptor() {

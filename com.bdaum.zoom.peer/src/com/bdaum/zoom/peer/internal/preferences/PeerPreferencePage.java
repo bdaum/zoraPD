@@ -31,7 +31,6 @@ import java.util.Map;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
-import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ComboBoxViewerCellEditor;
 import org.eclipse.jface.viewers.DialogCellEditor;
 import org.eclipse.jface.viewers.EditingSupport;
@@ -69,6 +68,7 @@ import org.eclipse.ui.IWorkbench;
 
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
+import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.peer.internal.IPeerListener;
 import com.bdaum.zoom.peer.internal.PeerActivator;
 import com.bdaum.zoom.peer.internal.model.PeerDefinition;
@@ -205,28 +205,28 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		final TableViewerColumn col1 = new TableViewerColumn(incomingViewer, SWT.NONE);
 		col1.getColumn().setWidth(250);
 		col1.getColumn().setText(Messages.PeerPreferencePage_calling_peer);
-		col1.setLabelProvider(new ColumnLabelProvider());
+		col1.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
 
 		final TableViewerColumn col2 = new TableViewerColumn(incomingViewer, SWT.NONE);
 		col2.getColumn().setWidth(250);
 		col2.getColumn().setText(Messages.PeerPreferencePage_last_access);
-		col2.setLabelProvider(new ColumnLabelProvider() {
+		col2.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof PeerDefinition)
 					return nf.format(new Date(((PeerDefinition) element).getLastAccess()));
-				return super.getText(element);
+				return  ""; //$NON-NLS-1$
 			}
 		});
 		TableViewerColumn col3 = new TableViewerColumn(incomingViewer, SWT.NONE);
 		col3.getColumn().setWidth(250);
 		col3.getColumn().setText(Messages.PeerPreferencePage_last_op);
-		col3.setLabelProvider(new ColumnLabelProvider() {
+		col3.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof PeerDefinition)
 					return ((PeerDefinition) element).getRightsLabel();
-				return super.getText(element);
+				return  ""; //$NON-NLS-1$
 			}
 
 			@Override
@@ -338,14 +338,14 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		TableViewerColumn col0 = new TableViewerColumn(peerViewer, SWT.NONE);
 		col0.getColumn().setWidth(100);
 		col0.getColumn().setText(Messages.PeerPreferencePage_nickname);
-		col0.setLabelProvider(new ColumnLabelProvider() {
+		col0.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof PeerDefinition) {
 					String nick = ((PeerDefinition) element).getNickname();
 					return nick == null ? "" : nick; //$NON-NLS-1$
 				}
-				return super.getText(element);
+				return  ""; //$NON-NLS-1$
 			}
 		});
 		EditingSupport editingSupport = new EditingSupport(peerViewer) {
@@ -393,26 +393,26 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		TableViewerColumn col1 = new TableViewerColumn(peerViewer, SWT.NONE);
 		col1.getColumn().setWidth(250);
 		col1.getColumn().setText(Messages.PeerPreferencePage_peer_location);
-		col1.setLabelProvider(new ColumnLabelProvider() {
+		col1.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof PeerDefinition)
 					return ((PeerDefinition) element).getLocation();
-				return super.getText(element);
+				return  ""; //$NON-NLS-1$
 			}
 		});
 		col1.setEditingSupport(editingSupport);
 		TableViewerColumn col2 = new TableViewerColumn(peerViewer, SWT.NONE);
 		col2.getColumn().setWidth(150);
 		col2.getColumn().setText(Messages.PeerPreferencePage_status);
-		col2.setLabelProvider(new ColumnLabelProvider() {
+		col2.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof PeerDefinition)
 					return PeerActivator.getDefault().isOnline((PeerDefinition) element)
 							? Messages.PeerPreferencePage_online
 							: Messages.PeerPreferencePage_offline;
-				return super.getText(element);
+				return  ""; //$NON-NLS-1$
 			}
 		});
 		peerViewer.setContentProvider(ArrayContentProvider.getInstance());
@@ -468,7 +468,7 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 	private Control createSharedGroup(CTabFolder parent) {
 		Composite comp = new Composite(parent, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		comp.setLayout(new GridLayout(1, false));
+		comp.setLayout(new GridLayout());
 		Composite innerComp = new Composite(comp, SWT.NONE);
 		GridLayout layout = new GridLayout(2, false);
 		layout.marginWidth = 0;
@@ -486,18 +486,18 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		TreeViewerColumn col1 = new TreeViewerColumn(catViewer, SWT.NONE);
 		col1.getColumn().setWidth(400);
 		col1.getColumn().setText(Messages.PeerPreferencePage_path);
-		col1.setLabelProvider(new ColumnLabelProvider());
+		col1.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
 		TreeViewerColumn col2 = new TreeViewerColumn(catViewer, SWT.NONE);
 		col2.getColumn().setWidth(200);
 		col2.getColumn().setText(Messages.PeerPreferencePage_privacy);
-		col2.setLabelProvider(new ColumnLabelProvider() {
+		col2.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof SharedCatalog)
 					return translatePrivacy(((SharedCatalog) element).getPrivacy());
 				if (element instanceof PeerDefinition)
 					return ((PeerDefinition) element).getRightsLabel();
-				return super.getText(element);
+				return  ""; //$NON-NLS-1$
 			}
 		});
 		col1.setEditingSupport(new EditingSupport(catViewer) {

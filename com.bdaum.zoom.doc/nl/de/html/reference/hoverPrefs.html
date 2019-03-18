@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de"><head>
+
+
+
+
+
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Hover-Präferenzen</title>
+
+<link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
+<h2><span class="tlid-translation translation">Hover-Präferenzen</span></h2><span class="tlid-translation translation"><span title="" class="">Auf dieser Voreinstellungsseite können Sie das anwendungsweite Hover-Verhalten konfigurieren.</span> <span title="" class="">Bitte beachten Sie, dass Sie den Hover über die Menüfunktion <acronym>Hilfe&gt;Hover</acronym> anzeigen oder durch Drücken von <abbr>F2</abbr> aus- und einschalten können.<br>
+</span></span>
+<h4><span class="tlid-translation translation"><span title="" class="">Vorlagen</span></span></h4>
+<h4><span class="tlid-translation translation"><span title="" class=""></span></span></h4>
+<span class="tlid-translation translation"><span title="" class="">In diesem Abschnitt </span></span><span class="tlid-translation translation">können Sie die Texte konfigurieren, die
+eingeblendet werden, wenn der Mauszeiger über ein Bild, ein Dia, eine
+Kollektion usw. bewegt wird. Sie können dies für jedes Element einzeln
+tun.<br><br>Die Hovertexte werden über Vorlagen gesteuert. Vorlagen
+werden aus konstanten Textteilen und Variablen erstellt. Sie können
+beides manuell eingeben, es ist jedoch viel komfortabler und sicherer,
+die Variablen aus einer Liste auszuwählen, indem Sie auf die
+Schaltflächen&nbsp;</span> <abbr>Variable einfügen...</abbr><span class="tlid-translation translation"> oder </span><abbr>Metadaten einfügen...</abbr><span class="tlid-translation translation"> klicken. Die letztere bezieht sich auf die verschiedenen Felder, die mit einem Bild definiert sind, z.B. EXIF- und IPTC-Daten.<br>
+<br>
+</span><span class="tlid-translation translation"><span title="" class="">Ein Sonderfall ist die Variable <code>{metadata}</code>.</span> <span title="" class="">Diese Variable erstellt einen gesamten Metadatenblock, der alle Metadatenfelder enthält, die in den <acronym>Metadaten</acronym>-Einstellungen im Abschnitt <acronym>Hover</acronym> konfiguriert sind.</span></span><br>
+<span class="tlid-translation translation"><br>Wenn
+eine Variable oder Metadaten nicht aufgelöst werden kann (z.B. ein Feld
+ist nicht definiert), wird die Variable einfach aus der Vorlage
+gelöscht. Dies reicht manchmal nicht aus: Sie möchten eventuell
+zusätzlichen Text damit löschen. Zu diesem Zweck wird eine spezielle
+Syntax bereitgestellt:<br>
+<br>
+</span><br>
+
+<table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-weight: bold; width: 20%;"><code>?<br>
+      </code></td>
+      <td style="vertical-align: top;"><span class="tlid-translation translation">Ein Fragezeichen am Anfang
+einer Zeile. Die gesamte Zeile wird gelöscht, wenn <span style="font-weight: bold;">alle</span> Variablen in
+dieser Zeile nicht aufgelöst sind.</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-weight: bold;"><code>??<br>
+      </code></td>
+      <td style="vertical-align: top;"><span class="tlid-translation translation">Zwei Fragezeichen am Anfang
+einer Zeile. Die gesamte Zeile wird gelöscht, wenn mindestens <span style="font-weight: bold;">eine</span>
+Variable in dieser Zeile nicht aufgelöst ist.</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-weight: bold;"><code>(? ... ?)<br>
+      </code></td>
+      <td style="vertical-align: top;"><span class="tlid-translation translation">Der vollständige Ausdruck
+zwischen den Klammern wird gelöscht, wenn <span style="font-weight: bold;">alle</span> Variablen in der Klammer
+unaufgelöst bleiben. Dies funktioniert auch über Zeilenumbrüche hinweg.</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-weight: bold;"><code>(?? ... ?)<br>
+      </code></td>
+      <td style="vertical-align: top;"><span class="tlid-translation translation">Der vollständige Ausdruck
+zwischen den Klammern wird gelöscht, wenn mindestens <span style="font-weight: bold;">eine</span> Variable
+innerhalb der Klammer unaufgelöst bleibt. Dies funktioniert auch über
+Zeilenumbrüche hinweg.</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+<span class="tlid-translation translation">Diese Markierungen werden abschließend aus der Vorlage entfernt, wenn der Hover-Text generiert wird.</span><abbr></abbr><br>
+<br>
+<h4><span class="tlid-translation translation"><span title="" class="">Timing</span></span></h4>
+<h4><span class="tlid-translation translation"></span></h4>
+<span class="tlid-translation translation"><span title="">In diesem Abschnitt können Sie das Hover-Timing konfigurieren:</span><br><br></span>
+<ul>
+  <li><span class="tlid-translation translation"><span style="font-weight: bold;" title="">Verzögerung.</span> <span title="">Dies ist die Zeit zwischen der Erkennung eines Maus-Hover-Ereignisses und dem tatsächlichen Popup des Hovertexts.</span> <span title="">Erhöhen Sie diese Zeit, wenn Hover-Popups regelmäßig mit der normalen Mausbedienung in Konflikt stehen.</span></span></li>
+  <li><span class="tlid-translation translation"><span style="font-weight: bold;">Basiszeit </span><span title="">Die minimale Zeit, in der die Hover-Texte angezeigt werden.</span></span></li>
+  <li><span class="tlid-translation translation"><span style="font-weight: bold;" title="">Zeit pro Zeichen.</span> <span title="">Dies ist die Zeit, die zur Basiszeit für jedes Zeichen im Hovertitel und Hovertext hinzugefügt wird.</span> <span title="">Damit können Sie das Hoververhalten an Ihre Lesegeschwindigkeit anpassen.</span></span></li>
+</ul>
+<span style="font-weight: bold;"></span><br>
+</body></html>

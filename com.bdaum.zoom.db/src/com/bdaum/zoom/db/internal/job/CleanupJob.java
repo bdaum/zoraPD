@@ -73,9 +73,7 @@ public class CleanupJob extends CustomJob {
 		}
 		Collections.sort(tobeChecked, new Comparator<SmartCollectionImpl>() {
 			public int compare(SmartCollectionImpl o1, SmartCollectionImpl o2) {
-				int l1 = o1.getStringId().length();
-				int l2 = o2.getStringId().length();
-				return (l1 == l2 ? 0 : l1 < l2 ? 1 : -1);
+				return o2.getStringId().length() - o1.getStringId().length();
 			}
 		});
 		monitor.beginTask(

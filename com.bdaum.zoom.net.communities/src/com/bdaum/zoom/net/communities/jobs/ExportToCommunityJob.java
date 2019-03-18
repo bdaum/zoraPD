@@ -440,9 +440,8 @@ public class ExportToCommunityJob extends AbstractExportJob implements IErrorHan
 			ImageUploadApi imageUploadApi = getImageUploadApi();
 			for (String id : imageTrack) {
 				TrackRecordImpl record = dbManager.obtainById(TrackRecordImpl.class, id);
-				if (record != null) {
+				if (record != null)
 					try {
-
 						if (imageUploadApi.getImageInfo(session, record.getDerivative()) != null)
 							return record.getExportDate();
 					} catch (InfoFailedException e) {
@@ -452,7 +451,6 @@ public class ExportToCommunityJob extends AbstractExportJob implements IErrorHan
 					} catch (ProtocolException e) {
 						// ignore
 					}
-				}
 			}
 		}
 		return null;

@@ -962,4 +962,24 @@
 	<entry keyword="Picture Transfer Protocol">
 		<topic href="html/reference/importFromDevice.html" />
 	</entry>
+	<entry keyword="Bewerten">
+		<entry keyword="automatisches ~">
+			<topic href="html/reference/rating.html" />
+		</entry>
+		<entry keyword="Bilder ~">
+			<topic href="html/tasks/rating.html" />
+		</entry>
+	</entry>
+	<entry keyword="Hover">
+		<entry keyword="~-Einstellungen">
+			<topic href="html/reference/hoverPrefs.html" />
+		</entry>
+		<entry keyword="~-Vorlagen">
+			<topic href="html/reference/hoverPrefs.html" />
+		</entry>
+		<entry keyword="~-Timing">
+			<topic href="html/reference/hoverPrefs.html" />
+		</entry>
+	</entry>
+
 </index>

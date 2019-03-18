@@ -175,7 +175,7 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	private static final int MAXIDS = 256;
 
-	private static final int VERSION = 14;
+	private static final int VERSION = 15;
 
 	private static final boolean DIAGNOSE = false;
 
@@ -376,7 +376,7 @@ public class DbManager implements IDbManager, IAdaptable {
 		common.objectClass(AssetImpl.class).cascadeOnDelete(true);
 		ObjectClass assetType = common.objectClass(Asset_typeImpl.class);
 		assetType.indexed(false);
-		indexedFields = new HashSet<>(factory.getIndexedFields());
+		indexedFields = factory.getIndexedFields();
 		for (String key : indexedFields)
 			assetType.objectField(key).indexed(true);
 		// Track and Ghost
@@ -2250,7 +2250,7 @@ public class DbManager implements IDbManager, IAdaptable {
 					LinkedList<String> sorted = new LinkedList<String>(dirtyCollections);
 					Collections.sort(sorted, new Comparator<String>() {
 						public int compare(String o1, String o2) {
-							return (o1.length() == o2.length() ? 0 : o1.length() < o2.length() ? 1 : -1);
+							return o2.length() - o2.length();
 						}
 					});
 					monitor.worked(1);

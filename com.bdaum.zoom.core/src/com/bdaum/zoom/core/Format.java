@@ -98,10 +98,13 @@ public class Format {
 		}
 
 		public Object fromString(String s) throws ParseException {
-			s = s.trim();
+			s = s.trim().toUpperCase();
 			NumberFormat af = getDecimalUSFormat(10);
 			try {
-				boolean dms = s.indexOf('°') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\'') >= 0;
+				boolean degQ = s.indexOf('°') >= 0;
+				boolean minQ = s.indexOf('"') >= 0;
+				boolean secQ = s.indexOf('\'') >= 0;
+				boolean dms = degQ || minQ ||secQ;
 				if (dms || s.indexOf(' ') >= 0) {
 					double sign = 1d;
 					if (s.startsWith(neg) || s.startsWith("-")) { //$NON-NLS-1$
@@ -129,25 +132,34 @@ public class Format {
 								throw new ParseException("", 0); //$NON-NLS-1$
 							degHappened = true;
 							if (n != null) {
-								d += Integer.parseInt(n);
+								d += minQ || secQ ? Integer.parseInt(n) : af.parse(n).doubleValue();
 								n = null;
 								i = 1;
 							}
 						} else if (!dms && " ".equals(token)) { //$NON-NLS-1$
 							if (n != null) {
-								if (degHappened)
-									throw new ParseException("", 0); //$NON-NLS-1$
-								degHappened = true;
-								d += Integer.parseInt(n);
+								switch (i++) {
+								case 0:
+									d += st.hasMoreTokens() ? Integer.parseInt(n) : af.parse(n).doubleValue();
+									degHappened = true;
+									break;
+								case 1:
+									d += (st.hasMoreTokens() ?  Integer.parseInt(n) : af.parse(n).doubleValue()) / 60d;
+									minHappened = true;
+									break;
+								case 2:
+									d += af.parse(n).doubleValue() / 3600d;
+									secHappened = true;
+									break;
+								}
 								n = null;
-								i = 1;
 							}
 						} else if ("'".equals(token)) { //$NON-NLS-1$
 							if (minHappened)
 								throw new ParseException("", 0); //$NON-NLS-1$
 							minHappened = true;
 							if (n != null) {
-								d += Integer.parseInt(n) / 60d;
+								d += (minQ || secQ ? Integer.parseInt(n) : af.parse(n).doubleValue()) / 60d;
 								n = null;
 								i = 2;
 							}
@@ -164,10 +176,10 @@ public class Format {
 							if (n != null) {
 								switch (i) {
 								case 0:
-									d += Integer.parseInt(n);
+									d = af.parse(n).doubleValue();
 									break;
 								case 1:
-									d += (dms ? (double) Integer.parseInt(n) : af.parse(n).doubleValue()) / 60d;
+									d += (secQ ? (double) Integer.parseInt(n) : af.parse(n).doubleValue()) / 60d;
 									break;
 								case 2:
 									d += af.parse(n).doubleValue() / 3600d;
@@ -401,7 +413,7 @@ public class Format {
 
 		public Object fromString(String s) throws ParseException {
 			try {
-				s = s.trim();
+				s = s.trim().toLowerCase();
 				int offset = 0;
 				if (s.endsWith(AM))
 					s = s.substring(0, s.length() - AM.length()).trim();
@@ -425,8 +437,11 @@ public class Format {
 	public final static IFormatter sizeFormatter = new IFormatter() {
 
 		public Object fromString(String s) throws ParseException {
-			s = s.trim();
+			s = s.trim().toUpperCase();
 			try {
+				if (s.endsWith("TB")) //$NON-NLS-1$
+					return (long) (getDecimalFormat(10).parse(s.substring(0, s.length() - 2).trim()).doubleValue()
+							* 1000000000000L);
 				if (s.endsWith("GB")) //$NON-NLS-1$
 					return (long) (getDecimalFormat(10).parse(s.substring(0, s.length() - 2).trim()).doubleValue()
 							* 1000000000);
@@ -444,11 +459,13 @@ public class Format {
 
 		public String toString(Object o) {
 			long d = ((Long) o).longValue();
-			if (d >= 1000000000)
+			if (d >= 1000000000000L)
+				return formatDecimal(d / 1000000000000d, 2) + " TB"; //$NON-NLS-1$
+			if (d >= 1000000000L)
 				return formatDecimal(d / 1000000000d, 2) + " GB"; //$NON-NLS-1$
-			if (d >= 1000000)
+			if (d >= 1000000L)
 				return formatDecimal(d / 1000000d, 2) + " MB"; //$NON-NLS-1$
-			if (d >= 1000)
+			if (d >= 1000L)
 				return formatDecimal(d / 1000d, 2) + " kB"; //$NON-NLS-1$
 			return String.valueOf(d);
 		}
@@ -511,45 +528,6 @@ public class Format {
 			return 2;
 		}
 	}
-
-	// public static double evaluateCurrencyExpression(String expression) throws
-	// ParseException {
-	// double total = 0d;
-	// double sign = 1d;
-	// String ops = "-+"; //$NON-NLS-1$
-	// StringTokenizer st = new StringTokenizer(expression, ops, true);
-	// while (st.hasMoreElements()) {
-	// String token = st.nextToken();
-	// int p = ops.indexOf(token);
-	// if (p >= 0)
-	// sign = 2 * p - 1;
-	// else
-	// total += sign * evaluateProduct(token.trim());
-	// }
-	// return total;
-	// }
-	//
-	// private static double evaluateProduct(String s) throws ParseException {
-	// double total = 1d;
-	// boolean divide = false;
-	// String ops = "/*"; //$NON-NLS-1$
-	// StringTokenizer st = new StringTokenizer(s, ops, true);
-	// while (st.hasMoreElements()) {
-	// String token = st.nextToken();
-	// int p = ops.indexOf(token);
-	// if (p >= 0)
-	// divide = p == 0;
-	// else if (divide)
-	// total /= parseCurreny(token.trim());
-	// else
-	// total *= parseCurreny(token.trim());
-	// }
-	// return total;
-	// }
-//
-//	private static double parseCurreny(String token) throws ParseException {
-//		return getCurrencyNumberFormat().parse(token).doubleValue();
-//	}
 	
 	// Based on an idea by Boann (https://stackoverflow.com/questions/3422673/evaluating-a-math-expression-given-in-string-form)
 

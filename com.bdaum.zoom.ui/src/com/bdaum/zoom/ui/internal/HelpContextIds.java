@@ -55,6 +55,8 @@ public interface HelpContextIds extends IHelpContexts {
 			+ "auto" + PAGE_POSTFIX; //$NON-NLS-1$
 	public static final String VOCAB_PREFERENCE_PAGE = PREFIX
 			+ "vocab" + PAGE_POSTFIX; //$NON-NLS-1$
+	public static final String HOVER_PREFERENCE_PAGE = PREFIX
+			+ "hover" + PAGE_POSTFIX; //$NON-NLS-1$
 
 
 	/* Dialogs */

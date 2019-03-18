@@ -10,13 +10,17 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
@@ -31,6 +35,7 @@ import com.bdaum.zoom.core.internal.ai.IAiService;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
+import com.bdaum.zoom.ui.internal.dialogs.ComputeTimeshiftDialog;
 import com.bdaum.zoom.ui.internal.dialogs.KeywordDialog;
 import com.bdaum.zoom.ui.internal.widgets.AutoRatingGroup;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
@@ -68,6 +73,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 	private String presetKeywords;
 	private String presetPrefix;
 	private Integer presetPrivacy;
+	private Spinner timeShiftMinuteField;
 
 	public ImportAddMetadataPage(String pageName, boolean media, SmartCollectionImpl collection, boolean newStruct) {
 		super(pageName);
@@ -85,16 +91,43 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new GridLayout());
 		CGroup metaComp = CGroup.create(comp, 1, Messages.ImportAddMetadataPage_add_metadata);
-		((GridLayout) metaComp.getLayout()).numColumns = 4;
+		((GridLayout) metaComp.getLayout()).numColumns = 5;
 		artistField = createHistoryCombo(metaComp, QueryField.EXIF_ARTIST.getLabel(), dialogSettings, ARTISTS);
+		((GridData) artistField.getLayoutData()).horizontalSpan = 2;
 		String lastArtist = dialogSettings.get(LAST_ARTIST);
 		if (lastArtist != null)
 			artistField.setText(lastArtist);
 		presetAuthor = artistField.getText();
 		eventField = createHistoryCombo(metaComp, QueryField.IPTC_EVENT.getLabel(), dialogSettings, EVENTS);
+		if (media) {
+			new Label(metaComp, SWT.NONE).setText(Messages.ImportAddMetadataPage_timeshift);
+			timeShiftMinuteField = new Spinner(metaComp, SWT.BORDER);
+			timeShiftMinuteField.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
+			timeShiftMinuteField.setMaximum(3660 * 24 * 60);
+			timeShiftMinuteField.setMinimum(-3660 * 24 * 60);
+			timeShiftMinuteField.setIncrement(1);
+			timeShiftMinuteField.setPageIncrement(60);
+			Button computeButton = new Button(metaComp, SWT.PUSH);
+			computeButton.setText(Messages.ImportAddMetadataPage_compute);
+			computeButton.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					ComputeTimeshiftDialog dialog = new ComputeTimeshiftDialog(getShell(),
+							timeShiftMinuteField.getSelection(), Messages.ImportAddMetadataPage_enter_current_time,
+							Messages.ImportAddMetadataPage_system_time, Messages.ImportAddMetadataPage_camera_time);
+					dialog.create();
+					dialog.getShell().setLocation(timeShiftMinuteField.toDisplay(40, 20));
+					if (dialog.open() == ComputeTimeshiftDialog.OK)
+						timeShiftMinuteField.setSelection(dialog.getResult());
+				}
+			});
+			Label label = new Label(metaComp, SWT.NONE);
+			label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+			label.setText(Messages.ImportAddMetadataPage_timeshift_hint);
+		}
 		new Label(metaComp, SWT.NONE).setText(QueryField.IPTC_KEYWORDS.getLabel());
 		keywordField = new Text(metaComp, SWT.READ_ONLY | SWT.BORDER | SWT.V_SCROLL);
-		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 3, 1);
+		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 4, 1);
 		layoutData.heightHint = 50;
 		keywordField.setLayoutData(layoutData);
 		keywordField.addMouseListener(new MouseAdapter() {
@@ -232,7 +265,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 			if (privacyGroup.getSelection() == presetPrivacy && privacy != null)
 				privacyGroup.setSelection(presetPrivacy = privacy);
 			String pp = current.getPrefix();
-			if (prefixField.getText().equals(presetPrefix) && pp != null)
+			if (prefixField != null && prefixField.getText().equals(presetPrefix) && pp != null)
 				prefixField.setText(presetKeywords = pp);
 		}
 	}
@@ -252,6 +285,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 		dialogSettings.put(LAST_ARTIST, artist);
 		saveComboHistory(eventField, dialogSettings);
 		importData.setEvent(eventField.getText());
+		importData.setTimeshift(timeShiftMinuteField == null ? 0 : timeShiftMinuteField.getSelection());
 		dialogSettings.put(KEYWORDS, currentKeywords);
 		importData.setKeywords(currentKeywords);
 		newDevice.setKeywords(currentKeywords);

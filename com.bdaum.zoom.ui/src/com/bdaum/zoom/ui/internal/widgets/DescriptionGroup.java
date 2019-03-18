@@ -48,8 +48,8 @@ public class DescriptionGroup {
 		descriptionHelpLabel.setText(Messages.DescriptionGroup_html_assist);
 		new Label(parent, SWT.NONE);
 		GridData gd_descriptionField = new GridData(SWT.FILL, SWT.FILL, true, true);
-		gd_descriptionField.widthHint = 250;
-		gd_descriptionField.heightHint = 70;
+		gd_descriptionField.widthHint = 300;
+		gd_descriptionField.heightHint = 100;
 		descriptionComposite = new Composite(parent, SWT.NONE);
 		descriptionComposite.setLayoutData(gd_descriptionField);
 		descriptionStack = new StackLayout();

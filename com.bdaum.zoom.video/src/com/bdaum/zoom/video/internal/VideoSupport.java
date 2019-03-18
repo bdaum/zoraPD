@@ -19,12 +19,10 @@
  */
 package com.bdaum.zoom.video.internal;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,18 +30,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
+import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.FrameGrabber.Exception;
+import org.bytedeco.javacv.Java2DFrameConverter;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Shell;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.impl.EclipseLogger;
-import org.slf4j.impl.IEclipseLoggingHandler;
 
 import com.bdaum.zoom.batch.internal.ExifToolSubstitute;
 import com.bdaum.zoom.cat.model.Ghost_typeImpl;
@@ -56,6 +51,7 @@ import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IFormatter;
 import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.core.QueryField;
@@ -65,7 +61,6 @@ import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.ImportException;
-import com.bdaum.zoom.core.internal.ImportFromDeviceData;
 import com.bdaum.zoom.core.internal.ImportState;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.core.internal.db.AssetEnsemble;
@@ -74,20 +69,16 @@ import com.bdaum.zoom.image.IExifLoader;
 import com.bdaum.zoom.image.ZImage;
 import com.bdaum.zoom.image.recipe.Recipe;
 import com.bdaum.zoom.job.OperationJob;
-import com.bdaum.zoom.logging.InvalidFileFormatException;
 import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.operations.internal.AbstractMediaSupport;
 import com.bdaum.zoom.operations.internal.AutoRuleOperation;
+import com.bdaum.zoom.program.DiskFullException;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.video.model.Video;
 import com.bdaum.zoom.video.model.VideoImpl;
 
-import uk.co.caprica.vlcj.player.MediaPlayer;
-import uk.co.caprica.vlcj.player.MediaPlayerEventAdapter;
-import uk.co.caprica.vlcj.player.MediaPlayerFactory;
-
 @SuppressWarnings("restriction")
-public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggingHandler {
+public class VideoSupport extends AbstractMediaSupport {
 
 	private static final String BAK = ".bak"; //$NON-NLS-1$
 	private static final Class<?>[] NOPARMS = new Class[0];
@@ -96,12 +87,11 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 	public static final IFormatter durationFormatter = new IFormatter() {
 
 		public String toString(Object obj) {
-			double d = ((Double) obj).doubleValue();
-			return getDurationFormat().format(d) + " s"; //$NON-NLS-1$
+			return Format.getDecimalFormat(3).format(((Double) obj).doubleValue()) + " s"; //$NON-NLS-1$
 		}
 
 		public Object fromString(String s) throws ParseException {
-			s = s.trim();
+			s = s.trim().toLowerCase();
 			if (s.endsWith("s")) //$NON-NLS-1$
 				s = s.substring(0, s.length() - 1).trim();
 			try {
@@ -112,12 +102,50 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 		}
 	};
 
-	public static NumberFormat getDurationFormat() {
-		NumberFormat df = NumberFormat.getNumberInstance();
-		df.setMaximumFractionDigits(3);
-		df.setMinimumFractionDigits(0);
-		return df;
-	}
+	private static final IFormatter frameFormatter = new IFormatter() {
+
+		public String toString(Object obj) {
+			return Format.getDecimalFormat(2).format(((Double) obj).doubleValue()) + " fps"; //$NON-NLS-1$
+		}
+
+		public Object fromString(String s) throws ParseException {
+			s = s.trim().toLowerCase();
+			if (s.endsWith("fps")) //$NON-NLS-1$
+				s = s.substring(0, s.length() - 3).trim();
+			try {
+				return Double.parseDouble(s);
+			} catch (NumberFormatException e) {
+				throw new ParseException(Messages.VideoSupport_bad_fps, 0);
+			}
+		}
+	};
+
+	private static final IFormatter bitrateFormatter = new IFormatter() {
+
+		public String toString(Object obj) {
+			double d = ((Integer) obj).intValue();
+			if (d > 2000000)
+				return Format.getDecimalFormat(3).format(d / 1000000d) + " Mbps"; //$NON-NLS-1$
+			return Format.getDecimalFormat(1).format(d / 1000d) + " kbps"; //$NON-NLS-1$
+		}
+
+		public Object fromString(String s) throws ParseException {
+			s = s.trim().toLowerCase();
+			double f = 1d;
+			if (s.endsWith("mbps")) { //$NON-NLS-1$
+				s = s.substring(0, s.length() - 4).trim();
+				f = 1000000d;
+			} else if (s.endsWith("kbps")) { //$NON-NLS-1$
+				s = s.substring(0, s.length() - 4).trim();
+				f = 1000d;
+			}
+			try {
+				return (int) (Double.parseDouble(s) * f);
+			} catch (NumberFormatException e) {
+				throw new ParseException(Messages.VideoSupport_bad_fps, 0);
+			}
+		}
+	};
 
 	// 0x0 = Reserved 0x12 = MPEG-4 generic
 	// 0x1 = MPEG-1 Video 0x13 = ISO 14496-1 SL-packetized
@@ -138,12 +166,12 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 	// 0x10 = MPEG-4 Video 0xa0 = MSCODEC Video
 	// 0x11 = MPEG-4 LATM AAC Audio 0xea = Private ES (VC-1)
 
-	private static final int[] STREAMTYPEKEYS = new int[] { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb,
-			0xc, 0xd, 0xe, 0xf, 0x10, 0x11, 0x12, 0x13, 0x14, 0x1b, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
+	private static final int[] STREAMTYPEKEYS = new int[] { -1, 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa,
+			0xb, 0xc, 0xd, 0xe, 0xf, 0x10, 0x11, 0x12, 0x13, 0x14, 0x1b, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
 			0x8a, 0x91, 0x92, 0x94, 0xa0, 0xea };
 
-	private static final String[] STREAMTYPELABELS = new String[] { "Reserved", //$NON-NLS-1$
-			"MPEG-1 Video", //$NON-NLS-1$
+	private static final String[] STREAMTYPELABELS = new String[] { Messages.VideoSupport_unknown,
+			Messages.VideoSupport_reserved, "MPEG-1 Video", //$NON-NLS-1$
 			"MPEG-2 Video", //$NON-NLS-1$
 			"MPEG-1 Audio", //$NON-NLS-1$
 			"MPEG-2 Audio", //$NON-NLS-1$
@@ -230,7 +258,6 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 					"3", "2/1", "3/1", "2/2", "3/2", //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 					"1", "2 max", "3 max", "4 max", "5 max", "6 max" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 			null, 0f, ISpellCheckingService.NOSPELLING) {
-
 		@Override
 		protected int getInt(Asset asset) {
 			Video v = getVx(asset, false);
@@ -243,10 +270,8 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 			null, "AudioSampleRate", Messages.QueryField_audio_sample_rate, QueryField.ACTION_QUERY, //$NON-NLS-1$
 			VIDEO | QueryField.EDIT_NEVER | QueryField.QUERY | QueryField.AUTO_LINEAR | QueryField.ESSENTIAL
 					| QueryField.HOVER | QueryField.REPORT,
-			CATEGORY_VIDEO, QueryField.T_INTEGER, 1, QueryField.T_NONE, new int[] { 0, 1, 2 },
-			new String[] { "48000", "44100", //$NON-NLS-1$ //$NON-NLS-2$
-					"32000" }, //$NON-NLS-1$
-			null, 0f, ISpellCheckingService.NOSPELLING) {
+			CATEGORY_VIDEO, QueryField.T_POSITIVEINTEGER, 1, QueryField.T_NONE, null, null, null, 0f,
+			ISpellCheckingService.NOSPELLING) {
 		@Override
 		protected int getInt(Asset asset) {
 			Video v = getVx(asset, false);
@@ -258,9 +283,9 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 			null, "SurroundMode", Messages.QueryField_surround_mode, QueryField.ACTION_QUERY, //$NON-NLS-1$
 			VIDEO | QueryField.EDIT_NEVER | QueryField.QUERY | QueryField.AUTO_DISCRETE | QueryField.ESSENTIAL
 					| QueryField.HOVER | QueryField.REPORT,
-			CATEGORY_VIDEO, QueryField.T_INTEGER, 1, QueryField.T_NONE, new int[] { 0, 1, 2 },
-			new String[] { Messages.QueryField_not_indicated, Messages.QueryField_not_dolby_surround,
-					Messages.QueryField_dolby_surround },
+			CATEGORY_VIDEO, QueryField.T_INTEGER, 1, QueryField.T_NONE, new int[] { -1, 0, 1, 2 },
+			new String[] { Messages.VideoSupport_unknown, Messages.QueryField_not_indicated,
+					Messages.QueryField_not_dolby_surround, Messages.QueryField_dolby_surround },
 			null, 0f, ISpellCheckingService.NOSPELLING) {
 		@Override
 		protected int getInt(Asset asset) {
@@ -275,7 +300,6 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 			VIDEO | QueryField.EDIT_NEVER | QueryField.QUERY | QueryField.AUTO_DISCRETE | QueryField.REPORT,
 			CATEGORY_VIDEO, QueryField.T_INTEGER, 1, QueryField.T_NONE, STREAMTYPEKEYS, STREAMTYPELABELS, null, 0f,
 			ISpellCheckingService.NOSPELLING) {
-
 		@Override
 		protected int getInt(Asset asset) {
 			Video v = getVx(asset, false);
@@ -308,13 +332,32 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 			Messages.QueryField_video_frame_rate, QueryField.ACTION_QUERY,
 			VIDEO | QueryField.EDIT_NEVER | QueryField.QUERY | QueryField.AUTO_LINEAR | QueryField.ESSENTIAL
 					| QueryField.HOVER | QueryField.REPORT,
-			CATEGORY_VIDEO, QueryField.T_POSITIVEFLOAT, 1, QueryField.T_NONE, null, 0.01f, Float.NaN,
+			CATEGORY_VIDEO, QueryField.T_POSITIVEFLOAT, 1, QueryField.T_NONE, null, null, frameFormatter, 0.01f,
 			ISpellCheckingService.NOSPELLING) {
 
 		@Override
 		protected double getDouble(Asset asset) {
 			Video v = getVx(asset, false);
 			return v == null ? Double.NaN : v.getVideoFrameRate();
+		}
+	};
+	public static final QueryField VIDEO_AVGBITRATE = new QueryField(VIDEO_GENERAL, "vx/avgBitrate", //$NON-NLS-1$
+			"AvgBitrate", //$NON-NLS-1$
+			null, "AvgBitrate", //$NON-NLS-1$
+			Messages.VideoSupport_avgbitrate, QueryField.ACTION_QUERY,
+			VIDEO | QueryField.EDIT_NEVER | QueryField.QUERY | QueryField.AUTO_LINEAR, CATEGORY_VIDEO,
+			QueryField.T_POSITIVEINTEGER, 1, QueryField.T_NONE, null, null, bitrateFormatter, 5f,
+			ISpellCheckingService.NOSPELLING) {
+
+		@Override
+		protected int getInt(Asset asset) {
+			Video v = getVx(asset, false);
+			if (v != null) {
+				int b = v.getAvgBitrate();
+				if (b > 0)
+					return b;
+			}
+			return -1;
 		}
 	};
 	public static final QueryField VIDEO_DURATION = new QueryField(VIDEO_GENERAL, "vx/duration", //$NON-NLS-1$
@@ -355,19 +398,6 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 
 	private static final int NOCONVERT = 2;
 
-	private static final String[] VLC_ARGS = { "--intf", "dummy", /* no interface *///$NON-NLS-1$//$NON-NLS-2$
-			"--vout", "dummy", /* we don't want video (output) *///$NON-NLS-1$ //$NON-NLS-2$
-			"--noaudio", /* we don't want audio (decoding) *///$NON-NLS-1$
-			"--no-video-title-show", /* nor the filename displayed *///$NON-NLS-1$
-			"--no-stats", /* no stats *///$NON-NLS-1$
-			"--no-sub-autodetect-file", /* we don't want subtitles *///$NON-NLS-1$
-			// "--no-inhibit", /* we don't want interfaces */
-			"--no-disable-screensaver", /* we don't want interfaces *///$NON-NLS-1$
-			"--no-snapshot-preview", /* no blending in dummy vout *///$NON-NLS-1$
-	};
-
-	private static final float VLC_THUMBNAIL_POSITION = 0f; // 30.0f / 100.0f;
-
 	static {
 		QueryField.IMAGE_FILE.setFlag(VIDEO);
 		QueryField.SAMPLESPERPIXEL.setFlag(VIDEO);
@@ -391,31 +421,23 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 	}
 
 	private ImportState importState;
-	private BufferedImage thumbnail;
 	private String name;
-
 	private String plural;
-
 	private boolean convertall;
-
 	private List<File> backups = new ArrayList<File>();
-
 	private Map<String, String> mimeMap;
-
 	private String collectionID;
 
-	/*** Importing ***/
-
-	/*
+	/**
 	 * (nicht-Javadoc)
 	 *
 	 * @see com.bdaum.zoom.core.internal.IMediaSupport#importFile(java.io.File,
-	 * java.lang.String, java.util.Date, int,
-	 * org.eclipse.core.runtime.IProgressMonitor, java.net.URI,
-	 * com.bdaum.zoom.core.internal.ImportState)
+	 *      java.lang.String, java.util.Date, int,
+	 *      org.eclipse.core.runtime.IProgressMonitor, java.net.URI,
+	 *      com.bdaum.zoom.core.internal.ImportState)
 	 */
 	public int importFile(StorageObject object, String extension, ImportState importState, IProgressMonitor aMonitor,
-			URI remote) throws Exception {
+			URI remote) throws IOException, DiskFullException {
 		if (this.importState != importState) {
 			this.importState = importState;
 			convertall = false;
@@ -434,11 +456,10 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 
 		Date lastModified = new Date(lastMod);
 		URI uri = object.toURI();
-		ImportFromDeviceData importFromDeviceData = importState.importFromDeviceData;
 		boolean fromImportFilter = VideoActivator.getDefault().getImportFilters().get(extension) != null;
 		File[] files = null;
-		if (importFromDeviceData != null) {
-			files = importState.transferFile(object, importState.importNo, aMonitor);
+		if (importState.transferNeeded()) {
+			files = importState.transferFile(object, aMonitor);
 			if (files == null || !files[0].exists())
 				return 0;
 			if (importState.skipDuplicates(files[0], originalFileName, lastModified)) {
@@ -446,16 +467,15 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 				return 0;
 			}
 		} else if (object.isLocal())
-			files = new File[] {(File) object.getNativeObject()};
+			files = new File[] { (File) object.getNativeObject() };
 		IDbManager dbManager = CoreActivator.getDefault().getDbManager();
 		ImportConfiguration configuration = importState.getConfiguration();
-		MediaPlayerFactory factory = null;
 		try {
 			AssetEnsemble ensemble = null;
-			List<AssetEnsemble> existing = AssetEnsemble.getAllAssets(dbManager, remote != null ? remote : files[0].toURI(),
-					importState);
-			if (importFromDeviceData == null) {
-				Asset asset = null;
+			List<AssetEnsemble> existing = AssetEnsemble.getAllAssets(dbManager,
+					remote != null ? remote : files[0].toURI(), importState);
+			Asset asset = null;
+			if (!importState.transferNeeded()) {
 				if (existing != null && !existing.isEmpty()) {
 					asset = existing.get(0).getAsset();
 					oldId = asset.getStringId();
@@ -494,19 +514,12 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 						}
 				}
 			}
-			final Shell shell = importState.info.getAdapter(Shell.class);
-			factory = VideoActivator.getDefault().vlcCheck(shell, VLC_ARGS);
-			if (factory == null) {
-				aMonitor.setCanceled(true);
-				return 0;
-			}
-
 			List<Ghost_typeImpl> ghosts = dbManager.obtainGhostsForFile(remote != null ? remote : files[0].toURI());
 			importState.allDeletedGhosts.addAll(ghosts);
 			toBeDeleted.addAll(ghosts);
 			if (ensemble == null)
 				ensemble = new AssetEnsemble(dbManager, importState, oldId);
-			Asset asset = importState.resetEnsemble(ensemble, remote != null ? remote : files[0].toURI(), files[0],
+			asset = importState.resetEnsemble(ensemble, remote != null ? remote : files[0].toURI(), files[0],
 					lastModified, originalFileName, importState.importDate);
 			aMonitor.worked(1);
 			--work;
@@ -517,24 +530,19 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 				IExifLoader etool = fromImportFilter ? new ExifToolSubstitute(files[0])
 						: importState.getExifTool(exifFile, 0);
 				if (oldThumbnail == null) {
-					if (fromImportFilter) {
-						int twidth = importState.computeThumbnailWidth();
-						image = ((ExifToolSubstitute) etool).loadThumbnail(twidth, twidth / 4 * 3, ImportState.MCUWidth,
-								0f);
-					} else {
-						decodeAndCaptureFrames(files[0], factory);
-						if (thumbnail != null) {
-							image = new ZImage(thumbnail, files[0].getAbsolutePath());
-							thumbnail = null;
-						}
-					}
+					int twidth = importState.computeThumbnailWidth();
+					image = fromImportFilter
+							? ((ExifToolSubstitute) etool).loadThumbnail(twidth, twidth / 4 * 3,
+									importState.thumbnailRaster, 0f)
+							: decodeAndCaptureFrames(files[0], twidth, importState.thumbnailRaster, aMonitor);
 					if (image == null)
 						asset = null;
 				}
 				aMonitor.worked(1);
 				--work;
-				if (asset != null && createImageEntry(files[0], uri, extension, false, ensemble, image, oldThumbnail, etool,
-						null, ensemble.xmpTimestamp, importState.importDate, toBeStored, toBeDeleted, aMonitor)) {
+				if (asset != null
+						&& createImageEntry(files[0], uri, extension, false, ensemble, image, oldThumbnail, etool, null,
+								ensemble.xmpTimestamp, importState.importDate, toBeStored, toBeDeleted, aMonitor)) {
 					AssetEnsemble.deleteAll(existing, deletedAssets, toBeDeleted, toBeStored);
 					ensemble.removeFromTrash(trashed);
 					ensemble.store(toBeDeleted, toBeStored);
@@ -580,8 +588,6 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 		} catch (ImportException e) {
 			return 0;
 		} finally {
-			if (factory != null)
-				factory.release();
 			aMonitor.worked(work);
 		}
 	}
@@ -594,12 +600,11 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 		if (assetStatus < Constants.STATE_DEVELOPED)
 			assetStatus = Constants.STATE_DEVELOPED;
 		ensemble.resetEnsemble(assetStatus);
-		if (importState.analogProperties != null)
-			ensemble.setAnalogProperties(importState.analogProperties);
+		ensemble.setAnalogProperties(importState.getAnalogProperties());
 		if (!importState.processExifData(ensemble, originalFile, 0))
 			return false;
 		importState.processXmpSidecars(uri, monitor, ensemble);
-		ensemble.cleanUp(now);
+		ensemble.cleanUp(now, importState.getTimeshift());
 		asset.setContentType(QueryField.CONTENTTYPE_PHOTO);
 		Video vx = getVx(asset, false);
 		if (vx != null && vx.getVideoFrameRate() < 8)
@@ -613,100 +618,48 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 			asset.setJpegThumbnail(oldThumbnail);
 			return true;
 		}
-		int width = importState.computeThumbnailWidth();
-		int height = width / 4 * 3;
 		int angle = importState.getThumbAngle(asset, false);
-		try {
-			if (image != null) {
-				int origWidth = image.width;
-				if (image.height > origWidth) {
-					int www = height;
-					height = width;
-					width = www;
-				}
-				image.setScaling(width, height, false, ImportState.MCUWidth, null); // , ZImage.SCALE_DEFAULT);
-				if (angle != 0)
-					image.setRotation(angle, 1f, 1f);
-			}
-		} catch (OutOfMemoryError e) {
-			importState.operation.addError(Messages.VideoSupport_non_enough_memory_for_thumbnail, e);
-		}
+		if (image != null && angle != 0)
+			image.setRotation(angle, 1f, 1f);
 		return (image != null) ? importState.writeThumbnail(image, asset, angle) : false;
 	}
 
 	/**
 	 * Construct a DecodeAndCaptureFrames which reads and captures frames from a
 	 * video file.
+	 * 
+	 * @param twidth
 	 *
 	 * @param filename
 	 *            the name of the media file to read
+	 * @throws IOException
 	 */
 
-	private void decodeAndCaptureFrames(File file, MediaPlayerFactory factory) throws InvalidFileFormatException {
-		Logger logger = LoggerFactory.getLogger("org.ffmpeg"); //$NON-NLS-1$
-		try {
-			if (logger instanceof EclipseLogger) {
-				((EclipseLogger) logger).setLastErrorMessage(null);
-				((EclipseLogger) logger).setLoggingHandler(this);
+	private static ZImage decodeAndCaptureFrames(File file, int twidth, int raster, IProgressMonitor aMonitor)
+			throws IOException {
+		try (FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(file)) {
+			Java2DFrameConverter converter = new Java2DFrameConverter();
+			grabber.start();
+			int h = grabber.getImageHeight();
+			int w = grabber.getImageWidth();
+			double f = (double) twidth / Math.max(w, h);
+			int newWidth = (int) (w * f);
+			int newHeight = (int) (h * f);
+			if (raster > 0) {
+				newWidth = (newWidth + (raster / 2)) / raster * raster;
+				newHeight = (newHeight + raster / 2) / raster * raster;
 			}
-			MediaPlayer mediaPlayer = factory.newHeadlessMediaPlayer();
-			try {
-
-				final CountDownLatch inPositionLatch = new CountDownLatch(1);
-				final CountDownLatch snapshotTakenLatch = new CountDownLatch(1);
-				mediaPlayer.addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
-					@Override
-					public void positionChanged(MediaPlayer mediaPlayer, float newPosition) {
-						if (newPosition >= VLC_THUMBNAIL_POSITION * 0.9f) { /*
-																			 * 90 % margin
-																			 */
-							// System.out.println("Countdown "+newPosition);
-							inPositionLatch.countDown();
-						}
-					}
-
-					@Override
-					public void snapshotTaken(MediaPlayer mediaPlayer, String filename) {
-						// System.out.println("snapshotTaken(filename="
-						// + filename + ")");
-						snapshotTakenLatch.countDown();
-					}
-				});
-				if (mediaPlayer.startMedia(file.toString())) {
-					mediaPlayer.setPosition(VLC_THUMBNAIL_POSITION);
-					try {
-						inPositionLatch.await(5, TimeUnit.SECONDS); // Might
-																	// wait
-																	// forever
-																	// if
-																	// error
-						thumbnail = mediaPlayer.getSnapshot(importState.computeThumbnailWidth(), 0);
-						snapshotTakenLatch.await(5, TimeUnit.SECONDS); // Might
-																		// wait
-																		// forever
-																		// if
-																		// error
-					} catch (InterruptedException e) {
-						showError(NLS.bind(Messages.VlcVideoSupport_timeout, file));
-					} finally {
-						mediaPlayer.stop();
-					}
-				} else {
-					throw new InvalidFileFormatException(NLS.bind(Messages.VideoSupport_unable_to_decode, file), null,
-							file.toURI());
-				}
-			} finally {
-				mediaPlayer.release();
-			}
-		} finally {
-			if (logger instanceof EclipseLogger)
-				((EclipseLogger) logger).setLoggingHandler(null);
+			grabber.setImageWidth(newWidth);
+			grabber.setImageHeight(newHeight);
+			grabber.setFrameNumber(1);
+			Frame frame = grabber.grabImage();
+			ZImage image = frame != null ? new ZImage(converter.getBufferedImage(frame), file.getAbsolutePath()) : null;
+			grabber.stop();
+			grabber.release();
+			return image;
+		} catch (Exception e) {
+			throw new IOException(NLS.bind(Messages.VideoSupport_taking_snapshot_failed, file), e);
 		}
-
-	}
-
-	private void showError(String msg) {
-		importState.operation.addError(msg, null);
 	}
 
 	public void log(int eLevel, String msg, Throwable t) {
@@ -874,7 +827,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 	}
 
 	private static VideoImpl createVideoInstance() {
-		return new VideoImpl(-1, -1, -1, -1, -1, -1, Double.NaN, -1, Double.NaN, -1);
+		return new VideoImpl(-1, -1, -1, -1, -1, -1, Double.NaN, -1, Double.NaN, -1, -1);
 	}
 
 	/*
@@ -1036,7 +989,7 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 	}
 
 	public boolean undoImport(Asset asset, Set<Object> toBeDeleted, List<Object> toBeStored) {
-		for (File backup : backups) {
+		for (File backup : backups)
 			if (backup.exists()) {
 				String name = backup.getName();
 				if (name.endsWith(BAK)) {
@@ -1046,7 +999,6 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 					backup.renameTo(videoFile);
 				}
 			}
-		}
 		backups.clear();
 		return false;
 	}
@@ -1059,6 +1011,11 @@ public class VideoSupport extends AbstractMediaSupport implements IEclipseLoggin
 	@Override
 	public void setCollectionId(String collectionID) {
 		this.collectionID = collectionID;
+	}
+
+	@Override
+	public String getGalleryHoverId() {
+		return "com.bdaum.zoom.ui.hover.galleryItem.video"; //$NON-NLS-1$
 	}
 
 }

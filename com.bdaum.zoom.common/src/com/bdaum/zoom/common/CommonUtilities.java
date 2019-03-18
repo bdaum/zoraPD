@@ -23,6 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommonUtilities {
+	
+	private static int hoverDelay = 200;
+	private static int hoverBaseTime = 1000;
+	private static int hoverTimePerChar = 25;
 
 	private CommonUtilities() {
 		// inhibit instantiation
@@ -84,5 +88,18 @@ public class CommonUtilities {
 		return result;
 	}
 
+	public static int computeHoverTime(int nchars) {
+		return hoverBaseTime + nchars * hoverTimePerChar;
+	}
+
+	public static void setHoverTiming(int dt, int bt, int ct) {
+		hoverDelay = dt;
+		hoverBaseTime = bt;
+		hoverTimePerChar = ct;
+	}
+
+	public static long getHoverDelay() {
+		return hoverDelay;
+	}
 
 }

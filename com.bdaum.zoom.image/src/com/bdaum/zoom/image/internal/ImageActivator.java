@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Berthold Daum.
+ * Copyright (c) 2009-2019 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -48,12 +48,11 @@ public class ImageActivator extends Plugin {
 
 	private static ImageActivator plugin;
 
-	private ICC_ProfileRGB SRGB_ICC;
-	private ICC_ProfileRGB ARGB_ICC;
-	private ColorConvertOp COLORCONVERTOP_SRGB2ARGB;
-	private ColorConvertOp COLORCONVERTOP_ARGB2SRGB;
+	private ICC_ProfileRGB[] iccProfiles = new ICC_ProfileRGB[ImageConstants.ICCFILES.length];
+	private ColorConvertOp[] COLORCONVERTOP_SRGB2ICC = new ColorConvertOp[ImageConstants.ICCFILES.length];
+	private ColorConvertOp[] COLORCONVERTOP_ICC2SRGB = new ColorConvertOp[ImageConstants.ICCFILES.length];
 	private Map<String, IImportFilterFactory> importFilters;
-
+	private String customProfile;
 	private File tempFolder;
 
 	/*
@@ -97,16 +96,27 @@ public class ImageActivator extends Plugin {
 		getLog().log(new Status(IStatus.WARNING, PLUGIN_ID, message, e));
 	}
 
-	public ICC_ProfileRGB getSRGB_ICC() {
-		if (SRGB_ICC == null)
-			SRGB_ICC = loadICCProfile("/sRGB Color Space Profile.icm"); //$NON-NLS-1$
-		return SRGB_ICC;
+	public ICC_ProfileRGB getIccProfile(int profile) {
+		if (profile == ImageConstants.NOCMS)
+			return null;
+		if (iccProfiles[profile] == null) {
+			if (profile == ImageConstants.CUSTOM) {
+				if (customProfile != null)
+					try {
+						return (ICC_ProfileRGB) ICC_Profile.getInstance(customProfile);
+					} catch (IOException e) {
+						// fall through
+					}
+				return null;
+			}
+			iccProfiles[profile] = loadICCProfile(ImageConstants.ICCFILES[profile]);
+		}
+		return iccProfiles[profile];
 	}
 
-	public ICC_ProfileRGB getARGB_ICC() {
-		if (ARGB_ICC == null)
-			ARGB_ICC = loadICCProfile("/AdobeRGB1998.icc"); //$NON-NLS-1$
-		return ARGB_ICC;
+	public void resetCustomProfile(String profile) {
+		customProfile = profile;
+		iccProfiles[ImageConstants.CUSTOM] = null;
 	}
 
 	private static ICC_ProfileRGB loadICCProfile(String name) {
@@ -121,10 +131,11 @@ public class ImageActivator extends Plugin {
 	}
 
 	public ColorConvertOp computeColorConvertOp(ICC_Profile sourceProfile, int cms) {
-		if (sourceProfile == null)
-			sourceProfile = getSRGB_ICC();
-		ICC_ProfileRGB outputProfile = (cms != ImageConstants.ARGB) ? getSRGB_ICC()
-				: ImageActivator.getDefault().getARGB_ICC();
+		if (cms == ImageConstants.NOCMS)
+			return null;
+		if (sourceProfile == null || sourceProfile == getIccProfile(ImageConstants.SRGB))
+			return cms == ImageConstants.SRGB ? null : getCOLORCONVERTOP_SRGB2ICC(cms);
+		ICC_ProfileRGB outputProfile = getIccProfile(cms);
 		return (sourceProfile != outputProfile) ? new ColorConvertOp(new ICC_Profile[] { sourceProfile, outputProfile },
 				new RenderingHints(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY))
 				: null;
@@ -140,18 +151,24 @@ public class ImageActivator extends Plugin {
 				: new UnsharpMask(amount, radius, threshold / 255f, 0f, null, UnsharpMask.SHARPEN);
 	}
 
-	public ColorConvertOp getCOLORCONVERTOP_SRGB2ARGB() {
-		if (COLORCONVERTOP_SRGB2ARGB == null)
-			COLORCONVERTOP_SRGB2ARGB = new ColorConvertOp(new ICC_Profile[] { getSRGB_ICC(), getARGB_ICC() },
+	public ColorConvertOp getCOLORCONVERTOP_SRGB2ICC(int profile) {
+		if (profile == ImageConstants.NOCMS || profile == ImageConstants.SRGB)
+			return null;
+		if (COLORCONVERTOP_SRGB2ICC[profile] == null)
+			COLORCONVERTOP_SRGB2ICC[profile] = new ColorConvertOp(
+					new ICC_Profile[] { getIccProfile(ImageConstants.SRGB), getIccProfile(profile) },
 					new RenderingHints(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY));
-		return COLORCONVERTOP_SRGB2ARGB;
+		return COLORCONVERTOP_SRGB2ICC[profile];
 	}
 
-	public ColorConvertOp getCOLORCONVERTOP_ARGB2SRGB() {
-		if (COLORCONVERTOP_ARGB2SRGB == null)
-			COLORCONVERTOP_ARGB2SRGB = new ColorConvertOp(new ICC_Profile[] { getARGB_ICC(), getSRGB_ICC() },
+	public ColorConvertOp getCOLORCONVERTOP_ICC2SRGB(int profile) {
+		if (profile == ImageConstants.NOCMS || profile == ImageConstants.SRGB)
+			return null;
+		if (COLORCONVERTOP_ICC2SRGB[profile] == null)
+			COLORCONVERTOP_ICC2SRGB[profile] = new ColorConvertOp(
+					new ICC_Profile[] { getIccProfile(profile), getIccProfile(ImageConstants.SRGB) },
 					new RenderingHints(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY));
-		return COLORCONVERTOP_ARGB2SRGB;
+		return COLORCONVERTOP_ICC2SRGB[profile];
 	}
 
 	public Map<String, IImportFilterFactory> getImportFilters() {

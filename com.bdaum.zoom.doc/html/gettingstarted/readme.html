@@ -250,6 +250,50 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <meta http-equiv="Content-Language" content="en-us">
 <meta name="GENERATOR" content="Microsoft FrontPage 4.0">
 <meta name="ProgId" content="FrontPage.Editor.Document"><title>Readme</title>
@@ -272,14 +316,14 @@ body { font-family: arial, helvetica, geneva; font-size: 10pt; clip: rect( ); ma
 </tr>
 <tr>
 <td>
-<p>December 8, 2018</p>
+<p>March 13. 2019</p>
 <br>
 <h1 style="color: red;"><a class="mozTocH1" name="mozTocId462522"></a>ZoRa Photo Director</h1>
 <div style="margin-left: 40px;"><sub>Zo = <span style="font-weight: bold;">Zo</span>omable
 User Interface</sub><br>
 <sub>Ra = <span style="font-weight: bold;">Ra</span>w
 file support</sub></div>
-<h1><a class="mozTocH2" name="mozTocId943067"></a>Contents<span style="text-decoration: underline;"></span></h1><span style="text-decoration: underline;"><br></span>
+<h1><a class="mozTocH2" name="mozTocId943067"></a>Contents<span style="text-decoration: underline;"></span></h1><span style="text-decoration: underline;"></span><a href="#mozTocId943067"></a>
       <ol>
 <li><a href="#mozTocId180886">Description</a></li><li><a href="#mozTocId725139">Features</a></li><li><a href="#mozTocId31540">
 Requirements</a></li><li><a href="#mozTocId493872">Installation</a><ol><li><a href="#mozTocId264756">Installation
@@ -288,7 +332,7 @@ under Windows</a></li><li><a href="#mozTocId688416">Installation under Linux
 on removable media</a></li><li><a href="#mozTocId983009">De-installation</a></li></ol></li><li><a href="#mozTocId767897">Known
 problems
 </a></li><li><a href="#mozTocId82845">License</a></li><li><a href="#mozTocId731789">Copyright</a></li><li><a href="#mozTocId902534">Source code</a></li><li><a href="#mozTocId961538">Change
-log</a><ol><li><a href="#mozTocId445631">Version 3.5.0</a></li><li><a href="#mozTocId983456">Version 3.4.0</a></li><li><a href="#mozTocId983456">Version 3.3.0</a></li><li><a href="#mozTocId160733">Version 3.2.2</a></li><li><a href="#mozTocId446335">Version 3.2.1</a></li><li><a href="#mozTocId636428">Version 3.2.0</a></li><li><a href="#mozTocId514211">Version 3.1.0</a></li><li><a href="#mozTocId527756">Version 3.0.1</a></li><li><a href="#mozTocId527756">Version 3.0.0</a></li><li><a href="#mozTocId342068">Version
+log</a><ol><li><a href="#mozTocId781810">Version 3.5.1</a></li><li><a href="#mozTocId445631">Version 3.5.0</a></li><li><a href="#mozTocId983456">Version 3.4.0</a></li><li><a href="#mozTocId983456">Version 3.3.0</a></li><li><a href="#mozTocId160733">Version 3.2.2</a></li><li><a href="#mozTocId446335">Version 3.2.1</a></li><li><a href="#mozTocId636428">Version 3.2.0</a></li><li><a href="#mozTocId514211">Version 3.1.0</a></li><li><a href="#mozTocId527756">Version 3.0.1</a></li><li><a href="#mozTocId527756">Version 3.0.0</a></li><li><a href="#mozTocId342068">Version
 2.5.0</a></li><li><a href="#mozTocId771503">Version
 2.4.0</a></li><li><a href="#mozTocId557735">Version
 2.3.0</a></li><li><a href="#mozTocId664656">Version
@@ -307,7 +351,6 @@ log</a><ol><li><a href="#mozTocId445631">Version 3.5.0</a></li><li><a href="#moz
 1.1.0</a></li></ol></li>
       </ol>
       <span style="text-decoration: underline;">
-      <br>
       </span>
 
 
@@ -486,8 +529,10 @@ problems<br>
 <li>If after updating to a new version the application
 does not
 start properly, please delete the old installation folder with all its
-contents, and perform a new installation.</li>
-        <li>Under Windows there are compatibility problems with Google Maps. Please use another map engine (select in map window)<br>
+contents, and perform a new installation.<br>
+If problems persist, please start the appication with parameter -clean.<br>
+</li>
+        <li>Using <span style="font-weight: bold;">Bing</span> maps can cause to UI freezes for a few seconds after a new map is displayed. To avoid this please use a different map system<br>
         </li>
 
 </ul>
@@ -500,7 +545,7 @@ or&nbsp;(at your option) any later version.</p>
 <span style="font-weight: bold;"></span>
 <h2><a class="mozTocH2" name="mozTocId731789"></a>Copyright</h2>
 <br>
-(c) Berthold Daum and contributors 2009-2018.&nbsp; All rights
+(c) Berthold Daum and contributors 2009-2019.&nbsp; All rights
 reserved.<br>
 <br>
 Visit <a href="http://www.photozora.org">http://www.photozora.org</a><br>
@@ -511,6 +556,89 @@ Visit <a href="http://www.photozora.org">http://www.photozora.org</a><br>
 <br>
 <h2><a class="mozTocH2" name="mozTocId961538"></a>Change
 log</h2><br>
+      <h3><a class="mozTocH3" name="mozTocId781810"></a>Version 3.5.1</h3>
+
+
+
+
+
+
+
+
+
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <ul>
+<li>Fixed a bug in the Preview view</li>
+        <li>Added a Compute button to the tracker time difference in the Geo preferences</li>
+        <li>Fixed bugs in the NMEA parser<br>
+</li>
+        
+        <li>GPS tracker files can now be dragged onto collections in the Catalog view, too</li>
+        <li>Fixed a bug in straight (without track editing) geo-tagging <br>
+        </li>
+        <li>The new Geonames API is now supported</li>
+<li>Fixed a bug in MTP- and PTP-import</li>
+        <li>Improved the target selection page in the import wizard</li>
+        <li>Fixed a bug when importing images via drag&amp;drop</li>
+        <li>Corrected original file name, MIME type, file size, and file creation date for imported raw and DNG files</li>
+        <li>Fixed a bug in the skip duplicates option<br>
+        </li><li>Fixed bugs in the file format filter</li>
+        <li>The import of videos has been redesigned, now using ffmpeg instead of VLC for thumbnail extraction for improving stability</li>
+        <li style="font-weight: bold; color: red;">The internal video viewer has been dropped. Please use any external video viewer.</li>
+        <li>Added a new property for videos: Average Bit Rate</li>
+        <li>Improved the Add to Album function in the slide show player</li>
+        <li>Improved the Edit collection dialog</li>
+        <li>Improved the Peer preference page</li>
+        <li>The AI Clarifai support is working again</li>
+        <li>Made improvement to the slide show player</li>
+        <li>Added the Rating function to the image context menu</li>
+        <li>Added more color profiles to the display configuration</li>
+        <li>Made improvements to the Map view</li>
+        <li>Improved performance of Remove from album operation</li>
+        <li>Fixed a bug in the collection edit dialog</li>
+        <li>Fixed a bug in the search for undefined fields</li>
+        <li>Added case insenistive search for text fields</li>
+        <li>Added new search operator "not like"</li>
+        <li>Several improvements to the import process</li>
+        <li>It is now possible to define a time shift for the image creation date during import from device</li>
+        <li>Added an indicator to f-number, focal length and 35mm focal length for incomplete lens information (e.g. third-party lenses)</li>
+        <li>Faster image processing</li>
+        <li>It is now possible again to edit slide show properties</li>
+        <li>Improved hover information</li>
+        <li>Hover is now configurable</li>
+        <li>Fixed a bug in person albums</li>
+        <li>Many improvement and bug fixes to the presentation editors (slideshow, exhibition, web gallery)<br>
+        </li>
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+</ul>
+
       <h3><a class="mozTocH3" name="mozTocId445631"></a>Version 3.5.0</h3>
 
 

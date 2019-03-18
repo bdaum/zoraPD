@@ -92,6 +92,7 @@ public class HistogramView extends BasicView implements PaintListener {
 	private int alignment;
 	private Composite composite;
 	private Label space;
+	private Action trigger;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -108,11 +109,11 @@ public class HistogramView extends BasicView implements PaintListener {
 			bool = memento.getBoolean(WEIGHTED);
 			weighted = bool != null && bool;
 			template = memento.getString(TEMPLATE);
-			if (template == null)
-				template = DEFAULTTEMPLATE;
 			Integer integer = memento.getInteger(ALIGNMENT);
 			alignment = integer != null ? integer : SWT.LEFT;
 		}
+		if (template == null)
+			template = DEFAULTTEMPLATE;
 	}
 
 	@Override
@@ -198,6 +199,7 @@ public class HistogramView extends BasicView implements PaintListener {
 				setImageDescriptor(showRed ? Icons.redDot.getDescriptor() : Icons.paleRedDot.getDescriptor());
 				setToolTipText(showRed ? Messages.getString("HistogramView.red_tooltip") //$NON-NLS-1$
 						: Messages.getString("HistogramView.red_off")); //$NON-NLS-1$
+				trigger = this;
 				refresh();
 			}
 		};
@@ -212,6 +214,7 @@ public class HistogramView extends BasicView implements PaintListener {
 				setImageDescriptor(showGreen ? Icons.greenDot.getDescriptor() : Icons.paleGreenDot.getDescriptor());
 				setToolTipText(showGreen ? Messages.getString("HistogramView.green_tooltip") //$NON-NLS-1$
 						: Messages.getString("HistogramView.green_off")); //$NON-NLS-1$
+				trigger = this;
 				refresh();
 			}
 		};
@@ -226,6 +229,7 @@ public class HistogramView extends BasicView implements PaintListener {
 				setImageDescriptor(showBlue ? Icons.blueDot.getDescriptor() : Icons.paleBlueDot.getDescriptor());
 				setToolTipText(showBlue ? Messages.getString("HistogramView.blue_tooltip") //$NON-NLS-1$
 						: Messages.getString("HistogramView.blue_off")); //$NON-NLS-1$
+				trigger = this;
 				refresh();
 			}
 		};
@@ -240,6 +244,7 @@ public class HistogramView extends BasicView implements PaintListener {
 				setImageDescriptor(showGrey ? Icons.grayscale.getDescriptor() : Icons.paleGrayscale.getDescriptor());
 				setToolTipText(showGrey ? Messages.getString("HistogramView.brightness_tooltip") //$NON-NLS-1$
 						: Messages.getString("HistogramView.grey_off")); //$NON-NLS-1$
+				trigger = this;
 				refresh();
 			}
 		};
@@ -273,6 +278,8 @@ public class HistogramView extends BasicView implements PaintListener {
 		GC gc = e.gc;
 		gc.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
 		gc.fillRectangle(clientArea);
+		int width = clientArea.width;
+		int height = clientArea.height;
 		if (mxvalue > 0) {
 			int gmax = 0;
 			int gavg = 0;
@@ -308,8 +315,8 @@ public class HistogramView extends BasicView implements PaintListener {
 			} else if (highlights > gavg && shadows > gavg)
 				message = Messages.getString("HistogramView.compress_contrast"); //$NON-NLS-1$
 			Transform transform = new Transform(display);
-			transform.translate(0, clientArea.height);
-			transform.scale((clientArea.width) / 256f, -(float) clientArea.height / mxvalue);
+			transform.translate(0, height);
+			transform.scale(width / 256f, -(float) height / mxvalue);
 			gc.setTransform(transform);
 			if (showGrey)
 				drawCurve(gc, greys,
@@ -328,7 +335,7 @@ public class HistogramView extends BasicView implements PaintListener {
 				gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_CYAN));
 				TextLayout textLayout = new TextLayout(gc.getDevice());
 				textLayout.setText(message);
-				textLayout.draw(gc, clientArea.width - textLayout.getBounds().width - 10, 15);
+				textLayout.draw(gc, width - textLayout.getBounds().width - 10, 15);
 				textLayout.dispose();
 			}
 		} else {
@@ -336,12 +343,12 @@ public class HistogramView extends BasicView implements PaintListener {
 					: Messages.getString("HistogramView.nothing_selected"); //$NON-NLS-1$
 			gc.setForeground(display.getSystemColor(SWT.COLOR_DARK_GRAY));
 			Point tx = gc.textExtent(text);
-			gc.drawText(text, (clientArea.width - tx.x) / 2, (clientArea.height - tx.y) / 2, true);
+			gc.drawText(text, (width - tx.x) / 2, (height - tx.y) / 2, true);
 		}
 		gc.setAlpha(255);
 		gc.setForeground(display.getSystemColor(SWT.COLOR_DARK_GRAY));
-		gc.drawLine(clientArea.width / 3, 0, clientArea.width / 3, clientArea.height);
-		gc.drawLine(2 * clientArea.width / 3, 0, 2 * clientArea.width / 3, clientArea.height);
+		gc.drawLine(width / 3, 0, width / 3, height);
+		gc.drawLine(2 * width / 3, 0, 2 * width / 3, height);
 	}
 
 	private static void drawCurve(GC gc, int[] values, Color color, boolean fill, boolean line) {
@@ -416,11 +423,10 @@ public class HistogramView extends BasicView implements PaintListener {
 			}
 			caption.setText(currentItem == null ? "" //$NON-NLS-1$
 					: Utilities.evaluateTemplate(template, Constants.TH_ALL, "", null, -1, -1, -1, null, currentItem, //$NON-NLS-1$
-							"", Integer.MAX_VALUE, false)); //$NON-NLS-1$
+							"", Integer.MAX_VALUE, false, true)); //$NON-NLS-1$
 			caption.setAlignment(alignment);
 		}
 	}
-
 
 	protected void recalculate() {
 		mxvalue = 0;
@@ -489,7 +495,7 @@ public class HistogramView extends BasicView implements PaintListener {
 					}
 			for (int i = 0; i < 255; i++)
 				mxvalue = Math.max(mxvalue,
-						Math.max(reds[i] + reds[i + 1], Math.max(greens[i] + greens[i + 1], blues[i] + blues[i])));
+						Math.max(reds[i] + reds[i + 1], Math.max(greens[i] + greens[i + 1], blues[i] + blues[i + 1])));
 			mxvalue /= 2;
 		}
 	}
@@ -513,6 +519,14 @@ public class HistogramView extends BasicView implements PaintListener {
 			blueAction.setEnabled(enabled);
 			greyAction.setEnabled(enabled);
 			centerAction.setEnabled(enabled);
+			if (enabled && !showBlue && !showGreen && !showRed && !showGrey) {
+				if (trigger == null || trigger == greyAction) {
+					redAction.run();
+					greenAction.run();
+					blueAction.run();
+				} else
+					greyAction.run();
+			}
 			updateActions(-1, -1);
 		}
 	}

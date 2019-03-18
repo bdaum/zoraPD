@@ -19,7 +19,6 @@
  */
 package com.bdaum.zoom.report.internal;
 
-
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.graphics.Image;
@@ -40,8 +39,7 @@ public class Icons {
 
 		private String getKey() {
 			if (key == null) {
-				key = prefix + (++counter);
-				JFaceResources.getImageRegistry().put(key,
+				JFaceResources.getImageRegistry().put(key = prefix + (++counter),
 						ReportActivator.getImageDescriptor(path));
 				path = null;
 			}
@@ -59,6 +57,5 @@ public class Icons {
 	}
 
 	public static final Icon report64 = new Icon("icons/report64.png"); //$NON-NLS-1$
-
 
 }

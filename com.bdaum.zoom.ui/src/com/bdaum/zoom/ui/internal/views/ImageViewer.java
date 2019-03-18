@@ -288,8 +288,7 @@ public class ImageViewer extends AbstractMediaViewer
 							if (topShell.isDisposed())
 								break;
 							display.syncExec(() -> {
-								if (!topShell.isDisposed())
-									topShell.setAlpha(Math.max(0, topShell.getAlpha() - 16));
+								topShell.setAlpha(Math.max(0, topShell.getAlpha() - 16));
 							});
 							try {
 								Thread.sleep(40);
@@ -308,7 +307,7 @@ public class ImageViewer extends AbstractMediaViewer
 						display.syncExec(() -> {
 							if (!topCanvas.isDisposed()) {
 								Rectangle area = topCanvas.getClientArea();
-								image.develop(monitor, display, cropmode, area.width, area.height);
+								image.develop(monitor, display, cropmode, area.width, area.height, ZImage.SWTIMAGE);
 							}
 						});
 						int superSamplingFactor = image.getSuperSamplingFactor();
@@ -404,7 +403,7 @@ public class ImageViewer extends AbstractMediaViewer
 				previewImage = tool.getPreviewImage(false);
 				if (previewImage != null && image == null) {
 					ExifTool.fixOrientation(previewImage, asset.getOrientation(), asset.getRotation());
-					previewImage.develop(monitor, display, ZImage.UNCROPPED, -1, -1);
+					previewImage.develop(monitor, display, ZImage.UNCROPPED, -1, -1, ZImage.SWTIMAGE);
 					previewImage.getSwtImage(display, false, ZImage.UNCROPPED, SWT.DEFAULT, SWT.DEFAULT);
 					previewShown = true;
 					fadein(status, monitor, previewShell, previewCanvas, bottomShell, true);
@@ -552,8 +551,7 @@ public class ImageViewer extends AbstractMediaViewer
 			if (monitor.isCanceled())
 				break;
 			display.syncExec(() -> {
-				if (!shell.isDisposed())
-					shell.setAlpha(Math.min(255, shell.getAlpha() + 16));
+				shell.setAlpha(Math.min(255, shell.getAlpha() + 16));
 			});
 			try {
 				Thread.sleep(60);
@@ -1180,7 +1178,7 @@ public class ImageViewer extends AbstractMediaViewer
 		toolTip.setAutoHide(true);
 		toolTip.setLocation(mbounds.x + mbounds.width / 2, mbounds.y + mbounds.height / 2);
 		toolTip.setText(NLS.bind(Messages.getString("SlideShowPlayer.metadata"), asset.getName())); //$NON-NLS-1$
-		toolTip.setMessage(new HoverInfo(asset, null, UiActivator.getDefault().getHoverNodes()).getText());
+		toolTip.setMessage(new HoverInfo(asset, (ImageRegion[]) null).getText());
 		toolTip.setVisible(true);
 	}
 

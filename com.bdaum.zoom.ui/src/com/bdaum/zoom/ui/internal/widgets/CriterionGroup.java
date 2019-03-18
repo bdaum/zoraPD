@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -142,7 +142,7 @@ public class CriterionGroup extends AbstractCriterionGroup {
 				}
 				if (selectionListener != null) {
 					valueCombo.addListener(SWT.Selection, selectionListener);
-					enumCombo.addListener(SWT.Selection,selectionListener);
+					enumCombo.addListener(SWT.Selection, selectionListener);
 					dateField.addListener(selectionListener);
 					intField.addListener(selectionListener);
 				}
@@ -152,9 +152,9 @@ public class CriterionGroup extends AbstractCriterionGroup {
 		public void removeFieldListeners(Listener modifyListener, Listener selectionListener) {
 			if (!readOnly) {
 				if (modifyListener != null) {
-					textField.removeListener(SWT.Modify,modifyListener);
+					textField.removeListener(SWT.Modify, modifyListener);
 					codeField.removeListener(modifyListener);
-					valueCombo.removeListener(SWT.Modify,modifyListener);
+					valueCombo.removeListener(SWT.Modify, modifyListener);
 				}
 				if (selectionListener != null) {
 					valueCombo.removeListener(SWT.Selection, selectionListener);
@@ -167,13 +167,13 @@ public class CriterionGroup extends AbstractCriterionGroup {
 
 		private Composite createLayerComposite() {
 			Composite comp = new Composite(this, SWT.NONE);
-			GridLayout gridLayout = new GridLayout(1, false);
+			GridLayout gridLayout = new GridLayout();
 			gridLayout.marginHeight = gridLayout.marginWidth = 0;
 			comp.setLayout(gridLayout);
 			return comp;
 		}
 
-		public void update(String[] valueProposals, boolean enumeration, FieldDescriptor fd) {
+		public void update(String[] valueProposals, boolean enumeration, FieldDescriptor fd, int rel) {
 			if (readOnly)
 				layout.topControl = textComposite;
 			else {
@@ -194,7 +194,8 @@ public class CriterionGroup extends AbstractCriterionGroup {
 									|| detailQfield.getType() == QueryField.T_INTEGER)) {
 						layout.topControl = intComposite;
 						configureNumericField(intField, detailQfield);
-					} else if (fd != null && collectionEditGroup.hasPreparedValues(fd.qfield)) {
+					} else if (fd != null && (rel == QueryField.EQUALS || rel == QueryField.NOTEQUAL)
+							&& collectionEditGroup.hasPreparedValues(fd.qfield)) {
 						layout.topControl = valueComposite;
 						collectionEditGroup.fillPreparedValues(valueCombo, fd.qfield);
 					} else if (detailQfield != null && detailQfield.getEnumeration() instanceof Integer) {
@@ -454,6 +455,7 @@ public class CriterionGroup extends AbstractCriterionGroup {
 		boolean ranged = enabled && (rel == QueryField.BETWEEN || rel == QueryField.NOTBETWEEN);
 		addChild(fromStack = new ValueStack(parent,
 				enabled ? borderStyle : borderStyle | SWT.READ_ONLY | (ranged ? SWT.DEFAULT : SWT.SINGLE)));
+		fromStack.addFieldListeners(modifyListener, selectionListener);
 		if (ranged) {
 			betweenLabel = new Label(parent, SWT.NONE);
 			betweenLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
@@ -496,10 +498,10 @@ public class CriterionGroup extends AbstractCriterionGroup {
 				toStack.setVisible(false);
 		} else {
 			fromStack.setVisible(true);
-			fromStack.update(valueProposals, enumeration, fd);
+			fromStack.update(valueProposals, enumeration, fd, rel);
 			if (toStack != null) {
 				if (range)
-					toStack.update(valueProposals, enumeration, fd);
+					toStack.update(valueProposals, enumeration, fd, rel);
 				toStack.setVisible(range);
 				betweenLabel.setVisible(range);
 			}

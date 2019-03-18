@@ -677,7 +677,7 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 		do {
 			if (sb.length() > 0)
 				sb.insert(0, '>');
-			sb.insert(0, sm.getAdhoc() ? UiUtilities.composeContentDescription(sm, " - ", true) : sm.getName()); //$NON-NLS-1$
+			sb.insert(0, sm.getAdhoc() ? UiUtilities.composeContentDescription(sm, " - ", true, false) : sm.getName()); //$NON-NLS-1$
 			sm = sm.getSmartCollection_subSelection_parent();
 		} while (sm != null);
 		return sb.toString();

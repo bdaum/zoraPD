@@ -299,13 +299,14 @@ public class BatchActivator extends Plugin {
 	public String[] locateExifTool() {
 		if (exifToolLocation == null) {
 			try {
-				exifToolLocation = BatchConstants.WIN32
-						? new String[] { FileLocator.findAbsolutePath(getBundle(), "/exiftool.exe") } //$NON-NLS-1$
-						: new String[] { "perl", FileLocator.findAbsolutePath(getBundle(), "/exiftool/exiftool") }; //$NON-NLS-1$//$NON-NLS-2$
-				if (exifToolLocation == null)
+				String loc = BatchConstants.WIN32 ? FileLocator.findAbsolutePath(getBundle(), "/exiftool.exe") : //$NON-NLS-1$
+						FileLocator.findAbsolutePath(getBundle(), "/exiftool/exiftool"); //$NON-NLS-1$
+				if (loc == null)
 					throw new FileNotFoundException();
+				exifToolLocation = BatchConstants.WIN32 ? new String[] { loc } : new String[] { "perl", loc }; //$NON-NLS-1$
 			} catch (IOException e) {
 				logError(Messages.BatchActivator_could_not_locate_exiftool, e);
+				return null;
 			}
 		}
 		return exifToolLocation;

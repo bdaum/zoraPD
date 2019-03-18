@@ -6,8 +6,11 @@ import java.net.URL;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
+
+import com.sun.jna.Native;
 
 public class JnaActivator extends Plugin {
 
@@ -27,6 +30,10 @@ public class JnaActivator extends Plugin {
 		String libPath = System.getProperty("jna.boot.library.path", ""); //$NON-NLS-1$//$NON-NLS-2$
 		if (libPath.indexOf(jnaPath) < 0)
 			System.setProperty("jna.boot.library.path", libPath.isEmpty() ? jnaPath : jnaPath + ';' + libPath); //$NON-NLS-1$
+		if (Platform.getOS() == Platform.OS_WIN32) {
+			System.setProperty("jna.protected","true"); //$NON-NLS-1$ //$NON-NLS-2$
+			Native.setProtected(true);
+		}
 	}
 
 	public static String libName() throws UnsupportedOperationException {

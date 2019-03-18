@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Berthold Daum.
+ * Copyright (c) 2009-2019 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,20 +21,21 @@ import com.bdaum.zoom.gps.widgets.AbstractMapComponent;
 
 public class MapComponent extends AbstractMapComponent {
 
-	private URL zoomMapUrl;
+	private static final String GMAP_ZOOM_MAP_JS = "gmap/zoomMap.js"; //$NON-NLS-1$
+	private static String zoomMapUrl;
+	private static String scriptEntries;
 
-	private URL findUrl(String path) {
-		return super.findUrl(BingActivator.getDefault().getBundle(), path);
+	static {
+		URL url = findUrl(BingActivator.getDefault().getBundle(), GMAP_ZOOM_MAP_JS);
+		zoomMapUrl = url == null ? GMAP_ZOOM_MAP_JS : url.toString();
 	}
 
 	@Override
 	protected String getCountryCode(String input) {
-		if (input != null && input.length() != 3) {
-			Locale[] availableLocales = Locale.getAvailableLocales();
-			for (Locale locale : availableLocales)
+		if (input != null && input.length() != 3)
+			for (Locale locale : Locale.getAvailableLocales())
 				if (input.equals(locale.getCountry()))
 					return locale.getISO3Country();
-		}
 		return input;
 	}
 
@@ -45,17 +46,11 @@ public class MapComponent extends AbstractMapComponent {
 
 	@Override
 	protected String createLatLngBounds(double swLat, double swLon, double neLat, double neLon) {
-		double height = Math.abs(neLat - swLat);
-		double width = Math.abs(neLon - swLon);
-		double cLat = (swLat + neLat) / 2;
-		double cLon = (swLon + neLon) / 2;
 		return NLS.bind("new Microsoft.Maps.LocationRect({0},{1},{2})", //$NON-NLS-1$
-				new Object[] { createLatLng(cLat, cLon), width, height });
-	}
-
-	@Override
-	protected void findResources() {
-		zoomMapUrl = findUrl("/gmap/zoomMap.js"); //$NON-NLS-1$
+				new Object[] {
+						createLatLng((swLat + neLat) / 2,
+								neLon < swLon ? (swLon + neLon + 360) / 2 % 360 : (swLon + neLon) / 2),
+						neLon < swLon ? neLon + 360 - swLon : swLon - neLon, Math.abs(neLat - swLat) });
 	}
 
 	@Override
@@ -72,9 +67,11 @@ public class MapComponent extends AbstractMapComponent {
 
 	@Override
 	protected String createScriptEntries() {
-		return new StringBuilder()
-				.append("<script type='text/javascript' src='http://www.bing.com/api/maps/mapcontrol'></script>\n") //$NON-NLS-1$
-				.append(createScriptEntry(zoomMapUrl)).toString();
+		if (scriptEntries == null)
+			scriptEntries = new StringBuilder()
+					.append("<script type='text/javascript' src='http://www.bing.com/api/maps/mapcontrol'></script>\n") //$NON-NLS-1$
+					.append(createScriptEntry(zoomMapUrl)).toString();
+		return scriptEntries;
 	}
 
 	@Override

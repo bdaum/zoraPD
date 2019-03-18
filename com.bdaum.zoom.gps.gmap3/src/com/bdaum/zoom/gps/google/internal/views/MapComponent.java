@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Berthold Daum.
+ * Copyright (c) 2009-2019 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,16 +28,21 @@ import com.bdaum.zoom.gps.widgets.AbstractMapComponent;
 
 public class MapComponent extends AbstractMapComponent {
 
-	private URL markerclusterUrl;
-	private URL zoomMapUrl;
-	private URL imagesUrl;
+	private static final String GMAP = "gmap/"; //$NON-NLS-1$
+	private static String markerclusterUrl;
+	private static String zoomMapUrl;
+	private static String imagesUrl;
+	private static String additionalVariables;
 	private int answers = 0;
 
-	@Override
-	protected void findResources() {
-		markerclusterUrl = findUrl("/gmap/markerclusterer.js"); //$NON-NLS-1$
-		zoomMapUrl = findUrl("/gmap/zoomMap.js"); //$NON-NLS-1$
-		imagesUrl = findUrl("/gmap/images/m1.png"); //$NON-NLS-1$
+	static {
+		URL url = findUrl(GoogleActivator.getDefault().getBundle(), GMAP);
+		String folderUrl = url == null ? GMAP : url.toString();
+		markerclusterUrl = folderUrl + "markerclusterer.js"; //$NON-NLS-1$
+		zoomMapUrl = folderUrl + "zoomMap.js"; //$NON-NLS-1$
+		imagesUrl = folderUrl + "images/m1.png"; //$NON-NLS-1$
+		additionalVariables = new StringBuilder().append("var imagesUrl = \"") //$NON-NLS-1$
+				.append(imagesUrl.substring(0, imagesUrl.length() - 5)).append("\";\n").toString(); //$NON-NLS-1$
 	}
 
 	@Override
@@ -50,10 +55,6 @@ public class MapComponent extends AbstractMapComponent {
 	protected String createLatLngBounds(double swLat, double swLon, double neLat, double neLon) {
 		return NLS.bind("new google.maps.LatLngBounds({0},{1})", createLatLng(swLat, swLon), //$NON-NLS-1$
 				createLatLng(neLat, neLon));
-	}
-
-	private URL findUrl(String path) {
-		return findUrl(GoogleActivator.getDefault().getBundle(), path);
 	}
 
 	/*
@@ -87,7 +88,8 @@ public class MapComponent extends AbstractMapComponent {
 					PreferencesUtil.createPreferenceDialogOn(activeWorkbenchWindow.getShell(), GpsPreferencePage.ID,
 							null, GpsPreferencePage.ACCOUNTS).open();
 					++answers;
-					clientId = preferencesService.getString(GpsActivator.PLUGIN_ID, PreferenceConstants.GOOGLECLIENTID, "", //$NON-NLS-1$
+					clientId = preferencesService.getString(GpsActivator.PLUGIN_ID, PreferenceConstants.GOOGLECLIENTID,
+							"", //$NON-NLS-1$
 							null);
 				}
 			}
@@ -96,8 +98,7 @@ public class MapComponent extends AbstractMapComponent {
 			sb.append("<script src=\"https://maps.googleapis.com/maps/api/js?key=").append(clientId.trim()) //$NON-NLS-1$
 					.append("\" type=\"text/javascript\"></script>\n"); //$NON-NLS-1$
 		else
-			sb.append(
-					"<script src=\"https://maps.googleapis.com/maps/api/js\" type=\"text/javascript\"></script>\n"); //$NON-NLS-1$
+			sb.append("<script src=\"https://maps.googleapis.com/maps/api/js\" type=\"text/javascript\"></script>\n"); //$NON-NLS-1$
 		sb.append(createScriptEntry(markerclusterUrl)).append('\n');
 		sb.append(createScriptEntry(zoomMapUrl));
 		return sb.toString();
@@ -123,11 +124,7 @@ public class MapComponent extends AbstractMapComponent {
 
 	@Override
 	protected String createAdditionalVariables() {
-		StringBuilder sb = new StringBuilder();
-		String s = imagesUrl.toString();
-		sb.append("var imagesUrl = \"").append(s.substring(0, s.length() - 5)) //$NON-NLS-1$
-				.append("\";\n"); //$NON-NLS-1$
-		return sb.toString();
+		return additionalVariables;
 	}
 
 	@Override

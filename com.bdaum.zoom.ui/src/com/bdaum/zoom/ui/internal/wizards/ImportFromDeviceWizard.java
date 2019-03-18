@@ -155,14 +155,14 @@ public class ImportFromDeviceWizard extends ZWizard implements IWorkbenchWizard,
 						: new ImportOperation(importData, config,
 								media ? Constants.FILESOURCE_DIGITAL_CAMERA : Constants.FILESOURCE_UNKNOWN);
 			} else if (analog)
-				op = new ImportOperation(new FileInput(files, false), config, analogProps, null);
+				op = new ImportOperation(new FileInput(files, false), config, importData, analogProps, null);
 			else {
 				List<File> foldersToWatch = new ArrayList<File>(folders.length);
 				for (StorageObject folder : folders)
 					if (folder.isLocal())
 						foldersToWatch.add((File) folder.getNativeObject());
-				
-				op = new ImportOperation(fileInput, config, null,
+
+				op = new ImportOperation(fileInput, config, importData, null,
 						foldersToWatch.toArray(new File[foldersToWatch.size()]));
 			}
 			CompoundOperation compoundOperation = null;

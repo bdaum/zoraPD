@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2011 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -67,10 +67,12 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchCommandConstants;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.operations.UndoRedoActionGroup;
 import org.piccolo2d.PCamera;
@@ -80,12 +82,14 @@ import org.piccolo2d.event.PInputEvent;
 import org.piccolo2d.event.PInputEventFilter;
 import org.piccolo2d.event.PInputEventListener;
 import org.piccolo2d.extras.swt.PSWTCanvas;
+import org.piccolo2d.extras.swt.PSWTImage;
 import org.piccolo2d.extras.swt.PSWTPath;
 import org.piccolo2d.extras.swt.PSWTText;
 import org.piccolo2d.util.PBounds;
 import org.piccolo2d.util.PDimension;
 import org.piccolo2d.util.PPaintContext;
 
+import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
@@ -114,9 +118,11 @@ import com.bdaum.zoom.ui.internal.widgets.GalleryPanEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.GalleryZoomEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.GreekedPSWTText;
 import com.bdaum.zoom.ui.internal.widgets.InertiaMouseWheelListener;
-import com.bdaum.zoom.ui.internal.widgets.PPanel;
+import com.bdaum.zoom.ui.internal.widgets.PContainer;
 import com.bdaum.zoom.ui.internal.widgets.PSWTAssetThumbnail;
 import com.bdaum.zoom.ui.internal.widgets.PSWTButton;
+import com.bdaum.zoom.ui.internal.widgets.PSWTSectionBreak;
+import com.bdaum.zoom.ui.internal.widgets.PTextHandler;
 import com.bdaum.zoom.ui.internal.widgets.TextEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.TextField;
 import com.bdaum.zoom.ui.internal.widgets.ZPSWTCanvas;
@@ -143,6 +149,51 @@ public abstract class AbstractPresentationView extends BasicView
 			setPickable(true);
 			if (inputEventHandler != null)
 				addInputEventListener(inputEventHandler);
+		}
+	}
+
+	protected abstract class PPresentationItem extends PNode implements PTextHandler, IPresentationItem {
+
+		private static final long serialVersionUID = 6878323979541287268L;
+		protected PSWTImage pImage;
+		protected TextField caption;
+		private boolean selected;
+		private PSWTPath frame;
+
+		@Override
+		public void setBackgroundColor(Color color) {
+			// do nothing
+		}
+
+		public void setSequenceNo(int i) {
+			// do nothing
+		}
+
+		@Override
+		public void updateColors(Color selectedPaint) {
+			// do nothing
+		}
+
+		public boolean isSelected() {
+			return selected;
+		}
+
+		public void setSelected(boolean selected) {
+			if (this.selected != selected) {
+				if (frame != null)
+					frame.setVisible(selected);
+				this.selected = selected;
+			}
+		}
+
+		protected PSWTPath createSelectionFrame(PBounds bounds) {
+			frame = PSWTPath.createRectangle((float) bounds.getX(), (float) bounds.getY(), (float) bounds.getWidth(),
+					(float) bounds.getHeight());
+			frame.setStrokeColor(new Color(255, 64, 0));
+			frame.setPaint(null);
+			frame.setVisible(false);
+			frame.setPickable(false);
+			return frame;
 		}
 	}
 
@@ -220,16 +271,24 @@ public abstract class AbstractPresentationView extends BasicView
 		public abstract org.eclipse.swt.graphics.Point getDragTolerance();
 	}
 
-	public static class GalleryHover implements IGalleryHover {
+	public class GalleryHover implements IGalleryHover {
 
 		public IHoverInfo getHoverInfo(IHoverSubject viewer, MouseEvent event) {
 			Object object = viewer.findObject(event);
+			if (object instanceof AbstractHandle) {
+				AbstractHandle handle = (AbstractHandle) object;
+				if (handle.getVisible())
+					return new HoverInfo(object, ((AbstractHandle) object).getTooltip());
+				object = handle.getParent();
+			}
 			if (object instanceof PSWTButton)
 				return new HoverInfo(object, ((PSWTButton) object).getTooltip());
+			if (object instanceof PSWTSectionBreak)
+				return new HoverInfo(object, createHoverTitle((PSWTSectionBreak) object),
+						createHoverText((PSWTSectionBreak) object));
 			if (object instanceof PSWTAssetThumbnail && ((PSWTAssetThumbnail) object).getAsset() != null)
-				return new HoverInfo(object, ((PSWTAssetThumbnail) object).getAsset().getName());
-			if (object instanceof AbstractHandle)
-				return new HoverInfo(object, ((AbstractHandle) object).getTooltip());
+				return new HoverInfo(object, createHoverTitle((PSWTAssetThumbnail) object),
+						createHoverText((PSWTAssetThumbnail) object));
 			if (object instanceof GreekedPSWTText) {
 				GreekedPSWTText field = (GreekedPSWTText) object;
 				if (field.isGreek())
@@ -238,6 +297,11 @@ public abstract class AbstractPresentationView extends BasicView
 			return null;
 		}
 	}
+
+	private static final double PAN_SENSITIVITY = 0.3d;
+	private static final double VACCEL = 2.5d;
+	private static final double HACCEL = 5d;
+	private static final java.awt.Rectangle RECT1 = new java.awt.Rectangle(0, 0, 1, 1);
 
 	protected PSWTCanvas canvas;
 	protected java.awt.Rectangle surfaceBounds;
@@ -252,20 +316,11 @@ public abstract class AbstractPresentationView extends BasicView
 	private String currentPresentation;
 	private int currentSystemCursor = SWT.CURSOR_ARROW;
 	private String currentCustomCursor;
-	protected Color offlineColor;
-	protected Color remoteColor;
-	protected Color selectedRemoteColor;
-	protected Color foregroundColor;
-	protected Color selectionForegroundColor;
-	protected Color selectionBackgroundColor;
-	protected Color backgroundColor;
-	protected Color titleForegroundColor;
-	protected Color titleBackgroundColor;
-	protected IAction showInFolderAction;
-	protected IAction showInTimeLineAction;
-	protected IAction synchronizeAction;
-	protected IAction gotoExhibitAction;
-	protected IAction propertiesAction;
+	protected Color offlineColor, remoteColor, selectedRemoteColor, foregroundColor, selectionForegroundColor,
+			selectionBackgroundColor, backgroundColor, titleForegroundColor, titleBackgroundColor;
+	protected IAction showInFolderAction, showInTimeLineAction, synchronizeAction, gotoExhibitAction, propertiesAction,
+			showInMapAction, showFullscreenAction, editAction, editWithAction, rotateLeftAction, rotateRightAction,
+			voiceNoteAction, deleteAction, cutAction, pasteAction, exhibitPropertiesAction, gotoLastSelectedAction;
 	protected Point2D positionRelativeToCamera;
 	protected boolean synchronize;
 	private IOperationHistory operationHistory;
@@ -273,21 +328,24 @@ public abstract class AbstractPresentationView extends BasicView
 	private GalleryZoomEventHandler zoomEventHandler;
 	protected double previousMagnification = 1d;
 	protected AffineTransform oldTransform;
-	protected IAction showInMapAction;
-	protected IAction showFullscreenAction;
-	private IAction editAction;
-	private IAction editWithAction;
-	private IAction rotateLeftAction;
-	private IAction rotateRightAction;
-	private IAction voiceNoteAction;
 	private Cursor cue;
-	protected Action exhibitPropertiesAction;
+	private int mouseX, mouseY;
+	protected Point2D positionX, currentMousePosition;
+	protected ProgressIndicator progressBar;
+	private MenuManager menuMgr;
+	protected PPresentationItem lastSelection, recentSelection;
+	protected List<IIdentifiableObject> clipboard = new ArrayList<>();
 
 	protected static TextField createTextLine(PNode parent, String text, int greekThreshold, int textWidth, int indent,
 			double ypos, Color penColor, Color bgColor, String fontFamily, int fontStyle, int fontSize,
 			int spellingOptions, int style) {
-		TextField field = new TextField(text, textWidth, new Font(fontFamily, fontStyle, fontSize), penColor, bgColor,
-				true, style);
+		return createTextLine(parent, text, greekThreshold, textWidth, indent, ypos, penColor, bgColor,
+				new Font(fontFamily, fontStyle, fontSize), spellingOptions, style);
+	}
+
+	protected static TextField createTextLine(PNode parent, String text, int greekThreshold, int textWidth, int indent,
+			double ypos, Color penColor, Color bgColor, Font font, int spellingOptions, int style) {
+		TextField field = new TextField(text, textWidth, font, penColor, bgColor, true, style);
 		field.setSpellingOptions(10, spellingOptions);
 		field.setOffset(indent, ypos);
 		field.setPickable(true);
@@ -295,6 +353,10 @@ public abstract class AbstractPresentationView extends BasicView
 		parent.addChild(field);
 		return field;
 	}
+
+	protected abstract String createHoverTitle(PNode object);
+
+	protected abstract String createHoverText(PNode thumbnail);
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -376,7 +438,59 @@ public abstract class AbstractPresentationView extends BasicView
 		};
 		synchronizeAction.setToolTipText(Messages.getString("AbstractPresentationView.synchronize_tooltip")); //$NON-NLS-1$
 		synchronizeAction.setImageDescriptor(Icons.sync.getDescriptor());
+		deleteAction = new Action(Messages.getString("AbstractPresentationView.delete_item"), //$NON-NLS-1$
+				Icons.delete.getDescriptor()) {
+			@Override
+			public void run() {
+				PPresentationItem item = (PPresentationItem) getAdapter(IPresentationItem.class);
+				if (item != null)
+					deletePresentationItem(item, false, true);
+			}
+		};
+		deleteAction.setToolTipText(Messages.getString("AbstractPresentationView.delete_tooltip")); //$NON-NLS-1$
+		cutAction = new Action(Messages.getString("AbstractPresentationView.cut"), Icons.cut.getDescriptor()) { //$NON-NLS-1$
+			@Override
+			public void run() {
+				IPresentationItem item = (IPresentationItem) getAdapter(IPresentationItem.class);
+				if (item != null)
+					deletePresentationItem(item, true, true);
+			}
+		};
+		cutAction.setToolTipText(Messages.getString("AbstractPresentationView.cut_tooltip")); //$NON-NLS-1$
+		pasteAction = new Action(Messages.getString("AbstractPresentationView.paste"), Icons.paste.getDescriptor()) { //$NON-NLS-1$
+
+			@Override
+			public void runWithEvent(Event event) {
+				if (event.type != SWT.Selection)
+					positionX = currentMousePosition;
+				super.runWithEvent(event);
+			}
+
+			@Override
+			public void run() {
+				pastePresentationItems();
+			}
+		};
+		pasteAction.setToolTipText(Messages.getString("AbstractPresentationView.paste_tooltip")); //$NON-NLS-1$
+
+		gotoLastSelectedAction = new Action(Messages.getString("AbstractPresentationView.goto_sel")) { //$NON-NLS-1$
+			@Override
+			public void run() {
+				if (recentSelection != null)
+					revealItem(recentSelection);
+			}
+		};
+		gotoLastSelectedAction.setToolTipText(Messages.getString("AbstractPresentationView.goto_sel_tooltip")); //$NON-NLS-1$
 	}
+
+	protected void revealItem(PPresentationItem item) {
+		if (item != null)
+			canvas.getCamera().setViewBounds(item.getGlobalFullBounds());
+	}
+
+	protected abstract void pastePresentationItems();
+
+	protected abstract void deletePresentationItem(IPresentationItem item, boolean cut, boolean multiple);
 
 	protected void synchronize() {
 		if (synchronize && pickedNode != null) {
@@ -431,12 +545,18 @@ public abstract class AbstractPresentationView extends BasicView
 	}
 
 	private void setObjectCursor(PNode obj, int button, String surface) {
+		if (obj instanceof AbstractHandle) {
+			AbstractHandle handle = (AbstractHandle) obj;
+			if (handle.getVisible()) {
+				setCanvasCursor(null, handle.getCursorType());
+				return;
+			}
+			obj = handle.getParent();
+		}
 		if (obj instanceof PSWTButton)
 			setCanvasCursor(null, SWT.CURSOR_HAND);
 		else if (obj instanceof PSWTText)
 			setCanvasCursor(null, obj.getParent() instanceof TextField ? SWT.CURSOR_IBEAM : SWT.CURSOR_ARROW);
-		else if (obj instanceof AbstractHandle)
-			setCanvasCursor(null, ((AbstractHandle) obj).getCursorType());
 		else if (obj instanceof PSWTAssetThumbnail || obj instanceof PPresentationPanel)
 			setCanvasCursor(null, SWT.CURSOR_SIZEALL);
 		else
@@ -472,19 +592,20 @@ public abstract class AbstractPresentationView extends BasicView
 		Point2D viewDimension = new Point(x, y);
 		canvas.getCamera().localToView(viewDimension);
 		ArrayList<PNode> results = new ArrayList<PNode>();
-		surface.findIntersectingNodes(
-				new java.awt.Rectangle((int) viewDimension.getX(), (int) viewDimension.getY(), 1, 1), results);
+		RECT1.x = (int) viewDimension.getX();
+		RECT1.y = (int) viewDimension.getY();
+		surface.findIntersectingNodes(RECT1, results);
 		for (PNode object : results)
 			if (object instanceof PSWTText || object instanceof PSWTButton || object instanceof AbstractHandle)
 				return object;
 		for (PNode object : results)
-			if (object instanceof PSWTAssetThumbnail)
+			if (object instanceof PSWTAssetThumbnail || object instanceof PSWTSectionBreak)
 				return object;
 		for (PNode object : results)
 			if (object instanceof PPresentationPanel)
 				return object;
 		for (PNode object : results)
-			if (object instanceof PPanel)
+			if (object instanceof PContainer)
 				return object;
 		return null;
 	}
@@ -580,6 +701,8 @@ public abstract class AbstractPresentationView extends BasicView
 
 	public void setInput(IdentifiableObject obj) {
 		if (obj != null) {
+			if (!obj.getStringId().equals(currentPresentation) && operationHistory != null)
+				operationHistory.dispose(undoContext, true, true, true);
 			cleanUp();
 			currentPresentation = obj.getStringId();
 		}
@@ -655,10 +778,6 @@ public abstract class AbstractPresentationView extends BasicView
 				setInput(null);
 		}
 	};
-	private int mouseY;
-	private int mouseX;
-	protected ProgressIndicator progressBar;
-	private MenuManager menuMgr;
 
 	protected abstract void updatePresentation(Collection<? extends Asset> assets);
 
@@ -733,7 +852,7 @@ public abstract class AbstractPresentationView extends BasicView
 		int horiztontalMargins = getHoriztontalMargins();
 		panEventHandler = new GalleryPanEventHandler(this, workarea, -horiztontalMargins, surfaceBounds.y,
 				surfaceBounds.width - horiztontalMargins, surfaceBounds.height + surfaceBounds.y, getPanDirection(),
-				FORCE_PAN_MASK, panSpeedOffset);
+				FORCE_PAN_MASK, panSpeedOffset, PAN_SENSITIVITY, HACCEL, VACCEL);
 		canvas.addInputEventListener(panEventHandler);
 		canvas.removeInputEventListener(canvas.getZoomEventHandler());
 		zoomEventHandler = new GalleryZoomEventHandler(this, workarea, zoomSpeedOffset);
@@ -792,7 +911,7 @@ public abstract class AbstractPresentationView extends BasicView
 			zoom(canvas, 1d - 0.05d * f);
 			break;
 		case '*':
-			camera.setViewTransform(new AffineTransform());
+			toggleTransform(camera);
 			break;
 		}
 	}
@@ -857,7 +976,7 @@ public abstract class AbstractPresentationView extends BasicView
 				super.dragOver(event);
 				if ((event.detail & DND.DROP_MOVE) != 0) {
 					org.eclipse.swt.graphics.Point pc = canvas.toControl(event.x, event.y);
-					if (findExhibit(pc, toLocal(pc)) == null)
+					if (findExhibit(toLocal(pc)) == null)
 						event.detail = DND.DROP_COPY;
 				}
 			}
@@ -891,7 +1010,25 @@ public abstract class AbstractPresentationView extends BasicView
 		});
 	}
 
-	protected abstract PNode findExhibit(org.eclipse.swt.graphics.Point point, Point2D globalToLocal);
+	private PPresentationItem findExhibit(Point2D position) {
+		double x = position.getX();
+		for (ListIterator<?> iterator = surface.getChildrenIterator(); iterator.hasNext();) {
+			Object container = iterator.next();
+			if (container instanceof PContainer)
+				for (ListIterator<?> iterator2 = ((PContainer) container).getChildrenIterator(); iterator2.hasNext();) {
+					Object object = iterator2.next();
+					if (object instanceof PPresentationItem) {
+						double p = ((PPresentationItem) object).getOffset().getX();
+						if (p < x) {
+							p += ((PPresentationItem) object).getBoundsReference().width;
+							if (p >= x)
+								return (PPresentationItem) object;
+						}
+					}
+				}
+		}
+		return null;
+	}
 
 	protected abstract void dropAssets(ISelection selection, org.eclipse.swt.graphics.Point point,
 			Point2D globalToLocal, boolean replace);
@@ -1044,6 +1181,16 @@ public abstract class AbstractPresentationView extends BasicView
 		oldTransform = null;
 	}
 
+	protected void toggleTransform(PCamera camera) {
+		if (oldTransform == null) {
+			oldTransform = camera.getViewTransform();
+			camera.setViewTransform(new AffineTransform());
+		} else {
+			camera.setViewTransform(oldTransform);
+			resetTransform();
+		}
+	}
+
 	protected void endTask() {
 		((GridData) progressBar.getLayoutData()).heightHint = 1;
 		progressBar.setVisible(false);
@@ -1079,6 +1226,8 @@ public abstract class AbstractPresentationView extends BasicView
 				modifyMenu.add(new Separator());
 				modifyMenu.add(exhibitPropertiesAction);
 			}
+			if (deleteAction != null)
+				manager.add(deleteAction);
 		}
 		manager.add(new Separator());
 		manager.add(showInFolderAction);
@@ -1102,6 +1251,9 @@ public abstract class AbstractPresentationView extends BasicView
 		registerCommand(rotateLeftAction, IZoomCommandIds.RotateAntiClockwiseCommand);
 		registerCommand(rotateRightAction, IZoomCommandIds.RotateClockwiseCommand);
 		registerCommand(voiceNoteAction, IZoomCommandIds.PlayVoiceNote);
+		registerCommand(deleteAction, IZoomCommandIds.DeleteCommand);
+		registerCommand(cutAction, IWorkbenchCommandConstants.EDIT_CUT);
+		registerCommand(pasteAction, IWorkbenchCommandConstants.EDIT_PASTE);
 		super.registerCommands();
 	}
 
@@ -1127,6 +1279,8 @@ public abstract class AbstractPresentationView extends BasicView
 			showFullscreenAction.setEnabled(one);
 			if (showInMapAction != null)
 				showInMapAction.setEnabled(count > 0);
+			pasteAction.setEnabled(!clipboard.isEmpty());
+			gotoLastSelectedAction.setEnabled(recentSelection != null);
 			super.updateActions(count, localCount);
 		}
 	}
@@ -1142,6 +1296,15 @@ public abstract class AbstractPresentationView extends BasicView
 				|| event.getEventType() == OperationHistoryEvent.REDONE)
 			refreshAfterHistoryEvent(event.getOperation());
 	}
+
+	@Override
+	protected void updateStatusLine() {
+		String statusMessage = getStatusMessage();
+		if (statusMessage != null)
+			setStatusMessage(statusMessage, false);
+	}
+
+	protected abstract String getStatusMessage();
 
 	protected abstract void refreshAfterHistoryEvent(IUndoableOperation operation);
 

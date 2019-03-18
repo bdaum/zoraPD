@@ -66,5 +66,9 @@
 			<topic href="html/maps.html" />
 		</entry>
 	</entry>
-
+	<entry keyword="Olympus">
+		<entry keyword="OI Track App">
+			<topic href="html/geoTagging.html" />
+		</entry>
+	</entry>
 </index>
