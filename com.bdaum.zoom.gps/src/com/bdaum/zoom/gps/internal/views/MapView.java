@@ -11,10 +11,7 @@
 
 package com.bdaum.zoom.gps.internal.views;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
@@ -52,7 +49,6 @@ import com.bdaum.zoom.cat.model.group.Criterion;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.location.Location;
 import com.bdaum.zoom.cat.model.location.LocationImpl;
-import com.bdaum.zoom.cat.model.locationShown.LocationShownImpl;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.CatalogAdapter;
 import com.bdaum.zoom.core.CatalogListener;
@@ -67,16 +63,15 @@ import com.bdaum.zoom.gps.internal.GeoService;
 import com.bdaum.zoom.gps.internal.GpsActivator;
 import com.bdaum.zoom.gps.internal.GpsConfiguration;
 import com.bdaum.zoom.gps.internal.HelpContextIds;
+import com.bdaum.zoom.gps.internal.IMapComponent;
 import com.bdaum.zoom.gps.internal.Icons;
 import com.bdaum.zoom.gps.internal.operations.GeodirOperation;
 import com.bdaum.zoom.gps.internal.operations.GeoshownOperation;
 import com.bdaum.zoom.gps.internal.operations.GeotagOperation;
-import com.bdaum.zoom.gps.widgets.IMapComponent;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.IProfiledOperation;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.Ui;
-import com.bdaum.zoom.ui.gps.RasterCoordinate;
 import com.bdaum.zoom.ui.gps.Trackpoint;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.views.BasicView;
@@ -153,10 +148,6 @@ public class MapView extends BasicView implements StatusTextListener, MapListene
 	private double lastLongitude = Double.NaN;
 	private double lastLatitude = Double.NaN;
 	protected int lastZoom = 12;
-	private AssetSelection lastSelection = AssetSelection.EMPTY;
-	private Map<RasterCoordinate, Place> placeMap = new HashMap<RasterCoordinate, Place>();
-	private Map<RasterCoordinate, Place> shownMap = new HashMap<RasterCoordinate, Place>();
-	private Place mapPosition;
 	private int initialZoomLevel;
 	private IMapComponent mapComponent;
 	private IEclipsePreferences.IPreferenceChangeListener preferenceListener;
@@ -166,6 +157,7 @@ public class MapView extends BasicView implements StatusTextListener, MapListene
 	private Action webAction;
 	private IConfigurationElement currentConf;
 	private Action refreshAction;
+	private Mapdata mapData = new Mapdata(null, null, clientClustering);
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -283,16 +275,12 @@ public class MapView extends BasicView implements StatusTextListener, MapListene
 	}
 
 	protected void updateGeoPosition(String[] ids, double latitude, double longitude, int type, String uuid) {
-		if (!lastSelection.isEmpty()) {
+		if (mapData != null && !mapData.isEmpty()) {
 			GpsConfiguration gpsConfig = GpsActivator.getDefault().createGpsConfiguration();
 			gpsConfig.overwrite = true;
 			boolean modify = ids != null;
-			if (ids == null || ids.length == 0) {
-				ids = new String[lastSelection.size()];
-				int i = 0;
-				for (Asset asset : lastSelection)
-					ids[i++] = asset.getStringId();
-			}
+			if (ids == null || ids.length == 0)
+				ids = mapData.getAssetIds();
 			if (ids.length > 0) {
 				IProfiledOperation op;
 				Trackpoint trackpoint = new Trackpoint(latitude, longitude, false);
@@ -388,7 +376,7 @@ public class MapView extends BasicView implements StatusTextListener, MapListene
 			latitude = Double.NaN;
 		if (longitude == null)
 			longitude = Double.NaN;
-		mapPosition = new Place(latitude, longitude);
+		Place mapPosition = new Place(latitude, longitude);
 		if (Double.isNaN(latitude) || Double.isNaN(longitude)) {
 			mapPosition.setCountryCode(loc.getCountryISOCode());
 			mapPosition.setCountryName(loc.getCountryName());
@@ -410,7 +398,7 @@ public class MapView extends BasicView implements StatusTextListener, MapListene
 			markerPositions = new Place[] { new Place(latitude, longitude) };
 			initialZoomLevel = 12;
 		}
-		showMap(markerPositions, null, IMapComponent.LOCATION);
+		showMap(new Mapdata(mapPosition, markerPositions, null), IMapComponent.LOCATION);
 	}
 
 	public void showLocations(AssetSelection selectedAssets) {
@@ -419,10 +407,11 @@ public class MapView extends BasicView implements StatusTextListener, MapListene
 	}
 
 	public void showMap() {
-		int size = placeMap.size();
-		Place[] markerPositions = placeMap.values().toArray(new Place[size]);
+		Place[] cameraPositions = mapData.getCameraPositions();
+		int assetCount = mapData.getAssetCount();
 		int mode;
-		switch (size) {
+		Place mapPosition;
+		switch (cameraPositions.length) {
 		case 0:
 			if (!Double.isNaN(lastLatitude) && !Double.isNaN(lastLongitude)) {
 				mapPosition = new Place(lastLatitude, lastLongitude);
@@ -438,30 +427,31 @@ public class MapView extends BasicView implements StatusTextListener, MapListene
 					initialZoomLevel = getLastZoom(6);
 				}
 			}
-			mode = (lastSelection.isEmpty()) ? IMapComponent.NONE : IMapComponent.ONE;
+			mode = assetCount == 0 ? IMapComponent.NONE : IMapComponent.ONE;
 			break;
 		case 1:
-			Collection<Place> values = placeMap.values();
-			mapPosition = values.toArray(new Place[values.size()])[0];
+			mapPosition = mapData.getInitialPosition();
 			initialZoomLevel = getLastZoom(12);
-			mode = lastSelection.size() > 1 ? IMapComponent.CLUSTER : IMapComponent.ONE;
+			mode = assetCount > 1 ? IMapComponent.CLUSTER : IMapComponent.ONE;
 			break;
 		default:
-			initialZoomLevel = computeZoomLevel(markerPositions, mapPosition = new Place());
+			initialZoomLevel = computeZoomLevel(cameraPositions, mapPosition = new Place());
 			mode = IMapComponent.MULTI;
 			break;
 		}
-		showMap(markerPositions, shownMap.values().toArray(new Place[size]), mode);
+		mapData.setMapPosition(mapPosition);
+		showMap(mapData, mode);
 	}
 
 	private int getLastZoom(int dflt) {
 		return lastZoom >= 0 ? lastZoom : dflt;
 	}
 
-	private void showMap(Place[] markerPositions, Place[] shownPositions, int mode) {
+	private void showMap(Mapdata mapData, int mode) {
 		if (mapComponent != null) {
-			mapComponent.setInput(mapPosition, initialZoomLevel, markerPositions, shownPositions, null,
+			mapComponent.setInput(mapData, initialZoomLevel,
 					dbIsReadonly() || isPeerOnly() ? IMapComponent.LOCATION : mode);
+			Place mapPosition = mapData.getInitialPosition();
 			if (!Double.isNaN(mapPosition.getLat()) && !Double.isNaN(mapPosition.getLon())) {
 				lastLatitude = mapPosition.getLat();
 				lastLongitude = mapPosition.getLon();
@@ -523,9 +513,7 @@ public class MapView extends BasicView implements StatusTextListener, MapListene
 	}
 
 	protected void assetsChanged(AssetSelection selectedAssets, boolean refresh) {
-		lastSelection = selectedAssets;
-		extractLocations(selectedAssets);
-		extractLocationsShown(selectedAssets);
+		mapData = new Mapdata(selectedAssets, null, clientClustering);
 		if (refresh) {
 			Shell shell = getSite().getShell();
 			if (shell != null && !shell.isDisposed())
@@ -534,82 +522,6 @@ public class MapView extends BasicView implements StatusTextListener, MapListene
 						refreshBusy();
 				});
 		}
-	}
-
-	private void extractLocations(AssetSelection selectedAssets) {
-		placeMap.clear();
-		boolean mixedDir = false;
-		int n = 0;
-		for (Asset asset : selectedAssets.getAssets()) {
-			double lat = asset.getGPSLatitude();
-			double lon = asset.getGPSLongitude();
-			if (!Double.isNaN(lat) && !Double.isNaN(lon)) {
-				RasterCoordinate coord = new RasterCoordinate(lat, lon, 2);
-				Place place = (Place) (clientClustering ? coord.findExactMatch(placeMap)
-						: coord.findClosestMatch(placeMap, 0.06d, 'K'));
-				double direction = asset.getGPSImgDirection();
-				if (place == null) {
-					place = new Place(lat, lon);
-					place.setImageName(asset.getName());
-					place.setDirection(direction);
-					placeMap.put(coord, place);
-				} else {
-					String description = place.getImageName();
-					if (description.length() > 40) {
-						if (!description.endsWith(",...")) //$NON-NLS-1$
-							description += ",..."; //$NON-NLS-1$
-					} else
-						description += ", " + asset.getName(); //$NON-NLS-1$
-					place.setImageName(description);
-					if (!mixedDir) {
-						if (Double.isNaN(place.getDirection()))
-							place.setDirection(direction);
-						else if (!Double.isNaN(direction)) {
-							if (Math.abs(place.getDirection() - direction) < 1d)
-								place.setDirection((place.getDirection() * n + direction) / ++n);
-							else {
-								place.setDirection(Double.NaN);
-								mixedDir = true;
-							}
-						}
-					}
-				}
-				place.addImageAssetId(asset.getStringId());
-			}
-		}
-	}
-
-	private void extractLocationsShown(AssetSelection selectedAssets) {
-		IDbManager dbManager = Core.getCore().getDbManager();
-		shownMap.clear();
-		for (Asset asset : selectedAssets.getAssets())
-			for (LocationShownImpl locationShown : dbManager.obtainStructForAsset(LocationShownImpl.class,
-					asset.getStringId(), false)) {
-				LocationImpl loc = dbManager.obtainById(LocationImpl.class, locationShown.getLocation());
-				if (loc != null) {
-					double lon = loc.getLongitude();
-					double lat = loc.getLatitude();
-					if (!Double.isNaN(lat) && !Double.isNaN(lon)) {
-						RasterCoordinate coord = new RasterCoordinate(lat, lon, 2);
-						Place place = (Place) (clientClustering ? coord.findExactMatch(shownMap)
-								: coord.findClosestMatch(shownMap, 0.06d, 'K'));
-						if (place == null) {
-							place = new Place(lat, lon);
-							place.setImageName(asset.getName());
-							shownMap.put(coord, place);
-						} else {
-							String description = place.getImageName();
-							if (description.length() > 40) {
-								if (!description.endsWith(",...")) //$NON-NLS-1$
-									description += ",..."; //$NON-NLS-1$
-							} else
-								description += ", " + asset.getName(); //$NON-NLS-1$
-							place.setImageName(description);
-						}
-						place.addImageAssetId(locationShown.getStringId());
-					}
-				}
-			}
 	}
 
 	@Override
@@ -630,9 +542,8 @@ public class MapView extends BasicView implements StatusTextListener, MapListene
 			for (LocationImpl loc2 : Core.getCore().getDbManager().findLocation(loc))
 				if (loc2.getLatitude() != null && !Double.isNaN(loc2.getLatitude()) && loc2.getLongitude() != null
 						&& !Double.isNaN(loc2.getLongitude())) {
-					mapComponent.setInput(new Place(loc2.getLatitude(), loc2.getLongitude()),
-							loc.getCity() != null ? 12 : loc.getProvinceOrState() != null ? 8 : 6, null, null, null,
-							IMapComponent.NONE);
+					mapComponent.setInput(new Mapdata(new Place(loc2.getLatitude(), loc2.getLongitude()), null, null),
+							loc.getCity() != null ? 12 : loc.getProvinceOrState() != null ? 8 : 6, IMapComponent.NONE);
 					break;
 				}
 		}

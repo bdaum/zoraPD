@@ -180,9 +180,9 @@ public class FindSeriesDialog extends ZTitleAreaDialog {
 		settings.put(IGNOREDERIVED, ignoreDerivates);
 		findWithinGroup.saveValues(settings);
 		result = new SmartCollectionImpl(Messages.FindSeriesDialog_find_series,
-				false, false, true, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
+				false, false, true, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 		result.addCriterion(new CriterionImpl(
-				QueryField.EXIF_DATETIMEORIGINAL.getKey(),null, new Date(86400000L),
+				QueryField.EXIF_DATETIMEORIGINAL.getKey(),null, new Date(86400000L),null,
 				QueryField.GREATER, false));
 		if (separateFormats)
 			result.addSortCriterion(new SortCriterionImpl(

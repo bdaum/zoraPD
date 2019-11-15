@@ -34,7 +34,6 @@ import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterion;
 import com.bdaum.zoom.core.IAssetFilter;
 import com.bdaum.zoom.ui.internal.NavigationHistory.HistoryItem;
-import com.bdaum.zoom.ui.internal.views.AbstractGalleryView;
 import com.bdaum.zoom.ui.internal.views.EducatedSelectionListener;
 
 /**
@@ -230,11 +229,6 @@ public interface INavigationHistory {
 	void selectionChanged(SelectionChangedEvent event);
 
 	/**
-	 * @return a list of currently open galleries
-	 */
-	List<AbstractGalleryView> getOpenGalleries();
-
-	/**
 	 * Indicate a cue change
 	 * @param object - the base object that has changed
 	 */
@@ -245,5 +239,10 @@ public interface INavigationHistory {
 	 * @return the most recent active presentation view
 	 */
 	String getLastPresentationView();
+
+	/**
+	 * @return a list of currently open part ids
+	 */
+	List<String> getOpenParts();
 
 }

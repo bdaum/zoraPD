@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE.win32_x64"
       label="Win32_x86_64 Feature"
-      version="3.5.1"
+      version="3.6.0"
       provider-name="bdaum industrial communications"
       os="win32"
       ws="win32"
@@ -92,6 +92,7 @@ your option) any later version.
 
    <plugin
          id="com.bdaum.zoom.batch.win32"
+         os="win32"
          download-size="0"
          install-size="0"
          version="0.0.0"

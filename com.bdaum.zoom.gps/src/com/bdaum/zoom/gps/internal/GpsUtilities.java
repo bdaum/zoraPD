@@ -135,12 +135,13 @@ public class GpsUtilities {
 		if (nogo != null) {
 			int i = 0;
 			double lat = 0, lon = 0, km = 0;
+			int zoom = 8;
 			String name = null;
 			StringTokenizer st = new StringTokenizer(nogo, ";,", true); //$NON-NLS-1$
 			while (st.hasMoreTokens()) {
 				String s = st.nextToken();
 				if (";".equals(s)) { //$NON-NLS-1$
-					areas.add(new GeoArea(name, lat, lon, km));
+					areas.add(new GeoArea(name, lat, lon, km, zoom));
 					i = 0;
 				} else if (",".equals(s)) //$NON-NLS-1$
 					++i;
@@ -159,8 +160,11 @@ public class GpsUtilities {
 						case 3:
 							km = nf.parse(s).doubleValue();
 							break;
+						case 4:
+							zoom = Integer.parseInt(s);
+							break;
 						}
-					} catch (ParseException e) {
+					} catch (ParseException | NumberFormatException e) {
 						// do nothing
 					}
 			}

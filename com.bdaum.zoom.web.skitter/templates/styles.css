@@ -1,0 +1,88 @@
+/* ------------------------------------------
+  Your main styles
+---------------------------------------------*/
+
+* {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+body {
+  ${bgcolor}
+  ${bgimage}
+  margin: ${topmargin}px ${rightmargin}px ${bottommargin}px ${leftmargin}px;
+  padding:0;
+  ${bodyfont}
+}
+#page {
+  margin: ${padding}px ${padding}px ${padding}px ${padding}px;
+  max-width: ${maxWidth}px;
+  padding: 40px;
+  ${bgcolor}
+  ${bgimage}
+  text-align: left;
+}
+#page h1 {
+  ${titlefont}
+  margin: 0 0 20px 0;
+  padding: 0 0 10px 0;
+  text-align: left;
+  letter-spacing: -1px;
+}
+#page h1 small {
+  ${sectionfont}
+  display: block;
+  letter-spacing: 0;
+}
+
+div#footer {
+	clear: both;
+	${footerfont}
+	margin: 0 auto;
+	padding: 40px 0 40px;
+	text-align: left;
+}
+
+.btn {
+  transition: background 300ms;
+  border-radius: 2px;
+  padding: 10px 20px;
+  display: inline-block;
+  text-decoration: none;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: rgba(0, 0, 0, 0.2) 0 -3px inset;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+.btn.btn-green {
+  color: white;
+  background: #009688;
+}
+.btn.btn-green:hover {
+  background: #00695c;
+}
+.btn.btn-download {
+  color: black;
+  background: ${downloadColor};
+}
+.btn.btn-download:hover {
+  background: ${hoverColor};
+}
+.btn.btn-small {
+  padding: 3px 7px;
+  font-size: 11px;
+}
+
+/* ------------------------------------------
+  Skitter custom settings
+---------------------------------------------*/
+.skitter-large-box {
+  width: 100%;
+}
+.skitter-small-box {
+  max-width: 400px;
+}
+.skitter-medium-box {
+  max-width: 500px;
+}

@@ -108,32 +108,30 @@ public class FileLocationBackup extends HistoryItem {
 				if (file != null && fileMoved)
 					deleteFile(asset, file);
 				toBeDeleted.add(asset);
-				if (asset.getCreatorsContact_parent() != null)
-					for (CreatorsContactImpl rel : dbManager.obtainStructForAsset(CreatorsContactImpl.class, assetId,
-							true)) {
-						rel.removeAsset(assetId);
-						if (rel.getAsset().isEmpty()) {
-							toBeDeleted.add(rel);
-							String contactId = rel.getContact();
-							if (contactId != null) {
-								ContactImpl contact = dbManager.obtainById(ContactImpl.class, contactId);
-								if (contact != null)
-									toBeDeleted.add(contact);
-							}
-						} else
-							toBeStored.add(rel);
-						break;
-					}
-				if (asset.getLocationCreated_parent() != null)
-					for (LocationCreatedImpl rel : dbManager.obtainStructForAsset(LocationCreatedImpl.class, assetId,
-							true)) {
-						rel.removeAsset(assetId);
-						if (rel.getAsset().isEmpty())
-							toBeDeleted.add(rel);
-						else
-							toBeStored.add(rel);
-						break;
-					}
+				CreatorsContactImpl rel = dbManager.obtainById(CreatorsContactImpl.class,
+						asset.getCreatorsContact_parent());
+				if (rel != null) {
+					rel.removeAsset(assetId);
+					if (rel.getAsset().isEmpty()) {
+						toBeDeleted.add(rel);
+						String contactId = rel.getContact();
+						if (contactId != null) {
+							ContactImpl contact = dbManager.obtainById(ContactImpl.class, contactId);
+							if (contact != null)
+								toBeDeleted.add(contact);
+						}
+					} else
+						toBeStored.add(rel);
+				}
+				LocationCreatedImpl loc = dbManager.obtainById(LocationCreatedImpl.class,
+						asset.getLocationCreated_parent());
+				if (loc != null) {
+					loc.removeAsset(assetId);
+					if (loc.getAsset().isEmpty())
+						toBeDeleted.add(loc);
+					else
+						toBeStored.add(loc);
+				}
 				if (!asset.getLocationShown_parent().isEmpty())
 					toBeDeleted.addAll(dbManager.obtainStructForAsset(LocationShownImpl.class, assetId, true));
 				if (!asset.getArtworkOrObjectShown_parent().isEmpty())
@@ -152,7 +150,7 @@ public class FileLocationBackup extends HistoryItem {
 					File[] xmpTargets = Core.getSidecarFiles(newFile.toURI(), false);
 					URI voiceOrigURI = null;
 					URI voiceTargetURI = null;
-					if (AssetEnsemble.hasCloseVoiceNote(asset)) { 
+					if (AssetEnsemble.hasCloseVoiceNote(asset)) {
 						voiceOrigURI = Core.getVoicefileURI(file);
 						voiceTargetURI = Core.getVoicefileURI(newFile);
 					}

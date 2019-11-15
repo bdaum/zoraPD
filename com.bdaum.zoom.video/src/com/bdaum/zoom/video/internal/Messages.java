@@ -43,6 +43,13 @@ public class Messages extends NLS {
 	public static String QueryField_duration;
 
 
+	public static String SelectFrameDialog_n_of_m;
+	public static String SelectFrameDialog_update_thumb;
+	public static String SelectFrameDialog_update_thumb_msg;
+	public static String UiExtension_update_thumb;
+	public static String UiExtension_update_thumb_tooltext;
+
+
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

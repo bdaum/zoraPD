@@ -35,7 +35,7 @@ import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
-import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IFormatter;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
@@ -132,7 +132,7 @@ public class DateTimeCellEditor extends DialogCellEditor {
 	protected void updateContents(Object v) {
 		IFormatter formatter = qfield.getFormatter();
 		super.updateContents(
-				v instanceof Date ? (formatter != null ? formatter.toString(v) : Constants.DFDT.format((Date) v)) : v);
+				v instanceof Date ? (formatter != null ? formatter.toString(v) : Format.DFDT.get().format((Date) v)) : v);
 	}
 
 	@Override

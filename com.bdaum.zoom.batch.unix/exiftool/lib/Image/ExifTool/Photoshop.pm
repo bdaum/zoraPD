@@ -28,7 +28,7 @@ use strict;
 use vars qw($VERSION $AUTOLOAD $iptcDigestInfo);
 use Image::ExifTool qw(:DataAccess :Utils);
 
-$VERSION = '1.62';
+$VERSION = '1.64';
 
 sub ProcessPhotoshop($$$);
 sub WritePhotoshop($$$);
@@ -675,9 +675,18 @@ sub ProcessLayersAndMask($$$)
     # check for Lr16 block if layers length is 0 (ref https://forums.adobe.com/thread/1540914)
     if ($len == 0 and $num == 0) {
         $raf->Read($data,10) == 10 or return 0;
-        if ($data =~/^..8BIMLr16/s) {
+        if ($data =~ /^..8BIMLr16/s) {
             $raf->Read($data, $psiz+2) == $psiz+2 or return 0;
             $len = $psb ? Get64u(\$data, 0) : Get32u(\$data, 0);
+        } elsif ($data =~ /^..8BIMMt16/s) { # (have seen Mt16 before Lr16, ref PH)
+            $raf->Read($data, $psiz) == $psiz or return 0;
+            $raf->Read($data, 8) == 8 or return 0;
+            if ($data eq '8BIMLr16') {
+                $raf->Read($data, $psiz+2) == $psiz+2 or return 0;
+                $len = $psb ? Get64u(\$data, 0) : Get32u(\$data, 0);
+            } else {
+                $raf->Seek(-18-$psiz, 1) or return 0;
+            }
         } else {
             $raf->Seek(-10, 1) or return 0;
         }
@@ -819,7 +828,7 @@ sub ProcessDocumentData($$$)
     my $raf = $$dirInfo{RAF};
     my $dirLen = $$dirInfo{DirLen};
     my $pos = 36;   # length of header
-    my $buff;
+    my ($buff, $n);
 
     $et->VerboseDir('Photoshop Document Data', undef, $dirLen);
     unless ($raf) {
@@ -838,7 +847,6 @@ sub ProcessDocumentData($$$)
     }
     my $psb = ($1 eq 'V0002');
     my %dinfo = ( DataPt => \$buff );
-    my ($n, $setOrder);
     $$et{IsPSB} = $psb; # set PSB flag (needed when handling Layers directory)
     while ($pos + 12 <= $dirLen) {
         $raf->Read($buff, 8) == 8 or last;
@@ -911,6 +919,9 @@ sub ProcessPhotoshop($$$)
             }
         }
     }
+    if ($$et{FILE_TYPE} eq 'JPEG' and $$dirInfo{Parent} ne 'APP13') {
+        $$et{LOW_PRIORITY_DIR}{'*'} = 1;    # lower priority of all these tags
+    }
     SetByteOrder('MM');     # Photoshop is always big-endian
     $verbose and $et->VerboseDir('Photoshop', 0, $$dirInfo{DirLen});
 
@@ -975,6 +986,7 @@ sub ProcessPhotoshop($$$)
         $size += 1 if $size & 0x01; # size is padded to an even # bytes
         $pos += $size;
     }
+    delete $$et{LOW_PRIORITY_DIR}{'*'};
     return $success;
 }
 

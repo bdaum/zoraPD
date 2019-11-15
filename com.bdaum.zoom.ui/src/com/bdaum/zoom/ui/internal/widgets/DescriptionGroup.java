@@ -24,7 +24,6 @@ public class DescriptionGroup {
 	private CheckedText descriptionField;
 	private HtmlSourceViewer descriptionHtmlViewer;
 	private RadioButtonGroup formatButtonGroup;
-	private HtmlEncoderDecoder htmlEncoderDecoder;
 
 	@SuppressWarnings("unused")
 	public DescriptionGroup(final Composite parent, int style) {
@@ -66,12 +65,12 @@ public class DescriptionGroup {
 
 	private void updateDescriptionStack(final Composite parent) {
 		if (formatButtonGroup.getSelection() == 1) {
-			descriptionHtmlViewer.getDocument().set(getHtmlEncoderDecoder().encodeHTML(descriptionField.getText(), true));
+			descriptionHtmlViewer.getDocument().set(HtmlEncoderDecoder.getInstance().encodeHTML(descriptionField.getText(), true));
 			descriptionStack.topControl = descriptionHtmlViewer.getControl();
 			descriptionHtmlViewer.setFocus();
 		} else {
 			StringBuilder sb = new StringBuilder();
-			if (getHtmlEncoderDecoder().decodeHTML(descriptionHtmlViewer.getDocument().get(), sb)
+			if (HtmlEncoderDecoder.getInstance().decodeHTML(descriptionHtmlViewer.getDocument().get(), sb)
 					&& !AcousticMessageDialog.openConfirm(parent.getShell(), Messages.DescriptionGroup_html_to_plain,
 							Messages.DescriptionGroup_existing_markup_will_be_deleted)) {
 				formatButtonGroup.setSelection(1);
@@ -115,12 +114,6 @@ public class DescriptionGroup {
 
 	private void updateHelpLabel() {
 		descriptionHelpLabel.setVisible(formatButtonGroup.isEnabled(1) && formatButtonGroup.getSelection() == 1);
-	}
-	
-	private HtmlEncoderDecoder getHtmlEncoderDecoder() {
-		if (htmlEncoderDecoder == null)
-			htmlEncoderDecoder = new HtmlEncoderDecoder();
-		return htmlEncoderDecoder;
 	}
 
 }

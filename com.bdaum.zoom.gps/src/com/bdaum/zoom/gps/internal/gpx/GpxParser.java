@@ -36,6 +36,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.ui.gps.IGpsParser;
 import com.bdaum.zoom.ui.gps.Trackpoint;
 
@@ -134,10 +135,10 @@ public class GpxParser implements IGpsParser {
 
 	private static Date text2date(String text) throws SAXException {
 		try {
-			SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:s"); //$NON-NLS-1$
-			DF.setTimeZone(TimeZone.getTimeZone("UTC")); //$NON-NLS-1$
+			SimpleDateFormat df = Format.XML_DATE_TIME_FORMAT.get(); 
+			df.setTimeZone(TimeZone.getTimeZone("UTC")); //$NON-NLS-1$
 			if (text.endsWith("Z")) //$NON-NLS-1$
-				return DF.parse(text.substring(0, text.length() - 1));
+				return df.parse(text.substring(0, text.length() - 1));
 			String shift;
 			boolean minus = false;
 			int p = text.lastIndexOf('+');
@@ -146,11 +147,11 @@ public class GpxParser implements IGpsParser {
 			else {
 				p = text.lastIndexOf('-');
 				if (p < 0)
-					return DF.parse(text);
+					return df.parse(text);
 				shift = text.substring(p + 1);
 				minus = true;
 			}
-			Date date = DF.parse(text.substring(0, p));
+			Date date = df.parse(text.substring(0, p));
 			p = shift.indexOf(':');
 			int offset = (p >= 0)
 					? Integer.parseInt(shift.substring(0, p)) * 60 + Integer.parseInt(shift.substring(p + 1))

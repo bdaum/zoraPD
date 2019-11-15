@@ -60,6 +60,7 @@ import org.eclipse.swt.graphics.RGB;
 import com.bdaum.zoom.cat.model.Meta_type;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
+import com.bdaum.zoom.cat.model.asset.MediaExtension;
 import com.bdaum.zoom.cat.model.asset.RegionImpl;
 import com.bdaum.zoom.cat.model.group.Criterion;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
@@ -79,11 +80,12 @@ import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.common.GeoMessages;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.mtp.ObjectFilter;
 import com.bdaum.zoom.program.BatchConstants;
+import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.HtmlEncoderDecoder;
 import com.google.openlocationcode.OpenLocationCode;
 
@@ -106,7 +108,7 @@ public class Utilities {
 		SmartCollection ncoll = new SmartCollectionImpl(scoll.getName(), scoll.getSystem(), scoll.getAlbum(),
 				scoll.getAdhoc(), false, scoll.getDescription(), scoll.getColorCode(), scoll.getLastAccessDate(),
 				scoll.getGeneration() + 1, scoll.getPerspective(), scoll.getShowLabel(), scoll.getLabelTemplate(),
-				scoll.getFontSize(), scoll.getPostProcessor());
+				scoll.getFontSize(), scoll.getAlignment(), scoll.getPostProcessor());
 		for (Criterion crit : scoll.getCriterion())
 			ncoll.addCriterion(crit);
 		ncoll.setSmartCollection_subSelection_parent(scoll.getSmartCollection_subSelection_parent());
@@ -137,14 +139,26 @@ public class Utilities {
 	public static String[] addToStringArray(String s, String[] array, boolean sort) {
 		if (array == null || array.length == 0)
 			return new String[] { s };
-		for (String kw : array)
+		int l = array.length;
+		int insert = l;
+		for (int i = 0; i < l; i++) {
+			String kw = array[i];
 			if (kw.equals(s))
 				return array;
-		String[] newArray = new String[array.length + 1];
-		System.arraycopy(array, 0, newArray, 0, array.length);
-		newArray[array.length] = s;
-		if (sort)
-			Arrays.sort(newArray);
+			if (sort && kw.compareTo(s) > 0) {
+				insert = i;
+				break;
+			}
+		}
+		String[] newArray = new String[l + 1];
+		if (insert == 0)
+			System.arraycopy(array, 0, newArray, 1, l);
+		else if (insert < l) {
+			System.arraycopy(array, 0, newArray, 0, insert);
+			System.arraycopy(array, 0, newArray, insert+1, l-insert);
+		} else
+			System.arraycopy(array, 0, newArray, 0, l);
+		newArray[insert] = s;
 		return newArray;
 	}
 
@@ -179,7 +193,7 @@ public class Utilities {
 	public static String getPlainDescription(WebExhibitImpl exhibit) {
 		String description = exhibit.getDescription();
 		if (description != null && exhibit.getHtmlDescription())
-			return new HtmlEncoderDecoder().decodeHTML(description);
+			return HtmlEncoderDecoder.getInstance().decodeHTML(description);
 		return description;
 	}
 
@@ -321,7 +335,7 @@ public class Utilities {
 
 	public static String evaluateTemplate(String template, String[] variables, String filename, GregorianCalendar cal,
 			int importNo, int imageNo, int sequenceNo, String cue, Asset asset, String collection, int maxLength,
-			boolean toFilename, boolean withQuestionMark) {
+			boolean toFilename) {
 		if (cal == null && asset != null) {
 			Date crDate = asset.getDateTimeOriginal();
 			if (crDate == null)
@@ -332,33 +346,18 @@ public class Utilities {
 			}
 		}
 		StringBuilder sb = new StringBuilder(template);
-		for (String tv : variables)
-			while (true) {
-				int p = sb.indexOf(tv);
-				if (p < 0)
-					break;
-				replaceContent(sb, p, tv, asset, collection, filename, cal, importNo, imageNo, sequenceNo, cue,
-						toFilename);
-			}
+		int p;
+		for (String tv : variables) {
+			int from = 0;
+			while ((p = sb.indexOf(tv, from)) < 0)
+				from = p + replaceVariables(sb, p, tv, asset, collection, filename, cal, importNo, imageNo, sequenceNo,
+						cue, toFilename);
+		}
 		if (asset != null) {
-			while (true) {
-				int p = sb.indexOf(Constants.TV_META);
-				if (p < 0)
-					break;
-				int q = sb.indexOf("}", p + 1); //$NON-NLS-1$
-				if (q < 0)
-					break;
-				QueryField[] qpath = QueryField.findQuerySubField(sb.substring(p + Constants.TV_META.length(), q));
-				if (qpath == null)
-					break;
-				String text = qpath[1].value2text(QueryField.obtainFieldValue(asset, qpath[0], qpath[1]), ""); //$NON-NLS-1$
-				if (text != null) {
-					text = qpath[1].addUnit(text, " ", "");  //$NON-NLS-1$//$NON-NLS-2$
-					if (withQuestionMark)
-						text = qpath[1].appendQuestionMark(asset, text);
-				} else
-					text = ""; //$NON-NLS-1$
-				sb.replace(p, q + 1, removeBadChars(text, toFilename));
+			int from = 0;
+			while ((p = sb.indexOf(Constants.TV_META, from)) < 0) {
+				int len = replaceMeta(sb, p, asset, false, toFilename, false);
+				from = p + (len < 0 ? Constants.TV_META.length() : len);
 			}
 		}
 		if (sb.length() > maxLength) {
@@ -371,7 +370,28 @@ public class Utilities {
 		return sb.toString();
 	}
 
-	private static void replaceContent(StringBuilder sb, int p, String tv, Asset asset, String collection,
+	public static int replaceMeta(StringBuilder sb, int p, Asset asset, boolean withQuestionMark, boolean toFilename,
+			boolean noMissingEntryString) {
+		int q = sb.indexOf("}", p + 1); //$NON-NLS-1$
+		if (q < 0)
+			return -1;
+		QueryField[] qpath = QueryField.findQuerySubField(sb.substring(p + Constants.TV_META.length(), q));
+		if (qpath == null)
+			return -1;
+		String text = qpath[1].value2text(QueryField.obtainFieldValue(asset, qpath[0], qpath[1]), ""); //$NON-NLS-1$
+		if (noMissingEntryString && text == Format.MISSINGENTRYSTRING || text == null)
+			text = ""; //$NON-NLS-1$
+		else {
+			text = qpath[1].addUnit(text, " ", ""); //$NON-NLS-1$//$NON-NLS-2$
+			if (withQuestionMark)
+				text = qpath[1].appendQuestionMark(asset, text);
+			text = removeBadChars(text, toFilename);
+		}
+		sb.replace(p, q + 1, text);
+		return text.length();
+	}
+
+	public static int replaceVariables(StringBuilder sb, int p, String tv, Asset asset, String collection,
 			String filename, GregorianCalendar cal, int importNo, int imageNo, int sequenceNo, String cue,
 			boolean toFilename) {
 		String value = ""; //$NON-NLS-1$
@@ -380,7 +400,7 @@ public class Utilities {
 		else if (tv == Constants.PI_NAME)
 			value = asset.getName();
 		else if (tv == Constants.PI_CREATIONDATE)
-			value = cal == null ? "" : new SimpleDateFormat(Messages.Utilities_yyyymdhmm).format(cal.getTime()); //$NON-NLS-1$
+			value = cal == null ? "" : Format.YMDT_SLASH.get().format(cal.getTime()); //$NON-NLS-1$
 		else if (tv == Constants.PI_CREATIONYEAR || tv == Constants.TV_YYYY)
 			value = cal == null ? "" : String.valueOf(cal.get(Calendar.YEAR)); //$NON-NLS-1$
 		else if (tv == Constants.PT_COLLECTION)
@@ -407,6 +427,8 @@ public class Utilities {
 			value = cal == null ? "" : Constants.DATEFORMATS.getMonths()[cal.get(Calendar.MONTH)]; //$NON-NLS-1$
 		else if (tv == Constants.TV_WW)
 			value = cal == null ? "" : leadingZeros(cal.get(Calendar.WEEK_OF_YEAR), 2); //$NON-NLS-1$
+		else if (tv == Constants.TV_DAY)
+			value = cal == null ? "" : Format.WEEKDAY_FORMAT.get().format(cal.getTime()); //$NON-NLS-1$
 		else if (tv == Constants.TV_MM)
 			value = cal == null ? "" : leadingZeros(cal.get(Calendar.MONTH) + 1, 2); //$NON-NLS-1$
 		else if (tv == Constants.TV_YY)
@@ -441,13 +463,12 @@ public class Utilities {
 			value = leadingZeros(importNo, 2);
 		else if (tv == Constants.TV_IMPORT_NO1)
 			value = String.valueOf(importNo);
-		else if (tv == Constants.TV_EXTENSION) {
+		else if (tv == Constants.TV_EXTENSION)
+			value = BatchUtilities.getTrueFileExtension(getFilename(filename, asset));
+		else if (tv == Constants.TV_FILENAME) {
+			filename = getFilename(filename, asset);
 			int q = filename.lastIndexOf('.');
-			if (q >= 0)
-				value = filename.substring(q + 1);
-		} else if (tv == Constants.TV_FILENAME) {
-			int q = filename.lastIndexOf('.');
-			value = q >= 0 ? filename.substring(0, q) : filename;
+			value = q > filename.lastIndexOf('/') ? filename.substring(0, q) : filename;
 		} else if (tv == Constants.TV_USER)
 			value = removeBadChars(System.getProperty("user.name"), toFilename); //$NON-NLS-1$
 		else if (tv == Constants.TV_OWNER)
@@ -455,6 +476,15 @@ public class Utilities {
 		else if (tv == Constants.TV_CUE)
 			value = cue == null ? "" : removeBadChars(cue, toFilename); //$NON-NLS-1$
 		sb.replace(p, p + tv.length(), value);
+		return value.length();
+	}
+
+	private static String getFilename(String filename, Asset asset) {
+		if (filename != null)
+			return filename;
+		if (asset != null)
+			return asset.getUri();
+		return ""; //$NON-NLS-1$
 	}
 
 	private static String removeBadChars(String property, boolean toFilename) {
@@ -486,8 +516,7 @@ public class Utilities {
 	}
 
 	public static String leadingZeros(int v, int digits) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(v);
+		StringBuilder sb = new StringBuilder(v);
 		while (sb.length() < digits)
 			sb.insert(0, "0"); //$NON-NLS-1$
 		return sb.toString();
@@ -564,7 +593,7 @@ public class Utilities {
 					break;
 				}
 			if (catGroup == null) {
-				catGroup = new GroupImpl(Messages.CoreActivator_Categories, false, Constants.INHERIT_LABEL, null, 0,
+				catGroup = new GroupImpl(Messages.CoreActivator_Categories, false, Constants.INHERIT_LABEL, null, 0, 1,
 						null);
 				catGroup.setStringId(Constants.GROUP_ID_CATEGORIES);
 				toBeStored.add(catGroup);
@@ -585,9 +614,10 @@ public class Utilities {
 			Group catGroup, Collection<Object> toBeStored) {
 		String label = category.getLabel();
 		SmartCollectionImpl coll = new SmartCollectionImpl(label.isEmpty() ? Messages.Utilities_not_categorized : label,
-				true, false, false, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
+				true, false, false, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 		coll.setStringId(IDbManager.CATKEY + label);
-		Criterion crit = new CriterionImpl(QueryField.IPTC_CATEGORY.getKey(), null, label, QueryField.EQUALS, false);
+		Criterion crit = new CriterionImpl(QueryField.IPTC_CATEGORY.getKey(), null, label, null, QueryField.EQUALS,
+				false);
 		coll.addCriterion(crit);
 		SortCriterion sortCrit1 = new SortCriterionImpl(QueryField.RATING.getKey(), null, true);
 		coll.addSortCriterion(sortCrit1);
@@ -852,25 +882,28 @@ public class Utilities {
 	}
 
 	public static String downGradeLastImport(SmartCollectionImpl coll) {
-		return setImportKeyAndLabel(coll, coll.getCriterion(0).getValue());
+		Criterion crit = coll.getCriterion(0);
+		return setImportKeyAndLabel(coll, crit.getValue(), crit.getTo());
 	}
 
-	public static String setImportKeyAndLabel(SmartCollectionImpl coll, Object value) {
+	public static String setImportKeyAndLabel(SmartCollectionImpl coll, Object value, Object vto) {
 		String lab, id;
-		if (value instanceof Range) {
-			Date from = (Date) ((Range) value).getFrom();
-			Date to = (Date) ((Range) value).getTo();
-			String sto = Constants.DFIMPORT.format(to);
-			String sfrom = Constants.DFIMPORTDD.format(from);
-			lab = sfrom.equals(Constants.DFIMPORTDD.format(to))
-					? new StringBuilder().append(sfrom).append(' ').append(Constants.DFIMPORTHH.format(from))
-							.append(" - ") //$NON-NLS-1$
-							.append(Constants.DFIMPORTHH.format(to)).toString()
-					: new StringBuilder().append(Constants.DFIMPORT.format(from)).append(" - ") //$NON-NLS-1$
+		SimpleDateFormat sdfh = Format.DATE_TIME_HYPHEN_FORMAT.get();
+		if (vto != null) {
+			Date from = (Date) value;
+			Date to = (Date) vto;
+			String sto = sdfh.format(to);
+			SimpleDateFormat sdf = Format.YEAR_MONTH_DAY_FORMAT.get();
+			String sfrom = sdf.format(from);
+			SimpleDateFormat hms = Format.HMS_FORMAT.get();
+			lab = sfrom.equals(sdf.format(to))
+					? new StringBuilder().append(sfrom).append(' ').append(hms.format(from)).append(" - ") //$NON-NLS-1$
+							.append(hms.format(to)).toString()
+					: new StringBuilder().append(sdfh.format(from)).append(" - ") //$NON-NLS-1$
 							.append(sto).toString();
 			id = IDbManager.IMPORTKEY + sto;
 		} else
-			id = IDbManager.IMPORTKEY + (lab = Constants.DFIMPORT.format((Date) value));
+			id = IDbManager.IMPORTKEY + (lab = sdfh.format((Date) value));
 		coll.setName(lab);
 		coll.setStringId(id);
 		coll.setSystem(false);
@@ -1010,9 +1043,9 @@ public class Utilities {
 		String prefix = ratingKey + '=';
 		for (int i = -1; i <= 5; i++) {
 			SmartCollectionImpl coll = new SmartCollectionImpl((i < 0) ? Messages.CoreActivator_Not_rated : STARS[i],
-					true, false, false, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
+					true, false, false, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 			coll.setStringId(prefix + i);
-			coll.addCriterion(new CriterionImpl(ratingKey, null, i, QueryField.EQUALS, false));
+			coll.addCriterion(new CriterionImpl(ratingKey, null, i, null, QueryField.EQUALS, false));
 			coll.addSortCriterion(new SortCriterionImpl(QueryField.IMPORTDATE.getKey(), null, true));
 			coll.setGroup_rootCollection_parent(rating.getStringId());
 			rating.addRootCollection(coll.getStringId());
@@ -1022,7 +1055,7 @@ public class Utilities {
 	}
 
 	private static GroupImpl createSystemGroup(IDbManager db, String id, String label) {
-		GroupImpl group = new GroupImpl(label, false, Constants.INHERIT_LABEL, null, 0, null);
+		GroupImpl group = new GroupImpl(label, false, Constants.INHERIT_LABEL, null, 0, 1, null);
 		group.setStringId(id);
 		db.store(group);
 		return group;
@@ -1287,14 +1320,14 @@ public class Utilities {
 			group.getRootCollection().clear();
 			toBeStored.add(group);
 			if (previousImport != null) {
-				String id = IDbManager.IMPORTKEY + Constants.DFIMPORT.format(previousImport);
+				String id = IDbManager.IMPORTKEY + Format.DATE_TIME_HYPHEN_FORMAT.get().format(previousImport);
 				SmartCollectionImpl previous = dbManager.obtainById(SmartCollectionImpl.class, id);
 				if (previous != null && !previous.getCriterion().isEmpty()) {
 					GroupImpl subgroup = dbManager.obtainById(GroupImpl.class, Constants.GROUP_ID_RECENTIMPORTS);
 					previous.setStringId(Constants.LAST_IMPORT_ID);
-					Object value = previous.getCriterion(0).getValue();
-					previous.setName(value instanceof Range ? Messages.Utilities_last_background_imports
-							: Messages.Utilities_last_import);
+					previous.setName(
+							previous.getCriterion(0).getTo() != null ? Messages.Utilities_last_background_imports
+									: Messages.Utilities_last_import);
 					previous.setSystem(true);
 					toBeStored.add(previous);
 					group.addRootCollection(Constants.LAST_IMPORT_ID);
@@ -1316,11 +1349,12 @@ public class Utilities {
 		if (sm.getSubSelection().isEmpty()) {
 			Criterion criterion = sm.getCriterion(0);
 			Object value = criterion.getValue();
+			Object to = criterion.getTo();
 			String field = criterion.getField();
 			List<AssetImpl> set;
-			set = value instanceof Range
-					? dbManager.obtainObjects(AssetImpl.class, false, field, ((Range) value).getFrom(),
-							QueryField.GREATER, field, ((Range) value).getTo(), QueryField.NOTGREATER)
+			set = to != null
+					? dbManager.obtainObjects(AssetImpl.class, false, field, value, QueryField.GREATER, field, to,
+							QueryField.NOTGREATER)
 					: dbManager.obtainObjects(AssetImpl.class, field, value, QueryField.EQUALS);
 			return !set.iterator().hasNext();
 		}
@@ -1360,7 +1394,7 @@ public class Utilities {
 			} else
 				toPattern(sb, backupLocation, 0, i);
 			String remainder = backupLocation.substring(i + Constants.DATEVAR.length());
-			backupLocation = backupLocation.substring(0, i) + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) //$NON-NLS-1$
+			backupLocation = backupLocation.substring(0, i) + Format.YEAR_MONTH_DAY_FORMAT.get().format(new Date())
 					+ remainder;
 			sb.append("20\\d\\d\\-(0[1-9]|1[0-2])\\-(0[1-9]|[1-2]\\d|3[0-1])"); //$NON-NLS-1$
 			toPattern(sb, remainder, 0, remainder.length());
@@ -1385,7 +1419,11 @@ public class Utilities {
 	}
 
 	public static int orientationDegrees(Asset asset) {
-		switch (asset.getOrientation()) {
+		return orientationDegrees(asset.getOrientation());
+	}
+
+	public static int orientationDegrees(int ori) {
+		switch (ori) {
 		case 3:
 			return 180;
 		case 6:
@@ -1634,6 +1672,16 @@ public class Utilities {
 
 	private static int fromHex(String html, int i) {
 		return 16 * hexChars.indexOf(html.charAt(i)) + hexChars.indexOf(html.charAt(i + 1));
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T extends MediaExtension> T getMediaExtension(Asset asset, Class<T> clazz) {
+		MediaExtension[] mediaExtension = asset.getMediaExtension();
+		if (mediaExtension != null)
+			for (MediaExtension ext : mediaExtension)
+				if (ext.getClass().equals(clazz))
+					return (T) ext;
+		return null;
 	}
 
 }

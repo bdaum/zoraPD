@@ -189,10 +189,10 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 						text + NLS.bind(Messages.QuickFindControl_maxmin, queryOptions.getMaxHits(),
 								queryOptions.getScore()),
 						false, false, true, queryOptions.isNetworked(), null, 0, null, 0, null, Constants.INHERIT_LABEL,
-						null, 0, null);
+						null, 0, 1, null);
 				sm.addCriterion(new CriterionImpl(ICollectionProcessor.TEXTSEARCH, null,
 						new TextSearchOptions_typeImpl(text, queryOptions.getMaxHits(), queryOptions.getScore() / 100f),
-						Constants.TEXTSEARCHOPTIONS_DEFAULT_MIN_SCORE, false));
+						null, Constants.TEXTSEARCHOPTIONS_DEFAULT_MIN_SCORE, false));
 			} else
 				sm = KeywordSearchDialog.computeQuery(text, false, null);
 			Ui.getUi().getNavigationHistory(getWorkbenchWindow()).postSelection(new StructuredSelection(sm));
@@ -339,9 +339,9 @@ public class QuickFindControl extends WorkbenchWindowControlContribution
 								SmartCollectionImpl collection = new SmartCollectionImpl(
 										NLS.bind(Messages.QuickFindControl_images_similar, asset.getName()), false,
 										false, true, queryOptions.isNetworked(), null, 0, null, 0, null,
-										Constants.INHERIT_LABEL, null, 0, null);
+										Constants.INHERIT_LABEL, null, 0, 1, null);
 								collection.addCriterion(new CriterionImpl(ICollectionProcessor.SIMILARITY, null,
-										newOptions, queryOptions.getScore(), false));
+										newOptions, null, queryOptions.getScore(), false));
 								Ui.getUi().getNavigationHistory(getWorkbenchWindow())
 										.postSelection(new StructuredSelection(collection));
 							}

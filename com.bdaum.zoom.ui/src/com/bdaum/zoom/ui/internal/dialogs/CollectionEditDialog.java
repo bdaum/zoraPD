@@ -66,7 +66,7 @@ import com.bdaum.zoom.ui.internal.widgets.CollectionEditGroup;
 import com.bdaum.zoom.ui.internal.widgets.ISizeHandler;
 import com.bdaum.zoom.ui.internal.widgets.LabelConfigGroup;
 
-public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandler {
+public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandler, Listener {
 
 	private static final String SETTINGSID = "collectionEditDialog"; //$NON-NLS-1$
 
@@ -161,7 +161,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		UiUtilities.createTabItem(tabFolder, Messages.CollectionEditDialog_appearance, null)
 				.setControl(createApperanceGroup(tabFolder));
 		try {
-			tabFolder.setSelection(settings.getInt(ACTIVETAB));
+			tabFolder.setSelection(current == null ? 0 : settings.getInt(ACTIVETAB));
 		} catch (NumberFormatException e) {
 			// do nothing
 		}
@@ -287,15 +287,12 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		Composite apperanceComp = new Composite(parent, SWT.NONE);
 		apperanceComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		apperanceComp.setLayout(new GridLayout(1, false));
-		labelConfigGroup = new LabelConfigGroup(apperanceComp, true);
-		labelConfigGroup.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				validate();
-			}
-		});
+		labelConfigGroup = new LabelConfigGroup(apperanceComp, true, true);
+		labelConfigGroup.addListener(this);
 		if (current != null)
-			labelConfigGroup.setSelection(current.getShowLabel(), current.getLabelTemplate(), current.getFontSize());
+			labelConfigGroup.setSelection(current.getShowLabel(), current.getLabelTemplate(), current.getFontSize(), current.getAlignment());
+		else
+			labelConfigGroup.setSelection(Constants.TITLE_LABEL, "", 8, 1); //$NON-NLS-1$
 		return apperanceComp;
 	}
 
@@ -308,16 +305,16 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		critComp.setLayout(new GridLayout(1, false));
 
 		collectionEditGroup = new CollectionEditGroup(critComp, current, album, readonly, findInNetwork(), this);
-		collectionEditGroup.addListener(new Listener() {
-			public void handleEvent(Event e) {
-				updateButtons();
-			}
-		});
+		collectionEditGroup.addListener(this);
 		return queryComp;
 	}
 
 	protected boolean findInNetwork() {
 		return findInNetworkGroup != null && findInNetworkGroup.getSelection();
+	}
+
+	public void handleEvent(Event e) {
+		updateButtons();
 	}
 
 	@Override
@@ -389,7 +386,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 			errorMessage = collectionEditGroup.validate();
 		if (errorMessage == null)
 			errorMessage = labelConfigGroup.validate();
-		if (errorMessage == null || !errorMessage.isEmpty())
+		if (errorMessage != null && !errorMessage.isEmpty())
 			setErrorMessage(errorMessage);
 		else
 			setErrorMessage(null);
@@ -411,7 +408,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 										: ((Label) descriptionField).getText(),
 				colorCode + 1, current != null ? current.getLastAccessDate() : null,
 				current != null ? current.getGeneration() + 1 : 0, current != null ? current.getPerspective() : null,
-				labelConfigGroup.getSelection(), labelConfigGroup.getTemplate(), labelConfigGroup.getFontSize(), null);
+				labelConfigGroup.getSelection(), labelConfigGroup.getTemplate(), labelConfigGroup.getFontSize(), labelConfigGroup.getAlignment(), null);
 		if (isSystem || UiUtilities.isImport(current))
 			result.setStringId(current.getStringId());
 		collectionEditGroup.applyCriteria(result, name);

@@ -257,11 +257,13 @@ public class Lucene implements ILuceneService {
 					byte[] pngImage = options.getPngImage();
 					if (pngImage != null) {
 						// Search for similar images
-						ImageSearchHits iHits = LireActivator.getDefault().search(indexReader,
-								ImageIO.read(new ByteArrayInputStream(pngImage)), options.getMethod(),
-								options.getMaxResults());
-						if (iHits != null)
-							hits = new SearchHits(indexReader, iHits);
+						BufferedImage image = ImageIO.read(new ByteArrayInputStream(pngImage));
+						if (image != null) {
+							ImageSearchHits iHits = LireActivator.getDefault().search(indexReader, image,
+									options.getMethod(), options.getMaxResults());
+							if (iHits != null)
+								hits = new SearchHits(indexReader, iHits);
+						}
 					}
 				}
 			}

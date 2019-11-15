@@ -79,7 +79,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 	@Override
 	public void createPartControl(Composite parent) {
 		// Gallery
-		setPreferences();
+		applyPreferences().addPropertyChangeListener(this);
 		gallery = new Gallery(parent, SWT.H_SCROLL | SWT.V_SCROLL | SWT.VIRTUAL | SWT.MULTI);
 		gallery.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_WHITE));
 		gallery.setHigherQualityDelay(300);
@@ -367,6 +367,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 	protected void setItemText(final GalleryItem item, Asset asset, Integer cardinality) {
 		item.setText(
 				asset != null ? Core.getFileName(asset.getUri(), true) : Messages.getString("DuplicatesView.deleted")); //$NON-NLS-1$
+		setAlignment();
 	}
 
 	public void setDuplicatesProvider(AbstractDuplicatesProvider provider) {

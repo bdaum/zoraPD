@@ -21,7 +21,6 @@ package com.bdaum.zoom.ui.internal.wizards;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -71,6 +70,7 @@ import com.bdaum.zoom.cat.model.meta.LastDeviceImportImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.FileInput;
@@ -376,7 +376,6 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 	private static final String REMOVEMEDIA = "removeMedia"; //$NON-NLS-1$
 	private static final String SKIPPOLICY = "skipPolicy"; //$NON-NLS-1$
 	private static final String SKIPPEDFORMATS = "skippedFormats"; //$NON-NLS-1$
-	private static final SimpleDateFormat sdf = new SimpleDateFormat(Messages.ImportFileSelectionPage_import_date_mask);
 	private static final int NODATES = 1000;
 	private static final int FILE = 999;
 	private CheckboxTreeViewer importViewer;
@@ -729,7 +728,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 				if (timestamp > 0)
 					sb.append(", ") //$NON-NLS-1$
 							.append(NLS.bind(Messages.ImportFileSelectionPage_last_import,
-									sdf.format(new Date(timestamp))));
+									Format.YMD_TIME_FORMAT.get().format(new Date(timestamp))));
 				descr = imp.getDescription();
 			}
 			volumeLabel.setText(sb.toString());

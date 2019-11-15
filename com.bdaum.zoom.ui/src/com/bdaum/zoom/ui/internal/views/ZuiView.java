@@ -29,7 +29,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
@@ -50,12 +49,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.cat.model.group.Group;
-import com.bdaum.zoom.cat.model.group.GroupImpl;
-import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
-import com.bdaum.zoom.core.Constants;
-import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
@@ -74,7 +68,7 @@ import com.bdaum.zoom.ui.internal.widgets.ZPSWTCanvas;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class ZuiView extends AbstractGalleryView implements Listener {
+public class ZuiView extends AbstractGalleryView implements Listener, IPropertyChangeListener {
 
 	private static class ZuiGalleryDecorateJob extends DecorateJob {
 
@@ -164,9 +158,6 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 	private int currentSystemCursor = SWT.CURSOR_ARROW;
 	private String currentCustomCursor;
 	private SmartCollectionImpl currentCollection;
-	private int showLabelDflt;
-	private String labelTemplateDflt;
-	private int labelFontsizeDflt;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -191,8 +182,8 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 
 	@Override
 	public void createPartControl(final Composite parent) {
-		setPreferences();
 		animatedGallery = new AnimatedGallery(new ZPSWTCanvas(parent, SWT.NONE), DIST, THUMB, this);
+		UiActivator.getDefault().getPreferenceStore().addPropertyChangeListener(this);
 		setCanvasCursor(null, SWT.CURSOR_APPSTARTING);
 		animatedGallery.setMinScale(0.2d);
 		animatedGallery.setMaxScale(3d);
@@ -357,44 +348,8 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 		if (animatedGallery == null || animatedGallery.isDisposed())
 			return false;
 		IAssetProvider assetProvider = getAssetProvider();
-		if (assetProvider != null) {
-			int showLabel = Constants.INHERIT_LABEL;
-			String labelTemplate = null;
-			SmartCollection coll = assetProvider.getCurrentCollection();
-			int labelFontsize = 0;
-			if (coll != null) {
-				while (true) {
-					showLabel = coll.getShowLabel();
-					if (showLabel != Constants.INHERIT_LABEL) {
-						labelTemplate = coll.getLabelTemplate();
-						labelFontsize = coll.getFontSize();
-						break;
-					}
-					if (coll.getSmartCollection_subSelection_parent() == null)
-						break;
-					coll = coll.getSmartCollection_subSelection_parent();
-				}
-				if (showLabel == Constants.INHERIT_LABEL) {
-					String groupId = coll.getGroup_rootCollection_parent();
-					Group group = Core.getCore().getDbManager().obtainById(GroupImpl.class, groupId);
-					while (group != null) {
-						showLabel = group.getShowLabel();
-						if (showLabel != Constants.INHERIT_LABEL) {
-							labelTemplate = group.getLabelTemplate();
-							labelFontsize = group.getFontSize();
-							break;
-						}
-						group = group.getGroup_subgroup_parent();
-					}
-				}
-			}
-			if (showLabel == Constants.INHERIT_LABEL) {
-				showLabel = showLabelDflt;
-				labelTemplate = labelTemplateDflt;
-				labelFontsize = labelFontsizeDflt;
-			}
-			animatedGallery.setAppearance(showLabel, labelTemplate, labelFontsize);
-		}
+		if (assetProvider != null)
+			animatedGallery.setContext(assetProvider.getCurrentCollection());
 		if (assets == null) {
 			if (assetProvider != null) {
 				if (fetchAssets()) {
@@ -526,7 +481,9 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 
 	@Override
 	public void dispose() {
-		animatedGallery.dispose();
+		UiActivator.getDefault().getPreferenceStore().removePropertyChangeListener(this);
+		if (animatedGallery != null)
+			animatedGallery.dispose();
 		super.dispose();
 	}
 
@@ -570,7 +527,10 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 	}
 
 	public AssetSelection getAssetSelection() {
-		return animatedGallery.getSelection();
+		SmartCollectionImpl currentCollection = getAssetProvider().getCurrentCollection();
+		AssetSelection sel = animatedGallery.getSelection();
+		sel.setContext(currentCollection);
+		return sel;
 	}
 
 	@Override
@@ -595,25 +555,16 @@ public class ZuiView extends AbstractGalleryView implements Listener {
 		setPartName(Messages.getString("ZuiView.sleeves")); //$NON-NLS-1$
 	}
 
-	protected void setPreferences() {
-		IPreferenceStore preferenceStore = applyPreferences();
-		preferenceStore.addPropertyChangeListener(new IPropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent event) {
-				String property = event.getProperty();
-				if (PreferenceConstants.SHOWLABEL.equals(property)
-						|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
-						|| PreferenceConstants.LABELFONTSIZE.equals(property))
-					applyPreferences();
-			}
-		});
-	}
-
-	protected IPreferenceStore applyPreferences() {
-		final IPreferenceStore preferenceStore = UiActivator.getDefault().getPreferenceStore();
-		showLabelDflt = preferenceStore.getInt(PreferenceConstants.SHOWLABEL);
-		labelTemplateDflt = preferenceStore.getString(PreferenceConstants.THUMBNAILTEMPLATE);
-		labelFontsizeDflt = preferenceStore.getInt(PreferenceConstants.LABELFONTSIZE);
-		return preferenceStore;
+	@Override
+	public void propertyChange(PropertyChangeEvent event) {
+		String property = event.getProperty();
+		if (PreferenceConstants.SHOWLABEL.equals(property)
+				|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
+				|| PreferenceConstants.LABELALIGNMENT.equals(property)
+				|| PreferenceConstants.LABELFONTSIZE.equals(property)) {
+			animatedGallery.getCaptionProcessor().updateGlobalConfiguration();
+			refresh();
+		}
 	}
 
 }

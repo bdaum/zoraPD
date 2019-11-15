@@ -184,6 +184,20 @@ public interface Video extends IAsset, MediaExtension {
 	 * @return - value of field videoFrameRate
 	 */
 	public double getVideoFrameRate();
+	
+	/**
+	 * Get value of property frameNo
+	 *
+	 * @return - value of field frameNo
+	 */
+	public int getFrameNo();
+
+	/**
+	 * Set value of property frameNo
+	 *
+	 * @param _value - new element value
+	 */
+	public void setFrameNo(int frameNo);
 
 	/**
 	 * Set value of property videoStreamType

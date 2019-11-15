@@ -71,9 +71,6 @@ import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
-import com.bdaum.zoom.cat.model.group.Group;
-import com.bdaum.zoom.cat.model.group.GroupImpl;
-import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterion;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
@@ -90,7 +87,6 @@ import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.INavigationHistory;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
-import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.CollapsePatternDialog;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 
@@ -120,8 +116,6 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	private SelectionAdapter closeTitleAreaListener;
 	protected IAction toggleCollapseAction;
 	private Font smallFont;
-	private int showLabel;
-	private String labelTemplate;
 	private int currentFontsize;
 
 	@Override
@@ -156,7 +150,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	@Override
 	public void createPartControl(Composite parent) {
 		// Gallery
-		setPreferences();
+		applyPreferences().addPropertyChangeListener(this);
 		final int orientation = HSTRIP.equals(layout) ? SWT.H_SCROLL : SWT.V_SCROLL;
 		gallery = new Gallery(parent, orientation | SWT.VIRTUAL | SWT.MULTI);
 		gallery.setBackground(gallery.getDisplay().getSystemColor(SWT.COLOR_WHITE));
@@ -409,45 +403,14 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	protected boolean doRedrawCollection(Collection<? extends Asset> assets, QueryField node) {
 		if (gallery == null || gallery.isDisposed())
 			return false;
-		int labelFontsize = 0;
 		IAssetProvider assetProvider = getAssetProvider();
-		if (assetProvider != null) {
-			SmartCollection coll = assetProvider.getCurrentCollection();
-			if (coll != null) {
-				while (true) {
-					showLabel = coll.getShowLabel();
-					if (showLabel != Constants.INHERIT_LABEL) {
-						labelTemplate = coll.getLabelTemplate();
-						labelFontsize = coll.getFontSize();
-						break;
-					}
-					if (coll.getSmartCollection_subSelection_parent() == null)
-						break;
-					coll = coll.getSmartCollection_subSelection_parent();
-				}
-				if (showLabel == Constants.INHERIT_LABEL) {
-					String groupId = coll.getGroup_rootCollection_parent();
-					Group group = Core.getCore().getDbManager().obtainById(GroupImpl.class, groupId);
-					while (group != null) {
-						showLabel = group.getShowLabel();
-						if (showLabel != Constants.INHERIT_LABEL) {
-							labelTemplate = group.getLabelTemplate();
-							labelFontsize = coll.getFontSize();
-							break;
-						}
-						group = group.getGroup_subgroup_parent();
-					}
-				}
-			}
-		}
-		if (showLabel == Constants.INHERIT_LABEL) {
-			showLabel = showLabelDflt;
-			labelTemplate = labelTemplateDflt;
-			labelFontsize = labelFontsizeDflt;
-		}
-		itemRenderer.setShowLabels(showLabel != Constants.NO_LABEL);
-		gallery.setFont(showLabel == Constants.CUSTOM_LABEL && labelFontsize != 0 ? getSmallFont(labelFontsize)
-				: JFaceResources.getDefaultFont());
+		if (assetProvider != null)
+			captionConfiguration = captionProcessor.computeCaptionConfiguration(assetProvider.getCurrentCollection());
+		itemRenderer.setShowLabels(captionConfiguration.showLabel != Constants.NO_LABEL);
+		gallery.setFont(
+				captionConfiguration.showLabel == Constants.CUSTOM_LABEL && captionConfiguration.labelFontsize != 0
+						? getSmallFont(captionConfiguration.labelFontsize)
+						: JFaceResources.getDefaultFont());
 		if (assets == null) {
 			if (fetchAssets()) {
 				scoreFormatter = assetProvider.getScoreFormatter();
@@ -614,9 +577,11 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 
 	@Override
 	protected void setItemText(final GalleryItem item, Asset asset, Integer cardinality) {
-		if (asset != null)
-			item.setText(UiUtilities.computeImageCaption(asset, scoreFormatter, cardinality, collapseFilter,
-					showLabel == Constants.CUSTOM_LABEL ? labelTemplate : null));
+		if (asset != null) {
+			item.setText(captionProcessor.computeImageCaption(asset, scoreFormatter, cardinality, collapseFilter,
+					captionConfiguration.getLabelTemplate(), false));
+			setAlignment();
+		}
 	}
 
 	protected Object vstripSizeProvider = new ISizeProvider() {
@@ -664,7 +629,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 		final Asset asset = (Asset) item.getData(ASSET);
 		if (asset != null) {
 			cancelInput();
-			final String captionText = UiUtilities.computeImageCaption(asset, null, null, null, null);
+			final String captionText = captionProcessor.computeImageCaption(asset, null, null, null, null, false);
 			titleInputValid = true;
 			if (titleInput != null)
 				titleInput.dispose();

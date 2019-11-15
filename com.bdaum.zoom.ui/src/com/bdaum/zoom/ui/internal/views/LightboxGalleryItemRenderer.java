@@ -128,6 +128,8 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 
 	private boolean showRegionNames;
 
+	private int alignment;
+
 	/**
 	 * Returns current label state : enabled or disabled
 	 *
@@ -311,7 +313,13 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 			String text = RendererHelper.createLabel(item.getText(), gc, width - 10);
 
 			// Draw
-			gc.drawText(text, x + RendererHelper.getShift(width, gc.textExtent(text).x), y + height - fontHeight, true);
+			int shift = 0;
+			if (alignment != 0) {
+				shift = RendererHelper.getShift(width, gc.textExtent(text).x);
+				if (alignment == 2)
+					shift <<= 1;
+			}
+			gc.drawText(text, x + shift, y + height - fontHeight, true);
 		}
 	}
 
@@ -503,5 +511,9 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 
 	public ImageRegion[] getRegions() {
 		return regions == null ? null : regions.toArray(new ImageRegion[regions.size()]);
+	}
+
+	public void setAlignment(int alignment) {
+		this.alignment = alignment;
 	}
 }

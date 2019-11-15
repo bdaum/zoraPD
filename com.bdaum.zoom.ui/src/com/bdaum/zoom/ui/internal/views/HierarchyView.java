@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -37,6 +36,8 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -88,6 +89,7 @@ import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.IPostProcessor;
 import com.bdaum.zoom.core.QueryField;
@@ -103,6 +105,7 @@ import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.IZoomActionConstants;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.internal.CaptionProcessor;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -112,7 +115,7 @@ import com.bdaum.zoom.ui.internal.dialogs.DescriptionDialog;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class HierarchyView extends ImageView implements ISelectionChangedListener, IDragHost {
+public class HierarchyView extends ImageView implements ISelectionChangedListener, IDragHost, IPropertyChangeListener {
 
 	@SuppressWarnings("serial")
 	public static class HierarchyPostProcessor extends PostProcessorImpl implements IPostProcessor {
@@ -341,12 +344,13 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 				Asset asset = node.getAsset();
 				StringBuilder sb = new StringBuilder();
 				insertIndent(sb, indent);
-				sb.append(UiUtilities.computeImageCaption(asset, null, null, null, null));
+				sb.append(captionProcessor.computeImageCaption(asset, null, null, null, null, false));
 				int uriLength = sb.length();
 				Date lastModification = asset == null ? null : asset.getLastModification();
 				if (lastModification != null) {
 					insertIndent(sb, indent + 3);
-					sb.append(Messages.getString("HierarchyView.modified")).append(df.format(lastModification)); //$NON-NLS-1$
+					sb.append(Messages.getString("HierarchyView.modified")) //$NON-NLS-1$
+							.append(Format.YMD_TIME_FORMAT.get().format(lastModification));
 				}
 				styles.add(new StyleRange(0, uriLength, viewer.getControl().getForeground(), null, SWT.BOLD));
 				IIdentifiableObject description = node.getDescription();
@@ -453,8 +457,6 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 	private final static int TYPE_COMPOSITES = 2;
 	private final static int TYPE_COMPONENTS = 3;
 	private static final int OPERATIONS = DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK;
-	private static final SimpleDateFormat df = new SimpleDateFormat(
-			Messages.getString("HierarchyView.modified_date_format")); //$NON-NLS-1$
 	@SuppressWarnings("unused")
 	private static final String ID = "com.bdaum.zoom.hierarchy"; //$NON-NLS-1$
 
@@ -468,6 +470,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 	private IAction showPossibleDerivativesAction;
 	private IAction showAssetAction;
 	protected boolean cntrlDwn;
+	private final CaptionProcessor captionProcessor = new CaptionProcessor(Constants.TH_ALL);
 
 	public void insertIndent(StringBuilder sb, int indent) {
 		if (sb.length() > 0)
@@ -507,6 +510,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 
 	@Override
 	public void createPartControl(Composite parent) {
+		UiActivator.getDefault().getPreferenceStore().addPropertyChangeListener(this);
 		viewer = new TreeViewer(parent, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL);
 		viewer.setContentProvider(new ViewContentProvider());
 		viewer.setLabelProvider(new ViewLabelProvider());
@@ -809,12 +813,12 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 					NLS.bind(originals ? Messages.getString("HierarchyView.possible_originals") //$NON-NLS-1$
 							: Messages.getString("HierarchyView.possible_derivatives"), //$NON-NLS-1$
 							asset.getName()),
-					false, false, true, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0,
+					false, false, true, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, 1,
 					new HierarchyPostProcessor(node));
 			collection.addCriterion(new CriterionImpl(QueryField.EXIF_ORIGINALFILENAME.getKey(), null,
-					asset.getOriginalFileName(), QueryField.EQUALS, true));
+					asset.getOriginalFileName(), null, QueryField.EQUALS, true));
 			collection.addCriterion(new CriterionImpl(QueryField.LASTMOD.getKey(), null, asset.getLastModification(),
-					originals ? QueryField.SMALLER : QueryField.GREATER, true));
+					null, originals ? QueryField.SMALLER : QueryField.GREATER, true));
 			collection.addSortCriterion(new SortCriterionImpl(QueryField.LASTMOD.getKey(), null, originals));
 			Ui.getUi().getNavigationHistory(getSite().getWorkbenchWindow())
 					.postSelection(new StructuredSelection(collection));
@@ -983,6 +987,21 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 
 	public ImageRegion findBestFaceRegion(int x, int y, boolean all) {
 		return null;
+	}
+
+	public void dispose() {
+		UiActivator.getDefault().getPreferenceStore().removePropertyChangeListener(this);
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent event) {
+		String property = event.getProperty();
+		if (PreferenceConstants.SHOWLABEL.equals(property) || PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
+				|| PreferenceConstants.LABELALIGNMENT.equals(property)
+				|| PreferenceConstants.LABELFONTSIZE.equals(property)) {
+			captionProcessor.updateGlobalConfiguration();
+			refresh();
+		}
 	}
 
 }

@@ -51,6 +51,7 @@ public class Messages extends NLS {
 	public static String AbstractMapComponent_not_found;
 	public static String AbstractMapComponent_previous_page;
 	public static String AbstractMapComponent_resource_missing;
+	public static String AbstractMapComponent_script_failed;
 	public static String AbstractMapComponent_search;
 	public static String AbstractMapComponent_search_with;
 	public static String AbstractMapComponent_single_image;

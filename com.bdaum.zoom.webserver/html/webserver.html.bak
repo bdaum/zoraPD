@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Webserver</title>
+  
+
+  
+  
+  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Webserver </h2>
+
+<p> The built-in webserver is an optional component. If installed
+it can expose images, generated exhibitions and generated webgalleries
+as web contents. The purpose of this webserver is to allow access to the catalog contents from
+"small" devices such as mobile phones, projectors, or TV sets, basically anything with a webbrowser capable of HTML 5, but
+not to supply a wide public audience.<br>
+</p>
+<p>Please note that</p>
+
+<ul>
+  <li>only images with the required privacy level will be shown.
+Non-JPEG-images and images with a color space other than sRGB are
+converted to JPEG images with a sRGB color space. Video thumbnails are shown but videos <span style="font-weight: bold;">are not</span> displayed..<br>
+  </li>
+  <li>only exhibitions  with the required privacy level will be
+shown.It is also required that the exhibition was successfully
+generated and exists at the specified output location.</li>
+  <li>only web galleries  with the required privacy level will be shown.It is
+also required that the web gallery was successfully generated and exists
+at the specified output location.</li>
+  
+
+</ul>
+
+
+<p>To configure the webserver go to <acronym>Window&gt;Preferences&gt;Webserver</acronym>.</p><br>
+<p></p>
+<h2>General</h2>
+<h4>Start and Stop</h4>
+<ul>
+  <li><span style="font-weight: bold;">Autostart</span>. If checked the webserver will be started automatically when the application is started.</li>
+  <li><span style="font-weight: bold;">Start</span>. The button is used to start the webserver manually.</li>
+  <li><span style="font-weight: bold;">Stop</span>. This button is used to stop the webserver manually.</li>
+</ul>
+<h4>HTTP settings</h4>
+<ul>
+  <li><span style="font-weight: bold;">Port</span>. Used to set the port number fior Internet access. Defaults to <code>8080</code>. E.g. from the same machine the webserver is accessed with <code>http://localhost:8080</code>.</li>
+  <li><span style="font-weight: bold;">Images path</span>. This is the path to the page with the image thumbnails. Defaults to <code>images</code>. Direct access is possible, for instance, with <code>http://localhost:8080/images/</code>.</li>
+  <li><span style="font-weight: bold;">Exhibitions path</span>. This is the path to the page with the exhibition thumbnails. Defaults to <code>exhibitions.</code> Direct access is possible, for instance, with <code>http://localhost:8080/</code><code>exhibitions</code><code>/</code>.</li>
+  <li><span style="font-weight: bold;">Web galleries path</span>. This is the path to the page with the web galleries thumbnails. Defaults to <span style="font-family: monospace;">galleries</span><code>.</code> Direct access is possible, for instance, with <code>http://localhost:8080/</code><span style="font-family: monospace;">galleries</span><code></code><code>/</code>.</li>
+</ul>
+<div style="margin-left: 40px;">Please note that all changes to the HTTP settings require a restart of the webserver.<br>
+</div>
+<br>
+<h4>IP addresses</h4>
+This section is to inform you about the IP addresses provided by your
+platform. Select an appropriate IP address and point your smartphone to
+the QR code to establish a connection.<br>
+<br>
+<h2>Contents<br>
+</h2>
+<h4>Acess rights</h4>
+<ul>
+  <li><span style="font-weight: bold;">Chapters</span>. Here you can define which chapters (Images, Exhibitions, Web galleries) are visible on the home page.</li>
+  <li><span style="font-weight: bold;">Groups</span>. Here you can define which groups (Ratings, Directories, Time line, etc.) shall be visible on the overview page.</li>
+  <li><span style="font-weight: bold;">Actions</span>.
+Here you can define which actions (Show metadata, Show fullsize,
+Download image file, Show location in map) are made available as buttons below the displayed
+image.</li>
+  <li><span style="font-weight: bold;">Privacy</span>. Determines the privacy level of images, exhibitions and web galleries required to be displayed.</li>
+
+</ul>
+<h4>Contents</h4>
+
+<ul>
+  
+  <li><span style="font-weight: bold;"></span><span style="font-weight: bold;">Thumbnails per page</span>. Determines the maximum number of thumbnails shown on one page. Defaults to 15.</li>
+  <li>I<span style="font-weight: bold;">nclude orphans.</span> If checked, also catalog entries without a high resolution image or without a generated gallery or web exhibition are shown.<br>
+  </li>
+
+
+  
+  <li><span style="font-weight: bold;">File types.</span> Only images with the marked file formats will be shown. Defaults to <code>JPEG</code>.</li><li><span style="font-weight: bold;">Images title</span> This is the title of the page with the image thumbnails. Defaults to <code>Images</code>.&nbsp;</li>
+  <li><span style="font-weight: bold;">Exhibitions title</span> This is the title of the page with the exhibition thumbnails. Defaults to <code>Exhibitions.</code>&nbsp;</li>
+  <li><span style="font-weight: bold;">Web galleries title</span> This is the title of the page with the web galleries thumbnails. Defaults to <span style="font-family: monospace;">Web galleries</span><code>.</code></li></ul><br>
+<h4>Output quality</h4>
+<ul>
+<li><span style="font-weight: bold;">Sharpen</span>.<span style="font-weight: bold;"> </span>Check this button to enable output sharpening.&nbsp;An <span style="font-weight: bold;">Unsharp Mask filter</span><span style="font-style: italic;"> </span>is
+used for that purpose:</li><ul><li><span style="font-weight: bold;">Amount</span>. The amount of sharpening</li><li><span style="font-weight: bold;">Radius</span>. The radius of the Unsharp Mask in pixel.</li><li><span style="font-weight: bold;">Threshhold</span>. Increase this value for inhibiting sharpening in low contrast area, so that noise is kept low.</li></ul>
+</ul>
+<div style="margin-left: 80px;">Downsizing of images for the details
+view or slideshows causes smear between pixels. Sharpening helps to
+improve the look of the image.<br>
+ </div>
+
+
+<h2>Uploads</h2>It is optionally possible to upload images and videos
+for the web browser to the catalog. This feature can be enabled by
+checking the option <span style="font-weight: bold;">Allow uploads</span>-<br>
+<h4>Access control</h4>
+Optionally, you may specify a <span style="font-weight: bold;">password</span>. If specified users will need to enter that password before getting access to the upload facility.<br>
+You may also restict the user by unchekcing <span style="font-weight: bold;">Allow metadata modification</span>.
+If this option is enabled the user may specify metadata for the
+uploaded files such as artist, event, keywords, and timeshift. In
+addition she may even upload XMP sidecars with the uploaded files.<br>
+<br>
+<h4>Import channel</h4>
+
+
+If uploads are enabled images are first uploaded to the specified <span style="font-weight: bold;">Transfer folder</span>. <span style="font-style: italic;">ZoRa PhotoDirector </span>will
+import the images in the transfer folder according to the
+specifications given by the transfer folder. If no transfer folder
+exists or you need a different transfer folder, click the <abbr>Add... </abbr>button.
+<h2>HTML</h2>
+
+This tab allows you editing the webservers HTML pages. Currently, there
+are three different pages: the home page, a overview page with the
+thumbnails and a navigation section, and the details page displaying a
+single image and the metadata.<br>However,
+you should leave the structure of these files intact. Editing is only
+recommended for the natural language text embedded in those files.<br>
+<span style="font-weight: bold;">Undo</span> and <span style="font-weight: bold;">Redo</span> is performed - as usual - using <abbr>Ctrl+Z</abbr> and <abbr>Ctrl+Y</abbr>.<br>
+By pressing the <abbr>Reset</abbr> button you can reset the current file to its original content.<br>
+<h2>CSS</h2>
+The CSS stylesheet applies to all HTML pages. It can be edited to change the Look&amp;Feel auf those pages.<br>
+<span style="font-weight: bold;">Undo</span> and <span style="font-weight: bold;">Redo</span> is performed - as usual - using <abbr>Ctrl+Z</abbr> and <abbr>Ctrl+Y</abbr>.<br>
+
+By pressing the <abbr>Reset</abbr> button you can reset the CSS stylesheet to its original content.<br>
+
+
+
+</body></html>

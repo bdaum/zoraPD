@@ -25,6 +25,24 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.ui.internal.messages"; //$NON-NLS-1$
 	public static String NavigationHistory_internal_error;
+	public static String TemplateProcessor_art_director;
+	public static String TemplateProcessor_comments;
+	public static String TemplateProcessor_description;
+	public static String TemplateProcessor_event;
+	public static String TemplateProcessor_for_test;
+	public static String TemplateProcessor_icc;
+	public static String TemplateProcessor_ignore;
+	public static String TemplateProcessor_importer;
+	public static String TemplateProcessor_model_info;
+	public static String TemplateProcessor_name;
+	public static String TemplateProcessor_portfolio;
+	public static String TemplateProcessor_rater;
+	public static String TemplateProcessor_test;
+	public static String TemplateProcessor_test_image;
+	public static String TemplateProcessor_testCollection;
+	public static String TemplateProcessor_user1;
+	public static String TemplateProcessor_user2;
+	public static String TemplateProcessor_worldwide;
 	public static String UiActivator_access_restriction;
 	public static String UiActivator_cancel_all_operations;
 	public static String UiActivator_cannot_create_relation_detector;
@@ -34,8 +52,10 @@ public class Messages extends NLS {
 	public static String UiActivator_connection_lost;
 	public static String UiActivator_disk_full_playing_remote;
 	public static String UiActivator_error_instantiating_action;
+	public static String UiActivator_failed_to_start;
 	public static String UiActivator_InternalErrorDropinHandler;
 	public static String UiActivator_io_error_playing_remote;
+	public static String UiActivator_media_ui_instantiation;
 	public static String UiActivator_please_wait;
 	public static String UiActivator_restart_later;
 	public static String UiActivator_restart;
@@ -59,8 +79,6 @@ public class Messages extends NLS {
 	public static String UiUtilities_and;
 	public static String UiUtilities_ascending;
 	public static String UiUtilities_based_on_similarity;
-	public static String UiUtilities_date_format;
-	public static String UiUtilities_date_format_compact;
 	public static String UiUtilities_descending;
 	public static String UiUtilities_File_does_not_exist;
 	public static String UiUtilities_File_does_not_exist_delete_entry;

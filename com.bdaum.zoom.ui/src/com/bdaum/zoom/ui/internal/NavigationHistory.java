@@ -492,18 +492,6 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 		}
 	}
 
-	public List<AbstractGalleryView> getOpenGalleries() {
-		List<AbstractGalleryView> galleries = new ArrayList<AbstractGalleryView>(3);
-		IWorkbenchPage activePage = window.getActivePage();
-		if (activePage != null)
-			for (String id : openParts) {
-				IViewPart view = activePage.findView(id);
-				if (view instanceof AbstractGalleryView)
-					galleries.add((AbstractGalleryView) view);
-			}
-		return galleries;
-	}
-
 	public boolean updateHistory(IWorkbenchPart part, ISelection selection) {
 		if (restoring)
 			return false;
@@ -885,6 +873,11 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 	@Override
 	public String getLastPresentationView() {
 		return lastPresentationView;
+	}
+
+	@Override
+	public List<String> getOpenParts() {
+		return openParts;
 	}
 
 }

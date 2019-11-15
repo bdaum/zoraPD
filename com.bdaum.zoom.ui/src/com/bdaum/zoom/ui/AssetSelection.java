@@ -29,6 +29,7 @@ import java.util.List;
 import org.eclipse.jface.viewers.StructuredSelection;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
+import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.IVolumeManager;
@@ -53,6 +54,8 @@ public class AssetSelection extends StructuredSelection implements Iterable<Asse
 	private IAssetProvider assetProvider;
 	private boolean picked = false;
 	private int mediaFlags = 0;
+
+	private SmartCollection context;
 
 	/**
 	 * Creates a new asset selection obtaining its assets from the supplied
@@ -408,6 +411,22 @@ public class AssetSelection extends StructuredSelection implements Iterable<Asse
 				mediaFlags = QueryField.PHOTO;
 		}
 		return mediaFlags;
+	}
+
+	/**
+	 * Set the context of the selection
+	 * @param context - collection or null
+	 */
+	public void setContext(SmartCollection context) {
+		this.context = context;
+	}
+	
+	/**
+	 * Retrieve the context of this selection
+	 * @return collection or null if unknown
+	 */
+	public SmartCollection getContext() {
+		return context;
 	}
 
 }

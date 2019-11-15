@@ -43,9 +43,9 @@ public class BagChange<T> {
 	 *            - optionally the resulting set of items (or null)
 	 */
 	public BagChange(Collection<T> add, Collection<T> modify, Collection<T> remove, T[] display) {
-		this.add = add == null ? null : (add instanceof Set) ? (Set<T>) add : new HashSet<>(add);
-		this.modify = modify == null ? null : (modify instanceof Set) ? (Set<T>) modify : new HashSet<>(modify);
-		this.remove = remove == null ? null : (remove instanceof Set) ? (Set<T>) remove : new HashSet<>(remove);
+		this.add = add == null ? null : new HashSet<>(add);
+		this.modify = modify == null ? null : new HashSet<>(modify);
+		this.remove = remove == null ? null : new HashSet<>(remove);
 		this.display = display;
 	}
 

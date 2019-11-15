@@ -91,6 +91,8 @@ public class GroupDialog extends ZTitleAreaDialog {
 	private int showLabel;
 	private String labelTemplate;
 	private IDialogSettings settings;
+	private int labelFontsize;
+	private int labelAlignment;
 
 	public GroupDialog(Shell parentShell, final GroupImpl current, Group parent) {
 		super(parentShell, HelpContextIds.GROUP_DIALOG);
@@ -201,7 +203,7 @@ public class GroupDialog extends ZTitleAreaDialog {
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout());
 
-		labelConfigGroup = new LabelConfigGroup(composite, true);
+		labelConfigGroup = new LabelConfigGroup(composite, true, true);
 		labelConfigGroup.addListener(new Listener() {
 			@Override
 			public void handleEvent(Event event) {
@@ -209,7 +211,7 @@ public class GroupDialog extends ZTitleAreaDialog {
 			}
 		});
 		if (current != null)
-			labelConfigGroup.setSelection(current.getShowLabel(), current.getLabelTemplate(), current.getFontSize());
+			labelConfigGroup.setSelection(current.getShowLabel(), current.getLabelTemplate(), current.getFontSize(), current.getAlignment());
 		return composite;
 	}
 
@@ -379,6 +381,8 @@ public class GroupDialog extends ZTitleAreaDialog {
 		annotations = computeAnnotations();
 		showLabel = labelConfigGroup.getSelection();
 		labelTemplate = labelConfigGroup.getTemplate();
+		labelAlignment = labelConfigGroup.getAlignment();
+		labelFontsize = labelConfigGroup.getFontSize();
 		if (isAuto() && overwriteButton.getSelection())
 			ruleComponent.accelerate();
 		super.okPressed();
@@ -434,6 +438,14 @@ public class GroupDialog extends ZTitleAreaDialog {
 
 	public String getLabelTemplate() {
 		return labelTemplate;
+	}
+
+	public int getLabelFontsize() {
+		return labelFontsize;
+	}
+
+	public int getLabelAlignment() {
+		return labelAlignment;
 	}
 
 }

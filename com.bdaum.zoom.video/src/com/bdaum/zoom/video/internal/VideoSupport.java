@@ -448,7 +448,9 @@ public class VideoSupport extends AbstractMediaSupport {
 		final Set<Object> toBeDeleted = new HashSet<Object>();
 		final List<Object> trashed = new ArrayList<Object>();
 		List<Asset> deletedAssets = new ArrayList<Asset>();
+		StorageObject originalFile = null;
 		byte[] oldThumbnail = null;
+		int oldFrameNo = 0;
 		String oldId = null;
 		int icnt = 0;
 		String originalFileName = object.getName();
@@ -459,7 +461,7 @@ public class VideoSupport extends AbstractMediaSupport {
 		boolean fromImportFilter = VideoActivator.getDefault().getImportFilters().get(extension) != null;
 		File[] files = null;
 		if (importState.transferNeeded()) {
-			files = importState.transferFile(object, aMonitor);
+			files = importState.transferFile(originalFile = object, aMonitor);
 			if (files == null || !files[0].exists())
 				return 0;
 			if (importState.skipDuplicates(files[0], originalFileName, lastModified)) {
@@ -480,6 +482,8 @@ public class VideoSupport extends AbstractMediaSupport {
 					asset = existing.get(0).getAsset();
 					oldId = asset.getStringId();
 					oldThumbnail = importState.useOldThumbnail(asset.getJpegThumbnail());
+					VideoImpl vx = Utilities.getMediaExtension(asset, VideoImpl.class);
+					oldFrameNo = vx == null ? 0 : vx.getFrameNo();
 				}
 				if (asset != null) {
 					if (configuration.conflictPolicy == ImportState.IGNOREALL)
@@ -531,17 +535,21 @@ public class VideoSupport extends AbstractMediaSupport {
 						: importState.getExifTool(exifFile, 0);
 				if (oldThumbnail == null) {
 					int twidth = importState.computeThumbnailWidth();
-					image = fromImportFilter
-							? ((ExifToolSubstitute) etool).loadThumbnail(twidth, twidth / 4 * 3,
-									importState.thumbnailRaster, 0f)
-							: decodeAndCaptureFrames(files[0], twidth, importState.thumbnailRaster, aMonitor);
+					try {
+						image = fromImportFilter
+								? ((ExifToolSubstitute) etool).loadThumbnail(twidth, twidth / 4 * 3,
+										importState.thumbnailRaster, 0f)
+								: decodeAndCaptureFrames(files[0], twidth, importState.thumbnailRaster, 1, null, aMonitor);
+					} catch (UnsupportedOperationException e) {
+						// should not happen
+					}
 					if (image == null)
 						asset = null;
 				}
 				aMonitor.worked(1);
 				--work;
 				if (asset != null
-						&& createImageEntry(files[0], uri, extension, false, ensemble, image, oldThumbnail, etool, null,
+						&& createImageEntry(files[0], uri, extension, false, ensemble, image, oldThumbnail, oldFrameNo, etool, null,
 								ensemble.xmpTimestamp, importState.importDate, toBeStored, toBeDeleted, aMonitor)) {
 					AssetEnsemble.deleteAll(existing, deletedAssets, toBeDeleted, toBeStored);
 					ensemble.removeFromTrash(trashed);
@@ -566,9 +574,9 @@ public class VideoSupport extends AbstractMediaSupport {
 				changed = true;
 				GroupImpl group = getMediaGroup(dbManager);
 				SmartCollectionImpl coll = new SmartCollectionImpl(Messages.VideoSupport_Videos, true, false, false,
-						false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
+						false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 				coll.setStringId(collectionID);
-				coll.addCriterion(new CriterionImpl(QueryField.MIMETYPE.getKey(), null, "video/", QueryField.STARTSWITH, //$NON-NLS-1$
+				coll.addCriterion(new CriterionImpl(QueryField.MIMETYPE.getKey(), null, "video/", null, QueryField.STARTSWITH, //$NON-NLS-1$
 						false));
 				coll.addSortCriterion(new SortCriterionImpl(QueryField.NAME.getKey(), null, false));
 				coll.setGroup_rootCollection_parent(group.getStringId());
@@ -584,6 +592,7 @@ public class VideoSupport extends AbstractMediaSupport {
 			--work;
 			changed |= importState.operation.updateFolderHierarchies(asset, true, configuration.timeline,
 					configuration.locations, false);
+			removeFromTransferfolder(importState, originalFile, files);
 			return (changed) ? -icnt : icnt;
 		} catch (ImportException e) {
 			return 0;
@@ -593,7 +602,7 @@ public class VideoSupport extends AbstractMediaSupport {
 	}
 
 	private boolean createImageEntry(final File originalFile, URI uri, String extension, boolean isConverted,
-			AssetEnsemble ensemble, ZImage image, byte[] oldThumbnail, IExifLoader tool, Recipe recipe,
+			AssetEnsemble ensemble, ZImage image, byte[] oldThumbnail, int frameNo, IExifLoader tool, Recipe recipe,
 			Date xmpTimestamp, Date now, List<Object> toBeStored, Set<Object> toBeDeleted, IProgressMonitor monitor) {
 		Asset asset = ensemble.getAsset();
 		int assetStatus = asset.getStatus();
@@ -607,8 +616,11 @@ public class VideoSupport extends AbstractMediaSupport {
 		ensemble.cleanUp(now, importState.getTimeshift());
 		asset.setContentType(QueryField.CONTENTTYPE_PHOTO);
 		Video vx = getVx(asset, false);
-		if (vx != null && vx.getVideoFrameRate() < 8)
-			asset.setContentType(QueryField.CONTENTTYPE_SCREENSHOT);
+		if (vx != null) {
+			vx.setFrameNo(frameNo);
+			if (vx.getVideoFrameRate() < 8)
+				asset.setContentType(QueryField.CONTENTTYPE_SCREENSHOT);
+		}
 		if (asset.getMimeType() == null || asset.getMimeType().isEmpty()) {
 			String mime = mimeMap.get(extension.toUpperCase());
 			if (mime != null)
@@ -629,14 +641,15 @@ public class VideoSupport extends AbstractMediaSupport {
 	 * video file.
 	 * 
 	 * @param twidth
-	 *
+	 * @param frameNo
 	 * @param filename
 	 *            the name of the media file to read
+	 * 
 	 * @throws IOException
 	 */
 
-	private static ZImage decodeAndCaptureFrames(File file, int twidth, int raster, IProgressMonitor aMonitor)
-			throws IOException {
+	public static ZImage decodeAndCaptureFrames(File file, int twidth, int raster, int frameNo, double[] frameCountBox,
+			IProgressMonitor aMonitor) throws IOException, UnsupportedOperationException {
 		try (FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(file)) {
 			Java2DFrameConverter converter = new Java2DFrameConverter();
 			grabber.start();
@@ -651,13 +664,19 @@ public class VideoSupport extends AbstractMediaSupport {
 			}
 			grabber.setImageWidth(newWidth);
 			grabber.setImageHeight(newHeight);
-			grabber.setFrameNumber(1);
+			if (frameCountBox != null) {
+				frameCountBox[0] = grabber.getLengthInFrames();
+				frameCountBox[1] = grabber.getFrameRate();
+			}
+			grabber.setFrameNumber(frameNo);
 			Frame frame = grabber.grabImage();
 			ZImage image = frame != null ? new ZImage(converter.getBufferedImage(frame), file.getAbsolutePath()) : null;
 			grabber.stop();
 			grabber.release();
 			return image;
 		} catch (Exception e) {
+			if (frameNo > 0 && e.getMessage().indexOf("_seek_") >= 0) //$NON-NLS-1$
+				throw new UnsupportedOperationException(e.getMessage());
 			throw new IOException(NLS.bind(Messages.VideoSupport_taking_snapshot_failed, file), e);
 		}
 	}

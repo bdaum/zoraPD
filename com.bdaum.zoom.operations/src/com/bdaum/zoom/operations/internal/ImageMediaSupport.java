@@ -63,6 +63,7 @@ import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.common.internal.IniReader;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IRelationDetector;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
@@ -90,7 +91,6 @@ import com.bdaum.zoom.program.IRawConverter;
 @SuppressWarnings("restriction")
 public class ImageMediaSupport extends AbstractMediaSupport {
 
-	private static final SimpleDateFormat EXIFTOOL_DATE_FORMAT = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss Z"); //$NON-NLS-1$
 	private static final String PICASA_INI = ".picasa.ini"; //$NON-NLS-1$
 	private ImportState importState;
 	private int twidth;
@@ -129,7 +129,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 		overlayMap.put(QueryField.EXIF_ORIGINALFILENAME.getExifToolKey(), originalFileName);
 		overlayMap.put(QueryField.FILESIZE.getExifToolKey(), String.valueOf(object.size()));
 		Date lastModified = new Date(lastMod);
-		overlayMap.put(QueryField.EXIF_DATETIME.getExifToolKey(), EXIFTOOL_DATE_FORMAT.format(lastModified));
+		overlayMap.put(QueryField.EXIF_DATETIME.getExifToolKey(), Format.DATE_TIME_ZONED_FORMAT.get().format(lastModified));
 		CoreActivator coreActivator = CoreActivator.getDefault();
 		IDbManager dbManager = coreActivator.getDbManager();
 		URI uri = object.toURI();
@@ -343,7 +343,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 						String oldLastmod = overlayMap.get(QueryField.EXIF_DATETIME.getExifToolKey());
 						overlayMap.put(QueryField.FILESIZE.getExifToolKey(), String.valueOf(dngsize));
 						overlayMap.put(QueryField.EXIF_DATETIME.getExifToolKey(),
-								EXIFTOOL_DATE_FORMAT.format(dngLastmod));
+								Format.DATE_TIME_ZONED_FORMAT.get().format(dngLastmod));
 						IExifLoader etool = importState.getExifTool(dngFile,
 								importState.getConfiguration().getExifFastMode());
 						Recipe dngRecipe = null;
@@ -461,7 +461,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 						asset.setUri(imageURI);
 						asset.setFileSize(files[0].length());
 						asset.setDateTime(
-								EXIFTOOL_DATE_FORMAT.parse(overlayMap.get(QueryField.EXIF_DATETIME.getExifToolKey())));
+								Format.DATE_TIME_ZONED_FORMAT.get().parse(overlayMap.get(QueryField.EXIF_DATETIME.getExifToolKey())));
 						ExifTool tool = importState.getExifTool(files[0],
 								importState.getConfiguration().getExifFastMode());
 						String software = tool.getMetadata().get(QueryField.EXIF_SOFTWARE.getExifToolKey());
@@ -628,9 +628,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 					configuration.locations, false)
 					|| importState.operation.updateFolderHierarchies(dngAsset, true, configuration.timeline,
 							configuration.locations, false);
-			if (originalFile != null && importState.fromTransferFolder()
-					&& !files[0].equals(originalFile.getNativeObject()))
-				originalFile.delete(); // the file in the transfer folder must be deleted
+			removeFromTransferfolder(importState, originalFile, files);
 			return (changed) ? -icnt : icnt;
 		} catch (ImportException e) {
 			return 0;

@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE.spell"
       label="Spell check feature"
-      version="3.5.1"
+      version="3.6.0"
       provider-name="bdaum industrial communications">
 
    <description url="http://www.example.com/description">

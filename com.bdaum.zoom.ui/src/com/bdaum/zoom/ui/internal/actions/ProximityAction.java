@@ -89,9 +89,9 @@ public class ProximityAction extends Action {
 					mx = Math.max(mx, Core.distance(lat, lon, asset.getGPSLatitude(), asset.getGPSLongitude(), unit));
 			Object[] values = new Object[] { lat, lon, (distance + mx), unit };
 			SmartCollectionImpl coll = new SmartCollectionImpl(Messages.ProximityAction_proximity_search, false, false,
-					true, dialog.isNetworked(), null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
+					true, dialog.isNetworked(), null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 			coll.addCriterion(new CriterionImpl(QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), null, values,
-					QueryField.NOTGREATER, false));
+					null, QueryField.NOTGREATER, false));
 			coll.addSortCriterion(new SortCriterionImpl(QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), null, false));
 			coll.setSmartCollection_subSelection_parent(dialog.getParentCollection());
 			Ui.getUi().getNavigationHistory(adaptable.getAdapter(IWorkbenchWindow.class))

@@ -75,11 +75,11 @@ public class FindUntaggedDialog extends ZTitleAreaDialog {
 	protected void okPressed() {
 		coll = new SmartCollectionImpl(
 				Messages.FindUntaggedDialog_untagged_images, false, false,
-				false, true, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
+				false, true, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 		coll.addCriterion(new CriterionImpl(QueryField.EXIF_GPSLATITUDE
-				.getKey(), null, Double.NaN, QueryField.UNDEFINED, false));
+				.getKey(), null, Double.NaN, null, QueryField.UNDEFINED, false));
 		coll.addCriterion(new CriterionImpl(QueryField.EXIF_GPSLONGITUDE
-				.getKey(), null, Double.NaN, QueryField.UNDEFINED, false));
+				.getKey(), null, Double.NaN, null, QueryField.UNDEFINED, false));
 		coll.addSortCriterion(new SortCriterionImpl(
 				QueryField.EXIF_DATETIMEORIGINAL.getKey(),  null, false));
 		coll.setSmartCollection_subSelection_parent(findWithinGroup

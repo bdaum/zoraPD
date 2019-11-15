@@ -33,7 +33,6 @@ public class Messages extends NLS {
 	public static String PeerPreferencePage_cats_tooltip;
 	public static String PeerPreferencePage_clear;
 	public static String PeerPreferencePage_computer_name;
-	public static String PeerPreferencePage_dateformat;
 	public static String PeerPreferencePage_defaultport;
 	public static String PeerPreferencePage_incoming_calls;
 	public static String PeerPreferencePage_incoming_msg;

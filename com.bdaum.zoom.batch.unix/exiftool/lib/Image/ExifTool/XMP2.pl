@@ -23,6 +23,8 @@ use strict;
 use Image::ExifTool qw(:Utils);
 use Image::ExifTool::XMP;
 
+sub Init_crd($);
+
 #------------------------------------------------------------------------------
 
 # xmpDM structure definitions
@@ -73,6 +75,18 @@ my %sTimecode = (
     },
     timeValue   => { },
     value       => { Writable => 'integer', Notes => 'only in XMP 2008 spec; an error?' },
+);
+
+# camera-raw defaults
+%Image::ExifTool::XMP::crd = (
+    %xmpTableDefaults,
+    INIT_TABLE => \&Init_crd,
+    GROUPS => { 1 => 'XMP-crd', 2 => 'Image' },
+    NAMESPACE   => 'crd',
+    AVOID => 1,
+    TABLE_DESC => 'Photoshop Camera Defaults namespace',
+    NOTES => 'Adobe Camera Raw Defaults tags.',
+    # (tags added dynamically when WRITE_PROC is called)
 );
 
 # XMP Dynamic Media namespace properties (xmpDM)
@@ -1608,11 +1622,13 @@ my %sSubVersion = (
 %Image::ExifTool::XMP::GSpherical = (
     %xmpTableDefaults,
     GROUPS => { 1 => 'XMP-GSpherical', 2 => 'Image' },
+    WRITE_GROUP => 'GSpherical', # write in special location for video files
     NAMESPACE => 'GSpherical',
     AVOID => 1,
     NOTES => q{
         Not actually XMP.  These RDF/XML tags are used in Google spherical MP4
-        videos.  See
+        videos.  These tags are written into the video track of MOV/MP4 files, and
+        not at the top level like other XMP tags.  See
         L<https://github.com/google/spatial-media/blob/master/docs/spherical-video-rfc.md>
         for the specification.
     },
@@ -1647,8 +1663,8 @@ my %sSubVersion = (
 # Google depthmap information (ref https://developers.google.com/depthmap-metadata/reference)
 %Image::ExifTool::XMP::GDepth = (
     GROUPS      => { 0 => 'XMP', 1 => 'XMP-GDepth', 2 => 'Image' },
-    NAMESPACE   => { 'GDepth' => 'http://ns.google.com/photos/1.0/depthmap/' },
-    AVOID       => 1, # (too potential tag name conflicts)
+    NAMESPACE   => 'GDepth',
+    AVOID       => 1, # (too many potential tag name conflicts)
     NOTES       => q{
         Google depthmap information. See
         L<https://developers.google.com/depthmap-metadata/> for the specification.
@@ -1665,6 +1681,7 @@ my %sSubVersion = (
     Far         => { Writable => 'real' },
     Mime        => { },
     Data => {
+        Name => 'DepthImage',
         ValueConv => 'Image::ExifTool::XMP::DecodeBase64($val)',
         ValueConvInv => 'Image::ExifTool::XMP::EncodeBase64($val)',
     },
@@ -1697,6 +1714,34 @@ my %sSubVersion = (
     FocalDistance   => { Writable => 'real' },
     FocalPointX     => { Writable => 'real' },
     FocalPointY     => { Writable => 'real' },
+);
+
+# Google camera namespace (ref PH)
+%Image::ExifTool::XMP::GCamera = (
+    %xmpTableDefaults,
+    GROUPS => { 1 => 'XMP-GCamera', 2 => 'Camera' },
+    NAMESPACE => 'GCamera',
+    NOTES => 'Camera information found in Google panorama images.',
+    BurstID         => { },
+    BurstPrimary    => { },
+    PortraitNote    => { },
+    PortraitRequest => {
+        Notes => 'High Definition Render Pipeline (HDRP) data', #PH (guess)
+        ValueConv => 'Image::ExifTool::XMP::DecodeBase64($val)',
+        ValueConvInv => 'Image::ExifTool::XMP::EncodeBase64($val)',
+    },
+    PortraitVersion => { },
+    SpecialTypeID   => { List => 'Bag' },
+    PortraitNote    => { },
+);
+
+# Google creations namespace (ref PH)
+%Image::ExifTool::XMP::GCreations = (
+    %xmpTableDefaults,
+    GROUPS => { 1 => 'XMP-GCreations', 2 => 'Camera' },
+    NAMESPACE => 'GCreations',
+    NOTES => 'Google creations tags.',
+    CameraBurstID  => { },
 );
 
 # Getty Images namespace (ref PH)
@@ -1779,6 +1824,23 @@ my %sSubVersion = (
     LANG_INFO => \&GetLangInfo,
     NAMESPACE => undef, # variable namespace
 );
+
+#------------------------------------------------------------------------------
+# Generate crd tags
+# Inputs: 0) tag table ref
+sub Init_crd($)
+{
+    my $tagTablePtr = shift;
+    # import tags from CRS namespace
+    my $crsTable = GetTagTable('Image::ExifTool::XMP::crs');
+    my $tag;
+    foreach $tag (Image::ExifTool::TagTableKeys($crsTable)) {
+        my $crsInfo = $$crsTable{$tag};
+        my $tagInfo = $$tagTablePtr{$tag} = { %$crsInfo };
+        $$tagInfo{Groups} = { 0 => 'XMP', 1 => 'XMP-crd' , 2 => $$crsInfo{Groups}{2} } if $$crsInfo{Groups};
+    }
+}
+
 
 1;  #end
 

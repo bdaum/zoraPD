@@ -28,7 +28,7 @@ public interface PreferenceConstants {
 	String BACKGROUNDCOLOR_GREY = "g"; //$NON-NLS-1$
 	String BACKGROUNDCOLOR_WHITE = "w"; //$NON-NLS-1$
 	String BACKGROUNDCOLOR_PLATFORM = "p"; //$NON-NLS-1$
-	
+
 	// Appearance
 	String SHOWCOLORCODE = "com.bdaum.zoom.showColorCode"; //$NON-NLS-1$
 	String COLORCODE_NO = "false"; //$NON-NLS-1$
@@ -39,14 +39,15 @@ public interface PreferenceConstants {
 	String SHOWRATING_NO = "false"; //$NON-NLS-1$
 	String SHOWRATING_SIZE = "true"; //$NON-NLS-1$
 	String SHOWRATING_COUNT = "count"; //$NON-NLS-1$
-	String SHOWLOCATION =  "com.bdaum.zoom.showLocation"; //$NON-NLS-1$
+	String SHOWLOCATION = "com.bdaum.zoom.showLocation"; //$NON-NLS-1$
 	String SHOWROTATEBUTTONS = "com.bdaum.zoom.showRotateButtons"; //$NON-NLS-1$
 	String SHOWVOICENOTE = "com.bdaum.zoom.showVoiceNote"; //$NON-NLS-1$
 	String SHOWDONEMARK = "com.bdaum.zoom.showDoneMark"; //$NON-NLS-1$
 	String SHOWEXPANDCOLLAPSE = "com.bdaum.zoom.showExpandCollapse"; //$NON-NLS-1$
 	String SHOWLABEL = "com.bdaum.zoom.showLabel"; //$NON-NLS-1$
-	String THUMBNAILTEMPLATE  = "com.bdaum.zoom.thumbnailTemplate"; //$NON-NLS-1$
-	String LABELFONTSIZE ="com.bdaum.zoom.labelFontSize"; //$NON-NLS-1$
+	String THUMBNAILTEMPLATE = "com.bdaum.zoom.thumbnailTemplate"; //$NON-NLS-1$
+	String LABELFONTSIZE = "com.bdaum.zoom.labelFontSize"; //$NON-NLS-1$
+	String LABELALIGNMENT = "com.bdaum.zoom.labelAlignment"; //$NON-NLS-1$
 	String DISTANCEUNIT = "com.bdaum.zoom.distanceUnit"; //$NON-NLS-1$
 	String DIMUNIT = "com.bdaum.zoom.dimUnit"; //$NON-NLS-1$
 	String HOVERBASETIME = "com.bdaum.zoom.hoverBaseTime"; //$NON-NLS-1$
@@ -71,7 +72,7 @@ public interface PreferenceConstants {
 	String RECIPEDETECTORCONFIGURATIONS = "com.bdaum.zoom.recipeDetectorConfigurations"; //$NON-NLS-1$
 	String PROCESSRECIPES = "com.bdaum.zoom.processRecipes"; //$NON-NLS-1$
 	String DNGFOLDER = "com.bdaum.zoom.dngFolder"; //$NON-NLS-1$
-	
+
 	// Import
 	String KEYWORDFILTER = "com.bdaum.zoom.keywordFilter"; //$NON-NLS-1$
 	String DERIVERELATIONS = "com.bdaum.zoom.deriveRelations"; //$NON-NLS-1$
@@ -108,7 +109,7 @@ public interface PreferenceConstants {
 	double AUDIO11KHZ = 11025;
 	double AUDIO22KHZ = 22050;
 	double AUDIO44KHZ = 44100;
-	
+
 	// Metadata
 	String ESSENTIALMETADATA = "com.bdaum.zoom.essentialMetadata"; //$NON-NLS-1$
 	String HOVERMETADATA = "com.bdaum.zoom.hoverMetadata"; //$NON-NLS-1$
@@ -119,13 +120,13 @@ public interface PreferenceConstants {
 
 	// Watched folders
 	String WATCHFILTER = "com.bdaum.zoom.watchFilter"; //$NON-NLS-1$
-	
+
 	// Update
 	String UPDATEPOLICY = "com.bdaum.zoom.updatePolicy"; //$NON-NLS-1$
 	String UPDATEPOLICY_WITHBACKUP = "withBackup"; //$NON-NLS-1$
 	String UPDATEPOLICY_ONSTART = "onStart"; //$NON-NLS-1$
 	String UPDATEPOLICY_MANUAL = "manual"; //$NON-NLS-1$
-	
+
 	// General
 	String INACTIVITYINTERVAL = "com.bdaum.zoom.inactivityInterval"; //$NON-NLS-1$
 	String BACKUPINTERVAL = "com.bdaum.zoom.backupInterval"; //$NON-NLS-1$
@@ -138,14 +139,15 @@ public interface PreferenceConstants {
 	String CUSTOMPROFILE = "com.bdaum.zoom.customProfile"; //$NON-NLS-1$
 	String BWFILTER = "com.bdaum.zoom.bwFilter"; //$NON-NLS-1$
 	String TABLECOLUMNS = "com.bdaum.zoom.tableColumns"; //$NON-NLS-1$
-	String ADDNOISE = "com.bdaum.zoom.addNoise"; //$NON-NLS-1$;
+	String ADDNOISE = "com.bdaum.zoom.addNoise"; //$NON-NLS-1$ ;
 	String ENLARGESMALL = "com.bdaum.zoom.enlargeSmall"; //$NON-NLS-1$
 	String SECONDARYMONITOR = "com.bdaum.zoom.secondaryMonitor"; //$NON-NLS-1$
 	String MON_ALTERNATE = "alternate"; //$NON-NLS-1$
+	String NOPROCESSORS = "com.bdaum.zoom.noProcessors"; //$NON-NLS-1$
 
 	// Faces
 	String MAXREGIONS = "com.bdaum.zoom.maxRegions"; //$NON-NLS-1$
-	
+
 	// Application
 	String HIDE_MENU_BAR = "hide_menu_bar"; //$NON-NLS-1$
 	String HIDE_STATUS_BAR = "hide_status_bar"; //$NON-NLS-1$

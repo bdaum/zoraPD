@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.bdaum.zora.FEATURE.webserver"
+      label="Webserver Feature"
+      version="3.6.0"
+      provider-name="bdaum industrial communications">
+
+   <description>
+      Optional webserver with text and content base image retrieval, slideshow, and upload possibility.
+   </description>
+
+   <copyright url="http://www.example.com/copyright">
+      [Geben Sie hier die Beschreibung für das Copyright ein.]
+   </copyright>
+
+   <license url="http://www.example.com/license">
+      [Geben Sie hier die Beschreibung für die Lizenz ein.]
+   </license>
+
+   <plugin
+         id="com.bdaum.zoom.webserver"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

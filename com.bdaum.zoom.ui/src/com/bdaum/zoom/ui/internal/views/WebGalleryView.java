@@ -121,6 +121,7 @@ import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.CaptionProcessor.CaptionConfiguration;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -764,6 +765,7 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 				}
 				boolean cleared = false;
 				Set<IIdentifiableObject> toBeStored = new HashSet<>(selection.size() * 2);
+				CaptionConfiguration captionConfig = captionProcessor.computeCaptionConfiguration(selection.getContext());
 				for (Asset asset : selection) {
 					if (!accepts(asset))
 						continue;
@@ -775,12 +777,11 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 					int rawIx = computeSequenceNumber(position.getX() - pstoryboard.getOffset().getX());
 					int ix = Math.max(1, Math.min(rawIx, storyboard.getExhibit().size() + 1));
 					WebExhibitImpl exhibit = replaced != null
-							? new WebExhibitImpl(UiUtilities.createSlideTitle(asset), ix, "", //$NON-NLS-1$
+							? new WebExhibitImpl(createSlideTitle(captionConfig, asset), ix, "", //$NON-NLS-1$
 									replaced.getHtmlDescription(), asset.getName(), replaced.getDownloadable(),
 									replaced.getIncludeMetadata(), assetId)
 							:
-
-							new WebExhibitImpl(UiUtilities.createSlideTitle(asset), ix, "", false, //$NON-NLS-1$
+							new WebExhibitImpl(createSlideTitle(captionConfig, asset), ix, "", false, //$NON-NLS-1$
 									asset.getName(), true, true, assetId);
 					replaced = null;
 					insertIntoStoryboard(storyboard, exhibit, ix - 1);
@@ -1284,12 +1285,8 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
 		super.init(site, memento);
-		if (memento != null) {
-			WebGalleryImpl obj = Core.getCore().getDbManager().obtainById(WebGalleryImpl.class,
-					memento.getString(LAST_GALLERY));
-			if (obj != null)
-				setGallery(obj);
-		}
+		if (memento != null)
+			lastSessionPresentation = memento.getString(LAST_GALLERY);
 	}
 
 	public WebExhibitImpl cloneExhibit(WebExhibitImpl original) {
@@ -1305,11 +1302,17 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 		super.saveState(memento);
 	}
 
-	private void setGallery(WebGalleryImpl gallery) {
-		this.gallery = gallery;
-		if (gallery.getStoryboard().isEmpty())
-			gallery.addStoryboard(new StoryboardImpl(Messages.getString("WebGalleryView.storyboard_1"), 1, false, "", //$NON-NLS-1$ //$NON-NLS-2$
-					0, false, true, true, true));
+	private WebGalleryImpl setGallery(IIdentifiableObject presentation) {
+		if (presentation instanceof WebGalleryImpl) {
+			gallery = (WebGalleryImpl) presentation;
+			setPartName(gallery.getName());
+			if (gallery.getStoryboard().isEmpty())
+				gallery.addStoryboard(
+						new StoryboardImpl(Messages.getString("WebGalleryView.storyboard_1"), 1, false, "", //$NON-NLS-1$ //$NON-NLS-2$
+								0, false, true, true, true));
+		} else if (gallery == null)
+			setPartName(Messages.getString("WebGalleryView.web_gallery")); //$NON-NLS-1$
+		return this.gallery;
 	}
 
 	@Override
@@ -1408,11 +1411,20 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 		installListeners();
 		hookContextMenu();
 		contributeToActionBars();
-		if (gallery != null)
-			setInput(gallery);
-		addCatalogListener();
-		setDecorator(canvas, new GalleryDecorateJob());
-		updateActions(false);
+	}
+
+	@Override
+	protected void startup() {
+		if (gallery == null)
+			setGallery(Core.getCore().getDbManager().obtainById(WebGalleryImpl.class, lastSessionPresentation));
+		if (isVisible()) {
+			if (gallery != null)
+				setInput(gallery);
+			addCatalogListener();
+			setDecorator(canvas, new GalleryDecorateJob());
+			updateActions(false);
+		} else if (gallery != null)
+			isDirty = true;
 	}
 
 	@Override
@@ -1542,7 +1554,7 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 				show = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, show, show.getName(),
 						false, true, null);
 				if (show != null) {
-					performOperation(new WebGalleryPropertiesOperation(backup, gallery = show));
+					performOperation(new WebGalleryPropertiesOperation(backup, setGallery(show)));
 					setInput(gallery);
 				}
 			}
@@ -1876,36 +1888,43 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 
 	protected WebGalleryImpl getGallery() {
 		if (gallery == null && !dbIsReadonly())
-			gallery = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, null,
-					Messages.getString("WebGalleryView.create_new_web_gallery"), false, false, null);//$NON-NLS-1$
+			setGallery(WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, null,
+					Messages.getString("WebGalleryView.create_new_web_gallery"), false, false, null));//$NON-NLS-1$
 		return gallery;
 	}
 
 	@Override
 	public void setInput(IdentifiableObject presentation) {
-		super.setInput(presentation);
-		if (presentation instanceof WebGalleryImpl) {
-			WebGalleryImpl gal = (WebGalleryImpl) presentation;
-			setGallery(gal);
-			setupGallery(getViewSite(), gal);
-			setPartName(gal.getName());
-			int n = 0;
-			for (Storyboard sb : gal.getStoryboard())
-				n += sb.getExhibit().size();
-			beginTask(n);
-			int y = 2 * STORYBOARDMARGINS;
-			double w = STORYBOARDWIDTH;
-			for (Storyboard sb : gal.getStoryboard())
-				w = Math.max(w, addStoryboard(sb, y += STORYBOARDDIST, progressBar).getBoundsReference().getWidth());
-			updateSurfaceBounds(w + 2 * STORYBOARDMARGINS,
-					gal.getStoryboard().size() * (STORYBOARDHEIGHT + STORYBOARDDIST) + 2 * STORYBOARDMARGINS
-							- STORYBOARDDIST);
-			setColor(canvas);
-			updateActions(false);
-			updateStatusLine();
-			endTask();
-		} else
-			setPartName(Messages.getString("WebGalleryView.web_gallery")); //$NON-NLS-1$
+		setGallery(presentation);
+		if (started) {
+			super.setInput(presentation);
+			if (presentation instanceof WebGalleryImpl) {
+				setupGallery(getViewSite(), gallery);
+				int n = 0;
+				List<Storyboard> storyboards = gallery.getStoryboard();
+				for (Storyboard sb : storyboards)
+					n += sb.getExhibit().size();
+				beginTask(n);
+				int y = 2 * STORYBOARDMARGINS;
+				double w = STORYBOARDWIDTH;
+				for (Storyboard sb : storyboards)
+					w = Math.max(w,
+							addStoryboard(sb, y += STORYBOARDDIST, progressBar).getBoundsReference().getWidth());
+				updateSurfaceBounds(w + 2 * STORYBOARDMARGINS, storyboards.size() * (STORYBOARDHEIGHT + STORYBOARDDIST)
+						+ 2 * STORYBOARDMARGINS - STORYBOARDDIST);
+				setColor(canvas);
+				updateActions(false);
+				updateStatusLine();
+				endTask();
+			}
+		}
+	}
+
+	@Override
+	protected void show() {
+		if (isDirty && gallery != null)
+			setInput(gallery);
+		super.show();
 	}
 
 	private void generate(final boolean save) {

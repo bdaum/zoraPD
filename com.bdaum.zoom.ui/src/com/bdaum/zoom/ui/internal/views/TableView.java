@@ -81,6 +81,7 @@ import org.piccolo2d.extras.swt.PSWTCanvas;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
+import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.Core;
@@ -739,9 +740,10 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 	}
 
 	public AssetSelection getAssetSelection() {
-		if (selection instanceof AssetSelection)
-			return (AssetSelection) selection;
-		return doGetAssetSelection();
+		SmartCollectionImpl currentCollection = getAssetProvider().getCurrentCollection();
+		AssetSelection assetSelection = selection instanceof AssetSelection ? (AssetSelection) selection : doGetAssetSelection();
+		assetSelection.setContext(currentCollection);
+		return assetSelection;
 	}
 
 	protected AssetSelection doGetAssetSelection() {

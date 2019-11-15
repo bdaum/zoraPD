@@ -855,7 +855,6 @@ public class Gallery extends Canvas {
 		if (selected) {
 			if (!isSelected(item)) {
 				_addSelection(item);
-
 			}
 
 		} else {
@@ -881,7 +880,6 @@ public class Gallery extends Canvas {
 			if (notifiedItem != null) {
 				index = indexOf(notifiedItem);
 			}
-
 			notifySelectionListeners(notifiedItem, index, false);
 		}
 
@@ -1140,17 +1138,17 @@ public class Gallery extends Canvas {
 
 	void onMouseHandleLeft(MouseEvent e, GalleryItem item, boolean down,
 			boolean up) {
+		
 		if (down) {
 			if (!isSelected(item)) {
 				_deselectAll(false);
-
 				if (DEBUG)
 					System.out.println("setSelected"); //$NON-NLS-1$
 				setSelected(item, true, true);
-
 				lastSingleClick = item;
 				redraw();
 				mouseClickHandled = true;
+				
 			}
 		} else if (up) {
 			if (item == null) {
@@ -1165,6 +1163,7 @@ public class Gallery extends Canvas {
 			}
 			redraw();
 		}
+		
 	}
 
 	/**

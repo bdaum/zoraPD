@@ -23,18 +23,14 @@ package com.bdaum.zoom.program;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HtmlEncoderDecoder {
-	
-	private static final int START = 0;
-	private static final int TAGOREND = 1;
-	private static final int TAG = 2;
-	private static final int END = 3;
-	private static final int SINGLE = 4;
-	private static final int ENTITY = 5;
-	private static Map<String, Character> entityMap = new HashMap<String, Character>(380);
-	private static Map<Character, String> codeMap = new HashMap<Character, String>(380);
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.RGB;
 
-	static {
+public class HtmlEncoderDecoder {
+
+	private static HtmlEncoderDecoder instance;
+
+	private HtmlEncoderDecoder() {
 		Object[][] entityCodes = { { new String("&Aacute;"), new Character((char) 193) }, //$NON-NLS-1$
 				{ new String("&aacute;"), new Character((char) 225) }, //$NON-NLS-1$
 				{ new String("&Acirc;"), new Character((char) 194) }, //$NON-NLS-1$
@@ -294,7 +290,20 @@ public class HtmlEncoderDecoder {
 		}
 	}
 
-	
+	public static HtmlEncoderDecoder getInstance() {
+		if (instance == null)
+			instance = new HtmlEncoderDecoder();
+		return instance;
+	}
+
+	private static final int START = 0;
+	private static final int TAGOREND = 1;
+	private static final int TAG = 2;
+	private static final int END = 3;
+	private static final int SINGLE = 4;
+	private static final int ENTITY = 5;
+	private Map<String, Character> entityMap = new HashMap<String, Character>(380);
+	private Map<Character, String> codeMap = new HashMap<Character, String>(380);
 	private StringBuilder out = new StringBuilder();
 	private StringBuilder text;
 
@@ -318,7 +327,7 @@ public class HtmlEncoderDecoder {
 				if (brk)
 					out.append("<br/>"); //$NON-NLS-1$
 				else
-					out.append(c);
+					out.append(' ');
 				break;
 			case '&':
 				int p = s.indexOf(';', i);
@@ -437,5 +446,17 @@ public class HtmlEncoderDecoder {
 		return markup;
 	}
 
+	/**
+	 * Creates an HTML color specification
+	 *
+	 * @param color
+	 *            - SWT color
+	 * @return - HTML color specification
+	 */
+	public static String createHtmlColor(Color color) {
+		RGB rgb = color.getRGB();
+		return new StringBuilder().append("rgb(").append(rgb.red).append(",").append(rgb.green) //$NON-NLS-1$ //$NON-NLS-2$
+				.append(",").append(rgb.blue).append(");").toString(); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 
 }

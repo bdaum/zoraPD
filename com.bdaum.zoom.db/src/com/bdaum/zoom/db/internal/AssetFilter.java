@@ -21,8 +21,6 @@ package com.bdaum.zoom.db.internal;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.IAssetFilter;
-import com.db4o.query.Constraint;
-import com.db4o.query.Query;
 
 /**
  * @author bdaum
@@ -49,8 +47,9 @@ public class AssetFilter implements IAssetFilter{
 	 * @param query
 	 *            - current database query
 	 * @return constraint that expresses the additional selection criteria
+	 * @deprecated due to poor performance. Use postfiltering with accept() instead
 	 */
-	public Constraint getConstraint(DbManager dbManager, Query query) {
-		return null;
-	}
+//	public Constraint getConstraint(DbManager dbManager, Query query) {
+//		return null;
+//	}
 }

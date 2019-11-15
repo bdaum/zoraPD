@@ -61,6 +61,7 @@ import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.job.CustomJob;
 import com.bdaum.zoom.job.OperationJob;
+import com.bdaum.zoom.ui.internal.TemplateProcessor;
 import com.bdaum.zoom.ui.internal.dialogs.PageProcessor;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
@@ -130,6 +131,7 @@ public class PdfJob extends CustomJob {
 	private final UnsharpMask unsharpMask;
 	protected String opId = java.util.UUID.randomUUID().toString();
 	protected IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
+	private final TemplateProcessor captionProcessor = new TemplateProcessor(Constants.PI_ALL);
 
 	public PdfJob(List<Asset> assets, PageLayout_typeImpl layout, File targetFile, int quality, int jpegQuality,
 			int cms, UnsharpMask unsharpMask, String collection) {
@@ -433,8 +435,7 @@ public class PdfJob extends CustomJob {
 				if (a >= assets.size())
 					cell = new PdfPCell();
 				else {
-					String cc = PageProcessor.computeCaption(caption, Constants.PI_ALL, assets.get(a), collection,
-							seqNo + j + 1, pageItem + j + 1);
+					String cc = captionProcessor.processTemplate(caption, assets.get(a), collection, seqNo + j + 1, pageItem + j + 1);
 					Paragraph p = new Paragraph(cc,
 							FontFactory.getFont(FontFactory.HELVETICA, fontSize, Font.NORMAL, BaseColor.DARK_GRAY));
 					p.setSpacingBefore(0);

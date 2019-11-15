@@ -47,6 +47,8 @@ public class AssetProvider implements IAssetProvider {
 	private static final String[] EMPTYIDS = new String[0];
 	private List<Asset> assets;
 	private int count = -1;
+	private boolean empty;
+	private boolean emptydefined = false;
 	private SmartCollectionImpl currentCollection;
 	private ICollectionProcessor currentProcessor;
 	private String lastSelection;
@@ -139,11 +141,13 @@ public class AssetProvider implements IAssetProvider {
 				currentProcessor = dbManager.createCollectionProcessor(currentCollection, currentFilters, currentSort);
 				assets = currentProcessor.select(true);
 				count = -1;
+				emptydefined = false;
 			});
 		} else if (invalid)
 			BusyIndicator.showWhile(null, () -> {
 				assets = currentProcessor.select(true);
 				count = -1;
+				emptydefined = false;
 			});
 		invalid = false;
 	}
@@ -167,7 +171,14 @@ public class AssetProvider implements IAssetProvider {
 	 */
 
 	public boolean isEmpty() {
-		return (assets == null || !assets.iterator().hasNext());
+		if (assets == null)
+			return true;
+		if (count >= 0)
+			return count == 0;
+		if (emptydefined)
+			return empty;
+		emptydefined = true;
+		return empty = !assets.iterator().hasNext();
 	}
 
 	/*

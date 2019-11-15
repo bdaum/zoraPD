@@ -47,6 +47,7 @@ import com.bdaum.zoom.cat.model.group.GroupImpl;
 import com.bdaum.zoom.cat.model.group.slideShow.SlideShowImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
@@ -86,7 +87,7 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements ModifyListe
 		GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		layoutData.verticalIndent = 10;
 		nameField.setLayoutData(layoutData);
-		nameField.setText(Messages.SlideShowSaveDialog_slideshow + Constants.DFDT.format(new Date()));
+		nameField.setText(Messages.SlideShowSaveDialog_slideshow + Format.DFDT.get().format(new Date()));
 		nameField.addModifyListener(this);
 		new Label(composite, SWT.NONE).setText(Messages.SlideShowSaveDialog_group);
 		groupField = new Combo(composite, SWT.DROP_DOWN);
@@ -138,7 +139,7 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements ModifyListe
 		String groupName = groupField.getText().trim();
 		selectedGroup = groupMap.get(groupName);
 		if (selectedGroup == null)
-			selectedGroup = new GroupImpl(groupName, false, Constants.INHERIT_LABEL, null, 0, null);
+			selectedGroup = new GroupImpl(groupName, false, Constants.INHERIT_LABEL, null, 0, 1, null);
 		open = openButton.getSelection();
 		super.okPressed();
 	}

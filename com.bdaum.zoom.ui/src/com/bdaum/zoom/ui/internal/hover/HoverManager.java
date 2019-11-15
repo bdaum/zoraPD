@@ -34,20 +34,16 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 public class HoverManager {
 
 	private Map<String, IHoverContribution> hoverContributions;
-	private TemplateProcessor templateProcessor = new TemplateProcessor();
+	private TemplateProcessor templateProcessor = new TemplateProcessor(null);
 
 	public String getHoverTitle(String key, Object object, IHoverContext context) {
 		IHoverContribution contrib = getHoverContribution(key);
-		if (contrib != null)
-			return templateProcessor.processTemplate(contrib, object, context, true);
-		return ""; //$NON-NLS-1$
+		return contrib != null ? templateProcessor.processTemplate(contrib, object, context, true) : ""; //$NON-NLS-1$
 	}
 
 	public String getHoverText(String key, Object object, IHoverContext context) {
 		IHoverContribution contrib = getHoverContribution(key);
-		if (contrib != null)
-			return templateProcessor.processTemplate(contrib, object, context, false);
-		return ""; //$NON-NLS-1$
+		return contrib != null ? templateProcessor.processTemplate(contrib, object, context, false) : ""; //$NON-NLS-1$
 	}
 
 	public IHoverContribution getHoverContribution(String key) {
@@ -65,7 +61,7 @@ public class HoverManager {
 					try {
 						IHoverContribution contrib = (IHoverContribution) conf.createExecutableExtension("class"); //$NON-NLS-1$
 						contrib.setId(id);
-						hoverContributions.put(id, contrib); 
+						hoverContributions.put(id, contrib);
 					} catch (CoreException e) {
 						UiActivator.getDefault().logError(NLS.bind(Messages.HoverManager_cannot_instatiate, id), e);
 					}

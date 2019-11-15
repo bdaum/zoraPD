@@ -58,14 +58,14 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-final class TGAImageReader extends ImageReaderBase {
+public final class TGAImageReader extends ImageReaderBase {
     // http://www.fileformat.info/format/tga/egff.htm
     // http://www.gamers.org/dEngine/quake3/TGA.txt
 
     private TGAHeader header;
     private TGAExtensions extensions;
 
-    TGAImageReader(final ImageReaderSpi provider) {
+    protected TGAImageReader(final ImageReaderSpi provider) {
         super(provider);
     }
 

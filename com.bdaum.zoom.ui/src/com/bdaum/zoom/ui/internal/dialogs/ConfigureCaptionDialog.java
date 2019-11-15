@@ -8,22 +8,27 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
-import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
+import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.widgets.LabelConfigGroup;
 import com.bdaum.zoom.ui.internal.widgets.TextWithVariableGroup;
 
 public class ConfigureCaptionDialog extends ZTitleAreaDialog {
 
 	private TextWithVariableGroup templateGroup;
 	private String template;
-	private RadioButtonGroup alignmentGroup;
 	private int alignment;
 	private Asset asset;
+	private LabelConfigGroup labelConfigGroup;
+	private int fontsize;
+	private int show;
 
-	public ConfigureCaptionDialog(Shell parentShell, String template, int alignment, Asset asset) {
-		super(parentShell);
+	public ConfigureCaptionDialog(Shell parentShell, int show, String template, int alignment, int fontsize,
+			Asset asset) {
+		super(parentShell, HelpContextIds.CONFIG_CAPTIONS_DIALOG);
+		this.show = show;
 		this.alignment = alignment;
+		this.fontsize = fontsize;
 		this.asset = asset;
 		this.template = template == null ? "" : template; //$NON-NLS-1$
 	}
@@ -41,30 +46,27 @@ public class ConfigureCaptionDialog extends ZTitleAreaDialog {
 		Composite composite = new Composite(area, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(4, false));
-		templateGroup = new TextWithVariableGroup(composite, Messages.ConfigureCaptionDialog_template, 500,
-				Constants.TH_ALL, true, template == null ? null : new String[] { template }, asset, ""); //$NON-NLS-1$
-		alignmentGroup = new RadioButtonGroup(composite, Messages.ConfigureCaptionDialog_alignment, SWT.HORIZONTAL,
-				Messages.ConfigureCaptionDialog_left, Messages.ConfigureCaptionDialog_center,
-				Messages.ConfigureCaptionDialog_right);
-		alignmentGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false, 4, 1));
+		labelConfigGroup = new LabelConfigGroup(composite, true, true);
+		labelConfigGroup.setContext("", asset); //$NON-NLS-1$
+		int a;
 		switch (alignment) {
 		case SWT.LEFT:
-			alignmentGroup.setSelection(0);
-			break;
-		case SWT.CENTER:
-			alignmentGroup.setSelection(1);
+			a = 0;
 			break;
 		case SWT.RIGHT:
-			alignmentGroup.setSelection(2);
+			a = 2;
 			break;
+		default:
+			a = 1;
 		}
+		labelConfigGroup.setSelection(show, template, fontsize, a);
 		return area;
 	}
 
 	@Override
 	protected void okPressed() {
 		template = templateGroup.getText();
-		switch (alignmentGroup.getSelection()) {
+		switch (labelConfigGroup.getAlignment()) {
 		case 0:
 			alignment = SWT.LEFT;
 			break;

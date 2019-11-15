@@ -658,12 +658,10 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 
 	@Override
 	public void eventLoopIdle(Display display) {
-		UiActivator ui = UiActivator.getDefault();
-		if (ui.hasStarted()) {
+		if (UiActivator.getDefault().hasStarted()) {
 			if (!initialized) {
 				initialized = true;
 				setTrayVisible(trayItem.getVisible(), RUNNING);
-				ui.fireStartListeners();
 			}
 			IWorkbenchWindow activeWorkbenchWindow = getWorkbenchConfigurer().getWorkbench().getActiveWorkbenchWindow();
 			if (activeWorkbenchWindow != null) {

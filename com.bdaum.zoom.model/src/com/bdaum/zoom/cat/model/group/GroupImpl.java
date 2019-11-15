@@ -33,11 +33,14 @@ public class GroupImpl extends Group_typeImpl implements Group {
 	 * @param showLabel - Property
 	 * @param labelTemplate - Property
 	 * @param fontSize - Property
+	 * @param alignment - Property
 	 * @param annotations - Property
 	 */
 	public GroupImpl(String name, boolean system, int showLabel,
-			String labelTemplate, int fontSize, String annotations) {
-		super(name, system, showLabel, labelTemplate, fontSize, annotations);
+			String labelTemplate, int fontSize, int alignment,
+			String annotations) {
+		super(name, system, showLabel, labelTemplate, fontSize, alignment,
+				annotations);
 
 	}
 

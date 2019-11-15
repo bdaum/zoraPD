@@ -21,6 +21,7 @@ package com.bdaum.zoom.ui.internal.commands;
 
 import java.io.File;
 
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.widgets.FileDialog;
@@ -30,6 +31,7 @@ import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.dialogs.TimedMessageDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.actions.Messages;
 
@@ -83,10 +85,13 @@ public class OpenCatalogCommand extends AbstractCatCommandHandler {
 	public static void checkPausedFolderWatch(Shell shell, IDbManager dbManager) {
 		if (dbManager.getFile() != null && shell != null && !shell.isDisposed()) {
 			Meta meta = dbManager.getMeta(true);
-			if (meta.getPauseFolderWatch() && AcousticMessageDialog.openQuestion(shell,
-					Messages.OpenCatalogCommand_paused, Messages.OpenCatalogCommand_resume_watch)) {
-				meta.setPauseFolderWatch(false);
-				dbManager.storeAndCommit(meta);
+			if (meta.getPauseFolderWatch()) {
+				if (new TimedMessageDialog(shell, null, Messages.OpenCatalogCommand_paused, null,
+						Messages.OpenCatalogCommand_resume_watch, AcousticMessageDialog.QUESTION,
+						new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL }, 0, 1, 30000L).open() == 0) {
+					meta.setPauseFolderWatch(false);
+					dbManager.storeAndCommit(meta);
+				}
 			}
 		}
 

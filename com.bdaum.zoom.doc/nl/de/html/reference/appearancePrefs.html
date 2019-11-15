@@ -1,133 +1,122 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="de"><head>
-
-
-
-
-
-
-
-
-
-
-<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Darstellung</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
-<h2>Darstellung</h2>
-<h4><span style="font-weight: bold;">Design</span><span style="font-weight: bold;"></span></h4>
-<ul style="font-weight: normal;">
-<li><span style="font-weight: bold;">Farbschema. </span>
-Sie können&nbsp;zwischen <samp>Schwarz</samp>, <samp>Dunkelgrau</samp>, <samp>Grau</samp>, <samp>Weiß</samp> und&nbsp;<samp>Plattform</samp> wählen. Textfarben werden automatisch angepasst. "Plattform"
-ist das Standardfarbschema des Betriebssystems.&nbsp;<br>
-Zusätzliche Farbschemata können durch Hinzufügen von <a href="css.html">CSS-Stylesheets</a>
-zum Unterordner <code>dropins/</code> im Installationsordner definiert werden.</li>
-  <li><span id="result_box" class="" lang="de"><span class=""><span style="font-weight: bold;">Einheiten</span>.</span> <span>Hier können Sie die Einheiten für Entfernungen und Dimensionen festlegen.</span> <span class="">Die Einheit für Entfernungen wirkt sich auf die Umkreissuche aus.</span> <span class="">Die
- Einheit für Dimensionen beeinflusst Suche und Anzeige der 
-physischen Größe eines Bildes, die Spezifikationen für Ausstellungen und die Layouteinstellungen für Druck und PDF.</span></span></li>
-
-</ul>
-<h4><span style="font-weight: bold;">Miniaturansichten</span></h4>
-<ul style="font-weight: normal;">
-
-  
-    
-  <li><span style="font-weight: bold;">Beschriftungen.</span>
-Normalerweise wird der Bildtitel und ggf. Zusatzinformationen in der
-Beschriftung eines Vorschaubildes angezeigt. Die Beschriftung kann
-jedoch auch ganz abgeschaltet werden oder mit Hilfe einer Vorlage frei
-konfiguriert werden.<br>
-    <br>
-Die folgenden Variablen können in die Beschriftung eingefügt werden:
-    <table style="text-align: left;" border="1" cellpadding="6" cellspacing="1">
-
-<tbody>
-<tr>
-<td style="font-weight: bold;"><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_1">Variable</font><code></code></td>
-<td style="font-weight: bold;" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_2">Beschreibung</td>
-</tr>
-    <tr>
-      <td style="vertical-align: top;"><code onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_3">{</code><code>title</code><code onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_3">}</code></td>
-      <td style="vertical-align: top;">Bildtitel oder Bildname, wenn kein Titel vorhanden<br>
-      </td>
-    </tr>
-<tr>
-<td><code onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_3">{</code><code>name</code><code onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_3">}</code></td>
-<td style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_4">Bildname</td>
-</tr>
-<tr>
-<td><code onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_5">{</code><code>creationDate</code><code onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_5">}</code></td>
-<td style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_6">Erstellungsdatum des Bildes</td>
-</tr>
-    
-
-
-<tr>
-<td><code onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_11">{</code><code>size</code><code onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_11">}</code></td>
-<td style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_12">Bildgröße
-in Pixel</td>
-</tr>
-<tr>
-<td><code onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_13">{</code><code>format</code><code onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_13">}</code></td>
-<td style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_14">Dateityp</td>
-</tr>
-</tbody>
-    </table>
-
-
-Zusätzlich können sämtliche EXIF- und IPTC-Metadatenfelder in die Beschriftung mit eingeschlossen werden.<br>
-    <br>
-  </li>
-  <li><span style="font-weight: bold;">Dekoration</span><br>
-    </li>
-
-  
-  <ul>
-    
-    <li><span style="font-weight: bold;">Statusmarkierung anzeigen.</span>&nbsp;
-Aktivieren Sie diese Option, um eine grüne Statusmarkierung für Bilder
-mit Status "Bereit für Veröffentlichung" oder RAW-Bilder mit Status
-"Korrigiert" anzuzeigen.</li>
-    <li><span style="font-weight: bold;">Max. Anzahl der angezeigten Regionen.</span> Begrenzt die Anzahl der Regionen (Gesicht, Haustier, Fokus, BarCode) in einer Miniaturansicht.</li>
-    <li><span style="font-weight: bold;">Standortdaten-Schaltfläche anzeigen</span>.
-Zeigt die Standortdaten-Nadel, die anzeigt, ob Standortdaten vorhanden
-sind, und mit einem Klick das Karten-Sichtfenster öffnet.<span style="font-weight: bold;"></span></li>
-    <li><span style="font-weight: bold;">Bewertung in
-Miniaturansichten
-anzeigen. </span>
-Wählen Sie&nbsp;<samp>durch Größe</samp>, um die Bewertung von Bildern durch&nbsp;verschieden
-große Sterne zu symbolisieren. Wählen
-Sie&nbsp;<samp>durch Anzahl</samp>, um die Bewertung als eine variable Anzahl von Sternen
-anzuzeigen.</li>
-    <li><span style="font-weight: bold;">Drehen-Schaltflächen&nbsp;in
-Miniaturansichten </span><span style="font-weight: bold;">anzeigen</span><span style="font-weight: bold;">. </span> Wählen Sie diese
-Option, um die&nbsp;Schaltflächen zum Drehen der Miniaturansicht am
-unteren Rand der Miniaturansicht anzuzeigen.</li>
-    <li><span style="font-weight: bold;">
-Sprachnotiz-Schaltfläche in
-Miniaturansichten anzeigen. </span> Aktivieren Sie diese Option,
-um die Sprachnotiz-Schaltfläche am unteren Rand der Miniaturansicht
-anzuzeigen.</li>
-    <li><span style="font-weight: bold;">Erweitern/Zusammenfassen-Schaltfläche in Miniaturansichten anzeigen</span>.&nbsp; Aktivieren Sie diese Option,
-um die <abbr>+</abbr> bzw <abbr>-</abbr> -Schaltfläche am oberen Rand der&nbsp;Miniaturansicht
-anzuzeigen. Mit dieser Schaltfläche wird kontrolliert, ob gleichnamige
-Bilder im Stapel oder einzeln angezeigt werden.</li>
-<ul style="font-weight: normal;">
-
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Darstellung</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css">
+    <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css">
+  </head>
+  <body>
+    <h2>Darstellung</h2>
+    <h4><span style="font-weight: bold;">Design</span><span style="font-weight: bold;"></span></h4>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Farbschema. </span>
+        Sie können&nbsp;zwischen <samp>Schwarz</samp>, <samp>Dunkelgrau</samp>,
+        <samp>Grau</samp>, <samp>Weiß</samp> und&nbsp;<samp>Plattform</samp>
+        wählen. Textfarben werden automatisch angepasst. "Plattform"
+        ist das Standardfarbschema des Betriebssystems.&nbsp;<br>
+        Zusätzliche Farbschemata können durch Hinzufügen von <a href="css.html">CSS-Stylesheets</a>
+        zum Unterordner <code>dropins/</code> im Installationsordner definiert
+        werden.</li>
+      <li><span id="result_box" class="" lang="de"><span class=""><span style="font-weight: bold;">Einheiten</span>.</span>
+          <span>Hier können Sie die Einheiten für Entfernungen und Dimensionen
+            festlegen.</span> <span class="">Die Einheit für Entfernungen wirkt
+            sich auf die Umkreissuche aus.</span> <span class="">Die Einheit
+            für Dimensionen beeinflusst Suche und Anzeige der physischen Größe
+            eines Bildes, die Spezifikationen für Ausstellungen und die
+            Layouteinstellungen für Druck und PDF.</span></span></li>
     </ul>
-  </ul>
-
-
-
-</ul>
-<br>
-<h4><span style="font-weight: bold;">Farbcodierung</span></h4>
-<h4><span style="font-weight: bold;"></span></h4>
-<ul style="font-weight: normal;"><li><span style="font-weight: bold;">Farbcode in
-Miniaturansichten
-anzeigen. </span>Wählen Sie eine Option zum Anzeigen von&nbsp;Farbcodes in Miniaturansichten:</li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">nein.</span> Es werden keine Farbcodes in Miniaturansichten gezeigt.</li><li><span style="font-weight: bold;">automatisch</span>. Farbcodes werden anhand der in der &nbsp;Gruppe <span style="font-style: italic;">Automatische Farbcodierung </span>definierten
-Regeln (siehe unten) automatisch bestimmt. Manuell vergebene Farbcodes
-überschreiben jedoch die automatischen Farbcodes.</li><li><span style="font-weight: bold;">benutzerdefiniert</span> Nur manuell vergebene Farbcodes werden angezeigt.</li></ul><li><span style="font-weight: bold;">Automatische Farbcodierung</span>. Diese Gruppe ist nur sichtbar wenn automatische Farbcodes gewählt wurden.&nbsp;<br>Für jeden <span style="font-weight: bold;">Farbcode</span> können Sie ein <span style="font-weight: bold;">Kriterium</span> spezifizieren, das die Bilder bestimmt, bei denen der Farbcode erscheinen soll (ähnlich wie bei den <a href="collectionEdit.html">Kriterien für Kollektionen</a>). <br><br><span style="font-weight: bold;">Hinweis: </span>Die
-automatische Farbcodierung verändert nicht die Metadaten von BIldern,
-sondern beeinflusst nur die Darstellung der Farbcodes auf der
-Benutzeroberfläche. Die Konsequenz ist, dass bei der Suche nach
-speziellen Farbcodes mit Hilfe des Feldes <acronym>Eigenschaften&gt;ZoRa Photo Director&gt;Farbcodes&nbsp;</acronym> die automatische Farbcodierung <span style="font-weight: bold;">keinen Effekt</span> hat. Anders beim <span style="font-weight: bold;">Farbcodefilter</span>, das Sie in den lokalen Werkzeugleisten der Gallerien finden. Hier wird die automatische Farbcodierung <span style="font-weight: bold;">berücksichtigt</span>.</li></ul>
-
-</body></html>
+    <h4><span style="font-weight: bold;">Miniaturansichten</span></h4>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Beschriftungen.</span>
+        Normalerweise wird der Bildtitel und ggf. Zusatzinformationen in der
+        Beschriftung eines Vorschaubildes angezeigt. Die Beschriftung kann
+        jedoch auch ganz abgeschaltet werden oder mit Hilfe einer <a href="configureCaptions.html">Vorlage
+          </a>frei
+        konfiguriert werden.<br>
+        <br>
+      </li>
+      <li><span style="font-weight: bold;">Dekoration</span><br>
+      </li>
+      <ul>
+        <li><span style="font-weight: bold;">Statusmarkierung anzeigen.</span>&nbsp;
+Aktivieren
+          Sie diese Option, um eine grüne Statusmarkierung für Bilder
+          mit Status "Bereit für Veröffentlichung" oder RAW-Bilder mit Status
+          "Korrigiert" anzuzeigen.</li>
+        <li><span style="font-weight: bold;">Max. Anzahl der angezeigten
+            Regionen.</span> Begrenzt die Anzahl der Regionen (Gesicht,
+          Haustier, Fokus, BarCode) in einer Miniaturansicht.</li>
+        <li><span style="font-weight: bold;">Standortdaten-Schaltfläche anzeigen</span>.
+          Zeigt die Standortdaten-Nadel, die anzeigt, ob Standortdaten vorhanden
+          sind, und mit einem Klick das Karten-Sichtfenster öffnet.<span style="font-weight: bold;"></span></li>
+        <li><span style="font-weight: bold;">Bewertung in
+            Miniaturansichten
+            anzeigen. </span>
+          Wählen Sie&nbsp;<samp>durch Größe</samp>, um die Bewertung von Bildern
+          durch&nbsp;verschieden
+          große Sterne zu symbolisieren. Wählen
+          Sie&nbsp;<samp>durch Anzahl</samp>, um die Bewertung als eine variable
+          Anzahl von Sternen
+          anzuzeigen.</li>
+        <li><span style="font-weight: bold;">Drehen-Schaltflächen&nbsp;in
+            Miniaturansichten </span><span style="font-weight: bold;">anzeigen</span><span
+            style="font-weight: bold;">. </span> Wählen Sie diese
+          Option, um die&nbsp;Schaltflächen zum Drehen der Miniaturansicht am
+          unteren Rand der Miniaturansicht anzuzeigen.</li>
+        <li><span style="font-weight: bold;">
+            Sprachnotiz-Schaltfläche in
+            Miniaturansichten anzeigen. </span> Aktivieren Sie diese Option,
+          um die Sprachnotiz-Schaltfläche am unteren Rand der Miniaturansicht
+          anzuzeigen.</li>
+        <li><span style="font-weight: bold;">Erweitern/Zusammenfassen-Schaltfläche
+            in Miniaturansichten anzeigen</span>.&nbsp; Aktivieren Sie diese
+          Option,
+          um die <abbr>+</abbr> bzw <abbr>-</abbr> -Schaltfläche am oberen
+          Rand der&nbsp;Miniaturansicht
+          anzuzeigen. Mit dieser Schaltfläche wird kontrolliert, ob gleichnamige
+          Bilder im Stapel oder einzeln angezeigt werden.</li>
+        <ul style="font-weight: normal;">
+        </ul>
+      </ul>
+    </ul>
+    <br>
+    <h4><span style="font-weight: bold;">Farbcodierung</span></h4>
+    <h4><span style="font-weight: bold;"></span></h4>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Farbcode in
+          Miniaturansichten
+          anzeigen. </span>Wählen Sie eine Option zum Anzeigen
+        von&nbsp;Farbcodes in Miniaturansichten:</li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: bold;">nein.</span> Es werden keine
+          Farbcodes in Miniaturansichten gezeigt.</li>
+        <li><span style="font-weight: bold;">automatisch</span>. Farbcodes
+          werden anhand der in der &nbsp;Gruppe <span style="font-style: italic;">Automatische
+            Farbcodierung </span>definierten
+          Regeln (siehe unten) automatisch bestimmt. Manuell vergebene Farbcodes
+          überschreiben jedoch die automatischen Farbcodes.</li>
+        <li><span style="font-weight: bold;">benutzerdefiniert</span> Nur
+          manuell vergebene Farbcodes werden angezeigt.</li>
+      </ul>
+      <li><span style="font-weight: bold;">Automatische Farbcodierung</span>.
+        Diese Gruppe ist nur sichtbar wenn automatische Farbcodes gewählt
+        wurden.&nbsp;<br>
+        Für jeden <span style="font-weight: bold;">Farbcode</span> können Sie
+        ein <span style="font-weight: bold;">Kriterium</span> spezifizieren,
+        das die Bilder bestimmt, bei denen der Farbcode erscheinen soll (ähnlich
+        wie bei den <a href="collectionEdit.html">Kriterien für Kollektionen</a>).
+        <br><br>
+        <span style="font-weight: bold;">Hinweis: </span>Die
+        automatische Farbcodierung verändert nicht die Metadaten von BIldern,
+        sondern beeinflusst nur die Darstellung der Farbcodes auf der
+        Benutzeroberfläche. Die Konsequenz ist, dass bei der Suche nach
+        speziellen Farbcodes mit Hilfe des Feldes <acronym>Eigenschaften&gt;ZoRa
+          Photo Director&gt;Farbcodes&nbsp;</acronym> die automatische
+        Farbcodierung <span style="font-weight: bold;">keinen Effekt</span>
+        hat. Anders beim <span style="font-weight: bold;">Farbcodefilter</span>,
+        das Sie in den lokalen Werkzeugleisten der Gallerien finden. Hier wird
+        die automatische Farbcodierung <span style="font-weight: bold;">berücksichtigt</span>.</li>
+    </ul>
+  </body>
+</html>

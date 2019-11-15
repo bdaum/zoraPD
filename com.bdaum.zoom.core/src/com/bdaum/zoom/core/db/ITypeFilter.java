@@ -33,7 +33,8 @@ public interface ITypeFilter extends IAssetFilter {
 	public static final int TIFF = 8;
 	public static final int OTHER = 16;
 	public static final int MEDIA = 32;
-	public static final int ALLFORMATS = RAW | DNG | JPEG | TIFF | OTHER | MEDIA;
+	public static final int ALLIMAGEFORMATS = RAW | DNG | JPEG | TIFF | OTHER;
+	public static final int ALLFORMATS = ALLIMAGEFORMATS | MEDIA;
 
 
 	/**

@@ -14,6 +14,7 @@ package com.bdaum.zoom.gps.internal;
 public class GeoArea {
 	private String name;
 	private double latitude, longitude, km;
+	private int zoom;
 
 	/**
 	 * @param name - name of area
@@ -21,11 +22,20 @@ public class GeoArea {
 	 * @param longitude - center longitude
 	 * @param km - radius in km
 	 */
-	public GeoArea(String name, double latitude, double longitude, double km) {
+	public GeoArea(String name, double latitude, double longitude, double km, int zoom) {
 		this.name = name;
 		this.latitude = latitude;
 		this.longitude = longitude;
 		this.km = km;
+		this.zoom = zoom;
+	}
+
+	public int getZoom() {
+		return zoom;
+	}
+
+	public void setZoom(int zoom) {
+		this.zoom = zoom;
 	}
 
 	public void setName(String name) {

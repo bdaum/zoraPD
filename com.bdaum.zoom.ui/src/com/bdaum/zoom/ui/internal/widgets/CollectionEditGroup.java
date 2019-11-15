@@ -363,7 +363,7 @@ public class CollectionEditGroup {
 	public void applyCriteria(SmartCollectionImpl result, String name) {
 		List<Criterion> criteria = new ArrayList<Criterion>(groups.size());
 		if (album) {
-			criteria.add(new CriterionImpl(QueryField.ALBUM.getKey(), null, name, QueryField.XREF, false));
+			criteria.add(new CriterionImpl(QueryField.ALBUM.getKey(), null, name, null, QueryField.XREF, false));
 			result.setCriterion(criteria);
 		} else if (isSystem)
 			result.setCriterion(current.getCriterion());

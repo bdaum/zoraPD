@@ -1,32 +1,20 @@
 // GMAP3
-var map;
-var mgr;
-var infowindow;
-var currentMarker;
-var dbl = false;
-var camCount = 0;
-var lmarker;
-var cmarker;
-var dmarker;
-var smarker;
-var mouseMove;
-var mapClick;
-var ldragEnd;
-var cdragEnd;
-var ddragEnd;
-var sdragEnd;
-var draggedMarker;
-var diagonal = 1;
-var batch = [];
-var arrowBatch = [];
-var redraw = false;
-var selected;
-var areaCircle;
+var map, mgr, infowindow, currentMarker, dbl, camCount, lmarker, cmarker, dmarker, smarker, mouseMove, mapClick, ldragEnd, cdragEnd, ddragEnd, sdragEnd, draggedMarker, diagonal, batch, arrowBatch, redraw, selected, areaCircle;
+
+/**
+ * API
+ */
 
 function setupMap() {
+	infowindow = currentMarker = lmarker = cmarker = dmarker = smarker = mouseMove = mapClick = ldragEnd = cdragEnd = ddragEnd = sdragEnd = draggedMarker = selected = areaCircle;
+	camCount = 0;
+	diagonal = 1;
+	batch = [];
+	arrowBatch = [];
+	dbl = redraw = false;
 	document.getElementById("map").innerHTML = mapIsLoading;
 	var mapTypeIds = [];
-	for ( var type in google.maps.MapTypeId) 
+	for ( var type in google.maps.MapTypeId)
 		mapTypeIds.push(google.maps.MapTypeId[type]);
 	mapTypeIds.push("OSM");
 	var mapTypeControlOptions = {
@@ -35,8 +23,8 @@ function setupMap() {
 	var overviewMapControlOptions = {
 		opened : true
 	};
-	var center = initialPosition ? initialPosition : new google.maps.LatLng(
-			49.785556, 9.038611);
+	var center = initialPosition ? toLatLng(initialPosition)
+			: createLatLng(49.785556, 9.038611);
 	if (!initialMapType)
 		initialMapType = google.maps.MapTypeId.ROADMAP;
 	var mapOptions = {
@@ -74,6 +62,7 @@ function setupMap() {
 		moved();
 	});
 	google.maps.event.addListener(map, 'dragend', function() {
+		releaseDragged();
 		moved();
 	});
 	google.maps.event.addDomListener(document, 'keyup', function(e) {
@@ -89,306 +78,46 @@ function setupMap() {
 	});
 }
 
-function releaseDragged() {
-	if (lmarker === draggedMarker)
-		releaseLocation();
-	else if (cmarker === draggedMarker)
-		releaseCamera();
-	else if (dmarker === draggedMarker)
-		releaseDirection();
-	else if (smarker === draggedMarker)
-		releaseLocationShown();
-	draggedMarker = null;
-	endFollowing();
-}
+function disposeMap() {}
 
-function MapClickHandler(event) {
-	if (closeInfoWindow())
+function cameraPin(titles, images) {
+	if (draggedMarker)
 		return;
-	if (selected) {
-		selected = null;
-		sendSelection();
-		releaseDragged();
-		setMarkers();
-	}
-}
-
-function performDrawing(redraw) {
-	var bounds = map.getBounds();
-	diagonal = distance(bounds.getNorthEast(), bounds.getSouthWest());
-	if (track.length) {
-		setTrack();
-		if (!redraw && track.length)
-			setBoundsForShape(track);
-	} else {
-		setMarkers();
-		if (!redraw && (locCreated.length || locShown.length))
-			setBoundsForShape(locCreated.concat(locShown));
-	}
-}
-
-function moved() {
-	sendPosition('moved', map.getCenter(), map.getZoom(), 0);
-}
-
-function unloadMap() {
-}
-
-function sendPosition(name, point, zoom, type, uuid) {
-	sendMessage(name, point.lat() + ',' + point.lng() + '&' + zoom + '&' + type
-			+ (uuid ? '&' + uuid : ""));
-}
-
-function sendCamCount() {
-	sendMessage('camCount', camCount);
-}
-
-function sendSelection() {
-	sendMessage('select', selected);
-}
-
-function debug(data) {
-	sendMessage('debug', data);
-}
-
-function sendMessage(name, data) {
-	window.location.href = 'http://www.bdaum.de/zoom/gmap/'
-			+ (data ? name + '?' + data : name);
-}
-
-function setMarkers() {
-	clearMarkers();
-	var bearing, marker, markerLocation;
-	for (var i = 0; i < locCreated.length; i++) {
-		bearing = imgDirection ? imgDirection[i] : NaN;
-		marker = new google.maps.Marker({
-			position : locCreated[i],
-			map : map,
-			icon : selected == locImage[i].join() ? primaryIconSelUrl
-					: primaryIconUrl,
-			anchorPoint : new google.maps.Point(12, 38),
-			title : locTitles[i],
-			draggable : true
-		});
-		google.maps.event.addListener(marker, 'dblclick',
-				makeDoubleClickCallback(marker, locImage[i]));
-		google.maps.event.addListener(marker, 'click', makeClickCallback(
-				marker, locCreated[i], locImage[i]));
-		google.maps.event.addListener(marker, 'dragend', makeDragEndCallback(
-				marker, bearing, i, locImage[i]));
-		batch.push(marker);
-		mgr.addMarker(marker);
-		++camCount;
-	}
-	for (i = 0; i < locShown.length; i++) {
-		marker = new google.maps.Marker({
-			position : locShown[i],
-			map : map,
-			icon : selected == locShownImage[i] ? secondaryIconSelUrl
-					: secondaryIconUrl,
-			anchorPoint : new google.maps.Point(10, 32),
-			title : locShownTitles[i],
-			draggable : true
-		});
-		google.maps.event.addListener(marker, 'dblclick',
-				makeDoubleClickCallback(marker, locShownImage[i]));
-		google.maps.event.addListener(marker, 'click', makeClickCallback(
-				marker, locShown[i], locShownImage[i]));
-		google.maps.event.addListener(marker, 'dragend', makeDragEndCallback(
-				marker, NaN, -1, locShownImage[i]));
-		batch.push(marker);
-		mgr.addMarker(marker);
-	}
-	for (i = 0; i < locCreated.length; i++) {
-		markerLocation = locCreated[i];
-		bearing = imgDirection ? imgDirection[i] : NaN;
-		if (bearing !== bearing)
-			arrowBatch.push(null);
-		else if (!isClustered(batch[i]))
-			arrowBatch.push(createArrow(markerLocation, bearing));
-	}
-	sendCamCount();
-}
-
-function isClustered(marker) {
-	var clustered = mgr.getClusters();
-	for (var i = 0; i < clustered.length; i++) {
-		var markers = clustered[i].getMarkers();
-		if (markers.length > 1)
-			for (var j = 0; j < markers.length; j++)
-				if (markers[j] == marker)
-					return true;
-	}
-	return false;
-}
-
-function createArrow(markerLocation, bearing) {
-	var dist = diagonal / 12;
-	var acoord = coord(markerLocation, dist, bearing);
-	var lineSymbol = {
-		path : google.maps.SymbolPath.FORWARD_CLOSED_ARROW
-	};
-	return new google.maps.Polyline({
-		path : [ markerLocation, acoord ],
-		icons : [ {
-			icon : lineSymbol,
-			strokeOpacity : 0.5,
-		} ],
-		map : map
-	});
-}
-
-function clearMarkers() {
-	camCount = 0;
-	mgr.clearMarkers();
-	for (var i = 0; i < batch.length; i++)
-		if (batch[i])
-			batch[i].setMap(null);
-	batch = [];
-	for (i = 0; i < arrowBatch.length; i++)
-		if (arrowBatch[i])
-			arrowBatch[i].setMap(null);
-	arrowBatch = [];
-}
-
-function distance(coord1, coord2) {
-	var degToRad = Math.PI / 180.0;
-	var phi1 = degToRad * coord1.lat();
-	var phi2 = degToRad * coord2.lat();
-	var lam1 = degToRad * coord1.lng();
-	var lam2 = degToRad * coord2.lng();
-	return 6371.01 * Math.acos(Math.sin(phi1) * Math.sin(phi2) + Math.cos(phi1)
-			* Math.cos(phi2) * Math.cos(lam2 - lam1));
-}
-
-function coord(coord, dist, bearing) {
-	var degToRad = Math.PI / 180.0;
-	var radToDeg = 180.0 / Math.PI;
-	var brg = degToRad * ((bearing + 360) % 360);
-	dist = dist / 6371.01;
-	var lat1 = degToRad * coord.lat();
-	var lon1 = degToRad * coord.lng();
-	var lat2 = Math.asin(Math.sin(lat1) * Math.cos(dist) + Math.cos(lat1)
-			* Math.sin(dist) * Math.cos(brg));
-	var lon2 = lon1
-			+ Math.atan2(Math.sin(brg) * Math.sin(dist) * Math.cos(lat1), Math
-					.cos(dist)
-					- Math.sin(lat1) * Math.sin(lat2));
-	return new google.maps.LatLng(radToDeg * lat2, (radToDeg * lon2 + 540) % 360 - 180);
-}
-
-function makeDragEndCallback(marker, bearing, i, ids) {
-	return function() {
-		var markerPoint = marker.getPosition();
-		if (typeof (ids) === "string")
-			locShown[i] = markerPoint;
-		else
-			locCreated[i] = markerPoint;
-		setSelection(ids);
-		sendPosition('modify', markerPoint, map.getZoom(), 0,
-				typeof (ids) === "string" ? ids : ids.join());
-		if (bearing !== bearing) {
-			// skip NaN
-		} else if (i >= 0 && arrowBatch[i]) {
-			arrowBatch[i].setMap(null);
-			arrowBatch[i] = createArrow(markerPoint, bearing);
-		}
-	};
-}
-
-function setTrack() {
-	new google.maps.Polyline({
-		map : map,
-		path : track,
-		strokeColor : 'red'
-	});
-}
-
-function setBoundsForShape(positions) {
-	if (positions.length) {
-		var bounds;
-		for (var i = 0; i < positions.length; i++) {
-			var location = positions[i];
-			if (bounds)
-				bounds.extend(location);
-			else
-				bounds = new google.maps.LatLngBounds(location, location);
-		}
-		if (bounds.getNorthEast().equals(bounds.getSouthWest()))
-			setCenter(bounds.getNorthEast(), map.getZoom());
-		else
-			setViewPort(bounds);
-	}
-}
-
-function setSelection(ids) {
-	selected = typeof (ids) === "string" ? ids : ids.join();
-	sendSelection();
-	setMarkers();
-}
-
-function closeInfoWindow() {
-	if (infowindow) {
-		infowindow.close();
-		infowindow = null;
-		return true;
-	}
-	return false;
-}
-
-function makeDoubleClickCallback(marker, ids) {
-	return function() {
-		dbl = true;
-		closeInfoWindow();
-		if (!currentMarker) {
-			sendSelection();
-			if (typeof (ids) === "string") {
-				if (ids != "shown=") {
-					currentMarker = marker;
-					sendMessage('info', ids);
+	releaseCamera();
+	mouseMove = google.maps.event.addListener(map, 'mousemove',
+			function(event) {
+				var cursorPoint = event.latLng;
+				if (!cmarker) {
+					cmarker = createPin(cursorPoint, camPinUrl);
+					// Marker dragged
+					cdragEnd = google.maps.event.addListener(cmarker,
+							'dragend', function(event) {
+								if (cmarker) {
+									sendPosition('drag', cmarker.getPosition(),
+											map.getZoom(), 1);
+									applyCameraSet(cmarker.getPosition());
+									releaseCamera();
+									setMarkers();
+									sendSelection();
+								}
+							});
+					mapClick = google.maps.event.addListener(map, 'click',
+							function() {
+								if (cmarker) {
+									sendPosition('click',
+											cmarker.getPosition(), map
+													.getZoom(), 1);
+									applyCameraSet(cmarker.getPosition());
+									releaseDragged();
+									setMarkers();
+								}
+							});
 				}
-			} else if (ids.length) {
-				currentMarker = marker;
-				sendMessage('info', ids.join());
-			}
-		}
-	};
-}
-
-function showInfo(html) {
-	if (currentMarker) {
-		infowindow = new google.maps.InfoWindow({
-			content : html,
-			position : currentMarker.getPosition(),
-			pixelOffset : new google.maps.Size(3, -30)
-		});
-		infowindow.open(map);
-		currentMarker = null;
-	}
-}
-
-/*
- * Delayed execution to inhibit firing in case of double click
- */
-function makeClickCallback(marker, position, ids) {
-	return function() {
-		closeInfoWindow();
-		dbl = false;
-		setTimeout(function() {
-			clickCallback(position, ids);
-		}, 300);
-	};
-}
-
-function clickCallback(position, ids) {
-	setSelection(ids);
-	if (!dbl) {
-		map.panTo(position);
-		var z = map.getZoom();
-		map.setZoom(z < 10 ? z + 2 : z + 1);
-		mgr.resetViewport();
-		sendMapPosition();
-	}
+				if (cmarker)
+					cmarker.setPosition(cursorPoint);
+			});
+	locTitles = titles;
+	locImage = images;
 }
 
 function locationPin() {
@@ -413,7 +142,8 @@ function locationPin() {
 							function() {
 								if (lmarker) {
 									sendPosition('click',
-											lmarker.getPosition(), map.getZoom(), 0);
+											lmarker.getPosition(), map
+													.getZoom(), 0);
 									releaseDragged();
 								}
 							});
@@ -423,54 +153,47 @@ function locationPin() {
 			});
 }
 
-function createPin(cursorPoint, url) {
-	draggedMarker = new google.maps.Marker({
-		position : cursorPoint,
-		map : map,
-		icon : url,
-		anchorPoint : new google.maps.Point(15, 48),
-		title : newLocationTitle,
-		draggable : true,
-		visible : true
-	});
-	return draggedMarker;
-}
-
-function cameraPin() {
+function locationShown(titles, images) {
 	if (draggedMarker)
 		return;
-	releaseCamera();
+	releaseLocationShown();
 	mouseMove = google.maps.event.addListener(map, 'mousemove',
 			function(event) {
 				var cursorPoint = event.latLng;
-				if (!cmarker) {
-					cmarker = createPin(cursorPoint, camPinUrl);
+				if (!smarker) {
+					smarker = createPin(cursorPoint, shownPinUrl);
 					// Marker dragged
-					cdragEnd = google.maps.event.addListener(cmarker,
+					sdragEnd = google.maps.event.addListener(smarker,
 							'dragend', function(event) {
-								if (cmarker) {
-									sendPosition('drag', cmarker.getPosition(),
-											map.getZoom(), 1);
-									applyCameraSet(cmarker.getPosition());
-									releaseCamera();
+								if (smarker) {
+									var uuid = applyShownSet(smarker
+											.getPosition());
+									sendPosition('drag', smarker.getPosition(),
+											map.getZoom(), 3, uuid);
+									releaseLocationShown();
 									setMarkers();
+									sendSelection();
 								}
 							});
 					mapClick = google.maps.event.addListener(map, 'click',
 							function() {
-								if (cmarker) {
+								if (smarker) {
+									var uuid = applyShownSet(smarker
+											.getPosition());
 									sendPosition('click',
-											cmarker.getPosition(), map
-													.getZoom(), 1);
-									applyCameraSet(cmarker.getPosition());
+											smarker.getPosition(), map
+													.getZoom(), 3, uuid);
 									releaseDragged();
 									setMarkers();
 								}
 							});
+
 				}
-				if (cmarker)
-					cmarker.setPosition(cursorPoint);
+				if (smarker)
+					smarker.setPosition(cursorPoint);
 			});
+	locShownTitles = titles;
+	locShownImage = images;
 }
 
 function direction() {
@@ -512,44 +235,404 @@ function direction() {
 			});
 }
 
-function locationShown() {
-	if (draggedMarker)
-		return;
-	releaseLocationShown();
-	mouseMove = google.maps.event.addListener(map, 'mousemove',
-			function(event) {
-				var cursorPoint = event.latLng;
-				if (!smarker) {
-					smarker = createPin(cursorPoint, shownPinUrl);
-					// Marker dragged
-					sdragEnd = google.maps.event.addListener(smarker,
-							'dragend', function(event) {
-								if (smarker) {
-									var uuid = applyShownSet(smarker
-											.getPosition());
-									sendPosition('drag', smarker.getPosition(),
-											map.getZoom(), 3, uuid);
-									releaseLocationShown();
-									setMarkers();
-								}
-							});
-					mapClick = google.maps.event.addListener(map, 'click',
-							function() {
-								if (smarker) {
-									var uuid = applyShownSet(smarker
-											.getPosition());
-									sendPosition('click',
-											smarker.getPosition(), map
-													.getZoom(), 3, uuid);
-									releaseDragged();
-									setMarkers();
-								}
-							});
+function deleteSelected() {
+	if (selected) {
+		var p = findItem(locImage, selected);
+		if (p >= 0) {
+			batch = removeItem(batch, p);
+			locCreated = removeItem(locCreated, p);
+			locTitles = removeItem(locTitles, p);
+			locImage = removeItem(locImage, p);
+			if (imgDirection)
+				imgDirection = removeItem(imgDirection, p);
+			selected = null;
+			setMarkers();
+		} else {
+			p = findItem(locShownImage, selected);
+			if (p >= 0) {
+				locShown = removeItem(locShown, p);
+				locShownTitles = removeItem(locShownTitles, p);
+				locShownImage = removeItem(locShownImage, p);
+				selected = null;
+				setMarkers();
+			}
+		}
+	}
+}
 
+function setCenter(pos, zoom) {
+	map.setCenter(toLatLng(pos), zoom);
+	sendMapPosition();
+}
+
+function showInfo(html) {
+	if (currentMarker) {
+		infowindow = new google.maps.InfoWindow({
+			content : html,
+			position : currentMarker.getPosition(),
+			pixelOffset : new google.maps.Size(3, -30)
+		});
+		infowindow.open(map);
+		currentMarker = null;
+	}
+}
+
+function setZoomDetails(zoom, pos) {
+	map.setZoom(zoom);
+	map.panTo(toLatLng(pos));
+}
+
+function setAreaCircle(position, diameter) {
+	var pos = toLatLng(position);
+	if (areaCircle) {
+		areaCircle.setCenter(pos);
+		areaCircle.setRadius(diameter / 2);
+	} else {
+		areaCircle = new google.maps.Circle({
+			strokeColor : '#00FF00',
+			strokeOpacity : 0.8,
+			strokeWeight : 2,
+			fillColor : '#00FF00',
+			fillOpacity : 0.35,
+			draggable : true,
+			map : map,
+			center : pos,
+			radius : diameter / 2
+		});
+		google.maps.event.addListener(areaCircle, 'dragend', function() {
+			sendPosition('modify', areaCircle.getCenter(), map.getZoom(), 4);
+		});
+	}
+}
+
+/**
+ * private
+ */
+
+function latLng(array) {
+	var tr = [];
+	for (i = 0; i < array.length; i++)
+		tr.push(createLatLng(array[i].lat, array[i].lon));
+	return tr;
+}
+
+function fromLatLng(pos) {
+	return {
+		lat : pos.lat(),
+		lon : pos.lng()
+	};
+}
+
+function toLatLng(pos) {
+	return createLatLng(pos.lat, pos.lon);
+}
+
+function toBounds(bounds) {
+	return new google.maps.LatLngBounds(toLatLng(bounds.sw),
+			toLatLng(bounds.ne));
+}
+
+function createLatLng(lat, lon) {
+	return new google.maps.LatLng(lat, lon);
+}
+
+function releaseDragged() {
+	if (lmarker === draggedMarker)
+		releaseLocation();
+	else if (cmarker === draggedMarker)
+		releaseCamera();
+	else if (dmarker === draggedMarker)
+		releaseDirection();
+	else if (smarker === draggedMarker)
+		releaseLocationShown();
+	draggedMarker = null;
+	endFollowing();
+}
+
+function MapClickHandler(event) {
+	if (closeInfoWindow())
+		return;
+	if (selected) {
+		selected = null;
+		sendSelection();
+		releaseDragged();
+		setMarkers();
+	}
+}
+
+function performDrawing(redraw) {
+	var bounds = map.getBounds();
+	diagonal = distance(bounds.getNorthEast(), bounds.getSouthWest());
+	if (track && track.length > 1)
+		setTrack();
+	setMarkers();
+	if (!redraw && (locCreated.length || locShown.length || track.length))
+		setBoundsForShape(locCreated.concat(locShown).concat(track));
+}
+
+function moved() {
+	sendPosition('moved', map.getCenter(), map.getZoom(), 0);
+}
+
+function sendPosition(name, point, zoom, type, uuid) {
+	sendMessage(name, point.lat() + ',' + point.lng() + '&' + zoom + '&' + type
+			+ (uuid ? '&' + uuid : ""));
+}
+
+function sendCamCount() {
+	sendMessage('camCount', camCount);
+}
+
+function sendSelection() {
+	sendMessage('select', selected);
+}
+
+function debug(data) {
+	sendMessage('debug', data);
+}
+
+function sendMessage(name, data) {
+	if (root)
+		window.location.href = root + (data ? name + '?' + data : name);
+}
+
+function setMarkers() {
+	clearMarkers();
+	var bearin, marker, markerLocation;
+	for (i = 0; i < locCreated.length; i++) {
+		var latlng = toLatLng(locCreated[i]);
+		bearin = imgDirection ? imgDirection[i] : NaN;
+		marker = new google.maps.Marker({
+			position : latlng,
+			map : map,
+			icon : selected == locImage[i].join() ? primaryIconSelUrl
+					: primaryIconUrl,
+			anchorPoint : new google.maps.Point(12, 38),
+			title : locTitles[i],
+			draggable : true
+		});
+		google.maps.event.addListener(marker, 'dblclick',
+				makeDoubleClickCallback(marker, locImage[i]));
+		google.maps.event.addListener(marker, 'click', makeClickCallback(
+				marker, latlng, locImage[i]));
+		if (root)
+			google.maps.event.addListener(marker, 'dragend',
+					makeDragEndCallback(marker, bearin, i, locImage[i]));
+		batch.push(marker);
+		mgr.addMarker(marker);
+		++camCount;
+	}
+	for (i = 0; i < locShown.length; i++) {
+		var loc = toLatLng(locShown[i]);
+		marker = new google.maps.Marker({
+			position : loc,
+			map : map,
+			icon : selected == locShownImage[i] ? secondaryIconSelUrl
+					: secondaryIconUrl,
+			anchorPoint : new google.maps.Point(10, 32),
+			title : locShownTitles[i],
+			draggable : true
+		});
+		google.maps.event.addListener(marker, 'dblclick',
+				makeDoubleClickCallback(marker, locShownImage[i]));
+		google.maps.event.addListener(marker, 'click', makeClickCallback(
+				marker, loc, locShownImage[i]));
+		if (root)
+			google.maps.event.addListener(marker, 'dragend',
+					makeDragEndCallback(marker, NaN, -1, locShownImage[i]));
+		batch.push(marker);
+		mgr.addMarker(marker);
+	}
+	for (i = 0; i < locCreated.length; i++) {
+		markerLocation = toLatLng(locCreated[i]);
+		bearin = imgDirection ? imgDirection[i] : NaN;
+		if (isNaN(bearin))
+			arrowBatch.push(null);
+		else if (!isClustered(batch[i]))
+			arrowBatch.push(createArrow(markerLocation, bearin));
+	}
+	sendCamCount();
+}
+
+function isClustered(marker) {
+	var clusters = mgr.getClusters();
+	for (i = 0; i < clusters.length; i++) {
+		var markers = clusters[i].getMarkers();
+		if (markers.length > 1)
+			for (j = 0; j < markers.length; j++)
+				if (markers[j] == marker)
+					return true;
+	}
+	return false;
+}
+
+function createArrow(markerLocation, bearin) {
+	if (!isNaN(bearin)) {
+		var dist = diagonal / 12;
+		var acoord = coord(markerLocation, dist, bearin);
+		var lineSymbol = {
+			path : google.maps.SymbolPath.FORWARD_CLOSED_ARROW
+		};
+		return new google.maps.Polyline({
+			path : [ markerLocation, acoord ],
+			icons : [ {
+				icon : lineSymbol,
+				strokeOpacity : 0.5,
+			} ],
+			map : map
+		});
+	}
+}
+
+function clearMarkers() {
+	camCount = 0;
+	mgr.clearMarkers();
+	for (i = 0; i < batch.length; i++)
+		if (batch[i])
+			batch[i].setMap(null);
+	batch = [];
+	for (i = 0; i < arrowBatch.length; i++)
+		if (arrowBatch[i])
+			arrowBatch[i].setMap(null);
+	arrowBatch = [];
+}
+
+function distance(coord1, coord2) {
+	var degToRad = Math.PI / 180.0;
+	var phi1 = degToRad * coord1.lat();
+	var phi2 = degToRad * coord2.lat();
+	return 6371.01 * Math.acos(Math.sin(phi1) * Math.sin(phi2) + Math.cos(phi1)
+			* Math.cos(phi2) * Math.cos(degToRad * (coord2.lng() - coord1.lng())));
+}
+
+function coord(coord, dist, bearin) {
+	var degToRad = Math.PI / 180.0;
+	var radToDeg = 180.0 / Math.PI;
+	var brg = degToRad * ((bearin + 360) % 360);
+	dist = dist / 6371.01;
+	var lat1 = degToRad * coord.lat();
+	var lon1 = degToRad * coord.lng();
+	var lat2 = Math.asin(Math.sin(lat1) * Math.cos(dist) + Math.cos(lat1)
+			* Math.sin(dist) * Math.cos(brg));
+	var lon2 = lon1
+			+ Math.atan2(Math.sin(brg) * Math.sin(dist) * Math.cos(lat1), Math
+					.cos(dist)
+					- Math.sin(lat1) * Math.sin(lat2));
+	return createLatLng(radToDeg * lat2, (radToDeg * lon2 + 540) % 360 - 180);
+}
+
+function makeDragEndCallback(marker, bearin, i, ids) {
+	return function() {
+		var markerPoint = marker.getPosition();
+		if (typeof (ids) === "string")
+			locShown[i] = fromLatLng(markerPoint);
+		else
+			locCreated[i] = fromLatLng(markerPoint);
+		setSelection(ids);
+		sendPosition('modify', markerPoint, map.getZoom(), 0,
+				typeof (ids) === "string" ? ids : ids.join());
+		if (!sNaN(bearin) && i >= 0 && arrowBatch[i]) {
+			arrowBatch[i].setMap(null);
+			arrowBatch[i] = createArrow(markerPoint, bearin);
+		}
+	}
+}
+
+function setTrack() {
+	new google.maps.Polyline({
+		map : map,
+		path : latLng(track),
+		strokeColor : 'red'
+	});
+}
+
+function setBoundsForShape(positions) {
+	if (positions.length) {
+		var bounds;
+		for (i = 0; i < positions.length; i++) {
+			var loc = toLatLng(positions[i]);
+			if (bounds)
+				bounds.extend(loc);
+			else
+				bounds = new google.maps.LatLngBounds(loc, loc);
+		}
+		if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
+			map.setCenter(bounds.getNorthEast(), map.getZoom());
+			sendMapPosition();
+		} else
+			viewPort(bounds);
+	}
+}
+
+function setSelection(ids) {
+	selected = typeof (ids) === "string" ? ids : ids.join();
+	sendSelection();
+	setMarkers();
+}
+
+function closeInfoWindow() {
+	if (infowindow) {
+		infowindow.close();
+		infowindow = null;
+		return true;
+	}
+	return false;
+}
+
+function makeDoubleClickCallback(marker, ids) {
+	return function() {
+		dbl = true;
+		closeInfoWindow();
+		if (!currentMarker) {
+			sendSelection();
+			if (typeof (ids) === "string") {
+				if (ids != "shown=") {
+					currentMarker = marker;
+					sendMessage('info', ids);
 				}
-				if (smarker)
-					smarker.setPosition(cursorPoint);
-			});
+			} else if (ids.length) {
+				currentMarker = marker;
+				sendMessage('info', ids.join());
+			}
+		}
+	};
+}
+
+/*
+ * Delayed execution to inhibit firing in case of double click
+ */
+function makeClickCallback(marker, position, ids) {
+	return function() {
+		closeInfoWindow();
+		dbl = false;
+		setTimeout(function() {
+			clickCallback(position, ids);
+		}, 300);
+	};
+}
+
+function clickCallback(position, ids) {
+	setSelection(ids);
+	if (!dbl) {
+		map.panTo(position);
+		var z = map.getZoom();
+		map.setZoom(z < 10 ? z + 2 : z + 1);
+		mgr.resetViewport();
+		sendMapPosition();
+	}
+}
+
+function createPin(cursorPoint, url) {
+	draggedMarker = new google.maps.Marker({
+		position : cursorPoint,
+		map : map,
+		icon : url,
+		anchorPoint : new google.maps.Point(15, 48),
+		title : newLocationTitle,
+		draggable : true,
+		visible : true
+	});
+	return draggedMarker;
 }
 
 function endFollowing() {
@@ -615,12 +698,11 @@ function releaseLocationShown() {
 }
 
 function setViewPort(bounds) {
-	map.fitBounds(bounds);
-	sendMapPosition();
+	viewPort(toBounds(bounds));
 }
 
-function setCenter(pos, zoom) {
-	map.setCenter(pos, zoom);
+function viewPort(bounds) {
+	map.fitBounds(bounds);
 	sendMapPosition();
 }
 
@@ -630,16 +712,12 @@ function sendMapPosition() {
 }
 
 function applyCameraSet(pos) {
-	locCreated = [];
-	locCreated.push(pos);
-	var titles = concatTitles(locTitles);
-	locTitles = [];
-	locTitles.push(titles);
+	locCreated = [ fromLatLng(pos) ];
+	locTitles = [ concatTitles(locTitles) ];
 	selected = flatten(locImage);
-	locImage = [];
-	locImage.push(selected);
-	imgDirection = [];
-	imgDirection.push(locShown && locShown.length > 0 ? bearing(pos, locShown[0]) : NaN);
+	locImage = [ selected ];
+	imgDirection = [ locShown && locShown.length ? bearing(fromLatLng(pos),
+			locShown[0]) : NaN ];
 }
 
 function concatTitles(array) {
@@ -649,11 +727,11 @@ function concatTitles(array) {
 	if (l === 1)
 		return array[0];
 	var newTitle = "";
-	for (var i = 0; i < array.length; i++) {
+	for (i = 0; i < array.length; i++) {
 		var titles = array[i].split(",");
-		for (var j = 0; j < titles.length; j++) {
-			var t = titles[j];
-			if (newTitle != "" && newTitle.length + t.length > 40 || t == "...")
+		for (j = 0; j < titles.length; j++) {
+			if (newTitle != "" && newTitle.length + titles[j].length > 40
+					|| titles[j] == "...")
 				return newTitle + ",...";
 			if (newTitle.length)
 				newTitle += ",";
@@ -665,19 +743,19 @@ function concatTitles(array) {
 
 function flatten(array) {
 	var result = [];
-	for (var i = 0; i < array.length; i++) {
+	for (i = 0; i < array.length; i++) {
 		var subArray = array[i];
-		for (var j = 0; j < subArray.length; j++)
+		for (j = 0; j < subArray.length; j++)
 			result.push(subArray[j]);
 	}
 	return result;
 }
 
 function bearing(from, to) {
-	var phi1 = from.lat() / 180.0 * Math.PI;
-	var phi2 = to.lat() / 180.0 * Math.PI;
-	var lam1 = from.lng() / 180.0 * Math.PI;
-	var lam2 = to.lng() / 180.0 * Math.PI;
+	var phi1 = from.lat / 180.0 * Math.PI;
+	var phi2 = to.lat / 180.0 * Math.PI;
+	var lam1 = from.lon / 180.0 * Math.PI;
+	var lam2 = to.lon / 180.0 * Math.PI;
 	var angle = Math.atan2(Math.sin(lam2 - lam1) * Math.cos(phi2), Math
 			.cos(phi1)
 			* Math.sin(phi2)
@@ -688,8 +766,8 @@ function bearing(from, to) {
 }
 
 function applyShownSet(pos) {
-	locShown.push(pos);
-	locShownTitles.push(locTitles.length > 0 ? locTitles[0] : "");
+	locShown.push(fromLatLng(pos));
+	locShownTitles.push(locTitles.length ? locTitles[0] : "");
 	var uuid = generateQuickGuid();
 	selected = "shown=" + uuid;
 	locShownImage.push(selected);
@@ -699,7 +777,7 @@ function applyShownSet(pos) {
 
 function applyDirectionSet(pos) {
 	if (imgDirection.length && locCreated.length)
-		imgDirection[0] = bearing(locCreated[0], pos);
+		imgDirection[0] = bearing(locCreated[0], fromLatLng(pos));
 }
 
 function generateQuickGuid() {
@@ -707,64 +785,17 @@ function generateQuickGuid() {
 			+ Math.random().toString(36).substring(2, 15);
 }
 
-function deleteSelected() {
-	if (selected) {
-		var p = findItem(locImage, selected);
-		if (p >= 0) {
-			batch = removeItem(batch, p);
-			locCreated = removeItem(locCreated, p);
-			locTitles = removeItem(locTitles, p);
-			locImage = removeItem(locImage, p);
-			if (imgDirection)
-				imgDirection = removeItem(imgDirection, p);
-			selected = null;
-			setMarkers();
-		} else {
-			p = findItem(locShownImage, selected);
-			if (p >= 0) {
-				locShown = removeItem(locShown, p);
-				locShownTitles = removeItem(locShownTitles, p);
-				locShownImage = removeItem(locShownImage, p);
-				selected = null;
-				setMarkers();
-			}
-		}
-	}
-}
-
 function removeItem(array, index) {
 	var newArray = [];
-	for (var i = 0; i < array.length; i++)
+	for (i = 0; i < array.length; i++)
 		if (i !== index)
 			newArray.push(array[i]);
 	return newArray;
 }
 
 function findItem(array, item) {
-	for (var i = 0; i < array.length; i++)
+	for (i = 0; i < array.length; i++)
 		if (item == array[i])
 			return i;
 	return -1;
-}
-
-function setAreaCircle(position, diameter) {
-	if (areaCircle) {
-		areaCircle.setCenter(position);
-		areaCircle.setRadius(diameter / 2);
-	} else {
-		areaCircle = new google.maps.Circle({
-			strokeColor : '#00FF00',
-			strokeOpacity : 0.8,
-			strokeWeight : 2,
-			fillColor : '#00FF00',
-			fillOpacity : 0.35,
-			draggable : true,
-			map : map,
-			center : position,
-			radius : diameter / 2
-		});
-		google.maps.event.addListener(areaCircle, 'dragend', function() {
-			sendPosition('modify', areaCircle.getCenter(), map.getZoom(), 4);
-		});
-	}
 }

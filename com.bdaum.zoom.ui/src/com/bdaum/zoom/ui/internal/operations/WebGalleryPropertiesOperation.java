@@ -35,23 +35,20 @@ public class WebGalleryPropertiesOperation extends AbstractOperation {
 	private final WebGalleryImpl gallery;
 	private WebGalleryImpl redo;
 
-	public WebGalleryPropertiesOperation(WebGalleryImpl backup,
-			WebGalleryImpl gallery) {
+	public WebGalleryPropertiesOperation(WebGalleryImpl backup, WebGalleryImpl gallery) {
 		super(Messages.WebGalleryPropertiesOperation_set_web_gallery_properties);
 		this.backup = backup;
 		this.gallery = gallery;
 	}
 
 	@Override
-	public IStatus execute(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		Core.getCore().getDbManager().safeTransaction(null, gallery);
 		return Status.OK_STATUS;
 	}
 
 	@Override
-	public IStatus redo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		transferValues(redo, gallery);
 		return execute(monitor, info);
 	}
@@ -105,33 +102,24 @@ public class WebGalleryPropertiesOperation extends AbstractOperation {
 	}
 
 	@Override
-	public IStatus undo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		redo = cloneGallery(gallery);
 		transferValues(backup, gallery);
 		return execute(monitor, info);
 	}
 
 	public static WebGalleryImpl cloneGallery(WebGalleryImpl show) {
-		return new WebGalleryImpl(show.getTemplate(), show.getName(),
-				show.getLogo(), show.getHtmlDescription(),
-				show.getDescription(), show.getHideHeader(), show.getOpacity(),
-				show.getPadding(), show.getThumbSize(), show.getDownloadText(),
-				show.getHideDownload(), show.getCopyright(),
-				show.getAddWatermark(), show.getShowMeta(),
-				show.getContactName(), show.getEmail(), show.getWebUrl(),
-				show.getHideFooter(), show.getBgImage(), show.getBgRepeat(),
-				show.getBgColor(), show.getShadeColor(), show.getBorderColor(),
-				show.getLinkColor(), show.getTitleFont(),
-				show.getSectionFont(), show.getCaptionFont(),
-				show.getDescriptionFont(), show.getFooterFont(),
-				show.getControlsFont(), show.getSelectedEngine(),
-				show.getOutputFolder(), show.getFtpDir(), show.getIsFtp(),
-				show.getPageName(), show.getPoweredByText(),
-				show.getApplySharpening(), show.getRadius(), show.getAmount(),
-				show.getThreshold(), show.getHeadHtml(), show.getTopHtml(),
-				show.getFooterHtml(), show.getJpegQuality(),
-				show.getScalingMethod(), show.getLastAccessDate(), show.getPerspective());
+		return new WebGalleryImpl(show.getTemplate(), show.getName(), show.getLogo(), show.getHtmlDescription(),
+				show.getDescription(), show.getHideHeader(), show.getOpacity(), show.getPadding(), show.getThumbSize(),
+				show.getDownloadText(), show.getHideDownload(), show.getCopyright(), show.getAddWatermark(),
+				show.getShowMeta(), show.getContactName(), show.getEmail(), show.getWebUrl(), show.getHideFooter(),
+				show.getBgImage(), show.getBgRepeat(), show.getBgColor(), show.getShadeColor(), show.getBorderColor(),
+				show.getLinkColor(), show.getTitleFont(), show.getSectionFont(), show.getCaptionFont(),
+				show.getDescriptionFont(), show.getFooterFont(), show.getControlsFont(), show.getSelectedEngine(),
+				show.getOutputFolder(), show.getFtpDir(), show.getIsFtp(), show.getPageName(), show.getPoweredByText(),
+				show.getApplySharpening(), show.getRadius(), show.getAmount(), show.getThreshold(), show.getHeadHtml(),
+				show.getTopHtml(), show.getFooterHtml(), show.getJpegQuality(), show.getScalingMethod(),
+				show.getLastAccessDate(), show.getPerspective(), show.getSafety());
 	}
 
 }

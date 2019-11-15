@@ -22,10 +22,8 @@ package com.bdaum.zoom.ui.internal.preferences;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -54,7 +52,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 
-import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
@@ -120,12 +117,17 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 	private TreeViewer exportViewer;
 	private JpegMetaGroup jpegGroup;
 	private ContainerCheckedTreeViewer tuningViewer;
-	private Set<String> alwaysIndexed = new HashSet<>();
+	private Set<QueryField> alwaysIndexed = new HashSet<>();
 
 	public MetadataPreferencePage() {
 		setDescription(Messages.getString("MetadataPreferencePage.what_to_do")); //$NON-NLS-1$
-		alwaysIndexed = new HashSet<>(
-				Core.fromStringList(getPreferenceStore().getDefaultString(PreferenceConstants.METADATATUNING), "\n")); //$NON-NLS-1$
+		StringTokenizer st = new StringTokenizer(
+				getPreferenceStore().getDefaultString(PreferenceConstants.METADATATUNING), "\n"); //$NON-NLS-1$
+		while (st.hasMoreTokens()) {
+			QueryField qfield = QueryField.findQueryField(st.nextToken());
+			if (qfield != null)
+				alwaysIndexed.add(qfield);
+		}
 	}
 
 	@Override
@@ -144,27 +146,29 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 				Messages.getString("MetadataPreferencePage.essential_metadata"), //$NON-NLS-1$
 				Messages.getString("MetadataPreferencePage.essential_tooltip")); //$NON-NLS-1$
 		essentialsGroup.setLayout(new GridLayout(2, false));
-		essentialsViewer = createViewerGroup(essentialsGroup, null, new MetadataLabelProvider());
+		essentialsViewer = createViewerGroup(essentialsGroup, null, new MetadataLabelProvider(), null);
 		final Composite hoverGroup = UiUtilities.createTabPage(tabFolder,
 				Messages.getString("MetadataPreferencePage.hover_metadata"), //$NON-NLS-1$
 				Messages.getString("MetadataPreferencePage.hover_tooltip")); //$NON-NLS-1$
 		hoverGroup.setLayout(new GridLayout(2, false));
-		hoverViewer = createViewerGroup(hoverGroup, null, new MetadataLabelProvider());
+		hoverViewer = createViewerGroup(hoverGroup, null, new MetadataLabelProvider(), null);
 		final Composite tolerancesGroup = UiUtilities.createTabPage(tabFolder,
 				Messages.getString("MetadataPreferencePage.tolerances"), //$NON-NLS-1$
 				Messages.getString("MetadataPreferencePage.tolerance_tooltip")); //$NON-NLS-1$
 		tolerancesGroup.setLayout(new GridLayout());
 		tolerancesViewer = createTolerancesViewer(tolerancesGroup);
 		final Composite exportGroup = UiUtilities.createTabPage(tabFolder,
-				Messages.getString("MetadataPreferencePage.export"), Messages.getString("MetadataPreferencePage.export_tooltip")); //$NON-NLS-1$ //$NON-NLS-2$
+				Messages.getString("MetadataPreferencePage.export"), //$NON-NLS-1$
+				Messages.getString("MetadataPreferencePage.export_tooltip")); //$NON-NLS-1$
 		exportGroup.setLayout(new GridLayout());
 		Composite viewerGroup = new Composite(exportGroup, SWT.NONE);
 		viewerGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewerGroup.setLayout(new GridLayout(2, false));
-		exportViewer = createViewerGroup(viewerGroup, null, new MetadataLabelProvider());
+		exportViewer = createViewerGroup(viewerGroup, null, new MetadataLabelProvider(), null);
 		jpegGroup = new JpegMetaGroup(exportGroup, SWT.NONE);
 		final Composite tuningGroup = UiUtilities.createTabPage(tabFolder,
-				Messages.getString("MetadataPreferencePage.tuning"), Messages.getString("MetadataPreferencePage.tuning_tooltip")); //$NON-NLS-1$ //$NON-NLS-2$
+				Messages.getString("MetadataPreferencePage.tuning"), //$NON-NLS-1$
+				Messages.getString("MetadataPreferencePage.tuning_tooltip")); //$NON-NLS-1$
 		tuningGroup.setLayout(new GridLayout(2, false));
 		Label label = new Label(tuningGroup, SWT.NONE);
 		label.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
@@ -181,23 +185,24 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 		}, new MetadataLabelProvider() {
 			@Override
 			protected Color getForeground(Object element) {
-				if (element instanceof QueryField && alwaysIndexed.contains(((QueryField) element).getKey()))
+				if (element instanceof QueryField && alwaysIndexed.contains(element))
 					return super.getDisabledForeground(element);
 				return super.getForeground(element);
 			}
-		});
+		}, alwaysIndexed);
 		tuningViewer.addCheckStateListener(new ICheckStateListener() {
 			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				if (!event.getChecked()) {
 					Object element = event.getElement();
-					if (element instanceof QueryField && alwaysIndexed.contains(((QueryField) element).getKey()))
+					if (element instanceof QueryField && alwaysIndexed.contains(element))
 						tuningViewer.setChecked(element, true);
 				}
 			}
 		});
 		jpegGroup.setSelection(getPreferenceStore().getBoolean(PreferenceConstants.JPEGMETADATA));
 		initTabFolder(0);
+		createExtensions(tabFolder, ID);
 		fillValues();
 		tabFolder.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -207,24 +212,28 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 		});
 	}
 
-	protected void fillValues() {
+	protected void doFillValues() {
 		switch (tabFolder.getSelectionIndex()) {
 		case 0:
-			fillViewer(essentialsViewer, getPreferenceStore().getString(PreferenceConstants.ESSENTIALMETADATA), 2,
+			fillViewer(essentialsViewer, getPreferenceStore().getString(PreferenceConstants.ESSENTIALMETADATA), null, 2,
 					false);
 			break;
 		case 1:
-			fillViewer(hoverViewer, getPreferenceStore().getString(PreferenceConstants.HOVERMETADATA), 2, false);
+			fillViewer(hoverViewer, getPreferenceStore().getString(PreferenceConstants.HOVERMETADATA), null, 2, false);
 			break;
 		case 2:
-			fillViewer(tolerancesViewer, getPreferenceStore().getString(PreferenceConstants.METADATATOLERANCES), 2,
-					false);
+			fillViewer(tolerancesViewer, getPreferenceStore().getString(PreferenceConstants.METADATATOLERANCES),
+					toleranceMap, 2, false);
 			break;
 		case 3:
-			fillViewer(exportViewer, getPreferenceStore().getString(PreferenceConstants.EXPORTMETADATA), 2, false);
+			fillViewer(exportViewer, getPreferenceStore().getString(PreferenceConstants.EXPORTMETADATA), null, 2,
+					false);
 			break;
 		case 4:
-			fillViewer(tuningViewer, getPreferenceStore().getString(PreferenceConstants.METADATATUNING), 2, false);
+			fillViewer(tuningViewer,
+					getPreferenceStore().getString(PreferenceConstants.METADATATUNING) + '\n'
+							+ getPreferenceStore().getDefaultString(PreferenceConstants.METADATATUNING),
+					null, 2, false);
 			break;
 		}
 	}
@@ -360,8 +369,8 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 	}
 
 	@SuppressWarnings("unused")
-	private static ContainerCheckedTreeViewer createViewerGroup(Composite comp, ViewerFilter filter,
-			MetadataLabelProvider labelProvider) {
+	public static ContainerCheckedTreeViewer createViewerGroup(Composite comp, ViewerFilter filter,
+			MetadataLabelProvider labelProvider, Set<QueryField> alwaysSelected) {
 		ExpandCollapseGroup expandCollapseGroup = new ExpandCollapseGroup(comp, SWT.NONE);
 		new Label(comp, SWT.NONE);
 		final ContainerCheckedTreeViewer viewer = new ContainerCheckedTreeViewer(comp,
@@ -388,14 +397,17 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 				if (e.widget.getData() == AllNoneGroup.ALL) {
 					viewer.setGrayedElements(EMPTY);
 					viewer.setCheckedElements(QueryField.getQueryFields().toArray());
-				} else
+				} else if (alwaysSelected != null)
+					viewer.setCheckedElements(alwaysSelected.toArray());
+				else
 					viewer.setCheckedElements(EMPTY);
 			}
 		});
 		return viewer;
 	}
 
-	private void fillViewer(final TreeViewer viewer, final String ess, final int level, boolean force) {
+	public static void fillViewer(final TreeViewer viewer, final String ess, Map<String, Float> toleranceMap,
+			final int level, boolean force) {
 		if (viewer.getInput() == null || force)
 			BusyIndicator.showWhile(viewer.getControl().getDisplay(), () -> {
 				if (viewer.getInput() == null) {
@@ -405,7 +417,7 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 				}
 				StringTokenizer st = new StringTokenizer(ess, "\n"); //$NON-NLS-1$
 				if (viewer instanceof CheckboxTreeViewer) {
-					List<QueryField> fields = new ArrayList<QueryField>();
+					Set<QueryField> fields = new HashSet<QueryField>();
 					while (st.hasMoreTokens()) {
 						QueryField qfield = QueryField.findQueryField(st.nextToken());
 						if (qfield != null)
@@ -441,38 +453,39 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 
 	@Override
 	protected void doPerformDefaults() {
-		setDefaults(essentialsViewer, PreferenceConstants.ESSENTIALMETADATA);
-		setDefaults(hoverViewer, PreferenceConstants.HOVERMETADATA);
-		setDefaults(tolerancesViewer, PreferenceConstants.METADATATOLERANCES);
-		setDefaults(exportViewer, PreferenceConstants.EXPORTMETADATA);
-		setDefaults(tuningViewer, PreferenceConstants.METADATATUNING);
-		tolerancesViewer.setInput(QueryField.ALL);
 		IPreferenceStore preferenceStore = getPreferenceStore();
+		setDefaults(preferenceStore, essentialsViewer, PreferenceConstants.ESSENTIALMETADATA);
+		setDefaults(preferenceStore, hoverViewer, PreferenceConstants.HOVERMETADATA);
+		setDefaults(preferenceStore, tolerancesViewer, PreferenceConstants.METADATATOLERANCES);
+		setDefaults(preferenceStore, exportViewer, PreferenceConstants.EXPORTMETADATA);
+		setDefaults(preferenceStore, tuningViewer, PreferenceConstants.METADATATUNING);
+		tolerancesViewer.setInput(QueryField.ALL);
 		preferenceStore.setValue(PreferenceConstants.JPEGMETADATA,
 				preferenceStore.getDefaultBoolean(PreferenceConstants.JPEGMETADATA));
 		jpegGroup.setSelection(getPreferenceStore().getBoolean(PreferenceConstants.JPEGMETADATA));
 	}
 
-	private void setDefaults(TreeViewer viewer, String key) {
+	public static void setDefaults(IPreferenceStore preferenceStore, TreeViewer viewer, String key) {
 		if (viewer instanceof CheckboxTreeViewer)
 			((CheckboxTreeViewer) viewer).setCheckedElements(EMPTYOBJECTS);
-		IPreferenceStore preferenceStore = getPreferenceStore();
 		String ess = preferenceStore.getDefaultString(key);
 		preferenceStore.setValue(key, ess);
-		fillViewer(viewer, ess, -1, true);
+		fillViewer(viewer, ess, null, -1, true);
 	}
 
 	@Override
 	protected void doPerformOk() {
-		saveValues(essentialsViewer, PreferenceConstants.ESSENTIALMETADATA);
-		saveValues(hoverViewer, PreferenceConstants.HOVERMETADATA);
-		saveValues(exportViewer, PreferenceConstants.EXPORTMETADATA);
-		saveValues(tolerancesViewer, PreferenceConstants.METADATATOLERANCES);
-		saveValues(tuningViewer, PreferenceConstants.METADATATUNING);
+		IPreferenceStore preferenceStore = getPreferenceStore();
+		saveValues(preferenceStore, essentialsViewer, PreferenceConstants.ESSENTIALMETADATA, null);
+		saveValues(preferenceStore, hoverViewer, PreferenceConstants.HOVERMETADATA, null);
+		saveValues(preferenceStore, exportViewer, PreferenceConstants.EXPORTMETADATA, null);
+		saveValues(preferenceStore, tolerancesViewer, PreferenceConstants.METADATATOLERANCES, toleranceMap);
+		saveValues(preferenceStore, tuningViewer, PreferenceConstants.METADATATUNING, null);
 		getPreferenceStore().setValue(PreferenceConstants.JPEGMETADATA, jpegGroup.getSelection());
 	}
 
-	private void saveValues(TreeViewer viewer, String pkey) {
+	public static void saveValues(IPreferenceStore preferenceStore, TreeViewer viewer, String pkey,
+			Map<String, Float> toleranceMap) {
 		if (viewer.getInput() != null) {
 			StringBuilder sb = new StringBuilder();
 			if (viewer instanceof CheckboxTreeViewer) {
@@ -492,7 +505,7 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 						sb.append('\n');
 					sb.append(key).append("=").append(toleranceMap.get(key)); //$NON-NLS-1$
 				}
-			getPreferenceStore().setValue(pkey, sb.toString());
+			preferenceStore.setValue(pkey, sb.toString());
 		}
 	}
 

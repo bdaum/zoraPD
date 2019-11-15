@@ -109,7 +109,6 @@ public class ExifTool implements IExifLoader, Closeable {
 	private boolean abort;
 	private int fast;
 	private Daemon cleanupJob;
-	private HtmlEncoderDecoder htmlEncoderDecoder;
 
 	private Thread shutdownHook = new Thread() {
 		@Override
@@ -192,7 +191,7 @@ public class ExifTool implements IExifLoader, Closeable {
 							if (p >= 0) {
 								String key = line.substring(0, p);
 								sb.setLength(0);
-								getHtmlEncoderDecoder().decodeHTML(line.substring(p + 1).trim(), sb);
+								HtmlEncoderDecoder.getInstance().decodeHTML(line.substring(p + 1).trim(), sb);
 								metadata.put(key, sb.toString());
 								if (isMakerNote)
 									makerNotes.add(key);
@@ -447,12 +446,6 @@ public class ExifTool implements IExifLoader, Closeable {
 	 */
 	public void setFast(int fast) {
 		this.fast = fast;
-	}
-
-	private HtmlEncoderDecoder getHtmlEncoderDecoder() {
-		if (htmlEncoderDecoder == null)
-			htmlEncoderDecoder = new HtmlEncoderDecoder();
-		return htmlEncoderDecoder;
 	}
 
 }

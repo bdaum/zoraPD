@@ -1,83 +1,112 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en-us"><head><title>Appearance</title>
-
-
-
-
-
-
-
-
-
-<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
-<h2>Appearance</h2>
-<h4><span style="font-weight: bold;">Design and Formats</span><span style="font-weight: bold;"></span></h4>
-<ul style="font-weight: normal;"><li><span style="font-weight: bold;">Color scheme</span>.You may choose between <samp>black</samp>, <samp>dark grey</samp>, <samp>grey</samp>, <samp>white</samp> and <samp>platform</samp>. Text
-colors are adapted automatically. "Platform" is the default color
-scheme of the operating system.&nbsp;<br>Additional color schemes can &nbsp;be added by placing <a href="css.html">CSS style sheets</a> into the <code>dropins/</code> subfolder of the installation directory.</li>
-  <li><span style="font-weight: bold;">Units</span>. Here you can set
-the units for distances and dimensions. The unit for distances affects
-the proximity search. The unit for dimensions affects the display and
-search for the physical size of an image, the specifications for
-exhibitions, and the layout settings for Print and PDF.<br>
-  </li>
-</ul>
-<h4><span style="font-weight: bold;">Thumbnails</span><span style="font-weight: bold;"></span></h4>
-<ul style="font-weight: normal;">
-  <li><span style="font-weight: bold;">Thumbnail labels</span>. By
-default, the image title and additional information is shown in the
-thumbnail label. However, the title may completely be switched off or
-configured using a template.<br>
-    <p>The following variables can be included into the label:</p>
-    <table style="text-align: left;" border="1" cellpadding="6" cellspacing="1">
-<tbody><tr><td style="font-weight: bold;">Variable<code></code></td><td style="font-weight: bold;">Description</td></tr><tr>
-      <td style="vertical-align: top;"><code>{title}</code></td>
-      <td style="vertical-align: top;">Image title or image name if no title is defined<br>
-      </td>
-    </tr>
-<tr><td><code>{name}</code></td><td>Image name</td></tr><tr><td><code>{creationDate}</code></td><td>Image creation date</td></tr>
-<tr><td><code>{size}</code></td><td>Image size in pixel</td></tr><tr><td><code>{format}</code></td><td>File type</td></tr></tbody>
-    </table>
-In addition, any EXIF and IPTC metadata field my be included into the label.<br>
-    <br>
-<span style="font-weight: bold;"></span></li>
-  <li><span style="font-weight: bold;">Decoration</span><br>
-  </li>
-<ul style="font-weight: normal;">
-    
-    <li><span style="font-weight: bold;">Show status mark.</span>
-Check this option to display a green status mark for images with status
-"Ready for publishing" or RAW images with status "Corrected".</li>
-    <li><span style="font-weight: bold;">Max. number of displayed regions.</span> Limits the number of&nbsp;regions (face, pet, focus, barcode) shown in a thumbnail.</li>
-    <li><span style="font-weight: bold;">Show location pin</span>. The location pin informs about the presence of location data and allows access to the map view with a single click.</li>
-    <li><span style="font-weight: bold;">Show color code in thumbnails.</span> Select an option to display color codes in&nbsp;thumbnails:</li>
-<ul>
-      
-      
-      
-      
-      
-      <li><span style="font-weight: bold;">No</span>. No colorcodes will be shown in thumbnails</li>
-      <li><span style="font-weight: bold;">Automatic</span>. Color codes are automatically determined by the rules defined in the <span style="font-style: italic;">Automatic Color Coding</span> box (see below). Manually set color codes override the automatic codes.</li>
-      <li><span style="font-weight: bold;">Manual</span>. Only manually set color codes are shown.</li>
-
-      
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=windows-1252">
+    <title>Appearance</title>
+    <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css">
+  </head>
+  <body>
+    <h2>Appearance</h2>
+    <h4><span style="font-weight: bold;">Design and Formats</span><span style="font-weight: bold;"></span></h4>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Color scheme</span>.You may choose
+        between <samp>black</samp>, <samp>dark grey</samp>, <samp>grey</samp>,
+        <samp>white</samp> and <samp>platform</samp>. Text
+        colors are adapted automatically. "Platform" is the default color
+        scheme of the operating system.&nbsp;<br>
+        Additional color schemes can &nbsp;be added by placing <a href="css.html">CSS
+          style sheets</a> into the <code>dropins/</code> subfolder of the
+        installation directory.</li>
+      <li><span style="font-weight: bold;">Units</span>. Here you can set
+        the units for distances and dimensions. The unit for distances affects
+        the proximity search. The unit for dimensions affects the display and
+        search for the physical size of an image, the specifications for
+        exhibitions, and the layout settings for Print and PDF.<br>
+      </li>
+    </ul>
+    <h4><span style="font-weight: bold;">Thumbnails</span><span style="font-weight: bold;"></span></h4>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Thumbnail labels</span>. By
+        default, the image title and additional information is shown in the
+        thumbnail label. However, the title may completely be switched off or
+        configured using a <a href="configureCaptions.html">template</a>.<br>
+        <br>
+        <span style="font-weight: bold;"></span></li>
+      <li><span style="font-weight: bold;">Decoration</span><br>
+      </li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: bold;">Show status mark.</span>
+          Check this option to display a green status mark for images with
+          status
+          "Ready for publishing" or RAW images with status "Corrected".</li>
+        <li><span style="font-weight: bold;">Max. number of displayed regions.</span>
+          Limits the number of&nbsp;regions (face, pet, focus, barcode) shown in
+          a thumbnail.</li>
+        <li><span style="font-weight: bold;">Show location pin</span>. The
+          location pin informs about the presence of location data and allows
+          access to the map view with a single click.</li>
+        <li><span style="font-weight: bold;">Show color code in thumbnails.</span>
+          Select an option to display color codes in&nbsp;thumbnails:</li>
+        <ul>
+          <li><span style="font-weight: bold;">No</span>. No colorcodes will be
+            shown in thumbnails</li>
+          <li><span style="font-weight: bold;">Automatic</span>. Color codes are
+            automatically determined by the rules defined in the <span style="font-style: italic;">Automatic
+              Color Coding</span> box (see below). Manually set color codes
+            override the automatic codes.</li>
+          <li><span style="font-weight: bold;">Manual</span>. Only manually set
+            color codes are shown.</li>
+        </ul>
+        <li><span style="font-weight: bold;">Show rating in thumbnails.</span>
+          Select&nbsp;<samp>by size</samp> to show the rating as one differently
+          sized star. Select&nbsp;<samp>by count</samp> to show the rating as a
+          variable number of stars.</li>
+        <li><span style="font-weight: bold;">Show rotate buttons in thumbnails.</span>
+          Check this option to display the rotate buttons at the bottom of the
+          thumbnail.</li>
+        <li><span style="font-weight: bold;">Show voicenote button in
+            thumbnails.</span> Check this option to display the&nbsp;voicenote
+          button at the bottom of the thumbnail.</li>
+        <li><span style="font-weight: bold;">Show Expand/Collapse button in
+            thumbnails</span>.
+          Check this option to display the <abbr>+</abbr> or <abbr>-</abbr>&nbsp;
+buttons
+          at the top of the thumbnail
+          for controlling the expanded/collapsed state of the thumbnail.
+          Collapsed means that subsequent images with the same name are shown as
+          one thumbnail.</li>
       </ul>
-    <li><span style="font-weight: bold;">Show rating in thumbnails.</span>
-Select&nbsp;<samp>by size</samp> to show the rating as one differently sized star. Select&nbsp;<samp>by count</samp> to show the rating as a variable number of stars.</li>
-    <li><span style="font-weight: bold;">Show rotate buttons in thumbnails.</span> Check this option to display the rotate buttons at the bottom of the thumbnail.</li>
-    <li><span style="font-weight: bold;">Show voicenote button in thumbnails.</span> Check this option to display the&nbsp;voicenote button at the bottom of the thumbnail.</li>
-    <li><span style="font-weight: bold;">Show Expand/Collapse button in thumbnails</span>.
-Check this option to display the <abbr>+</abbr> or <abbr>-</abbr>&nbsp;
-buttons at the top of the thumbnail
-for controlling the expanded/collapsed state of the thumbnail.
-Collapsed means that subsequent images with the same name are shown as
-one thumbnail.</li>
-</ul>
-</ul>
-<h4>Color codes</h4>
-<span style="font-weight: bold;"></span><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Show color code in thumbnails.</span> Select an option to display color codes in&nbsp;thumbnails:</li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">no</span>. No colorcodes will be shown in thumbnails</li><li><span style="font-weight: bold;">automatic</span>. Color codes are automatically determined by the rules defined in the <span style="font-style: italic;">Automatic Color Coding</span> box (see below). Manually set color codes override the automatic codes.</li><li><span style="font-weight: bold;">user defined.</span> Only manually set color codes are shown.</li></ul><li><span style="font-weight: bold;">Automatic Color Coding</span>. This group is only shown if the automatic color code option was chosen. <br>For each color code you may specify a <span style="font-weight: bold;">criterion</span> selecting the images for which the color code is to be shown (similar to specifying a <a href="collectionEdit.html">collection criterion</a>).<br><br><span style="font-weight: bold;">Note: </span>Automatic
-color coding does not modify the meta data of images but only
-influences the display of color codes in the user interface. The
-consequence is that if you query for a specific color code in <acronym>Properties&gt;ZoRa Photo Director&gt;Color code</acronym> automatic color coding has<span style="font-weight: bold;"> no effect</span>. But if you use the <span style="font-weight: bold;">Color code filter</span> found in&nbsp;the local&nbsp;toolbars of galleries, automatic color coding<span style="font-weight: bold;"> is </span>considered.</li></ul>
-</body></html>
+    </ul>
+    <h4>Color codes</h4>
+    <span style="font-weight: bold;"></span>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Show color code in thumbnails.</span>
+        Select an option to display color codes in&nbsp;thumbnails:</li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: bold;">no</span>. No colorcodes will be
+          shown in thumbnails</li>
+        <li><span style="font-weight: bold;">automatic</span>. Color codes are
+          automatically determined by the rules defined in the <span style="font-style: italic;">Automatic
+            Color Coding</span> box (see below). Manually set color codes
+          override the automatic codes.</li>
+        <li><span style="font-weight: bold;">user defined.</span> Only manually
+          set color codes are shown.</li>
+      </ul>
+      <li><span style="font-weight: bold;">Automatic Color Coding</span>. This
+        group is only shown if the automatic color code option was chosen. <br>
+        For each color code you may specify a <span style="font-weight: bold;">criterion</span>
+        selecting the images for which the color code is to be shown (similar to
+        specifying a <a href="collectionEdit.html">collection criterion</a>).<br>
+        <br>
+        <span style="font-weight: bold;">Note: </span>Automatic
+        color coding does not modify the meta data of images but only
+        influences the display of color codes in the user interface. The
+        consequence is that if you query for a specific color code in <acronym>Properties&gt;ZoRa
+          Photo Director&gt;Color code</acronym> automatic color coding has<span
+          style="font-weight: bold;"> no effect</span>. But if you use the <span
+          style="font-weight: bold;">Color code filter</span> found in&nbsp;the
+        local&nbsp;toolbars of galleries, automatic color coding<span style="font-weight: bold;">
+          is </span>considered.</li>
+    </ul>
+  </body>
+</html>

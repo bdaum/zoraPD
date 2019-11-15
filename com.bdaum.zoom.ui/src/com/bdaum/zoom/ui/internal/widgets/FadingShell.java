@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.widgets;
@@ -131,6 +131,12 @@ public class FadingShell {
 					int w;
 					int h;
 					switch (blendingEffect) {
+					case Constants.SLIDE_TRANSITION_EXPAND:
+						w = Math.max(0, width * alpha / 255);
+						h = Math.max(0, height * alpha / 255);
+						x = (width - w) >> 1;
+						y = (height - h) >> 1;
+						break;
 					case Constants.SLIDE_TRANSITION_BLEND_LEFT:
 						w = Math.max(0, width * alpha / 255);
 						x = width - w;
@@ -173,12 +179,6 @@ public class FadingShell {
 						x = 0;
 						y = 0;
 						break;
-					case Constants.SLIDE_TRANSITION_EXPAND:
-						w = Math.max(0, width * alpha / 255);
-						h = Math.max(0, height * alpha / 255);
-						x = (width - w) / 2;
-						y = (height - h) / 2;
-						break;
 					case Constants.SLIDE_TRANSITION_BLEND_UP:
 					default:
 						h = Math.max(0, height * alpha / 255);
@@ -189,6 +189,8 @@ public class FadingShell {
 					}
 					region.intersect(x, y, w, h);
 					region.add(x, y, w, h);
+					region.add(width - 1, 0, 1, 1); // Avoid crippling the shell horizontally
+					region.add(0, height - 1, 1, 1); // Avoid crippling the shell vertically
 					shell.setRegion(region);
 				}
 			}

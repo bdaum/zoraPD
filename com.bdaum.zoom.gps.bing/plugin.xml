@@ -7,7 +7,7 @@
             id="com.bdaum.zoom.gps.mappingSystem.bing"
             mapComponent="com.bdaum.zoom.gps.bing.internal.views.MapComponent"
             name="%mappingSystem.name"
-            query="http://bing.com/maps/default.aspx?cp={0}~{1}&amp;lvl={3}">
+            query="https://bing.com/maps/default.aspx?cp={0}~{1}&amp;lvl={2}">
       </mappingSystem>
    </extension>
    <extension

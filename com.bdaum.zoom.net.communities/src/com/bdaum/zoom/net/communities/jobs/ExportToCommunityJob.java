@@ -56,6 +56,7 @@ import com.bdaum.zoom.cat.model.asset.TrackRecordImpl;
 import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
@@ -317,7 +318,7 @@ public class ExportToCommunityJob extends AbstractExportJob implements IErrorHan
 												Messages.ExportToCommunityJob_skip_all,
 												Messages.ExportToCommunityJob_skp,
 												Messages.ExportToCommunityJob_cancel });
-						SimpleDateFormat df = new SimpleDateFormat(Messages.ExportToCommunityJob_tracik_date_format);
+						SimpleDateFormat df = Format.TRACK_DATE_FORMAT.get();
 						final AcousticMessageDialog dialog = new AcousticMessageDialog(shell,
 								Messages.ExportToCommunityJob_image_already_uploaded, null,
 								NLS.bind(Messages.ExportToCommunityJob_image_uploaded_at, new Object[] { name,

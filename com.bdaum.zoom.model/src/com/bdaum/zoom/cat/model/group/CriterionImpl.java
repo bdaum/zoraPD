@@ -28,12 +28,13 @@ public class CriterionImpl extends Criterion_typeImpl implements Criterion {
 	 * @param field - Property
 	 * @param subfield - Property
 	 * @param value - Property
+	 * @param to - Property
 	 * @param relation - Property
 	 * @param and - Property
 	 */
 	public CriterionImpl(String field, String subfield, Object value,
-			int relation, boolean and) {
-		super(field, subfield, value, relation, and);
+			Object to, int relation, boolean and) {
+		super(field, subfield, value, to, relation, and);
 
 	}
 

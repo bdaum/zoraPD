@@ -522,7 +522,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 				GroupImpl importedAlbums = dbm.obtainById(GroupImpl.class, Constants.GROUP_ID_IMPORTED_ALBUMS);
 				if (importedAlbums == null) {
 					importedAlbums = new GroupImpl(Messages.EditCommunityAccountDialog_imported_albums, true,
-							Constants.INHERIT_LABEL, null, 0, null);
+							Constants.INHERIT_LABEL, null, 0, 1, null);
 					importedAlbums.setStringId(Constants.GROUP_ID_IMPORTED_ALBUMS);
 				}
 				Object[] checkedElements = albumViewer.getCheckedElements();
@@ -533,10 +533,10 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 					SmartCollectionImpl sm = localAlbums.get(title);
 					if (sm == null) {
 						sm = new SmartCollectionImpl(title, false, true, false, false, photoSet.getDescription(), 0,
-								null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
+								null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 						sm.setGroup_rootCollection_parent(Constants.GROUP_ID_IMPORTED_ALBUMS);
 						List<Criterion> criteria = new ArrayList<Criterion>(1);
-						criteria.add(new CriterionImpl(Constants.OID, null, sm.getStringId(), QueryField.XREF, false));
+						criteria.add(new CriterionImpl(Constants.OID, null, sm.getStringId(), null, QueryField.XREF, false));
 						sm.setCriterion(criteria);
 						importedAlbums.addRootCollection(sm.getStringId());
 					} else

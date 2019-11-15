@@ -80,7 +80,8 @@ public class FileFormatDialog extends ZDialog implements Listener {
 				jpgField.setSelection(sel);
 				tifField.setSelection(sel);
 				othersField.setSelection(sel);
-				mediaField.setSelection(sel);
+				if (mediaField != null)
+					mediaField.setSelection(sel);
 				getButton(IDialogConstants.OK_ID).setEnabled(sel);
 			}
 		});

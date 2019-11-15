@@ -20,7 +20,6 @@
 
 package com.bdaum.zoom.ui.dialogs;
 
-import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.IInputValidator;
@@ -64,7 +63,7 @@ public class TimedMessageDialog extends AcousticMessageDialog {
 	 * @param parentShell
 	 *            the parent shell
 	 * @param validator
-	 *            validator
+	 *            validator or null
 	 * @param dialogTitle
 	 *            the dialog title, or <code>null</code> if none
 	 * @param dialogTitleImage
@@ -99,7 +98,6 @@ public class TimedMessageDialog extends AcousticMessageDialog {
 			long interval) {
 		super(parentShell, dialogTitle, dialogTitleImage, dialogMessage, dialogImageType, dialogButtonLabels,
 				defaultIndex);
-		Assert.isNotNull(validator);
 		this.validator = validator;
 		this.cancelIndex = cancelIndex;
 		this.interval = interval;
@@ -157,7 +155,7 @@ public class TimedMessageDialog extends AcousticMessageDialog {
 	 */
 	@Override
 	protected void execTimer() {
-		if (validator.isValid(null) == null) {
+		if (validator == null || validator.isValid(null) == null) {
 			Shell shell = getShell();
 			if (shell != null && !shell.isDisposed())
 				shell.getDisplay().asyncExec(() -> {

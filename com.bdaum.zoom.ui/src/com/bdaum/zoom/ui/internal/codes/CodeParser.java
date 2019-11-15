@@ -22,7 +22,6 @@ package com.bdaum.zoom.ui.internal.codes;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -43,8 +42,8 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -239,7 +238,7 @@ public class CodeParser {
 						}
 				} else if (DATE_AND_TIME.equals(qName))
 					try {
-						dateAndTime = new SimpleDateFormat("yyyyMMdd'T'HHmmssZ").parse(text.toString()); //$NON-NLS-1$
+						dateAndTime = Format.CODES_FORMAT.get().parse(text.toString()); 
 					} catch (ParseException e) {
 						// do nothing
 					}
@@ -261,7 +260,7 @@ public class CodeParser {
 	 */
 	public String getMessage() {
 		doLoad();
-		return NLS.bind(msg, dateAndTime == null ? Messages.CodeParser_unknown : Constants.DFDT.format(dateAndTime));
+		return NLS.bind(msg, dateAndTime == null ? Messages.CodeParser_unknown : Format.DFDT.get().format(dateAndTime));
 	}
 
 	public Topic findTopic(String code) {

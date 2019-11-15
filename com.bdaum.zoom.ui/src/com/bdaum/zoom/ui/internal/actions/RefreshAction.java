@@ -52,6 +52,7 @@ import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.RefreshDialog;
 import com.bdaum.zoom.ui.internal.views.CatalogView;
 
@@ -137,7 +138,7 @@ public class RefreshAction extends Action {
 			return selection.getLocalAssets();
 		final List<Asset> assets = new ArrayList<Asset>(1000);
 		IWorkbenchPage page = adaptable.getAdapter(IWorkbenchPage.class);
-		CatalogView catView = (CatalogView) page.findView(CatalogView.ID);
+		CatalogView catView = (CatalogView) UiUtilities.findViewNoRestore(page, CatalogView.ID);
 		if (catView != null) {
 			final IStructuredSelection sel = (IStructuredSelection) catView.getSelection();
 			BusyIndicator.showWhile(shell.getDisplay(), () -> {

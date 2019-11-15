@@ -6,6 +6,7 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 
@@ -27,6 +28,7 @@ import com.bdaum.zoom.ui.INavigationHistory;
 import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.Icons;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.views.AbstractGalleryView;
 import com.bdaum.zoom.ui.internal.views.CatalogView;
 
@@ -73,22 +75,25 @@ public class GotoBookmarkAction extends Action {
 			if (asset != null) {
 				IWorkbenchPage page = adaptable.getAdapter(IWorkbenchPage.class);
 				INavigationHistory navigationHistory = Ui.getUi().getNavigationHistory(page.getWorkbenchWindow());
-				AbstractGalleryView aView = null;
+				String aViewId = null;
 				SmartCollection localCollection = null;
 				boolean shown = false;
-				lp: for (AbstractGalleryView gallery : navigationHistory.getOpenGalleries()) {
-					if (aView == null)
-						aView = gallery;
-					IAssetProvider assetProvider = gallery.getAssetProvider();
-					SmartCollectionImpl currentCollection = assetProvider.getCurrentCollection();
-					if (currentCollection != null) {
-						if (currentCollection.getNetwork()) {
-							if (assetProvider.indexOf(assetId) >= 0) {
-								shown = true;
-								break lp;
-							}
-						} else
-							localCollection = currentCollection;
+				for (String id : navigationHistory.getOpenParts()) {
+					IViewPart view = UiUtilities.findViewNoRestore(page, id);
+					if (view instanceof AbstractGalleryView) {
+						if (aViewId == null)
+							aViewId = id;
+						IAssetProvider assetProvider = ((AbstractGalleryView) view).getAssetProvider();
+						SmartCollectionImpl currentCollection = assetProvider.getCurrentCollection();
+						if (currentCollection != null) {
+							if (currentCollection.getNetwork()) {
+								if (assetProvider.indexOf(assetId) >= 0) {
+									shown = true;
+									break;
+								}
+							} else
+								localCollection = currentCollection;
+						}
 					}
 				}
 				SmartCollection sm = null;
@@ -100,9 +105,9 @@ public class GotoBookmarkAction extends Action {
 						if (!shown) {
 							SmartCollectionImpl newColl = new SmartCollectionImpl(
 									Messages.GotoBookmarkAction_bookmarked, false, false, true, true, null, 0, null, 0,
-									null, Constants.INHERIT_LABEL, null, 0, null);
+									null, Constants.INHERIT_LABEL, null, 0, 1, null);
 							newColl.addCriterion(
-									new CriterionImpl(Constants.OID, null, assetId, QueryField.EQUALS, false));
+									new CriterionImpl(Constants.OID, null, assetId, null, QueryField.EQUALS, false));
 							navigationHistory.postSelection(new StructuredSelection(newColl));
 						}
 					} else
@@ -118,7 +123,11 @@ public class GotoBookmarkAction extends Action {
 				navigationHistory.postSelection(AssetSelection.EMPTY);
 				if (asset != null)
 					navigationHistory.postSelection(new AssetSelection(asset));
-				page.activate(aView);
+				try {
+					page.showView(aViewId);
+				} catch (PartInitException e) {
+					// should never happen
+				}
 			} else
 				AcousticMessageDialog.openInformation(adaptable.getAdapter(Shell.class),
 						Messages.GotoBookmarkAction_goto_bookmark_title, Messages.GotoBookmarkAction_outdated_bookmark);

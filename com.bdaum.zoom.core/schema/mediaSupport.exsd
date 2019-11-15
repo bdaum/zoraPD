@@ -54,6 +54,9 @@
          </documentation>
       </annotation>
       <complexType>
+         <sequence>
+            <element ref="format" minOccurs="0" maxOccurs="unbounded"/>
+         </sequence>
          <attribute name="name" type="string" use="required">
             <annotation>
                <documentation>
@@ -72,22 +75,6 @@
                <appinfo>
                   <meta.attribute kind="identifier"/>
                </appinfo>
-            </annotation>
-         </attribute>
-         <attribute name="formats" type="string" use="required">
-            <annotation>
-               <documentation>
-                  Supported file formats in uppercase. Separated by blanks.
-These are the file types as provided by EXIFTOOL. The file extensions should be given, too, without the period.
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="mimetypes" type="string" use="required">
-            <annotation>
-               <documentation>
-                  A list of mime types corresponding to the list of file formats
-Separated by blanks.
-               </documentation>
             </annotation>
          </attribute>
          <attribute name="class" type="string" use="required">
@@ -114,6 +101,25 @@ Separated by blanks.
             <annotation>
                <documentation>
                   ID for collections collecting media of this type
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="format">
+      <complexType>
+         <attribute name="extension" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="mimeType" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
                </documentation>
             </annotation>
          </attribute>

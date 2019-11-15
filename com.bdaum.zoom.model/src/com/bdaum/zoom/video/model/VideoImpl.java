@@ -364,6 +364,31 @@ public class VideoImpl extends MediaExtensionImpl implements Video {
 	public double getVideoFrameRate() {
 		return videoFrameRate;
 	}
+	
+	/* *** Property frameNo *** */
+
+	private int frameNo;
+
+	/**
+	 * Get value of property frameNo
+	 *
+	 * @return - value of field frameNo
+	 */
+	@Override
+	public int getFrameNo() {
+		return frameNo;
+	}
+
+	/**
+	 * Set value of property frameNo
+	 *
+	 * @param _value - new element value
+	 */
+	@Override
+	public void setFrameNo(int frameNo) {
+		this.frameNo = frameNo;
+	}
+
 
 	/* *** Property videoStreamType *** */
 

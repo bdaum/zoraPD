@@ -65,8 +65,9 @@ import com.bdaum.zoom.gps.internal.GeoArea;
 import com.bdaum.zoom.gps.internal.GpsActivator;
 import com.bdaum.zoom.gps.internal.GpsUtilities;
 import com.bdaum.zoom.gps.internal.HelpContextIds;
+import com.bdaum.zoom.gps.internal.IMapComponent;
 import com.bdaum.zoom.gps.internal.dialogs.SearchDetailDialog;
-import com.bdaum.zoom.gps.widgets.IMapComponent;
+import com.bdaum.zoom.gps.internal.views.Mapdata;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.ComputeTimeshiftDialog;
@@ -141,15 +142,16 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 				mapComponent.addMapListener(new MapAdapter() {
 					public void setCoordinates(String[] assetId, double latitude, double longitude, int zoom, int type,
 							String uuid) {
+						area.setZoom(zoom);
 						mapComponent.setArea(EditNogoDialog.this.latitude = latitude,
 								EditNogoDialog.this.longitude = longitude, Core.toKm(diameter, unit));
 						validateGeo();
 					}
 				});
 				mapComponent.getControl().setLayoutData(new GridData(800, 600));
-				mapComponent.setInput(mapPosition, 8, null, null, null, IMapComponent.AREA);
+				mapComponent.setInput(new Mapdata(mapPosition, null, null), area.getZoom(), IMapComponent.AREA);
 				if (area != null)
-					dialogArea.getDisplay().timerExec(300,
+					dialogArea.getDisplay().timerExec(500, // give map time to load
 							() -> mapComponent.setArea(latitude, longitude, Core.toKm(diameter, unit)));
 			}
 			Composite controlGroup = new Composite(dialogArea, SWT.NONE);
@@ -223,7 +225,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 		public GeoArea getArea() {
 			double radius = Core.toKm(diameter / 2, unit);
 			if (area == null)
-				return new GeoArea(areaName, latitude, longitude, radius);
+				return new GeoArea(areaName, latitude, longitude, radius, 8);
 			area.setKm(radius);
 			area.setLatitude(latitude);
 			area.setLongitude(longitude);
@@ -234,7 +236,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 	}
 
 	public static final String ID = "com.bdaum.zoom.gps.preferences.GpsPreferencePage"; //$NON-NLS-1$
-	public static final Object ACCOUNTS = "accounts"; //$NON-NLS-1$
+	public static final String ACCOUNTS = "accounts"; //$NON-NLS-1$
 	private CheckboxButton coordinateButton;
 	private CheckboxButton placenameButton;
 	private CheckboxButton tagButton;
@@ -516,7 +518,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 		for (GeoArea geoArea : nogoAreas)
 			sb.append(geoArea.getName()).append(',').append(nf.format(geoArea.getLatitude())).append(',')
 					.append(nf.format(geoArea.getLongitude())).append(',').append(nf.format(geoArea.getKm()))
-					.append(';');
+					.append(',').append(nf.format(geoArea.getZoom())).append(';');
 		preferenceStore.setValue(PreferenceConstants.NOGO, sb.toString());
 		preferenceStore.setValue(PreferenceConstants.NAMINGSERVICE, combo.getText());
 		preferenceStore.setValue(PreferenceConstants.HOURLYLIMIT, reqhField.getSelection());
@@ -552,7 +554,7 @@ public class GpsPreferencePage extends AbstractPreferencePage {
 		Label label = new Label(group, SWT.CENTER);
 		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
 		label.setText(Messages.getString("GpsPreferencePage.not_needed")); //$NON-NLS-1$
-		
+
 		new Label(group, SWT.NONE).setText(Messages.getString("GpsPreferencePage.Tolerance")); //$NON-NLS-1$
 		Composite sub = new Composite(group, SWT.NONE);
 		sub.setLayoutData(new GridData(SWT.BEGINNING, SWT.FILL, false, false, 2, 1));

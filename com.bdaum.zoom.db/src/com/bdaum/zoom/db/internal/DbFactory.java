@@ -199,6 +199,11 @@ public class DbFactory implements IDbFactory, IDbListener {
 	 * @see com.bdaum.zoom.core.db.IDbFactory#createTypeAndRatingFilter(int, int)
 	 */
 	public ITypeFilter createTypeFilter(int formats) {
+		if (CoreActivator.getDefault().getMediaSupportMap().isEmpty()) {
+			if (formats == ITypeFilter.ALLIMAGEFORMATS || formats == ITypeFilter.ALLFORMATS)
+				return null;
+		} else if (formats == ITypeFilter.ALLFORMATS)
+			return null;
 		return new TypeFilter(formats);
 	}
 
@@ -307,7 +312,7 @@ public class DbFactory implements IDbFactory, IDbListener {
 			else
 				indexedFields.add(key);
 		}
-		
+
 	}
 
 	@Override
@@ -347,8 +352,8 @@ public class DbFactory implements IDbFactory, IDbListener {
 				.append('\n').append(QueryField.IPTC_KEYWORDS.getKey()).append('\n')
 				.append(QueryField.IPTC_CATEGORY.getKey()).append('\n').append(QueryField.EXIF_GPSLATITUDE.getKey())
 				.append('\n').append(QueryField.EXIF_GPSLONGITUDE.getKey()).append('\n')
-				.append(QueryField.FORMAT.getKey()).append('\n').append(QueryField.MIMETYPE.getKey()).append('\n')
-				.append(QueryField.RATING.getKey()).append('\n').toString();
+				.append(QueryField.MIMETYPE.getKey()).append('\n').append(QueryField.RATING.getKey()).append('\n')
+				.toString().toString();
 	}
 
 }

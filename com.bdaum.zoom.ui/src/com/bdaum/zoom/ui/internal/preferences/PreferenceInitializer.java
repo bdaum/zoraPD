@@ -48,6 +48,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 	@Override
 	public void initializeDefaultPreferences() {
 		IEclipsePreferences defaultNode = DefaultScope.INSTANCE.getNode(UiActivator.PLUGIN_ID);
+		defaultNode.putInt(PreferenceConstants.NOPROCESSORS,
+				ImageConstants.AVAILABLE_PROCESSORS > 2 ? ImageConstants.AVAILABLE_PROCESSORS - 1
+						: ImageConstants.AVAILABLE_PROCESSORS);
 		defaultNode.put(PreferenceConstants.BACKGROUNDCOLOR, PreferenceConstants.BACKGROUNDCOLOR_DARKGREY);
 		defaultNode.put(PreferenceConstants.DISTANCEUNIT, "k"); //$NON-NLS-1$
 		defaultNode.put(PreferenceConstants.DIMUNIT, "c"); //$NON-NLS-1$
@@ -60,9 +63,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.putBoolean(PreferenceConstants.SHOWEXPANDCOLLAPSE, true);
 		defaultNode.put(PreferenceConstants.SHOWCOLORCODE, PreferenceConstants.COLORCODE_MANUAL);
 		defaultNode.putBoolean(PreferenceConstants.SHOWDONEMARK, true);
-		defaultNode.put(PreferenceConstants.THUMBNAILTEMPLATE, "{creationDate} {meta=exposureTime} {meta=fNumber}"); //$NON-NLS-1$
+		defaultNode.put(PreferenceConstants.THUMBNAILTEMPLATE,
+				"{creationDate}    {meta=exposureTime}(?  f{meta=fNumber}?)  {extension}"); //$NON-NLS-1$
 		defaultNode.putInt(PreferenceConstants.LABELFONTSIZE,
 				JFaceResources.getDefaultFont().getFontData()[0].getHeight());
+		defaultNode.putInt(PreferenceConstants.LABELALIGNMENT, 1);
 		defaultNode.putInt(PreferenceConstants.SHOWLABEL, Constants.TITLE_LABEL);
 		defaultNode.putInt(PreferenceConstants.HOVERDELAY, 200);
 		defaultNode.putInt(PreferenceConstants.HOVERBASETIME, 1000);
@@ -105,7 +110,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.put(PreferenceConstants.HOVERMETADATA, sbh.toString());
 		defaultNode.put(PreferenceConstants.METADATATOLERANCES, sbt.toString());
 		defaultNode.put(PreferenceConstants.EXPORTMETADATA, sbe.toString());
-		defaultNode.put(PreferenceConstants.METADATATUNING,Core.getCore().getDbFactory().getDefaultTuning());
+		defaultNode.put(PreferenceConstants.METADATATUNING, Core.getCore().getDbFactory().getDefaultTuning());
 		sb.setLength(0);
 		sb.append(QueryField.NAME.getKey()).append('\n').append(QueryField.FORMAT.getKey()).append('\n')
 				.append(QueryField.EXIF_DATETIMEORIGINAL.getKey()).append('\n').append(QueryField.IPTC_TITLE.getKey())

@@ -54,6 +54,7 @@ import com.bdaum.zoom.cat.model.meta.WatchedFolder;
 import com.bdaum.zoom.cat.model.meta.WatchedFolderImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.Ticketbox;
 import com.bdaum.zoom.core.db.IDbErrorHandler;
@@ -74,9 +75,6 @@ import com.bdaum.zoom.program.BatchUtilities;
 
 @SuppressWarnings("restriction")
 public class ImportOperation extends AbstractImportOperation {
-	static final SimpleDateFormat dfYear = new SimpleDateFormat("yyyy"); //$NON-NLS-1$
-	static final SimpleDateFormat dfShort = new SimpleDateFormat("yyyy-MM"); //$NON-NLS-1$
-	static final SimpleDateFormat dfLong = new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
 
 	private ObjectFilter filenameFilter;
 	private FileInput fileInput;
@@ -87,7 +85,7 @@ public class ImportOperation extends AbstractImportOperation {
 	private final GregorianCalendar cal = new GregorianCalendar();
 	private File[] foldersToWatch;
 	private Set<IMediaSupport> contributors = new HashSet<IMediaSupport>(5);
-	private ImageMediaSupport imageMediaSupport;
+	private AbstractMediaSupport imageMediaSupport;
 
 	public ImportOperation(FileInput fileInput, ImportConfiguration configuration, ImportFromDeviceData importData,
 			AnalogProperties properties, File[] foldersToWatch) {
@@ -269,24 +267,24 @@ public class ImportOperation extends AbstractImportOperation {
 		if (importState.transferNeeded()) {
 			if (tethered)
 				return NLS.bind(Messages.getString("ImportOperation.tethered"), //$NON-NLS-1$
-						new SimpleDateFormat(Messages.getString("ImportOperation.mm_dd_yy_hh_mm")).format(importDate)); //$NON-NLS-1$
+						Format.EMDY_TIME_FORMAT.get().format(importDate)); 
 			String owner = importState.getDcimOwner();
 			return owner == null ? "" //$NON-NLS-1$
 					: NLS.bind(Messages.getString("ImportOperation.import_transfer"), owner, //$NON-NLS-1$
-							new SimpleDateFormat(Messages.getString("ImportOperation.MMM_dd_yyyy")).format(importDate)); //$NON-NLS-1$
+							Format.MDY_FORMAT.get().format(importDate)); 
 		}
 		String timeline = importState.getConfiguration().timeline.intern();
 		SimpleDateFormat df = null;
 		if (timeline == Meta_type.timeline_year)
-			df = new SimpleDateFormat("yyyy"); //$NON-NLS-1$
+			df = Format.YEAR_FORMAT.get();
 		else if (timeline == Meta_type.timeline_month)
-			df = new SimpleDateFormat(Messages.getString("ImportOperation.MMM_yyyy")); //$NON-NLS-1$
+			df = Format.MY_FORMAT.get(); 
 		else if (timeline == Meta_type.timeline_day)
-			df = new SimpleDateFormat(Messages.getString("ImportOperation.MMM_dd_yyyy")); //$NON-NLS-1$
+			df = Format.MDY_FORMAT.get(); 
 		else if (timeline == Meta_type.timeline_week)
-			df = new SimpleDateFormat(Messages.getString("ImportOperation.ww_yyyy")); //$NON-NLS-1$
+			df = Format.WEEK_WY_FORMAT.get();
 		else if (timeline == Meta_type.timeline_weekAndDay)
-			df = new SimpleDateFormat(Messages.getString("ImportOperation.EEE_ww_yyyy")); //$NON-NLS-1$
+			df = Format.WEEK_EWY_FORMAT.get();
 		if (df != null)
 			return NLS.bind(Messages.getString("ImportOperation.watched_folder_imports_for"), df.format(importDate)); //$NON-NLS-1$
 		return Messages.getString("ImportOperation.watched_folder_imports"); //$NON-NLS-1$

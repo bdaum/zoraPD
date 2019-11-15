@@ -750,6 +750,20 @@ public interface Exhibition_type extends AomValueChangedNotifier,
 	 */
 	public String getPerspective();
 
+	/**
+	 * Set value of property safety
+	 *
+	 * @param _value - new element value
+	 */
+	public void setSafety(int _value);
+
+	/**
+	 * Get value of property safety
+	 *
+	 * @return - value of field safety
+	 */
+	public int getSafety();
+
 	/* ----- Validation ----- */
 
 	/**

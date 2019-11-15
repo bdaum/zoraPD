@@ -136,12 +136,26 @@ public class Core {
 			return null;
 		StringBuilder sb = new StringBuilder();
 		for (Object t : tokens)
-			if (t != null) {
-				if (sb.length() > 0)
-					sb.append(sep);
-				sb.append(t);
-			}
+			condAppend(t, sb, sep);
 		return sb.toString();
+	}
+
+	/**
+	 * Appends token to a string builder if not null, separated by seperation string
+	 * 
+	 * @param token
+	 *            - token
+	 * @param buf
+	 *            - buffer
+	 * @param sep
+	 *            - separator
+	 */
+	public static void condAppend(Object token, StringBuilder buf, String sep) {
+		if (token != null) {
+			if (buf.length() > 0)
+				buf.append(", "); //$NON-NLS-1$
+			buf.append(token);
+		}
 	}
 
 	/**
@@ -183,10 +197,8 @@ public class Core {
 	public static double distance(double lat1, double lon1, double lat2, double lon2, char unit) {
 		double phi1 = Math.toRadians(lat1);
 		double phi2 = Math.toRadians(lat2);
-		double lam1 = Math.toRadians(lon1);
-		double lam2 = Math.toRadians(lon2);
 		double dist = EARTHRADIUS
-				* Math.acos(Math.sin(phi1) * Math.sin(phi2) + Math.cos(phi1) * Math.cos(phi2) * Math.cos(lam2 - lam1));
+				* Math.acos(Math.sin(phi1) * Math.sin(phi2) + Math.cos(phi1) * Math.cos(phi2) * Math.cos(Math.toRadians(lon2-lon1)));
 		return fromKm(dist, unit);
 	}
 
@@ -514,11 +526,13 @@ public class Core {
 	 * @return - endoded string
 	 */
 	public static String encodeUrlSegment(String s) {
-		try {
-			return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		} catch (UnsupportedEncodingException e) {
-			return s;
-		}
+		if (s != null)
+			try {
+				return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			} catch (UnsupportedEncodingException e) {
+				// do nothing
+			}
+		return s;
 	}
 
 	/**
@@ -529,11 +543,13 @@ public class Core {
 	 * @return the decoded string
 	 */
 	public static String decodeUrl(String s) {
-		try {
-			return URLDecoder.decode(s, "UTF-8"); //$NON-NLS-1$
-		} catch (UnsupportedEncodingException e) {
-			return s;
-		}
+		if (s != null)
+			try {
+				return URLDecoder.decode(s, "UTF-8"); //$NON-NLS-1$
+			} catch (UnsupportedEncodingException e) {
+				// do nothing
+			}
+		return s;
 	}
 
 	/**

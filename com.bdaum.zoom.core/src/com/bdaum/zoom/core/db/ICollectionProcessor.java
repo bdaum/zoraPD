@@ -37,7 +37,7 @@ public interface ICollectionProcessor {
 
 	SmartCollectionImpl EMPTYCOLLECTION = new SmartCollectionImpl(
 			Messages.CollectionProcessor_Empty, false, false, false, false,
-			null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
+			null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 	String SIMILARITY = "*similarity"; //$NON-NLS-1$
 	String TEXTSEARCH = "*textsearch"; //$NON-NLS-1$
 	String ORPHANS = "*orphans"; //$NON-NLS-1$

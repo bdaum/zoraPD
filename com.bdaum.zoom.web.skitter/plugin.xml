@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.ui.galleryGenerator">
+      <generator
+            aspectRatio="5%"
+            class="com.bdaum.zoom.web.skitter.SkitterGalleryGenerator:"
+            description="html/preview.html"
+            id="com.bdaum.zoom.web.skitter.generator"
+            maxImages="20"
+            name="Skitter"
+            sections="false"
+            slideshows="true"
+            unsupported="showmetadata thumbnailsize sectionfont"
+            url="https://skitter-slider.net">
+         <group
+               name="%group.name.appearance">
+         </group>
+         <parameter
+               description="%parameter.description.theme"
+               encodeForHtml="false"
+               id="theme"
+               label="%parameter.label.theme"
+               required="true"
+               type="string">
+            <enumeration
+                  id="default"
+                  label="%enumeration.label.theme.default">
+            </enumeration>
+            <enumeration
+                  id="minimalist"
+                  label="%enumeration.label.theme.minimalist">
+            </enumeration>
+            <enumeration
+                  id="round"
+                  label="%enumeration.label.theme.round">
+            </enumeration>
+            <enumeration
+                  id="clean"
+                  label="%enumeration.label.theme.clean">
+            </enumeration>
+            <enumeration
+                  id="square"
+                  label="%enumeration.label.theme.square">
+            </enumeration>
+         </parameter>
+         <parameter
+               default="dots"
+               description="%parameter.description.nav.description"
+               encodeForHtml="false"
+               id="navigation"
+               label="%parameter.label.nav.name"
+               required="true"
+               type="string">
+            <enumeration
+                  id="dots"
+                  label="%enumeration.label.nav.dots">
+            </enumeration>
+            <enumeration
+                  id="dotsPreview"
+                  label="%enumeration.label.nav.dotspreview">
+            </enumeration>
+            <enumeration
+                  id="thumbs"
+                  label="%enumeration.label.nav.thumbs">
+            </enumeration>
+            <enumeration
+                  id="numbers"
+                  label="%enumeration.label.nav.numbers">
+            </enumeration>
+         </parameter>
+         <parameter
+               default="center"
+               description="%parameter.description.alignment.description"
+               encodeForHtml="false"
+               id="navAlign"
+               label="%parameter.label.alignment.name"
+               required="true"
+               type="string">
+            <enumeration
+                  id="left"
+                  label="%enumeration.label.alignment.left">
+            </enumeration>
+            <enumeration
+                  id="center"
+                  label="%enumeration.label.alignment.center">
+            </enumeration>
+            <enumeration
+                  id="right"
+                  label="%enumeration.label.alignment.right">
+            </enumeration>
+         </parameter>
+         <parameter
+               default="false"
+               description="%parameter.description.showbuttons.description"
+               enabledIf="fullscreen!"
+               encodeForHtml="false"
+               id="navControls"
+               label="%parameter.label.showbuttons.name"
+               required="true"
+               type="boolean">
+         </parameter>
+         <parameter
+               default="false"
+               description="%parameter.description.showfocus.description"
+               enabledIf="fullscreen!"
+               encodeForHtml="false"
+               id="focus"
+               label="%parameter.label.showfocus.name"
+               required="true"
+               type="boolean">
+         </parameter>
+         <parameter
+               default="slideUp"
+               description="%parameter.description.captions.description"
+               encodeForHtml="false"
+               id="labels"
+               label="%parameter.label.captions.name"
+               required="true"
+               type="string">
+            <enumeration
+                  id="slideUp"
+                  label="%enumeration.label.captions.slideup">
+            </enumeration>
+            <enumeration
+                  id="left"
+                  label="%enumeration.label.captions.left">
+            </enumeration>
+            <enumeration
+                  id="right"
+                  label="%enumeration.label.captions.right">
+            </enumeration>
+            <enumeration
+                  id="fixed"
+                  label="%enumeration.label.captions.fixed">
+            </enumeration>
+            <enumeration
+                  id="none"
+                  label="%enumeration.label.captions.none">
+            </enumeration>
+         </parameter>
+         <parameter
+               default="false"
+               description="%parameter.fullscreen.description"
+               encodeForHtml="false"
+               id="fullscreen"
+               label="%parameter.label.fullscreen.name"
+               required="true"
+               type="boolean">
+         </parameter>
+         <group
+               name="%group.name.animation">
+         </group>
+         <parameter
+               default="fade"
+               description="%parameter.description.transition"
+               encodeForHtml="false"
+               id="animation"
+               label="%parameter.label.transition.name"
+               required="true"
+               type="string">
+            <enumeration
+                  id="cube"
+                  label="%enumeration.label.transitions.cubes">
+            </enumeration>
+            <enumeration id="cubeRandom" label="%enumeration.label.transition.randomcubes"> </enumeration> 
+      <enumeration id="block" label="%enumeration.label.transition.blocks"> </enumeration> 
+      <enumeration id="cubeStop" label="%enumeration.label.stoppingcubes"> </enumeration> 
+      <enumeration id="cubeStopRandom" label="%enumeration.label.transition.randomstoppingcubes"> </enumeration> 
+      <enumeration id="cubeHide" label="%enumeration.label.transition.cubehide"> </enumeration> 
+      <enumeration id="cubeSize" label="%enumeration.label.sizingcubes"> </enumeration> 
+      <enumeration id="horizontal" label="%enumeration.label.transition.horizontal"> </enumeration> 
+      <enumeration id="showBars" label="%enumeration.label.transition.showbars"> </enumeration> 
+      <enumeration id="showBarsRandom" label="%enumeration.label.transition.randombars"> </enumeration> 
+      <enumeration id="tube" label="%enumeration.label.transition.tubes"> </enumeration>
+      <enumeration id="fade" label="%enumeration.label.transition.fade"> </enumeration>
+      <enumeration id="fadeFour" label="%enumeration.label.transition.fadeout"> </enumeration>
+      <enumeration id="paralell" label="%enumeration.label.transition.parallel"> </enumeration>
+      <enumeration id="blind" label="%enumeration.label.transition.blinds"> </enumeration>
+      <enumeration id="blindHeight" label="%enumeration.label.transition.blindsvertical"> </enumeration>
+      <enumeration id="blindWidth" label="%enumeration.label.transition.blindshorizontal"> </enumeration>
+      <enumeration id="directionTop" label="%enumeration.label.transition.dirtop"> </enumeration>
+      <enumeration id="directionBottom" label="%enumeration.label.transition.dirbottom"> </enumeration>
+      <enumeration id="directionRight" label="%enumeration.label.transition.dirright"> </enumeration>
+      <enumeration id="directionLeft" label="%enumeration.label.transition.dirleft"> </enumeration>
+      <enumeration id="cubeSpread" label="%enumeration.label.spreadcubes"> </enumeration>
+      <enumeration id="glassCube" label="%enumeration.label.glasscubes"> </enumeration>
+      <enumeration id="glassBlock" label="%enumeration.label.transition.glassblocks"> </enumeration>
+      <enumeration id="circles" label="%enumeration.label.transition.circles"> </enumeration>
+      <enumeration id="circlesInside" label="%enumeration.label.transition.circlesinside"> </enumeration>
+      <enumeration id="circlesRotate" label="%enumeration.label.transition.rotatingcircles"> </enumeration>
+      <enumeration id="cubeShow" label="%enumeration.label.transition.showcubes"> </enumeration>
+      <enumeration id="upBars" label="%enumeration.label.transition.barsupwards"> </enumeration> 
+      <enumeration id="downBars" label="%enumeration.label.transition.downwards"> </enumeration> 
+      <enumeration id="hideBars" label="%enumeration.label.transition.hidebards"> </enumeration> 
+      <enumeration id="swapBars" label="%enumeration.label.transition.swapbars"> </enumeration> 
+      <enumeration id="swapBarsBack" label="%enumeration.label.transition.swapbarsbackwards"> </enumeration> 
+      <enumeration id="swapBlocks" label="%enumeration.label.transition.swapblocks"> </enumeration>
+      <enumeration id="cut" label="%enumeration.label.transition.cut"> </enumeration>
+         </parameter>
+         <parameter
+               default="2.5"
+               description="%parameter.description.duration"
+               encodeForHtml="false"
+               id="autoplay"
+               label="%parameter.label.duration.name"
+               max="300"
+               min="0"
+               required="true"
+               type="double">
+         </parameter>
+         <parameter
+               default="false"
+               description="%parameter.description.shownav"
+               enabledIf="fullscreen! navControls &amp; navigation &quot;numbers&quot; &amp;"
+               encodeForHtml="false"
+               id="hideTools"
+               label="%parameter.label.shownav.name"
+               required="true"
+               type="boolean">
+         </parameter>
+      </generator>
+   </extension>
+
+</plugin>

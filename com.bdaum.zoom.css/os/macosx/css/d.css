@@ -11,12 +11,12 @@ Text#errors {color:red;background-color:rgb(212,212,212);}
 Text[style='SWT.READ_ONLY'] {color:rgb(240,240,240);background-color:rgb(60,60,60);}
 Text[enabled=false] {color:rgb(212,212,212);background-color:rgb(64,64,64);}
 Text[editable=false] {color:rgb(240,240,240);background-color:rgb(60,60,60);}
-Text {color:black;background-color:rgb(212,212,212);}
+Text {color:black;background-color:rgb(240,240,240);}
 StyledText#hint {color:rgb(128,128,128);background-color:rgb(212,212,212);}
 StyledText[style='SWT.READ_ONLY'] {color:rgb(240,240,240);background-color:rgb(60,60,60);}
 StyledText[enabled=false] {color:rgb(212,212,212);background-color:rgb(64,64,64);}
 StyledText[editable=false] {color:rgb(240,240,240);background-color:rgb(60,60,60);}
-StyledText {color:black;background-color:rgb(212,212,212);link-color:blue;}
+StyledText {color:black;background-color:rgb(240,240,240);link-color:blue;}
 Combo[enabled=false] {color:rgb(212,212,212);background-color:rgb(64,64,64);}
 Combo {color:black;background-color:rgb(240,240,240);}
 CCombo[enabled=false] {color:rgb(212,212,212);background-color:rgb(64,64,64);}

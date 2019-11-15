@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.cat.foreign.c1;singleton:=true
-Bundle-Version: 3.5.1
+Bundle-Version: 3.6.0
 Bundle-Vendor: %Bundle-Vendor
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Require-Bundle: com.bdaum.zoom.cat.foreign;bundle-version="3.5.1"
+Require-Bundle: com.bdaum.zoom.cat.foreign;bundle-version="3.6.0"

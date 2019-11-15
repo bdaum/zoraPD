@@ -35,7 +35,8 @@ import com.bdaum.zoom.gps.MapAdapter;
 import com.bdaum.zoom.gps.geonames.Place;
 import com.bdaum.zoom.gps.internal.GpsActivator;
 import com.bdaum.zoom.gps.internal.HelpContextIds;
-import com.bdaum.zoom.gps.widgets.IMapComponent;
+import com.bdaum.zoom.gps.internal.IMapComponent;
+import com.bdaum.zoom.gps.internal.views.Mapdata;
 import com.bdaum.zoom.ui.internal.dialogs.ZResizableDialog;
 
 @SuppressWarnings("restriction")
@@ -112,7 +113,7 @@ public class MapDialog extends ZResizableDialog {
 			}
 		} else
 			markerPositions = new Place[] { new Place(latitude, longitude) };
-		mapComponent.setInput(mapPosition, initialZoomLevel, markerPositions, null, null, IMapComponent.ADDLOCATION);
+		mapComponent.setInput(new Mapdata(mapPosition, markerPositions, null), initialZoomLevel, IMapComponent.ADDLOCATION);
 	}
 
 	public Location getResult() {

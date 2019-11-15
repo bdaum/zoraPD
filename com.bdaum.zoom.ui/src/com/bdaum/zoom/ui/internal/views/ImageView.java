@@ -77,10 +77,12 @@ import com.bdaum.zoom.operations.internal.ColorCodeOperation;
 import com.bdaum.zoom.operations.internal.RotateOperation;
 import com.bdaum.zoom.operations.internal.SetStatusOperation;
 import com.bdaum.zoom.ui.AssetSelection;
+import com.bdaum.zoom.ui.IMediaUiExtension;
 import com.bdaum.zoom.ui.INavigationHistory;
 import com.bdaum.zoom.ui.IZoomActionConstants;
 import com.bdaum.zoom.ui.IZoomCommandIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.actions.CopyAction;
 import com.bdaum.zoom.ui.internal.actions.GotoBookmarkAction;
 import com.bdaum.zoom.ui.internal.actions.PasteAction;
@@ -125,6 +127,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	}
 
 	private static final int THRESHHOLD = 3;
+	private static final String VIEWID = "com.bdaum.zoom.ui.views.ImageView"; //$NON-NLS-1$
 	protected IAction editAction;
 	protected IAction editWithAction;
 	protected IAction viewImageAction;
@@ -137,7 +140,6 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	protected IAction ratingAction;
 	protected IAction colorCodeAction;
 	protected IAction playVoiceNoteAction;
-//	protected IAction selectAllAction;
 	protected IAction searchSimilarAction;
 	protected IAction timeSearchAction;
 	protected IAction proximitySearchAction;
@@ -223,7 +225,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 
 	protected void hookContextMenu() {
 		if (contextMenuMgr == null) {
-			contextMenuMgr = new MenuManager("#PopupMenu"); //$NON-NLS-1$
+			contextMenuMgr = new MenuManager("#PopupMenu", VIEWID); //$NON-NLS-1$
 			contextMenuMgr.setRemoveAllWhenShown(true);
 			contextMenuMgr.addMenuListener(new IMenuListener() {
 				public void menuAboutToShow(IMenuManager manager) {
@@ -277,8 +279,6 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		bars.setGlobalActionHandler(ActionFactory.COPY.getId(), copyAction);
 		bars.setGlobalActionHandler(ActionFactory.PASTE.getId(), pasteAction);
 		bars.setGlobalActionHandler(ActionFactory.PRINT.getId(), new PrintAction(viewSite.getWorkbenchWindow()));
-//		if (selectAllAction != null)
-//			bars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(), selectAllAction);
 		return bars;
 	}
 
@@ -390,8 +390,15 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		registerCommand(copyAction, IWorkbenchCommandConstants.EDIT_COPY);
 		registerCommand(pasteAction, IWorkbenchCommandConstants.EDIT_PASTE);
 		registerCommand(addBookmarkAction, IWorkbenchCommandConstants.EDIT_ADD_BOOKMARK);
+		registerMediaContributions();
 		super.registerCommands();
 	}
+	
+	protected void registerMediaContributions() {
+		for (IMediaUiExtension ext : UiActivator.getDefault().getUiMediaExtensions()) 
+			ext.registerMediaContributions(this);
+	}
+
 
 	@Override
 	public void updateActions(boolean force) {
@@ -437,12 +444,19 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 			copyAction.setEnabled(localSelected);
 			pasteAction.setEnabled(writable && testClipboardForImages());
 			addBookmarkAction.setEnabled(one && writable);
+			updateMediaContributions(count, localCount, assetSelection);
 			updateActions(count, localCount);
 		}
 	}
+	
+	protected void updateMediaContributions(int count, int localCount, AssetSelection assetSelection) {
+		for (IMediaUiExtension ext : UiActivator.getDefault().getUiMediaExtensions()) 
+			ext.updateMediaContributions(this, count, localCount, assetSelection);
+	}
+
 
 	private boolean collectionSelected() {
-		CatalogView catView = (CatalogView) getSite().getPage().findView(CatalogView.ID);
+		CatalogView catView = (CatalogView) UiUtilities.findViewNoRestore(getSite().getPage(), CatalogView.ID);
 		if (catView != null)
 			for (Iterator<?> iterator = ((IStructuredSelection) catView.getSelection()).iterator(); iterator.hasNext();)
 				if (iterator.next() instanceof SmartCollection)
@@ -550,11 +564,17 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		manager.add(viewImageAction);
 		manager.add(editAction);
 		manager.add(editWithAction);
+		addMediaContributions(manager, IZoomActionConstants.MB_EDIT);
 		manager.add(new Separator(IZoomActionConstants.MB_EDIT));
 		manager.add(searchSimilarAction);
 		manager.add(timeSearchAction);
 		manager.add(proximitySearchAction);
 		manager.add(new Separator(IZoomActionConstants.MB_SEARCH));
+	}
+
+	protected void addMediaContributions(IMenuManager manager, String anchor) {
+		for (IMediaUiExtension ext : UiActivator.getDefault().getUiMediaExtensions()) 
+			ext.addMediaContributions(manager, anchor, this);
 	}
 
 	protected void fillMetaData(IMenuManager manager, boolean readOnly) {

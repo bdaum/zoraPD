@@ -444,7 +444,7 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 		SmartCollectionImpl newColl = new SmartCollectionImpl(coll.getName(), coll.getSystem(), coll.getAlbum(),
 				coll.getAdhoc(), coll.getNetwork(), coll.getDescription(), coll.getColorCode(),
 				coll.getLastAccessDate(), coll.getGeneration(), coll.getPerspective(), coll.getShowLabel(),
-				coll.getLabelTemplate(), coll.getFontSize(), postProcessor);
+				coll.getLabelTemplate(), coll.getFontSize(), coll.getAlignment(), postProcessor);
 		String id = coll.getStringId();
 		newColl.setStringId(id);
 		toBeStored.add(newColl);
@@ -462,7 +462,7 @@ public class MigrateOperation extends AbstractCloneCatOperation {
 		}
 		for (Criterion crit : coll.getCriterion()) {
 			Object value = crit.getValue();
-			Criterion newCrit = new CriterionImpl(crit.getField(), crit.getSubfield(), value, crit.getRelation(),
+			Criterion newCrit = new CriterionImpl(crit.getField(), crit.getSubfield(), value, null, crit.getRelation(),
 					crit.getAnd());
 			newCrit.setStringId(crit.getStringId());
 			newColl.addCriterion(newCrit);

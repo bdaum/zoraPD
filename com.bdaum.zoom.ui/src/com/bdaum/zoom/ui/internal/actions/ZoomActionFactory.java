@@ -23,6 +23,7 @@ package com.bdaum.zoom.ui.internal.actions;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Date;
@@ -186,7 +187,7 @@ public abstract class ZoomActionFactory {
 				private void showHostFolder(final IAdaptable info, final Asset asset) {
 					URI uri = Core.getCore().getVolumeManager().findExistingFile(asset, true);
 					if (uri != null)
-						BatchUtilities.showInFolder(new File(uri));
+						BatchUtilities.showInFolder(new File(uri), true);
 					else
 						AcousticMessageDialog.openInformation(info.getAdapter(Shell.class),
 								Messages.ZoomActionFactory_show_in_folder,
@@ -214,16 +215,16 @@ public abstract class ZoomActionFactory {
 						if (id.equals(LightboxView.ID) || id.equals(ZuiView.ID) || id.equals(TableView.ID)
 								|| id.equals(LightboxView.VSTRIPVIEW) || id.equals(LightboxView.HSTRIPVIEW)) {
 							if (currentView == null || !id.equals(currentView.getViewSite().getId())) {
-								IViewPart view = page.findView(id);
-								if (view instanceof AbstractGalleryView
-										&& ((AbstractGalleryView) view).isVisible()) {
+								IViewPart view = ref.getView(false);
+								if (view instanceof AbstractGalleryView && ((AbstractGalleryView) view).isVisible()) {
 									gallery = page.showView(id);
 									break;
 								}
 							}
 						}
 					}
-					if (gallery == null && (currentView == null || !LightboxView.ID.equals(currentView.getViewSite().getId())))
+					if (gallery == null
+							&& (currentView == null || !LightboxView.ID.equals(currentView.getViewSite().getId())))
 						gallery = page.showView(LightboxView.ID);
 				}
 				((CatalogView) page.showView(CatalogView.ID)).setSelection(new StructuredSelection(sm), true);
@@ -247,10 +248,9 @@ public abstract class ZoomActionFactory {
 				@Override
 				public void run() {
 					final Asset asset = getFirstLocalAsset(adaptable);
-					if (asset != null) {
+					if (asset != null)
 						showInGallery(adaptable, asset, Utilities
 								.obtainTimelineCollection(Core.getCore().getDbManager(), asset.getDateTimeOriginal()));
-					}
 				}
 
 			};
@@ -799,24 +799,27 @@ public abstract class ZoomActionFactory {
 							XMPUtilities.configureXMPFactory();
 							XMPMeta xmpMeta = XMPMetaFactory.create();
 							XMPUtilities.writeProperties(xmpMeta, asset, filter, true);
-							ByteArrayOutputStream out = new ByteArrayOutputStream();
-							XMPMetaFactory.serialize(xmpMeta, out);
-							String s = new String(out.toByteArray(), "UTF-8"); //$NON-NLS-1$
-							File voiceFile = null;
-							String voiceFileURI = asset.getVoiceFileURI();
-							if (voiceFileURI != null) {
-								s += '\f' + voiceFileURI;
-								URI uri = Core.getCore().getVolumeManager().findVoiceFile(asset);
-								if (uri != null)
-									voiceFile = new File(uri);
+							try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+								XMPMetaFactory.serialize(xmpMeta, out);
+								String s = new String(out.toByteArray(), "UTF-8"); //$NON-NLS-1$
+								File voiceFile = null;
+								String voiceFileURI = asset.getVoiceFileURI();
+								if (voiceFileURI != null) {
+									s += '\f' + voiceFileURI;
+									URI uri = Core.getCore().getVolumeManager().findVoiceFile(asset);
+									if (uri != null)
+										voiceFile = new File(uri);
+								}
+								Clipboard clipboard = activator.getClipboard(shell.getDisplay());
+								if (voiceFile == null)
+									clipboard.setContents(new Object[] { s },
+											new Transfer[] { TextTransfer.getInstance() });
+								else
+									clipboard.setContents(new Object[] { s, new String[] { voiceFile.toString() } },
+											new Transfer[] { TextTransfer.getInstance(), FileTransfer.getInstance() });
+							} catch (IOException e) {
+								// should never happen
 							}
-							Clipboard clipboard = activator.getClipboard(shell.getDisplay());
-							if (voiceFile == null)
-								clipboard.setContents(new Object[] { s },
-										new Transfer[] { TextTransfer.getInstance() });
-							else
-								clipboard.setContents(new Object[] { s, new String[] { voiceFile.toString() } },
-										new Transfer[] { TextTransfer.getInstance(), FileTransfer.getInstance() });
 						} catch (SWTError ex) {
 							if (ex.code != DND.ERROR_CANNOT_SET_CLIPBOARD)
 								activator.logError(Messages.CopyMetadataAction_Error_when_copying_metadata, ex);
@@ -825,8 +828,6 @@ public abstract class ZoomActionFactory {
 										Messages.CopyMetadataAction_Problem_when_copying,
 										Messages.CopyMetadataAction_There_was_a_problem_accessing);
 							}
-						} catch (UnsupportedEncodingException e) {
-							// should never happen
 						} catch (XMPException e) {
 							activator.logError(Messages.CopyMetadataAction_xmp_error_creating_clipboard, e);
 						}

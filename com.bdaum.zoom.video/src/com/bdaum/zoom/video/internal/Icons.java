@@ -57,4 +57,8 @@ public class Icons {
 	}
 
 	public static final Icon video40 = new Icon("icons/video40.png"); //$NON-NLS-1$
+	public static final Icon left = new Icon("icons/left.png"); //$NON-NLS-1$
+	public static final Icon leftleft = new Icon("icons/leftleft.png"); //$NON-NLS-1$
+	public static final Icon right = new Icon("icons/right.png"); //$NON-NLS-1$
+	public static final Icon rightright = new Icon("icons/rightright.png"); //$NON-NLS-1$
 }

@@ -57,6 +57,7 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.ICollectionProcessor;
 import com.bdaum.zoom.core.db.IDbFactory;
 import com.bdaum.zoom.core.db.IDbManager;
+import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.ui.IZoomCommandIds;
 import com.bdaum.zoom.ui.internal.Icons;
@@ -268,8 +269,8 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 								dbManager.safeTransaction(toBeDeleted, toBeStored);
 								setInput();
 								viewer.setSelection(new StructuredSelection(result), true);
+								CoreActivator.getDefault().fireAssetsModified(null, null);
 							}
-
 						};
 						BusyIndicator.showWhile(viewer.getControl().getDisplay(), runnable);
 					}
@@ -322,11 +323,14 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 						current.setAnnotations(newAnno);
 						current.setShowLabel(dialog.getShowLabel());
 						current.setLabelTemplate(dialog.getLabelTemplate());
+						current.setAlignment(dialog.getLabelAlignment());
+						current.setFontSize(dialog.getLabelFontsize());
 						dbManager.safeTransaction(null, current);
 						if (oldAnno != null && !oldAnno.equals(newAnno) || oldAnno == null && newAnno != null)
 							refresh();
 						else
 							viewer.update(current, null);
+						CoreActivator.getDefault().fireAssetsModified(null, null);
 					}
 				}
 			}

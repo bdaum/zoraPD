@@ -22,7 +22,6 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import java.io.File;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.eclipse.core.runtime.ListenerList;
@@ -37,6 +36,8 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
+
+import com.bdaum.zoom.core.Format;
 
 public class WatermarkGroup {
 	public static final String COPYRIGHT = "copyright"; //$NON-NLS-1$
@@ -114,7 +115,7 @@ public class WatermarkGroup {
 
 	private static boolean testYear(String s) {
 		try {
-			new SimpleDateFormat("yyyy").parse(s.trim()); //$NON-NLS-1$
+			Format.YEAR_FORMAT.get().parse(s.trim());
 			return true;
 		} catch (ParseException e) {
 			return false;
@@ -126,7 +127,7 @@ public class WatermarkGroup {
 			String copyright = settings.get(COPYRIGHT);
 			if (copyright == null || copyright.trim().isEmpty()
 					|| copyright.trim().length() == 4 && testYear(copyright))
-				copyrightField.setText(new SimpleDateFormat("yyyy").format(new Date()) + " "); //$NON-NLS-1$ //$NON-NLS-2$
+				copyrightField.setText(Format.YEAR_FORMAT.get().format(new Date()) + " "); //$NON-NLS-1$ 
 			createWatermarkButton.setSelection(settings.getBoolean(WATERMARK));
 			if (copyright != null)
 				copyrightField.setText(copyright);

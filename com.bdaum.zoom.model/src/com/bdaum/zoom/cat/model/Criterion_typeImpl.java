@@ -28,15 +28,17 @@ public class Criterion_typeImpl extends AomObject implements Criterion_type {
 	 * @param field - Property
 	 * @param subfield - Property
 	 * @param value - Property
+	 * @param to - Property
 	 * @param relation - Property
 	 * @param and - Property
 	 */
 	public Criterion_typeImpl(String field, String subfield, Object value,
-			int relation, boolean and) {
+			Object to, int relation, boolean and) {
 		super();
 		this.field = field;
 		this.subfield = subfield;
 		this.value = value;
+		this.to = to;
 		this.relation = relation;
 		this.and = and;
 
@@ -101,9 +103,6 @@ public class Criterion_typeImpl extends AomObject implements Criterion_type {
 	 * @param _value - new field value
 	 */
 	public void setValue(Object _value) {
-		if (_value == null)
-			throw new IllegalArgumentException(ModelMessages.getString(
-					ErrorMessages.ARGUMENT_NOT_NULL, "value"));
 		value = _value;
 	}
 
@@ -114,6 +113,28 @@ public class Criterion_typeImpl extends AomObject implements Criterion_type {
 	 */
 	public Object getValue() {
 		return value;
+	}
+
+	/* *** Property to *** */
+
+	private Object to;
+
+	/**
+	 * Set value of property to
+	 *
+	 * @param _value - new field value
+	 */
+	public void setTo(Object _value) {
+		to = _value;
+	}
+
+	/**
+	 * Get value of property to
+	 *
+	 * @return - value of field to
+	 */
+	public Object getTo() {
+		return to;
 	}
 
 	/* *** Property relation *** */
@@ -184,6 +205,9 @@ public class Criterion_typeImpl extends AomObject implements Criterion_type {
 				&& ((getValue() == null && other.getValue() == null) || (getValue() != null && getValue()
 						.equals(other.getValue())))
 
+				&& ((getTo() == null && other.getTo() == null) || (getTo() != null && getTo()
+						.equals(other.getTo())))
+
 				&& getRelation() == other.getRelation()
 
 				&& getAnd() == other.getAnd()
@@ -209,6 +233,8 @@ public class Criterion_typeImpl extends AomObject implements Criterion_type {
 
 		hashCode = 31 * hashCode
 				+ ((getValue() == null) ? 0 : getValue().hashCode());
+
+		hashCode = 31 * hashCode + ((getTo() == null) ? 0 : getTo().hashCode());
 
 		hashCode = 31 * hashCode + getRelation();
 
@@ -240,10 +266,6 @@ public class Criterion_typeImpl extends AomObject implements Criterion_type {
 		if (field == null)
 			throw new ConstraintException(ModelMessages.getString(
 					ErrorMessages.ARGUMENT_NOT_NULL, "field"));
-
-		if (value == null)
-			throw new ConstraintException(ModelMessages.getString(
-					ErrorMessages.ARGUMENT_NOT_NULL, "value"));
 
 	}
 

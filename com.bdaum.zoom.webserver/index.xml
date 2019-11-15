@@ -1,0 +1,28 @@
+<index>
+<entry keyword="Webserver">
+	<topic href="html/webserver.html" />
+</entry>
+<entry keyword="QR code">
+	<topic href="html/webserver.html" />
+</entry>
+<entry keyword="Privacy">
+	<entry keyword="Webserver">
+		<topic href="html/webserver.html" />
+	</entry>
+</entry>
+<entry keyword="Thumbnails">
+	<entry keyword="Webserver">
+		<topic href="html/webserver.html" />
+	</entry>
+</entry>
+<entry keyword="Uploads">
+	<entry keyword="Webserver">
+		<topic href="html/webserver.html" />
+	</entry>
+</entry>
+<entry keyword="Transfer folder">
+	<entry keyword="Webserver">
+		<topic href="html/webserver.html" />
+	</entry>
+</entry>
+</index>

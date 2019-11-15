@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.meta.LastDeviceImport;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.ImportFromDeviceData;
 import com.bdaum.zoom.css.CSSProperties;
@@ -75,29 +76,29 @@ public class ImportTargetPage extends ColoredWizardPage {
 
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
-			String t = null;
+			SimpleDateFormat sdf = null;
 			switch (policy) {
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEAR:
-				t = "yyyy"; //$NON-NLS-1$
+				sdf = Format.YEAR_FORMAT.get();
 				break;
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARMONTH:
-				t = "yyyy-MM"; //$NON-NLS-1$
+				sdf = Format.YEAR_MONTH_FORMAT.get();
 				break;
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARMONTHDAY:
-				t = "yyyy-MM-dd"; //$NON-NLS-1$
+				sdf = Format.YEAR_MONTH_DAY_FORMAT.get();
 				break;
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARWEEK:
-				t = "YYYY-'W'ww"; //$NON-NLS-1$
+				sdf = Format.YEAR_WEEK_FORMAT.get();
 				break;
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARWEEKDAY:
-				t = "YYYY-'W'ww-uu"; //$NON-NLS-1$
+				sdf = Format.YEAR_WEEK_DAY_FORMAT.get();
 				break;
 			}
-			if (t != null) {
+			if (sdf != null) {
 				FolderNode root = new FolderNode(null, rootFolder.getName());
 				for (StorageObject file : files) {
 					date.setTime(file.lastModified());
-					String name = new SimpleDateFormat(t).format(date);
+					String name = sdf.format(date);
 					FolderNode parentNode = root;
 					int from = 0;
 					int depth = 0;

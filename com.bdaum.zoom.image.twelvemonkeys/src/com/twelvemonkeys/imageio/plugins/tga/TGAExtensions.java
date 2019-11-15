@@ -36,8 +36,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 
-import static com.twelvemonkeys.imageio.plugins.tga.TGA.EXT_AREA_SIZE;
-
 /**
  * TGAExtensions.
  *
@@ -46,6 +44,7 @@ import static com.twelvemonkeys.imageio.plugins.tga.TGA.EXT_AREA_SIZE;
  * @version $Id: TGAExtensions.java,v 1.0 27/07/15 harald.kuhr Exp$
  */
 final class TGAExtensions {
+    public static final int EXT_AREA_SIZE = 495;
 
     private String authorName;
     private String authorComments;
@@ -78,7 +77,7 @@ final class TGAExtensions {
         }
 
         TGAExtensions extensions = new TGAExtensions();
-        extensions.authorName = readString(stream, 41);
+        extensions.authorName = readString(stream, 41);;
         extensions.authorComments = readString(stream, 324);
         extensions.creationDate = readDate(stream);
         extensions.jobId = readString(stream, 41);

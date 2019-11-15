@@ -19,10 +19,9 @@
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
+import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
@@ -30,27 +29,29 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Constants;
-import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.ui.internal.FieldDescriptor;
+import com.bdaum.zoom.ui.internal.TemplateProcessor;
 import com.bdaum.zoom.ui.internal.dialogs.AddVariablesDialog;
 import com.bdaum.zoom.ui.internal.dialogs.TemplateFieldSelectionDialog;
 
-@SuppressWarnings("restriction")
-public class TextWithVariableGroup implements ModifyListener {
+public class TextWithVariableGroup implements Listener {
 
-	static class SelectTemplateDialog extends ZDialog {
+	class SelectTemplateDialog extends ZDialog {
 
 		private String title;
 		private String[] templates;
 		private List list;
-		String var = null;
+		private String var = null;
+		private Label example;
 
 		public SelectTemplateDialog(Shell parent, String title, String[] templates) {
 			super(parent);
@@ -84,6 +85,7 @@ public class TextWithVariableGroup implements ModifyListener {
 				public void widgetSelected(SelectionEvent e) {
 					int i = list.getSelectionIndex();
 					var = i < 0 ? null : templates[i];
+					showExample();
 					validate();
 				}
 
@@ -93,9 +95,16 @@ public class TextWithVariableGroup implements ModifyListener {
 						okPressed();
 				}
 			});
-			list.setLayoutData(new GridData(500, 200));
+			list.setLayoutData(new GridData(600, 200));
+			example = new Label(area, SWT.NONE);
+			example.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			list.setItems(templates);
 			return area;
+		}
+
+		protected void showExample() {
+			example.setText(var != null && !var.isEmpty() ? Messages.TextWithVariableGroup_example + ": " //$NON-NLS-1$
+					+ templateProcessor.processTemplate(var, asset, collection, -1, -1) : ""); //$NON-NLS-1$
 		}
 
 		protected void validate() {
@@ -110,18 +119,23 @@ public class TextWithVariableGroup implements ModifyListener {
 	private Button selectTemplateButton;
 	private Asset asset;
 	private String collection;
+	private ListenerList<Listener> listeners = new ListenerList<Listener>();
+	private String[] variables;
+	private TemplateProcessor templateProcessor;
 
-	public TextWithVariableGroup(Composite composite, String lab, int width,
-			final String[] variables, boolean metadata, final String[] templates, Asset asset, String collection) {
+	public TextWithVariableGroup(Composite composite, String lab, int width, final String[] variables, boolean metadata,
+			final String[] templates, Asset asset, String collection) {
+		this.variables = variables;
 		this.asset = asset;
 		this.collection = collection;
+		templateProcessor = new TemplateProcessor(variables);
 		if (lab != null)
 			new Label(composite, SWT.NONE).setText(lab);
 		textField = new Text(composite, SWT.BORDER);
 		final GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		data.widthHint = width;
 		textField.setLayoutData(data);
-		textField.addModifyListener(this);
+		textField.addListener(SWT.Modify, this);
 		if (templates != null && templates.length > 0) {
 			if (templates.length == 1)
 				textField.setText(templates[0]);
@@ -144,36 +158,11 @@ public class TextWithVariableGroup implements ModifyListener {
 		}
 		addVariableButton = new Button(composite, SWT.PUSH);
 		addVariableButton.setText(Messages.TextWithVariableGroup_add_variable);
-		addVariableButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				AddVariablesDialog dialog = new AddVariablesDialog(composite.getShell(),
-						Messages.TextWithVariableGroup_add_variable, variables, null);
-				Point loc = textField.toDisplay(20, 10);
-				dialog.create();
-				dialog.getShell().setLocation(loc);
-				if (dialog.open() == Window.OK)
-					textField.insert(dialog.getResult());
-			}
-		});
+		addVariableButton.addListener(SWT.Selection, this);
 		if (metadata) {
 			addMetadataButon = new Button(composite, SWT.PUSH);
 			addMetadataButon.setText(Messages.TextWithVariableGroup_add_metadata);
-			addMetadataButon.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					TemplateFieldSelectionDialog dialog = new TemplateFieldSelectionDialog(composite.getShell());
-					Point loc = textField.toDisplay(20, 10);
-					dialog.create();
-					dialog.getShell().setLocation(loc);
-					if (dialog.open() != TemplateFieldSelectionDialog.OK)
-						return;
-					FieldDescriptor fd = dialog.getResult();
-					String qname = fd.subfield == null ? fd.qfield.getId()
-							: fd.qfield.getId() + '&' + fd.subfield.getId();
-					textField.insert(Constants.TV_META + qname + '}');
-				}
-			});
+			addMetadataButon.addListener(SWT.Selection, this);
 		}
 		setTooltip();
 	}
@@ -186,6 +175,11 @@ public class TextWithVariableGroup implements ModifyListener {
 		textField.setText(text);
 	}
 
+	public void setContext(String collection, Asset asset) {
+		this.collection = collection;
+		this.asset = asset;
+	}
+
 	public void setEnabled(boolean enabled) {
 		textField.setEnabled(enabled);
 		addVariableButton.setEnabled(enabled);
@@ -193,22 +187,54 @@ public class TextWithVariableGroup implements ModifyListener {
 			addMetadataButon.setEnabled(enabled);
 	}
 
-	@Override
-	public void modifyText(ModifyEvent e) {
-		setTooltip();
-	}
-
 	protected void setTooltip() {
-		if (asset != null && collection != null) {
-			String text = textField.getText();
-			if (!text.isEmpty())
-				setToolTipText(Utilities.evaluateTemplate(text, Constants.PI_ALL, null, null, 0, 1, 1, null, asset,
-						collection, Integer.MAX_VALUE, false, false));
-		}
+		String template = textField.getText();
+		textField.setToolTipText(
+				!template.isEmpty() ? templateProcessor.processTemplate(template, asset, collection, -1, -1) : null);
 	}
 
 	public void setToolTipText(String tooltip) {
 		textField.setToolTipText(tooltip);
+	}
+
+	public void addListener(Listener listener) {
+		listeners.add(listener);
+	}
+
+	public void removeListener(Listener listener) {
+		listeners.remove(listener);
+	}
+
+	private void fireEvent(Event event) {
+		for (Listener listener : listeners)
+			listener.handleEvent(event);
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		if (event.widget == textField) {
+			setTooltip();
+			fireEvent(event);
+		} else if (event.widget == addVariableButton) {
+			AddVariablesDialog dialog = new AddVariablesDialog(textField.getShell(),
+					Messages.TextWithVariableGroup_add_variable, variables, null);
+			dialog.create();
+			dialog.getShell().setLocation(textField.toDisplay(20, 10));
+			if (dialog.open() == Window.OK) {
+				textField.insert(dialog.getResult());
+				fireEvent(event);
+			}
+		} else if (event.widget == addMetadataButon) {
+			TemplateFieldSelectionDialog dialog = new TemplateFieldSelectionDialog(textField.getShell());
+			dialog.create();
+			dialog.getShell().setLocation(textField.toDisplay(20, 10));
+			if (dialog.open() != TemplateFieldSelectionDialog.OK)
+				return;
+			FieldDescriptor fd = dialog.getResult();
+			String qname = fd.subfield == null ? fd.qfield.getId() : fd.qfield.getId() + '&' + fd.subfield.getId();
+			textField.insert(Constants.TV_META + qname + '}');
+			fireEvent(event);
+		}
 	}
 
 }

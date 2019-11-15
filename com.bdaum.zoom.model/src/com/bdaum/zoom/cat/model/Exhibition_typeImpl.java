@@ -71,6 +71,7 @@ public class Exhibition_typeImpl extends AomObject implements Exhibition_type {
 	 * @param scalingMethod - Property
 	 * @param lastAccessDate - Property
 	 * @param perspective - Property
+	 * @param safety - Property
 	 */
 	public Exhibition_typeImpl(String name, String description, String info,
 			int defaultViewingHeight, int variance, int gridSize,
@@ -86,7 +87,7 @@ public class Exhibition_typeImpl extends AomObject implements Exhibition_type {
 			String contactName, String email, String webUrl, String copyright,
 			String logo, int infoPlatePosition, boolean hideCredits,
 			int jpegQuality, int scalingMethod, Date lastAccessDate,
-			String perspective) {
+			String perspective, int safety) {
 		super();
 		this.name = name;
 		this.description = description;
@@ -134,6 +135,7 @@ public class Exhibition_typeImpl extends AomObject implements Exhibition_type {
 		this.scalingMethod = scalingMethod;
 		this.lastAccessDate = lastAccessDate;
 		this.perspective = perspective;
+		this.safety = safety;
 
 	}
 
@@ -1291,6 +1293,28 @@ public class Exhibition_typeImpl extends AomObject implements Exhibition_type {
 		return perspective;
 	}
 
+	/* *** Property safety *** */
+
+	private int safety;
+
+	/**
+	 * Set value of property safety
+	 *
+	 * @param _value - new field value
+	 */
+	public void setSafety(int _value) {
+		safety = _value;
+	}
+
+	/**
+	 * Get value of property safety
+	 *
+	 * @return - value of field safety
+	 */
+	public int getSafety() {
+		return safety;
+	}
+
 	/* ----- Equality ----- */
 
 	/**
@@ -1426,6 +1450,8 @@ public class Exhibition_typeImpl extends AomObject implements Exhibition_type {
 
 				&& ((getPerspective() == null && other.getPerspective() == null) || (getPerspective() != null && getPerspective()
 						.equals(other.getPerspective())))
+
+				&& getSafety() == other.getSafety()
 
 		;
 	}
@@ -1582,6 +1608,8 @@ public class Exhibition_typeImpl extends AomObject implements Exhibition_type {
 		hashCode = 31
 				* hashCode
 				+ ((getPerspective() == null) ? 0 : getPerspective().hashCode());
+
+		hashCode = 31 * hashCode + getSafety();
 
 		return hashCode;
 	}

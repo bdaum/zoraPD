@@ -139,7 +139,7 @@ public class ExportMetadataOperation extends DbOperation {
 		} finally {
 			fileWatcher.stopIgnoring(opId);
 			if (show && firstExport != null)
-				BatchUtilities.showInFolder(firstExport);
+				BatchUtilities.showInFolder(firstExport, true);
 		}
 	}
 

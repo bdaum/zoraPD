@@ -25,13 +25,18 @@ import java.awt.Font;
 import java.awt.event.InputEvent;
 import java.awt.geom.Point2D;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.AbstractOperation;
@@ -46,6 +51,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
@@ -53,9 +59,16 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -73,17 +86,23 @@ import org.piccolo2d.util.PDimension;
 
 import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
+import com.bdaum.zoom.cat.model.artworkOrObjectShown.ArtworkOrObjectImpl;
+import com.bdaum.zoom.cat.model.artworkOrObjectShown.ArtworkOrObjectShownImpl;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.group.slideShow.Slide;
 import com.bdaum.zoom.cat.model.group.slideShow.SlideImpl;
 import com.bdaum.zoom.cat.model.group.slideShow.SlideShow;
 import com.bdaum.zoom.cat.model.group.slideShow.SlideShowImpl;
+import com.bdaum.zoom.cat.model.location.LocationImpl;
+import com.bdaum.zoom.cat.model.locationCreated.LocationCreatedImpl;
 import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.core.IVolumeManager;
+import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
@@ -92,24 +111,27 @@ import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.Ui;
+import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.CaptionProcessor.CaptionConfiguration;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.EditSlideDialog;
-import com.bdaum.zoom.ui.internal.dialogs.SectionBreakDialog;
 import com.bdaum.zoom.ui.internal.dialogs.SelectSlideDialog;
 import com.bdaum.zoom.ui.internal.dialogs.SlideshowEditDialog;
 import com.bdaum.zoom.ui.internal.hover.IHoverContext;
 import com.bdaum.zoom.ui.internal.job.DecorateJob;
 import com.bdaum.zoom.ui.internal.operations.SlideshowPropertiesOperation;
 import com.bdaum.zoom.ui.internal.widgets.AbstractHandle;
+import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.GalleryPanEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.GreekedPSWTText;
 import com.bdaum.zoom.ui.internal.widgets.IAugmentedTextField;
 import com.bdaum.zoom.ui.internal.widgets.PContainer;
 import com.bdaum.zoom.ui.internal.widgets.PSWTAssetThumbnail;
 import com.bdaum.zoom.ui.internal.widgets.PSWTSectionBreak;
+import com.bdaum.zoom.ui.internal.widgets.SectionLayoutGroup;
 import com.bdaum.zoom.ui.internal.widgets.TextEventHandler;
 import com.bdaum.zoom.ui.internal.widgets.TextField;
 import com.bdaum.zoom.ui.internal.widgets.ZPSWTImage;
@@ -118,6 +140,209 @@ import com.bdaum.zoom.ui.internal.widgets.ZPSWTImage;
 public class SlideshowView extends AbstractPresentationView implements IHoverContext {
 
 	private static final Point DRAGTOLERANCE = new Point(25, 25);
+
+	public class SectionBreakDialog extends ZTitleAreaDialog implements Listener {
+
+		private SlideImpl slide;
+		private CheckedText captionField;
+		private CheckedText descriptionField;
+		private SectionLayoutGroup layoutGroup;
+		private int seqNo;
+		private Combo combo;
+
+		public SectionBreakDialog(Shell parentShell, int seqNo) {
+			super(parentShell, HelpContextIds.SECTIONBREAK_DIALOG);
+			this.seqNo = seqNo;
+		}
+
+		@Override
+		public void create() {
+			super.create();
+			setTitle(Messages.getString("SlideshowView.create_title_slide")); //$NON-NLS-1$
+			setMessage(Messages.getString("SlideshowView.specify_title")); //$NON-NLS-1$
+			updateButtons();
+			getShell().layout();
+			getShell().pack();
+		}
+
+		private void updateButtons() {
+			getShell().setModified(!readonly);
+			getButton(IDialogConstants.OK_ID).setEnabled(!readonly);
+		}
+
+		@Override
+		protected Control createDialogArea(Composite parent) {
+			Composite area = (Composite) super.createDialogArea(parent);
+			Composite comp = new Composite(area, SWT.NONE);
+			comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			comp.setLayout(new GridLayout(3, false));
+			Label label = new Label(comp, SWT.NONE);
+			label.setText(Messages.getString("SlideshowView.title")); //$NON-NLS-1$
+			captionField = new CheckedText(comp, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
+			captionField.setSpellingOptions(8, ISpellCheckingService.TITLEOPTIONS);
+			captionField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+			label = new Label(comp, SWT.NONE);
+			label.setText(Messages.getString("SlideshowView.description")); //$NON-NLS-1$
+			descriptionField = new CheckedText(comp, SWT.MULTI | SWT.LEAD | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
+			GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
+			layoutData.widthHint = 400;
+			layoutData.heightHint = 100;
+			descriptionField.setLayoutData(layoutData);
+			layoutGroup = new SectionLayoutGroup(comp, 1);
+			List<String> selectables = new ArrayList<String>();
+			boolean selected = false;
+			boolean hasSection = false;
+			List<String> assetIds = new ArrayList<>();
+			for (String id : slideshow.getEntry()) {
+				PSlide pslide = slideMap.get(id);
+				Slide slide = pslide.slide;
+				if (slide.getSequenceNo() > seqNo) {
+					if (slide.getAsset() == null) {
+						hasSection = true;
+						break;
+					}
+					selected |= pslide.isSelected();
+					selectables.add(String.valueOf(slide.getSequenceNo()));
+					assetIds.add(slide.getAsset());
+				}
+			}
+			layoutGroup.setAssets(assetIds);
+			if (!selectables.isEmpty()) {
+				if (selected)
+					selectables.add(0, Messages.getString("SlideshowView.first_selected")); //$NON-NLS-1$
+				selectables.add(0, hasSection ? Messages.getString("SlideshowView.end_of_sel") //$NON-NLS-1$
+						: Messages.getString("SlideshowView.end_of_show")); //$NON-NLS-1$
+				selectables.add(0, Messages.getString("SlideshowView.none")); //$NON-NLS-1$
+				Composite compileGroup = new Composite(comp, SWT.NONE);
+				compileGroup.setLayoutData(new GridData(SWT.END, SWT.FILL, true, true));
+				GridLayout layout = new GridLayout(2, false);
+				layout.marginWidth = layout.marginHeight = 0;
+				compileGroup.setLayout(layout);
+				new Label(compileGroup, SWT.NONE).setText(Messages.getString("SlideshowView.compile_from")); //$NON-NLS-1$
+				combo = new Combo(compileGroup, SWT.DROP_DOWN | SWT.READ_ONLY);
+				combo.setItems(selectables.toArray(new String[selectables.size()]));
+				combo.setText(selectables.get(0));
+				combo.addListener(SWT.Selection, this);
+				combo.setToolTipText(Messages.getString("SlideshowView.compile_tooltip")); //$NON-NLS-1$
+			}
+			fillValues();
+			return area;
+		}
+
+		private void fillValues() {
+			if (slide != null) {
+				captionField.setText(slide.getCaption());
+				descriptionField.setText(slide.getDescription());
+				layoutGroup.setSelection(slide.getLayout());
+			} else
+				layoutGroup.setSelection(0);
+		}
+
+		@Override
+		protected void okPressed() {
+			slide = new SlideImpl();
+			slide.setCaption(captionField.getText());
+			slide.setDescription(descriptionField.getText());
+			slide.setLayout(Math.max(0, layoutGroup.getSelection()));
+			super.okPressed();
+		}
+
+		public SlideImpl getResult() {
+			return slide;
+		}
+
+		@Override
+		public void handleEvent(Event event) {
+			int index = combo.getSelectionIndex();
+			if (index <= 0)
+				return;
+			int endNo;
+			if (index == 1)
+				endNo = -2;
+			else {
+				String selection = combo.getItem(index);
+				if (Character.isDigit(selection.charAt(0)))
+					endNo = Integer.parseInt(selection);
+				else
+					endNo = -1;
+			}
+			Set<String> cities = new LinkedHashSet<String>();
+			Set<String> models = new LinkedHashSet<String>();
+			Set<String> artworks = new LinkedHashSet<String>();
+			Date firstDate = null;
+			Date lastDate = null;
+			int count = 0;
+			boolean geo = false;
+			for (String id : slideshow.getEntry()) {
+				PSlide pslide = slideMap.get(id);
+				if (pslide.isSelected() && endNo == -1)
+					break;
+				Slide slide = pslide.slide;
+				if (slide.getSequenceNo() > seqNo) {
+					String assetId = slide.getAsset();
+					if (assetId == null || (endNo >= 0 && slide.getSequenceNo() >= endNo))
+						break;
+					++count;
+					AssetImpl asset = dbManager.obtainAsset(assetId);
+					if (asset != null) {
+						Date dateCreated = asset.getDateCreated();
+						if (dateCreated == null)
+							dateCreated = asset.getDateTimeOriginal();
+						if (dateCreated != null) {
+							if (firstDate == null || firstDate.compareTo(dateCreated) > 0)
+								firstDate = dateCreated;
+							if (lastDate == null || lastDate.compareTo(dateCreated) < 0)
+								lastDate = dateCreated;
+						}
+						geo |= !Double.isNaN(asset.getGPSLatitude()) && !Double.isNaN(asset.getGPSLongitude());
+						LocationCreatedImpl rel = dbManager.obtainById(LocationCreatedImpl.class,
+								asset.getLocationCreated_parent());
+						if (rel != null) {
+							LocationImpl loc = dbManager.obtainById(LocationImpl.class, rel.getLocation());
+							if (loc != null && loc.getCity() != null && !loc.getCity().isEmpty())
+								cities.add(loc.getCity());
+						}
+						String model = asset.getModelInformation();
+						if (model != null && !model.isEmpty())
+							models.add(model);
+						List<ArtworkOrObjectShownImpl> artworksShown = dbManager.obtainObjects(
+								ArtworkOrObjectShownImpl.class, false, "asset", assetId, QueryField.EQUALS); //$NON-NLS-1$
+						for (ArtworkOrObjectShownImpl artworkShown : artworksShown) {
+							ArtworkOrObjectImpl artwork = dbManager.obtainById(ArtworkOrObjectImpl.class,
+									artworkShown.getArtworkOrObject());
+							if (artwork != null && artwork.getTitle() != null && !artwork.getTitle().isEmpty())
+								artworks.add(artwork.getTitle());
+						}
+					}
+				}
+			}
+			StringBuilder sb = new StringBuilder();
+			if (firstDate != null) {
+				SimpleDateFormat sdf = Format.MDY_FORMAT.get();
+				String fd1 = sdf.format(firstDate);
+				sb.append("\n\n").append(fd1); //$NON-NLS-1$
+				String fd2 = sdf.format(lastDate);
+				if (!fd1.equals(fd2))
+					sb.append(" - ").append(fd2); //$NON-NLS-1$
+			}
+			if (!cities.isEmpty())
+				sb.append("\n\n").append(Core.toStringList(cities.toArray(), ", ")); //$NON-NLS-1$//$NON-NLS-2$
+			if (!models.isEmpty())
+				sb.append("\n\n").append(Core.toStringList(models.toArray(), ", ")); //$NON-NLS-1$//$NON-NLS-2$
+			if (!artworks.isEmpty())
+				sb.append("\n\n").append(Core.toStringList(artworks.toArray(), ", ")); //$NON-NLS-1$//$NON-NLS-2$
+			if (sb.length() > 0)
+				descriptionField.setText(sb.toString());
+			int layout = layoutGroup.getSelection();
+			if (layout == Constants.SLIDE_NO_THUMBNAILS && count > 2 && count <= 15)
+				layout = Constants.SLIDE_THUMBNAILS_LEFT;
+			if (geo)
+				layout = layout == Constants.SLIDE_MAP_RIGHT || layout == Constants.SLIDE_THUMBNAILS_RIGHT
+						? Constants.SLIDE_MAP_RIGHT
+						: Constants.SLIDE_MAP_LEFT;
+			layoutGroup.setSelection(layout);
+		}
+	}
 
 	public class EditCaptionOperation extends AbstractOperation {
 
@@ -321,10 +546,7 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 				added = makeSlide(sectionSlide);
 				updateSequenceNumbers();
 				realignSlides();
-				List<IIdentifiableObject> toBeStored = new ArrayList<>(2);
-				toBeStored.add(sectionSlide);
-				toBeStored.add(show);
-				storeSafelyAndUpdateIndex(null, toBeStored, null);
+				storeSafelyAndUpdateIndex(null, Arrays.asList(sectionSlide, show), null);
 				updateActions(false);
 				updateStatusLine();
 				++sectionCount;
@@ -564,6 +786,7 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 				}
 				boolean cleared = false;
 				List<IIdentifiableObject> toBeStored = new ArrayList<>(selection.size() + 1);
+				CaptionConfiguration captionConfig = captionProcessor.computeCaptionConfiguration(selection.getContext());
 				for (Asset asset : selection) {
 					if (!accepts(asset))
 						continue;
@@ -575,11 +798,11 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 					if (effect == Constants.SLIDE_TRANSITION_RANDOM)
 						effect = (int) (Math.random() * Constants.SLIDE_TRANSITION_N);
 					String assetId = asset.getStringId();
-					SlideImpl slide = replaced != null ? new SlideImpl(UiUtilities.createSlideTitle(asset), seqNo, null,
+					SlideImpl slide = replaced != null ? new SlideImpl(createSlideTitle(captionConfig, asset), seqNo, null,
 							replaced.getLayout(), replaced.getDelay(), replaced.getFadeIn(), replaced.getDuration(),
 							replaced.getFadeOut(), replaced.getEffect(), replaced.getZoom(), replaced.getZoomX(),
 							replaced.getZoomY(), replaced.getNoVoice(), asset.getSafety(), assetId)
-							: new SlideImpl(UiUtilities.createSlideTitle(asset), seqNo, null,
+							: new SlideImpl(createSlideTitle(captionConfig, asset), seqNo, null,
 									Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(),
 									show.getDuration(), show.getFading(), effect, show.getZoom(), 0, 0, false,
 									asset.getSafety(), assetId);
@@ -944,14 +1167,14 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 						slide.setDuration(duration);
 					break;
 				case EditSlideOperation.ZOOM:
-					slide.setZoom(Math.max(0, Math.min(100,
-							(int) (backup.getZoom() + shiftX * 100d / pImage.getWidth()))));
+					slide.setZoom(
+							Math.max(0, Math.min(100, (int) (backup.getZoom() + shiftX * 100d / pImage.getWidth()))));
 					break;
 				case EditSlideOperation.ZOOMPOS:
-					slide.setZoomX(Math.max(-100, Math.min(100,
-							(int) (backup.getZoomX() + shiftX * 100d / pImage.getWidth()))));
-					slide.setZoomY(Math.max(-100, Math.min(100,
-							(int) (backup.getZoomY() + shiftY * 100d / pImage.getHeight()))));
+					slide.setZoomX(Math.max(-100,
+							Math.min(100, (int) (backup.getZoomX() + shiftX * 200d / pImage.getWidth()))));
+					slide.setZoomY(Math.max(-100,
+							Math.min(100, (int) (backup.getZoomY() + shiftY * 200d / pImage.getHeight()))));
 					break;
 				default:
 					int maxFadeout = 60000;
@@ -1131,6 +1354,10 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 			updateHandles();
 		}
 
+		public Slide getSlide() {
+			return slide;
+		}
+
 		public void updateHandles() {
 			boolean visible = slide.getZoom() > 0;
 			if (zoomDirPoint != null)
@@ -1211,7 +1438,8 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 			sb.append(Messages.getString("SlideshowView.fade_out")).append( //$NON-NLS-1$
 					af.format(slide.getFadeOut() / 1000d)).append(" sec").append('\n'); //$NON-NLS-1$
 			sb.append(Messages.getString("SlideshowView.effect")) //$NON-NLS-1$
-					.append(SlideshowEditDialog.EFFECTS[slide.getEffect()]).append('\n');
+					.append(SlideshowEditDialog.EFFECTS[slide.getEffect() - Constants.SLIDE_TRANSITION_START])
+					.append('\n');
 			sb.append(slide.getZoom() > 0 ? NLS.bind(Messages.getString("SlideshowView.zoom_legend"), //$NON-NLS-1$
 					new Object[] { slide.getZoom(), slide.getZoomX(), slide.getZoomY() })
 					: Messages.getString("SlideshowView.no_zoom")); //$NON-NLS-1$
@@ -1222,8 +1450,10 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 			startPoint.relocateHandle();
 			delayPoint.relocateHandle();
 			midPoint.relocateHandle();
-			zoomPoint.relocateHandle();
-			zoomDirPoint.relocateHandle();
+			if (zoomPoint != null)
+				zoomPoint.relocateHandle();
+			if (zoomDirPoint != null)
+				zoomDirPoint.relocateHandle();
 			endPoint.relocateHandle();
 			connectZoomPoints();
 		}
@@ -1291,12 +1521,8 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
 		super.init(site, memento);
-		if (memento != null) {
-			SlideShowImpl obj = Core.getCore().getDbManager().obtainById(SlideShowImpl.class,
-					memento.getString(LAST_SLIDESHOW));
-			if (obj != null)
-				factor = ((double) slideSize) / (defaultDuration = obj.getDuration());
-		}
+		if (memento != null)
+			lastSessionPresentation = memento.getString(LAST_SLIDESHOW);
 	}
 
 	@Override
@@ -1451,11 +1677,19 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 		installListeners();
 		hookContextMenu();
 		contributeToActionBars();
-		if (slideshow != null)
-			setInput(slideshow);
-		addCatalogListener();
-		setDecorator(canvas, new SlideShowDecorateJob());
-		updateActions(false);
+	}
+
+	protected void startup() {
+		if (slideshow == null)
+			setSlideshow(Core.getCore().getDbManager().obtainById(SlideShowImpl.class, lastSessionPresentation));
+		if (isVisible()) {
+			if (slideshow != null)
+				setInput(slideshow);
+			addCatalogListener();
+			setDecorator(canvas, new SlideShowDecorateJob());
+			updateActions(false);
+		} else if (slideshow != null)
+			isDirty = true;
 	}
 
 	private void setPanAndZoomHandlers() {
@@ -1619,6 +1853,8 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 	}
 
 	protected PSlide makeSlide(SlideImpl slide) {
+		if (slide.getEffect() < Constants.SLIDE_TRANSITION_START)
+			slide.setEffect(Constants.SLIDE_TRANSITION_FADE);
 		PSlide pslide = new PSlide(canvas, slide);
 		pslide.setPenColor(foregroundColor);
 		pslide.setTitleColor(titleForegroundColor);
@@ -1671,7 +1907,7 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 			SlideshowEditDialog dialog = new SlideshowEditDialog(getSite().getShell(), null, null,
 					Messages.getString("SlideshowView.create_slideshow"), false, false); //$NON-NLS-1$
 			if (dialog.open() == Window.OK)
-				slideshow = dialog.getResult();
+				setSlideshow(dialog.getResult());
 		}
 		return slideshow;
 	}
@@ -1746,7 +1982,7 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 				SlideshowEditDialog dialog = new SlideshowEditDialog(getSite().getShell(), null, slideshow,
 						slideshow.getName(), false, true);
 				if (dialog.open() == Window.OK) {
-					slideshow = dialog.getResult();
+					setSlideshow(dialog.getResult());
 					performOperation(new SlideshowPropertiesOperation(backup, slideshow));
 					setInput(slideshow);
 				}
@@ -1790,7 +2026,10 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 		createBreakAction = new Action(Messages.getString("SlideshowView.create_section_break")) { //$NON-NLS-1$
 			@Override
 			public void run() {
-				SectionBreakDialog dialog = new SectionBreakDialog(getSite().getShell(), null);
+				PNode target = findSlide(slideshow, positionX, null);
+				SectionBreakDialog dialog = new SectionBreakDialog(getSite().getShell(),
+						target == null ? slideBar.getChildrenCount() + 1
+								: target instanceof PSlide ? ((PSlide) target).slide.getSequenceNo() : 0);
 				if (dialog.open() == Window.OK)
 					performOperation(new CreateBreakOperation(dialog.getResult(), positionX));
 			}
@@ -1870,38 +2109,52 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 		return true;
 	}
 
+	private void setSlideshow(IdentifiableObject presentation) {
+		if (presentation instanceof SlideShowImpl) {
+			slideshow = (SlideShowImpl) presentation;
+			setPartName(slideshow.getName());
+		} else if (slideshow == null)
+			setPartName(Messages.getString("SlideshowView.slide_show")); //$NON-NLS-1$
+	}
+
 	@Override
 	public void setInput(IdentifiableObject presentation) {
-		super.setInput(presentation);
-		sectionCount = 0;
-		if (presentation instanceof SlideShowImpl) {
-			this.slideshow = (SlideShowImpl) presentation;
-			setPartName(slideshow.getName());
-			beginTask(slideshow.getEntry().size());
-			defaultDuration = slideshow.getDuration();
-			factor = ((double) slideSize) / defaultDuration;
-			List<String> ids = new ArrayList<String>(slideshow.getEntry().size());
-			IDbManager dbManager = Core.getCore().getDbManager();
-			for (String id : slideshow.getEntry()) {
-				SlideImpl slide = dbManager.obtainById(SlideImpl.class, id);
-				if (slide != null) {
-					if (!slideMap.containsKey(id)) {
+		setSlideshow(presentation);
+		if (started) {
+			super.setInput(presentation);
+			sectionCount = 0;
+			if (presentation instanceof SlideShowImpl) {
+				int size = slideshow.getEntry().size();
+				beginTask(size);
+				defaultDuration = slideshow.getDuration();
+				factor = ((double) slideSize) / defaultDuration;
+				List<String> ids = new ArrayList<String>(size);
+				IDbManager dbManager = Core.getCore().getDbManager();
+				for (String id : slideshow.getEntry()) {
+					SlideImpl slide = dbManager.obtainById(SlideImpl.class, id);
+					if (slide != null && !slideMap.containsKey(id)) {
 						ids.add(id);
 						makeSlide(slide).setSequenceNo(slideBar.getChildrenCount());
 						if (slide.getAsset() == null)
 							++sectionCount;
 					}
+					progressBar.worked(1);
 				}
-				progressBar.worked(1);
+				slideshow.setEntry(ids);
+				realignSlides();
+				updateSlidebarBounds();
+				updateActions(false);
+				updateStatusLine();
+				endTask();
 			}
-			slideshow.setEntry(ids);
-			realignSlides();
-			updateSlidebarBounds();
-			updateActions(false);
-			updateStatusLine();
-			endTask();
-		} else
-			setPartName(Messages.getString("SlideshowView.slide_show")); //$NON-NLS-1$
+		}
+	}
+
+	@Override
+	protected void show() {
+		if (isDirty && slideshow != null)
+			setInput(slideshow);
+		super.show();
 	}
 
 	protected PNode findSlide(SlideShow show, Point2D loc, PSlide exclude) {
@@ -2082,4 +2335,5 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 					show.getEntry().size(), sectionCount);
 		return null;
 	}
+
 }

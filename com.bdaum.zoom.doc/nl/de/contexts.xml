@@ -21,6 +21,10 @@
     <topic href="html/reference/collectionEdit.html" label="Dialog für Kollektionssuchkriterien"/>
     <topic href="html/tasks/imageRetrieval.html" label="Suchen und Finden von Bildern"/>
  </context>
+ <context id="configCaptions_dialog_context" title="Bildunterschriften konfigurieren">
+    <description>Bildunterschriften mittel Vorlagen konfigurieren</description>
+    <topic href="html/reference/configureCaptions.html" label="Bildunterschriften konfigurieren"/>
+ </context>
  <context id="autoRule_dialog_context" title="Regel für die automatische Erstellung von Kollektionen">
     <description>Regel für die automatische Erstellung von Kollektionen bearbeiten</description>
     <topic href="html/reference/autoRule.html" label="Regel für die automatische Erstellung von Kollektionen bearbeiten"/>

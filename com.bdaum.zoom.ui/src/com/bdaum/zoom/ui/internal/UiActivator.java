@@ -69,6 +69,7 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChang
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -146,9 +147,11 @@ import com.bdaum.zoom.mtp.ObjectFilter;
 import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.net.core.internal.Base64;
 import com.bdaum.zoom.program.DiskFullException;
+import com.bdaum.zoom.ui.IAutostartable;
 import com.bdaum.zoom.ui.IDropinHandler;
 import com.bdaum.zoom.ui.IFrameManager;
 import com.bdaum.zoom.ui.ILocationDisplay;
+import com.bdaum.zoom.ui.IMediaUiExtension;
 import com.bdaum.zoom.ui.INavigationHistory;
 import com.bdaum.zoom.ui.IUi;
 import com.bdaum.zoom.ui.actions.IViewAction;
@@ -241,6 +244,8 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	private Map<String, IRelationDetector> relationDetectors;
 
 	private ListenerList<LifeCycleListener> lifeCycleListeners = new ListenerList<LifeCycleListener>();
+	
+	private ListenerList<ServerListener> serverListeners = new ListenerList<ServerListener>();
 
 	private AssetDropTargetEffect dropTargetEffect;
 
@@ -275,13 +280,15 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	private Map<String, String> perspectiveGalleries;
 
 	private Map<Rectangle, IKiosk> viewerMonitorMap = new HashMap<>(5);
-	
+
 	private IPreferenceChangeListener preferenceListener = new IPreferenceChangeListener() {
 		public void preferenceChange(PreferenceChangeEvent event) {
 			if (PreferenceConstants.FILEASSOCIATION.equals(event.getKey()))
 				fileEditorMappings = null;
 		}
 	};
+
+	private IMediaUiExtension[] uiMediaExtensions;
 
 
 	/*
@@ -397,7 +404,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 					relation = Integer.parseInt(s.substring(off, p));
 					try (ObjectInputStream in = new ObjectInputStream(
 							new ByteArrayInputStream(Base64.decode(s.substring(p + 1))))) {
-						return new CriterionImpl(field, null, in.readObject(), relation, true);
+						return new CriterionImpl(field, null, in.readObject(), null, relation, true);
 					} catch (ClassNotFoundException e) {
 						// do nothing
 					} catch (IOException e) {
@@ -917,6 +924,27 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		return viewerMap;
 	}
 
+	public IMediaUiExtension[] getUiMediaExtensions() {
+		if (uiMediaExtensions == null) {
+			List<IMediaUiExtension> extList = new ArrayList<>(5);
+			for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "mediaUiExtension") //$NON-NLS-1$
+					.getExtensions())
+				for (IConfigurationElement conf : extension.getConfigurationElements()) {
+					String name = conf.getAttribute("name"); //$NON-NLS-1$
+					String ref = conf.getAttribute("mediaSupportId"); //$NON-NLS-1$
+					try {
+						IMediaUiExtension mediaSupport = (IMediaUiExtension) conf.createExecutableExtension("class"); //$NON-NLS-1$
+						mediaSupport.setMediaSupportId(ref);
+						extList.add(mediaSupport);
+					} catch (CoreException e) {
+						logError(NLS.bind(Messages.UiActivator_media_ui_instantiation, name), e);
+					}
+				}
+			uiMediaExtensions = extList.toArray(new IMediaUiExtension[extList.size()]);
+		}
+		return uiMediaExtensions;
+	}
+
 	public void sendMail(final List<String> to) {
 		BusyIndicator.showWhile(null, () -> {
 			BundleContext context = getBundle().getBundleContext();
@@ -1004,11 +1032,11 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	}
 
 	public void addPreferenceChangeListener(IPreferenceChangeListener preferenceListener) {
-		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID).addPreferenceChangeListener(preferenceListener);
+		InstanceScope.INSTANCE.getNode(PLUGIN_ID).addPreferenceChangeListener(preferenceListener);
 	}
 
 	public void removePreferenceChangeListener(IPreferenceChangeListener preferenceListener) {
-		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID).removePreferenceChangeListener(preferenceListener);
+		InstanceScope.INSTANCE.getNode(PLUGIN_ID).removePreferenceChangeListener(preferenceListener);
 	}
 
 	public String getDefaultWatchFilters() {
@@ -1321,6 +1349,15 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		}
 		return false;
 	}
+	
+	public void addServerListener(ServerListener listener) {
+		serverListeners.add(listener);
+	}
+	
+	public void removeServerListener(ServerListener listener) {
+		serverListeners. remove(listener);
+	}
+
 
 	public String getPreviousCatUri() {
 		return previousCatUri;
@@ -1396,7 +1433,20 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	}
 
 	public void setStarted() {
+		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "autostart"); //$NON-NLS-1$
+		for (IExtension ext : extensionPoint.getExtensions())
+			for (IConfigurationElement config : ext.getConfigurationElements()) {
+				String label = config.getAttribute("name"); //$NON-NLS-1$
+				try {
+					IAutostartable action = (IAutostartable) config.createExecutableExtension("class"); //$NON-NLS-1$
+					if (!action.startExtension())
+						logError(NLS.bind(Messages.UiActivator_failed_to_start, label), null);
+				} catch (CoreException e) {
+					logError(NLS.bind(Messages.UiActivator_failed_to_start, label), e);
+				}
+			}
 		started = true;
+		fireStartListeners();
 	}
 
 	public boolean hasStarted() {
@@ -1453,7 +1503,6 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	};
 
 	private HoverManager hoverManager;
-
 
 	public boolean startTetheredShooting(StorageObject[] dcims, IJobChangeListener listener) {
 		if (!isTetheredShootingActive()) {
@@ -1553,6 +1602,11 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		if (hoverManager == null)
 			hoverManager = new HoverManager();
 		return hoverManager;
+	}
+
+	public void setServerMessage(String message, IAction clickHandler) {
+		for (ServerListener listener : serverListeners)
+			listener.setMessage(message, clickHandler);
 	}
 
 }

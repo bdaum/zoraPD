@@ -29,8 +29,12 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.resource.StringConverter;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -42,6 +46,8 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Device;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -71,7 +77,6 @@ import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -79,19 +84,21 @@ import com.bdaum.zoom.ui.IFrameListener;
 import com.bdaum.zoom.ui.IFrameProvider;
 import com.bdaum.zoom.ui.IZoomActionConstants;
 import com.bdaum.zoom.ui.Ui;
+import com.bdaum.zoom.ui.internal.TemplateProcessor;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.dialogs.ConfigureCaptionDialog;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
-@SuppressWarnings("restriction")
 public class PreviewView extends ImageView implements PaintListener, IFrameListener {
 
 	public static final String ID = "com.bdaum.zoom.ui.views.PreviewView"; //$NON-NLS-1$
 	private static final String CUE = "cue"; //$NON-NLS-1$
 	private static final String TEMPLATE = "template"; //$NON-NLS-1$
 	private static final String ALIGNMENT = "alignment"; //$NON-NLS-1$
+	private static final String SHOW = "show"; //$NON-NLS-1$
+	private static final String FONTSIZE = "fontsize"; //$NON-NLS-1$
 	private static final String BW = "bs"; //$NON-NLS-1$
 
 	private Canvas canvas;
@@ -111,6 +118,15 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 	private AssetSelection assetSelection = AssetSelection.EMPTY;
 	private Composite composite;
 	private Rectangle2D currentFrame = new Rectangle2D.Double(0d, 0d, 1d, 1d);
+	private final TemplateProcessor captionProcessor = new TemplateProcessor(Constants.TH_ALL);
+	private int show;
+	private int fontsize;
+	private int showLabelDflt;
+	private String labelTemplateDflt;
+	private int labelFontsizeDflt;
+	private int currentFontsize = -1;
+	private Font smallFont;
+	private int labelAlignmentDflt = 1;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -123,7 +139,13 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 			template = memento.getString(TEMPLATE);
 			if (template == null)
 				template = DEFAULTTEMPLATE;
-			Integer integer = memento.getInteger(ALIGNMENT);
+			Integer integer = memento.getInteger(SHOW);
+			show = integer != null ? integer
+					: template == null ? Constants.INHERIT_LABEL
+							: template.isEmpty() ? Constants.NO_LABEL : Constants.CUSTOM_LABEL;
+			integer = memento.getInteger(FONTSIZE);
+			fontsize = integer != null ? integer : 8;
+			integer = memento.getInteger(ALIGNMENT);
 			alignment = integer != null ? integer : SWT.LEFT;
 		}
 	}
@@ -135,10 +157,38 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 		memento.putBoolean(BW, bw);
 		memento.putString(TEMPLATE, template);
 		memento.putInteger(ALIGNMENT, alignment);
+		memento.putInteger(SHOW, show);
+		memento.putInteger(FONTSIZE, fontsize);
+	}
+
+	protected void setPreferences() {
+		IPreferenceStore preferenceStore = applyPreferences();
+		preferenceStore.addPropertyChangeListener(new IPropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent event) {
+				String property = event.getProperty();
+				if (PreferenceConstants.SHOWLABEL.equals(property)
+						|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
+						|| PreferenceConstants.LABELALIGNMENT.equals(property)
+						|| PreferenceConstants.LABELFONTSIZE.equals(property)) {
+					applyPreferences();
+					updateCaption();
+				}
+			}
+		});
+	}
+
+	protected IPreferenceStore applyPreferences() {
+		final IPreferenceStore preferenceStore = UiActivator.getDefault().getPreferenceStore();
+		showLabelDflt = preferenceStore.getInt(PreferenceConstants.SHOWLABEL);
+		labelTemplateDflt = preferenceStore.getString(PreferenceConstants.THUMBNAILTEMPLATE);
+		labelFontsizeDflt = preferenceStore.getInt(PreferenceConstants.LABELFONTSIZE);
+		labelAlignmentDflt  = preferenceStore.getInt(PreferenceConstants.LABELALIGNMENT);
+		return preferenceStore;
 	}
 
 	@Override
 	public void createPartControl(Composite parent) {
+		setPreferences();
 		filter = StringConverter.asRGB(Platform.getPreferencesService().getString(UiActivator.PLUGIN_ID,
 				PreferenceConstants.BWFILTER, null, null), new RGB(64, 128, 64));
 		composite = new Composite(parent, SWT.NONE);
@@ -210,8 +260,8 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 		configureAction = new Action(Messages.getString("PreviewView.configure_caption")) { //$NON-NLS-1$
 			@Override
 			public void run() {
-				ConfigureCaptionDialog dialog = new ConfigureCaptionDialog(getSite().getShell(), template, alignment,
-						currentItem);
+				ConfigureCaptionDialog dialog = new ConfigureCaptionDialog(getSite().getShell(), show, template,
+						alignment, fontsize, currentItem);
 				if (dialog.open() == ConfigureCaptionDialog.OK) {
 					template = dialog.getTemplate();
 					alignment = dialog.getAlignment();
@@ -417,6 +467,12 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 
 	@Override
 	public void refresh() {
+		if (show == Constants.INHERIT_LABEL) {
+			show = showLabelDflt;
+			template = labelTemplateDflt;
+			fontsize = labelFontsizeDflt;
+			alignment = labelAlignmentDflt;
+		}
 		disposeBwImage();
 		canvas.redraw();
 		updateActions(false);
@@ -472,11 +528,10 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 	}
 
 	protected void updateCaption() {
-		if (template == null || template.isEmpty()) {
+		if (show == Constants.NO_LABEL || template == null || template.isEmpty()) {
 			if (caption != null) {
 				caption.dispose();
 				caption = null;
-				composite.layout(true, true);
 			}
 		} else {
 			if (caption == null) {
@@ -488,23 +543,36 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 						configureAction.run();
 					}
 				});
-				composite.layout(true, true);
 			}
 			caption.setText(currentItem == null ? "" //$NON-NLS-1$
-					: Utilities.evaluateTemplate(template, Constants.TH_ALL, "", null, -1, -1, -1, null, currentItem, //$NON-NLS-1$
-							"", Integer.MAX_VALUE, false, true)); //$NON-NLS-1$
+					: captionProcessor.processTemplate(show == Constants.CUSTOM_LABEL ? template : null, currentItem));
 			caption.setAlignment(alignment);
+			caption.setFont(show == Constants.CUSTOM_LABEL && fontsize != 0 ? getSmallFont(fontsize)
+					: JFaceResources.getDefaultFont());
 		}
+		composite.layout(true, true);
+	}
+
+	private Font getSmallFont(int labelFontsize) {
+		if (labelFontsize != currentFontsize) {
+			currentFontsize = labelFontsize;
+			if (smallFont != null) {
+				smallFont.dispose();
+				smallFont = null;
+			}
+		}
+		if (smallFont == null) {
+			FontData[] fd = JFaceResources.getDefaultFontDescriptor().getFontData();
+			smallFont = new Font(canvas.getDisplay(), fd[0].getName(), currentFontsize, fd[0].getStyle());
+		}
+		return smallFont;
 	}
 
 	@Override
 	public void cueChanged(Object o) {
 		Asset previous = currentItem;
-		if (cue) {
-			currentItem = o instanceof Asset ? (Asset) o : selectedItem;
-			if (previous != currentItem)
-				asyncRefresh();
-		}
+		if (cue && previous != (currentItem = o instanceof Asset ? (Asset) o : selectedItem))
+			asyncRefresh();
 	}
 
 	@Override

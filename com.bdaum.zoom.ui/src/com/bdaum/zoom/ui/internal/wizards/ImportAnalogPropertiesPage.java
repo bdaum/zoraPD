@@ -1,7 +1,6 @@
 package com.bdaum.zoom.ui.internal.wizards;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -29,6 +28,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.Utilities;
@@ -66,7 +66,6 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage {
 	private static final String KEYWORDS = "keywords"; //$NON-NLS-1$
 
 	private static final String[] EMPTYSTRINGS = new String[0];
-	private static final SimpleDateFormat sf = new SimpleDateFormat("yyyy-DDD HH:mm:ss"); //$NON-NLS-1$
 
 	private static final int[] FACTORS = new int[] { 100, 100, 318, // Messages.QueryField_kodak_disc,
 			308, // "8x11mm",
@@ -460,7 +459,7 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage {
 		if (s != null)
 			try {
 				GregorianCalendar cal = new GregorianCalendar();
-				cal.setTime(sf.parse(s));
+				cal.setTime(Format.YEAR_DAY_TIME_FORMAT.get().parse(s));
 				dateField.setDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
 				timeField.setTime(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND));
 			} catch (ParseException e) {
@@ -610,7 +609,7 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage {
 		String em = emulsionField.getText().trim();
 		if (!em.isEmpty())
 			settings.put(EMULSION, em);
-		settings.put(DATE, sf.format(result.creationDate));
+		settings.put(DATE, Format.YEAR_DAY_TIME_FORMAT.get().format(result.creationDate));
 		settings.put(KEYWORDS, currentKeywords);
 		if (autoGroup != null)
 			autoGroup.saveValues();

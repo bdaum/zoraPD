@@ -21,7 +21,6 @@
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -51,6 +50,7 @@ import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.QueryField;
@@ -62,6 +62,7 @@ import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.image.ZImage;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.internal.TemplateProcessor;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
 @SuppressWarnings("restriction")
@@ -71,6 +72,7 @@ public class PageProcessor {
 	private static final int titleSize = 12;
 	private static final int subtitleSize = 10;
 	private static final int footerSize = 9;
+	private final TemplateProcessor captionProcessor = new TemplateProcessor(Constants.PI_ALL);
 
 	private PageLayout_typeImpl layout;
 	private List<Asset> assets;
@@ -325,8 +327,7 @@ public class PageProcessor {
 									if (textFont == null)
 										textFont = createFont(device, fontSize, SWT.NORMAL);
 									iGc.setFont(textFont);
-									String caption1 = computeCaption(layout.getCaption1(), Constants.PI_ALL, asset,
-											collection, seqNo, pageItem);
+									String caption1 = captionProcessor.processTemplate(layout.getCaption1(), asset, collection, pageItem, seqNo);
 									int tx = (cx + (cellWidth - iGc.textExtent(caption1).x) / 2);
 									int ty = (iy + ih + fontLead + keyLine);
 									iGc.drawText(caption1, tx, ty, true);
@@ -335,8 +336,7 @@ public class PageProcessor {
 									if (textFont == null)
 										textFont = createFont(device, fontSize, SWT.NORMAL);
 									iGc.setFont(textFont);
-									String caption2 = computeCaption(layout.getCaption2(), Constants.PI_ALL, asset,
-											collection, seqNo, pageItem);
+									String caption2 = captionProcessor.processTemplate(layout.getCaption2(), asset, collection, pageItem, seqNo);
 									int tx = (cx + (cellWidth - iGc.textExtent(caption2).x) / 2);
 									int ty = (iy + ih + 2 * fontLead + fontPixelSize + keyLine);
 									iGc.drawText(caption2, tx, ty, true);
@@ -383,7 +383,7 @@ public class PageProcessor {
 		if (tv == Constants.PT_CATALOG)
 			value = catname;
 		else if (tv == Constants.PT_TODAY)
-			value = new SimpleDateFormat(Messages.PageProcessor_yyyymd).format(date);
+			value = Format.YMDT_SLASH.get().format(date);
 		else if (tv == Constants.PT_COUNT)
 			value = String.valueOf(count);
 		else if (tv == Constants.PT_PAGENO)
@@ -397,12 +397,6 @@ public class PageProcessor {
 		else if (tv == Constants.PT_OWNER)
 			value = meta.getOwner();
 		sb.replace(p, p + tv.length(), value);
-	}
-
-	public static String computeCaption(String template, String[] variables, Asset asset, String collection,
-			int sequenceNo, int pageItem) {
-		return Utilities.evaluateTemplate(template, Constants.PI_ALL, null, null, 0, pageItem, sequenceNo, null, asset,
-				collection, Integer.MAX_VALUE, false, false);
 	}
 
 	private static Font createFont(Device device, int size, int style) {

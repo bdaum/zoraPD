@@ -35,57 +35,44 @@ public class ExhibitionPropertiesOperation extends AbstractOperation {
 	private ExhibitionImpl exhibition;
 	private ExhibitionImpl redo;
 
-	public ExhibitionPropertiesOperation(ExhibitionImpl backup,
-			ExhibitionImpl exhibition) {
+	public ExhibitionPropertiesOperation(ExhibitionImpl backup, ExhibitionImpl exhibition) {
 		super(Messages.ExhibitionPropertiesOperation_set_exhibition_properties);
 		this.backup = backup;
 		this.exhibition = exhibition;
 	}
 
 	public static ExhibitionImpl cloneExhibition(ExhibitionImpl exhibition) {
-		return new ExhibitionImpl(exhibition.getName(),
-				exhibition.getDescription(), exhibition.getInfo(),
-				exhibition.getDefaultViewingHeight(), exhibition.getVariance(),
-				exhibition.getGridSize(), exhibition.getShowGrid(),
-				exhibition.getSnapToGrid(), exhibition.getDefaultDescription(),
-				exhibition.getLabelFontFamily(), exhibition.getLabelFontSize(),
-				exhibition.getLabelSequence(), exhibition.getHideLabel(),
-				exhibition.getLabelAlignment(), exhibition.getLabelDistance(),
-				exhibition.getLabelIndent(), exhibition.getStartX(),
-				exhibition.getStartY(), exhibition.getMatWidth(),
-				exhibition.getMatColor(), exhibition.getFrameWidth(),
-				exhibition.getFrameColor(), exhibition.getGroundColor(),
-				exhibition.getHorizonColor(), exhibition.getCeilingColor(),
-				exhibition.getAudio(), exhibition.getOutputFolder(),
-				exhibition.getFtpDir(), exhibition.getIsFtp(),
-				exhibition.getPageName(), exhibition.getApplySharpening(),
-				exhibition.getRadius(), exhibition.getAmount(),
-				exhibition.getThreshold(), exhibition.getAddWatermark(),
-				exhibition.getContactName(), exhibition.getEmail(),
-				exhibition.getWebUrl(), exhibition.getCopyright(),
-				exhibition.getLogo(), exhibition.getInfoPlatePosition(),
-				exhibition.getHideCredits(), exhibition.getJpegQuality(),
-				exhibition.getScalingMethod(), exhibition.getLastAccessDate(),
-				exhibition.getPerspective());
+		return new ExhibitionImpl(exhibition.getName(), exhibition.getDescription(), exhibition.getInfo(),
+				exhibition.getDefaultViewingHeight(), exhibition.getVariance(), exhibition.getGridSize(),
+				exhibition.getShowGrid(), exhibition.getSnapToGrid(), exhibition.getDefaultDescription(),
+				exhibition.getLabelFontFamily(), exhibition.getLabelFontSize(), exhibition.getLabelSequence(),
+				exhibition.getHideLabel(), exhibition.getLabelAlignment(), exhibition.getLabelDistance(),
+				exhibition.getLabelIndent(), exhibition.getStartX(), exhibition.getStartY(), exhibition.getMatWidth(),
+				exhibition.getMatColor(), exhibition.getFrameWidth(), exhibition.getFrameColor(),
+				exhibition.getGroundColor(), exhibition.getHorizonColor(), exhibition.getCeilingColor(),
+				exhibition.getAudio(), exhibition.getOutputFolder(), exhibition.getFtpDir(), exhibition.getIsFtp(),
+				exhibition.getPageName(), exhibition.getApplySharpening(), exhibition.getRadius(),
+				exhibition.getAmount(), exhibition.getThreshold(), exhibition.getAddWatermark(),
+				exhibition.getContactName(), exhibition.getEmail(), exhibition.getWebUrl(), exhibition.getCopyright(),
+				exhibition.getLogo(), exhibition.getInfoPlatePosition(), exhibition.getHideCredits(),
+				exhibition.getJpegQuality(), exhibition.getScalingMethod(), exhibition.getLastAccessDate(),
+				exhibition.getPerspective(), exhibition.getSafety());
 	}
 
 	@Override
-	public IStatus execute(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		Core.getCore().getDbManager().safeTransaction(null, exhibition);
 		return Status.OK_STATUS;
 	}
 
 	@Override
-	public IStatus redo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		transferValues(redo, exhibition);
 		return execute(monitor, info);
 	}
 
 	@Override
-	public IStatus undo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		redo = cloneExhibition(exhibition);
 		transferValues(backup, exhibition);
 		return execute(monitor, info);

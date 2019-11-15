@@ -39,9 +39,6 @@ public class Messages extends NLS {
 	public static String DbManager_Defrag_failed;
 	public static String DbManager_Defragmenting_;
 	public static String DbManager_database_converted_to_version_n;
-	public static String DbManager_date_mask_day_of_week;
-	public static String DbManager_date_mask_month;
-	public static String DbManager_date_mask_week;
 	public static String DbManager_defrag_cat_2;
 	public static String DbManager_defragmentation_failed;
 	public static String DbManager_defragmentation_successfiul;

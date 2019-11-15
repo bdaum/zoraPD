@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009-2017 Berthold Daum.
+ * Copyright (c) 2009-2019 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -62,8 +62,8 @@ import ij.io.Opener;
 import sun.awt.image.ToolkitImage;
 
 /**
- * This class combines several image representations into one entity It also
- * controls the development of RAW images
+ * This class combines several image representations into one entity. It also
+ * controls the recipe based development of RAW images.
  *
  */
 public class ZImage {
@@ -161,10 +161,10 @@ public class ZImage {
 	 * @param rotation
 	 *            - user defined rotation to be applied during loading
 	 * @param bounds
-	 *            - preferred image bounds or null to scale only for height. Set
-	 *            bounds.with negative to scale only for width, set bound.height
+	 *            - preferred image bounds or null. To scale only for height set
+	 *            bounds.width negative; to scale only for width, set bounds.height
 	 *            negative. Note that the absolute values of width and height are
-	 *            also used to determine the orientation
+	 *            also used to determine the orientation-
 	 * @param scalingFactor
 	 *            - scaling factor to be used when bounds are specified as null Set
 	 *            to 0 for full resolution without subsampling
@@ -313,7 +313,7 @@ public class ZImage {
 	 * Sets the image to black&white
 	 *
 	 * @param bw
-	 *            - true if image is to be delived as a B&W image
+	 *            - true if image is to be delivered as a B&W image
 	 */
 	public void setBw(RGB bw) {
 		this.bw = bw;
@@ -632,7 +632,7 @@ public class ZImage {
 	 * @param targetSystem
 	 *            - ANY, SWTIMAGE or AWTIMAGE
 	 */
-	public synchronized void develop(IProgressMonitor monitor, Device device, int cropMode, int preferredWidth,
+	public void develop(IProgressMonitor monitor, Device device, int cropMode, int preferredWidth,
 			int preferredHeight, int targetSystem) {
 		if (!developed) {
 			boolean cropping = cropMode == CROPPED && recipe != null && recipe.getCropping() != null;
@@ -870,10 +870,10 @@ public class ZImage {
 	}
 
 	private void convertBufferedImageToRGB(int format) {
-//		if (preferSwt(format))
-//			bufferedImage2Swt();
-//		else
-			bufferedImage = ImageUtilities.convertToDirectColor(bufferedImage, thumbnail);
+		// if (preferSwt(format))
+		// bufferedImage2Swt();
+		// else
+		bufferedImage = ImageUtilities.convertToDirectColor(bufferedImage, thumbnail);
 	}
 
 	protected void bufferedImage2Swt() {
@@ -1165,7 +1165,7 @@ public class ZImage {
 	 *            for JPEG and WebP, default = 75)
 	 * @throws IOException
 	 */
-	public void saveToStream(final IProgressMonitor monitor, boolean develop, final int cropMode,
+	public synchronized void saveToStream(final IProgressMonitor monitor, boolean develop, final int cropMode,
 			final int preferredWidth, final int preferredHeight, OutputStream out, int format, int quality)
 			throws IOException {
 		ImageLoader loader = null;

@@ -21,7 +21,6 @@
 package com.bdaum.zoom.ui.internal.views;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -97,6 +96,7 @@ import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.CatalogListener;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IVolumeManager;
@@ -116,8 +116,6 @@ import com.bdaum.zoom.ui.internal.hover.HoverManager;
 
 @SuppressWarnings("restriction")
 public class BookmarkView extends ViewPart implements CatalogListener, IDragHost, IDropHost {
-
-	public static final SimpleDateFormat DATEFORMAT = new SimpleDateFormat(Messages.getString("BookmarkView.dateformat")); //$NON-NLS-1$
 
 	private final class BookmarkDropTargetListener extends EffectDropTargetListener {
 		private final FileTransfer fileTransfer;
@@ -463,7 +461,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 			public String getText(Object element) {
 				if (element instanceof Bookmark) {
 					Date createdAt = ((Bookmark) element).getCreatedAt();
-					return createdAt == null ? "" : DATEFORMAT.format(createdAt); //$NON-NLS-1$
+					return createdAt == null ? "" : Format.MDY_TIME_LONG_FORMAT.get().format(createdAt); //$NON-NLS-1$
 				}
 				return super.getText(element);
 			}

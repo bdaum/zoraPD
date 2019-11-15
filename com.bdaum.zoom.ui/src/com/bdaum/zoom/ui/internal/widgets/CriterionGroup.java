@@ -49,7 +49,6 @@ import com.bdaum.zoom.cat.model.location.LocationImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.ui.internal.FieldDescriptor;
 import com.bdaum.zoom.ui.internal.Icons;
@@ -644,28 +643,19 @@ public class CriterionGroup extends AbstractCriterionGroup {
 						} else if (type == QueryField.T_BOOLEAN)
 							fromStack.setEnumerationData(enumKeys, UiConstants.BOOLEANLABELS, null, 10);
 						if (crit != null) {
-							Object value = crit.getValue();
-							if (range) {
-								Range r = (Range) value;
-								fromStack.select(r.getFrom());
-								if (toStack != null)
-									toStack.select(r.getTo());
-							} else
-								fromStack.select(value);
+							fromStack.select(crit.getValue());
+							if (range && toStack != null)
+								toStack.select(crit.getTo()); 
 						}
 					} else if (range) {
 						updateStacks(false, null, true, fieldDescriptor, rel);
 						boolean set = oldFrom != null && fromStack.setValue(fieldDescriptor, oldFrom);
 						set &= oldTo != null && toStack != null && toStack.setValue(fieldDescriptor, oldTo);
 						if (!set && crit != null) {
-							Object value = crit.getValue();
-							if (value instanceof Range) {
-								Range vrange = (Range) value;
-								fromStack.setValue(fieldDescriptor, vrange.getFrom());
-								if (toStack != null)
-									toStack.setValue(fieldDescriptor, vrange.getTo());
-							} else
-								fromStack.setValue(fieldDescriptor, value);
+							fromStack.setValue(fieldDescriptor, crit.getValue());
+							Object vto = crit.getTo();
+							if (vto != null && toStack != null)
+								toStack.setValue(fieldDescriptor, vto);
 						}
 					} else {
 						updateStacks(false, null, false, fieldDescriptor, rel);
@@ -724,7 +714,8 @@ public class CriterionGroup extends AbstractCriterionGroup {
 		crit.setSubfield(des.subfield == null ? null : des.subfield.getKey());
 		crit.setRelation(relation);
 		crit.setAnd(and);
-		crit.setValue(toValue != null ? new Range(fromValue, toValue) : fromValue);
+		crit.setValue(fromValue);
+		crit.setTo(toValue);
 		return crit;
 	}
 

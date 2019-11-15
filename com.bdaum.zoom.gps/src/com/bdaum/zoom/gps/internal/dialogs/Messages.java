@@ -47,7 +47,6 @@ public class Messages extends NLS {
 	public static String TrackpointDialog_start;
 	public static String TrackpointDialog_start_after_x;
 	public static String TrackpointDialog_subtrack_overlaps;
-	public static String TrackpointDialog_tracktimeformat;
 	public static String TrackpointDialog_wrong_gap_end_value;
 	public static String TrackpointDialog_wrong_gap_start_value;
 	public static String SearchDetailDialog_parameters;

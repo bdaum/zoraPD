@@ -105,6 +105,8 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.CaptionProcessor;
+import com.bdaum.zoom.ui.internal.CaptionProcessor.CaptionConfiguration;
 import com.bdaum.zoom.ui.internal.ExportXmpViewerFilter;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -164,6 +166,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 	private static final String REPEAT_BG = "repeatBg"; //$NON-NLS-1$
 	private static final String BG_IMAGE = "bgImage"; //$NON-NLS-1$
 	private static final String LOGO = "logo"; //$NON-NLS-1$
+	private static final String PRIVACY = "privacy"; //$NON-NLS-1$
 	private static final String DOWNLOAD_TEXT = "downloadText"; //$NON-NLS-1$
 	private static final String LINKPAGE = "linkpage"; //$NON-NLS-1$
 	private static final String POWEREDBY_TEXT = "powered_by"; //$NON-NLS-1$
@@ -234,6 +237,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 	private Map<IConfigurationElement, String> linkMap = new HashMap<IConfigurationElement, String>();
 	private DescriptionGroup descriptionGroup;
 	private QualityGroup qualityGroup;
+	private RadioButtonGroup privacyGroup;
 
 	public WebGalleryEditDialog(Shell parentShell, GroupImpl group, WebGalleryImpl current, String title,
 			boolean promptForEngine, boolean canUndo) {
@@ -403,6 +407,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		setCondText(contactField, settings.get(CONTACT));
 		setCondText(emailField, settings.get(EMAIL));
 		setCondText(weburlField, settings.get(WEBURL));
+		privacyGroup.setSelection(getInteger(PRIVACY, QueryField.SAFETY_SAFE));
 		String poweredBy = settings.get(POWEREDBY_TEXT);
 		if (poweredBy == null || poweredBy.isEmpty())
 			poweredBy = Messages.WebGalleryEditDialog_powered_by;
@@ -415,11 +420,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		shadeColor = shadeButton.fillValues(settings, SHADE_COLOR, 224, 224, 224);
 		linkColor = linkButton.fillValues(settings, LINK_COLOR, 32, 112, 208);
 		// Colors
-		try {
-			opacityField.setSelection(settings.getInt(OPACITY));
-		} catch (NumberFormatException e) {
-			opacityField.setSelection(67);
-		}
+		opacityField.setSelection(getInteger(OPACITY, 67));
 		try {
 			int thumbSize = Math.max(0, Math.min(thumbsizeField.getItemCount() - 1, settings.getInt(THUMBSIZE2)));
 			thumbsizeField.select(thumbSize);
@@ -464,6 +465,14 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		return settings.getArray(XMP_FILTER);
 	}
 
+	private int getInteger(String key, int dflt) {
+		try {
+			return settings.getInt(key);
+		} catch (NumberFormatException e) {
+			return dflt;
+		}
+	}
+
 	private void initNumericControl(NumericControl control, String key, int dflt) {
 		try {
 			control.setSelection(settings.getInt(key));
@@ -488,6 +497,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		settings.put(EMAIL, gallery.getEmail());
 		settings.put(WEBURL, gallery.getWebUrl());
 		settings.put(WATER_MARK, gallery.getAddWatermark());
+		settings.put(PRIVACY, privacyGroup.getSelection());
 		settings.put(SHOW_META, gallery.getShowMeta());
 		bgButton.saveSettings(settings, BG_COLOR);
 		borderButton.saveSettings(settings, BORDER_COLOR);
@@ -543,6 +553,16 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 					keywordField.setText(sb.toString());
 				}
 				xmpFilter = gallery.getXmpFilter();
+			}
+			switch (gallery.getSafety()) {
+			case QueryField.SAFETY_SAFE:
+				privacyGroup.setSelection(0);
+				break;
+			case QueryField.SAFETY_MODERATE:
+				privacyGroup.setSelection(1);
+				break;
+			default:
+				privacyGroup.setSelection(2);
 			}
 			setText(downloadField, gallery.getDownloadText());
 			downloadButton.setSelection(gallery.getHideDownload());
@@ -802,6 +822,11 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 				addImageKeywords();
 			}
 		});
+		// Privacy
+		new Label(parent, SWT.NONE).setText(Messages.WebGalleryEditDialog_privacy);
+		privacyGroup = new RadioButtonGroup(parent, null, SWT.HORIZONTAL, Messages.WebGalleryEditDialog_public,
+				Messages.WebGalleryEditDialog_medium, Messages.WebGalleryEditDialog_private);
+		privacyGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		// Download
 		final Label downloadLabel = new Label(parent, SWT.NONE);
 		downloadLabel.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
@@ -1009,10 +1034,10 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		HtmlSourceViewer viewer = new HtmlSourceViewer(comp, null,
 				SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.H_SCROLL | SWT.V_SCROLL, new XMLCodeScanner(),
 				new HtmlContentAssistant());
-		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
-		data.heightHint = h;
-		data.widthHint = w;
-		viewer.getControl().setLayoutData(data);
+		layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
+		layoutData.heightHint = h;
+		layoutData.widthHint = w;
+		viewer.getControl().setLayoutData(layoutData);
 		viewer.setDocument(new Document());
 		return viewer;
 	}
@@ -1253,7 +1278,8 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		} else if (control instanceof WebColorGroup)
 			newValue = ((WebColorGroup) control).getRGB();
 		if (newValue != null) {
-			String selector = control instanceof Control ? (String) ((Control) control).getData(UiConstants.SELECTOR) : null;
+			String selector = control instanceof Control ? (String) ((Control) control).getData(UiConstants.SELECTOR)
+					: null;
 			if (selector != null) {
 				String prefix = selector + ':';
 				WebParameter oldParm = parameters.get(key);
@@ -1630,6 +1656,16 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 			result.setEmail(emailField.getText().trim());
 			result.setWebUrl(weburlField.getText().trim());
 			result.setAddWatermark(watermarkButton.getSelection());
+			switch (privacyGroup.getSelection()) {
+			case 0:
+				result.setSafety(QueryField.SAFETY_SAFE);
+				break;
+			case 1:
+				result.setSafety(QueryField.SAFETY_MODERATE);
+				break;
+			default:
+				result.setSafety(QueryField.SAFETY_RESTRICTED);
+			}
 			result.setXmpFilter(getXmpFilter());
 			result.setBgColor(bgButton.getRGB());
 			result.setShadeColor(shadeButton.getRGB());
@@ -1682,7 +1718,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 				}
 				if (group == null) {
 					group = new GroupImpl(Messages.WebGalleryEditDialog_web_galleries, false, Constants.INHERIT_LABEL,
-							null, 0, null);
+							null, 0, 1, null);
 					group.setStringId(Constants.GROUP_ID_WEBGALLERY);
 				}
 				if (current != null)
@@ -1788,20 +1824,22 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		} else if (obj instanceof SmartCollectionImpl) {
 			int seqNo = 1;
 			SmartCollection sm = (SmartCollection) obj;
-			List<Asset> assets = dbManager.createCollectionProcessor(sm).select(true);
 			StoryboardImpl newStoryboard = new StoryboardImpl("", 1, false, null, //$NON-NLS-1$
 					0, false, true, true, true);
 			newStoryboard.setTitle(sm.getName());
 			newStoryboard.setDescription(sm.getDescription());
-			for (Asset asset : assets) {
-				if (!WebGalleryView.accepts(asset))
-					continue;
-				WebExhibitImpl newExhibit = new WebExhibitImpl(UiUtilities.createSlideTitle(asset), ++seqNo, "", //$NON-NLS-1$
-						false, asset.getName(), true, true, asset.getStringId());
-				dbManager.store(newExhibit);
-				newStoryboard.addExhibit(newExhibit.getStringId());
-			}
-			dbManager.store(newStoryboard);
+			CaptionProcessor captionProcessor = new CaptionProcessor(Constants.TH_ALL);
+			CaptionConfiguration captionConfig = captionProcessor.computeCaptionConfiguration((SmartCollection) obj);
+			for (Asset asset : dbManager.createCollectionProcessor(sm).select(true))
+				if (WebGalleryView.accepts(asset)) {
+					WebExhibitImpl newExhibit = new WebExhibitImpl(
+							captionProcessor.computeImageCaption(asset, null, null, null, captionConfig.getLabelTemplate(), true),
+							++seqNo, "", //$NON-NLS-1$
+							false, asset.getName(), true, true, asset.getStringId());
+					dbManager.store(newExhibit);
+					newStoryboard.addExhibit(newExhibit.getStringId());
+					dbManager.store(newStoryboard);
+				}
 			gallery.addStoryboard(newStoryboard);
 		}
 	}

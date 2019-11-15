@@ -19,7 +19,6 @@
  */
 package com.bdaum.zoom.gps.internal.dialogs;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -49,9 +48,11 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.gps.internal.GpsActivator;
 import com.bdaum.zoom.gps.internal.HelpContextIds;
-import com.bdaum.zoom.gps.widgets.IMapComponent;
+import com.bdaum.zoom.gps.internal.IMapComponent;
+import com.bdaum.zoom.gps.internal.views.Mapdata;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.gps.Trackpoint;
 import com.bdaum.zoom.ui.widgets.DateInput;
@@ -131,13 +132,12 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 				else if (e >= track.getEnd())
 					errorMessage = NLS.bind(split ? Messages.TrackpointDialog_wrong_gap_end_value
 							: Messages.TrackpointDialog_end_before_x, formatDate(track.getEnd()));
-			} else {
+			} else
 				for (SubTrack t : subtracks)
 					if (s >= t.getStart() && s < t.getEnd() || e >= t.getStart() && e < t.getEnd()) {
 						errorMessage = NLS.bind(Messages.TrackpointDialog_subtrack_overlaps, formatTrack(t));
 						break;
 					}
-			}
 			setErrorMessage(errorMessage);
 			getButton(OK).setEnabled(errorMessage == null);
 		}
@@ -201,7 +201,7 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 		}
 	}
 
-	SimpleDateFormat sd = new SimpleDateFormat(Messages.TrackpointDialog_tracktimeformat);
+	private static final long ONEMINUTE = 60000L;
 	private final List<SubTrack> subtracks = new LinkedList<TrackpointDialog.SubTrack>();
 	private TableViewer viewer;
 	private Button editButton;
@@ -240,7 +240,7 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 		super.create();
 		getShell().setText(Constants.APPLICATION_NAME);
 		setTitle(Messages.TrackpointDialog_edit_trackpoints);
-		setMessage(NLS.bind(Messages.TrackpointDialog_initial_message, formatTime(tolerance)));
+		setMessage(NLS.bind(Messages.TrackpointDialog_initial_message, formatTime(tolerance / ONEMINUTE)));
 		updateButtons();
 	}
 
@@ -263,7 +263,7 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 			GridData layoutData = new GridData(GridData.FILL_BOTH);
 			layoutData.widthHint = layoutData.heightHint = 500;
 			mapComponent.getControl().setLayoutData(layoutData);
-			mapComponent.setInput(null, 12, null, null, null, IMapComponent.BLANK);
+			mapComponent.setInput(null, 12, IMapComponent.BLANK);
 		}
 	}
 
@@ -387,7 +387,7 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 			public String getText(Object element) {
 				if (element instanceof SubTrack) {
 					SubTrack subTrack = (SubTrack) element;
-					return formatTime((subTrack.getEnd() - subTrack.getStart() + 30000L) / 60000L);
+					return formatTime((subTrack.getEnd() - subTrack.getStart() + 30000L) / ONEMINUTE);
 				}
 				return super.getText(element);
 			}
@@ -447,7 +447,8 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 				previous = pnt;
 			}
 		}
-		mapComponent.setInput(null, 12, null, null, pnts.toArray(new Trackpoint[pnts.size()]), IMapComponent.TRACK);
+		mapComponent.setInput(new Mapdata(null, pnts.toArray(new Trackpoint[pnts.size()]), false), 12,
+				IMapComponent.TRACK);
 	}
 
 	protected void updateButtons() {
@@ -463,22 +464,19 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 			join = true;
 			Iterator<?> it = selection.iterator();
 			while (it.hasNext()) {
-				int index = subtracks.indexOf(it.next());
-				if (previous >= 0) {
-					if (index - previous > 1) {
-						join = false;
-						break;
-					}
+				if (previous >= 0 && subtracks.indexOf(it.next()) - previous > 1) {
+					join = false;
+					break;
 				}
-				previous = index;
+				previous = subtracks.indexOf(it.next());
 			}
 		}
 		joinButton.setEnabled(join);
 		splitButton.setEnabled(single);
 	}
 
-	private String formatDate(long time) {
-		return sd.format(new Date(time));
+	private static String formatDate(long time) {
+		return Format.EMDY_TIME_FORMAT.get().format(new Date(time));
 	}
 
 	private static String formatTime(long minutes) {

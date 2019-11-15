@@ -1,6 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="en-us"><head>
 
+
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Hover preferences</title>
 
 
@@ -35,29 +36,55 @@ it. For this purpose a special syntax is provided:<br>
     <tr>
       <td style="vertical-align: top; font-weight: bold; width: 20%;"><code>?<br>
       </code></td>
-      <td style="vertical-align: top;">A question mark at the beginning of a line. The whole line will be deleted when <span style="font-weight: bold;">all</span> variables within that line remain unresolved.<br>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Conditional line 1<br>
+      </span>A question mark at the beginning of a line. The whole line will be deleted when <span style="font-weight: bold;">all</span> variables and groups within that line remain unresolved.<br>
+      <span style="font-weight: bold;">Example:</span><code><br>
+ ?Shot in </code><code>{meta=iptc_location_created&amp;city}</code><br>
       </td>
     </tr>
     <tr>
       <td style="vertical-align: top; font-weight: bold;"><code>??<br>
       </code></td>
-      <td style="vertical-align: top;">Two question marks at the beginning of a line. The whole line will be deleted when at least <span style="font-weight: bold;">one</span> variable within that line remains unresolved.<br>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Conditional line 2<br>
+      </span>Two question marks at the beginning of a line. The whole line will be deleted when at least <span style="font-weight: bold;">one</span> variable or group within that line remains unresolved.<br>
+      <span style="font-weight: bold;">Example:</span><br>
+
+??<code>{meta=owner},</code><code> {</code><code>yyyy</code><code>}</code><code></code><br>
       </td>
     </tr>
     <tr>
       <td style="vertical-align: top; font-weight: bold;"><code>(? ... ?)<br>
       </code></td>
-      <td style="vertical-align: top;">The complete expression between the parantheses will be deleted if <span style="font-weight: bold;">all</span> variables within the paranthesis remain unresolved. This works across line breaks, too.<br>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Conditional group 1<br>
+      </span>The complete expression between the parantheses will be deleted if <span style="font-weight: bold;">all</span> variables and subgroups within the paranthesis remain unresolved. This works across line breaks, too.<br>
+      <span style="font-weight: bold;">Example:</span><code><br>
+ (?Shot in </code><code>{meta=iptc_location_created&amp;city}?)</code><br>
       </td>
     </tr>
     <tr>
       <td style="vertical-align: top; font-weight: bold;"><code>(?? ... ?)<br>
       </code></td>
-      <td style="vertical-align: top;">The complete expression between the parantheses will be deleted if at least <span style="font-weight: bold;">one</span> variable within the paranthesis remains unresolved. This works across line breaks, too.</td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Conditional group 2</span><br>
+The complete expression between the parantheses will be deleted if at least <span style="font-weight: bold;">one</span> variable or subgroup within the paranthesis remains unresolved. This works across line breaks, too.<br>
+      <span style="font-weight: bold;">Example:</span><br>
+
+(??<code>{meta=owner},</code><code> {</code><code>yyyy</code><code>}?</code><code>)</code><br>
+</td>
+    </tr><tr>
+      <td style="vertical-align: top;"><code>...|(...)</code></td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Fallback</span><br>
+
+If the expression (variable, conditional group, or another fallback) in front of the<code> | </code>is
+unresolved, the expression within the parantheses is used instead.
+Otherwise it is discarded, This works across line breaks, too.<br>
+
+          <span style="font-weight: bold;">Example:<br>
+          </span><code> {meta=iptc_location_created&amp;city}|(</code><code>Not geotagged)</code></td>
     </tr>
+
   </tbody>
 </table>
-<br>
+<br>Conditional groups and fallbacks can be nested.<br>
 This mark-up is finally removed from the template when the hover text is generated.<br>
 <br>
 <h4>Timing</h4>

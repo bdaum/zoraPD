@@ -11,6 +11,8 @@
    <extension-point id="viewAction" name="%extension-point.name" schema="schema/com.bdaum.zoom.ui.viewAction.exsd"/>
    <extension-point id="perspectiveGallery" name="%extension-point.name.perspectiveGallery" schema="schema/perspectiveGallery.exsd"/>
    <extension-point id="hoverContribution" name="%extension-point.name.hover" schema="schema/hoverContribution.exsd"/>
+   <extension-point id="mediaUiExtension" name="%extension-point.name.mediaUiExt" schema="schema/mediaUiExtension.exsd"/>
+   <extension-point id="autostart" name="Autostart" schema="schema/autostart.exsd"/>
 
    <extension
          point="org.eclipse.ui.views">
@@ -2730,6 +2732,10 @@
       <hoverContribution
             class="com.bdaum.zoom.ui.internal.hover.CatalogPresentationHoverContribution"
             id="com.bdaum.zoom.ui.hover.catalog.presentation">
+      </hoverContribution>
+      <hoverContribution
+            class="com.bdaum.zoom.ui.internal.hover.WatchedFolderHoverContribution"
+            id="com.bdaum.zoom.ui.hover.watchedFolder">
       </hoverContribution>
    </extension>
 </plugin>

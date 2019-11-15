@@ -49,6 +49,7 @@ import com.bdaum.zoom.cat.model.PageLayout_typeImpl;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
@@ -115,9 +116,10 @@ public class LayoutComponent implements IInputValidator {
 	protected static final String[] PAGEVARIABLES = new String[] { Constants.PT_CATALOG, Constants.PT_TODAY,
 			Constants.PT_COUNT, Constants.PT_PAGENO, Constants.PT_COLLECTION, Constants.PT_USER, Constants.PT_OWNER };
 
-	protected static final String[] CAPTIONVARIABLES = new String[] { Constants.PI_TITLE, Constants.PI_NAME,
-			Constants.PI_FORMAT, Constants.PI_CREATIONDATE, Constants.PI_CREATIONYEAR, Constants.PI_SIZE,
-			Constants.PT_COLLECTION, Constants.PI_SEQUENCENO, Constants.PI_PAGEITEM };
+//	protected static final String[] CAPTIONVARIABLES = new String[] { Constants.PI_TITLE, Constants.PI_NAME, 
+//			Constants.PI_FORMAT, Constants.PI_CREATIONDATE, Constants.PI_CREATIONYEAR, Constants.PI_SIZE,
+//			Constants.PT_COLLECTION, Constants.PI_SEQUENCENO, Constants.PI_PAGEITEM };
+	
 	private static final String[] CAPTIONTEMPLATES = new String[] { "- {sequenceNo} -", //$NON-NLS-1$
 			"- {pageItem} -", //$NON-NLS-1$
 			"{title}", //$NON-NLS-1$
@@ -249,11 +251,11 @@ public class LayoutComponent implements IInputValidator {
 		}
 		CGroup captionGroup = createGroup(composite, Messages.LayoutComponent_captions, 5);
 		caption1Field = new TextWithVariableGroup(captionGroup, Messages.PrintLayoutDialog_capt_line_1, 300,
-				CAPTIONVARIABLES, true, CAPTIONTEMPLATES, asset, collection);
+				Constants.PI_ALL, true, CAPTIONTEMPLATES, asset, collection);
 		caption2Field = new TextWithVariableGroup(captionGroup, Messages.PrintLayoutDialog_capt_line_2, 300,
-				CAPTIONVARIABLES, true, CAPTIONTEMPLATES, asset, collection);
+				Constants.PI_ALL, true, CAPTIONTEMPLATES, asset, collection);
 		if (type == HTML)
-			altField = new TextWithVariableGroup(captionGroup, Messages.LayoutComponent_alt, 300, CAPTIONVARIABLES,
+			altField = new TextWithVariableGroup(captionGroup, Messages.LayoutComponent_alt, 300, Constants.PI_ALL,
 					true, CAPTIONTEMPLATES, asset, collection);
 		else {
 			new Label(captionGroup, SWT.NONE).setText(Messages.PrintLayoutDialog_keyline);
@@ -312,7 +314,7 @@ public class LayoutComponent implements IInputValidator {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				Date now = new Date();
-				SimpleDateFormat df = new SimpleDateFormat(Messages.LayoutComponent_date_format);
+				SimpleDateFormat df = Format.MDY_FORMAT.get(); 
 				InputDialog dialog = new InputDialog(saveButton.getShell(), Messages.LayoutComponent_layout_name,
 						Messages.LayoutComponent_layout_name_msg, df.format(now), LayoutComponent.this);
 				if (dialog.open() == InputDialog.OK) {

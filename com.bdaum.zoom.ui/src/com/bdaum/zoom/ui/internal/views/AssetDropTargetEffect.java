@@ -25,6 +25,7 @@ import org.eclipse.swt.dnd.DropTargetEffect;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -32,6 +33,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.Region;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TreeItem;
 
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -49,6 +51,8 @@ public class AssetDropTargetEffect extends DropTargetEffect implements PaintList
 	private double magnification = 0.3d;
 	private String caption = null;
 	private Region region;
+	private TreeItem treeItem;
+	private Color targetColor;
 
 	public AssetDropTargetEffect(IDragHost host, Control control) {
 		super(control);
@@ -109,10 +113,43 @@ public class AssetDropTargetEffect extends DropTargetEffect implements PaintList
 		if (mode != event.detail)
 			setMode(event.detail);
 		getControl().getDisplay().syncExec(() -> {
-			if (mode != DND.DROP_NONE && shell != null && !shell.isDisposed())
-				shell.setLocation(pos);
+			if (!shell.isDisposed() && shell != null) {
+				clearTarget();
+				if (mode != DND.DROP_NONE) {
+					shell.setLocation(pos);
+					if (event.item instanceof TreeItem) {
+						treeItem = (TreeItem) event.item;
+						if (targetColor == null) {
+							Color bg = treeItem.getParent().getBackground();
+							int red = bg.getRed();
+							int green = bg.getGreen();
+							int blue = bg.getBlue();
+							if (red+green+blue < 384)
+								blue +=64;
+							else {
+								red -= 64;
+								green -= 64;
+							}
+							targetColor = new Color(getControl().getDisplay(), red, green, blue);
+						}
+						treeItem.setBackground(targetColor);
+					}
+				}
+			}
 		});
 
+	}
+	
+	@Override
+	public void dragLeave(DropTargetEvent event) {
+		clearTarget();
+	}
+
+	private void clearTarget() {
+		if (treeItem != null) {
+			treeItem.setBackground(null);
+			treeItem = null;
+		}
 	}
 
 	/*
@@ -144,6 +181,8 @@ public class AssetDropTargetEffect extends DropTargetEffect implements PaintList
 	}
 
 	public void dispose() {
+		if (targetColor != null)
+			targetColor.dispose();
 		if (shell != null)
 			shell.close();
 		if (region != null)

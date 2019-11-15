@@ -586,7 +586,7 @@ public abstract class BasicView extends ViewPart
 		return asset != null && !Double.isNaN(asset.getGPSLatitude()) && !Double.isNaN(asset.getGPSLongitude());
 	}
 
-	protected void registerCommand(IAction action, String commandId) {
+	public void registerCommand(IAction action, String commandId) {
 		if (action != null) {
 			IHandlerService service = getSite().getService(IHandlerService.class);
 			if (service != null) {

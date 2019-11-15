@@ -7,11 +7,77 @@
       <mediaSupport
             class="com.bdaum.zoom.video.internal.VideoSupport"
             collectionID="videos"
-            formats="AVCHD MTS AVI MP4 MOV 3GP 3GPP 3G2 3GPP2 ASF WMV WMA OGG OGV OGM MKV RM"
             id="com.bdaum.zoom.video.mediaSupport"
-            mimetypes="video/avchd-stream video/mts video/x-msvideo video/mp4 video/quicktime video/3gpp video/3gpp video/3gpp2 video/3gpp2 video/x-ms-wmv video/x-ms-asf video/ogg video/ogg application/ogg  video/x-matroska application/vnd.rn-realmedia"
             name="%mediaSupport.name.video"
             plural="%mediaSupport.plural.video">
+         <format
+               extension="AVCHD"
+               mimeType="video/avchd-stream">
+         </format>
+         <format
+               extension="MTS"
+               mimeType="video/mts">
+         </format>
+         <format
+               extension="AVI"
+               mimeType="video/x-msvideo">
+         </format>
+         <format
+               extension="MP4"
+               mimeType="video/mp4">
+         </format>
+         <format
+               extension="MOV"
+               mimeType="video/quicktime">
+         </format>
+         <format
+               extension="3GP"
+               mimeType="video/3gpp">
+         </format>
+         <format
+               extension="3GPP"
+               mimeType="video/3gpp">
+         </format>
+         <format
+               extension="3G2"
+               mimeType="video/3gpp2">
+         </format>
+         <format
+               extension="3GPP2"
+               mimeType="video/3gpp2">
+         </format>
+         <format
+               extension="ASF"
+               mimeType="video/x-ms-asf">
+         </format>
+         <format
+               extension="WMV"
+               mimeType="video/x-ms-wmv">
+         </format>
+         <format
+               extension="OGG"
+               mimeType="video/ogg">
+         </format>
+         <format
+               extension="OGV"
+               mimeType="video/ogg">
+         </format>
+         <format
+               extension="OGM"
+               mimeType="application/ogg">
+         </format>
+         <format
+               extension="MKV"
+               mimeType="video/x-matroska">
+         </format>
+         <format
+               extension="RM"
+               mimeType="application/vnd.rn-realmedia">
+         </format>
+         <format
+               extension="webm"
+               mimeType="video/webm">
+         </format>
       </mediaSupport>
    </extension>
    <extension
@@ -78,7 +144,7 @@
             class="com.bdaum.zoom.video.internal.views.VideoView"
             icon="icons/video.png"
             id="com.bdaum.zoom.video.view"
-            name="Video"
+            name="%view.name.video2"
             restorable="true">
       </view>
    </extension>
@@ -89,5 +155,30 @@
             id="com.bdaum.zoom.ui.hover.galleryItem.video">
       </hoverContribution>
    </extension>
-
+   <extension
+         point="com.bdaum.zoom.ui.mediaUiExtension">
+      <uiExtension
+            class="com.bdaum.zoom.video.internal.UiExtension"
+            mediaSupportId="com.bdaum.zoom.video.mediaSupport"
+            name="Video Ui Extension">
+      </uiExtension>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            categoryId="com.bdaum.zoom.ui.ImageCommands"
+            id="com.bdaum.zoom.video.updateThumbCommand"
+            name="%command.name.updateThumb">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="com.bdaum.zoom.video.updateThumbCommand"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
+            sequence="M1+V M1+T">
+      </key>
+   </extension>
+ 
 </plugin>

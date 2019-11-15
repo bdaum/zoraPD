@@ -42,8 +42,8 @@ import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -53,7 +53,6 @@ import com.bdaum.zoom.ui.widgets.DateInput;
 
 public class TimeSearchDialog extends ZTitleAreaDialog {
 
-	private static final SimpleDateFormat df = new SimpleDateFormat(Messages.TimeSearchDialog_dateFormat);
 	private static final String SETTINGSID = "com.bdaum.zoom.timeSearchDialog"; //$NON-NLS-1$
 
 	private static final long ONEHOUR = 3600000L;
@@ -78,9 +77,10 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 	public void create() {
 		super.create();
 		setTitle(Messages.TimeSearchDialog_time_search);
-		setMessage(date1.equals(date2) ? NLS.bind(Messages.TimeSearchDialog_search_for_all, df.format(date1))
-				: NLS.bind(Messages.TimeSearchDialog_search_for_all_images_between, df.format(date1),
-						df.format(date2)));
+		SimpleDateFormat sdf = Format.EMDY_TIME_LONG_FORMAT.get();
+		setMessage(date1.equals(date2) ? NLS.bind(Messages.TimeSearchDialog_search_for_all, sdf.format(date1))
+				: NLS.bind(Messages.TimeSearchDialog_search_for_all_images_between, sdf.format(date1),
+						sdf.format(date2)));
 	}
 
 	@Override
@@ -127,11 +127,10 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 		intervalComp.setLayoutData(layoutData);
 		intervalComp.setText(Messages.TimeSearchDialog_derived_interval);
 		intervalComp.setLayout(new GridLayout(2, false));
-		intervalRadioGroup = new RadioButtonGroup(intervalComp, null, 2,
-				Messages.TimeSearchDialog_exactly_same_time, Messages.TimeSearchDialog_within_same_hour,
-				Messages.TimeSearchDialog_within_4_hours, Messages.TimeSearchDialog_same_day,
-				Messages.TimeSearchDialog_same_week, Messages.TimeSearchDialog_same_month,
-				Messages.TimeSearchDialog_same_year);
+		intervalRadioGroup = new RadioButtonGroup(intervalComp, null, 2, Messages.TimeSearchDialog_exactly_same_time,
+				Messages.TimeSearchDialog_within_same_hour, Messages.TimeSearchDialog_within_4_hours,
+				Messages.TimeSearchDialog_same_day, Messages.TimeSearchDialog_same_week,
+				Messages.TimeSearchDialog_same_month, Messages.TimeSearchDialog_same_year);
 		fillValues();
 		return area;
 	}
@@ -156,7 +155,7 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 		date2 = toField.getDate();
 		boolean network = findInNetworkGroup == null ? false : findInNetworkGroup.getSelection();
 		coll = new SmartCollectionImpl(Messages.TimeSearchDialog_time_search, false, false, true, network, null, 0,
-				null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
+				null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 		Date from, to;
 		int buttonpressed = intervalRadioGroup.getSelection();
 		switch (buttonpressed) {
@@ -258,15 +257,15 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 			to = date2;
 		}
 		int rel;
-		Object value;
-		if (from.equals(to)) {
-			value = from;
+		Object value = from;
+		Object vto = null;
+		if (from.equals(to))
 			rel = QueryField.EQUALS;
-		} else {
-			value = new Range(from, to);
+		else {
+			vto = to;
 			rel = QueryField.BETWEEN;
 		}
-		coll.addCriterion(new CriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, value, rel, false));
+		coll.addCriterion(new CriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, value, vto, rel, false));
 		coll.addSortCriterion(new SortCriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, false));
 		coll.setSmartCollection_subSelection_parent(findWithinGroup.getParentCollection());
 		settings.put(INTERVAL, buttonpressed);

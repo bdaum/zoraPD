@@ -44,6 +44,7 @@ import Jama.Matrix;
 import com.bdaum.zoom.cat.model.meta.WatchedFolder;
 import com.bdaum.zoom.core.AbstractRecipeDetector;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IRecipeDetector;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.image.IFileHandler;
@@ -62,7 +63,6 @@ import com.bdaum.zoom.program.DiskFullException;
 
 public class C1Detector extends AbstractRecipeDetector {
 	private static final String EIP = ".EIP"; //$NON-NLS-1$
-	private static final SimpleDateFormat sf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss"); //$NON-NLS-1$
 	private static final String V = "V"; //$NON-NLS-1$
 	private static final String K = "K"; //$NON-NLS-1$
 	private static final String E2 = "E"; //$NON-NLS-1$
@@ -927,7 +927,7 @@ public class C1Detector extends AbstractRecipeDetector {
 
 	protected Date parseDate(String value) {
 		try {
-			return sf.parse(value);
+			return Format.DATE_TIME_SLASH_FORMAT.get().parse(value);
 		} catch (ParseException e) {
 			C1Activator.getDefault().logError(NLS.bind(Messages.C1Detector_bad_date, value), e);
 			return null;

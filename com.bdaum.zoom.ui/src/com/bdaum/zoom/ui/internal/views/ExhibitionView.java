@@ -30,7 +30,6 @@ import java.io.FileFilter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -109,6 +108,7 @@ import com.bdaum.zoom.cat.model.group.exhibition.Wall;
 import com.bdaum.zoom.cat.model.group.exhibition.WallImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
@@ -120,6 +120,7 @@ import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.net.core.job.TransferJob;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.internal.CaptionProcessor.CaptionConfiguration;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -322,10 +323,7 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 				show.addWall(wall);
 				added = addWall(wall, y, true, null);
 				setColor(canvas);
-				List<Object> toBeStored = new ArrayList<Object>(2);
-				toBeStored.add(wall);
-				toBeStored.add(show);
-				storeSafelyAndUpdateIndex(null, toBeStored, null);
+				storeSafelyAndUpdateIndex(null, Arrays.asList(wall, show), null);
 				updateStatusLine();
 				return Status.OK_STATUS;
 			}
@@ -915,6 +913,7 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 				int defaultViewingHeight = show.getDefaultViewingHeight();
 				int variance = show.getVariance();
 				String defaultDescription = exhibition.getDefaultDescription();
+				CaptionConfiguration captionConfig = captionProcessor.computeCaptionConfiguration(selection.getContext());
 				for (Asset asset : selection) {
 					if (!accepts(asset))
 						continue;
@@ -949,12 +948,12 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 						ys = cand.exhibit.getY();
 					}
 					String assetId = asset.getStringId();
-					ExhibitImpl exhibit = new ExhibitImpl(UiUtilities.createSlideTitle(asset),
+					ExhibitImpl exhibit = new ExhibitImpl(createSlideTitle(captionConfig, asset),
 							defaultDescription == null ? Messages.getString("ExhibitionView.inkjet_print") //$NON-NLS-1$
 									: defaultDescription,
 							Core.toStringList(asset.getArtist(), " "), //$NON-NLS-1$
 							(dateCreated == null) ? "" //$NON-NLS-1$
-									: EDF.format(dateCreated),
+									: Format.YEAR_FORMAT.get().format(dateCreated),
 							xs, ys, w, h, null, null, null, null, false, null, null, null, null, assetId);
 					if (globalIndex >= exhibits.size())
 						exhibits.add(exhibit);
@@ -1597,7 +1596,7 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 				// sold mark
 				updateSoldMark();
 			}
-			setOffset(pos - frameWidth - matWidth, y - frameWidth - matWidth);
+			setOffset(pos, y);
 			installHandleEventHandlers(pImage, false, false, this);
 			if (pMat != null)
 				installHandleEventHandlers(pMat, false, false, this);
@@ -1843,7 +1842,6 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 
 	public static final String ID = "com.bdaum.zoom.ui.ExhibitionView"; //$NON-NLS-1$
 	private static final String LAST_EXHIBITION = "com.bdaum.zoom.lastExhibition"; //$NON-NLS-1$
-	protected static final SimpleDateFormat EDF = new SimpleDateFormat("yyyy"); //$NON-NLS-1$
 	public static final String EXHIBITION_PERSPECTIVE = "com.bdaum.zoom.PresentationPerspective"; //$NON-NLS-1$
 	private static final float DOORWIDTH = 1000;
 	private static final int DOORHEIGHT = 2000;
@@ -1895,12 +1893,8 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
 		super.init(site, memento);
-		if (memento != null) {
-			String lastSelection = memento.getString(LAST_EXHIBITION);
-			ExhibitionImpl obj = Core.getCore().getDbManager().obtainById(ExhibitionImpl.class, lastSelection);
-			if (obj != null)
-				setExhibition(obj);
-		}
+		if (memento != null)
+			lastSessionPresentation = memento.getString(LAST_EXHIBITION);
 	}
 
 	public void addGrid(PWall pwall) {
@@ -2078,10 +2072,19 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 		installListeners();
 		hookContextMenu();
 		contributeToActionBars();
-		if (exhibition != null)
-			setInput(exhibition);
-		addCatalogListener();
-		updateActions(false);
+	}
+
+	@Override
+	protected void startup() {
+		if (exhibition == null)
+			setExhibition(Core.getCore().getDbManager().obtainById(ExhibitionImpl.class, lastSessionPresentation));
+		if (isVisible()) {
+			if (exhibition != null)
+				setInput(exhibition);
+			addCatalogListener();
+			updateActions(false);
+		} else if (exhibition != null)
+			isDirty = true;
 	}
 
 	@Override
@@ -2092,13 +2095,13 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 			@Override
 			public void run() {
 				ExhibitionImpl show = getExhibition();
-				if (show == null)
-					return;
-				ExhibitionImpl backup = ExhibitionPropertiesOperation.cloneExhibition(show);
-				show = ExhibitionEditDialog.open(getSite().getShell(), null, show, show.getName(), true, null);
 				if (show != null) {
-					performOperation(new ExhibitionPropertiesOperation(backup, exhibition = show));
-					setInput(exhibition);
+					ExhibitionImpl backup = ExhibitionPropertiesOperation.cloneExhibition(show);
+					show = ExhibitionEditDialog.open(getSite().getShell(), null, show, show.getName(), true, null);
+					if (show != null) {
+						performOperation(new ExhibitionPropertiesOperation(backup, setExhibition(show)));
+						setInput(exhibition);
+					}
 				}
 			}
 		};
@@ -2107,16 +2110,16 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 			@Override
 			public void run() {
 				ExhibitionImpl show = getExhibition();
-				if (show == null)
-					return;
-				int l = show.getWall().size();
-				int y = 10;
-				for (Wall w : show.getWall())
-					y += w.getHeight() + 15;
-				EditWallDialog dialog = new EditWallDialog(getSite().getShell(), null,
-						NLS.bind(Messages.getString("ExhibitionView.wall_n"), l + 1)); //$NON-NLS-1$
-				if (dialog.open() == Window.OK)
-					performOperation(new CreateWallOperation(dialog.getResult(), y));
+				if (show != null) {
+					int l = show.getWall().size();
+					int y = 10;
+					for (Wall w : show.getWall())
+						y += w.getHeight() + 15;
+					EditWallDialog dialog = new EditWallDialog(getSite().getShell(), null,
+							NLS.bind(Messages.getString("ExhibitionView.wall_n"), l + 1)); //$NON-NLS-1$
+					if (dialog.open() == Window.OK)
+						performOperation(new CreateWallOperation(dialog.getResult(), y));
+				}
 			}
 		};
 		addWallAction.setToolTipText(Messages.getString("ExhibitionView.add_a_new_wall")); //$NON-NLS-1$
@@ -2346,8 +2349,8 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 
 	protected ExhibitionImpl getExhibition() {
 		if (exhibition == null && !dbIsReadonly())
-			exhibition = ExhibitionEditDialog.open(getSite().getShell(), null, null,
-					Messages.getString("ExhibitionView.create_exhibition"), false, null); //$NON-NLS-1$
+			setExhibition(ExhibitionEditDialog.open(getSite().getShell(), null, null,
+					Messages.getString("ExhibitionView.create_exhibition"), false, null)); //$NON-NLS-1$
 		return exhibition;
 	}
 
@@ -2383,28 +2386,35 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 
 	@Override
 	public void setInput(IdentifiableObject presentation) {
-		super.setInput(presentation);
-		if (presentation instanceof ExhibitionImpl) {
-			ExhibitionImpl exh = (ExhibitionImpl) presentation;
-			setExhibition(exh);
-			setupExhibition(getViewSite(), exh, 0);
-			setPartName(exh.getName());
-			int n = 0;
-			for (Wall wall : exh.getWall())
-				n += wall.getExhibit().size();
-			beginTask(n);
-			int y = TOPINDENT;
-			for (Wall wall : exh.getWall()) {
-				addWall(wall, y, false, progressBar);
-				y += wall.getHeight() + V_WALLMARGINS;
+		setExhibition(presentation);
+		if (started) {
+			super.setInput(presentation);
+			if (presentation instanceof ExhibitionImpl) {
+				setupExhibition(getViewSite(), exhibition, 0);
+				int n = 0;
+				List<Wall> walls = exhibition.getWall();
+				for (Wall wall : walls)
+					n += wall.getExhibit().size();
+				beginTask(n);
+				int y = TOPINDENT;
+				for (Wall wall : walls) {
+					addWall(wall, y, false, progressBar);
+					y += wall.getHeight() + V_WALLMARGINS;
+				}
+				setArtists();
+				setColor(canvas);
+				updateActions(false);
+				updateStatusLine();
+				endTask();
 			}
-			setArtists();
-			setColor(canvas);
-			updateActions(false);
-			updateStatusLine();
-			endTask();
-		} else
-			setPartName(Messages.getString("ExhibitionView.exhibition")); //$NON-NLS-1$
+		}
+	}
+
+	@Override
+	protected void show() {
+		if (isDirty && exhibition != null)
+			setInput(exhibition);
+		super.show();
 	}
 
 	protected void selectExhibit(PExhibit pExhibit, int modifiers, int clicks) {
@@ -2567,20 +2577,22 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 		setPanAndZoomHandlers(-11, -14);
 	}
 
-	private void setExhibition(ExhibitionImpl exhibition) {
-		this.exhibition = exhibition;
-		if (exhibition.getWall().isEmpty()) {
-			Wall wall = new WallImpl();
-			wall.setLocation(Messages.getString("ExhibitionView.wall_1")); //$NON-NLS-1$
-			wall.setWidth(5000);
-			wall.setHeight(2500);
-			wall.setColor(new Rgb_typeImpl(255, 255, 250));
-			exhibition.addWall(wall);
-			List<Object> toBeStored = new ArrayList<Object>(2);
-			toBeStored.add(wall);
-			toBeStored.add(exhibition);
-			storeSafelyAndUpdateIndex(null, toBeStored, null);
-		}
+	private ExhibitionImpl setExhibition(IIdentifiableObject presentation) {
+		if (presentation instanceof ExhibitionImpl) {
+			exhibition = (ExhibitionImpl) presentation;
+			setPartName(exhibition.getName());
+			if (exhibition.getWall().isEmpty()) {
+				Wall wall = new WallImpl();
+				wall.setLocation(Messages.getString("ExhibitionView.wall_1")); //$NON-NLS-1$
+				wall.setWidth(5000);
+				wall.setHeight(2500);
+				wall.setColor(new Rgb_typeImpl(255, 255, 250));
+				exhibition.addWall(wall);
+				storeSafelyAndUpdateIndex(null,  Arrays.asList(wall, exhibition), null);
+			}
+		} else if (exhibition == null)
+			setPartName(Messages.getString("ExhibitionView.exhibition")); //$NON-NLS-1$
+		return this.exhibition;
 	}
 
 	private void setupExhibition(IViewSite site, ExhibitionImpl exhibition, int maxwidth) {
@@ -2941,6 +2953,8 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 		final File start = new File(file, (page == null || page.isEmpty()) ? "index.html" //$NON-NLS-1$
 				: page);
 		final ExhibitionJob job = new ExhibitionJob(show, exhibitionId, ExhibitionView.this, makeDefault);
+		// final ExhibitionJob2 job = new ExhibitionJob2(show, exhibitionId,
+		// ExhibitionView.this, makeDefault);
 		final FtpAccount account;
 		if (ftp) {
 			account = FtpAccount.findAccount(outputFolder);

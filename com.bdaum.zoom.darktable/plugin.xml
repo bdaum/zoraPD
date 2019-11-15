@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.bdaum.zoom.batch.rawConverter">
+      <converter
+            class="com.bdaum.zoom.darktable.internal.DtRawConverter"
+            detectors="false"
+            executable="optional"
+            id="com.bdaum.zoom.darktable.converter"
+            isDefault="false"
+            name="darktable"
+            path="com.bdaum.zoom.dtrawpath">
+         <property
+               default=" "
+               id="com.bdaum.zoom.darktable.expl"
+               name="%property.name.expl"
+               type="label">
+         </property>
+      </converter>
+   </extension>
+
+</plugin>

@@ -27,6 +27,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -167,11 +168,15 @@ public class GeotagOperation extends DbOperation {
 							asset.setGPSDestLatitude(Double.NaN);
 							asset.setGPSLongitude(Double.NaN);
 							asset.setGPSImgDirection(Double.NaN);
-							List<LocationCreatedImpl> rels = dbManager.obtainStructForAsset(LocationCreatedImpl.class,
-									assetId, true);
-							if (backups[i] != null)
-								backups[i].addAllDeleted(rels);
-							storeSafely(rels.toArray(), 1, asset);
+							List<LocationCreatedImpl> rels = null;
+							LocationCreatedImpl rel = dbManager.obtainById(LocationCreatedImpl.class,
+									asset.getLocationCreated_parent());
+							if (rel != null) {
+								rels = Collections.singletonList(rel);
+								if (backups[i] != null)
+									backups[i].addAllDeleted(rels);
+							}
+							storeSafely(rels != null ? rels.toArray() : null, 1, asset);
 							++tagged;
 						} else if (asset.getDateTimeOriginal() != null) {
 							if (aMonitor.isCanceled())
@@ -244,12 +249,12 @@ public class GeotagOperation extends DbOperation {
 			} catch (EOFException e) {
 				addError(Messages.getString("GeotagOperation.geonaming_aborted"), null); //$NON-NLS-1$
 			}
-			for (Backup backup : backups)
-				if (backup != null)
-					dbManager.storeTrash(backup);
-			dbManager.commitTrash();
-			backups = null;
 		}
+		for (Backup backup : backups)
+			if (backup != null)
+				dbManager.storeTrash(backup);
+		dbManager.commitTrash();
+		backups = null;
 		return close(info, processed.isEmpty() ? (String[]) null : processed.toArray(new String[processed.size()]));
 	}
 
@@ -270,9 +275,8 @@ public class GeotagOperation extends DbOperation {
 			List<String> oldKeywords = new ArrayList<String>();
 			LocationCreatedImpl rel = null;
 			String assetId = asset.getStringId();
-			for (LocationCreatedImpl locationCreated : dbManager.obtainStructForAsset(LocationCreatedImpl.class,
-					assetId, true)) {
-				rel = locationCreated;
+			rel = dbManager.obtainById(LocationCreatedImpl.class, asset.getLocationCreated_parent());
+			if (rel != null) {
 				LocationImpl obj = dbManager.obtainById(LocationImpl.class, rel.getLocation());
 				if (obj != null)
 					Utilities.extractKeywords(location = obj, oldKeywords);
@@ -349,6 +353,7 @@ public class GeotagOperation extends DbOperation {
 
 	private void assignGeoNames(Asset asset, Meta meta, Backup backup, LocationImpl location, List<String> oldKeywords,
 			LocationCreatedImpl rel, LocationImpl newLocation) {
+		boolean locSet = false;
 		boolean noLocation = location == null || GpsUtilities.isEmpty(location);
 		if (noLocation || !location.equals(newLocation)) {
 			if (!noLocation && !location.equals(newLocation))
@@ -377,16 +382,19 @@ public class GeotagOperation extends DbOperation {
 			}
 			rel = new LocationCreatedImpl(location.getStringId());
 			rel.addAsset(asset.getStringId());
+			asset.setLocationCreated_parent(rel.getStringId());
+			locSet = true;
 			dbManager.store(rel);
 			if (backup != null)
 				backup.addObject(rel.getStringId());
 		}
 		if (backup != null)
 			dbManager.storeTrash(backup);
-		if (updateKeywords(asset, newLocation, meta, oldKeywords)) {
+		boolean updateKeywords = updateKeywords(asset, newLocation, meta, oldKeywords);
+		if (updateKeywords || locSet)
 			dbManager.store(asset);
+		if (updateKeywords)
 			dbManager.store(meta);
-		}
 		processed.add(asset.getStringId());
 	}
 
@@ -580,7 +588,7 @@ public class GeotagOperation extends DbOperation {
 			toBeDeleted.clear();
 			toBeStored.clear();
 		}
-		fireAssetsModified(null, null);
+		fireAssetsModified(null, QueryField.EXIF_GPS);
 		return close(info);
 	}
 

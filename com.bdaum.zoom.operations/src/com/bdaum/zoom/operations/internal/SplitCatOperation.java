@@ -178,7 +178,8 @@ public class SplitCatOperation extends AbstractCloneCatOperation {
 		aMonitor.subTask(Messages.getString("SplitCatOperation.transfering_collections")); //$NON-NLS-1$
 		lp: for (SmartCollectionImpl coll : collections) {
 			if (!coll.getSystem() || coll.getAlbum()) {
-				aMonitor.subTask(NLS.bind(Messages.getString("SplitCatOperation.transferring_collection"), coll.getName()));  //$NON-NLS-1$
+				aMonitor.subTask(
+						NLS.bind(Messages.getString("SplitCatOperation.transferring_collection"), coll.getName())); //$NON-NLS-1$
 				SmartCollection parent = coll;
 				while (parent != null) {
 					if (parent.getSmartCollection_subSelection_parent() != null)
@@ -249,7 +250,7 @@ public class SplitCatOperation extends AbstractCloneCatOperation {
 		for (Ghost_typeImpl ghost : ghosts)
 			if (ghost.getUri() != null && ghost.getUri().equals(asset.getUri()))
 				toBeStored.add(ghost);
-		transferAssetRelations(db, newDb, toBeStored, locationOption, assetId);
+		transferAssetRelations(db, newDb, toBeStored, locationOption, asset);
 		newDb.createFolderHierarchy(asset);
 		newDb.createTimeLine(asset, aTimeLine);
 		meta.setLastSequenceNo(meta.getLastSequenceNo() + 1);
@@ -260,7 +261,8 @@ public class SplitCatOperation extends AbstractCloneCatOperation {
 	}
 
 	protected void transferAssetRelations(IDbManager db, IDbManager newDb, List<Object> toBeStored,
-			String locationOption, String assetId) {
+			String locationOption, Asset asset) {
+		String assetId = asset.getStringId();
 		for (ArtworkOrObjectShownImpl rel : db.obtainStructForAsset(ArtworkOrObjectShownImpl.class, assetId, false)) {
 			if (newDb.obtainById(ArtworkOrObjectShownImpl.class, rel.getStringId()) == null) {
 				String id = rel.getArtworkOrObject();
@@ -284,7 +286,8 @@ public class SplitCatOperation extends AbstractCloneCatOperation {
 					}
 				}
 		}
-		for (LocationCreatedImpl rel : db.obtainStructForAsset(LocationCreatedImpl.class, assetId, true)) {
+		LocationCreatedImpl rel = db.obtainById(LocationCreatedImpl.class, asset.getLocationCreated_parent());
+		if (rel != null) {
 			LocationCreatedImpl obj = newDb.obtainById(LocationCreatedImpl.class, rel.getStringId());
 			if (obj == null) {
 				obj = new LocationCreatedImpl(rel.getLocation());
@@ -301,21 +304,24 @@ public class SplitCatOperation extends AbstractCloneCatOperation {
 				}
 			}
 			obj.addAsset(assetId);
+			asset.setLocationCreated_parent(rel.getStringId());
 			toBeStored.add(obj);
 		}
-		for (CreatorsContactImpl rel : db.obtainStructForAsset(CreatorsContactImpl.class, assetId, true)) {
-			CreatorsContactImpl obj = newDb.obtainById(CreatorsContactImpl.class, rel.getStringId());
+		CreatorsContactImpl cc = db.obtainById(CreatorsContactImpl.class, asset.getCreatorsContact_parent());
+		if (cc != null) {
+			CreatorsContactImpl obj = newDb.obtainById(CreatorsContactImpl.class, cc.getStringId());
 			if (obj == null) {
-				obj = new CreatorsContactImpl(rel.getContact());
-				obj.setStringId(rel.getStringId());
+				obj = new CreatorsContactImpl(cc.getContact());
+				obj.setStringId(cc.getStringId());
 			}
 			if (obj.getAsset().isEmpty()) {
-				String id = rel.getContact();
+				String id = cc.getContact();
 				ContactImpl cont = db.obtainById(ContactImpl.class, id);
 				if (cont != null && newDb.obtainById(ContactImpl.class, id) == null)
 					toBeStored.add(cont);
 			}
 			obj.addAsset(assetId);
+			asset.setCreatorsContact_parent(obj.getStringId());
 			toBeStored.add(obj);
 		}
 		for (TrackRecordImpl record : db.obtainObjects(TrackRecordImpl.class, "asset_track_parent", assetId, //$NON-NLS-1$
@@ -329,5 +335,5 @@ public class SplitCatOperation extends AbstractCloneCatOperation {
 	protected void handleResume(Meta meta, int code, int i, IAdaptable info) {
 		// do nothing
 	}
-	
+
 }

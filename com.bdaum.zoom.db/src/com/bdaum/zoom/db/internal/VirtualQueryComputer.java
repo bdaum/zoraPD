@@ -7,7 +7,6 @@ import java.util.Map;
 
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.db.internal.CollectionProcessor.AspectEvaluation;
 import com.bdaum.zoom.db.internal.CollectionProcessor.DateEvaluation;
 import com.bdaum.zoom.db.internal.CollectionProcessor.GeographicPostProcessor;
@@ -37,13 +36,13 @@ public class VirtualQueryComputer {
 	private static void configure() {
 		map.put(QueryField.MODIFIED_SINCE.getKey(), new VirtualQueryComputer() {
 			@Override
-			protected Constraint computeConstraint(Query query, Object value, int rel, CollectionProcessor processor) {
+			protected Constraint computeConstraint(Query query, Object value,  Object vto, int rel, CollectionProcessor processor) {
 				long time = System.currentTimeMillis();
 				String field = QueryField.LASTMOD.getKey();
 				if (rel == QueryField.BETWEEN || rel == QueryField.NOTBETWEEN)
 					return CollectionProcessor.applyBetween(query, field, field, rel,
-							new Date(Math.max(0, time - (Integer) ((Range) value).getTo() * MSECINDAY + HALFDAY)),
-							new Date(Math.max(0, time - (Integer) ((Range) value).getFrom() * MSECINDAY - HALFDAY)));
+							new Date(Math.max(0, time - (Integer) value * MSECINDAY + HALFDAY)),
+							new Date(Math.max(0, time - (Integer) vto * MSECINDAY - HALFDAY)));
 				int days = (Integer) value;
 				switch (rel) {
 				case QueryField.EQUALS:
@@ -80,7 +79,7 @@ public class VirtualQueryComputer {
 		map.put(QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), new VirtualQueryComputer() {
 			// Supports only NOTGREATER
 			@Override
-			protected Constraint computeConstraint(Query query, Object value, int rel, CollectionProcessor processor) {
+			protected Constraint computeConstraint(Query query, Object value,  Object vto, int rel, CollectionProcessor processor) {
 				Object[] values = (Object[]) value;
 				Point2D.Double p1 = locationFrom((Double) values[0], (Double) values[1], (Double) values[2] * SQRT2,
 						45d, Core.getCore().getDbFactory().getDistanceUnit());
@@ -124,11 +123,11 @@ public class VirtualQueryComputer {
 		});
 		map.put(QueryField.PHYSICALHEIGHT.getKey(), new VirtualQueryComputer() {
 			@Override
-			protected Constraint computeConstraint(Query query, Object value, int rel, CollectionProcessor processor) {
+			protected Constraint computeConstraint(Query query, Object value,  Object vto, int rel, CollectionProcessor processor) {
 				String field = QueryField.HEIGHT.getKey();
 				if (rel == QueryField.BETWEEN || rel == QueryField.NOTBETWEEN)
 					return CollectionProcessor.applyBetween(query, field, field, rel,
-							(Double) ((Range) value).getFrom() * RESAT300, (Double) ((Range) value).getTo() * RESAT300);
+							(Double) value * RESAT300, (Double) vto * RESAT300);
 				return CollectionProcessor.applyRelation(null, field, field, rel, value,
 						query.descend(field).constrain(((Double) value) * 300 / 2.54d), query);
 			}
@@ -141,11 +140,11 @@ public class VirtualQueryComputer {
 		});
 		map.put(QueryField.PHYSICALWIDTH.getKey(), new VirtualQueryComputer() {
 			@Override
-			protected Constraint computeConstraint(Query query, Object value, int rel, CollectionProcessor processor) {
+			protected Constraint computeConstraint(Query query, Object value,  Object vto, int rel, CollectionProcessor processor) {
 				String field = QueryField.WIDTH.getKey();
 				if (rel == QueryField.BETWEEN || rel == QueryField.NOTBETWEEN)
 					return CollectionProcessor.applyBetween(query, field, field, rel,
-							(Double) ((Range) value).getFrom() * RESAT300, (Double) ((Range) value).getTo() * RESAT300);
+							(Double) value * RESAT300, (Double) vto * RESAT300);
 				return CollectionProcessor.applyRelation(null, field, field, rel, value,
 						query.descend(field).constrain(((Double) value) * 300 / 2.54d), query);
 			}
@@ -158,26 +157,26 @@ public class VirtualQueryComputer {
 		});
 		map.put(QueryField.ASPECTRATIO.getKey(), new VirtualQueryComputer() {
 			@Override
-			protected Constraint computeConstraint(Query query, Object value, int rel, CollectionProcessor processor) {
+			protected Constraint computeConstraint(Query query, Object value,  Object vto, int rel, CollectionProcessor processor) {
 				return query.constrain(new AspectEvaluation(((Double) value), Double.NaN, rel));
 			}
 		});
 		map.put(QueryField.TIMEOFDAY.getKey(), new VirtualQueryComputer() {
 			@Override
-			protected Constraint computeConstraint(Query query, Object value, int rel, CollectionProcessor processor) {
+			protected Constraint computeConstraint(Query query, Object value,  Object vto, int rel, CollectionProcessor processor) {
 				return query.constrain(new TimeOfDayEvaluation(((Integer) value), -1, rel));
 			}
 		});
 
 		map.put(QueryField.DATE.getKey(), new VirtualQueryComputer() {
 			@Override
-			protected Constraint computeConstraint(Query query, Object value, int rel, CollectionProcessor processor) {
+			protected Constraint computeConstraint(Query query, Object value,  Object vto, int rel, CollectionProcessor processor) {
 				return query.constrain(new DateEvaluation(((Date) value), null, rel));
 			}
 		});
 	}
 
-	protected Constraint computeConstraint(Query query, Object value, int rel, CollectionProcessor processor) {
+	protected Constraint computeConstraint(Query query, Object value,  Object vto, int rel, CollectionProcessor processor) {
 		return null;
 	}
 
@@ -185,10 +184,10 @@ public class VirtualQueryComputer {
 		return null;
 	}
 
-	protected static Constraint computeConstraint(String key, Query query, Object value, int relation,
+	protected static Constraint computeConstraint(String key, Query query, Object value,  Object vto, int relation,
 			CollectionProcessor processor) {
 		VirtualQueryComputer vvc = map.get(key);
-		return vvc != null ? vvc.computeConstraint(query, value, relation, processor) : null;
+		return vvc != null ? vvc.computeConstraint(query, value, vto, relation, processor) : null;
 	}
 
 	protected static String[] getBasedOn(String key) {

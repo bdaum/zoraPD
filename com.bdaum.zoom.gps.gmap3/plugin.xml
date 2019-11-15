@@ -9,7 +9,7 @@
             id="com.bdaum.zoom.gps.mappingSystem.googleMaps3"
             mapComponent="com.bdaum.zoom.gps.google.internal.views.MapComponent"
             name="%mappingSystem.name"
-            query="https://www.google.com/maps/place/@{0},{1},{2}z">
+            query="https://www.google.com/maps/dir//{0},{1}/@{0},{1},{2}z">
       </mappingSystem>
    </extension>
    <extension

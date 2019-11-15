@@ -89,7 +89,7 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 						final File file = new File(uri);
 						cal.setTimeInMillis(file.lastModified());
 						asset.setTitle(Utilities.evaluateTemplate(template, Constants.TV_RENAME, file.getName(), cal, -1,
-								i + start, -1, cue, asset, "", field.getMaxlength(), false, false)); //$NON-NLS-1$
+								i + start, -1, cue, asset, "", field.getMaxlength(), false)); //$NON-NLS-1$
 						dbManager.storeAndCommit(asset);
 						modified.add(asset);
 					}
@@ -106,7 +106,7 @@ public class BulkRenameOperation extends AbstractRenamingOperation {
 									- ext.length();
 							cal.setTimeInMillis(file.lastModified());
 							String newFilename = Utilities.evaluateTemplate(template,Constants.TV_RENAME, filename, cal,
-									-1, i + 1, -1, cue, asset, "", maxLength, true, false); //$NON-NLS-1$
+									-1, i + 1, -1, cue, asset, "", maxLength, true); //$NON-NLS-1$
 							final File dest = new File(folder, newFilename + ext);
 							if (file.equals(dest)) {
 								monitor.worked(2);

@@ -126,7 +126,7 @@ public class PeerProvider implements IPeerProvider, Serializable {
 				scoll = Utilities.localizeSmartCollection(scoll);
 				if (!local && privacy != QueryField.SAFETY_RESTRICTED)
 					scoll.addCriterion(
-							new CriterionImpl(QueryField.SAFETY.getKey(), null, privacy, QueryField.NOTGREATER, true));
+							new CriterionImpl(QueryField.SAFETY.getKey(), null, privacy, null, QueryField.NOTGREATER, true));
 				IDbManager dbManager = cat.getDbManager();
 				if (dbManager.getFile() != null) {
 					ICollectionProcessor processor = dbManager.createCollectionProcessor(scoll, assetFilters, null);

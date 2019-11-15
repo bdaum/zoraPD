@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE.geo"
       label="Geo Feature"
-      version="3.5.1"
+      version="3.6.0"
       provider-name="bdaum industrial communications">
 
    <description url="http://www.example.com/description">
@@ -22,13 +22,6 @@ your option) any later version.
 
    <plugin
          id="com.bdaum.zoom.gps"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="com.bdaum.zoom.gps.bing"
          download-size="0"
          install-size="0"
          version="0.0.0"

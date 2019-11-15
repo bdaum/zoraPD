@@ -23,11 +23,13 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.vr.internal.messages"; //$NON-NLS-1$
+	public static String ExhibitionJob_cannot_create_dir;
 	public static String ExhibitionJob_disk_full_copying;
 	public static String ExhibitionJob_disk_full_web_resource;
 	public static String ExhibitionJob_download_image_failed;
 	public static String ExhibitionJob_error_creating_image_file;
 	public static String ExhibitionJob_error_generating;
+	public static String ExhibitionJob_gallery_creation_failed;
 	public static String ExhibitionJob_generate_exhibition;
 	public static String ExhibitionJob_generating;
 	public static String ExhibitionJob_generator;

@@ -125,9 +125,9 @@ public class OrphansCommand extends AbstractCommandHandler {
 				}
 				if (show) {
 					SmartCollectionImpl collection = new SmartCollectionImpl(Messages.FindOrphansActionDelegate_orphans,
-							true, false, true, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
+							true, false, true, false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 					collection.addCriterion(
-							new CriterionImpl(ICollectionProcessor.ORPHANS, null, result, QueryField.XREF, false));
+							new CriterionImpl(ICollectionProcessor.ORPHANS, null, result, null, QueryField.XREF, false));
 					Ui.getUi().getNavigationHistory(getActiveWorkbenchWindow())
 							.postSelection(new StructuredSelection(collection));
 				}

@@ -345,8 +345,8 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 		}
 		boolean network = findInNetworkGroup == null ? false : findInNetworkGroup.getSelection();
 		collection = new SmartCollectionImpl(title, false, false, adhoc, network, null, 0, null, 0, null,
-				Constants.INHERIT_LABEL, null, 0, null);
-		collection.addCriterion(new CriterionImpl(ICollectionProcessor.SIMILARITY, null, newOptions,
+				Constants.INHERIT_LABEL, null, 0, 1, null);
+		collection.addCriterion(new CriterionImpl(ICollectionProcessor.SIMILARITY, null, newOptions, null, 
 				searchResultGroup.getScore(), false));
 		if (findWithinGroup != null) {
 			collection.setSmartCollection_subSelection_parent(findWithinGroup.getParentCollection());

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009-2018 Berthold Daum.
+ * Copyright (c) 2009-2019 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -138,9 +138,9 @@ public class HighresImageLoader {
 	 * @param flen35mm
 	 *            - focal length equivalent to 35mm film
 	 * @param bounds
-	 *            - desired size, if null, scalingFactor applies to scale only for
-	 *            height, set bounds.with negative to scale only for width, set
-	 *            bound.height negative Note that the absolute values of width and
+	 *            - desired size, if null, scalingFactor applies; to scale only for
+	 *            height, set bounds.width negative; to scale only for width, set
+	 *            bounds.height negative. Note that the absolute values of width and
 	 *            height are also used to determine the orientation
 	 * @param scalingFactor
 	 *            factor applies if bounds == null set to 0 for full resolution
@@ -156,7 +156,7 @@ public class HighresImageLoader {
 	 *            set to an RGB value to force b&w rendering using this value as
 	 *            filter
 	 * @param umask
-	 *            unsharp mask for output sharpening
+	 *            unsharp mask for output sharpening or null
 	 * @param fileWatcher
 	 *            filewatcher instance for blocking files to be watched
 	 * @param opId
@@ -223,7 +223,8 @@ public class HighresImageLoader {
 				rawRecipe.setScaling(scalingFactor > 0 ? (float) scalingFactor : 1f);
 				rawRecipe.setSampleFactor(factor);
 			}
-			// if (cms == ImageConstants.ARGB) // better to work in the camera color space, not all raw converts support color conversion
+			// if (cms == ImageConstants.ARGB) // better to work in the camera color space,
+			// not all raw converts support color conversion
 			// options.put(IConverter.ADOBE_RGB, Boolean.TRUE);
 			workfile = null;
 			ImageKey key = new ImageKey(file, options, rawConverter.getId());
@@ -284,9 +285,7 @@ public class HighresImageLoader {
 				monitor.setCanceled(true);
 			return true;
 		}
-		if (monitor != null)
-			return monitor.isCanceled();
-		return false;
+		return monitor != null && monitor.isCanceled();
 	}
 
 	private void profile(String label) {

@@ -275,6 +275,8 @@ public class Startup implements IStartup, IAdaptable {
 		final File file = previousCatFile;
 		int[] ret = new int[1];
 		while (coreActivator.getDbManager().getFile() == null) {
+			if (workbench.getDisplay().isDisposed())
+				return false;
 			workbench.getDisplay().syncExec(() -> {
 				try {
 					IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow() == null

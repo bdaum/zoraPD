@@ -32,6 +32,7 @@ import org.eclipse.osgi.util.NLS;
 
 import com.bdaum.zoom.cat.model.TrackRecord_type;
 import com.bdaum.zoom.cat.model.asset.TrackRecord;
+import com.bdaum.zoom.core.internal.Utilities;
 
 /**
  * This class provided a set of field formatters that can also parse input
@@ -39,6 +40,281 @@ import com.bdaum.zoom.cat.model.asset.TrackRecord;
  *
  */
 public class Format {
+	
+	/*** language dependent date formats ***/
+	
+
+	public static final ThreadLocal<SimpleDateFormat> TRACK_DATE_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.QueryField_track_date_format);
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> EMDY_TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_emdy_time);
+		}
+	};
+	
+	
+	public static final ThreadLocal<SimpleDateFormat> MDY_TIME_SHORT_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_mdy_time_short);
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> MDY_TIME_SECS_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_mdy_time_secs);
+		}
+	};
+
+	
+	public static final ThreadLocal<SimpleDateFormat> EMDY_TIME_LONG_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_emdy_time_long);
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> MDY_TIME_LONG_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_mdy_time_long);
+		}
+	};
+
+	public static final ThreadLocal<SimpleDateFormat> DFDT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Constants_ExtenalDateTimeFormat);
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> YMDT_SLASH = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_ymdt_slash);
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> WEEK = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_week);
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> WEEK_WY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_week_wy);
+		}
+	};
+
+	public static final ThreadLocal<SimpleDateFormat> WEEK_EWY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_week_ewy);
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> MDYHM_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_mdy_time);
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> MDY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_mdy);
+		}
+	};
+
+	public static final ThreadLocal<SimpleDateFormat> MY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_my);
+		}
+	};
+
+
+	public static final ThreadLocal<SimpleDateFormat> YMD_TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_ymd_time);
+		}
+	};
+
+	public static final ThreadLocal<SimpleDateFormat> YMD_SLASH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_ymd_slash);
+		}
+	};
+
+	public static final ThreadLocal<SimpleDateFormat> LDY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_ldy);
+		}
+	};
+	public static final ThreadLocal<SimpleDateFormat> LY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_ly);
+		}
+	};
+	public static final ThreadLocal<SimpleDateFormat> LRY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_lry);
+		}
+	};
+
+	public static final ThreadLocal<SimpleDateFormat> LY_SHORT_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(Messages.Format_ly_short);
+		}
+	};
+
+	
+	/*** language invariant date formats ***/
+	
+	public static final ThreadLocal<SimpleDateFormat> DATE_TIME_ZONED_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyy:MM:dd HH:mm:ss Z"); //$NON-NLS-1$
+		}
+	};
+
+	public static final ThreadLocal<SimpleDateFormat> YEAR_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyy"); //$NON-NLS-1$
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> YEAR_MONTH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyy-MM"); //$NON-NLS-1$
+		}
+	};
+
+	public static final ThreadLocal<SimpleDateFormat> YEAR_MONTH_DAY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
+		}
+	};
+
+	public static final ThreadLocal<SimpleDateFormat> YEAR_WEEK_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("YYYY-'W'ww"); //$NON-NLS-1$
+		}
+	};
+
+	public static final ThreadLocal<SimpleDateFormat> YEAR_WEEK_DAY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("YYYY-'W'ww-uu"); //$NON-NLS-1$
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> YEAR_DAY_TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyy-DDD HH:mm:ss"); //$NON-NLS-1$
+		}
+	};
+
+
+	public static final ThreadLocal<SimpleDateFormat> DATE_TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyy:MM:dd HH:mm:ss"); //$NON-NLS-1$
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> DATE_TIME_HYPHEN_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); //$NON-NLS-1$
+		}
+	};
+
+	
+	public static final ThreadLocal<SimpleDateFormat> DATE_TIME_SLASH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("MM/dd/yyyy HH:mm:ss"); //$NON-NLS-1$
+		}
+	};
+
+	
+	public static final ThreadLocal<SimpleDateFormat> XML_DATE_TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:s"); //$NON-NLS-1$
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> XML_DATE_TIME_XZONED_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX"); //$NON-NLS-1$
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> XML_DATE_TIME_ZZONED_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ"); //$NON-NLS-1$
+		}
+	};
+
+
+
+	public static final ThreadLocal<SimpleDateFormat> WEEKDAY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("EEEEEEEEEEEEEEEEEEEE"); //$NON-NLS-1$
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat>MONTH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("MMMMMMMMM"); //$NON-NLS-1$
+		}
+	};
+
+	
+	public static final ThreadLocal<SimpleDateFormat> CODES_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyyMMdd'T'HHmmssZ"); //$NON-NLS-1$
+		}
+	};
+	
+	public static final ThreadLocal<SimpleDateFormat> HMS_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected synchronized SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
+		}
+	};
+
+
+
 
 	private static final String AM = Messages.Format_am;
 	private static final String PM = Messages.Format_pm;
@@ -49,6 +325,53 @@ public class Format {
 	public static final String MISSINGENTRYSTRING = " - "; //$NON-NLS-1$
 
 	public static final String EDITABLEINDICATOR = "»"; //$NON-NLS-1$
+
+	public final static IFormatter plusMinusFormatter = new PlusMinusFormatter();
+
+	private static final class PlusMinusFormatter implements IFormatter {
+
+		public String toString(Object o) {
+			int d = (Integer) o;
+			return d > 0 ? "+" + d : String.valueOf(d); //$NON-NLS-1$
+		}
+
+		public Object fromString(String s) throws ParseException {
+			try {
+				return Integer.parseInt(s);
+			} catch (NumberFormatException e) {
+				throw new ParseException(Messages.Format_bad_integer, 0);
+			}
+		}
+	}
+
+	public final static IFormatter orientationFormatter = new OrientationFormatter();
+
+	private static final class OrientationFormatter implements IFormatter {
+
+		public String toString(Object o) {
+			int d = (Integer) o;
+			return Utilities.orientationDegrees(d) + "°"; //$NON-NLS-1$
+		}
+
+		public Object fromString(String s) throws ParseException {
+			if (s.endsWith("°")) //$NON-NLS-1$
+				s = s.substring(0, s.length() - 1);
+			try {
+				int d = Integer.parseInt(s);
+				if (d == 180)
+					return 3;
+				if (d == 90)
+					return 6;
+				if (d == 270)
+					return 8;
+				if (d == 0)
+					return 0;
+			} catch (NumberFormatException e) {
+				// fal through
+			}
+			throw new ParseException(Messages.Format_bad_ori, 0);
+		}
+	}
 
 	private static final class CurrencyExpressionFormatter implements IFormatter {
 
@@ -104,7 +427,7 @@ public class Format {
 				boolean degQ = s.indexOf('°') >= 0;
 				boolean minQ = s.indexOf('"') >= 0;
 				boolean secQ = s.indexOf('\'') >= 0;
-				boolean dms = degQ || minQ ||secQ;
+				boolean dms = degQ || minQ || secQ;
 				if (dms || s.indexOf(' ') >= 0) {
 					double sign = 1d;
 					if (s.startsWith(neg) || s.startsWith("-")) { //$NON-NLS-1$
@@ -144,7 +467,7 @@ public class Format {
 									degHappened = true;
 									break;
 								case 1:
-									d += (st.hasMoreTokens() ?  Integer.parseInt(n) : af.parse(n).doubleValue()) / 60d;
+									d += (st.hasMoreTokens() ? Integer.parseInt(n) : af.parse(n).doubleValue()) / 60d;
 									minHappened = true;
 									break;
 								case 2:
@@ -231,7 +554,7 @@ public class Format {
 				return MISSINGENTRYSTRING;
 			if (d > 0.5d || d <= 0)
 				return formatDecimal(d, 1);
-			return "1/" + ((int) (1 / d)); //$NON-NLS-1$
+			return "1/" + ((int) ((1 / d) + 0.5d)); //$NON-NLS-1$
 		}
 
 		public Object fromString(String s) throws ParseException {
@@ -372,11 +695,11 @@ public class Format {
 	public static IFormatter dayFormatter = new IFormatter() {
 
 		public String toString(Object d) {
-			return Constants.IPTCDF.format((Date) d);
+			return YEAR_MONTH_DAY_FORMAT.get().format((Date) d);
 		}
 
 		public Object fromString(String s) throws ParseException {
-			return Constants.IPTCDF.parse(s);
+			return YEAR_MONTH_DAY_FORMAT.get().parse(s);
 		}
 	};
 
@@ -498,7 +821,7 @@ public class Format {
 
 		public String toString(Object o) {
 			if (o instanceof TrackRecord) {
-				SimpleDateFormat trackdateFormat = new SimpleDateFormat(Messages.QueryField_track_date_format);
+				SimpleDateFormat trackdateFormat = TRACK_DATE_FORMAT.get();
 				TrackRecord record = (TrackRecord) o;
 				String date = trackdateFormat.format(record.getExportDate());
 				String postfix = record.getReplaced() ? Messages.QueryField_replacement : ""; //$NON-NLS-1$
@@ -528,8 +851,9 @@ public class Format {
 			return 2;
 		}
 	}
-	
-	// Based on an idea by Boann (https://stackoverflow.com/questions/3422673/evaluating-a-math-expression-given-in-string-form)
+
+	// Based on an idea by Boann
+	// (https://stackoverflow.com/questions/3422673/evaluating-a-math-expression-given-in-string-form)
 
 	private static double evaluateCurrencyExpression(final String str) throws ParseException {
 		return new Object() {
@@ -596,15 +920,17 @@ public class Format {
 					double x = parseExpression();
 					eat(')');
 					return x;
-				} else if (ch != '+' && ch != '-' && ch != '*' && ch != '/' && ch != '(' && ch != ')' && ch != ' ' && ch != -1) { // anything
-																														// else
-					while (ch != '+' && ch != '-' && ch != '*' && ch != '/' && ch != '(' && ch != ')' && ch != ' ' && ch != -1)
+				} else if (ch != '+' && ch != '-' && ch != '*' && ch != '/' && ch != '(' && ch != ')' && ch != ' '
+						&& ch != -1) { // anything
+					// else
+					while (ch != '+' && ch != '-' && ch != '*' && ch != '/' && ch != '(' && ch != ')' && ch != ' '
+							&& ch != -1)
 						nextChar();
 					String token = str.substring(startPos, this.pos);
 					try {
 						return getCurrencyNumberFormat().parse(token).doubleValue();
 					} catch (ParseException e) {
-						return  getDecimalFormat(3).parse(token).doubleValue();
+						return getDecimalFormat(3).parse(token).doubleValue();
 					}
 				} else
 					throw new ParseException(NLS.bind(Messages.Format_unexpected, (char) ch), this.pos);

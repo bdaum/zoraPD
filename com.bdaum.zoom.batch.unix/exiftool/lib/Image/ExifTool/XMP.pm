@@ -49,7 +49,7 @@ use Image::ExifTool::Exif;
 use Image::ExifTool::GPS;
 require Exporter;
 
-$VERSION = '3.20';
+$VERSION = '3.26';
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(EscapeXML UnescapeXML);
 
@@ -68,6 +68,7 @@ sub AddFlattenedTags($;$$);
 sub FormatXMPDate($);
 sub ConvertRational($);
 sub ConvertRationalList($);
+sub WriteGSpherical($$$);
 
 # lookup for translating to ExifTool namespaces (and family 1 group names)
 %stdXlatNS = (
@@ -100,6 +101,7 @@ my %xmpNS = (
     aux       => 'http://ns.adobe.com/exif/1.0/aux/',
     album     => 'http://ns.adobe.com/album/1.0/',
     cc        => 'http://creativecommons.org/ns#', # changed 2007/12/21 - PH
+    crd       => 'http://ns.adobe.com/camera-raw-defaults/1.0/',
     crs       => 'http://ns.adobe.com/camera-raw-settings/1.0/',
     crss      => 'http://ns.adobe.com/camera-raw-saved-settings/1.0/',
     dc        => 'http://purl.org/dc/elements/1.1/',
@@ -176,6 +178,8 @@ my %xmpNS = (
     GSpherical=> 'http://ns.google.com/videos/1.0/spherical/',
     GDepth    => 'http://ns.google.com/photos/1.0/depthmap/',
     GFocus    => 'http://ns.google.com/photos/1.0/focus/',
+    GCamera   => 'http://ns.google.com/photos/1.0/camera/',
+    GCreations=> 'http://ns.google.com/photos/1.0/creations/',
     dwc       => 'http://rs.tdwg.org/dwc/index.htm',
     GettyImagesGIFT => 'http://xmp.gettyimages.com/gift/1.0/',
     LImage    => 'http://ns.leiainc.com/photos/1.0/image/',
@@ -558,6 +562,10 @@ my %sRetouchArea = (
         Name => 'photoshop',
         SubDirectory => { TagTable => 'Image::ExifTool::XMP::photoshop' },
     },
+    crd => {
+        Name => 'crd',
+        SubDirectory => { TagTable => 'Image::ExifTool::XMP::crd' },
+    },
     crs => {
         Name => 'crs',
         SubDirectory => { TagTable => 'Image::ExifTool::XMP::crs' },
@@ -745,6 +753,14 @@ my %sRetouchArea = (
     GFocus => {
         Name => 'GFocus',
         SubDirectory => { TagTable => 'Image::ExifTool::XMP::GFocus' },
+    },
+    GCamera => {
+        Name => 'GCamera',
+        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GCamera' },
+    },
+    GCreations => {
+        Name => 'GCreations',
+        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GCreations' },
     },
     dwc => {
         Name => 'dwc',
@@ -1358,6 +1374,7 @@ my %sPantryItem = (
     Exposure2012                        => { Writable => 'real' },
     Contrast2012                        => { Writable => 'integer' },
     Highlights2012                      => { Writable => 'integer' },
+    Highlight2012                       => { Writable => 'integer' }, # (written by Nikon software)
     Shadows2012                         => { Writable => 'integer' },
     Whites2012                          => { Writable => 'integer' },
     Blacks2012                          => { Writable => 'integer' },
@@ -1452,6 +1469,8 @@ my %sPantryItem = (
     PerspectiveX                        => { Writable => 'real' },
     PerspectiveY                        => { Writable => 'real' },
     UprightFourSegmentsCount            => { Writable => 'integer' },
+    AutoTone                            => { Writable => 'boolean' },
+    Texture                             => { Writable => 'integer' },
 );
 
 # Tiff namespace properties (tiff)
@@ -2037,10 +2056,11 @@ my %sPantryItem = (
         Writable => 'integer',
     },
     CameraOwnerName     => { Name => 'OwnerName' },
-    BodySerialNumber    => { Name => 'SerialNumber' },
+    BodySerialNumber    => { Name => 'SerialNumber', Groups => { 2 => 'Camera' } },
     LensSpecification => {
         Name => 'LensInfo',
         Writable => 'rational',
+        Groups => { 2 => 'Camera' },
         List => 'Seq',
         RawJoin => 1, # join list into a string before ValueConv
         ValueConv => \&ConvertRationalList,
@@ -2064,9 +2084,9 @@ my %sPantryItem = (
             instead of using the existing XMP-aux:LensInfo
         },
     },
-    LensMake            => { },
-    LensModel           => { },
-    LensSerialNumber    => { },
+    LensMake            => { Groups => { 2 => 'Camera' } },
+    LensModel           => { Groups => { 2 => 'Camera' } },
+    LensSerialNumber    => { Groups => { 2 => 'Camera' } },
     InteroperabilityIndex => {
         Name => 'InteropIndex',
         Description => 'Interoperability Index',
@@ -2217,7 +2237,9 @@ my %sPantryItem = (
     # get latitude/logitude reference from XMP lat/long tags
     # (used to set EXIF GPS position from XMP tags)
     GPSLatitudeRef => {
-        Require => 'XMP:GPSLatitude',
+        Require => 'XMP-exif:GPSLatitude',
+        Groups => { 2 => 'Location' },
+        # Note: Do not Inihibit based on EXIF:GPSLatitudeRef (see forum10192)
         ValueConv => q{
             IsFloat($val[0]) and return $val[0] < 0 ? "S" : "N";
             $val[0] =~ /^.*([NS])/;
@@ -2226,7 +2248,8 @@ my %sPantryItem = (
         PrintConv => { N => 'North', S => 'South' },
     },
     GPSLongitudeRef => {
-        Require => 'XMP:GPSLongitude',
+        Require => 'XMP-exif:GPSLongitude',
+        Groups => { 2 => 'Location' },
         ValueConv => q{
             IsFloat($val[0]) and return $val[0] < 0 ? "W" : "E";
             $val[0] =~ /^.*([EW])/;
@@ -2235,7 +2258,8 @@ my %sPantryItem = (
         PrintConv => { E => 'East', W => 'West' },
     },
     GPSDestLatitudeRef => {
-        Require => 'XMP:GPSDestLatitude',
+        Require => 'XMP-exif:GPSDestLatitude',
+        Groups => { 2 => 'Location' },
         ValueConv => q{
             IsFloat($val[0]) and return $val[0] < 0 ? "S" : "N";
             $val[0] =~ /^.*([NS])/;
@@ -2244,7 +2268,8 @@ my %sPantryItem = (
         PrintConv => { N => 'North', S => 'South' },
     },
     GPSDestLongitudeRef => {
-        Require => 'XMP:GPSDestLongitude',
+        Require => 'XMP-exif:GPSDestLongitude',
+        Groups => { 2 => 'Location' },
         ValueConv => q{
             IsFloat($val[0]) and return $val[0] < 0 ? "W" : "E";
             $val[0] =~ /^.*([EW])/;
@@ -2267,6 +2292,7 @@ my %sPantryItem = (
         Inhibit => {
             6 => 'Composite:LensID',    # don't override existing Composite:LensID
         },
+        Groups => { 2 => 'Camera' },
         ValueConv => '$val',
         PrintConv => 'Image::ExifTool::XMP::PrintLensID($self, @val)',
     },
@@ -2280,6 +2306,7 @@ my %sPantryItem = (
             4 => 'XMP:FlashRedEyeMode',
             5 => 'XMP:Flash', # handle structured flash information too
         },
+        Groups => { 2 => 'Camera' },
         Writable => 1,
         PrintHex => 1,
         SeparateTable => 'EXIF Flash',
@@ -2289,11 +2316,11 @@ my %sPantryItem = (
                 my $i = 0;
                 $val[$i++] = $val[5]{$_} foreach qw(Fired Return Mode Function RedEyeMode);
             }
-            return (($val[0] and lc($val[0]) eq 'true') ? 0x01 : 0) |
+            return((($val[0] and lc($val[0]) eq 'true') ? 0x01 : 0) |
                    (($val[1] || 0) << 1) |
                    (($val[2] || 0) << 3) |
                    (($val[3] and lc($val[3]) eq 'true') ? 0x20 : 0) |
-                   (($val[4] and lc($val[4]) eq 'true') ? 0x40 : 0);
+                   (($val[4] and lc($val[4]) eq 'true') ? 0x40 : 0));
         },
         PrintConv => \%Image::ExifTool::Exif::flash,
         WriteAlso => {
@@ -3163,6 +3190,26 @@ NoLoop:
     my $key = $et->FoundTag($tagInfo, $val) or return 0;
     # save original components of rational numbers (used when copying)
     $$et{RATIONAL}{$key} = $rational if defined $rational;
+    # allow read-only subdirectories (eg. embedded base64 XMP/IPTC in NKSC files)
+    if ($$tagInfo{SubDirectory} and not $$et{IsWriting}) {
+        my $subdir = $$tagInfo{SubDirectory};
+        my $dataPt = ref $$et{VALUE}{$key} ? $$et{VALUE}{$key} : \$$et{VALUE}{$key};
+        # process subdirectory information
+        my %dirInfo = (
+            DirName  => $$subdir{DirName} || $$tagInfo{Name},
+            DataPt   => $dataPt,
+            DirLen   => length $$dataPt,
+            IsExtended => 1, # (hack to avoid Duplicate warning for embedded XMP)
+        );
+        my $oldOrder = GetByteOrder();
+        SetByteOrder($$subdir{ByteOrder}) if $$subdir{ByteOrder};
+        my $oldNS = $$et{definedNS};
+        delete $$et{definedNS};
+        my $subTablePtr = GetTagTable($$subdir{TagTable}) || $tagTablePtr;
+        $et->ProcessDirectory(\%dirInfo, $subTablePtr, $$subdir{ProcessProc});
+        SetByteOrder($oldOrder);
+        $$et{definedNS} = $oldNS;
+    }
     # save structure/list information if necessary
     if (@structProps and (@structProps > 1 or defined $structProps[0][1]) and
         not $$et{NO_STRUCT})
@@ -3247,7 +3294,6 @@ sub ParseXMPElement($$$;$$$$)
         # (empty elements end with '/', eg. <a:b/>)
         if ($attrs !~ s/\/$//) {
             my $nesting = 1;
-            my $tok;
             for (;;) {
 # this match fails with perl 5.6.2 (perl bug!), but it works without
 # the '(.*?)', so we must do it differently...
@@ -3703,7 +3749,7 @@ sub ProcessXMP($$;$)
                 $fmt = 'n';     # UTF-16 or 32 MM with BOM
             } elsif ($buf2 =~ /^(\xff\xfe)(<\?xml|<rdf:RDF|<x(mp)?:x[ma]pmeta)/g) {
                 $fmt = 'v';     # UTF-16 or 32 II with BOM
-            } elsif ($buf2 =~ /^(\xef\xbb\xbf)?(<\?xml|<rdf:RDF|<x(mp)?:x[ma]pmeta)/g) {
+            } elsif ($buf2 =~ /^(\xef\xbb\xbf)?(<\?xml|<rdf:RDF|<x(mp)?:x[ma]pmeta|<svg\b)/g) {
                 $fmt = 0;       # UTF-8 with BOM or unknown encoding without BOM
             } elsif ($buf2 =~ /^(\xfe\xff|\xff\xfe|\xef\xbb\xbf)(<\?xpacket begin=)/g) {
                 $double = $1;   # double-encoded UTF
@@ -3852,8 +3898,8 @@ sub ProcessXMP($$;$)
     # extract XMP as a block if specified
     my $blockName = $$dirInfo{BlockInfo} ? $$dirInfo{BlockInfo}{Name} : 'XMP';
     if (($$et{REQ_TAG_LOOKUP}{lc $blockName} or ($$et{TAGS_FROM_FILE} and
-        not $$et{EXCL_TAG_LOOKUP}{lc $blockName})) and
-        ($$dirInfo{DirName} and $$dirInfo{DirName} eq 'XMP'))
+        not $$et{EXCL_TAG_LOOKUP}{lc $blockName})) and ($$et{FileType} eq 'XMP' or
+        ($$dirInfo{DirName} and $$dirInfo{DirName} eq 'XMP')))
     {
         $et->FoundTag($$dirInfo{BlockInfo} || 'XMP', substr($$dataPt, $dirStart, $dirLen));
     }

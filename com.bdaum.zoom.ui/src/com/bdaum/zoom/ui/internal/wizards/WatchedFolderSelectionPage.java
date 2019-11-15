@@ -49,11 +49,14 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 	private CheckboxButton subfolderButton;
 	private RadioButtonGroup typeButtonGroup;
 	private boolean typeChoice;
+	private boolean subfolderChoice;
 
-	public WatchedFolderSelectionPage(String pageName, WatchedFolderImpl watchedFolder, boolean typeChoice) {
+	public WatchedFolderSelectionPage(String pageName, WatchedFolderImpl watchedFolder, boolean typeChoice,
+			boolean subfolderChoice) {
 		super(pageName);
 		this.watchedFolder = watchedFolder;
 		this.typeChoice = typeChoice;
+		this.subfolderChoice = subfolderChoice;
 	}
 
 	@Override
@@ -112,9 +115,9 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 			typeButtonGroup.setSelection(1);
 		else
 			typeButtonGroup.setSelection(0);
-		typeButtonGroup.setEnabled(typeChoice && !watchedFolder.getTethered());
+		typeButtonGroup.setVisible(typeChoice && !watchedFolder.getTethered());
 		subfolderButton.setSelection(watchedFolder.getRecursive());
-
+		subfolderButton.setVisible(subfolderChoice);
 	}
 
 	@Override

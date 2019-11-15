@@ -168,9 +168,9 @@ public class MultiModifyAssetOperation extends DbOperation {
 													toBeDeleted.add(rel);
 												} else {
 													backup.addModification(key, rel.getStringId(), true);
-													rel.removeAsset(assetId);
 													toBeStored.add(rel);
 												}
+												asset.setLocationCreated_parent(null);
 											}
 										}
 										if (id != null) {
@@ -183,6 +183,7 @@ public class MultiModifyAssetOperation extends DbOperation {
 												backup.addModification(key, (rel = set.get(0)).getStringId(), false);
 											toBeStored.add(rel);
 											rel.addAsset(assetId);
+											asset.setLocationCreated_parent(rel.getStringId());
 										}
 									} else if (qfield == QueryField.IPTC_LOCATIONSHOWN) {
 										if (oldId != null) {
@@ -213,6 +214,7 @@ public class MultiModifyAssetOperation extends DbOperation {
 													backup.addModification(key, rel.getStringId(), true);
 													toBeStored.add(rel);
 												}
+												asset.setCreatorsContact_parent(null);
 											}
 										}
 										if (id != null) {
@@ -228,6 +230,7 @@ public class MultiModifyAssetOperation extends DbOperation {
 												backup.addObject((rel = new CreatorsContactImpl(id)).getStringId());
 											toBeStored.add(rel);
 											rel.addAsset(assetId);
+											asset.setCreatorsContact_parent(rel.getStringId());
 										}
 									} else if (qfield == QueryField.IPTC_ARTWORK) {
 										if (oldId != null) {

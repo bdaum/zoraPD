@@ -233,7 +233,6 @@ public class Trash extends HistoryItem {
 			for (Ghost_typeImpl ghost : ghosts)
 				dbManager.delete(ghost);
 		}
-		dbManager.store(asset);
 		// Albums
 		String[] albums = asset.getAlbum();
 		if (albums != null)
@@ -269,6 +268,7 @@ public class Trash extends HistoryItem {
 				LocationCreatedImpl impl = dbManager.obtainById(LocationCreatedImpl.class, locId);
 				if (impl != null && !impl.getAsset().contains(assetid)) {
 					impl.addAsset(assetid);
+					asset.setLocationCreated_parent(impl.getStringId());
 					dbManager.store(impl);
 				}
 			}
@@ -289,6 +289,7 @@ public class Trash extends HistoryItem {
 				status.add(
 						new Status(IStatus.ERROR, CoreActivator.PLUGIN_ID, Messages.Trash_error_adding_to_lucene, e));
 			}
+		dbManager.store(asset);
 		dbManager.deleteTrash(this);
 		return asset;
 	}

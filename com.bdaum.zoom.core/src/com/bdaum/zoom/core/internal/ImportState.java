@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,6 +35,7 @@ import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IRelationDetector;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbErrorHandler;
@@ -105,9 +105,9 @@ public class ImportState {
 	private ImportConfiguration tempConfiguration;
 	private boolean changed;
 	private Set<String> errorSet = new HashSet<>();
-	private int i = 0;
 	private ImportFromDeviceData importFromDeviceData;
 	private AnalogProperties analogProperties;
+	private int sidecarTimeshift = 0;
 
 	public ImportState(ImportConfiguration configuration, ImportFromDeviceData importFromDeviceData,
 			AnalogProperties analogProperties, AbstractImportOperation operation, int fileSource) {
@@ -353,7 +353,7 @@ public class ImportState {
 	}
 
 	public int getTimeshift() {
-		return importFromDeviceData == null ? 0 : importFromDeviceData.getTimeshift();
+		return importFromDeviceData == null ? sidecarTimeshift : importFromDeviceData.getTimeshift() + sidecarTimeshift;
 	}
 
 	public int getSkipPolicy() {
@@ -368,8 +368,7 @@ public class ImportState {
 	}
 
 	public boolean fromTransferFolder() {
-		return importFromDeviceData != null && importFromDeviceData.getTargetDir() != null
-				&& importFromDeviceData.getWatchedFolder() != null; // from transfer folder
+		return transferNeeded() && importFromDeviceData.getWatchedFolder() != null; // from transfer folder
 	}
 
 	public void deleteTransferredFile(Asset asset) {
@@ -429,9 +428,13 @@ public class ImportState {
 
 	public void readXMP(InputStream in, String file, AssetEnsemble ensemble) {
 		try {
-			for (XMPField field : XMPUtilities.readXMP(in))
-				if (!overlayMap.containsKey(field.getQfield().getExifToolKey()))
+			for (XMPField field : XMPUtilities.readXMP(in)) {
+				QueryField qfield = field.getQfield();
+				if (qfield == QueryField.TIMESHIFT)
+					sidecarTimeshift = field.getIntegerValue();
+				else if (!overlayMap.containsKey(qfield.getExifToolKey()))
 					assignValue(field, ensemble, file);
+			}
 		} catch (XMPException e) {
 			operation.addError(NLS.bind(Messages.ImportState_Malformed_XMP, file), e);
 		}
@@ -547,42 +550,41 @@ public class ImportState {
 		int subfolderPolicy = importFromDeviceData.getSubfolderPolicy();
 		if (subfolderPolicy != ImportFromDeviceData.SUBFOLDERPOLICY_NO) {
 			Date date = cal.getTime();
-			subFolder = new File(subFolder, new SimpleDateFormat("yyyy").format(date)); //$NON-NLS-1$
+			subFolder = new File(subFolder, Format.YEAR_FORMAT.get().format(date)); 
 			subFolder.mkdir();
 			switch (subfolderPolicy) {
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARMONTH:
-				subFolder = new File(subFolder, new SimpleDateFormat("yyyy-MM").format(date)); //$NON-NLS-1$
+				subFolder = new File(subFolder, Format.YEAR_MONTH_FORMAT.get().format(date)); 
 				subFolder.mkdir();
 				break;
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARMONTHDAY:
 				if (deep) {
-					subFolder = new File(subFolder, new SimpleDateFormat("yyyy-MM").format(date)); //$NON-NLS-1$
+					subFolder = new File(subFolder, Format.YEAR_MONTH_FORMAT.get().format(date)); 
 					subFolder.mkdir();
 				}
-				subFolder = new File(subFolder, new SimpleDateFormat("yyyy-MM-dd").format(date)); //$NON-NLS-1$
+				subFolder = new File(subFolder, Format.YEAR_MONTH_DAY_FORMAT.get().format(date)); 
 				subFolder.mkdir();
 				break;
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARWEEK:
-				subFolder = new File(subFolder, new SimpleDateFormat("YYYY-'W'ww").format(date)); //$NON-NLS-1$
+				subFolder = new File(subFolder, Format.YEAR_WEEK_FORMAT.get().format(date)); 
 				subFolder.mkdir();
 				break;
 			case ImportFromDeviceData.SUBFOLDERPOLICY_YEARWEEKDAY:
 				if (deep) {
-					subFolder = new File(subFolder, new SimpleDateFormat("YYYY-'W'ww").format(date)); //$NON-NLS-1$
+					subFolder = new File(subFolder, Format.YEAR_WEEK_FORMAT.get().format(date)); 
 					subFolder.mkdir();
 				}
-				subFolder = new File(subFolder, new SimpleDateFormat("YYYY-'W'ww-uu").format(date)); //$NON-NLS-1$
+				subFolder = new File(subFolder, Format.YEAR_WEEK_DAY_FORMAT.get().format(date)); 
 				subFolder.mkdir();
 				break;
 			}
 		}
-		int p = filename.lastIndexOf('.');
-		String ext = (p > filename.lastIndexOf('/')) ? filename.substring(p) : ""; //$NON-NLS-1$
+		String ext = BatchUtilities.getTrueFileExtension(filename);
 		String newFilename = Utilities.evaluateTemplate(importFromDeviceData.getRenamingTemplate(),
 				importFromDeviceData.getWatchedFolder() != null ? Constants.TV_TRANSFER : Constants.TV_ALL, filename,
 				cal, importNo, meta.getLastSequenceNo() + 1, meta.getLastYearSequenceNo() + 1,
 				importFromDeviceData.getCue(), null, "", //$NON-NLS-1$
-				BatchConstants.MAXPATHLENGTH - subFolder.getAbsolutePath().length() - 1 - ext.length(), true, false);
+				BatchConstants.MAXPATHLENGTH - subFolder.getAbsolutePath().length() - 1 - ext.length(), true);
 		File target = BatchUtilities.makeUniqueFile(subFolder, newFilename, ext);
 		File voiceTarget = null;
 		try {
@@ -714,13 +716,14 @@ public class ImportState {
 	}
 
 	public void nextPicture(int ret) {
+		sidecarTimeshift = 0;
 		reimport = false;
 		if (tempConfiguration != null && tempConfiguration.conflictPolicy == CANCEL)
 			tempConfiguration = null;
 		overlayMap.clear();
 		changed |= ret < 0;
 		if (ret != 0) {
-			if (i == 0 && !isSilent()) {
+			if ((importNo & 7) == 0 && !isSilent()) {
 				Core.getCore().fireAssetsModified(new BagChange<>(added, modified, null, null), null);
 				added.clear();
 				modified.clear();
@@ -729,8 +732,6 @@ public class ImportState {
 					changed = false;
 				}
 			}
-			if (i++ == 8)
-				i = 0;
 			++importNo;
 		}
 	}

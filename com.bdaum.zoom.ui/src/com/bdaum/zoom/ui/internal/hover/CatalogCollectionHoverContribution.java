@@ -82,7 +82,7 @@ public class CatalogCollectionHoverContribution extends AbstractHoverContributio
 	public String[] getItemKeys() {
 		return TAGS;
 	}
-	
+
 	@Override
 	public String[] getTitleItemLabels() {
 		return null;
@@ -97,7 +97,6 @@ public class CatalogCollectionHoverContribution extends AbstractHoverContributio
 	public String[] getTitleItemKeys() {
 		return null;
 	}
-
 
 	@Override
 	public IHoverItem getHoverItem(String itemkey) {
@@ -150,8 +149,8 @@ public class CatalogCollectionHoverContribution extends AbstractHoverContributio
 				List<SortCriterion> sortCriteria = sm.getSortCriterion();
 				if (!sortCriteria.isEmpty()) {
 					StringBuilder sb = new StringBuilder();
-					UiUtilities.composeSortDescription(sm, sb);
-					return NLS.bind(Messages.CatalogCollectionHoverContribution_sorted_by, sb.toString());
+					UiUtilities.composeSortDescription(sm, sb, false);
+					return sb.toString();
 				}
 			} else if (HINTS.equals(key)) {
 				if (sm.getAlbum()) {

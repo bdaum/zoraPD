@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.Shell;
 import com.bdaum.zoom.cat.model.meta.LastDeviceImport;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
@@ -58,7 +59,6 @@ import com.bdaum.zoom.ui.internal.ZViewerComparator;
 public class MediaDialog extends ZTitleAreaDialog {
 
 	private static final int REMOVE = 9999;
-	private static final SimpleDateFormat sdf = new SimpleDateFormat(Messages.MediaDialog_import_date_mask);
 	private TableViewer viewer;
 	private List<LastDeviceImport> mediaList;
 	private String key;
@@ -146,7 +146,7 @@ public class MediaDialog extends ZTitleAreaDialog {
 			public String getText(Object element) {
 				if (element instanceof LastDeviceImport) {
 					long timestamp = ((LastDeviceImport) element).getTimestamp();
-					return timestamp == 0L ? " - " : sdf.format(new Date(timestamp)); //$NON-NLS-1$
+					return timestamp == 0L ? " - " : Format.YMD_TIME_FORMAT.get().format(new Date(timestamp)); //$NON-NLS-1$
 				}
 				return element.toString();
 			}
@@ -157,7 +157,7 @@ public class MediaDialog extends ZTitleAreaDialog {
 			protected void setValue(Object element, Object value) {
 				if (element instanceof LastDeviceImport && value instanceof String) {
 					try {
-						((LastDeviceImport) element).setTimestamp(sdf.parse((String) value).getTime());
+						((LastDeviceImport) element).setTimestamp(Format.YMD_TIME_FORMAT.get().parse((String) value).getTime());
 						viewer.update(element, null);
 					} catch (ParseException e) {
 						// do nothing
@@ -168,7 +168,7 @@ public class MediaDialog extends ZTitleAreaDialog {
 			@Override
 			protected Object getValue(Object element) {
 				if (element instanceof LastDeviceImport)
-					return sdf.format(new Date(((LastDeviceImport) element).getTimestamp()));
+					return Format.YMD_TIME_FORMAT.get().format(new Date(((LastDeviceImport) element).getTimestamp()));
 				return ""; //$NON-NLS-1$
 			}
 
@@ -178,12 +178,13 @@ public class MediaDialog extends ZTitleAreaDialog {
 				editor.setValidator(new ICellEditorValidator() {
 					public String isValid(Object value) {
 						if (value instanceof String) {
+							SimpleDateFormat sdf = Format.YMD_TIME_FORMAT.get();
 							try {
 								sdf.parse((String) value);
 								setErrorMessage(null);
 							} catch (ParseException e) {
 								String errorMessage = NLS.bind(Messages.MediaDialog_bad_date_format,
-										Messages.MediaDialog_import_date_mask);
+										sdf.toPattern());
 								setErrorMessage(errorMessage);
 								return errorMessage;
 							}

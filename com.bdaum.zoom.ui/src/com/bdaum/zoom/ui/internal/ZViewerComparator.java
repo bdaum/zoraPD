@@ -19,6 +19,8 @@
  */
 package com.bdaum.zoom.ui.internal;
 
+import java.util.Comparator;
+
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnViewer;
@@ -36,8 +38,15 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 
 public class ZViewerComparator extends ViewerComparator {
 
+	private Comparator<String> comparator;
+
 	public ZViewerComparator() {
-		super(UiUtilities.stringComparator);
+		this(UiUtilities.stringComparator);
+	}
+
+	public ZViewerComparator(Comparator<String> comparator) {
+		super(comparator);
+		this.comparator = comparator;
 	}
 
 	public static final ViewerComparator INSTANCE = new ZViewerComparator();
@@ -76,10 +85,10 @@ public class ZViewerComparator extends ViewerComparator {
 			int dir = sortDir == SWT.DOWN ? -1 : 1;
 			CellLabelProvider labelProvider = columnViewer.getLabelProvider(colIndex);
 			if (labelProvider instanceof ColumnLabelProvider)
-				return dir * UiUtilities.stringComparator.compare(((ColumnLabelProvider) labelProvider).getText(e1),
+				return dir * comparator.compare(((ColumnLabelProvider) labelProvider).getText(e1),
 						((ColumnLabelProvider) labelProvider).getText(e2));
 			if (labelProvider instanceof ZColumnLabelProvider)
-				return dir * UiUtilities.stringComparator.compare(((ZColumnLabelProvider) labelProvider).getText(e1),
+				return dir * comparator.compare(((ZColumnLabelProvider) labelProvider).getText(e1),
 						((ZColumnLabelProvider) labelProvider).getText(e2));
 		}
 		return super.compare(viewer, e1, e2);

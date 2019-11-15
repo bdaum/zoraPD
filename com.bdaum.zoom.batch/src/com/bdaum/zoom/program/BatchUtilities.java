@@ -286,18 +286,16 @@ public class BatchUtilities {
 		ImageUtilities.waitUntilFileIsReady(in);
 		long size = in.length();
 		synchronized (out) {
-			try (FileInputStream instream = new FileInputStream(in)) {
-				try (FileChannel sourceChannel = instream.getChannel()) {
-					try (FileOutputStream outstream = new FileOutputStream(out)) {
-						try (FileChannel destinationChannel = outstream.getChannel()) {
-							if (size < MAXTRANSFERSIZE)
-								sourceChannel.transferTo(0, sourceChannel.size(), destinationChannel);
-							else {
-								long position = 0;
-								while (position < size && (monitor == null || !monitor.isCanceled()))
-									position += sourceChannel.transferTo(position, MAXTRANSFERSIZE, destinationChannel);
-							}
-						}
+			try (FileInputStream instream = new FileInputStream(in);
+					FileOutputStream outstream = new FileOutputStream(out);) {
+				try (FileChannel sourceChannel = instream.getChannel();
+						FileChannel destinationChannel = outstream.getChannel()) {
+					if (size < MAXTRANSFERSIZE)
+						sourceChannel.transferTo(0, sourceChannel.size(), destinationChannel);
+					else {
+						long position = 0;
+						while (position < size && (monitor == null || !monitor.isCanceled()))
+							position += sourceChannel.transferTo(position, MAXTRANSFERSIZE, destinationChannel);
 					}
 				}
 			} finally {
@@ -317,29 +315,26 @@ public class BatchUtilities {
 
 	private static void copyBytes(File in, File out, IProgressMonitor monitor) throws IOException, DiskFullException {
 		FileLock fl = null;
-		try (FileInputStream fin = new FileInputStream(in)) {
-			try (FileOutputStream fout = new FileOutputStream(out)) {
+		try (FileInputStream fin = new FileInputStream(in); FileOutputStream fout = new FileOutputStream(out)) {
+			try {
+				fl = fin.getChannel().tryLock();
+				if (fl == null)
+					throw new IOException(NLS.bind(Messages.getString("BatchUtilities.File_in_use"), in.getPath())); //$NON-NLS-1$
+			} catch (Exception e) {
+				// work without lock
+			}
+			try (BufferedInputStream bin = new BufferedInputStream(fin);
+					BufferedOutputStream bout = new BufferedOutputStream(fout)) {
 				try {
-					fl = fin.getChannel().tryLock();
-					if (fl == null)
-						throw new IOException(NLS.bind(Messages.getString("BatchUtilities.File_in_use"), in.getPath())); //$NON-NLS-1$
-				} catch (Exception e) {
-					// work without lock
-				}
-				try (BufferedInputStream bin = new BufferedInputStream(fin)) {
-					try (BufferedOutputStream bout = new BufferedOutputStream(fout)) {
-						try {
-							transferStreams(bin, bout, monitor);
-						} finally {
-							if (fl != null)
-								fl.release();
-							long size = in.length();
-							long outsize = out.length();
-							if (outsize < size)
-								throw new DiskFullException(NLS.bind(Messages.getString("BatchUtilities.File_n_m"), //$NON-NLS-1$
-										out, outsize + " < " + size)); //$NON-NLS-1$
-						}
-					}
+					transferStreams(bin, bout, monitor);
+				} finally {
+					if (fl != null)
+						fl.release();
+					long size = in.length();
+					long outsize = out.length();
+					if (outsize < size)
+						throw new DiskFullException(NLS.bind(Messages.getString("BatchUtilities.File_n_m"), //$NON-NLS-1$
+								out, outsize + " < " + size)); //$NON-NLS-1$
 				}
 			}
 		}
@@ -409,16 +404,19 @@ public class BatchUtilities {
 	 *
 	 * @param file
 	 *            - the file to be shown
+	 * @param select
+	 *            - true if specifed file is to be selected, false if file is to be
+	 *            opened
 	 */
-	public static void showInFolder(final File file) {
+	public static void showInFolder(final File file, boolean select) {
 		BusyIndicator.showWhile(null, () -> {
 			try {
 				if (BatchConstants.WIN32)
-					BatchActivator.getDefault().runScript(new String[] { "/select.bat", //$NON-NLS-1$
+					BatchActivator.getDefault().runScript(new String[] { select ? "/select.bat" : "root.bat", //$NON-NLS-1$ //$NON-NLS-2$
 							file.getAbsolutePath() }, false);
 				else
 					BatchUtilities.executeCommand(new String[] { BatchConstants.OSX ? "open" : "xdg-open", //$NON-NLS-1$ //$NON-NLS-2$
-							file.getParentFile().getAbsolutePath() }, null,
+							select ? file.getParentFile().getAbsolutePath() : file.getAbsolutePath() }, null,
 							Messages.getString("BatchUtilities.run_script"), IStatus.OK, IStatus.ERROR, 0, 1000L, //$NON-NLS-1$
 							"UTF-8"); //$NON-NLS-1$
 			} catch (IOException e1) {

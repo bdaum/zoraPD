@@ -123,7 +123,6 @@ import com.bdaum.zoom.core.CatalogListener;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.job.OperationJob;
@@ -558,12 +557,8 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 						&& !c2.getCriterion().isEmpty()) {
 					Criterion crit1 = c1.getCriterion(0);
 					Object value1 = crit1 == null ? null : crit1.getValue();
-					if (value1 instanceof Range)
-						value1 = ((Range) value1).getFrom();
 					Criterion crit2 = c2.getCriterion(0);
 					Object value2 = crit2 == null ? null : crit2.getValue();
-					if (value2 instanceof Range)
-						value2 = ((Range) value2).getFrom();
 					if (value1 != null && value2 != null && value1.getClass().equals(value2.getClass()))
 						return ((Comparable<Object>) value1).compareTo(value2);
 				} else
@@ -587,7 +582,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 
 	public static final String ID = "com.bdaum.zoom.ui.views.CatalogView"; //$NON-NLS-1$
 	public static final GroupImpl WASTEBASKET = new GroupImpl(Messages.getString("CatalogView.wastebasket"), true, 1, //$NON-NLS-1$
-			null, -1, null);
+			null, -1, 1, null);
 
 	private static final FileTransfer fileTransfer = FileTransfer.getInstance();
 	private static final LocalSelectionTransfer selectionTransfer = LocalSelectionTransfer.getTransfer();
@@ -750,7 +745,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 
 			@Override
 			public void assetsModified(BagChange<Asset> changes, QueryField node) {
-				forceSelectionUpdate();
+				// forceSelectionUpdate();
 			}
 
 			@Override
@@ -760,18 +755,18 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 						CatalogView.this, false);
 			}
 
-			private void forceSelectionUpdate() {
-				Shell shell = getSite().getShell();
-				if (shell != null && !shell.isDisposed())
-					shell.getDisplay().asyncExec(() -> {
-						if (!shell.isDisposed()) {
-							ISelection selection = viewer.getSelection();
-							viewer.setSelection(StructuredSelection.EMPTY);
-							setViewerSelection(selection, true);
-							fireSelection(new SelectionChangedEvent(CatalogView.this, selection));
-						}
-					});
-			}
+//			private void forceSelectionUpdate() {
+//				Shell shell = getSite().getShell();
+//				if (shell != null && !shell.isDisposed())
+//					shell.getDisplay().asyncExec(() -> {
+//						if (!shell.isDisposed()) {
+//							ISelection selection = viewer.getSelection();
+//							viewer.setSelection(StructuredSelection.EMPTY);
+//							setViewerSelection(selection, true);
+//							fireSelection(new SelectionChangedEvent(CatalogView.this, selection));
+//						}
+//					});
+//			}
 
 			@Override
 			public void setCatalogSelection(final ISelection selection, final boolean forceUpdate) {
@@ -1170,10 +1165,12 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			public void run() {
 				GroupDialog dialog = new GroupDialog(getSite().getShell(), null, null);
 				if (dialog.open() == Window.OK) {
-					GroupImpl group = new GroupImpl(dialog.getName(), false, Constants.INHERIT_LABEL, null, 0, null);
+					GroupImpl group = new GroupImpl(dialog.getName(), false, Constants.INHERIT_LABEL, null, 0, 1, null);
 					group.setAnnotations(dialog.getAnnotations());
 					group.setShowLabel(dialog.getShowLabel());
 					group.setLabelTemplate(dialog.getLabelTemplate());
+					group.setAlignment(dialog.getLabelAlignment());
+					group.setFontSize(dialog.getLabelFontsize());
 					Core.getCore().getDbManager().safeTransaction(null, group);
 					setInput();
 					setViewerSelection(new StructuredSelection(group), true);
@@ -1246,7 +1243,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 					CollectionEditDialog dialog = new CollectionEditDialog(getSite().getShell(), null,
 							Messages.getString("CatalogView.create_album"), //$NON-NLS-1$
 							Messages.getString("CatalogView.albums_msg"), //$NON-NLS-1$
-							false, true, false, false);
+							false, true, ((Group) obj).getStringId().equals(Constants.GROUP_ID_PERSONS), false);
 					if (dialog.open() == Window.OK)
 						insertCollection(dialog.getResult(), (GroupImpl) obj);
 				}
@@ -1264,11 +1261,13 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 					if (!parent.getSystem() || isPersonGroup(parent)) {
 						GroupDialog dialog = new GroupDialog(getSite().getShell(), null, parent);
 						if (dialog.open() == Window.OK) {
-							Group group = new GroupImpl(dialog.getName(), false, Constants.INHERIT_LABEL, null, 0,
+							Group group = new GroupImpl(dialog.getName(), false, Constants.INHERIT_LABEL, null, 0, 1,
 									null);
 							group.setAnnotations(dialog.getAnnotations());
 							group.setShowLabel(dialog.getShowLabel());
 							group.setLabelTemplate(dialog.getLabelTemplate());
+							group.setAlignment(dialog.getLabelAlignment());
+							group.setFontSize(dialog.getLabelFontsize());
 							group.setGroup_subgroup_parent(parent);
 							List<Group> subgroups = parent.getSubgroup();
 							if (subgroups == null)
@@ -1454,10 +1453,10 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 				SmartCollectionImpl newSm = new SmartCollectionImpl(oldSm.getName(), false, oldSm.getAlbum(),
 						oldSm.getAdhoc(), oldSm.getNetwork(), null, oldSm.getColorCode(), oldSm.getLastAccessDate(), 0,
 						oldSm.getPerspective(), oldSm.getShowLabel(), oldSm.getLabelTemplate(), oldSm.getFontSize(),
-						null);
+						oldSm.getAlignment(), null);
 				for (Criterion oldCrit : oldSm.getCriterion())
 					newSm.addCriterion(new CriterionImpl(oldCrit.getField(), oldCrit.getSubfield(), oldCrit.getValue(),
-							oldCrit.getRelation(), oldCrit.getAnd()));
+							null, oldCrit.getRelation(), oldCrit.getAnd()));
 				for (SortCriterion oldCrit : oldSm.getSortCriterion())
 					newSm.addSortCriterion(
 							new SortCriterionImpl(oldCrit.getField(), oldCrit.getSubfield(), oldCrit.getDescending()));
@@ -1668,7 +1667,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 	}
 
 	private void tellHistoryView(IdentifiableObject obj) {
-		HistoryView historyView = (HistoryView) getSite().getPage().findView(HistoryView.ID);
+		HistoryView historyView = (HistoryView) UiUtilities.findViewNoRestore(getSite().getPage(), HistoryView.ID);
 		if (historyView != null)
 			historyView.removeItem(obj);
 	}

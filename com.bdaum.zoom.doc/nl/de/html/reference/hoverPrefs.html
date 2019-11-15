@@ -5,6 +5,7 @@
 
 
 
+
 <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Hover-Präferenzen</title>
 
 <link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
@@ -31,46 +32,76 @@ Syntax bereitgestellt:<br>
 <br>
 </span><br>
 
-<table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
   <tbody>
     <tr>
       <td style="vertical-align: top; font-weight: bold; width: 20%;"><code>?<br>
       </code></td>
-      <td style="vertical-align: top;"><span class="tlid-translation translation">Ein Fragezeichen am Anfang
-einer Zeile. Die gesamte Zeile wird gelöscht, wenn <span style="font-weight: bold;">alle</span> Variablen in
-dieser Zeile nicht aufgelöst sind.</span>
+      <td style="vertical-align: top;"><span class="tlid-translation translation"><span style="font-weight: bold;">Bedingte Zeile Typ 1</span><br>
+Ein Fragezeichen am Anfang
+einer Zeile. Die gesamte Zeile wird gelöscht, wenn <span style="font-weight: bold;">alle</span> Variablen und Gruppen in
+dieser Zeile nicht aufgelöst sind.<br>
+</span><span style="font-weight: bold;">Beispiel:<br>
+      </span><code>
+ ?Shot in </code><code>{meta=iptc_location_created&amp;city}</code><br>
+
       </td>
     </tr>
     <tr>
       <td style="vertical-align: top; font-weight: bold;"><code>??<br>
       </code></td>
-      <td style="vertical-align: top;"><span class="tlid-translation translation">Zwei Fragezeichen am Anfang
+      <td style="vertical-align: top;"><span class="tlid-translation translation"><span style="font-weight: bold;">Bedingte Zeile Typ 2</span></span><br>
+      <span class="tlid-translation translation">Zwei Fragezeichen am Anfang
 einer Zeile. Die gesamte Zeile wird gelöscht, wenn mindestens <span style="font-weight: bold;">eine</span>
-Variable in dieser Zeile nicht aufgelöst ist.</span>
+Variable oder Gruppe in dieser Zeile nicht aufgelöst ist.<br>
+      </span><span style="font-weight: bold;">Beispiel:<br>
+      </span>
+??<code>{meta=owner},</code><code> {</code><code>yyyy</code><code>}</code><br>
+
       </td>
     </tr>
     <tr>
       <td style="vertical-align: top; font-weight: bold;"><code>(? ... ?)<br>
       </code></td>
-      <td style="vertical-align: top;"><span class="tlid-translation translation">Der vollständige Ausdruck
-zwischen den Klammern wird gelöscht, wenn <span style="font-weight: bold;">alle</span> Variablen in der Klammer
-unaufgelöst bleiben. Dies funktioniert auch über Zeilenumbrüche hinweg.</span>
+      <td style="vertical-align: top;"><span class="tlid-translation translation"><span style="font-weight: bold;">Bedingte Gruppe Typ 1</span></span><br>
+      <span class="tlid-translation translation">Der vollständige Ausdruck
+zwischen den Klammern wird gelöscht, wenn <span style="font-weight: bold;">alle</span> Variablen und Untergruppen in der Klammer
+unaufgelöst bleiben. Dies funktioniert auch über Zeilenumbrüche hinweg.<br>
+      </span><span style="font-weight: bold;">Beispiel:<br>
+      </span><code>
+ (?Shot in </code><code>{meta=iptc_location_created&amp;city}?)</code><br>
+
       </td>
     </tr>
     <tr>
       <td style="vertical-align: top; font-weight: bold;"><code>(?? ... ?)<br>
       </code></td>
-      <td style="vertical-align: top;"><span class="tlid-translation translation">Der vollständige Ausdruck
-zwischen den Klammern wird gelöscht, wenn mindestens <span style="font-weight: bold;">eine</span> Variable
+      <td style="vertical-align: top;"><span class="tlid-translation translation"><span style="font-weight: bold;">Bedingte Gruppe Typ 2<br>
+</span></span><span class="tlid-translation translation">Der vollständige Ausdruck
+zwischen den Klammern wird gelöscht, wenn mindestens <span style="font-weight: bold;">eine</span> Variable oder Untergruppe
 innerhalb der Klammer unaufgelöst bleibt. Dies funktioniert auch über
-Zeilenumbrüche hinweg.</span></td>
+Zeilenumbrüche hinweg.<br>
+      </span><span style="font-weight: bold;">Beispiel:<br>
+      </span>
+(??<code>{meta=owner},</code><code> {</code><code>yyyy</code><code>}?</code><code>)</code><br>
+</td>
+    </tr><tr>
+      <td style="vertical-align: top;"><code>...|(...)</code></td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Fallback</span><br>
+Wenn der Ausdruck (Variable, bedingte Gruppe oder ein anderer Fallback) vor dem<code> | </code>nicht aufgelöst ist, wird stattdessen der Ausdruck innerhalb der <span class="tlid-translation translation">Klammern</span> verwendet. Andernfalls wird er verworfen. Dies funktioniert auch über Zeilenumbrüche hinweg.<br>
+
+
+          <span style="font-weight: bold;">Beispiel:<br>
+          </span><code> {meta=iptc_location_created&amp;city}|(</code><code>Not geotagged)</code></td>
     </tr>
+
   </tbody>
 </table>
 
 <br>
-<span class="tlid-translation translation">Diese Markierungen werden abschließend aus der Vorlage entfernt, wenn der Hover-Text generiert wird.</span><abbr></abbr><br>
+Bedingte Gruppen und Fallbacks können verschachtelt werden.<br>
+<span class="tlid-translation translation">Diese Steuerzeichen werden abschließend aus der Vorlage entfernt, wenn der Hover-Text generiert wird.</span><abbr></abbr><br>
 <br>
 <h4><span class="tlid-translation translation"><span title="" class="">Timing</span></span></h4>
 <h4><span class="tlid-translation translation"></span></h4>

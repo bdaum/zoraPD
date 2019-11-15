@@ -137,15 +137,14 @@ public class SetLocationCreatedOperation extends DbOperation {
 			newLocationCreated = locationCreated = new LocationCreatedImpl(locationId);
 		toBeStored.add(locationCreated);
 		monitor.worked(1);
-		lp: for (int i = 0; i < size; i++) {
+		for (int i = 0; i < size; i++) {
 			Asset asset = assets.get(i);
 			oldLocCreatedId[i] = asset.getLocationCreated_parent();
 			String assetId = asset.getStringId();
-			List<LocationCreatedImpl> oldLocCreated = dbManager.obtainStructForAsset(LocationCreatedImpl.class, assetId,
-					true);
-			for (LocationCreatedImpl lc : oldLocCreated) {
+			LocationCreatedImpl lc = dbManager.obtainById(LocationCreatedImpl.class, asset.getLocationCreated_parent());
+			if (lc != null) {
 				if (lc.getLocation().equals(locationId))
-					continue lp;
+					continue;
 				lc.removeAsset(assetId);
 				if (lc.getAsset().isEmpty())
 					toBeDeleted.add(lc);

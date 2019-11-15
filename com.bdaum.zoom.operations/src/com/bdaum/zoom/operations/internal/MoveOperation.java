@@ -317,8 +317,9 @@ public class MoveOperation extends DbOperation {
 							toBeStored.add(contact);
 							backup.addCreatedObject(contact);
 						}
-						rel.getAsset().clear();
+						rel.clearAsset();
 						rel.addAsset(assetId);
+						asset.setCreatorsContact_parent(rel.getStringId());
 						toBeStored.add(rel);
 					}
 				}
@@ -327,11 +328,11 @@ public class MoveOperation extends DbOperation {
 		}
 		relId = asset.getLocationCreated_parent();
 		if (relId != null) {
-			Iterator<LocationCreatedImpl> it = peerService
+			Iterator<LocationCreatedImpl> it = peerService 
 					.obtainStructForAsset(assetOrigin, LocationCreatedImpl.class, assetId, true).iterator();
 			if (it.hasNext()) {
 				LocationCreatedImpl rel = it.next();
-				rel.getAsset().clear();
+				rel.clearAsset();
 				String locationId = rel.getLocation();
 				if (locationId == null)
 					asset.setLocationCreated_parent(null);
@@ -356,6 +357,7 @@ public class MoveOperation extends DbOperation {
 							backup.addCreatedObject(location);
 						}
 						rel.addAsset(assetId);
+						asset.setLocationCreated_parent(rel.getStringId());
 						toBeStored.add(rel);
 					}
 				}

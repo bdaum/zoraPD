@@ -22,8 +22,6 @@ package com.bdaum.zoom.db.internal;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IRatingFilter;
-import com.db4o.query.Constraint;
-import com.db4o.query.Query;
 
 public class RatingFilter extends AssetFilter implements IRatingFilter {
 
@@ -55,14 +53,14 @@ public class RatingFilter extends AssetFilter implements IRatingFilter {
 	 * @see
 	 * com.bdaum.zoom.db.internal.AssetFilter#getConstraint(com.db4o.query.Query)
 	 */
-	@Override
-	public Constraint getConstraint(DbManager dbManager, Query query) {
-		if (rating == QueryField.SELECTALL)
-			return null;
-		if (rating == QueryField.SELECTUNDEF)
-			return query.descend(QueryField.RATING.getKey()).constrain(0).smaller();
-		return query.descend(QueryField.RATING.getKey()).constrain(rating).smaller().not();
-	}
+//	@Override
+//	public Constraint getConstraint(DbManager dbManager, Query query) {
+//		if (rating == QueryField.SELECTALL)
+//			return null;
+//		if (rating == QueryField.SELECTUNDEF)
+//			return query.descend(QueryField.RATING.getKey()).constrain(0).smaller();
+//		return query.descend(QueryField.RATING.getKey()).constrain(rating).smaller().not();
+//	}
 
 	/*
 	 * (nicht-Javadoc)

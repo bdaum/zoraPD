@@ -100,9 +100,9 @@ public class ImageConstants {
 			"/icc/P3D65.icc", null //$NON-NLS-1$
 	};
 
-	private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
+	public static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
 
-	public static final int NPROCESSORS = AVAILABLE_PROCESSORS > 2 ? AVAILABLE_PROCESSORS - 1 : AVAILABLE_PROCESSORS;
+	public static int NPROCESSORS = AVAILABLE_PROCESSORS > 2 ? AVAILABLE_PROCESSORS - 1 : AVAILABLE_PROCESSORS;
 
 	public static final String APPNAME = Platform.getProduct().getProperty("shortName"); //$NON-NLS-1$
 	public final static String APPLICATION_NAME = Platform.getProduct().getName();
@@ -172,6 +172,8 @@ public class ImageConstants {
 	
 	// Voicenote file extensions
 	public static final String[] VOICEEXT = new String[] {".WAV", ".wav"};  //$NON-NLS-1$//$NON-NLS-2$
+
+	public static final int IMAGE_WEBP = 99; // Extends SWT constants
 
 	public static List<String> getNonRawImageFileExtensions() {
 		Map<String, String> mimeMap = getMimeMap();
@@ -346,7 +348,7 @@ public class ImageConstants {
 	 */
 	public static boolean isJpeg(String ext) {
 		String s = ext.toLowerCase();
-		return s.charAt(0) == 'j' && ImageConstants.SWTFORMATS.contains(s);
+		return s.startsWith("j") && ImageConstants.SWTFORMATS.contains(s); //$NON-NLS-1$
 	}
 
 	static {
@@ -390,6 +392,10 @@ public class ImageConstants {
 		SWTFORMATS.add("jfif"); //$NON-NLS-1$
 
 		FILEHANDLERS.put("eip", new EipFileHandler()); //$NON-NLS-1$
+	}
+
+	public static void setNoProcessors(int np) {
+		NPROCESSORS = np;
 	}
 
 }

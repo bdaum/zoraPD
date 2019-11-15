@@ -529,5 +529,9 @@ public abstract class AbstractPreferencePage extends PreferencePage implements I
 		}
 		return null;
 	}
+	
+	public CTabFolder getTabFolder() {
+		return tabFolder;
+	}
 
 }

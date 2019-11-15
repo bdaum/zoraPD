@@ -21,7 +21,6 @@ package com.bdaum.zoom.ui.internal.commands;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -48,8 +47,6 @@ public class ImportPreferencesCommand extends AbstractCommandHandler {
 					Messages.ImportPreferencesAction_do_you_really_want_to_overwrite)) {
 				try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
 					Platform.getPreferencesService().importPreferences(in);
-				} catch (FileNotFoundException e) {
-					// should never happen
 				} catch (CoreException e) {
 					AcousticMessageDialog.openError(getShell(),
 							Messages.ImportPreferencesAction_import_user_preferences,

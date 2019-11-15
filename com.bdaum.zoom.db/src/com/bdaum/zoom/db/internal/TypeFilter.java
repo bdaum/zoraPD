@@ -20,11 +20,8 @@
 package com.bdaum.zoom.db.internal;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.ITypeFilter;
 import com.bdaum.zoom.image.ImageConstants;
-import com.db4o.query.Constraint;
-import com.db4o.query.Query;
 
 public class TypeFilter extends AssetFilter implements ITypeFilter {
 
@@ -204,285 +201,285 @@ public class TypeFilter extends AssetFilter implements ITypeFilter {
 	 * @see
 	 * com.bdaum.zoom.db.internal.AssetFilter#getConstraint(com.db4o.query.Query )
 	 */
-	@Override
-	public Constraint getConstraint(DbManager dbManager, Query query) {
-		Constraint formatConstraint = null;
-		switch (formats) {
-		// case 0:
-		// return null;
-		case RAW:
-			return createRawConstraint(query, true);
+//	@Override
+//	public Constraint getConstraint(DbManager dbManager, Query query) {
+//		Constraint formatConstraint = null;
+//		switch (formats) {
+//		// case 0:
+//		// return null;
+//		case RAW:
+//			return createRawConstraint(query, true);
+//
+//		case DNG:
+//			return createDngConstraint(query, true);
+//
+//		case RAW | DNG:
+//			return createRawConstraint(query, true).or(createDngConstraint(query, true));
+//
+//		case JPEG:
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG);
+//
+//		case JPEG | RAW:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG);
+//			return createRawConstraint(query, true).or(formatConstraint);
+//
+//		case JPEG | DNG:
+//			formatConstraint = createDngConstraint(query, true);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).or(formatConstraint);
+//
+//		case JPEG | DNG | RAW:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG);
+//			return createRawConstraint(query, true).or(createDngConstraint(query, true)).or(formatConstraint);
+//
+//		case TIFF:
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF);
+//
+//		case TIFF | RAW:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF);
+//			return createRawConstraint(query, true).or(formatConstraint);
+//
+//		case TIFF | DNG:
+//			formatConstraint = createDngConstraint(query, true);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).or(formatConstraint);
+//
+//		case TIFF | DNG | RAW:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF);
+//			return createRawConstraint(query, true).or(createDngConstraint(query, true)).or(formatConstraint);
+//
+//		case TIFF | JPEG:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).or(formatConstraint);
+//
+//		case TIFF | JPEG | RAW:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG)
+//					.or(formatConstraint);
+//			return createRawConstraint(query, true).or(formatConstraint);
+//
+//		case TIFF | JPEG | DNG:
+//			formatConstraint = createDngConstraint(query, true);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG)
+//					.or(formatConstraint);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).or(formatConstraint);
+//
+//		case TIFF | JPEG | DNG | RAW:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF)
+//					.or(formatConstraint);
+//			return createRawConstraint(query, true).or(createDngConstraint(query, true)).or(formatConstraint);
+//
+//		case OTHER:
+//			formatConstraint = createImageConstraint(query, true);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
+//					.and(formatConstraint);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not()
+//					.and(formatConstraint);
+//			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
+//
+//		case OTHER | RAW:
+//			formatConstraint = createImageConstraint(query, true);
+//			formatConstraint = createDngConstraint(query, false).and(formatConstraint);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
+//					.and(formatConstraint);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
+//
+//		case OTHER | DNG:
+//			formatConstraint = createImageConstraint(query, true);
+//			formatConstraint = createRawConstraint(query, false).and(formatConstraint);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
+//					.and(formatConstraint);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
+//
+//		case OTHER | DNG | RAW:
+//			formatConstraint = createImageConstraint(query, true);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
+//					.and(formatConstraint);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
+//
+//		case OTHER | JPEG:
+//			formatConstraint = createImageConstraint(query, true);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not()
+//					.and(formatConstraint);
+//			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
+//
+//		case OTHER | JPEG | RAW:
+//			formatConstraint = createImageConstraint(query, true);
+//			formatConstraint = createDngConstraint(query, false).and(formatConstraint);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
+//
+//		case OTHER | JPEG | DNG:
+//			formatConstraint = createImageConstraint(query, true);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not()
+//					.and(formatConstraint);
+//			return createRawConstraint(query, false).and(formatConstraint);
+//
+//		case OTHER | JPEG | DNG | RAW:
+//			formatConstraint = createImageConstraint(query, true);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
+//
+//		case OTHER | TIFF:
+//			formatConstraint = createImageConstraint(query, true);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
+//					.and(formatConstraint);
+//			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
+//
+//		case OTHER | TIFF | RAW:
+//			formatConstraint = createImageConstraint(query, true);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
+//					.and(createDngConstraint(query, false)).and(formatConstraint);
+//
+//		case OTHER | TIFF | DNG:
+//			formatConstraint = createImageConstraint(query, true);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
+//					.and(formatConstraint);
+//			return createRawConstraint(query, false).and(formatConstraint);
+//
+//		case OTHER | TIFF | DNG | RAW:
+//			formatConstraint = createImageConstraint(query, true);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not().and(formatConstraint);
+//
+//		case OTHER | TIFF | JPEG:
+//			formatConstraint = createImageConstraint(query, true);
+//			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
+//
+//		case OTHER | TIFF | JPEG | RAW:
+//			formatConstraint = createImageConstraint(query, true);
+//			return createDngConstraint(query, false).and(formatConstraint);
+//
+//		case OTHER | TIFF | JPEG | DNG:
+//			formatConstraint = createImageConstraint(query, true);
+//			return createRawConstraint(query, false).and(formatConstraint);
+//
+//		case OTHER | TIFF | JPEG | DNG | RAW:
+//			return createImageConstraint(query, true);
+//
+//		case MEDIA:
+//			return createImageConstraint(query, false);
+//		case MEDIA | RAW:
+//			return createImageConstraint(query, false).or(createRawConstraint(query, true));
+//		case MEDIA | DNG:
+//			return createImageConstraint(query, false).or(createDngConstraint(query, true));
+//		case MEDIA | RAW | DNG:
+//			return createImageConstraint(query, false).or(createRawConstraint(query, true))
+//					.or(createDngConstraint(query, true));
+//		case MEDIA | JPEG:
+//			return createImageConstraint(query, false)
+//					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG));
+//		case MEDIA | JPEG | RAW:
+//			formatConstraint = createImageConstraint(query, false)
+//					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG));
+//			return createRawConstraint(query, true).or(formatConstraint);
+//		case MEDIA | JPEG | DNG:
+//			formatConstraint = createImageConstraint(query, false)
+//					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG));
+//			return createDngConstraint(query, true).or(formatConstraint);
+//		case MEDIA | JPEG | DNG | RAW:
+//			formatConstraint = createImageConstraint(query, false)
+//					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG));
+//			return createRawConstraint(query, true).or(createDngConstraint(query, true)).or(formatConstraint);
+//		case MEDIA | TIFF:
+//			return createImageConstraint(query, false)
+//					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
+//		case MEDIA | TIFF | RAW:
+//			formatConstraint = createImageConstraint(query, false)
+//					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
+//			return createRawConstraint(query, true).or(formatConstraint);
+//		case MEDIA | TIFF | DNG:
+//			formatConstraint = createImageConstraint(query, false)
+//					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
+//			return createDngConstraint(query, true).or(formatConstraint);
+//		case MEDIA | TIFF | DNG | RAW:
+//			formatConstraint = createImageConstraint(query, false)
+//					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
+//			return createRawConstraint(query, true).or(createDngConstraint(query, true)).or(formatConstraint);
+//		case MEDIA | TIFF | JPEG:
+//			formatConstraint = createImageConstraint(query, false)
+//					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).or(formatConstraint);
+//		case MEDIA | TIFF | JPEG | RAW:
+//			formatConstraint = createImageConstraint(query, false)
+//					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG)
+//					.or(formatConstraint);
+//			return createRawConstraint(query, true).or(formatConstraint);
+//		case MEDIA | TIFF | JPEG | DNG:
+//			formatConstraint = createImageConstraint(query, false)
+//					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
+//			formatConstraint = createDngConstraint(query, true).or(formatConstraint);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).or(formatConstraint);
+//		case MEDIA | TIFF | JPEG | DNG | RAW:
+//			formatConstraint = createImageConstraint(query, false)
+//					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG)
+//					.or(formatConstraint);
+//			return createRawConstraint(query, true).or(createDngConstraint(query, true)).or(formatConstraint);
+//		case MEDIA | OTHER:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not();
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not()
+//					.and(formatConstraint);
+//			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
+//		case MEDIA | OTHER | RAW:
+//			formatConstraint = createDngConstraint(query, false);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
+//					.and(formatConstraint);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
+//		case MEDIA | OTHER | DNG:
+//			formatConstraint = createRawConstraint(query, false);
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
+//					.and(formatConstraint);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
+//		case MEDIA | OTHER | DNG | RAW:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not();
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
+//		case MEDIA | OTHER | JPEG:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not()
+//					.and(formatConstraint);
+//			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
+//		case MEDIA | OTHER | JPEG | RAW:
+//			formatConstraint = createDngConstraint(query, false);
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
+//		case MEDIA | OTHER | JPEG | DNG:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not();
+//			return createRawConstraint(query, false).and(formatConstraint);
+//		case MEDIA | OTHER | JPEG | DNG | RAW:
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not();
+//		case MEDIA | OTHER | TIFF:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not();
+//			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
+//		case MEDIA | OTHER | TIFF | RAW:
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
+//					.and(createDngConstraint(query, false));
+//		case MEDIA | OTHER | TIFF | DNG:
+//			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not();
+//			return createRawConstraint(query, false).and(formatConstraint);
+//		case MEDIA | OTHER | TIFF | DNG | RAW:
+//			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not();
+//		case MEDIA | OTHER | TIFF | JPEG:
+//			return createRawConstraint(query, false).and(createDngConstraint(query, false));
+//		case MEDIA | OTHER | TIFF | JPEG | RAW:
+//			return createDngConstraint(query, false);
+//		case MEDIA | OTHER | TIFF | JPEG | DNG:
+//			return createRawConstraint(query, false);
+//		// case MEDIA | OTHER | TIFF | JPEG | DNG | RAW:
+//		// return null;
+//		}
+//		return null;
+//	}
 
-		case DNG:
-			return createDngConstraint(query, true);
-
-		case RAW | DNG:
-			return createRawConstraint(query, true).or(createDngConstraint(query, true));
-
-		case JPEG:
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG);
-
-		case JPEG | RAW:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG);
-			return createRawConstraint(query, true).or(formatConstraint);
-
-		case JPEG | DNG:
-			formatConstraint = createDngConstraint(query, true);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).or(formatConstraint);
-
-		case JPEG | DNG | RAW:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG);
-			return createRawConstraint(query, true).or(createDngConstraint(query, true)).or(formatConstraint);
-
-		case TIFF:
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF);
-
-		case TIFF | RAW:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF);
-			return createRawConstraint(query, true).or(formatConstraint);
-
-		case TIFF | DNG:
-			formatConstraint = createDngConstraint(query, true);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).or(formatConstraint);
-
-		case TIFF | DNG | RAW:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF);
-			return createRawConstraint(query, true).or(createDngConstraint(query, true)).or(formatConstraint);
-
-		case TIFF | JPEG:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).or(formatConstraint);
-
-		case TIFF | JPEG | RAW:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG)
-					.or(formatConstraint);
-			return createRawConstraint(query, true).or(formatConstraint);
-
-		case TIFF | JPEG | DNG:
-			formatConstraint = createDngConstraint(query, true);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG)
-					.or(formatConstraint);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).or(formatConstraint);
-
-		case TIFF | JPEG | DNG | RAW:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF)
-					.or(formatConstraint);
-			return createRawConstraint(query, true).or(createDngConstraint(query, true)).or(formatConstraint);
-
-		case OTHER:
-			formatConstraint = createImageConstraint(query, true);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
-					.and(formatConstraint);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not()
-					.and(formatConstraint);
-			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
-
-		case OTHER | RAW:
-			formatConstraint = createImageConstraint(query, true);
-			formatConstraint = createDngConstraint(query, false).and(formatConstraint);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
-					.and(formatConstraint);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
-
-		case OTHER | DNG:
-			formatConstraint = createImageConstraint(query, true);
-			formatConstraint = createRawConstraint(query, false).and(formatConstraint);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
-					.and(formatConstraint);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
-
-		case OTHER | DNG | RAW:
-			formatConstraint = createImageConstraint(query, true);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
-					.and(formatConstraint);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
-
-		case OTHER | JPEG:
-			formatConstraint = createImageConstraint(query, true);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not()
-					.and(formatConstraint);
-			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
-
-		case OTHER | JPEG | RAW:
-			formatConstraint = createImageConstraint(query, true);
-			formatConstraint = createDngConstraint(query, false).and(formatConstraint);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
-
-		case OTHER | JPEG | DNG:
-			formatConstraint = createImageConstraint(query, true);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not()
-					.and(formatConstraint);
-			return createRawConstraint(query, false).and(formatConstraint);
-
-		case OTHER | JPEG | DNG | RAW:
-			formatConstraint = createImageConstraint(query, true);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
-
-		case OTHER | TIFF:
-			formatConstraint = createImageConstraint(query, true);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
-					.and(formatConstraint);
-			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
-
-		case OTHER | TIFF | RAW:
-			formatConstraint = createImageConstraint(query, true);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
-					.and(createDngConstraint(query, false)).and(formatConstraint);
-
-		case OTHER | TIFF | DNG:
-			formatConstraint = createImageConstraint(query, true);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
-					.and(formatConstraint);
-			return createRawConstraint(query, false).and(formatConstraint);
-
-		case OTHER | TIFF | DNG | RAW:
-			formatConstraint = createImageConstraint(query, true);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not().and(formatConstraint);
-
-		case OTHER | TIFF | JPEG:
-			formatConstraint = createImageConstraint(query, true);
-			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
-
-		case OTHER | TIFF | JPEG | RAW:
-			formatConstraint = createImageConstraint(query, true);
-			return createDngConstraint(query, false).and(formatConstraint);
-
-		case OTHER | TIFF | JPEG | DNG:
-			formatConstraint = createImageConstraint(query, true);
-			return createRawConstraint(query, false).and(formatConstraint);
-
-		case OTHER | TIFF | JPEG | DNG | RAW:
-			return createImageConstraint(query, true);
-
-		case MEDIA:
-			return createImageConstraint(query, false);
-		case MEDIA | RAW:
-			return createImageConstraint(query, false).or(createRawConstraint(query, true));
-		case MEDIA | DNG:
-			return createImageConstraint(query, false).or(createDngConstraint(query, true));
-		case MEDIA | RAW | DNG:
-			return createImageConstraint(query, false).or(createRawConstraint(query, true))
-					.or(createDngConstraint(query, true));
-		case MEDIA | JPEG:
-			return createImageConstraint(query, false)
-					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG));
-		case MEDIA | JPEG | RAW:
-			formatConstraint = createImageConstraint(query, false)
-					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG));
-			return createRawConstraint(query, true).or(formatConstraint);
-		case MEDIA | JPEG | DNG:
-			formatConstraint = createImageConstraint(query, false)
-					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG));
-			return createDngConstraint(query, true).or(formatConstraint);
-		case MEDIA | JPEG | DNG | RAW:
-			formatConstraint = createImageConstraint(query, false)
-					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG));
-			return createRawConstraint(query, true).or(createDngConstraint(query, true)).or(formatConstraint);
-		case MEDIA | TIFF:
-			return createImageConstraint(query, false)
-					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
-		case MEDIA | TIFF | RAW:
-			formatConstraint = createImageConstraint(query, false)
-					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
-			return createRawConstraint(query, true).or(formatConstraint);
-		case MEDIA | TIFF | DNG:
-			formatConstraint = createImageConstraint(query, false)
-					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
-			return createDngConstraint(query, true).or(formatConstraint);
-		case MEDIA | TIFF | DNG | RAW:
-			formatConstraint = createImageConstraint(query, false)
-					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
-			return createRawConstraint(query, true).or(createDngConstraint(query, true)).or(formatConstraint);
-		case MEDIA | TIFF | JPEG:
-			formatConstraint = createImageConstraint(query, false)
-					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).or(formatConstraint);
-		case MEDIA | TIFF | JPEG | RAW:
-			formatConstraint = createImageConstraint(query, false)
-					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG)
-					.or(formatConstraint);
-			return createRawConstraint(query, true).or(formatConstraint);
-		case MEDIA | TIFF | JPEG | DNG:
-			formatConstraint = createImageConstraint(query, false)
-					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
-			formatConstraint = createDngConstraint(query, true).or(formatConstraint);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).or(formatConstraint);
-		case MEDIA | TIFF | JPEG | DNG | RAW:
-			formatConstraint = createImageConstraint(query, false)
-					.or(query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF));
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG)
-					.or(formatConstraint);
-			return createRawConstraint(query, true).or(createDngConstraint(query, true)).or(formatConstraint);
-		case MEDIA | OTHER:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not();
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not()
-					.and(formatConstraint);
-			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
-		case MEDIA | OTHER | RAW:
-			formatConstraint = createDngConstraint(query, false);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
-					.and(formatConstraint);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
-		case MEDIA | OTHER | DNG:
-			formatConstraint = createRawConstraint(query, false);
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
-					.and(formatConstraint);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
-		case MEDIA | OTHER | DNG | RAW:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not();
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
-		case MEDIA | OTHER | JPEG:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not()
-					.and(formatConstraint);
-			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
-		case MEDIA | OTHER | JPEG | RAW:
-			formatConstraint = createDngConstraint(query, false);
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not().and(formatConstraint);
-		case MEDIA | OTHER | JPEG | DNG:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not();
-			return createRawConstraint(query, false).and(formatConstraint);
-		case MEDIA | OTHER | JPEG | DNG | RAW:
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.TIFF).not();
-		case MEDIA | OTHER | TIFF:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not();
-			return createRawConstraint(query, false).and(createDngConstraint(query, false)).and(formatConstraint);
-		case MEDIA | OTHER | TIFF | RAW:
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not()
-					.and(createDngConstraint(query, false));
-		case MEDIA | OTHER | TIFF | DNG:
-			formatConstraint = query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not();
-			return createRawConstraint(query, false).and(formatConstraint);
-		case MEDIA | OTHER | TIFF | DNG | RAW:
-			return query.descend(QueryField.FORMAT.getKey()).constrain(ImageConstants.JPEG).not();
-		case MEDIA | OTHER | TIFF | JPEG:
-			return createRawConstraint(query, false).and(createDngConstraint(query, false));
-		case MEDIA | OTHER | TIFF | JPEG | RAW:
-			return createDngConstraint(query, false);
-		case MEDIA | OTHER | TIFF | JPEG | DNG:
-			return createRawConstraint(query, false);
-		// case MEDIA | OTHER | TIFF | JPEG | DNG | RAW:
-		// return null;
-		}
-		return null;
-	}
-
-	private static Constraint createDngConstraint(Query query, boolean accept) {
-		Constraint formatConstraint = query.descend(QueryField.MIMETYPE.getKey()).constrain(ImageConstants.IMAGE_X_DNG);
-		return accept ? formatConstraint : formatConstraint.not();
-	}
-
-	private static Constraint createRawConstraint(Query query, boolean accept) {
-		Constraint formatConstraint = query.descend(QueryField.MIMETYPE.getKey()).constrain(ImageConstants.IMAGE_X_RAW);
-		return accept ? formatConstraint : formatConstraint.not();
-	}
-
-	private static Constraint createImageConstraint(Query query, boolean accept) {
-		Constraint formatConstraint = query.descend(QueryField.MIMETYPE.getKey()).constrain("image/").startsWith(true); //$NON-NLS-1$
-		return accept ? formatConstraint : formatConstraint.not();
-	}
+//	private static Constraint createDngConstraint(Query query, boolean accept) {
+//		Constraint formatConstraint = query.descend(QueryField.MIMETYPE.getKey()).constrain(ImageConstants.IMAGE_X_DNG);
+//		return accept ? formatConstraint : formatConstraint.not();
+//	}
+//
+//	private static Constraint createRawConstraint(Query query, boolean accept) {
+//		Constraint formatConstraint = query.descend(QueryField.MIMETYPE.getKey()).constrain(ImageConstants.IMAGE_X_RAW);
+//		return accept ? formatConstraint : formatConstraint.not();
+//	}
+//
+//	private static Constraint createImageConstraint(Query query, boolean accept) {
+//		Constraint formatConstraint = query.descend(QueryField.MIMETYPE.getKey()).constrain("image/").startsWith(true); //$NON-NLS-1$
+//		return accept ? formatConstraint : formatConstraint.not();
+//	}
 
 	/*
 	 * (nicht-Javadoc)

@@ -342,14 +342,13 @@ public class RenameGroup extends Composite {
 		if (file != null) {
 			filename = file.getName();
 			int p = filename.lastIndexOf('.');
-			String ext = (p >= 0) ? filename.substring(p) : ""; //$NON-NLS-1$
-			maxLength -= (file.getAbsolutePath().length() - filename.length() + ext.length());
+			maxLength -= (file.getAbsolutePath().length() - (p>= 0 ? p : filename.length()));
 		}
 		Meta meta = Core.getCore().getDbManager().getMeta(true);
 		return Utilities.evaluateTemplate(template.getContent(), tv, filename, new GregorianCalendar(), 1,
 				startField.isVisible() ? start : meta.getLastSequenceNo() + 1, meta.getLastYearSequenceNo() + 1,
 				!cue.isEmpty() ? cue : Messages.RenameGroup_cue2, asset, "", //$NON-NLS-1$
-				maxLength, QueryField.URI == field, false);
+				maxLength, QueryField.URI == field);
 	}
 
 	public void fillValues(IDialogSettings dialogSettings, String selTemplate, String cue) {

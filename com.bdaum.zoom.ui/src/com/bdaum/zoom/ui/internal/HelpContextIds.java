@@ -191,6 +191,10 @@ public interface HelpContextIds extends IHelpContexts {
 
 	public static final String TETHERED_DIALOG  = PREFIX
 			+ "tethered" + DIALOG_POSTFIX; //$NON-NLS-1$
+	
+	public static final String CONFIG_CAPTIONS_DIALOG = PREFIX
+			+ "configCaptions" + DIALOG_POSTFIX; //$NON-NLS-1$
+
 
 	/* Views */
 	public static final String LIGHTBOX_VIEW = PREFIX

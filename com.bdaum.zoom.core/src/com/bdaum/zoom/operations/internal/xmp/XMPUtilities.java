@@ -65,7 +65,7 @@ public class XMPUtilities {
 	}
 
 	public static List<XMPField> readXMP(InputStream in) throws XMPException {
-		XMPUtilities.configureXMPFactory();
+		configureXMPFactory();
 		XMPMeta xmpMeta = XMPMetaFactory.parse(in);
 		XMPIterator iterator = xmpMeta.iterator();
 		List<XMPField> fields = new ArrayList<XMPField>();

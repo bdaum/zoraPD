@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,9 +75,13 @@ import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.graphics.TextStyle;
 import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.ui.IViewPart;
@@ -128,6 +133,7 @@ import com.bdaum.zoom.ui.internal.AbstractKiosk;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiConstants;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.AlbumSelectionDialog;
 import com.bdaum.zoom.ui.internal.dialogs.RatingDialog;
 import com.bdaum.zoom.ui.internal.dialogs.SelectSlideDialog;
@@ -147,6 +153,26 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 	static final int LONGTICK = 60;
 	static final int NTICKS = (LONGTICK + TICK / 2) / TICK;
 	public static final long STARTUPDELAY = 3000L;
+	private static final int CACHESIZE = 3;
+
+	private static class Cache extends LinkedHashMap<String, ZImage> {
+		private static final long serialVersionUID = -3139446943713462728L;
+		private int size;
+
+		public Cache(int size) {
+			super(size * 3 / 2);
+			this.size = size;
+		}
+
+		@Override
+		protected boolean removeEldestEntry(java.util.Map.Entry<String, ZImage> eldest) {
+			if (size() > size) {
+				eldest.getValue().dispose();
+				return true;
+			}
+			return false;
+		}
+	}
 
 	public class PreparationJob extends Job {
 
@@ -336,15 +362,15 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 				if (ww != null) {
 					IWorkbenchPage page = ww.getActivePage();
 					if (page != null)
-						editor = (SlideshowView) page.findView(SlideshowView.ID);
+						editor = (SlideshowView) UiUtilities.findViewNoRestore(page, SlideshowView.ID);
 				}
 				if (editor != null && editor.getContent() != slideshow)
 					editor = null;
 				if (editor == null) {
 					dbManager.safeTransaction(() -> {
-						for (SlideImpl slideImpl : removeFromShow) {
-							dbManager.delete(slideImpl);
-							slideshow.removeEntry(slideImpl.getStringId());
+						for (SlideImpl slide : removeFromShow) {
+							dbManager.delete(slide);
+							slideshow.removeEntry(slide.getStringId());
 						}
 						dbManager.store(slideshow);
 					});
@@ -417,8 +443,16 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 						request = requests.take();
 						if (shell.isDisposed() || request == FINALREQUEST || monitor.isCanceled())
 							break;
-						int zoom = request.getSlide().getZoom();
-						float zp = zoom == 0 ? 1f :  (1f + zoom / 100f)*0.631f;
+						SlideImpl slide = request.getSlide();
+						ZImage zImage = cache.get(slide.getStringId());
+						if (zImage != null) {
+							request.setImage(zImage);
+							answers.add(request);
+							request = null;
+							continue;
+						}
+						int zoom = slide.getZoom();
+						float zp = zoom == 0 ? 1f : (1f + zoom / 100f) * 0.631f;
 						int preferredWidth = (int) (bounds.width * zp);
 						int preferredHeight = (int) (bounds.height * zp);
 						ZImage image = null;
@@ -525,7 +559,8 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 						if (image != null)
 							image.develop(monitor, display, ZImage.CROPPED, preferredWidth, preferredHeight,
 									ZImage.SWTIMAGE);
-						else
+						else if (slide.getLayout() != Constants.SLIDE_MAP_LEFT
+								&& slide.getLayout() != Constants.SLIDE_MAP_RIGHT)
 							image = createIntermediatePlate(shell, request,
 									Messages.getString("SlideShowPlayer.image_unavail"), //$NON-NLS-1$
 									Messages.getString("SlideShowPlayer.highres_image_not_loaded"), //$NON-NLS-1$
@@ -559,6 +594,14 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 
 		private ZImage createSectionBreak(final Shell shl, SlideRequest req) {
 			final SlideImpl slide = req.getSlide();
+			int layout = slide.getLayout();
+			if ((layout == Constants.SLIDE_MAP_LEFT
+					|| layout == Constants.SLIDE_MAP_RIGHT) && CoreActivator.getDefault().getGeoService() != null) {
+				AssetImpl[] nextAssets = req.getNextAssets();
+				for (AssetImpl asset : nextAssets)
+					if (!Double.isNaN(asset.getGPSLatitude()) && !Double.isNaN(asset.getGPSLongitude()))
+						return null;
+			}
 			return createIntermediatePlate(shl, req, slide.getCaption() != null ? slide.getCaption() : "", //$NON-NLS-1$
 					slide.getDescription() != null ? slide.getDescription() : "", slide.getLayout()); //$NON-NLS-1$
 		}
@@ -1126,60 +1169,9 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 				final Shell shell = new Shell(parent, SWT.NO_TRIM);
 				effect = slide.getEffect();
 				if (effect == Constants.SLIDE_TRANSITION_RANDOM)
-					effect = (int) (Math.random() * Constants.SLIDE_TRANSITION_N);
+					effect = (int) (Math.random() * Constants.SLIDE_TRANSITION_N) + Constants.SLIDE_TRANSITION_START;
 				fadingShell = new FadingShell(shell, true, effect);
-				shell.setText(slide.getCaption());
-				shell.setLayout(new FillLayout());
-				imageCanvas = new Canvas(shell, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
-				imageCanvas.setCursor(transparentCursor);
-				imageCanvas.addPaintListener(new PaintListener() {
-					public void paintControl(PaintEvent e) {
-						ZImage image = request.getImage();
-						Rectangle sbounds = imageCanvas.getClientArea();
-						GC gc = e.gc;
-						gc.setBackground(shell.getBackground());
-						gc.fillRectangle(sbounds);
-						if (image != null && !image.isDisposed()) {
-							Rectangle ibounds = image.getBounds();
-							if (slide.getZoom() == 0)
-								image.draw(gc, (sbounds.width - ibounds.width) / 2,
-										(sbounds.height - ibounds.height) / 2, ZImage.CROPPED, sbounds.width,
-										sbounds.height);
-							else {
-								double f = Math.min((double) sbounds.width / ibounds.width,
-										(double) sbounds.height / ibounds.height);
-								double iwidth = ibounds.width * f;
-								double iheight = ibounds.height * f;
-								double w = ibounds.width * zoom;
-								double h = ibounds.height * zoom;
-								double offx = Math.max(0, Math.min(ibounds.width - w,
-										ibounds.width * (slide.getZoomX() + 100) / 200 - w / 2));
-								double offy = Math.max(0, Math.min(ibounds.height - h,
-										ibounds.height * (slide.getZoomY() + 100) / 200 - h / 2));
-								image.draw(gc, (int) (offx + 0.5d), (int) (offy + 0.5d), (int) (w + 0.5d),
-										(int) (h + 0.5d), (int) ((sbounds.width - iwidth) / 2 + 0.5d),
-										(int) ((sbounds.height - iheight) / 2 + 0.5d), (int) (iwidth + 0.5d),
-										(int) (iheight + 0.5d), ZImage.CROPPED, sbounds.width, sbounds.height, true);
-							}
-							if (request.isRemoveFromShow()) {
-								String txt = Messages.getString("SlideShowPlayer.deleted"); //$NON-NLS-1$
-								gc.setFont(JFaceResources.getFont(UiConstants.VIEWERBANNERFONT));
-								int x = gc.textExtent(txt).x;
-								gc.setForeground(displ.getSystemColor(SWT.COLOR_WHITE));
-								gc.drawText(txt, sbounds.width - x - 5, 5, true);
-								gc.setForeground(displ.getSystemColor(SWT.COLOR_RED));
-								gc.drawText(txt, sbounds.width - x - 4, 4, true);
-							}
-						}
-					}
-				});
-				imageCanvas.addMouseMoveListener(new MouseMoveListener() {
-					public void mouseMove(MouseEvent e) {
-						if (panelTask == null && !pauseAt && !ignoreMouseMovements)
-							mouseMovements++;
-					}
-				});
-				KeyAdapter keyListener = new KeyAdapter() {
+				KeyListener keyListener = new KeyAdapter() {
 					@Override
 					public void keyReleased(KeyEvent e) {
 						switch (e.character) {
@@ -1293,8 +1285,17 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 						}
 					}
 				};
-				imageCanvas.addKeyListener(keyListener);
-				imageCanvas.addHelpListener(SingleSlideJob.this);
+				MouseMoveListener mouseMNoveListener = new MouseMoveListener() {
+					public void mouseMove(MouseEvent e) {
+						if (panelTask == null && !pauseAt && !ignoreMouseMovements)
+							mouseMovements++;
+					}
+				};
+				if (request.getImage() == null)
+					fillSectionShell(shell, keyListener, mouseMNoveListener, request.getSlide(),
+							request.getNextAssets());
+				else
+					fillImageShell(shell, keyListener, mouseMNoveListener);
 				shell.setFullScreen(true);
 				shell.setBackground(parent.getBackground());
 				shell.setForeground(parent.getForeground());
@@ -1479,7 +1480,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 					long t1 = System.currentTimeMillis();
 					ticks = 1;
 					int sleep = TICK;
-					durLoop: for (int i = 0; i < dursteps; i+=ticks) {
+					durLoop: for (int i = 0; i < dursteps; i += ticks) {
 						if (startFrom <= 0)
 							sleepTick(sleep);
 						if (i % NTICKS == 0) {
@@ -1500,12 +1501,12 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 									imageCanvas.redraw();
 							});
 							long t2 = System.currentTimeMillis();
-							int interval = (int) (t2-t1);
+							int interval = (int) (t2 - t1);
 							t1 = t2;
-							ticks = (interval+TICK-1) / TICK;
+							ticks = (interval + TICK - 1) / TICK;
 							if (ticks < 1)
 								ticks = 1;
-							sleep = Math.max(2,TICK * ticks - interval);
+							sleep = Math.max(2, TICK * ticks - interval);
 						}
 						startFrom -= TICK;
 						if (i * TICK >= startNext && !next) {
@@ -1570,6 +1571,119 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 				}
 			}
 			return Status.OK_STATUS;
+		}
+
+		private void fillSectionShell(Shell shell, KeyListener keyListener, MouseMoveListener mouseMNoveListener,
+				Slide slide, AssetImpl[] assets) {
+			shell.setText(slide.getCaption());
+			shell.setLayout(new GridLayout(2, true));
+			if (slide.getLayout() == Constants.SLIDE_MAP_RIGHT) {
+				createTextgroup(shell, slide, keyListener, mouseMNoveListener);
+				createMaparea(shell, assets, keyListener, mouseMNoveListener);
+			} else {
+				createMaparea(shell, assets, keyListener, mouseMNoveListener);
+				createTextgroup(shell, slide, keyListener, mouseMNoveListener);
+			}
+		}
+
+		private void createTextgroup(Shell shell, Slide slide, KeyListener keyListener,
+				MouseMoveListener mouseMoveListener) {
+			Composite textGroup = new Composite(shell, SWT.NONE);
+			textGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+			GridLayout layout = new GridLayout();
+			layout.marginHeight = layout.marginWidth = 20;
+			layout.verticalSpacing = 20;
+			textGroup.setLayout(layout);
+			textGroup.setBackground(bottomShell.getBackground());
+			Label titleLabel = new Label(textGroup, SWT.NONE);
+			titleLabel.setLayoutData(new GridData(SWT.CENTER, SWT.BEGINNING, true, false));
+			titleLabel.setText(slide.getCaption());
+			titleLabel.setAlignment(SWT.CENTER);
+			titleLabel.setFont(JFaceResources.getFont(UiConstants.VIEWERBANNERFONT));
+			titleLabel.setBackground(bottomShell.getBackground());
+			titleLabel.setForeground(bottomShell.getForeground());
+			Label descriptionLabel = new Label(textGroup, SWT.WRAP);
+			descriptionLabel.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, true, false));
+			descriptionLabel.setAlignment(SWT.CENTER);
+			descriptionLabel.setText(slide.getDescription());
+			descriptionLabel.setFont(JFaceResources.getFont(UiConstants.VIEWERTITLEFONT));
+			descriptionLabel.setBackground(bottomShell.getBackground());
+			descriptionLabel.setForeground(bottomShell.getForeground());
+			titleLabel.addMouseMoveListener(mouseMoveListener);
+			titleLabel.addKeyListener(keyListener);
+			titleLabel.addHelpListener(SingleSlideJob.this);
+			descriptionLabel.addMouseMoveListener(mouseMoveListener);
+			descriptionLabel.addKeyListener(keyListener);
+			descriptionLabel.addHelpListener(SingleSlideJob.this);
+			textGroup.addMouseMoveListener(mouseMoveListener);
+			textGroup.addKeyListener(keyListener);
+			textGroup.addHelpListener(SingleSlideJob.this);
+		}
+
+		private void createMaparea(Shell shell, AssetImpl[] assets, KeyListener keyListener,
+				MouseMoveListener mouseMoveListener) {
+			Composite mapArea = new Composite(shell, SWT.NONE);
+			mapArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			mapArea.setBackground(bottomShell.getBackground());
+			mapArea.addMouseMoveListener(mouseMoveListener);
+			GridLayout layout = new GridLayout();
+			layout.marginHeight = layout.marginWidth = 20;
+			mapArea.setLayout(layout);
+			Control map = CoreActivator.getDefault().getGeoService().showTrack(mapArea, assets, true);
+			if (map != null) {
+				map.addMouseMoveListener(mouseMoveListener);
+				map.addKeyListener(keyListener);
+			}
+		}
+
+		private void fillImageShell(Shell shell, KeyListener keyListener, MouseMoveListener mouseMoveListener) {
+			shell.setText(slide.getCaption());
+			shell.setLayout(new FillLayout());
+			imageCanvas = new Canvas(shell, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
+			imageCanvas.setCursor(transparentCursor);
+			imageCanvas.addPaintListener(new PaintListener() {
+				public void paintControl(PaintEvent e) {
+					ZImage image = request.getImage();
+					Rectangle sbounds = imageCanvas.getClientArea();
+					GC gc = e.gc;
+					gc.setBackground(shell.getBackground());
+					gc.fillRectangle(sbounds);
+					if (image != null && !image.isDisposed()) {
+						Rectangle ibounds = image.getBounds();
+						if (slide.getZoom() == 0)
+							image.draw(gc, (sbounds.width - ibounds.width) / 2, (sbounds.height - ibounds.height) / 2,
+									ZImage.CROPPED, sbounds.width, sbounds.height);
+						else {
+							double f = Math.min((double) sbounds.width / ibounds.width,
+									(double) sbounds.height / ibounds.height);
+							double iwidth = ibounds.width * f;
+							double iheight = ibounds.height * f;
+							double w = ibounds.width * zoom;
+							double h = ibounds.height * zoom;
+							double offx = Math.max(0, Math.min(ibounds.width - w,
+									ibounds.width * (slide.getZoomX() + 100) / 200 - w / 2));
+							double offy = Math.max(0, Math.min(ibounds.height - h,
+									ibounds.height * (slide.getZoomY() + 100) / 200 - h / 2));
+							image.draw(gc, (int) (offx + 0.5d), (int) (offy + 0.5d), (int) (w + 0.5d), (int) (h + 0.5d),
+									(int) ((sbounds.width - iwidth) / 2 + 0.5d),
+									(int) ((sbounds.height - iheight) / 2 + 0.5d), (int) (iwidth + 0.5d),
+									(int) (iheight + 0.5d), ZImage.CROPPED, sbounds.width, sbounds.height, true);
+						}
+						if (request.isRemoveFromShow()) {
+							String txt = Messages.getString("SlideShowPlayer.deleted"); //$NON-NLS-1$
+							gc.setFont(JFaceResources.getFont(UiConstants.VIEWERBANNERFONT));
+							int x = gc.textExtent(txt).x;
+							gc.setForeground(displ.getSystemColor(SWT.COLOR_WHITE));
+							gc.drawText(txt, sbounds.width - x - 5, 5, true);
+							gc.setForeground(displ.getSystemColor(SWT.COLOR_RED));
+							gc.drawText(txt, sbounds.width - x - 4, 4, true);
+						}
+					}
+				}
+			});
+			imageCanvas.addMouseMoveListener(mouseMoveListener);
+			imageCanvas.addKeyListener(keyListener);
+			imageCanvas.addHelpListener(SingleSlideJob.this);
 		}
 
 		protected void showMessage(String msg, final int titleDur, int valign, String font, int margins) {
@@ -1676,7 +1790,8 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 
 		private void doShowControl() {
 			if (!fadingShell.isDisposed()) {
-				imageCanvas.setCursor(null);
+				if (imageCanvas != null)
+					imageCanvas.setCursor(null);
 				slideControl = new SlideControl(fadingShell);
 				startTimer();
 			}
@@ -2046,30 +2161,30 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 								}
 							});
 							slide = answer.getSlide();
-							ZImage image = answer.getImage();
-							if (image != null) {
-								d = slide.getDelay() + slide.getDuration() + slide.getFadeOut();
-								int startNext = slide.getDuration() - answer.getOverlap();
-								singleSlideJob = new SingleSlideJob(answer, startFrom, startNext, shell, mbounds,
-										pauseAt, new FadingListener() {
-											public void fadeoutStarted() {
-												// do nothing
-											}
+							// ZImage image = answer.getImage();
+							// if (image != null) {
+							d = slide.getDelay() + slide.getDuration() + slide.getFadeOut();
+							singleSlideJob = new SingleSlideJob(answer, startFrom,
+									slide.getDuration() - answer.getOverlap(), shell, mbounds, pauseAt,
+									new FadingListener() {
+										public void fadeoutStarted() {
+											// do nothing
+										}
 
-											public void fadeoutEnded() {
-												// do nothing
-											}
+										public void fadeoutEnded() {
+											// do nothing
+										}
 
-											public void fadeinStarted() {
-												// do nothing
-											}
+										public void fadeinStarted() {
+											// do nothing
+										}
 
-											public void fadeinEnded() {
-												preloadNextSlide();
-											}
-										});
-								singleSlideJob.schedule();
-							}
+										public void fadeinEnded() {
+											preloadNextSlide();
+										}
+									});
+							singleSlideJob.schedule();
+							// }
 						}
 						pauseAt = false;
 						if (checkStatus(answer, monitor))
@@ -2189,15 +2304,15 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 				req.setAborted(false);
 			}
 			// jump to slide and ask for another
-			if (!shell.isDisposed())
+			currentSlide = pos;
+			req = requestList.get(currentSlide++);
+			if (!cache.containsKey(req.getSlide().getStringId()) && !shell.isDisposed())
 				shell.getDisplay().asyncExec(() -> {
 					if (!text.isDisposed()) {
 						text.setText(message);
 						bottomCanvas.redraw();
 					}
 				});
-			currentSlide = pos;
-			req = requestList.get(currentSlide++);
 			requests.add(req);
 			// continue
 			if (receipt != null)
@@ -2217,7 +2332,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 		}
 	}
 
-	private static class SlideRequest {
+	private class SlideRequest {
 		private SlideImpl slide;
 		private URI uri;
 		private int rotation;
@@ -2270,7 +2385,8 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 
 		public void dispose() {
 			if (image != null) {
-				image.dispose();
+				cache.put(slide.getStringId(), image);
+				// image.dispose();
 				image = null;
 			}
 		}
@@ -2453,7 +2569,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 	private static final double MARGINHEIGHT = 0.1d;
 	private static final double MARGINWIDTH = 0.1d;
 	private static final double THUMBNAILSPACE = 0.3d;
-	private static final SlideRequest FINALREQUEST = new SlideRequest(-1, null, null, 0, -1, 0);
+	private static SlideRequest FINALREQUEST;
 	private static final int CLOSE_CLOSE = 0;
 	private static final int CLOSE_IGNORE = 1;
 	private static final int CLOSE_CANCEL = 2;
@@ -2482,11 +2598,13 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 	public Job transferJob;
 	public boolean ignoreMouseMovements;
 	public boolean ignoreChanges;
+	private Cache cache = new Cache(CACHESIZE);
 
 	// State
 
 	public void init(IWorkbenchWindow parentWindow, SlideShowImpl slideshow, List<SlideImpl> slides, boolean adhoc) {
 		super.init(parentWindow, PRIMARY);
+		FINALREQUEST = new SlideRequest(-1, null, null, 0, -1, 0);
 		this.adhoc = adhoc;
 		this.slideshow = slideshow;
 		this.slides = slides;
@@ -2717,6 +2835,9 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 			text.dispose();
 		if (!bottomShell.isDisposed())
 			bottomShell.close();
+		for (ZImage image : cache.values())
+			image.dispose();
+		cache.clear();
 		return super.close();
 	}
 

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="de"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../files/zora.svg" sizes="any">
+  <link rel="stylesheet" href="../zoraPD.css">
+  <title>{$appName} Web Client - Help</title>
+</head>
+<body>
+<header id="helpHeader">
+	<h1 id="helpTitle">{$appName} Web Client - Help</h1>
+ </header>
+<main> 
+	<section class="helpsection">
+	<h4 class="helpSubtitle">Chapters</h4>
+		Simply click on a chapter name:<br>
+		<ul>
+		  {$$images}<li>The chapter <span class="strong">{$imagesTitle}</span>
+		invokes the lightbox showing the collections and images of the catalog.</li>
+		  {$$}{$$exhibitions}<li>The chapter <span class="strong">{$exhibitionsTitle}</span>
+		shows the accessible exhibitions of the catalog.</li>
+		  {$$}{$$galleries}<li>The chapter <span class="strong">{$webgalleriesTitle}</span>
+		shows the accessible web galleries of the catalog.</li>
+		  {$$}{$$slideshows}<li>The chapter <span class="strong">{$slideshowsTitle}</span>
+		shows the predefined slideshows in the catalog.</li>
+		{$$}</ul>
+	</section>
+	{$$images}<section class="helpsection">
+		The lightbox allows to navigate within the set of images:<br>
+		<ul>
+		  <li>At the top you find the <span class="strong">breadcrumbs
+		  </span> informing you about your current position in the catalog. 
+		  You may click on one of its components to navigate back to a former position.</li>
+		  <li>This is followed by the list of <span class="strong">groups and 
+		  collections</span>. Click on an element to show its subgroups and subcollections 
+		  and its images, if any.</li>
+		  <li>Next are the <span class="strong">search fields</span>. 
+		  Enter some text into the text search field. If this text matches a defined keyword,
+		  a keyword search is performed. Otherwise a free text search is performed.</li>
+		  <li>You may also drag a <span class="strong">thumbnail</span> 
+		  into the text search field. This will perform a search for visually similar images.</li>
+		  <li>Below the text search field is the <span class="strong">drop field
+		  </span> for performing a similarity search by using an external image as search object. 
+		  Simply click on that field or drag an external image onto that field.</li>
+		  <li>Finally, there is a list of <span class="strong">thumbnails</span>
+		  (if any). Click on a thumbnail to open the image viewer on that particular image. If the
+		  thumbnail is not responsive the corresponding file is missing or offline or is not
+		  a still image.
+		  {$$formats}<br>Please note, that only images of the following file formats are shown: {$formatlist}.
+		  {$$}</li>
+		</ul>
+		In addition, on top of the page you may find:
+		<ul>
+		  <li>The <span class="strong">Go to thumbnails</span> <img style="width: 20px; height: 20px;" alt="Thumbnails" src="../files/thumbs.png"> button
+		  for jumping directly to the thumbnails section.</li>
+		  <li>The <span class="strong">Play</span> <img style="width: 20px; height: 20px;" alt="Slideshow" src="../files/play.png"> button
+		  for starting an adhoc slideshow stepping through the thumbnails beginning with the
+		  thumbnail at the top of the page.</li>
+		  {$$addons}<li>The <span class="strong">Plus</span> <img style="width: 20px; height: 20px;" alt="Uploads" src="../files/add.png">
+		  button opens the <span class="strong">Upload</span> page.<br>
+		  {$$}</li>
+		</ul>
+    </section>
+	<section class="helpsection">
+		<h4 class="helpSubtitle">Image Viewer</h4>
+		The image viewer shows a single image in detail. You may click the image to
+		toggle your browser between fullscreen and normal mode.<br>
+		In addition the image viewer features some buttons below the image:<br>
+		<ul>
+		  {$$infoAction}<li>The <span class="strong">Info</span> <img style="width: 20px; height: 20px;" alt="Info" src="../files/info.png">
+		button shows or hides the images metadata (EXIF and IPTC).</li>
+		  {$$}{$$fullAction}<li>The <span class="strong">Enlarge</span> <img style="width: 20px; height: 20px;" alt="Enlarge" src="../files/fullscreen.png"> button opens the image in a new browser tab
+		without any decoration and in its original size. You may then use your
+		browsers tools to enlarge the image even more.</li>
+		  {$$}{$$downloadAction}<li>The <span class="strong">Download</span> <img style="width: 20px; height: 20px;" alt="Download" src="../files/download.png"> button downloads the image file. For JPeG
+		files this may have the same effect as the Enlarge button but RAW or
+		TIFF image files are simply downloaded without showing them in the
+		browser.<br></li>
+		  {$$}{$$geoAction}<li>The <span class="strong">Geo</span> <img style="width: 20px; height: 20px;" alt="Geo" src="../files/geo.png"> button shows the camera location on a map.
+		  This button is only available for geotagged images.
+		  </li>
+		{$$}</ul>
+	</section>
+	<section class="helpsection">
+		<h4 class="helpSubtitle">Slideshow</h4>
+		Sideshows start immediately. Click on the current
+		image to pause the slideshow and to show the controls. The
+		slideshow continues when you click on one of the <span class="strong">
+		navigation arrows</span>.<br>Another click on the image will toggle between fullscreen and normal mode.
+		Alternatively you may use the <span class="strong">expand/contract button
+		</span> in the right bottom corner.<br>
+		By default, <span class="strong">captions</span>, if any,
+		are shown for each image. To hide the captions, simply click on a caption. 
+		To bring the captions back, click on the image.
+	</section>
+	{$$exhibitions}<section class="helpsection">
+		<h4 class="helpSubtitle">Exhibitions</h4>
+		The Exhibition page shows you an overview over defined exhibitions.
+		You may also enter text in the <span class="strong">search field</span> to search for specific exhibitions.<br>
+		Click on an exhibition thumbnail to run the exhibition. If the exhibition is not yet 
+		generated or is offline it is run as a slideshow.
+	</section>
+	{$$}{$$galleries}<section class="helpsection"> 
+		<h4 class="helpSubtitle">Web galleries</h4>
+		The Web galleries page shows you an overview over defined web
+		galleries. You may also enter text in the 
+		<span class="strong">search field</span> to search for specific galleries.<br/>
+		Click on a gallery thumbnail to run the gallery. If the gallery is not yet 
+		generated or is offline it is run as a slideshow.
+	 </section>
+	 {$$}{$$addons}<section class="helpsection"> 
+		<h4 class="helpSubtitle">Uploads</h4>
+		To upload images click on the <span class="strong">drop field</span> 
+		or drag an external image onto that field. You may also select or drag multiple files. 
+		All image formats supported by the catalog are accepted, including RAW images.<br>
+		You may also upload XMP sidecars with metadata but this must be done in the same step
+		with the corresponding image. In addition you can specify metadata such as 
+		<span class="strong">Artist</span>, 
+		<span class="strong">Event</span>, and <span class="strong">
+		Keywords</span> with each upload operation.<br>
+		Processing the uploaded images may take a while but then you may see the uploaded 
+		image in the Lightbox page by hitting the <span style="font-style: bold;">
+		Refresh</span> button of your browser{$$formats}, provided it is a {$formatlist} image{$$}.<br>
+	</section>{$$}
+</main>
+<footer>
+	<p>Created with {$appName}</p>
+</footer>
+</body>
+</html>

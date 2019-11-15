@@ -41,6 +41,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.internal.ImportState;
 import com.bdaum.zoom.core.internal.operations.ImportConfiguration;
 import com.bdaum.zoom.ui.Ui;
@@ -196,7 +197,7 @@ public class ConflictDialog extends ZTitleAreaDialog {
 			canvasLabel.setText(asset.getName());
 			Label importLabel = new Label(ccomp, SWT.NONE);
 			importLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
-			SimpleDateFormat sdf = new SimpleDateFormat(Messages.ConflictDialog_importDateFormat);
+			SimpleDateFormat sdf = Format.EMDY_TIME_LONG_FORMAT.get();
 			String by = asset.getImportedBy();
 			importLabel.setText(NLS.bind(Messages.ConflictDialog_imported, sdf.format(asset.getImportDate()),
 					by == null ? Messages.ConflictDialog_unknown : by));

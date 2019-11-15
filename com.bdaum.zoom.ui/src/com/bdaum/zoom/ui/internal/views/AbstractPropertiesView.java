@@ -37,7 +37,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -127,6 +132,60 @@ import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
 public abstract class AbstractPropertiesView extends BasicView implements ISelectionProvider, IFieldUpdater {
+
+	private static ISchedulingRule refresherRule = new ISchedulingRule() {
+
+		@Override
+		public boolean isConflicting(ISchedulingRule rule) {
+			return rule == this;
+		}
+
+		@Override
+		public boolean contains(ISchedulingRule rule) {
+			return rule == this;
+		}
+	};
+
+	private class RefresherJob extends Job {
+
+		private Object[] expandedElements;
+
+		public RefresherJob() {
+			super(Messages.getString("AbstractPropertiesView.refresh")); //$NON-NLS-1$
+			setPriority(Job.SHORT);
+			setSystem(true);
+			setRule(refresherRule);
+		}
+
+		@Override
+		public boolean belongsTo(Object family) {
+			return family == AbstractPropertiesView.this;
+		}
+
+		@Override
+		protected IStatus run(IProgressMonitor monitor) {
+			computeFlags();
+			if (monitor.isCanceled())
+				return Status.CANCEL_STATUS;
+			computeEssentials();
+			if (monitor.isCanceled())
+				return Status.CANCEL_STATUS;
+			Display display = viewer.getControl().getDisplay();
+			display.syncExec(() -> expandedElements = viewer.getExpandedElements());
+			if (monitor.isCanceled())
+				return Status.CANCEL_STATUS;
+			display.syncExec(() -> viewer.setInput(getRootElement()));
+			if (monitor.isCanceled())
+				return Status.CANCEL_STATUS;
+			display.syncExec(() -> {
+				if (expandedElements.length == 0)
+					viewer.expandToLevel(getExpandLevel());
+				else
+					viewer.setExpandedElements(expandedElements);
+			});
+			return Status.OK_STATUS;
+		}
+	}
 
 	private final class DetailsViewerFilter extends ViewerFilter {
 		@Override
@@ -652,10 +711,6 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 
 	public abstract QueryField getRootElement();
 
-	/**
-	 * This is a callback that will allow us to create the viewer and initialize it.
-	 */
-
 	@SuppressWarnings("unused")
 	@Override
 	public void createPartControl(Composite parent) {
@@ -698,7 +753,34 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		col3.getColumn().setWidth(colWidth[2]);
 		col3.setLabelProvider(new ActionColumnLabelProvider());
 		viewer.setContentProvider(new MetadataContentProvider());
-		viewer.setComparator(ZViewerComparator.INSTANCE);
+		viewer.setComparator(new ZViewerComparator(new Comparator<String>() {
+			@Override
+			public int compare(String s1, String s2) {
+				if (s1 == s2)
+					return 0;
+				if (s1 == null)
+					return -1;
+				if (s2 == null)
+					return 1;
+				int i = 0, j = 0;
+				int n1 = s1.length();
+				int n2 = s2.length();
+				if (n1 > 0 && s1.charAt(0) == '»')
+					++i;
+				if (n2 > 0 && s2.charAt(0) == '»')
+					++j;
+				int min = Math.min(n1, n2);
+				while (i < n1 && j < n2) {
+					char c1 = s1.charAt(i);
+					char c2 = s2.charAt(j);
+					if (c1 != c2)
+						return c1 - c2;
+					++i;
+					++j;
+				}
+				return n1 - n2;
+			}
+		}));
 		viewer.setFilters(new ViewerFilter[] { new DetailsViewerFilter(), new ContentTypeViewerFilter() });
 		ZColumnViewerToolTipSupport.enableFor(viewer);
 		viewer.setInput(getRootElement());
@@ -984,32 +1066,34 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 			text = "?"; //$NON-NLS-1$
 		String rel = null;
 		SmartCollection coll = new SmartCollectionImpl("", true, false, false, true, null, 0, null, 0, null, //$NON-NLS-1$
-				Constants.INHERIT_LABEL, null, 0, null);
+				Constants.INHERIT_LABEL, null, 0, 1, null);
 		if (qfield.getCard() != 1) {
 			rel = ":"; //$NON-NLS-1$
 			if (fieldValue instanceof LocationImpl[]) {
 				LocationImpl[] array = (LocationImpl[]) fieldValue;
 				for (int i = 0; i < array.length; i++)
-					coll.addCriterion(
-							new CriterionImpl(qfield.getKey(), null, array[i].getStringId(), QueryField.EQUALS, true));
+					coll.addCriterion(new CriterionImpl(qfield.getKey(), null, array[i].getStringId(), null,
+							QueryField.EQUALS, true));
 			} else if (fieldValue instanceof ArtworkOrObjectImpl[]) {
 				ArtworkOrObjectImpl[] array = (ArtworkOrObjectImpl[]) fieldValue;
 				for (int i = 0; i < array.length; i++)
-					coll.addCriterion(
-							new CriterionImpl(qfield.getKey(), null, array[i].getStringId(), QueryField.EQUALS, true));
+					coll.addCriterion(new CriterionImpl(qfield.getKey(), null, array[i].getStringId(), null,
+							QueryField.EQUALS, true));
 			} else if (fieldValue instanceof ContactImpl[]) {
 				ContactImpl[] array = (ContactImpl[]) fieldValue;
 				for (int i = 0; i < array.length; i++)
-					coll.addCriterion(
-							new CriterionImpl(qfield.getKey(), null, array[i].getStringId(), QueryField.EQUALS, true));
+					coll.addCriterion(new CriterionImpl(qfield.getKey(), null, array[i].getStringId(), null,
+							QueryField.EQUALS, true));
 			} else if (fieldValue instanceof int[]) {
 				int[] array = (int[]) fieldValue;
 				for (int i = 0; i < array.length; i++)
-					coll.addCriterion(new CriterionImpl(qfield.getKey(), null, array[i], QueryField.EQUALS, true));
+					coll.addCriterion(
+							new CriterionImpl(qfield.getKey(), null, array[i], null, QueryField.EQUALS, true));
 			} else if (fieldValue instanceof String[]) {
 				String[] array = (String[]) fieldValue;
 				for (int i = 0; i < array.length; i++)
-					coll.addCriterion(new CriterionImpl(qfield.getKey(), null, array[i], QueryField.EQUALS, true));
+					coll.addCriterion(
+							new CriterionImpl(qfield.getKey(), null, array[i], null, QueryField.EQUALS, true));
 			}
 		} else {
 			if (fieldValue instanceof LocationImpl)
@@ -1019,7 +1103,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 			else if (fieldValue instanceof ContactImpl)
 				fieldValue = ((ContactImpl) fieldValue).getStringId();
 			boolean equ = qfield.getTolerance() == 0f;
-			coll.addCriterion(new CriterionImpl(qfield.getKey(), null, fieldValue,
+			coll.addCriterion(new CriterionImpl(qfield.getKey(), null, fieldValue, null,
 					equ ? QueryField.EQUALS : QueryField.SIMILAR, false));
 			rel = equ ? "=" : "=~"; //$NON-NLS-1$ //$NON-NLS-2$
 		}
@@ -1037,6 +1121,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 
 	@Override
 	public void dispose() {
+		Job.getJobManager().cancel(this);
 		if (preferenceListener != null)
 			InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID).removePreferenceChangeListener(preferenceListener);
 		resetCaches();
@@ -1294,9 +1379,8 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 
 	@Override
 	public void refresh() {
-		computeFlags();
-		computeEssentials();
-		refreshInternal();
+		Job.getJobManager().cancel(this);
+		new RefresherJob().schedule(30);
 	}
 
 	private void refreshInternal() {

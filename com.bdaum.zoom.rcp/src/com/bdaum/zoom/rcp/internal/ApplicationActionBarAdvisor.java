@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.ContributionItem;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IContributionManager;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -62,13 +63,14 @@ import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.QueryOptions;
 import com.bdaum.zoom.ui.IZoomActionConstants;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.internal.ServerListener;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.commands.AbstractCatCommandHandler;
 import com.bdaum.zoom.ui.internal.commands.OpenCatalogCommand;
 import com.bdaum.zoom.ui.internal.views.IUndoHost;
 
 @SuppressWarnings("restriction")
-public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
+public class ApplicationActionBarAdvisor extends ActionBarAdvisor implements ServerListener {
 
 	public class ClickableStatusLineContributionItem extends ContributionItem {
 		private final static int DEFAULT_CHAR_WIDTH = 45;
@@ -84,7 +86,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 
 		private String text = ""; //$NON-NLS-1$
 		private int widthHint = -1;
-		private IWorkbenchAction handler;
+		private IAction handler;
 
 		/**
 		 * Creates a status line contribution item with the given id.
@@ -95,7 +97,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		 * @param handler
 		 *            - click handler
 		 */
-		public ClickableStatusLineContributionItem(String id, IWorkbenchAction handler) {
+		public ClickableStatusLineContributionItem(String id, IAction handler) {
 			this(id, DEFAULT_CHAR_WIDTH, handler);
 		}
 
@@ -115,7 +117,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		 *            - click handler
 		 * 
 		 */
-		public ClickableStatusLineContributionItem(String id, int charWidth, IWorkbenchAction handler) {
+		public ClickableStatusLineContributionItem(String id, int charWidth, IAction handler) {
 			super(id);
 			this.handler = handler;
 			this.charWidth = charWidth;
@@ -140,7 +142,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 			label.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseDown(MouseEvent e) {
-					if (!getText().isEmpty())
+					if (handler != null && !getText().isEmpty())
 						handler.run();
 				}
 			});
@@ -167,6 +169,10 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 				}
 			}
 		}
+
+		public void setHandler(IAction handler) {
+			this.handler = handler;
+		}
 	}
 
 	private static final String MINSCORE = "minscore"; //$NON-NLS-1$
@@ -177,6 +183,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 	private ClickableStatusLineContributionItem undoStatusLineItem;
 	private ClickableStatusLineContributionItem redoStatusLineItem;
 	private IWorkbenchPart activePart;
+	private ClickableStatusLineContributionItem serverStatusLineItem;
 
 	public class OpenAction extends Action {
 
@@ -272,6 +279,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		register(ActionFactory.ABOUT.create(window));
 		register(ActionFactory.INTRO.create(window));
 		statusLineItem = new StatusLineContributionItem("ModeContributionItem"); //$NON-NLS-1$
+		serverStatusLineItem = new ClickableStatusLineContributionItem("ServerContributionItem", null); //$NON-NLS-1$
+
 		undoStatusLineItem = new ClickableStatusLineContributionItem("UndoContributionItem", //$NON-NLS-1$
 				ActionFactory.UNDO.create(window));
 		redoStatusLineItem = new ClickableStatusLineContributionItem("RedoContributionItem", //$NON-NLS-1$
@@ -385,10 +394,16 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 	@Override
 	protected void fillStatusLine(IStatusLineManager statusLine) {
 		statusLine.setCancelEnabled(true);
+		statusLine.add(serverStatusLineItem);
 		statusLine.add(undoStatusLineItem);
 		statusLine.add(redoStatusLineItem);
 		statusLine.add(statusLineItem);
 		hookUndoMessenger();
+		hookWebserver();
+	}
+
+	private void hookWebserver() {
+		UiActivator.getDefault().addServerListener(this);
 	}
 
 	private void hookUndoMessenger() {
@@ -451,12 +466,13 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 
 	protected void updateStatusLineItems() {
 		activePart = null;
-		IWorkbenchWindow window = getActionBarConfigurer().getWindowConfigurer().getWindow();
+		IActionBarConfigurer actionBarConfigurer = getActionBarConfigurer();
+		IWorkbenchWindow window = actionBarConfigurer.getWindowConfigurer().getWindow();
 		IWorkbenchPage activePage = window.getActivePage();
 		if (activePage != null)
 			activePart = activePage.getActivePart();
 		Shell shell = window.getShell();
-		if (shell != null && !shell.isDisposed()) {
+		if (shell != null && !shell.isDisposed())
 			shell.getDisplay().asyncExec(() -> {
 				if (!shell.isDisposed()) {
 					String undoLabel = ""; //$NON-NLS-1$
@@ -478,9 +494,25 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 					}
 					undoStatusLineItem.setText(undoLabel);
 					redoStatusLineItem.setText(redoLabel);
+					actionBarConfigurer.getStatusLineManager().update(true);
 				}
 			});
-		}
+	}
+
+	@Override
+	public void setMessage(String message, IAction clickHandler) {
+		serverStatusLineItem.setHandler(clickHandler);
+		IActionBarConfigurer actionBarConfigurer = getActionBarConfigurer();
+		IWorkbenchWindow window = actionBarConfigurer.getWindowConfigurer().getWindow();
+		Shell shell = window.getShell();
+		if (shell != null && !shell.isDisposed())
+			shell.getDisplay().asyncExec(() -> {
+				if (!shell.isDisposed()) {
+					serverStatusLineItem.setText(message != null ? message : ""); //$NON-NLS-1$
+					actionBarConfigurer.getStatusLineManager().update(true);
+				}
+			});
+		
 	}
 
 }

@@ -20,6 +20,10 @@
     <description>Edit a collection query</description>
     <topic href="html/reference/collectionEdit.html" label="Collection query dialog"/>
  </context>
+ <context id="configCaptions_dialog_context" title="Configure image captions">
+    <description>Configure image captions using templates</description>
+    <topic href="html/reference/configureCaptions.html" label="Configure image captions"/>
+ </context>
  <context id="autoRule_dialog_context" title="Rule for automatic collection creation dialog">
     <description>Edit a rule for automatic collection creation dialog</description>
     <topic href="html/reference/autoRule.html" label="Edit a rule for automatic collection creation dialog"/>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+  	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/svg+xml" href="../files/zora.svg" sizes="any">
+    <link rel="stylesheet" href="../zoraPD.css">
+    <title>{$appName} Web Client - Slideshow</title>
+    <script type="text/javascript">
+    /** Slideshow configuration **/
+		var interval = 7000; // default slideshow interval
+		var capOpacity = 0.4; // caption opacity
+		var thumbSize = 66; // Thumbnails size in section breaks in percent
+	/** End of configuration - more in CSS stylesheet **/
+		
+		var images = [{$slides}]; // do not modify
+		var titles = [{$captions}]; // do not modify
+		var properties = [{$properties}]; // do not modify
+		var captionDur = {$captionDur}; // do not modify
+		
+		function speed(sp) {
+			interval = sp*1000;
+		}
+	</script>
+	{$mapContext}
+	<script src="../files/js/slideshow.js"></script>
+  </head>
+  <body>
+ 	<header id="slideshowHeader">
+      <h1 id="slideshowTitle">{$title}</h1>
+    </header>
+    <main id="slideshow">
+		<div id="imageDiv"><div id="caption"></div></div> <!-- do not modify -->
+		<div id="slideNav"><section id="backwardsSection"><a href="#" class="navLink" id="backwards"><img src="../files/backw.png" alt="Previous"/></a></section><section id="forwardsSection"><a href="#" class="navLink" id="forwards"><img src="../files/forw.png" alt="Next"/></a></section></div>
+		<div id="slideExpand"><a href="#" class="expandContract" id="expand"><img src="../files/expand.png" alt="Activate fullscreen"/></a></div>
+		<div id="slideContract"><a href="#" class="expandContract" id="contract"><img src="../files/contract.png" alt="Deactivate fullscreen"/></a></div>
+		<div id="slideSpeed">
+		    <label class="vradio"><input class="radio" type="radio" name="speed" value="3" onClick="speed(3);">&nbsp;&nbsp;3s</label>
+		    <label class="vradio"><input class="radio" type="radio" name="speed" value="5" onClick="speed(5);">&nbsp;&nbsp;5s</label>
+		    <label class="vradio"><input class="radio" type="radio" name="speed" value="7" onClick="speed(7);" checked="true">&nbsp;&nbsp;7s</label>
+		    <label class="vradio"><input class="radio" type="radio" name="speed" value="10" onClick="speed(10);">&nbsp;10s</label>
+		    <label class="vradio"><input class="radio" type="radio" name="speed" value="15" onClick="speed(15);">&nbsp;15s</label>
+		</div>
+	</main>
+	<footer id="slideshowFooter">
+	    <p><a href="{$orgLink}" target="_blank" rel="noopener">Created with {$appName}</a></p>    
+	</footer>  
+  </body>
+</html>

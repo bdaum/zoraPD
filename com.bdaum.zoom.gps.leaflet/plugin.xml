@@ -9,7 +9,7 @@
             id="com.bdaum.zoom.gps.mappingSystem.leaflet.mapnik"
             mapComponent="com.bdaum.zoom.gps.leaflet.internal.views.MapComponent:OpenStreetMap.Mapnik"
             name="OpenStreetMap"
-            query="http://www.openstreetmap.org/index.html?lat={0}&amp;lon={1}&amp;&amp;zoom={2}">
+            query="https://www.openstreetmap.org/directions?to={0}%2C{1}#map={2}/{0}/{1}">
       </mappingSystem>
       <mappingSystem
             clientClustering="true"
@@ -17,7 +17,7 @@
             id="com.bdaum.zoom.gps.mappingSystem.leaflet.opentopomap"
             mapComponent="com.bdaum.zoom.gps.leaflet.internal.views.MapComponent:OpenTopoMap"
             name="OpenTopoMap"
-            query="http://www.opentopomap.org/index.html?lat={0}&amp;lon={1}&amp;&amp;zoom={2}">
+            query="https://www.opentopomap.org/index.html#marker={2}/{0}/{1}">
       </mappingSystem>
       <mappingSystem
             clientClustering="true"

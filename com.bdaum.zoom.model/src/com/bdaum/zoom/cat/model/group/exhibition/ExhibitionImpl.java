@@ -73,6 +73,7 @@ public class ExhibitionImpl extends Exhibition_typeImpl implements Exhibition {
 	 * @param scalingMethod - Property
 	 * @param lastAccessDate - Property
 	 * @param perspective - Property
+	 * @param safety - Property
 	 */
 	public ExhibitionImpl(String name, String description, String info,
 			int defaultViewingHeight, int variance, int gridSize,
@@ -88,7 +89,7 @@ public class ExhibitionImpl extends Exhibition_typeImpl implements Exhibition {
 			String contactName, String email, String webUrl, String copyright,
 			String logo, int infoPlatePosition, boolean hideCredits,
 			int jpegQuality, int scalingMethod, Date lastAccessDate,
-			String perspective) {
+			String perspective, int safety) {
 		super(name, description, info, defaultViewingHeight, variance,
 				gridSize, showGrid, snapToGrid, defaultDescription,
 				labelFontFamily, labelFontSize, labelSequence, hideLabel,
@@ -98,7 +99,7 @@ public class ExhibitionImpl extends Exhibition_typeImpl implements Exhibition {
 				pageName, applySharpening, radius, amount, threshold,
 				addWatermark, contactName, email, webUrl, copyright, logo,
 				infoPlatePosition, hideCredits, jpegQuality, scalingMethod,
-				lastAccessDate, perspective);
+				lastAccessDate, perspective, safety);
 
 	}
 

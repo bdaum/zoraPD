@@ -21,7 +21,6 @@ package com.bdaum.zoom.ui.internal.dialogs;
 
 import java.io.File;
 import java.net.URI;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -50,12 +49,9 @@ public class InvalidFileDialog extends ZTitleAreaDialog {
 	private String message;
 	private URI uri;
 	private boolean isFile;
-	private SimpleDateFormat df = new SimpleDateFormat(
-			Messages.InvalidFileDialog_dateformat);
 	private IProgressMonitor monitor;
 
-	public InvalidFileDialog(Shell parentShell, String title, String message,
-			URI uri, IProgressMonitor monitor) {
+	public InvalidFileDialog(Shell parentShell, String title, String message, URI uri, IProgressMonitor monitor) {
 		super(parentShell);
 		this.title = title;
 		this.message = message;
@@ -80,23 +76,17 @@ public class InvalidFileDialog extends ZTitleAreaDialog {
 		composite.setLayout(new GridLayout(2, false));
 		if (isFile) {
 			File file = new File(uri);
-			new Label(composite, SWT.NONE)
-					.setText(Messages.InvalidFileDialog_file_name);
+			new Label(composite, SWT.NONE).setText(Messages.InvalidFileDialog_file_name);
 			new Label(composite, SWT.NONE).setText(file.getName());
-			new Label(composite, SWT.NONE)
-					.setText(Messages.InvalidFileDialog_file_path);
+			new Label(composite, SWT.NONE).setText(Messages.InvalidFileDialog_file_path);
 			new Label(composite, SWT.NONE).setText(file.getParent());
+			new Label(composite, SWT.NONE).setText(Messages.InvalidFileDialog_file_size);
+			new Label(composite, SWT.NONE).setText(Format.sizeFormatter.toString(file.length()));
+			new Label(composite, SWT.NONE).setText(Messages.InvalidFileDialog_last_mod);
 			new Label(composite, SWT.NONE)
-					.setText(Messages.InvalidFileDialog_file_size);
-			new Label(composite, SWT.NONE).setText(Format.sizeFormatter
-					.toString(file.length()));
-			new Label(composite, SWT.NONE)
-					.setText(Messages.InvalidFileDialog_last_mod);
-			new Label(composite, SWT.NONE).setText(df.format(new Date(file
-					.lastModified())));
+					.setText(Format.MDY_TIME_SECS_FORMAT.get().format(new Date(file.lastModified())));
 		} else {
-			new Label(composite, SWT.NONE)
-					.setText(Messages.InvalidFileDialog_uri);
+			new Label(composite, SWT.NONE).setText(Messages.InvalidFileDialog_uri);
 			new Label(composite, SWT.NONE).setText(uri.toString());
 		}
 		return dialogArea;
@@ -117,18 +107,14 @@ public class InvalidFileDialog extends ZTitleAreaDialog {
 		switch (buttonId) {
 		case 0:
 			File file = new File(uri);
-			if (AcousticMessageDialog.openQuestion(
-					getShell(),
-					Messages.InvalidFileDialog_delete_invalid,
-					NLS.bind(Messages.InvalidFileDialog_really_delete,
-							file.getName()))) {
+			if (AcousticMessageDialog.openQuestion(getShell(), Messages.InvalidFileDialog_delete_invalid,
+					NLS.bind(Messages.InvalidFileDialog_really_delete, file.getName()))) {
 				file.delete();
 				break;
 			}
 			return;
 		case 1:
-			IDialogSettings settings = getDialogSettings(
-					UiActivator.getDefault(), SETTINGSID);
+			IDialogSettings settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 			String path = settings.get(PATH);
 			file = new File(uri);
 			FileDialog dialog = new FileDialog(getShell(), SWT.SAVE);

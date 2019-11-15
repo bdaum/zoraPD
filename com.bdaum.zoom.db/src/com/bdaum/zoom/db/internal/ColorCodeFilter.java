@@ -25,8 +25,6 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IPostProcessor2;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IColorCodeFilter;
-import com.db4o.query.Constraint;
-import com.db4o.query.Query;
 
 public class ColorCodeFilter extends AssetFilter implements IColorCodeFilter {
 
@@ -65,20 +63,20 @@ public class ColorCodeFilter extends AssetFilter implements IColorCodeFilter {
 	 * @see com.bdaum.zoom.db.internal.AssetFilter#getConstraint(com.bdaum.zoom.db
 	 * .internal.DbManager, com.db4o.query.Query)
 	 */
-	@Override
-	public Constraint getConstraint(DbManager dbManager, Query query) {
-		if (colorCode == QueryField.SELECTALL)
-			return null;
-		if (colorCode == Constants.COLOR_UNDEFINED)
-			return query.descend(QueryField.COLORCODE.getKey()).constrain(0).smaller();
-		Constraint con3 = query.descend(QueryField.COLORCODE.getKey()).constrain(colorCode);
-		if (processor instanceof QueryPostProcessor) {
-			Constraint con2 = ((QueryPostProcessor) processor).getConstraint(dbManager, query);
-			if (con2 != null)
-				return query.descend(QueryField.COLORCODE.getKey()).constrain(0).not().and(con2).or(con3);
-		}
-		return con3;
-	}
+//	@Override
+//	public Constraint getConstraint(DbManager dbManager, Query query) {
+//		if (colorCode == QueryField.SELECTALL)
+//			return null;
+//		if (colorCode == Constants.COLOR_UNDEFINED)
+//			return query.descend(QueryField.COLORCODE.getKey()).constrain(0).smaller();
+//		Constraint con3 = query.descend(QueryField.COLORCODE.getKey()).constrain(colorCode);
+//		if (processor instanceof QueryPostProcessor) {
+//			Constraint con2 = ((QueryPostProcessor) processor).getConstraint(dbManager, query);
+//			if (con2 != null)
+//				return query.descend(QueryField.COLORCODE.getKey()).constrain(0).not().and(con2).or(con3);
+//		}
+//		return con3;
+//	}
 
 	/*
 	 * (nicht-Javadoc)

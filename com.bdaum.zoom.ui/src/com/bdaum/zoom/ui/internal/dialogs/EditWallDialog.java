@@ -20,21 +20,17 @@
 
 package com.bdaum.zoom.ui.internal.dialogs;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
-
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -44,6 +40,7 @@ import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.widgets.WebColorGroup;
+import com.bdaum.zoom.ui.widgets.NumericControl;
 
 public class EditWallDialog extends ZTitleAreaDialog {
 
@@ -55,19 +52,31 @@ public class EditWallDialog extends ZTitleAreaDialog {
 
 	private static final String HEIGHT = "height"; //$NON-NLS-1$
 
-	private static NumberFormat af = (NumberFormat.getNumberInstance());
-
 	private WallImpl current;
 	private String title;
 	private Text nameField;
+	
+	private NumericControl widthField;
+
+	private NumericControl heightField;
+
+	private WebColorGroup selectColorGroup;
 
 	private IDialogSettings settings;
+	
+	private final Listener listener = new Listener() {
+		@Override
+		public void handleEvent(Event event) {
+			updateButtons();
+		}
+	};
+
 
 	public EditWallDialog(Shell parentShell, WallImpl current, String title) {
 		super(parentShell, HelpContextIds.EDITWALL_DIALOG);
 		this.current = current;
 		this.title = title;
-		settings = getDialogSettings(UiActivator.getDefault(),SETTINGSID);
+		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 	}
 
 	@Override
@@ -78,56 +87,44 @@ public class EditWallDialog extends ZTitleAreaDialog {
 		updateButtons();
 	}
 
-	private final ModifyListener modifyListener = new ModifyListener() {
-		public void modifyText(ModifyEvent e) {
-			updateButtons();
-		}
-	};
-
-	private Text widthField;
-
-	private Text heightField;
-
-	private WebColorGroup selectColorGroup;
-
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
 		final Composite comp = new Composite(area, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		comp.setLayout(new GridLayout(2,false));
+		comp.setLayout(new GridLayout(2, false));
 		new Label(comp, SWT.NONE).setText(Messages.EditWallDialog_location);
 
 		nameField = new Text(comp, SWT.BORDER);
-		nameField
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		nameField.addModifyListener(modifyListener);
+		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		nameField.addListener(SWT.Modify, listener);
 
 		new Label(comp, SWT.NONE).setText(Messages.EditWallDialog_dimensions);
 
 		final Composite parm = new Composite(comp, SWT.NONE);
-		final GridLayout gridLayout_1 = new GridLayout();
-		gridLayout_1.numColumns = 4;
-		parm.setLayout(gridLayout_1);
+		parm.setLayout(new GridLayout(4, false));
 
 		new Label(parm, SWT.NONE).setText(Messages.EditWallDialog_width);
+		widthField = new NumericControl(parm, SWT.BORDER);
+		widthField.setDigits(2);
+		widthField.setMinimum(50);
+		widthField.setMaximum(3000);
+		widthField.setIncrement(10);
+		widthField.setPageIncrement(100);
+		widthField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		widthField.addListener(listener);
 
-		widthField = new Text(parm, SWT.BORDER);
-		final GridData gd_widthField = new GridData(SWT.FILL, SWT.CENTER, true,
-				false);
-		gd_widthField.widthHint = 50;
-		widthField.setLayoutData(gd_widthField);
-		widthField.addModifyListener(modifyListener);
 		new Label(parm, SWT.NONE).setText(Messages.EditWallDialog_height);
+		heightField = new NumericControl(parm, SWT.BORDER);
+		heightField.setDigits(2);
+		heightField.setMinimum(50);
+		heightField.setMaximum(500);
+		heightField.setIncrement(10);
+		heightField.setPageIncrement(100);
+		heightField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		heightField.addListener(listener);
 
-		heightField = new Text(parm, SWT.BORDER);
-		final GridData gd_heightField = new GridData(SWT.FILL, SWT.CENTER,
-				true, false);
-		gd_heightField.widthHint = 50;
-		heightField.setLayoutData(gd_heightField);
-		heightField.addModifyListener(modifyListener);
-		selectColorGroup = new WebColorGroup(comp,
-				Messages.EditWallDialog_wall_color);
+		selectColorGroup = new WebColorGroup(comp, Messages.EditWallDialog_wall_color);
 		initValues();
 		fillValues();
 		return area;
@@ -147,35 +144,8 @@ public class EditWallDialog extends ZTitleAreaDialog {
 			setErrorMessage(Messages.EditWallDialog_specify_location_name);
 			return false;
 		}
-		if (!validDouble(widthField, Messages.EditWallDialog_width_error, 0.5d,
-				30d))
-			return false;
-		if (!validDouble(heightField, Messages.EditWallDialog_height_error,
-				0.5d, 5d))
-			return false;
 		setErrorMessage(null);
 		return true;
-	}
-
-	private boolean validDouble(Text field, String label, double min, double max) {
-		af.setMaximumFractionDigits(3);
-		String s = field.getText();
-		try {
-			double v = af.parse(s).doubleValue();
-			if (v > max) {
-				setErrorMessage(NLS.bind(
-						Messages.EditWallDialog_value_must_not_be_larger,
-						label, min));
-			} else if (v >= min)
-				return true;
-			setErrorMessage(NLS.bind(
-					Messages.EditWallDialog_value_must_be_larger_equal, label,
-					min));
-		} catch (ParseException e) {
-			setErrorMessage(NLS.bind(
-					Messages.EditWallDialog_not_a_valid_number, label));
-		}
-		return false;
 	}
 
 	private void initValues() {
@@ -184,23 +154,21 @@ public class EditWallDialog extends ZTitleAreaDialog {
 		initNumericControl(heightField, HEIGHT, 2.5d);
 	}
 
-	private void initNumericControl(Text control, String key, double dflt) {
-		af.setMaximumFractionDigits(2);
+	private void initNumericControl(NumericControl control, String key, double dflt) {
 		try {
-			control.setText(af.format(settings.getDouble(key)));
+			control.setSelection((int) (settings.getDouble(key) * 100));
 		} catch (NumberFormatException e) {
-			control.setText(af.format(dflt));
+			control.setSelection((int) (dflt * 100));
 		}
 	}
 
 	private void fillValues() {
-		af.setMaximumFractionDigits(2);
 		Rgb_type selectedColor = null;
 		if (current != null) {
 			nameField.setText(current.getLocation());
 			selectedColor = current.getColor();
-			widthField.setText(af.format(current.getWidth() / 1000d));
-			heightField.setText(af.format(current.getHeight() / 1000d));
+			widthField.setSelection((int) (current.getWidth() / 10d));
+			heightField.setSelection((int) (current.getHeight() / 10d));
 		} else
 			nameField.setText(title);
 		if (selectedColor != null)
@@ -213,8 +181,8 @@ public class EditWallDialog extends ZTitleAreaDialog {
 			current = new WallImpl();
 		current.setLocation(nameField.getText());
 		current.setColor(selectColorGroup.getRGB());
-		current.setWidth(stringToMm(widthField));
-		current.setHeight(stringToMm(heightField));
+		current.setWidth(widthField.getSelection() * 10);
+		current.setHeight(heightField.getSelection() * 10);
 		saveValues();
 		super.okPressed();
 	}
@@ -227,16 +195,6 @@ public class EditWallDialog extends ZTitleAreaDialog {
 
 	public WallImpl getResult() {
 		return current;
-	}
-
-	private static int stringToMm(Text field) {
-		af.setMaximumFractionDigits(3);
-		try {
-			return (int) (1000 * af.parse(field.getText()).doubleValue());
-		} catch (ParseException e) {
-			// should not happen
-			return 0;
-		}
 	}
 
 }

@@ -12,10 +12,11 @@
 package com.bdaum.zoom.gps.google.internal.views;
 
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
-import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
@@ -28,7 +29,8 @@ import com.bdaum.zoom.gps.widgets.AbstractMapComponent;
 
 public class MapComponent extends AbstractMapComponent {
 
-	private static final String GMAP = "gmap/"; //$NON-NLS-1$
+	private static final String MARKERCLUSTERER_JS = "markerclusterer.js"; //$NON-NLS-1$
+	private static final String ZOOM_MAP_JS = "zoomMap.js"; //$NON-NLS-1$
 	private static String markerclusterUrl;
 	private static String zoomMapUrl;
 	private static String imagesUrl;
@@ -38,35 +40,23 @@ public class MapComponent extends AbstractMapComponent {
 	static {
 		URL url = findUrl(GoogleActivator.getDefault().getBundle(), GMAP);
 		String folderUrl = url == null ? GMAP : url.toString();
-		markerclusterUrl = folderUrl + "markerclusterer.js"; //$NON-NLS-1$
-		zoomMapUrl = folderUrl + "zoomMap.js"; //$NON-NLS-1$
+		markerclusterUrl = folderUrl + MARKERCLUSTERER_JS;
+		zoomMapUrl = folderUrl + ZOOM_MAP_JS; // $NON-NLS-1$
 		imagesUrl = folderUrl + "images/m1.png"; //$NON-NLS-1$
 		additionalVariables = new StringBuilder().append("var imagesUrl = \"") //$NON-NLS-1$
 				.append(imagesUrl.substring(0, imagesUrl.length() - 5)).append("\";\n").toString(); //$NON-NLS-1$
 	}
 
 	@Override
-	protected String createSetPosDetailScript(HistoryItem item) {
-		return NLS.bind("map.setZoom({0});\nmap.panTo({1});", (int) item.getDetail(), //$NON-NLS-1$
-				createLatLng(item.getLatitude(), item.getLongitude()));
-	}
-
-	@Override
-	protected String createLatLngBounds(double swLat, double swLon, double neLat, double neLon) {
-		return NLS.bind("new google.maps.LatLngBounds({0},{1})", createLatLng(swLat, swLon), //$NON-NLS-1$
-				createLatLng(neLat, neLon));
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.bdaum.zoom.gps.widgets.AbstractMapComponent#createLatLng(double,
-	 * double)
-	 */
-
-	@Override
-	protected String createLatLng(double lat, double lon) {
-		return NLS.bind("new google.maps.LatLng({0},{1})", usformat.format(lat), usformat.format(lon)); //$NON-NLS-1$
+	public List<String> getScriptUrls() {
+		String googleApi = "https://maps.googleapis.com/maps/api/js"; //$NON-NLS-1$
+		String clientId = Platform.getPreferencesService().getString(GpsActivator.PLUGIN_ID,
+				PreferenceConstants.GOOGLECLIENTID, "", //$NON-NLS-1$
+				null);
+		if (clientId != null && !clientId.trim().isEmpty())
+			googleApi += "?key=" + clientId.trim(); //$NON-NLS-1$
+		String folder = PLUGINS + GoogleActivator.PLUGIN_ID + '/' + GMAP;
+		return Arrays.asList(googleApi, folder + MARKERCLUSTERER_JS, folder + ZOOM_MAP_JS);
 	}
 
 	/*
@@ -123,13 +113,8 @@ public class MapComponent extends AbstractMapComponent {
 	 */
 
 	@Override
-	protected String createAdditionalVariables() {
+	public String createAdditionalVariables() {
 		return additionalVariables;
-	}
-
-	@Override
-	protected String getAppKey() {
-		return null;
 	}
 
 	@Override

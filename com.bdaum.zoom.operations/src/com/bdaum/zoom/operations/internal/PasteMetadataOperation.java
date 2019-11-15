@@ -112,7 +112,7 @@ public class PasteMetadataOperation extends DbOperation {
 				Set<Object> toBeDeleted = new HashSet<Object>();
 				HashMap<XMPField, Object> undoMap = new HashMap<XMPField, Object>(selectedFields.size() * 4 / 3);
 				undoMaps[i] = undoMap;
-				//Annotations
+				// Annotations
 				String oldNote = asset.getVoiceFileURI();
 				oldNotes[i] = oldNote;
 				oldVolumes[i++] = asset.getVoiceVolume();
@@ -191,10 +191,9 @@ public class PasteMetadataOperation extends DbOperation {
 						if (mode == Constants.SKIP && !qfield.isNeutralValue(oldValue))
 							continue;
 						undoMap.put(field, oldValue);
-						String assetId = asset.getStringId();
 						if (field.getIndex1() <= 1)
-							deleteRelations(qfield, assetId, toBeDeleted, toBeStored);
-						if (!createRelation(qfield, assetId, prop.getValue().toString(), toBeStored))
+							deleteRelations(qfield, asset, toBeDeleted, toBeStored);
+						if (!createRelation(qfield, asset, prop.getValue().toString(), toBeStored))
 							field.assignValue(ensemble, null);
 						fullTextSearch |= qfield.isFullTextSearch();
 						modified = true;
@@ -219,7 +218,8 @@ public class PasteMetadataOperation extends DbOperation {
 		return close(info, fullTextSearch ? assets : null);
 	}
 
-	private boolean createRelation(QueryField qfield, String assetId, String id, Collection<Object> toBeStored) {
+	private boolean createRelation(QueryField qfield, Asset asset, String id, Collection<Object> toBeStored) {
+		String assetId = asset.getStringId();
 		if (qfield == QueryField.LOCATIONSHOWN_ID) {
 			List<LocationShownImpl> rels = dbManager.obtainStruct(LocationShownImpl.class, assetId, false, "location", //$NON-NLS-1$
 					id, false);
@@ -233,11 +233,13 @@ public class PasteMetadataOperation extends DbOperation {
 			if (set.isEmpty()) {
 				LocationCreatedImpl rel = new LocationCreatedImpl(id);
 				rel.addAsset(assetId);
+				asset.setLocationCreated_parent(rel.getStringId());
 				toBeStored.add(rel);
 			} else {
 				LocationCreatedImpl rel = set.get(0);
 				if (!rel.getAsset().contains(assetId)) {
 					rel.addAsset(assetId);
+					asset.setLocationCreated_parent(rel.getStringId());
 					toBeStored.add(rel);
 				}
 			}
@@ -249,11 +251,13 @@ public class PasteMetadataOperation extends DbOperation {
 			if (set.isEmpty()) {
 				CreatorsContactImpl rel = new CreatorsContactImpl(id);
 				rel.addAsset(assetId);
+				asset.setCreatorsContact_parent(rel.getStringId());
 				toBeStored.add(rel);
 			} else {
 				CreatorsContactImpl rel = set.get(0);
 				if (!rel.getAsset().contains(assetId)) {
 					rel.addAsset(assetId);
+					asset.setCreatorsContact_parent(rel.getStringId());
 					toBeStored.add(rel);
 				}
 			}
@@ -269,33 +273,36 @@ public class PasteMetadataOperation extends DbOperation {
 		return false;
 	}
 
-	private void deleteRelations(QueryField qfield, String assetId, Collection<Object> toBeDeleted,
+	private void deleteRelations(QueryField qfield, Asset asset, Collection<Object> toBeDeleted,
 			Collection<Object> toBeStored) {
+		String assetId = asset.getStringId();
 		if (qfield == QueryField.LOCATIONSHOWN_ID)
 			for (LocationShownImpl obj : new ArrayList<LocationShownImpl>(
 					dbManager.obtainStructForAsset(LocationShownImpl.class, assetId, false)))
 				toBeDeleted.add(obj);
-		else if (qfield == QueryField.LOCATIONCREATED_ID)
-			for (LocationCreatedImpl obj : new ArrayList<LocationCreatedImpl>(
-					dbManager.obtainStructForAsset(LocationCreatedImpl.class, assetId, true))) {
-				LocationCreatedImpl rel = obj;
+		else if (qfield == QueryField.LOCATIONCREATED_ID) {
+			LocationCreatedImpl rel = dbManager.obtainById(LocationCreatedImpl.class,
+					asset.getLocationCreated_parent());
+			if (rel != null) {
 				rel.removeAsset(assetId);
 				if (rel.getAsset().isEmpty())
 					toBeDeleted.add(rel);
 				else
 					toBeStored.add(rel);
+				asset.setLocationCreated_parent(null);
 			}
-		else if (qfield == QueryField.CONTACT_ID)
-			for (CreatorsContactImpl obj : new ArrayList<CreatorsContactImpl>(
-					dbManager.obtainStructForAsset(CreatorsContactImpl.class, assetId, true))) {
-				CreatorsContactImpl rel = obj;
+		} else if (qfield == QueryField.CONTACT_ID) {
+			CreatorsContactImpl rel = dbManager.obtainById(CreatorsContactImpl.class,
+					asset.getCreatorsContact_parent());
+			if (rel != null) {
 				rel.removeAsset(assetId);
 				if (rel.getAsset().isEmpty())
 					toBeDeleted.add(rel);
 				else
 					toBeStored.add(rel);
+				asset.setCreatorsContact_parent(null);
 			}
-		else if (qfield == QueryField.ARTWORK_ID)
+		} else if (qfield == QueryField.ARTWORK_ID)
 			for (ArtworkOrObjectShownImpl obj : new ArrayList<ArtworkOrObjectShownImpl>(
 					dbManager.obtainStructForAsset(ArtworkOrObjectShownImpl.class, assetId, false)))
 				toBeDeleted.add(obj);
@@ -323,18 +330,17 @@ public class PasteMetadataOperation extends DbOperation {
 				if (undoMap != null && !undoMap.isEmpty()) {
 					toBeDeleted = new HashSet<Object>();
 					AssetEnsemble ensemble = new AssetEnsemble(dbManager, asset, null);
-					String assetId = asset.getStringId();
 					for (Map.Entry<XMPField, Object> entry : undoMap.entrySet()) {
 						Object oldValue = entry.getValue();
 						XMPField field = entry.getKey();
 						QueryField qfield = field.getQfield();
-						deleteRelations(qfield, assetId, toBeDeleted, toBeStored);
+						deleteRelations(qfield, asset, toBeDeleted, toBeStored);
 						boolean done = false;
 						if (oldValue instanceof String)
-							done = createRelation(qfield, assetId, (String) oldValue, toBeStored);
+							done = createRelation(qfield, asset, (String) oldValue, toBeStored);
 						else if (oldValue instanceof String[])
 							for (String id : (String[]) oldValue)
-								done |= createRelation(qfield, assetId, id, toBeStored);
+								done |= createRelation(qfield, asset, id, toBeStored);
 						if (!done)
 							try {
 								field.assignValue(ensemble, oldValue);

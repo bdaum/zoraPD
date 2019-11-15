@@ -41,7 +41,6 @@ public class Messages extends NLS {
 	public static String ExportToCommunityJob_skip_all;
 	public static String ExportToCommunityJob_skp;
 	public static String ExportToCommunityJob_the_traffic_limit_of;
-	public static String ExportToCommunityJob_tracik_date_format;
 	public static String ExportToCommunityJob_traffic_limit_exceeded;
 	public static String ExportToCommunityJob_upload;
 	public static String ExportToCommunityJob_upload_all;

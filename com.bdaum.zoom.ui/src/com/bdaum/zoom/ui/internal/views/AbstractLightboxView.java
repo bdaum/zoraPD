@@ -69,6 +69,8 @@ import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.css.internal.IExtendedColorModel2;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.ui.AssetSelection;
+import com.bdaum.zoom.ui.internal.CaptionProcessor;
+import com.bdaum.zoom.ui.internal.CaptionProcessor.CaptionConfiguration;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
@@ -81,7 +83,7 @@ import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
 public abstract class AbstractLightboxView extends AbstractGalleryView
-		implements SelectionListener, IExtendedColorModel2 {
+		implements SelectionListener, IExtendedColorModel2, IPropertyChangeListener {
 
 	public static class DecoJob extends Job {
 		public static final Object ID = "ThumbDeco"; //$NON-NLS-1$
@@ -494,18 +496,22 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 	protected boolean showLocation;
 	protected int showRating;
 	protected boolean showVoicenoteButton;
+	protected CaptionProcessor captionProcessor = new CaptionProcessor(Constants.TH_ALL);
+	protected CaptionConfiguration captionConfiguration = captionProcessor.computeCaptionConfiguration();
+
 	protected Image placeHolder;
 	private boolean showExpandCollapseButton;
 	private int showRegions;
 	private boolean showDoneMark;
-	protected int showLabelDflt;
-	protected String labelTemplateDflt;
-	protected int labelFontsizeDflt;
 	private GalleryItem currentItem;
 
 	protected static final GalleryItem[] NOITEM = new GalleryItem[0];
 
 	protected abstract void setItemText(final GalleryItem item, Asset asset, Integer cardinality);
+
+	protected void setAlignment() {
+		itemRenderer.setAlignment(captionConfiguration.labelAlignment );
+	}
 
 	protected void addGalleryPaintListener() {
 		placeHolder = new Image(gallery.getDisplay(), getImage(null), SWT.IMAGE_GRAY);
@@ -529,6 +535,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 
 	@Override
 	public void dispose() {
+		UiActivator.getDefault().getPreferenceStore().removePropertyChangeListener(this);
 		if (placeHolder != null)
 			placeHolder.dispose();
 		super.dispose();
@@ -777,7 +784,11 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 	}
 
 	public AssetSelection getAssetSelection() {
-		return selection instanceof AssetSelection ? (AssetSelection) selection : doGetAssetSelection();
+		SmartCollectionImpl currentCollection = getAssetProvider().getCurrentCollection();
+		AssetSelection assetSelection = selection instanceof AssetSelection ? (AssetSelection) selection
+				: doGetAssetSelection();
+		assetSelection.setContext(currentCollection);
+		return assetSelection;
 	}
 
 	/**
@@ -800,35 +811,31 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 			fireSelection();
 		}
 	}
-
-	protected void setPreferences() {
-		IPreferenceStore preferenceStore = applyPreferences();
-		preferenceStore.addPropertyChangeListener(new IPropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent event) {
-				String property = event.getProperty();
-				if (PreferenceConstants.SHOWLABEL.equals(property)
-						|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
-						|| PreferenceConstants.LABELFONTSIZE.equals(property)
-						|| PreferenceConstants.SHOWROTATEBUTTONS.equals(property)
-						|| PreferenceConstants.SHOWCOLORCODE.equals(property)
-						|| PreferenceConstants.SHOWRATING.equals(property)
-						|| PreferenceConstants.SHOWLOCATION.equals(property)
-						|| PreferenceConstants.SHOWDONEMARK.equals(property)
-						|| PreferenceConstants.SHOWVOICENOTE.equals(property)
-						|| PreferenceConstants.SHOWEXPANDCOLLAPSE.equals(property)
-						|| PreferenceConstants.MAXREGIONS.equals(property)) {
-					applyPreferences();
-					refresh();
-				}
-			}
-		});
+	
+	@Override
+	public void propertyChange(PropertyChangeEvent event) {
+		String property = event.getProperty();
+		if (PreferenceConstants.SHOWLABEL.equals(property)
+				|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
+				|| PreferenceConstants.LABELFONTSIZE.equals(property)
+				|| PreferenceConstants.LABELALIGNMENT.equals(property)
+				|| PreferenceConstants.SHOWROTATEBUTTONS.equals(property)
+				|| PreferenceConstants.SHOWCOLORCODE.equals(property)
+				|| PreferenceConstants.SHOWRATING.equals(property)
+				|| PreferenceConstants.SHOWLOCATION.equals(property)
+				|| PreferenceConstants.SHOWDONEMARK.equals(property)
+				|| PreferenceConstants.SHOWVOICENOTE.equals(property)
+				|| PreferenceConstants.SHOWEXPANDCOLLAPSE.equals(property)
+				|| PreferenceConstants.MAXREGIONS.equals(property)) {
+			applyPreferences();
+			refresh();
+		}
 	}
 
 	protected IPreferenceStore applyPreferences() {
+		captionProcessor.updateGlobalConfiguration();
+		captionConfiguration = captionProcessor.computeCaptionConfiguration();
 		final IPreferenceStore preferenceStore = UiActivator.getDefault().getPreferenceStore();
-		showLabelDflt = preferenceStore.getInt(PreferenceConstants.SHOWLABEL);
-		labelTemplateDflt = preferenceStore.getString(PreferenceConstants.THUMBNAILTEMPLATE);
-		labelFontsizeDflt = preferenceStore.getInt(PreferenceConstants.LABELFONTSIZE);
 		showRotateButtons = preferenceStore.getBoolean(PreferenceConstants.SHOWROTATEBUTTONS);
 		showColorCode = !PreferenceConstants.COLORCODE_NO
 				.equals(preferenceStore.getString(PreferenceConstants.SHOWCOLORCODE));

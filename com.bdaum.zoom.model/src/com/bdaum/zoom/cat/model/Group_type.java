@@ -90,6 +90,20 @@ public interface Group_type extends AomValueChangedNotifier,
 	public int getFontSize();
 
 	/**
+	 * Set value of property alignment
+	 *
+	 * @param _value - new element value
+	 */
+	public void setAlignment(int _value);
+
+	/**
+	 * Get value of property alignment
+	 *
+	 * @return - value of field alignment
+	 */
+	public int getAlignment();
+
+	/**
 	 * Set value of property annotations
 	 *
 	 * @param _value - new element value

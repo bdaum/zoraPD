@@ -39,11 +39,12 @@ public class SmartCollection_typeImpl extends AomObject implements
 	 * @param showLabel - Property
 	 * @param labelTemplate - Property
 	 * @param fontSize - Property
+	 * @param alignment - Property
 	 */
 	public SmartCollection_typeImpl(String name, boolean system, boolean album,
 			boolean adhoc, boolean network, String description, int colorCode,
 			Date lastAccessDate, int generation, String perspective,
-			int showLabel, String labelTemplate, int fontSize) {
+			int showLabel, String labelTemplate, int fontSize, int alignment) {
 		super();
 		this.name = name;
 		this.system = system;
@@ -58,6 +59,7 @@ public class SmartCollection_typeImpl extends AomObject implements
 		this.showLabel = showLabel;
 		this.labelTemplate = labelTemplate;
 		this.fontSize = fontSize;
+		this.alignment = alignment;
 
 	}
 
@@ -355,6 +357,28 @@ public class SmartCollection_typeImpl extends AomObject implements
 		return fontSize;
 	}
 
+	/* *** Property alignment *** */
+
+	private int alignment;
+
+	/**
+	 * Set value of property alignment
+	 *
+	 * @param _value - new field value
+	 */
+	public void setAlignment(int _value) {
+		alignment = _value;
+	}
+
+	/**
+	 * Get value of property alignment
+	 *
+	 * @return - value of field alignment
+	 */
+	public int getAlignment() {
+		return alignment;
+	}
+
 	/* ----- Equality ----- */
 
 	/**
@@ -400,6 +424,8 @@ public class SmartCollection_typeImpl extends AomObject implements
 						.equals(other.getLabelTemplate())))
 
 				&& getFontSize() == other.getFontSize()
+
+				&& getAlignment() == other.getAlignment()
 
 		;
 	}
@@ -450,6 +476,8 @@ public class SmartCollection_typeImpl extends AomObject implements
 						.hashCode());
 
 		hashCode = 31 * hashCode + getFontSize();
+
+		hashCode = 31 * hashCode + getAlignment();
 
 		return hashCode;
 	}

@@ -95,7 +95,7 @@ public class KeywordSuggestDialog extends ZProgressDialog implements Listener {
 								(keywords == null || keywords.length == 0) ? 0 : queryOptions.getKeywordWeight());
 						for (Asset foundAsset : collectionProcessor
 								.processContentSearch(new CriterionImpl(ICollectionProcessor.SIMILARITY, null, options,
-										(int) (options.getMinScore() * 100), true), null, null))
+										null, (int) (options.getMinScore() * 100), true), null, null))
 							addScoredString(foundAssets, (int) (foundAsset.getScore() * 100), foundAsset.getStringId());
 						if (monitor.isCanceled())
 							return Status.CANCEL_STATUS;

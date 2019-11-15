@@ -24,7 +24,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -114,11 +113,10 @@ import com.bdaum.zoom.common.GeoMessages;
 import com.bdaum.zoom.core.CatalogListener;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IAssetFilter;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Range;
-import com.bdaum.zoom.core.TetheredRange;
 import com.bdaum.zoom.core.db.ICollectionProcessor;
 import com.bdaum.zoom.core.db.IDbListener;
 import com.bdaum.zoom.core.db.IDbManager;
@@ -175,7 +173,7 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	private static final int MAXIDS = 256;
 
-	private static final int VERSION = 15;
+	private static final int VERSION = 16;
 
 	private static final boolean DIAGNOSE = false;
 
@@ -1437,9 +1435,9 @@ public class DbManager implements IDbManager, IAdaptable {
 		SmartCollectionImpl coll1 = null;
 		if (set.isEmpty()) {
 			coll1 = new SmartCollectionImpl(name, true, false, false, false, null, 0, null, 0, null,
-					Constants.INHERIT_LABEL, null, 0, null);
+					Constants.INHERIT_LABEL, null, 0, 1, null);
 			coll1.setStringId(key);
-			Criterion crit = new CriterionImpl(fieldname, null, fieldvalue, rel, false);
+			Criterion crit = new CriterionImpl(fieldname, null, fieldvalue, null, rel, false);
 			coll1.addCriterion(crit);
 			SortCriterion sortCrit = new SortCriterionImpl(fieldname, null, false);
 			coll1.addSortCriterion(sortCrit);
@@ -1557,20 +1555,20 @@ public class DbManager implements IDbManager, IAdaptable {
 			Criterion criterion = coll.getCriterion().isEmpty() ? null : coll.getCriterion(0);
 			if (criterion != null) {
 				Object value = criterion.getValue();
-				if (value instanceof Range) {
-					Range range = (Range) value;
-					previousImport = (Date) range.getTo();
-					if (range instanceof TetheredRange && tethered
+				Object to = criterion.getTo();
+				if (to != null) {
+					previousImport = (Date) to;
+					if (criterion.getAnd() && tethered
 							|| cumulate && (description == null || description.equals(coll.getDescription()))) {
-						range.setTo(importDate);
-						store(range);
+						criterion.setTo(importDate);
+						store(criterion);
 						return previousImport;
 					}
 				} else
 					previousImport = (Date) value;
 				group.removeRootCollection(Constants.LAST_IMPORT_ID);
 				subgroup = getRecentImportsSubgroup(group);
-				subgroup.addRootCollection(Utilities.setImportKeyAndLabel(coll, value));
+				subgroup.addRootCollection(Utilities.setImportKeyAndLabel(coll, value, to));
 				coll.setGroup_rootCollection_parent(subgroup.getStringId());
 				store(coll);
 			} else {
@@ -1583,17 +1581,18 @@ public class DbManager implements IDbManager, IAdaptable {
 		SmartCollectionImpl newcoll = new SmartCollectionImpl(
 				tethered ? Messages.DbManager_tethered
 						: cumulate ? Messages.DbManager_recent_bg_imports : Messages.DbManager_last_import,
-				true, false, false, false, description, 0, null, 0, null, showLabel, labelTemplate, 0, null);
+				true, false, false, false, description, 0, null, 0, null, showLabel, labelTemplate, 0, 1, null);
 		newcoll.setStringId(Constants.LAST_IMPORT_ID);
 		Criterion criterion = new CriterionImpl(QueryField.IMPORTDATE.getKey(), null, "", //$NON-NLS-1$
-				cumulate ? QueryField.BETWEEN : QueryField.DATEEQUALS, false);
+				null, cumulate ? QueryField.BETWEEN : QueryField.DATEEQUALS, false);
 		newcoll.addCriterion(criterion);
 		SortCriterion sortCrit = new SortCriterionImpl(QueryField.NAME.getKey(), null, false);
 		newcoll.addSortCriterion(sortCrit);
 		newcoll.setGroup_rootCollection_parent(group.getStringId());
 		group.addRootCollection(Constants.LAST_IMPORT_ID);
-		criterion.setValue(tethered ? new TetheredRange(importDate, importDate)
-				: cumulate ? new Range(importDate, importDate) : importDate);
+		criterion.setValue(importDate);
+		criterion.setAnd(tethered);
+		criterion.setTo(tethered || cumulate ? importDate : null);
 		store(criterion);
 		store(sortCrit);
 		store(newcoll);
@@ -1612,7 +1611,8 @@ public class DbManager implements IDbManager, IAdaptable {
 	private GroupImpl getRecentImportsSubgroup(GroupImpl group) {
 		GroupImpl subgroup = obtainById(GroupImpl.class, Constants.GROUP_ID_RECENTIMPORTS);
 		if (subgroup == null) {
-			subgroup = new GroupImpl(Messages.DbManager_recent_imports, true, Constants.INHERIT_LABEL, null, 0, null);
+			subgroup = new GroupImpl(Messages.DbManager_recent_imports, true, Constants.INHERIT_LABEL, null, 0, 1,
+					null);
 			subgroup.setStringId(Constants.GROUP_ID_RECENTIMPORTS);
 			subgroup.setGroup_subgroup_parent(group);
 			group.addSubgroup(subgroup);
@@ -1639,7 +1639,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	private GroupImpl getCollectionGroup(String id, String label, boolean system) {
 		GroupImpl group = obtainById(GroupImpl.class, id);
 		if (group == null) {
-			group = new GroupImpl(label, system, Constants.INHERIT_LABEL, null, 0, null);
+			group = new GroupImpl(label, system, Constants.INHERIT_LABEL, null, 0, 1, null);
 			group.setStringId(id);
 		}
 		return group;
@@ -1694,7 +1694,7 @@ public class DbManager implements IDbManager, IAdaptable {
 						to.set(Calendar.MINUTE, 59);
 						to.set(Calendar.SECOND, 59);
 						parentColl = createTimelineCollection(
-								new SimpleDateFormat(Messages.DbManager_date_mask_week).format(from1.getTime()),
+								Format.WEEK.get().format(from1.getTime()),
 								parentColl, timeLineGroup, ksb.toString(), from1, to, changeIndicator);
 						if (!timeline.equals(Meta_type.timeline_week)) {
 							int day11 = cal.get(Calendar.DAY_OF_WEEK);
@@ -1708,17 +1708,15 @@ public class DbManager implements IDbManager, IAdaptable {
 							to.set(Calendar.HOUR_OF_DAY, 23);
 							to.set(Calendar.MINUTE, 59);
 							to.set(Calendar.SECOND, 59);
-							createTimelineCollection(
-									new SimpleDateFormat(Messages.DbManager_date_mask_day_of_week)
-											.format(from1.getTime()),
-									parentColl, timeLineGroup, ksb.toString(), from1, to, changeIndicator);
+							createTimelineCollection(Format.WEEKDAY_FORMAT.get().format(from1.getTime()), parentColl,
+									timeLineGroup, ksb.toString(), from1, to, changeIndicator);
 						}
 					} else {
 						int month = cal.get(Calendar.MONTH);
 						GregorianCalendar from2 = new GregorianCalendar(year, month, 1);
 						ksb.append('-').append(month);
 						parentColl = createTimelineCollection(
-								new SimpleDateFormat(Messages.DbManager_date_mask_month).format(from2.getTime()),
+								Format.MONTH_FORMAT.get().format(from2.getTime()),
 								parentColl, timeLineGroup, ksb.toString(), from2, new GregorianCalendar(year, month,
 										from2.getActualMaximum(Calendar.DAY_OF_MONTH), 23, 59, 59),
 								changeIndicator);
@@ -1743,11 +1741,10 @@ public class DbManager implements IDbManager, IAdaptable {
 		SmartCollectionImpl coll = obtainById(SmartCollectionImpl.class, id);
 		if (coll == null) {
 			coll = new SmartCollectionImpl(name, true, false, false, false, null, 0, null, 0, null,
-					Constants.INHERIT_LABEL, null, 0, null);
+					Constants.INHERIT_LABEL, null, 0, 1, null);
 			coll.setStringId(id);
-			Range value = new Range(from.getTime(), to.getTime());
-			Criterion exifCrit = new CriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, value,
-					QueryField.BETWEEN, false);
+			Criterion exifCrit = new CriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, from.getTime(),
+					to.getTime(), QueryField.BETWEEN, false);
 			coll.addCriterion(exifCrit);
 			SortCriterion sortCrit1 = new SortCriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, false);
 			coll.addSortCriterion(sortCrit1);
@@ -1760,7 +1757,6 @@ public class DbManager implements IDbManager, IAdaptable {
 			}
 			store(coll);
 			store(exifCrit);
-			store(value);
 			store(sortCrit1);
 			changeIndicator[0] = true;
 		}
@@ -1818,7 +1814,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				String name = regionCode != null ? GeoMessages.getString(GeoMessages.PREFIX + regionCode)
 						: Messages.DbManager_unknown_world_region;
 				Criterion crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
-						QueryField.LOCATION_WORLDREGIONCODE.getKey(), regionCode,
+						QueryField.LOCATION_WORLDREGIONCODE.getKey(), regionCode, null,
 						regionCode == null || regionCode.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS, true);
 				SmartCollectionImpl parentColl = createLocationCollection(name, null, locationGroup, ksb.toString(),
 						changeIndicator, crit);
@@ -1830,7 +1826,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				if (name == null)
 					name = Messages.DbManager_unknown_country;
 				crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
-						QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode,
+						QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode, null,
 						countryCode == null || countryCode.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS, true);
 				parentColl = createLocationCollection(name, parentColl, null, ksb.toString(), changeIndicator, crit);
 				if (!locationOption.equals(Meta_type.locationFolders_country)) {
@@ -1840,10 +1836,10 @@ public class DbManager implements IDbManager, IAdaptable {
 					if (name == null)
 						name = Messages.DbManager_unknown_state;
 					crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
-							QueryField.LOCATION_STATE.getKey(), state,
+							QueryField.LOCATION_STATE.getKey(), state, null,
 							state == null || state.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS, true);
 					CriterionImpl crit2 = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
-							QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode,
+							QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode, null,
 							countryCode == null || countryCode.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS,
 							true);
 					parentColl = createLocationCollection(name, parentColl, null, ksb.toString(), changeIndicator, crit,
@@ -1854,14 +1850,14 @@ public class DbManager implements IDbManager, IAdaptable {
 						if (name == null)
 							name = Messages.DbManager_unknown_city;
 						crit = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
-								QueryField.LOCATION_CITY.getKey(), city,
+								QueryField.LOCATION_CITY.getKey(), city, null,
 								city == null || city.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS, true);
 
 						crit2 = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
-								QueryField.LOCATION_STATE.getKey(), state,
+								QueryField.LOCATION_STATE.getKey(), state, null,
 								state == null || state.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS, true);
 						CriterionImpl crit3 = new CriterionImpl(QueryField.IPTC_LOCATIONCREATED.getKey(),
-								QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode,
+								QueryField.LOCATION_COUNTRYCODE.getKey(), countryCode, null,
 								countryCode == null || countryCode.isEmpty() ? QueryField.UNDEFINED : QueryField.EQUALS,
 								true);
 						parentColl = createLocationCollection(name, parentColl, null, locationKey, changeIndicator,
@@ -1881,7 +1877,7 @@ public class DbManager implements IDbManager, IAdaptable {
 		SmartCollectionImpl coll = obtainById(SmartCollectionImpl.class, id);
 		if (coll == null) {
 			coll = new SmartCollectionImpl(name, true, false, false, false, null, 0, null, 0, null,
-					Constants.INHERIT_LABEL, null, 0, null);
+					Constants.INHERIT_LABEL, null, 0, 1, null);
 			coll.setStringId(id);
 			for (Criterion criterion : criteria)
 				coll.addCriterion(criterion);
@@ -2167,13 +2163,13 @@ public class DbManager implements IDbManager, IAdaptable {
 							| addDirtyCollection(
 									ksb.append('-').append(String.valueOf(Calendar.DAY_OF_WEEK)).toString());
 				}
-				for (LocationCreatedImpl locationCreated : obtainStructForAsset(LocationCreatedImpl.class,
-						asset.getStringId(), true))
-					added |= markSystemCollectionsForPurge(
-							obtainById(LocationImpl.class, locationCreated.getLocation()));
+				LocationCreatedImpl rel = obtainById(LocationCreatedImpl.class, asset.getLocationCreated_parent());
+				LocationImpl loc = obtainById(LocationImpl.class, rel == null ? null : rel.getLocation());
+				if (loc != null)
+					added |= markSystemCollectionsForPurge(loc);
 				Date importDate = asset.getImportDate();
 				if (importDate != null)
-					added |= addDirtyCollection(IMPORTKEY + Constants.DFIMPORT.format(importDate));
+					added |= addDirtyCollection(IMPORTKEY + Format.DATE_TIME_HYPHEN_FORMAT.get().format(importDate));
 				if (added && !notEmpty && cleaned) {
 					meta.setCleaned(false);
 					storeAndCommit(meta);

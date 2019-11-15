@@ -519,11 +519,13 @@ public class CollectionProcessor implements ICollectionProcessor {
 								if (qsubfield == null && relation != QueryField.XREF)
 									return EMPTY;
 								Object value = crit.getValue();
+								Object vto = crit.getTo();
 								Constraint constraint = null;
 								if (value != null) {
 									if (relation == QueryField.DATEEQUALS || relation == QueryField.DATENOTEQUAL) {
 										long t = ((Date) value).getTime() / 1000 * 1000;
-										value = new Range(new Date(t), new Date(t + 999));
+										value = new Date(t);
+										vto = new Date(t + 999);
 										relation = relation == QueryField.DATEEQUALS ? QueryField.BETWEEN
 												: QueryField.NOTBETWEEN;
 									} else if (qsubfield != null && qsubfield.getType() != QueryField.T_STRING
@@ -532,7 +534,9 @@ public class CollectionProcessor implements ICollectionProcessor {
 										if (tolerance != 0f) {
 											relation = relation == QueryField.NOTSIMILAR ? QueryField.NOTBETWEEN
 													: QueryField.BETWEEN;
-											value = compileSimilarRange(value, tolerance);
+											Range range = compileSimilarRange(value, tolerance);
+											value = range.getFrom();
+											vto = range.getTo();
 										} else
 											relation = relation == QueryField.NOTSIMILAR ? QueryField.NOTEQUAL
 													: QueryField.EQUALS;
@@ -551,8 +555,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 									Query vQuery = database.query();
 									vQuery.constrain(mediaClazz);
 									if (relation == QueryField.BETWEEN || relation == QueryField.NOTBETWEEN)
-										applyBetween(vQuery, field, vField, relation, ((Range) value).getFrom(),
-												((Range) value).getTo());
+										applyBetween(vQuery, field, vField, relation, value, vto);
 									else if (relation != QueryField.EQUALS && relation != QueryField.NOTEQUAL
 											&& qsubfield.getCard() != 1 && qsubfield.getType() == QueryField.T_STRING)
 										vQuery.constrain(
@@ -575,11 +578,11 @@ public class CollectionProcessor implements ICollectionProcessor {
 								} else {
 									if (qsubfield != null && qsubfield.isVirtual())
 										constraint = VirtualQueryComputer.computeConstraint(qsubfield.getKey(), query,
-												crit.getValue(), crit.getRelation(), this);
-									else if (relation == QueryField.BETWEEN || relation == QueryField.NOTBETWEEN)
-										constraint = applyBetween(query, field, field, relation,
-												((Range) value).getFrom(), ((Range) value).getTo());
-									else if (qsubfield == QueryField.IPTC_CATEGORY) {
+												crit.getValue(), crit.getTo(), crit.getRelation(), this);
+									else if (relation == QueryField.BETWEEN || relation == QueryField.NOTBETWEEN) {
+										if (value != null)
+											constraint = applyBetween(query, field, field, relation, value, vto);
+									} else if (qsubfield == QueryField.IPTC_CATEGORY) {
 										constraint = query.descend(field).constrain(value);
 										applyRelation(dbManager, field, field, crit.getRelation(), value, constraint,
 												query);
@@ -709,18 +712,25 @@ public class CollectionProcessor implements ICollectionProcessor {
 						if (tempColl == null)
 							break;
 					} // End collection hierarchy loop
-					if (assetFilters != null)
-						for (IAssetFilter assetFilter : assetFilters) {
-							Constraint filterConstraint = assetFilter instanceof AssetFilter
-									? ((AssetFilter) assetFilter).getConstraint(dbManager, query)
-									: null;
-							if (filterConstraint != null)
-								conjunction = conjunction == null ? filterConstraint
-										: conjunction.and(filterConstraint);
-						}
+					// if (assetFilters != null && (idSetAnd == null || conjunction != null ||
+					// idSetAnd.size() > MAXIDS)) {
+					// // we use filter constraints only when no retrieval by id or too many ids or
+					// // when there are constraints anyway (very slow)
+					// // Otherwise we filter after the query
+					// for (IAssetFilter assetFilter : assetFilters) {
+					// Constraint filterConstraint = assetFilter instanceof AssetFilter
+					// ? ((AssetFilter) assetFilter).getConstraint(dbManager, query)
+					// : null;
+					// if (filterConstraint != null)
+					// conjunction = conjunction == null ? filterConstraint
+					// : conjunction.and(filterConstraint);
+					// }
+					// assetFilters = null;
+					// }
 					if (idSetAnd != null) {
 						if (conjunction != null || idSetAnd.size() > MAXIDS)
 							query.constrain(new IdEvaluation(idSetAnd));
+						// AND with conjunction works, despite an explicit AND is impossible!
 						else {
 							query = null;
 							if (idSetAnd.isEmpty())
@@ -730,7 +740,16 @@ public class CollectionProcessor implements ICollectionProcessor {
 								Query q = database.query();
 								q.constrain(AssetImpl.class);
 								q.descend(Constants.OID).constrain(id);
-								assets.addAll(q.<AssetImpl>execute());
+								ObjectSet<AssetImpl> hits = q.<AssetImpl>execute();
+								if (assetFilters != null)
+									hl: for (AssetImpl asset : hits) {
+										for (IAssetFilter filter : assetFilters)
+											if (!filter.accept(asset))
+												continue hl;
+										assets.add(asset);
+									}
+								else
+									assets.addAll(hits);
 							}
 							postponeSorts(isSorted, scoll, cSort, postponedSorts);
 							return assets;
@@ -777,6 +796,24 @@ public class CollectionProcessor implements ICollectionProcessor {
 			}
 			if (dynamic)
 				query = null;
+			if (assetFilters != null && set != null) { // postfiltering of results ia much faster
+				List<Asset> result = testExist ? null : new ArrayList<Asset>();
+				hl: for (Asset asset : set) {
+					for (IAssetFilter filter : assetFilters)
+						if (!filter.accept(asset))
+							continue hl;
+					if (testExist)
+						return EMPTY;
+					result.add(asset);
+				}
+				if (ticket != null) {
+					if (testExist)
+						return peerService.getSelect(ticket).isEmpty() ? null : EMPTY;
+					result.addAll(peerService.getSelect(ticket));
+				} else if (testExist)
+					return null;
+				return result;
+			}
 			if (testExist) {
 				if (ticket == null)
 					return set.hasNext() ? EMPTY : null;
@@ -786,7 +823,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 			}
 			if (ticket == null)
 				return set == null ? EMPTY : set;
-			List<Asset> result = new ArrayList<Asset>(set);
+			List<Asset> result = set == null ? new ArrayList<Asset>() : new ArrayList<Asset>(set);
 			result.addAll(peerService.getSelect(ticket));
 			return result;
 		} finally {
@@ -1182,6 +1219,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 							assetMap.put(assedId, index);
 				}
 				Arrays.sort(assets, new Comparator<Asset>() {
+
 					public int compare(Asset o1, Asset o2) {
 						Integer index1 = assetMap.get(o1.getStringId());
 						Integer index2 = assetMap.get(o2.getStringId());

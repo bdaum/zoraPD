@@ -20,18 +20,20 @@
 package com.bdaum.zoom.gps.leaflet.internal.views;
 
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExecutableExtension;
-import org.eclipse.osgi.util.NLS;
 
 import com.bdaum.zoom.gps.leaflet.internal.LeafletActivator;
 import com.bdaum.zoom.gps.widgets.AbstractMapComponent;
 
 public class MapComponent extends AbstractMapComponent implements IExecutableExtension {
 
-	private static final String GMAP = "gmap/"; //$NON-NLS-1$
+	private static final String ZOOM_MAP_JS = "zoomMap.js"; //$NON-NLS-1$
+
 	private static String leafletUrl;
 	private static String zoomMapUrl;
 	private static String leafletCss;
@@ -50,12 +52,26 @@ public class MapComponent extends AbstractMapComponent implements IExecutableExt
 		providersUrl = folderUrl + "leaflet-providers.js"; //$NON-NLS-1$
 		leafletCss = folderUrl + "leaflet.css"; //$NON-NLS-1$
 		leafletUrl = folderUrl + "leaflet.js"; //$NON-NLS-1$
-		zoomMapUrl = folderUrl + "zoomMap.js"; //$NON-NLS-1$
+		zoomMapUrl = folderUrl + ZOOM_MAP_JS;
 		minimapUrl = folderUrl + "Control.MiniMap.min.js"; //$NON-NLS-1$
 		minimapCss = folderUrl + "Control.MiniMap.min.css"; //$NON-NLS-1$
 		markerClusterGroupUrl = folderUrl + "leaflet.markercluster.js"; //$NON-NLS-1$
 		markerClusterGroupCss = folderUrl + "MarkerCluster.css"; //$NON-NLS-1$
 		markerClusterGroupDefaultCss = folderUrl + "MarkerCluster.Default.css"; //$NON-NLS-1$
+	}
+
+	@Override
+	public List<String> getScriptUrls() {
+		String folder = PLUGINS + LeafletActivator.PLUGIN_ID + '/' + GMAP;
+		return Arrays.asList(folder + "leaflet.css", //$NON-NLS-1$
+				folder + "Control.MiniMap.min.css", //$NON-NLS-1$
+				folder + "leaflet.js", //$NON-NLS-1$
+				folder + "leaflet-providers.js", //$NON-NLS-1$
+				folder + "Control.MiniMap.min.js", //$NON-NLS-1$
+				folder + "leaflet.markercluster.js", //$NON-NLS-1$
+				folder + "MarkerCluster.css", //$NON-NLS-1$
+				folder + "MarkerCluster.Default.css", //$NON-NLS-1$
+				folder + ZOOM_MAP_JS);
 	}
 
 	public void setInitializationData(IConfigurationElement config, String propertyName, Object data)
@@ -65,23 +81,12 @@ public class MapComponent extends AbstractMapComponent implements IExecutableExt
 	}
 
 	@Override
-	protected String createSetPosDetailScript(HistoryItem item) {
-		return NLS.bind("map.setZoom({0});\nmap.panTo({1});", (int) item.getDetail(), //$NON-NLS-1$
-				createLatLng(item.getLatitude(), item.getLongitude()));
-	}
-
-	@Override
 	protected String getMappingSystemName() {
 		return "Leaflet"; //$NON-NLS-1$
 	}
 
 	@Override
-	protected String getAppKey() {
-		return null;
-	}
-
-	@Override
-	protected String createAdditionalVariables() {
+	public String createAdditionalVariables() {
 		return additionalVariables;
 	}
 
@@ -96,16 +101,6 @@ public class MapComponent extends AbstractMapComponent implements IExecutableExt
 					.append(createStyleEntry(markerClusterGroupDefaultCss)).append('\n')
 					.append(createScriptEntry(zoomMapUrl)).toString();
 		return scriptEntries;
-	}
-
-	@Override
-	protected String createLatLng(double lat, double lon) {
-		return NLS.bind("L.latLng({0},{1})", usformat.format(lat), usformat.format(lon)); //$NON-NLS-1$
-	}
-
-	@Override
-	protected String createLatLngBounds(double swLat, double swLon, double neLat, double neLon) {
-		return NLS.bind("L.latLngBounds({0},{1})", createLatLng(swLat, swLon), createLatLng(neLat, neLon)); //$NON-NLS-1$ ;
 	}
 
 	/*

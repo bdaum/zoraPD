@@ -21,9 +21,13 @@ public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard {
 	private TransferPage transferPage;
 	private FilterPage filterPage;
 	private boolean typeChoice;
+	private boolean subfolderChoice;
+	private boolean metaPage;
 
-	public WatchedFolderWizard(boolean typeChoice) {
+	public WatchedFolderWizard(boolean typeChoice, boolean subfolderChoice, boolean metaPage) {
 		this.typeChoice = typeChoice;
+		this.subfolderChoice = subfolderChoice;
+		this.metaPage = metaPage;
 		setHelpAvailable(true);
 	}
 
@@ -38,7 +42,7 @@ public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard {
 	public void addPages() {
 		ImageDescriptor imageDescriptor = Icons.watchedFolder.getDescriptor();
 		folderSelectionPage = new WatchedFolderSelectionPage(Messages.WatchedFolderWizard_folder_selection,
-				watchedFolder, typeChoice);
+				watchedFolder, typeChoice, subfolderChoice);
 		folderSelectionPage.setImageDescriptor(imageDescriptor);
 		addPage(folderSelectionPage);
 		transferPage = new TransferPage(Messages.WatchedFolderWizard_transfer_parameters, watchedFolder);
@@ -58,7 +62,7 @@ public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard {
 	@Override
 	public IWizardPage getNextPage(IWizardPage page) {
 		if (page == folderSelectionPage)
-			return folderSelectionPage.isTransfer() ? transferPage : filterPage;
+			return folderSelectionPage.isTransfer() ? metaPage ? transferPage : targetPage : filterPage;
 		if (page == transferPage)
 			return targetPage;
 		if (page == filterPage)
@@ -69,6 +73,8 @@ public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard {
 	@Override
 	public IWizardPage getPreviousPage(IWizardPage page) {
 		if (page == filterPage)
+			return folderSelectionPage;
+		if (page == targetPage && !metaPage)
 			return folderSelectionPage;
 		return super.getPreviousPage(page);
 	}
@@ -84,9 +90,10 @@ public class WatchedFolderWizard extends ZWizard implements IWorkbenchWizard {
 	@Override
 	public boolean performFinish() {
 		folderSelectionPage.performFinish();
-		if (folderSelectionPage.isTransfer())
-			transferPage.performFinish();
-		else
+		if (folderSelectionPage.isTransfer()) {
+			if (metaPage)
+				transferPage.performFinish();
+		} else
 			filterPage.performFinish();
 		targetPage.performFinish();
 		if (folderSelectionPage.isTransfer())

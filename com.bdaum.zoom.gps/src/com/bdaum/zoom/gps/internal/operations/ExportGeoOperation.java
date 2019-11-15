@@ -20,12 +20,15 @@ import org.eclipse.osgi.util.NLS;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.gps.internal.GpsActivator;
 import com.bdaum.zoom.gps.internal.wizards.AbstractGeoExportWizard;
 import com.bdaum.zoom.operations.DbOperation;
 import com.bdaum.zoom.operations.IProfiledOperation;
 import com.bdaum.zoom.program.BatchUtilities;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 
+@SuppressWarnings("restriction")
 public class ExportGeoOperation extends DbOperation {
 
 	private List<Asset> assets;
@@ -44,7 +47,7 @@ public class ExportGeoOperation extends DbOperation {
 		monitor.beginTask(NLS.bind(Messages.getString("ExportGeoOperation.export_file"), type.toUpperCase()), assets.size()); //$NON-NLS-1$
 		NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
 		nf.setGroupingUsed(false);
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX"); //$NON-NLS-1$
+		SimpleDateFormat sdf = Format.XML_DATE_TIME_XZONED_FORMAT.get(); 
 		nf.setMaximumFractionDigits(6);
 		try (Writer writer = new FileWriter(targetFile)) {
 			StringBuilder sb = new StringBuilder();
@@ -58,9 +61,7 @@ public class ExportGeoOperation extends DbOperation {
 				double lat = asset.getGPSLatitude();
 				double lon = asset.getGPSLongitude();
 				double ele = asset.getGPSAltitude();
-				String name = asset.getTitle();
-				if (name == null || name.isEmpty())
-					name = asset.getName();
+				String name = UiUtilities.createSlideTitle(asset);
 				if (type == AbstractGeoExportWizard.GPX) {
 					sb.append("<wpt lat=\"").append(nf.format(lat)).append("\" lon=\"").append(nf.format(lon)) //$NON-NLS-1$ //$NON-NLS-2$
 							.append("\">"); //$NON-NLS-1$

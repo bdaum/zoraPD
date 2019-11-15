@@ -226,7 +226,6 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 	private IAction saveQueryAction;
 	private String initialSelection;
 	protected int thumbsize = DEFAULTTHUMBSIZE;
-	// protected GalleryMouseWheelListener mouseWheelListener;
 	protected IScoreFormatter scoreFormatter;
 	protected int refreshing;
 	protected IAction collapseAction;
@@ -533,12 +532,11 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 				}
 				int newFormats = dialog.open();
 				if (newFormats >= 0 && newFormats != formats) {
-					ITypeFilter newFilter = newFormats == ITypeFilter.ALLFORMATS ? null
-							: Core.getCore().getDbFactory().createTypeFilter(newFormats);
+					ITypeFilter newFilter = Core.getCore().getDbFactory().createTypeFilter(newFormats);
 					getNavigationHistory().updateFilters(oldFilter, newFilter);
 					String tooltip;
 					Icon icon;
-					if (newFormats == ITypeFilter.ALLFORMATS) {
+					if (newFilter == null) {
 						tooltip = Messages.getString("AbstractGalleryView.show_all_images_independent_of_format"); //$NON-NLS-1$
 						icon = Icons.format;
 					} else {
@@ -1050,7 +1048,11 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 	}
 
 	public void hasStarted() {
-		setSystemCursor(getControl(), SWT.CURSOR_ARROW);
+		Control c = getControl();
+		if (!c.isDisposed())
+			c.getDisplay().asyncExec(() -> {
+				setSystemCursor(getControl(), SWT.CURSOR_ARROW);
+			});
 	}
 
 	private static void setSystemCursor(Control control, int format) {

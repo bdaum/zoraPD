@@ -269,12 +269,12 @@ public class DeleteOperation extends DbOperation {
 		trashItem.addObjects(composites);
 		List<ComposedToImpl> components = dbManager.obtainStruct(ComposedToImpl.class, null, false, "component", //$NON-NLS-1$
 				assetId, true);
-		for (IdentifiableObject composedTo : components)
-			if (((ComposedToImpl) composedTo).getComponent().size() <= 1)
+		for (ComposedToImpl composedTo : components)
+			if (composedTo.getComponent().size() <= 1)
 				trashItem.addObject(composedTo);
 			else {
 				trashItem.addComposition(composedTo.getStringId());
-				((ComposedToImpl) composedTo).removeComponent(assetId);
+				composedTo.removeComponent(assetId);
 				tobeStored.add(composedTo);
 			}
 		List<DerivedByImpl> derivatives = dbManager.obtainStruct(DerivedByImpl.class, null, false, "derivative", //$NON-NLS-1$
@@ -294,12 +294,12 @@ public class DeleteOperation extends DbOperation {
 		// Structures
 		List<LocationCreatedImpl> locs = dbManager.obtainStruct(LocationCreatedImpl.class, assetId, true, null, null,
 				false);
-		for (IdentifiableObject loc : locs)
-			if (((LocationCreatedImpl) loc).getAsset().size() <= 1)
+		for (LocationCreatedImpl loc : locs)
+			if (loc.getAsset().size() <= 1)
 				trashItem.addObject(loc);
 			else {
 				trashItem.addLocationCreated(loc.getStringId());
-				((LocationCreatedImpl) loc).removeAsset(assetId);
+				loc.removeAsset(assetId);
 				tobeStored.add(loc);
 			}
 		List<LocationShownImpl> locsShown = dbManager.obtainStruct(LocationShownImpl.class, assetId, false, null, null,
@@ -307,12 +307,13 @@ public class DeleteOperation extends DbOperation {
 		trashItem.addObjects(locsShown);
 		List<CreatorsContactImpl> contacts = dbManager.obtainStruct(CreatorsContactImpl.class, assetId, false, null,
 				null, false);
-		for (IdentifiableObject contact : contacts)
-			if (((CreatorsContactImpl) contact).getAsset().size() <= 1)
+		for (CreatorsContactImpl contact : contacts)
+			if (contact.getAsset().size() <= 1)
 				trashItem.addObject(contact);
 			else {
 				trashItem.addCreatorsContact(contact.getStringId());
-				((CreatorsContactImpl) contact).removeAsset(assetId);
+				contact.removeAsset(assetId);
+				asset.setCreatorsContact_parent(null);
 				tobeStored.add(contact);
 			}
 		List<ArtworkOrObjectShownImpl> artworks = dbManager.obtainStruct(ArtworkOrObjectShownImpl.class, assetId, false,
@@ -321,7 +322,7 @@ public class DeleteOperation extends DbOperation {
 		// Faces
 		List<RegionImpl> regions = dbManager.obtainObjects(RegionImpl.class, "asset_person_parent", assetId, //$NON-NLS-1$
 				QueryField.EQUALS);
-		for (IdentifiableObject obj : regions)
+		for (RegionImpl obj : regions)
 			dbManager.delete(obj);
 		// Tracks
 		List<TrackRecordImpl> trackRecords = dbManager.obtainObjects(TrackRecordImpl.class, "asset_track_parent", //$NON-NLS-1$

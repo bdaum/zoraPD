@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=windows-1252">
+    <title>Configure captions</title>
+    <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css">
+  </head>
+  <body>
+    <h2>Configure captions</h2>
+    <span style="font-weight: bold;"></span><span style="font-weight: bold;"></span>
+    <ul style="font-weight: normal;">
+      <li>
+        <div style="text-align: left;">By
+          default, the image title and additional information are shown in image
+          captions. However, the title may completely be switched off or
+          configured using a template.</div>
+      </li>
+      <li><b>Templates </b>are constructed from constant text parts
+        and variables. You can type in both, but it is much more comfortable
+        and safe to select the variables from a list by clicking the button <abbr>Insert
+          variable..</abbr>. or <abbr>Insert metadata...</abbr><abbr></abbr>.
+        The later refers to the different fields defined with an image such as
+        EXIF and IPTC data.<br>
+        <br>
+        When a variable or metadata cannot be resolved (e.g. a field is
+        undefined) the variable is simply deleted from the template. This may
+        sometimes leave unwanted text fragments within the caption. To avoid
+        this a special syntax is provided:<br>
+        <br>
+        <table style="text-align: left; width: 100%;" cellspacing="2" cellpadding="2"
+          border="1">
+          <tbody>
+            <tr>
+              <td style="vertical-align: top; font-weight: bold;">Pattern<br>
+              </td>
+              <td style="vertical-align: top; font-weight: bold;">Description</td>
+            </tr>
+            <tr>
+              <td style="vertical-align: top;"><code>(?...?)<br>
+                </code></td>
+              <td style="vertical-align: top;"><span style="font-weight: bold;">Conditional
+                  group type 1</span><br>
+                The complete expression between the parantheses will be deleted
+                if <span style="font-weight: bold;">all</span> variables and
+                subgroups within the paranthesis remain unresolved. <br>
+                <span style="font-weight: bold;">Example:</span><code><br>
+                  (?Shot in </code><code>{meta=iptc_location_created&amp;city}?)</code></td>
+            </tr>
+            <tr>
+              <td style="vertical-align: top;"><code>(??...?)</code></td>
+              <td style="vertical-align: top;"><span style="font-weight: bold;">Conditional
+                  group type 2<br>
+                </span>The complete expression between the parantheses will be
+                deleted if at least <span style="font-weight: bold;">one</span>
+                variable or subgroup within the paranthesis remains unresolved.<br>
+                <span style="font-weight: bold;">Example:</span><br>
+                (??<code>{meta=owner},</code><code> {</code><code>yyyy</code><code>}?</code><code>)</code></td>
+            </tr>
+            <tr>
+              <td style="vertical-align: top;"><code>...|(...)<br>
+                </code></td>
+              <td style="vertical-align: top;"><span style="font-weight: bold;">Fallback</span><br>
+                If the expression (variable, conditional group, or another
+                fallback) in front of the<code> | </code>is unresolved, the
+                expression within the parantheses is used instead. Otherwise it
+                is discarded, <br>
+                <span style="font-weight: bold;">Example:<br>
+                </span><code> {meta=iptc_location_created&amp;city}|(</code><code>{title})</code><br>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <br>
+        Conditional groups and fallbacks may be nested.<br>
+        The mark-up is finally removed from the template when the hover text is
+        generated.<br>
+        <span style="font-weight: bold;"></span></li>
+      <li>In addition, you may specify a <b>fontsize </b>and an <b>alignment
+        </b>but only for custom templates.</li>
+    </ul>
+  </body>
+</html>

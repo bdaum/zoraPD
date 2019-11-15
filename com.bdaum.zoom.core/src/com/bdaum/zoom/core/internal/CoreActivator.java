@@ -42,7 +42,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IOperationHistory;
@@ -94,8 +93,8 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IRecipeDetector;
-import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.IRecipeDetector.IRecipeParameter;
+import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbErrorHandler;
 import com.bdaum.zoom.core.db.IDbFactory;
@@ -627,12 +626,12 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 			mediaMimeMap = new HashMap<String, String>(30);
 			for (IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(PLUGIN_ID, "mediaSupport") //$NON-NLS-1$
 					.getExtensions())
-				for (IConfigurationElement conf : extension.getConfigurationElements()) {
-					StringTokenizer st = new StringTokenizer(conf.getAttribute("formats")); //$NON-NLS-1$
-					StringTokenizer stm = new StringTokenizer(conf.getAttribute("mimetypes")); //$NON-NLS-1$
-					while (st.hasMoreTokens() && stm.hasMoreTokens())
-						mediaMimeMap.put(st.nextToken(), stm.nextToken());
-				}
+				for (IConfigurationElement conf : extension.getConfigurationElements())
+					for (IConfigurationElement format : conf.getChildren("format")) { //$NON-NLS-1$
+						String ext = format.getAttribute("extension"); //$NON-NLS-1$
+						String mime = format.getAttribute("mimeType"); //$NON-NLS-1$
+						mediaMimeMap.put(ext, mime);
+					}
 		}
 		return mediaMimeMap;
 	}
@@ -644,19 +643,20 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 					.getExtensions())
 				for (IConfigurationElement conf : extension.getConfigurationElements()) {
 					String name = conf.getAttribute("name"); //$NON-NLS-1$
+					String id = conf.getAttribute("id"); //$NON-NLS-1$
 					String plural = conf.getAttribute("plural"); //$NON-NLS-1$
 					String collectionID = conf.getAttribute("collectionID"); //$NON-NLS-1$
 					try {
 						IMediaSupport mediaSupport = (IMediaSupport) conf.createExecutableExtension("class"); //$NON-NLS-1$
 						mediaSupport.setName(name);
+						mediaSupport.setId(id);
 						mediaSupport.setPlural(plural);
 						mediaSupport.setCollectionId(collectionID);
 						Map<String, String> mimeMap = new HashMap<String, String>(30);
-						StringTokenizer st = new StringTokenizer(conf.getAttribute("formats")); //$NON-NLS-1$
-						StringTokenizer stm = new StringTokenizer(conf.getAttribute("mimetypes")); //$NON-NLS-1$
-						while (st.hasMoreTokens() && stm.hasMoreTokens()) {
-							String ext = st.nextToken();
-							mimeMap.put(ext, stm.nextToken());
+						for (IConfigurationElement format : conf.getChildren("format")) { //$NON-NLS-1$
+							String ext = format.getAttribute("extension"); //$NON-NLS-1$
+							String mime = format.getAttribute("mimetype"); //$NON-NLS-1$
+							mimeMap.put(ext, mime);
 							mediaSupportMap.put(ext, mediaSupport);
 						}
 						mediaSupport.setMimeMap(mimeMap);

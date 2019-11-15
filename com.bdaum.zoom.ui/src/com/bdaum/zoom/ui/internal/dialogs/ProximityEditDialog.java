@@ -142,31 +142,23 @@ public class ProximityEditDialog extends ZTitleAreaDialog {
 	protected void okPressed() {
 		Double lat;
 		try {
-			lat = (Double) Format.latitudeFormatter.fromString(latField
-					.getText());
+			lat = (Double) Format.latitudeFormatter.fromString(latField.getText());
 		} catch (ParseException e) {
 			lat = Double.NaN;
 		}
 		Double lon;
 		try {
-			lon = (Double) Format.longitudeFormatter.fromString(lonField
-					.getText());
+			lon = (Double) Format.longitudeFormatter.fromString(lonField.getText());
 		} catch (ParseException e) {
 			lon = Double.NaN;
 		}
-		Double[] values = new Double[] { lat, lon,
-				distanceField.getSelection() / 1000d };
-		boolean network = findInNetworkGroup == null ? false
-				: findInNetworkGroup.getSelection();
-		collection = new SmartCollectionImpl(coll.getName(), false, false,
-				coll.getAdhoc(), network, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
-		CriterionImpl crit = new CriterionImpl(
-				QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), null, values,
-				QueryField.NOTGREATER, false);
-		collection.addCriterion(crit);
-		SortCriterionImpl sort = new SortCriterionImpl(
-				QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(),  null, false);
-		collection.addSortCriterion(sort);
+		Double[] values = new Double[] { lat, lon, distanceField.getSelection() / 1000d };
+		boolean network = findInNetworkGroup == null ? false : findInNetworkGroup.getSelection();
+		collection = new SmartCollectionImpl(coll.getName(), false, false, coll.getAdhoc(), network, null, 0, null, 0,
+				null, Constants.INHERIT_LABEL, null, 0, 1, null);
+		collection.addCriterion(new CriterionImpl(QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), null, values, null,
+				QueryField.NOTGREATER, false));
+		collection.addSortCriterion(new SortCriterionImpl(QueryField.EXIF_GPSLOCATIONDISTANCE.getKey(), null, false));
 		super.okPressed();
 	}
 

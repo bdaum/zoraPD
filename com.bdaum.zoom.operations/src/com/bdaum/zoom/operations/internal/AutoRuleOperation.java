@@ -332,12 +332,12 @@ public class AutoRuleOperation extends DbOperation {
 							GroupImpl autogroup = dbManager.obtainById(GroupImpl.class, Constants.GROUP_ID_AUTO);
 							if (autogroup == null) {
 								autogroup = new GroupImpl(Messages.getString("AutoRuleOperation.automatic"), false, //$NON-NLS-1$
-										Constants.INHERIT_LABEL, null, 0, null);
+										Constants.INHERIT_LABEL, null, 0, 1, null);
 								autogroup.setStringId(Constants.GROUP_ID_AUTO);
 								addInfo(NLS.bind(Messages.getString("AutoRuleOperation.group_created"), //$NON-NLS-1$
 										autogroup.getName()));
 							}
-							subgroup = new GroupImpl(qfield.getLabel(), false, Constants.INHERIT_LABEL, null, 0, null);
+							subgroup = new GroupImpl(qfield.getLabel(), false, Constants.INHERIT_LABEL, null, 0, 1, null);
 							subgroup.setStringId(groupId);
 							autogroup.addSubgroup(subgroup);
 							subgroup.setGroup_subgroup_parent(autogroup);
@@ -349,13 +349,13 @@ public class AutoRuleOperation extends DbOperation {
 						sm = new SmartCollectionImpl(name.toString(), false, false, false, false,
 								NLS.bind(Messages.getString("AutoRuleOperation.automatically_created"), //$NON-NLS-1$
 										qfield.getLabel(), autoRule.getName()),
-								-1, null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
+								-1, null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 						sm.setStringId(ids);
 						sm.addCriterion(new CriterionImpl(qfield.getId(), null, value,
-								rel == QueryField.BETWEEN ? QueryField.NOTSMALLER : rel, true));
+								null, rel == QueryField.BETWEEN ? QueryField.NOTSMALLER : rel, true));
 						if (rel == QueryField.BETWEEN)
 							sm.addCriterion(
-									new CriterionImpl(qfield.getId(), null, upperValue, QueryField.SMALLER, true));
+									new CriterionImpl(qfield.getId(), null, upperValue, null, QueryField.SMALLER, true));
 						SortCriterion sortCrit = new SortCriterionImpl(QueryField.IPTC_DATECREATED.getId(), null, true);
 						sm.addSortCriterion(sortCrit);
 						sm.setGroup_rootCollection_parent(subgroup.getStringId());

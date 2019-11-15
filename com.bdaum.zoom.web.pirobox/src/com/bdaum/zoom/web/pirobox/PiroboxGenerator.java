@@ -35,6 +35,7 @@ import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebParameter;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.operations.internal.gen.AbstractGalleryGenerator;
+import com.bdaum.zoom.program.HtmlEncoderDecoder;
 
 @SuppressWarnings("restriction")
 public class PiroboxGenerator extends AbstractGalleryGenerator {
@@ -89,12 +90,12 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 		varmap.put("thumbnail", encodeURL(thumbnail)); //$NON-NLS-1$
 		String altText = exhibit.getAltText();
 		if (altText != null && !altText.isEmpty())
-			varmap.put("alt", getHtmlEncoderDecoder().encodeHTML(altText, false)); //$NON-NLS-1$
+			varmap.put("alt", HtmlEncoderDecoder.getInstance().encodeHTML(altText, false)); //$NON-NLS-1$
 		if (storyboard.getShowCaptions()) {
 			String caption = exhibit.getCaption();
 			if (caption != null && !caption.isEmpty()) {
 				StringBuilder sb = new StringBuilder();
-				String c = getHtmlEncoderDecoder().encodeHTML(caption, false);
+				String c = HtmlEncoderDecoder.getInstance().encodeHTML(caption, false);
 				sb.append(c);
 				if (storyboard.getShowDescriptions()) {
 					String description = exhibit.getDescription();
@@ -105,14 +106,14 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 							StringTokenizer st = new StringTokenizer(description, "\n\r"); //$NON-NLS-1$
 							while (st.hasMoreTokens())
 								sb.append("<br/><small>").append( //$NON-NLS-1$
-										getHtmlEncoderDecoder().encodeHTML(st.nextToken(), false)).append("</small>"); //$NON-NLS-1$
+										HtmlEncoderDecoder.getInstance().encodeHTML(st.nextToken(), false)).append("</small>"); //$NON-NLS-1$
 						}
 					}
 				}
 				WebGalleryImpl show = getShow();
 				if (exhibit.getDownloadable() && original != null && needsOriginals())
 					sb.append("<div class='download'><a href='").append(encodeURL(original)) //$NON-NLS-1$
-							.append("'>").append(getHtmlEncoderDecoder().encodeHTML(show.getDownloadText(), false)) //$NON-NLS-1$
+							.append("'>").append(HtmlEncoderDecoder.getInstance().encodeHTML(show.getDownloadText(), false)) //$NON-NLS-1$
 							.append("</a></div>"); //$NON-NLS-1$
 				String exifDiv = getExifDiv(storyboard, exhibit, asset, "meta"); //$NON-NLS-1$
 				if (exifDiv != null)
@@ -212,10 +213,10 @@ public class PiroboxGenerator extends AbstractGalleryGenerator {
 	protected Map<String, String> getSectionSnippetVars(StoryboardImpl storyboard, int i) {
 		Map<String, String> varmap = new HashMap<String, String>();
 		varmap.put("resources", getDeployResourceFolder().getName()); //$NON-NLS-1$
-		varmap.put("title", getHtmlEncoderDecoder().encodeHTML(storyboard.getTitle(), true)); //$NON-NLS-1$
+		varmap.put("title", HtmlEncoderDecoder.getInstance().encodeHTML(storyboard.getTitle(), true)); //$NON-NLS-1$
 		String description = storyboard.getDescription();
 		if (description != null && !description.isEmpty()) {
-			String d = storyboard.getHtmlDescription() ? description : getHtmlEncoderDecoder().encodeHTML(description, true);
+			String d = storyboard.getHtmlDescription() ? description : HtmlEncoderDecoder.getInstance().encodeHTML(description, true);
 			varmap.put("descriptiondiv", //$NON-NLS-1$
 					"<div id=\"description\" class=\"emboxd\">" + d + "</div>"); //$NON-NLS-1$ //$NON-NLS-2$
 		}

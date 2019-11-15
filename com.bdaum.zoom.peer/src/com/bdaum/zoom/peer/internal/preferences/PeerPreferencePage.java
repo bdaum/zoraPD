@@ -20,7 +20,6 @@
 package com.bdaum.zoom.peer.internal.preferences;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -67,6 +66,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.peer.internal.IPeerListener;
@@ -85,7 +85,6 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 public class PeerPreferencePage extends AbstractPreferencePage implements IPeerListener {
 
 	private static final Object[] EMPTY = new Object[0];
-	protected static final SimpleDateFormat nf = new SimpleDateFormat(Messages.PeerPreferencePage_dateformat);
 	private TreeViewer catViewer;
 	private Spinner portField;
 	private Text ipLabel;
@@ -214,7 +213,7 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 			@Override
 			public String getText(Object element) {
 				if (element instanceof PeerDefinition)
-					return nf.format(new Date(((PeerDefinition) element).getLastAccess()));
+					return Format.YMD_TIME_FORMAT.get().format(new Date(((PeerDefinition) element).getLastAccess()));
 				return  ""; //$NON-NLS-1$
 			}
 		});

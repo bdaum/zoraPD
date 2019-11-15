@@ -29,10 +29,10 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
-import com.bdaum.zoom.ui.internal.views.BookmarkView;
 
 public class BookmarkHoverContribution extends AbstractHoverContribution implements IHoverItem {
 
@@ -43,15 +43,16 @@ public class BookmarkHoverContribution extends AbstractHoverContribution impleme
 	private static final String CREATIONDATE = "{creationDate}"; //$NON-NLS-1$
 	private static final String TARGET = "{target}"; //$NON-NLS-1$
 	private static final String METADATA = Constants.HV_METADATA;
-	
+
 	private static final String[] TITLETAGS = new String[] { LABEL, CREATIONDATE, PEER, CATALOG, COLLECTION, TARGET };
 	private static final String[] TITLELABELS = new String[] { "Bookmark label", "Creation date", "Network origin", //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-			"Catalog", "Collection" , Messages.BookmarkHoverContribution_target }; //$NON-NLS-1$//$NON-NLS-2$
+			"Catalog", "Collection", Messages.BookmarkHoverContribution_target }; //$NON-NLS-1$//$NON-NLS-2$
 
-
-	private static final String[] TAGS = new String[] { LABEL, CREATIONDATE, PEER, CATALOG, COLLECTION, TARGET, METADATA };
+	private static final String[] TAGS = new String[] { LABEL, CREATIONDATE, PEER, CATALOG, COLLECTION, TARGET,
+			METADATA };
 	private static final String[] LABELS = new String[] { "Bookmark label", "Creation date", "Network origin", //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-			"Catalog", "Collection" , Messages.BookmarkHoverContribution_target, Messages.BookmarkHoverContribution_metadata_block }; //$NON-NLS-1$//$NON-NLS-2$
+			"Catalog", "Collection", Messages.BookmarkHoverContribution_target, //$NON-NLS-1$//$NON-NLS-2$
+			Messages.BookmarkHoverContribution_metadata_block };
 
 	@Override
 	public boolean supportsTitle() {
@@ -107,7 +108,7 @@ public class BookmarkHoverContribution extends AbstractHoverContribution impleme
 			else if (COLLECTION.equals(key))
 				return Messages.BookmarkHoverContribution_sample_coll;
 			else if (CREATIONDATE.equals(key))
-				return BookmarkView.DATEFORMAT.format(new Date());
+				return Format.EMDY_TIME_LONG_FORMAT.get().format(new Date());
 			else if (TARGET.equals(key))
 				return NLS.bind("{0} {1}", "img2019-234", Messages.BookmarkHoverContribution_offline); //$NON-NLS-1$ //$NON-NLS-2$
 		}
@@ -129,7 +130,7 @@ public class BookmarkHoverContribution extends AbstractHoverContribution impleme
 			}
 			if (CREATIONDATE.equals(key)) {
 				Date createdAt = bookmark.getCreatedAt();
-				return createdAt == null ? null : BookmarkView.DATEFORMAT.format(createdAt);
+				return createdAt == null ? null : Format.EMDY_TIME_LONG_FORMAT.get().format(createdAt);
 			}
 			if (TARGET.equals(key)) {
 				Asset asset = core.getDbManager().obtainAsset(bookmark.getAssetId());
@@ -162,7 +163,7 @@ public class BookmarkHoverContribution extends AbstractHoverContribution impleme
 	public String[] getItemLabels() {
 		return LABELS;
 	}
-	
+
 	@Override
 	public String[] getTitleItemKeys() {
 		return TITLETAGS;
@@ -176,11 +177,5 @@ public class BookmarkHoverContribution extends AbstractHoverContribution impleme
 			return new HoverTestAsset();
 		return null;
 	}
-
-	@Override
-	public Object getTestObject() {
-		return new HoverTestObject();
-	}
-
 
 }

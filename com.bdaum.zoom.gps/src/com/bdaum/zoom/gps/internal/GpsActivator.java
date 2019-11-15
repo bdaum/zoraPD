@@ -33,19 +33,23 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.BundleContext;
 
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.gps.geonames.IGeocodingService;
 import com.bdaum.zoom.gps.internal.preferences.PreferenceConstants;
-import com.bdaum.zoom.gps.widgets.IMapComponent;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
 @SuppressWarnings("restriction")
 public class GpsActivator extends ZUiPlugin {
+
+	private static final String SEARCH_HISTORY = "searchHistory"; //$NON-NLS-1$
+
+	private static final String MAP_COMPONENT = "mapComponent"; //$NON-NLS-1$
 
 	private static final String[] EMPTY = new String[0];
 
@@ -65,10 +69,22 @@ public class GpsActivator extends ZUiPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+		IDialogSettings dialogSettings = getDialogSettings();
+		IDialogSettings section = dialogSettings.getSection(MAP_COMPONENT);
+		if (section == null)
+			section = dialogSettings.addNewSection(MAP_COMPONENT); 
+		String[] hist = section.getArray(SEARCH_HISTORY);
+		if (hist != null)
+			searchHistory = hist;
 	}
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
+		if (searchHistory != null) {
+			IDialogSettings section = getDialogSettings().getSection(MAP_COMPONENT);
+			if (section != null)
+				section.put(SEARCH_HISTORY, searchHistory);
+		}
 		plugin = null;
 		super.stop(context);
 	}
@@ -143,7 +159,7 @@ public class GpsActivator extends ZUiPlugin {
 	public static IMapComponent getMapComponent(IConfigurationElement conf) {
 		if (conf != null) {
 			try {
-				IMapComponent mc = (IMapComponent) (conf.createExecutableExtension("mapComponent")); //$NON-NLS-1$
+				IMapComponent mc = (IMapComponent) (conf.createExecutableExtension(MAP_COMPONENT));
 				String maptype = Platform.getPreferencesService().getString(PLUGIN_ID,
 						PreferenceConstants.MAPTYPE + '.' + conf.getAttribute("id"), //$NON-NLS-1$
 						null, null);
@@ -261,7 +277,8 @@ public class GpsActivator extends ZUiPlugin {
 						for (IConfigurationElement child : conf.getChildren())
 							service.addParameter(new IGeocodingService.Parameter(child.getAttribute("id"), //$NON-NLS-1$
 									child.getAttribute("label"), child.getAttribute("reqMsg"), //$NON-NLS-1$ //$NON-NLS-2$
-									child.getAttribute("hint"), child.getAttribute("tooltip"), child.getAttribute("explanation"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+									child.getAttribute("hint"), child.getAttribute("tooltip"), //$NON-NLS-1$ //$NON-NLS-2$
+									child.getAttribute("explanation"))); //$NON-NLS-1$
 						namingList.add(service);
 					} catch (CoreException e) {
 						logError(NLS.bind(Messages.getString("GpsActivator.cannot_create_geonaming_service"), name), e); //$NON-NLS-1$

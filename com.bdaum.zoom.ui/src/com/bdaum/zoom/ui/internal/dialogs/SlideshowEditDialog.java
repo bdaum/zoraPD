@@ -21,7 +21,6 @@
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -31,19 +30,18 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import com.bdaum.aoModeling.runtime.AomList;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.group.GroupImpl;
@@ -60,9 +58,10 @@ import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.CaptionProcessor;
+import com.bdaum.zoom.ui.internal.CaptionProcessor.CaptionConfiguration;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
-import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.views.SlideshowView;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
@@ -105,7 +104,8 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	public static final String EFFECT = "effect"; //$NON-NLS-1$
 
 	private static final String[] TITLECONTENTITEMS = new String[] { Messages.SlideshowEditDialog_caption_only,
-			Messages.SlideshowEditDialog_seqno_only, Messages.SlideshowEditDialog_caption_seqno, Messages.SlideshowEditDialog_captions_unequal};
+			Messages.SlideshowEditDialog_seqno_only, Messages.SlideshowEditDialog_caption_seqno,
+			Messages.SlideshowEditDialog_captions_unequal };
 
 	private static NumberFormat af = (NumberFormat.getNumberInstance());
 
@@ -115,8 +115,8 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	private SlideShowImpl result;
 	private Text nameField;
 	private CheckedText descriptionField;
-	private Text durationField;
-	private Text fadingField;
+	private NumericControl durationField;
+	private NumericControl fadingField;
 	private boolean fromPreview = false;
 	private boolean voiceNotes = false;
 	private int fading = 1000;
@@ -133,7 +133,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 
 	private int titleContent = Constants.SLIDE_TITLEONLY;
 
-	private Text titleDisplayField;
+	private NumericControl titleDisplayField;
 
 	private GroupImpl group;
 
@@ -171,7 +171,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	public void create() {
 		super.create();
 		setTitle(title);
-		setMessage(Messages.SlideshowEditDialog_specify_properties);
+		setMessage(adhoc ? Messages.SlideshowEditDialog_specify_properties : Messages.SlideshowEditDialog_specify_properties_nonadhoc);
 		updateButtons();
 		updateFields();
 		if (nameField != null)
@@ -179,11 +179,12 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	}
 
 	private void updateFields() {
-		titleContentField.setEnabled(stringToMsec(titleDisplayField) > 0);
+		titleContentField.setEnabled(titleDisplayField.getSelection() > 0);
 	}
 
-	private final ModifyListener modifyListener = new ModifyListener() {
-		public void modifyText(ModifyEvent e) {
+	private final Listener listener = new Listener() {
+		@Override
+		public void handleEvent(Event event) {
 			updateButtons();
 		}
 	};
@@ -212,7 +213,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			new Label(comp, SWT.NONE).setText(Messages.SlideshowEditDialog_name);
 			nameField = new Text(comp, SWT.BORDER);
 			nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-			nameField.addModifyListener(modifyListener);
+			nameField.addListener(SWT.Modify, listener);
 			new Label(comp, SWT.NONE).setText(Messages.SlideshowEditDialog_description);
 			final GridData gd_descriptionField = new GridData(SWT.FILL, SWT.FILL, true, true);
 			gd_descriptionField.widthHint = 250;
@@ -233,19 +234,10 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 		parms.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, false, 2, 1));
 		parms.setLayout(new GridLayout(4, false));
 		parms.setText(Messages.SlideshowEditDialog_default_timing);
-		new Label(parms, SWT.NONE).setText(Messages.SlideshowEditDialog_duration);
-		durationField = new Text(parms, SWT.BORDER);
-		GridData data = new GridData(40, SWT.DEFAULT);
-		data.horizontalSpan = 3;
-		durationField.setLayoutData(data);
-		durationField.addModifyListener(modifyListener);
-		new Label(parms, SWT.NONE).setText(Messages.SlideshowEditDialog_fading);
-		fadingField = new Text(parms, SWT.BORDER);
-		fadingField.addModifyListener(modifyListener);
-		data = new GridData(40, SWT.DEFAULT);
-		fadingField.setLayoutData(data);
+		durationField = createNumericField(parms, 36000, Messages.SlideshowEditDialog_duration, 3);
+		fadingField = createNumericField(parms, 300, Messages.SlideshowEditDialog_fading, 1);
 		final Label effectLabel = new Label(parms, SWT.NONE);
-		data = new GridData();
+		GridData data = new GridData(SWT.END, SWT.CENTER, false, false);
 		data.horizontalIndent = 15;
 		effectLabel.setLayoutData(data);
 		effectLabel.setText(Messages.SlideshowEditDialog_transition_effect);
@@ -257,16 +249,9 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 		zoomField = new NumericControl(parms, SWT.NONE);
 		zoomField.setMaximum(100);
 		zoomField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
-		new Label(parms, SWT.NONE).setText(Messages.SlideshowEditDialog_title_display);
-		titleDisplayField = new Text(parms, SWT.BORDER);
-		titleDisplayField.setLayoutData(new GridData(40, SWT.DEFAULT));
-		titleDisplayField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				updateFields();
-			}
-		});
+		titleDisplayField = createNumericField(parms, 36000, Messages.SlideshowEditDialog_title_display, 1);
 		final Label titleContentLabel = new Label(parms, SWT.NONE);
-		data = new GridData();
+		data = new GridData(SWT.END, SWT.CENTER, false, false);
 		data.horizontalIndent = 15;
 		titleContentLabel.setLayoutData(data);
 		titleContentLabel.setText(Messages.SlideshowEditDialog_content);
@@ -279,6 +264,19 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 		new Label(parms, SWT.NONE);
 		fillValues(current, false);
 		return area;
+	}
+
+	private NumericControl createNumericField(final Composite comp, int max, String text, int columns) {
+		new Label(comp, SWT.NONE).setText(text);
+		NumericControl field = new NumericControl(comp, SWT.BORDER);
+		field.setMinimum(0);
+		field.setDigits(1);
+		field.setMaximum(max);
+		field.setIncrement(5);
+		field.setPageIncrement(50);
+		field.addListener(listener);
+		field.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, columns, 1));
+		return field;
 	}
 
 	private void updateButtons() {
@@ -304,29 +302,8 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 					return false;
 				}
 		}
-		if (!validDouble(durationField, Messages.SlideshowEditDialog_delay_error, 0d, 3600d))
-			return false;
-		if (!validDouble(fadingField, Messages.SlideshowEditDialog_fading_error, 0d, 30d))
-			return false;
-		if (!validDouble(titleDisplayField, Messages.SlideshowEditDialog_title_display_error, 0d, 30d))
-			return false;
 		setErrorMessage(null);
 		return true;
-	}
-
-	private boolean validDouble(Text field, String label, double min, double max) {
-		String s = field.getText();
-		try {
-			double v = af.parse(s).doubleValue();
-			if (v > max)
-				setErrorMessage(NLS.bind(Messages.SlideshowEditDialog_value_must_not_be_larger, label, min));
-			else if (v >= min)
-				return true;
-			setErrorMessage(NLS.bind(Messages.SlideshowEditDialog_value_must_be_larger_or_equal, label, min));
-		} catch (ParseException e) {
-			setErrorMessage(NLS.bind(Messages.SlideshowEditDialog_not_a_number, label));
-		}
-		return false;
 	}
 
 	private void fillValues(SlideShowImpl show, boolean template) {
@@ -388,11 +365,11 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			voiceNotes = show.getVoiceNotes();
 		}
 		af.setMaximumFractionDigits(1);
-		durationField.setText(af.format(duration / 1000d));
+		durationField.setSelection(duration / 100);
 		effectField.select(effect - Constants.SLIDE_TRANSITION_START);
 		zoomField.setSelection(zoom);
-		fadingField.setText(af.format(fading / 1000d));
-		titleDisplayField.setText(af.format(titleDisplay / 1000d));
+		fadingField.setSelection(fading / 100);
+		titleDisplayField.setSelection(titleDisplay / 100);
 		titleContentField.select(titleContent);
 		fromPreviewButton.setSelection(fromPreview);
 		voiceButton.setSelection(voiceNotes);
@@ -434,7 +411,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 				result.setDescription(""); //$NON-NLS-1$
 			if (adhoc)
 				privacy = privacyGroup.getSelection();
-			duration = stringToMsec(durationField);
+			duration = durationField.getSelection() * 100;
 			result.setDuration(duration);
 			settings.put(DELAY, duration);
 			effect = Math.max(0, effectField.getSelectionIndex()) + Constants.SLIDE_TRANSITION_START;
@@ -442,11 +419,11 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			result.setZoom(zoom);
 			settings.put(EFFECT, effect);
 			result.setEffect(effect);
-			fading = stringToMsec(fadingField);
+			fading = fadingField.getSelection() * 100;
 			result.setFading(fading);
 			settings.put(ZOOM, zoom);
 			settings.put(FADING, fading);
-			titleDisplay = stringToMsec(titleDisplayField);
+			titleDisplay = titleDisplayField.getSelection() * 100;
 			result.setTitleDisplay(titleDisplay);
 			settings.put(TITLEDISPLAY, titleDisplay);
 			titleContent = titleContentField.getSelectionIndex();
@@ -468,10 +445,8 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			if (!adhoc && !canUndo) {
 				dbManager.safeTransaction(new Runnable() {
 					public void run() {
-						if (importGroup != null) {
-							IdentifiableObject obj = importGroup.getFromItem();
-							importIntoGallery(result, obj);
-						}
+						if (importGroup != null)
+							importIntoGallery(result, importGroup.getFromItem());
 						if (group == null) {
 							String groupId = (current != null) ? current.getGroup_slideshow_parent()
 									: Constants.GROUP_ID_SLIDESHOW;
@@ -481,7 +456,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 						}
 						if (group == null) {
 							group = new GroupImpl(Messages.SlideshowEditDialog_slideshows, false,
-									Constants.INHERIT_LABEL, null, 0, null);
+									Constants.INHERIT_LABEL, null, 0, 1, null);
 							group.setStringId(Constants.GROUP_ID_SLIDESHOW);
 						}
 						if (current != null)
@@ -509,8 +484,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 
 	private void importIntoGallery(SlideShowImpl show, IdentifiableObject obj) {
 		if (obj instanceof SlideShowImpl) {
-			AomList<String> entries = ((SlideShowImpl) obj).getEntry();
-			for (String slideId : entries) {
+			for (String slideId : ((SlideShowImpl) obj).getEntry()) {
 				SlideImpl slide = dbManager.obtainById(SlideImpl.class, slideId);
 				if (slide != null) {
 					SlideImpl newSlide = SlideshowView.cloneSlide(slide);
@@ -518,77 +492,67 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 					show.addEntry(newSlide.getStringId());
 				}
 			}
-		} else {
-			if (obj instanceof ExhibitionImpl) {
-				AomList<Wall> walls = ((ExhibitionImpl) obj).getWall();
-				int seqNo = 1;
-				for (Wall wall : walls) {
-					SlideImpl newSlide = new SlideImpl(wall.getLocation(), seqNo++, "", Constants.SLIDE_NO_THUMBNAILS, //$NON-NLS-1$
-							show.getFading(), show.getFading(), show.getDuration(), show.getFading(), show.getEffect(),
-							0, 0, 0, true, QueryField.SAFETY_SAFE, null);
-					dbManager.store(newSlide);
-					show.addEntry(newSlide.getStringId());
-					for (String exhibitId : wall.getExhibit()) {
-						ExhibitImpl exhibit = dbManager.obtainById(ExhibitImpl.class, exhibitId);
-						if (exhibit != null) {
-							String assetId = exhibit.getAsset();
-							if (!SlideshowView.accepts(dbManager.obtainAsset(assetId)))
-								continue;
-							newSlide = new SlideImpl(exhibit.getTitle(), seqNo++, exhibit.getDescription(),
-									Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(),
-									show.getDuration(), show.getFading(), show.getEffect(), show.getZoom(), 0, 0, false,
-									QueryField.SAFETY_SAFE, assetId);
-							dbManager.store(newSlide);
-							show.addEntry(newSlide.getStringId());
-						}
+		} else if (obj instanceof ExhibitionImpl) {
+			int seqNo = 1;
+			for (Wall wall : ((ExhibitionImpl) obj).getWall()) {
+				SlideImpl newSlide = new SlideImpl(wall.getLocation(), seqNo++, "", Constants.SLIDE_NO_THUMBNAILS, //$NON-NLS-1$
+						show.getFading(), show.getFading(), show.getDuration(), show.getFading(), show.getEffect(), 0,
+						0, 0, true, QueryField.SAFETY_SAFE, null);
+				dbManager.store(newSlide);
+				show.addEntry(newSlide.getStringId());
+				for (String exhibitId : wall.getExhibit()) {
+					ExhibitImpl exhibit = dbManager.obtainById(ExhibitImpl.class, exhibitId);
+					if (exhibit != null) {
+						String assetId = exhibit.getAsset();
+						if (!SlideshowView.accepts(dbManager.obtainAsset(assetId)))
+							continue;
+						newSlide = new SlideImpl(exhibit.getTitle(), seqNo++, exhibit.getDescription(),
+								Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(), show.getDuration(),
+								show.getFading(), show.getEffect(), show.getZoom(), 0, 0, false, QueryField.SAFETY_SAFE,
+								assetId);
+						dbManager.store(newSlide);
+						show.addEntry(newSlide.getStringId());
 					}
-				}
-			} else if (obj instanceof WebGalleryImpl) {
-				int seqNo = 1;
-				AomList<Storyboard> storyboards = ((WebGalleryImpl) obj).getStoryboard();
-				for (Storyboard storyboard : storyboards) {
-					SlideImpl newSlide = new SlideImpl(storyboard.getTitle(), seqNo++, storyboard.getDescription(),
-							Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(), show.getDuration(),
-							show.getFading(), show.getEffect(), 0, 0, 0, true, QueryField.SAFETY_SAFE, null);
-					dbManager.store(newSlide);
-					show.addEntry(newSlide.getStringId());
-					for (String exhibitId : storyboard.getExhibit()) {
-						WebExhibitImpl exhibit = dbManager.obtainById(WebExhibitImpl.class, exhibitId);
-						if (exhibit != null) {
-							String assetId = exhibit.getAsset();
-							if (!SlideshowView.accepts(dbManager.obtainAsset(assetId)))
-								continue;
-							newSlide = new SlideImpl(exhibit.getCaption(), seqNo++, exhibit.getDescription(),
-									Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(),
-									show.getDuration(), show.getFading(), show.getEffect(), show.getZoom(), 0, 0, false,
-									QueryField.SAFETY_SAFE, assetId);
-							dbManager.store(newSlide);
-							show.addEntry(newSlide.getStringId());
-						}
-					}
-				}
-			} else if (obj instanceof SmartCollectionImpl) {
-				int seqNo = 1;
-				for (Asset asset : dbManager.createCollectionProcessor((SmartCollection) obj).select(true)) {
-					if (!SlideshowView.accepts(asset))
-						continue;
-					SlideImpl newSlide = new SlideImpl(UiUtilities.createSlideTitle(asset), seqNo++, null,
-							Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(), show.getDuration(),
-							show.getFading(), show.getEffect(), show.getZoom(), 0, 0, false, QueryField.SAFETY_SAFE,
-							asset.getStringId());
-					dbManager.store(newSlide);
-					show.addEntry(newSlide.getStringId());
 				}
 			}
-		}
-	}
-
-	private static int stringToMsec(Text field) {
-		try {
-			return (int) (1000 * af.parse(field.getText()).doubleValue());
-		} catch (ParseException e) {
-			// should not happen
-			return 0;
+		} else if (obj instanceof WebGalleryImpl) {
+			int seqNo = 1;
+			for (Storyboard storyboard : ((WebGalleryImpl) obj).getStoryboard()) {
+				SlideImpl newSlide = new SlideImpl(storyboard.getTitle(), seqNo++, storyboard.getDescription(),
+						Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(), show.getDuration(),
+						show.getFading(), show.getEffect(), 0, 0, 0, true, QueryField.SAFETY_SAFE, null);
+				dbManager.store(newSlide);
+				show.addEntry(newSlide.getStringId());
+				for (String exhibitId : storyboard.getExhibit()) {
+					WebExhibitImpl exhibit = dbManager.obtainById(WebExhibitImpl.class, exhibitId);
+					if (exhibit != null) {
+						String assetId = exhibit.getAsset();
+						if (!SlideshowView.accepts(dbManager.obtainAsset(assetId)))
+							continue;
+						newSlide = new SlideImpl(exhibit.getCaption(), seqNo++, exhibit.getDescription(),
+								Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(), show.getDuration(),
+								show.getFading(), show.getEffect(), show.getZoom(), 0, 0, false, QueryField.SAFETY_SAFE,
+								assetId);
+						dbManager.store(newSlide);
+						show.addEntry(newSlide.getStringId());
+					}
+				}
+			}
+		} else if (obj instanceof SmartCollectionImpl) {
+			int seqNo = 1;
+			CaptionProcessor captionProcessor = new CaptionProcessor(Constants.TH_ALL);
+			CaptionConfiguration captionConfig = captionProcessor.computeCaptionConfiguration((SmartCollection) obj);
+			for (Asset asset : dbManager.createCollectionProcessor((SmartCollection) obj).select(true))
+				if (SlideshowView.accepts(asset)) {
+					SlideImpl newSlide = new SlideImpl(
+							captionProcessor.computeImageCaption(asset, null, null, null,
+									captionConfig.getLabelTemplate(), true),
+							seqNo++, null, Constants.SLIDE_NO_THUMBNAILS, show.getFading(), show.getFading(),
+							show.getDuration(), show.getFading(), show.getEffect(), show.getZoom(), 0, 0, false,
+							QueryField.SAFETY_SAFE, asset.getStringId());
+					dbManager.store(newSlide);
+					show.addEntry(newSlide.getStringId());
+				}
 		}
 	}
 

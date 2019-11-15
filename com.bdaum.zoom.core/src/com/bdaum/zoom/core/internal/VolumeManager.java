@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -78,7 +79,6 @@ public class VolumeManager implements IVolumeManager {
 	private static final String VOLUME_PATTERNS_INI = "/volumePatterns.ini"; //$NON-NLS-1$
 	private static final StorageObject[] NULLSTORAGEOBECTS = new StorageObject[0];
 
-	private FileSystemView fileSystemView;
 	private File[] roots = new File[0];
 	private long[] timeStamps;
 	private String[] volumes;
@@ -109,12 +109,6 @@ public class VolumeManager implements IVolumeManager {
 			}
 		};
 		monitorJob.schedule(4000L);
-	}
-
-	public FileSystemView getFileSystemView() {
-		if (fileSystemView == null)
-			fileSystemView = FileSystemView.getFileSystemView();
-		return fileSystemView;
 	}
 
 	/*
@@ -240,7 +234,6 @@ public class VolumeManager implements IVolumeManager {
 
 	private void updateVolumes() {
 		synchronized (this) {
-			fileSystemView = null;
 			File[] list = File.listRoots();
 			if (list == null)
 				return;
@@ -411,25 +404,26 @@ public class VolumeManager implements IVolumeManager {
 	}
 
 	public String obtainVolumeLabel(String path) {
-		File rootFile = getRootFile(new File(path));
-		return obtainVolumeLabel(rootFile);
+		return obtainVolumeLabel(getRootFile(new File(path)));
 	}
 
 	private String obtainVolumeLabel(File dir) {
-		if (Constants.WIN32) {
-			String name = getFileSystemView().getSystemDisplayName(dir);
-			if (name != null) {
-				name = name.trim();
-				if (!name.isEmpty()) {
-					int index = name.lastIndexOf(" ("); //$NON-NLS-1$
-					if (index > 0)
-						return name.substring(0, index);
+		if (Constants.WIN32)
+			try {
+				String name = Files.getFileStore(dir.toPath()).name();
+				if (name != null) {
+					name = name.trim();
+					if (!name.isEmpty()) {
+						int index = name.lastIndexOf(" ("); //$NON-NLS-1$
+						if (index > 0)
+							return name.substring(0, index).trim();
+					}
 				}
+				return name;
+			} catch (IOException e) {
+				return null;
 			}
-			return name;
-		}
-		String path = dir.getAbsolutePath();
-		return extractLinuxPath(path);
+		return extractLinuxPath(dir.getAbsolutePath());
 	}
 
 	public String extractLinuxPath(String path) {
@@ -472,7 +466,7 @@ public class VolumeManager implements IVolumeManager {
 
 	public Icon getFileIcon(String path) {
 		File f = new File(path);
-		return f.exists() ? getFileSystemView().getSystemIcon(f) : null;
+		return f.exists() ? FileSystemView.getFileSystemView().getSystemIcon(f) : null;
 	}
 
 	public void addDeviceInsertionListener(DeviceInsertionListener listener) {

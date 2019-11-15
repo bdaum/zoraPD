@@ -83,6 +83,7 @@ import org.piccolo2d.util.PPaintContext;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.Region;
 import com.bdaum.zoom.cat.model.asset.RegionImpl;
+import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.locationShown.LocationShownImpl;
 import com.bdaum.zoom.core.Constants;
@@ -101,6 +102,8 @@ import com.bdaum.zoom.css.internal.IExtendedColorModel2;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.ImageStore;
 import com.bdaum.zoom.ui.AssetSelection;
+import com.bdaum.zoom.ui.internal.CaptionProcessor;
+import com.bdaum.zoom.ui.internal.CaptionProcessor.CaptionConfiguration;
 import com.bdaum.zoom.ui.internal.IPresentationHandler;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -551,7 +554,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 			}
 			// Decoration
 			addMediaIcon(canvas, asset, x, y, width);
-			addCaption(canvas, asset, captionText, x, y, height);
+			addCaption(canvas, asset, captionText, x, y, width, height, captionConfiguration.labelAlignment);
 			addRatingStar(canvas, asset, x, y, width);
 			addDoneMark(canvas, asset, x, y, width);
 			double x1 = addColorCode(canvas, asset);
@@ -576,14 +579,15 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		}
 
 		private void addCaption(PSWTCanvas pswtCanvas, final Asset anAsset, String text, double x, double y,
-				double height) {
-			boolean readOnly = anAsset.getFileState() != IVolumeManager.ONLINE || showLabel != Constants.TITLE_LABEL;
-			caption = new TextField(text, SWT.DEFAULT,
-					UiUtilities.getAwtFont(pswtCanvas, null, java.awt.Font.BOLD,
-							showLabel == Constants.CUSTOM_LABEL && labelFontSize != 0 ? labelFontSize
-									: defaultFontSize),
+				double width, double height, int alignment) {
+			boolean readOnly = anAsset.getFileState() != IVolumeManager.ONLINE
+					|| captionConfiguration != null && captionConfiguration.showLabel != Constants.TITLE_LABEL;
+			caption = new TextField(text, (int) width, UiUtilities.getAwtFont(pswtCanvas, null, java.awt.Font.BOLD,
+					captionConfiguration.showLabel == Constants.CUSTOM_LABEL ? captionConfiguration.labelFontsize
+							: defaultFontSize),
 					UiUtilities.getAwtForeground(pswtCanvas, null), null, true,
-					SWT.SINGLE | (readOnly ? SWT.READ_ONLY : SWT.NONE));
+					(alignment == 0 ? SWT.LEFT : alignment == 2 ? SWT.RIGHT : SWT.CENTER) | SWT.SINGLE
+							| (readOnly ? SWT.READ_ONLY : SWT.NONE));
 			caption.setSelectedBgColor(UiUtilities.getAwtBackground(pswtCanvas, selectionBackgroundColor));
 			caption.setGreekThreshold(6);
 			caption.setOffset(x, y + height);
@@ -744,8 +748,10 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		}
 
 		private String computeCaption(Asset anAsset) {
-			return (anAsset != null && showLabel != Constants.NO_LABEL) ? UiUtilities.computeImageCaption(anAsset,
-					scoreFormatter, null, null, showLabel == Constants.CUSTOM_LABEL ? labelTemplate : null) : ""; //$NON-NLS-1$
+			return (anAsset != null && captionConfiguration.showLabel != Constants.NO_LABEL)
+					? captionProcessor.computeImageCaption(anAsset, scoreFormatter, null, null,
+							captionConfiguration.getLabelTemplate(), false)
+					: ""; //$NON-NLS-1$
 		}
 
 		public void setSelectTransform() {
@@ -968,11 +974,10 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 	private static final int RATING_NO = 0;
 	private static final int RATING_SIZE = 1;
 	private static final int RATING_COUNT = 2;
-	
+
 	private static final double PAN_SENSITIVITY = 0.2d;
 	private static final double VACCEL = 5d;
 	private static final double HACCEL = 2.5d;
-
 
 	private Color offlineColor;
 	private Color remoteColor;
@@ -1041,11 +1046,9 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 
 	private List<Rectangle> rectangleList = new ArrayList<>();
 
-	private int showLabel;
+	private final CaptionProcessor captionProcessor = new CaptionProcessor(Constants.TH_ALL);
 
-	private String labelTemplate;
-
-	private int labelFontSize;
+	private CaptionConfiguration captionConfiguration = captionProcessor.computeCaptionConfiguration();
 
 	public AnimatedGallery(final PSWTCanvas canvas, int slideSize, int thumbSize, ImageStore imageSource) {
 		this.thumbSize = thumbSize;
@@ -1109,7 +1112,8 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		canvas.removeInputEventListener(canvas.getPanEventHandler());
 		canvas.addInputEventListener(panHandler = new GalleryPanEventHandler(this, workArea, surfaceBounds.x,
 				surfaceBounds.y, surfaceBounds.width + surfaceBounds.x, surfaceBounds.height + surfaceBounds.y,
-				GalleryPanEventHandler.BOTH, InputEvent.ALT_MASK | InputEvent.BUTTON1_MASK, -3, PAN_SENSITIVITY, HACCEL, VACCEL));
+				GalleryPanEventHandler.BOTH, InputEvent.ALT_MASK | InputEvent.BUTTON1_MASK, -3, PAN_SENSITIVITY, HACCEL,
+				VACCEL));
 		canvas.removeInputEventListener(canvas.getZoomEventHandler());
 		canvas.addInputEventListener(zoomHandler = new GalleryZoomEventHandler(this, workArea, -10));
 		canvas.addMouseWheelListener(wheelListener = new InertiaMouseWheelListener());
@@ -1849,10 +1853,12 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		return imageRegions;
 	}
 
-	public void setAppearance(int showLabel, String labelTemplate, int fontSize) {
-		this.showLabel = showLabel;
-		this.labelTemplate = labelTemplate;
-		this.labelFontSize = fontSize;
+	public void setContext(SmartCollection coll) {
+		captionConfiguration = captionProcessor.computeCaptionConfiguration(coll);
+	}
+
+	public CaptionProcessor getCaptionProcessor() {
+		return captionProcessor;
 	}
 
 }

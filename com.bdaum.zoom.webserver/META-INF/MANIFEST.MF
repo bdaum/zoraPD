@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %Bundle-Name
+Bundle-SymbolicName: com.bdaum.zoom.webserver;singleton:=true
+Bundle-Version: 3.5.2
+Bundle-Activator: com.bdaum.zoom.webserver.internals.WebserverActivator
+Bundle-Vendor: %Bundle-Vendor
+Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.6.0",
+ com.bdaum.zoom.net.core;bundle-version="3.6.0",
+ org.eclipse.help;bundle-version="3.8.0",
+ com.bdaum.zoom.gps;bundle-version="3.6.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy

@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.gps.internal.GpsActivator;
 
 public class PreferenceInitializer extends AbstractPreferenceInitializer {
@@ -28,12 +29,12 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 	public void initializeDefaultPreferences() {
 		IEclipsePreferences node = DefaultScope.INSTANCE.getNode(GpsActivator.PLUGIN_ID);
 		// get local time shift to UTC
-		SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:s"); //$NON-NLS-1$
+		SimpleDateFormat df = Format.XML_DATE_TIME_FORMAT.get();
 		Date now = new Date();
-		String today = DF.format(now);
-		DF.setTimeZone(TimeZone.getTimeZone("UTC")); //$NON-NLS-1$
+		String today = df.format(now);
+		df.setTimeZone(TimeZone.getTimeZone("UTC")); //$NON-NLS-1$
 		try {
-			long diff = now.getTime() - DF.parse(today).getTime();
+			long diff = now.getTime() - df.parse(today).getTime();
 			diff += diff < 0 ? -30000L : 30000L;
 			node.putInt(PreferenceConstants.TIMESHIFT, (int) (diff / 60000L));
 		} catch (ParseException e) {

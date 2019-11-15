@@ -23,12 +23,24 @@ import com.bdaum.zoom.ui.internal.views.ImageRegion;
 
 public interface IHoverInfo {
 
+	/**
+	 * @return hover text
+	 */
 	String getText();
 
+	/**
+	 * @return hover title
+	 */
 	String getTitle();
 
+	/**
+	 * @return array of regions under the mouse
+	 */
 	ImageRegion[] getRegions();
 
+	/**
+	 * @return hover object unequal null
+	 */
 	Object getObject();
 
 }

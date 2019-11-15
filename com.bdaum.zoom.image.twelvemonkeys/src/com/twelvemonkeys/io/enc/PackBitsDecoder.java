@@ -37,30 +37,36 @@ import java.nio.ByteBuffer;
 
 /**
  * Decoder implementation for Apple PackBits run-length encoding.
- * <p/>
- * <small>From Wikipedia, the free encyclopedia</small><br/>
+ * <p>
+ * <small>From Wikipedia, the free encyclopedia</small>
+ * <br>
  * PackBits is a fast, simple compression scheme for run-length encoding of
  * data.
- * <p/>
+ * </p>
+ * <p>
  * Apple introduced the PackBits format with the release of MacPaint on the
  * Macintosh computer. This compression scheme is one of the types of
  * compression that can be used in TIFF-files.
- * <p/>
+ * </p>
+ * <p>
  * A PackBits data stream consists of packets of one byte of header followed by
  * data. The header is a signed byte; the data can be signed, unsigned, or
  * packed (such as MacPaint pixels).
- * <p/>
- * <table><tr><th>Header byte</th><th>Data</th></tr>
- * <tr><td>0 to 127</td>    <td>1 + <i>n</i> literal bytes of data</td></tr>
- * <tr><td>0 to -127</td>   <td>One byte of data, repeated 1 - <i>n</i> times in
- *                           the decompressed output</td></tr>
- * <tr><td>-128</td>        <td>No operation</td></tr></table>
- * <p/>
+ * </p>
+ * <table>
+ *     <caption>PackBits</caption>
+ *     <tr><th>Header byte</th><th>Data</th></tr>
+ *     <tr><td>0 to 127</td>    <td>1 + <i>n</i> literal bytes of data</td></tr>
+ *     <tr><td>0 to -127</td>   <td>One byte of data, repeated 1 - <i>n</i> times in the decompressed output</td></tr>
+ *     <tr><td>-128</td>        <td>No operation</td></tr>
+ * </table>
+ * <p>
  * Note that interpreting 0 as positive or negative makes no difference in the
  * output. Runs of two bytes adjacent to non-runs are typically written as
  * literal data.
- * <p/>
- * See <a href="http://developer.apple.com/technotes/tn/tn1023.html">Understanding PackBits</a>
+ * </p>
+ *
+ * @see <a href="http://developer.apple.com/technotes/tn/tn1023.html">Understanding PackBits</a>
  *
  * @author <a href="mailto:harald.kuhr@gmail.com">Harald Kuhr</a>
  * @version $Id: //depot/branches/personal/haraldk/twelvemonkeys/release-2/twelvemonkeys-core/src/main/java/com/twelvemonkeys/io/enc/PackBitsDecoder.java#1 $
@@ -71,8 +77,6 @@ public final class PackBitsDecoder implements Decoder {
     private final boolean disableNoOp;
     private final byte[] sample;
 
-    private int leftOfRun;
-    private boolean splitRun;
     private boolean reachedEOF;
 
     /** Creates a {@code PackBitsDecoder}. */
@@ -82,10 +86,11 @@ public final class PackBitsDecoder implements Decoder {
 
     /**
      * Creates a {@code PackBitsDecoder}, with optional compatibility mode.
-     * <p/>
+     * <p>
      * As some implementations of PackBits-like encoders treat {@code -128} as length of
      * a compressed run, instead of a no-op, it's possible to disable no-ops for compatibility.
      * Should be used with caution, even though, most known encoders never write no-ops in the compressed streams.
+     * </p>
      *
      * @param disableNoOp {@code true} if {@code -128} should be treated as a compressed run, and not a no-op
      */
@@ -95,10 +100,11 @@ public final class PackBitsDecoder implements Decoder {
 
     /**
      * Creates a {@code PackBitsDecoder}, with optional compatibility mode.
-     * <p/>
+     * <p>
      * As some implementations of PackBits-like encoders treat {@code -128} as length of
      * a compressed run, instead of a no-op, it's possible to disable no-ops for compatibility.
      * Should be used with caution, even though, most known encoders never write no-ops in the compressed streams.
+     * </p>
      *
      * @param disableNoOp {@code true} if {@code -128} should be treated as a compressed run, and not a no-op
      */
@@ -114,65 +120,43 @@ public final class PackBitsDecoder implements Decoder {
      * @param buffer a byte array, minimum 128 (or 129 if no-op is disabled) bytes long
      * @return The number of bytes decoded
      *
-     * @throws java.io.IOException
+     * @throws java.io.IOException if a problem occurs during decoding.
      */
     public int decode(final InputStream stream, final ByteBuffer buffer) throws IOException {
         if (reachedEOF) {
             return -1;
         }
 
-        // TODO: Don't decode more than single runs, because some writers add pad bytes inside the stream...
-        while (buffer.hasRemaining()) {
-            int n;
-            
-            if (splitRun) {
-                // Continue run
-                n = leftOfRun;
-                splitRun = false;
-            }
-            else {
-                // Start new run
-                int b = stream.read();
-                if (b < 0) {
-                    reachedEOF = true;
-                    break;
-                }
-                n = (byte) b;
-            }
+        // NOTE: We don't decode more than single runs, because some writers add pad bytes inside the stream...
+        // Start new run
+        int b = stream.read();
+        if (b < 0) {
+            reachedEOF = true;
+            return 0;
+        }
 
-            // Split run at or before max
-            if (n >= 0 && n + 1 > buffer.remaining()) {
-                leftOfRun = n;
-                splitRun = true;
-                break;
-            }
-            else if (n < 0 && -n + 1 > buffer.remaining()) {
-                leftOfRun = n;
-                splitRun = true;
-                break;
-            }
+        int n = (byte) b;
 
-            try {
-                if (n >= 0) {
-                    // Copy next n + 1 bytes literally
-                    readFully(stream, buffer, sample.length * (n + 1));
+        try {
+            if (n >= 0) {
+                // Copy next n + 1 bytes literally
+                readFully(stream, buffer, sample.length * (n + 1));
+            }
+            // Allow -128 for compatibility, see above
+            else if (disableNoOp || n != -128) {
+                // Replicate the next byte -n + 1 times
+                for (int s = 0; s < sample.length; s++) {
+                    sample[s] = readByte(stream);
                 }
-                // Allow -128 for compatibility, see above
-                else if (disableNoOp || n != -128) {
-                    // Replicate the next byte -n + 1 times
-                    for (int s = 0; s < sample.length; s++) {
-                        sample[s] = readByte(stream);
-                    }
 
-                    for (int i = -n + 1; i > 0; i--) {
-                        buffer.put(sample);
-                    }
+                for (int i = -n + 1; i > 0; i--) {
+                    buffer.put(sample);
                 }
-                // else NOOP (-128)
             }
-            catch (IndexOutOfBoundsException e) {
-                throw new DecodeException("Error in PackBits decompression, data seems corrupt", e);
-            }
+            // else NOOP (-128)
+        }
+        catch (IndexOutOfBoundsException e) {
+            throw new DecodeException("Error in PackBits decompression, data seems corrupt", e);
         }
 
         return buffer.position();

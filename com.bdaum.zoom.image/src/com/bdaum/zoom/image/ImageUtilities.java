@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009-2017 Berthold Daum.
+ * Copyright (c) 2009-2019 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,6 +18,7 @@ import java.awt.Transparency;
 import java.awt.color.ColorSpace;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorConvertOp;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
@@ -87,9 +88,7 @@ import mediautil.image.jpeg.LLJTranException;
  */
 public class ImageUtilities {
 
-	private static final Random randomNumberGenerator = new Random();
 	private static Random randomNumbers;
-	private static int nP = ImageConstants.NPROCESSORS;
 	private static final int P16 = 1 << 16;
 	private static final int P15 = 1 << 15;
 
@@ -199,26 +198,30 @@ public class ImageUtilities {
 		if (rotation != 0) {
 			int h = image.width;
 			newData = new ImageData(image.height, h, image.depth, image.palette);
-			if (nP == 1)
+			if (ImageConstants.NPROCESSORS == 1)
 				rotateImage(0, h, image, scaleX, scaleY, newData, 0);
 			else {
 				final float scaleX1 = scaleX;
 				final float scaleY1 = scaleY;
-				IntStream.range(0, nP).parallel().forEach(p -> rotateImage(h * p / nP, h * (p + 1) / nP, image, scaleX1,
-						scaleY1, newData, scaleY1 < 0 ? h * (nP - p - 1) / nP : h * p / nP));
+				IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+						.forEach(p -> rotateImage(h * p / ImageConstants.NPROCESSORS,
+								h * (p + 1) / ImageConstants.NPROCESSORS, image, scaleX1, scaleY1, newData,
+								scaleY1 < 0 ? h * (ImageConstants.NPROCESSORS - p - 1) / ImageConstants.NPROCESSORS
+										: h * p / ImageConstants.NPROCESSORS));
 			}
 		} else {
 			if (scaleX > 0 && scaleY > 0)
 				return image;
 			int h = image.height;
 			newData = new ImageData(image.width, h, image.depth, image.palette);
-			if (nP == 1)
+			if (ImageConstants.NPROCESSORS == 1)
 				flipImage(0, h, image, scaleX, scaleY, newData);
 			else {
 				final float scaleX1 = scaleX;
 				final float scaleY1 = scaleY;
-				IntStream.range(0, nP).parallel()
-						.forEach(p -> flipImage(h * p / nP, h * (p + 1) / nP, image, scaleX1, scaleY1, newData));
+				IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+						.forEach(p -> flipImage(h * p / ImageConstants.NPROCESSORS,
+								h * (p + 1) / ImageConstants.NPROCESSORS, image, scaleX1, scaleY1, newData));
 			}
 		}
 		return newData;
@@ -226,97 +229,82 @@ public class ImageUtilities {
 
 	private static void flipImage(int from, int to, ImageData image, float scaleX, float scaleY, ImageData newData) {
 		byte[] sd = image.data;
-		byte[] td = newData.alphaData;
+		byte[] td = newData.data;
 		int bytesPerLine = image.bytesPerLine;
 		int tx, sx;
 		int w = image.width;
-		// int[] sourceline = new int[w];
 		if (scaleY < 0) {
 			int h1 = image.height - 1;
-			if (scaleX < 0) {
-				// int[] scanline = new int[w];
+			if (scaleX < 0)
 				for (int y = to - 1; y >= from; y--) {
 					tx = (h1 - y) * bytesPerLine;
 					sx = y * bytesPerLine + w * 3 - 3;
 					for (int x = 0; x < w; x++) {
 						td[tx++] = sd[sx++];
 						td[tx++] = sd[sx++];
-						td[tx++] = sd[sx++];
-						sx -= 6;
+						td[tx++] = sd[sx];
+						sx -= 5;
 					}
-					// image.getPixels(0, y, w, sourceline, 0);
-					// for (int x = w - 1, xt = 0; x >= xt; x--, xt++) {
-					// scanline[xt] = sourceline[x];
-					// scanline[x] = sourceline[xt];
-					// }
-					// newData.setPixels(0, h1 - y, w, scanline, 0);
 				}
-			} else
-				for (int y = to - 1; y >= from; y--) {
-					sx = y * bytesPerLine;
-					tx = (h1 - y) * bytesPerLine;
-					for (int x = 0; x < w; x++) {
-						td[tx++] = sd[sx++];
-						td[tx++] = sd[sx++];
-						td[tx++] = sd[sx++];
-					}
-					// image.getPixels(0, y, w, sourceline, 0);
-					// newData.setPixels(0, h1 - y, w, sourceline, 0);
-				}
-		} else {
-			// int[] scanline = new int[w];
+			else
+				for (int y = to - 1; y >= from; y--)
+					System.arraycopy(sd, y * bytesPerLine, td, (h1 - y) * bytesPerLine, bytesPerLine);
+		} else
 			for (int y = from; y < to; y++) {
 				tx = y * bytesPerLine;
 				sx = tx + w * 3 - 3;
-				// image.getPixels(0, y, w, sourceline, 0);
 				for (int x = 0; x < w; x++) {
 					td[tx++] = sd[sx++];
 					td[tx++] = sd[sx++];
-					td[tx++] = sd[sx++];
-					sx -= 6;
+					td[tx++] = sd[sx];
+					sx -= 5;
 				}
-				// for (int x = w - 1, xt = 0; x >= xt; x--, xt++) {
-				// scanline[xt] = sourceline[x];
-				// scanline[x] = sourceline[xt];
-				// }
-				// newData.setPixels(0, y, w, scanline, 0);
 			}
-		}
 	}
 
-	private static void rotateImage(int from, int to, ImageData image, float scaleX, float scaleY, ImageData newData,
+	private static void rotateImage(int from, int to, ImageData original, float scaleX, float scaleY, ImageData out,
 			int offset) {
-		int w = image.height;
-		int[] scanline = new int[w];
+		int w = original.height;
+		byte[] originaldata = original.data;
+		byte[] outdata = out.data;
+		int originalBytesPerLine = original.bytesPerLine;
+		int outBytesPerLine = out.bytesPerLine;
+		int tx, sx, x, y;
 		if (scaleY < 0) {
 			int yt = offset;
 			if (scaleX < 0)
-				for (int y = to - 1; y >= from; y--) {
-					int xt = 0;
-					for (int x = w - 1; x >= 0; x--)
-						scanline[xt++] = image.getPixel(y, x);
-					newData.setPixels(0, yt++, w, scanline, 0);
-				}
+				for (y = to - 1; y >= from; y--)
+					for (x = w - 1, tx = outBytesPerLine * yt++; x >= 0; x--) {
+						sx = originalBytesPerLine * x + 3 * y;
+						outdata[tx++] = originaldata[sx++];
+						outdata[tx++] = originaldata[sx++];
+						outdata[tx++] = originaldata[sx];
+					}
 			else
-				for (int y = to - 1; y >= from; y--) {
-					for (int x = 0; x < w; x++)
-						scanline[x] = image.getPixel(y, x);
-					newData.setPixels(0, yt++, w, scanline, 0);
-				}
+				for (y = to - 1; y >= from; y--)
+					for (x = 0, tx = outBytesPerLine * yt++; x < w; x++) {
+						sx = originalBytesPerLine * x + 3 * y;
+						outdata[tx++] = originaldata[sx++];
+						outdata[tx++] = originaldata[sx++];
+						outdata[tx++] = originaldata[sx];
+					}
 		} else {
 			if (scaleX < 0)
-				for (int y = from; y < to; y++) {
-					int xt = 0;
-					for (int x = w - 1; x >= 0; x--)
-						scanline[xt++] = image.getPixel(y, x);
-					newData.setPixels(0, y, w, scanline, 0);
-				}
+				for (y = from; y < to; y++)
+					for (x = w - 1, tx = outBytesPerLine * y; x >= 0; x--) {
+						sx = originalBytesPerLine * x + 3 * y;
+						outdata[tx++] = originaldata[sx++];
+						outdata[tx++] = originaldata[sx++];
+						outdata[tx++] = originaldata[sx];
+					}
 			else
-				for (int y = from; y < to; y++) {
-					for (int x = 0; x < w; x++)
-						scanline[x] = image.getPixel(y, x);
-					newData.setPixels(0, y, w, scanline, 0);
-				}
+				for (y = from; y < to; y++)
+					for (x = 0, tx = outBytesPerLine * y; x < w; x++) {
+						sx = originalBytesPerLine * x + 3 * y;
+						outdata[tx++] = originaldata[sx++];
+						outdata[tx++] = originaldata[sx++];
+						outdata[tx++] = originaldata[sx];
+					}
 		}
 	}
 
@@ -356,24 +344,26 @@ public class ImageUtilities {
 		if (rotation != 0) {
 			int h = image.getWidth();
 			out = colorModel.createCompatibleWritableRaster(image.getHeight(), h);
-			if (nP == 1)
+			if (ImageConstants.NPROCESSORS == 1)
 				rotateImage(0, h, scaleX, scaleY, src, out);
 			else {
 				final float scaleX1 = scaleX;
 				final float scaleY1 = scaleY;
-				IntStream.range(0, nP).parallel()
-						.forEach(p -> rotateImage(h * p / nP, h * (p + 1) / nP, scaleX1, scaleY1, src, out));
+				IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+						.forEach(p -> rotateImage(h * p / ImageConstants.NPROCESSORS,
+								h * (p + 1) / ImageConstants.NPROCESSORS, scaleX1, scaleY1, src, out));
 			}
 		} else {
 			int h = image.getHeight();
 			out = colorModel.createCompatibleWritableRaster(image.getWidth(), h);
-			if (nP == 1)
+			if (ImageConstants.NPROCESSORS == 1)
 				flipImage(0, h, scaleX, scaleY, src, out);
 			else {
 				final float scaleX1 = scaleX;
 				final float scaleY1 = scaleY;
-				IntStream.range(0, nP).parallel()
-						.forEach(p -> flipImage(h * p / nP, h * (p + 1) / nP, scaleX1, scaleY1, src, out));
+				IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+						.forEach(p -> flipImage(h * p / ImageConstants.NPROCESSORS,
+								h * (p + 1) / ImageConstants.NPROCESSORS, scaleX1, scaleY1, src, out));
 			}
 		}
 		return new BufferedImage(colorModel, out, false, null);
@@ -386,13 +376,14 @@ public class ImageUtilities {
 		int len = w * bands;
 		int[] inLine = new int[len];
 		int[] outLine = new int[len];
+		int x, y, xt, k;
 		if (scaleY < 0) {
 			int h1 = out.getHeight() - 1;
 			if (scaleX < 0)
-				for (int y = to - 1; y >= from; y--) {
+				for (y = to - 1; y >= from; y--) {
 					src.getPixels(0, y, w, 1, inLine);
-					for (int x = len - bands, xt = 0; x >= xt; x -= bands, xt += bands) {
-						for (int k = 0; k < bands; k++) {
+					for (x = len - bands, xt = 0; x >= xt; x -= bands, xt += bands) {
+						for (k = 0; k < bands; k++) {
 							outLine[xt + k] = inLine[x + k];
 							outLine[x + k] = inLine[xt + k];
 						}
@@ -400,15 +391,15 @@ public class ImageUtilities {
 					out.setPixels(0, h1 - y, w, 1, outLine);
 				}
 			else
-				for (int y = to - 1; y >= from; y--) {
+				for (y = to - 1; y >= from; y--) {
 					src.getPixels(0, y, w, 1, inLine);
 					out.setPixels(0, h1 - y, w, 1, inLine);
 				}
 		} else
-			for (int y = to - 1; y >= from; y--) {
+			for (y = to - 1; y >= from; y--) {
 				src.getPixels(0, y, w, 1, inLine);
-				for (int x = len - bands, xt = 0; x >= xt; x -= bands, xt += bands) {
-					for (int k = 0; k < bands; k++) {
+				for (x = len - bands, xt = 0; x >= xt; x -= bands, xt += bands) {
+					for (k = 0; k < bands; k++) {
 						outLine[xt + k] = inLine[x + k];
 						outLine[x + k] = inLine[xt + k];
 					}
@@ -427,12 +418,13 @@ public class ImageUtilities {
 		int[] inLine = new int[m * bands];
 		int[] outLine = new int[m * bands];
 		int len = w * bands;
+		int x, y, k, xt;
 		if (scaleY < 0) {
 			if (scaleX < 0)
-				for (int y = to - 1; y >= from; y--) {
+				for (y = to - 1; y >= from; y--) {
 					src.getPixels(y, 0, 1, w, inLine);
-					for (int x = len - bands, xt = 0; x >= xt; x -= bands, xt += bands) {
-						for (int k = 0; k < bands; k++) {
+					for (x = len - bands, xt = 0; x >= xt; x -= bands, xt += bands) {
+						for (k = 0; k < bands; k++) {
 							outLine[xt + k] = inLine[x + k];
 							outLine[x + k] = inLine[xt + k];
 						}
@@ -440,24 +432,23 @@ public class ImageUtilities {
 					out.setPixels(0, h1 - y, w, 1, outLine);
 				}
 			else
-				for (int y = to - 1; y >= from; y--) {
+				for (y = to - 1; y >= from; y--) {
 					src.getPixels(y, 0, 1, w, inLine);
 					out.setPixels(0, h1 - y, w, 1, inLine);
 				}
 		} else {
 			if (scaleX < 0)
-				for (int y = to - 1; y >= from; y--) {
+				for (y = to - 1; y >= from; y--) {
 					src.getPixels(y, 0, 1, w, inLine);
-					for (int x = len - bands, xt = 0; x >= xt; x -= bands, xt += bands) {
-						for (int k = 0; k < bands; k++) {
+					for (x = len - bands, xt = 0; x >= xt; x -= bands, xt += bands)
+						for (k = 0; k < bands; k++) {
 							outLine[xt + k] = inLine[x + k];
 							outLine[x + k] = inLine[xt + k];
 						}
-					}
 					out.setPixels(0, y, w, 1, outLine);
 				}
 			else
-				for (int y = to - 1; y >= from; y--) {
+				for (y = to - 1; y >= from; y--) {
 					src.getPixels(y, 0, 1, w, inLine);
 					out.setPixels(0, y, w, 1, inLine);
 				}
@@ -487,7 +478,6 @@ public class ImageUtilities {
 		} catch (IOException e) {
 			return null;
 		}
-
 	}
 
 	private static final int LLJTRAN_ROT_90 = 5;
@@ -703,6 +693,8 @@ public class ImageUtilities {
 	public static ImageData downSample(final ImageData original, int width, int height, int raster) {
 		if (original == null)
 			return null;
+		if (randomNumbers == null)
+			randomNumbers = new Random();
 		int origWidth = original.width;
 		int origHeight = original.height;
 		double scale = computeScale(origWidth, origHeight, width, height);
@@ -746,31 +738,27 @@ public class ImageUtilities {
 				incy = wy / 2;
 		}
 
-		if (nP == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			downSample(0, newHeight, original, newWidth, newHeight, palette, newData, wx, wy, incx, incy);
 		else {
 			final int incx1 = incx;
 			final int incy1 = incy;
 			final int newWidth1 = newWidth;
 			final int newHeight1 = newHeight;
-			IntStream.range(0, nP).parallel().forEach(p -> downSample(newHeight1 * p / nP, newHeight1 * (p + 1) / nP,
-					original, newWidth1, newHeight1, palette, newData, wx, wy, incx1, incy1));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> downSample(newHeight1 * p / ImageConstants.NPROCESSORS,
+							newHeight1 * (p + 1) / ImageConstants.NPROCESSORS, original, newWidth1, newHeight1, palette,
+							newData, wx, wy, incx1, incy1));
 		}
 		return newData;
 	}
 
 	private static void downSample(int from, int to, ImageData original, int newWidth, int newHeight,
 			PaletteData palette, ImageData newData, int wx, int wy, int incx, int incy) {
-		int r;
-		int g;
-		int b;
-		int ly;
-		int uy;
-		int n;
-		int ny;
-		int ux1;
-		int uy1;
-		boolean isDirect = palette.isDirect;
+		int r, g, b;
+		int ly, uy;
+		int n, ny;
+		int ux1, uy1;
 		int origWidth = original.width;
 		int origWidth_1 = origWidth - 1;
 		int origHeight = original.height;
@@ -778,18 +766,13 @@ public class ImageUtilities {
 		int wx2 = wx / 2;
 		int wy2 = wy / 2;
 		int sampleSize = incx * incy;
-		PaletteData newPalette = newData.palette;
-		int redMask = newPalette.redMask;
-		int greenMask = newPalette.greenMask;
-		int blueMask = newPalette.blueMask;
-		int redShift = newPalette.redShift;
-		int greenShift = newPalette.greenShift;
-		int blueShift = newPalette.blueShift;
 		int tx = from * newWidth * 3;
 		int[] lxi = new int[newWidth];
 		int[] uxi = new int[newWidth];
 		int[] nxi = new int[newWidth];
-		for (int x = 0; x < newWidth; x++) {
+		int x, y, ox, oy, rr, ox2, oy2, pixel;
+		RGB rgb;
+		for (x = 0; x < newWidth; x++) {
 			lxi[x] = (x * origWidth / newWidth) - wx2;
 			uxi[x] = lxi[x] + wx;
 			if (lxi[x] < 0) {
@@ -804,64 +787,100 @@ public class ImageUtilities {
 			nxi[x] = ((uxi[x] - lxi[x]) / incx);
 		}
 		int bytesPerLine = newData.bytesPerLine;
-		for (int y = from; y < to; y++) {
-			ly = (y * origHeight / newHeight) - wy2;
-			uy = ly + wy;
-			if (ly < 0) {
-				ly = 0;
-				if (uy < 1)
-					uy = 1;
-			} else if (uy > origHeight) {
-				uy = origHeight;
-				if (ly >= origHeight)
-					ly = origHeight_1;
-			}
-			ny = ((uy - ly) / incy);
-			uy1 = uy - incy;
-			tx = bytesPerLine * y;
-			for (int x = 0; x < newWidth; x++) {
-				n = nxi[x] * ny;
-				r = g = b = n / 2;
-				if (sampleSize == 1)
-					for (int oy = ly; oy < uy; oy++)
-						for (int ox = lxi[x]; ox < uxi[x]; ox++) {
-							int pixel = original.getPixel(ox, oy);
-							if (!isDirect) {
-								RGB rgb = palette.getRGB(pixel);
-								r += rgb.red;
-								g += rgb.green;
-								b += rgb.blue;
-							} else if (pixel != 0) {
-								r += ((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel & redMask) << redShift);
-								g += ((greenShift < 0) ? (pixel & greenMask) >>> -greenShift
-										: (pixel & greenMask) << greenShift);
-								b += ((blueShift < 0) ? (pixel & blueMask) >>> -blueShift
-										: (pixel & blueMask) << blueShift);
-							}
-						}
-				else {
-					ux1 = uxi[x] - incx;
-					for (int oy = ly; oy <= uy1; oy += incy)
-						for (int ox = lxi[x]; ox <= ux1; ox += incx) {
-							int rr = randomNumberGenerator.nextInt(sampleSize);
-							int pixel = original.getPixel(ox + rr % incx, oy + rr / incx);
-							if (!isDirect) {
-								RGB rgb = palette.getRGB(pixel);
-								r += rgb.red;
-								g += rgb.green;
-								b += rgb.blue;
-							} else if (pixel != 0) {
-								r += ((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel & redMask) << redShift);
-								g += ((greenShift < 0) ? (pixel & greenMask) >>> -greenShift
-										: (pixel & greenMask) << greenShift);
-								b += ((blueShift < 0) ? (pixel & blueMask) >>> -blueShift
-										: (pixel & blueMask) << blueShift);
-							}
-						}
+		if (palette.isDirect) {
+			byte[] originaldata = original.data;
+			int origBytesPerLine = original.bytesPerLine;
+			int sx;
+			for (y = from; y < to; y++) {
+				ly = (y * origHeight / newHeight) - wy2;
+				uy = ly + wy;
+				if (ly < 0) {
+					ly = 0;
+					if (uy < 1)
+						uy = 1;
+				} else if (uy > origHeight) {
+					uy = origHeight;
+					if (ly >= origHeight)
+						ly = origHeight_1;
 				}
-				newData.data[tx++] = (byte) (b /= n);
-				newData.data[tx++] = (byte) (g /= n);
-				newData.data[tx++] = (byte) (r /= n);
+				ny = ((uy - ly) / incy);
+				uy1 = uy - incy;
+
+				tx = bytesPerLine * y;
+				for (x = 0; x < newWidth; x++) {
+					n = nxi[x] * ny;
+					r = g = b = n / 2;
+					if (sampleSize == 1)
+						for (oy = ly; oy < uy; oy++)
+							for (ox = lxi[x]; ox < uxi[x]; ox++) {
+								sx = origBytesPerLine * oy + 3 * ox;
+								b += (originaldata[sx++] & 0xff);
+								g += (originaldata[sx++] & 0xff);
+								r += (originaldata[sx] & 0xff);
+							}
+					else {
+						ux1 = uxi[x] - incx;
+						for (oy = ly; oy <= uy1; oy += incy)
+							for (ox = lxi[x]; ox <= ux1; ox += incx) {
+								rr = randomNumbers.nextInt(sampleSize);
+								ox2 = ox + rr % incx;
+								oy2 = oy + rr / incx;
+								sx = origBytesPerLine * oy2 + 3 * ox2;
+								b += (originaldata[sx++] & 0xff);
+								g += (originaldata[sx++] & 0xff);
+								r += (originaldata[sx] & 0xff);
+							}
+					}
+					newData.data[tx++] = (byte) (b /= n);
+					newData.data[tx++] = (byte) (g /= n);
+					newData.data[tx++] = (byte) (r /= n);
+				}
+			}
+		} else {
+			for (y = from; y < to; y++) {
+				ly = (y * origHeight / newHeight) - wy2;
+				uy = ly + wy;
+				if (ly < 0) {
+					ly = 0;
+					if (uy < 1)
+						uy = 1;
+				} else if (uy > origHeight) {
+					uy = origHeight;
+					if (ly >= origHeight)
+						ly = origHeight_1;
+				}
+				ny = ((uy - ly) / incy);
+				uy1 = uy - incy;
+				tx = bytesPerLine * y;
+				for (x = 0; x < newWidth; x++) {
+					n = nxi[x] * ny;
+					r = g = b = n / 2;
+					if (sampleSize == 1)
+						for (oy = ly; oy < uy; oy++)
+							for (ox = lxi[x]; ox < uxi[x]; ox++) {
+								pixel = original.getPixel(ox, oy);
+								rgb = palette.getRGB(pixel);
+								r += rgb.red;
+								g += rgb.green;
+								b += rgb.blue;
+							}
+					else {
+						ux1 = uxi[x] - incx;
+						for (oy = ly; oy <= uy1; oy += incy)
+							for (ox = lxi[x]; ox <= ux1; ox += incx) {
+								rr = randomNumbers.nextInt(sampleSize);
+								pixel = original.getPixel(ox + rr % incx, oy + rr / incx);
+								rgb = palette.getRGB(pixel);
+								r += rgb.red;
+								g += rgb.green;
+								b += rgb.blue;
+
+							}
+					}
+					newData.data[tx++] = (byte) (b /= n);
+					newData.data[tx++] = (byte) (g /= n);
+					newData.data[tx++] = (byte) (r /= n);
+				}
 			}
 		}
 	}
@@ -975,11 +994,10 @@ public class ImageUtilities {
 				: new BufferedImage(colorModel, colorModel.createCompatibleWritableRaster(w, h), false, null);
 		// Render the src image into our new optimal source.
 		Graphics g = result.getGraphics();
-		g.drawImage(bufferedImage, 0, 0, null); //TODO dead slow
+		g.drawImage(bufferedImage, 0, 0, null); // TODO this is dead slow
 		g.dispose();
 		bufferedImage.flush();
 		return result;
-
 	}
 
 	public static ImageData convertToDirectColor(final ImageData data) {
@@ -991,16 +1009,18 @@ public class ImageUtilities {
 		int tPixel = data.transparentPixel;
 		final RGB[] rgBs = palette.getRGBs();
 		int colors[] = new int[rgBs.length];
+		RGB rgb;
 		for (int i = 0; i < rgBs.length; i++) {
-			RGB rgb = rgBs[i];
+			rgb = rgBs[i];
 			colors[i] = rgb.red | rgb.green << 8 | rgb.blue << 16;
 		}
 		final ImageData copy = new ImageData(w, h, 24, new PaletteData(0xFF, 0xFF00, 0xFF0000));
-		if (nP == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			convertToDirectColor(0, h, data, w, colors, copy, tPixel);
 		else
-			IntStream.range(0, nP).parallel()
-					.forEach(p -> convertToDirectColor(h * p / nP, h * (p + 1) / nP, data, w, colors, copy, tPixel));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> convertToDirectColor(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, data, w, colors, copy, tPixel));
 		return copy;
 	}
 
@@ -1008,12 +1028,13 @@ public class ImageUtilities {
 			int tPixel) {
 		int rgblen = colors.length;
 		int[] scanLine = new int[w];
+		int x, y, index;
 		if (tPixel >= 0) {
 			byte[] alphas = new byte[w];
-			for (int y = from; y < to; y++) {
+			for (y = from; y < to; y++) {
 				data.getPixels(0, y, w, scanLine, 0);
-				for (int x = 0; x < scanLine.length; x++) {
-					int index = scanLine[x];
+				for (x = 0; x < scanLine.length; x++) {
+					index = scanLine[x];
 					if (index >= 0 && index < rgblen)
 						scanLine[x] = colors[index];
 					alphas[x] = tPixel == index ? 0 : (byte) 255;
@@ -1022,10 +1043,10 @@ public class ImageUtilities {
 				copy.setAlphas(0, y, w, alphas, 0);
 			}
 		} else
-			for (int y = from; y < to; y++) {
+			for (y = from; y < to; y++) {
 				data.getPixels(0, y, w, scanLine, 0);
-				for (int x = 0; x < scanLine.length; x++) {
-					int index = scanLine[x];
+				for (x = 0; x < scanLine.length; x++) {
+					index = scanLine[x];
 					if (index >= 0 && index < rgblen)
 						scanLine[x] = colors[index];
 				}
@@ -1077,11 +1098,12 @@ public class ImageUtilities {
 			final PaletteData palette = new PaletteData(0xff, 0xff00, 0xff0000);
 			final ImageData data = new ImageData(w, h, 24, palette);
 			final WritableRaster raster = bufferedImage.getRaster();
-			if (nP == 1)
+			if (ImageConstants.NPROCESSORS == 1)
 				fromDirectOrComponentModel(0, h, data, raster, model);
 			else
-				IntStream.range(0, nP).parallel()
-						.forEach(p -> fromDirectOrComponentModel(h * p / nP, h * (p + 1) / nP, data, raster, model));
+				IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+						.forEach(p -> fromDirectOrComponentModel(h * p / ImageConstants.NPROCESSORS,
+								h * (p + 1) / ImageConstants.NPROCESSORS, data, raster, model));
 			return data;
 		}
 		if (model instanceof IndexColorModel) {
@@ -1101,29 +1123,33 @@ public class ImageUtilities {
 			final ImageData data = new ImageData(w, h, 24, palette);
 			final WritableRaster raster = bufferedImage.getRaster();
 			int transparentPixel = colorModel.getTransparentPixel();
-			if (nP == 1)
+			if (ImageConstants.NPROCESSORS == 1)
 				fromIndexedModel(0, h, data, raster, transparentPixel, reds, greens, blues);
 			else
-				IntStream.range(0, nP).parallel().forEach(p -> fromIndexedModel(h * p / nP, h * (p + 1) / nP, data,
-						raster, transparentPixel, reds, greens, blues));
+				IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+						.forEach(p -> fromIndexedModel(h * p / ImageConstants.NPROCESSORS,
+								h * (p + 1) / ImageConstants.NPROCESSORS, data, raster, transparentPixel, reds, greens,
+								blues));
 			return data;
 		}
 		if (model instanceof ComponentColorModel) {
 			PaletteData palette = new PaletteData(0xff, 0xff00, 0xff0000);
 			final ImageData data = new ImageData(w, h, 24, palette);
 			if (model.getColorSpace().getType() == ColorSpace.TYPE_CMYK) {
-				if (nP == 1)
+				if (ImageConstants.NPROCESSORS == 1)
 					fromCMYKComponentModel(0, h, data, bufferedImage);
 				else
-					IntStream.range(0, nP).parallel()
-							.forEach(p -> fromCMYKComponentModel(h * p / nP, h * (p + 1) / nP, data, bufferedImage));
+					IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+							.forEach(p -> fromCMYKComponentModel(h * p / ImageConstants.NPROCESSORS,
+									h * (p + 1) / ImageConstants.NPROCESSORS, data, bufferedImage));
 			} else {
 				final WritableRaster raster = bufferedImage.getRaster();
-				if (nP == 1)
+				if (ImageConstants.NPROCESSORS == 1)
 					fromDirectOrComponentModel(0, h, data, raster, model);
 				else
-					IntStream.range(0, nP).parallel().forEach(
-							p -> fromDirectOrComponentModel(h * p / nP, h * (p + 1) / nP, data, raster, model));
+					IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+							.forEach(p -> fromDirectOrComponentModel(h * p / ImageConstants.NPROCESSORS,
+									h * (p + 1) / ImageConstants.NPROCESSORS, data, raster, model));
 			}
 			return data;
 		}
@@ -1132,15 +1158,15 @@ public class ImageUtilities {
 
 	private static void fromCMYKComponentModel(int from, int to, ImageData data, BufferedImage bufferedImage) {
 		int w = data.width;
-		int tx;
+		int tx, y, pix;
 		int[] scanLine = new int[w];
 		byte[] datadata = data.data;
 		int bytesPerLine = data.bytesPerLine;
-		for (int y = from; y < to; y++) {
+		for (y = from; y < to; y++) {
 			tx = bytesPerLine * y;
 			bufferedImage.getRGB(0, y, w, 1, scanLine, 0, w);
 			for (int i : scanLine) {
-				int pix = scanLine[i];
+				pix = scanLine[i];
 				datadata[tx++] = (byte) pix;
 				datadata[tx++] = (byte) (pix >> 8);
 				datadata[tx++] = (byte) (pix >> 16);
@@ -1155,7 +1181,7 @@ public class ImageUtilities {
 		int nColors = bands - (hasAlpha ? 1 : 0);
 		int w = data.width;
 		int bytesPerLine = data.bytesPerLine;
-		int tx;
+		int tx, x, xi, y;
 		int[] nbits = model.getComponentSize();
 		byte[] datadata = data.data;
 		switch (nColors) {
@@ -1166,9 +1192,8 @@ public class ImageUtilities {
 				if (hasAlpha) {
 					int alphashift = nbits[1] - 8;
 					byte[] alphas = new byte[w];
-					for (int y = from; y < to; y++) {
-						tx = bytesPerLine * y;
-						for (int x = 0; x < w; x++) {
+					for (y = from; y < to; y++) {
+						for (x = 0, tx = bytesPerLine * y; x < w; x++) {
 							datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) ((raster.getSample(x, y,
 									0) >> shift));
 							alphas[x] = (byte) (raster.getSample(x, y, 1) >> alphashift);
@@ -1176,22 +1201,19 @@ public class ImageUtilities {
 						data.setAlphas(0, y, w, alphas, 0);
 					}
 				} else
-					for (int y = from; y < to; y++) {
-						tx = bytesPerLine * y;
-						for (int x = 0; x < w; x++)
+					for (y = from; y < to; y++)
+						for (x = 0, tx = bytesPerLine * y; x < w; x++)
 							datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) ((raster.getSample(x, y,
 									0) >> shift));
-					}
 			} else {
 				int shift = 8 - nbits[0];
 				int[] pixelArray = new int[w * bands];
 				if (hasAlpha) {
 					byte[] alphas = new byte[w];
 					int alphashift = 8 - nbits[1];
-					for (int y = from; y < to; y++) {
-						tx = bytesPerLine * y;
+					for (y = from; y < to; y++) {
 						raster.getPixels(0, y, w, 1, pixelArray);
-						for (int x = 0, xi = 0; x < w; x++) {
+						for (x = 0, xi = 0, tx = bytesPerLine * y; x < w; x++) {
 							datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) (shift < 0
 									? (pixelArray[xi++] >> (-shift))
 									: (pixelArray[xi++] << shift));
@@ -1201,10 +1223,9 @@ public class ImageUtilities {
 						data.setAlphas(0, y, w, alphas, 0);
 					}
 				} else
-					for (int y = from; y < to; y++) {
-						tx = bytesPerLine * y;
+					for (y = from; y < to; y++) {
 						raster.getPixels(0, y, w, 1, pixelArray);
-						for (int x = 0, xi = 0; x < w; x++)
+						for (x = 0, xi = 0, tx = bytesPerLine * y; x < w; x++)
 							datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) (shift < 0
 									? (pixelArray[xi++] >> (-shift))
 									: (pixelArray[xi++] << shift));
@@ -1218,10 +1239,9 @@ public class ImageUtilities {
 			if (hasAlpha) {
 				int alphashift = 8 - nbits[2];
 				byte[] alphas = new byte[w];
-				for (int y = from; y < to; y++) {
-					tx = bytesPerLine * y;
+				for (y = from; y < to; y++) {
 					raster.getPixels(0, y, w, 1, pixelArray);
-					for (int x = 0, xi = 0; x < w; x++) {
+					for (x = 0, xi = 0, tx = bytesPerLine * y; x < w; x++) {
 						int v = pixelArray[xi++] + pixelArray[xi++];
 						datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) (shift < 0 ? (v >> (-shift))
 								: (v << shift));
@@ -1231,10 +1251,9 @@ public class ImageUtilities {
 					data.setAlphas(0, y, w, alphas, 0);
 				}
 			} else
-				for (int y = from; y < to; y++) {
-					tx = bytesPerLine * y;
+				for (y = from; y < to; y++) {
 					raster.getPixels(0, y, w, 1, pixelArray);
-					for (int x = 0, xi = 0; x < w; x++) {
+					for (x = 0, xi = 0, tx = bytesPerLine * y; x < w; x++) {
 						int v = pixelArray[xi++] + pixelArray[xi++];
 						datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) (shift < 0 ? (v >> (-shift))
 								: (v << shift));
@@ -1247,9 +1266,8 @@ public class ImageUtilities {
 			if (dataBuffer instanceof DataBufferFloat) {
 				if (hasAlpha) {
 					byte[] alphas = new byte[w];
-					for (int y = from; y < to; y++) {
-						tx = bytesPerLine * y;
-						for (int x = 0; x < w; x++) {
+					for (y = from; y < to; y++) {
+						for (x = 0, tx = bytesPerLine * y; x < w; x++) {
 							datadata[tx++] = (byte) (255f * raster.getSampleFloat(x, y, 2) + 0.5f);
 							datadata[tx++] = (byte) (255f * raster.getSampleFloat(x, y, 1) + 0.5f);
 							datadata[tx++] = (byte) (255f * raster.getSampleFloat(x, y, 0) + 0.5f);
@@ -1258,9 +1276,8 @@ public class ImageUtilities {
 						data.setAlphas(0, y, w, alphas, 0);
 					}
 				} else
-					for (int y = from; y < to; y++) {
-						tx = bytesPerLine * y;
-						for (int x = 0; x < w; x++) {
+					for (y = from; y < to; y++) {
+						for (x = 0, tx = bytesPerLine * y; x < w; x++) {
 							datadata[tx++] = (byte) (int) (255f * raster.getSampleFloat(x, y, 2) + 0.5f);
 							datadata[tx++] = (byte) (int) (255f * raster.getSampleFloat(x, y, 1) + 0.5f);
 							datadata[tx++] = (byte) (int) (255f * raster.getSampleFloat(x, y, 0) + 0.5f);
@@ -1269,9 +1286,8 @@ public class ImageUtilities {
 			} else if (dataBuffer instanceof DataBufferDouble) {
 				if (hasAlpha) {
 					byte[] alphas = new byte[w];
-					for (int y = from; y < to; y++) {
-						tx = bytesPerLine * y;
-						for (int x = 0; x < w; x++) {
+					for (y = from; y < to; y++) {
+						for (x = 0, tx = bytesPerLine * y; x < w; x++) {
 							datadata[tx++] = (byte) (255d * raster.getSampleDouble(x, y, 2) + 0.5f);
 							datadata[tx++] = (byte) (255d * raster.getSampleDouble(x, y, 1) + 0.5f);
 							datadata[tx++] = (byte) (255d * raster.getSampleDouble(x, y, 0) + 0.5f);
@@ -1280,24 +1296,21 @@ public class ImageUtilities {
 						data.setAlphas(0, y, w, alphas, 0);
 					}
 				} else
-					for (int y = from; y < to; y++) {
-						tx = bytesPerLine * y;
-						for (int x = 0; x < w; x++) {
+					for (y = from; y < to; y++)
+						for (x = 0, tx = bytesPerLine * y; x < w; x++) {
 							datadata[tx++] = (byte) (255d * raster.getSampleDouble(x, y, 0) + 0.5f);
 							datadata[tx++] = (byte) (255d * raster.getSampleDouble(x, y, 1) + 0.5f);
 							datadata[tx++] = (byte) (255d * raster.getSampleDouble(x, y, 2) + 0.5f);
 						}
-					}
 			} else {
 				int redshift = nbits[0] - 8;
 				int greenshift = nbits[1] - 8;
 				int blueshift = nbits[2] - 8;
 				int[] pixelArray = new int[bands * w];
 				if (redshift == 0 && greenshift == 0 && blueshift == 0 && !hasAlpha) {
-					for (int y = from; y < to; y++) {
-						tx = bytesPerLine * y;
+					for (y = from; y < to; y++) {
 						raster.getPixels(0, y, w, 1, pixelArray);
-						for (int x = 0, xi = 0; x < w; x++) {
+						for (x = 0, xi = 0, tx = bytesPerLine * y; x < w; x++) {
 							byte red = (byte) pixelArray[xi++];
 							byte green = (byte) pixelArray[xi++];
 							datadata[tx++] = (byte) pixelArray[xi++];
@@ -1308,13 +1321,12 @@ public class ImageUtilities {
 				} else if (hasAlpha) {
 					byte[] alphas = new byte[w];
 					int alphashift = nbits[3] - 8;
-					for (int y = from; y < to; y++) {
-						tx = bytesPerLine * y;
+					byte red, green;
+					for (y = from; y < to; y++) {
 						raster.getPixels(0, y, w, 1, pixelArray);
-						for (int x = 0, xi = 0; x < w; x++) {
-							byte red = (byte) (redshift > 0 ? pixelArray[xi++] >> redshift
-									: pixelArray[xi++] << -redshift);
-							byte green = (byte) (greenshift > 0 ? pixelArray[xi++] >> greenshift
+						for (x = 0, xi = 0, tx = bytesPerLine * y; x < w; x++) {
+							red = (byte) (redshift > 0 ? pixelArray[xi++] >> redshift : pixelArray[xi++] << -redshift);
+							green = (byte) (greenshift > 0 ? pixelArray[xi++] >> greenshift
 									: pixelArray[xi++] << -greenshift);
 							datadata[tx++] = (byte) (blueshift > 0 ? pixelArray[xi++] >> blueshift
 									: pixelArray[xi++] << -blueshift);
@@ -1325,14 +1337,13 @@ public class ImageUtilities {
 						}
 						data.setAlphas(0, y, w, alphas, 0);
 					}
-				} else
-					for (int y = from; y < to; y++) {
-						tx = bytesPerLine * y;
+				} else {
+					byte red, green;
+					for (y = from; y < to; y++) {
 						raster.getPixels(0, y, w, 1, pixelArray);
-						for (int x = 0, xi = 0; x < w; x++) {
-							byte red = (byte) (redshift > 0 ? pixelArray[xi++] >> redshift
-									: pixelArray[xi++] << -redshift);
-							byte green = (byte) (greenshift > 0 ? pixelArray[xi++] >> greenshift
+						for (x = 0, xi = 0, tx = bytesPerLine * y; x < w; x++) {
+							red = (byte) (redshift > 0 ? pixelArray[xi++] >> redshift : pixelArray[xi++] << -redshift);
+							green = (byte) (greenshift > 0 ? pixelArray[xi++] >> greenshift
 									: pixelArray[xi++] << -greenshift);
 							datadata[tx++] = (byte) (blueshift > 0 ? pixelArray[xi++] >> blueshift
 									: pixelArray[xi++] << -blueshift);
@@ -1340,6 +1351,7 @@ public class ImageUtilities {
 							datadata[tx++] = red;
 						}
 					}
+				}
 			}
 			break;
 		}
@@ -1350,13 +1362,12 @@ public class ImageUtilities {
 			byte[] reds, byte[] greens, byte[] blues) {
 		int w = data.width;
 		int bytesPerLine = data.bytesPerLine;
-		int tx;
+		int tx, x, y;
 		int[] pixel = new int[1];
 		if (transparentPixel >= 0) {
 			byte[] alphas = new byte[w];
-			for (int y = from; y < to; y++) {
-				tx = bytesPerLine * y;
-				for (int x = 0; x < w; x++) {
+			for (y = from; y < to; y++) {
+				for (x = 0, tx = bytesPerLine * y; x < w; x++) {
 					raster.getPixel(x, y, pixel);
 					int index = pixel[0];
 					alphas[x] = (byte) (index == transparentPixel ? 0 : 255);
@@ -1367,9 +1378,8 @@ public class ImageUtilities {
 				data.setAlphas(0, y, w, alphas, 0);
 			}
 		} else
-			for (int y = from; y < to; y++) {
-				tx = bytesPerLine * y;
-				for (int x = 0; x < w; x++) {
+			for (y = from; y < to; y++) {
+				for (x = 0, tx = bytesPerLine * y; x < w; x++) {
 					raster.getPixel(x, y, pixel);
 					int index = pixel[0];
 					data.data[tx++] = blues[index];
@@ -1397,11 +1407,12 @@ public class ImageUtilities {
 			BufferedImage bufferedImage = new BufferedImage(colorModel, colorModel.createCompatibleWritableRaster(w, h),
 					false, null);
 			final WritableRaster raster = bufferedImage.getRaster();
-			if (nP == 1)
+			if (ImageConstants.NPROCESSORS == 1)
 				directToBuffered(0, h, data, raster);
 			else
-				IntStream.range(0, nP).parallel()
-						.forEach(p -> directToBuffered(h * p / nP, h * (p + 1) / nP, data, raster));
+				IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+						.forEach(p -> directToBuffered(h * p / ImageConstants.NPROCESSORS,
+								h * (p + 1) / ImageConstants.NPROCESSORS, data, raster));
 			return bufferedImage;
 		}
 		RGB[] rgbs = palette.getRGBs();
@@ -1416,11 +1427,12 @@ public class ImageUtilities {
 		BufferedImage bufferedImage = new BufferedImage(colorModel, colorModel.createCompatibleWritableRaster(w, h),
 				false, null);
 		final WritableRaster raster = bufferedImage.getRaster();
-		if (nP == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			indexedToBuffered(0, h, data, raster, colors);
 		else
-			IntStream.range(0, nP).parallel()
-					.forEach(p -> indexedToBuffered(h * p / nP, h * (p + 1) / nP, data, raster, colors));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> indexedToBuffered(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, data, raster, colors));
 		return bufferedImage;
 	}
 
@@ -1428,9 +1440,10 @@ public class ImageUtilities {
 		int rgblen = colors.length;
 		int w = data.width;
 		int[] scanLine = new int[w];
-		for (int y = from; y < to; y++) {
+		int x, y;
+		for (y = from; y < to; y++) {
 			data.getPixels(0, y, w, scanLine, 0);
-			for (int x = 0; x < scanLine.length; x++) {
+			for (x = 0; x < scanLine.length; x++) {
 				int index = scanLine[x];
 				if (index >= 0 && index < rgblen)
 					scanLine[x] = colors[index];
@@ -1442,33 +1455,15 @@ public class ImageUtilities {
 	private static void directToBuffered(int from, int to, ImageData data, WritableRaster raster) {
 		byte[] datadata = data.data;
 		int bytesPerLine = data.bytesPerLine;
-		int sx;
-		// PaletteData palette = data.palette;
-		// int redMask = palette.redMask;
-		// int greenMask = palette.greenMask;
-		// int blueMask = palette.blueMask;
-		// int redShift = palette.redShift;
-		// int greenShift = palette.greenShift;
-		// int blueShift = palette.blueShift;
+		int sx, x, y, k;
 		int bands = raster.getNumBands();
 		int w = data.width;
 		int[] pixelArray = new int[w * bands];
-		// int[] scanLine = new int[w];
-		// int pixel;
-		for (int y = from; y < to; y++) {
-			sx = bytesPerLine * y;
-			// data.getPixels(0, y, w, scanLine, 0);
-			for (int x = 0, k = 0; x < w; x++, k += bands) {
+		for (y = from; y < to; y++) {
+			for (x = 0, k = 0, sx = bytesPerLine * y; x < w; x++, k += bands) {
 				pixelArray[k + 2] = datadata[sx++];
 				pixelArray[k + 1] = datadata[sx++];
 				pixelArray[k] = datadata[sx++];
-				// pixel = scanLine[x];
-				// pixelArray[k] = ((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel &
-				// redMask) << redShift);
-				// pixelArray[k + 1] = ((greenShift < 0) ? (pixel & greenMask) >>> -greenShift
-				// : (pixel & greenMask) << greenShift);
-				// pixelArray[k + 2] = ((blueShift < 0) ? (pixel & blueMask) >>> -blueShift
-				// : (pixel & blueMask) << blueShift);
 			}
 			raster.setPixels(0, y, w, 1, pixelArray);
 		}
@@ -1516,11 +1511,14 @@ public class ImageUtilities {
 		if (thumbnailData != null) {
 			ByteArrayInputStream is = new ByteArrayInputStream(thumbnailData);
 			try {
-				if (cms != ImageConstants.NOCMS && cms != ImageConstants.SRGB) {
+				if (cms != ImageConstants.NOCMS && cms != ImageConstants.SRGB
+						|| ImageConstants.IMAGE_WEBP == formatHint) {
 					BufferedImage bi = ImageIO.read(is);
 					if (bi == null)
 						return null;
-					ImageActivator.getDefault().getCOLORCONVERTOP_SRGB2ICC(cms).filter(bi, bi);
+					ColorConvertOp cco = ImageActivator.getDefault().getCOLORCONVERTOP_SRGB2ICC(cms);
+					if (cco != null)
+						cco.filter(bi, bi);
 					return bufferedImage2swt(bi);
 				}
 				ImageData[] iData = new ImageLoader().load(is, formatHint);
@@ -1661,51 +1659,39 @@ public class ImageUtilities {
 		int redFilter = bwmode.red;
 		int greenFilter = bwmode.green;
 		int blueFilter = bwmode.blue;
+		PaletteData palette = data.palette;
+		if (palette.isDirect) {
+			int h = data.height;
+			if (ImageConstants.NPROCESSORS == 1)
+				convert2Bw(0, h, data, redFilter, greenFilter, blueFilter);
+			else
+				IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+						.forEach(p -> convert2Bw(h * p / ImageConstants.NPROCESSORS,
+								h * (p + 1) / ImageConstants.NPROCESSORS, data, redFilter, greenFilter, blueFilter));
+		} else {
+			int fsum = redFilter + greenFilter + blueFilter;
+			int fsum2 = fsum / 2;
+			for (RGB rgb : palette.getRGBs())
+				rgb.red = rgb.green = rgb.blue = (fsum2 + rgb.red * redFilter + rgb.green * greenFilter
+						+ rgb.blue * blueFilter) / fsum;
+		}
+	}
+
+	private static void convert2Bw(int from, int to, ImageData data, int redFilter, int greenFilter, int blueFilter) {
 		int fsum = redFilter + greenFilter + blueFilter;
 		int fsum2 = fsum / 2;
-		PaletteData palette = data.palette;
 		int w = data.width;
-		// int[] scanLine = new int[w];
-		if (palette.isDirect) {
-			byte[] datadata = data.data;
-			int bytesPerLine = data.bytesPerLine;
-			int tx;
-			// int redMask = palette.redMask;
-			// int greenMask = palette.greenMask;
-			// int blueMask = palette.blueMask;
-			// int redShift = palette.redShift;
-			// int greenShift = palette.greenShift;
-			// int blueShift = palette.blueShift;
-			// int pixel;
-			// int grey;
-			for (int y = 0; y < data.height; y++) {
-				tx = bytesPerLine * y;
-				// data.getPixels(0, y, w, scanLine, 0);
-				for (int x = 0; x < w; x++) {
-					datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) ((fsum2
-							+ (datadata[tx + 2] & 0xff) * redFilter + (datadata[tx + 1] & 0xff) * greenFilter
-							+ (datadata[tx] & 0xff) * blueFilter) / fsum);
-					// pixel = scanLine[x];
-					// grey = ((redShift < 0 ? (pixel & redMask) >>> -redShift : (pixel & redMask)
-					// << redShift) * redFilter
-					// + (greenShift < 0 ? (pixel & greenMask) >>> -greenShift : (pixel & greenMask)
-					// << greenShift)
-					// * greenFilter
-					// + (blueShift < 0 ? (pixel & blueMask) >>> -blueShift : (pixel & blueMask) <<
-					// blueShift)
-					// * blueFilter)
-					// / fsum;
-					// scanLine[x] = (redShift < 0 ? grey << -redShift : grey >>> redShift) &
-					// redMask
-					// | ((greenShift < 0 ? grey << -greenShift : grey >>> greenShift) & greenMask)
-					// | ((blueShift < 0 ? grey << -blueShift : grey >>> blueShift) & blueMask);
-				}
-				// data.setPixels(0, y, w, scanLine, 0);
+		byte[] datadata = data.data;
+		int bytesPerLine = data.bytesPerLine;
+		int tx, grey, x, y;
+		for (y = from; y < to; y++) {
+			tx = bytesPerLine * y;
+			for (x = 0; x < w; x++) {
+				grey = (fsum2 + (datadata[tx + 2] & 0xff) * redFilter + (datadata[tx + 1] & 0xff) * greenFilter
+						+ (datadata[tx] & 0xff) * blueFilter) / fsum;
+				datadata[tx++] = datadata[tx++] = datadata[tx++] = (byte) (grey < 0 ? 0 : grey > 255 ? 255 : grey);
 			}
-		} else
-			for (RGB rgb : palette.getRGBs())
-				rgb.red = rgb.green = rgb.blue = (fsum2 + rgb.red * redFilter + rgb.green * greenFilter + rgb.blue * blueFilter)
-						/ fsum;
+		}
 	}
 
 	private static final int IFD_ENTRY_SIZE = 12;
@@ -1775,11 +1761,13 @@ public class ImageUtilities {
 		int h = raster.getHeight();
 		if (raster.getNumBands() < 3)
 			return image;
-		if (nP == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			convert2Bw(0, h, raster, w, filter.red, filter.green, filter.blue);
 		else
-			IntStream.range(0, nP).parallel().forEach(
-					p -> convert2Bw(h * p / nP, h * (p + 1) / nP, raster, w, filter.red, filter.green, filter.blue));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> convert2Bw(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, raster, w, filter.red, filter.green,
+							filter.blue));
 		return image;
 	}
 
@@ -1789,9 +1777,10 @@ public class ImageUtilities {
 		int numBands = raster.getNumBands();
 		int len = w * numBands;
 		int[] pixels = new int[len];
-		for (int y = from; y < to; y++) {
+		int x, y;
+		for (y = from; y < to; y++) {
 			raster.getPixels(0, y, w, 1, pixels);
-			for (int x = 0; x < len; x += numBands)
+			for (x = 0; x < len; x += numBands)
 				pixels[x] = pixels[x + 1] = pixels[x
 						+ 2] = (pixels[x] * redFilter + pixels[x + 1] * greenFilter + pixels[x + 2] * blueFilter)
 								/ fsum;
@@ -1804,16 +1793,18 @@ public class ImageUtilities {
 		if (!(model instanceof DirectColorModel))
 			return ImageUtilities.convertToDirectColor(original, true);
 		final WritableRaster in = original.getRaster();
-		final int w = in.getWidth();
-		int h = in.getHeight();
 		if (in.getNumBands() >= 3)
 			return original;
+		final int w = in.getWidth();
+		int h = in.getHeight();
 		BufferedImage result = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 		final WritableRaster out = result.getRaster();
-		if (nP == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			convertToColor(0, h, in, w, out);
 		else
-			IntStream.range(0, nP).parallel().forEach(p -> convertToColor(h * p / nP, h * (p + 1) / nP, in, w, out));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> convertToColor(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, in, w, out));
 		return result;
 	}
 
@@ -1822,12 +1813,11 @@ public class ImageUtilities {
 		int len = w * bands;
 		int[] inpixels = new int[len];
 		int[] outpixels = new int[w * 3];
-		int gray;
-		for (int y = from; y < to; y++) {
+		int gray, x, y, xs, k;
+		for (y = from; y < to; y++) {
 			in.getPixels(0, y, w, 1, inpixels);
-			for (int x = 0, xs = 0; x < len;) {
-				gray = 0;
-				for (int k = 0; k < bands; k++)
+			for (x = 0, xs = 0; x < len;) {
+				for (k = 0, gray = 0; k < bands; k++)
 					gray += inpixels[x++];
 				outpixels[xs++] = outpixels[xs++] = outpixels[xs++] = gray / bands;
 			}
@@ -1841,46 +1831,35 @@ public class ImageUtilities {
 		ImageData data = im.getImageData();
 		Device device = im.getDevice();
 		im.dispose();
-		int pixel, red, green, blue;
-		final PaletteData palette = data.palette;
-		int redMask = palette.redMask;
-		int greenMask = palette.greenMask;
-		int blueMask = palette.blueMask;
-		int redShift = palette.redShift;
-		int greenShift = palette.greenShift;
-		int blueShift = palette.blueShift;
-		int width = data.width;
-		int[] scanLine = new int[width];
-		for (int i = 0; i < data.height; i++) {
-			data.getPixels(0, i, width, scanLine, 0);
-			for (int j = i % 2; j < width; j += 2) {
-				pixel = scanLine[j];
-				red = ((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel & redMask) << redShift);
-				green = ((greenShift < 0) ? (pixel & greenMask) >>> -greenShift : (pixel & greenMask) << greenShift);
-				blue = ((blueShift < 0) ? (pixel & blueMask) >>> -blueShift : (pixel & blueMask) << blueShift);
-				int n = (int) (randomNumbers.nextGaussian() * 8);
-				red += n;
-				green += n;
-				blue += n;
-				if (red < 0)
-					red = 0;
-				else if (red > 255)
-					red = 255;
-				if (green < 0)
-					green = 0;
-				else if (green > 255)
-					green = 255;
-				if (blue < 0)
-					blue = 0;
-				else if (blue > 255)
-					blue = 255;
-				scanLine[j] = ((redShift < 0 ? red << -redShift : red >>> redShift) & redMask)
-						| ((greenShift < 0 ? green << -greenShift : green >>> greenShift) & greenMask)
-						| ((blueShift < 0 ? blue << -blueShift : blue >>> blueShift) & blueMask);
-			}
-			data.setPixels(0, i, width, scanLine, 0);
-		}
+		int h = data.height;
+		if (ImageConstants.NPROCESSORS == 1)
+			applyNoise(0, h, data);
+		else
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> applyNoise(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, data));
 		return new Image(device, data);
+	}
+
+	private static void applyNoise(int from, int to, ImageData data) {
+		byte[] datadata = data.data;
+		int bytesPerLine = data.bytesPerLine;
+		int tx, j, y;
+		int red, green, blue;
+		int width = data.width;
+		for (y = from; y < to; y++) {
+			tx = bytesPerLine * y;
+			for (j = y % 2; j < width; j += 2) {
+				int n = (int) (randomNumbers.nextGaussian() * 12);
+				blue = (datadata[tx] & 0xff) + n;
+				datadata[tx++] = (byte) (blue < 0 ? 0 : blue > 255 ? 255 : blue);
+				green = (datadata[tx] & 0xff) + n;
+				datadata[tx++] = (byte) (green < 0 ? 0 : green > 255 ? 255 : green);
+				red = (datadata[tx] & 0xff) + n;
+				datadata[tx] = (byte) (red < 0 ? 0 : red > 255 ? 255 : red);
+				tx += 4;
+			}
+		}
 	}
 
 	public static ImageData applyCurves(final ImageData data, ShortLookupTable lookupTable) {
@@ -1897,11 +1876,12 @@ public class ImageUtilities {
 		final PaletteData palette = data.palette;
 		if (palette.isDirect) {
 			int h = data.height;
-			if (nP == 1)
+			if (ImageConstants.NPROCESSORS == 1)
 				applyCurve(0, h, data, ltred, ltgreen, ltblue);
 			else
-				IntStream.range(0, nP).parallel()
-						.forEach(p -> applyCurve(h * p / nP, h * (p + 1) / nP, data, ltred, ltgreen, ltblue));
+				IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+						.forEach(p -> applyCurve(h * p / ImageConstants.NPROCESSORS,
+								h * (p + 1) / ImageConstants.NPROCESSORS, data, ltred, ltgreen, ltblue));
 		} else
 			for (RGB rgb : palette.getRGBs()) {
 				int red = ltred[rgb.red];
@@ -1915,38 +1895,16 @@ public class ImageUtilities {
 	}
 
 	private static void applyCurve(int from, int to, ImageData data, short[] ltred, short[] ltgreen, short[] ltblue) {
-		
-//	},			PaletteData palette) {
-		byte[] datadata = data.alphaData;
+		byte[] datadata = data.data;
 		int bytesPerLine = data.bytesPerLine;
-		int tx;
-//		int pixel, red, green, blue;
-//		int redMask = palette.redMask;
-//		int greenMask = palette.greenMask;
-//		int blueMask = palette.blueMask;
-//		int redShift = palette.redShift;
-//		int greenShift = palette.greenShift;
-//		int blueShift = palette.blueShift;
+		int tx, x, y;
 		int w = data.width;
-//		int[] scanLine = new int[w];
-		for (int y = from; y < to; y++) {
-			tx = bytesPerLine*y;
-//			data.getPixels(0, y, w, scanLine, 0);
-			for (int x = 0; x < w; x++) {
+		for (y = from; y < to; y++)
+			for (x = 0, tx = bytesPerLine * y; x < w; x++) {
 				datadata[tx++] = (byte) ltblue[datadata[tx] & 0xff];
 				datadata[tx++] = (byte) ltgreen[datadata[tx] & 0xff];
 				datadata[tx++] = (byte) ltred[datadata[tx] & 0xff];
-//				pixel = scanLine[x];
-//				red = ltred[((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel & redMask) << redShift)];
-//				green = ltgreen[((greenShift < 0) ? (pixel & greenMask) >>> -greenShift
-//						: (pixel & greenMask) << greenShift)];
-//				blue = ltblue[((blueShift < 0) ? (pixel & blueMask) >>> -blueShift : (pixel & blueMask) << blueShift)];
-//				scanLine[x] = ((redShift < 0 ? red << -redShift : red >>> redShift) & redMask)
-//						| ((greenShift < 0 ? green << -greenShift : green >>> greenShift) & greenMask)
-//						| ((blueShift < 0 ? blue << -blueShift : blue >>> blueShift) & blueMask);
 			}
-//			data.setPixels(0, y, w, scanLine, 0);
-		}
 	}
 
 	public static BufferedImage applyCurves(BufferedImage image, ShortLookupTable lookupTable) {
@@ -1967,11 +1925,12 @@ public class ImageUtilities {
 			image = ImageUtilities.convertToColor(image);
 		final WritableRaster r = image.getRaster();
 		int h = r.getHeight();
-		if (nP == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			applyCurve(0, h, ltred, ltgreen, ltblue, r);
 		else
-			IntStream.range(0, nP).parallel()
-					.forEach(p -> applyCurve(h * p / nP, h * (p + 1) / nP, ltred, ltgreen, ltblue, r));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> applyCurve(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, ltred, ltgreen, ltblue, r));
 		return image;
 	}
 
@@ -1982,9 +1941,10 @@ public class ImageUtilities {
 		int len = w * bands;
 		int inc = bands - 2;
 		int[] pixels = new int[len];
-		for (int y = from; y < to; y++) {
+		int x, y;
+		for (y = from; y < to; y++) {
 			r.getPixels(0, y, w, 1, pixels);
-			for (int x = 0; x < len; x += inc) {
+			for (x = 0; x < len; x += inc) {
 				red = ltred[pixels[x]];
 				green = ltgreen[pixels[x + 1]];
 				blue = ltblue[pixels[x + 2]];
@@ -2056,8 +2016,7 @@ public class ImageUtilities {
 		final short[] balance = split.distribution.makeTable(255);
 		final WritableRaster wr = image.getRaster();
 		int h = wr.getHeight();
-		int n = ImageConstants.NPROCESSORS;
-		if (n == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			applySplitTone(0, h, rh, gh, bh, rs, gs, bs, balance, wr);
 		else {
 			final int rh1 = rh;
@@ -2066,8 +2025,9 @@ public class ImageUtilities {
 			final int rs1 = rs;
 			final int gs1 = gs;
 			final int bs1 = bs;
-			IntStream.range(0, nP).parallel().forEach(
-					p -> applySplitTone(h * p / nP, h * (p + 1) / nP, rh1, gh1, bh1, rs1, gs1, bs1, balance, wr));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> applySplitTone(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, rh1, gh1, bh1, rs1, gs1, bs1, balance, wr));
 		}
 		return image;
 	}
@@ -2080,9 +2040,10 @@ public class ImageUtilities {
 		int[] pixels = new int[len];
 		int inc = bands - 2;
 		int red, green, blue, bal, ibal;
-		for (int y = from; y < to; y++) {
+		int x, y;
+		for (y = from; y < to; y++) {
 			r.getPixels(0, y, w, 1, pixels);
-			for (int x = 0; x < len; x += inc) {
+			for (x = 0; x < len; x += inc) {
 				red = pixels[x];
 				green = pixels[x + 1];
 				blue = pixels[x + 2];
@@ -2156,8 +2117,7 @@ public class ImageUtilities {
 		final PaletteData palette = data.palette;
 		if (palette.isDirect) {
 			int h = data.height;
-			int n = ImageConstants.NPROCESSORS;
-			if (n == 1)
+			if (ImageConstants.NPROCESSORS == 1)
 				applySplitTone(0, h, data, rh, gh, bh, rs, gs, bs, balance);
 			else {
 				final int rh1 = rh;
@@ -2166,8 +2126,9 @@ public class ImageUtilities {
 				final int rs1 = rs;
 				final int gs1 = gs;
 				final int bs1 = bs;
-				IntStream.range(0, nP).parallel().forEach(p -> applySplitTone(h * p / nP, h * (p + 1) / nP, data, rh1,
-						gh1, bh1, rs1, gs1, bs1, balance));
+				IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+						.forEach(p -> applySplitTone(h * p / ImageConstants.NPROCESSORS,
+								h * (p + 1) / ImageConstants.NPROCESSORS, data, rh1, gh1, bh1, rs1, gs1, bs1, balance));
 			}
 		} else {
 			int red, green, blue, bal, ibal;
@@ -2190,51 +2151,27 @@ public class ImageUtilities {
 
 	private static void applySplitTone(int from, int to, ImageData data, int rh, int gh, int bh, int rs, int gs, int bs,
 			short[] balance) {
-//		, PaletteData palette) {
-		byte[] datadata = data.alphaData;
+		byte[] datadata = data.data;
 		int bytesPerLine = data.bytesPerLine;
-		int tx;
-//		int pixel;
-		int red;
-		int green;
-		int blue;
-		int bal;
-		int ibal;
+		int tx, sx, x, y;
+		int red, green, blue;
+		int bal, ibal;
 		int w = data.width;
-//		int[] scanLine = new int[w];
-//		int redMask = palette.redMask;
-//		int greenMask = palette.greenMask;
-//		int blueMask = palette.blueMask;
-//		int redShift = palette.redShift;
-//		int greenShift = palette.greenShift;
-//		int blueShift = palette.blueShift;
-		for (int y = from; y < to; y++) {
-			tx = bytesPerLine*y;
-//			data.getPixels(0, y, w, scanLine, 0);
-			for (int x = 0; x < w; x++) {
-				blue = datadata[tx] & 0xff;
-				green = datadata[tx+1] & 0xff;
-				red = datadata[tx+2] & 0xff;
-//				pixel = scanLine[x];
-//				red = ((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel & redMask) << redShift);
-//				green = ((greenShift < 0) ? (pixel & greenMask) >>> -greenShift : (pixel & greenMask) << greenShift);
-//				blue = ((blueShift < 0) ? (pixel & blueMask) >>> -blueShift : (pixel & blueMask) << blueShift);
+		for (y = from; y < to; y++) {
+			sx = tx = bytesPerLine * y;
+			for (x = 0; x < w; x++) {
+				blue = datadata[sx++] & 0xff;
+				green = datadata[sx++] & 0xff;
+				red = datadata[sx++] & 0xff;
 				bal = balance[(red + green + blue) / 3];
 				ibal = 255 - bal;
 				red += (ibal * rs - bal * rh) / 255;
 				green += (ibal * gs - bal * gh) / 255;
 				blue += (ibal * bs - bal * bh) / 255;
-				red = red < 0 ? 0 : red > 255 ? 255 : red;
-				green = green < 0 ? 0 : green > 255 ? 255 : green;
-				blue = blue < 0 ? 0 : blue > 255 ? 255 : blue;
-				datadata[tx++] = (byte) blue;
-				datadata[tx++] = (byte) green;
-				datadata[tx++] = (byte) red;
-//				scanLine[x] = ((redShift < 0 ? red << -redShift : red >>> redShift) & redMask)
-//						| ((greenShift < 0 ? green << -greenShift : green >>> greenShift) & greenMask)
-//						| ((blueShift < 0 ? blue << -blueShift : blue >>> blueShift) & blueMask);
+				datadata[tx++] = (byte) (blue < 0 ? 0 : blue > 255 ? 255 : blue);
+				datadata[tx++] = (byte) (green < 0 ? 0 : green > 255 ? 255 : green);
+				datadata[tx++] = (byte) (red < 0 ? 0 : red > 255 ? 255 : red);
 			}
-//			data.setPixels(0, y, w, scanLine, 0);
 		}
 	}
 
@@ -2263,12 +2200,12 @@ public class ImageUtilities {
 			float vign = i >= maxRadius ? 0f : (float) (v + mul * Math.tanh(b * (maxRadius - i) / maxRadius));
 			lt[i] = Math.round(vign * P16);
 		}
-		int n = ImageConstants.NPROCESSORS;
-		if (n == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			applyVignette(0, h, r, w, hlow, wlow, whigh, lt, offX, offY);
 		else
-			IntStream.range(0, nP).parallel()
-					.forEach(p -> applyVignette(h * p / nP, h * (p + 1) / nP, r, w, hlow, wlow, whigh, lt, offX, offY));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> applyVignette(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, r, w, hlow, wlow, whigh, lt, offX, offY));
 		return image;
 	}
 
@@ -2279,14 +2216,16 @@ public class ImageUtilities {
 		int[] pixels = new int[len];
 		int inc = bands > 2 ? bands - 2 : bands;
 		int red, green, blue;
-		for (int j = from; j < to; j++) {
-			int y = j + hlow;
-			double vy2 = y - offY;
+		int j, x, i, f, y;
+		double vx, vy2;
+		for (j = from; j < to; j++) {
+			y = j + hlow;
+			vy2 = y - offY;
 			vy2 *= vy2;
 			r.getPixels(0, j, w, 1, pixels);
-			for (int x = wlow, i = 0; x < whigh; x++, i += inc) {
-				double vx = x - offX;
-				int f = lt[(int) Math.sqrt(vx * vx + vy2)];
+			for (x = wlow, i = 0; x < whigh; x++, i += inc) {
+				vx = x - offX;
+				f = lt[(int) Math.sqrt(vx * vx + vy2)];
 				red = pixels[i] * f + P15 >>> 16;
 				pixels[i] = red > 255 ? 255 : red;
 				if (bands > 2) {
@@ -2321,48 +2260,36 @@ public class ImageUtilities {
 			float vign = i >= maxRadius ? 0f : (float) (v + mul * Math.tanh(b * (maxRadius - i) / maxRadius));
 			lt[i] = Math.round(vign * P16);
 		}
-		int n = ImageConstants.NPROCESSORS;
-		if (n == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			applyVignette(0, h, result, result.width, -h / 2, hhigh, wlow, whigh, lt, offX, offY);
 		else
-			IntStream.range(0, nP).parallel().forEach(p -> applyVignette(h * p / nP, h * (p + 1) / nP, result,
-					result.width, -h / 2, hhigh, wlow, whigh, lt, offX, offY));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> applyVignette(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, result, result.width, -h / 2, hhigh, wlow, whigh,
+							lt, offX, offY));
 		return result;
 	}
 
 	private static void applyVignette(int from, int to, ImageData data, int w, int hlow, int hhigh, int wlow, int whigh,
 			int[] lt, double offX, double offY) {
-		int[] scanLine = new int[w];
-		int pixel, red, green, blue;
-		PaletteData palette = data.palette;
-		int redMask = palette.redMask;
-		int greenMask = palette.greenMask;
-		int blueMask = palette.blueMask;
-		int redShift = palette.redShift;
-		int greenShift = palette.greenShift;
-		int blueShift = palette.blueShift;
-		for (int j = from, y = hlow; j < to && y < hhigh; y++, j++) {
-			double vy2 = y - offY;
+		byte[] datadata = data.data;
+		int bytesPerLine = data.bytesPerLine;
+		int tx, red, green, blue;
+		int j, y, x, f;
+		double vx, vy2;
+		for (j = from, y = hlow; j < to && y < hhigh; y++, j++) {
+			vy2 = y - offY;
 			vy2 *= vy2;
-			data.getPixels(0, j, w, scanLine, 0);
-			for (int i = 0, x = wlow; x < whigh; x++, i++) {
-				double vx = x - offX;
-				pixel = scanLine[i];
-				red = ((redShift < 0) ? (pixel & redMask) >>> -redShift : (pixel & redMask) << redShift);
-				green = ((greenShift < 0) ? (pixel & greenMask) >>> -greenShift : (pixel & greenMask) << greenShift);
-				blue = ((blueShift < 0) ? (pixel & blueMask) >>> -blueShift : (pixel & blueMask) << blueShift);
-				int f = lt[(int) Math.sqrt(vx * vx + vy2)];
-				red = red * f + P15 >>> 16;
-				green = green * f + P15 >>> 16;
-				blue = blue * f + P15 >>> 16;
-				red = red > 255 ? 255 : red;
-				green = green > 255 ? 255 : green;
-				blue = blue > 255 ? 255 : blue;
-				scanLine[i] = ((redShift < 0 ? red << -redShift : red >>> redShift) & redMask)
-						| ((greenShift < 0 ? green << -greenShift : green >>> greenShift) & greenMask)
-						| ((blueShift < 0 ? blue << -blueShift : blue >>> blueShift) & blueMask);
+			for (x = wlow, tx = bytesPerLine * j; x < whigh; x++) {
+				vx = x - offX;
+				f = lt[(int) Math.sqrt(vx * vx + vy2)];
+				blue = (datadata[tx] & 0xff) * f + P15 >>> 16;
+				datadata[tx++] = (byte) (blue < 0 ? 0 : blue > 255 ? 255 : blue);
+				green = (datadata[tx] & 0xff) * f + P15 >>> 16;
+				datadata[tx++] = (byte) (green < 0 ? 0 : green > 255 ? 255 : green);
+				red = (datadata[tx] & 0xff) * f + P15 >>> 16;
+				datadata[tx++] = (byte) (red < 0 ? 0 : red > 255 ? 255 : red);
 			}
-			data.setPixels(0, j, w, scanLine, 0);
 		}
 	}
 
@@ -2378,18 +2305,22 @@ public class ImageUtilities {
 		tmatrix = tmatrix.times(norm);
 		tmatrix = normi.times(tmatrix);
 		final double[][] m = tmatrix.getArray();
-		int n = ImageConstants.NPROCESSORS;
 		final ImageData out = new ImageData(w, h, data.depth, data.palette);
-		if (n == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			applyPerspectiveCorrection(0, h, in, perspectiveCorrection, w, h, m, out);
 		else
-			IntStream.range(0, nP).parallel().forEach(p -> applyPerspectiveCorrection(h * p / nP, h * (p + 1) / nP, in,
-					perspectiveCorrection, w, h, m, out));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> applyPerspectiveCorrection(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, in, perspectiveCorrection, w, h, m, out));
 		return out;
 	}
 
 	private static void applyPerspectiveCorrection(int from, int to, ImageData data,
 			PerspectiveCorrection perspectiveCorrection, int w, int h, double[][] m, ImageData out) {
+		byte[] datadata = data.data;
+		int bytesPerLine = data.bytesPerLine;
+		int txx, sx, sx1, blue00, green00, red00, blue01, green01, red01, blue10, green10, red10, blue11, green11,
+				red11;
 		double m00 = m[0][0];
 		double m01 = m[0][1];
 		double m02 = m[0][2];
@@ -2404,8 +2335,6 @@ public class ImageUtilities {
 		double m33 = m[3][3];
 		double f = perspectiveCorrection.flen;
 		RGB fillColor = perspectiveCorrection.fillColor;
-		PaletteData palette = data.palette;
-		int bgpixel = palette.getPixel(fillColor);
 		int bgred = fillColor.red;
 		int bggreen = fillColor.green;
 		int bgblue = fillColor.blue;
@@ -2415,13 +2344,6 @@ public class ImageUtilities {
 		int whigh = w + wlow;
 		int h1 = h - 1;
 		int w1 = w - 1;
-		int[] scanLine = new int[w];
-		int redMask = palette.redMask;
-		int greenMask = palette.greenMask;
-		int blueMask = palette.blueMask;
-		int redShift = palette.redShift;
-		int greenShift = palette.greenShift;
-		int blueShift = palette.blueShift;
 		int red, green, blue;
 		double m32_f_m33 = m32 * f + m33;
 		double m02_f_m03 = m02 * f + m03;
@@ -2429,96 +2351,73 @@ public class ImageUtilities {
 		Point2D.Double translation = perspectiveCorrection.finalTranslation;
 		double tx = (translation == null ? 0d : translation.x * w) + wlow;
 		double ty = (translation == null ? 0d : translation.y * h) + hlow;
-		for (int j = from; j < to; j++) {
-			int y = j + hlow;
-			double ym3 = m31 * y + m32_f_m33;
-			double ym0 = m01 * y + m02_f_m03;
-			double ym1 = m11 * y + m12_f_m13;
-			for (int i = 0, x = wlow; x < whigh; x++, i++) {
-				double s = m30 * x + ym3;
-				double px = (m00 * x + ym0) / s - tx;
-				double py = (m10 * x + ym1) / s - ty;
-				int x1 = (int) Math.floor(px);
-				int y1 = (int) Math.floor(py);
-				int dx = (int) ((px - x1) * 256d);
-				int dy = (int) ((py - y1) * 256d);
-				int dx1 = 256 - dx;
-				int dy1 = 256 - dy;
+		int j, x, y, x1, y1, dx, dy, dx1, dy1;
+		double s, px, py, ym3, ym0, ym1;
+		for (j = from; j < to; j++) {
+			txx = bytesPerLine * j;
+			y = j + hlow;
+			ym3 = m31 * y + m32_f_m33;
+			ym0 = m01 * y + m02_f_m03;
+			ym1 = m11 * y + m12_f_m13;
+			for (x = wlow; x < whigh; x++) {
+				s = m30 * x + ym3;
+				px = (m00 * x + ym0) / s - tx;
+				py = (m10 * x + ym1) / s - ty;
+				x1 = (int) Math.floor(px);
+				y1 = (int) Math.floor(py);
+				dx = (int) ((px - x1) * 256d);
+				dy = (int) ((py - y1) * 256d);
+				dx1 = 256 - dx;
+				dy1 = 256 - dy;
 				if (x1 < 0 || x1 >= w1 || y1 < 0 || y1 >= h1) {
 					if (x1 == -1 && y1 >= 0 && y1 < h) {
-						int p00 = data.getPixel(x1 + 1, y1);
-						int red00 = ((redShift < 0) ? (p00 & redMask) >>> -redShift : (p00 & redMask) << redShift);
-						int green00 = ((greenShift < 0) ? (p00 & greenMask) >>> -greenShift
-								: (p00 & greenMask) << greenShift);
-						int blue00 = ((blueShift < 0) ? (p00 & blueMask) >>> -blueShift
-								: (p00 & blueMask) << blueShift);
-						red = dx1 * bgred + dx * red00 + 128 >> 8;
-						green = dx1 * bggreen + dx * green00 + 128 >> 8;
-						blue = dx1 * bgblue + dx * blue00 + 128 >> 8;
+						sx = bytesPerLine * y1 + 3 * (x1 + 1);
+						blue = dx1 * bgblue + dx * (datadata[sx++] & 0xff) + 128 >> 8;
+						green = dx1 * bggreen + dx * (datadata[sx++] & 0xff) + 128 >> 8;
+						red = dx1 * bgred + dx * (datadata[sx] & 0xff) + 128 >> 8;
 					} else if (x1 == w1 && y1 >= 0 && y1 < h) {
-						int p00 = data.getPixel(x1, y1);
-						int red00 = ((redShift < 0) ? (p00 & redMask) >>> -redShift : (p00 & redMask) << redShift);
-						int green00 = ((greenShift < 0) ? (p00 & greenMask) >>> -greenShift
-								: (p00 & greenMask) << greenShift);
-						int blue00 = ((blueShift < 0) ? (p00 & blueMask) >>> -blueShift
-								: (p00 & blueMask) << blueShift);
-						red = dx1 * red00 + dx * bgred + 128 >> 8;
-						green = dx1 * green00 + dx * bggreen + 128 >> 8;
-						blue = dx1 * blue00 + dx * bgblue + 128 >> 8;
+						sx = bytesPerLine * y1 + 3 * x1;
+						blue = dx1 * (datadata[sx++] & 0xff) + dx * bgblue + 128 >> 8;
+						green = dx1 * (datadata[sx++] & 0xff) + dx * bggreen + 128 >> 8;
+						red = dx1 * (datadata[sx] & 0xff) + dx * bgred + 128 >> 8;
 					} else if (y1 == -1 && x1 >= 0 && x1 < w) {
-						int p00 = data.getPixel(x1, y1 + 1);
-						int red00 = ((redShift < 0) ? (p00 & redMask) >>> -redShift : (p00 & redMask) << redShift);
-						int green00 = ((greenShift < 0) ? (p00 & greenMask) >>> -greenShift
-								: (p00 & greenMask) << greenShift);
-						int blue00 = ((blueShift < 0) ? (p00 & blueMask) >>> -blueShift
-								: (p00 & blueMask) << blueShift);
-						red = dy1 * bgred + dy * red00 + 128 >> 8;
-						green = dy1 * bggreen + dy * green00 + 128 >> 8;
-						blue = dy1 * bgblue + dy * blue00 + 128 >> 8;
+						sx = bytesPerLine * (y1 + 1) + 3 * x1;
+						blue = dy1 * bgblue + dy * (datadata[sx++] & 0xff) + 128 >> 8;
+						green = dy1 * bggreen + dy * (datadata[sx++] & 0xff) + 128 >> 8;
+						red = dy1 * bgred + dy * (datadata[sx] & 0xff) + 128 >> 8;
 					} else if (y1 == h1 && x1 >= 0 && x1 < w) {
-						int p00 = data.getPixel(x1, y1);
-						int red00 = ((redShift < 0) ? (p00 & redMask) >>> -redShift : (p00 & redMask) << redShift);
-						int green00 = ((greenShift < 0) ? (p00 & greenMask) >>> -greenShift
-								: (p00 & greenMask) << greenShift);
-						int blue00 = ((blueShift < 0) ? (p00 & blueMask) >>> -blueShift
-								: (p00 & blueMask) << blueShift);
-						red = dy1 * red00 + dy * bgred + 128 >> 8;
-						green = dy1 * green00 + dy * bggreen + 128 >> 8;
-						blue = dy1 * blue00 + dy * bgblue + 128 >> 8;
+						sx = bytesPerLine * y1 + 3 * x1;
+						blue = dy1 * (datadata[sx++] & 0xff) + dy * bgblue + 128 >> 8;
+						green = dy1 * (datadata[sx++] & 0xff) + dy * bggreen + 128 >> 8;
+						red = dy1 * (datadata[sx] & 0xff) + dy * bgred + 128 >> 8;
 					} else {
-						scanLine[i] = bgpixel;
-						continue;
+						blue = bgblue;
+						green = bggreen;
+						red = bgred;
 					}
 				} else {
-					int p00 = data.getPixel(x1, y1);
-					int red00 = ((redShift < 0) ? (p00 & redMask) >>> -redShift : (p00 & redMask) << redShift);
-					int green00 = ((greenShift < 0) ? (p00 & greenMask) >>> -greenShift
-							: (p00 & greenMask) << greenShift);
-					int blue00 = ((blueShift < 0) ? (p00 & blueMask) >>> -blueShift : (p00 & blueMask) << blueShift);
-					int p01 = data.getPixel(x1 + 1, y1);
-					int red01 = ((redShift < 0) ? (p01 & redMask) >>> -redShift : (p01 & redMask) << redShift);
-					int green01 = ((greenShift < 0) ? (p01 & greenMask) >>> -greenShift
-							: (p01 & greenMask) << greenShift);
-					int blue01 = ((blueShift < 0) ? (p01 & blueMask) >>> -blueShift : (p01 & blueMask) << blueShift);
-					int p10 = data.getPixel(x1, y1 + 1);
-					int red10 = ((redShift < 0) ? (p10 & redMask) >>> -redShift : (p10 & redMask) << redShift);
-					int green10 = ((greenShift < 0) ? (p10 & greenMask) >>> -greenShift
-							: (p10 & greenMask) << greenShift);
-					int blue10 = ((blueShift < 0) ? (p10 & blueMask) >>> -blueShift : (p10 & blueMask) << blueShift);
-					int p11 = data.getPixel(x1 + 1, y1 + 1);
-					int red11 = ((redShift < 0) ? (p11 & redMask) >>> -redShift : (p11 & redMask) << redShift);
-					int green11 = ((greenShift < 0) ? (p11 & greenMask) >>> -greenShift
-							: (p11 & greenMask) << greenShift);
-					int blue11 = ((blueShift < 0) ? (p11 & blueMask) >>> -blueShift : (p11 & blueMask) << blueShift);
+					sx = bytesPerLine * y1 + 3 * x1;
+					sx1 = sx + bytesPerLine;
+					blue00 = datadata[sx++] & 0xff;
+					green00 = datadata[sx++] & 0xff;
+					red00 = datadata[sx++] & 0xff;
+					blue01 = datadata[sx++] & 0xff;
+					green01 = datadata[sx++] & 0xff;
+					red01 = datadata[sx] & 0xff;
+					blue10 = datadata[sx1++] & 0xff;
+					green10 = datadata[sx1++] & 0xff;
+					red10 = datadata[sx1++] & 0xff;
+					blue11 = datadata[sx1++] & 0xff;
+					green11 = datadata[sx1++] & 0xff;
+					red11 = datadata[sx1] & 0xff;
 					red = dy1 * (dx1 * red00 + dx * red01) + dy * (dx1 * red10 + dx * red11) + 128 >> 16;
 					green = dy1 * (dx1 * green00 + dx * green01) + dy * (dx1 * green10 + dx * green11) + 128 >> 16;
 					blue = dy1 * (dx1 * blue00 + dx * blue01) + dy * (dx1 * blue10 + dx * blue11) + 128 >> 16;
 				}
-				scanLine[i] = ((redShift < 0 ? red << -redShift : red >>> redShift) & redMask)
-						| ((greenShift < 0 ? green << -greenShift : green >>> greenShift) & greenMask)
-						| ((blueShift < 0 ? blue << -blueShift : blue >>> blueShift) & blueMask);
+				datadata[txx++] = (byte) blue;
+				datadata[txx++] = (byte) green;
+				datadata[txx++] = (byte) red;
 			}
-			out.setPixels(0, j, w, scanLine, 0);
 		}
 	}
 
@@ -2540,12 +2439,12 @@ public class ImageUtilities {
 		tmatrix = tmatrix.times(norm);
 		tmatrix = normi.times(tmatrix);
 		final double[][] m = tmatrix.getArray();
-		int n = ImageConstants.NPROCESSORS;
-		if (n == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			applyPerspectiveCorrection(0, h, perspectiveCorrection, r, w, h, out, m);
 		else
-			IntStream.range(0, nP).parallel().forEach(p -> applyPerspectiveCorrection(h * p / nP, h * (p + 1) / nP,
-					perspectiveCorrection, r, w, h, out, m));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> applyPerspectiveCorrection(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, perspectiveCorrection, r, w, h, out, m));
 		return new BufferedImage(colorModel, out, false, null);
 	}
 
@@ -2594,22 +2493,23 @@ public class ImageUtilities {
 		Point2D.Double translation = perspectiveCorrection.finalTranslation;
 		double tx = (translation == null ? 0d : translation.x * w) + wlow;
 		double ty = (translation == null ? 0d : translation.y * h) + hlow;
-
-		for (int j = from; j < to; j++) {
-			int y = j + hlow;
-			double ym3 = m31 * y + m32_f_m33;
-			double ym0 = m01 * y + m02_f_m03;
-			double ym1 = m11 * y + m12_f_m13;
-			for (int x = wlow, i = 0; x < whigh; x++, i += bands) {
-				double s = m30 * x + ym3;
-				double px = (m00 * x + ym0) / s - tx;
-				double py = (m10 * x + ym1) / s - ty;
-				int x1 = (int) Math.floor(px);
-				int y1 = (int) Math.floor(py);
-				int dx = (int) ((px - x1) * 256d);
-				int dy = (int) ((py - y1) * 256d);
-				int dx1 = 256 - dx;
-				int dy1 = 256 - dy;
+		int j, x, y, i, x1, y1, dx, dy, dx1, dy1;
+		double ym3, ym0, ym1, s, px, py;
+		for (j = from; j < to; j++) {
+			y = j + hlow;
+			ym3 = m31 * y + m32_f_m33;
+			ym0 = m01 * y + m02_f_m03;
+			ym1 = m11 * y + m12_f_m13;
+			for (x = wlow, i = 0; x < whigh; x++, i += bands) {
+				s = m30 * x + ym3;
+				px = (m00 * x + ym0) / s - tx;
+				py = (m10 * x + ym1) / s - ty;
+				x1 = (int) Math.floor(px);
+				y1 = (int) Math.floor(py);
+				dx = (int) ((px - x1) * 256d);
+				dy = (int) ((py - y1) * 256d);
+				dx1 = 256 - dx;
+				dy1 = 256 - dy;
 				if (x1 < 0 || x1 >= w1 || y1 < 0 || y1 >= h1) {
 					if (x1 == -1 && y1 >= 0 && y1 < h) {
 						r.getPixel(x1 + 1, y1, pixel);
@@ -2645,13 +2545,13 @@ public class ImageUtilities {
 		final int w = in.width;
 		final int h = in.height;
 		transformation.init(w, h);
-		int n = ImageConstants.NPROCESSORS;
 		final ImageData out = new ImageData(w, h, data.depth, data.palette);
-		if (n == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			applyTransformation(0, h, in, transformation, w, h, out);
 		else
-			IntStream.range(0, nP).parallel()
-					.forEach(p -> applyTransformation(h * p / nP, h * (p + 1) / nP, in, transformation, w, h, out));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> applyTransformation(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, in, transformation, w, h, out));
 		return out;
 
 	}
@@ -2662,11 +2562,14 @@ public class ImageUtilities {
 	 */
 	private static void applyTransformation(int from, int to, ImageData data, Transformation transformation, int w,
 			int h, ImageData out) {
+		byte[] datadata = data.data;
+		byte[] outdata = out.data;
+		int bytesPerLine = data.bytesPerLine;
+		int txx, sx, sx1, blue00, green00, red00, blue01, green01, red01, blue10, green10, red10, blue11, green11,
+				red11;
 		RGB fillColor = transformation.fillColor;
-		PaletteData palette = data.palette;
-		int bgpixel = 0, bgred = 0, bggreen = 0, bgblue = 0;
+		int bgred = 0, bggreen = 0, bgblue = 0;
 		if (fillColor != null) {
-			bgpixel = palette.getPixel(fillColor);
 			bgred = fillColor.red;
 			bggreen = fillColor.green;
 			bgblue = fillColor.blue;
@@ -2676,13 +2579,6 @@ public class ImageUtilities {
 		int whigh = w + wlow;
 		int h1 = h - 1;
 		int w1 = w - 1;
-		int[] scanLine = new int[w];
-		int redMask = palette.redMask;
-		int greenMask = palette.greenMask;
-		int blueMask = palette.blueMask;
-		int redShift = palette.redShift;
-		int greenShift = palette.greenShift;
-		int blueShift = palette.blueShift;
 		int red, green, blue;
 
 		double maxRadius = transformation.maxRadius;
@@ -2701,11 +2597,12 @@ public class ImageUtilities {
 		double ascale = transformation.fillScale;
 		boolean perspectiveChange = transformation.perspectiveChange;
 		boolean isRotating = transformation.isRotating;
-		for (int j = from; j < to; j++) {
-			int y = j + hlow;
-			for (int i = 0, x = wlow; x < whigh; x++, i++) {
-				double x_d = ascale * x; // scale
-				double y_d = ascale * y; // scale
+		int j, y, x, x1, y1, dx, dy, dx1, dy1;
+		double px, py, x_d, y_d, r, s;
+		for (j = from; j < to; j++)
+			for (x = wlow, txx = bytesPerLine * j, y = j + hlow; x < whigh; x++) {
+				x_d = ascale * x; // scale
+				y_d = ascale * y; // scale
 				if (perspectiveChange) {
 					// horizontal perspective transformation
 					y_d = y_d * maxRadius / (maxRadius + x_d * hptanpt);
@@ -2715,7 +2612,7 @@ public class ImageUtilities {
 					x_d = x_d * maxRadius / (maxRadius - y_d * vptanpt);
 					y_d = y_d * maxRadius * vpcospt / (maxRadius - y_d * vptanpt);
 				}
-				double px, py;
+
 				if (isRotating) {
 					// rotate
 					px = x_d * cost - y_d * sint;
@@ -2726,97 +2623,69 @@ public class ImageUtilities {
 				}
 				if (distortion != 0d) {
 					// distortion correction
-					double r = Math.sqrt(px * px + py * py) / maxRadius;
-					double s = 1.0 - distortion + distortion * r;
+					r = Math.sqrt(px * px + py * py) / maxRadius;
+					s = 1.0 - distortion + distortion * r;
 					px *= s;
 					py *= s;
 				}
 				// de-center
 				px -= wlow;
 				py -= hlow;
-				int x1 = (int) Math.floor(px);
-				int y1 = (int) Math.floor(py);
-				int dx = (int) ((px - x1) * 256d);
-				int dy = (int) ((py - y1) * 256d);
-				int dx1 = 256 - dx;
-				int dy1 = 256 - dy;
+				x1 = (int) Math.floor(px);
+				y1 = (int) Math.floor(py);
+				dx = (int) ((px - x1) * 256d);
+				dy = (int) ((py - y1) * 256d);
+				dx1 = 256 - dx;
+				dy1 = 256 - dy;
 				if (x1 < 0 || x1 >= w1 || y1 < 0 || y1 >= h1) {
 					if (x1 == -1 && y1 >= 0 && y1 < h) {
-						int p00 = data.getPixel(x1 + 1, y1);
-						int red00 = ((redShift < 0) ? (p00 & redMask) >>> -redShift : (p00 & redMask) << redShift);
-						int green00 = ((greenShift < 0) ? (p00 & greenMask) >>> -greenShift
-								: (p00 & greenMask) << greenShift);
-						int blue00 = ((blueShift < 0) ? (p00 & blueMask) >>> -blueShift
-								: (p00 & blueMask) << blueShift);
-						red = dx1 * bgred + dx * red00 + 128 >> 8;
-						green = dx1 * bggreen + dx * green00 + 128 >> 8;
-						blue = dx1 * bgblue + dx * blue00 + 128 >> 8;
+						sx = bytesPerLine * y1 + 3 * (x1 + 1);
+						blue = dx1 * bgblue + dx * (datadata[sx++] & 0xff) + 128 >> 8;
+						green = dx1 * bggreen + dx * (datadata[sx++] & 0xff) + 128 >> 8;
+						red = dx1 * bgred + dx * (datadata[sx] & 0xff) + 128 >> 8;
 					} else if (x1 == w1 && y1 >= 0 && y1 < h) {
-						int p00 = data.getPixel(x1, y1);
-						int red00 = ((redShift < 0) ? (p00 & redMask) >>> -redShift : (p00 & redMask) << redShift);
-						int green00 = ((greenShift < 0) ? (p00 & greenMask) >>> -greenShift
-								: (p00 & greenMask) << greenShift);
-						int blue00 = ((blueShift < 0) ? (p00 & blueMask) >>> -blueShift
-								: (p00 & blueMask) << blueShift);
-						red = dx1 * red00 + dx * bgred + 128 >> 8;
-						green = dx1 * green00 + dx * bggreen + 128 >> 8;
-						blue = dx1 * blue00 + dx * bgblue + 128 >> 8;
+						sx = bytesPerLine * y1 + 3 * x1;
+						blue = dx1 * (datadata[sx++] & 0xff) + dx * bgblue + 128 >> 8;
+						green = dx1 * (datadata[sx++] & 0xff) + dx * bggreen + 128 >> 8;
+						red = dx1 * (datadata[sx] & 0xff) + dx * bgred + 128 >> 8;
 					} else if (y1 == -1 && x1 >= 0 && x1 < w) {
-						int p00 = data.getPixel(x1, y1 + 1);
-						int red00 = ((redShift < 0) ? (p00 & redMask) >>> -redShift : (p00 & redMask) << redShift);
-						int green00 = ((greenShift < 0) ? (p00 & greenMask) >>> -greenShift
-								: (p00 & greenMask) << greenShift);
-						int blue00 = ((blueShift < 0) ? (p00 & blueMask) >>> -blueShift
-								: (p00 & blueMask) << blueShift);
-						red = dy1 * bgred + dy * red00 + 128 >> 8;
-						green = dy1 * bggreen + dy * green00 + 128 >> 8;
-						blue = dy1 * bgblue + dy * blue00 + 128 >> 8;
+						sx = bytesPerLine * (y1 + 1) + 3 * x1;
+						blue = dy1 * bgblue + dy * (datadata[sx++] & 0xff) + 128 >> 8;
+						green = dy1 * bggreen + dy * (datadata[sx++] & 0xff) + 128 >> 8;
+						red = dy1 * bgred + dy * (datadata[sx] & 0xff) + 128 >> 8;
 					} else if (y1 == h1 && x1 >= 0 && x1 < w) {
-						int p00 = data.getPixel(x1, y1);
-						int red00 = ((redShift < 0) ? (p00 & redMask) >>> -redShift : (p00 & redMask) << redShift);
-						int green00 = ((greenShift < 0) ? (p00 & greenMask) >>> -greenShift
-								: (p00 & greenMask) << greenShift);
-						int blue00 = ((blueShift < 0) ? (p00 & blueMask) >>> -blueShift
-								: (p00 & blueMask) << blueShift);
-						red = dy1 * red00 + dy * bgred + 128 >> 8;
-						green = dy1 * green00 + dy * bggreen + 128 >> 8;
-						blue = dy1 * blue00 + dy * bgblue + 128 >> 8;
+						sx = bytesPerLine * y1 + 3 * x1;
+						blue = dy1 * (datadata[sx++] & 0xff) + dy * bgblue + 128 >> 8;
+						green = dy1 * (datadata[sx++] & 0xff) + dy * bggreen + 128 >> 8;
+						red = dy1 * (datadata[sx] & 0xff) + dy * bgred + 128 >> 8;
 					} else {
-						scanLine[i] = bgpixel;
-						continue;
+						blue = bgblue;
+						green = bggreen;
+						red = bgred;
 					}
 				} else {
-					int p00 = data.getPixel(x1, y1);
-					int red00 = ((redShift < 0) ? (p00 & redMask) >>> -redShift : (p00 & redMask) << redShift);
-					int green00 = ((greenShift < 0) ? (p00 & greenMask) >>> -greenShift
-							: (p00 & greenMask) << greenShift);
-					int blue00 = ((blueShift < 0) ? (p00 & blueMask) >>> -blueShift : (p00 & blueMask) << blueShift);
-					int p01 = data.getPixel(x1 + 1, y1);
-					int red01 = ((redShift < 0) ? (p01 & redMask) >>> -redShift : (p01 & redMask) << redShift);
-					int green01 = ((greenShift < 0) ? (p01 & greenMask) >>> -greenShift
-							: (p01 & greenMask) << greenShift);
-					int blue01 = ((blueShift < 0) ? (p01 & blueMask) >>> -blueShift : (p01 & blueMask) << blueShift);
-					int p10 = data.getPixel(x1, y1 + 1);
-					int red10 = ((redShift < 0) ? (p10 & redMask) >>> -redShift : (p10 & redMask) << redShift);
-					int green10 = ((greenShift < 0) ? (p10 & greenMask) >>> -greenShift
-							: (p10 & greenMask) << greenShift);
-					int blue10 = ((blueShift < 0) ? (p10 & blueMask) >>> -blueShift : (p10 & blueMask) << blueShift);
-					int p11 = data.getPixel(x1 + 1, y1 + 1);
-					int red11 = ((redShift < 0) ? (p11 & redMask) >>> -redShift : (p11 & redMask) << redShift);
-					int green11 = ((greenShift < 0) ? (p11 & greenMask) >>> -greenShift
-							: (p11 & greenMask) << greenShift);
-					int blue11 = ((blueShift < 0) ? (p11 & blueMask) >>> -blueShift : (p11 & blueMask) << blueShift);
+					sx = bytesPerLine * y1 + 3 * x1;
+					sx1 = sx + bytesPerLine;
+					blue00 = datadata[sx++] & 0xff;
+					green00 = datadata[sx++] & 0xff;
+					red00 = datadata[sx++] & 0xff;
+					blue01 = datadata[sx++] & 0xff;
+					green01 = datadata[sx++] & 0xff;
+					red01 = datadata[sx] & 0xff;
+					blue10 = datadata[sx1++] & 0xff;
+					green10 = datadata[sx1++] & 0xff;
+					red10 = datadata[sx1++] & 0xff;
+					blue11 = datadata[sx1++] & 0xff;
+					green11 = datadata[sx1++] & 0xff;
+					red11 = datadata[sx1] & 0xff;
 					red = dy1 * (dx1 * red00 + dx * red01) + dy * (dx1 * red10 + dx * red11) + 128 >> 16;
 					green = dy1 * (dx1 * green00 + dx * green01) + dy * (dx1 * green10 + dx * green11) + 128 >> 16;
 					blue = dy1 * (dx1 * blue00 + dx * blue01) + dy * (dx1 * blue10 + dx * blue11) + 128 >> 16;
 				}
-				scanLine[i] = ((redShift < 0 ? red << -redShift : red >>> redShift) & redMask)
-						| ((greenShift < 0 ? green << -greenShift : green >>> greenShift) & greenMask)
-						| ((blueShift < 0 ? blue << -blueShift : blue >>> blueShift) & blueMask);
+				outdata[txx++] = (byte) blue;
+				outdata[txx++] = (byte) green;
+				outdata[txx++] = (byte) red;
 			}
-			out.setPixels(0, j, w, scanLine, 0);
-		}
-
 	}
 
 	public static BufferedImage applyTransformation(BufferedImage image, final Transformation transformation) {
@@ -2830,12 +2699,12 @@ public class ImageUtilities {
 		final int h = r.getHeight();
 		transformation.init(w, h);
 		final WritableRaster raster = colorModel.createCompatibleWritableRaster(w, h);
-		int n = ImageConstants.NPROCESSORS;
-		if (n == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			applyTransformation(0, h, transformation, r, w, h, raster);
 		else
-			IntStream.range(0, nP).parallel()
-					.forEach(p -> applyTransformation(h * p / nP, h * (p + 1) / nP, transformation, r, w, h, raster));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> applyTransformation(h * p / ImageConstants.NPROCESSORS,
+							h * (p + 1) / ImageConstants.NPROCESSORS, transformation, r, w, h, raster));
 		return new BufferedImage(colorModel, raster, false, null);
 	}
 
@@ -2884,11 +2753,12 @@ public class ImageUtilities {
 		double ascale = transformation.fillScale;
 		boolean perspectiveChange = transformation.perspectiveChange;
 		boolean isRotating = transformation.isRotating;
-		for (int j = from; j < to; j++) {
-			int y = j + hlow;
-			for (int x = wlow, i = 0; x < whigh; x++, i += bands) {
-				double x_d = ascale * x; // scale
-				double y_d = ascale * y; // scale
+		int j, y, x, i, x1, y1, dx, dy, dx1, dy1, b;
+		double px, py, x_d, y_d, r, s;
+		for (j = from; j < to; j++) {
+			for (x = wlow, i = 0, y = j + hlow; x < whigh; x++, i += bands) {
+				x_d = ascale * x; // scale
+				y_d = ascale * y; // scale
 				if (perspectiveChange) {
 					// horizontal perspective transformation
 					y_d = y_d * maxRadius / (maxRadius + x_d * hptanpt);
@@ -2898,7 +2768,7 @@ public class ImageUtilities {
 					x_d = x_d * maxRadius / (maxRadius - y_d * vptanpt);
 					y_d = y_d * maxRadius * vpcospt / (maxRadius - y_d * vptanpt);
 				}
-				double px, py;
+
 				if (isRotating) {
 					// rotate
 					px = x_d * cost - y_d * sint;
@@ -2909,8 +2779,8 @@ public class ImageUtilities {
 				}
 				if (distortion != 0d) {
 					// distortion correction
-					double r = Math.sqrt(px * px + py * py) / maxRadius;
-					double s = 1.0 - distortion + distortion * r;
+					r = Math.sqrt(px * px + py * py) / maxRadius;
+					s = 1.0 - distortion + distortion * r;
 					px *= s;
 					py *= s;
 				}
@@ -2918,34 +2788,34 @@ public class ImageUtilities {
 				px -= wlow;
 				py -= hlow;
 
-				int x1 = (int) Math.floor(px);
-				int y1 = (int) Math.floor(py);
-				int dx = (int) ((px - x1) * 256d);
-				int dy = (int) ((py - y1) * 256d);
-				int dx1 = 256 - dx;
-				int dy1 = 256 - dy;
+				x1 = (int) Math.floor(px);
+				y1 = (int) Math.floor(py);
+				dx = (int) ((px - x1) * 256d);
+				dy = (int) ((py - y1) * 256d);
+				dx1 = 256 - dx;
+				dy1 = 256 - dy;
 				if (x1 < 0 || x1 >= w1 || y1 < 0 || y1 >= h1) {
 					if (x1 == -1 && y1 >= 0 && y1 < h) {
 						wr.getPixel(x1 + 1, y1, pixel);
-						for (int b = 0; b < bands; b++)
+						for (b = 0; b < bands; b++)
 							pixels[i + b] = dx1 * bgpixel[b] + dx * pixel[b] + 128 >> 8;
 					} else if (x1 == w1 && y1 >= 0 && y1 < h) {
 						wr.getPixel(x1, y1, pixel);
-						for (int b = 0; b < bands; b++)
+						for (b = 0; b < bands; b++)
 							pixels[i + b] = dx1 * pixel[b] + dx * bgpixel[b] + 128 >> 8;
 					} else if (y1 == -1 && x1 >= 0 && x1 < w) {
 						wr.getPixel(x1, y1 + 1, pixel);
-						for (int b = 0; b < bands; b++)
+						for (b = 0; b < bands; b++)
 							pixels[i + b] = dy1 * bgpixel[b] + dy * pixel[b] + 128 >> 8;
 					} else if (y1 == h1 && x1 >= 0 && x1 < w) {
 						wr.getPixel(x1, y1, pixel);
-						for (int b = 0; b < bands; b++)
+						for (b = 0; b < bands; b++)
 							pixels[i + b] = dy1 * pixel[b] + dy * bgpixel[b] + 128 >> 8;
 					} else
 						System.arraycopy(bgpixel, 0, pixels, i, bands);
 				} else {
 					wr.getPixels(x1, y1, 2, 2, pixel);
-					for (int b = 0; b < bands; b++)
+					for (b = 0; b < bands; b++)
 						pixels[i + b] = dy1 * (dx1 * pixel[b] + dx * pixel[b + bands])
 								+ dy * (dx1 * pixel[b + bands2] + dx * pixel[b + bands3]) + 128 >> 16;
 				}
@@ -2956,11 +2826,12 @@ public class ImageUtilities {
 
 	public static void convolveAndTranspose(final int[] kernel, final byte[] in, final byte[] out, final int width,
 			final int height) {
-		if (nP == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			convolveAndTranspose(0, height, kernel, in, out, width, height);
 		else
-			IntStream.range(0, nP).parallel().forEach(
-					p -> convolveAndTranspose(height * p / nP, height * (p + 1) / nP, kernel, in, out, width, height));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> convolveAndTranspose(height * p / ImageConstants.NPROCESSORS,
+							height * (p + 1) / ImageConstants.NPROCESSORS, kernel, in, out, width, height));
 	}
 
 	private static void convolveAndTranspose(int from, int to, int[] kernel, byte[] in, byte[] out, int width,
@@ -2971,29 +2842,27 @@ public class ImageUtilities {
 		int maxvalue = (1 << shift) * 255;
 		int cols2 = cols / 2;
 		int w1 = width - 1;
-		int index, yoff, lum, ix;
-		for (int y = from; y < to; y++) {
-			index = y;
-			yoff = y * width;
-			for (int x = 0; x < width; x++) {
+		int index, yoff, lum, ix, y, x, col;
+		for (y = from; y < to; y++)
+			for (x = 0, index = y, yoff = y * width; x < width; x++) {
 				lum = round;
-				for (int col = -cols2; col <= cols2; col++) {
+				for (col = -cols2; col <= cols2; col++) {
 					ix = x + col;
 					lum += kernel[cols2 + col] * (in[yoff + (ix < 0 ? 0 : ix > w1 ? w1 : ix)] & 0xff);
 				}
 				out[index] = lum < 0 ? 0 : lum > maxvalue ? -1 : (byte) (lum >>> shift);
 				index += height;
 			}
-		}
 	}
 
 	public static void convolveAndTranspose(final int[] kernel, final short[] in, final short[] out, final int width,
 			final int height) {
-		if (nP == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			convolveAndTranspose(0, height, kernel, in, out, width, height);
 		else
-			IntStream.range(0, nP).parallel().forEach(
-					p -> convolveAndTranspose(height * p / nP, height * (p + 1) / nP, kernel, in, out, width, height));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> convolveAndTranspose(height * p / ImageConstants.NPROCESSORS,
+							height * (p + 1) / ImageConstants.NPROCESSORS, kernel, in, out, width, height));
 	}
 
 	private static void convolveAndTranspose(int from, int to, int[] kernel, short[] in, short[] out, int width,
@@ -3005,13 +2874,10 @@ public class ImageUtilities {
 		int facr = fac >>> 1;
 		int cols2 = cols >>> 1;
 		int w1 = width - 1;
-		int index, yoff, lum, ix;
-		for (int y = from; y < to; y++) {
-			index = y;
-			yoff = y * width;
-			for (int x = 0; x < width; x++) {
-				lum = facr;
-				for (int col = -cols2; col <= cols2; col++) {
+		int index, yoff, lum, ix, y, x, col;
+		for (y = from; y < to; y++)
+			for (x = 0, index = y, yoff = y * width; x < width; x++) {
+				for (col = -cols2, lum = facr; col <= cols2; col++) {
 					ix = x + col;
 					lum += kernel[cols2 + col] * (in[yoff + (ix < 0 ? 0 : ix > w1 ? w1 : ix)]);
 				}
@@ -3019,37 +2885,35 @@ public class ImageUtilities {
 				out[index] = lum < 0 ? 0 : lum > max ? max : (short) lum;
 				index += height;
 			}
-		}
 	}
 
 	public static void convolveAndTranspose(final int radius, final byte[] in, final byte[] out, final int width,
 			final int height, final boolean min) {
-		if (nP == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			convolveAndTranspose(0, height, radius, in, out, width, height, min);
 		else
-			IntStream.range(0, nP).parallel().forEach(p -> convolveAndTranspose(height * p / nP, height * (p + 1) / nP,
-					radius, in, out, width, height, min));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> convolveAndTranspose(height * p / ImageConstants.NPROCESSORS,
+							height * (p + 1) / ImageConstants.NPROCESSORS, radius, in, out, width, height, min));
 	}
 
 	public static void convolveAndTranspose(final int radius, final short[] in, final short[] out, final int width,
 			final int height, final boolean min) {
-		if (nP == 1)
+		if (ImageConstants.NPROCESSORS == 1)
 			convolveAndTranspose(0, height, radius, in, out, width, height, min);
 		else
-			IntStream.range(0, nP).parallel().forEach(p -> convolveAndTranspose(height * p / nP, height * (p + 1) / nP,
-					radius, in, out, width, height, min));
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
+					.forEach(p -> convolveAndTranspose(height * p / ImageConstants.NPROCESSORS,
+							height * (p + 1) / ImageConstants.NPROCESSORS, radius, in, out, width, height, min));
 	}
 
 	private static void convolveAndTranspose(int from, int to, int radius, byte[] in, byte[] out, int width, int height,
 			boolean min) {
 		int w1 = width - 1;
-		int index, yoff, lum, ix;
-		for (int y = from; y < to; y++) {
-			index = y;
-			yoff = y * width;
-			for (int x = 0; x < width; x++) {
-				lum = (min) ? 255 : 0;
-				for (int col = -radius; col <= radius; col++) {
+		int index, yoff, lum, ix, y, x, col;
+		for (y = from; y < to; y++)
+			for (x = 0, index = y, yoff = y * width; x < width; x++) {
+				for (col = -radius, lum = (min) ? 255 : 0; col <= radius; col++) {
 					ix = x + col;
 					if (ix >= 0 && ix <= w1) {
 						int lum1 = in[yoff + ix] & 0xff;
@@ -3063,19 +2927,15 @@ public class ImageUtilities {
 				out[index] = (byte) lum;
 				index += height;
 			}
-		}
 	}
 
 	private static void convolveAndTranspose(int from, int to, int radius, short[] in, short[] out, int width,
 			int height, boolean min) {
 		int w1 = width - 1;
-		int index, yoff, lum, ix;
-		for (int y = from; y < to; y++) {
-			index = y;
-			yoff = y * width;
-			for (int x = 0; x < width; x++) {
-				lum = (min) ? LabImage.MAXL : 0;
-				for (int col = -radius; col <= radius; col++) {
+		int index, yoff, lum, ix, y, x, col;
+		for (y = from; y < to; y++)
+			for (x = 0, index = y, yoff = y * width; x < width; x++) {
+				for (col = -radius, lum = (min) ? LabImage.MAXL : 0; col <= radius; col++) {
 					ix = x + col;
 					if (ix >= 0 && ix <= w1) {
 						int lum1 = in[yoff + ix];
@@ -3089,7 +2949,6 @@ public class ImageUtilities {
 				out[index] = (short) lum;
 				index += height;
 			}
-		}
 	}
 
 	public static void waitUntilFileIsReady(File file) throws AccessDeniedException {

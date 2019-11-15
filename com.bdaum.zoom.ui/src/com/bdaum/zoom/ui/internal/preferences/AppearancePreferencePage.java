@@ -56,6 +56,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 
 public class AppearancePreferencePage extends AbstractPreferencePage {
 
+	private static final String PAGEID = "com.bdaum.zoom.ui.preferences.AppearancePreferencePage"; //$NON-NLS-1$
 	private static final String[] ratingOptions = new String[] { PreferenceConstants.SHOWRATING_NO,
 			PreferenceConstants.SHOWRATING_SIZE, PreferenceConstants.SHOWRATING_COUNT };
 	private static final String[] ratingLabels = new String[] { Messages.getString("AppearancePreferencePage.no"), //$NON-NLS-1$
@@ -85,16 +86,14 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.APPEARANCE_PREFERENCE_PAGE);
 		createTabFolder(composite, "Appearance"); //$NON-NLS-1$
-		UiUtilities
-				.createTabItem(tabFolder, Messages.getString("AppearancePreferencePage.color_scheme"), //$NON-NLS-1$
-						Messages.getString("AppearancePreferencePage.scheme_tooltip")) //$NON-NLS-1$
+		UiUtilities.createTabItem(tabFolder, Messages.getString("AppearancePreferencePage.color_scheme"), //$NON-NLS-1$
+				Messages.getString("AppearancePreferencePage.scheme_tooltip")) //$NON-NLS-1$
 				.setControl(createColorSchemeGroup(tabFolder));
-		UiUtilities
-				.createTabItem(tabFolder, Messages.getString("AppearancePreferencePage.thumbnails"), //$NON-NLS-1$
-						Messages.getString("AppearancePreferencePage.thumbnail_tooltip")) //$NON-NLS-1$
+		UiUtilities.createTabItem(tabFolder, Messages.getString("AppearancePreferencePage.thumbnails"), //$NON-NLS-1$
+				Messages.getString("AppearancePreferencePage.thumbnail_tooltip")) //$NON-NLS-1$
 				.setControl(createThumbnailsGroup(tabFolder));
 		initTabFolder(0);
-		createExtensions(tabFolder, "com.bdaum.zoom.ui.preferences.AppearancePreferencePage"); //$NON-NLS-1$
+		createExtensions(tabFolder, PAGEID);
 		fillValues();
 	}
 
@@ -186,7 +185,7 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(1, false));
-		labelConfigGroup = new LabelConfigGroup(composite, false);
+		labelConfigGroup = new LabelConfigGroup(composite, false, true);
 		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("AppearancePreferencePage.decoration")); // $NO //$NON-NLS-1$
 		new Label(group, SWT.NONE).setText(Messages.getString("AppearancePreferencePage.max_face_regions")); //$NON-NLS-1$
 		regionField = new Spinner(group, SWT.BORDER);
@@ -259,7 +258,8 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		expandButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.SHOWEXPANDCOLLAPSE));
 		labelConfigGroup.setSelection(preferenceStore.getInt(PreferenceConstants.SHOWLABEL),
 				preferenceStore.getString(PreferenceConstants.THUMBNAILTEMPLATE),
-				preferenceStore.getInt(PreferenceConstants.LABELFONTSIZE));
+				preferenceStore.getInt(PreferenceConstants.LABELFONTSIZE),
+				preferenceStore.getInt(PreferenceConstants.LABELALIGNMENT));
 		updateButtons();
 	}
 
@@ -274,6 +274,10 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 				preferenceStore.getDefaultInt(PreferenceConstants.SHOWLABEL));
 		preferenceStore.setValue(PreferenceConstants.THUMBNAILTEMPLATE,
 				preferenceStore.getDefaultString(PreferenceConstants.THUMBNAILTEMPLATE));
+		preferenceStore.setValue(PreferenceConstants.LABELFONTSIZE,
+				preferenceStore.getDefaultInt(PreferenceConstants.LABELFONTSIZE));
+		preferenceStore.setValue(PreferenceConstants.LABELFONTSIZE,
+				preferenceStore.getDefaultInt(PreferenceConstants.LABELALIGNMENT));
 		preferenceStore.setValue(PreferenceConstants.BACKGROUNDCOLOR,
 				preferenceStore.getDefaultString(PreferenceConstants.BACKGROUNDCOLOR));
 		preferenceStore.setValue(PreferenceConstants.SHOWLOCATION,
@@ -298,8 +302,9 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		int showLabel = labelConfigGroup.getSelection();
 		if (showLabel >= 0) {
 			preferenceStore.setValue(PreferenceConstants.SHOWLABEL, showLabel);
-			if (showLabel == Constants.CUSTOM_LABEL)
-				preferenceStore.setValue(PreferenceConstants.THUMBNAILTEMPLATE, labelConfigGroup.getTemplate());
+			preferenceStore.setValue(PreferenceConstants.THUMBNAILTEMPLATE, labelConfigGroup.getTemplate());
+			preferenceStore.setValue(PreferenceConstants.LABELFONTSIZE, labelConfigGroup.getFontSize());
+			preferenceStore.setValue(PreferenceConstants.LABELALIGNMENT, labelConfigGroup.getAlignment());
 		}
 		IStructuredSelection selection = colorViewer.getStructuredSelection();
 		if (!selection.isEmpty())

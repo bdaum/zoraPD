@@ -109,7 +109,7 @@ public class TetheredDialog extends ZTitleAreaDialog implements ISelectionChange
 			WatchedFolder folder = new WatchedFolderImpl(null, null, 0L, false, null, true, null, true, 0, null,
 					ImportFromDeviceData.SUBFOLDERPOLICY_YEARMONTH, null, null, Constants.FILESOURCE_DIGITAL_CAMERA,
 					true);
-			WatchedFolderWizard wizard = new WatchedFolderWizard(false);
+			WatchedFolderWizard wizard = new WatchedFolderWizard(false, true, true);
 			WizardDialog wizardDialog = new WizardDialog(getShell(), wizard);
 			wizard.init(null, new StructuredSelection(folder));
 			if (wizardDialog.open() == WizardDialog.OK)

@@ -12,6 +12,8 @@
 package com.bdaum.zoom.gps.bing.internal.views;
 
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 import org.eclipse.osgi.util.NLS;
@@ -31,6 +33,12 @@ public class MapComponent extends AbstractMapComponent {
 	}
 
 	@Override
+	public List<String> getScriptUrls() {
+		return Arrays.asList("https://www.bing.com/api/maps/mapcontrol", //$NON-NLS-1$
+				PLUGINS + BingActivator.PLUGIN_ID + '/' + GMAP_ZOOM_MAP_JS);
+	}
+
+	@Override
 	protected String getCountryCode(String input) {
 		if (input != null && input.length() != 3)
 			for (Locale locale : Locale.getAvailableLocales())
@@ -40,28 +48,13 @@ public class MapComponent extends AbstractMapComponent {
 	}
 
 	@Override
-	protected String createLatLng(double lat, double lon) {
-		return NLS.bind("new Microsoft.Maps.Location({0},{1})", usformat.format(lat), usformat.format(lon)); //$NON-NLS-1$
-	}
-
-	@Override
-	protected String createLatLngBounds(double swLat, double swLon, double neLat, double neLon) {
-		return NLS.bind("new Microsoft.Maps.LocationRect({0},{1},{2})", //$NON-NLS-1$
-				new Object[] {
-						createLatLng((swLat + neLat) / 2,
-								neLon < swLon ? (swLon + neLon + 360) / 2 % 360 : (swLon + neLon) / 2),
-						neLon < swLon ? neLon + 360 - swLon : swLon - neLon, Math.abs(neLat - swLat) });
-	}
-
-	@Override
 	protected String createSetPosDetailScript(com.bdaum.zoom.gps.widgets.AbstractMapComponent.HistoryItem item) {
-		int zoom = (int) item.getDetail();
-		return "map.setView({zoom: " + zoom + ", center: " + createLatLng(item.getLatitude(), item.getLongitude()) //$NON-NLS-1$ //$NON-NLS-2$
-				+ "});\n"; //$NON-NLS-1$
+		return NLS.bind("setZoomDetails({0}, {1})", (int) item.getDetail(), //$NON-NLS-1$
+				latLon(item.getLatitude(), item.getLongitude()));
 	}
 
 	@Override
-	protected String createAdditionalVariables() {
+	public String createAdditionalVariables() {
 		return null;
 	}
 

@@ -47,7 +47,9 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.ProgressIndicator;
+import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.osgi.util.NLS;
@@ -96,6 +98,7 @@ import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.CatalogAdapter;
 import com.bdaum.zoom.core.CatalogListener;
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
@@ -104,8 +107,11 @@ import com.bdaum.zoom.css.internal.IExtendedColorModel2;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.IZoomCommandIds;
+import com.bdaum.zoom.ui.internal.CaptionProcessor;
+import com.bdaum.zoom.ui.internal.CaptionProcessor.CaptionConfiguration;
 import com.bdaum.zoom.ui.internal.IPresentationHandler;
 import com.bdaum.zoom.ui.internal.Icons;
+import com.bdaum.zoom.ui.internal.StartListener;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
@@ -129,8 +135,8 @@ import com.bdaum.zoom.ui.internal.widgets.ZPSWTCanvas;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public abstract class AbstractPresentationView extends BasicView
-		implements IExtendedColorModel2, IPresentationHandler, UiConstants, IOperationHistoryListener {
+public abstract class AbstractPresentationView extends BasicView implements IExtendedColorModel2, IPresentationHandler,
+		UiConstants, IOperationHistoryListener, StartListener, IPropertyChangeListener {
 
 	private static final int PROGRESS_THICKNESS = 5;
 	private static final int FORCE_PAN_MASK = InputEvent.SHIFT_MASK | InputEvent.ALT_MASK | InputEvent.CTRL_MASK
@@ -303,6 +309,7 @@ public abstract class AbstractPresentationView extends BasicView
 	private static final double HACCEL = 5d;
 	private static final java.awt.Rectangle RECT1 = new java.awt.Rectangle(0, 0, 1, 1);
 
+	protected CaptionProcessor captionProcessor = new CaptionProcessor(Constants.TH_ALL);
 	protected PSWTCanvas canvas;
 	protected java.awt.Rectangle surfaceBounds;
 	protected PSWTPath surface;
@@ -335,6 +342,8 @@ public abstract class AbstractPresentationView extends BasicView
 	private MenuManager menuMgr;
 	protected PPresentationItem lastSelection, recentSelection;
 	protected List<IIdentifiableObject> clipboard = new ArrayList<>();
+	protected String lastSessionPresentation;
+	protected boolean started;
 
 	protected static TextField createTextLine(PNode parent, String text, int greekThreshold, int textWidth, int indent,
 			double ypos, Color penColor, Color bgColor, String fontFamily, int fontStyle, int fontSize,
@@ -360,6 +369,7 @@ public abstract class AbstractPresentationView extends BasicView
 
 	@Override
 	public void createPartControl(Composite parent) {
+		started = !UiActivator.getDefault().addStartListener(this);
 		Composite composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = 0;
@@ -414,7 +424,20 @@ public abstract class AbstractPresentationView extends BasicView
 						refresh();
 					}
 				});
+		UiActivator.getDefault().getPreferenceStore().addPropertyChangeListener(this);
 	}
+
+	public void hasStarted() {
+		started = true;
+		Control c = getControl();
+		if (!c.isDisposed())
+			c.getDisplay().asyncExec(() -> {
+				if (!c.isDisposed())
+					startup();
+			});
+	}
+
+	protected abstract void startup();
 
 	@Override
 	protected void makeActions() {
@@ -610,6 +633,12 @@ public abstract class AbstractPresentationView extends BasicView
 		return null;
 	}
 
+	public String createSlideTitle(CaptionConfiguration captionConfiguration, Asset asset) {
+		if (captionConfiguration.getLabelTemplate() != null)
+			return captionProcessor.computeImageCaption(asset, null, null, null, captionConfiguration.getLabelTemplate(), true);
+		return UiUtilities.createSlideTitle(asset);
+	}
+
 	@Override
 	public IGalleryHover getGalleryHover(MouseEvent event) {
 		return new GalleryHover();
@@ -706,6 +735,7 @@ public abstract class AbstractPresentationView extends BasicView
 			cleanUp();
 			currentPresentation = obj.getStringId();
 		}
+		isDirty = false;
 		if (currentSystemCursor == SWT.CURSOR_APPSTARTING)
 			setCanvasCursor(null, SWT.CURSOR_ARROW);
 	}
@@ -803,6 +833,7 @@ public abstract class AbstractPresentationView extends BasicView
 
 	@Override
 	public void dispose() {
+		UiActivator.getDefault().getPreferenceStore().removePropertyChangeListener(this);
 		Core.getCore().removeCatalogListener(catListener);
 		if (wheelListener != null) {
 			wheelListener.dispose();
@@ -1272,7 +1303,7 @@ public abstract class AbstractPresentationView extends BasicView
 			showInFolderAction.setEnabled(localOne);
 			showInTimeLineAction.setEnabled(localOne && hasTimeLine());
 			if (exhibitPropertiesAction != null)
-				exhibitPropertiesAction.setEnabled(one);
+				exhibitPropertiesAction.setEnabled(getAdapter(IPresentationItem.class) != null);
 			voiceNoteAction.setEnabled(localOne && hasVoiceNote(selection));
 			rotateLeftAction.setEnabled(localSelected && writable && isMedia(selection, QueryField.PHOTO, true));
 			rotateRightAction.setEnabled(localSelected && writable && isMedia(selection, QueryField.PHOTO, true));
@@ -1309,5 +1340,15 @@ public abstract class AbstractPresentationView extends BasicView
 	protected abstract void refreshAfterHistoryEvent(IUndoableOperation operation);
 
 	public abstract String getId();
+	
+	@Override
+	public void propertyChange(PropertyChangeEvent event) {
+		String property = event.getProperty();
+		if (PreferenceConstants.SHOWLABEL.equals(property)
+				|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
+				|| PreferenceConstants.LABELALIGNMENT.equals(property)
+				|| PreferenceConstants.LABELFONTSIZE.equals(property))
+			captionProcessor.updateGlobalConfiguration();
+	}
 
 }

@@ -274,4 +274,15 @@ public interface IMediaSupport {
 	 */
 	String getGalleryHoverId();
 
+	/**
+	 * Sets the media support id (internal)
+	 * @param id
+	 */
+	void setId(String id);
+	
+	/**
+	 * @return the media support id
+	 */
+	String getId();
+
 }

@@ -38,13 +38,17 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
 import com.bdaum.zoom.cat.model.composedTo.ComposedToImpl;
+import com.bdaum.zoom.cat.model.creatorsContact.ContactImpl;
+import com.bdaum.zoom.cat.model.creatorsContact.CreatorsContactImpl;
 import com.bdaum.zoom.cat.model.derivedBy.DerivedByImpl;
 import com.bdaum.zoom.cat.model.group.Criterion;
+import com.bdaum.zoom.cat.model.group.CriterionImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterion;
 import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
 import com.bdaum.zoom.cat.model.location.LocationImpl;
+import com.bdaum.zoom.cat.model.locationCreated.LocationCreatedImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.cat.model.meta.WatchedFolderImpl;
 import com.bdaum.zoom.core.Constants;
@@ -52,6 +56,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.Range;
+import com.bdaum.zoom.core.TetheredRange;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.image.ImageConstants;
@@ -183,9 +188,6 @@ public class CatalogConverter {
 					Criterion crit = sm.getCriterion(0);
 					crit.setRelation(QueryField.XREF);
 					db.store(crit);
-					Object value = crit.getValue();
-					if (value instanceof Range)
-						db.store(value);
 					db.store(sm);
 				}
 			}
@@ -204,10 +206,10 @@ public class CatalogConverter {
 						Criterion criterion = sm.getCriterion(0);
 						if (criterion != null) {
 							Object value = criterion.getValue();
-							if (value instanceof Range) {
-								Range range = (Range) value;
-								Date d1 = (Date) range.getFrom();
-								Date d2 = (Date) range.getTo();
+							Object vto = criterion.getTo();
+							if (vto != null) {
+								Date d1 = (Date) value;
+								Date d2 = (Date) vto;
 								GregorianCalendar from = new GregorianCalendar();
 								from.setTime(d1);
 								GregorianCalendar to = new GregorianCalendar(from.get(Calendar.YEAR),
@@ -215,8 +217,8 @@ public class CatalogConverter {
 										59);
 								Date d3 = to.getTime();
 								if (!d3.equals(d2)) {
-									range.setTo(d3);
-									db.store(range);
+									criterion.setTo(d3);
+									db.store(criterion);
 									added = db.addDirtyCollection(id);
 								}
 							}
@@ -404,16 +406,157 @@ public class CatalogConverter {
 					}
 					asset.setMimeType(isDng ? ImageConstants.IMAGE_X_DNG : ImageConstants.IMAGE_X_RAW);
 					asset.setDigitalZoomRatio(Double.NaN);
-					if (isRaw && Constants.STATE_CONVERTED == asset.getStatus()) 
+					if (isRaw && Constants.STATE_CONVERTED == asset.getStatus())
 						asset.setStatus(Constants.STATE_RAW);
 					db.store(asset);
 					if (++c % 500 == 0)
 						db.commit();
 				}
 			}
-
+		}
+		if (version <= 15) {
+			monitor.subTask(Messages.CatalogConverter_fix_range);
+			for (CriterionImpl crit : db.obtainObjects(CriterionImpl.class)) {
+				Object value = crit.getValue();
+				if (value instanceof Range) {
+					crit.setValue(((Range) value).getFrom());
+					crit.setTo(((Range) value).getTo());
+					crit.setAnd(value instanceof TetheredRange);
+					db.store(crit);
+					db.delete(value);
+				} else if (value == null) {
+					SmartCollection sm = crit.getSmartCollection_parent();
+					if (sm != null) {
+						String id = sm.getStringId();
+						if (id.startsWith(IDbManager.DATETIMEKEY)) {
+							GregorianCalendar cal1 = new GregorianCalendar();
+							GregorianCalendar cal2 = new GregorianCalendar();
+							String[] split = id.split("=|-"); //$NON-NLS-1$
+							switch (split.length) {
+							case 2: {
+								int year = getInt(split[1]);
+								cal1.set(year, 0, 1, 0, 0, 0);
+								cal2.set(year, 11, 31, 23, 59, 59);
+								break;
+							}
+							case 3: {
+								int year = getInt(split[1]);
+								if (split[2].startsWith("W")) { //$NON-NLS-1$
+									int week = getInt(split[2].substring(1));
+									cal1.set(year, 0, 1, 0, 0, 0);
+									cal1.set(GregorianCalendar.WEEK_OF_YEAR, week);
+									cal1.set(GregorianCalendar.DAY_OF_WEEK, 0);
+									cal2.set(Calendar.YEAR, year);
+									cal2.set(Calendar.WEEK_OF_YEAR, week);
+									cal2.set(Calendar.DAY_OF_WEEK, 6);
+									cal2.set(Calendar.HOUR_OF_DAY, 23);
+									cal2.set(Calendar.MINUTE, 59);
+									cal2.set(Calendar.SECOND, 59);
+								} else {
+									int month = getInt(split[2]);
+									cal1.set(year, month, 1, 0, 0, 0);
+									cal2.set(year, month, cal1.getActualMaximum(Calendar.DAY_OF_MONTH), 23, 59, 59);
+								}
+								break;
+							}
+							case 4: {
+								int year = getInt(split[1]);
+								int day = getInt(split[3]);
+								if (split[2].startsWith("W")) { //$NON-NLS-1$
+									int week = getInt(split[2].substring(1));
+									cal1.set(year, 0, 1, 0, 0, 0);
+									cal1.set(GregorianCalendar.WEEK_OF_YEAR, week);
+									cal1.set(GregorianCalendar.DAY_OF_WEEK, day);
+									cal2.set(Calendar.YEAR, year);
+									cal2.set(Calendar.WEEK_OF_YEAR, week);
+									cal2.set(Calendar.DAY_OF_WEEK, day);
+									cal2.set(Calendar.HOUR_OF_DAY, 23);
+									cal2.set(Calendar.MINUTE, 59);
+									cal2.set(Calendar.SECOND, 59);
+								} else {
+									int month = getInt(split[2]);
+									cal1.set(year, month, day, 0, 0, 0);
+									cal2.set(year, month, day, 23, 59, 59);
+								}
+								break;
+							}
+							}
+							crit.setValue(cal1.getTime());
+							crit.setTo(cal2.getTime());
+							db.store(crit);
+						}
+					} else
+						db.delete(crit);
+				}
+			}
+			db.commit();
+			int c = 0;
+			monitor.subTask(Messages.CatalogConverter_tune_structures);
+			List<CreatorsContactImpl> contacts = new ArrayList<CreatorsContactImpl>(
+					db.obtainObjects(CreatorsContactImpl.class));
+			for (CreatorsContactImpl rel : contacts) {
+				List<String> assetIds = rel.getAsset();
+				if (assetIds.isEmpty()) {
+					deleteContact(db, rel);
+					continue;
+				}
+				for (String assetId : assetIds) {
+					AssetImpl asset = db.obtainAsset(assetId);
+					if (asset != null) {
+						asset.setCreatorsContact_parent(rel.getStringId());
+						db.store(asset);
+					} else {
+						rel.removeAsset(assetId);
+						if (rel.getAsset().isEmpty())
+							deleteContact(db, rel);
+						else
+							db.store(rel);
+					}
+					if (++c % 500 == 0)
+						db.commit();
+				}
+			}
+			db.commit();
+			c = 0;
+			List<LocationCreatedImpl> locs = new ArrayList<LocationCreatedImpl>(
+					db.obtainObjects(LocationCreatedImpl.class));
+			for (LocationCreatedImpl rel : locs) {
+				List<String> assetIds = rel.getAsset();
+				if (assetIds.isEmpty()) {
+					db.delete(rel);
+					continue;
+				}
+				for (String assetId : assetIds) {
+					AssetImpl asset = db.obtainAsset(assetId);
+					if (asset != null) {
+						asset.setLocationCreated_parent(rel.getStringId());
+						db.store(asset);
+					} else {
+						rel.removeAsset(assetId);
+						if (rel.getAsset().isEmpty())
+							db.delete(rel);
+						else
+							db.store(rel);
+					}
+					if (++c % 500 == 0)
+						db.commit();
+				}
+			}
+			db.commit();
 		}
 		meta.setVersion(db.getVersion());
 		db.storeAndCommit(meta);
+	}
+
+	private static int getInt(String s) {
+		return Integer.parseInt(s);
+	}
+
+	private static void deleteContact(IDbManager db, CreatorsContactImpl rel) {
+		String contactId = rel.getContact();
+		ContactImpl contact = db.obtainById(ContactImpl.class, contactId);
+		if (contact != null)
+			db.delete(contact);
+		db.delete(rel);
 	}
 }

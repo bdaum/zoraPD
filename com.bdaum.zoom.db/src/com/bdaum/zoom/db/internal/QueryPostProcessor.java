@@ -70,6 +70,7 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 			String field = crit.getField();
 			int relation = crit.getRelation();
 			Object value = crit.getValue();
+			Object vto = crit.getTo();
 			QueryField qfield = QueryField.findQueryField(field);
 			if (qfield != null) {
 				int type = qfield.getType();
@@ -223,8 +224,8 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 								break;
 							case QueryField.BETWEEN:
 							case QueryField.NOTBETWEEN: {
-								from = (Integer) ((Range) value).getFrom();
-								to = (Integer) ((Range) value).getTo();
+								from = (Integer) value;
+								to = (Integer) vto;
 								break;
 							}
 							}
@@ -284,10 +285,10 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 								result = v1 >= (Long) value;
 								break;
 							case QueryField.BETWEEN:
-								result = v1 >= (Long) ((Range) value).getFrom() && v1 <= (Long) ((Range) value).getTo();
+								result = v1 >= (Long) value && v1 <= (Long) vto;
 								break;
 							case QueryField.NOTBETWEEN:
-								result = v1 < (Long) ((Range) value).getFrom() || v1 > (Long) ((Range) value).getTo();
+								result = v1 < (Long) value || v1 > (Long) vto;
 								break;
 							}
 						}
@@ -316,8 +317,8 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 								break;
 							case QueryField.BETWEEN:
 							case QueryField.NOTBETWEEN: {
-								from = (Double) ((Range) value).getFrom();
-								to = (Double) ((Range) value).getTo();
+								from = (Double) value;
+								to = (Double) vto;
 								break;
 							}
 							}
@@ -385,8 +386,8 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 								break;
 							case QueryField.BETWEEN:
 							case QueryField.NOTBETWEEN: {
-								from = (Date) ((Range) value).getFrom();
-								to = (Date) ((Range) value).getTo();
+								from = (Date)value;
+								to = (Date) vto;
 								break;
 							}
 							}
@@ -492,23 +493,26 @@ public class QueryPostProcessor extends PostProcessorImpl implements IPostProces
 				return null;
 			int relation = crit.getRelation();
 			Object value = crit.getValue();
+			Object to = crit.getTo();
 			Constraint constraint = null;
 			if (relation == QueryField.DATEEQUALS || relation == QueryField.DATENOTEQUAL) {
 				long t = ((Date) value).getTime() / 1000 * 1000;
-				value = new Range(new Date(t), new Date(t + 999));
+				value = new Date(t);
+				to = new Date(t + 999);
 				relation = (relation == QueryField.DATEEQUALS) ? QueryField.BETWEEN : QueryField.NOTBETWEEN;
 			} else if (qfield.getType() != QueryField.T_STRING
 					&& (relation == QueryField.SIMILAR || relation == QueryField.NOTSIMILAR)) {
 				float tolerance = getTolerance(field);
 				if (tolerance != 0f) {
 					relation = relation == QueryField.NOTSIMILAR ? QueryField.NOTBETWEEN : QueryField.BETWEEN;
-					value = CollectionProcessor.compileSimilarRange(value, tolerance);
+					Range range = CollectionProcessor.compileSimilarRange(value, tolerance);
+					value = range.getFrom();
+					to = range.getTo();
 				} else
 					relation = relation == QueryField.NOTSIMILAR ? QueryField.NOTEQUAL : QueryField.EQUALS;
 			}
 			if (relation == QueryField.BETWEEN || relation == QueryField.NOTBETWEEN)
-				constraint = CollectionProcessor.applyBetween(query, field, field, relation, ((Range) value).getFrom(),
-						((Range) value).getTo());
+				constraint = CollectionProcessor.applyBetween(query, field, field, relation, value, to);
 			else if (relation != QueryField.EQUALS && relation != QueryField.NOTEQUAL && qfield.getCard() != 1
 					&& qfield.getType() == QueryField.T_STRING)
 				constraint = query.constrain(new StringArrayEvaluation(qfield, relation, (String) value));

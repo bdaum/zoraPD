@@ -76,6 +76,7 @@ public class WebGalleryImpl extends WebGallery_typeImpl implements WebGallery {
 	 * @param scalingMethod - Property
 	 * @param lastAccessDate - Property
 	 * @param perspective - Property
+	 * @param safety - Property
 	 */
 	public WebGalleryImpl(boolean template, String name, String logo,
 			boolean htmlDescription, String description, boolean hideHeader,
@@ -92,7 +93,7 @@ public class WebGalleryImpl extends WebGallery_typeImpl implements WebGallery {
 			boolean applySharpening, float radius, float amount, int threshold,
 			String headHtml, String topHtml, String footerHtml,
 			int jpegQuality, int scalingMethod, Date lastAccessDate,
-			String perspective) {
+			String perspective, int safety) {
 		super(template, name, logo, htmlDescription, description, hideHeader,
 				opacity, padding, thumbSize, downloadText, hideDownload,
 				copyright, addWatermark, showMeta, contactName, email, webUrl,
@@ -102,7 +103,7 @@ public class WebGalleryImpl extends WebGallery_typeImpl implements WebGallery {
 				outputFolder, ftpDir, isFtp, pageName, poweredByText,
 				applySharpening, radius, amount, threshold, headHtml, topHtml,
 				footerHtml, jpegQuality, scalingMethod, lastAccessDate,
-				perspective);
+				perspective, safety);
 
 	}
 

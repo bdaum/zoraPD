@@ -58,6 +58,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -83,11 +84,8 @@ import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IFormatter;
-import com.bdaum.zoom.core.IScoreFormatter;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Range;
-import com.bdaum.zoom.core.TetheredRange;
 import com.bdaum.zoom.core.db.ICollectionProcessor;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.Utilities;
@@ -119,6 +117,20 @@ public class UiUtilities {
 
 	private static final int USHRT_MAXV = 65535;
 	private static final Integer MINUSONE = Integer.valueOf(-1);
+
+	/**
+	 * Finds a view in the page without restoring the view
+	 * 
+	 * @param page
+	 *            - workbench page
+	 * @param id
+	 *            - view id
+	 * @return - found view or null
+	 */
+	public static IViewPart findViewNoRestore(IWorkbenchPage page, String id) {
+		IViewReference ref = page.findViewReference(id);
+		return ref == null ? null : ref.getView(false);
+	}
 
 	/**
 	 * Creates a labeled group
@@ -178,12 +190,7 @@ public class UiUtilities {
 	}
 
 	public static String createSlideTitle(Asset asset) {
-		String tit = asset.getTitle();
-		if (tit == null || tit.trim().isEmpty())
-			tit = asset.getHeadline();
-		if (tit == null || tit.trim().isEmpty())
-			return Core.getFileName(asset.getUri(), true);
-		return tit;
+		return (String) QueryField.TITLEORNAME.obtainFieldValue(asset);
 	}
 
 	public static String addExplanation(QueryField qfield, String[] value, String text) {
@@ -260,6 +267,15 @@ public class UiUtilities {
 		return list.toArray(new String[list.size()]);
 	}
 
+	public static String[] getComboHistory(Combo combo, char c) {
+		String[] items = combo.getItems();
+		List<String> list = new ArrayList<>(items.length);
+		for (String s : items)
+			if (s.indexOf(c) < 0)
+				list.add(s);
+		return list.toArray(new String[list.size()]);
+	}
+
 	public static Point snapToGrid(int x, int y, int w, int h, int yOff, int gridSize, int gridTolerance) {
 		int rx = (x + gridSize / 2) / gridSize * gridSize;
 		if (Math.abs(rx - x) < gridTolerance)
@@ -315,41 +331,6 @@ public class UiUtilities {
 	public static Color getAwtBackground(Control control, org.eclipse.swt.graphics.Color color) {
 		RGB rgb = (color != null ? color : control.getBackground()).getRGB();
 		return new Color(rgb.red, rgb.green, rgb.blue);
-	}
-
-	public static String computeImageCaption(Asset asset, IScoreFormatter scoreFormatter, Integer cardinality,
-			WildCardFilter filter, String template) {
-		if (asset == null)
-			return ""; //$NON-NLS-1$
-		StringBuilder sb;
-		if (template != null) {
-			String s = Utilities.evaluateTemplate(template, Constants.TH_ALL, "", null, -1, -1, -1, null, asset, //$NON-NLS-1$
-					"", Integer.MAX_VALUE, false, true); //$NON-NLS-1$
-			if (scoreFormatter == null)
-				return s;
-			sb = new StringBuilder(s);
-		} else if (cardinality != null) {
-			String name = asset.getName();
-			if (filter != null) {
-				String s = Core.getFileName(asset.getUri(), true);
-				String[] capture = filter.capture(s);
-				for (String c : capture)
-					if (c.length() < s.length())
-						name = c;
-			}
-			sb = new StringBuilder(name).append(" (").append(cardinality.intValue()).append(')'); //$NON-NLS-1$
-		} else {
-			String s = Core.getFileName(asset.getUri(), true);
-			if (scoreFormatter == null)
-				return s;
-			sb = new StringBuilder(s);
-		}
-		if (scoreFormatter != null) {
-			String remark = scoreFormatter.format(asset.getScore());
-			if (!remark.isEmpty())
-				sb.append(" (").append(remark).append(')'); //$NON-NLS-1$
-		}
-		return sb.toString();
 	}
 
 	public static Rectangle computeFrame(String regionId, int x, int y, int width, int height, int rotation) {
@@ -427,7 +408,7 @@ public class UiUtilities {
 	public static GroupImpl obtainUserGroup(final IDbManager dbManager) {
 		GroupImpl user = dbManager.obtainById(GroupImpl.class, Constants.GROUP_ID_USER);
 		if (user == null) {
-			user = new GroupImpl(Messages.UiUtilities_user_defined, false, Constants.INHERIT_LABEL, null, 0, null);
+			user = new GroupImpl(Messages.UiUtilities_user_defined, false, Constants.INHERIT_LABEL, null, 0, 1, null);
 			user.setStringId(Constants.GROUP_ID_USER);
 		}
 		return user;
@@ -598,26 +579,28 @@ public class UiUtilities {
 		return errorMessage;
 	}
 
-//	private static void compileCategories(Map<String, Category> categories, Set<String> result) {
-//		for (Category cat : categories.values())
-//			if (cat != null) {
-//				String label = cat.getLabel();
-//				result.add(label);
-//				result.add(label);
-//				compileCategories(cat.getSubCategory(), result);
-//			}
-//	}
-//
+	// private static void compileCategories(Map<String, Category> categories,
+	// Set<String> result) {
+	// for (Category cat : categories.values())
+	// if (cat != null) {
+	// String label = cat.getLabel();
+	// result.add(label);
+	// result.add(label);
+	// compileCategories(cat.getSubCategory(), result);
+	// }
+	// }
+	//
 	public static Set<String> getValueProposals(IDbManager db, String field, String subfield) {
 		Set<String> result = null;
 		Meta meta = db.getMeta(false);
 		if (meta != null) {
 			QueryField qfield = QueryField.findQuerySubField(field, subfield);
-//			if (qfield == QueryField.IPTC_KEYWORDS)
-//				return meta.getKeywords();
-//			if (qfield == QueryField.IPTC_CATEGORY || qfield == QueryField.IPTC_SUPPLEMENTALCATEGORIES)
-//				compileCategories(meta.getCategory(), result = new HashSet<String>(30));
-//			else
+			// if (qfield == QueryField.IPTC_KEYWORDS)
+			// return meta.getKeywords();
+			// if (qfield == QueryField.IPTC_CATEGORY || qfield ==
+			// QueryField.IPTC_SUPPLEMENTALCATEGORIES)
+			// compileCategories(meta.getCategory(), result = new HashSet<String>(30));
+			// else
 			if (qfield == QueryField.LOCATION_WORLDREGION) {
 				result = new HashSet<String>(10);
 				for (LocationImpl loc : db.obtainObjects(LocationImpl.class)) {
@@ -814,15 +797,14 @@ public class UiUtilities {
 			QueryField qfield = QueryField.findQueryField(field);
 			if (qfield != null) {
 				if (qfield == QueryField.IPTC_DATECREATED) {
-					SimpleDateFormat df = new SimpleDateFormat(
-							compact ? Messages.UiUtilities_date_format_compact : Messages.UiUtilities_date_format);
+					SimpleDateFormat df = compact ? Format.MDY_TIME_SHORT_FORMAT.get()
+							: Format.EMDY_TIME_LONG_FORMAT.get();
 					if (crit.getRelation() == QueryField.EQUALS && value instanceof Date)
 						return NLS.bind(Messages.UiUtilities_time_search, df.format((Date) value));
-					else if (crit.getRelation() == QueryField.BETWEEN && value instanceof Range) {
-						Range range = (Range) value;
-						if (range.getFrom() instanceof Date && range.getTo() instanceof Date)
-							return NLS.bind(Messages.UiUtilities_time_search2, df.format((Date) range.getFrom()),
-									df.format((Date) range.getTo()));
+					else if (crit.getRelation() == QueryField.BETWEEN && crit.getTo() != null) {
+						if (crit.getValue() instanceof Date && crit.getTo() instanceof Date)
+							return NLS.bind(Messages.UiUtilities_time_search2, df.format((Date) crit.getValue()),
+									df.format((Date) crit.getTo()));
 					}
 				}
 				if (sb.length() > 0)
@@ -848,15 +830,19 @@ public class UiUtilities {
 				sb.append('"');
 			}
 		}
-		if (sort) 
-			composeSortDescription(sm, sb);
+		if (sort)
+			composeSortDescription(sm, sb, true);
 		return sb.toString();
 	}
 
-	public static void composeSortDescription(SmartCollection sm, StringBuilder sb) {
+	public static void composeSortDescription(SmartCollection sm, StringBuilder sb, boolean upperCase) {
 		List<SortCriterion> sortCriterion = sm.getSortCriterion();
 		if (!sortCriterion.isEmpty()) {
-			sb.append(Messages.UiUtilities_sorted_by);
+			String msg = Messages.UiUtilities_sorted_by;
+			if (upperCase)
+				sb.append(' ').append(msg.toUpperCase());
+			else
+				sb.append(msg);
 			boolean and = false;
 			for (SortCriterion sc : sortCriterion) {
 				String field = sc.getField();
@@ -873,8 +859,7 @@ public class UiUtilities {
 						if (qsub != null)
 							sb.append(' ').append(qsub.getLabel());
 					}
-					sb.append(
-							sc.getDescending() ? Messages.UiUtilities_descending : Messages.UiUtilities_ascending);
+					sb.append(sc.getDescending() ? Messages.UiUtilities_descending : Messages.UiUtilities_ascending);
 				}
 			}
 		}
@@ -919,7 +904,7 @@ public class UiUtilities {
 		if (coll.getStringId().startsWith(IDbManager.IMPORTKEY)) {
 			if (!coll.getCriterion().isEmpty()) {
 				Criterion crit = coll.getCriterion().get(0);
-				if (crit != null && crit.getValue() instanceof TetheredRange)
+				if (crit != null && crit.getAnd())
 					return Icons.folder_tethered;
 			}
 			return Icons.folder_import;
@@ -1131,15 +1116,6 @@ public class UiUtilities {
 		return null;
 	}
 
-	public static String[] getComboHistory(Combo combo, char c) {
-		String[] items = combo.getItems();
-		List<String> list = new ArrayList<>(items.length);
-		for (String s : items)
-			if (s.indexOf(c) < 0)
-				list.add(s);
-		return list.toArray(new String[list.size()]);
-	}
-
 	public static Image getAnnotationIcon(Asset asset) {
 		String voiceFileURI = asset.getVoiceFileURI();
 		if (voiceFileURI != null && !voiceFileURI.isEmpty()) {
@@ -1156,7 +1132,7 @@ public class UiUtilities {
 		}
 		return null;
 	}
-	
+
 	public static Date getCreationDate(Asset asset) {
 		Date date = asset.getDateCreated();
 		if (date == null)
@@ -1165,13 +1141,13 @@ public class UiUtilities {
 			date = asset.getDateTime();
 		return date;
 	}
-	
+
 	private static final String ELLIPSIS = "..."; //$NON-NLS-1$
 
 	public static String shortenText(String s, int maxchars) {
 		if (s == null || s.length() <= maxchars)
 			return s;
-		return s.substring(0,maxchars)+ELLIPSIS;
+		return s.substring(0, maxchars) + ELLIPSIS;
 	}
 
 }

@@ -43,7 +43,6 @@ import com.bdaum.zoom.cat.model.group.slideShow.SlideShowImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.core.db.IDbManager;
 
 public class CatalogContentProvider implements ITreeContentProvider {
@@ -180,9 +179,10 @@ public class CatalogContentProvider implements ITreeContentProvider {
 			if (criterion == null)
 				return false;
 			Object value = criterion.getValue();
+			Object to = criterion.getTo();
 			if (cal != null)
 				cal = new GregorianCalendar();
-			cal.setTime(value instanceof Range ? (Date) ((Range) value).getTo() : (Date) value);
+			cal.setTime(to != null ? (Date) to : (Date) value);
 			switch (sel) {
 			case '0':
 				cal.add(Calendar.MONTH, 1);

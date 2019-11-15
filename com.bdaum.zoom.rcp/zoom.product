@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="%appName" uid="com.bdaum.zoom.rcp.product" id="com.bdaum.zoom.rcp.product" application="com.bdaum.zoom.rcp.application" version="3.5.1" useFeatures="true" includeLaunchers="true">
+<product name="%appName" uid="com.bdaum.zoom.rcp.product" id="com.bdaum.zoom.rcp.product" application="com.bdaum.zoom.rcp.application" version="3.6.0" useFeatures="true" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/com.bdaum.zoom.rcp/about.gif"/>
@@ -171,20 +171,21 @@
    </plugins>
 
    <features>
-      <feature id="com.bdaum.zora.FEATURE" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.linux_gtk_x86" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.linux_gtk_x64" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.macosx_cocoa_x64" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.win32_x86" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.win32_x64" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.advancedSearch" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.geo" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.peer" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.spell" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.ai" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.raw" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.report" version="3.5.1"/>
-      <feature id="com.bdaum.zora.FEATURE.video" version="3.5.1"/>
+      <feature id="com.bdaum.zora.FEATURE" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.linux_gtk_x86" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.linux_gtk_x64" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.macosx_cocoa_x64" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.win32_x86" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.win32_x64" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.advancedSearch" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.geo" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.peer" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.spell" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.ai" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.raw" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.report" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.video" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE.webserver" version="3.6.0"/>
    </features>
 
    <configurations>

@@ -25,6 +25,10 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -33,6 +37,8 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
@@ -57,13 +63,14 @@ import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Constants;
-import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.ui.AssetSelection;
+import com.bdaum.zoom.ui.internal.TemplateProcessor;
+import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.dialogs.ConfigureCaptionDialog;
+import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
-@SuppressWarnings("restriction")
 public class HistogramView extends BasicView implements PaintListener {
 	public static final String ID = "com.bdaum.zoom.ui.views.HistogramView"; //$NON-NLS-1$
 	private static final int MINTHUMBNAILSIZE = 160 * 120;
@@ -72,6 +79,8 @@ public class HistogramView extends BasicView implements PaintListener {
 	private static final String SHOW_BLUE = "showBlue"; //$NON-NLS-1$
 	private static final String SHOW_GREY = "showGrey"; //$NON-NLS-1$
 	private static final String WEIGHTED = "weighted"; //$NON-NLS-1$
+	private static final String SHOW = "show"; //$NON-NLS-1$
+	private static final String FONTSIZE = "fontsize"; //$NON-NLS-1$
 	private Canvas canvas;
 	private Asset currentItem;
 	private int[] reds = new int[256];
@@ -93,6 +102,15 @@ public class HistogramView extends BasicView implements PaintListener {
 	private Composite composite;
 	private Label space;
 	private Action trigger;
+	private final TemplateProcessor captionProcessor = new TemplateProcessor(Constants.TH_ALL);
+	private int show;
+	private int fontsize;
+	private int showLabelDflt;
+	private String labelTemplateDflt;
+	private int labelFontsizeDflt;
+	private int currentFontsize = -1;
+	private Font smallFont;
+	private int labelAlignmentDflt = 1;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -109,7 +127,13 @@ public class HistogramView extends BasicView implements PaintListener {
 			bool = memento.getBoolean(WEIGHTED);
 			weighted = bool != null && bool;
 			template = memento.getString(TEMPLATE);
-			Integer integer = memento.getInteger(ALIGNMENT);
+			Integer integer = memento.getInteger(SHOW);
+			show = integer != null ? integer
+					: template == null ? Constants.INHERIT_LABEL
+							: template.isEmpty() ? Constants.NO_LABEL : Constants.CUSTOM_LABEL;
+			integer = memento.getInteger(FONTSIZE);
+			fontsize = integer != null ? integer : 8;
+			integer = memento.getInteger(ALIGNMENT);
 			alignment = integer != null ? integer : SWT.LEFT;
 		}
 		if (template == null)
@@ -126,12 +150,40 @@ public class HistogramView extends BasicView implements PaintListener {
 			memento.putBoolean(SHOW_GREY, weighted);
 			memento.putString(TEMPLATE, template);
 			memento.putInteger(ALIGNMENT, alignment);
+			memento.putInteger(SHOW, show);
+			memento.putInteger(FONTSIZE, fontsize);
 		}
 		super.saveState(memento);
 	}
 
+	protected void setPreferences() {
+		IPreferenceStore preferenceStore = applyPreferences();
+		preferenceStore.addPropertyChangeListener(new IPropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent event) {
+				String property = event.getProperty();
+				if (PreferenceConstants.SHOWLABEL.equals(property)
+						|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
+						|| PreferenceConstants.LABELALIGNMENT.equals(property)
+						|| PreferenceConstants.LABELFONTSIZE.equals(property)) {
+					applyPreferences();
+					updateCaption();
+				}
+			}
+		});
+	}
+
+	protected IPreferenceStore applyPreferences() {
+		final IPreferenceStore preferenceStore = UiActivator.getDefault().getPreferenceStore();
+		showLabelDflt = preferenceStore.getInt(PreferenceConstants.SHOWLABEL);
+		labelTemplateDflt = preferenceStore.getString(PreferenceConstants.THUMBNAILTEMPLATE);
+		labelFontsizeDflt = preferenceStore.getInt(PreferenceConstants.LABELFONTSIZE);
+		labelAlignmentDflt = preferenceStore.getInt(PreferenceConstants.LABELALIGNMENT);
+		return preferenceStore;
+	}
+
 	@Override
 	public void createPartControl(Composite parent) {
+		setPreferences();
 		composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = 0;
@@ -255,8 +307,8 @@ public class HistogramView extends BasicView implements PaintListener {
 		configureAction = new Action(Messages.getString("HistogramView.config_caption")) { //$NON-NLS-1$
 			@Override
 			public void run() {
-				ConfigureCaptionDialog dialog = new ConfigureCaptionDialog(getSite().getShell(), template, alignment,
-						currentItem);
+				ConfigureCaptionDialog dialog = new ConfigureCaptionDialog(getSite().getShell(), show, template,
+						alignment, fontsize, currentItem);
 				if (dialog.open() == ConfigureCaptionDialog.OK) {
 					template = dialog.getTemplate();
 					alignment = dialog.getAlignment();
@@ -401,12 +453,11 @@ public class HistogramView extends BasicView implements PaintListener {
 	}
 
 	protected void updateCaption() {
-		if (template.isEmpty()) {
+		if (show == Constants.NO_LABEL || template == null || template.isEmpty()) {
 			if (caption != null) {
 				space.dispose();
 				caption.dispose();
 				caption = null;
-				composite.layout(true, true);
 			}
 		} else {
 			if (caption == null) {
@@ -419,13 +470,29 @@ public class HistogramView extends BasicView implements PaintListener {
 						configureAction.run();
 					}
 				});
-				composite.layout(true, true);
 			}
 			caption.setText(currentItem == null ? "" //$NON-NLS-1$
-					: Utilities.evaluateTemplate(template, Constants.TH_ALL, "", null, -1, -1, -1, null, currentItem, //$NON-NLS-1$
-							"", Integer.MAX_VALUE, false, true)); //$NON-NLS-1$
+					: captionProcessor.processTemplate(show == Constants.CUSTOM_LABEL ? template : null, currentItem));
 			caption.setAlignment(alignment);
+			caption.setFont(show == Constants.CUSTOM_LABEL && fontsize != 0 ? getSmallFont(fontsize)
+					: JFaceResources.getDefaultFont());
 		}
+		composite.layout(true, true);
+	}
+
+	private Font getSmallFont(int labelFontsize) {
+		if (labelFontsize != currentFontsize) {
+			currentFontsize = labelFontsize;
+			if (smallFont != null) {
+				smallFont.dispose();
+				smallFont = null;
+			}
+		}
+		if (smallFont == null) {
+			FontData[] fd = JFaceResources.getDefaultFontDescriptor().getFontData();
+			smallFont = new Font(canvas.getDisplay(), fd[0].getName(), currentFontsize, fd[0].getStyle());
+		}
+		return smallFont;
 	}
 
 	protected void recalculate() {
@@ -506,6 +573,12 @@ public class HistogramView extends BasicView implements PaintListener {
 
 	@Override
 	public void refresh() {
+		if (show == Constants.INHERIT_LABEL) {
+			show = showLabelDflt;
+			template = labelTemplateDflt;
+			fontsize = labelFontsizeDflt;
+			alignment = labelAlignmentDflt;
+		}
 		canvas.redraw();
 		updateActions(false);
 	}

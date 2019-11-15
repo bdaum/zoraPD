@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+  	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/svg+xml" href="../files/zora.svg" sizes="any">
+    <link rel="stylesheet" href="zoraPD.css">
+    <title>{$appName} Web Client</title>
+  </head>
+  <body>
+    <header class="chapters">
+      <h1 id="mainTitle">{$appName} Web Client</h1>
+      <a href="help.html" target="_blank" rel="noopener"><img src="../files/help.png" alt="Help"/></a>
+    </header>
+    <main id="contents">
+		{$$images}<section id="images" class="contents">   
+			<a class="chapter" href="../{$imagesPath}/lightbox.html" target="_blank" rel="noopener"><h2 class="chapter">{$imagesTitle}</h2></a>
+	    {$$}{$$exhibitions}</section>
+		<section id="exhibitions" class="contents">   
+			<a class="chapter" href="../{$exhibitionsPath}/lightbox.html" target="_blank" rel="noopener"><h2 class="chapter">{$exhibitionsTitle}</h2></a>
+	    {$$}{$$galleries}</section>
+		<section id="webgalleries" class="contents">   
+			<a class="chapter" href="../{$webgalleriesPath}/lightbox.html" target="_blank" rel="noopener"><h2 class="chapter">{$webgalleriesTitle}</h2></a>
+	    </section>
+	    {$$}{$$slideshows}</section>
+		<section id="slideshows" class="contents">   
+			<a class="chapter" href="../{$slideshowsPath}/lightbox.html" target="_blank" rel="noopener"><h2 class="chapter">{$slideshowsTitle}</h2></a>
+	    </section>
+	    {$$}
+    </main>
+	<footer>
+	    <p>Created with {$appName}</p>    
+	</footer>  
+  </body>
+</html>

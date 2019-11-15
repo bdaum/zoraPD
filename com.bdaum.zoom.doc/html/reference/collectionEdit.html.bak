@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us"><head>
+
+<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Collection dialog</title>
+
+<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
+<h2>Collection dialog </h2>
+<br>
+The collections dialog is used for defining the query that selects the
+images of a collection. In addition one or several sort criteria can be defined to sort the
+results of the query. <br><h4>General</h4>
+<ul>
+  <li>The <span style="font-weight: bold;">name</span> of the collection. Adhoc collections do not have a name.</li>
+  <li>A collection <span style="font-weight: bold;">description</span>. Adhoc collections do not have a name.</li>
+  <li>A <span style="font-weight: bold;">color code</span> to be displayed with the collection in the <span style="font-style: italic;">Catalog view</span>. Adhoc collections do not have a color code.</li>
+  <li>For adhoc-queriers, you may opt to execute the query <span style="font-weight: bold;">within</span> the currently collection.</li>
+  <li>In case of a peer-to-peer <span style="font-weight: bold;">network</span> you may opt to execute the query across the whole network.<br>
+  </li>
+</ul>
+<br>
+<h4>Query</h4>
+Each query can be made up from several criteria that can be
+connected via <abbr>AND</abbr> and <abbr>OR</abbr> operators. The processing sequence is strictly
+top down &nbsp;- criteria defined first are evaluated first. There is
+no operator precedence between <abbr>AND</abbr> and <abbr>OR</abbr>.<br>Each criterion consists of a <span style="font-style: italic;">field</span>, a <span style="font-style: italic;">relation</span> and a <span style="font-style: italic;">value</span>. In case of the <code>between</code> and <code>not between</code> relations two values (<code>from</code> and <code>to</code>) must be given. The fields are ordered into three groups: <span style="font-style: italic;">Properties</span>, <span style="font-style: italic;">EXIF</span> and<span style="font-style: italic;"> IPTC</span>. <br><br>The relations depend on the field type:<br><ul style="font-weight: normal;"><li>types with multiple numeric values allow only for the relations <code>=</code> and <code><span style="font-family: Arial;">≠</span></code>. In case of <code>=</code> at least one matching value leades to success, in case of <code><span style="font-family: Arial;">≠</span></code> no matching value are allowed.</li><li><code>between</code>&nbsp;and&nbsp;<code>not between</code> can only be used with&nbsp;numeric and date types.</li><li><code>similar</code> can be used with some numeric and date fields. The tolerances applied during such a query can be configured under.&nbsp; <acronym>Window&gt;Preferences&gt;Metadata&gt;Tolerances<sup>*</sup></acronym>. <br>
+Applied text fields, similar performs a case insensitive search.</li><li>the relations&nbsp;<code>contains</code> and&nbsp;<code>does not contain</code> are also possible with string types meaning that the specified value must be a substring of the field value or not.</li><li>the relations <code>Wildcard pattern</code> and <code>exclude pattern</code> allow the use of wildcards (<code>*</code>, <code>?</code>) in the search value.</li></ul>
+<h5>Sorting</h5>
+Sort criteria can be connected via <abbr>AND</abbr>
+operators. Fields with multiple values cannot be used in sort criteria.
+The sort criteria specifed first are the dominant sort critera<br>
+<br>
+<h4>Appearance</h4>
+<ul>
+  <li><span style="font-weight: bold;">Thumbnail labels</span>. Here you can
+define a policy how thumbnail labels of images in this collection shall be
+displayed. If you choose "inherited", the settings of the parent collection, the parent group
+or of the <a href="appearancePrefs.html">global preferences</a> are used. Note, that subcollections may overwrite those policies.
+  </li>
+</ul>
+
+
+
+
+<hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa Photo Director&gt;Preferences&gt;...</acronym><br></body></html>

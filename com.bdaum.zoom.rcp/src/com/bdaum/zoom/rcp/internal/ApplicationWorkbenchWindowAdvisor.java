@@ -51,6 +51,7 @@ import com.bdaum.zoom.core.db.IDbFactory;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.fileMonitor.internal.filefilter.FilterChain;
+import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.mtp.DeviceInsertionListener;
 import com.bdaum.zoom.rcp.internal.perspective.DataEntryPerspective;
@@ -144,6 +145,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 		String customProfile = preferencesService.getString(UI_NAMESPACE, PreferenceConstants.CUSTOMPROFILE, null,
 				null);
 		ImageActivator.getDefault().resetCustomProfile(customProfile);
+		if (ImageConstants.AVAILABLE_PROCESSORS > 1)
+			ImageConstants.setNoProcessors(
+					preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.NOPROCESSORS, 2, null));
 		setTheme(preferencesService.getString(UI_NAMESPACE, PreferenceConstants.BACKGROUNDCOLOR,
 				PreferenceConstants.BACKGROUNDCOLOR_DARKGREY, null));
 		final CoreActivator activator = CoreActivator.getDefault();
@@ -183,6 +187,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 									PreferenceConstants.CUSTOMPROFILE, null, null);
 							if (customProfile != null)
 								ImageActivator.getDefault().resetCustomProfile(customProfile);
+						} else if (key == PreferenceConstants.NOPROCESSORS) {
+							ImageConstants.setNoProcessors(
+									preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.NOPROCESSORS, 2, null));
 						} else if (key == PreferenceConstants.BACKGROUNDCOLOR) {
 							String bgColor = preferencesService.getString(UI_NAMESPACE,
 									PreferenceConstants.BACKGROUNDCOLOR, PreferenceConstants.BACKGROUNDCOLOR_DARKGREY,
@@ -253,7 +260,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 				off = p + 1;
 				if (crit != null) {
 					SmartCollectionImpl sm = new SmartCollectionImpl("autoColors", true, false, false, false, "", 0, //$NON-NLS-1$//$NON-NLS-2$
-							null, 0, null, Constants.INHERIT_LABEL, null, 0, null);
+							null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 					sm.addCriterion(crit);
 					processors[i] = Core.getCore().getDbFactory().createQueryPostProcessor(sm);
 				}

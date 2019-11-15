@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -43,7 +42,6 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -124,11 +122,14 @@ import com.bdaum.zoom.cat.model.group.webGallery.WebExhibitImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.Utilities;
 import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.CaptionProcessor;
+import com.bdaum.zoom.ui.internal.CaptionProcessor.CaptionConfiguration;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
@@ -138,6 +139,7 @@ import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.FileEditor;
 import com.bdaum.zoom.ui.internal.widgets.QualityGroup;
+import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.internal.widgets.WebColorGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
@@ -177,6 +179,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	private static final String CONTACT = "contact"; //$NON-NLS-1$
 	private static final String COPYRIGHT = "copyright"; //$NON-NLS-1$
 	private static final String LOGO = "logo"; //$NON-NLS-1$
+	private static final String PRIVACY = "privacy"; //$NON-NLS-1$
 	private static final String LINKPAGE = "linkpage"; //$NON-NLS-1$
 	private static final String FONTFAMILY = "fontfamily"; //$NON-NLS-1$
 	private static final String FONTSIZE = "fontsize"; //$NON-NLS-1$
@@ -195,7 +198,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	private static final int PDFBUTTON = 998;
 	private static final int PRINTBUTTON = 999;
 	private static NumberFormat af = NumberFormat.getNumberInstance();
-	private static final SimpleDateFormat EDF = new SimpleDateFormat("yyyy"); //$NON-NLS-1$
 	private static String[] SEQUENCEITEMS = new String[] { Messages.ExhibitionEditDialog_capt_des_cred,
 			Messages.ExhibitionEditDialog_capt_cred_des, Messages.ExhibitionEditDialog_cred_capt_des };
 
@@ -220,6 +222,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	private double scale;
 	private int xoff, yoff;
 	private int[] wxs, wys, wx2s, wy2s;
+	private int startX, startY;
+	private double[] wa;
 	private int hotIndex;
 	private GroupImpl group;
 	private IDialogSettings settings;
@@ -239,11 +243,14 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	private OutputTargetGroup outputTargetGroup;
 	private FileEditor logoField;
 	protected int dragHandle;
-	protected Object draggedObject, recentlyDraggedObject, hotObject, selectedItem;
+	protected int draggedObject, recentlyDraggedObject, hotObject, selectedItem;
+	private static final int ENTRANCE = -1;
+	private static final int NIL = -1000;
 	protected Point dragStart;
 	protected Point origin = new Point(0, 0);
 	private QualityGroup qualityGroup;
 	private TreeViewer frameDetailViewer;
+	private RadioButtonGroup privacyGroup;
 
 	public static ExhibitionImpl open(final Shell shell, final GroupImpl group, final ExhibitionImpl gallery,
 			final String title, final boolean canUndo, final String errorMsg) {
@@ -265,10 +272,34 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		super(parentShell, HelpContextIds.EXHIBITION_DIALOG);
 		this.group = group;
 		this.current = current;
-		selectedItem = current;
+		recentlyDraggedObject = hotObject = selectedItem = ENTRANCE;
+		draggedObject = NIL;
 		this.title = title;
 		this.canUndo = canUndo;
 		settings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
+		int n = current == null ? 0 : current.getWall().size();
+		wxs = new int[n];
+		wys = new int[n];
+		wx2s = new int[n];
+		wy2s = new int[n];
+		wa = new double[n];
+		if (current != null) {
+			startX = current.getStartX();
+			startY = current.getStartY();
+			for (int i = 0; i < n; i++) {
+				Wall wall = current.getWall(i);
+				int gx = wall.getGX();
+				int gy = wall.getGY();
+				double angle = wall.getGAngle();
+				double r = Math.toRadians(angle);
+				int width = wall.getWidth();
+				wxs[i] = gx;
+				wys[i] = gy;
+				wx2s[i] = (int) (gx + Math.cos(r) * width + D05);
+				wy2s[i] = (int) (gy + Math.sin(r) * width + D05);
+				wa[i] = angle;
+			}
+		}
 	}
 
 	@Override
@@ -646,17 +677,11 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				int miny = Integer.MAX_VALUE;
 				int maxx = Integer.MIN_VALUE;
 				int maxy = Integer.MIN_VALUE;
-				int n = current.getWall().size();
-				wxs = new int[n];
-				wys = new int[n];
-				wx2s = new int[n];
-				wy2s = new int[n];
-				double[] wa = new double[n];
 				int i = 0;
 				for (Wall wall : current.getWall()) {
-					double angle = wall.getGAngle();
-					int gx = wall.getGX();
-					int gy = wall.getGY();
+					double angle = wa[i];
+					int gx = wxs[i];
+					int gy = wys[i];
 					boolean match = false;
 					for (int j = 0; j < i; j++)
 						if (gx == wxs[j] && gy == wys[j] && angle == wa[j]) {
@@ -664,10 +689,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 							break;
 						}
 					if (match) {
-						wall.setGX(wx2s[i - 1]);
-						gx = wx2s[i - 1];
-						wall.setGY(wy2s[i - 1]);
-						gy = wy2s[i - 1];
+						wxs[i] = gx = wx2s[i - 1];
+						wys[i] = gy = wy2s[i - 1];
 						double d = wa[i - 1];
 						if (d > 45 && d < 135)
 							angle = ((i / 2) % 2 == 0) ? d - 90 : d + 90;
@@ -679,7 +702,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 							angle += 360;
 						else if (angle >= 360)
 							angle -= 360;
-						wall.setGAngle(angle);
+						wa[i] = angle;
 						updateFloorplanDetails();
 					}
 					int width = wall.getWidth();
@@ -690,19 +713,14 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 					miny = Math.min(miny, Math.min(gy, gy2));
 					maxx = Math.max(maxx, Math.max(gx, gx2));
 					maxy = Math.max(maxy, Math.max(gy, gy2));
-					wxs[i] = gx;
-					wys[i] = gy;
 					wx2s[i] = gx2;
 					wy2s[i] = gy2;
-					wa[i] = angle;
 					++i;
 				}
-				int sx = current.getStartX();
-				int sy = current.getStartY();
-				minx = Math.min(minx, sx);
-				miny = Math.min(miny, sy);
-				maxx = Math.max(maxx, sx);
-				maxy = Math.max(maxy, sy);
+				minx = Math.min(minx, startX);
+				miny = Math.min(miny, startY);
+				maxx = Math.max(maxx, startX);
+				maxy = Math.max(maxy, startY);
 				double w = maxx - minx;
 				double h = maxy - miny;
 				scale = Math.min(area.width / w, area.height / h) / 2d;
@@ -729,27 +747,25 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				gc.setBackground(e.display.getSystemColor(SWT.COLOR_GRAY));
 				gc.fillRectangle(xoff - 3, yoff - 3, 6, 6);
 				gc.setLineWidth(2);
-				Wall doorWall = null;
-				i = 0;
-				for (Wall wall : current.getWall()) {
-					gc.setForeground(
-							e.display.getSystemColor(selectedItem == wall ? SWT.COLOR_RED : SWT.COLOR_DARK_GRAY));
-					int x1 = xoff + (int) (wxs[i] * scale + D05);
-					int y1 = yoff + (int) (wys[i] * scale + D05);
-					int x2 = xoff + (int) (wx2s[i] * scale + D05);
-					int y2 = yoff + (int) (wy2s[i] * scale + D05);
+				int doorWall = -1;
+				for (int j = 0; j < wxs.length; j++) {
+					gc.setForeground(e.display.getSystemColor(selectedItem == j ? SWT.COLOR_RED : SWT.COLOR_DARK_GRAY));
+					int x1 = xoff + (int) (wxs[j] * scale + D05);
+					int y1 = yoff + (int) (wys[j] * scale + D05);
+					int x2 = xoff + (int) (wx2s[j] * scale + D05);
+					int y2 = yoff + (int) (wy2s[j] * scale + D05);
 					gc.drawLine(x1, y1, x2, y2);
-					double aAngle = wall.getGAngle();
+					double aAngle = wa[j];
 					double r = Math.toRadians(aAngle);
 					double sin = Math.sin(r);
 					double cos = Math.cos(r);
-					if (sx >= Math.min(wxs[i], wx2s[i]) - 50 && sx <= Math.max(wxs[i], wx2s[i]) + 50
-							&& sy >= Math.min(wys[i], wy2s[i]) - 50 && sy <= Math.max(wys[i], wy2s[i]) + 50) {
+					if (startX >= Math.min(wxs[j], wx2s[j]) - 50 && startX <= Math.max(wxs[j], wx2s[j]) + 50
+							&& startY >= Math.min(wys[j], wy2s[j]) - 50 && startY <= Math.max(wys[j], wy2s[j]) + 50) {
 						if (Math.abs(cos) > 0.01d) {
-							if (Math.abs(wys[i] - sy + (sx - wxs[i]) * sin / cos) < 50)
-								doorWall = wall;
+							if (Math.abs(wys[j] - startY + (startX - wxs[j]) * sin / cos) < 50)
+								doorWall = j;
 						} else
-							doorWall = wall;
+							doorWall = j;
 					}
 					int xa = (int) ((x1 + x2) * D05 - sin * 5);
 					int ya = (int) ((y1 + y2) * D05 + cos * 5);
@@ -763,16 +779,15 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 					x3 = (int) (xa + 6 * Math.cos(r) + D05);
 					y3 = (int) (ya + 6 * Math.sin(r) + D05);
 					gc.drawLine(xa, ya, x3, y3);
-					++i;
 				}
-				if (doorWall != null) {
+				if (doorWall >= 0) {
 					int lineStyle = gc.getLineStyle();
 					gc.setLineStyle(SWT.LINE_DASH);
-					double r = Math.toRadians(doorWall.getGAngle());
+					double r = Math.toRadians(wa[doorWall]);
 					double sin = Math.sin(r);
 					double cos = Math.cos(r);
-					double dx = sx * scale - sin * 5;
-					double dy = sy * scale + cos * 5;
+					double dx = startX * scale - sin * 5;
+					double dy = startY * scale + cos * 5;
 					int dx1 = (int) (dx + DOORWIDTH / 2 * scale * cos + D05);
 					int dy1 = (int) (dy - DOORWIDTH / 2 * scale * sin + D05);
 					int dx2 = (int) (dx - (INFOWIDTH + DOORWIDTH / 2) * scale * cos + D05);
@@ -781,31 +796,32 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 					gc.setLineStyle(lineStyle);
 				}
 				gc.setForeground(
-						e.display.getSystemColor(selectedItem == current ? SWT.COLOR_RED : SWT.COLOR_DARK_GREEN));
-				gc.drawOval(xoff + (int) (sx * scale + D05) - ENTRANCEDIAMETER / 2 - 1,
-						yoff + (int) (sy * scale + D05) - ENTRANCEDIAMETER / 2 - 1, ENTRANCEDIAMETER, ENTRANCEDIAMETER);
+						e.display.getSystemColor(selectedItem == ENTRANCE ? SWT.COLOR_RED : SWT.COLOR_DARK_GREEN));
+				gc.drawOval(xoff + (int) (startX * scale + D05) - ENTRANCEDIAMETER / 2 - 1,
+						yoff + (int) (startY * scale + D05) - ENTRANCEDIAMETER / 2 - 1, ENTRANCEDIAMETER,
+						ENTRANCEDIAMETER);
 			}
 		});
 		floorplan.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(MouseEvent e) {
-				if (hotObject != null) {
+				if (hotObject != NIL) {
 					dragStart = new Point(e.x, e.y);
 					draggedObject = hotObject;
 					dragHandle = hotIndex;
-					hotObject = null;
+					hotObject = NIL;
 				}
 			}
 
 			@Override
 			public void mouseUp(MouseEvent e) {
 				recentlyDraggedObject = draggedObject;
-				draggedObject = null;
+				draggedObject = NIL;
 				Object sel = null;
 				int x = e.x;
 				int y = e.y;
-				int sx = xoff + (int) (current.getStartX() * scale + D05);
-				int sy = yoff + (int) (current.getStartY() * scale + D05);
+				int sx = xoff + (int) (startX * scale + D05);
+				int sy = yoff + (int) (startY * scale + D05);
 				if (Math.sqrt((sx - x) * (sx - x) + (sy - y) * (sy - y)) <= ENTRANCEDIAMETER / 2 + 1) {
 					sel = current;
 				} else {
@@ -831,49 +847,42 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		});
 		floorplan.addMouseMoveListener(new MouseMoveListener() {
 			public void mouseMove(MouseEvent e) {
-				if (draggedObject != null) {
+				if (draggedObject != NIL) {
 					int dx = e.x - dragStart.x;
 					int dy = e.y - dragStart.y;
 					int x = origin.x + (int) (dx / scale + D05);
 					int y = origin.y + (int) (dy / scale + D05);
-					if (draggedObject == current) {
-						current.setStartX(x);
-						current.setStartY(y);
-					} else if (draggedObject instanceof Wall) {
-						Wall wall = (Wall) draggedObject;
+					if (draggedObject == ENTRANCE) {
+						startX = x;
+						startY = y;
+					} else if (draggedObject >= 0) {
 						if (dragHandle == 1) {
-							wall.setGX(x);
-							wall.setGY(y);
+							wxs[draggedObject] = x;
+							wys[draggedObject] = y;
 						} else {
-							double ddx = wall.getGX() - x;
-							double ddy = wall.getGY() - y;
-							double angle = ddx == 0 ? 90 : Math.toDegrees(Math.atan(ddy / ddx));
-							if (ddx > 0) {
-								if (ddy < 0)
-									angle += 180;
-								else
-									angle -= 180;
-							}
-							wall.setGAngle(angle);
+							double degrees = Math.toDegrees(Math.atan2(y - wys[draggedObject], x - wxs[draggedObject]));
+							if (degrees < 0)
+								degrees += 360;
+							wa[draggedObject] = degrees;
 						}
 					}
 					floorplan.redraw();
 					updateFloorplanDetails();
 					return;
 				}
-				IStructuredSelection selection = itemViewer.getStructuredSelection();
-				hotObject = null;
+				hotObject = NIL;
 				hotIndex = -1;
-				Object sel = selection.getFirstElement();
+				Object sel = itemViewer.getStructuredSelection().getFirstElement();
 				int x = e.x;
 				int y = e.y;
-				int sx = xoff + (int) (current.getStartX() * scale + D05);
-				int sy = yoff + (int) (current.getStartY() * scale + D05);
+				int sx = xoff + (int) (startX * scale + D05);
+				int sy = yoff + (int) (startY * scale + D05);
 				if (sel == current
 						&& Math.sqrt((sx - x) * (sx - x) + (sy - y) * (sy - y)) <= ENTRANCEDIAMETER / 2 + 1) {
-					hotObject = current;
-					origin.x = current.getStartX();
-					origin.y = current.getStartY();
+					hotObject = ENTRANCE;
+					hotIndex = 1;
+					origin.x = startX;
+					origin.y = startY;
 				} else {
 					int i = 0;
 					for (Wall wall : current.getWall()) {
@@ -884,12 +893,12 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 							int y2 = yoff + (int) (wy2s[i] * scale + D05);
 							if (Math.sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)) <= TOLERANCE) {
 								hotIndex = 1;
-								hotObject = wall;
+								hotObject = i;
 								origin.x = wxs[i];
 								origin.y = wys[i];
 							} else if (Math.sqrt((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y)) <= TOLERANCE) {
 								hotIndex = 2;
-								hotObject = wall;
+								hotObject = i;
 								origin.x = wx2s[i];
 								origin.y = wy2s[i];
 							}
@@ -897,19 +906,19 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 						++i;
 					}
 				}
-				if (hotObject != null) {
-					if (hotIndex == 2)
-						floorplan.setCursor(rotCursor);
-					else
-						floorplan.setCursor(getShell().getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL));
-				} else
+				if (hotObject == NIL)
 					floorplan.setCursor(getShell().getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
+				else if (hotIndex == 2)
+					floorplan.setCursor(rotCursor);
+				else
+					floorplan.setCursor(getShell().getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL));
+
 			}
 		});
 		floorplan.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
-				if (recentlyDraggedObject != null) {
+				if (recentlyDraggedObject != NIL) {
 					int dx = 0;
 					int dy = 0;
 					switch (e.keyCode) {
@@ -940,27 +949,25 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 					default:
 						return;
 					}
-					if (recentlyDraggedObject == current) {
-						current.setStartX(current.getStartX() + dx);
-						current.setStartY(current.getStartY() + dy);
-					} else if (recentlyDraggedObject instanceof Wall) {
-						Wall wall = (Wall) recentlyDraggedObject;
-						int gx = wall.getGX();
-						int gy = wall.getGY();
+					if (recentlyDraggedObject == ENTRANCE) {
+						startX += dx;
+						startY += dy;
+					} else if (recentlyDraggedObject >= 0) {
 						if (dragHandle == 1) {
-							wall.setGX(gx + dx);
-							wall.setGY(gy + dy);
+							wxs[recentlyDraggedObject] += dx;
+							wys[recentlyDraggedObject] += dy;
 						} else {
+							Wall wall = current.getWall(recentlyDraggedObject);
+							int gx = wxs[recentlyDraggedObject];
+							int gy = wys[recentlyDraggedObject];
 							int width = wall.getWidth();
-							double r = Math.toRadians(wall.getGAngle());
+							double r = Math.toRadians(wa[recentlyDraggedObject]);
 							int gx2 = (int) (gx + Math.cos(r) * width + D05);
 							int gy2 = (int) (gy + Math.sin(r) * width + D05);
-							double ddx = gx - gx2 - dx;
-							double ddy = gy - gy2 - dy;
-							double angle = ddx == 0 ? 90 : Math.toDegrees(Math.atan(ddy / ddx));
-							if (ddx > 0)
-								angle = ddy < 0 ? 180 + angle : angle - 180;
-							wall.setGAngle(angle);
+							double degrees = Math.toDegrees(Math.atan2(gy2 + dy - gy, gx2 + dx - gx));
+							if (degrees < 0)
+								degrees += 360;
+							wa[recentlyDraggedObject] = degrees;
 						}
 					}
 					floorplan.redraw();
@@ -972,13 +979,28 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		updateFloorplanDetails();
 		itemViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
-				selectedItem = ((IStructuredSelection) event.getSelection()).getFirstElement();
+				selectedItem = getSelectionIndex();
 				updateFloorplanDetails();
 				floorplan.redraw();
 			}
+
 		});
 		itemViewer.setSelection(new StructuredSelection(current));
+	}
 
+	private int getSelectionIndex() {
+		if (itemViewer != null) {
+			Object el = itemViewer.getStructuredSelection().getFirstElement();
+			if (el == current)
+				return ENTRANCE;
+			int i = 0;
+			for (Wall w : current.getWall()) {
+				if (w == el)
+					return i;
+				++i;
+			}
+		}
+		return NIL;
 	}
 
 	private String captionUnitmft() {
@@ -994,35 +1016,33 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	}
 
 	protected void updateItems(int x, int y, double a) {
-		if (selectedItem instanceof Wall) {
+		if (selectedItem >= 0) {
 			if (x >= 0)
-				((Wall) selectedItem).setGX(x);
+				wxs[selectedItem] = x;
 			if (y >= 0)
-				((Wall) selectedItem).setGY(y);
+				wys[selectedItem] = y;
 			if (!Double.isNaN(a))
-				((Wall) selectedItem).setGAngle(a);
+				wa[selectedItem] = a;
 		} else if (current != null) {
 			if (x >= 0)
-				current.setStartX(x);
+				startX = x;
 			if (y >= 0)
-				current.setStartY(y);
+				startY = y;
 		}
 		floorplan.redraw();
 	}
 
 	protected void updateFloorplanDetails() {
-		IStructuredSelection selection = itemViewer.getStructuredSelection();
-		Object firstElement = selection.getFirstElement();
-		if (firstElement instanceof Wall) {
-			Wall wall = (Wall) firstElement;
-			xspinner.setSelection(fromMm(wall.getGX()));
-			yspinner.setSelection(fromMm(wall.getGY()));
-			aspinner.setSelection((int) (wall.getGAngle() * 10 + 0.5d));
+		int index = getSelectionIndex();
+		if (index >= 0) {
+			xspinner.setSelection(fromMm(wxs[index]));
+			yspinner.setSelection(fromMm(wys[index]));
+			aspinner.setSelection((int) (wa[index] * 10 + 0.5d));
 			aspinner.setVisible(true);
 			alabel.setVisible(true);
 		} else if (current != null) {
-			xspinner.setSelection(fromMm(current.getStartX()));
-			yspinner.setSelection(fromMm(current.getStartY()));
+			xspinner.setSelection(fromMm(startX));
+			yspinner.setSelection(fromMm(startY));
 			alabel.setVisible(false);
 			aspinner.setVisible(false);
 		}
@@ -1153,11 +1173,11 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 					break;
 				case 3:
 					if (element instanceof Exhibit)
-						return printDimension(((Exhibit) element).getWidth(), tara);
+						return printDimension(((Exhibit) element).getWidth(), tara, true);
 					break;
 				case 4:
 					if (element instanceof Exhibit)
-						return printDimension(((Exhibit) element).getHeight(), tara);
+						return printDimension(((Exhibit) element).getHeight(), tara, true);
 					break;
 				case 5:
 					if (element instanceof Exhibit) {
@@ -1175,22 +1195,22 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				return ""; //$NON-NLS-1$
 			}
 
-			protected String printDistance(int dist, int tara) {
-				af.setMaximumFractionDigits(2);
-				af.setMinimumFractionDigits(2);
-				if (unit == 'i')
-					return af.format((dist + 2 * tara) / 304.8d) + " ft"; //$NON-NLS-1$
-				return af.format((dist + tara) / 1000d) + " m"; //$NON-NLS-1$
-			}
-
-			protected String printDimension(int dim, int tara) {
-				af.setMaximumFractionDigits(1);
-				af.setMinimumFractionDigits(1);
-				if (unit == 'i')
-					return af.format((dim + 2 * tara) / 25.4d) + " in"; //$NON-NLS-1$
-				return af.format((dim + 2 * tara) / 10d) + " cm"; //$NON-NLS-1$
-			}
 		});
+	}
+
+	protected String printDistance(int dist, int tara) {
+		af.setMaximumFractionDigits(2);
+		af.setMinimumFractionDigits(2);
+		if (unit == 'i')
+			return af.format((dist + 2 * tara) / 304.8d) + " ft"; //$NON-NLS-1$
+		return af.format((dist + tara) / 1000d) + " m"; //$NON-NLS-1$
+	}
+
+	protected String printDimension(int dim, int tara, boolean u) {
+		af.setMaximumFractionDigits(1);
+		af.setMinimumFractionDigits(1);
+		double v = (dim + 2 * tara) / unit == 'i' ? 25.4d : 10d;
+		return NLS.bind(u ? "{0} {1}" : "{0}", v, unit == 'i' ? "in" : "cm"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
 
 	@SuppressWarnings("unused")
@@ -1202,13 +1222,16 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		nameField.addListener(SWT.Modify, modifyListener);
 		final Label descriptionLabel = new Label(exhGroup, SWT.NONE);
-		descriptionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
+		descriptionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.BEGINNING, false, false));
 		descriptionLabel.setText(Messages.ExhibitionEditDialog_description);
 		final GridData gd_descriptionField = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gd_descriptionField.widthHint = 250;
 		gd_descriptionField.heightHint = 120;
 		descriptionField = new CheckedText(exhGroup, SWT.WRAP | SWT.V_SCROLL | SWT.MULTI | SWT.BORDER);
 		descriptionField.setLayoutData(gd_descriptionField);
+		new Label(exhGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_privacy);
+		privacyGroup = new RadioButtonGroup(exhGroup, null, SWT.HORIZONTAL, Messages.ExhibitionEditDialog_public,
+				Messages.ExhibitionEditDialog_medium, Messages.ExhibitionEditDialog_private);
 		CGroup infoGroup = CGroup.create(comp, 1, Messages.ExhibitionEditDialog_info_plate);
 		new Label(infoGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_info_plate_position);
 		infoPosField = new Combo(infoGroup, SWT.DROP_DOWN | SWT.READ_ONLY);
@@ -1216,7 +1239,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		infoPosField.setItems(new String[] { Messages.ExhibitionEditDialog_no_info_plate,
 				Messages.ExhibitionEditDialog_right_to_door, Messages.ExhibitionEditDialog_left_to_door });
 		final Label infoLabel = new Label(infoGroup, SWT.NONE);
-		infoLabel.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
+		infoLabel.setLayoutData(new GridData(SWT.LEFT, SWT.BEGINNING, false, false));
 		infoLabel.setText(Messages.ExhibitionEditDialog_info);
 		final GridData gd_infoField = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gd_infoField.widthHint = 250;
@@ -1284,6 +1307,16 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			if (!template) {
 				nameField.setText(show.getName());
 				descriptionField.setText(show.getDescription());
+			}
+			switch (show.getSafety()) {
+			case QueryField.SAFETY_SAFE:
+				privacyGroup.setSelection(0);
+				break;
+			case QueryField.SAFETY_MODERATE:
+				privacyGroup.setSelection(1);
+				break;
+			default:
+				privacyGroup.setSelection(2);
 			}
 			infoField.setText(show.getInfo() == null ? "" : show.getInfo()); //$NON-NLS-1$
 			infoPosField.select(show.getInfoPlatePosition() + 1);
@@ -1372,6 +1405,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			link = "index.html"; //$NON-NLS-1$
 		setCondText(linkField, link);
 		setCondText(logoField, settings.get(LOGO));
+		privacyGroup.setSelection(getInteger(PRIVACY, QueryField.SAFETY_SAFE));
 		String copyright = settings.get(COPYRIGHT);
 		if (copyright == null || copyright.isEmpty())
 			copyright = new GregorianCalendar().get(Calendar.YEAR) + " "; //$NON-NLS-1$
@@ -1388,26 +1422,10 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		ceilingColorGroup.fillValues(settings, CEILING_COLOR, 148, 146, 123);
 		horizonColorGroup.fillValues(settings, HORIZON_COLOR, 0, 0, 0);
 		groundColorGroup.fillValues(settings, GROUND_COLOR, 201, 199, 176);
-		try {
-			viewingHeightField.setSelection(fromMm(settings.getInt(VIEWING_HEIGHT)));
-		} catch (NumberFormatException e1) {
-			viewingHeightField.setSelection(fromMm(1700));
-		}
-		try {
-			frameWidthField.setSelection(fromMmi(settings.getInt(FRAME_WIDTH)));
-		} catch (NumberFormatException e2) {
-			frameWidthField.setSelection(0);
-		}
-		try {
-			matWidthField.setSelection(fromMmi(settings.getInt(MAT_WIDTH)));
-		} catch (NumberFormatException e2) {
-			matWidthField.setSelection(0);
-		}
-		try {
-			varianceField.setSelection(fromMm(settings.getInt(VARIANCE)));
-		} catch (NumberFormatException e1) {
-			varianceField.setSelection(fromMm(200));
-		}
+		viewingHeightField.setSelection(fromMm(getInteger(VIEWING_HEIGHT, 1700)));
+		frameWidthField.setSelection(fromMmi(getInteger(FRAME_WIDTH, 0)));
+		matWidthField.setSelection(fromMmi(getInteger(MAT_WIDTH, 0)));
+		varianceField.setSelection(fromMm(getInteger(VARIANCE, 200)));
 		if (selectedFont != null)
 			selectedFont.dispose();
 		String family = settings.get(FONTFAMILY);
@@ -1418,13 +1436,17 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		} catch (NumberFormatException e) {
 			// ignore
 		}
-		try {
-			sequenceCombo.select(settings.getInt(LABELSEQUENCE));
-		} catch (NumberFormatException e) {
-			sequenceCombo.select(Constants.EXHLABEL_TIT_DES_CRED);
-		}
+		sequenceCombo.select(getInteger(LABELSEQUENCE, Constants.EXHLABEL_TIT_DES_CRED));
 		String dfi = settings.get(DEFAULTINFO);
 		labelTextField.setText(dfi != null ? dfi : Messages.ExhibitionEditDialog_inkjet_print);
+	}
+
+	private int getInteger(String key, int dflt) {
+		try {
+			return settings.getInt(key);
+		} catch (NumberFormatException e) {
+			return dflt;
+		}
 	}
 
 	@Override
@@ -1504,7 +1526,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			p.setAlignment(Element.ALIGN_CENTER);
 			p.setSpacingAfter(8);
 			document.add(p);
-			String subtitle = NLS.bind(Messages.ExhibitionEditDialog_image_list, Constants.DFDT.format(new Date()),
+			String subtitle = NLS.bind(Messages.ExhibitionEditDialog_image_list, Format.DFDT.get().format(new Date()),
 					frame ? Messages.ExhibitionEditDialog_image_sizes : Messages.ExhibitionEditDialog_frame_sizes);
 			p = new Paragraph(subtitle,
 					FontFactory.getFont(FontFactory.HELVETICA, 10, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK));
@@ -1536,10 +1558,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				p.setSpacingAfter(12);
 				document.add(p);
 				PdfPTable table = new PdfPTable(7);
-				// table.setBorderWidth(1);
-				// table.setBorderColor(new Color(224, 224, 224));
-				// table.setPadding(5);
-				// table.setSpacing(0);
 				table.setWidths(new int[] { 8, 33, 13, 13, 20, 13, 20 });
 				table.addCell(createTableHeader(Messages.ExhibitionEditDialog_No, Element.ALIGN_RIGHT));
 				table.addCell(createTableHeader(Messages.ExhibitionEditDialog_title, Element.ALIGN_LEFT));
@@ -1565,24 +1583,17 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 					int tara = computeTara(frame, exhibit);
 					table.addCell(createTableCell(String.valueOf(no++), Element.ALIGN_RIGHT));
 					table.addCell(createTableCell(exhibit.getTitle(), Element.ALIGN_LEFT));
-					af.setMaximumFractionDigits(2);
-					af.setMinimumFractionDigits(2);
-					String x = af.format((exhibit.getX() - tara) / 1000d);
-					table.addCell(createTableCell(NLS.bind("{0} m", x), Element.ALIGN_RIGHT)); //$NON-NLS-1$
-					String y = af.format((exhibit.getY() + tara) / 1000d);
-					table.addCell(createTableCell(NLS.bind("{0} m", y), Element.ALIGN_RIGHT)); //$NON-NLS-1$
-					af.setMaximumFractionDigits(1);
-					af.setMinimumFractionDigits(1);
-					String h = af.format((exhibit.getHeight() + 2 * tara) / 10d);
+					table.addCell(createTableCell(printDistance(exhibit.getX(), tara), Element.ALIGN_RIGHT));
+					table.addCell(createTableCell(printDistance(exhibit.getY(), tara), Element.ALIGN_RIGHT));
+					String h = printDimension(exhibit.getHeight(), tara, true);
 					int width = exhibit.getWidth();
-					String w = af.format((width + 2 * tara) / 10d);
-					table.addCell(createTableCell(NLS.bind("{0} x {1} cm", w, h), Element.ALIGN_RIGHT)); //$NON-NLS-1$
+					String w = printDimension(width, tara, false);
+					table.addCell(createTableCell(NLS.bind("{0} x {1}", w, h), Element.ALIGN_RIGHT)); //$NON-NLS-1$
 					AssetImpl asset = dbManager.obtainAsset(exhibit.getAsset());
-					if (asset != null) {
-						int pixels = asset.getWidth();
-						double dpi = pixels * 25.4d / width;
-						table.addCell(createTableCell(String.valueOf((int) dpi), Element.ALIGN_RIGHT));
-					} else
+					if (asset != null)
+						table.addCell(createTableCell(String.valueOf((int) (asset.getWidth() * 25.4d / width)),
+								Element.ALIGN_RIGHT));
+					else
 						table.addCell(""); //$NON-NLS-1$
 					table.addCell(createTableCell(exhibit.getSold() ? Messages.ExhibitionEditDialog_sold : "", //$NON-NLS-1$
 							Element.ALIGN_LEFT));
@@ -1652,7 +1663,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		String tit = NLS.bind(Messages.ExhibitionEditDialog_exhibition_name, nameField.getText(),
 				frame ? Messages.ExhibitionEditDialog_image_sizes : Messages.ExhibitionEditDialog_frame_sizes);
 		grid.add(SWT.CENTER, new TextPrint(tit, titleFont, SWT.CENTER), GridPrint.REMAINDER);
-		String subtitle = NLS.bind(Messages.ExhibitionEditDialog_image_list, Constants.DFDT.format(new Date()));
+		String subtitle = NLS.bind(Messages.ExhibitionEditDialog_image_list, Format.DFDT.get().format(new Date()));
 		grid.add(SWT.CENTER, new TextPrint(subtitle, textFont, SWT.CENTER), GridPrint.REMAINDER);
 		grid.add(SWT.CENTER, new TextPrint(descriptionField.getText(), textFont, SWT.CENTER), GridPrint.REMAINDER);
 		grid.add(SWT.CENTER, new TextPrint(infoField.getText(), textFont, SWT.CENTER), GridPrint.REMAINDER);
@@ -1689,18 +1700,14 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 				int tara = computeTara(frame, exhibit);
 				grid.add(SWT.RIGHT, new TextPrint(String.valueOf(no++), textFont, SWT.RIGHT));
 				grid.add(new TextPrint(exhibit.getTitle(), textFont, SWT.LEFT));
-				af.setMaximumFractionDigits(2);
-				af.setMinimumFractionDigits(2);
-				grid.add(SWT.RIGHT, new TextPrint(NLS.bind("{0} m", af.format((exhibit.getX() - tara) / 1000d)), //$NON-NLS-1$
-						textFont, SWT.RIGHT));
-				grid.add(SWT.RIGHT, new TextPrint(NLS.bind("{0} m", af.format((exhibit.getY() + tara) / 1000d)), //$NON-NLS-1$
-						textFont, SWT.RIGHT));
+				grid.add(SWT.RIGHT, new TextPrint(printDistance(exhibit.getX(), tara), textFont, SWT.RIGHT));
+				grid.add(SWT.RIGHT, new TextPrint(printDistance(exhibit.getY(), tara), textFont, SWT.RIGHT));
 				af.setMaximumFractionDigits(1);
 				af.setMinimumFractionDigits(1);
 				int width = exhibit.getWidth();
-				grid.add(new TextPrint(NLS.bind("{0} x {1} cm", //$NON-NLS-1$
-						af.format((width + 2 * tara) / 10d), af.format((exhibit.getHeight() + 2 * tara) / 10d)),
-						textFont, SWT.LEFT));
+				grid.add(new TextPrint(NLS.bind("{0} x {1}", //$NON-NLS-1$
+						printDimension(width, tara, false), printDimension(exhibit.getHeight(), tara, true)), textFont,
+						SWT.LEFT));
 				AssetImpl asset = dbManager.obtainAsset(exhibit.getAsset());
 				String reso = asset != null ? String.valueOf((int) (asset.getWidth() * 25.4d / width)) : ""; //$NON-NLS-1$
 				grid.add(SWT.RIGHT, new TextPrint(reso, textFont, SWT.RIGHT));
@@ -1713,7 +1720,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 
 	private int computeTara(boolean frame, Exhibit exhibit) {
 		int tara = 0;
-		if (frame) {
+		if (!frame) {
 			Integer frameWidth = exhibit.getFrameWidth();
 			if (frameWidth != null)
 				tara += frameWidth;
@@ -1746,18 +1753,30 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 					for (Wall wall : result.getWall())
 						wall.setExhibition_wall_parent(result);
 					result.setGroup_exhibition_parent(current.getGroup_exhibition_parent());
-					result.setStartX(current.getStartX());
-					result.setStartY(current.getStartY());
 				}
 			}
 			result.setName(nameField.getText());
-			if (itemViewer != null
-					&& !(itemViewer.getStructuredSelection().getFirstElement() instanceof Wall)) {
-				result.setStartX(toMm(xspinner.getSelection()));
-				result.setStartY(toMm(yspinner.getSelection()));
+			result.setStartX(startX);
+			result.setStartY(startY);
+			int i = 0;
+			for (Wall w : result.getWall()) {
+				w.setGX(wxs[i]);
+				w.setGY(wys[i]);
+				w.setGAngle(wa[i]);
+				++i;
 			}
 			result.setDescription(descriptionField.getText());
 			result.setInfo(infoField.getText());
+			switch (privacyGroup.getSelection()) {
+			case 0:
+				result.setSafety(QueryField.SAFETY_SAFE);
+				break;
+			case 1:
+				result.setSafety(QueryField.SAFETY_MODERATE);
+				break;
+			default:
+				result.setSafety(QueryField.SAFETY_RESTRICTED);
+			}
 			result.setInfoPlatePosition(Math.max(-1, infoPosField.getSelectionIndex() - 1));
 			result.setHideCredits(!showCreditsButton.getSelection());
 			result.setDefaultViewingHeight(toMm(viewingHeightField.getSelection()));
@@ -1814,7 +1833,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 						}
 						if (group == null) {
 							group = new GroupImpl(Messages.ExhibitionEditDialog_exhibitions, false,
-									Constants.INHERIT_LABEL, null, 0, null);
+									Constants.INHERIT_LABEL, null, 0, 1, null);
 							group.setStringId(Constants.GROUP_ID_EXHIBITION);
 						}
 						if (current != null)
@@ -1838,6 +1857,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		outputTargetGroup.saveValues(settings);
 		settings.put(LINKPAGE, gallery.getPageName());
 		settings.put(LOGO, gallery.getLogo());
+		settings.put(PRIVACY, privacyGroup.getSelection());
 		settings.put(COPYRIGHT, gallery.getCopyright());
 		settings.put(CONTACT, gallery.getContactName());
 		settings.put(EMAIL, gallery.getEmail());
@@ -1910,7 +1930,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 						ExhibitImpl newExhibit = new ExhibitImpl(slide.getCaption(), slide.getDescription(),
 								Core.toStringList(asset.getArtist(), " "), //$NON-NLS-1$
 								(dateCreated == null) ? "" //$NON-NLS-1$
-										: EDF.format(dateCreated),
+										: Format.YEAR_FORMAT.get().format(dateCreated),
 								pos, y, w, h, null, null, null, null, false, null, null, null, null,
 								asset.getStringId());
 						pos += 2 * w;
@@ -1969,13 +1989,15 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			WallImpl newWall = createNewWall(1);
 			newWall.setLocation(sm.getName());
 			int incr = (newWall.getWidth() - 2 * pos) / (assets.size() + 1);
-			for (Asset asset : assets) {
-				if (!ExhibitionView.accepts(asset))
-					continue;
-				createExhibitFromAsset(show, newWall, pos, asset, UiUtilities.createSlideTitle(asset),
-						Messages.ExhibitionEditDialog_inkjet_print);
-				pos += incr;
-			}
+			CaptionProcessor captionProcessor = new CaptionProcessor(Constants.TH_ALL);
+			CaptionConfiguration captionConfig = captionProcessor.computeCaptionConfiguration((SmartCollection) obj);
+			for (Asset asset : assets)
+				if (ExhibitionView.accepts(asset)) {
+					createExhibitFromAsset(show, newWall, pos, asset,
+							captionProcessor.computeImageCaption(asset, null, null, null, captionConfig.getLabelTemplate(), true),
+							Messages.ExhibitionEditDialog_inkjet_print);
+					pos += incr;
+				}
 		}
 	}
 
@@ -1989,7 +2011,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		int y = show.getDefaultViewingHeight() + h / 2;
 		ExhibitImpl newExhibit = new ExhibitImpl(caption, description, Core.toStringList(asset.getArtist(), " "), //$NON-NLS-1$
 				(dateCreated == null) ? "" //$NON-NLS-1$
-						: EDF.format(dateCreated),
+						: Format.YEAR_FORMAT.get().format(dateCreated),
 				pos, y, w, h, null, null, null, null, false, null, null, null, null, asset.getStringId());
 		pos += 2 * w;
 		dbManager.store(newExhibit);

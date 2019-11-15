@@ -36,6 +36,7 @@ import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.IMediaSupport;
 import com.bdaum.zoom.core.internal.ImportState;
+import com.bdaum.zoom.operations.internal.AbstractMediaSupport;
 import com.bdaum.zoom.operations.internal.ImageMediaSupport;
 
 @SuppressWarnings({ "restriction" })
@@ -44,7 +45,7 @@ public abstract class AbstractForeignCatHandler implements IForeignCatHandler {
 	private final GregorianCalendar cal = new GregorianCalendar();
 	protected Date previousImport;
 	protected ImportState importState;
-	private ImageMediaSupport imageMediaSupport;
+	private AbstractMediaSupport imageMediaSupport;
 
 	protected ResultSet performQuery(IProgressMonitor monitor, final ImportState importState, Statement statement,
 			String query, final String fileName) throws SQLException {

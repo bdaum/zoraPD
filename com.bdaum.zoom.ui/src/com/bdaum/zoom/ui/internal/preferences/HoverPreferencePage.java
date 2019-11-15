@@ -60,9 +60,9 @@ import org.eclipse.ui.IWorkbench;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
+import com.bdaum.zoom.ui.internal.TemplateProcessor;
 import com.bdaum.zoom.ui.internal.FieldDescriptor;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
-import com.bdaum.zoom.ui.internal.TemplateProcessor;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.AddVariablesDialog;
@@ -136,7 +136,7 @@ public class HoverPreferencePage extends AbstractPreferencePage
 
 		@SuppressWarnings("unused")
 		public HoverEditGroup(Composite parent, String label, IHoverContribution contrib, String[] variables,
-				String[] vlabels, boolean isTitle) {
+				String[] vlabels, int h, boolean isTitle) {
 			super(parent, SWT.NONE);
 			this.variables = variables;
 			this.isTitle = isTitle;
@@ -152,7 +152,7 @@ public class HoverPreferencePage extends AbstractPreferencePage
 			if (isTitle)
 				templateField.addVerifyListener(this);
 			GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
-			layoutData.heightHint = 100;
+			layoutData.heightHint = h;
 			layoutData.widthHint = 300;
 			templateField.setLayoutData(layoutData);
 			templateField.addListener(SWT.Modify, this);
@@ -199,7 +199,7 @@ public class HoverPreferencePage extends AbstractPreferencePage
 			lab.setText(Messages.getString("HoverPreferencePage.preview")); //$NON-NLS-1$
 			previewField = new Text(this, SWT.MULTI | SWT.LEAD | SWT.BORDER | SWT.READ_ONLY);
 			layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
-			layoutData.heightHint = 100;
+			layoutData.heightHint = h;
 			layoutData.widthHint = 300;
 			previewField.setLayoutData(layoutData);
 		}
@@ -265,9 +265,9 @@ public class HoverPreferencePage extends AbstractPreferencePage
 			composite.setLayout(new GridLayout());
 			if (contrib.supportsTitle())
 				titleGroup = new HoverEditGroup(composite, Messages.getString("HoverPreferencePage.title"), contrib, //$NON-NLS-1$
-						contrib.getTitleItemKeys(), contrib.getTitleItemLabels(), true);
+						contrib.getTitleItemKeys(), contrib.getTitleItemLabels(), 40, true);
 			textGroup = new HoverEditGroup(composite, Messages.getString("HoverPreferencePage.text"), contrib, //$NON-NLS-1$
-					contrib.getItemKeys(), contrib.getItemLabels(), false);
+					contrib.getItemKeys(), contrib.getItemLabels(), 160, false);
 			return area;
 		}
 
@@ -356,7 +356,7 @@ public class HoverPreferencePage extends AbstractPreferencePage
 	private TreeViewer viewer;
 	private Map<String, Category> rootMap = new HashMap<>(11);
 	private Button editButton;
-	private TemplateProcessor templateProcessor = new TemplateProcessor();
+	private TemplateProcessor templateProcessor = new TemplateProcessor(null);
 	private Button resetButton;
 	private CTabItem tabItem0;
 	private CTabItem tabItem1;

@@ -62,6 +62,20 @@ public interface Criterion_type extends AomValueChangedNotifier,
 	public Object getValue();
 
 	/**
+	 * Set value of property to
+	 *
+	 * @param _value - new element value
+	 */
+	public void setTo(Object _value);
+
+	/**
+	 * Get value of property to
+	 *
+	 * @return - value of field to
+	 */
+	public Object getTo();
+
+	/**
 	 * Set value of property relation
 	 *
 	 * @param _value - new element value

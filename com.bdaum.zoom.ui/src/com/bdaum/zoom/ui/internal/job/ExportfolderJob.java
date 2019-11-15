@@ -290,7 +290,7 @@ public class ExportfolderJob extends AbstractExportJob {
 		monitor.done();
 		OperationJob.signalJobEnd(now.getTime());
 		if (target != Constants.FTP && firstExport != null)
-			BatchUtilities.showInFolder(new File(firstExport));
+			BatchUtilities.showInFolder(new File(firstExport), true);
 		return status;
 	}
 

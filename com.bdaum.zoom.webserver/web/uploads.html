@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+  	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/svg+xml" href="../files/zora.svg" sizes="any">
+	<link rel="stylesheet" href="../files/css/dropzone.css">
+    <link rel="stylesheet" href="../zoraPD.css">
+    <!-- https://www.dropzonejs.com/ -->
+    <script src="../files/js/dropzone.min.js"></script>
+    <script>
+    	Dropzone.options.filesearch = {
+    		dictDefaultMessage: "File upload: Drop files <span style='color: #d0d0c0;'>here</span>."
+		};
+    </script>
+    <title>{$appName} Web Client - Uploads</title>
+  </head>
+  <body>
+    <header id="uploadsHeader">
+      <h1 id="uploadsTitle">Uploads</h1>
+    </header>
+   <main id="uploads">
+   	    <section class="filedrop">
+   	    	<!-- Dropzone anchor  -->
+			<form id="fileupload" action="/file-upload" class="dropzone">
+	   	    	{$$metaMod}<p class="expl">
+	   	    		Please specify the metadata you want to add to the uploaded files.<br>
+	   	    		In addition you may upload an XMP sidecar in the same upload step.<br>
+	   	    		The timeshift field can be used to correct the camera time.
+	   	    	</p>
+				<p class="meta">
+					<label class="meta" for="artist">Artist</label>
+					<input class="meta" id="artist" type = "text" name = "artist" />
+				</p>
+		        <p class="meta">
+			         <label class="meta" for="event">Event</label>
+			         <input  class="meta" id="event" type = "text" name = "event" />
+				</p>
+		        <p class="meta">
+			         <label class="meta" for="keywords">Keywords</label> 
+			         <textarea class="meta" id="keywords" rows = "5" cols = "50" name = "keywords" placeholder=" Enter keywords here, each on a separate line...">
+			         </textarea>
+				</p>
+		        <p class="meta">
+			         <label class="meta for="timeshift">Timeshift (min)</label>
+			         <input class="meta  id="timeshift" type = "number" name = "timeshift" value="0"/>
+				</p>{$$}
+				<p class="expl">
+    				Simply drop image or video files into the area below or click this area for selecting files.
+				</p>
+	      </form>
+	    </section>
+    </main>	<footer>
+	    <p>Created with {$appName}</p>    
+	</footer>  
+  </body>
+</html>

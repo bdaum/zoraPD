@@ -161,8 +161,9 @@ public class FileMonitor {
 	}
 
 	public void dispose() {
-		for (WatchKey key : keyMap.keySet())
-			key.cancel();
+		
+		for (Object key : keyMap.keySet().toArray())
+			((WatchKey) key).cancel();
 		keyMap.clear();
 		pathSet.clear();
 		try {

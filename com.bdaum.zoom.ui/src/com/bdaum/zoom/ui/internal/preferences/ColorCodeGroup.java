@@ -37,7 +37,6 @@ import com.bdaum.zoom.cat.model.group.Criterion;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.net.core.internal.Base64;
 import com.bdaum.zoom.ui.internal.FieldDescriptor;
@@ -307,24 +306,24 @@ public class ColorCodeGroup {
 						enumToField.setVisibleItemCount(minItems);
 						if (criterion != null) {
 							Object value = criterion.getValue();
+							Object vto = criterion.getTo();
 							if (enumKeys instanceof int[]) {
 								int[] intKeys = (int[]) enumKeys;
-								if (value instanceof Range) {
-									Range range = (Range) value;
-									int v = ((Integer) range.getFrom()).intValue();
+								if (vto != null) {
+									int v = (Integer) value;
 									for (int j = 0; j < intKeys.length; j++)
 										if (intKeys[j] == v) {
 											enumFromField.select(j);
 											break;
 										}
-									v = ((Integer) range.getTo()).intValue();
+									v = (Integer) vto;
 									for (int j = 0; j < intKeys.length; j++)
 										if (intKeys[j] == v) {
 											enumToField.select(j);
 											break;
 										}
 								} else if (value != null) {
-									int v = ((Integer) value).intValue();
+									int v = (Integer) value;
 									for (int j = 0; j < intKeys.length; j++)
 										if (intKeys[j] == v) {
 											enumValueCombo.select(j);
@@ -353,9 +352,8 @@ public class ColorCodeGroup {
 					if (rel == QueryField.BETWEEN || rel == QueryField.NOTBETWEEN) {
 						updateValueGroup(false, null, true, fieldDescriptor, rel);
 						if (criterion != null) {
-							Range range = (Range) criterion.getValue();
-							Object from = range.getFrom();
-							Object to = range.getTo();
+							Object from = criterion.getValue();
+							Object to = criterion.getTo();
 							if (valueLayout.topControl == enumRangeGroup) {
 								enumFromField.setText(UiUtilities.computeFieldStringValue(fieldDescriptor, from));
 								enumToField.setText(UiUtilities.computeFieldStringValue(fieldDescriptor, to));
@@ -550,22 +548,25 @@ public class ColorCodeGroup {
 		criterion.setRelation(relationKeys[relation]);
 		if (valueLayout.topControl == enumGroup)
 			criterion.setValue(getEnumValue(enumValueCombo, des));
-		else if (valueLayout.topControl == enumRangeGroup)
-			criterion.setValue(new Range(getEnumValue(enumFromField, des), getEnumValue(enumToField, des)));
-		else if (valueLayout.topControl == dateGroup)
+		else if (valueLayout.topControl == enumRangeGroup) {
+			criterion.setValue(getEnumValue(enumFromField, des));
+			criterion.setTo(getEnumValue(enumToField, des));
+		} else if (valueLayout.topControl == dateGroup)
 			criterion.setValue(dateValueField.getDate());
-		else if (valueLayout.topControl == dateRangeGroup)
-			criterion.setValue(new Range(dateFromField.getDate(), dateToField.getDate()));
-		else if (valueLayout.topControl == codeGroup)
+		else if (valueLayout.topControl == dateRangeGroup) {
+			criterion.setValue(dateFromField.getDate());
+			criterion.setTo(dateToField.getDate());
+		} else if (valueLayout.topControl == codeGroup)
 			criterion.setValue(UiUtilities.computeCookedValue(des, codeValueField.getText()));
-		else if (valueLayout.topControl == dateRangeGroup)
-			criterion.setValue(new Range(UiUtilities.computeCookedValue(des, codeFromField.getText()),
-					UiUtilities.computeCookedValue(des, codeToField.getText())));
-		else if (valueLayout.topControl == textGroup)
+		else if (valueLayout.topControl == dateRangeGroup) {
+			criterion.setValue(UiUtilities.computeCookedValue(des, codeFromField.getText()));
+			criterion.setTo(UiUtilities.computeCookedValue(des, codeToField.getText()));
+		} else if (valueLayout.topControl == textGroup)
 			criterion.setValue(UiUtilities.computeCookedValue(des, textValueField.getText()));
-		else
-			criterion.setValue(new Range(UiUtilities.computeCookedValue(des, textFromField.getText()),
-					UiUtilities.computeCookedValue(des, textToField.getText())));
+		else {
+			criterion.setValue(UiUtilities.computeCookedValue(des, textFromField.getText()));
+			criterion.setValue(UiUtilities.computeCookedValue(des, textToField.getText()));
+		}
 		return criterion;
 	}
 

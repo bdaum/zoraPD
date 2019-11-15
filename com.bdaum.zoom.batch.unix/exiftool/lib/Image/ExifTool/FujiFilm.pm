@@ -19,6 +19,7 @@
 #               10) Albert Shan private communication
 #               11) http://u88.n24.queensu.ca/exiftool/forum/index.php/topic,8377.0.html
 #               12) http://u88.n24.queensu.ca/exiftool/forum/index.php/topic,9607.0.html
+#               13) http://u88.n24.queensu.ca/exiftool/forum/index.php/topic=10481.0.html
 #               IB) Iliah Borg private communication (LibRaw)
 #               JD) Jens Duttke private communication
 #------------------------------------------------------------------------------
@@ -30,7 +31,7 @@ use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 use Image::ExifTool::Exif;
 
-$VERSION = '1.66';
+$VERSION = '1.74';
 
 sub ProcessFujiDir($$$);
 sub ProcessFaceRec($$$);
@@ -49,11 +50,14 @@ my %testedRAF = (
     '0144' => 'X100T Ver1.44',
     '0159' => 'S2Pro Ver1.00',
     '0200' => 'X10 Ver2.00',
+    '0201' => 'X-H1 Ver2.01',
     '0212' => 'S3Pro Ver2.12',
     '0216' => 'S3Pro Ver2.16', # (NC)
     '0218' => 'S3Pro Ver2.18',
+    '0240' => 'X-E1 Ver2.40',
     '0264' => 'F700 Ver2.00',
     '0266' => 'S9500 Ver1.01',
+    '0261' => 'X-E1 Ver2.61',
     '0269' => 'S9500 Ver1.02',
     '0271' => 'S3Pro Ver2.71', # UV/IR model?
     '0300' => 'X-E2',
@@ -260,10 +264,22 @@ my %faceCategories = (
             16 => 'Commander',
             0x8000 => 'Not Attached', #10 (X-T2) (or external flash off)
             0x8120 => 'TTL', #10 (X-T2)
+            0x8320 => 'TTL Auto - Did not fire',
             0x9840 => 'Manual', #10 (X-T2)
+            0x9860 => 'Flash Commander', #13
             0x9880 => 'Multi-flash', #10 (X-T2)
             0xa920 => '1st Curtain (front)', #10 (EF-X500 flash)
+            0xaa20 => 'TTL Slow - 1st Curtain (front)', #13
+            0xab20 => 'TTL Auto - 1st Curtain (front)', #13
+            0xad20 => 'TTL - Red-eye Flash - 1st Curtain (front)', #13
+            0xae20 => 'TTL Slow - Red-eye Flash - 1st Curtain (front)', #13
+            0xaf20 => 'TTL Auto - Red-eye Flash - 1st Curtain (front)', #13
             0xc920 => '2nd Curtain (rear)', #10
+            0xca20 => 'TTL Slow - 2nd Curtain (rear)', #13
+            0xcb20 => 'TTL Auto - 2nd Curtain (rear)', #13
+            0xcd20 => 'TTL - Red-eye Flash - 2nd Curtain (rear)', #13
+            0xce20 => 'TTL Slow - Red-eye Flash - 2nd Curtain (rear)', #13
+            0xcf20 => 'TTL Auto - Red-eye Flash - 2nd Curtain (rear)', #13
             0xe920 => 'High Speed Sync (HSS)', #10
         },
     },
@@ -450,8 +466,9 @@ my %faceCategories = (
     0x104d => { #forum9634
         Name => 'CropMode',
         Writable => 'int16u',
-        PrintConv => {
+        PrintConv => { # (perhaps this is a bit mask?)
             0 => 'n/a',
+            1 => 'Full-frame on GFX', #IB
             2 => 'Sports Finder Mode', # (mechanical shutter)
             4 => 'Electronic Shutter 1.25x Crop', # (continuous high)
         },
@@ -635,7 +652,7 @@ my %faceCategories = (
     },
     # 0x1408 - values: '0100', 'S100', 'VQ10'
     # 0x1409 - values: same as 0x1408
-    # 0x140a - values: 0, 1, 3, 5, 7 (bit 2=red-eye detection, ref 11)
+    # 0x140a - values: 0, 1, 3, 5, 7 (bit 2=red-eye detection, ref 11/13)
     0x140b => { #6
         Name => 'AutoDynamicRange',
         Writable => 'int16u',
@@ -650,6 +667,7 @@ my %faceCategories = (
             0 => 'None',
             1 => 'Optical', #PH
             2 => 'Sensor-shift', #PH
+            3 => 'OIS Lens', #forum9815 (optical+sensor?)
             512 => 'Digital', #PH
         },{
             0 => 'Off',
@@ -708,12 +726,41 @@ my %faceCategories = (
     0x1446 => { #12
         Name => 'FlickerReduction',
         Writable => 'int32u',
+        # seen values: Off=0x0000, On=0x2100,0x3100
         PrintConv => q{
-            my $on = ((($val >> 12) & 0xff) == 3) ? 'On' : 'Off';
+            my $on = ((($val >> 8) & 0x0f) == 1) ? 'On' : 'Off';
             return sprintf('%s (0x%.4x)', $on, $val);
         },
         PrintConvInv => '$val=~/(0x[0-9a-f]+)/i; hex $1',
     },
+    0x3803 => { #forum10037
+        Name => 'VideoRecordingMode',
+        Groups => { 2 => 'Video' },
+        Writable => 'int32u',
+        PrintHex => 1,
+        PrintConv => {
+            0x00 => 'Normal',
+            0x10 => 'F-log',
+            0x20 => 'HLG',
+        },
+    },
+    0x3804 => { #forum10037
+        Name => 'PeripheralLighting',
+        Groups => { 2 => 'Video' },
+        Writable => 'int16u',
+        PrintConv => { 0 => 'Off', 1 => 'On' },
+    },
+    # 0x3805 - int16u: seen 1
+    0x3806 => { #forum10037
+        Name => 'VideoCompression',
+        Groups => { 2 => 'Video' },
+        Writable => 'int16u',
+        PrintConv => {
+            1 => 'Log GOP',
+            2 => 'All Intra',
+        },
+    },
+    # 0x3810 - int32u: related to video codec (ref forum10037)
     0x3820 => { #PH (HS20EXR MOV)
         Name => 'FrameRate',
         Writable => 'int16u',
@@ -728,6 +775,11 @@ my %faceCategories = (
         Name => 'FrameHeight',
         Writable => 'int16u',
         Groups => { 2 => 'Video' },
+    },
+    0x3824 => { #forum10480 (X-T3)
+        Name => 'FullHDHighSpeedRec',
+        Writable => 'int32u',
+        Groups => { 1 => 'Off', 2 => 'On' },
     },
     0x4005 => { #forum9634
         Name => 'FaceElementSelected', # (could be face or eye)
@@ -839,9 +891,10 @@ my %faceCategories = (
         Name => 'FocusMode2',
         Mask => 0x000000ff,
         PrintConv => {
-            0 => 'AF-M',
-            1 => 'AF-S',
-            2 => 'AF-C',
+            0x00 => 'AF-M',
+            0x01 => 'AF-S',
+            0x02 => 'AF-C',
+            0x11 => 'AF-S (Auto)',
         },
     },
     0.2 => {
@@ -1003,8 +1056,29 @@ my %faceCategories = (
         Groups => { 1 => 'RAF2' }, # (so RAF2 shows up in family 1 list)
         Count => 2,
         Notes => 'including borders',
-        ValueConv => 'my @v=reverse split(" ",$val);"@v"',
+        ValueConv => 'my @v=reverse split(" ",$val);"@v"', # reverse to show width first
         PrintConv => '$val=~tr/ /x/; $val',
+    },
+    0x110 => {
+        Name => 'RawImageCropTopLeft',
+        Format => 'int16u',
+        Count => 2,
+        Notes => 'top margin first, then left margin',
+    },
+    0x111 => {
+        Name => 'RawImageCroppedSize',
+        Format => 'int16u',
+        Count => 2,
+        Notes => 'including borders',
+        ValueConv => 'my @v=reverse split(" ",$val);"@v"', # reverse to show width first
+        PrintConv => '$val=~tr/ /x/; $val',
+    },
+    0x115 => {
+        Name => 'RawImageAspectRatio',
+        Format => 'int16u',
+        Count => 2,
+        ValueConv => 'my @v=reverse split(" ",$val);"@v"', # reverse to show width first
+        PrintConv => '$val=~tr/ /:/; $val',
     },
     0x121 => [
         {

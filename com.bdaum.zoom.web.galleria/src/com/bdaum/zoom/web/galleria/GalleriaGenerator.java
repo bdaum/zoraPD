@@ -16,6 +16,7 @@ import com.bdaum.zoom.cat.model.group.webGallery.WebExhibit;
 import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebParameter;
 import com.bdaum.zoom.operations.internal.gen.AbstractGalleryGenerator;
+import com.bdaum.zoom.program.HtmlEncoderDecoder;
 
 @SuppressWarnings("restriction")
 public class GalleriaGenerator extends AbstractGalleryGenerator {
@@ -134,11 +135,11 @@ public class GalleriaGenerator extends AbstractGalleryGenerator {
 		imageVarmap.put("thumbnail", encodeURL(thumbnail)); //$NON-NLS-1$
 		String altText = exhibit.getAltText();
 		if (altText != null && !altText.isEmpty())
-			imageVarmap.put("alt", getHtmlEncoderDecoder().encodeHTML(altText, false)); //$NON-NLS-1$
+			imageVarmap.put("alt", HtmlEncoderDecoder.getInstance().encodeHTML(altText, false)); //$NON-NLS-1$
 		if (storyboard.getShowCaptions()) {
 			String caption = exhibit.getCaption();
 			if (caption != null && !caption.isEmpty()) {
-				String c = getHtmlEncoderDecoder().encodeHTML(caption, true);
+				String c = HtmlEncoderDecoder.getInstance().encodeHTML(caption, true);
 				imageVarmap.put("title", c); //$NON-NLS-1$
 				imageVarmap.put("image-title", c); //$NON-NLS-1$
 			}
@@ -148,7 +149,7 @@ public class GalleriaGenerator extends AbstractGalleryGenerator {
 			String exifdiv = getExifDiv(storyboard, exhibit, asset, null);
 			if ((description != null && !description.isEmpty()) || exifdiv != null) {
 				String html = description != null
-						? exhibit.getHtmlDescription() ? description : getHtmlEncoderDecoder().encodeHTML(description, true)
+						? exhibit.getHtmlDescription() ? description : HtmlEncoderDecoder.getInstance().encodeHTML(description, true)
 						: ""; //$NON-NLS-1$
 				if (exifdiv != null) {
 					if (!html.isEmpty())

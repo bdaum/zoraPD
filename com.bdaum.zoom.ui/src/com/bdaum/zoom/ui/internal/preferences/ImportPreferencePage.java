@@ -164,7 +164,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 	@Override
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.IMPORT_PREFERENCE_PAGE);
-		createTabFolder(composite, "Import"); //$NON-NLS-1$
+		createTabFolder(composite, Messages.getString("ImportPreferencePage.import"));  //$NON-NLS-1$
 		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.getString("ImportPreferencePage.general"), null); //$NON-NLS-1$
 		tabItem0.setControl(createGeneralGroup(tabFolder));
 		tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.getString("ImportPreferencePage.raw_conversion"), //$NON-NLS-1$

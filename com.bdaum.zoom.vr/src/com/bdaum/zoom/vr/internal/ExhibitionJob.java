@@ -132,7 +132,6 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 	private GC entryGC;
 	private List<Point> lights = new ArrayList<Point>();
 	private int jpegQuality;
-	private HtmlEncoderDecoder htmlEncoderDecoder;
 
 	public ExhibitionJob(ExhibitionImpl gallery, String exhibitionId, IAdaptable adaptable, boolean makeDefault) {
 		super(Messages.ExhibitionJob_generate_exhibition);
@@ -192,6 +191,11 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 		else {
 			targetFolder = new File(gallery.getOutputFolder());
 			targetFolder.mkdirs();
+			if (!targetFolder.exists()) {
+				Core.getCore().getDbFactory().getErrorHandler().showError(Messages.ExhibitionJob_gallery_creation_failed,
+						NLS.bind(Messages.ExhibitionJob_cannot_create_dir, targetFolder), null);
+				return;
+			}
 		}
 		// Scripts
 		File scripts = VrActivator.getDefault().locateResource("/resources/scripts"); //$NON-NLS-1$
@@ -313,7 +317,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 		web = formatWebUrl(web);
 		String copyright = gallery.getCopyright();
 		if (copyright != null && !copyright.isEmpty())
-			sb.append("&copy; ").append(getHtmlEncoderDecoder().encodeHTML(copyright, false)); //$NON-NLS-1$
+			sb.append("&copy; ").append(HtmlEncoderDecoder.getInstance().encodeHTML(copyright, false)); //$NON-NLS-1$
 		String contact = gallery.getContactName();
 		String email = gallery.getEmail();
 		if (contact == null || contact.isEmpty())
@@ -323,9 +327,9 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 				sb.append("<br/>"); //$NON-NLS-1$
 			if (email != null && !email.isEmpty())
 				sb.append("<a href='mailto:").append(email).append("'>") //$NON-NLS-1$ //$NON-NLS-2$
-						.append(getHtmlEncoderDecoder().encodeHTML(contact, false)).append("</a>"); //$NON-NLS-1$
+						.append(HtmlEncoderDecoder.getInstance().encodeHTML(contact, false)).append("</a>"); //$NON-NLS-1$
 			else
-				sb.append(getHtmlEncoderDecoder().encodeHTML(contact, false));
+				sb.append(HtmlEncoderDecoder.getInstance().encodeHTML(contact, false));
 		}
 		if (web != null && !web.isEmpty()) {
 			if (sb.length() > 0)
@@ -335,7 +339,7 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 			if (label.startsWith(HTTPS))
 				label = label.substring(HTTPS.length());
 			generateLink(web, sb);
-			sb.append(getHtmlEncoderDecoder().encodeHTML(label, false)).append("</a>"); //$NON-NLS-1$
+			sb.append(HtmlEncoderDecoder.getInstance().encodeHTML(label, false)).append("</a>"); //$NON-NLS-1$
 		}
 		if (sb.length() > 0)
 			sb.append("<br/>"); //$NON-NLS-1$
@@ -1440,12 +1444,6 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 
 	public boolean progress(int total, int worked) {
 		return monitor.isCanceled();
-	}
-
-	private HtmlEncoderDecoder getHtmlEncoderDecoder() {
-		if (htmlEncoderDecoder == null)
-			htmlEncoderDecoder = new HtmlEncoderDecoder();
-		return htmlEncoderDecoder;
 	}
 
 }

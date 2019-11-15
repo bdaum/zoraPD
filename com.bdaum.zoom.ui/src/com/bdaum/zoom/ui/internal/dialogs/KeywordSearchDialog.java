@@ -247,7 +247,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 
 	public static SmartCollection computeQuery(String searchString, boolean network, SmartCollection parent) {
 		SmartCollectionImpl sm = new SmartCollectionImpl(searchString, false, false, true, network, null, 0, null, 0,
-				null, Constants.INHERIT_LABEL, null, 0, null);
+				null, Constants.INHERIT_LABEL, null, 0, 1, null);
 		boolean neg = false;
 		boolean and = false;
 		int p = 0;
@@ -267,7 +267,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 				and = true;
 			} else {
 				sm.addCriterion(new CriterionImpl(QueryField.IPTC_KEYWORDS.getKey(), null, token,
-						(neg) ? QueryField.NOTEQUAL : QueryField.EQUALS, and));
+						null, neg ? QueryField.NOTEQUAL : QueryField.EQUALS, and));
 				neg = false;
 				and = false;
 			}

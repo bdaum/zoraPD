@@ -30,16 +30,19 @@ public class Group_typeImpl extends AomObject implements Group_type {
 	 * @param showLabel - Property
 	 * @param labelTemplate - Property
 	 * @param fontSize - Property
+	 * @param alignment - Property
 	 * @param annotations - Property
 	 */
 	public Group_typeImpl(String name, boolean system, int showLabel,
-			String labelTemplate, int fontSize, String annotations) {
+			String labelTemplate, int fontSize, int alignment,
+			String annotations) {
 		super();
 		this.name = name;
 		this.system = system;
 		this.showLabel = showLabel;
 		this.labelTemplate = labelTemplate;
 		this.fontSize = fontSize;
+		this.alignment = alignment;
 		this.annotations = annotations;
 
 	}
@@ -159,6 +162,28 @@ public class Group_typeImpl extends AomObject implements Group_type {
 		return fontSize;
 	}
 
+	/* *** Property alignment *** */
+
+	private int alignment;
+
+	/**
+	 * Set value of property alignment
+	 *
+	 * @param _value - new field value
+	 */
+	public void setAlignment(int _value) {
+		alignment = _value;
+	}
+
+	/**
+	 * Get value of property alignment
+	 *
+	 * @return - value of field alignment
+	 */
+	public int getAlignment() {
+		return alignment;
+	}
+
 	/* *** Property annotations *** */
 
 	private String annotations;
@@ -208,6 +233,8 @@ public class Group_typeImpl extends AomObject implements Group_type {
 
 				&& getFontSize() == other.getFontSize()
 
+				&& getAlignment() == other.getAlignment()
+
 				&& ((getAnnotations() == null && other.getAnnotations() == null) || (getAnnotations() != null && getAnnotations()
 						.equals(other.getAnnotations())))
 
@@ -237,6 +264,8 @@ public class Group_typeImpl extends AomObject implements Group_type {
 						.hashCode());
 
 		hashCode = 31 * hashCode + getFontSize();
+
+		hashCode = 31 * hashCode + getAlignment();
 
 		hashCode = 31
 				* hashCode

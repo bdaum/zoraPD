@@ -61,7 +61,7 @@ public class GalleryItemHoverContribution extends AbstractHoverContribution impl
 
 	@Override
 	public String getDefaultTemplate() {
-		return "{origin}?  {imageRegions}{metadata}"; //$NON-NLS-1$
+		return "(?{origin}  ?){imageRegions}{metadata}"; //$NON-NLS-1$
 	}
 
 	@Override

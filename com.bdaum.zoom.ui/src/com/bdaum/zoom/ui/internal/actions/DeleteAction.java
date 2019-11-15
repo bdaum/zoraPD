@@ -34,6 +34,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -247,7 +248,7 @@ public class DeleteAction extends Action {
 								: Messages.DeleteAction_delete_images,
 						MessageDialog.QUESTION, buttons.toArray(new String[buttons.size()]), 0);
 				int ret = dialog.open();
-				if (ret < esc)
+				if (ret != SWT.DEFAULT && ret < esc)
 					launchOperation(ret == 0 && inAlbum ? selectedCollection : null, inAlbum ? (ret > 1) : (ret > 0),
 							localAssets, slides, exhibits, webexhibits);
 			}

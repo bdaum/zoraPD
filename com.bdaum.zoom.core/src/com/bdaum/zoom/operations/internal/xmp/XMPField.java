@@ -382,5 +382,12 @@ public class XMPField {
 	public String getAttribute() {
 		return attribute;
 	}
+	
+	public int getIntegerValue() throws XMPException {
+		String v = getProp().getValue();
+		if (v.startsWith("+")) //$NON-NLS-1$
+			v = v.substring(1);
+		return XMPUtils.convertToInteger(v);
+	}
 
 }

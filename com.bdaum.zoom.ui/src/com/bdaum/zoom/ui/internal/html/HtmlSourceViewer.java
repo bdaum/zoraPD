@@ -48,72 +48,63 @@ public class HtmlSourceViewer extends SourceViewer implements
 			RuleBasedScanner codeScanner,
 			IContentAssistProcessor contentAssistant) {
 		super(parent, ruler, styles);
-		configure(new XMLViewerConfiguration(this, codeScanner,
+		configure(new SimpleViewerConfiguration(this, codeScanner,
 				contentAssistant, undoManager));
 		Control styleTextWidget = getControl();
 		appendVerifyKeyListener(new VerifyKeyListener() {
 			public void verifyKey(VerifyEvent event) {
-				if (event.stateMask == SWT.CTRL || event.character == 13)
+				if (event.stateMask == SWT.CTRL)
 					event.doit = false;
 			}
 		});
 		styleTextWidget.addKeyListener(new KeyListener() {
 			public void keyPressed(KeyEvent event) {
-				if (event.character == 13) {
-					ITextSelection selection = (ITextSelection) getSelection();
-					if (selection != null)
-						try {
-							getDocument().replace(selection.getOffset(), 0, "<br/>"); //$NON-NLS-1$
-							setSelectedRange(selection.getOffset()+5, 0);
-						} catch (BadLocationException e) {
-							// should never happen
-						}
-					return;
-				}
+//				if (event.character == 13) {
+//					ITextSelection selection = (ITextSelection) getSelection();
+//					if (selection != null)
+//						try {
+//							getDocument().replace(selection.getOffset(), 0, "<br/>"); //$NON-NLS-1$
+//							setSelectedRange(selection.getOffset()+5, 0);
+//						} catch (BadLocationException e) {
+//							// should never happen
+//						}
+//					return;
+//				}
 				if (event.stateMask != SWT.CTRL)
 					return;
 				int operation = 0;
-				if (event.character == ' ') {
+				if (contentAssistant != null && event.character == ' ') {
 					// STRG+Leer: Content Assist
 					operation = ISourceViewer.CONTENTASSIST_PROPOSALS;
 				} else {
 					switch (event.character | '\u0040') {
 					case 'Z':
-						// STRG+Z: Undo
 						operation = ITextOperationTarget.UNDO;
 						break;
 					case 'Y':
-						// STRG+Z: Undo
 						operation = ITextOperationTarget.REDO;
 						break;
 					case 'C':
-						// STRG+Z: Undo
 						operation = ITextOperationTarget.COPY;
 						break;
 					case 'V':
-						// STRG+Z: Undo
 						operation = ITextOperationTarget.PASTE;
 						break;
 					case 'X':
-						// STRG+Z: Undo
 						operation = ITextOperationTarget.CUT;
 						break;
 					case 'A':
-						// STRG+Z: Undo
 						operation = ITextOperationTarget.SELECT_ALL;
 						break;
 					case 'B':
 					case 'F':
-						// STRG+B: Bold
 						setTextStyle(SWT.BOLD);
 						break;
 					case 'I':
 					case 'K':
-						// STRG+I: Italic
 						setTextStyle(SWT.ITALIC);
 						break;
 					case 'U':
-						// STRG+U: Underlined
 						setTextStyle(SWT.UNDERLINE_SINGLE);
 						break;
 					}

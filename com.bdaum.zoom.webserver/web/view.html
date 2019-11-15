@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+  <head>
+  	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/svg+xml" href="../files/zora.svg" sizes="any">
+    <link rel="stylesheet" href="../zoraPD.css">
+	<script type="text/javascript">
+   		var fullscreen = false;
+   		
+    	{$$infoAction}function toggleInfo() {
+    		var button = document.getElementById('metadata');
+			button.style.display = button.style.display == 'block' ? 'none' : 'block';
+    	}{$$}
+    	
+    	function toggleFullscreen() {
+			if (document.fullscreenEnabled) {
+				var displ;
+				if (fullscreen = !fullscreen) {
+					document.documentElement.requestFullscreen();	
+					displ = "none";
+				} else {
+					document.exitFullscreen();
+					displ = "block";
+				}
+				var header = document.getElementById('viewHeader');
+				var footer = document.getElementById('viewFooter');
+				header.style.display = footer.style.display = displ;
+			}
+		}
+		
+		window.onload = function () {
+			var loader = document.getElementById('loader');
+			loader.style.transition = "opacity 2s linear";
+			loader.style.opacity = 0;
+		};
+    </script>
+    <title>{$appName} Web Client</title>
+  </head>
+  <body>
+    <header id="viewHeader">
+    	<h4 id="viewTitle">{$imageTitle}</h4>
+    </header>
+    <main>
+		<section id="imagesection">
+		<div id="loader">{$imageTitle}</div>
+		<div id="image">
+			<img id="fullimage" onclick="toggleFullscreen()"{$imageLink}"/>
+			<br><br><br>
+		</div><div id="info">
+			{$$infoAction}<a class="action"><img onclick="toggleInfo()" id="infoButton" src="../files/info.png" alt="Info" title="Show metadata"></a>
+			{$$}{$$fullAction}<a class="action" href="{$fullsizeLink}" target="_blank" rel="noopener"><img id="fullButton" src="../files/fullscreen.png" alt="Full size" title="Show full size image"></a>
+			{$$}{$$downloadAction}<a class="action" href="{$imageFile}" target="_blank" rel="noopener"><img id="downloadButton" src="../files/download.png" alt="Download" title="Download original image file"></a>
+			{$$}{$$geoAction}<a class="action" href="{$geoLink}" target="_blank" rel="noopener"><img id="geoButton" src="../files/geo.png" alt="Geo" title="Show location on map"></a>
+			{$$}
+		</div>{$$infoAction}<div id="metadata" style="display: none;">
+			{$metadata}
+		</div>{$$}
+	    </section>
+    </main>
+	<footer id="viewFooter">
+		<p>Created with {$appName}</p>
+	</footer>  
+  </body>
+</html>

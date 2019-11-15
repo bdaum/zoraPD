@@ -759,23 +759,24 @@ public class AssetEnsemble {
 		List<LocationShownImpl> locsshown = new ArrayList<LocationShownImpl>(
 				dbManager.obtainStructForAsset(LocationShownImpl.class, assetId, false));
 		toBeDeleted.addAll(locsshown);
-		List<LocationCreatedImpl> locscreated = new ArrayList<LocationCreatedImpl>(
-				dbManager.obtainStructForAsset(LocationCreatedImpl.class, assetId, true));
-		for (LocationCreatedImpl loc : locscreated) {
+		LocationCreatedImpl loc = dbManager.obtainById(LocationCreatedImpl.class, asset.getLocationCreated_parent());
+		if (loc != null) {
 			loc.removeAsset(assetId);
 			if (loc.getAsset().isEmpty())
 				toBeDeleted.add(loc);
 			else
 				toBeStored.add(loc);
+			asset.setLocationCreated_parent(null);
 		}
-		List<CreatorsContactImpl> contacts = new ArrayList<CreatorsContactImpl>(
-				dbManager.obtainStructForAsset(CreatorsContactImpl.class, assetId, true));
-		for (CreatorsContactImpl contact : contacts) {
+		CreatorsContactImpl contact = dbManager.obtainById(CreatorsContactImpl.class,
+				asset.getCreatorsContact_parent());
+		if (contact != null) {
 			contact.removeAsset(assetId);
 			if (contact.getAsset().isEmpty())
 				toBeDeleted.add(contact);
 			else
 				toBeStored.add(contact);
+			asset.setCreatorsContact_parent(null);
 		}
 	}
 
@@ -815,11 +816,13 @@ public class AssetEnsemble {
 				LocationCreatedImpl rel = it.next();
 				if (!rel.getAsset().contains(assetId)) {
 					rel.addAsset(assetId);
+					asset.setLocationCreated_parent(rel.getStringId());
 					toBeStored.add(rel);
 				}
 			} else {
 				LocationCreatedImpl rel = new LocationCreatedImpl(locationCreated.getStringId());
 				rel.addAsset(assetId);
+				asset.setLocationCreated_parent(rel.getStringId());
 				toBeStored.add(rel);
 			}
 		}
@@ -900,13 +903,13 @@ public class AssetEnsemble {
 										Constants.GROUP_ID_PERSONS);
 								if (personAlbumsGroup == null) {
 									personAlbumsGroup = new GroupImpl(Messages.AssetEnsemble_persons, true,
-											Constants.INHERIT_LABEL, null, 0, null);
+											Constants.INHERIT_LABEL, null, 0, 1, null);
 									personAlbumsGroup.setStringId(Constants.GROUP_ID_PERSONS);
 								}
 								album = new SmartCollectionImpl(name, true, true, false, false, "", 0, null, 0, null, //$NON-NLS-1$
-										Constants.INHERIT_LABEL, null, 0, null);
+										Constants.INHERIT_LABEL, null, 0, 1, null);
 								album.setGroup_rootCollection_parent(Constants.GROUP_ID_PERSONS);
-								album.addCriterion(new CriterionImpl(Constants.OID, null, album.getStringId(),
+								album.addCriterion(new CriterionImpl(Constants.OID, null, album.getStringId(), null,
 										QueryField.XREF, false));
 								album.addSortCriterion(
 										new SortCriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, true));

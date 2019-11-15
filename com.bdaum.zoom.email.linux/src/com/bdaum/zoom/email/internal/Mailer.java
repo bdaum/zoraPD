@@ -102,7 +102,7 @@ public class Mailer extends AbstractMailer {
 			List<String> attachments) throws URISyntaxException, IOException {
 		java.awt.Desktop.getDesktop().mail(new URI(mailto.toString()));
 		if (attachments != null && !attachments.isEmpty())
-			BatchUtilities.showInFolder(new File(attachments.get(0)));
+			BatchUtilities.showInFolder(new File(attachments.get(0)), true);
 	}
 
 }

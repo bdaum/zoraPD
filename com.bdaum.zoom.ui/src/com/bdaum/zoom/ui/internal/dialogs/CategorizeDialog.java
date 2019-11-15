@@ -1193,7 +1193,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 				}
 				StringBuilder sb = new StringBuilder();
 				String title = currentAsset.getTitle();
-				if (title == null || title.isEmpty())
+				if (title == null || title.trim().isEmpty())
 					title = currentAsset.getName();
 				sb.append(title).append('\n');
 				String headline = currentAsset.getHeadline();

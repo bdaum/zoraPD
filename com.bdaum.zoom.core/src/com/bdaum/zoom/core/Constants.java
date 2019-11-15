@@ -20,9 +20,7 @@
 
 package com.bdaum.zoom.core;
 
-import java.text.DateFormat;
 import java.text.DateFormatSymbols;
-import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
@@ -92,13 +90,6 @@ public class Constants {
 
 	public static final String GROUP_ID_CATEGORIES = "groupCategories"; //$NON-NLS-1$
 	public static final String LAST_IMPORT_ID = "lastImport"; //$NON-NLS-1$
-	public static final DateFormat DFIMPORTDD = new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
-	public static final DateFormat DFIMPORTHH = new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
-	public static final DateFormat DFIMPORT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); //$NON-NLS-1$
-
-	public final static SimpleDateFormat DFDT = new SimpleDateFormat(Messages.Constants_ExtenalDateTimeFormat);
-
-	public static final SimpleDateFormat IPTCDF = new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
 
 	public static final DateFormatSymbols DATEFORMATS = new DateFormatSymbols(Locale.getDefault());
 
@@ -193,6 +184,7 @@ public class Constants {
 	public static final String TV_DD = "{dd}"; //$NON-NLS-1$
 	public static final String TV_MONTH = "{month}"; //$NON-NLS-1$
 	public static final String TV_WW = "{ww}"; //$NON-NLS-1$
+	public static final String TV_DAY = "{day}"; //$NON-NLS-1$
 	public static final String TV_MM = "{mm}"; //$NON-NLS-1$
 	public static final String TV_YY = "{yy}"; //$NON-NLS-1$
 	public static final String TV_YYYY = "{yyyy}"; //$NON-NLS-1$
@@ -217,22 +209,23 @@ public class Constants {
 	public static final String TV_OWNER = "{owner}"; //$NON-NLS-1$
 	public static final String TV_CUE = "{cue}"; //$NON-NLS-1$
 	public static final String TV_META = "{meta="; //$NON-NLS-1$
-	public static final String[] TV_ALL = new String[] { TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_MM,
-			TV_YY, TV_YYYY, TV_SEQUENCE_NO5, TV_SEQUENCE_NO4, TV_SEQUENCE_NO3, TV_SEQUENCE_NO2, TV_SEQUENCE_NO1,
+	public static final String[] TV_ALL = new String[] { TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_DAY,
+			TV_MM, TV_YY, TV_YYYY, TV_SEQUENCE_NO5, TV_SEQUENCE_NO4, TV_SEQUENCE_NO3, TV_SEQUENCE_NO2, TV_SEQUENCE_NO1,
 			TV_IMAGE_NO5, TV_IMAGE_NO4, TV_IMAGE_NO3, TV_IMAGE_NO2, TV_IMAGE_NO1, TV_IMPORT_NO5, TV_IMPORT_NO4,
 			TV_IMPORT_NO3, TV_IMPORT_NO2, TV_IMPORT_NO1, TV_EXTENSION, TV_FILENAME, TV_USER, TV_OWNER, TV_CUE };
 	public static final String[] TV_TRANSFER = new String[] { TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW,
-			TV_MM, TV_YY, TV_YYYY, TV_SEQUENCE_NO5, TV_SEQUENCE_NO4, TV_SEQUENCE_NO3, TV_SEQUENCE_NO2, TV_SEQUENCE_NO1,
-			TV_IMAGE_NO5, TV_IMAGE_NO4, TV_IMAGE_NO3, TV_IMAGE_NO2, TV_IMAGE_NO1, TV_EXTENSION, TV_FILENAME, TV_USER,
-			TV_OWNER, TV_CUE };
-	public static final String[] TV_RENAME = new String[] { TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_MM,
-			TV_YY, TV_YYYY, TV_IMAGE_NO5, TV_IMAGE_NO4, TV_IMAGE_NO3, TV_IMAGE_NO2, TV_IMAGE_NO1, TV_EXTENSION,
+			TV_DAY, TV_MM, TV_YY, TV_YYYY, TV_SEQUENCE_NO5, TV_SEQUENCE_NO4, TV_SEQUENCE_NO3, TV_SEQUENCE_NO2,
+			TV_SEQUENCE_NO1, TV_IMAGE_NO5, TV_IMAGE_NO4, TV_IMAGE_NO3, TV_IMAGE_NO2, TV_IMAGE_NO1, TV_EXTENSION,
 			TV_FILENAME, TV_USER, TV_OWNER, TV_CUE };
-	public static final String[] PI_ALL = new String[] { PI_TITLE, PI_NAME, PI_DESCRIPTION, PI_CREATIONDATE,
-			PI_CREATIONYEAR, PT_COLLECTION, PI_SEQUENCENO, PI_PAGEITEM, PI_SIZE, PI_FORMAT };
-	public static final String[] TH_ALL = new String[] { PI_TITLE, PI_NAME, PI_FORMAT, PI_SIZE, PI_CREATIONDATE,
-			TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_MM, TV_YY, TV_YYYY };
-	
+	public static final String[] TV_RENAME = new String[] { TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_DAY,
+			TV_MM, TV_YY, TV_YYYY, TV_IMAGE_NO5, TV_IMAGE_NO4, TV_IMAGE_NO3, TV_IMAGE_NO2, TV_IMAGE_NO1, TV_EXTENSION,
+			TV_FILENAME, TV_USER, TV_OWNER, TV_CUE };
+	public static final String[] PI_ALL = new String[] { PI_TITLE, PI_NAME, TV_FILENAME, PI_DESCRIPTION, PI_CREATIONDATE,
+			PI_CREATIONYEAR, TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_DAY, TV_MM, TV_YY, TV_YYYY,
+			PT_COLLECTION, PI_SEQUENCENO, PI_PAGEITEM, PI_SIZE, PI_FORMAT, TV_EXTENSION };
+	public static final String[] TH_ALL = new String[] { PI_TITLE, PI_NAME, TV_FILENAME, PI_FORMAT, TV_EXTENSION, PI_SIZE, PI_CREATIONDATE,
+			PI_CREATIONYEAR, TV_SS, TV_II, TV_HH, TV_JJJ, TV_DD, TV_MONTH, TV_WW, TV_DAY, TV_MM, TV_YY, TV_YYYY };
+
 	public static final String HV_NAME = "{name}"; //$NON-NLS-1$
 	public static final String HV_TYPE = "{type}"; //$NON-NLS-1$
 	public static final String HV_DESCRIPTION = "{description}"; //$NON-NLS-1$
@@ -247,7 +240,18 @@ public class Constants {
 	public static final String HV_STORYBOARDPOS = "{storyboardPosition}"; //$NON-NLS-1$
 	public static final String HV_IMAGE_REGIONS = "{imageRegions}"; //$NON-NLS-1$
 	public static final String HV_ORIGIN = "{origin}"; //$NON-NLS-1$
-
+	public static final String HV_LOCATION = "{location}"; //$NON-NLS-1$
+	public static final String HV_LASTOBSERVATION = "{lastObservation}"; //$NON-NLS-1$
+	public static final String HV_RECURSIVE = "{recursive}"; //$NON-NLS-1$
+	public static final String HV_FILTERS = "{filters}"; //$NON-NLS-1$
+	public static final String HV_TRANSFER = "{transfer}"; //$NON-NLS-1$
+	public static final String HV_ARTIST = "{artist}"; //$NON-NLS-1$
+	public static final String HV_SKIPDUPLICATES = "{skipDuplicates}"; //$NON-NLS-1$
+	public static final String HV_TARGETDIR = "{targetDir}"; //$NON-NLS-1$
+	public static final String HV_SUBFOLDERPOLICY = "{subfolderPolicy}"; //$NON-NLS-1$
+	public static final String HV_TEMPLATE = "{template}"; //$NON-NLS-1$
+	public static final String HV_FILESOURCE = "{fileSource}"; //$NON-NLS-1$
+	public static final String HV_CONTENT = "{content}"; //$NON-NLS-1$
 
 	public final static String RAWIMPORT_ONLYRAW = "raw"; //$NON-NLS-1$
 	public final static String RAWIMPORT_ONLYDNG = "dng"; //$NON-NLS-1$
@@ -264,6 +268,8 @@ public class Constants {
 	public final static int SLIDE_THUMBNAILS_RIGHT = 2;
 	public final static int SLIDE_THUMBNAILS_TOP = 3;
 	public final static int SLIDE_THUMBNAILS_BOTTOM = 4;
+	public final static int SLIDE_MAP_LEFT = 5;
+	public final static int SLIDE_MAP_RIGHT = 6;
 
 	public final static int SLIDE_TRANSITION_EXPAND = -1;
 	public final static int SLIDE_TRANSITION_FADE = 0;
@@ -324,7 +330,6 @@ public class Constants {
 	public static final String CRITICAL = "com.bdaum.zoom.critical"; //$NON-NLS-1$
 	public static final String FILETRANSFER = "com.bdaum.zoom.fileTransfer"; //$NON-NLS-1$
 	public static final Object TETHEREDJOB = "com.bdaum.zoom.tethered"; //$NON-NLS-1$
-
 
 	// Merge duplicates
 	public static final int SKIP = 0;

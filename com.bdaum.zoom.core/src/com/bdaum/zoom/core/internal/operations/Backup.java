@@ -162,10 +162,14 @@ public class Backup extends HistoryItem {
 							LocationCreatedImpl.class, mod.relId);
 					if (rel != null) {
 						if (mod.removed) {
-							if (!rel.getAsset().contains(assetId))
+							if (!rel.getAsset().contains(assetId)) {
 								rel.addAsset(assetId);
-						} else
+								asset.setLocationCreated_parent(rel.getStringId());
+							}
+						} else {
 							rel.removeAsset(assetId);
+							asset.setLocationCreated_parent(null);
+						}
 						toBeStored.add(rel);
 					}
 				} else if (mod.key == QueryField.IPTC_CONTACT.getKey()) {
@@ -173,10 +177,14 @@ public class Backup extends HistoryItem {
 							CreatorsContactImpl.class, mod.relId);
 					if (rel != null) {
 						if (mod.removed) {
-							if (!rel.getAsset().contains(assetId))
+							if (!rel.getAsset().contains(assetId)) {
 								rel.addAsset(assetId);
-						} else
+								asset.setCreatorsContact_parent(rel.getStringId());
+							}
+						} else {
 							rel.removeAsset(assetId);
+							asset.setCreatorsContact_parent(null);
+						}
 						toBeStored.add(rel);
 					}
 				}

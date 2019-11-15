@@ -66,6 +66,16 @@ public class PSWTSectionBreak extends ZPSWTImage {
 			ix = w / 10;
 			iy = ty;
 			break;
+		case Constants.SLIDE_MAP_LEFT:
+			tw = w * 4 / 10;
+			th = h * 7 / 10;
+			tx = w / 2;
+			ty = h / 10;
+			iw = w * 3 / 10;
+			ih = th;
+			ix = 0;
+			iy = ty;
+			break;
 		case Constants.SLIDE_THUMBNAILS_RIGHT:
 			tw = w * 4 / 10;
 			th = h * 8 / 10;
@@ -76,6 +86,16 @@ public class PSWTSectionBreak extends ZPSWTImage {
 			ix = w * 6 / 10;
 			iy = ty;
 			break;
+		case Constants.SLIDE_MAP_RIGHT:
+			tw = w * 4 / 10;
+			th = h * 7 / 10;
+			tx = w / 10;
+			ty = h / 10;
+			iw = w * 3 / 10;
+			ih = th;
+			ix = w * 5 / 10;
+			iy = ty;
+			break;		
 		case Constants.SLIDE_THUMBNAILS_TOP:
 			tw = w * 8 / 10;
 			th = h * 4 / 10;
@@ -154,6 +174,10 @@ public class PSWTSectionBreak extends ZPSWTImage {
 			int y = s + iy;
 			for (int i = 0; i < 6; i++)
 				gc.fillRectangle(i * 18 * s / 10 + ix, y, s, s);
+			break;
+		case Constants.SLIDE_MAP_LEFT:
+		case Constants.SLIDE_MAP_RIGHT:
+			gc.fillRectangle(s + ix, s / 2 + iy, tw, th);
 			break;
 		}
 		gc.dispose();

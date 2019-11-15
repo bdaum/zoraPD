@@ -698,9 +698,9 @@ public class TagCloudView extends ViewPart implements IDbListener {
 			SmartCollectionImpl sm = new SmartCollectionImpl(
 					s + NLS.bind(Messages.getString("TagCloudView.maxmin"), maxNumber, score), //$NON-NLS-1$
 					false, false, true, networkAction != null && networked, null, 0, null, 0, null,
-					Constants.INHERIT_LABEL, null, 0, null);
+					Constants.INHERIT_LABEL, null, 0, 1, null);
 			sm.addCriterion(new CriterionImpl(ICollectionProcessor.TEXTSEARCH, null,
-					new TextSearchOptions_typeImpl(s, maxNumber, score / 100f), score, false));
+					new TextSearchOptions_typeImpl(s, maxNumber, score / 100f), null, score, false));
 			Ui.getUi().getNavigationHistory(getSite().getWorkbenchWindow()).postSelection(new StructuredSelection(sm));
 			IViewReference[] viewReferences = getSite().getPage().getViewReferences();
 			for (IViewReference ref : viewReferences)

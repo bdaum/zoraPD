@@ -38,6 +38,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.events.KeyEvent;
@@ -70,8 +71,8 @@ import com.bdaum.zoom.cat.model.group.SortCriterionImpl;
 import com.bdaum.zoom.core.CatalogAdapter;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
+import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.Range;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.ui.AssetSelection;
@@ -79,9 +80,57 @@ import com.bdaum.zoom.ui.Ui;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.hover.IGalleryHover;
+import com.bdaum.zoom.ui.internal.hover.IHoverInfo;
 
 @SuppressWarnings("restriction")
 public class CalendarView extends BasicView implements PaintListener, MouseListener, MouseMoveListener {
+
+	public class CalendarHover implements IGalleryHover {
+
+		@Override
+		public IHoverInfo getHoverInfo(IHoverSubject subject, MouseEvent event) {
+			if (event.widget instanceof Canvas) {
+				Rectangle clientArea = ((Canvas) event.widget).getClientArea();
+				if (event.x >= clientArea.x && event.x < clientArea.x + clientArea.width && event.y > clientArea.y
+						&& event.y < clientArea.y + clientArea.height) {
+					int i = (event.x - wxo) / size + 7 * ((event.y - yoff) / size);
+					if (i >= 0 && i < daysInMonth && calendarAssets[i] != null) {
+						workingCal.setTime(currentCal.getTime());
+						workingCal.add(GregorianCalendar.DAY_OF_MONTH, i);
+						Date from = workingCal.getTime();
+						workingCal.add(GregorianCalendar.DAY_OF_MONTH, 1);
+						List<AssetImpl> set = Core.getCore().getDbManager().obtainObjects(AssetImpl.class, false,
+								QueryField.IPTC_DATECREATED.getKey(), from, QueryField.NOTSMALLER,
+								QueryField.IPTC_DATECREATED.getKey(), workingCal.getTime(), QueryField.SMALLER);
+						final String hovertext = NLS.bind(Messages.getString("CalendarView.n_items"), set.size()); //$NON-NLS-1$
+						return new IHoverInfo() {
+							@Override
+							public String getTitle() {
+								return null;
+							}
+
+							@Override
+							public String getText() {
+								return hovertext;
+							}
+
+							@Override
+							public ImageRegion[] getRegions() {
+								return null;
+							}
+
+							@Override
+							public Object getObject() {
+								return this;
+							}
+						};
+					}
+				}
+			}
+			return null;
+		}
+	}
 
 	public class FindLimitsJob extends Job {
 
@@ -102,9 +151,8 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 				List<Criterion> criteria = sm.getCriterion();
 				if (criteria != null && !criteria.isEmpty()) {
 					Criterion crit = criteria.get(0);
-					Range range = (Range) crit.getValue();
-					Date from = (Date) range.getFrom();
-					Date to = (Date) range.getTo();
+					Date from = (Date) crit.getValue();
+					Date to = (Date) crit.getTo();
 					if (to.getTime() - from.getTime() < D100) {
 						if (dmin == null || dmin.after(from))
 							dmin = from;
@@ -239,7 +287,7 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 			if (firstElement instanceof SmartCollection) {
 				SmartCollectionImpl currentCollection = (SmartCollectionImpl) firstElement;
 				if (currentCollection.getStringId().startsWith(IDbManager.DATETIMEKEY))
-					setCurrentCal((Date) ((Range) currentCollection.getCriterion(0).getValue()).getFrom());
+					setCurrentCal((Date) currentCollection.getCriterion(0).getValue());
 			}
 		}
 	}
@@ -284,6 +332,16 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 				new FindLimitsJob().schedule();
 			}
 		});
+		installHoveringController();
+	}
+
+	public Control[] getControls() {
+		return new Control[] { canvas };
+	}
+
+	@Override
+	public IGalleryHover getGalleryHover(MouseEvent event) {
+		return new CalendarHover();
 	}
 
 	@Override
@@ -405,8 +463,7 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 			if (asset != null) {
 				Image image = getImage(asset);
 				Rectangle bounds = image.getBounds();
-				int isize = Math.max(bounds.width, bounds.height);
-				double fac = (double) (size - 2) / isize;
+				double fac = (double) (size - 2) / Math.max(bounds.width, bounds.height);
 				int iw = (int) (bounds.width * fac);
 				int ih = (int) (bounds.height * fac);
 				int x = (i + coff) % 7;
@@ -439,12 +496,12 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 		int fontsize;
 		SimpleDateFormat df;
 		if (xoff > yoff * 3) {
-			df = new SimpleDateFormat(Messages.getString("CalendarView.LLL_nl_yyyy")); //$NON-NLS-1$
+			df = Format.LRY_FORMAT.get();
 			fontsize = size / 2;
 			titleRect.x = 0;
 			titleRect.y = yoff;
 		} else {
-			df = new SimpleDateFormat(Messages.getString("CalendarView.LLL_yyyy")); //$NON-NLS-1$
+			df = Format.LY_SHORT_FORMAT.get();
 			fontsize = size / 4;
 			titleRect.x = xoff;
 			titleRect.y = 0;
@@ -519,8 +576,7 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 				Date from = workingCal.getTime();
 				workingCal.add(GregorianCalendar.DAY_OF_MONTH, 7);
 				workingCal.add(GregorianCalendar.MILLISECOND, -1);
-				SimpleDateFormat df = new SimpleDateFormat(Messages.getString("CalendarView.week_w_yyyy")); //$NON-NLS-1$
-				postQuery(from, workingCal.getTime(), df.format(from));
+				postQuery(from, workingCal.getTime(), Format.WEEK_WY_FORMAT.get().format(from));
 				break;
 			}
 		}
@@ -554,8 +610,7 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 				Date from = workingCal.getTime();
 				workingCal.add(GregorianCalendar.DAY_OF_MONTH, 1);
 				workingCal.add(GregorianCalendar.MILLISECOND, -1);
-				SimpleDateFormat df = new SimpleDateFormat(Messages.getString("CalendarView.LLLLLLLLLLLL_dd_yyyy")); //$NON-NLS-1$
-				postQuery(from, workingCal.getTime(), df.format(from));
+				postQuery(from, workingCal.getTime(), Format.LDY_FORMAT.get().format(from));
 			}
 		}
 	}
@@ -573,8 +628,7 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 		workingCal.setTime(from);
 		workingCal.add(GregorianCalendar.MONTH, 1);
 		workingCal.add(GregorianCalendar.MILLISECOND, -1);
-		SimpleDateFormat df = new SimpleDateFormat(Messages.getString("CalendarView.LLLLLLLLLLLL_yyyy")); //$NON-NLS-1$
-		postQuery(from, workingCal.getTime(), df.format(from));
+		postQuery(from, workingCal.getTime(), Format.LY_FORMAT.get().format(from));
 	}
 
 	@Override
@@ -645,9 +699,9 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 
 	private void postQuery(Date from, Date to, String s) {
 		SmartCollectionImpl sm = new SmartCollectionImpl(s, false, false, false, true, null, 0, null, 0, null,
-				Constants.INHERIT_LABEL, null, 0, null);
-		sm.addCriterion(new CriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, new Range(from, to),
-				QueryField.BETWEEN, true));
+				Constants.INHERIT_LABEL, null, 0, 1, null);
+		sm.addCriterion(
+				new CriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, from, to, QueryField.BETWEEN, true));
 		sm.addSortCriterion(new SortCriterionImpl(QueryField.IPTC_DATECREATED.getKey(), null, false));
 		showCollection(sm);
 	}
@@ -662,13 +716,12 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 	private void bringGalleryToTop() {
 		String perspId = getSite().getPage().getPerspective().getId();
 		String viewId = UiActivator.getDefault().getPerspectiveGallery(perspId);
-		if (viewId != null) {
+		if (viewId != null)
 			try {
 				getSite().getPage().showView(viewId);
 			} catch (PartInitException e) {
 				// ignore
 			}
-		}
 	}
 
 	@Override

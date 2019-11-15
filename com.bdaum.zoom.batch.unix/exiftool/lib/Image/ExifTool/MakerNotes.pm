@@ -21,7 +21,7 @@ sub ProcessKodakPatch($$$);
 sub WriteUnknownOrPreview($$$);
 sub FixLeicaBase($$;$);
 
-$VERSION = '2.08';
+$VERSION = '2.09';
 
 my $debug;          # set to 1 to enable debugging code
 
@@ -32,7 +32,7 @@ my $debug;          # set to 1 to enable debugging code
 #   write maker notes into a file with different byte ordering!
 # - Put these in alphabetical order to make TagNames documentation nicer.
 @Image::ExifTool::MakerNotes::Main = (
-    # decide which MakerNotes to use (based on camera make/model)
+    # decide which MakerNotes to use (based on makernote header and camera make/model)
     {
         Name => 'MakerNoteApple',
         Condition => '$$valPt =~ /^Apple iOS\0/',
@@ -842,6 +842,25 @@ my $debug;          # set to 1 to enable debugging code
         },
     },
     {
+        Name => 'MakerNoteReconyx3',
+        Condition => '$$valPt =~ /^RECONYXH2\0/',
+        SubDirectory => {
+            TagTable => 'Image::ExifTool::Reconyx::Type3',
+            ByteOrder => 'Little-endian',
+        },
+    },
+    {
+        Name => 'MakerNoteRicohPentax',
+        # used by cameras such as the Ricoh GR III
+        Condition => '$$valPt=~/^RICOH\0(II|MM)/',
+        SubDirectory => {
+            TagTable => 'Image::ExifTool::Pentax::Main',
+            Start => '$valuePtr + 8',
+            Base => '$start - 8',
+            ByteOrder => 'Unknown',
+        },
+    },
+    {
         Name => 'MakerNoteRicoh',
         # (my test R50 image starts with "      \x02\x01" - PH)
         Condition => q{
@@ -952,10 +971,20 @@ my $debug;          # set to 1 to enable debugging code
     {
         Name => 'MakerNoteSigma',
         # (starts with "SIGMA\0")
-        Condition => '$$self{Make}=~/^(SIGMA|FOVEON)/',
+        Condition => '$$self{Make}=~/^(SIGMA|FOVEON)/ and $$valPt!~/^SIGMA\0\0\0\0\x03/',
         SubDirectory => {
             TagTable => 'Image::ExifTool::Sigma::Main',
             Validate => '$val =~ /^(SIGMA|FOVEON)/',
+            Start => '$valuePtr + 10',
+            ByteOrder => 'Unknown',
+        },
+    },
+    {
+        Name => 'MakerNoteSigma3',
+        # (starts with "SIGMA\0\0\0\0\x03")
+        Condition => '$$valPt=~/^SIGMA\0\0\0\0\x03/ and $$self{MakerNoteSigma3}=1',
+        SubDirectory => {
+            TagTable => 'Image::ExifTool::Sigma::Main',
             Start => '$valuePtr + 10',
             ByteOrder => 'Unknown',
         },

@@ -179,6 +179,7 @@ public class AssetImpl extends Asset_typeImpl implements Asset {
 	 * @param lastPicasaIniEntry - Property
 	 * @param noLensInfo - Property
 	 */
+
 	public AssetImpl(String name, String uri, String volume, int fileState,
 			long fileSize, String comments, String format, String mimeType,
 			int safety, int contentType, int height, int width, String ori,

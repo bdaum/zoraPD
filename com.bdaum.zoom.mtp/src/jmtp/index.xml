@@ -1,0 +1,902 @@
+<index>
+	<entry keyword="Archiving">
+		<topic href="html/reference/archive.html" />
+	</entry>
+	<entry keyword="Appearance">
+		<topic href="html/reference/appearancePrefs.html" />
+	</entry>
+	<entry keyword="Analog images">
+		<topic href="html/reference/analogImport.html" />
+	</entry>
+	<entry keyword="Album">
+		<topic href="html/reference/albums.html" />
+	</entry>
+	<entry keyword="Image">
+		<entry keyword="analog ~">
+			<topic href="html/reference/analogImport.html" />
+		</entry>
+		<entry keyword="~ size">
+			<topic href="html/concepts/images.html" />
+		</entry>
+		<entry keyword="Viewer">
+			<topic href="html/reference/internalViewer.html" />
+		</entry>
+		<entry keyword="Rating">
+			<topic href="html/reference/galleries.html#imagebuttons" label="Galleries - Image buttons" />
+			<topic href="html/reference/rating.html" label="Automatic rating" />
+		</entry>
+	</entry>
+	<entry keyword="Bookmarks">
+		<topic href="html/reference/bookmarks.html" />
+	</entry>
+	<entry keyword="Tag Cloud">
+		<topic href="html/reference/tagcloud.html" />
+	</entry>
+	<entry keyword="Catalog">
+		<topic href="html/reference/catalog.html" />
+		<entry keyword="Properties">
+			<topic href="html/reference/catProperties.html" label="Catalog Properties" />
+		</entry>
+		<entry keyword="merge ~">
+			<topic href="html/reference/mergeCat.html" />
+		</entry>
+		<entry keyword="split ~">
+			<topic href="html/reference/splitCat.html" />
+		</entry>
+		<entry keyword="migrate ~">
+			<topic href="html/reference/migrate.html" />
+		</entry>
+		<entry keyword="creating new ~">
+			<topic href="html/gettingstarted/newcat.html" />
+		</entry>
+		<entry keyword="restore ~">
+			<topic href="html/tasks/maintenance.html" />
+		</entry>
+		<entry keyword="Maintenance">
+			<topic href="html/tasks/maintenance.html" label="Catalog maintenance funtions" />
+			<topic href="html/reference/catProperties.html" label="Defragmentation" />
+		</entry>
+		<entry keyword="Defragmentation">
+			<topic href="html/reference/catProperties.html" />
+		</entry>
+		<entry keyword="~ Theme">
+			<topic href="html/reference/catProperties.html" label="Catalog Properties" />
+		</entry>
+	</entry>
+	<entry keyword="Theme">
+		<entry keyword="Catalog ~">
+			<topic href="html/reference/catProperties.html" label="Catalog Properties" />
+		</entry>
+	</entry>
+	<entry keyword="Restore catalog">
+		<entry keyword="from backup">
+			<topic href="html/tasks/maintenance.html" />
+		</entry>
+		<entry keyword="manually">
+			<topic href="html/tasks/tricks.html" />
+		</entry>
+	</entry>
+	<entry keyword="Maintenance">
+		<topic href="html/tasks/maintenance.html" />
+	</entry>
+	<entry keyword="Collection">
+		<topic href="html/reference/collectionEdit.html" label="Edit collection definition" />
+		<entry keyword="automatic creation of ~">
+			<topic href="html/reference/autoPrefs.html" />
+			<topic href="html/reference/autoRule.html" />
+		</entry>
+	</entry>
+	<entry keyword="Rules">
+		<entry keyword="for the automatic creation of collections">
+			<topic href="html/reference/autoPrefs.html" />
+			<topic href="html/reference/autoRule.html" />
+		</entry>
+	</entry>
+	<entry keyword="Commandline">
+		<topic href="html/reference/commandline.html" />
+	</entry>
+	<entry keyword="Web Community">
+		<topic href="html/reference/community.html" />
+	</entry>
+	<entry keyword="Photo Community">
+		<topic href="html/reference/community.html" />
+	</entry>
+	<entry keyword="Table View">
+		<topic href="html/reference/tableView.htm" label="Table view" />
+		<entry keyword="configure ~">
+			<topic href="html/reference/configureColumns.html" />
+		</entry>
+	</entry>
+	<entry keyword="CSS">
+		<topic href="html/reference/css.html" />
+	</entry>
+	<entry keyword="Hierarchy">
+		<topic href="html/reference/hierarchy.html" />
+		<entry keyword="Description">
+			<topic href="html/reference/descriptionEdit.html" />
+		</entry>
+	</entry>
+	<entry keyword="Relations">
+		<topic href="html/reference/hierarchy.html" />
+		<entry keyword="automatic creation of ~">
+			<topic href="html/reference/autoPrefs.html" />
+		</entry>
+		<entry keyword="Description">
+			<topic href="html/reference/descriptionEdit.html" />
+		</entry>
+	</entry>
+	<entry keyword="Duplicates">
+		<topic href="html/reference/duplicates.html" />
+		<entry keyword="Search">
+			<topic href="html/reference/duplicatesSearch.html" />
+		</entry>
+	</entry>
+	<entry keyword="Exhibition">
+		<topic href="html/reference/exhibition.html" />
+	</entry>
+	<entry keyword="Export">
+		<entry keyword="Folder">
+			<topic href="html/reference/exportFolder.html" />
+		</entry>
+		<entry keyword="FTP">
+			<topic href="html/reference/ftpAccount.html" />
+		</entry>
+		<entry keyword="Metadata">
+			<topic href="html/reference/fileAssociations.html" />
+		</entry>
+	</entry>
+	<entry keyword="File Associations">
+		<topic href="html/reference/fileAssociations.html" />
+	</entry>
+	<entry keyword="Editors">
+		<topic href="html/tasks/externalEditors.html" />
+		<entry keyword="Associations">
+			<topic href="html/reference/fileAssociations.html" />
+		</entry>
+	</entry>
+	<entry keyword="FTP">
+		<topic href="html/reference/ftpAccount.html" />
+	</entry>
+	<entry keyword="Preferences">
+		<entry keyword="General">
+			<topic href="html/reference/generalPrefs.html" />
+		</entry>
+		<entry keyword="Import">
+			<topic href="html/reference/importPrefs.html" />
+		</entry>
+		<entry keyword="Keys">
+			<topic href="html/reference/keyPrefs.html" />
+		</entry>
+		<entry keyword="Keywords">
+			<topic href="html/reference/keywordPrefs.html" />
+			<topic href="html/reference/keyworddef.html" />
+		</entry>
+		<entry keyword="Appearance">
+			<topic href="html/reference/appearancePrefs.html" />
+		</entry>
+	</entry>
+	<entry keyword="Secondary monitor">
+		<topic href="html/reference/generalPrefs.html" />
+	</entry>
+	<entry keyword="Monitor">
+		<topic href="html/reference/generalPrefs.html" />
+	</entry>
+	<entry keyword="Histogram">
+		<topic href="html/reference/histogram.html" />
+	</entry>
+	<entry keyword="Horizontal Strip">
+		<topic href="html/reference/hstrip.html" />
+	</entry>
+	<entry keyword="Import">
+		<topic href="html/tasks/import.html" />
+		<entry keyword="from Device">
+			<topic href="html/reference/importFromDevice.html" />
+		</entry>
+		<entry keyword="into new structure">
+			<topic href="html/reference/importNewStructure.html" />
+		</entry>
+		<entry keyword="Preferences">
+			<topic href="html/reference/importPrefs.html" />
+		</entry>
+		<entry keyword="File renaming">
+			<topic href="html/reference/templates.html" />
+		</entry>
+		<entry keyword="in the background">
+			<topic href="html/reference/catProperties.html#watchedFolders"
+				label="Show background imports" />
+		</entry>
+		<entry keyword="~ mode">
+			<topic href="html/reference/importMode.html" />
+		</entry>
+	</entry>
+	<entry keyword="Watched Folders">
+		<topic href="html/reference/catProperties.html#watchedFolders"
+			label="Configure" />
+	</entry>
+	<entry keyword="Background">
+		<entry keyword="Activities">
+			<topic href="html/reference/progress.html" />
+		</entry>
+		<entry keyword="Imports">
+			<topic href="html/reference/catProperties.html#watchedFolders"
+				label="Show background imports" />
+		</entry>
+	</entry>
+	<entry keyword="Search">
+		<topic href="html/tasks/imageRetrieval.html" />
+		<entry keyword="Keywords">
+			<topic href="html/reference/keywordSearch.html" label="Keyword search" />
+			<topic href="html/tasks/keywords.html" />
+		</entry>
+		<entry keyword="Series">
+			<topic href="html/reference/seriesSearch.html" />
+		</entry>
+		<entry keyword="Time">
+			<topic href="html/reference/timeSearch.html" />
+		</entry>
+		<entry keyword="Duplicates">
+			<topic href="html/reference/duplicatesSearch.html" />
+		</entry>
+	</entry>
+	<entry keyword="Keywords">
+		<entry keyword="search for ~">
+			<topic href="html/reference/keywordSearch.html" label="Keyword search" />
+			<topic href="html/tasks/keywords.html" />
+		</entry>
+		<entry keyword="Preferences">
+			<topic href="html/reference/keywordPrefs.html" />
+		</entry>
+		<entry keyword="Overview">
+			<topic href="html/reference/catProperties.html#keywords" label="Catalog properties - Keywords" />
+		</entry>
+		<entry keyword="Vocabularies and ~">
+			<topic href="html/reference/catProperties.html" label="Managing vocabularies" />
+			<topic href="html/reference/keyworddef.html" label="Select ~ fron vocabularies" />
+			<topic href="html/concepts/keywords.html" label="~ and vocabularies - basics" />
+		</entry>
+	</entry>
+	<entry keyword="Vocabularies">
+		<topic href="html/reference/catProperties.html#keywords" label="Managing ~" />
+		<topic href="html/reference/keyworddef.html" label="Select keyword from ~" />
+		<topic href="html/concepts/keywords.html" label="Keywords and ~ - basics" />
+		<topic href="html/reference/catPrefs.html" label="User defined ~" />
+	</entry>
+	<entry keyword="Categories">
+		<entry keyword="Overview">
+			<topic href="html/reference/catProperties.html#categories"
+				label="Catalog properties - Categories" />
+		</entry>
+		<entry keyword="Assigning ~ to images">
+			<topic href="html/reference/categorize.html" label="Categorizing images" />
+		</entry>
+		<entry keyword="~ and keywords">
+			<topic href="html/concepts/keywords.html" />
+		</entry>
+	</entry>
+	<entry keyword="Locations">
+		<entry keyword="Overview">
+			<topic href="html/reference/catProperties.html#locations"
+				label="Catalog properties - Locations" />
+		</entry>
+		<entry keyword="Collections">
+			<topic href="html/reference/catProperties.html#general" label="Catalog properties - General" />
+		</entry>
+	</entry>
+	<entry keyword="Artwork">
+		<entry keyword="Overview">
+			<topic href="html/reference/catProperties.html#artwork" label="Catalog properties - Artwork" />
+		</entry>
+	</entry>
+	<entry keyword="Contacts">
+		<entry keyword="Overview">
+			<topic href="html/reference/catProperties.html#contacts" label="Catalog properties - Contacts" />
+		</entry>
+	</entry>
+	<entry keyword="Statistics">
+		<topic href="html/reference/catProperties.html#statistics"
+			label="Catalog properties - Statistics" />
+	</entry>
+	<entry keyword="Time search">
+		<topic href="html/reference/timeSearch.html" />
+	</entry>
+
+	<entry keyword="Lightbox">
+		<topic href="html/reference/lightbox.html" />
+	</entry>
+	<entry keyword="Errors">
+		<entry keyword="Log view">
+			<topic href="html/reference/logView.html" />
+		</entry>
+		<entry keyword="reporting ~">
+			<topic href="html/tasks/reportingError.html" />
+		</entry>
+	</entry>
+	<entry keyword="Metadata">
+		<entry keyword="viewing ~">
+			<topic href="html/reference/metadata.html" />
+		</entry>
+		<entry keyword="editing ~">
+			<topic href="html/reference/dataEntry.html" />
+		</entry>
+		<entry keyword="copying ~">
+			<topic href="html/reference/galleries.html" />
+		</entry>
+		<entry keyword="pasting ~">
+			<topic href="html/reference/pasteMetadata.html" />
+		</entry>
+		<entry keyword="exporting ~">
+			<topic href="html/reference/fileAssociations.html" />
+		</entry>
+		<entry keyword="selecting">
+			<topic href="html/reference/metadataPrefs.html" />
+		</entry>
+		<entry keyword="tuning">
+			<topic href="html/reference/metadataPrefs.html" />
+			<topic href="html/tasks/tuning.html" />
+		</entry>
+		<entry keyword="JPEG">
+			<topic href="html/concepts/basic.html" />
+			<topic href="html/reference/metadataPrefs.html" />
+		</entry>
+	</entry>
+	<entry keyword="Properties view">
+		<topic href="html/reference/metadata.html" />
+	</entry>
+	<entry keyword="EXIF view">
+		<topic href="html/reference/metadata.html" />
+	</entry>
+	<entry keyword="IPTC view">
+		<topic href="html/reference/metadata.html" />
+	</entry>
+	<entry keyword="Perspective">
+		<topic href="html/reference/perspective.html" />
+		<entry keyword="deleting ~">
+			<topic href="html/reference/perspectivePrefs.html" />
+		</entry>
+	</entry>
+	<entry keyword="Preview view">
+		<topic href="html/reference/preview.html" />
+	</entry>
+	<entry keyword="Printing">
+		<entry keyword="Layout">
+			<topic href="html/reference/printLayout.htm" />
+		</entry>
+	</entry>
+	<entry keyword="Layout">
+		<entry keyword="Printing">
+			<topic href="html/reference/printLayout.htm" />
+		</entry>
+		<entry keyword="Exhibit ~">
+			<topic href="html/reference/exhibitLayout.html" />
+		</entry>
+	</entry>
+	<entry keyword="Exhibit">
+		<entry keyword="Layout">
+			<topic href="html/reference/exhibitLayout.html" />
+		</entry>
+	</entry>
+	<entry keyword="Progress view">
+		<topic href="html/reference/progress.html" />
+	</entry>
+	<entry keyword="Refresh">
+		<topic href="html/reference/refresh.htm" />
+	</entry>
+	<entry keyword="Series">
+		<topic href="html/reference/series.html" />
+		<entry keyword="search ~">
+			<topic href="html/reference/seriesSearch.html" />
+		</entry>
+	</entry>
+	<entry keyword="Sleeves view">
+		<topic href="html/reference/sleeves.htm" />
+	</entry>
+	<entry keyword="Slide">
+		<topic href="html/reference/slide.html" />
+	</entry>
+	<entry keyword="Slide show">
+		<entry keyword="Designer">
+			<topic href="html/reference/slideshow.html" />
+		</entry>
+		<entry keyword="Player">
+			<topic href="html/reference/slideshowPlayer.html" />
+		</entry>
+	</entry>
+	<entry keyword="Renaming">
+		<topic href="html/reference/templates.html" label="~ during import" />
+		<topic href="html/reference/galleries.html#rename" label="Direct ~" />
+		<topic href="html/reference/bulkRename.html" label="Bulk ~" />
+	</entry>
+	<entry keyword="Template">
+		<topic href="html/reference/templateDef.html" />
+	</entry>
+	<entry keyword="Trashcan">
+		<topic href="html/reference/trashcan.html" />
+	</entry>
+	<entry keyword="Waste basket">
+		<topic href="html/reference/trashcan.html" />
+	</entry>
+	<entry keyword="View">
+		<topic href="html/reference/views.html" />
+		<entry keyword="Table">
+			<topic href="html/reference/tableView.htm" label="Table view" />
+		</entry>
+		<entry keyword="Sleeves">
+			<topic href="html/reference/sleeves.htm" />
+		</entry>
+		<entry keyword="Catalog">
+			<topic href="html/reference/catalog.html" />
+		</entry>
+		<entry keyword="Metadata">
+			<topic href="html/reference/metadata.html" />
+		</entry>
+		<entry keyword="Properties">
+			<topic href="html/reference/metadata.html" />
+		</entry>
+		<entry keyword="EXIF">
+			<topic href="html/reference/metadata.html" />
+		</entry>
+		<entry keyword="IPTC">
+			<topic href="html/reference/metadata.html" />
+		</entry>
+		<entry keyword="Preview">
+			<topic href="html/reference/preview.html" />
+		</entry>
+		<entry keyword="Progress">
+			<topic href="html/reference/progress.html" />
+		</entry>
+		<entry keyword="Lightbox">
+			<topic href="html/reference/lightbox.html" />
+		</entry>
+		<entry keyword="Log">
+			<topic href="html/reference/logView.html" />
+		</entry>
+		<entry keyword="Horizontal Strip">
+			<topic href="html/reference/hstrip.html" />
+		</entry>
+		<entry keyword="Vertical Strip">
+			<topic href="html/reference/vstrip.html" />
+		</entry>
+		<entry keyword="Gallery">
+			<topic href="html/reference/galleries.html" />
+		</entry>
+	</entry>
+	<entry keyword="Web galleries">
+		<topic href="html/reference/webGallery.html" />
+		<entry keyword="creating ~">
+			<topic href="html/tasks/webGalleries.html" />
+		</entry>
+		<entry keyword="Generator">
+			<topic href="html/reference/webGalleryGenerator.html" />
+		</entry>
+	</entry>
+	<entry keyword="Vertical Strip">
+		<topic href="html/reference/vstrip.html" />
+	</entry>
+	<entry keyword="CMS">
+		<topic href="html/concepts/CMS.html" />
+	</entry>
+	<entry keyword="Color management">
+		<topic href="html/concepts/CMS.html" />
+	</entry>
+	<entry keyword="Viewer">
+		<topic href="html/reference/internalViewer.html" />
+	</entry>
+	<entry keyword="Thumbnail">
+		<entry keyword="Preferences">
+			<topic href="html/reference/appearancePrefs.html" />
+			<topic href="html/reference/catProperties.html#thumbnails"
+				label="Catalog Properties - Thumbnails" />
+		</entry>
+		<entry keyword="Color Code">
+			<topic href="html/reference/appearancePrefs.html" />
+		</entry>
+		<entry keyword="Operations">
+			<topic href="html/reference/galleries.html" />
+		</entry>
+		<entry keyword="Face detection">
+			<topic href="html/reference/appearancePrefs.html" />
+		</entry>
+	</entry>
+	<entry keyword="Decoration">
+		<entry keyword="Thumbnail">
+			<topic href="html/reference/appearancePrefs.html" />
+		</entry>
+	</entry>
+	<entry keyword="Time stamp">
+		<topic href="html/reference/timeShift.htm" />
+	</entry>
+	<entry keyword="Time shift">
+		<topic href="html/reference/timeShift.htm" />
+	</entry>
+	<entry keyword="Timeline">
+		<topic href="html/reference/catalog.html" />
+		<entry keyword="Hiding ~">
+			<topic href="html/reference/catFilter.html" />
+		</entry>
+		<entry keyword="Configuring ~">
+			<topic href="html/reference/catProperties.html" label="Catalog Properties" />
+		</entry>
+		<entry keyword="Show in ~">
+			<topic href="html/reference/exhibition.html" />
+			<topic href="html/reference/galleries.html" />
+			<topic href="html/reference/slideshow.html" />
+			<topic href="html/reference/webGallery.html" />
+			<topic href="html/reference/preview.html" />
+		</entry>
+	</entry>
+	<entry keyword="Mouse gestures">
+		<topic href="html/reference/galleries.html" />
+		<topic href="html/reference/catalog.html" />
+		<topic href="html/reference/hierarchy.html" />
+		<topic href="html/reference/preview.html" />
+	</entry>
+	<entry keyword="Zoom key">
+		<topic href="html/reference/mousePrefs.html" />
+	</entry>
+	<entry keyword="Mouse wheel">
+		<topic href="html/reference/mousePrefs.html" />
+	</entry>
+	<entry keyword="Acceleration">
+		<entry keyword="Mouse">
+			<topic href="html/reference/mousePrefs.html" />
+		</entry>
+	</entry>
+	<entry keyword="Spell checking">
+		<topic href="html/reference/spell.html" />
+	</entry>
+	<entry keyword="Floorplan">
+		<topic href="html/reference/exhibition.html" />
+	</entry>
+	<entry keyword="File filter">
+		<topic href="html/reference/fileFilter.html" />
+	</entry>
+	<entry keyword="Catalog filter">
+		<topic href="html/reference/catFilter.html" />
+	</entry>
+	<entry keyword="Filter">
+		<entry keyword="File format">
+			<topic href="html/reference/galleries.html#fileformat" label="Galleries - File format filter" />
+		</entry>
+		<entry keyword="Rating">
+			<topic href="html/reference/galleries.html#rating" label="Galleries - Rating filter" />
+		</entry>
+		<entry keyword="Color code">
+			<topic href="html/reference/galleries.html#colorcode" label="Galleries - Color code filter" />
+			<topic href="html/reference/catalog.html" label="Catalog - Color code filter" />
+		</entry>
+		<entry keyword="File">
+			<topic href="html/reference/fileFilter.html" />
+		</entry>
+		<entry keyword="Catalog">
+			<topic href="html/reference/catFilter.html" />
+		</entry>
+		<entry keyword="BW ~">
+			<topic href="html/reference/preview.html" />
+		</entry>
+	</entry>
+	<entry keyword="File format">
+		<entry keyword="~ association">
+			<topic href="html/reference/fileAssociations.html" />
+		</entry>
+		<entry keyword="~ filter">
+			<topic href="html/reference/galleries.html#fileformat" label="Galleries - File format filter" />
+		</entry>
+	</entry>
+	<entry keyword="BW filter">
+		<topic href="html/reference/preview.html" />
+	</entry>
+	<entry keyword="Grayscale">
+		<topic href="html/reference/preview.html" />
+	</entry>
+	<entry keyword="RAW">
+		<topic href="html/reference/importPrefs.html" />
+		<topic href="html/tasks/import.html" />
+		<topic href="html/concepts/raw.html" />
+	</entry>
+	<entry keyword="RawTherapee">
+		<topic href="html/reference/importPrefs.html" />
+		<topic href="html/tasks/import.html" />
+		<topic href="html/concepts/raw.html" />
+	</entry>
+	<entry keyword="darktable">
+		<topic href="html/reference/importPrefs.html" />
+		<topic href="html/tasks/import.html" />
+		<topic href="html/concepts/raw.html" />
+	</entry>
+	<entry keyword="Status">
+		<topic href="html/tasks/import.html" />
+	</entry>
+	<entry keyword="Recipe">
+		<topic href="html/reference/importPrefs.html" />
+		<topic href="html/tasks/import.html" />
+		<topic href="html/concepts/raw.html" />
+	</entry>
+	<entry keyword="Archive recipe">
+		<topic href="html/reference/importPrefs.html" />
+		<topic href="html/concepts/raw.html" />
+	</entry>
+	<entry keyword="Restore recipe">
+		<topic href="html/reference/hierarchy.html" />
+		<topic href="html/concepts/raw.html" />
+	</entry>
+	<entry keyword="Internal viewer">
+		<topic href="html/reference/internalViewer.html" />
+	</entry>
+	<entry keyword="Raw Recipe Reflection">
+		<topic href="html/tasks/import.html" />
+		<topic href="html/concepts/raw.html" />
+	</entry>
+	<entry keyword="3R">
+		<topic href="html/tasks/import.html" />
+	</entry>
+	<entry keyword="Scanner">
+		<topic href="html/tasks/scanners.html" />
+	</entry>
+	<entry keyword="TWAIN">
+		<topic href="html/tasks/scanners.html" />
+	</entry>
+	<entry keyword="latency">
+		<topic href="html/reference/catProperties.html" label="Catalog Properties" />
+	</entry>
+	<entry keyword="fullscreen">
+		<topic href="html/reference/applicationPrefs.html" />
+	</entry>
+	<entry keyword="Installation">
+		<topic href="html/tasks/install.html" />
+	</entry>
+	<entry keyword="De-installation">
+		<topic href="html/tasks/install.html" />
+	</entry>
+	<entry keyword="Crop mode">
+		<topic href="html/reference/galleries.html" />
+		<topic href="html/reference/preview.html" />
+	</entry>
+	<entry keyword="Black&amp;White mode">
+		<topic href="html/reference/galleries.html" />
+		<topic href="html/reference/preview.html" />
+	</entry>
+	<entry keyword="CHDK">
+		<topic href="html/concepts/raw.html" />
+	</entry>
+	<entry keyword="DNG">
+		<topic href="html/concepts/raw.html" />
+		<topic href="html/reference/importPrefs.html" />
+	</entry>
+	<entry keyword="XMP">
+		<topic href="html/reference/fileAssociations.html" />
+	</entry>
+	<entry keyword="Face detection">
+		<topic href="html/concepts/face.html" />
+		<topic href="html/reference/appearancePrefs.html" label="Display of face regions" />
+		<topic href="html/reference/importPrefs.html" label="Import face data from camera" />
+	</entry>
+	<entry keyword="Persons">
+		<topic href="html/concepts/face.html" />
+	</entry>
+	<entry keyword="Picasa">
+		<topic href="html/concepts/face.html" />
+	</entry>
+	<entry keyword="Google Picasa">
+		<topic href="html/concepts/face.html" />
+	</entry>
+	<entry keyword="Live Photo Gallery">
+		<topic href="html/concepts/face.html" />
+	</entry>
+	<entry keyword="Windows Live Photo Gallery">
+		<topic href="html/concepts/face.html" />
+	</entry>
+	<entry keyword="Adobe Lightroom">
+		<topic href="html/concepts/face.html" />
+	</entry>
+	<entry keyword="Lightroom">
+		<topic href="html/concepts/face.html" />
+	</entry>
+	<entry keyword="JPEG">
+		<entry keyword="Metadata">
+			<topic href="html/concepts/basic.html" />
+			<topic href="html/reference/metadataPrefs.html" />
+		</entry>
+	</entry>
+	<entry keyword="Window">
+		<entry keyword="multiple">
+			<topic href="html/reference/views.html" />
+		</entry>
+	</entry>
+	<entry keyword="Rating">
+		<entry keyword="assign ~">
+			<topic href="html/reference/galleries.html#imagebuttons" label="Galleries - Image buttons" />
+			<topic href="html/reference/rating.html" label="Automatic rating" />
+		</entry>
+		<entry keyword="~ filter">
+			<topic href="html/reference/galleries.html#rating" label="Galleries - Rating filter" />
+		</entry>
+	</entry>
+	<entry keyword="Data Entry">
+		<topic href="html/reference/dataEntry.html" />
+	</entry>
+	<entry keyword="Tuning">
+		<topic href="html/tasks/tuning.html" label="General Tuning Tips" />
+		<topic href="html/reference/catProperties.html" label="Defragmentation" />
+		<topic href="html/reference/metadataPrefs.html" label="Metadata ~" />
+	</entry>
+	<entry keyword="Performance">
+		<topic href="html/tasks/tuning.html" label="General Tuning Tips" />
+		<topic href="html/reference/catProperties.html" label="Defragmentation" />
+	</entry>
+	<entry keyword="HTML">
+		<entry keyword="editing">
+			<topic href="html/reference/htmlEditing.html" />
+		</entry>
+	</entry>
+	<entry keyword="Retarget">
+		<topic href="html/reference/galleries.html" />
+		<topic href="html/reference/retarget.html" label="Retargeting" />
+	</entry>
+	<entry keyword="Orphans">
+		<entry keyword="Retargeting ~">
+			<topic href="html/reference/galleries.html" />
+			<topic href="html/reference/retarget.html" label="Retargeting" />
+		</entry>
+		<entry keyword="Removing ~">
+			<topic href="html/reference/refresh.htm" />
+		</entry>
+		<entry keyword="Searching ~">
+			<topic href="html/tasks/imageRetrieval.html" />
+		</entry>
+	</entry>
+	<entry keyword="Touchpad">
+		<topic href="html/reference/mousePrefs.html" />
+	</entry>
+	<entry keyword="DCRAW">
+		<topic href="html/reference/importPrefs.html#raw" label="RAW import preferences" />
+		<topic href="html/tasks/tuning.html" />
+		<topic href="html/tasks/firstAid.html" />
+		<topic href="html/reference/dcraw.html" label="DCRAW integration" />
+	</entry>
+	<entry keyword="Sorting">
+		<topic href="html/reference/collectionEdit.html" label="Edit collection definition" />
+		<topic href="html/reference/tableView.html" label="Table view" />
+	</entry>
+	<entry keyword="3D">
+		<topic href="html/reference/exhibition.html" />
+	</entry>
+	<entry keyword="HTML5">
+		<topic href="html/reference/exhibition.html" />
+	</entry>
+	<entry keyword="Virtual exhibition">
+		<topic href="html/reference/exhibition.html" />
+	</entry>
+	<entry keyword="Frame">
+		<entry keyword="virtual exhibition">
+			<topic href="html/reference/exhibition.html" />
+		</entry>
+	</entry>
+	<entry keyword="Mat">
+		<entry keyword="virtual exhibition">
+			<topic href="html/reference/exhibition.html" />
+		</entry>
+	</entry>
+	<entry keyword="Color Code">
+		<entry keyword="manual">
+			<topic href="html/reference/galleries.html" />
+		</entry>
+		<entry keyword="automatic">
+			<topic href="html/reference/appearancePrefs.html" />
+		</entry>
+		<entry keyword="assign ~">
+			<topic href="html/reference/galleries.html#imagebuttons" label="Galleries - Image buttons" />
+		</entry>
+		<entry keyword="~ filter">
+			<topic href="html/reference/galleries.html#colorcode" label="Galleries - Color code filter" />
+			<topic href="html/reference/catalog.html" label="Catalog - Color code filter" />
+		</entry>
+	</entry>
+	<entry keyword="Lucene">
+		<entry keyword="Refresh index">
+			<topic href="html/tasks/firstAid.html" />
+		</entry>
+	</entry>
+	<entry keyword="License">
+		<topic href="html/gettingstarted/licence.htm" />
+	</entry>
+	<entry keyword="Back-up">
+		<entry keyword="configure">
+			<topic href="html/reference/catProperties.html" label="Catalog properties" />
+		</entry>
+		<entry keyword="Restore catalog from ~ ">
+			<topic href="html/tasks/maintenance.html" />
+		</entry>
+		<entry keyword="Restore catalog manually">
+			<topic href="html/tasks/tricks.html" />
+		</entry>
+	</entry>
+	<entry keyword="JPEG quality">
+		<entry keyword="Thumbnails">
+			<topic href="html/reference/catProperties.html" label="Catalog Properties" />
+		</entry>
+		<entry keyword="Export into folder">
+			<topic href="html/reference/exportFolder.html" />
+		</entry>
+	</entry>
+	<entry keyword="Indexing">
+		<topic href="html/reference/catProperties.html#indexing" label="Catalog Properties - Indexing" />
+	</entry>
+	<entry keyword="Output quality">
+		<topic href="html/reference/outputQuality.html" />
+	</entry>
+	<entry keyword="Quality">
+		<entry keyword="Output ~">
+			<topic href="html/reference/outputQuality.html" />
+		</entry>
+	</entry>
+	<entry keyword="Troubleshooting">
+		<topic href="html/tasks/firstAid.html" />
+	</entry>
+	<entry keyword="Collapse">
+		<topic href="html/reference/lightbox.html" label="Collapsing images" />
+		<topic href="html/reference/collapsePattern.html" label="Configure Collapsing" />
+	</entry>
+	<entry keyword="Cue">
+		<topic href="html/reference/preview.html" label="Cue mode" />
+	</entry>
+	<entry keyword="Wildcards">
+		<entry keyword="~ in search criteria">
+			<topic href="html/reference/collectionEdit.html" />
+		</entry>
+		<entry keyword="~ in file filters">
+			<topic href="html/reference/fileFilter.html" />
+		</entry>
+	</entry>
+	<entry keyword="Subgroup">
+		<topic href="html/reference/catalog.html" />
+	</entry>
+	<entry keyword="path pattern">
+		<topic href="html/reference/fileFilter.html" />
+	</entry>
+	<entry keyword="Stack">
+		<topic href="html/reference/galleries.html#stack" label="Declaring a named stack" />
+		<topic href="html/reference/collapsePattern.html" label="Collapsing a named stack" />
+	</entry>
+	<entry keyword="Location pin">
+		<topic href="html/reference/galleries.html#imagebuttons" label="Using the location pin" />
+	</entry>
+	<entry keyword="Voice notes">
+		<topic href="html/reference/galleries.html#voicenote" label="Replaying voice notes" />
+		<topic href="html/reference/galleries.html#voicenote" label="Attaching voice notes" />
+		<topic href="html/reference/galleries.html#voicenote" label="Removeing voice notes" />
+		<topic href="html/reference/slideshow.html#properties" label="Replaying voice notes in slide show" />
+		<topic href="html/reference/slideshow.html" label="Recording voice notes in slide show" />
+		<topic href="html/reference/slide.html" label="Suppress voice notes for individual slides" />
+	</entry>
+	<entry keyword="Text notes">
+		<topic href="html/reference/galleries.html#voicenote" label="Editing text notes" />
+	</entry>
+	<entry keyword="Drawing">
+		<topic href="html/reference/galleries.html#voicenote" label="Overlayed drawings" />
+	</entry>
+	<entry keyword="Regular expression">
+		<topic href="html/reference/regex.html" label="Regular expression syntax" />
+	</entry>
+	<entry keyword="migrate">
+		<entry keyword="~ catalog">
+			<topic href="html/reference/migrate.html" />
+		</entry>
+	</entry>
+	<entry keyword="JPEG 2000">
+		<topic href="html/concepts/images.html" />
+	</entry>
+	<entry keyword="WebP">
+		<topic href="html/concepts/images.html" />
+	</entry>
+	<entry keyword="Units">
+		<topic href="html/reference/appearancePrefs.html" />
+	</entry>
+	<entry keyword="Calendar">
+		<topic href="html/reference/calendar.html" />
+	</entry>
+	<entry keyword="Tethered Shooting">
+		<topic href="html/reference/tethered.html" label="Basics"/>
+		<topic href="html/reference/importPrefs.html" label="Starting on device insertion"/>
+	</entry>
+	
+</index>

@@ -53,7 +53,6 @@ import com.bdaum.zoom.cat.model.creatorsContact.ContactImpl;
 import com.bdaum.zoom.cat.model.location.Location;
 import com.bdaum.zoom.cat.model.location.LocationImpl;
 import com.bdaum.zoom.common.GeoMessages;
-import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.IFormatter;
@@ -152,7 +151,7 @@ public class EditStructDialog extends ZTitleAreaDialog implements IAdaptable {
 				break;
 			case QueryField.T_DATE:
 				if (value instanceof Date)
-					return Constants.DFDT.format((Date) value);
+					return Format.DFDT.get().format((Date) value);
 				break;
 			}
 			return String.valueOf(value);
@@ -243,7 +242,7 @@ public class EditStructDialog extends ZTitleAreaDialog implements IAdaptable {
 					if (formatter != null)
 						return formatter.toString(value);
 					if (value instanceof Date)
-						return Constants.DFDT.format((Date) value);
+						return Format.DFDT.get().format((Date) value);
 				}
 				return value;
 			}

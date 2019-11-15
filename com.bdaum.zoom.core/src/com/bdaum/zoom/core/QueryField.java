@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2018 Berthold Daum  
+ * (c) 2009-2019 Berthold Daum  
  */
 
 package com.bdaum.zoom.core;
@@ -25,7 +25,6 @@ import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -874,8 +873,10 @@ public class QueryField {
 
 		@Override
 		protected Object getValue(Asset asset) {
-			String title = asset.getTitle();
-			return (title == null || title.trim().isEmpty()) ? asset.getName() : title;
+			String tit = asset.getTitle();
+			if (tit == null || tit.trim().isEmpty())
+				tit = asset.getHeadline();
+			return (tit == null || tit.trim().isEmpty()) ? asset.getName() : tit;
 		}
 	};
 
@@ -1214,7 +1215,7 @@ public class QueryField {
 			"Orientation", //$NON-NLS-1$
 			NS_TIFF, "Orientation", //$NON-NLS-1$
 			Messages.QueryField_Orientation_exif, ACTION_NONE, PHOTO | EDIT_NEVER, CATEGORY_EXIF, T_POSITIVEINTEGER, 1,
-			3, 0f, 360, ISpellCheckingService.NOSPELLING) {
+			3, Format.orientationFormatter, 0f, 360, ISpellCheckingService.NOSPELLING) {
 
 		@Override
 		protected int getInt(Asset asset) {
@@ -1274,7 +1275,7 @@ public class QueryField {
 	public static final QueryField EXIF_COLORSPACE = new QueryField(EXIF_IMAGE, "colorSpace", "ColorSpace", NS_EXIF, //$NON-NLS-1$ //$NON-NLS-2$
 			"ColorSpace", Messages.QueryField_Color_space, ACTION_QUERY, //$NON-NLS-1$
 			PHOTO | EDIT_NEVER | ESSENTIAL | QUERY | TEXT | AUTO_DISCRETE | REPORT, CATEGORY_EXIF, T_INTEGER, 1, 1,
-			new int[] { -1, 1, 2, 65535 }, new String[] { Messages.QueryField_Undefined, "sRGB", //$NON-NLS-1$
+			new int[] { -1, 0, 1, 2, 65535 }, new String[] { Messages.QueryField_Undefined, "sRGB", "sRGB", //$NON-NLS-1$ //$NON-NLS-2$
 					"AdobeRGB", Messages.QueryField_Uncalibrated }, //$NON-NLS-1$
 			null, 0f, ISpellCheckingService.NOSPELLING) {
 
@@ -1335,7 +1336,8 @@ public class QueryField {
 		}
 
 		public String appendQuestionMark(Asset asset, String text) {
-			if (asset.getNoLensInfo() && text != null && !text.isEmpty() && text != Format.MISSINGENTRYSTRING && text != VALUE_MIXED)
+			if (asset.getNoLensInfo() && text != null && !text.isEmpty() && text != Format.MISSINGENTRYSTRING
+					&& text != VALUE_MIXED)
 				return text + '?';
 			return text;
 		}
@@ -1635,7 +1637,8 @@ public class QueryField {
 		}
 
 		public String appendQuestionMark(Asset asset, String text) {
-			if (asset.getNoLensInfo() && text != null && !text.isEmpty() && text != Format.MISSINGENTRYSTRING && text != VALUE_MIXED)
+			if (asset.getNoLensInfo() && text != null && !text.isEmpty() && text != Format.MISSINGENTRYSTRING
+					&& text != VALUE_MIXED)
 				return text + '?';
 			return text;
 		}
@@ -1661,11 +1664,11 @@ public class QueryField {
 			return "bcps"; //$NON-NLS-1$
 		}
 	};
-	public static final QueryField EXIF_FLASHEXPOSURECOMP = new QueryField(EXIF_FLASH, "flashExposureComp", //$NON-NLS-1$
+	public static final QueryField EXIF_FLASHEXPOSURECOMP = new QueryField(EXIF_FLASH, "0f", //$NON-NLS-1$
 			"FlashCompensation", //$NON-NLS-1$
 			NS_EXIF, "FlashExposureComp", //$NON-NLS-1$
 			Messages.QueryField_Flash_exposure_compensation, ACTION_QUERY,
-			PHOTO | EDIT_ANALOG | QUERY | AUTO_LOG | REPORT, CATEGORY_EXIF, T_FLOAT, 1, 3, 10f, 16f,
+			PHOTO | EDIT_ANALOG | QUERY | AUTO_LOG | REPORT, CATEGORY_EXIF, T_FLOAT, 1, 3, Format.plusMinusFormatter, 10f, 16f,
 			ISpellCheckingService.NOSPELLING) {
 
 		@Override
@@ -1807,7 +1810,8 @@ public class QueryField {
 		}
 
 		public String appendQuestionMark(Asset asset, String text) {
-			if (asset.getNoLensInfo() && text != null && !text.isEmpty() && text != Format.MISSINGENTRYSTRING && text != VALUE_MIXED)
+			if (asset.getNoLensInfo() && text != null && !text.isEmpty() && text != Format.MISSINGENTRYSTRING
+					&& text != VALUE_MIXED)
 				return text + '?';
 			return text;
 		}
@@ -2010,7 +2014,7 @@ public class QueryField {
 			"Vibrance", //$NON-NLS-1$
 			NS_EXIF, "Vibrance", //$NON-NLS-1$
 			Messages.QueryField_Vibrance, ACTION_QUERY, PHOTO | EDIT_NEVER | QUERY | AUTO_LINEAR | REPORT,
-			CATEGORY_EXIF, T_INTEGER, 1, 1, 0f, 9f, ISpellCheckingService.NOSPELLING) {
+			CATEGORY_EXIF, T_INTEGER, 1, 1, Format.plusMinusFormatter, 0f, 9f, ISpellCheckingService.NOSPELLING) {
 
 		@Override
 		protected int getInt(Asset asset) {
@@ -2440,9 +2444,9 @@ public class QueryField {
 
 		@Override
 		public Object getStruct(Asset asset) {
-			Iterator<LocationCreatedImpl> it = CoreActivator.getDefault().getDbManager()
-					.obtainStructForAsset(LocationCreatedImpl.class, asset.getStringId(), true).iterator();
-			return it.hasNext() ? it.next().getLocation() : null;
+			LocationCreatedImpl rel = CoreActivator.getDefault().getDbManager().obtainById(LocationCreatedImpl.class,
+					asset.getLocationCreated_parent());
+			return rel == null ? null : rel.getLocation();
 		}
 	};
 	public static final QueryField IPTC_MAXAVAILHEIGHT = new QueryField(IPTC_ADMIN, "maxAvailHeight", //$NON-NLS-1$
@@ -2682,10 +2686,9 @@ public class QueryField {
 			Float.NaN, ISpellCheckingService.NOSPELLING) {
 		@Override
 		public Object getStruct(Asset asset) {
-			for (CreatorsContactImpl creatorsContact : CoreActivator.getDefault().getDbManager()
-					.obtainStructForAsset(CreatorsContactImpl.class, asset.getStringId(), true))
-				return creatorsContact.getContact();
-			return null;
+			CreatorsContactImpl rel = CoreActivator.getDefault().getDbManager().obtainById(CreatorsContactImpl.class,
+					asset.getCreatorsContact_parent());
+			return rel == null ? null : rel.getContact();
 		}
 	};
 	public static final QueryField IPTC_USAGE = new QueryField(IPTC_RIGHTS, "usageTerms", //$NON-NLS-1$
@@ -3049,12 +3052,13 @@ public class QueryField {
 	public static final QueryField SCORE = new QueryField(null, "score", //$NON-NLS-1$
 			null, null, null, null, ACTION_NONE, EDIT_HIDDEN, CATEGORY_NONE, T_FLOAT, 1, 2, 0f, Float.NaN,
 			ISpellCheckingService.NOSPELLING) {
-
 		@Override
 		protected double getDouble(Asset asset) {
 			return asset.getScore();
 		}
 	};
+	public static final QueryField TIMESHIFT = new QueryField(null, null, null, NS_ZORA, "timeshift", null, ACTION_NONE, //$NON-NLS-1$
+			EDIT_HIDDEN, CATEGORY_NONE, T_INTEGER, 1, 3, 0f, Float.NaN, ISpellCheckingService.NOSPELLING);
 
 	private static final Object EMPTYBOOL = new boolean[0];
 	private static final Object EMPTYINT = new int[0];
@@ -4700,7 +4704,7 @@ public class QueryField {
 		case QueryField.T_DATE:
 			if (value instanceof Date)
 				return (inLocale != null) ? DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, inLocale)
-						.format((Date) value) : Constants.DFDT.format((Date) value);
+						.format((Date) value) : Format.DFDT.get().format((Date) value);
 			break;
 		}
 		return String.valueOf(value);
@@ -4856,10 +4860,10 @@ public class QueryField {
 	@SuppressWarnings("fallthrough")
 	public static Date parseDate(String v) throws XMPException {
 		try {
-			return new SimpleDateFormat("yyyy:MM:dd HH:mm:ss Z").parse(v); //$NON-NLS-1$
+			return Format.DATE_TIME_ZONED_FORMAT.get().parse(v); 
 		} catch (ParseException e) {
 			try {
-				return new SimpleDateFormat("yyyy:MM:dd HH:mm:ss").parse(v); //$NON-NLS-1$
+				return  Format.DATE_TIME_FORMAT.get().parse(v); 
 			} catch (Exception e1) {
 				try {
 					return XMPUtils.convertToDate(v).getCalendar().getTime();

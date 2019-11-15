@@ -37,6 +37,18 @@ public class GpsConfiguration {
 	public long interval;
 	public boolean excludeNoGoAreas;
 
+	/**
+	 * @param timeshift
+	 * @param tolerance in minutes
+	 * @param edit
+	 * @param overwrite
+	 * @param useWaypoints
+	 * @param includeCoordinates
+	 * @param includeNames
+	 * @param keywordFilter
+	 * @param updateAltitude
+	 * @param interval
+	 */
 	public GpsConfiguration(int timeshift, int tolerance,boolean edit, boolean overwrite, boolean useWaypoints,
 			boolean includeCoordinates, boolean includeNames, FilterChain keywordFilter, boolean updateAltitude, long interval) {
 		this.timeshift = timeshift;
