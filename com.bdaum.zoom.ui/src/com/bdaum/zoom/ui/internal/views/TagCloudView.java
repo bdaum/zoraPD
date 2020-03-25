@@ -68,6 +68,7 @@ import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
@@ -556,6 +557,7 @@ public class TagCloudView extends ViewPart implements IDbListener {
 			manager.add(networkAction);
 		manager.add(searchAction);
 		manager.add(refreshAction);
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	private void makeActions(IActionBars actionBars) {

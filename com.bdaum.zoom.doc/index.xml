@@ -937,5 +937,23 @@
 			<topic href="html/reference/sectionbreak.html" />
 		</entry>
 	</entry>
-
+	<entry keyword="JRE">
+		<topic href="html/tasks/tuning.html" />
+	</entry>
+	<entry keyword="VM">
+		<topic href="html/tasks/tuning.html" />
+	</entry>
+	<entry keyword="Java Runtime Environment">
+		<topic href="html/tasks/tuning.html" />
+	</entry>
+	<entry keyword="GPU">
+		<topic href="html/reference/generalPrefs.html" />
+		<topic href="html/tasks/tuning.html" />
+	</entry>
+	<entry keyword="Acceleration">
+		<entry keyword="GPU">
+			<topic href="html/reference/generalPrefs.html" />
+			<topic href="html/tasks/tuning.html" />
+		</entry>
+	</entry>
 </index>

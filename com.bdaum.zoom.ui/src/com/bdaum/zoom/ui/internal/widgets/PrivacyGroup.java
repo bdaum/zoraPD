@@ -70,12 +70,12 @@ public class PrivacyGroup {
 		updateButtons();
 	}
 
-	public void addListener(Listener listener) {
-		privacyButtonGroup.addListener(listener);
+	public void addListener(int type, Listener listener) {
+		privacyButtonGroup.addListener(type, listener);
 	}
 
-	public void removeListener(Listener listener) {
-		privacyButtonGroup.removeListener(listener);
+	public void removeListener(int type, Listener listener) {
+		privacyButtonGroup.removeListener(type, listener);
 	}
 
 	public void setSelection(int rating) {

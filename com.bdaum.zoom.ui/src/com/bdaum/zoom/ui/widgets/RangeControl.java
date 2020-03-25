@@ -22,8 +22,6 @@ package com.bdaum.zoom.ui.widgets;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
@@ -41,14 +39,13 @@ import org.eclipse.swt.widgets.Spinner;
  * small synchronous slider below the spinner
  *
  */
-public class RangeControl extends Composite implements Listener, FocusListener {
+public class RangeControl extends Composite implements Listener {
 
 	private static final String TOOLTIP = Messages.RangeControl_click_to_set;
 	private Spinner lowSpinner;
 	private Canvas canvas;
 	private Point selection;
 	private ListenerList<Listener> selectionListeners = new ListenerList<>();
-	private ListenerList<FocusListener> focusListeners = new ListenerList<>();
 	private Spinner highSpinner;
 	private boolean lowDown = false;
 	private boolean highDown = false;
@@ -64,7 +61,6 @@ public class RangeControl extends Composite implements Listener, FocusListener {
 		lowSpinner.addListener(SWT.Selection, this);
 		lowSpinner.addListener(SWT.DefaultSelection, this);
 		lowSpinner.addListener(SWT.Modify, this);
-		lowSpinner.addFocusListener(this);
 		lowSpinner.pack();
 		Point size = lowSpinner.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 		canvas = new Canvas(this, SWT.DOUBLE_BUFFERED);
@@ -82,8 +78,6 @@ public class RangeControl extends Composite implements Listener, FocusListener {
 		highSpinner.addListener(SWT.Selection, this);
 		highSpinner.addListener(SWT.DefaultSelection, this);
 		highSpinner.addListener(SWT.Modify, this);
-		highSpinner.addFocusListener(this);
-
 	}
 
 	/*
@@ -132,26 +126,15 @@ public class RangeControl extends Composite implements Listener, FocusListener {
 	}
 
 	/**
-	 * Adds a focus listener
-	 * 
-	 * @param listener
-	 *            - focus listener
-	 * @see org.eclipse.swt.widgets.Control#addFocusListener(org.eclipse.swt.events.FocusListener)
-	 */
-	@Override
-	public void addFocusListener(FocusListener listener) {
-		focusListeners.add(listener);
-	}
-
-	/**
 	 * Adds a selection listener
 	 * 
 	 * @param listener
 	 *            - selection listener
 	 * @see org.eclipse.swt.widgets.Spinner#addSelectionListener(org.eclipse.swt.events.SelectionListener)
 	 */
-	public void addListener(Listener listener) {
-		selectionListeners.add(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Selection)
+			selectionListeners.add(listener);
 	}
 
 	/**
@@ -161,20 +144,8 @@ public class RangeControl extends Composite implements Listener, FocusListener {
 	 *            - selection listener
 	 * @see org.eclipse.swt.widgets.Spinner#removeSelectionListener(org.eclipse.swt.events.SelectionListener)
 	 */
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
 		selectionListeners.remove(listener);
-	}
-
-	/**
-	 * Removes a focus listener
-	 * 
-	 * @param listener
-	 *            - focus listener
-	 * @see org.eclipse.swt.widgets.Control#removeFocusListener(org.eclipse.swt.events.FocusListener)
-	 */
-	@Override
-	public void removeFocusListener(FocusListener listener) {
-		focusListeners.remove(listener);
 	}
 
 	/**
@@ -448,24 +419,6 @@ public class RangeControl extends Composite implements Listener, FocusListener {
 	private void fireEvent(Event e) {
 		for (Listener l : selectionListeners)
 			l.handleEvent(e);
-	}
-
-	public void focusGained(FocusEvent e) {
-		fireFocusGained(e);
-	}
-
-	public void focusLost(FocusEvent e) {
-		fireFocusLost(e);
-	}
-
-	private void fireFocusGained(FocusEvent e) {
-		for (FocusListener l : focusListeners)
-			l.focusGained(e);
-	}
-
-	private void fireFocusLost(FocusEvent e) {
-		for (FocusListener l : focusListeners)
-			l.focusLost(e);
 	}
 
 	private void processMouseEvent(Event e) {

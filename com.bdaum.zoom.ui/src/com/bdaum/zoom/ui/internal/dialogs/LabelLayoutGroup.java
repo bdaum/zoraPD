@@ -46,9 +46,8 @@ public class LabelLayoutGroup extends Composite implements Listener {
 	private CheckboxButton hideButton;
 	private CCombo alignField;
 	private NumericControl distField, indentField;
-	private String[] words = new String[] { Messages.LabelLayoutGroup_left,
-			Messages.LabelLayoutGroup_center, Messages.LabelLayoutGroup_right,
-			Messages.LabelLayoutGroup_top, Messages.LabelLayoutGroup_middle,
+	private String[] words = new String[] { Messages.LabelLayoutGroup_left, Messages.LabelLayoutGroup_center,
+			Messages.LabelLayoutGroup_right, Messages.LabelLayoutGroup_top, Messages.LabelLayoutGroup_middle,
 			Messages.LabelLayoutGroup_bottom };
 	private ListenerList<Listener> listeners = new ListenerList<>();
 	private final boolean dontHide;
@@ -58,25 +57,15 @@ public class LabelLayoutGroup extends Composite implements Listener {
 		super(parent, style);
 		this.dontHide = dontHide;
 		setLayout(new GridLayout());
-		hideButton = WidgetFactory.createCheckButton(this,
-				Messages.LabelLayoutGroup_hide, null);
+		hideButton = WidgetFactory.createCheckButton(this, Messages.LabelLayoutGroup_hide, null);
 		if (!dontHide)
-			hideButton.addListener(new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					updateFields();
-				}
-			});
+			hideButton.addListener(SWT.Selection, this);
 		Composite composite = new Composite(this, SWT.NONE);
-		composite
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		composite.setLayout(new GridLayout(6, false));
-		new Label(composite, SWT.NONE)
-				.setText(Messages.LabelLayoutGroup_position_alignment);
-		alignField = new CCombo(composite, SWT.DROP_DOWN | SWT.READ_ONLY
-				| SWT.BORDER);
-		alignField
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		new Label(composite, SWT.NONE).setText(Messages.LabelLayoutGroup_position_alignment);
+		alignField = new CCombo(composite, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.BORDER);
+		alignField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		String[] items = new String[36];
 		Object[] insertions = new Object[4];
 		for (int i = 0; i < items.length; i++) {
@@ -92,7 +81,7 @@ public class LabelLayoutGroup extends Composite implements Listener {
 			case 1:
 				insertions[0] = words[5];
 				insertions[2] = words[3];
-				insertions[1] = words[2-group];
+				insertions[1] = words[2 - group];
 				insertions[3] = words[item];
 				break;
 			case 2:
@@ -108,24 +97,21 @@ public class LabelLayoutGroup extends Composite implements Listener {
 				insertions[3] = words[item];
 				break;
 			}
-			items[i] = NLS.bind(Messages.LabelLayoutGroup_image_label,
-					insertions);
+			items[i] = NLS.bind(Messages.LabelLayoutGroup_image_label, insertions);
 		}
 		alignField.setItems(items);
 		alignField.setVisibleItemCount(9);
-		new Label(composite, SWT.NONE)
-				.setText(Messages.LabelLayoutGroup_distance + captionUnitcmin());
+		new Label(composite, SWT.NONE).setText(Messages.LabelLayoutGroup_distance + captionUnitcmin());
 		distField = new NumericControl(composite, SWT.NONE);
 		distField.setDigits(1);
 		distField.setMaximum(unit == 'i' ? 1000 : 2500);
-		distField.addListener(this);
-		new Label(composite, SWT.NONE)
-				.setText(Messages.LabelLayoutGroup_indent + captionUnitcmin());
+		distField.addListener(SWT.Selection, this);
+		new Label(composite, SWT.NONE).setText(Messages.LabelLayoutGroup_indent + captionUnitcmin());
 		indentField = new NumericControl(composite, SWT.NONE);
 		indentField.setDigits(1);
 		indentField.setMaximum(unit == 'i' ? 400 : 1000);
 		indentField.setMinimum(unit == 'i' ? -400 : -1000);
-		indentField.addListener(this);
+		indentField.addListener(SWT.Selection, this);
 	}
 
 	public void fillValues(boolean hide, int alignment, int distance, int indent) {
@@ -173,8 +159,11 @@ public class LabelLayoutGroup extends Composite implements Listener {
 	}
 
 	public void handleEvent(Event e) {
-		for (Listener listener : listeners)
-			listener.handleEvent(e);
+		if (e.widget == hideButton)
+			updateFields();
+		else
+			for (Listener listener : listeners)
+				listener.handleEvent(e);
 	}
 
 	public void addListener(Listener listener) {
@@ -188,13 +177,13 @@ public class LabelLayoutGroup extends Composite implements Listener {
 	private String captionUnitcmin() {
 		return unit == 'i' ? " (in)" : " (cm)"; //$NON-NLS-1$ //$NON-NLS-2$
 	}
-	
+
 	private int fromMm(double x) {
-		return (int) ((unit == 'i' ? (x / 2.54d ) : x) + + 0.5d);
+		return (int) ((unit == 'i' ? (x / 2.54d) : x) + +0.5d);
 	}
 
 	private int toMm(int x) {
-		return unit == 'i' ? (int) (x * 2.54d  + 0.5d) : x;
+		return unit == 'i' ? (int) (x * 2.54d + 0.5d) : x;
 	}
 
 }

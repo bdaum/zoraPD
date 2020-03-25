@@ -44,7 +44,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class ExportModeGroup {
+public class ExportModeGroup implements Listener {
 	public static final int ORIGINALS = 1;
 	public static final int JPEG = 2;
 	public static final int WEBP = 4;
@@ -59,14 +59,6 @@ public class ExportModeGroup {
 	private static final String SIZE = "size"; //$NON-NLS-1$
 	private static final String SCALING = "scaling"; //$NON-NLS-1$
 	private static final String RAWCROPPING = "rawCropping"; //$NON-NLS-1$
-
-	private Listener selectionListener = new Listener() {
-		@Override
-		public void handleEvent(Event e) {
-			updateControls();
-			fireEvent(e);
-		}
-	};
 
 	private Label scaleLabel;
 	private Scale scale;
@@ -99,7 +91,7 @@ public class ExportModeGroup {
 		modeGroup.setLayout(new GridLayout(2, false));
 		modeButtonGroup = new RadioButtonGroup(modeGroup, null, SWT.NONE);
 		modeButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		modeButtonGroup.addListener(selectionListener);
+		modeButtonGroup.addListener(SWT.Selection, this);
 		int i = 0;
 		if ((style & ORIGINALS) != 0) {
 			modeButtonGroup.addButton(Messages.SendEmailPage_Send_originals);
@@ -135,7 +127,7 @@ public class ExportModeGroup {
 				s_fixed = i++;
 			}
 			sizeButtonGroup.setSelection(0);
-			sizeButtonGroup.addListener(selectionListener);
+			sizeButtonGroup.addListener(SWT.Selection, this);
 			stackComp = new Composite(modeGroup, SWT.NONE);
 			stackComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 			stackLayout = new StackLayout();
@@ -169,7 +161,7 @@ public class ExportModeGroup {
 				dimField.setMinimum(16);
 				dimField.setIncrement(10);
 				dimField.setMaximum(32000);
-				dimField.addListener(listener);
+				dimField.addListener(SWT.Selection, this);
 			}
 		}
 		IRawConverter currentRawConverter = BatchActivator.getDefault().getCurrentRawConverter(false);
@@ -181,12 +173,20 @@ public class ExportModeGroup {
 		}
 		if (style != ORIGINALS) {
 			qualityGroup = new QualityGroup(parent, false);
-			qualityGroup.addListener(selectionListener);
+			qualityGroup.addListener(SWT.Selection, this);
 		}
 		updateControls();
 	}
 
+	@Override
+	public void handleEvent(Event e) {
+		updateControls();
+		fireEvent(e);
+	}
+
 	protected void fireEvent(Event e) {
+		e.type = SWT.Modify;
+		e.data = this;
 		for (Listener listener : listeners)
 			listener.handleEvent(e);
 	}
@@ -223,11 +223,12 @@ public class ExportModeGroup {
 		}
 	}
 
-	public void addListener(Listener listener) {
-		listeners.add(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Modify)
+			listeners.add(listener);
 	}
 
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
 		listeners.remove(listener);
 	}
 

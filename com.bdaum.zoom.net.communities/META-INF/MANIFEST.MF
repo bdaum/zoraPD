@@ -2,17 +2,43 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %plugin
 Bundle-SymbolicName: com.bdaum.zoom.net.communities;singleton:=true
-Bundle-Version: 3.6.0
+Bundle-Version: 3.6.1
 Bundle-Activator: com.bdaum.zoom.net.communities.CommunitiesActivator
 Bundle-Vendor: %bdaum
-Require-Bundle: com.bdaum.zoom.net.ui;bundle-version="3.6.0";visibility:=reexport,
+Require-Bundle: com.bdaum.zoom.net.ui;bundle-version="3.6.1";visibility:=reexport,
  org.apache.commons.codec;bundle-version="1.3.0";visibility:=reexport,
- org.eclipse.help;bundle-version="3.6.000";visibility:=reexport
+ org.eclipse.help;bundle-version="3.6.100";visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: com.bdaum.zoom.net.communities,
  com.bdaum.zoom.net.communities.jobs,
  com.bdaum.zoom.net.communities.ui,
+ com.github.scribejava.apis,
+ com.github.scribejava.apis.fitbit,
+ com.github.scribejava.apis.imgur,
+ com.github.scribejava.apis.mailru,
+ com.github.scribejava.apis.microsoftazureactivedirectory,
+ com.github.scribejava.apis.odnoklassniki,
+ com.github.scribejava.apis.openid,
+ com.github.scribejava.apis.salesforce,
+ com.github.scribejava.apis.tutby,
+ com.github.scribejava.apis.vk,
+ com.github.scribejava.apis.wunderlist,
+ com.github.scribejava.core.builder,
+ com.github.scribejava.core.builder.api,
+ com.github.scribejava.core.exceptions,
+ com.github.scribejava.core.extractors,
+ com.github.scribejava.core.httpclient,
+ com.github.scribejava.core.httpclient.jdk,
+ com.github.scribejava.core.java8,
+ com.github.scribejava.core.model,
+ com.github.scribejava.core.oauth,
+ com.github.scribejava.core.oauth2.bearersignature,
+ com.github.scribejava.core.oauth2.clientauthentication,
+ com.github.scribejava.core.pkce,
+ com.github.scribejava.core.revoke,
+ com.github.scribejava.core.services,
+ com.github.scribejava.core.utils,
  org.scohen.juploadr,
  org.scohen.juploadr.app,
  org.scohen.juploadr.app.geo,
@@ -22,12 +48,9 @@ Export-Package: com.bdaum.zoom.net.communities,
  org.scohen.juploadr.upload,
  org.scohen.juploadr.uploadapi,
  org.scohen.juploadr.urls,
- org.scohen.juploadr.util,
- org.scribe.builder,
- org.scribe.builder.api,
- org.scribe.exceptions,
- org.scribe.extractors,
- org.scribe.model,
- org.scribe.oauth,
- org.scribe.services,
- org.scribe.utils
+ org.scohen.juploadr.util
+Bundle-ClassPath: .,
+ lib/jackson-core-2.10.1.jar,
+ lib/jackson-databind-2.10.1.jar,
+ lib/scribejava-apis-6.2.0.jar,
+ lib/scribejava-core-6.2.0.jar

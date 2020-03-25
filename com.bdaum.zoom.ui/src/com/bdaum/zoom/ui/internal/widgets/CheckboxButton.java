@@ -76,12 +76,15 @@ public class CheckboxButton extends Composite implements Listener {
 	@Override
 	public void handleEvent(Event event) {
 		event.widget = this;
+		event.type = SWT.Selection;
 		if (event.type == SWT.MouseDown)
 			setSelection(!getSelection());
 		fireEvent(event);
 	}
 
 	private void fireEvent(Event event) {
+		event.widget = this;
+		event.type = SWT.Selection;
 		for (Listener listener : listeners)
 			listener.handleEvent(event);
 	}
@@ -98,11 +101,12 @@ public class CheckboxButton extends Composite implements Listener {
 		return button.getEnabled() && super.isEnabled();
 	}
 
-	public void addListener(Listener listener) {
-		listeners.add(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Selection)
+			listeners.add(listener);
 	}
 
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
 		listeners.remove(listener);
 	}
 

@@ -524,7 +524,7 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 						for (WaypointArea waypointArea : areas)
 							areaMap.put(waypointArea.getName(), waypointArea);
 						Set<String> keySet = areaMap.keySet();
-						String[] items = keySet.toArray(new String[keySet.size()]);
+						Object[] items = keySet.toArray();
 						Arrays.sort(items);
 						LocationSelectionDialog dialog = new LocationSelectionDialog(searchCombo.getShell(), items);
 						dialog.create();

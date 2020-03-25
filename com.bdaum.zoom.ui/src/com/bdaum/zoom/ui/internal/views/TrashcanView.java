@@ -38,8 +38,6 @@ import org.eclipse.nebula.widgets.gallery.GalleryItem;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
@@ -169,12 +167,12 @@ public class TrashcanView extends LightboxView {
 	}
 
 	@Override
-	public void keyReleased(KeyEvent e) {
+	protected void onKeyUp(Event e) {
 		switch (e.character) {
 		case SWT.TAB:
 		case '+':
 		case '-':
-			super.keyReleased(e);
+			super.onKeyUp(e);
 			break;
 		}
 	}
@@ -183,7 +181,6 @@ public class TrashcanView extends LightboxView {
 	protected void makeActions(IActionBars bars) {
 		createScaleContributionItem(MINTHUMBSIZE, MAXTHUMBSIZE);
 		selectionActionCluster = ZoomActionFactory.createSelectionActionCluster(this, this);
-
 		sortModeAction = new Action(Messages.getString("TrashcanView.sort_by_name"), IAction.AS_CHECK_BOX) { //$NON-NLS-1$
 			@Override
 			public void run() {
@@ -259,6 +256,7 @@ public class TrashcanView extends LightboxView {
 		manager.add(restoreAction);
 		manager.add(emptyTrashcanAction);
 		manager.add(scaleContributionItem);
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	@Override
@@ -279,16 +277,6 @@ public class TrashcanView extends LightboxView {
 			manager.add(removeAction);
 		}
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
-	}
-
-	@Override
-	public void widgetSelected(SelectionEvent e) {
-		GalleryItem[] sel = gallery.getSelection();
-		HistoryItem[] items = new HistoryItem[sel.length];
-		for (int i = 0; i < sel.length; i++)
-			items[i] = (HistoryItem) sel[i].getData(UiConstants.TRASH);
-		selection = new StructuredSelection(items);
-		fireSelection();
 	}
 
 	@Override
@@ -378,7 +366,7 @@ public class TrashcanView extends LightboxView {
 	}
 
 	@Override
-	public void handleEvent(Event event) {
+	protected void onSetData(Event event) {
 		final GalleryItem item = (GalleryItem) event.item;
 		if (item.getParentItem() == null)
 			// It's a group
@@ -391,6 +379,16 @@ public class TrashcanView extends LightboxView {
 			item.setText(trashItem.getName());
 			item.setData(UiConstants.TRASH, trashItem);
 		}
+	}
+
+	@Override
+	protected void onSelection(Event event) {
+		GalleryItem[] sel = gallery.getSelection();
+		HistoryItem[] items = new HistoryItem[sel.length];
+		for (int i = 0; i < sel.length; i++)
+			items[i] = (HistoryItem) sel[i].getData(UiConstants.TRASH);
+		selection = new StructuredSelection(items);
+		fireSelection();
 	}
 
 	@Override

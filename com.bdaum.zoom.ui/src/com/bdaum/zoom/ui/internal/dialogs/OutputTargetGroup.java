@@ -52,7 +52,7 @@ import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
-public class OutputTargetGroup {
+public class OutputTargetGroup implements Listener {
 	public static final String SUBFOLDER = "subfolder"; //$NON-NLS-1$
 	public static final String SETTINGS = "settings"; //$NON-NLS-1$
 	public static final String FTP = "ftp"; //$NON-NLS-1$
@@ -75,6 +75,7 @@ public class OutputTargetGroup {
 	private ComboViewer subfolderViewer;
 	private String subfolderoption;
 	private CheckboxButton settingsOption;
+	private Listener listener;
 
 	/**
 	 * @param parent
@@ -94,6 +95,7 @@ public class OutputTargetGroup {
 	@SuppressWarnings("unused")
 	public OutputTargetGroup(final Composite parent, GridData gridData, final Listener listener,
 			boolean subfolders, boolean ftp, boolean showSettingsOption) {
+		this.listener = listener;
 		ftpAccounts = FtpAccount.getAllAccounts();
 		ftpAccounts.add(0, new FtpAccount());
 		group = new CGroup(parent, SWT.NONE);
@@ -241,14 +243,15 @@ public class OutputTargetGroup {
 		if (showSettingsOption) {
 			settingsOption = WidgetFactory.createCheckButton(group, Messages.OutputTargetGroup_target_specific, null,
 					Messages.OutputTargetGroup_target_specific_tooltip);
-			settingsOption.addListener(new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					notifyListener(listener, event, SETTINGS);
-				}
-			});
+			settingsOption.addListener(SWT.Selection, this);
 		}
 	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		notifyListener(listener, event, SETTINGS);
+	}
+
 
 	public IDialogSettings getTargetSection(IDialogSettings settings, boolean save) {
 		if (getSettingsOption()) {
@@ -401,6 +404,7 @@ public class OutputTargetGroup {
 	}
 
 	private static void notifyListener(final Listener listener, Event event, Object data) {
+		event.type = SWT.Modify;
 		if (listener != null) {
 			event.data = data;
 			listener.handleEvent(event);

@@ -300,11 +300,12 @@ public class CollectionEditGroup {
 		sizeChanged();
 	}
 
-	public void addListener(Listener listener) {
-		modifyListeners.add(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Modify)
+			modifyListeners.add(listener);
 	}
 
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
 		modifyListeners.remove(listener);
 	}
 
@@ -385,6 +386,8 @@ public class CollectionEditGroup {
 	}
 
 	public void fireModified(Event ev) {
+		ev.type = SWT.Modify;
+		ev.data = this;
 		for (Listener listener : modifyListeners)
 			listener.handleEvent(ev);
 	}

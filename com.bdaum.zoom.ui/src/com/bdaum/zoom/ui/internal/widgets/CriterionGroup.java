@@ -115,7 +115,7 @@ public class CriterionGroup extends AbstractCriterionGroup {
 				enumComposite = createLayerComposite();
 				enumCombo = new Combo(enumComposite, SWT.READ_ONLY | style);
 				enumCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
-				enumCombo.addListener(SWT.Selection, selectionListener);
+				enumCombo.addListener(SWT.Selection, CriterionGroup.this);
 				dateComposite = createLayerComposite();
 				dateField = new DateInput(dateComposite, SWT.DATE | SWT.TIME | SWT.DROP_DOWN | style);
 				dateField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, true));
@@ -136,14 +136,14 @@ public class CriterionGroup extends AbstractCriterionGroup {
 			if (!readOnly) {
 				if (modifyListener != null) {
 					textField.addListener(SWT.Modify, modifyListener);
-					codeField.addListener(modifyListener);
+					codeField.addListener(SWT.Modify, modifyListener);
 					valueCombo.addListener(SWT.Modify, modifyListener);
 				}
 				if (selectionListener != null) {
 					valueCombo.addListener(SWT.Selection, selectionListener);
 					enumCombo.addListener(SWT.Selection, selectionListener);
-					dateField.addListener(selectionListener);
-					intField.addListener(selectionListener);
+					dateField.addListener(SWT.Selection, selectionListener);
+					intField.addListener(SWT.Selection, selectionListener);
 				}
 			}
 		}
@@ -152,14 +152,14 @@ public class CriterionGroup extends AbstractCriterionGroup {
 			if (!readOnly) {
 				if (modifyListener != null) {
 					textField.removeListener(SWT.Modify, modifyListener);
-					codeField.removeListener(modifyListener);
+					codeField.removeListener(SWT.Modify, modifyListener);
 					valueCombo.removeListener(SWT.Modify, modifyListener);
 				}
 				if (selectionListener != null) {
 					valueCombo.removeListener(SWT.Selection, selectionListener);
 					enumCombo.removeListener(SWT.Selection, selectionListener);
-					dateField.removeListener(selectionListener);
-					intField.removeListener(selectionListener);
+					dateField.removeListener(SWT.Selection, selectionListener);
+					intField.removeListener(SWT.Selection, selectionListener);
 				}
 			}
 		}
@@ -454,13 +454,13 @@ public class CriterionGroup extends AbstractCriterionGroup {
 		boolean ranged = enabled && (rel == QueryField.BETWEEN || rel == QueryField.NOTBETWEEN);
 		addChild(fromStack = new ValueStack(parent,
 				enabled ? borderStyle : borderStyle | SWT.READ_ONLY | (ranged ? SWT.DEFAULT : SWT.SINGLE)));
-		fromStack.addFieldListeners(modifyListener, selectionListener);
+		fromStack.addFieldListeners(modifyListener, this);
 		if (ranged) {
 			betweenLabel = new Label(parent, SWT.NONE);
 			betweenLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 			betweenLabel.setText(Messages.CriterionGroup_and_between);
 			addChild(toStack = new ValueStack(parent, enabled ? borderStyle : borderStyle | SWT.READ_ONLY));
-			toStack.addFieldListeners(modifyListener, selectionListener);
+			toStack.addFieldListeners(modifyListener, this);
 		}
 		updateStacks(false, null, false, null, 0);
 		createButtons(parent);

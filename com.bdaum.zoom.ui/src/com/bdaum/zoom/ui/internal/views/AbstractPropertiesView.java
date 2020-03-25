@@ -858,7 +858,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 		Core.getCore().addCatalogListener(new CatalogAdapter() {
 			@Override
 			public void assetsModified(BagChange<Asset> changes, final QueryField node) {
-				for (Asset asset : getNavigationHistory().getSelectedAssets()) {
+				for (Asset asset : getNavigationHistory().getSelectedAssets().getAssets()) {
 					if (changes == null || changes.hasChanged(asset)) {
 						Shell shell = getSite().getShell();
 						if (shell != null && !shell.isDisposed())

@@ -114,19 +114,21 @@ public class DateInput extends Composite implements Listener {
 	 * @param listener
 	 *            - selection listener
 	 */
-	public void addListener(Listener listener) {
-		checkWidget();
-		if (listener == null)
-			SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (!listeners.contains(listener)) {
-			listeners.add(listener);
-			if (dateField != null) {
-				dateField.addListener(SWT.Selection,this);
-				dateField.addListener(SWT.DefaultSelection,this);
-			}
-			if (timeField != null) {
-				timeField.addListener(SWT.Selection,this);
-				timeField.addListener(SWT.DefaultSelection,this);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Selection) {
+			checkWidget();
+			if (listener == null)
+				SWT.error(SWT.ERROR_NULL_ARGUMENT);
+			if (!listeners.contains(listener)) {
+				listeners.add(listener);
+				if (dateField != null) {
+					dateField.addListener(SWT.Selection, this);
+					dateField.addListener(SWT.DefaultSelection, this);
+				}
+				if (timeField != null) {
+					timeField.addListener(SWT.Selection, this);
+					timeField.addListener(SWT.DefaultSelection, this);
+				}
 			}
 		}
 	}
@@ -137,19 +139,20 @@ public class DateInput extends Composite implements Listener {
 	 * @param listener
 	 *            - selection listener
 	 */
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
+		if (type == SWT.Selection) {
 		checkWidget();
 		if (listener == null)
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		listeners.remove(listener);
 		if (dateField != null) {
-			dateField.removeListener(SWT.Selection,this);
-			dateField.removeListener(SWT.DefaultSelection,this);
+			dateField.removeListener(SWT.Selection, this);
+			dateField.removeListener(SWT.DefaultSelection, this);
 		}
 		if (timeField != null) {
-			timeField.removeListener(SWT.Selection,this);
-			timeField.removeListener(SWT.DefaultSelection,this);
-		}
+			timeField.removeListener(SWT.Selection, this);
+			timeField.removeListener(SWT.DefaultSelection, this);
+		}}
 	}
 
 	/*
@@ -160,6 +163,7 @@ public class DateInput extends Composite implements Listener {
 	 */
 	public void handleEvent(Event e) {
 		e.widget = this;
+		e.type = SWT.Selection;
 		for (Listener listener : listeners)
 			listener.handleEvent(e);
 	}

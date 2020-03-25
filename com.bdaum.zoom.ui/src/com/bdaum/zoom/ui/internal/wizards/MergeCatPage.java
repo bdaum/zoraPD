@@ -215,7 +215,7 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 		fileEditor = new FileEditor(header, SWT.OPEN | SWT.READ_ONLY, Messages.MergeCatPage_file_name, true,
 				activator.getCatFileExtensions(), activator.getSupportedCatFileNames(), null,
 				'*' + Constants.CATALOGEXTENSION, true, getWizard().getDialogSettings());
-		fileEditor.addListener(new Listener() {
+		fileEditor.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				validatePage();
@@ -231,7 +231,7 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 		policyButtonGroup = new RadioButtonGroup(header, null, SWT.NONE, Messages.MergeCatPage_skip,
 				Messages.MergeCatPage_replace, Messages.MergeCatPage_merge);
 		policyButtonGroup.setSelection(2);
-		policyButtonGroup.addListener(new Listener() {
+		policyButtonGroup.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
 				getWizard().getContainer().updateButtons();

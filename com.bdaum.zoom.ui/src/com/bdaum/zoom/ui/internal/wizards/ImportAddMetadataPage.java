@@ -17,9 +17,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 
@@ -146,16 +144,16 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 			albumButton.setSelection(true);
 		}
 		// Auto rating
-		if (aiService != null && aiService.isEnabled() && aiService.getRatingProviderIds().length > 0) {
-			autoGroup = new AutoRatingGroup(comp, aiService, dialogSettings);
-			autoGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-			autoGroup.addListener(new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					validatePage();
-				}
-			});
-		}
+//		if (aiService != null && aiService.isEnabled() && aiService.getRatingProviderIds().length > 0) {
+//			autoGroup = new AutoRatingGroup(comp, aiService, dialogSettings);
+//			autoGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+//			autoGroup.addListener(new Listener() {
+//				@Override
+//				public void handleEvent(Event event) {
+//					validatePage();
+//				}
+//			});
+//		}
 		// CHDK
 		if (media) {
 			prefixComp = CGroup.create(comp, 1, Messages.ImportAddMetadataPage_advanced_options);
@@ -210,7 +208,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 		KeywordDialog dialog = new KeywordDialog(getShell(), Messages.ImportFromDeviceWizard_Add_keywords_for_import,
 				currentKeywords, selectableKeywords, null);
 		if (dialog.open() == Dialog.OK) {
-			Arrays.sort(currentKeywords = dialog.getResult().getDisplay(), Utilities.KEYWORDCOMPARATOR);
+			Arrays.parallelSort(currentKeywords = dialog.getResult().getDisplay(), Utilities.KEYWORDCOMPARATOR);
 			keywordField.setText(Core.toStringList(currentKeywords, "\n")); //$NON-NLS-1$
 		}
 	}

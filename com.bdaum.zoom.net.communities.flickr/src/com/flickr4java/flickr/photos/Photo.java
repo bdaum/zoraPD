@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2005 Aetrion LLC.
- */
+
 package com.flickr4java.flickr.photos;
 
 import com.flickr4java.flickr.FlickrException;
@@ -21,6 +19,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 
@@ -831,7 +830,8 @@ public class Photo {
 
     public String getVideoOriginalUrl() {
         if (videoOriginal == null) {
-            return "";
+            // Workaround for API limitations
+            return String.format("https://www.flickr.com/video_download.gne?id=%s&originalSecret=%s&secret=%s", id, originalSecret, secret);
         } else {
             return videoOriginal.getSource();
         }
@@ -969,7 +969,7 @@ public class Photo {
         StringBuffer buffer = new StringBuffer();
         buffer.append("https://farm");
         buffer.append(getFarm());
-        buffer.append(".static.flickr.com/");
+        buffer.append(".staticflickr.com/");
         buffer.append(getServer());
         buffer.append("/");
         buffer.append(getId());
@@ -1081,6 +1081,15 @@ public class Photo {
             	hdMP4 = size;
             }
         }
+    }
+
+    public Collection<Size> getSizes() {
+        return Arrays.asList(
+                smallSize, squareSize, thumbnailSize, mediumSize,
+                largeSize, large1600Size, large2048Size, originalSize,
+                squareLargeSize, small320Size, medium640Size, medium800Size,
+                videoPlayer, siteMP4, videoOriginal, mobileMP4, hdMP4
+        );
     }
 
     public Size getSquareSize() {

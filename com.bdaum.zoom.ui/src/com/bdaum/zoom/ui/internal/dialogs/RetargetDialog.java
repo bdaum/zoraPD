@@ -3,11 +3,13 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
@@ -16,6 +18,7 @@ import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
+import com.bdaum.zoom.ui.widgets.CGroup;
 
 public class RetargetDialog extends ZTitleAreaDialog implements Listener {
 
@@ -54,28 +57,48 @@ public class RetargetDialog extends ZTitleAreaDialog implements Listener {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-		RadioButtonGroup retargetButtonGroup = new RadioButtonGroup(area, null, SWT.NONE, Messages.RetargetDialog_selected_image);
+		Composite composite = new Composite(area, SWT.NONE);
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		composite.setLayout(new GridLayout());
+
+		CGroup group = new CGroup(composite, SWT.NONE);
+		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
+
+		group.setLayoutData(layoutData);
+		group.setLayout(new GridLayout());
+		group.setText(Messages.RetargetDialog_scope);
+
+		RadioButtonGroup retargetButtonGroup = new RadioButtonGroup(group, null, SWT.NONE,
+				Messages.RetargetDialog_selected_image);
 		retargetButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		retargetButtonGroup.setData(0, VALUE, 0);
-		retargetButtonGroup.addListener(this);
+		retargetButtonGroup.addListener(SWT.Selection, this);
 		IPath path = oldPath.removeLastSegments(1);
 		IPath path2 = newPath.removeLastSegments(1);
 		int n = oldPath.segmentCount() - 1;
 		int m = newPath.segmentCount() - 1;
 		int k = 1;
-		while (n > 0 && m > 0) {
-			final int s = oldPath.segmentCount() - n;
-			retargetButtonGroup.addButton(path.toString() + "/ -> " + path2.toString() + '/'); //$NON-NLS-1$
-			retargetButtonGroup.setData(k++, VALUE, s);
-			if (!oldPath.segment(--n).equals(newPath.segment(--m)))
-				break;
-			path = path.removeLastSegments(1);
-			path2 = path2.removeLastSegments(1);
+		int width = 300;
+		GC gc = new GC(retargetButtonGroup);
+		try {
+			while (n > 0 && m > 0) {
+				final int s = oldPath.segmentCount() - n;
+				String label = path.toString() + "/ -> " + path2.toString() + '/'; //$NON-NLS-1$
+				Point textExtent = gc.textExtent(label);
+				width = Math.max(width, textExtent.x);
+				retargetButtonGroup.addButton(label);
+				retargetButtonGroup.setData(k++, VALUE, s);
+				if (!oldPath.segment(--n).equals(newPath.segment(--m)))
+					break;
+				path = path.removeLastSegments(1);
+				path2 = path2.removeLastSegments(1);
+			}
+		} finally {
+			gc.dispose();
 		}
-		Label label = new Label(retargetButtonGroup, SWT.SEPARATOR | SWT.HORIZONTAL);
-		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		voiceNoteButton = WidgetFactory.createCheckButton(retargetButtonGroup,
-				Messages.RetargetDialog_retarget_voicenote, new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		layoutData.widthHint = Math.min(750, width) + 50;
+		voiceNoteButton = WidgetFactory.createCheckButton(composite, Messages.RetargetDialog_retarget_voicenote,
+				new GridData(SWT.FILL, SWT.CENTER, true, false));
 		return area;
 	}
 

@@ -56,13 +56,14 @@ public class FindWithinGroup {
 		checkButton.setEnabled(canFindWithin());
 	}
 	
-	/**
-	 * @param listener
-	 * @see org.eclipse.swt.widgets.Button#addSelectionListener(org.eclipse.swt.events.SelectionListener)
-	 */
-	public void addListener(Listener listener) {
-		checkButton.addListener(listener);
+	public void addListener(int type, Listener listener) {
+		checkButton.addListener(type, listener);
 	}
+	
+	public void removeListener(int type, Listener listener) {
+		checkButton.removeListener(type, listener);
+	}
+
 
 	private boolean canFindWithin() {
 		IAssetProvider assetProvider = Core.getCore().getAssetProvider();

@@ -1,89 +1,85 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en-us"><head>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Clarifai</title>
-
-
-
-
-
-  
-
-  
-  
-  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css"></head><body>
-<h2>Clarifai </h2><span style="font-style: italic;">Clarifai</span> is
-one of the leading service providers for image content analysis. They
-offer several pricing plans, starting with a free plan. At the time of
-writing the free plan allowed for 5000 images per month.<br>
-Before you can use the service you must open an account with <span style="font-style: italic;">Clarifai</span>. To do so, visit their website at <a href="https://www.clarifai.com/">https://www.clarifai.com</a>
-or click the link in the Clarifai preference page. You must then enter
-your credentials (<span style="font-weight: bold;">Client ID</span> and<span style="font-weight: bold;"> Client secret</span>) into the <span style="font-style: italic;">Clarifai</span> preference page.<br>
-<br>
-<span style="font-style: italic;">Clarifai</span> supports several "models" such as <span style="font-weight: bold;">General</span>, <span style="font-weight: bold;">Food</span>, <span style="font-weight: bold;">Wedding</span>, and <span style="font-weight: bold;">Travel</span>. The model used in<span style="font-style: italic;"> ZoRa Photo Director</span> is derived from the theme set for the current catalog (<acronym><a href="../../com.bdaum.zoom.doc/html/reference/catProperties.html">Catalog&gt; Properties...</a></acronym>). <br>
-<br>
-The <span style="font-style: italic;">Clarifai</span> service is also
-used to establish a semantic similarity between images or faces (optionally).
-This allows to search for images that depict similar concepts or faces. The service is used, too, for automated image rating. <span style="font-style: italic;"></span><br>
-<br>
-<h4>Options</h4>
-
-<ul>
-  <li><span style="font-weight: bold;">Model</span>. This is by
-default set by the catalog theme (see above). However, you may override
-that setting temporarily, for example, if you want to categorize a
-travel album within a catalog with a general theme.</li>
-  <li><span style="font-weight: bold;">Language</span>. Choose an output language. Currently, only the <span style="font-weight: bold;">General</span> model supports other languages than English. For other models you may want to use the translation service.<br>
-  </li>
-
-  <li><span style="font-weight: bold;">Maximum number of concepts</span>. 
-For each image <span style="font-style: italic;">Clarifai</span>
-proposes around twenty different categories (also called concepts). You
-may restrict this by setting a maximum number of proposals.</li>
-
-  <li><span style="font-weight: bold;">Minimum confidence level.</span>
-All proposals are given with a confidence level. You may enter a value
-between 0 and 100 (in percent) to supress all proposals with a lower
-confidence level.</li>
-  <li><span style="font-weight: bold;">Pre-mark keywords when confidence is above.</span>
-Specify a confidence level for which the system should automatically
-mark proposals as keywords. Specify a value of 100 if you do not wish
-automatical marking.</li>
-  <li><span style="font-weight: bold;">Pre-m</span><span style="font-weight: bold;">ark only known keywords.</span> This option will restricts automatical marking to keywords that are already defined in the catalog.<br>
-  </li>
-
-  <li><span style="font-weight: bold;">Check "safe for work"</span>.
-Mark this option to check if an image contains sexual or racist
-contents. The results will be used to set the images privacy settings.
-If this option is set an additional <span style="font-style: italic;">Clarifai</span> request is issued for each image.</li>
-  <li><span style="font-weight: bold;">Detect faces.</span> Mark
-this option if you want the service to detect faces in the image. If
-faces are found bounding boxes in green color will be drawn in the
-image. You have then the option to accept those face regions or to
-dicard them. 
-If this option is set an additional <span style="font-style: italic;">Clarifai</span> request is issued for each image.</li>
-  <li><span style="font-weight: bold;">Detect celebrities.</span> Mark
-this option if you want the service to detect faces of celebrities in the images. If this option is set an additional <span style="font-style: italic;">Clarifai</span> request is issued for each image.</li>
-
-
-  <li><span style="font-weight: bold;">Translate.</span> Mark this option if you use English as your default <span style="font-style: italic;">Clarifai</span> language but want the output in another language. The <a href="../../com.bdaum.zoom.ai/html/ai.html"><span style="font-style: italic;">Microsoft Translator Service</span></a> will be used to translate the returned texts.<br>
-  </li>
-</ul>
-<br>
-<acronym></acronym>
-<p> </p>
-
-
-</body></html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+    <title>Clarifai</title>
+    <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css">
+  </head>
+  <body>
+    <h2>Clarifai </h2>
+    <span style="font-style: italic;">Clarifai</span> is one of the leading
+    service providers for image content analysis. They offer several pricing
+    plans, starting with a free plan. At the time of writing the free plan
+    allowed for 5000 images per month.<br>
+    Before you can use the service you must open an account with <span style="font-style: italic;">Clarifai</span>.
+    To do so, visit their website at <a href="https://www.clarifai.com/">https://www.clarifai.com</a>
+    or click the link in the Clarifai preference page. You must then enter your
+    credentials (<span style="font-weight: bold;">API key</span><span style="font-weight: bold;"></span>)
+    into the <span style="font-style: italic;">Clarifai</span> preference page.<br>
+    <br>
+    <span style="font-style: italic;">Clarifai</span> supports several "models"
+    such as <span style="font-weight: bold;">General</span>, <span style="font-weight: bold;">Food</span>,
+    <span style="font-weight: bold;">Wedding</span>, and <span style="font-weight: bold;">Travel</span>.
+    The model used in<span style="font-style: italic;"> ZoRa Photo Director</span>
+    is derived from the theme set for the current catalog (<acronym><a href="../../com.bdaum.zoom.doc/html/reference/catProperties.html">Catalog&gt;
+        Properties...</a></acronym>). <br>
+    <br>
+    The <span style="font-style: italic;">Clarifai</span> service is also used
+    to establish a semantic similarity between images or faces (optionally).
+    This allows to search for images that depict similar concepts or faces. <span
+      style="font-style: italic;"></span><br>
+    <br>
+    <h4>Options</h4>
+    <ul>
+      <li><span style="font-weight: bold;">Model</span>. This is by default set
+        by the catalog theme (see above). However, you may override that setting
+        temporarily, for example, if you want to categorize a travel album
+        within a catalog with a general theme.</li>
+      <li><span style="font-weight: bold;">Language</span>. Choose an output
+        language. Currently, only the <span style="font-weight: bold;">General</span>
+        model supports other languages than English. For other models you may
+        want to use the translation service.<br>
+      </li>
+      <li><span style="font-weight: bold;">Maximum number of concepts</span>.
+        For each image <span style="font-style: italic;">Clarifai</span>
+        proposes around twenty different categories (also called concepts). You
+        may restrict this by setting a maximum number of proposals.</li>
+      <li><span style="font-weight: bold;">Minimum confidence level.</span> All
+        proposals are given with a confidence level. You may enter a value
+        between 0 and 100 (in percent) to supress all proposals with a lower
+        confidence level.</li>
+      <li><span style="font-weight: bold;">Pre-mark keywords when confidence is
+          above.</span> Specify a confidence level for which the system should
+        automatically mark proposals as keywords. Specify a value of 100 if you
+        do not wish automatical marking.</li>
+      <li><span style="font-weight: bold;">Pre-m</span><span style="font-weight: bold;">ark
+          only known keywords.</span> This option will restricts automatical
+        marking to keywords that are already defined in the catalog.<br>
+      </li>
+      <li><span style="font-weight: bold;">Check "safe for work"</span>. Mark
+        this option to check if an image contains sexual or racist contents. The
+        results will be used to set the images privacy settings. If this option
+        is set an additional <span style="font-style: italic;">Clarifai</span>
+        request is issued for each image.</li>
+      <li><span style="font-weight: bold;">Detect faces.</span> Mark this option
+        if you want the service to detect faces in the image. If faces are found
+        bounding boxes in green color will be drawn in the image. You have then
+        the option to accept those face regions or to dicard them. If this
+        option is set an additional <span style="font-style: italic;">Clarifai</span>
+        request is issued for each image.</li>
+      <li><span style="font-weight: bold;">Detect celebrities.</span> Mark this
+        option if you want the service to detect faces of celebrities in the
+        images. If this option is set an additional <span style="font-style: italic;">Clarifai</span>
+        request is issued for each image.</li>
+      <li><span style="font-weight: bold;">Translate.</span> Mark this option if
+        you use English as your default <span style="font-style: italic;">Clarifai</span>
+        language but want the output in another language. The <a href="../../com.bdaum.zoom.ai/html/ai.html"><span
+            style="font-style: italic;">Microsoft Translator Service</span></a>
+        will be used to translate the returned texts.<br>
+      </li>
+    </ul>
+    <br>
+    <acronym></acronym>
+    <p> </p>
+  </body>
+</html>

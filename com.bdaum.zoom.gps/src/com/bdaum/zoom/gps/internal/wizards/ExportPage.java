@@ -27,7 +27,7 @@ import com.bdaum.zoom.ui.internal.widgets.FileEditor;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class ExportPage extends ColoredWizardPage {
+public class ExportPage extends ColoredWizardPage implements Listener {
 
 	private static final String EXTENSIONS = "*.{0};*.{1}"; //$NON-NLS-1$
 
@@ -58,13 +58,7 @@ public class ExportPage extends ColoredWizardPage {
 		String fileName = "*." + type; //$NON-NLS-1$
 		fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY, Messages.ExportPage_target_file, true, filterExtensions,
 				filterNames, path, fileName, true, dialogSettings);
-		fileEditor.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				path = fileEditor.getFilterPath();
-				validatePage();
-			}
-		});
+		fileEditor.addListener(SWT.Modify, this);
 		new Label(composite, SWT.NONE).setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 		setControl(composite);
 		setHelp(type == AbstractGeoExportWizard.KML ? HelpContextIds.KML_WIZARD : HelpContextIds.GPX_WIZARD);
@@ -72,6 +66,12 @@ public class ExportPage extends ColoredWizardPage {
 		setMessage(NLS.bind(Messages.ExportPage_specify_location, type.toUpperCase()));
 		fillValues();
 		super.createControl(parent);
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		path = fileEditor.getFilterPath();
+		validatePage();
 	}
 
 	private void fillValues() {

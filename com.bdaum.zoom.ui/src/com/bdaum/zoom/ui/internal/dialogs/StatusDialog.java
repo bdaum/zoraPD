@@ -69,7 +69,7 @@ public class StatusDialog extends ZDialog {
 				stateButtonGroup.setSelection(k);
 			stateButtonGroup.setData(k++, "index", index); //$NON-NLS-1$
 		}
-		stateButtonGroup.addListener(new Listener() {
+		stateButtonGroup.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				status = states[(Integer) stateButtonGroup.getData(event.detail, "index")]; //$NON-NLS-1$

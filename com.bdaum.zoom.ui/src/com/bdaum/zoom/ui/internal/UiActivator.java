@@ -244,7 +244,7 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	private Map<String, IRelationDetector> relationDetectors;
 
 	private ListenerList<LifeCycleListener> lifeCycleListeners = new ListenerList<LifeCycleListener>();
-	
+
 	private ListenerList<ServerListener> serverListeners = new ListenerList<ServerListener>();
 
 	private AssetDropTargetEffect dropTargetEffect;
@@ -289,7 +289,6 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	};
 
 	private IMediaUiExtension[] uiMediaExtensions;
-
 
 	/*
 	 * (non-Javadoc)
@@ -723,9 +722,9 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 								dbManager.checkDbSanity(true);
 							else if (meta != null) {
 								if (meta.getBackupLocation() == null || meta.getBackupLocation().isEmpty()) {
-									if (mode != CatalogListener.TASKBAR)
+									if (mode != CatalogListener.TASKBAR && !meta.getReadonly())
 										dbManager.checkDbSanity(false);
-								} else {
+								} else if (!meta.getReadonly() || !activator.getNoBackup()) {
 									long interval = activator.getBackupInterval() * ONEDAY;
 									Date lastSessionEnd = meta.getLastSessionEnd();
 									long lastBackup = meta.getLastBackup().getTime();
@@ -1349,15 +1348,14 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		}
 		return false;
 	}
-	
+
 	public void addServerListener(ServerListener listener) {
 		serverListeners.add(listener);
 	}
-	
-	public void removeServerListener(ServerListener listener) {
-		serverListeners. remove(listener);
-	}
 
+	public void removeServerListener(ServerListener listener) {
+		serverListeners.remove(listener);
+	}
 
 	public String getPreviousCatUri() {
 		return previousCatUri;

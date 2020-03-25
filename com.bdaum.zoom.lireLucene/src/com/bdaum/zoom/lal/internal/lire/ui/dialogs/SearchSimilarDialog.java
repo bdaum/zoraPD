@@ -31,8 +31,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
@@ -176,15 +174,15 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.widthHint = 120;
 		keywordField.setLayoutData(layoutData);
-		keywordField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+		keywordField.addListener(SWT.Modify, new Listener() {
+			public void handleEvent(Event e) {
 				updateScale();
 			}
 		});
 		KeywordVerifyListener keywordVerifyListener = new KeywordVerifyListener();
 		Set<String> keywords = dbManager.getMeta(true).getKeywords();
 		keywordVerifyListener.setKeywords(keywords.toArray(new String[keywords.size()]));
-		keywordField.addVerifyListener(keywordVerifyListener);
+		keywordField.addListener(SWT.Verify, keywordVerifyListener);
 		Composite sliderGroup = new Composite(group, SWT.NONE);
 		sliderGroup.setLayoutData(new GridData(SWT.FILL, SWT.END, true, false));
 		sliderGroup.setLayout(new GridLayout(3, false));
@@ -261,7 +259,7 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 			findWithinGroup = new FindWithinGroup(optionsGroup);
 		if (Core.getCore().isNetworked()) {
 			findInNetworkGroup = new FindInNetworkGroup(optionsGroup);
-			findInNetworkGroup.addListener(new Listener() {
+			findInNetworkGroup.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
 					validateAlgo();
@@ -346,7 +344,7 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 		boolean network = findInNetworkGroup == null ? false : findInNetworkGroup.getSelection();
 		collection = new SmartCollectionImpl(title, false, false, adhoc, network, null, 0, null, 0, null,
 				Constants.INHERIT_LABEL, null, 0, 1, null);
-		collection.addCriterion(new CriterionImpl(ICollectionProcessor.SIMILARITY, null, newOptions, null, 
+		collection.addCriterion(new CriterionImpl(ICollectionProcessor.SIMILARITY, null, newOptions, null,
 				searchResultGroup.getScore(), false));
 		if (findWithinGroup != null) {
 			collection.setSmartCollection_subSelection_parent(findWithinGroup.getParentCollection());

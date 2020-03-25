@@ -464,7 +464,7 @@ public class MapView extends BasicView implements StatusTextListener, MapListene
 		AssetSelection selectedAssets = getNavigationHistory().getSelectedAssets();
 		if (selectedAssets.isEmpty())
 			return false;
-		for (Asset asset : selectedAssets)
+		for (Asset asset : selectedAssets.getAssets())
 			if (peerService == null || !peerService.isOwnedByPeer(asset.getStringId()))
 				return false;
 		return true;

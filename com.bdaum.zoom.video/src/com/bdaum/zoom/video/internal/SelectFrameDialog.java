@@ -7,8 +7,6 @@ import java.net.URI;
 
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -35,7 +33,7 @@ import com.bdaum.zoom.video.model.Video;
 import com.bdaum.zoom.video.model.VideoImpl;
 
 @SuppressWarnings("restriction")
-public class SelectFrameDialog extends ZTitleAreaDialog implements Listener, PaintListener {
+public class SelectFrameDialog extends ZTitleAreaDialog implements Listener {
 
 	private Asset asset;
 	private ZImage zimage;
@@ -94,7 +92,7 @@ public class SelectFrameDialog extends ZTitleAreaDialog implements Listener, Pai
 		layoutData.widthHint = 640;
 		layoutData.heightHint = 480;
 		canvas.setLayoutData(layoutData);
-		canvas.addPaintListener(this);
+		canvas.addListener(SWT.Paint, this);
 		leftArrow = new Button(composite, SWT.PUSH);
 		leftArrow.setImage(Icons.left.getImage());
 		leftArrow.addListener(SWT.Selection, this);
@@ -122,18 +120,26 @@ public class SelectFrameDialog extends ZTitleAreaDialog implements Listener, Pai
 	}
 
 	@Override
-	public void handleEvent(Event event) {
-		Widget widget = event.widget;
-		if (widget == leftArrow)
-			selectFrame(Math.max(1, currentFrame - 1), true);
-		else if (widget == leftleftArrow)
-			selectFrame(Math.max(1, currentFrame - rate), true);
-		else if (widget == rightrightArrow)
-			selectFrame(Math.min(frames, currentFrame + rate), true);
-		else if (widget == rightArrow)
-			selectFrame(Math.min(frames, currentFrame + 1), true);
-		else if (widget == scale)
-			selectFrame(scale.getSelection(), false);
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Paint:
+			if (zimage != null)
+				zimage.draw(e.gc, 0, 0, ZImage.UNCROPPED, 640, 400);
+			break;
+		default:
+			Widget widget = e.widget;
+			if (widget == leftArrow)
+				selectFrame(Math.max(1, currentFrame - 1), true);
+			else if (widget == leftleftArrow)
+				selectFrame(Math.max(1, currentFrame - rate), true);
+			else if (widget == rightrightArrow)
+				selectFrame(Math.min(frames, currentFrame + rate), true);
+			else if (widget == rightArrow)
+				selectFrame(Math.min(frames, currentFrame + 1), true);
+			else if (widget == scale)
+				selectFrame(scale.getSelection(), false);
+			break;
+		}
 	}
 
 	private void selectFrame(int frame, boolean updateScale) {
@@ -200,13 +206,6 @@ public class SelectFrameDialog extends ZTitleAreaDialog implements Listener, Pai
 			zimage = null;
 		}
 		return super.close();
-	}
-
-	@Override
-	public void paintControl(PaintEvent e) {
-		if (zimage != null)
-			zimage.draw(e.gc, 0, 0, ZImage.UNCROPPED, 640, 400);
-
 	}
 
 }

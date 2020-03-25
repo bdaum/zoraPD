@@ -38,7 +38,6 @@ import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
 import clarifai2.api.ClarifaiBuilder;
 import clarifai2.api.ClarifaiClient;
-import okhttp3.OkHttpClient;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -56,9 +55,7 @@ public class ClarifaiActivator extends ZUiPlugin {
 	// The shared instance
 	private static ClarifaiActivator plugin;
 
-	private String clientId;
-
-	private String clientSecret;
+	private String apiKey;
 
 	private ClarifaiClient client;
 
@@ -71,8 +68,7 @@ public class ClarifaiActivator extends ZUiPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
-		clientId = getPreferenceStore().getString(PreferenceConstants.CLIENTID);
-		clientSecret = getPreferenceStore().getString(PreferenceConstants.CLIENTSECRET);
+		apiKey = getPreferenceStore().getString(PreferenceConstants.APIKEY);
 		InstanceScope.INSTANCE.getNode(AiActivator.PLUGIN_ID)
 				.addPreferenceChangeListener(new IEclipsePreferences.IPreferenceChangeListener() {
 					@Override
@@ -104,18 +100,16 @@ public class ClarifaiActivator extends ZUiPlugin {
 		return plugin;
 	}
 
-	public void setAccountCredentials(String clientId, String clientSecret) {
-		if (!clientId.equals(this.clientId) || !clientSecret.equals(this.clientSecret)) {
-			this.clientId = clientId;
-			this.clientSecret = clientSecret;
+	public void setAccountCredentials(String clientId) {
+		if (!clientId.equals(this.apiKey)) {
+			this.apiKey = clientId;
 			disposeClient();
 		}
 	}
 
 	public ClarifaiClient getClient() {
-		if (client == null && clientId != null && !clientId.isEmpty() && clientSecret != null
-				&& !clientSecret.isEmpty())
-			client = new ClarifaiBuilder(clientId, clientSecret).client(new OkHttpClient()).buildSync();
+		if (client == null && apiKey != null && !apiKey.isEmpty())
+			client = new ClarifaiBuilder(apiKey).buildSync();
 		return client;
 	}
 

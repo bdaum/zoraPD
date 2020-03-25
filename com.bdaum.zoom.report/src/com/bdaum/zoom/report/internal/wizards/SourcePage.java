@@ -31,10 +31,6 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -77,7 +73,7 @@ public class SourcePage extends ColoredWizardPage implements Listener {
 		public ReportSelectionDialog(Shell parent, int style) {
 			super(parent, style);
 		}
-		
+
 		@Override
 		public void create() {
 			setContentProvider(ArrayContentProvider.getInstance());
@@ -85,7 +81,7 @@ public class SourcePage extends ColoredWizardPage implements Listener {
 				@Override
 				public String getText(Object element) {
 					if (element instanceof Report)
-						return ((Report)element).getName();
+						return ((Report) element).getName();
 					return element.toString();
 				}
 			});
@@ -94,12 +90,12 @@ public class SourcePage extends ColoredWizardPage implements Listener {
 			getTableViewer().addSelectionChangedListener(new ISelectionChangedListener() {
 				@Override
 				public void selectionChanged(SelectionChangedEvent event) {
-					 updateButtons();
+					updateButtons();
 				}
 			});
 			updateButtons();
 		}
-		
+
 		private void updateButtons() {
 			boolean enabled = !getTableViewer().getSelection().isEmpty();
 			getButton(DELETE).setEnabled(enabled);
@@ -111,7 +107,7 @@ public class SourcePage extends ColoredWizardPage implements Listener {
 			createButton(parent, DELETE, Messages.SourcePage_delete, false);
 			super.createButtonsForButtonBar(parent);
 		}
-		
+
 		@Override
 		protected void buttonPressed(int buttonId) {
 			if (buttonId == DELETE) {
@@ -157,47 +153,24 @@ public class SourcePage extends ColoredWizardPage implements Listener {
 		new Label(composite, SWT.NONE).setText(Messages.SourcePage_name);
 		nameField = new Text(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		nameField.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				report.setName(nameField.getText());
-			}
-		});
+		nameField.addListener(SWT.Modify, this);
 		browseButton = new Button(composite, SWT.PUSH);
 		browseButton.setText(Messages.SourcePage_browse);
-		browseButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				ReportSelectionDialog dialog = new ReportSelectionDialog(getShell(), SWT.SINGLE);
-				dialog.setInput(reports);
-				if (dialog.open() == ReportSelectionDialog.OK) {
-					Object[] result = dialog.getResult();
-					if (result != null && result.length > 0) {
-						((ReportWizard)getWizard()).setReport((Report) result[0]);
-						fillValues();
-						checkExistingReports();
-					}
-				}
-			}
-		});
-		
+		browseButton.addListener(SWT.Selection, this);
+
 		new Label(composite, SWT.NONE).setText(Messages.SourcePage_description);
 		descriptionField = new CheckedText(composite, SWT.MULTI | SWT.LEAD | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL,
 				ISpellCheckingService.DESCRIPTIONOPTIONS);
-		descriptionField.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				report.setDescription(descriptionField.getText());
-			}
-		});
+		descriptionField.addListener(SWT.Modify, this);
 		GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
 		layoutData.heightHint = 100;
 		descriptionField.setLayoutData(layoutData);
 		Composite sourceComp = new Composite(composite, SWT.NONE);
 		sourceComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1));
 		sourceComp.setLayout(new GridLayout(1, false));
-		sourceButtonGroup = new RadioButtonGroup(sourceComp, null, SWT.NONE, Messages.SourcePage_all, Messages.SourcePage_collection);
-		sourceButtonGroup.addListener(this);
+		sourceButtonGroup = new RadioButtonGroup(sourceComp, null, SWT.NONE, Messages.SourcePage_all,
+				Messages.SourcePage_collection);
+		sourceButtonGroup.addListener(SWT.Selection, this);
 		sourceButtonGroup.setSelection(1);
 		new Label(sourceComp, SWT.NONE);
 		collViewer = new TreeViewer(sourceComp, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
@@ -252,19 +225,19 @@ public class SourcePage extends ColoredWizardPage implements Listener {
 				setErrorMessage(Messages.SourcePage_not_a_group);
 				setPageComplete(false);
 			} else {
-				report.setSource(((SmartCollection)firstElement).getStringId());
+				report.setSource(((SmartCollection) firstElement).getStringId());
 				report.setSkipOrphans(skipOrphansButton.getSelection());
 				setErrorMessage(null);
 				setPageComplete(true);
 			}
-		} else  {
+		} else {
 			report.setSource(null);
 			report.setSkipOrphans(skipOrphansButton.getSelection());
 			setErrorMessage(null);
 			setPageComplete(true);
 		}
 	}
-	
+
 	@Override
 	public void setVisible(boolean visible) {
 		if (visible)
@@ -273,7 +246,7 @@ public class SourcePage extends ColoredWizardPage implements Listener {
 	}
 
 	protected void fillValues() {
-		report = ((ReportWizard)getWizard()).getReport();
+		report = ((ReportWizard) getWizard()).getReport();
 		nameField.setText(report.getName());
 		String descr = report.getDescription();
 		descriptionField.setText(descr == null ? "" : descr); //$NON-NLS-1$
@@ -292,8 +265,31 @@ public class SourcePage extends ColoredWizardPage implements Listener {
 	}
 
 	public void handleEvent(Event e) {
-		updateFields();
+		switch (e.type) {
+		case SWT.Modify:
+			if (e.widget == nameField)
+				report.setName(nameField.getText());
+			else
+				report.setDescription(descriptionField.getText());
+			break;
+
+		case SWT.Selection:
+			if (e.widget == browseButton) {
+				ReportSelectionDialog dialog = new ReportSelectionDialog(getShell(), SWT.SINGLE);
+				dialog.setInput(reports);
+				if (dialog.open() == ReportSelectionDialog.OK) {
+					Object[] result = dialog.getResult();
+					if (result != null && result.length > 0) {
+						((ReportWizard) getWizard()).setReport((Report) result[0]);
+						fillValues();
+						checkExistingReports();
+					}
+				}
+			} else
+				updateFields();
+			break;
+		}
+
 	}
-	
 
 }

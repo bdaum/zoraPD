@@ -130,16 +130,18 @@ public interface PreferenceConstants {
 	// General
 	String INACTIVITYINTERVAL = "com.bdaum.zoom.inactivityInterval"; //$NON-NLS-1$
 	String BACKUPINTERVAL = "com.bdaum.zoom.backupInterval"; //$NON-NLS-1$
+	String NOBACKUP = "com.bdaum.zoom.noBackup"; //$NON-NLS-1$
 	String BACKUPGENERATIONS = "com.bdaum.zoom.backupGenerations"; //$NON-NLS-1$
 	String UNDOLEVELS = "com.bdaum.zoom.undoLevels"; //$NON-NLS-1$
 	String LASTPLUGINSCAN = "com.bdaum.zoom.lastPluginScan"; //$NON-NLS-1$
 	String NOPROGRESS = "com.bdaum.zoom.noProgress"; //$NON-NLS-1$
 	String ADVANCEDGRAPHICS = "com.bdaum.zoom.advancedGraphics"; //$NON-NLS-1$
+	String ACCELERATION = "com.bdaum.zoom.acceleration"; //$NON-NLS-1$
 	String COLORPROFILE = "com.bdaum.zoom.colorProfile"; //$NON-NLS-1$
 	String CUSTOMPROFILE = "com.bdaum.zoom.customProfile"; //$NON-NLS-1$
 	String BWFILTER = "com.bdaum.zoom.bwFilter"; //$NON-NLS-1$
 	String TABLECOLUMNS = "com.bdaum.zoom.tableColumns"; //$NON-NLS-1$
-	String ADDNOISE = "com.bdaum.zoom.addNoise"; //$NON-NLS-1$ ;
+
 	String ENLARGESMALL = "com.bdaum.zoom.enlargeSmall"; //$NON-NLS-1$
 	String SECONDARYMONITOR = "com.bdaum.zoom.secondaryMonitor"; //$NON-NLS-1$
 	String MON_ALTERNATE = "alternate"; //$NON-NLS-1$

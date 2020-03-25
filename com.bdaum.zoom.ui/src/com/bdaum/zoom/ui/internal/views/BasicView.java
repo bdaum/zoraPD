@@ -49,21 +49,19 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.events.GestureEvent;
 import org.eclipse.swt.events.GestureListener;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.events.TraverseEvent;
-import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Scrollable;
 import org.eclipse.swt.widgets.Shell;
@@ -116,8 +114,8 @@ import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
 public abstract class BasicView extends ViewPart
-		implements ISelectionProvider, EducatedSelectionListener, IThemeListener, ImageStore, KeyListener,
-		TraverseListener, IHoverSubject, UiConstants, IPartListener2, VolumeListener, IUndoHost {
+		implements ISelectionProvider, EducatedSelectionListener, IThemeListener, Listener, ImageStore, 
+		IHoverSubject, UiConstants, IPartListener2, VolumeListener, IUndoHost {
 
 	private boolean isVisible = false; // true;
 	protected boolean isDirty = false;
@@ -183,7 +181,7 @@ public abstract class BasicView extends ViewPart
 
 	protected static boolean hasVoiceNote(AssetSelection assetSelection) {
 		if (assetSelection != null)
-			for (Asset asset : assetSelection)
+			for (Asset asset : assetSelection.getAssets())
 				if (asset.getFileState() != IVolumeManager.PEER)
 					return getVoiceNoteAsset(asset) != null;
 		return false;
@@ -192,7 +190,7 @@ public abstract class BasicView extends ViewPart
 	protected static boolean isMedia(AssetSelection assetSelection, int flags, boolean local) {
 		if (assetSelection != null) {
 			CoreActivator activator = CoreActivator.getDefault();
-			for (Asset asset : assetSelection)
+			for (Asset asset : assetSelection.getAssets())
 				if (!local || asset.getFileState() != IVolumeManager.PEER) {
 					IMediaSupport mediaSupport = activator.getMediaSupport(asset.getFormat());
 					if (mediaSupport != null) {
@@ -492,7 +490,7 @@ public abstract class BasicView extends ViewPart
 	 * @see com.bdaum.zoom.ui.views.IHoverSubject#findObject(int, int)
 	 */
 
-	public Object findObject(MouseEvent event) {
+	public Object findObject(Event event) {
 		return null;
 	}
 
@@ -501,7 +499,7 @@ public abstract class BasicView extends ViewPart
 	 *
 	 * @see com.bdaum.zoom.ui.internal.views.IHoverSubject#findRegions(int, int)
 	 */
-	public ImageRegion[] findAllRegions(MouseEvent event) {
+	public ImageRegion[] findAllRegions(Event event) {
 		return null;
 	}
 
@@ -521,7 +519,7 @@ public abstract class BasicView extends ViewPart
 	 * .events.MouseEvent)
 	 */
 
-	public IGalleryHover getGalleryHover(MouseEvent event) {
+	public IGalleryHover getGalleryHover(Event event) {
 		return null;
 	}
 
@@ -529,35 +527,52 @@ public abstract class BasicView extends ViewPart
 		return Core.getCore().getImageCache().getImage(imageSource);
 	}
 
-	public void keyPressed(KeyEvent e) {
+	protected void onKeyDown(Event e) {
 		// do nothing
 	}
 
-	public void keyReleased(KeyEvent e) {
+	protected void onKeyUp(Event e) {
 		// do nothing
 	}
 
 	protected void addKeyListener() {
 		Control control = getControl();
 		if (control != null && !control.isDisposed()) {
-			control.addKeyListener(this);
-			control.addTraverseListener(this);
+			control.addListener(SWT.KeyDown, this);
+			control.addListener(SWT.KeyUp, this);
+			control.addListener(SWT.Traverse, this);
 		}
 	}
 
 	protected void removeKeyListener() {
 		Control control = getControl();
 		if (control != null && !control.isDisposed()) {
-			control.removeKeyListener(this);
-			control.removeTraverseListener(this);
+			control.removeListener(SWT.KeyDown, this);
+			control.removeListener(SWT.KeyUp, this);
+			control.removeListener(SWT.Traverse, this);
 		}
 	}
 
 	public Control[] getControls() {
 		return null;
 	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Traverse:
+			onTraverse(e);
+			break;
+		case SWT.KeyDown:
+			onKeyDown(e);
+			break;
+		case SWT.KeyUp:
+			onKeyUp(e);
+			break;
+		}
+	}
 
-	public void keyTraversed(TraverseEvent e) {
+	protected void onTraverse(Event e) {
 		switch (e.detail) {
 		case SWT.TRAVERSE_TAB_NEXT:
 			if ((e.stateMask & SWT.CTRL) != 0)

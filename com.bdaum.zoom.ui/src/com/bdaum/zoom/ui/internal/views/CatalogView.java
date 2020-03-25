@@ -66,12 +66,12 @@ import org.eclipse.swt.dnd.DragSourceListener;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.Widget;
@@ -1155,6 +1155,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		manager.add(filterAction);
 		manager.add(new Separator());
 		drillDownAdapter.addNavigationActions(manager);
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	@Override
@@ -1674,14 +1675,12 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 
 	private Object doDeleteCollection(final SmartCollectionImpl collection, Set<Object> toBeDeleted,
 			Set<Object> toBeStored, final IDbManager dbManager) {
-		if (collection.getAlbum()) {
-			if (!collection.getCriterion().isEmpty()) {
-				List<String> assetIds = collection.getAsset();
-				if (assetIds != null) {
-					List<AssetImpl> set = dbManager.obtainByIds(AssetImpl.class, assetIds);
-					if (!set.isEmpty())
-						OperationJob.executeOperation(new RemoveAlbumOperation(collection, set), this);
-				}
+		if (collection.getAlbum() && !collection.getCriterion().isEmpty()) {
+			List<String> assetIds = collection.getAsset();
+			if (assetIds != null) {
+				List<AssetImpl> set = dbManager.obtainByIds(AssetImpl.class, assetIds);
+				if (!set.isEmpty())
+					OperationJob.executeOperation(new RemoveAlbumOperation(collection, set), this);
 			}
 		}
 		final Object parent = getParent(collection);
@@ -1781,7 +1780,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 	}
 
 	@Override
-	public Object findObject(MouseEvent event) {
+	public Object findObject(Event event) {
 		findingPoint.x = event.x;
 		findingPoint.y = event.y;
 		ViewerCell cell = viewer.getCell(findingPoint);
@@ -1789,7 +1788,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 	}
 
 	@Override
-	public IGalleryHover getGalleryHover(MouseEvent event) {
+	public IGalleryHover getGalleryHover(Event event) {
 		return null;
 	}
 

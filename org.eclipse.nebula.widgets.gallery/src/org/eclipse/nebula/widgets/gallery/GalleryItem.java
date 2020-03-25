@@ -265,7 +265,12 @@ public class GalleryItem extends Item {
 		return parent._indexOf(this, childItem);
 	}
 
+	@Override
 	public void setImage(Image image) {
+		checkWidget();
+		if (image != null && image.isDisposed()) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
 		super.setImage(image);
 		parent.redraw(this);
 	}
@@ -722,6 +727,7 @@ public class GalleryItem extends Item {
 		}
 	}
 
+	@Override
 	public void dispose() {
 		checkWidget();
 
@@ -734,6 +740,7 @@ public class GalleryItem extends Item {
 		parent.redraw();
 	}
 
+	@Override
 	public void setText(String string) {
 		setText(0, string);
 	}
@@ -746,6 +753,7 @@ public class GalleryItem extends Item {
 		parent.redraw(this);
 	}
 
+	@Override
 	public String getText() {
 		return getText(0);
 	}

@@ -460,11 +460,7 @@
     <description>Maintain user defined vocabularies</description>
     <topic href="html/reference/catPrefs.html" label="Vocabulary"/>
  </context>
- <context id="autoRating_dialog_context" title="Automatic Rating">
-    <description>Rating images with the help of AI</description>
-    <topic href="html/reference/rating.html" label="Automatic Rating"/>
- </context>
-  <context id="tethered_dialog_context" title="Tethered shooting">
+ <context id="tethered_dialog_context" title="Tethered shooting">
     <description>Tethered shooting</description>
     <topic href="html/reference/tethered.html" label="Tethered shooting"/>
  </context>
@@ -472,5 +468,9 @@
     <description>Hover Preferences</description>
     <topic href="html/reference/hoverPrefs.html" label="Hover Preferences"/>
  </context>
+  <context id="general_page_tuning_context" title="Database tuning">
+     <description>Database tuning</description>
+     <topic href="html/tasks/tuning.html" label="Database tuning"/>
+  </context>
  
 </contexts>

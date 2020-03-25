@@ -179,6 +179,8 @@ public class RadioButtonGroup extends Composite implements Listener {
 	}
 
 	private void fireEvent(Event event) {
+		event.widget = this;
+		event.type = SWT.Selection;
 		for (Listener listener : listeners)
 			listener.handleEvent(event);
 	}
@@ -207,11 +209,12 @@ public class RadioButtonGroup extends Composite implements Listener {
 		return false;
 	}
 
-	public void addListener(Listener listener) {
-		listeners.add(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Selection)
+			listeners.add(listener);
 	}
 
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
 		listeners.remove(listener);
 	}
 

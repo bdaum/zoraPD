@@ -33,8 +33,7 @@ public interface BatchConstants {
 	public static final boolean WIN32 = Platform.getOS().equals(Platform.OS_WIN32);
 	public static final boolean OSX = Platform.getOS().equals(Platform.OS_MACOSX);
 	public static final boolean LINUX = Platform.getOS().equals(Platform.OS_LINUX);
-	public static final boolean ARCH64 = Platform.getOSArch().equals(Platform.ARCH_X86_64)
-			|| Platform.getOSArch().equals(Platform.ARCH_IA64);
+	public static final boolean ARCH64 = Platform.getOSArch().equals(Platform.ARCH_X86_64);
 	// Catalog
 	public static final String CATFILETYPE = "com.bdaum.zoom.cat"; //$NON-NLS-1$
 	public static final String CATEXTENSION = ".zdb"; //$NON-NLS-1$

@@ -39,9 +39,12 @@
 
 package net.semanticmetadata.lire.searchers;
 
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.LinkedList;
+
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.FieldInvertState;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -52,10 +55,6 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.util.BytesRef;
-
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.util.LinkedList;
 
 /**
  * Provides a general searcher for visual words implementation. Can be used for SIFT, SURF and MSER.
@@ -125,18 +124,18 @@ public class VisualWordsImageSearcher extends AbstractImageSearcher {
      */
     @SuppressWarnings("unused")
     private static class MySimilarity extends ClassicSimilarity {
-        @Override
-        public float coord(int overlap, int maxOverlap) {
-            return super.coord(overlap, maxOverlap);
-        }
+//        @Override
+//        public float coord(int overlap, int maxOverlap) {
+//            return super.coord(overlap, maxOverlap);
+//        }
+//
+//        @Override
+//        public float queryNorm(float sumOfSquaredWeights) {
+//            return super.queryNorm(sumOfSquaredWeights);
+//        }
 
         @Override
-        public float queryNorm(float sumOfSquaredWeights) {
-            return super.queryNorm(sumOfSquaredWeights);
-        }
-
-        @Override
-        public float lengthNorm(FieldInvertState state) {
+        public float lengthNorm(int state) {
             return super.lengthNorm(state);
         }
 

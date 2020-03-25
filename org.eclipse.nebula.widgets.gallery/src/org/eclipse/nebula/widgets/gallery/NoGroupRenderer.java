@@ -10,10 +10,10 @@
  *******************************************************************************/
 package org.eclipse.nebula.widgets.gallery;
 
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Event;
 
 /**
  * <p>
@@ -138,7 +138,7 @@ public class NoGroupRenderer extends AbstractGridGroupRenderer {
 	 * (org.eclipse.nebula.widgets.gallery.GalleryItem,
 	 * org.eclipse.swt.events.MouseEvent, org.eclipse.swt.graphics.Point)
 	 */
-	public boolean mouseDown(GalleryItem group, MouseEvent e, Point coords) {
+	public boolean mouseDown(GalleryItem group, Event e, Point coords) {
 		// Do nothing
 		return true;
 	}

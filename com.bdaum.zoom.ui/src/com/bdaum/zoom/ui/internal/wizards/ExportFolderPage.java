@@ -50,7 +50,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
-public class ExportFolderPage extends ColoredWizardPage {
+public class ExportFolderPage extends ColoredWizardPage implements Listener {
 
 	private List<Asset> assets;
 	private OutputTargetGroup outputTargetGroup;
@@ -91,44 +91,19 @@ public class ExportFolderPage extends ColoredWizardPage {
 						: ExportModeGroup.ALLFORMATS | ExportModeGroup.SIZING
 								| (Core.getCore().containsRawImage(assets, true) ? ExportModeGroup.RAWCROP : 0),
 				multiMedia ? Messages.ExportFolderPage_media : Messages.ExportFolderPage_image);
-		exportModeGroup.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				saveOptions();
-				updateCatButtons();
-				updateControls();
-				checkImages();
-			}
-		});
+		exportModeGroup.addListener(SWT.Modify, this);
 		final CGroup metaGroup = CGroup.create(composite, 1, Messages.ExportFolderPage_metadata);
 		if (!multiMedia) {
 			metaButton = WidgetFactory.createCheckButton(metaGroup, Messages.ExportFolderPage_include_metadata, null);
-			metaButton.addListener(new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					saveOptions();
-					getWizard().getContainer().updateButtons();
-				}
-			});
+			metaButton.addListener(SWT.Selection, this);
 			watermarkGroup = new WatermarkGroup(metaGroup);
-			watermarkGroup.addListener(new Listener() {
-				@Override
-				public void handleEvent(Event e) {
-					saveOptions();
-				}
-			});
+			watermarkGroup.addListener(SWT.Modify, this);
 		}
 		privacyGroup = new PrivacyGroup(metaGroup, Messages.ExportFolderPage_export_only, assets);
-		Listener selectionListener = new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				saveOptions();
-			}
-		};
-		privacyGroup.addListener(selectionListener);
+		privacyGroup.addListener(SWT.Selection, this);
 		if (!multiMedia) {
 			addToCatGroup = new AddToCatGroup(composite);
-			addToCatGroup.addListener(selectionListener);
+			addToCatGroup.addListener(SWT.Selection, this);
 		}
 		fillValues(getDialogSettings());
 		updateOptions();
@@ -149,6 +124,29 @@ public class ExportFolderPage extends ColoredWizardPage {
 		setMessage(msg);
 		super.createControl(parent);
 		validatePage();
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			if (e.widget == metaButton) {
+				saveOptions();
+				getWizard().getContainer().updateButtons();
+			} else
+				saveOptions();
+			break;
+
+		case SWT.Modify:
+			saveOptions();
+			if (e.data == exportModeGroup) {
+				updateCatButtons();
+				updateControls();
+				checkImages();
+			}
+			break;
+		}
+		
 	}
 
 	protected void saveOptions() {

@@ -19,6 +19,7 @@
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
+import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -46,12 +47,12 @@ public class LabelConfigGroup implements Listener {
 	private RadioButtonGroup showGroup;
 	private TextWithVariableGroup templateGroup;
 	private NumericControl fontField;
-
 	private int offset;
-
 	private RadioButtonGroup alignmentGroup;
+	private CheckboxButton overlayButton;
+	private ListenerList<Listener> listeners = new ListenerList<Listener>();
 
-	public LabelConfigGroup(Composite parent, boolean inherit, boolean alignment) {
+	public LabelConfigGroup(Composite parent, boolean inherit, boolean alignment, boolean overlay) {
 		offset = inherit ? 0 : 1;
 		CGroup labelgroup = UiUtilities.createGroup(parent, 1, Messages.LabelConfigGroup_tumbnail_labels);
 		showGroup = new RadioButtonGroup(labelgroup, Messages.LabelConfigGroup_show, SWT.VERTICAL,
@@ -59,7 +60,7 @@ public class LabelConfigGroup implements Listener {
 						Messages.LabelConfigGroup_nothing, Messages.LabelConfigGroup_custom }
 						: new String[] { Messages.LabelConfigGroup_title, Messages.LabelConfigGroup_nothing,
 								Messages.LabelConfigGroup_custom });
-		showGroup.addListener(this);
+		showGroup.addListener(SWT.Selection, this);
 		Composite tempComp = new Composite(labelgroup, SWT.NONE);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.horizontalIndent = 15;
@@ -67,20 +68,36 @@ public class LabelConfigGroup implements Listener {
 		tempComp.setLayout(new GridLayout(5, false));
 		templateGroup = new TextWithVariableGroup(tempComp, Messages.LabelConfigGroup_template, 400, Constants.TH_ALL,
 				true, CAPTIONTEMPLATES, null, null);
+		templateGroup.addListener(SWT.Modify, this);
 		new Label(tempComp, SWT.NONE).setText(Messages.LabelConfigGroup_fontsize);
-		fontField = new NumericControl(tempComp, SWT.NONE);
+		Composite layoutComp = new Composite(tempComp, SWT.NONE);
+		layoutComp.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 4, 1));
+		GridLayout layout = new GridLayout(3, false);
+		layout.marginHeight = layout.marginWidth = 0;
+		layoutComp.setLayout(layout);
+		fontField = new NumericControl(layoutComp, SWT.NONE);
 		fontField.setMinimum(5);
 		fontField.setMaximum(14);
-		fontField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1));
-		if (alignment) {
-			new Label(tempComp, SWT.NONE).setText( Messages.LabelConfigGroup_alignment);
-			alignmentGroup = new RadioButtonGroup(tempComp,null, SWT.HORIZONTAL, Messages.LabelConfigGroup_left, Messages.LabelConfigGroup_center, Messages.LabelConfigGroup_right);
-		}
+		fontField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
+		if (alignment)
+			alignmentGroup = new RadioButtonGroup(layoutComp, Messages.LabelConfigGroup_alignment, SWT.HORIZONTAL,
+					Messages.LabelConfigGroup_left, Messages.LabelConfigGroup_center, Messages.LabelConfigGroup_right);
+		if (overlay)
+			overlayButton = WidgetFactory.createCheckButton(layoutComp, Messages.LabelConfigGroup_overlay,
+					new GridData(SWT.END, SWT.CENTER, true, false));
 	}
 
 	@Override
 	public void handleEvent(Event e) {
 		updateControls();
+		fireEvent(e);
+	}
+
+	private void fireEvent(Event e) {
+		e.type = SWT.Modify;
+		e.data = this;
+		for (Listener listener : listeners)
+			listener.handleEvent(e);
 	}
 
 	private void updateControls() {
@@ -89,12 +106,14 @@ public class LabelConfigGroup implements Listener {
 		fontField.setEnabled(enabled);
 	}
 
-	public void setSelection(int index, String template, int fontSize, int align) {
+	public void setSelection(int index, String template, int fontSize, int align, boolean overlay) {
 		showGroup.setSelection(index >= offset ? index - offset : Constants.TITLE_LABEL);
 		if (template != null)
 			templateGroup.setText(template);
 		if (alignmentGroup != null)
 			alignmentGroup.setSelection(align);
+		if (overlayButton != null)
+			overlayButton.setSelection(overlay);
 		if (fontSize == 0)
 			fontSize = JFaceResources.getDefaultFont().getFontData()[0].getHeight();
 		fontField.setSelection(fontSize);
@@ -116,14 +135,13 @@ public class LabelConfigGroup implements Listener {
 		return templateGroup.getText();
 	}
 
-	public void addListener(Listener listener) {
-		showGroup.addListener(listener);
-		templateGroup.addListener(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Modify)
+			listeners.add(listener);
 	}
 
-	public void removeSelectionListener(Listener listener) {
-		showGroup.removeListener(listener);
-		templateGroup.removeListener(listener);
+	public void removeSelectionListener(int type, Listener listener) {
+		listeners.remove(listener);
 	}
 
 	public String validate() {
@@ -143,6 +161,10 @@ public class LabelConfigGroup implements Listener {
 
 	public int getAlignment() {
 		return alignmentGroup == null ? 1 : alignmentGroup.getSelection();
+	}
+
+	public boolean getOverlay() {
+		return overlayButton == null ? false : overlayButton.getSelection();
 	}
 
 }

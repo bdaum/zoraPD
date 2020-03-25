@@ -2,9 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.net.communities.flickr;singleton:=true
-Bundle-Version: 3.6.0
+Bundle-Version: 3.6.1
 Bundle-Vendor: %bdaum
-Require-Bundle: com.bdaum.zoom.net.communities;bundle-version="3.6.0",
- com.bdaum.zoom.logging;bundle-version="3.6.0"
+Require-Bundle: com.bdaum.zoom.net.communities;bundle-version="3.6.1",
+ com.bdaum.zoom.logging;bundle-version="3.6.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .,
+ slf4j-simple-1.7.9.jar

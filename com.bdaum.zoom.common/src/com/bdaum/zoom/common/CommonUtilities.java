@@ -35,8 +35,7 @@ public class CommonUtilities {
 	/**
 	 * Encodes the blanks of a URL
 	 *
-	 * @param s
-	 *            - URL or URL part/
+	 * @param s - URL or URL part/
 	 * @return the encoded string
 	 */
 	public static String encodeBlanks(String s) {
@@ -46,10 +45,8 @@ public class CommonUtilities {
 	/**
 	 * Converts a separator separated string list into a list of strings
 	 *
-	 * @param stringlist
-	 *            - input string
-	 * @param seps
-	 *            - valid separators
+	 * @param stringlist - input string
+	 * @param seps       - valid separators
 	 * @return - resulting list
 	 */
 
@@ -66,33 +63,33 @@ public class CommonUtilities {
 				char c = chars[i];
 				if (token) {
 					for (int j = 0; j < seplen; j++)
-						if (c == separators[j]) {
-							int end = i;
-							while (end > offset && chars[end - 1] == ' ')
-								--end;
-							while (offset < end && chars[offset] == ' ')
-								++offset;
-							result.add(new String(chars, offset, end - offset));
+						if (c != separators[j]) {
 							token = false;
-							break;
-						}
-				} else
-					for (int j = 0; j < seplen; j++)
-						if (c == separators[j]) {
-							token = true;
 							offset = i;
 							break;
 						}
+				} 
+				if (!token)
+					for (int j = 0; j < seplen; j++)
+						if (c == separators[j]) {
+							addToResult(chars, offset, i, separators, result);
+							token = true;
+							break;
+						}
 			}
-			if (token) {
-				while (l > offset && chars[l - 1] == ' ')
-					--l;
-				while (offset < l && chars[offset] == ' ')
-					++offset;
-				result.add(new String(chars, offset, l - offset));
-			}
+			if (!token)
+				addToResult(chars, offset, l, separators, result);
 		}
 		return result;
+	}
+
+	private static void addToResult(char[] chars, int offset, int end, char[] separators, ArrayList<String> result) {
+		while (end > offset && chars[end - 1] == ' ')
+			--end;
+		while (offset < end && chars[offset] == ' ')
+			++offset;
+		if (offset < end)
+			result.add(new String(chars, offset, end - offset));
 	}
 
 	public static int computeHoverTime(int nchars) {

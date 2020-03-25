@@ -24,18 +24,10 @@ import java.util.Arrays;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseMoveListener;
-import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ToolTip;
 
 import com.bdaum.zoom.batch.internal.Daemon;
@@ -45,8 +37,8 @@ import com.bdaum.zoom.ui.internal.views.IHoverSubject;
 import com.bdaum.zoom.ui.internal.views.ImageRegion;
 
 /**
- * A hovering controller. The controller registers with its subject
- * as a <code>MouseTrackListener<code>. When
+ * A hovering controller. The controller registers with its subject as a
+ * <code>MouseTrackListener<code>. When
  * receiving a mouse hover event, it opens a popup window using the
  * appropriate <code>IGalleryHover</code> to initialize the window's display
  * information. The controller closes the window if the mouse pointer leaves the
@@ -54,10 +46,9 @@ import com.bdaum.zoom.ui.internal.views.ImageRegion;
  * <p>
  */
 @SuppressWarnings("restriction")
-public class HoveringController extends MouseTrackAdapter {
+public class HoveringController implements Listener {
 
-	class WindowManager extends MouseTrackAdapter
-			implements MouseListener, MouseMoveListener, ControlListener, KeyListener, FocusListener {
+	class WindowManager implements Listener {
 
 		private Object fCoveredObject;
 		private ImageRegion[] fCoveredRegions;
@@ -83,12 +74,14 @@ public class HoveringController extends MouseTrackAdapter {
 		 * Starts watching whether the popup window must be closed.
 		 */
 		public void start() {
-			control.addMouseListener(this);
-			control.addMouseMoveListener(this);
-			control.addMouseTrackListener(this);
-			control.addControlListener(this);
-			control.addKeyListener(this);
-			control.addFocusListener(this);
+			control.addListener(SWT.MouseDown, this);
+			control.addListener(SWT.MouseDoubleClick, this);
+			control.addListener(SWT.MouseExit, this);
+			control.addListener(SWT.MouseMove, this);
+			control.addListener(SWT.Resize, this);
+			control.addListener(SWT.Move, this);
+			control.addListener(SWT.KeyDown, this);
+			control.addListener(SWT.FocusOut, this);
 			delayer = new Daemon(Messages.HoveringController_hover_control, -1L) {
 				@Override
 				protected void doRun(IProgressMonitor monitor) {
@@ -100,7 +93,7 @@ public class HoveringController extends MouseTrackAdapter {
 						});
 				}
 			};
-			delayer.schedule(CommonUtilities.getHoverDelay());	
+			delayer.schedule(CommonUtilities.getHoverDelay());
 		}
 
 		protected void show() {
@@ -132,100 +125,45 @@ public class HoveringController extends MouseTrackAdapter {
 				stopper.cancel();
 				stopper = null;
 			}
-			control.removeMouseListener(this);
-			control.removeMouseMoveListener(this);
-			control.removeMouseTrackListener(this);
-			control.removeControlListener(this);
-			control.removeKeyListener(this);
-			control.removeFocusListener(this);
+			control.removeListener(SWT.MouseDown, this);
+			control.removeListener(SWT.MouseDoubleClick, this);
+			control.removeListener(SWT.MouseExit, this);
+			control.removeListener(SWT.MouseMove, this);
+			control.removeListener(SWT.Resize, this);
+			control.removeListener(SWT.Move, this);
+			control.removeListener(SWT.KeyDown, this);
+			control.removeListener(SWT.FocusOut, this);
 			install();
 			toolTip.setVisible(false);
 		}
 
-		/*
-		 * @see MouseMoveListener#mouseMove
-		 */
-		public void mouseMove(MouseEvent event) {
-			Object foundItem = subject.findObject(event);
-			ImageRegion[] foundRegions = subject.findAllRegions(event);
-			if (foundItem != fCoveredObject || !Arrays.equals(foundRegions, fCoveredRegions))
-				stop();
-		}
-
-		/*
-		 * @see MouseListener#mouseUp(MouseEvent)
-		 */
-		public void mouseUp(MouseEvent event) {
-			// do nothing
-		}
-
-		/*
-		 * @see MouseListener#mouseDown(MouseEvent)
-		 */
-		public void mouseDown(MouseEvent event) {
-			stop();
-		}
-
-		/*
-		 * @see MouseListener#mouseDoubleClick(MouseEvent)
-		 */
-		public void mouseDoubleClick(MouseEvent event) {
-			stop();
-		}
-
-		/*
-		 * @see MouseTrackAdapter#mouseExit(MouseEvent)
-		 */
 		@Override
-		public void mouseExit(MouseEvent event) {
-			stop();
-		}
-
-		/*
-		 * @see ControlListener#controlResized(ControlEvent)
-		 */
-		public void controlResized(ControlEvent event) {
-			stop();
-		}
-
-		/*
-		 * @see ControlListener#controlMoved(ControlEvent)
-		 */
-		public void controlMoved(ControlEvent event) {
-			stop();
-		}
-
-		/*
-		 * @see KeyListener#keyReleased(KeyEvent)
-		 */
-		public void keyReleased(KeyEvent event) {
-			// do nothing
-		}
-
-		/*
-		 * @see KeyListener#keyPressed(KeyEvent)
-		 */
-		public void keyPressed(KeyEvent event) {
-			stop();
-		}
-
-		/*
-		 * @see FocusListener#focusLost(FocusEvent)
-		 */
-		public void focusLost(FocusEvent event) {
-			if (subject.getControl() == event.widget) {
-				event.display.asyncExec(() -> {
-					if (!event.display.isDisposed())
-						stop();
-				});
+		public void handleEvent(Event e) {
+			switch (e.type) {
+			case SWT.MouseDown:
+			case SWT.MouseDoubleClick:
+			case SWT.MouseExit:
+			case SWT.KeyDown:
+			case SWT.Resize:
+			case SWT.Move:
+				stop();
+				break;
+			case SWT.MouseMove:
+				Object foundItem = subject.findObject(e);
+				ImageRegion[] foundRegions = subject.findAllRegions(e);
+				if (foundItem != fCoveredObject || !Arrays.equals(foundRegions, fCoveredRegions))
+					stop();
+				break;
+			case SWT.FocusOut:
+				if (subject.getControl() == e.widget) {
+					e.display.asyncExec(() -> {
+						if (!e.display.isDisposed())
+							stop();
+					});
+				}
+				break;
 			}
-		}
 
-		/*
-		 * @see FocusListener#focusGained(FocusEvent)
-		 */
-		public void focusGained(FocusEvent event) {
-			// do nothing
 		}
 	}
 
@@ -289,30 +227,10 @@ public class HoveringController extends MouseTrackAdapter {
 		fHoverObject = null;
 		Control control = subject.getControl();
 		if (control != null)
-			control.addMouseTrackListener(this);
+			control.addListener(SWT.MouseHover, this);
 		else
 			for (Control c : subject.getControls())
-				c.addMouseTrackListener(this);
-	}
-
-	/*
-	 * @see MouseTrackAdapter#mouseHover
-	 */
-
-	@Override
-	public void mouseHover(MouseEvent event) {
-		if (UiActivator.getDefault().getShowHover()) {
-			IGalleryHover hover = subject.getGalleryHover(event);
-			if (hover != null) {
-				info = hover.getHoverInfo(subject, event);
-				if (info != null && !info.getObject().equals(fHoverObject)) {
-					fHoverObject = info.getObject();
-					if (toolTip != null && !toolTip.isDisposed())
-						showWindow((Control) event.widget, fHoverObject, info.getRegions(),
-								computeWindowLocation((Control) event.widget, event.x, event.y));
-				}
-			}
-		}
+				c.addListener(SWT.MouseHover, this);
 	}
 
 	/**
@@ -345,10 +263,26 @@ public class HoveringController extends MouseTrackAdapter {
 	public void uninstall() {
 		Control control = subject.getControl();
 		if (control != null)
-			control.removeMouseTrackListener(this);
+			control.removeListener(SWT.MouseHover, this);
 		else
 			for (Control c : subject.getControls())
-				c.removeMouseTrackListener(this);
+				c.removeListener(SWT.MouseHover, this);
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		if (UiActivator.getDefault().getShowHover()) {
+			IGalleryHover hover = subject.getGalleryHover(event);
+			if (hover != null) {
+				info = hover.getHoverInfo(subject, event);
+				if (info != null && !info.getObject().equals(fHoverObject)) {
+					fHoverObject = info.getObject();
+					if (toolTip != null && !toolTip.isDisposed())
+						showWindow((Control) event.widget, fHoverObject, info.getRegions(),
+								computeWindowLocation((Control) event.widget, event.x, event.y));
+				}
+			}
+		}
 	}
 
 }

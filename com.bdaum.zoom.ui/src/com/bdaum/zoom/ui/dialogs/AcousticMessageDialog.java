@@ -49,8 +49,9 @@ public class AcousticMessageDialog extends MessageDialog {
 	private int type;
 	private String dialogTitle;
 	private IValidator validator;
-	private Timer timer;
+	private Timer timer = new Timer();
 	private int y = -1;
+	private TimerTask task;
 
 	/**
 	 * Convenience method to open a simple confirm (OK/Cancel) dialog.
@@ -310,21 +311,23 @@ public class AcousticMessageDialog extends MessageDialog {
 		create();
 		if (validator != null) {
 			final Display display = getShell().getDisplay();
-			timer = new Timer();
-			timer.schedule(new TimerTask() {
+			if (task != null)
+				task.cancel();
+			task = new TimerTask() {
 				@Override
 				public void run() {
 					display.asyncExec(() -> execTimer());
 				}
-			}, 300L, 300L);
+			};
+			timer.schedule(task, 300L, 300L);
 		}
 		return super.open();
 	}
 
 	@Override
 	public boolean close() {
-		if (timer != null)
-			timer.cancel();
+		if (task != null)
+			task.cancel();
 		return super.close();
 	}
 

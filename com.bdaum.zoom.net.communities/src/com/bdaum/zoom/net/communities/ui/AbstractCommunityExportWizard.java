@@ -20,8 +20,7 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.net.communities.CommunitiesActivator;
 import com.bdaum.zoom.net.communities.CommunityApi;
 
-public abstract class AbstractCommunityExportWizard extends Wizard implements
-		IExportWizard, IExecutableExtension {
+public abstract class AbstractCommunityExportWizard extends Wizard implements IExportWizard, IExecutableExtension {
 
 	private static final String _SETTINGSID = "com.bdaum.zoom.exportCommunityProperties."; //$NON-NLS-1$
 	protected IConfigurationElement configElement;
@@ -32,8 +31,7 @@ public abstract class AbstractCommunityExportWizard extends Wizard implements
 	protected String settingsId;
 	protected CommunityApi api;
 
-	public void setInitializationData(IConfigurationElement cfig,
-			String propertyName, Object data) {
+	public void setInitializationData(IConfigurationElement cfig, String propertyName, Object data) {
 		String namespaceIdentifier = cfig.getNamespaceIdentifier();
 		IExtensionPoint extensionPoint = Platform.getExtensionRegistry()
 				.getExtensionPoint(CommunitiesActivator.PLUGIN_ID, "community"); //$NON-NLS-1$
@@ -62,36 +60,23 @@ public abstract class AbstractCommunityExportWizard extends Wizard implements
 		try {
 			boolean result = doFinish();
 			if (!result)
-				wizardPage.setErrorMessage(NLS.bind(
-						Messages.AbstractCommunityExportWizard_auth_failed,
-						communityName));
+				wizardPage.setErrorMessage(NLS.bind(Messages.AbstractCommunityExportWizard_auth_failed, communityName));
 			return result;
 		} catch (AuthException e) {
-			wizardPage.setErrorMessage(NLS.bind(
-					Messages.AbstractCommunityExportWizard_auth_failed,
-					communityName));
+			wizardPage.setErrorMessage(NLS.bind(Messages.AbstractCommunityExportWizard_auth_failed, communityName));
 			return false;
 		} catch (CommunicationException e) {
-			wizardPage.setErrorMessage(NLS.bind(
-					Messages.CommunityExportWizard_connection_failed,
-					communityName));
+			wizardPage.setErrorMessage(NLS.bind(Messages.CommunityExportWizard_connection_failed, communityName));
 			return false;
 		} catch (Throwable t) {
-			CommunitiesActivator
-					.getDefault()
-					.logError(
-							NLS.bind(
-									Messages.AbstractCommunityExportWizard_internal_error,
-									communityName), t);
-			wizardPage.setErrorMessage(NLS.bind(
-					Messages.AbstractCommunityExportWizard_internal_error,
-					communityName));
+			CommunitiesActivator.getDefault()
+					.logError(NLS.bind(Messages.AbstractCommunityExportWizard_internal_error, communityName), t);
+			wizardPage.setErrorMessage(NLS.bind(Messages.AbstractCommunityExportWizard_internal_error, communityName));
 			return false;
 		}
 	}
 
-	protected abstract boolean doFinish() throws CommunicationException,
-			AuthException;
+	protected abstract boolean doFinish() throws CommunicationException, AuthException;
 
 	public CommunityApi getApi() {
 		return api;

@@ -44,12 +44,14 @@ public class PreferenceConstants {
 	public static final String LIGHTBOX = "lightbox.html"; //$NON-NLS-1$
 	public static final String SLIDESHOW = "slideshow.html"; //$NON-NLS-1$
 	public static final String VIEW = "view.html"; //$NON-NLS-1$
+	public static final String VIDEO = "video.html"; //$NON-NLS-1$
 	public static final String UPLOADS = "uploads.html"; //$NON-NLS-1$
 	public static final String LOGIN = "login.html"; //$NON-NLS-1$
 	public static final String STATUS = "status.html"; //$NON-NLS-1$
 	public static final String ERROR = "error.html"; //$NON-NLS-1$
 	public static final String HELP = "help.html"; //$NON-NLS-1$
 	public static final String[] HTMLTYPES = new String[] { INDEX, LIGHTBOX, VIEW, SLIDESHOW, LOGIN, UPLOADS, STATUS, ERROR, HELP };
+//	public static final String[] HTMLTYPES = new String[] { INDEX, LIGHTBOX, VIEW, VIDEO, SLIDESHOW, LOGIN, UPLOADS, STATUS, ERROR, HELP };
 	public static final String CSS = "com.bdaum.zoom.webserver.css"; //$NON-NLS-1$
 
 	public static final String GROUPS = "com.bdaum.zoom.webserver.groups"; //$NON-NLS-1$

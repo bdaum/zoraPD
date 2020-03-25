@@ -60,7 +60,7 @@ public class RetargetOperation extends DbOperation {
 		boolean changed = false;
 		boolean prune = false;
 		IVolumeManager volumeManager = Core.getCore().getVolumeManager();
-		String volume = volumeManager.getVolumeForFile(newFile);
+		String newVolume = volumeManager.getVolumeForFile(newFile);
 		oldVolume = asset.getVolume();
 		int folderLevel = Math.max(1, level);
 		oldFolderUri = asset.getUri();
@@ -80,7 +80,7 @@ public class RetargetOperation extends DbOperation {
 				oldName = asset.getName();
 				asset.setUri(newFile.toURI().toString());
 				asset.setName(newFile.getName());
-				asset.setVolume(volume);
+				asset.setVolume(newVolume);
 				if (dbManager.safeTransaction(null, asset)) {
 					changed = dbManager.createFolderHierarchy(asset);
 					fireAssetsModified(null, null);
@@ -88,7 +88,7 @@ public class RetargetOperation extends DbOperation {
 			}
 			aMonitor.worked(1);
 		} else {
-			oldFolderUriSlash = oldFolderUri.substring(0, p + 1);
+			oldFolderUriSlash = asset.getUri().substring(0, p + 1);
 			List<AssetImpl> assets = dbManager.obtainObjects(AssetImpl.class, "uri", oldFolderUriSlash, //$NON-NLS-1$
 					QueryField.STARTSWITH);
 			int size = assets.size();
@@ -113,7 +113,7 @@ public class RetargetOperation extends DbOperation {
 						if (nFile.exists()) {
 							dbManager.markSystemCollectionsForPurge(a);
 							a.setUri(newAssetUri);
-							a.setVolume(volume);
+							a.setVolume(newVolume);
 							if (dbManager.safeTransaction(null, a)) {
 								assetIds[i] = a.getStringId();
 								changed |= dbManager.createFolderHierarchy(a);
@@ -150,7 +150,7 @@ public class RetargetOperation extends DbOperation {
 							File nVoiceFile = new File(new URI(newVoiceUri));
 							if (nVoiceFile.exists()) {
 								oldVoiceUris[i] = a.getVoiceFileURI();
-								AssetEnsemble.insertVoiceNote(a, volume, newVoiceUri);
+								AssetEnsemble.insertVoiceNote(a, newVolume, newVoiceUri);
 								if (dbManager.safeTransaction(null, a))
 									vAssetIds[i] = a.getStringId();
 							}

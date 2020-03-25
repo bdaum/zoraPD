@@ -28,14 +28,12 @@ import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.lal.internal.lire.ui.dialogs.TextSearchDialog;
 import com.bdaum.zoom.ui.Ui;
-import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.commands.AbstractCommandHandler;
 
 /**
  * @author berth
  *
  */
-@SuppressWarnings("restriction")
 public class TextQueryCommand extends AbstractCommandHandler {
 
 	/*

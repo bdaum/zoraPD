@@ -38,7 +38,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class CsvTargetFilePage extends ColoredWizardPage {
+public class CsvTargetFilePage extends ColoredWizardPage implements Listener {
 
 	private static final String CSVPATH = "csvPath"; //$NON-NLS-1$
 	private static final String NOFIRSTLINE = "firstLine"; //$NON-NLS-1$
@@ -67,13 +67,7 @@ public class CsvTargetFilePage extends ColoredWizardPage {
 		fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY,
 				Messages.CsvTargetFilePage_target_file, true, filterExtensions,
 				filterNames, path, fileName, true, dialogSettings);
-		fileEditor.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				path = fileEditor.getFilterPath();
-				validatePage();
-			}
-		});
+		fileEditor.addListener(SWT.Modify, this);
 		firstLineButton = WidgetFactory.createCheckButton(composite,
 				Messages.CsvTargetFilePage_first_line, new GridData(SWT.BEGINNING,
 						SWT.CENTER, false, false, 3, 1));
@@ -86,6 +80,12 @@ public class CsvTargetFilePage extends ColoredWizardPage {
 		setMessage(Messages.CsvTargetFilePage_specify_location);
 		fillValues();
 		super.createControl(parent);
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		path = fileEditor.getFilterPath();
+		validatePage();
 	}
 
 	private void fillValues() {

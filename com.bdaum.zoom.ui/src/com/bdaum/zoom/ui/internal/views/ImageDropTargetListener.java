@@ -124,16 +124,13 @@ public final class ImageDropTargetListener extends EffectDropTargetListener {
 			List<File> folders = null;
 			List<File> gpsFiles = null;
 			if (images) {
-				imageFiles = new ArrayList<File>(filenames.length);
-				Utilities.collectImages(filenames, imageFiles);
+				Utilities.collectImages(filenames, imageFiles = new ArrayList<File>(filenames.length));
 				Utilities.collectFolders(filenames, folders = new ArrayList<File>(filenames.length));
 			}
-			if (gps) {
-				gpsFiles = new ArrayList<File>();
-				Utilities.collectFilteredFiles(filenames, gpsFiles,
-						UiActivator.getDefault().createGpsFileFormatFilter());
-			}
-			if (sound) {
+			if (gps)
+				Utilities.collectFilteredFiles(filenames, gpsFiles = new ArrayList<File>(),
+						UiActivator.getDefault().createGpsFileFormatFilter(), false);
+			if (sound)
 				for (int j = 0; j < filenames.length; j++) {
 					File file = new File(filenames[j]);
 					if (Constants.SOUNDFILEFILTER.accept(file)) {
@@ -141,18 +138,17 @@ public final class ImageDropTargetListener extends EffectDropTargetListener {
 						break;
 					}
 				}
-			}
 			if (imageFiles != null && !imageFiles.isEmpty()) {
 				if ((event.detail & DND.DROP_LINK) != 0)
 					linkImage(event.x, event.y, imageFiles);
 				else
 					importImages(folders, imageFiles);
-			}
+			} else if (folders != null && !folders.isEmpty())
+				importImages(folders, imageFiles);
 			if (gpsFiles != null && !gpsFiles.isEmpty())
 				importGpx(gpsFiles);
-			if (soundFile != null) {
+			if (soundFile != null)
 				importSound(event.x, event.y, soundFile);
-			}
 		}
 	}
 

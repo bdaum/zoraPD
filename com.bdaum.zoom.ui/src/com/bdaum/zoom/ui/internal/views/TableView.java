@@ -53,9 +53,6 @@ import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -67,6 +64,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -540,23 +538,20 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 	}
 
 	@Override
-	public void keyPressed(KeyEvent e) {
-		super.keyReleased(e);
+	protected void onKeyDown(Event e) {
+		super.onKeyUp(e);
 	}
 
 	@Override
-	public void keyReleased(KeyEvent e) {
+	protected void onKeyUp(Event e) {
 		// do nothing
 	}
 
 	protected void hookDoubleClickAction() {
-		gallery.getTable().addMouseListener(new MouseAdapter() {
+		gallery.getTable().addListener(SWT.MouseDoubleClick, new Listener() {
 			@Override
-			public void mouseDoubleClick(MouseEvent e) {
-				IStructuredSelection sel = gallery.getStructuredSelection();
-				Event event = new Event();
-				event.data = sel.getFirstElement();
-				event.stateMask = e.stateMask;
+			public void handleEvent(Event event) {
+				event.data = gallery.getStructuredSelection().getFirstElement();
 				viewImageAction.runWithEvent(event);
 			}
 		});
@@ -730,7 +725,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		fireSelection();
 	}
 
-	public Object findObject(MouseEvent e) {
+	public Object findObject(Event e) {
 		return findObject(e.x, e.y);
 	}
 
@@ -842,7 +837,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 	}
 
 	@Override
-	public IGalleryHover getGalleryHover(MouseEvent event) {
+	public IGalleryHover getGalleryHover(Event event) {
 		return (event.x > gallery.getTable().getColumn(0).getWidth()) ? null : new GalleryHover();
 	}
 

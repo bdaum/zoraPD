@@ -274,7 +274,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 		field.setMaximum(max);
 		field.setIncrement(5);
 		field.setPageIncrement(50);
-		field.addListener(listener);
+		field.addListener(SWT.Selection, listener);
 		field.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, columns, 1));
 		return field;
 	}

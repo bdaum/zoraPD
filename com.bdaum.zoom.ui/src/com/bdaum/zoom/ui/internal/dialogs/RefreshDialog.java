@@ -37,7 +37,7 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 
-public class RefreshDialog extends ZTitleAreaDialog {
+public class RefreshDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.refreshDialog"; //$NON-NLS-1$
 	private static final String OUTDATED = "outdated";//$NON-NLS-1$
@@ -134,13 +134,7 @@ public class RefreshDialog extends ZTitleAreaDialog {
 		gd_uptoDateButton.horizontalIndent = 15;
 		uptoDateButton = WidgetFactory.createCheckButton(comp,
 				Messages.RefreshDialog_include_up_to_date, gd_uptoDateButton);
-		Listener selectionListener = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateButtons();
-			}
-		};
-		uptoDateButton.addListener(selectionListener);
+		uptoDateButton.addListener(SWT.Selection, this);
 		final GridData gd_resetImageButton = new GridData(SWT.FILL, SWT.CENTER,
 				true, false);
 		gd_resetImageButton.horizontalIndent = 15;
@@ -173,7 +167,7 @@ public class RefreshDialog extends ZTitleAreaDialog {
 		gd_resetIptcButton.horizontalIndent = 15;
 		resetIptcButton = WidgetFactory.createCheckButton(comp,
 				Messages.RefreshDialog_refresh_iptc, gd_resetIptcButton);
-		existingButton.addListener(selectionListener);
+		existingButton.addListener(SWT.Selection, this);
 		remoteButton = WidgetFactory.createCheckButton(comp,
 				NLS.bind(Messages.RefreshDialog_include_remote, remote),
 				new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -181,6 +175,11 @@ public class RefreshDialog extends ZTitleAreaDialog {
 				NLS.bind(Messages.RefreshDialog_remove_missing_files, missing),
 				new GridData(SWT.FILL, SWT.CENTER, true, false));
 		return area;
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		updateButtons();
 	}
 
 	protected void updateButtons() {

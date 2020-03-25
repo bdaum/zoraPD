@@ -1,11 +1,9 @@
-/*
- * Copyright (c) 2005 Aetrion LLC.
- */
+
 package com.flickr4java.flickr;
 
 /**
  * Exception which wraps a Flickr error.
- *
+ * 
  * @author Anthony Eden
  */
 public class FlickrException extends Exception {
@@ -32,7 +30,7 @@ public class FlickrException extends Exception {
     }
 
     public FlickrException(String errorCode, String errorMessage) {
-        super(errorCode + ": " + errorMessage); //$NON-NLS-1$
+        super(errorCode + ": " + errorMessage);
         this.errorCode = errorCode;
         this.errorMessage = errorMessage;
     }

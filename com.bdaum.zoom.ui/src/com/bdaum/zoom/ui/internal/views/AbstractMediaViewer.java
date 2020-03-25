@@ -19,16 +19,17 @@
  */
 package com.bdaum.zoom.ui.internal.views;
 
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.ui.internal.AbstractKiosk;
 import com.bdaum.zoom.ui.views.IMediaViewer;
 
-public abstract class AbstractMediaViewer extends AbstractKiosk implements IMediaViewer, KeyListener {
+public abstract class AbstractMediaViewer extends AbstractKiosk implements IMediaViewer, Listener {
 
 	protected String name;
 	protected String id;
@@ -70,27 +71,29 @@ public abstract class AbstractMediaViewer extends AbstractKiosk implements IMedi
 		return false;
 	}
 	
-	public void keyPressed(KeyEvent e) {
-		if (keyDown)
-			releaseKey(e);
-		keyDown = true;
-	}
-
 	@Override
-	public void releaseKey(KeyEvent e) {
+	public void releaseKey(Event e) {
 		// do nothing
-	}
-
-	public void keyReleased(KeyEvent e) {
-		releaseKey(e);
-		keyDown = false;
 	}
 
 	@Override
 	public boolean isDummy() {
 		return false;
 	}
-
-
+	
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.KeyDown:
+			if (keyDown)
+				releaseKey(e);
+			keyDown = true;
+			break;
+		case SWT.KeyUp:
+			releaseKey(e);
+			keyDown = false;
+			break;
+		}
+	}
 
 }

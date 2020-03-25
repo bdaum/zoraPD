@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2005 Aetrion LLC.
- */
+
 package com.flickr4java.flickr.photos;
 
 import com.flickr4java.flickr.FlickrException;
@@ -55,6 +53,8 @@ public class SearchParameters {
 
     private int accuracy = 0;
 
+    private int privacyFilter = 0;
+
     private String safeSearch;
 
     private String[] machineTags;
@@ -65,11 +65,17 @@ public class SearchParameters {
 
     private String longitude;
 
-    private int radius = -1;
+    private double radius = -1;
 
     private String radiusUnits;
 
     private boolean hasGeo = false;
+
+    private boolean inGallery = false;
+
+    private boolean isCommons = false;
+
+    private boolean isGetty = false;
 
     public static final ThreadLocal<SimpleDateFormat> DATE_FORMATS = new ThreadLocal<SimpleDateFormat>() {
         @Override
@@ -131,6 +137,30 @@ public class SearchParameters {
 
     public int getAccuracy() {
         return accuracy;
+    }
+
+    /**
+     * @return the privacyFilter
+     */
+    public int getPrivacyFilter() {
+        return privacyFilter;
+    }
+
+    /**
+     * @param privacyFilter
+     *            Return photos only matching a certain privacy level.
+     * 
+     *            This only applies when making an authenticated call to view photos you own. Valid values are:
+     *            <ul>
+     *            <li>1 public photos
+     *            <li>2 private photos visible to friends
+     *            <li>3 private photos visible to family
+     *            <li>4 private photos visible to friends &amp; family
+     *            <li>5 completely private photos
+     *            </ul>
+     */
+    public void setPrivacyFilter(int privacyFilter) {
+        this.privacyFilter = privacyFilter;
     }
 
     public String getGroupId() {
@@ -282,6 +312,10 @@ public class SearchParameters {
     public void setExtras(Set<String> extras) {
         this.extras = extras;
     }
+    
+    public Set<String> getExtras() {
+        return extras;
+    }
 
     /**
      * 4 values defining the Bounding Box of the area that will be searched.
@@ -360,6 +394,7 @@ public class SearchParameters {
      * @return A placeId
      * @see com.flickr4java.flickr.places.PlacesInterface#resolvePlaceId(String)
      */
+    @SuppressWarnings("javadoc")
     public String getPlaceId() {
         return placeId;
     }
@@ -379,6 +414,7 @@ public class SearchParameters {
      * @see com.flickr4java.flickr.places.Place#getPlaceId()
      * @see com.flickr4java.flickr.places.Location#getPlaceId()
      */
+    @SuppressWarnings("javadoc")
     public void setPlaceId(String placeId) {
         this.placeId = placeId;
     }
@@ -456,9 +492,9 @@ public class SearchParameters {
             parameters.put("lon", lon);
         }
 
-        int radius = getRadius();
+        double radius = getRadius();
         if (radius > 0) {
-            parameters.put("radius", Integer.toString(radius));
+            parameters.put("radius", Double.toString(radius));
         }
 
         String radiusUnits = getRadiusUnits();
@@ -563,6 +599,25 @@ public class SearchParameters {
             parameters.put("has_geo", "true");
         }
 
+        boolean inGallery = getInGallery();
+        if (inGallery) {
+            parameters.put("in_gallery", "true");
+        }
+
+        boolean isCommons = getIsCommons();
+        if (isCommons) {
+            parameters.put("is_commons", "true");
+        }
+
+        boolean isGetty = getIsGetty();
+        if (isGetty) {
+            parameters.put("is_getty", "true");
+        }
+
+        if (privacyFilter > 0) {
+            parameters.put("privacy_filter", Integer.toString(privacyFilter));
+        }
+
         if (extras != null && !extras.isEmpty()) {
             parameters.put("extras", StringUtilities.join(extras, ","));
         }
@@ -603,6 +658,10 @@ public class SearchParameters {
         latitude = lat;
     }
 
+    public void setRadius(double r) {
+        radius = r;
+    }
+
     public void setRadius(int r) {
         radius = r;
     }
@@ -623,7 +682,7 @@ public class SearchParameters {
         return longitude;
     }
 
-    public int getRadius() {
+    public double getRadius() {
         return radius;
     }
 
@@ -639,4 +698,27 @@ public class SearchParameters {
         this.userId = userId;
     }
 
+    public void setInGallery(boolean inGallery) {
+        this.inGallery = inGallery;
+    }
+
+    public boolean getInGallery() {
+        return inGallery;
+    }
+
+    public void setIsCommons(boolean isCommons) {
+        this.isCommons = isCommons;
+    }
+
+    public boolean getIsCommons() {
+        return isCommons;
+    }
+
+    public void setIsGetty(boolean isGetty) {
+        this.isGetty = isGetty;
+    }
+
+    public boolean getIsGetty() {
+        return isGetty;
+    }
 }

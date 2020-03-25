@@ -36,7 +36,7 @@ import com.bdaum.zoom.ui.internal.widgets.RenameGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class ImportRenamingPage extends ColoredWizardPage implements IFileProvider {
+public class ImportRenamingPage extends ColoredWizardPage implements IFileProvider, Listener {
 
 	private final boolean media;
 	private RenameGroup renameGroup;
@@ -61,12 +61,7 @@ public class ImportRenamingPage extends ColoredWizardPage implements IFileProvid
 								Constants.TV_FILENAME + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
 						new RenamingTemplate(Messages.ImportRenamingPage_orig_filename, Constants.TV_FILENAME, true) },
 				Constants.TV_ALL);
-		renameGroup.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				validatePage();
-			}
-		});
+		renameGroup.addListener(SWT.Modify, this);
 		setControl(renameGroup);
 		setHelp(media ? HelpContextIds.IMPORT_FROM_DEVICE_WIZARD_RENAMING
 				: HelpContextIds.IMPORT_NEW_STRUCTURE_WIZARD_RENAMING);
@@ -74,6 +69,11 @@ public class ImportRenamingPage extends ColoredWizardPage implements IFileProvid
 		setMessage(Messages.ImportRenamingPage_select_a_template);
 		super.createControl(parent);
 		fillValues();
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		validatePage();
 	}
 
 	private void fillValues() {

@@ -23,18 +23,17 @@ import java.awt.image.BufferedImage;
 
 import org.eclipse.swt.widgets.Shell;
 
-import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
 
 public interface IAiService {
 
 	Prediction predict(byte[] jpeg, String serviceId);
 	
-	int rate(Asset asset, String opId, int maxRating, String modelId, String serviceId);
+//	int rate(Asset asset, String opId, int maxRating, String modelId, String serviceId);
 	
-	String[] getRatingModelIds(String serviceId);
+//	String[] getRatingModelIds(String serviceId);
 
-	String[] getRatingModelLabels(String serviceId);
+//	String[] getRatingModelLabels(String serviceId);
 
 	String[] getProviderIds();
 

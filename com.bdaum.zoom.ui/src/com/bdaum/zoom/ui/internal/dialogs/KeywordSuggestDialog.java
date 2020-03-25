@@ -218,7 +218,7 @@ public class KeywordSuggestDialog extends ZProgressDialog implements Listener {
 		sortButtonGroup = new RadioButtonGroup(comp, Messages.KeywordSuggestDialog_sort_by, SWT.HORIZONTAL,
 				Messages.KeywordSuggestDialog_score, Messages.KeywordSuggestDialog_alpha);
 		sortButtonGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
-		sortButtonGroup.addListener(this);
+		sortButtonGroup.addListener(SWT.Selection, this);
 		Composite viewerComp = new Composite(comp, SWT.NONE);
 		viewerComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewerComp.setLayout(new GridLayout(2, false));

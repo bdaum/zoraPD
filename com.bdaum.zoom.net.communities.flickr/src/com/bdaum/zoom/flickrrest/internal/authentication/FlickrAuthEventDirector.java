@@ -23,8 +23,8 @@ package com.bdaum.zoom.flickrrest.internal.authentication;
 import org.scohen.juploadr.uploadapi.CommunicationException;
 import org.scohen.juploadr.uploadapi.ProtocolException;
 import org.scohen.juploadr.uploadapi.Session;
-import org.scribe.model.Token;
-import org.scribe.model.Verifier;
+//import org.scribe.model.Token;
+//import org.scribe.model.Verifier;
 
 import com.bdaum.zoom.flickrrest.internal.RestFlickrApi;
 import com.bdaum.zoom.flickrrest.internal.upload.GetUploadStatus;
@@ -33,6 +33,8 @@ import com.bdaum.zoom.net.communities.ui.AuthDialog;
 import com.flickr4java.flickr.FlickrException;
 import com.flickr4java.flickr.auth.AuthInterface;
 import com.flickr4java.flickr.auth.Permission;
+import com.github.scribejava.core.model.OAuth1RequestToken;
+import com.github.scribejava.core.model.OAuth1Token;
 
 public class FlickrAuthEventDirector {
 	private static final String AUTHMESSAGE = Messages.FlickrAuthEventDirector_your_authorization_is_required
@@ -51,7 +53,7 @@ public class FlickrAuthEventDirector {
 			if (!account.isAuthenticated()) {
 				AuthInterface authInterface = RestFlickrApi.FLICKR
 						.getAuthInterface();
-				Token token = authInterface.getRequestToken();
+				OAuth1RequestToken token = authInterface.getRequestToken();
 				String authLink = authInterface.getAuthorizationUrl(token,
 						Permission.WRITE);
 				String code = AuthDialog.show(authLink, AUTHMESSAGE, 850, 800,
@@ -60,12 +62,11 @@ public class FlickrAuthEventDirector {
 					return false;
 				int attempts = MAXATTEMPTS;
 				while (true) {
-					Token accessToken = authInterface.getAccessToken(token,
-							new Verifier(code));
+					OAuth1Token accessToken = authInterface.getAccessToken(token, code);
 					try {
 						authInterface.checkToken(accessToken);
 						account.setToken(accessToken.getToken());
-						account.setSecret(accessToken.getSecret());
+						account.setSecret(accessToken.getTokenSecret());
 						break;
 					} catch (FlickrException e) {
 						if (--attempts >= 0)

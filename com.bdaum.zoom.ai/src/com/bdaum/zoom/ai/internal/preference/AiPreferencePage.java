@@ -28,13 +28,10 @@ import java.util.TimerTask;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
@@ -57,15 +54,16 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.CLink;
 
 @SuppressWarnings("restriction")
-public class AiPreferencePage extends AbstractPreferencePage implements ModifyListener {
+public class AiPreferencePage extends AbstractPreferencePage implements Listener {
 
 	public static final String ID = "com.bdaum.zoom.ai.aiPrefPage"; //$NON-NLS-1$
 	private CheckboxButton enableButton;
 	private Text keyField;
 	private Label statusField;
-	private Timer timer;
+	private Timer timer = new Timer();
 	private ComboViewer languageViewer;
 	private boolean enabled;
+	private TimerTask task;
 
 	public AiPreferencePage() {
 		setDescription(Messages.AiPreferencePage_configure);
@@ -82,13 +80,7 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.PREFERENCE_PAGE);
 		enableButton = WidgetFactory.createCheckButton(composite, Messages.AiPreferencePage_enable, null);
-		enableButton.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				setEnabled(enableButton.getSelection());
-				updateFields();
-			}
-		});
+		enableButton.addListener(SWT.Selection, this);
 		// Tab folder
 		createTabFolder(composite, "Services"); //$NON-NLS-1$
 		createExtensions(tabFolder, "com.bdaum.zoom.ai.aiPrefPage"); //$NON-NLS-1$
@@ -111,7 +103,7 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 		new Label(eGroup, SWT.NONE).setText(Messages.AiPreferencePage_key1_or_key2);
 		keyField = new Text(eGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		keyField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		keyField.addModifyListener(this);
+		keyField.addListener(SWT.Modify, this);
 		new Label(eGroup, SWT.NONE).setText(Messages.AiPreferencePage_status);
 		statusField = new Label(eGroup, SWT.WRAP);
 		statusField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
@@ -134,9 +126,22 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 		CLink link = new CLink(eGroup, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		link.setText(Messages.AiPreferencePage_visit_account);
-		link.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
+		link.addListener(SWT.Selection, this);
+		if (!tabinit)
+			initTabFolder(0);
+		fillValues();
+		setEnabled(enableButton.getSelection());
+		updateButtons();
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			if (e.widget == enableButton) {
+				setEnabled(enableButton.getSelection());
+				updateFields();
+			} else {
 				String url = System.getProperty("com.bdaum.zoom.msTranslation"); //$NON-NLS-1$
 				try {
 					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(url));
@@ -146,12 +151,12 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 					// should never happen
 				}
 			}
-		});
-		if (!tabinit)
-			initTabFolder(0);
-		fillValues();
-		setEnabled(enableButton.getSelection());
-		updateButtons();
+			break;
+		case SWT.Modify:
+			if (enabled)
+				checkCredentials();
+			break;
+		}
 	}
 
 	protected void updateFields() {
@@ -183,7 +188,7 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 
 	@Override
 	protected void doPerformOk() {
-		disposeTimer();
+		disposeTimerTask();
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		boolean enabled = enableButton.getSelection();
 		preferenceStore.setValue(PreferenceConstants.ENABLE, enabled);
@@ -205,13 +210,7 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 
 	@Override
 	protected void doPerformCancel() {
-		disposeTimer();
-	}
-
-	@Override
-	public void modifyText(ModifyEvent e) {
-		if (enabled)
-			checkCredentials();
+		disposeTimerTask();
 	}
 
 	private void checkCredentials() {
@@ -227,9 +226,8 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 	}
 
 	protected void verifyAccountCredentials(int time) {
-		disposeTimer();
-		timer = new Timer();
-		timer.schedule(new TimerTask() {
+		disposeTimerTask();
+		task = new TimerTask() {
 			@Override
 			public void run() {
 				boolean error;
@@ -268,7 +266,8 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 
 					});
 			}
-		}, time);
+		};
+		timer.schedule(task, time);
 	}
 
 	private void showStatus(String msg, boolean error) {
@@ -277,10 +276,10 @@ public class AiPreferencePage extends AbstractPreferencePage implements ModifyLi
 		CssActivator.getDefault().setColors(statusField);
 	}
 
-	private void disposeTimer() {
-		if (timer != null) {
-			timer.cancel();
-			timer = null;
+	private void disposeTimerTask() {
+		if (task != null) {
+			task.cancel();
+			task = null;
 		}
 	}
 

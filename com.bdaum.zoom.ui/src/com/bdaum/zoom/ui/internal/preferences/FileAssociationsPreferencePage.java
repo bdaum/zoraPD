@@ -165,7 +165,8 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 
 	private void createFileEditor(Composite parent, String label, String id) {
 		FileEditor fileEditor = new FileEditor(parent, SWT.OPEN | SWT.READ_ONLY, label, true, Constants.EXEEXTENSION,
-				Constants.EXEFILTERNAMES, null, null, false, true, UiActivator.getDefault().getDialogSettings(SETTINGSID));
+				Constants.EXEFILTERNAMES, null, null, false, true,
+				UiActivator.getDefault().getDialogSettings(SETTINGSID));
 		fileEditor.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		fileEditorMap.put(id, fileEditor);
 	}
@@ -306,13 +307,7 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 
 		rememberLastButton = WidgetFactory.createCheckButton(optionsGroup,
 				Messages.getString("FileAssociationsPreferencePage.remember_last"), null); //$NON-NLS-1$
-		rememberLastButton.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				FileEditorMapping selectedResourceType = getSelectedResourceType();
-				selectedResourceType.setRememberLast(rememberLastButton.getSelection());
-			}
-		});
+		rememberLastButton.addListener(SWT.Selection, this);
 		return comp;
 	}
 
@@ -346,9 +341,11 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 			IMemento memento = XMLMemento.createReadRoot(reader);
 			List<FileEditorMapping> mappings = new ArrayList<FileEditorMapping>();
 			for (IMemento child : memento.getChildren("fileEditorMapping")) { //$NON-NLS-1$
-				FileEditorMapping mapping = new FileEditorMapping(null);
-				mapping.loadValues(child);
-				mappings.add(mapping);
+				if (!child.getString("extension").isEmpty()) { //$NON-NLS-1$
+					FileEditorMapping mapping = new FileEditorMapping(null);
+					mapping.loadValues(child);
+					mappings.add(mapping);
+				}
 			}
 			return mappings.toArray(new FileEditorMapping[mappings.size()]);
 		} catch (WorkbenchException e) {
@@ -551,10 +548,8 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 	 * Add a new resource type to the collection shown in the top of the page. This
 	 * is typically called after the extension dialog is shown to the user.
 	 *
-	 * @param newName
-	 *            the new name
-	 * @param newExtension
-	 *            the new extension
+	 * @param newName      the new name
+	 * @param newExtension the new extension
 	 */
 	public void addResourceType(String[] newExtensions, int replace) {
 		// Either a file name or extension must be provided
@@ -613,7 +608,10 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 	}
 
 	public void handleEvent(Event event) {
-		if (event.widget == addResourceTypeButton)
+		if (event.widget == rememberLastButton) {
+			FileEditorMapping selectedResourceType = getSelectedResourceType();
+			selectedResourceType.setRememberLast(rememberLastButton.getSelection());
+		} else if (event.widget == addResourceTypeButton)
 			promptForResourceType(-1);
 		else if (event.widget == editResourceTypeButton)
 			promptForResourceType(resourceTypeTable.getSelectionIndex());

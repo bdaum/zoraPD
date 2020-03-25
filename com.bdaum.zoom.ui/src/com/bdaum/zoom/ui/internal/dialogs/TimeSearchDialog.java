@@ -99,7 +99,7 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 		new Label(timeGroup, SWT.NONE).setText(Messages.TimeSearchDialog_from);
 		fromField = new DateInput(timeGroup, SWT.DATE | SWT.TIME | SWT.DROP_DOWN | SWT.BORDER);
 		fromField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, false, false));
-		fromField.addListener(new Listener() {
+		fromField.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				Date to = toField.getDate();
@@ -110,7 +110,7 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 		new Label(timeGroup, SWT.NONE).setText(Messages.TimeSearchDialog_to);
 		toField = new DateInput(timeGroup, SWT.DATE | SWT.TIME | SWT.DROP_DOWN | SWT.BORDER);
 		toField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, false, false));
-		toField.addListener(new Listener() {
+		toField.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				Date from = fromField.getDate();

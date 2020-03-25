@@ -61,7 +61,7 @@ public class ProximityAction extends Action {
 		double lat = 0;
 		double lon = 0;
 		int n = 0;
-		for (Asset asset : selection)
+		for (Asset asset : selection.getAssets())
 			if (!Double.isNaN(asset.getGPSLatitude()) && !Double.isNaN(asset.getGPSLongitude())) {
 				lat += asset.getGPSLatitude();
 				double longitude = asset.getGPSLongitude();
@@ -84,7 +84,7 @@ public class ProximityAction extends Action {
 			lon /= n;
 			double mx = 0;
 			char unit = Core.getCore().getDbFactory().getDistanceUnit();
-			for (Asset asset : selection)
+			for (Asset asset : selection.getAssets())
 				if (!Double.isNaN(asset.getGPSLatitude()) && !Double.isNaN(asset.getGPSLongitude()))
 					mx = Math.max(mx, Core.distance(lat, lon, asset.getGPSLatitude(), asset.getGPSLongitude(), unit));
 			Object[] values = new Object[] { lat, lon, (distance + mx), unit };

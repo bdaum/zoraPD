@@ -58,10 +58,6 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
@@ -279,7 +275,7 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 
 	public class GalleryHover implements IGalleryHover {
 
-		public IHoverInfo getHoverInfo(IHoverSubject viewer, MouseEvent event) {
+		public IHoverInfo getHoverInfo(IHoverSubject viewer, Event event) {
 			Object object = viewer.findObject(event);
 			if (object instanceof AbstractHandle) {
 				AbstractHandle handle = (AbstractHandle) object;
@@ -383,36 +379,9 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 		surfaceBounds = computeSurfaceSize(canvas.getDisplay().getPrimaryMonitor().getBounds());
 		surface = PSWTPath.createRectangle(surfaceBounds.x, surfaceBounds.y, surfaceBounds.width, surfaceBounds.height);
 		canvas.getLayer().addChild(surface);
-		canvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				mouseDown = true;
-				mouseButton = e.button;
-				mouseX = lastMouseX = e.x;
-				mouseY = e.y;
-				setCursorForObject(e, CURSOR_GRABBING, CURSOR_MPLUS, CURSOR_MPLUS);
-			}
-
-			@Override
-			public void mouseUp(MouseEvent e) {
-				mouseX = e.x;
-				mouseY = e.y;
-				mouseDown = false;
-				setCursorForObject(e, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND);
-			}
-		});
-		canvas.addMouseMoveListener(new MouseMoveListener() {
-			public void mouseMove(MouseEvent e) {
-				mouseX = e.x;
-				mouseY = e.y;
-				if (mouseDown) {
-					e.button = mouseButton;
-					setCursorForObject(e, mouseButton > 1 ? CURSOR_OPEN_HAND : CURSOR_GRABBING, CURSOR_MPLUS,
-							CURSOR_MMINUS);
-				} else
-					setCursorForObject(e, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND);
-			}
-		});
+		canvas.addListener(SWT.MouseDown, this);
+		canvas.addListener(SWT.MouseUp, this);
+		canvas.addListener(SWT.MouseMove, this);
 		progressBar = new ProgressIndicator(composite, SWT.BORDER);
 		GridData data = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
 		data.heightHint = PROGRESS_THICKNESS;
@@ -425,6 +394,36 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 					}
 				});
 		UiActivator.getDefault().getPreferenceStore().addPropertyChangeListener(this);
+	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.MouseMove:
+			mouseX = e.x;
+			mouseY = e.y;
+			if (mouseDown) {
+				e.button = mouseButton;
+				setCursorForObject(e, mouseButton > 1 ? CURSOR_OPEN_HAND : CURSOR_GRABBING, CURSOR_MPLUS,
+						CURSOR_MMINUS);
+			} else
+				setCursorForObject(e, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND);
+			break;
+		case SWT.MouseDown:
+			mouseDown = true;
+			mouseButton = e.button;
+			mouseX = lastMouseX = e.x;
+			mouseY = e.y;
+			setCursorForObject(e, CURSOR_GRABBING, CURSOR_MPLUS, CURSOR_MPLUS);
+			break;
+		case SWT.MouseUp:
+			mouseX = e.x;
+			mouseY = e.y;
+			mouseDown = false;
+			setCursorForObject(e, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND);
+			break;
+		}
+		super.handleEvent(e);
 	}
 
 	public void hasStarted() {
@@ -528,7 +527,7 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 		}
 	}
 
-	private void setCursorForObject(MouseEvent e, String surface, String altLeft, String altRight) {
+	private void setCursorForObject(Event e, String surface, String altLeft, String altRight) {
 		boolean zooming = false;
 		boolean panning = false;
 		int zoomKey = Platform.getPreferencesService().getInt(UiActivator.PLUGIN_ID, PreferenceConstants.ZOOMKEY,
@@ -607,7 +606,7 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 	}
 
 	@Override
-	public PNode findObject(MouseEvent event) {
+	public PNode findObject(Event event) {
 		return findObject(event.x, event.y);
 	}
 
@@ -640,7 +639,7 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 	}
 
 	@Override
-	public IGalleryHover getGalleryHover(MouseEvent event) {
+	public IGalleryHover getGalleryHover(Event event) {
 		return new GalleryHover();
 	}
 
@@ -869,7 +868,7 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 	protected void fillLocalToolBar(IToolBarManager manager) {
 		manager.add(propertiesAction);
 		manager.add(synchronizeAction);
-		manager.add(new Separator());
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	protected void fillLocalPullDown(IMenuManager manager) {
@@ -1155,7 +1154,7 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 	}
 
 	@Override
-	public void keyPressed(KeyEvent e) {
+	public void onKeyDown(Event e) {
 		int code = e.keyCode & SWT.MODIFIER_MASK;
 		if (code != 0) {
 			boolean zooming = false, panning = false;
@@ -1187,7 +1186,7 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 	}
 
 	@Override
-	public void keyReleased(KeyEvent e) {
+	public void onKeyUp(Event e) {
 		if ((e.keyCode & (SWT.ALT | SWT.SHIFT)) != 0)
 			setObjectCursor(findObject(mouseX, mouseY), 0, CURSOR_OPEN_HAND);
 	}

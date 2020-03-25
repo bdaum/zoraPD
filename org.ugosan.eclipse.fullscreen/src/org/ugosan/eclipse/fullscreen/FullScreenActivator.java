@@ -103,7 +103,7 @@ public class FullScreenActivator extends ZUiPlugin {
 				controls.get(i).setVisible(true);
 	}
 
-	private List<Control> hideTrimControls(Shell mainShell) {
+	private static List<Control> hideTrimControls(Shell mainShell) {
 		List<Control> controls = new ArrayList<>();
 		Control[] children = mainShell.getChildren();
 		for (int i = 0; i < children.length; i++) {

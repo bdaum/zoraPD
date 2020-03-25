@@ -408,7 +408,7 @@ public class GeotagOperation extends DbOperation {
 				keywords.removeAll(oldKeywords);
 			keywords.addAll(newKeywords);
 			String[] kws = keywords.toArray(new String[keywords.size()]);
-			Arrays.sort(kws, Utilities.KEYWORDCOMPARATOR);
+			Arrays.parallelSort(kws, Utilities.KEYWORDCOMPARATOR);
 			asset.setKeyword(kws);
 			return true;
 		}
@@ -606,7 +606,7 @@ public class GeotagOperation extends DbOperation {
 		addKeywordsToCat(meta, newKeywords);
 		newKeywords.addAll(oldKeywords);
 		String[] kws = newKeywords.toArray(new String[newKeywords.size()]);
-		Arrays.sort(kws, Utilities.KEYWORDCOMPARATOR);
+		Arrays.parallelSort(kws, Utilities.KEYWORDCOMPARATOR);
 		asset.setKeyword(kws);
 		return storeSafely(null, 1, meta, asset);
 	}

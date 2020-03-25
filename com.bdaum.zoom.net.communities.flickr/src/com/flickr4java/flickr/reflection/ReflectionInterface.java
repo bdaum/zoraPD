@@ -1,14 +1,12 @@
-/*
- * Copyright (c) 2005 Aetrion LLC.
- */
+
 package com.flickr4java.flickr.reflection;
 
 import com.flickr4java.flickr.FlickrException;
 import com.flickr4java.flickr.Response;
 import com.flickr4java.flickr.Transport;
 import com.flickr4java.flickr.util.XMLUtilities;
-
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -27,7 +25,7 @@ import java.util.Map;
  */
 public class ReflectionInterface {
 
-    private static Logger _log = Logger.getLogger(ReflectionInterface.class);
+    private static Logger _log = LoggerFactory.getLogger(ReflectionInterface.class);
 
     public static final String METHOD_GET_METHOD_INFO = "flickr.reflection.getMethodInfo";
 

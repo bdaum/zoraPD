@@ -62,14 +62,14 @@ public class PresentationPage extends ColoredWizardPage implements Listener {
 		chartButtonGroup = new RadioButtonGroup(chartTypeGroup, null, 2, Messages.PresentationPage_pie,
 				Messages.PresentationPage_bar, Messages.PresentationPage_line, Messages.PresentationPage_step,
 				Messages.PresentationPage_area);
-		chartButtonGroup.addListener(this);
+		chartButtonGroup.addListener(SWT.Selection, this);
 		CGroup optionsGroup = UiUtilities.createGroup(composite, 1, Messages.PresentationPage_options);
 		threeButton = WidgetFactory.createCheckButton(optionsGroup, Messages.PresentationPage_threeD, null);
-		threeButton.addListener(this);
+		threeButton.addListener(SWT.Selection, this);
 		cylinderButton = WidgetFactory.createCheckButton(optionsGroup, Messages.PresentationPage_cylindric, null);
-		cylinderButton.addListener(this);
+		cylinderButton.addListener(SWT.Selection, this);
 		cumulateButton = WidgetFactory.createCheckButton(optionsGroup, Messages.PresentationPage_cumulate, null);
-		cumulateButton.addListener(this);
+		cumulateButton.addListener(SWT.Selection, this);
 		CGroup previewGroup = UiUtilities.createGroup(composite, 1,
 				NLS.bind(Messages.PresentationPage_preview, PREVIEWLIMIT));
 		reportComponent = new ReportComponent(previewGroup, SWT.NONE, PREVIEWLIMIT);

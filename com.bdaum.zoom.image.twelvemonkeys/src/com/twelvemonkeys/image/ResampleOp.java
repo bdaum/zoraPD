@@ -548,7 +548,7 @@ public class ResampleOp implements BufferedImageOp/* TODO: RasterOp */ {
         }
 
         // Try to use native ImageMagick code
-//        BufferedImage result = MagickAccelerator.filter(this, input, output); //bd removed
+//        BufferedImage result = MagickAccelerator.filter(this, input, output); // removed bd
 //        if (result != null) {
 //            return result;
 //        }

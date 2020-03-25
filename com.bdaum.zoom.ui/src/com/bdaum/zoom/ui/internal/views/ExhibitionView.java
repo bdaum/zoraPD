@@ -78,6 +78,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
@@ -914,7 +915,7 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 				int variance = show.getVariance();
 				String defaultDescription = exhibition.getDefaultDescription();
 				CaptionConfiguration captionConfig = captionProcessor.computeCaptionConfiguration(selection.getContext());
-				for (Asset asset : selection) {
+				for (Asset asset : selection.getAssets()) {
 					if (!accepts(asset))
 						continue;
 					++index;
@@ -2237,6 +2238,7 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 		manager.add(addWallAction);
 		manager.add(new Separator());
 		manager.add(generateAction);
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	@Override

@@ -20,6 +20,7 @@
 
 package com.bdaum.zoom.ui.internal.widgets;
 
+import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -34,7 +35,7 @@ import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class SharpeningGroup {
+public class SharpeningGroup implements Listener {
 
 	private static final String RADIUS = "radius"; //$NON-NLS-1$
 	private static final String AMOUNT = "amount"; //$NON-NLS-1$
@@ -46,21 +47,20 @@ public class SharpeningGroup {
 	private NumericControl threshholdField;
 	private CheckboxButton applyButton;
 	private Composite group;
+	private ListenerList<Listener> listeners = new ListenerList<Listener>();
 
 	public SharpeningGroup(Composite parent) {
 		group = new Composite(parent, SWT.NONE);
 		GridLayout gridLayout = (GridLayout) parent.getLayout();
-		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false,
-				gridLayout.numColumns, 1));
+		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, gridLayout.numColumns, 1));
 		GridLayout layout = new GridLayout(6, false);
 		layout.horizontalSpacing = 15;
 		layout.marginWidth = 0;
 		layout.marginHeight = 3;
 		group.setLayout(layout);
-		applyButton = WidgetFactory.createCheckButton(group,
-				Messages.SharpeningGroup_apply_sharpening, new GridData(
-						SWT.BEGINNING, SWT.CENTER, true, false, 6, 1));
-		applyButton.addListener(new Listener() {
+		applyButton = WidgetFactory.createCheckButton(group, Messages.SharpeningGroup_apply_sharpening,
+				new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 6, 1));
+		applyButton.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				updateControls();
@@ -74,47 +74,48 @@ public class SharpeningGroup {
 		radiusLabel.setLayoutData(layoutData);
 		radiusLabel.setText(Messages.SharpeningGroup_radius);
 		radiusField = new NumericControl(group, SWT.NONE);
-		radiusField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false));
+		radiusField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		radiusField.setMinimum(5);
 		radiusField.setMaximum(50);
 		radiusField.setIncrement(1);
 		radiusField.setDigits(1);
 		new Label(group, SWT.NONE).setText(Messages.SharpeningGroup_amount);
 		amountField = new NumericControl(group, SWT.NONE);
-		amountField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false));
+		amountField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		amountField.setMinimum(0);
 		amountField.setMaximum(200);
 		amountField.setIncrement(10);
 		amountField.setDigits(2);
 		new Label(group, SWT.NONE).setText(Messages.SharpeningGroup_threshhold);
 		threshholdField = new NumericControl(group, SWT.NONE);
-		threshholdField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false));
+		threshholdField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		threshholdField.setMinimum(0);
 		threshholdField.setMaximum(25);
 		threshholdField.setIncrement(1);
-	}
-	
-	public void addListener(Listener listener) {
-		applyButton.addListener(listener);
-		radiusField.addListener(listener);
-		amountField.addListener(listener);
-		threshholdField.addListener(listener);
+		applyButton.addListener(SWT.Selection, this);
+		radiusField.addListener(SWT.Selection, this);
+		amountField.addListener(SWT.Selection, this);
+		threshholdField.addListener(SWT.Selection, this);
 	}
 
-	public void removeListener(Listener listener) {
-		applyButton.removeListener(listener);
-		radiusField.removeListener(listener);
-		amountField.removeListener(listener);
-		threshholdField.removeListener(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Selection)
+			listeners.add(listener);
 	}
 
+	public void removeListener(int type, Listener listener) {
+		listeners.remove(listener);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		e.data = this;
+		for (Listener listener : listeners)
+			listener.handleEvent(e);
+	}
 
 	public void updateControls() {
-		boolean sharpenEnabled = applyButton.getEnabled()
-				&& applyButton.getSelection();
+		boolean sharpenEnabled = applyButton.getEnabled() && applyButton.getSelection();
 		radiusField.setEnabled(sharpenEnabled);
 		amountField.setEnabled(sharpenEnabled);
 		threshholdField.setEnabled(sharpenEnabled);
@@ -161,14 +162,13 @@ public class SharpeningGroup {
 	}
 
 	public UnsharpMask getUnsharpMask() {
-		return applyButton.getSelection() ? ImageActivator.getDefault()
-				.computeUnsharpMask(radiusField.getSelection() / 10f,
-						amountField.getSelection() / 100f,
-						threshholdField.getSelection()) : null;
+		return applyButton.getSelection()
+				? ImageActivator.getDefault().computeUnsharpMask(radiusField.getSelection() / 10f,
+						amountField.getSelection() / 100f, threshholdField.getSelection())
+				: null;
 	}
 
-	public void fillValues(boolean applySharpening, float radius, float amount,
-			int threshold) {
+	public void fillValues(boolean applySharpening, float radius, float amount, int threshold) {
 		applyButton.setSelection(applySharpening);
 		radiusField.setSelection((int) (radius * 10));
 		amountField.setSelection((int) (amount * 100));
@@ -215,5 +215,4 @@ public class SharpeningGroup {
 	public void setVisible(boolean visible) {
 		group.setVisible(visible);
 	}
-
 }

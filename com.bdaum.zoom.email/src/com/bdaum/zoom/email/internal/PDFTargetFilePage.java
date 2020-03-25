@@ -43,7 +43,7 @@ import com.bdaum.zoom.ui.internal.wizards.ExportModeGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class PDFTargetFilePage extends ColoredWizardPage {
+public class PDFTargetFilePage extends ColoredWizardPage implements Listener {
 
 	private static final String PDFPATH = "pdfPath"; //$NON-NLS-1$
 	private static final String HTMLPATH = "htmlPath"; //$NON-NLS-1$
@@ -81,12 +81,7 @@ public class PDFTargetFilePage extends ColoredWizardPage {
 			fileName = "*.pdf"; //$NON-NLS-1$
 			fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY, Messages.PDFTargetFilePage_target_file,
 					true, filterExtensions, filterNames, path, fileName, true, dialogSettings);
-			fileEditor.addListener(new Listener() {
-				public void handleEvent(Event event) {
-					path = fileEditor.getFilterPath();
-					validatePage();
-				}
-			});
+			fileEditor.addListener(SWT.Modify, this);
 		} else {
 			outputTargetGroup = new OutputTargetGroup(composite,
 					new GridData(GridData.FILL, GridData.BEGINNING, true, false, 3, 1), new Listener() {
@@ -110,6 +105,11 @@ public class PDFTargetFilePage extends ColoredWizardPage {
 		setMessage(NLS.bind(Messages.PDFTargetFilePage_set_target_file, type));
 		fillValues();
 		super.createControl(parent);
+	}
+	
+	public void handleEvent(Event event) {
+		path = fileEditor.getFilterPath();
+		validatePage();
 	}
 
 	private void fillValues() {

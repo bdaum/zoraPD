@@ -2,10 +2,10 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name.0
 Bundle-SymbolicName: com.bdaum.zoom.video;singleton:=true
-Bundle-Version: 3.6.0
+Bundle-Version: 3.6.1
 Bundle-Activator: com.bdaum.zoom.video.internal.VideoActivator
 Bundle-Vendor: %Bundle-Vendor.bdaum
-Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.6.0";visibility:=reexport,
+Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.6.1";visibility:=reexport,
  org.eclipse.help
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
@@ -18,3 +18,4 @@ Bundle-ClassPath: .,
  lib/javacpp.jar,
  lib/javacv-platform.jar,
  lib/javacv.jar
+Service-Component: OSGI-INF/services.xml

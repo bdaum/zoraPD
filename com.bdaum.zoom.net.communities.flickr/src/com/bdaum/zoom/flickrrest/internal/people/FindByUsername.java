@@ -27,6 +27,7 @@ import com.bdaum.zoom.flickrrest.internal.RestFlickrApi;
 import com.bdaum.zoom.net.communities.CommunityAccount;
 import com.flickr4java.flickr.FlickrException;
 import com.flickr4java.flickr.auth.Permission;
+import com.flickr4java.flickr.people.User;
 
 public class FindByUsername extends FlickrMethod {
 
@@ -38,10 +39,13 @@ public class FindByUsername extends FlickrMethod {
 	protected boolean doExecute(CommunityAccount account)
 			throws FlickrException {
 		account = setPermission(Permission.READ);
-		String nsid = RestFlickrApi.FLICKR.getPhotosInterface().findByUsername(
-				account.getUsername(), null);
-		if (nsid != null && nsid.length() > 1)
-			session.setSessionId(nsid);
+		User user = RestFlickrApi.FLICKR.getPeopleInterface().findByUsername(account.getUsername());
+		if (user != null)
+			session.setSessionId(user.getId());
+//		String nsid = RestFlickrApi.FLICKR.getPhotosInterface().findByUsername(
+//				account.getUsername(), null);
+//		if (nsid != null && nsid.length() > 1)
+//			session.setSessionId(nsid);
 		return true;
 	}
 

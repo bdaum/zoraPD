@@ -75,7 +75,7 @@ public final class AssetDragSourceListener implements DragSourceListener {
 			event.doit = false;
 		else {
 			IVolumeManager volumeManager = Core.getCore().getVolumeManager();
-			for (Asset asset : assetSelection)
+			for (Asset asset : assetSelection.getAssets())
 				if (volumeManager.isRemote(asset)) {
 					event.doit = false;
 					break;
@@ -93,7 +93,7 @@ public final class AssetDragSourceListener implements DragSourceListener {
 			ICore core = Core.getCore();
 			IVolumeManager volumeManager = core.getVolumeManager();
 			List<String> files = new ArrayList<String>(assetSelection.size());
-			for (Asset asset : assetSelection) {
+			for (Asset asset : assetSelection.getAssets()) {
 				URI uri = volumeManager.findFile(asset);
 				if (uri != null && Constants.FILESCHEME.equals(uri.getScheme())) {
 					String absolutePath = (new File(uri)).getAbsolutePath();
@@ -110,7 +110,7 @@ public final class AssetDragSourceListener implements DragSourceListener {
 			event.data = files.toArray(new String[files.size()]);
 		} else if (textTransfer.isSupportedType(event.dataType)) {
 			StringBuilder sb = new StringBuilder();
-			for (Asset asset : assetSelection) {
+			for (Asset asset : assetSelection.getAssets()) {
 				if (sb.length() > 0)
 					sb.append('\n');
 				sb.append(asset.getStringId());

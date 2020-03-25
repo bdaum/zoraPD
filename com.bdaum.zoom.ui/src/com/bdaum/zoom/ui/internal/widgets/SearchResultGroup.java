@@ -34,8 +34,6 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -59,7 +57,7 @@ import com.bdaum.zoom.ui.widgets.CLink;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class SearchResultGroup {
+public class SearchResultGroup implements Listener {
 
 	private static final String MAX_NUMBER = "maxNumber"; //$NON-NLS-1$
 	private static final String SCORE = "score"; //$NON-NLS-1$
@@ -135,27 +133,7 @@ public class SearchResultGroup {
 			link = new CLink(methodGroup, SWT.NONE);
 			link.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 			link.setText(Messages.SearchResultGroup_configure);
-			link.addListener(new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					BusyIndicator.showWhile(link.getDisplay(), () -> {
-						IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-						if (activeWorkbenchWindow != null) {
-							IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-							if (activePage != null) {
-								EditMetaDialog mdialog = new EditMetaDialog(link.getShell(), activePage,
-										Core.getCore().getDbManager(), false, null);
-								mdialog.setInitialPage(EditMetaDialog.INDEXING);
-								if (mdialog.open() == Dialog.OK) {
-									ISelection selection = algoViewer.getSelection();
-									fillAlgoViewer();
-									algoViewer.setSelection(selection);
-								}
-							}
-						}
-					});
-				}
-			});
+			link.addListener(SWT.Selection, this);
 		}
 		if (scoreAndHits) {
 			Label numberlabel = new Label(composite, SWT.NONE);
@@ -186,15 +164,34 @@ public class SearchResultGroup {
 			scale.setLayoutData(data);
 			scale.setMaximum(100);
 			scale.setIncrement(5);
-			scale.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					scale.setToolTipText(String.valueOf(scale.getMaximum() - scale.getSelection()));
-				}
-			});
+			scale.addListener(SWT.Selection, this);
 			label = new Label(keyGroup, SWT.NONE);
 			label.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
 			label.setText(Messages.SearchResultGroup_visual);
+		}
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == link) {
+			BusyIndicator.showWhile(link.getDisplay(), () -> {
+				IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+				if (activeWorkbenchWindow != null) {
+					IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+					if (activePage != null) {
+						EditMetaDialog mdialog = new EditMetaDialog(link.getShell(), activePage,
+								Core.getCore().getDbManager(), false, null);
+						mdialog.setInitialPage(EditMetaDialog.INDEXING);
+						if (mdialog.open() == Dialog.OK) {
+							ISelection selection = algoViewer.getSelection();
+							fillAlgoViewer();
+							algoViewer.setSelection(selection);
+						}
+					}
+				}
+			});
+		} else {
+			scale.setToolTipText(String.valueOf(scale.getMaximum() - scale.getSelection()));
 		}
 	}
 
@@ -328,8 +325,7 @@ public class SearchResultGroup {
 	}
 
 	public Algorithm getSelectedAlgorithm() {
-		return (algoViewer != null) ? (Algorithm) algoViewer.getStructuredSelection().getFirstElement()
-				: null;
+		return (algoViewer != null) ? (Algorithm) algoViewer.getStructuredSelection().getFirstElement() : null;
 	}
 
 	/**

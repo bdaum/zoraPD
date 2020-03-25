@@ -62,7 +62,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
-public class GeoNamesService extends AbstractGeocodingService {
+public class GeoNamesService extends AbstractGeocodingService implements Listener {
 
 	private static final String USERNAME = "photozora"; //$NON-NLS-1$
 	private static final String[] CONTINENTCODES = new String[] { "AF", "AS", "EU", "NA", "OC", "SA", "AN" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
@@ -177,13 +177,7 @@ public class GeoNamesService extends AbstractGeocodingService {
 		modeCombo.setItems(Messages.getString("GeoNamesService.whole_text"), //$NON-NLS-1$
 				Messages.getString("GeoNamesService.contains"), Messages.getString("GeoNamesService.starts_with"), //$NON-NLS-1$ //$NON-NLS-2$
 				Messages.getString("GeoNamesService.equals")); //$NON-NLS-1$
-		Listener listener = new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				updateSettings();
-			}
-		};
-		modeCombo.addListener(SWT.Selection, listener);
+		modeCombo.addListener(SWT.Selection, this);
 		new Label(composite, SWT.NONE).setText(Messages.getString("GeoNamesService.continent")); //$NON-NLS-1$
 		contCombo = new Combo(composite, SWT.DROP_DOWN | SWT.READ_ONLY);
 		contCombo.setItems(Messages.getString("GeoNamesService.all"), Messages.getString("GeoNamesService.af"), //$NON-NLS-1$ //$NON-NLS-2$
@@ -191,7 +185,7 @@ public class GeoNamesService extends AbstractGeocodingService {
 				Messages.getString("GeoNamesService.na"), Messages.getString("GeoNamesService.oc"), //$NON-NLS-1$ //$NON-NLS-2$
 				Messages.getString("GeoNamesService.sa"), //$NON-NLS-1$
 				Messages.getString("GeoNamesService.an")); //$NON-NLS-1$
-		contCombo.addListener(SWT.Selection, listener);
+		contCombo.addListener(SWT.Selection, this);
 		nameRequiredButton = WidgetFactory.createCheckButton(composite,
 				Messages.getString("GeoNamesService.at_least_one"), //$NON-NLS-1$
 				new GridData(SWT.BEGINNING, SWT.CENTER, true, true, 2, 1));
@@ -202,32 +196,32 @@ public class GeoNamesService extends AbstractGeocodingService {
 		classGroup.setLayout(new GridLayout(2, true));
 		aButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.country"), //$NON-NLS-1$
 				null);
-		aButton.addListener(listener);
+		aButton.addListener(SWT.Selection, this);
 		hButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.stream"), //$NON-NLS-1$
 				null);
-		hButton.addListener(listener);
+		hButton.addListener(SWT.Selection, this);
 		lButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.parks"), //$NON-NLS-1$
 				null);
-		lButton.addListener(listener);
+		lButton.addListener(SWT.Selection, this);
 		pButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.city"), //$NON-NLS-1$
 				null);
-		pButton.addListener(listener);
+		pButton.addListener(SWT.Selection, this);
 		rButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.road"), //$NON-NLS-1$
 				null);
-		rButton.addListener(listener);
+		rButton.addListener(SWT.Selection, this);
 		sButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.spot"), //$NON-NLS-1$
 				null);
-		sButton.addListener(listener);
+		sButton.addListener(SWT.Selection, this);
 		tButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.mountain"), //$NON-NLS-1$
 				null);
-		tButton.addListener(listener);
+		tButton.addListener(SWT.Selection, this);
 		uButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.undersea"), //$NON-NLS-1$
 				null);
-		uButton.addListener(listener);
+		uButton.addListener(SWT.Selection, this);
 		vButton = WidgetFactory.createCheckButton(classGroup, Messages.getString("GeoNamesService.forest"), //$NON-NLS-1$
 				null);
-		vButton.addListener(listener);
-		nameRequiredButton.addListener(listener);
+		vButton.addListener(SWT.Selection, this);
+		nameRequiredButton.addListener(SWT.Selection, this);
 		searchParms = getSearchParms();
 		if (searchParms.startsWith("q")) //$NON-NLS-1$
 			modeCombo.select(0);
@@ -260,6 +254,12 @@ public class GeoNamesService extends AbstractGeocodingService {
 			contCombo.select(0);
 		return composite;
 	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		updateSettings();
+	}
+
 
 	protected void updateSettings() {
 		StringBuilder sb = new StringBuilder(64);

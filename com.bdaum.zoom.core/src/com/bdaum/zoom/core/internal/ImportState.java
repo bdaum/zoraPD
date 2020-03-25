@@ -759,7 +759,7 @@ public class ImportState {
 
 	public boolean isUserImport() {
 		ImportConfiguration conf = getConfiguration();
-		return !conf.inBackground && conf.isSynchronize;
+		return !conf.inBackground && !conf.isSynchronize;
 	}
 
 }

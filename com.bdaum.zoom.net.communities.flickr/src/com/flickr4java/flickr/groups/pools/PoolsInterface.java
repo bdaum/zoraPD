@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2005 Aetrion LLC.
- */
+
 package com.flickr4java.flickr.groups.pools;
 
 import com.flickr4java.flickr.FlickrException;
@@ -14,8 +12,8 @@ import com.flickr4java.flickr.photos.PhotoContext;
 import com.flickr4java.flickr.photos.PhotoList;
 import com.flickr4java.flickr.photos.PhotoUtils;
 import com.flickr4java.flickr.util.StringUtilities;
-
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -31,7 +29,7 @@ import java.util.Set;
  */
 public class PoolsInterface {
 
-    private static Logger _log = Logger.getLogger(PoolsInterface.class);
+    private static Logger _log = LoggerFactory.getLogger(PoolsInterface.class);
 
     public static final String METHOD_ADD = "flickr.groups.pools.add";
 

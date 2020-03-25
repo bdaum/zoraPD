@@ -256,7 +256,7 @@ public class BatchActivator extends Plugin {
 			inputGrabber.start();
 			try {
 				int ret = process.waitFor();
-				if (ret == 0) {
+				if (ret != 0) {
 					inputGrabber.join(timeout);
 					return inputGrabber.getData();
 				}

@@ -2,11 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: MTP Plugin
 Bundle-SymbolicName: com.bdaum.zoom.mtp
-Bundle-Version: 3.6.0
+Bundle-Version: 3.6.1
 Bundle-Activator: com.bdaum.zoom.mtp.internal.MtpActivator
 Bundle-Vendor: bdaum industrial communications
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.13.0",
- com.bdaum.zoom.batch;bundle-version="3.6.0";visibility:=reexport
+ com.bdaum.zoom.batch;bundle-version="3.6.1";visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .

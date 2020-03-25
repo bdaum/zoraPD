@@ -130,7 +130,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class WebGalleryEditDialog extends ZTitleAreaDialog {
+public class WebGalleryEditDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String HIDE_DOWNLOAD = "hideDownload"; //$NON-NLS-1$
 	private static final String HIDE_HEADER = "hideHeader"; //$NON-NLS-1$
@@ -195,16 +195,6 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 	private Map<String, Control> unsupportedFieldMap = new HashMap<String, Control>();
 	private boolean initialised = false;
 
-	private final Listener listener = new Listener() {
-		@Override
-		public void handleEvent(Event e) {
-			if (initialised) {
-				updateWebParameterEnablement();
-				updateButtons();
-			}
-		}
-	};
-
 	private final boolean canUndo;
 	private WebGalleryImpl result;
 	private FileEditor logoField;
@@ -238,6 +228,12 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 	private DescriptionGroup descriptionGroup;
 	private QualityGroup qualityGroup;
 	private RadioButtonGroup privacyGroup;
+	private CheckboxButton booleanButton;
+	private Combo valueCombo;
+	private NumericControl floatSpinner;
+	private NumericControl intSpinner;
+	private WebColorGroup colorGroup;
+	private RadioButtonGroup enumGroup;
 
 	public WebGalleryEditDialog(Shell parentShell, GroupImpl group, WebGalleryImpl current, String title,
 			boolean promptForEngine, boolean canUndo) {
@@ -328,18 +324,48 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		browser = new Browser(previewComp, SWT.NONE);
 		browser.setLayoutData(new GridData(GridData.FILL_BOTH));
 		tabFolder.setSimple(false);
-		tabFolder.addSelectionListener(new SelectionAdapter() {
-
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateButtons();
-				updateTabItems();
-			}
-
-		});
+		tabFolder.addListener(SWT.Selection, this);
 		tabFolder.setSelection(0);
 		updateTabItems();
 		return area;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Modify:
+			valueModified();
+			break;
+
+		case SWT.Selection:
+			if (e.widget == tabFolder) {
+				updateButtons();
+				updateTabItems();
+			} else if (e.widget == booleanButton || e.widget == valueCombo || e.widget == floatSpinner
+					|| e.widget == intSpinner || e.widget == enumGroup)
+				valueModified();
+			else if (e.widget == hideHeaderButton) {
+				updateHeaderFields();
+				if (nameField.getEnabled())
+					nameField.setFocus();
+			} else if (e.widget == downloadButton) {
+				updateDownloadField();
+				if (downloadField.getEnabled())
+					downloadField.setFocus();
+			} else if (e.widget == hideFooterButton) {
+				updateFooterFields();
+				if (contactField.getEnabled())
+					contactField.setFocus();
+			}
+			break;
+		}
+	}
+
+	private void valueModified() {
+		if (initialised) {
+			updateWebParameterEnablement();
+			updateButtons();
+		}
 	}
 
 	protected void updateTabItems() {
@@ -674,7 +700,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 							((String[]) ((RadioButtonGroup) target).getData(UiConstants.MAP))[selection],
 							gallery.getParameter());
 					if (control != null)
-						((RadioButtonGroup) target).addListener(new Listener() {
+						((RadioButtonGroup) target).addListener(SWT.Selection, new Listener() {
 							@Override
 							public void handleEvent(Event e) {
 								saveParameterValue(fromConf, gallery.getParameter());
@@ -787,22 +813,15 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		new Label(parent, SWT.NONE).setText(Messages.WebGalleryEditDialog_name);
 		nameField = new Text(parent, SWT.BORDER);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		nameField.addListener(SWT.Modify, listener);
+		nameField.addListener(SWT.Modify, this);
 		hideHeaderButton = WidgetFactory.createCheckButton(parent, Messages.WebGalleryEditDialog_hide, null);
-		hideHeaderButton.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				updateHeaderFields();
-				if (nameField.getEnabled())
-					nameField.setFocus();
-			}
-		});
+		hideHeaderButton.addListener(SWT.Selection, this);
 		descriptionGroup = new DescriptionGroup(parent, SWT.NONE);
 		// Link
 		new Label(parent, SWT.NONE).setText(Messages.WebGalleryEditDialog_web_link);
 		linkField = new Text(parent, SWT.BORDER);
 		linkField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		linkField.addListener(SWT.Modify, listener);
+		linkField.addListener(SWT.Modify, this);
 		// Keywords
 		final Label keywordLabel = new Label(parent, SWT.NONE);
 		keywordLabel.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
@@ -847,14 +866,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		});
 		downloadButton = WidgetFactory.createCheckButton(parent, Messages.WebGalleryEditDialog_hide, null);
 		downloadField.setData(UiConstants.BUTTON, downloadButton); // $NON-NLS-1$
-		downloadButton.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				updateDownloadField();
-				if (downloadField.getEnabled())
-					downloadField.setFocus();
-			}
-		});
+		downloadButton.addListener(SWT.Selection, this);
 		// Nameplate and Watermark
 		new Label(parent, SWT.NONE).setText(Messages.WebGalleryEditDialog_name_plate);
 		logoField = createImageGroup(parent, Messages.WebGalleryEditDialog_select_nameplate_image);
@@ -873,14 +885,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		gd_copyrightField.widthHint = 250;
 		copyrightField.setLayoutData(gd_copyrightField);
 		hideFooterButton = WidgetFactory.createCheckButton(parent, Messages.WebGalleryEditDialog_hide, null);
-		hideFooterButton.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				updateFooterFields();
-				if (contactField.getEnabled())
-					contactField.setFocus();
-			}
-		});
+		hideFooterButton.addListener(SWT.Selection, this);
 		final Label contactLabel = new Label(parent, SWT.NONE);
 		contactLabel.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
 		contactLabel.setText(Messages.WebGalleryEditDialog_contact);
@@ -970,7 +975,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 				}
 			}
 			String[] kws = keywords.toArray(new String[keywords.size()]);
-			Arrays.sort(kws, Utilities.KEYWORDCOMPARATOR);
+			Arrays.parallelSort(kws, Utilities.KEYWORDCOMPARATOR);
 			keywordField.setText(Core.toStringList(kws, "\n")); //$NON-NLS-1$
 		});
 	}
@@ -1125,14 +1130,14 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		FileEditor imageEditor = new FileEditor(comp, SWT.OPEN, dialogTitle, false,
 				new String[] { "*.gif;*.GIF;*.jpg;*.JPG;*.png;*.PNG" }, //$NON-NLS-1$
 				new String[] { Messages.WebGalleryEditDialog_valid_image_files }, null, null, false, settings);
-		imageEditor.addListener(listener);
+		imageEditor.addListener(SWT.Modify, this);
 		return imageEditor;
 	}
 
 	private void createOutputGroup(Composite parent) {
 		parent.setLayout(new GridLayout());
 		outputTargetGroup = new OutputTargetGroup(parent, new GridData(GridData.FILL, GridData.BEGINNING, true, false),
-				listener, false, true, false);
+				this, false, true, false);
 		qualityGroup = new QualityGroup(parent, false);
 	}
 
@@ -1378,13 +1383,13 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 		Object control = null;
 		Label lab = null;
 		if ("boolean".equals(type)) { //$NON-NLS-1$
-			CheckboxButton button = WidgetFactory.createCheckButton(genComp, label,
+			booleanButton = WidgetFactory.createCheckButton(genComp, label,
 					new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-			button.setSelection("true".equals(dflt)); //$NON-NLS-1$
-			button.addListener(listener);
-			control = button;
+			booleanButton.setSelection("true".equals(dflt)); //$NON-NLS-1$
+			booleanButton.addListener(SWT.Selection, this);
+			control = booleanButton;
 		} else if ("color".equals(type)) { //$NON-NLS-1$
-			WebColorGroup colorGroup = new WebColorGroup(genComp, label);
+			colorGroup = new WebColorGroup(genComp, label);
 			if (dflt != null && !dflt.isEmpty()) {
 				StringTokenizer st = new StringTokenizer(dflt);
 				int i = 0;
@@ -1400,7 +1405,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 			}
 			if (description != null)
 				colorGroup.setToolTipText(description);
-			colorGroup.addListener(listener);
+			colorGroup.addListener(SWT.Modify, this);
 			control = colorGroup;
 		} else {
 			lab = new Label(genComp, SWT.NONE);
@@ -1414,7 +1419,7 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 					textField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 					if (dflt != null)
 						textField.setText(dflt);
-					textField.addListener(SWT.Modify, listener);
+					textField.addListener(SWT.Modify, this);
 					control = textField;
 				} else if (enums.length <= 3) {
 					String[] labels = new String[enums.length];
@@ -1427,33 +1432,33 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 						if (ids[i].equals(dflt))
 							selection = i;
 					}
-					RadioButtonGroup radioGroup = new RadioButtonGroup(genComp, null, SWT.HORIZONTAL, labels);
-					radioGroup.setData(UiConstants.MAP, ids);
+					enumGroup = new RadioButtonGroup(genComp, null, SWT.HORIZONTAL, labels);
+					enumGroup.setData(UiConstants.MAP, ids);
 					if (selection >= 0)
-						radioGroup.setSelection(selection);
-					radioGroup.addListener(listener);
-					control = radioGroup;
+						enumGroup.setSelection(selection);
+					enumGroup.addListener(SWT.Selection, this);
+					control = enumGroup;
 				} else {
-					Combo combo = new Combo(genComp, SWT.READ_ONLY);
+					valueCombo = new Combo(genComp, SWT.READ_ONLY);
 					Map<String, String> comboMap = new HashMap<String, String>();
 					int index = -1;
 					int i = 0;
 					for (IConfigurationElement en : enums) {
 						String vlab = en.getAttribute("label"); //$NON-NLS-1$
-						combo.add(vlab);
+						valueCombo.add(vlab);
 						String idv = en.getAttribute("id"); //$NON-NLS-1$
 						if (idv.equals(dflt))
 							index = i;
 						comboMap.put(vlab, idv);
 						++i;
 					}
-					combo.setData(UiConstants.MAP, comboMap);
-					combo.setVisibleItemCount(8);
+					valueCombo.setData(UiConstants.MAP, comboMap);
+					valueCombo.setVisibleItemCount(8);
 					if (index >= 0)
-						combo.select(index);
-					combo.addListener(SWT.Modify, listener);
-					combo.addListener(SWT.Selection, listener);
-					control = combo;
+						valueCombo.select(index);
+					valueCombo.addListener(SWT.Modify, this);
+					valueCombo.addListener(SWT.Selection, this);
+					control = valueCombo;
 				}
 			} else if ("text".equals(type)) { //$NON-NLS-1$
 				Text textField = new Text(genComp, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
@@ -1462,35 +1467,35 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 				textField.setLayoutData(layoutData);
 				if (dflt != null)
 					textField.setText(dflt);
-				textField.addListener(SWT.Modify, listener);
+				textField.addListener(SWT.Modify, this);
 				control = textField;
 			} else if ("int".equals(type)) { //$NON-NLS-1$
-				NumericControl spinner = new NumericControl(genComp, SWT.NONE);
-				spinner.setLayoutData(new GridData(50, SWT.DEFAULT));
-				spinner.setMaximum(Integer.MAX_VALUE);
+				intSpinner = new NumericControl(genComp, SWT.NONE);
+				intSpinner.setLayoutData(new GridData(50, SWT.DEFAULT));
+				intSpinner.setMaximum(Integer.MAX_VALUE);
 				if (max != null)
 					try {
-						spinner.setMaximum(Integer.parseInt(max));
+						intSpinner.setMaximum(Integer.parseInt(max));
 					} catch (NumberFormatException e) {
 						// do nothing
 					}
 				if (min != null)
 					try {
-						spinner.setMinimum(Integer.parseInt(min));
+						intSpinner.setMinimum(Integer.parseInt(min));
 					} catch (NumberFormatException e) {
 						// do nothing
 					}
 				if (dflt != null)
 					try {
-						spinner.setSelection(Integer.parseInt(dflt));
+						intSpinner.setSelection(Integer.parseInt(dflt));
 					} catch (NumberFormatException e) {
 						// do nothing
 					}
-				spinner.addListener(listener);
-				control = spinner;
+				intSpinner.addListener(SWT.Selection, this);
+				control = intSpinner;
 			} else if ("double".equals(type)) { //$NON-NLS-1$
-				NumericControl spinner = new NumericControl(genComp, SWT.NONE);
-				spinner.setLayoutData(new GridData(50, SWT.DEFAULT));
+				floatSpinner = new NumericControl(genComp, SWT.NONE);
+				floatSpinner.setLayoutData(new GridData(50, SWT.DEFAULT));
 				int digits = 1;
 				if (dflt != null)
 					try {
@@ -1499,26 +1504,26 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 							p = dflt.indexOf(',');
 						if (p >= 0)
 							digits = dflt.length() - p - 1;
-						spinner.setSelection((int) (Double.parseDouble(dflt) * Math.pow(10, digits)));
+						floatSpinner.setSelection((int) (Double.parseDouble(dflt) * Math.pow(10, digits)));
 					} catch (NumberFormatException e) {
 						// do nothing
 					}
-				spinner.setMaximum(Integer.MAX_VALUE);
+				floatSpinner.setMaximum(Integer.MAX_VALUE);
 				if (max != null)
 					try {
-						spinner.setMaximum((int) (Integer.parseInt(max) * Math.pow(10, digits)));
+						floatSpinner.setMaximum((int) (Integer.parseInt(max) * Math.pow(10, digits)));
 					} catch (NumberFormatException e) {
 						// do nothing
 					}
 				if (min != null)
 					try {
-						spinner.setMinimum((int) (Integer.parseInt(min) * Math.pow(10, digits)));
+						floatSpinner.setMinimum((int) (Integer.parseInt(min) * Math.pow(10, digits)));
 					} catch (NumberFormatException e) {
 						// do nothing
 					}
-				spinner.setDigits(digits);
-				spinner.addListener(listener);
-				control = spinner;
+				floatSpinner.setDigits(digits);
+				floatSpinner.addListener(SWT.Selection, this);
+				control = floatSpinner;
 			}
 		}
 		if (control != null) {
@@ -1833,7 +1838,8 @@ public class WebGalleryEditDialog extends ZTitleAreaDialog {
 			for (Asset asset : dbManager.createCollectionProcessor(sm).select(true))
 				if (WebGalleryView.accepts(asset)) {
 					WebExhibitImpl newExhibit = new WebExhibitImpl(
-							captionProcessor.computeImageCaption(asset, null, null, null, captionConfig.getLabelTemplate(), true),
+							captionProcessor.computeImageCaption(asset, null, null, null,
+									captionConfig.getLabelTemplate(), true),
 							++seqNo, "", //$NON-NLS-1$
 							false, asset.getName(), true, true, asset.getStringId());
 					dbManager.store(newExhibit);

@@ -66,20 +66,20 @@ public class ModePage extends ColoredWizardPage implements Listener {
 		valueGroup.setText(Messages.ModePage_values_y);
 		countButton = WidgetFactory.createCheckButton(valueGroup, Messages.ModePage_imageCount,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-		countButton.addListener(this);
+		countButton.addListener(SWT.Selection, this);
 		salesButton = WidgetFactory.createCheckButton(valueGroup, Messages.ModePage_dales,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-		salesButton.addListener(this);
+		salesButton.addListener(SWT.Selection, this);
 		earningsButton = WidgetFactory.createCheckButton(valueGroup, Messages.ModePage_earnings,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-		earningsButton.addListener(this);
+		earningsButton.addListener(SWT.Selection, this);
 		CGroup xGroup = new CGroup(composite, SWT.NONE);
 		xGroup.setLayout(new FillLayout());
 		xGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, true));
 		xGroup.setText(Messages.ModePage_xAxis);
 		domainGroup = new RadioButtonGroup(xGroup, null, SWT.NONE, Messages.ModePage_daytime, Messages.ModePage_caltime, Messages.ModePage_numeric,
 				Messages.ModePage_discrete);
-		domainGroup.addListener(this);
+		domainGroup.addListener(SWT.Selection, this);
 		domainGroup.setSelection(1);
 		CGroup optionsGroup = new CGroup(composite, SWT.NONE);
 		optionsGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, true));
@@ -88,13 +88,13 @@ public class ModePage extends ColoredWizardPage implements Listener {
 		sortButtonGroup = new RadioButtonGroup(optionsGroup, Messages.ModePage_sortBy, SWT.NONE, Messages.ModePage_noSort, Messages.ModePage_name, Messages.ModePage_count, Messages.ModePage_sales,
 				Messages.ModePage_earnings);
 		sortButtonGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.FILL, true, true));
-		sortButtonGroup.addListener(this);
+		sortButtonGroup.addListener(SWT.Selection, this);
 		sortButtonGroup.setSelection(0);
 		sortDirectionGroup = new RadioButtonGroup(optionsGroup, Messages.ModePage_sortDirection, SWT.NONE, Messages.ModePage_ascending, Messages.ModePage_descending);
 		layoutData = new GridData(SWT.BEGINNING, SWT.FILL, true, true);
 		layoutData.verticalIndent = 5;
 		sortDirectionGroup.setLayoutData(layoutData);
-		sortDirectionGroup.addListener(this);
+		sortDirectionGroup.addListener(SWT.Selection, this);
 		sortDirectionGroup.setSelection(0);
 		countButton.setSelection(true);
 		super.createControl(parent);

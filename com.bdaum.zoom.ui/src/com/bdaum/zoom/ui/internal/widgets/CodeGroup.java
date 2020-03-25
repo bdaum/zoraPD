@@ -21,13 +21,12 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
@@ -37,7 +36,7 @@ import com.bdaum.zoom.ui.internal.codes.CodeParser;
 import com.bdaum.zoom.ui.internal.codes.Topic;
 import com.bdaum.zoom.ui.internal.dialogs.CodesDialog;
 
-public class CodeGroup extends Composite implements SelectionListener {
+public class CodeGroup extends Composite implements Listener {
 
 	private Text textfield;
 	private CodeParser parser;
@@ -59,7 +58,7 @@ public class CodeGroup extends Composite implements SelectionListener {
 		button = new Button(this, SWT.PUSH);
 		button.setText("..."); //$NON-NLS-1$
 		button.setToolTipText(Messages.CodeGroup_select_code);
-		button.addSelectionListener(this);
+		button.addListener(SWT.Selection, this);
 	}
 
 	@Override
@@ -102,23 +101,18 @@ public class CodeGroup extends Composite implements SelectionListener {
 	}
 
 	@Override
-	public void widgetSelected(SelectionEvent e) {
+	public void handleEvent(Event e) {
 		CodesDialog dialog = new CodesDialog(getShell(), qfield, textfield.getText(), null);
 		if (dialog.open() == Dialog.OK)
 			setText(dialog.getResult());
 	}
 
-	@Override
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
+	public void removeListener(int type, Listener listener) {
+		textfield.removeListener(type, listener);
 	}
 
-	public void removeListener(Listener listener) {
-		textfield.removeListener(SWT.Modify, listener);
-	}
-
-	public void addListener(Listener listener) {
-		textfield.addListener(SWT.Modify, listener);
+	public void addListener(int type, Listener listener) {
+		textfield.addListener(type, listener);
 	}
 
 }

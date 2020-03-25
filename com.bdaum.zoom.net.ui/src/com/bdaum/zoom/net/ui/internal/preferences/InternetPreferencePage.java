@@ -199,7 +199,7 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 		CGroup group = UiUtilities.createGroup(parent, 2, Messages.InternetPreferencePage_http_proxy);
 		proxyGroup = new RadioButtonGroup(group, null, SWT.NONE, Messages.InternetPreferencePage_System_proxy_config,
 				Messages.InternetPreferencePage_Direct_connection, Messages.InternetPreferencePage_Manual_config);
-		proxyGroup.addListener(new Listener() {
+		proxyGroup.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				updateFields();

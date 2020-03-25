@@ -2,11 +2,11 @@ package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
@@ -14,7 +14,7 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 
-public class LargeTextCellEditorDialog extends ZTitleAreaDialog {
+public class LargeTextCellEditorDialog extends ZTitleAreaDialog implements Listener {
 
 	private Object value;
 	private QueryField qfield;
@@ -48,16 +48,16 @@ public class LargeTextCellEditorDialog extends ZTitleAreaDialog {
 		if (value != null)
 			viewer.setText(value.toString());
 		viewer.setLayoutData(layoutData);
-		viewer.addVerifyListener(new VerifyListener() {
-			public void verifyText(VerifyEvent e) {
-				String msg = qfield.isValid(viewer.getText().substring(0, e.start) + e.text
-						+ viewer.getText().substring(e.end), asset);
-				setErrorMessage(msg);
-				valid = msg == null;
-				updateButtons();
-			}
-		});
+		viewer.addListener(SWT.Verify, this);
 		return comp;
+	}
+	
+	public void handleEvent(Event e) {
+		String msg = qfield.isValid(viewer.getText().substring(0, e.start) + e.text
+				+ viewer.getText().substring(e.end), asset);
+		setErrorMessage(msg);
+		valid = msg == null;
+		updateButtons();
 	}
 
 	protected void updateButtons() {

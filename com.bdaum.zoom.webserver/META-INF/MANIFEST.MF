@@ -5,9 +5,9 @@ Bundle-SymbolicName: com.bdaum.zoom.webserver;singleton:=true
 Bundle-Version: 3.5.2
 Bundle-Activator: com.bdaum.zoom.webserver.internals.WebserverActivator
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.6.0",
- com.bdaum.zoom.net.core;bundle-version="3.6.0",
+Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.6.1",
+ com.bdaum.zoom.net.core;bundle-version="3.6.1",
  org.eclipse.help;bundle-version="3.8.0",
- com.bdaum.zoom.gps;bundle-version="3.6.0"
+ com.bdaum.zoom.gps;bundle-version="3.6.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

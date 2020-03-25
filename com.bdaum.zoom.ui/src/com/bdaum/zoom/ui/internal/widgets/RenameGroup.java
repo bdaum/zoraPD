@@ -55,7 +55,7 @@ import com.bdaum.zoom.ui.internal.dialogs.TemplateEditDialog;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class RenameGroup extends Composite {
+public class RenameGroup extends Composite implements Listener {
 
 	public class TemplateLabelProvider extends ZColumnLabelProvider {
 		@Override
@@ -156,20 +156,11 @@ public class RenameGroup extends Composite {
 		}
 		new Label(labelGroup, SWT.NONE).setLayoutData(new GridData(100, -1));
 		startField = createNumericControl(labelGroup, Messages.RenameGroup_start_at);
-		Listener listener = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				if (event.widget == startField)
-					start = startField.getSelection();
-				updateTemplateViewer();
-				fireEvent(event);
-			}
-		};
-		startField.addListener(listener);
+		startField.addListener(SWT.Selection, this);
 		cueField = createHistoryCombo(labelGroup, Messages.RenameGroup_cue);
 		cueField.setLayoutData(new GridData(80, -1));
-		cueField.addListener(SWT.Modify, listener);
-		cueField.addListener(SWT.Selection, listener);
+		cueField.addListener(SWT.Modify, this);
+		cueField.addListener(SWT.Selection, this);
 		templateViewer = new TableViewer(this, SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, false);
 		layoutData.heightHint = 150;
@@ -239,6 +230,14 @@ public class RenameGroup extends Composite {
 		layoutData.horizontalIndent = 15;
 		layoutData.widthHint = 500;
 		preLabel.setLayoutData(layoutData);
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		if (event.widget == startField)
+			start = startField.getSelection();
+		updateTemplateViewer();
+		fireEvent(event);
 	}
 
 	protected void updatePreview() {
@@ -342,7 +341,7 @@ public class RenameGroup extends Composite {
 		if (file != null) {
 			filename = file.getName();
 			int p = filename.lastIndexOf('.');
-			maxLength -= (file.getAbsolutePath().length() - (p>= 0 ? p : filename.length()));
+			maxLength -= (file.getAbsolutePath().length() - (p >= 0 ? p : filename.length()));
 		}
 		Meta meta = Core.getCore().getDbManager().getMeta(true);
 		return Utilities.evaluateTemplate(template.getContent(), tv, filename, new GregorianCalendar(), 1,
@@ -423,15 +422,18 @@ public class RenameGroup extends Composite {
 		return null;
 	}
 
-	public void addListener(Listener listener) {
-		listeners.add(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Modify)
+			listeners.add(listener);
 	}
 
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
 		listeners.remove(listener);
 	}
 
 	protected void fireEvent(Event e) {
+		e.type = SWT.Modify;
+		e.widget = this;
 		for (Listener listener : listeners)
 			listener.handleEvent(e);
 	}

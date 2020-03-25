@@ -1,6 +1,7 @@
 package com.flickr4java.flickr.stats;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Referrer information as returned by the stats interface.
@@ -11,10 +12,10 @@ import org.apache.log4j.Logger;
 public class Referrer {
 
     /**
-     * Logger for log4j.
+     * Logger.
      */
     @SuppressWarnings("unused")
-    private static Logger _log = Logger.getLogger(Referrer.class);
+    private static Logger _log = LoggerFactory.getLogger(Referrer.class);
 
     public Referrer() {
     }

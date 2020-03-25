@@ -47,18 +47,18 @@ public class AutoRatingOperation extends DbOperation {
 	private int[] newRates;
 	private String providerName;
 	private String providerId;
-	private String modelId;
+//	private String modelId;
 	private boolean overwrite;
-	private int maxRating;
+//	private int maxRating;
 
 	public AutoRatingOperation(List<Asset> assets, String providerId, String modelId, boolean overwrite,
 			int maxRating) {
 		super(Messages.getString("AutoRatingOperation.rating")); //$NON-NLS-1$
 		this.assets = assets;
 		this.providerId = providerId;
-		this.modelId = modelId;
+//		this.modelId = modelId;
 		this.overwrite = overwrite;
-		this.maxRating = maxRating;
+//		this.maxRating = maxRating;
 		size = assets.size();
 		oldRates = new int[size];
 		newRates = new int[size];
@@ -98,13 +98,13 @@ public class AutoRatingOperation extends DbOperation {
 				oldRates[i] = asset.getRating();
 				oldRatedBy[i] = asset.getRatedBy();
 				if (asset.getRating() < 0 || overwrite) {
-					int rating = aiService.rate(asset, opId, maxRating, modelId, providerId);
-					if (rating >= 0) {
-						asset.setRating(rating);
-						asset.setRatedBy(providerName);
-						if (!storeSafely(null, 0, asset))
-							break;
-					}
+//					int rating = aiService.rate(asset, opId, maxRating, modelId, providerId);
+//					if (rating >= 0) {
+//						asset.setRating(rating);
+//						asset.setRatedBy(providerName);
+//						if (!storeSafely(null, 0, asset))
+//							break;
+//					}
 				}
 				++i;
 				aMonitor.worked(1);

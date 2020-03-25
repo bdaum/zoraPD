@@ -77,19 +77,17 @@ public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExp
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		super.init(workbench, selection);
 		CoreActivator coreActivator = CoreActivator.getDefault();
-		setDialogSettings(Activator.getDefault(),SETTINGSID);
+		setDialogSettings(Activator.getDefault(), SETTINGSID);
 		Iterator<Asset> it = assets.iterator();
 		while (it.hasNext()) {
 			IMediaSupport mediaSupport = coreActivator.getMediaSupport(it.next().getFormat());
 			if (mediaSupport != null && !mediaSupport.testProperty(IMediaSupport.PDF))
-					it.remove();
+				it.remove();
 		}
 		int size = assets.size();
 		setWindowTitle(size == 0 ? Messages.EmailPDFWizard_nothing_selected
 				: size == 1 ? Messages.EmailPDFWizard_email_one_image_as_pdf
-						: NLS.bind(
-								Messages.EmailPDFWizard_email_n_images_as_pdf,
-								size));
+						: NLS.bind(Messages.EmailPDFWizard_email_n_images_as_pdf, size));
 	}
 
 	@Override
@@ -116,13 +114,10 @@ public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExp
 	public File getTargetFile() {
 		if (pdfFile == null) {
 			try {
-				pdfFile = Activator
-						.getDefault()
-						.createTempFile(
-								Constants.APPNAME + "_pdf" + (++count) + ".pdf", ".pdf"); //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+				pdfFile = Activator.getDefault().createTempFile(Constants.APPNAME + "_pdf" + (++count) + ".pdf", //$NON-NLS-1$//$NON-NLS-2$
+						".pdf"); //$NON-NLS-1$
 			} catch (IOException e) {
-				Activator.getDefault().logError(
-						Messages.EmailPDFWizard_cannot_create_temp_PDF_file, e);
+				Activator.getDefault().logError(Messages.EmailPDFWizard_cannot_create_temp_PDF_file, e);
 			}
 		}
 		return pdfFile;

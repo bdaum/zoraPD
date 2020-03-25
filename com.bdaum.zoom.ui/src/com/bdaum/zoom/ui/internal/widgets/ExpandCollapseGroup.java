@@ -21,47 +21,36 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
 import com.bdaum.zoom.ui.internal.Icons;
 
-public class ExpandCollapseGroup {
+public class ExpandCollapseGroup implements Listener {
 
 	private TreeViewer treeViewer;
 	private ToolBar toolBar;
+	private ToolItem collapseItem;
 
 	public ExpandCollapseGroup(Composite parent, int style) {
 		this(parent, style, null);
 	}
-	
+
 	public ExpandCollapseGroup(Composite parent, int style, Object layoutData) {
 		toolBar = new ToolBar(parent, SWT.FLAT);
 		toolBar.setLayoutData(layoutData != null ? layoutData : new GridData(SWT.END, SWT.BEGINNING, true, false));
-		ToolItem collapseItem = new ToolItem(toolBar, SWT.PUSH);
+		collapseItem = new ToolItem(toolBar, SWT.PUSH);
 		collapseItem.setImage(Icons.collapseAll.getImage());
 		collapseItem.setToolTipText(Messages.ExpandCollapseGroup_collapseall);
-		collapseItem.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				if (treeViewer != null)
-					treeViewer.collapseAll();
-			}
-		});
+		collapseItem.addListener(SWT.Selection, this);
 		ToolItem expandItem = new ToolItem(toolBar, SWT.PUSH);
 		expandItem.setImage(Icons.expandAll.getImage());
 		expandItem.setToolTipText(Messages.ExpandCollapseGroup_expandall);
-		expandItem.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				if (treeViewer != null)
-					treeViewer.expandAll();
-			}
-		});
+		expandItem.addListener(SWT.Selection, this);
 	}
 
 	public void setViewer(TreeViewer treeViewer) {
@@ -74,6 +63,16 @@ public class ExpandCollapseGroup {
 
 	public void setVisible(boolean visible) {
 		toolBar.setVisible(visible);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (treeViewer != null) {
+			if (e.widget == collapseItem) 
+				treeViewer.collapseAll();
+			else
+				treeViewer.expandAll();
+		}
 	}
 
 }

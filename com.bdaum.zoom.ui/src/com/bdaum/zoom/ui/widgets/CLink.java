@@ -23,7 +23,6 @@ package com.bdaum.zoom.ui.widgets;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -40,7 +39,7 @@ import com.bdaum.zoom.css.internal.CssActivator;
  * regards to styling (link color can be changed)
  *
  */
-public class CLink extends Composite implements Listener, MouseTrackListener {
+public class CLink extends Composite implements Listener {
 
 	private Label label;
 	private ListenerList<Listener> listeners = new ListenerList<>();
@@ -62,7 +61,8 @@ public class CLink extends Composite implements Listener, MouseTrackListener {
 		label.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		label.setCursor(parent.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		label.addListener(SWT.MouseUp, this);
-		label.addMouseTrackListener(this);
+		label.addListener(SWT.MouseEnter, this);
+		label.addListener(SWT.MouseExit, this);
 	}
 
 	@Override
@@ -72,18 +72,22 @@ public class CLink extends Composite implements Listener, MouseTrackListener {
 		CssActivator.getDefault().setColors(label);
 	}
 
-	public void addListener(Listener listener) {
-		checkWidget();
-		if (listener == null)
-			SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		listeners.add(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Selection) {
+			checkWidget();
+			if (listener == null)
+				SWT.error(SWT.ERROR_NULL_ARGUMENT);
+			listeners.add(listener);
+		}
 	}
 
-	public void removeSelectionListener(Listener listener) {
-		checkWidget();
-		if (listener == null)
-			SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		listeners.remove(listener);
+	public void removeListener(int type, Listener listener) {
+		if (type == SWT.Selection) {
+			checkWidget();
+			if (listener == null)
+				SWT.error(SWT.ERROR_NULL_ARGUMENT);
+			listeners.remove(listener);
+		}
 	}
 
 	public void setText(String text) {
@@ -102,63 +106,33 @@ public class CLink extends Composite implements Listener, MouseTrackListener {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.
-	 * MouseEvent)
-	 */
-	public void mouseDoubleClick(MouseEvent e) {
-		// do nothing
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.
-	 * MouseEvent)
-	 */
-	public void mouseDown(MouseEvent e) {
-		// do nothing
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.
 	 * MouseEvent)
 	 */
 	public void handleEvent(Event e) {
-		if (e.button == 1)
-			fireEvent(e);
+		switch (e.type) {
+		case SWT.MouseEnter:
+			inactiveColor = label.getForeground();
+			label.setForeground(getForeground());
+			break;
+		case SWT.MouseExit:
+			label.setForeground(inactiveColor);
+			inactiveColor = null;
+			break;
+		case SWT.MouseUp:
+			if (e.button == 1)
+				fireEvent(e);
+			break;
+		}
 	}
 
 	private void fireEvent(Event event) {
+		event.widget = this;
+		event.type = SWT.Selection;
 		for (Listener listener : listeners)
 			listener.handleEvent(event);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.MouseTrackListener#mouseEnter(org.eclipse.swt.events.
-	 * MouseEvent)
-	 */
-	public void mouseEnter(MouseEvent e) {
-		inactiveColor = label.getForeground();
-		label.setForeground(getForeground());
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.MouseTrackListener#mouseExit(org.eclipse.swt.events.
-	 * MouseEvent)
-	 */
-	public void mouseExit(MouseEvent e) {
-		label.setForeground(inactiveColor);
-		inactiveColor = null;
-	}
 
 	/*
 	 * (non-Javadoc)

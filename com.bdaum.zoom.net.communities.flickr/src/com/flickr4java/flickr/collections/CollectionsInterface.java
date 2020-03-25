@@ -6,8 +6,8 @@ import com.flickr4java.flickr.Transport;
 import com.flickr4java.flickr.photos.PhotoUtils;
 import com.flickr4java.flickr.photosets.Photoset;
 import com.flickr4java.flickr.util.XMLUtilities;
-
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -29,10 +29,10 @@ public class CollectionsInterface {
     private static final String METHOD_GET_TREE = "flickr.collections.getTree";
 
     /**
-     * Logger for log4j.
+     * Logger.
      */
     @SuppressWarnings("unused")
-    private static Logger _log = Logger.getLogger(CollectionsInterface.class);
+    private static Logger _log = LoggerFactory.getLogger(CollectionsInterface.class);
 
     private final String apiKey;
 

@@ -84,7 +84,6 @@ public class NumericControl extends Composite implements Listener {
 		return v < 0 ? -Math.pow(10, v) + 1 : Math.pow(10, v) - 1;
 	}
 
-
 	@Override
 	public void addFocusListener(FocusListener listener) {
 		spinner.addFocusListener(listener);
@@ -95,11 +94,12 @@ public class NumericControl extends Composite implements Listener {
 		spinner.removeFocusListener(listener);
 	}
 
-	public void addListener(Listener listener) {
-		listeners.add(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Selection)
+			listeners.add(listener);
 	}
 
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
 		listeners.remove(listener);
 	}
 
@@ -295,6 +295,7 @@ public class NumericControl extends Composite implements Listener {
 
 	private void fireEvent(Event ev) {
 		ev.widget = this;
+		ev.type = SWT.Selection;
 		for (Listener l : listeners)
 			l.handleEvent(ev);
 	}

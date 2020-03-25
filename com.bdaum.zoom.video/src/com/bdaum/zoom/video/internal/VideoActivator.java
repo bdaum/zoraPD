@@ -34,10 +34,11 @@ import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.BundleContext;
 
 import com.bdaum.zoom.image.IImportFilterFactory;
+import com.bdaum.zoom.image.IVideoService;
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
 @SuppressWarnings("restriction")
-public class VideoActivator extends ZUiPlugin {
+public class VideoActivator extends ZUiPlugin implements IVideoService {
 
 	public static final String PLUGIN_ID = "com.bdaum.zoom.video"; //$NON-NLS-1$
 	
@@ -85,6 +86,11 @@ public class VideoActivator extends ZUiPlugin {
 
 	public void logError(String message, Throwable e) {
 		getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, message, e));
+	}
+
+	@Override
+	public IVideoStreamer createVideoStreamer(String file, IFrameHandler frameHandler, int preferreWidth) {
+		return new VideoStreamer(file, frameHandler, preferreWidth);
 	}
 
 }

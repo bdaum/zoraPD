@@ -5,7 +5,7 @@ Bundle-SymbolicName: com.bdaum.zoom.lireLucene;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-Activator: com.bdaum.zoom.lal.internal.LireActivator
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.6.0",
+Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.6.1",
  org.eclipse.help;bundle-version="3.7.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
@@ -15,9 +15,10 @@ Bundle-ClassPath: .,
  lib/opencv-2411.jar,
  lib/commons-io-2.5.jar,
  lib/commons-codec-1.10.jar,
- lib/lucene-analyzers-common-6.6.3.jar,
- lib/lucene-core-6.6.3.jar,
- lib/lucene-queryparser-6.6.3.jar
+ lib/lucene-analyzers-common-7.7.2.jar,
+ lib/lucene-core-7.7.2.jar,
+ lib/lucene-queryparser-7.7.2.jar,
+ lib/lucene-backward-codecs-7.7.2.jar
 Service-Component: OSGI-INF/lireServices.xml, OSGI-INF/luceneServices.xml
 Export-Package: com.bdaum.zoom.lal.internal.lire.ui.commands;uses:="com.bdaum.zoom.ui.internal.commands",
  net.semanticmetadata.lire.imageanalysis.features,

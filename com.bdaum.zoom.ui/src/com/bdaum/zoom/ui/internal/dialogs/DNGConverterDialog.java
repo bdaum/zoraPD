@@ -45,7 +45,7 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.widgets.FileEditor;
 import com.bdaum.zoom.ui.widgets.CLink;
 
-public class DNGConverterDialog extends ZTitleAreaDialog {
+public class DNGConverterDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final int WITHOUTDNG = 9999;
 	private static final String SETTINGSID = "com.bdaum.zoom.dngConverterDialog"; //$NON-NLS-1$
@@ -87,29 +87,31 @@ public class DNGConverterDialog extends ZTitleAreaDialog {
 				Constants.EXEEXTENSION, Constants.EXEFILTERNAMES, null,
 				dngLocation == null ? "" : dngLocation.getAbsolutePath(), //$NON-NLS-1$
 				false, false, dialogSettings);
-		fileEditor.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateButtons();
-			}
-		});
+		fileEditor.addListener(SWT.Modify, this);
 		CLink link = new CLink(composite, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		link.setText(Messages.DNGConverterDialog_download);
-		link.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				String vlcDownload = System.getProperty(Messages.DNGConverterDialog_dngkey);
-				try {
-					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));
-				} catch (PartInitException e1) {
-					// do nothing
-				} catch (MalformedURLException e1) {
-					// should never happen
-				}
-			}
-		});
+		link.addListener(SWT.Selection, this);
 		return area;
+	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Modify:
+			updateButtons();
+			break;
+		case SWT.Selection:
+			String vlcDownload = System.getProperty(Messages.DNGConverterDialog_dngkey);
+			try {
+				PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));
+			} catch (PartInitException e1) {
+				// do nothing
+			} catch (MalformedURLException e1) {
+				// should never happen
+			}
+			break;
+		}
 	}
 
 	@Override

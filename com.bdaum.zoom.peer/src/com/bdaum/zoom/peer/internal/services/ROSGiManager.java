@@ -152,7 +152,7 @@ public class ROSGiManager {
 								CLink link = new CLink(composite, SWT.NONE);
 								link.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
 								link.setText(Messages.ROSGiManager_configure_network);
-								link.addListener(new Listener() {
+								link.addListener(SWT.Selection, new Listener() {
 									@Override
 									public void handleEvent(Event event) {
 										close();

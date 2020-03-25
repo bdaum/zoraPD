@@ -1,9 +1,5 @@
-/*
- * Copyright (c) 2005 Aetrion LLC.
- */
-package com.flickr4java.flickr;
 
-import java.util.Set;
+package com.flickr4java.flickr;
 
 import com.flickr4java.flickr.activity.ActivityInterface;
 import com.flickr4java.flickr.auth.Auth;
@@ -42,21 +38,23 @@ import com.flickr4java.flickr.test.TestInterface;
 import com.flickr4java.flickr.uploader.Uploader;
 import com.flickr4java.flickr.urls.UrlsInterface;
 
+import java.util.Set;
+
 /**
  * Main entry point for the Flickr4Java API. This class is used to acquire Interface classes which wrap the Flickr API.
  * <p>
- *
+ * 
  * If you registered API keys, you find them with the shared secret at your <a href="http://www.flickr.com/services/api/registered_keys.gne">list of API
  * keys</a>
  * <p>
- *
+ * 
  * The user who authenticates himself, can manage this permissions at <a href="http://www.flickr.com/services/auth/list.gne">his list of Third-party
  * applications</a> (You -> Your account -> Extending Flickr -> Account Links -> edit).
- *
+ * 
  * @author Anthony Eden
  * @version $Id: Flickr.java,v 1.45 2009/06/23 21:51:25 x-mago Exp $
  */
-public class Flickr {
+public class Flickr implements IFlickr {
 
     /**
      * The default endpoint host.
@@ -179,7 +177,7 @@ public class Flickr {
 
     /**
      * The lowest accuracy for bounding-box searches.
-     *
+     * 
      * @see com.flickr4java.flickr.photos.SearchParameters#setAccuracy(int)
      */
     public static final int ACCURACY_WORLD = 1;
@@ -201,7 +199,7 @@ public class Flickr {
 
     /**
      * The highest accuracy for bounding-box searches.
-     *
+     * 
      * @see com.flickr4java.flickr.photos.SearchParameters#setAccuracy(int)
      */
     public static final int ACCURACY_STREET = 16;
@@ -274,7 +272,7 @@ public class Flickr {
 
     /**
      * Construct a new Flickr gateway instance.
-     *
+     * 
      * @param apiKey
      *            The API key, must be non-null
      * @param sharedSecret
@@ -288,19 +286,21 @@ public class Flickr {
 
     /**
      * Get the API key.
-     *
+     * 
      * @return The API key
      */
+    @Override
     public String getApiKey() {
         return apiKey;
     }
 
     /**
      * Set the API key to use which must not be null.
-     *
+     * 
      * @param apiKey
      *            The API key which cannot be null
      */
+    @Override
     public void setApiKey(String apiKey) {
         if (apiKey == null) {
             throw new IllegalArgumentException("API key must not be null");
@@ -308,34 +308,38 @@ public class Flickr {
         this.apiKey = apiKey;
     }
 
+    @Override
     public void setAuth(Auth auth) {
         this.auth = auth;
     }
 
     /**
      * Get the Auth-object.
-     *
+     * 
      * @return The Auth-object
      */
+    @Override
     public Auth getAuth() {
         return auth;
     }
 
     /**
      * Get the Shared-Secret.
-     *
+     * 
      * @return The Shared-Secret
      */
+    @Override
     public String getSharedSecret() {
         return sharedSecret;
     }
 
     /**
      * Set the Shared-Secret to use which must not be null.
-     *
+     * 
      * @param sharedSecret
      *            The Shared-Secret which cannot be null
      */
+    @Override
     public void setSharedSecret(String sharedSecret) {
         if (sharedSecret == null) {
             throw new IllegalArgumentException("Shared-Secret must not be null");
@@ -345,18 +349,20 @@ public class Flickr {
 
     /**
      * Get the Transport interface.
-     *
+     * 
      * @return The Tranport interface
      */
+    @Override
     public Transport getTransport() {
         return transport;
     }
 
     /**
      * Set the Transport which must not be null.
-     *
+     * 
      * @param transport
      */
+    @Override
     public void setTransport(Transport transport) {
         if (transport == null) {
             throw new IllegalArgumentException("Transport must not be null");
@@ -366,9 +372,10 @@ public class Flickr {
 
     /**
      * Get the AuthInterface.
-     *
+     * 
      * @return The AuthInterface
      */
+    @Override
     public AuthInterface getAuthInterface() {
         if (authInterface == null) {
             authInterface = new AuthInterface(apiKey, sharedSecret, transport);
@@ -378,9 +385,10 @@ public class Flickr {
 
     /**
      * Get the ActivityInterface.
-     *
+     * 
      * @return The ActivityInterface
      */
+    @Override
     public ActivityInterface getActivityInterface() {
         if (activityInterface == null) {
             activityInterface = new ActivityInterface(apiKey, sharedSecret, transport);
@@ -388,6 +396,7 @@ public class Flickr {
         return activityInterface;
     }
 
+    @Override
     public synchronized BlogsInterface getBlogsInterface() {
         if (blogsInterface == null) {
             blogsInterface = new BlogsInterface(apiKey, sharedSecret, transport);
@@ -395,6 +404,7 @@ public class Flickr {
         return blogsInterface;
     }
 
+    @Override
     public CommentsInterface getCommentsInterface() {
         if (commentsInterface == null) {
             commentsInterface = new CommentsInterface(apiKey, sharedSecret, transport);
@@ -402,6 +412,7 @@ public class Flickr {
         return commentsInterface;
     }
 
+    @Override
     public CommonsInterface getCommonsInterface() {
         if (commonsInterface == null) {
             commonsInterface = new CommonsInterface(apiKey, sharedSecret, transport);
@@ -409,6 +420,7 @@ public class Flickr {
         return commonsInterface;
     }
 
+    @Override
     public ContactsInterface getContactsInterface() {
         if (contactsInterface == null) {
             contactsInterface = new ContactsInterface(apiKey, sharedSecret, transport);
@@ -416,6 +428,7 @@ public class Flickr {
         return contactsInterface;
     }
 
+    @Override
     public FavoritesInterface getFavoritesInterface() {
         if (favoritesInterface == null) {
             favoritesInterface = new FavoritesInterface(apiKey, sharedSecret, transport);
@@ -423,6 +436,7 @@ public class Flickr {
         return favoritesInterface;
     }
 
+    @Override
     public GeoInterface getGeoInterface() {
         if (geoInterface == null) {
             geoInterface = new GeoInterface(apiKey, sharedSecret, transport);
@@ -430,6 +444,7 @@ public class Flickr {
         return geoInterface;
     }
 
+    @Override
     public GroupsInterface getGroupsInterface() {
         if (groupsInterface == null) {
             groupsInterface = new GroupsInterface(apiKey, sharedSecret, transport);
@@ -440,6 +455,7 @@ public class Flickr {
     /**
      * @return the interface to the flickr.interestingness methods
      */
+    @Override
     public synchronized InterestingnessInterface getInterestingnessInterface() {
         if (interestingnessInterface == null) {
             interestingnessInterface = new InterestingnessInterface(apiKey, sharedSecret, transport);
@@ -447,6 +463,7 @@ public class Flickr {
         return interestingnessInterface;
     }
 
+    @Override
     public LicensesInterface getLicensesInterface() {
         if (licensesInterface == null) {
             licensesInterface = new LicensesInterface(apiKey, sharedSecret, transport);
@@ -454,6 +471,7 @@ public class Flickr {
         return licensesInterface;
     }
 
+    @Override
     public MachinetagsInterface getMachinetagsInterface() {
         if (machinetagsInterface == null) {
             machinetagsInterface = new MachinetagsInterface(apiKey, sharedSecret, transport);
@@ -461,6 +479,7 @@ public class Flickr {
         return machinetagsInterface;
     }
 
+    @Override
     public MembersInterface getMembersInterface() {
         if (membersInterface == null) {
             membersInterface = new MembersInterface(apiKey, sharedSecret, transport);
@@ -468,6 +487,7 @@ public class Flickr {
         return membersInterface;
     }
 
+    @Override
     public NotesInterface getNotesInterface() {
         if (notesInterface == null) {
             notesInterface = new NotesInterface(apiKey, sharedSecret, transport);
@@ -475,6 +495,7 @@ public class Flickr {
         return notesInterface;
     }
 
+    @Override
     public PandaInterface getPandaInterface() {
         if (pandaInterface == null) {
             pandaInterface = new PandaInterface(apiKey, sharedSecret, transport);
@@ -482,6 +503,7 @@ public class Flickr {
         return pandaInterface;
     }
 
+    @Override
     public PoolsInterface getPoolsInterface() {
         if (poolsInterface == null) {
             poolsInterface = new PoolsInterface(apiKey, sharedSecret, transport);
@@ -489,6 +511,7 @@ public class Flickr {
         return poolsInterface;
     }
 
+    @Override
     public PeopleInterface getPeopleInterface() {
         if (peopleInterface == null) {
             peopleInterface = new PeopleInterface(apiKey, sharedSecret, transport);
@@ -496,6 +519,7 @@ public class Flickr {
         return peopleInterface;
     }
 
+    @Override
     public PhotosInterface getPhotosInterface() {
         if (photosInterface == null) {
             photosInterface = new PhotosInterface(apiKey, sharedSecret, transport);
@@ -503,6 +527,7 @@ public class Flickr {
         return photosInterface;
     }
 
+    @Override
     public PhotosetsCommentsInterface getPhotosetsCommentsInterface() {
         if (photosetsCommentsInterface == null) {
             photosetsCommentsInterface = new PhotosetsCommentsInterface(apiKey, sharedSecret, transport);
@@ -510,6 +535,7 @@ public class Flickr {
         return photosetsCommentsInterface;
     }
 
+    @Override
     public PhotosetsInterface getPhotosetsInterface() {
         if (photosetsInterface == null) {
             photosetsInterface = new PhotosetsInterface(apiKey, sharedSecret, transport);
@@ -517,6 +543,7 @@ public class Flickr {
         return photosetsInterface;
     }
 
+    @Override
     public CollectionsInterface getCollectionsInterface() {
         if (collectionsInterface == null) {
             collectionsInterface = new CollectionsInterface(apiKey, sharedSecret, transport);
@@ -524,6 +551,7 @@ public class Flickr {
         return collectionsInterface;
     }
 
+    @Override
     public PlacesInterface getPlacesInterface() {
         if (placesInterface == null) {
             placesInterface = new PlacesInterface(apiKey, sharedSecret, transport);
@@ -531,6 +559,7 @@ public class Flickr {
         return placesInterface;
     }
 
+    @Override
     public PrefsInterface getPrefsInterface() {
         if (prefsInterface == null) {
             prefsInterface = new PrefsInterface(apiKey, sharedSecret, transport);
@@ -538,6 +567,7 @@ public class Flickr {
         return prefsInterface;
     }
 
+    @Override
     public ReflectionInterface getReflectionInterface() {
         if (reflectionInterface == null) {
             reflectionInterface = new ReflectionInterface(apiKey, sharedSecret, transport);
@@ -547,9 +577,10 @@ public class Flickr {
 
     /**
      * Get the TagsInterface for working with Flickr Tags.
-     *
+     * 
      * @return The TagsInterface
      */
+    @Override
     public TagsInterface getTagsInterface() {
         if (tagsInterface == null) {
             tagsInterface = new TagsInterface(apiKey, sharedSecret, transport);
@@ -557,6 +588,7 @@ public class Flickr {
         return tagsInterface;
     }
 
+    @Override
     public TestInterface getTestInterface() {
         if (testInterface == null) {
             testInterface = new TestInterface(apiKey, sharedSecret, transport);
@@ -564,6 +596,7 @@ public class Flickr {
         return testInterface;
     }
 
+    @Override
     public TransformInterface getTransformInterface() {
         if (transformInterface == null) {
             transformInterface = new TransformInterface(apiKey, sharedSecret, transport);
@@ -571,6 +604,7 @@ public class Flickr {
         return transformInterface;
     }
 
+    @Override
     public UploadInterface getUploadInterface() {
         if (uploadInterface == null) {
             uploadInterface = new UploadInterface(apiKey, sharedSecret, transport);
@@ -578,6 +612,7 @@ public class Flickr {
         return uploadInterface;
     }
 
+    @Override
     public Uploader getUploader() {
         if (uploader == null) {
             uploader = new Uploader(apiKey, sharedSecret);
@@ -585,6 +620,7 @@ public class Flickr {
         return uploader;
     }
 
+    @Override
     public UrlsInterface getUrlsInterface() {
         if (urlsInterface == null) {
             urlsInterface = new UrlsInterface(apiKey, sharedSecret, transport);
@@ -592,6 +628,7 @@ public class Flickr {
         return urlsInterface;
     }
 
+    @Override
     public GalleriesInterface getGalleriesInterface() {
         if (galleriesInterface == null) {
             galleriesInterface = new GalleriesInterface(apiKey, sharedSecret, transport);
@@ -599,6 +636,7 @@ public class Flickr {
         return galleriesInterface;
     }
 
+    @Override
     public StatsInterface getStatsInterface() {
         if (statsInterface == null) {
             statsInterface = new StatsInterface(apiKey, sharedSecret, transport);
@@ -606,6 +644,7 @@ public class Flickr {
         return statsInterface;
     }
 
+    @Override
     public CamerasInterface getCamerasInterface() {
         if (cameraInterface == null) {
             cameraInterface = new CamerasInterface(apiKey, sharedSecret, transport);
@@ -615,9 +654,10 @@ public class Flickr {
 
     /**
      * Get the SuggestionsInterface.
-     *
+     * 
      * @return The SuggestionsInterface
      */
+    @Override
     public SuggestionsInterface getSuggestionsInterface() {
         if (suggestionsInterface == null) {
             suggestionsInterface = new SuggestionsInterface(apiKey, sharedSecret, transport);
@@ -627,10 +667,11 @@ public class Flickr {
 
     /**
      * Get the GroupDiscussInterface.
-     *
+     * 
      * @return The GroupDiscussInterface
      */
 
+    @Override
     public GroupDiscussInterface getDiscussionInterface() {
         if (discussionInterface == null) {
             discussionInterface = new GroupDiscussInterface(apiKey, sharedSecret, transport);

@@ -185,6 +185,8 @@ public class TextWithVariableGroup implements Listener {
 		addVariableButton.setEnabled(enabled);
 		if (addMetadataButon != null)
 			addMetadataButon.setEnabled(enabled);
+		if (selectTemplateButton != null)
+			selectTemplateButton.setEnabled(enabled);
 	}
 
 	protected void setTooltip() {
@@ -197,15 +199,18 @@ public class TextWithVariableGroup implements Listener {
 		textField.setToolTipText(tooltip);
 	}
 
-	public void addListener(Listener listener) {
-		listeners.add(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Modify)
+			listeners.add(listener);
 	}
 
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
 		listeners.remove(listener);
 	}
 
 	private void fireEvent(Event event) {
+		event.type = SWT.Modify;
+		event.data = this;
 		for (Listener listener : listeners)
 			listener.handleEvent(event);
 	}

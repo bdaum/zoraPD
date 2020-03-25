@@ -198,6 +198,8 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 
 	private boolean tetheredShooting;
 
+	private boolean noBackup;
+
 	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
@@ -978,6 +980,10 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 		this.backupInterval = backupInterval;
 	}
 
+	public void setNoBackup(boolean noBackup) {
+		this.noBackup = noBackup;
+	}
+
 	public void setCatFile(File catFile) {
 		this.catFile = catFile;
 	}
@@ -992,6 +998,10 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 
 	public int getBackupInterval() {
 		return backupInterval;
+	}
+
+	public boolean getNoBackup() {
+		return noBackup;
 	}
 
 	public LinkedList<CatLocation> getRecentCats() {

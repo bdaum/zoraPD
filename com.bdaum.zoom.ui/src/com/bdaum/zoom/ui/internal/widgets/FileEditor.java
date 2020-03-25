@@ -43,7 +43,7 @@ import org.eclipse.swt.widgets.Listener;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 
-public class FileEditor extends Composite {
+public class FileEditor extends Composite implements Listener {
 
 	private static final String FILEHISTORY = "fileHistory"; //$NON-NLS-1$
 	private static final String LASTFILENAME = "lastFilename"; //$NON-NLS-1$
@@ -197,27 +197,31 @@ public class FileEditor extends Composite {
 						fireEvent(event);
 				}
 			});
-			addListener(new Listener() {
-				public void handleEvent(Event e) {
-					clearButton.setEnabled(!getText().isEmpty());
-				}
-			});
+			addListener(SWT.Modify, this);
 		}
+	}
+
+	public void handleEvent(Event e) {
+		clearButton.setEnabled(!getText().isEmpty());
 	}
 
 	/**
 	 * Add listener. Transmitted event maybe null
+	 * 
 	 * @param listener
 	 */
-	public void addListener(Listener listener) {
-		listeners.add(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Modify)
+			listeners.add(listener);
 	}
 
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
 		listeners.remove(listener);
 	}
 
 	public void fireEvent(Event e) {
+		e.type = SWT.Modify;
+		e.widget = this;
 		for (Listener listener : listeners)
 			listener.handleEvent(e);
 	}

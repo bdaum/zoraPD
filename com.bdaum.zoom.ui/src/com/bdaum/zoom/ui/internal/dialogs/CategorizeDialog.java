@@ -54,12 +54,6 @@ import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.TableDragSourceEffect;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -121,7 +115,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.CLink;
 
 @SuppressWarnings("restriction")
-public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject, KeyListener {
+public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject, Listener {
 
 	private final class PairLabelProvider extends ZColumnLabelProvider {
 		@Override
@@ -450,7 +444,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 	public class CatDialogHover implements IGalleryHover {
 
 		@Override
-		public IHoverInfo getHoverInfo(IHoverSubject viewer, MouseEvent event) {
+		public IHoverInfo getHoverInfo(IHoverSubject viewer, Event event) {
 			if (event.widget == imageCanvas)
 				return new HoverInfo(currentAsset, (ImageRegion[]) null);
 			Node found = root.findNode(event.x, event.y);
@@ -760,6 +754,10 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 	private List<Rectangle> newFaces;
 	private Rectangle imageBounds;
 	private VocabManager vocabManager;
+	private Button unpairedButton;
+	private Button unpairedButton2;
+	private CLink aiLink;
+	private CLink catLink;
 
 	public CategorizeDialog(Shell parentShell, List<Asset> localAssets) {
 		super(parentShell, HelpContextIds.CATEGORIZE_DIALOG);
@@ -907,17 +905,9 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 				updateButtons();
 			}
 		});
-		Button button = new Button(buttonArea, SWT.PUSH);
-		button.setText(Messages.CategorizeDialog_select_unpaired);
-		button.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Token[] tokens = (Token[]) proposalViewer.getInput();
-				for (Token tok : tokens) {
-					proposalViewer.setChecked(tok, tok.getMatch() == UNCHECKED);
-				}
-			}
-		});
+		unpairedButton = new Button(buttonArea, SWT.PUSH);
+		unpairedButton.setText(Messages.CategorizeDialog_select_unpaired);
+		unpairedButton.addListener(SWT.Selection, this);
 		// Split version
 		splitComp = new Composite(stack, SWT.NONE);
 		splitComp.setLayout(new GridLayout(2, false));
@@ -956,16 +946,9 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 				updateButtons();
 			}
 		});
-		button = new Button(buttonArea1, SWT.PUSH);
-		button.setText(Messages.CategorizeDialog_select_unpaired);
-		button.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Token[] tokens = (Token[]) proposalViewer1.getInput();
-				for (Token tok : tokens)
-					proposalViewer1.setChecked(tok, tok.getMatch() == UNCHECKED);
-			}
-		});
+		unpairedButton2 = new Button(buttonArea1, SWT.PUSH);
+		unpairedButton2.setText(Messages.CategorizeDialog_select_unpaired);
+		unpairedButton2.addListener(SWT.Selection, this);
 		Label keyLabel = new Label(splitComp, SWT.NONE);
 		keyLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, true, 2, 1));
 		keyLabel.setFont(JFaceResources.getBannerFont());
@@ -997,33 +980,10 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		ldata.heightHint = 30;
 		msgLabel.setLayoutData(ldata);
 
-		CLink aiLink = new CLink(proposalArea, SWT.NONE);
+		aiLink = new CLink(proposalArea, SWT.NONE);
 		aiLink.setText(Messages.CategorizeDialog_configure);
 		aiLink.setToolTipText(Messages.CategorizeDialog_user_preferences);
-		aiLink.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				if (aiService != null) {
-					boolean wasEnabled = aiService.isEnabled();
-					if (wasEnabled)
-						Job.getJobManager().cancel(this);
-					if (aiService.configure(getShell())) {
-						boolean enabled = aiService.isEnabled();
-						setProposalTitel();
-						List<Asset> reordered;
-						int p = assets.indexOf(currentAsset);
-						reordered = p > 0 ? assets.subList(p, assets.size()) : assets;
-						for (Asset asset : reordered)
-							predictions.remove(asset.getStringId());
-						fillValues(false);
-						// TODO could be improved when language can be
-						// controlled through API
-						if (enabled)
-							startPredictionJob(reordered);
-					}
-				}
-			}
-		});
+		aiLink.addListener(SWT.Selection, this);
 	}
 
 	@SuppressWarnings("unused")
@@ -1041,54 +1001,9 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		layoutData.widthHint = Math.min(800, depth * 200);
 		layoutData.heightHint = Math.min(600, width * 20);
 		catCanvas.setLayoutData(layoutData);
-		catCanvas.addPaintListener(new PaintListener() {
-			@Override
-			public void paintControl(PaintEvent e) {
-				Rectangle clientArea = catCanvas.getClientArea();
-				e.gc.fillRectangle(clientArea);
-				root.draw(e.gc, MARGINS, MARGINS, Math.max(20, (clientArea.width - 2 * MARGINS) / (depth + 1)),
-						Math.max(15, (clientArea.height - 2 * MARGINS) / (width + 1)));
-			}
-		});
-		catCanvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				boolean alt = (e.stateMask & SWT.ALT) == SWT.ALT;
-				Node found = findObject(e);
-				if (found != null) {
-					int check = found.getChecked();
-					switch (check) {
-					case CHECKED:
-						found.setChecked(alt ? SUPPLEMENTAL : UNCHECKED, false);
-						break;
-					case SUPPLEMENTAL:
-					case PROPOSED:
-						if (alt)
-							found.setChecked(UNCHECKED, false);
-						else {
-							root.degrade(PROPOSED, SUPPROPOSED);
-							root.degrade(CHECKED, SUPPLEMENTAL);
-							found.setChecked(CHECKED, false);
-						}
-						break;
-					case SUPPROPOSED:
-						found.setChecked(alt ? UNCHECKED : SUPPLEMENTAL, false);
-						break;
-					default:
-						if (alt || forcePrimary) {
-							root.degrade(PROPOSED, SUPPROPOSED);
-							root.degrade(CHECKED, SUPPLEMENTAL);
-							found.setChecked(CHECKED, false);
-						} else
-							found.setChecked(SUPPLEMENTAL, false);
-						break;
-					}
-					drawCat();
-					forcePrimary = false;
-				}
-			}
-		});
-		catCanvas.addKeyListener(this);
+		catCanvas.addListener(SWT.Paint, this);
+		catCanvas.addListener(SWT.MouseDown, this);
+		catCanvas.addListener(SWT.KeyDown, this);
 		new ProposalDropTargetListener(catCanvas, DND.DROP_MOVE | DND.DROP_COPY);
 
 		Composite linkArea = new Composite(catArea, SWT.NONE);
@@ -1097,51 +1012,16 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		layout.marginHeight = 0;
 		linkArea.setLayout(layout);
 
-		CLink catLink = new CLink(linkArea, SWT.NONE);
+		catLink = new CLink(linkArea, SWT.NONE);
 		catLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
 		catLink.setText(Messages.CategorizeDialog_configure);
 		catLink.setToolTipText(Messages.CategorizeDialog_configure_tooltip);
-		catLink.addListener(new Listener() {
-
-			@Override
-			public void handleEvent(Event event) {
-				final Shell shell = getShell();
-				BusyIndicator.showWhile(shell.getDisplay(), () -> {
-					IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-					if (activeWorkbenchWindow != null) {
-						IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-						if (activePage != null) {
-							EditMetaDialog mdialog = new EditMetaDialog(shell, activePage,
-									Core.getCore().getDbManager(), false, null);
-							mdialog.setInitialPage(EditMetaDialog.CATEGORIES);
-							if (catBackup != null)
-								mdialog.setCategories(catBackup);
-							if (mdialog.open() == EditMetaDialog.OK) {
-								categories = mdialog.getCategories();
-								catBackup = null;
-								Node oldRoot = root;
-								constructTree(categories);
-								oldRoot.transferTo(root);
-								drawCat();
-								updateButtons();
-							}
-						}
-					}
-				});
-			}
-		});
+		catLink.addListener(SWT.Selection, this);
 		acceptLink = new CLink(linkArea, SWT.NONE);
 		acceptLink.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		acceptLink.setText(Messages.CategorizeDialog_accept_proposals);
 		acceptLink.setToolTipText(Messages.CategorizeDialog_accept_proposals_tooltip);
-		acceptLink.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				root.acceptProposals(root.has(CHECKED));
-				drawCat();
-				updateButtons();
-			}
-		});
+		acceptLink.addListener(SWT.Selection, this);
 	}
 
 	protected void createImageArea() {
@@ -1156,66 +1036,8 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		layoutData.widthHint = 350;
 		layoutData.heightHint = 450;
 		imageCanvas.setLayoutData(layoutData);
-		imageCanvas.addPaintListener(new PaintListener() {
-			@Override
-			public void paintControl(PaintEvent e) {
-				Image image = imageCache.getImage(currentAsset);
-				imageBounds = image.getBounds();
-				int imageSize = Math.max(imageBounds.width, imageBounds.height);
-				Rectangle clientArea = imageCanvas.getClientArea();
-				GC gc = e.gc;
-				gc.fillRectangle(clientArea);
-				int canvasSize = Math.max(10, Math.min(clientArea.width, clientArea.height) - 2 * MARGINS);
-				double factor = (double) Math.min(320, canvasSize) / imageSize;
-				int destWidth = (int) (imageBounds.width * factor);
-				int destHeight = (int) (imageBounds.height * factor);
-				int destX = (clientArea.width - destWidth) / 2;
-				int destY = (Math.min(350, clientArea.height) - destHeight) / 2;
-				gc.drawImage(image, 0, 0, imageBounds.width, imageBounds.height, destX, destY, destWidth, destHeight);
-				currentRegions = null;
-				if (showRegions > 0) {
-					Color color = gc.getForeground();
-					currentRegions = UiUtilities.drawRegions(gc, currentAsset, destX, destY, destWidth, destHeight,
-							true, showRegions, true, null);
-					gc.setForeground(color);
-				}
-				if (newFaces != null) {
-					Color color = gc.getForeground();
-					gc.setForeground(e.display.getSystemColor(SWT.COLOR_GREEN));
-					for (Rectangle rectangle : newFaces) {
-						int fWidth = (int) (rectangle.width * factor);
-						int fHeight = (int) (rectangle.height * factor);
-						int fx = (int) (rectangle.x * factor);
-						int fy = (int) (rectangle.y * factor);
-						gc.drawRectangle(fx + destX, fy + destY, fWidth, fHeight);
-					}
-					gc.setForeground(color);
-				}
-				StringBuilder sb = new StringBuilder();
-				String title = currentAsset.getTitle();
-				if (title == null || title.trim().isEmpty())
-					title = currentAsset.getName();
-				sb.append(title).append('\n');
-				String headline = currentAsset.getHeadline();
-				if (headline != null && !headline.isEmpty())
-					sb.append(headline).append('\n');
-				String description = currentAsset.getImageDescription();
-				if (description != null && !description.isEmpty())
-					sb.append(description).append('\n');
-				String[] keyword = currentAsset.getKeyword();
-				if (keyword != null && keyword.length > 0)
-					sb.append(Core.toStringList(keyword, ", ")).append('\n'); //$NON-NLS-1$
-				sb.append("\n\n").append(NLS.bind(Messages.CategorizeDialog_x_of_y, current + 1, size)); //$NON-NLS-1$
-				textLayout.setWidth(destWidth);
-				textLayout.setText(sb.toString());
-				textLayout.draw(gc, destX, destY + destHeight + MARGINS, -1, -1, null, null);
-				String safety = QueryField.SAFETY.value2text(QueryField.SAFETY.obtainFieldValue(currentAsset), ""); //$NON-NLS-1$
-				Point tx = gc.textExtent(safety);
-				gc.drawText(safety, clientArea.width - tx.x - 5, clientArea.height - tx.y - 5, true);
-
-			}
-		});
-		imageCanvas.addKeyListener(this);
+		imageCanvas.addListener(SWT.Paint, this);
+		imageCanvas.addListener(SWT.KeyDown, this);
 		CGroup subImageArea = UiUtilities.createGroup(imageArea, 2, Messages.CategorizeDialog_settings);
 		if (aiService != null)
 			faceButton = WidgetFactory.createCheckButton(subImageArea, Messages.CategorizeDialog_use_new_faces,
@@ -1558,17 +1380,17 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 	}
 
 	@Override
-	public Node findObject(MouseEvent event) {
+	public Node findObject(Event event) {
 		return root.findNode(event.x, event.y);
 	}
 
 	@Override
-	public ImageRegion[] findAllRegions(MouseEvent event) {
+	public ImageRegion[] findAllRegions(Event event) {
 		return null;
 	}
 
 	@Override
-	public IGalleryHover getGalleryHover(MouseEvent event) {
+	public IGalleryHover getGalleryHover(Event event) {
 		return new CatDialogHover();
 	}
 
@@ -1579,37 +1401,198 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 	}
 
 	@Override
-	public void keyPressed(KeyEvent e) {
-		switch (e.character) {
-		case SWT.CR:
-			buttonPressed(DONE_ID);
-			break;
-		case SWT.ESC:
-			buttonPressed(IDialogConstants.CANCEL_ID);
-			break;
-		default:
-			switch (e.keyCode & SWT.KEY_MASK) {
-			case SWT.ARROW_LEFT:
-				if (current > 1)
-					buttonPressed(BACK_ID);
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.KeyDown:
+			switch (e.character) {
+			case SWT.CR:
+				buttonPressed(DONE_ID);
 				break;
-			case SWT.ARROW_RIGHT:
-				if (current < size - 1) {
-					if ((e.stateMask & SWT.CTRL) == SWT.CTRL) {
-						if (current > 1)
-							buttonPressed(CLONE_ID);
-					} else
-						buttonPressed(NEXT_ID);
+			case SWT.ESC:
+				buttonPressed(IDialogConstants.CANCEL_ID);
+				break;
+			default:
+				switch (e.keyCode & SWT.KEY_MASK) {
+				case SWT.ARROW_LEFT:
+					if (current > 1)
+						buttonPressed(BACK_ID);
+					break;
+				case SWT.ARROW_RIGHT:
+					if (current < size - 1) {
+						if ((e.stateMask & SWT.CTRL) == SWT.CTRL) {
+							if (current > 1)
+								buttonPressed(CLONE_ID);
+						} else
+							buttonPressed(NEXT_ID);
+					}
+					break;
 				}
 				break;
 			}
 			break;
+
+		case SWT.MouseDown:
+			boolean alt = (e.stateMask & SWT.ALT) == SWT.ALT;
+			Node found = findObject(e);
+			if (found != null) {
+				int check = found.getChecked();
+				switch (check) {
+				case CHECKED:
+					found.setChecked(alt ? SUPPLEMENTAL : UNCHECKED, false);
+					break;
+				case SUPPLEMENTAL:
+				case PROPOSED:
+					if (alt)
+						found.setChecked(UNCHECKED, false);
+					else {
+						root.degrade(PROPOSED, SUPPROPOSED);
+						root.degrade(CHECKED, SUPPLEMENTAL);
+						found.setChecked(CHECKED, false);
+					}
+					break;
+				case SUPPROPOSED:
+					found.setChecked(alt ? UNCHECKED : SUPPLEMENTAL, false);
+					break;
+				default:
+					if (alt || forcePrimary) {
+						root.degrade(PROPOSED, SUPPROPOSED);
+						root.degrade(CHECKED, SUPPLEMENTAL);
+						found.setChecked(CHECKED, false);
+					} else
+						found.setChecked(SUPPLEMENTAL, false);
+					break;
+				}
+				drawCat();
+				forcePrimary = false;
+			}
+			break;
+		case SWT.Selection:
+			if (e.widget == unpairedButton) {
+				Token[] tokens = (Token[]) proposalViewer.getInput();
+				for (Token tok : tokens)
+					proposalViewer.setChecked(tok, tok.getMatch() == UNCHECKED);
+			} else if (e.widget == unpairedButton2) {
+				Token[] tokens = (Token[]) proposalViewer1.getInput();
+				for (Token tok : tokens)
+					proposalViewer1.setChecked(tok, tok.getMatch() == UNCHECKED);
+			} else if (e.widget == aiLink) {
+				if (aiService != null) {
+					boolean wasEnabled = aiService.isEnabled();
+					if (wasEnabled)
+						Job.getJobManager().cancel(this);
+					if (aiService.configure(getShell())) {
+						boolean enabled = aiService.isEnabled();
+						setProposalTitel();
+						List<Asset> reordered;
+						int p = assets.indexOf(currentAsset);
+						reordered = p > 0 ? assets.subList(p, assets.size()) : assets;
+						for (Asset asset : reordered)
+							predictions.remove(asset.getStringId());
+						fillValues(false);
+						// TODO could be improved when language can be
+						// controlled through API
+						if (enabled)
+							startPredictionJob(reordered);
+					}
+				}
+			} else if (e.widget == catLink) {
+				final Shell shell = getShell();
+				BusyIndicator.showWhile(shell.getDisplay(), () -> {
+					IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+					if (activeWorkbenchWindow != null) {
+						IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+						if (activePage != null) {
+							EditMetaDialog mdialog = new EditMetaDialog(shell, activePage,
+									Core.getCore().getDbManager(), false, null);
+							mdialog.setInitialPage(EditMetaDialog.CATEGORIES);
+							if (catBackup != null)
+								mdialog.setCategories(catBackup);
+							if (mdialog.open() == EditMetaDialog.OK) {
+								categories = mdialog.getCategories();
+								catBackup = null;
+								Node oldRoot = root;
+								constructTree(categories);
+								oldRoot.transferTo(root);
+								drawCat();
+								updateButtons();
+							}
+						}
+					}
+				});
+			} else if (e.widget == acceptLink) {
+				root.acceptProposals(root.has(CHECKED));
+				drawCat();
+				updateButtons();
+			}
+			break;
+		case SWT.Paint:
+			if (e.widget == catCanvas) {
+				Rectangle clientArea = catCanvas.getClientArea();
+				e.gc.fillRectangle(clientArea);
+				root.draw(e.gc, MARGINS, MARGINS, Math.max(20, (clientArea.width - 2 * MARGINS) / (depth + 1)),
+						Math.max(15, (clientArea.height - 2 * MARGINS) / (width + 1)));
+			} else
+				paintImage(e);
+			break;
 		}
+
 	}
 
-	@Override
-	public void keyReleased(KeyEvent e) {
-		// do nothing
+	private void paintImage(Event e) {
+		Image image = imageCache.getImage(currentAsset);
+		imageBounds = image.getBounds();
+		int imageSize = Math.max(imageBounds.width, imageBounds.height);
+		Rectangle clientArea = imageCanvas.getClientArea();
+		GC gc = e.gc;
+		gc.fillRectangle(clientArea);
+		int canvasSize = Math.max(10, Math.min(clientArea.width, clientArea.height) - 2 * MARGINS);
+		double factor = (double) Math.min(320, canvasSize) / imageSize;
+		int destWidth = (int) (imageBounds.width * factor);
+		int destHeight = (int) (imageBounds.height * factor);
+		int destX = (clientArea.width - destWidth) / 2;
+		int destY = (Math.min(350, clientArea.height) - destHeight) / 2;
+		gc.drawImage(image, 0, 0, imageBounds.width, imageBounds.height, destX, destY, destWidth, destHeight);
+		currentRegions = null;
+		if (showRegions > 0) {
+			Color color = gc.getForeground();
+			currentRegions = UiUtilities.drawRegions(gc, currentAsset, destX, destY, destWidth, destHeight, true,
+					showRegions, true, null);
+			gc.setForeground(color);
+		}
+		if (newFaces != null) {
+			Color color = gc.getForeground();
+			gc.setForeground(e.display.getSystemColor(SWT.COLOR_GREEN));
+			for (Rectangle rectangle : newFaces) {
+				int fWidth = (int) (rectangle.width * factor);
+				int fHeight = (int) (rectangle.height * factor);
+				int fx = (int) (rectangle.x * factor);
+				int fy = (int) (rectangle.y * factor);
+				gc.drawRectangle(fx + destX, fy + destY, fWidth, fHeight);
+			}
+			gc.setForeground(color);
+		}
+		StringBuilder sb = new StringBuilder();
+		String title = currentAsset.getTitle();
+		if (title == null || title.trim().isEmpty())
+			title = currentAsset.getName();
+		sb.append(title).append('\n');
+		String headline = currentAsset.getHeadline();
+		if (headline != null && !headline.isEmpty())
+			sb.append(headline).append('\n');
+		String description = currentAsset.getImageDescription();
+		if (description != null && !description.isEmpty())
+			sb.append(description).append('\n');
+		String[] keyword = currentAsset.getKeyword();
+		if (keyword != null && keyword.length > 0)
+			sb.append(Core.toStringList(keyword, ", ")).append('\n'); //$NON-NLS-1$
+		sb.append("\n\n").append(NLS.bind(Messages.CategorizeDialog_x_of_y, current + 1, size)); //$NON-NLS-1$
+		textLayout.setWidth(destWidth);
+		textLayout.setText(sb.toString());
+		textLayout.draw(gc, destX, destY + destHeight + MARGINS, -1, -1, null, null);
+		String safety = QueryField.SAFETY.value2text(QueryField.SAFETY.obtainFieldValue(currentAsset), ""); //$NON-NLS-1$
+		Point tx = gc.textExtent(safety);
+		gc.drawText(safety, clientArea.width - tx.x - 5, clientArea.height - tx.y - 5, true);
+
 	}
 
 	public Map<String, Category> getCategories() {

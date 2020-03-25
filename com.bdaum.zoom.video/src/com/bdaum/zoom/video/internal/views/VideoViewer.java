@@ -21,8 +21,8 @@ package com.bdaum.zoom.video.internal.views;
 
 import java.io.IOException;
 
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
@@ -47,7 +47,7 @@ public class VideoViewer extends AbstractMediaViewer {
 	public boolean close() {
 		return false;
 	}
-	public void releaseKey(KeyEvent e) {
+	public void releaseKey(Event e) {
 		//dummy
 	}
 

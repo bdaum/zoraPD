@@ -43,7 +43,7 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.internal.FieldDescriptor;
 import com.bdaum.zoom.ui.internal.dialogs.Messages;
 
-public abstract class AbstractCriterionGroup {
+public abstract class AbstractCriterionGroup implements Listener {
 
 	protected static final int ALLITEMS = 3;
 
@@ -69,14 +69,6 @@ public abstract class AbstractCriterionGroup {
 	private String[] fieldItems;
 	private FieldDescriptor fieldValue;
 	private int relationValue;
-
-	protected Listener selectionListener = new Listener() {
-		@Override
-		public void handleEvent(Event e) {
-			validate();
-			signalModification(e);
-		}
-	};
 
 	public AbstractCriterionGroup(Composite parent, CollectionEditGroup collectionEditGroup, int groupNo,
 			boolean enabled, boolean and) {
@@ -123,6 +115,13 @@ public abstract class AbstractCriterionGroup {
 			children.add(relationLab);
 		}
 	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		validate();
+		signalModification(e);
+	}
+
 
 	protected void validate() {
 		// do nothing

@@ -10,15 +10,16 @@
  *******************************************************************************/
 package com.bdaum.zoom.ui.paint;
 
+import java.util.Vector;
 
-import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.*;
-
-import java.util.*;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Event;
 
 /**
- * The superclass for paint tools that contruct objects from individually
- * picked segments.
+ * The superclass for paint tools that contruct objects from individually picked
+ * segments.
  */
 public abstract class SegmentedPaintSession extends BasicPaintSession {
 	/**
@@ -48,37 +49,38 @@ public abstract class SegmentedPaintSession extends BasicPaintSession {
 	/**
 	 * Activates the tool.
 	 */
-	
+
 	public void beginSession() {
 		super.beginSession();
-		getPaintSurface().setStatusMessage(PaintExample.getResourceString(
-			"session.SegmentedInteractivePaint.message.anchorMode")); //$NON-NLS-1$
+		getPaintSurface().setStatusMessage(
+				PaintExample.getResourceString("session.SegmentedInteractivePaint.message.anchorMode")); //$NON-NLS-1$
 		previousFigure = null;
 		currentFigure = null;
 		controlPoints.clear();
 	}
-	
+
 	/**
 	 * Deactivates the tool.
-     */
-	
+	 */
+
 	public void endSession() {
 		getPaintSurface().clearRubberbandSelection();
-		if (previousFigure != null) getPaintSurface().drawFigure(previousFigure);
+		if (previousFigure != null)
+			getPaintSurface().drawFigure(previousFigure);
 		super.endSession();
 	}
-	
+
 	/**
-	 * Resets the tool.
-	 * Aborts any operation in progress.
+	 * Resets the tool. Aborts any operation in progress.
 	 */
-	
+
 	public void resetSession() {
 		getPaintSurface().clearRubberbandSelection();
-		if (previousFigure != null) getPaintSurface().drawFigure(previousFigure);
-		
-		getPaintSurface().setStatusMessage(PaintExample.getResourceString(
-			"session.SegmentedInteractivePaint.message.anchorMode")); //$NON-NLS-1$
+		if (previousFigure != null)
+			getPaintSurface().drawFigure(previousFigure);
+
+		getPaintSurface().setStatusMessage(
+				PaintExample.getResourceString("session.SegmentedInteractivePaint.message.anchorMode")); //$NON-NLS-1$
 		previousFigure = null;
 		currentFigure = null;
 		controlPoints.clear();
@@ -87,80 +89,69 @@ public abstract class SegmentedPaintSession extends BasicPaintSession {
 	/**
 	 * Handles a mouseDown event.
 	 * 
-	 * @param event the mouse event detail information
+	 * @param event
+	 *            the mouse event detail information
 	 */
-	
-	public void mouseDown(MouseEvent event) {
-		if (event.button != 1) return;
 
-		getPaintSurface().setStatusMessage(PaintExample.getResourceString(
-			"session.SegmentedInteractivePaint.message.interactiveMode")); //$NON-NLS-1$
+	public void mouseDown(MouseEvent event) {
+		if (event.button != 1)
+			return;
+
+		getPaintSurface().setStatusMessage(
+				PaintExample.getResourceString("session.SegmentedInteractivePaint.message.interactiveMode")); //$NON-NLS-1$
 		previousFigure = currentFigure;
 
 		if (!controlPoints.isEmpty()) {
 			Point lastPoint = controlPoints.elementAt(controlPoints.size() - 1);
-			if (lastPoint.x == event.x || lastPoint.y == event.y) return; // spurious event
+			if (lastPoint.x == event.x || lastPoint.y == event.y)
+				return; // spurious event
 		}
 		controlPoints.add(new Point(event.x, event.y));
 	}
 
-	/**
-	 * Handles a mouseDoubleClick event.
-	 * 
-	 * @param event the mouse event detail information
-	 */
-	
-	public void mouseDoubleClick(MouseEvent event) {
-		if (event.button != 1) return;
-		if (controlPoints.size() >= 2) {
-			getPaintSurface().clearRubberbandSelection();
-			previousFigure = createFigure(
-				controlPoints.toArray(new Point[controlPoints.size()]),
-				controlPoints.size(), true);
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.MouseDoubleClick:
+			if (e.button != 1)
+				return;
+			if (controlPoints.size() >= 2) {
+				getPaintSurface().clearRubberbandSelection();
+				previousFigure = createFigure(controlPoints.toArray(new Point[controlPoints.size()]),
+						controlPoints.size(), true);
+			}
+			resetSession();
+			break;
+		case SWT.MouseUp:
+			if (e.button != 1)
+				resetSession(); // abort if right or middle mouse button pressed
+			break;
+		case SWT.MouseMove:
+			final PaintSurface ps = getPaintSurface();
+			if (controlPoints.isEmpty())
+				ps.setStatusCoord(ps.getCurrentPosition());
+			else {
+				ps.setStatusCoordRange(controlPoints.elementAt(controlPoints.size() - 1), ps.getCurrentPosition());
+				ps.clearRubberbandSelection();
+				Point[] points = controlPoints.toArray(new Point[controlPoints.size() + 1]);
+				points[controlPoints.size()] = ps.getCurrentPosition();
+				currentFigure = createFigure(points, points.length, false);
+				ps.addRubberbandSelection(currentFigure);
+			}
+			break;
 		}
-		resetSession();
 	}
 
 	/**
-	 * Handles a mouseUp event.
+	 * Template Method: Creates a Figure for drawing rubberband entities and the
+	 * final product
 	 * 
-	 * @param event the mouse event detail information
-	 */
-	
-	public void mouseUp(MouseEvent event) {
-		if (event.button != 1) {
-			resetSession(); // abort if right or middle mouse button pressed
-			return;
-		}
-	}
-	
-	/**
-	 * Handles a mouseMove event.
-	 * 
-	 * @param event the mouse event detail information
-	 */
-	
-	public void mouseMove(MouseEvent event) {
-		final PaintSurface ps = getPaintSurface();
-		if (controlPoints.isEmpty()) {
-			ps.setStatusCoord(ps.getCurrentPosition());
-			return; // spurious event
-		}
-		ps.setStatusCoordRange(controlPoints.elementAt(controlPoints.size() - 1),
-			ps.getCurrentPosition());
-		ps.clearRubberbandSelection();
-		Point[] points = controlPoints.toArray(new Point[controlPoints.size() + 1]);
-		points[controlPoints.size()] = ps.getCurrentPosition();
-		currentFigure = createFigure(points, points.length, false);
-		ps.addRubberbandSelection(currentFigure);
-	}	
-
-	/**
-	 * Template Method: Creates a Figure for drawing rubberband entities and the final product
-	 * 
-	 * @param points the array of control points
-	 * @param numPoints the number of valid points in the array (n >= 2)
-	 * @param closed true if the user double-clicked on the final control point
+	 * @param points
+	 *            the array of control points
+	 * @param numPoints
+	 *            the number of valid points in the array (n >= 2)
+	 * @param closed
+	 *            true if the user double-clicked on the final control point
 	 */
 	protected abstract Figure createFigure(Point[] points, int numPoints, boolean closed);
 }

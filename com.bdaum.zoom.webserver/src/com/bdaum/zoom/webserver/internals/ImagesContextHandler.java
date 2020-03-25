@@ -19,11 +19,13 @@
  */
 package com.bdaum.zoom.webserver.internals;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -74,6 +76,10 @@ import com.bdaum.zoom.core.internal.lire.Algorithm;
 import com.bdaum.zoom.core.internal.lucene.ILuceneService;
 import com.bdaum.zoom.core.internal.lucene.ParseException;
 import com.bdaum.zoom.gps.internal.GeoService;
+import com.bdaum.zoom.image.IVideoService;
+import com.bdaum.zoom.image.IVideoService.IFrameHandler;
+import com.bdaum.zoom.image.IVideoService.IVideoStreamer;
+import com.bdaum.zoom.image.internal.ImageActivator;
 import com.bdaum.zoom.operations.internal.xmp.XMPUtilities;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
@@ -92,13 +98,13 @@ final class ImagesContextHandler extends AbstractLightboxContextHandler {
 	private static final String XMP = ".xmp"; //$NON-NLS-1$
 	private static IVolumeManager volumeManager = Core.getCore().getVolumeManager();
 	private static int labelAlignment;
+	private static final String boundary = "stream"; //$NON-NLS-1$
 
 	public synchronized int serve(Request req, Response resp) throws IOException {
 		if (!preferenceStore.getBoolean(PreferenceConstants.IMAGES))
 			return 403;
 		IDbManager dbManager = Core.getCore().getDbManager();
 		String imagesPath = '/' + preferenceStore.getString(PreferenceConstants.IMAGEPATH);
-		String byId = imagesPath + "/byId/"; //$NON-NLS-1$
 		String jpeg = imagesPath + "/jpg/"; //$NON-NLS-1$
 		String path = req.getPath();
 		if (path.startsWith(jpeg)) {
@@ -112,6 +118,37 @@ final class ImagesContextHandler extends AbstractLightboxContextHandler {
 			}
 			return sendThumbnail(resp, assetId);
 		}
+		String video = imagesPath + "/video/"; //$NON-NLS-1$
+		if (path.startsWith(video)) {
+			ZHTTPServer server = WebserverActivator.getDefault().getServer();
+			IVideoService videoService = ImageActivator.getDefault().getVideoService();
+			if (videoService != null && server != null) {
+				AssetImpl asset = Core.getCore().getDbManager().obtainAsset(path.substring(video.length()));
+				URI uri = Core.getCore().getVolumeManager().findExistingFile(asset, true);
+				if (uri != null) {
+					File file = new File(uri);
+					OutputStream outputStream = resp.getOutputStream();
+					IVideoStreamer streamer = videoService.createVideoStreamer(file.getAbsolutePath(),
+							new IFrameHandler() {
+								@Override
+								public boolean handleFrame(BufferedImage frame) {
+									try {
+										server.pushImage(outputStream, frame, boundary);
+									} catch (IOException e) {
+										return false;
+									}
+									return true;
+								}
+							}, -1);
+					ZHTTPServer.writeVideoHeader(outputStream, boundary);
+					streamer.start();
+					return 0;
+				}
+				return 404;
+			}
+			return 503;
+		}
+		String byId = imagesPath + "/byId/"; //$NON-NLS-1$
 		if (path.startsWith(byId))
 			return preferenceStore.getBoolean(PreferenceConstants.DOWNLOAD)
 					? handleDownloadPath(path.substring(byId.length()), req, resp)
@@ -246,9 +283,6 @@ final class ImagesContextHandler extends AbstractLightboxContextHandler {
 				if (asset != null) {
 					String caption = WebserverActivator.getDefault().getCaptionProcessor().computeImageCaption(asset,
 							null, null, null, labelTemplate, true);
-					pos = parseInteger(params.get("pos"), 0); //$NON-NLS-1$
-					targetId = params.get("targetId"); //$NON-NLS-1$
-					search = Core.decodeUrl(params.get("search")); //$NON-NLS-1$
 					substitutions.put("{$imageLink}", computeImageLink(asset, imageId, caption)); //$NON-NLS-1$
 					substitutions.put("{$imageTitle}", UiUtilities.createSlideTitle(asset)); //$NON-NLS-1$
 					substitutions.put("{$fullsizeLink}", "jpg/" + asset.getStringId() + "_0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -271,6 +305,33 @@ final class ImagesContextHandler extends AbstractLightboxContextHandler {
 					substitutions.put("{$metadata}", computeMetadata(asset)); //$NON-NLS-1$
 					substitutions.put("{$caption}", caption); //$NON-NLS-1$
 					content = WebserverActivator.getDefault().compilePage(PreferenceConstants.VIEW, substitutions);
+				}
+			} else if (path.endsWith("/video.html")) { //$NON-NLS-1$
+				String imageId = params.get("imageId"); //$NON-NLS-1$
+				AssetImpl asset = Core.getCore().getDbManager().obtainAsset(imageId);
+				if (asset != null) {
+					String caption = WebserverActivator.getDefault().getCaptionProcessor().computeImageCaption(asset,
+							null, null, null, labelTemplate, true);
+					String uri = asset.getUri();
+					substitutions.put("{$videoLink}", uri.startsWith("http") ? uri : "video/" + asset.getStringId()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					substitutions.put("{$imageTitle}", UiUtilities.createSlideTitle(asset)); //$NON-NLS-1$
+					String geoLink = null;
+					double lat = asset.getGPSLatitude();
+					double lon = asset.getGPSLongitude();
+					if (!Double.isNaN(lat) && !Double.isNaN(lon))
+						geoLink = GeoService.obtainGeoLink(lat, lon, 12);
+					if (geoLink != null)
+						substitutions.put("{$geoLink}", geoLink); //$NON-NLS-1$
+					substitutions.put("{$imageFile}", "byId/" + asset.getStringId()); //$NON-NLS-1$ //$NON-NLS-2$
+					substitutions.put("{$$infoAction}", //$NON-NLS-1$
+							preferenceStore.getBoolean(PreferenceConstants.METADATA) ? null : ""); //$NON-NLS-1$
+					substitutions.put("{$$downloadAction}", //$NON-NLS-1$
+							preferenceStore.getBoolean(PreferenceConstants.DOWNLOAD) ? null : ""); //$NON-NLS-1$
+					substitutions.put("{$$geoAction}", //$NON-NLS-1$
+							preferenceStore.getBoolean(PreferenceConstants.GEO) && geoLink != null ? null : ""); //$NON-NLS-1$
+					substitutions.put("{$metadata}", computeMetadata(asset)); //$NON-NLS-1$
+					substitutions.put("{$caption}", caption); //$NON-NLS-1$
+					content = WebserverActivator.getDefault().compilePage(PreferenceConstants.VIDEO, substitutions);
 				}
 			} else if (path.endsWith("/uploads.html")) { //$NON-NLS-1$
 				if (!preferenceStore.getBoolean(PreferenceConstants.ALLOWUPLOADS))
@@ -644,9 +705,15 @@ final class ImagesContextHandler extends AbstractLightboxContextHandler {
 	}
 
 	private static String computeImageLink(AssetImpl asset, String imageId, String caption) {
-		return new StringBuilder().append(" src=\"jpg/").append(imageId).append("_500\" srcset=\"jpg/") //$NON-NLS-1$ //$NON-NLS-2$
-				.append(imageId).append("_1000 1000w, jpg/").append(imageId).append("_2000 2000w, jpg/").append(imageId) //$NON-NLS-1$ //$NON-NLS-2$
-				.append("_3000 3000w\" ").append("alt=\"").append(caption).append("\" title=\"") //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
+		String uri = asset.getUri();
+		StringBuilder sb = new StringBuilder(256);
+		if (uri.startsWith("http")) //$NON-NLS-1$
+			sb.append(" src=\"").append(uri).append("\" "); //$NON-NLS-1$ //$NON-NLS-2$
+		else
+			sb.append(" src=\"jpg/").append(imageId).append("_500\" srcset=\"jpg/") //$NON-NLS-1$ //$NON-NLS-2$
+					.append(imageId).append("_1000 1000w, jpg/").append(imageId).append("_2000 2000w, jpg/") //$NON-NLS-1$ //$NON-NLS-2$
+					.append(imageId).append("_3000 3000w\" "); // $NON-NLS-1$ //$NON-NLS-1$
+		return sb.append("alt=\"").append(caption).append("\" title=\"") //$NON-NLS-1$//$NON-NLS-2$
 				.append(toHtml(caption, false)).toString(); // $NON-NLS-1$
 	}
 
@@ -758,22 +825,25 @@ final class ImagesContextHandler extends AbstractLightboxContextHandler {
 	private String createSection(StringBuilder sb, Asset asset, int pos, String collId, String search, String template,
 			IScoreFormatter scoreFormatter, boolean first) {
 		String assetId = asset.getStringId();
-		boolean isPhoto = volumeManager.findExistingFile(asset, true) != null
-				&& getMediaFlags(asset) == QueryField.PHOTO;
+		boolean isWeb = asset.getUri().startsWith("http"); //$NON-NLS-1$
+		boolean isLocal = volumeManager.findExistingFile(asset, true) != null;
+		boolean isPhoto = (isLocal || isWeb) && getMediaFlags(asset) == IMediaSupport.PHOTO;
+		boolean isVideo = false;
 		sb.append("<section class=\"column\">\n"); //$NON-NLS-1$
-		if (isPhoto) {
+		if (isPhoto)
 			sb.append("<a href=\"view.html?imageId=").append(assetId) //$NON-NLS-1$
-					.append("&pos=").append(pos); //$NON-NLS-1$
-			if (collId != null)
-				sb.append("&targetId=").append(collId); //$NON-NLS-1$
-			if (search != null)
-				sb.append("&search=").append(Core.encodeUrlSegment(search)); //$NON-NLS-1$
-			sb.append("\" target=\"_blank\">"); //$NON-NLS-1$
-		}
+					.append("\" target=\"_blank\">"); //$NON-NLS-1$
+//		else {
+//			isVideo = (isLocal || isWeb) && getMediaFlags(asset) == IMediaSupport.VIDEO
+//					&& ImageActivator.getDefault().getVideoService() != null;
+//			if (isVideo)
+//				sb.append("<a href=\"video.html?imageId=").append(assetId) //$NON-NLS-1$
+//						.append("\" target=\"_blank\">"); //$NON-NLS-1$
+//		}
 		String caption = toHtml(WebserverActivator.getDefault().getCaptionProcessor().computeImageCaption(asset,
 				scoreFormatter, null, null, template, false), false);
 		sb.append("<figure class=\"thumbnail"); //$NON-NLS-1$
-		if (!isPhoto)
+		if (!isPhoto && !isVideo)
 			sb.append(" offline"); //$NON-NLS-1$
 		if (first)
 			sb.append("\" id=\"firstthumb"); //$NON-NLS-1$
@@ -784,7 +854,8 @@ final class ImagesContextHandler extends AbstractLightboxContextHandler {
 				.append("<figcaption class=\"thumbnail\" style=\"text-align: ") //$NON-NLS-1$
 				.append(labelAlignment == 0 ? "left" : labelAlignment == 2 ? "right" : "center").append(";\">") //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 				.append(caption).append("</figcaption>\n</figure>"); //$NON-NLS-1$
-		sb.append("</a>"); //$NON-NLS-1$
+		if (isPhoto || isVideo)
+			sb.append("</a>"); //$NON-NLS-1$
 		sb.append("\n</section>\n"); //$NON-NLS-1$
 		return assetId;
 	}

@@ -20,10 +20,7 @@
 
 package com.bdaum.zoom.ui.internal.dialogs;
 
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
@@ -32,7 +29,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.ui.internal.widgets.ZDialog;
 
-public class ColorCodeDialog extends ZDialog {
+public class ColorCodeDialog extends ZDialog implements Listener {
 
 	public static final int SELECTABORT = -2;
 	private int code;
@@ -48,23 +45,8 @@ public class ColorCodeDialog extends ZDialog {
 	protected Control createDialogArea(Composite parent) {
 		Shell shell = getShell();
 		colorCodeGroup = new ColorCodeGroup(parent, SWT.NONE, code);
-		colorCodeGroup.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				code = -2;
-				close();
-			}
-		});
-		colorCodeGroup.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				code = colorCodeGroup.getCode();
-				shell.getDisplay().timerExec(100, () -> {
-					if (!shell.isDisposed())
-						close();
-				});
-			}
-		});
+		colorCodeGroup.addListener(SWT.FocusOut, this);
+		colorCodeGroup.addListener(this);
 		shell.pack();
 		shell.layout();
 		colorCodeGroup.setFocus();
@@ -73,6 +55,27 @@ public class ColorCodeDialog extends ZDialog {
 
 	@Override
 	public int open() {
-		return (super.open() != Window.CANCEL) ? code : SELECTABORT;
+		setReturnCode(CANCEL);
+		return (super.open() != CANCEL) ? code : SELECTABORT;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.FocusOut:
+			code = SELECTABORT;
+			close();
+			break;
+		default:
+			setReturnCode(OK);
+			Shell shell = getShell();
+			code = colorCodeGroup.getCode();
+			shell.getDisplay().timerExec(100, () -> {
+				if (!shell.isDisposed())
+					close();
+			});
+			break;
+		}
+
 	}
 }

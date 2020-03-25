@@ -61,7 +61,6 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -69,6 +68,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IPartListener;
@@ -653,7 +653,6 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		manager.add(viewImageAction);
 		manager.add(new Separator());
 		manager.add(editAction);
-		manager.add(editWithAction);
 		manager.add(new Separator(IZoomActionConstants.MB_HIERARCHY));
 		switch (type) {
 		case TYPE_DERIVATIVE:
@@ -926,7 +925,7 @@ public class HierarchyView extends ImageView implements ISelectionChangedListene
 		return getAssetSelection();
 	}
 
-	public Object findObject(MouseEvent e) {
+	public Object findObject(Event e) {
 		return findObject(e.x, e.y);
 	}
 

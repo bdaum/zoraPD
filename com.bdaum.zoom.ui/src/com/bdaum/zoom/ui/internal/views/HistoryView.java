@@ -570,6 +570,7 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 		manager.add(weekAction);
 		manager.add(monthAction);
 		manager.add(olderAction);
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	private void hookDoubleClickAction() {

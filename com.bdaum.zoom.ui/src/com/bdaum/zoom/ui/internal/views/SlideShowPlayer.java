@@ -54,15 +54,10 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.HelpEvent;
-import org.eclipse.swt.events.HelpListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -81,7 +76,9 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.ui.IViewPart;
@@ -147,7 +144,7 @@ import com.bdaum.zoom.ui.internal.widgets.FadingShell;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class SlideShowPlayer extends AbstractKiosk implements MouseListener, KeyListener {
+public class SlideShowPlayer extends AbstractKiosk implements Listener {
 
 	static final int TICK = 17;
 	static final int LONGTICK = 60;
@@ -479,9 +476,9 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 							} else
 								try {
 									shell.getDisplay().syncExec(() -> {
-										if (!text.getText().isEmpty()) {
-											text.setText(
-													text.getText() + Messages.getString("SlideShowPlayer.downloading")); //$NON-NLS-1$
+										if (!textLayout.getText().isEmpty()) {
+											textLayout.setText(textLayout.getText()
+													+ Messages.getString("SlideShowPlayer.downloading")); //$NON-NLS-1$
 											bottomCanvas.redraw();
 										}
 									});
@@ -534,8 +531,8 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 										break;
 									if (recipe != null && recipe != Recipe.NULL)
 										shell.getDisplay().syncExec(() -> {
-											if (!text.getText().isEmpty()) {
-												text.setText(text.getText()
+											if (!textLayout.getText().isEmpty()) {
+												textLayout.setText(textLayout.getText()
 														+ Messages.getString("SlideShowPlayer.developing")); //$NON-NLS-1$
 												bottomCanvas.redraw();
 											}
@@ -595,8 +592,8 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 		private ZImage createSectionBreak(final Shell shl, SlideRequest req) {
 			final SlideImpl slide = req.getSlide();
 			int layout = slide.getLayout();
-			if ((layout == Constants.SLIDE_MAP_LEFT
-					|| layout == Constants.SLIDE_MAP_RIGHT) && CoreActivator.getDefault().getGeoService() != null) {
+			if ((layout == Constants.SLIDE_MAP_LEFT || layout == Constants.SLIDE_MAP_RIGHT)
+					&& CoreActivator.getDefault().getGeoService() != null) {
 				AssetImpl[] nextAssets = req.getNextAssets();
 				for (AssetImpl asset : nextAssets)
 					if (!Double.isNaN(asset.getGPSLatitude()) && !Double.isNaN(asset.getGPSLongitude()))
@@ -763,13 +760,13 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 
 	public SmartCollectionImpl[] selectedAlbums;
 
-	public class SingleSlideJob extends Job implements HelpListener {
+	public class SingleSlideJob extends Job implements Listener {
 
 		public class SlideControl implements IHoverSubject {
 
 			public class ControlHover implements IGalleryHover {
 
-				public IHoverInfo getHoverInfo(IHoverSubject viewer, MouseEvent event) {
+				public IHoverInfo getHoverInfo(IHoverSubject viewer, Event event) {
 					Object ob = viewer.findObject(event);
 					if (ob instanceof Integer) {
 						String msg = null;
@@ -1091,16 +1088,16 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 				return null;
 			}
 
-			public Object findObject(MouseEvent event) {
+			public Object findObject(Event event) {
 				startTimer();
 				return ((int) (event.x / factor - 1.5d)) / 80;
 			}
 
-			public ImageRegion[] findAllRegions(MouseEvent event) {
+			public ImageRegion[] findAllRegions(Event event) {
 				return null;
 			}
 
-			public IGalleryHover getGalleryHover(MouseEvent event) {
+			public IGalleryHover getGalleryHover(Event event) {
 				return new ControlHover();
 			}
 
@@ -1135,7 +1132,6 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 		private ScheduledFuture<?> buttonTask;
 		private ScheduledFuture<?> panelTask;
 		private SlideControl slideControl;
-		private Point pnt = new Point(0, 0);
 		private Rectangle mbounds;
 		private boolean inhibitTimer;
 		private float zoom = 1f;
@@ -1171,131 +1167,10 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 				if (effect == Constants.SLIDE_TRANSITION_RANDOM)
 					effect = (int) (Math.random() * Constants.SLIDE_TRANSITION_N) + Constants.SLIDE_TRANSITION_START;
 				fadingShell = new FadingShell(shell, true, effect);
-				KeyListener keyListener = new KeyAdapter() {
-					@Override
-					public void keyReleased(KeyEvent e) {
-						switch (e.character) {
-						case SWT.TAB:
-							setPaused(true);
-							int ret = showClosePrompt(bottomShell);
-							if (ret != CLOSE_CANCEL)
-								request.setOperation(ret == CLOSE_CLOSE ? ABORT : IGNORE);
-							else
-								setPaused(false);
-							break;
-						case ' ':
-							if (request.isPaused())
-								request.setOperation(CONTINUE);
-							request.setPaused(!request.isPaused());
-							closeControl();
-							if (request.isPaused())
-								showMessage(Messages.getString("SlideShowPlayer.pause"), 1500, SWT.CENTER, //$NON-NLS-1$
-										UiConstants.VIEWERBANNERFONT, 5);
-							break;
-						case '0':
-						case '1':
-						case '2':
-						case '3':
-						case '4':
-						case '5':
-							if (request.getImage() != null) {
-								request.setPaused(true);
-								ZImage image = request.getImage();
-								if (image != null)
-									rateSlide(shell, null, e.character - '0', true);
-								closeControl();
-								request.setPaused(false);
-							}
-							break;
-						case 'a':
-							setPaused(true);
-							addToAlbums(shell, null);
-							setPaused(false);
-							break;
-						case 'r':
-							rotateClockwise(270);
-							break;
-						case 'R':
-							rotateClockwise(90);
-							break;
-						case 's':
-							if (request.getImage() != null)
-								addToSelection(request, true);
-							break;
-						case 'S':
-							if (request.getImage() != null)
-								addToSelection(request, false);
-							break;
-						default:
-							switch (e.keyCode) {
-							case SWT.ESC:
-								setPaused(true);
-								int cret = showClosePrompt(bottomShell);
-								if (cret != CLOSE_CANCEL)
-									request.setOperation(cret == CLOSE_CLOSE ? ABORT : IGNORE);
-								else
-									setPaused(false);
-								break;
-							case SWT.ARROW_LEFT:
-								if ((e.stateMask & SWT.CONTROL) == SWT.CONTROL) {
-									rotateClockwise(270);
-									break;
-								}
-								if (request.getSeqno() > 0) {
-									request.setOperation(BACK);
-									closeControl();
-									request.setPaused(true);
-								}
-								break;
-							case SWT.ARROW_RIGHT:
-								if ((e.stateMask & SWT.CONTROL) == SWT.CONTROL) {
-									rotateClockwise(90);
-									break;
-								}
-								if (request.getSeqno() < requestList.size() - 1) {
-									request.setOperation(FORWARD);
-									closeControl();
-									request.setPaused(true);
-								}
-								break;
-							case SWT.ARROW_UP:
-								setPaused(true);
-								gotoSlide(null, request, RESTART);
-								setPaused(false);
-								break;
-							case SWT.DEL:
-								if ((e.stateMask & (SWT.CONTROL | SWT.ALT)) != 0 && request.getImage() != null) {
-									request.setPaused(true);
-									processDelete(shell, null);
-									closeControl();
-									request.setPaused(false);
-								}
-								break;
-							case SWT.F2:
-								if (request.getImage() != null) {
-									Asset asset = request.getAsset();
-									if (asset != null) {
-										request.setPaused(true);
-										metadataRequested(asset);
-										request.setPaused(false);
-									}
-								}
-							}
-							break;
-						}
-					}
-				};
-				MouseMoveListener mouseMNoveListener = new MouseMoveListener() {
-					public void mouseMove(MouseEvent e) {
-						if (panelTask == null && !pauseAt && !ignoreMouseMovements)
-							mouseMovements++;
-					}
-				};
 				if (request.getImage() == null)
-					fillSectionShell(shell, keyListener, mouseMNoveListener, request.getSlide(),
-							request.getNextAssets());
+					fillSectionShell(shell, this, this, request.getSlide(), request.getNextAssets());
 				else
-					fillImageShell(shell, keyListener, mouseMNoveListener);
+					fillImageShell(shell, this, this);
 				shell.setFullScreen(true);
 				shell.setBackground(parent.getBackground());
 				shell.setForeground(parent.getForeground());
@@ -1573,8 +1448,8 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 			return Status.OK_STATUS;
 		}
 
-		private void fillSectionShell(Shell shell, KeyListener keyListener, MouseMoveListener mouseMNoveListener,
-				Slide slide, AssetImpl[] assets) {
+		private void fillSectionShell(Shell shell, Listener keyListener, Listener mouseMNoveListener, Slide slide,
+				AssetImpl[] assets) {
 			shell.setText(slide.getCaption());
 			shell.setLayout(new GridLayout(2, true));
 			if (slide.getLayout() == Constants.SLIDE_MAP_RIGHT) {
@@ -1586,8 +1461,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 			}
 		}
 
-		private void createTextgroup(Shell shell, Slide slide, KeyListener keyListener,
-				MouseMoveListener mouseMoveListener) {
+		private void createTextgroup(Shell shell, Slide slide, Listener keyListener, Listener mouseMoveListener) {
 			Composite textGroup = new Composite(shell, SWT.NONE);
 			textGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 			GridLayout layout = new GridLayout();
@@ -1609,81 +1483,80 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 			descriptionLabel.setFont(JFaceResources.getFont(UiConstants.VIEWERTITLEFONT));
 			descriptionLabel.setBackground(bottomShell.getBackground());
 			descriptionLabel.setForeground(bottomShell.getForeground());
-			titleLabel.addMouseMoveListener(mouseMoveListener);
-			titleLabel.addKeyListener(keyListener);
-			titleLabel.addHelpListener(SingleSlideJob.this);
-			descriptionLabel.addMouseMoveListener(mouseMoveListener);
-			descriptionLabel.addKeyListener(keyListener);
-			descriptionLabel.addHelpListener(SingleSlideJob.this);
-			textGroup.addMouseMoveListener(mouseMoveListener);
-			textGroup.addKeyListener(keyListener);
-			textGroup.addHelpListener(SingleSlideJob.this);
+			titleLabel.addListener(SWT.MouseMove, mouseMoveListener);
+			titleLabel.addListener(SWT.KeyUp, keyListener);
+			titleLabel.addListener(SWT.Help, SingleSlideJob.this);
+			descriptionLabel.addListener(SWT.MouseMove, mouseMoveListener);
+			descriptionLabel.addListener(SWT.KeyUp, keyListener);
+			descriptionLabel.addListener(SWT.Help, SingleSlideJob.this);
+			textGroup.addListener(SWT.MouseMove, mouseMoveListener);
+			textGroup.addListener(SWT.KeyUp, keyListener);
+			textGroup.addListener(SWT.Help, SingleSlideJob.this);
 		}
 
-		private void createMaparea(Shell shell, AssetImpl[] assets, KeyListener keyListener,
-				MouseMoveListener mouseMoveListener) {
+		private void createMaparea(Shell shell, AssetImpl[] assets, Listener keyListener, Listener mouseMoveListener) {
 			Composite mapArea = new Composite(shell, SWT.NONE);
 			mapArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 			mapArea.setBackground(bottomShell.getBackground());
-			mapArea.addMouseMoveListener(mouseMoveListener);
+			mapArea.addListener(SWT.MouseMove, mouseMoveListener);
 			GridLayout layout = new GridLayout();
 			layout.marginHeight = layout.marginWidth = 20;
 			mapArea.setLayout(layout);
 			Control map = CoreActivator.getDefault().getGeoService().showTrack(mapArea, assets, true);
 			if (map != null) {
-				map.addMouseMoveListener(mouseMoveListener);
-				map.addKeyListener(keyListener);
+				map.addListener(SWT.MouseMove, mouseMoveListener);
+				map.addListener(SWT.KeyUp, keyListener);
 			}
 		}
 
-		private void fillImageShell(Shell shell, KeyListener keyListener, MouseMoveListener mouseMoveListener) {
+		private void fillImageShell(Shell shell, Listener keyListener, Listener mouseMoveListener) {
 			shell.setText(slide.getCaption());
 			shell.setLayout(new FillLayout());
 			imageCanvas = new Canvas(shell, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
 			imageCanvas.setCursor(transparentCursor);
-			imageCanvas.addPaintListener(new PaintListener() {
-				public void paintControl(PaintEvent e) {
-					ZImage image = request.getImage();
-					Rectangle sbounds = imageCanvas.getClientArea();
-					GC gc = e.gc;
-					gc.setBackground(shell.getBackground());
-					gc.fillRectangle(sbounds);
-					if (image != null && !image.isDisposed()) {
-						Rectangle ibounds = image.getBounds();
-						if (slide.getZoom() == 0)
-							image.draw(gc, (sbounds.width - ibounds.width) / 2, (sbounds.height - ibounds.height) / 2,
-									ZImage.CROPPED, sbounds.width, sbounds.height);
-						else {
-							double f = Math.min((double) sbounds.width / ibounds.width,
-									(double) sbounds.height / ibounds.height);
-							double iwidth = ibounds.width * f;
-							double iheight = ibounds.height * f;
-							double w = ibounds.width * zoom;
-							double h = ibounds.height * zoom;
-							double offx = Math.max(0, Math.min(ibounds.width - w,
-									ibounds.width * (slide.getZoomX() + 100) / 200 - w / 2));
-							double offy = Math.max(0, Math.min(ibounds.height - h,
-									ibounds.height * (slide.getZoomY() + 100) / 200 - h / 2));
-							image.draw(gc, (int) (offx + 0.5d), (int) (offy + 0.5d), (int) (w + 0.5d), (int) (h + 0.5d),
-									(int) ((sbounds.width - iwidth) / 2 + 0.5d),
-									(int) ((sbounds.height - iheight) / 2 + 0.5d), (int) (iwidth + 0.5d),
-									(int) (iheight + 0.5d), ZImage.CROPPED, sbounds.width, sbounds.height, true);
-						}
-						if (request.isRemoveFromShow()) {
-							String txt = Messages.getString("SlideShowPlayer.deleted"); //$NON-NLS-1$
-							gc.setFont(JFaceResources.getFont(UiConstants.VIEWERBANNERFONT));
-							int x = gc.textExtent(txt).x;
-							gc.setForeground(displ.getSystemColor(SWT.COLOR_WHITE));
-							gc.drawText(txt, sbounds.width - x - 5, 5, true);
-							gc.setForeground(displ.getSystemColor(SWT.COLOR_RED));
-							gc.drawText(txt, sbounds.width - x - 4, 4, true);
-						}
-					}
+			imageCanvas.addListener(SWT.Paint, this);
+			imageCanvas.addListener(SWT.MouseMove, mouseMoveListener);
+			imageCanvas.addListener(SWT.KeyUp, keyListener);
+			imageCanvas.addListener(SWT.Help, SingleSlideJob.this);
+		}
+
+		private void paintImage(Event e) {
+			ZImage image = request.getImage();
+			Rectangle sbounds = imageCanvas.getClientArea();
+			GC gc = e.gc;
+			gc.setBackground(shell.getBackground());
+			gc.fillRectangle(sbounds);
+			if (image != null && !image.isDisposed()) {
+				Rectangle ibounds = image.getBounds();
+				if (slide.getZoom() == 0)
+					image.draw(gc, (sbounds.width - ibounds.width) / 2, (sbounds.height - ibounds.height) / 2,
+							ZImage.CROPPED, sbounds.width, sbounds.height);
+				else {
+					double f = Math.min((double) sbounds.width / ibounds.width,
+							(double) sbounds.height / ibounds.height);
+					double iwidth = ibounds.width * f;
+					double iheight = ibounds.height * f;
+					double w = ibounds.width * zoom;
+					double h = ibounds.height * zoom;
+					double offx = Math.max(0,
+							Math.min(ibounds.width - w, ibounds.width * (slide.getZoomX() + 100) / 200 - w / 2));
+					double offy = Math.max(0,
+							Math.min(ibounds.height - h, ibounds.height * (slide.getZoomY() + 100) / 200 - h / 2));
+					image.draw(gc, (int) (offx + 0.5d), (int) (offy + 0.5d), (int) (w + 0.5d), (int) (h + 0.5d),
+							(int) ((sbounds.width - iwidth) / 2 + 0.5d), (int) ((sbounds.height - iheight) / 2 + 0.5d),
+							(int) (iwidth + 0.5d), (int) (iheight + 0.5d), ZImage.CROPPED, sbounds.width,
+							sbounds.height, true);
 				}
-			});
-			imageCanvas.addMouseMoveListener(mouseMoveListener);
-			imageCanvas.addKeyListener(keyListener);
-			imageCanvas.addHelpListener(SingleSlideJob.this);
+				if (request.isRemoveFromShow()) {
+					String txt = Messages.getString("SlideShowPlayer.deleted"); //$NON-NLS-1$
+					gc.setFont(JFaceResources.getFont(UiConstants.VIEWERBANNERFONT));
+					int x = gc.textExtent(txt).x;
+					gc.setForeground(displ.getSystemColor(SWT.COLOR_WHITE));
+					gc.drawText(txt, sbounds.width - x - 5, 5, true);
+					gc.setForeground(displ.getSystemColor(SWT.COLOR_RED));
+					gc.drawText(txt, sbounds.width - x - 4, 4, true);
+				}
+			}
 		}
 
 		protected void showMessage(String msg, final int titleDur, int valign, String font, int margins) {
@@ -1703,7 +1576,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 					e.gc.drawText(msg, margins, margins);
 				}
 			});
-			titleCanvas.addHelpListener(SingleSlideJob.this);
+			titleCanvas.addListener(SWT.Help, SingleSlideJob.this);
 			int y = pBounds.y;
 			switch (valign) {
 			case SWT.BEGINNING:
@@ -1745,6 +1618,140 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 						});
 				}
 			}, 0L, TICK, TimeUnit.MILLISECONDS);
+		}
+
+		@Override
+		public void handleEvent(Event e) {
+			switch (e.type) {
+			case SWT.Help:
+				ToolTip toolTip = new ToolTip(displ.getActiveShell(), SWT.BALLOON);
+				Rectangle bounds = displ.getPrimaryMonitor().getBounds();
+				UiUtilities.showTooltip(toolTip, bounds.x + 10, bounds.y + 5,
+						Messages.getString("SlideShowPlayer.Slideshow"), getKeyboardHelp()); //$NON-NLS-1$
+				break;
+			case SWT.Paint:
+				paintImage(e);
+				break;
+			case SWT.KeyUp:
+				keyReleased(e);
+				break;
+			case SWT.MouseMove:
+				if (panelTask == null && !pauseAt && !ignoreMouseMovements)
+					mouseMovements++;
+				break;
+			}
+		}
+
+		private void keyReleased(Event e) {
+			switch (e.character) {
+			case SWT.TAB:
+				setPaused(true);
+				int ret = showClosePrompt(bottomShell);
+				if (ret != CLOSE_CANCEL)
+					request.setOperation(ret == CLOSE_CLOSE ? ABORT : IGNORE);
+				else
+					setPaused(false);
+				break;
+			case ' ':
+				if (request.isPaused())
+					request.setOperation(CONTINUE);
+				request.setPaused(!request.isPaused());
+				closeControl();
+				if (request.isPaused())
+					showMessage(Messages.getString("SlideShowPlayer.pause"), 1500, SWT.CENTER, //$NON-NLS-1$
+							UiConstants.VIEWERBANNERFONT, 5);
+				break;
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+				if (request.getImage() != null) {
+					request.setPaused(true);
+					ZImage image = request.getImage();
+					if (image != null)
+						rateSlide(shell, null, e.character - '0', true);
+					closeControl();
+					request.setPaused(false);
+				}
+				break;
+			case 'a':
+				setPaused(true);
+				addToAlbums(shell, null);
+				setPaused(false);
+				break;
+			case 'r':
+				rotateClockwise(270);
+				break;
+			case 'R':
+				rotateClockwise(90);
+				break;
+			case 's':
+				if (request.getImage() != null)
+					addToSelection(request, true);
+				break;
+			case 'S':
+				if (request.getImage() != null)
+					addToSelection(request, false);
+				break;
+			default:
+				switch (e.keyCode) {
+				case SWT.ESC:
+					setPaused(true);
+					int cret = showClosePrompt(bottomShell);
+					if (cret != CLOSE_CANCEL)
+						request.setOperation(cret == CLOSE_CLOSE ? ABORT : IGNORE);
+					else
+						setPaused(false);
+					break;
+				case SWT.ARROW_LEFT:
+					if ((e.stateMask & SWT.CONTROL) == SWT.CONTROL) {
+						rotateClockwise(270);
+						break;
+					}
+					if (request.getSeqno() > 0) {
+						request.setOperation(BACK);
+						closeControl();
+						request.setPaused(true);
+					}
+					break;
+				case SWT.ARROW_RIGHT:
+					if ((e.stateMask & SWT.CONTROL) == SWT.CONTROL) {
+						rotateClockwise(90);
+						break;
+					}
+					if (request.getSeqno() < requestList.size() - 1) {
+						request.setOperation(FORWARD);
+						closeControl();
+						request.setPaused(true);
+					}
+					break;
+				case SWT.ARROW_UP:
+					setPaused(true);
+					gotoSlide(null, request, RESTART);
+					setPaused(false);
+					break;
+				case SWT.DEL:
+					if ((e.stateMask & (SWT.CONTROL | SWT.ALT)) != 0 && request.getImage() != null) {
+						request.setPaused(true);
+						processDelete(shell, null);
+						closeControl();
+						request.setPaused(false);
+					}
+					break;
+				case SWT.F2:
+					if (request.getImage() != null) {
+						Asset asset = request.getAsset();
+						if (asset != null) {
+							request.setPaused(true);
+							metadataRequested(asset);
+							request.setPaused(false);
+						}
+					}
+				}
+				break;
+			}
 		}
 
 		private int checkStatus(IProgressMonitor monitor) {
@@ -1912,26 +1919,12 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 			}
 		}
 
-		public void helpRequested(HelpEvent e) {
-			ToolTip toolTip = new ToolTip(displ.getActiveShell(), SWT.BALLOON);
-			toolTip.setAutoHide(true);
-			pnt.x = pnt.y = 0;
-			toolTip.setLocation(pnt);
-			toolTip.setText(Messages.getString("SlideShowPlayer.Slideshow")); //$NON-NLS-1$
-			toolTip.setMessage(getKeyboardHelp());
-			toolTip.setVisible(true);
-		}
-
 		private void metadataRequested(Asset asset) {
 			ToolTip toolTip = new ToolTip(displ.getActiveShell(), SWT.BALLOON);
-			toolTip.setAutoHide(true);
 			Rectangle bounds = displ.getPrimaryMonitor().getBounds();
-			pnt.x = bounds.width / 2;
-			pnt.y = bounds.height / 2;
-			toolTip.setLocation(pnt);
-			toolTip.setText(NLS.bind(Messages.getString("SlideShowPlayer.metadata"), asset.getName())); //$NON-NLS-1$
-			toolTip.setMessage(new HoverInfo(asset, (ImageRegion[]) null).getText());
-			toolTip.setVisible(true);
+			UiUtilities.showTooltip(toolTip, bounds.width / 2 + bounds.x, bounds.height / 2 + bounds.y,
+					NLS.bind(Messages.getString("SlideShowPlayer.metadata"), asset.getName()), //$NON-NLS-1$
+					new HoverInfo(asset, (ImageRegion[]) null).getText());
 		}
 
 		private void rateSlide(final Control control, MouseEvent event, int rating, boolean autoClose) {
@@ -2156,7 +2149,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 						if (answer != null && !shell.isDisposed()) {
 							shell.getDisplay().asyncExec(() -> {
 								if (!shell.isDisposed()) {
-									text.setText(""); //$NON-NLS-1$
+									textLayout.setText(""); //$NON-NLS-1$
 									bottomCanvas.redraw();
 								}
 							});
@@ -2246,7 +2239,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 							if (slide != null && !shell.isDisposed()) {
 								shell.getDisplay().asyncExec(() -> {
 									if (!shell.isDisposed()) {
-										text.setText(Messages.getString("SlideShowPlayer.end_of_show")); //$NON-NLS-1$
+										textLayout.setText(Messages.getString("SlideShowPlayer.end_of_show")); //$NON-NLS-1$
 										CssActivator.getDefault().setColors(bottomShell);
 										bottomCanvas.redraw();
 									}
@@ -2308,8 +2301,8 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 			req = requestList.get(currentSlide++);
 			if (!cache.containsKey(req.getSlide().getStringId()) && !shell.isDisposed())
 				shell.getDisplay().asyncExec(() -> {
-					if (!text.isDisposed()) {
-						text.setText(message);
+					if (!textLayout.isDisposed()) {
+						textLayout.setText(message);
 						bottomCanvas.redraw();
 					}
 				});
@@ -2580,7 +2573,7 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 	private SlideShowImpl slideshow;
 	private Shell bottomShell;
 	private Canvas bottomCanvas;
-	private TextLayout text;
+	private TextLayout textLayout;
 	private List<SlideImpl> slides;
 	private boolean advanced;
 	private List<SlideRequest> requestList;
@@ -2622,15 +2615,14 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 				deleted.add(request.getSlide().getStringId());
 		if (slides.size() > deleted.size()) {
 			ToolTip tooltip = new ToolTip(parentWindow.getShell(), SWT.BALLOON);
-			tooltip.setText(Messages.getString("SlideShowPlayer.save_show")); //$NON-NLS-1$
-			tooltip.setMessage(Messages.getString("SlideShowPlayer.save_show_msg")); //$NON-NLS-1$
 			tooltip.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
 					doPromptForSave(deleted);
 				}
 			});
-			tooltip.setVisible(true);
+			UiUtilities.showTooltip(tooltip, 0, 0, Messages.getString("SlideShowPlayer.save_show"), //$NON-NLS-1$
+					Messages.getString("SlideShowPlayer.save_show_msg")); //$NON-NLS-1$
 		}
 	}
 
@@ -2682,31 +2674,70 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 		super.create();
 		bottomShell = createKioskShell(Messages.getString("SlideShowPlayer.slideshow")); //$NON-NLS-1$
 		bottomCanvas = new Canvas(bottomShell, SWT.DOUBLE_BUFFERED);
-		bottomCanvas.addKeyListener(this);
-		bottomCanvas.addMouseListener(this);
-		text = new TextLayout(display);
-		text.setAlignment(SWT.CENTER);
-		text.setFont(JFaceResources.getFont(UiConstants.VIEWERFONT));
+		bottomCanvas.addListener(SWT.KeyUp, this);
+		bottomCanvas.addListener(SWT.MouseDoubleClick, this);
+		textLayout = new TextLayout(display);
+		textLayout.setAlignment(SWT.CENTER);
+		textLayout.setFont(JFaceResources.getFont(UiConstants.VIEWERFONT));
 		createTransparentCursor();
 		bottomCanvas.setCursor(transparentCursor);
-		bottomCanvas.addPaintListener(new PaintListener() {
-			public void paintControl(PaintEvent e) {
-				Rectangle sbounds = bottomCanvas.getClientArea();
-				GC gc = e.gc;
-				gc.setBackground(bottomShell.getBackground());
-				gc.fillRectangle(sbounds);
-				gc.setForeground(bottomShell.getForeground());
-				text.setWidth(sbounds.width / 2);
-				Rectangle tbounds = text.getBounds();
-				text.draw(gc, (sbounds.width - tbounds.width) / 2, (sbounds.height - tbounds.height) / 2);
-			}
-		});
+		bottomCanvas.addListener(SWT.Paint, this);
 		bottomShell.setData(CSSProperties.ID, CSSProperties.SLIDESHOW);
 		CssActivator.getDefault().setColors(bottomShell);
-		text.setText(NLS.bind(slideshow.getAdhoc() ? Messages.getString("SlideShowPlayer.preparing") //$NON-NLS-1$
+		textLayout.setText(NLS.bind(slideshow.getAdhoc() ? Messages.getString("SlideShowPlayer.preparing") //$NON-NLS-1$
 				: Messages.getString("SlideShowPlayer.preparing_slideshow"), //$NON-NLS-1$
 				slideshow.getName()));
 		bottomShell.layout();
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.KeyUp:
+			if (e.character == SWT.TAB || e.keyCode == SWT.ESC)
+				closeWithPrompt();
+			break;
+		case SWT.MouseDoubleClick:
+			closeWithPrompt();
+			break;
+		case SWT.Paint:
+			paintBottom(e);
+			break;
+		}
+	}
+
+	private void paintBottom(Event e) {
+		Rectangle sbounds = bottomCanvas.getClientArea();
+		textLayout.setWidth(sbounds.width / 2);
+		Rectangle tbounds = textLayout.getBounds();
+		int x = (sbounds.width - tbounds.width) / 2;
+		int y = (sbounds.height - tbounds.height) / 2;
+		GC gc = e.gc;
+		Image img = null;
+		for (Slide slide : slides) {
+			String assetId = slide.getAsset();
+			AssetImpl asset = Core.getCore().getDbManager().obtainAsset(assetId);
+			if (asset != null) {
+				img = ImageUtilities.boxedblur(Core.getCore().getImageCache().getImage(asset), 4, -3);
+				break;
+			}
+		}
+		if (img != null) {
+			Rectangle ibnds = img.getBounds();
+			double factor = Math.max((double) sbounds.width / ibnds.width, (double) sbounds.height / ibnds.height);
+			int w = (int) (ibnds.width * factor);
+			int h = (int) (ibnds.height * factor);
+			gc.drawImage(img, 0, 0, ibnds.width, ibnds.height, (sbounds.width - w) / 2, (sbounds.height - h) / 2, w, h);
+			gc.setBackground(display.getSystemColor(SWT.COLOR_BLACK));
+			gc.setAlpha(96);
+			gc.fillRoundRectangle(x - 10, y + 25, textLayout.getWidth() + 20, tbounds.height + 10, 10, 10);
+			gc.setAlpha(255);
+		} else {
+			gc.setBackground(bottomShell.getBackground());
+			gc.fillRectangle(sbounds);
+		}
+		gc.setForeground(bottomShell.getForeground());
+		textLayout.draw(gc, x, y);
 	}
 
 	public void prepare(final int position) {
@@ -2821,8 +2852,9 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 		sb.append('\n').append(Messages.getString("SlideShowPlayer.press_esc_to_cancel")); //$NON-NLS-1$
 		if (firstSlide >= 0)
 			sb.append('\n').append(Messages.getString("SlideShowPlayer.move_mouse_to_obtain_control_panel")); //$NON-NLS-1$
-		text.setText(sb.toString());
-		text.setStyle(new TextStyle(JFaceResources.getFont(UiConstants.VIEWERTITLEFONT), null, null), 0, name.length());
+		textLayout.setText(sb.toString());
+		textLayout.setStyle(new TextStyle(JFaceResources.getFont(UiConstants.VIEWERTITLEFONT), null, null), 0,
+				name.length());
 		bottomCanvas.redraw();
 	}
 
@@ -2831,35 +2863,14 @@ public class SlideShowPlayer extends AbstractKiosk implements MouseListener, Key
 		if (transferJob != null)
 			Job.getJobManager().cancel(transferJob);
 		Job.getJobManager().cancel(Constants.SLIDESHOW);
-		if (text != null)
-			text.dispose();
+		if (textLayout != null)
+			textLayout.dispose();
 		if (!bottomShell.isDisposed())
 			bottomShell.close();
 		for (ZImage image : cache.values())
 			image.dispose();
 		cache.clear();
 		return super.close();
-	}
-
-	public void mouseDoubleClick(MouseEvent e) {
-		closeWithPrompt();
-	}
-
-	public void mouseDown(MouseEvent e) {
-		// do nothing
-	}
-
-	public void mouseUp(MouseEvent e) {
-		// do nothing
-	}
-
-	public void keyPressed(KeyEvent e) {
-		// do nothing
-	}
-
-	public void keyReleased(KeyEvent e) {
-		if (e.character == SWT.TAB || e.keyCode == SWT.ESC)
-			closeWithPrompt();
 	}
 
 	private void closeWithPrompt() {

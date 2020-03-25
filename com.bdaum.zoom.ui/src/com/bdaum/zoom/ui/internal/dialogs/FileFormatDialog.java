@@ -71,30 +71,17 @@ public class FileFormatDialog extends ZDialog implements Listener {
 		Composite comp = new Composite(area, SWT.BORDER);
 		comp.setLayout(new GridLayout(2, false));
 		allField = WidgetFactory.createCheckButton(comp, Messages.FileFormatDialog_all, null);
-		allField.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				boolean sel = allField.getSelection();
-				rawField.setSelection(sel);
-				dngField.setSelection(sel);
-				jpgField.setSelection(sel);
-				tifField.setSelection(sel);
-				othersField.setSelection(sel);
-				if (mediaField != null)
-					mediaField.setSelection(sel);
-				getButton(IDialogConstants.OK_ID).setEnabled(sel);
-			}
-		});
+		allField.addListener(SWT.Selection, this);
 		rawField = WidgetFactory.createCheckButton(comp, "RAW", null); //$NON-NLS-1$
-		rawField.addListener(this);
+		rawField.addListener(SWT.Selection, this);
 		dngField = WidgetFactory.createCheckButton(comp, "DNG", null); //$NON-NLS-1$
-		dngField.addListener(this);
+		dngField.addListener(SWT.Selection, this);
 		jpgField = WidgetFactory.createCheckButton(comp, "JPEG", null); //$NON-NLS-1$
-		jpgField.addListener(this);
+		jpgField.addListener(SWT.Selection, this);
 		tifField = WidgetFactory.createCheckButton(comp, "TIFF", null); //$NON-NLS-1$
-		tifField.addListener(this);
+		tifField.addListener(SWT.Selection, this);
 		othersField = WidgetFactory.createCheckButton(comp, Messages.FileFormatDialog_Other, null);
-		othersField.addListener(this);
+		othersField.addListener(SWT.Selection, this);
 		rawField.setSelection((formats & ITypeFilter.RAW) != 0);
 		dngField.setSelection((formats & ITypeFilter.DNG) != 0);
 		jpgField.setSelection((formats & ITypeFilter.JPEG) != 0);
@@ -102,7 +89,7 @@ public class FileFormatDialog extends ZDialog implements Listener {
 		othersField.setSelection((formats & ITypeFilter.OTHER) != 0);
 		if (!CoreActivator.getDefault().getMediaSupportMap().isEmpty()) {
 			mediaField = WidgetFactory.createCheckButton(comp, Messages.FileFormatDialog_other_media, null);
-			mediaField.addListener(this);
+			mediaField.addListener(SWT.Selection, this);
 			mediaField.setSelection((formats & ITypeFilter.MEDIA) != 0);
 		}
 		return area;
@@ -135,7 +122,18 @@ public class FileFormatDialog extends ZDialog implements Listener {
 	}
 
 	public void handleEvent(Event e) {
-		updateButtons();
+		if (e.widget == allField) {
+			boolean sel = allField.getSelection();
+			rawField.setSelection(sel);
+			dngField.setSelection(sel);
+			jpgField.setSelection(sel);
+			tifField.setSelection(sel);
+			othersField.setSelection(sel);
+			if (mediaField != null)
+				mediaField.setSelection(sel);
+			getButton(IDialogConstants.OK_ID).setEnabled(sel);
+		} else
+			updateButtons();
 	}
 
 	private void updateButtons() {

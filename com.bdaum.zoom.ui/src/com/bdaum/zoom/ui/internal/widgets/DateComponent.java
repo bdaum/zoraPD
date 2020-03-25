@@ -68,8 +68,8 @@ public class DateComponent extends Composite {
 		layout(true,true);
 	}
 
-	public void addListener(Listener listener) {
-		dateInput.addListener(listener);
+	public void addListener(int type, Listener listener) {
+		dateInput.addListener(type, listener);
 	}
 
 	/**
@@ -82,8 +82,8 @@ public class DateComponent extends Composite {
 		super.setEnabled(enabled);
 	}
 
-	public void removeListener(Listener listener) {
-		dateInput.removeListener(listener);
+	public void removeListener(int type, Listener listener) {
+		dateInput.removeListener(type, listener);
 	}
 
 }

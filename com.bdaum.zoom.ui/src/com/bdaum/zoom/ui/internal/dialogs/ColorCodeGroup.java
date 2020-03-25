@@ -23,8 +23,6 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
@@ -36,7 +34,7 @@ import org.eclipse.swt.widgets.Listener;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.internal.Icons;
 
-public class ColorCodeGroup extends Composite implements PaintListener {
+public class ColorCodeGroup extends Composite implements Listener {
 
 	private static int n = QueryField.COLORCODE.getEnumLabels().length;
 	private static int width = 16;
@@ -54,15 +52,8 @@ public class ColorCodeGroup extends Composite implements PaintListener {
 		canvas = new Canvas(this, SWT.DOUBLE_BUFFERED | SWT.BORDER);
 		canvas.setBounds(0, 0, cwidth, cheight);
 		setBounds(0, 0, cwidth, cheight);
-		canvas.addPaintListener(this);
-		canvas.addListener(SWT.MouseDown, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				ColorCodeGroup.this.code = event.x / width - 1;
-				canvas.redraw();
-				fireSelection(event);
-			}
-		});
+		canvas.addListener(SWT.Paint, this);
+		canvas.addListener(SWT.MouseDown, this);
 		canvas.redraw();
 	}
 
@@ -94,27 +85,38 @@ public class ColorCodeGroup extends Composite implements PaintListener {
 			listener.handleEvent(event);
 	}
 
-	public void paintControl(PaintEvent e) {
-		GC gc = e.gc;
-		gc.setBackground(e.display.getSystemColor(SWT.COLOR_WHITE));
-		gc.fillRectangle(0, 0, width, height);
-		gc.setBackground(e.display.getSystemColor(SWT.COLOR_GRAY));
-		for (int i = 0; i < width; i += 4)
-			for (int j = 0; j < height; j += 4)
-				if ((i + j) % 8 == 0)
-					gc.fillRectangle(i, j, 4, 4);
-		for (int i = 0; i < n; i++)
-			if (i > 0) {
-				Image image = Icons.toSwtColors(i - 1);
-				Rectangle ibounds = image.getBounds();
-				gc.drawImage(image, ibounds.x, ibounds.y, ibounds.width,
-						ibounds.height, i * width, 0, width, height);
-			}
-		gc.drawImage(Icons.tri.getImage(), width * (code + 1), height);
-	}
-
 	public int getCode() {
 		return code;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Paint:
+			GC gc = e.gc;
+			gc.setBackground(e.display.getSystemColor(SWT.COLOR_WHITE));
+			gc.fillRectangle(0, 0, width, height);
+			gc.setBackground(e.display.getSystemColor(SWT.COLOR_GRAY));
+			for (int i = 0; i < width; i += 4)
+				for (int j = 0; j < height; j += 4)
+					if ((i + j) % 8 == 0)
+						gc.fillRectangle(i, j, 4, 4);
+			for (int i = 0; i < n; i++)
+				if (i > 0) {
+					Image image = Icons.toSwtColors(i - 1);
+					Rectangle ibounds = image.getBounds();
+					gc.drawImage(image, ibounds.x, ibounds.y, ibounds.width,
+							ibounds.height, i * width, 0, width, height);
+				}
+			gc.drawImage(Icons.tri.getImage(), width * (code + 1), height);
+			break;
+		case SWT.MouseDown:
+			code = e.x / width - 1;
+			canvas.redraw();
+			fireSelection(e);
+			break;
+		}
+		
 	}
 
 }

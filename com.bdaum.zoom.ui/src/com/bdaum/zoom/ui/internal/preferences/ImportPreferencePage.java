@@ -54,8 +54,6 @@ import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -100,7 +98,7 @@ import com.bdaum.zoom.ui.widgets.CLink;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class ImportPreferencePage extends AbstractPreferencePage {
+public class ImportPreferencePage extends AbstractPreferencePage implements Listener {
 
 	public static final String ID = "com.bdaum.zoom.ui.preferences.ImportPreferencePage"; //$NON-NLS-1$
 	public static final String DNG = "dng"; //$NON-NLS-1$
@@ -164,7 +162,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 	@Override
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.IMPORT_PREFERENCE_PAGE);
-		createTabFolder(composite, Messages.getString("ImportPreferencePage.import"));  //$NON-NLS-1$
+		createTabFolder(composite, Messages.getString("ImportPreferencePage.import")); //$NON-NLS-1$
 		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.getString("ImportPreferencePage.general"), null); //$NON-NLS-1$
 		tabItem0.setControl(createGeneralGroup(tabFolder));
 		tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.getString("ImportPreferencePage.raw_conversion"), //$NON-NLS-1$
@@ -208,8 +206,10 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 				Messages.getString("ImportPreferencePage.automatically_invoke_import"), //$NON-NLS-1$
 				Messages.getString("ImportPreferencePage.start_tethered")); //$NON-NLS-1$
 		deviceGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		tetheredGroup = new RadioButtonGroup(eventGroup, Messages.getString("ImportPreferencePage.show_new"), SWT.HORIZONTAL, Messages.getString("ImportPreferencePage.gallery"), //$NON-NLS-1$ //$NON-NLS-2$
-				Messages.getString("ImportPreferencePage.internal_viewer"), Messages.getString("ImportPreferencePage.external_viewer")); //$NON-NLS-1$ //$NON-NLS-2$
+		tetheredGroup = new RadioButtonGroup(eventGroup, Messages.getString("ImportPreferencePage.show_new"), //$NON-NLS-1$
+				SWT.HORIZONTAL, Messages.getString("ImportPreferencePage.gallery"), //$NON-NLS-1$
+				Messages.getString("ImportPreferencePage.internal_viewer"), //$NON-NLS-1$
+				Messages.getString("ImportPreferencePage.external_viewer")); //$NON-NLS-1$
 		tetheredGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		return composite;
 	}
@@ -336,12 +336,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 			processRecipesButton.setSelection(previousProcessRecipes);
 			archiveRecipesButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ARCHIVERECIPES));
 		}
-		deviceGroup.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				checkForTetheringHint();
-			}
-		});
+		deviceGroup.addListener(SWT.Selection, this);
 	}
 
 	@Override
@@ -371,29 +366,11 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 				Messages.getString("ImportPreferencePage.location_Adobe_DNG_converter"), //$NON-NLS-1$
 				true, Constants.EXEEXTENSION, Constants.EXEFILTERNAMES, null, null, false, dialogSettings);
 		dngpathEditor.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		dngpathEditor.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				validate();
-			}
-		});
+		dngpathEditor.addListener(SWT.Modify, this);
 		CLink link = new CLink(basicsGroup, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		link.setText(Messages.getString("ImportPreferencePage.download_dng")); //$NON-NLS-1$
-		link.addListener(new Listener() {
-
-			@Override
-			public void handleEvent(Event event) {
-				String vlcDownload = System.getProperty(Messages.getString("ImportPreferencePage.dng_key")); //$NON-NLS-1$
-				try {
-					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));
-				} catch (PartInitException e1) {
-					// do nothing
-				} catch (MalformedURLException e1) {
-					// should never happen
-				}
-			}
-		});
+		link.addListener(SWT.Selection, this);
 		CGroup optionsGroup = UiUtilities.createGroup(composite, 2, Messages.getString("ImportPreferencePage.options")); //$NON-NLS-1$
 		uncompressedButton = WidgetFactory.createCheckButton(optionsGroup,
 				Messages.getString("ImportPreferencePage.uncompressed_dng"), //$NON-NLS-1$
@@ -407,13 +384,38 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 		GridData layoutData = new GridData(250, SWT.DEFAULT);
 		layoutData.horizontalIndent = 20;
 		dngfolderField.setLayoutData(layoutData);
-		dngfolderField.addVerifyListener(new VerifyListener() {
-			public void verifyText(VerifyEvent e) {
-				if (BatchUtilities.checkFilename(e.text) > 0)
-					e.doit = false;
-			}
-		});
+		dngfolderField.addListener(SWT.Verify, this);
 		return composite;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			if (e.widget == deviceGroup)
+				checkForTetheringHint();
+			else if (e.widget == processRecipesButton)
+				updateThumbnailWarning();
+			else {
+				String vlcDownload = System.getProperty(Messages.getString("ImportPreferencePage.dng_key")); //$NON-NLS-1$
+				try {
+					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));
+				} catch (PartInitException e1) {
+					// do nothing
+				} catch (MalformedURLException e1) {
+					// should never happen
+				}
+			}
+			break;
+		case SWT.Verify:
+			if (BatchUtilities.checkFilename(e.text) > 0)
+				e.doit = false;
+			break;
+		case SWT.Modify:
+			validate();
+			break;
+		}
+
 	}
 
 	private Composite createRawGroup(Composite parent) {
@@ -459,12 +461,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 								: Messages.getString("ImportPreferencePage.executable"), rc.getName()), //$NON-NLS-1$
 						true, Constants.EXEEXTENSION, Constants.EXEFILTERNAMES, null, null, false, true,
 						dialogSettings);
-				fileEditor.addListener(new Listener() {
-					@Override
-					public void handleEvent(Event event) {
-						validate();
-					}
-				});
+				fileEditor.addListener(SWT.Modify, this);
 				String msg = rc.getVersionMessage();
 				if (msg != null)
 					new Label(basicsComp, SWT.NONE).setText(msg);
@@ -731,12 +728,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 		processRecipesButton = WidgetFactory.createCheckButton(recipeGroup,
 				Messages.getString("ImportPreferencePage.process_recipes"), new GridData(SWT.BEGINNING, SWT.CENTER, //$NON-NLS-1$
 						false, false, 2, 1));
-		processRecipesButton.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateThumbnailWarning();
-			}
-		});
+		processRecipesButton.addListener(SWT.Selection, this);
 		synchronizeRecipesButton = WidgetFactory.createCheckButton(recipeGroup,
 				Messages.getString("ImportPreferencePage.immediate_update"), new GridData(SWT.BEGINNING, SWT.CENTER, //$NON-NLS-1$
 						false, false, 2, 1));
@@ -836,8 +828,7 @@ public class ImportPreferencePage extends AbstractPreferencePage {
 			for (RawProperty prop : props) {
 				Object object = optionProps.get(prop.id);
 				if (object instanceof ComboViewer) {
-					RawEnum rawEnum = (RawEnum) ((ComboViewer) object).getStructuredSelection()
-							.getFirstElement();
+					RawEnum rawEnum = (RawEnum) ((ComboViewer) object).getStructuredSelection().getFirstElement();
 					if (rawEnum != null)
 						prop.value = rawEnum.id;
 				} else if (object instanceof Spinner)

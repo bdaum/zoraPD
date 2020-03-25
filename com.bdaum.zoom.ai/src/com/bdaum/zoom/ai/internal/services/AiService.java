@@ -32,7 +32,6 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 import com.bdaum.zoom.ai.internal.AiActivator;
 import com.bdaum.zoom.ai.internal.preference.AiPreferencePage;
 import com.bdaum.zoom.ai.internal.preference.PreferenceConstants;
-import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.internal.ai.IAiService;
 import com.bdaum.zoom.core.internal.ai.Prediction;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
@@ -66,35 +65,35 @@ public class AiService implements IAiService {
 				new Status(IStatus.INFO, AiActivator.PLUGIN_ID, Messages.AiService_deactivated));
 	}
 	
-	@Override
-	public int rate(Asset asset, String opId, int maxRating, String modelId, String serviceId) {
-		if (isEnabled()) {
-			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(serviceId);
-			if (provider != null)
-				return provider.rate(asset, opId, maxRating, modelId);
-		}
-		return -1;
-	}
+//	@Override
+//	public int rate(Asset asset, String opId, int maxRating, String modelId, String serviceId) {
+//		if (isEnabled()) {
+//			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(serviceId);
+//			if (provider != null)
+//				return provider.rate(asset, opId, maxRating, modelId);
+//		}
+//		return -1;
+//	}
 
-	@Override
-	public String[] getRatingModelIds(String serviceId) {
-		if (isEnabled()) {
-			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(serviceId);
-			if (provider != null)
-				return provider.getRatingModelIds();
-		}
-		return null;
-	}
-
-	@Override
-	public String[] getRatingModelLabels(String serviceId) {
-		if (isEnabled()) {
-			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(serviceId);
-			if (provider != null)
-				return provider.getRatingModelLabels();
-		}
-		return null;
-	}
+//	@Override
+//	public String[] getRatingModelIds(String serviceId) {
+//		if (isEnabled()) {
+//			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(serviceId);
+//			if (provider != null)
+//				return provider.getRatingModelIds();
+//		}
+//		return null;
+//	}
+//
+//	@Override
+//	public String[] getRatingModelLabels(String serviceId) {
+//		if (isEnabled()) {
+//			IAiServiceProvider provider = AiActivator.getDefault().getServiceProvider(serviceId);
+//			if (provider != null)
+//				return provider.getRatingModelLabels();
+//		}
+//		return null;
+//	}
 
 
 	@Override

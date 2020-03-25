@@ -10,15 +10,9 @@
  *******************************************************************************/
 package com.bdaum.zoom.ui.paint;
 
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseMoveListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -29,6 +23,8 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.Region;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
@@ -36,7 +32,7 @@ import org.eclipse.swt.widgets.Text;
 /**
  * Manages a simple drawing surface.
  */
-public class PaintSurface {
+public class PaintSurface implements Listener {
 	private Point currentPosition = new Point(0, 0);
 	private Canvas paintCanvas;
 
@@ -104,92 +100,12 @@ public class PaintSurface {
 				displayFDC.gc.dispose();
 			}
 		});
-		paintCanvas.addMouseListener(new MouseAdapter() {
-
-			@Override
-			public void mouseDown(MouseEvent event) {
-				processMouseEventCoordinates(event);
-				if (paintSession != null)
-					paintSession.mouseDown(event);
-			}
-
-			@Override
-			public void mouseUp(MouseEvent event) {
-				processMouseEventCoordinates(event);
-				if (paintSession != null)
-					paintSession.mouseUp(event);
-			}
-
-			@Override
-			public void mouseDoubleClick(MouseEvent event) {
-				processMouseEventCoordinates(event);
-				if (paintSession != null)
-					paintSession.mouseDoubleClick(event);
-			}
-		});
-		paintCanvas.addMouseMoveListener(new MouseMoveListener() {
-
-			public void mouseMove(MouseEvent event) {
-				processMouseEventCoordinates(event);
-				if (paintSession != null)
-					paintSession.mouseMove(event);
-			}
-		});
-		paintCanvas.addPaintListener(new PaintListener() {
-
-			public void paintControl(PaintEvent event) {
-				if (rubberband.isEmpty()) {
-					// Nothing to merge, so we just refresh
-					event.gc.drawImage(image, displayFDC.xOffset + event.x, displayFDC.yOffset + event.y, event.width,
-							event.height, event.x, event.y, event.width, event.height);
-				} else {
-					/*
-					 * Avoid flicker when merging overlayed objects by constructing the image on a
-					 * backbuffer first, then blitting it to the screen.
-					 */
-					// Check that the backbuffer is large enough
-					if (paintImage != null) {
-						Rectangle rect = paintImage.getBounds();
-						if ((event.width + event.x > rect.width) || (event.height + event.y > rect.height)) {
-							paintFDC.gc.dispose();
-							paintImage.dispose();
-							paintImage = null;
-						}
-					}
-					if (paintImage == null) {
-						Display display = getDisplay();
-						Rectangle rect = display.getPrimaryMonitor().getClientArea();
-						paintImage = new Image(display, Math.max(rect.width, event.width + event.x),
-								Math.max(rect.height, event.height + event.y));
-						paintFDC.gc = new GC(paintImage);
-					}
-					// Setup clipping and the FDC
-					Region clipRegion = new Region();
-					event.gc.getClipping(clipRegion);
-					paintFDC.gc.setClipping(clipRegion);
-					clipRegion.dispose();
-
-					paintFDC.xOffset = displayFDC.xOffset;
-					paintFDC.yOffset = displayFDC.yOffset;
-					paintFDC.xScale = displayFDC.xScale;
-					paintFDC.yScale = displayFDC.yScale;
-
-					// Merge the overlayed objects into the image, then blit
-					paintFDC.gc.drawImage(image, displayFDC.xOffset + event.x, displayFDC.yOffset + event.y,
-							event.width, event.height, event.x, event.y, event.width, event.height);
-					rubberband.draw(paintFDC);
-					event.gc.drawImage(paintImage, event.x, event.y, event.width, event.height, event.x, event.y,
-							event.width, event.height);
-				}
-			}
-		});
-		paintCanvas.addControlListener(new ControlAdapter() {
-
-			@Override
-			public void controlResized(ControlEvent event) {
-				handleResize();
-			}
-		});
+		paintCanvas.addListener(SWT.MouseUp, this);
+		paintCanvas.addListener(SWT.MouseDown, this);
+		paintCanvas.addListener(SWT.MouseDoubleClick, this);
+		paintCanvas.addListener(SWT.MouseMove, this);
+		paintCanvas.addListener(SWT.Paint, this);
+		paintCanvas.addListener(SWT.Resize, this);
 
 		/* Set up the paint canvas scroll bars */
 		ScrollBar horizontal = paintCanvas.getHorizontalBar();
@@ -216,6 +132,86 @@ public class PaintSurface {
 		}
 		handleResize();
 	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Paint:
+			paintControl(e);
+			break;
+		case SWT.Resize:
+			handleResize();
+			break;
+		case SWT.MouseUp:
+			processMouseEventCoordinates(e);
+			if (paintSession != null)
+				paintSession.handleEvent(e);
+			break;
+		case SWT.MouseDown:
+			processMouseEventCoordinates(e);
+			if (paintSession != null)
+				paintSession.handleEvent(e);
+			break;
+		case SWT.MouseDoubleClick:
+			processMouseEventCoordinates(e);
+			if (paintSession != null)
+				paintSession.handleEvent(e);
+			break;
+		case SWT.MouseMove:
+			processMouseEventCoordinates(e);
+			if (paintSession != null)
+				paintSession.handleEvent(e);
+			break;
+		}
+		
+	}
+	
+	private void paintControl(Event event) {
+		if (rubberband.isEmpty()) {
+			// Nothing to merge, so we just refresh
+			event.gc.drawImage(image, displayFDC.xOffset + event.x, displayFDC.yOffset + event.y, event.width,
+					event.height, event.x, event.y, event.width, event.height);
+		} else {
+			/*
+			 * Avoid flicker when merging overlayed objects by constructing the image on a
+			 * backbuffer first, then blitting it to the screen.
+			 */
+			// Check that the backbuffer is large enough
+			if (paintImage != null) {
+				Rectangle rect = paintImage.getBounds();
+				if ((event.width + event.x > rect.width) || (event.height + event.y > rect.height)) {
+					paintFDC.gc.dispose();
+					paintImage.dispose();
+					paintImage = null;
+				}
+			}
+			if (paintImage == null) {
+				Display display = getDisplay();
+				Rectangle rect = display.getPrimaryMonitor().getClientArea();
+				paintImage = new Image(display, Math.max(rect.width, event.width + event.x),
+						Math.max(rect.height, event.height + event.y));
+				paintFDC.gc = new GC(paintImage);
+			}
+			// Setup clipping and the FDC
+			Region clipRegion = new Region();
+			event.gc.getClipping(clipRegion);
+			paintFDC.gc.setClipping(clipRegion);
+			clipRegion.dispose();
+
+			paintFDC.xOffset = displayFDC.xOffset;
+			paintFDC.yOffset = displayFDC.yOffset;
+			paintFDC.xScale = displayFDC.xScale;
+			paintFDC.yScale = displayFDC.yScale;
+
+			// Merge the overlayed objects into the image, then blit
+			paintFDC.gc.drawImage(image, displayFDC.xOffset + event.x, displayFDC.yOffset + event.y,
+					event.width, event.height, event.x, event.y, event.width, event.height);
+			rubberband.draw(paintFDC);
+			event.gc.drawImage(paintImage, event.x, event.y, event.width, event.height, event.x, event.y,
+					event.width, event.height);
+		}
+	}
+
 
 	/**
 	 * Disposes of the PaintSurface's resources.
@@ -505,7 +501,7 @@ public class PaintSurface {
 	/**
 	 * Virtualizes MouseEvent coordinates and stores the current position.
 	 */
-	private void processMouseEventCoordinates(MouseEvent event) {
+	private void processMouseEventCoordinates(Event event) {
 		currentPosition.x = event.x = Math.min(Math.max(event.x, 0), visibleWidth - 1) + displayFDC.xOffset;
 		currentPosition.y = event.y = Math.min(Math.max(event.y, 0), visibleHeight - 1) + displayFDC.yOffset;
 	}
@@ -594,5 +590,6 @@ public class PaintSurface {
 	public FigureDrawContext getImageFDC() {
 		return imageFDC;
 	}
+
 
 }

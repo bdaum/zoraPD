@@ -57,6 +57,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
@@ -80,6 +81,7 @@ import com.bdaum.zoom.cat.model.group.SortCriterion;
 import com.bdaum.zoom.cat.model.location.LocationImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.cat.model.meta.WatchedFolder;
+import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.Format;
@@ -1149,5 +1151,19 @@ public class UiUtilities {
 			return s;
 		return s.substring(0, maxchars) + ELLIPSIS;
 	}
+	
+	public static void showTooltip(ToolTip tooltip, int x, int y, String title, String msg) {
+		int hover = CommonUtilities.computeHoverTime(title.length() + msg.length());
+		tooltip.setLocation(x, y);
+		tooltip.setText(title);
+		tooltip.setMessage(msg);
+		tooltip.setAutoHide(false);
+		tooltip.setVisible(true);
+		tooltip.getDisplay().timerExec(hover, () -> {
+			if (!tooltip.isDisposed())
+				tooltip.setVisible(false);
+		});
+	}
+
 
 }

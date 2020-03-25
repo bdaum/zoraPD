@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="lib/lucene-analyzers-common-6.6.3.jar" sourcepath="C:/javasource/lucene-6.6.3"/>
-	<classpathentry exported="true" kind="lib" path="lib/lucene-core-6.6.3.jar" sourcepath="C:/javasource/lucene-6.6.3"/>
-	<classpathentry exported="true" kind="lib" path="lib/lucene-queryparser-6.6.3.jar" sourcepath="C:/javasource/lucene-6.6.3"/>
+	<classpathentry exported="true" kind="lib" path="lib/lucene-backward-codecs-7.7.2.jar" sourcepath="C:/Users/User/Desktop/lucene-7.7.2-src"/>
+	<classpathentry exported="true" kind="lib" path="lib/lucene-analyzers-common-7.7.2.jar" sourcepath="C:/Users/User/Desktop/lucene-7.7.2-src"/>
+	<classpathentry exported="true" kind="lib" path="lib/lucene-core-7.7.2.jar" sourcepath="C:/javasource/lucene-7.7.2"/>
+	<classpathentry exported="true" kind="lib" path="lib/lucene-queryparser-7.7.2.jar" sourcepath="C:/javasource/lucene-7.7.2"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-codec-1.10.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-io-2.5.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/opencv-2411.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/JOpenSurf.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-math3-3.6.1.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

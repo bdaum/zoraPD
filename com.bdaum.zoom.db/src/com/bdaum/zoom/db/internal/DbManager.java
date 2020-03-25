@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.stream.IntStream;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -89,7 +90,6 @@ import com.bdaum.zoom.cat.model.group.Criterion;
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
 import com.bdaum.zoom.cat.model.group.Group;
 import com.bdaum.zoom.cat.model.group.GroupImpl;
-import com.bdaum.zoom.cat.model.group.PostProcessor;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.group.SortCriterion;
@@ -234,14 +234,10 @@ public class DbManager implements IDbManager, IAdaptable {
 	/**
 	 * Constructor
 	 *
-	 * @param factory
-	 *            - parent factory
-	 * @param fileName
-	 *            - catalog file name
-	 * @param newDb
-	 *            - true if new catalog
-	 * @param readOnly
-	 *            - true if opened in read only mode
+	 * @param factory  - parent factory
+	 * @param fileName - catalog file name
+	 * @param newDb    - true if new catalog
+	 * @param readOnly - true if opened in read only mode
 	 */
 	public DbManager(DbFactory factory, String fileName, boolean newDb, boolean readOnly) {
 		this(factory, fileName, newDb, readOnly, null);
@@ -561,7 +557,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 
 	public <T extends IIdentifiableObject> T obtainById(Class<T> clazz, String id) {
-		while (id != null && db != null) {
+		while (id != null && db != null)
 			try {
 				Query query = db.query();
 				query.constrain(clazz);
@@ -580,13 +576,12 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (Db4oException e) {
 				reconnectToDb(e);
 			}
-		}
 		return null;
 	}
 
 	@Override
 	public boolean exists(Class<? extends IIdentifiableObject> clazz, String id) {
-		while (id != null && db != null) {
+		while (id != null && db != null)
 			try {
 				Query query = db.query();
 				query.constrain(clazz);
@@ -601,7 +596,6 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (Db4oException e) {
 				reconnectToDb(e);
 			}
-		}
 		return false;
 	}
 
@@ -681,9 +675,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				return set;
 			} catch (DatabaseClosedException e) {
 				break;
-			} catch (IllegalStateException e) {
-				reconnectToDb(e);
-			} catch (Db4oException e) {
+			} catch (IllegalStateException | Db4oException e) {
 				reconnectToDb(e);
 			}
 		return new ArrayList<T>(0);
@@ -745,9 +737,7 @@ public class DbManager implements IDbManager, IAdaptable {
 				return set;
 			} catch (DatabaseClosedException e) {
 				break;
-			} catch (IllegalStateException e) {
-				reconnectToDb(e);
-			} catch (Db4oException e) {
+			} catch (IllegalStateException | Db4oException e) {
 				reconnectToDb(e);
 			}
 		}
@@ -762,67 +752,56 @@ public class DbManager implements IDbManager, IAdaptable {
 	 * java.lang.String, java.lang.String[])
 	 */
 	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<T> clazz, String field, String[] values) {
-		while (values != null && db != null) {
-			if (values.length == 0)
-				return new ArrayList<T>(0);
+		while (values != null && db != null && values.length > 0)
 			try {
-				Query query = db.query();
-				query.constrain(clazz);
-				Constraint or = null;
-				for (String value : values) {
-					Constraint constraint = query.descend(field).constrain(value);
-					or = or != null ? constraint.or(or) : constraint;
+				int count = values.length;
+				int n = ImageConstants.NPROCESSORS;
+				if (n > 1 && count > 1) {
+					final List<T> set = Collections.synchronizedList(new ArrayList<T>(count));
+					final int inc = (count + n - 1) / n;
+					IntStream.range(0, n).parallel().forEach(
+							p -> fetchByIds(clazz, field, values, p * inc, Math.min(count, (p + 1) * inc), set));
+					dbErrorCounter = 0;
+					return set;
 				}
-				ObjectSet<T> set = query.execute();
+				List<T> set = new ArrayList<T>(count);
+				fetchByIds(clazz, field, values, 0, count, set);
 				dbErrorCounter = 0;
 				return set;
 			} catch (DatabaseClosedException e) {
 				break;
-			} catch (IllegalStateException e) {
-				reconnectToDb(e);
-			} catch (Db4oException e) {
+			} catch (IllegalStateException | Db4oException e) {
 				reconnectToDb(e);
 			}
-		}
 		return new ArrayList<T>(0);
 	}
 
 	public <T extends IIdentifiableObject> List<T> obtainParentObjects(Class<T> clazz, String field,
 			Collection<? extends IIdentifiableObject> children) {
-		while (children != null && db != null) {
-			if (children.isEmpty())
-				break;
-			try {
-				if (children.size() > MAXIDS) {
-					Set<T> set = new HashSet<T>(children.size());
-					for (IIdentifiableObject child : children) {
-						Query query = db.query();
-						query.constrain(clazz);
-						query.descend(field).constrain(child.getStringId());
-						set.addAll(query.<T>execute());
-					}
-					dbErrorCounter = 0;
-					return new ArrayList<T>(set);
-				}
-				Query query = db.query();
-				query.constrain(clazz);
-				Constraint or = null;
-				for (IIdentifiableObject child : children) {
-					Constraint constraint = query.descend(field).constrain(child.getStringId());
-					or = or != null ? constraint.or(or) : constraint;
-				}
-				ObjectSet<T> set = query.execute();
-				dbErrorCounter = 0;
-				return set;
-			} catch (DatabaseClosedException e) {
-				break;
-			} catch (IllegalStateException e) {
-				reconnectToDb(e);
-			} catch (Db4oException e) {
-				reconnectToDb(e);
-			}
+		if (children != null && db != null && !children.isEmpty()) {
+			String[] ids = new String[children.size()];
+			int i = 0;
+			for (IIdentifiableObject child : children)
+				ids[i++] = child.getStringId();
+			return obtainObjects(clazz, field, ids);
 		}
 		return new ArrayList<T>(0);
+	}
+
+	private <T> void fetchByIds(Class<T> clazz, String field, String[] ids, int lower, int upper, Collection<T> set) {
+		if (upper - lower > MAXIDS) {
+			int segments = (upper - lower + MAXIDS - 1) / MAXIDS;
+			int inc = (upper - lower + segments - 1) / segments;
+			for (int i = lower; i < upper; i += inc)
+				fetchByIds(clazz, field, ids, i, Math.min(upper, i + inc), set);
+		} else if (upper > lower) {
+			Query query = db.query();
+			query.constrain(clazz);
+			Constraint or = query.descend(field).constrain(ids[lower]);
+			for (int i = lower + 1; i < upper; i++)
+				or = query.descend(field).constrain(ids[i]).or(or);
+			set.addAll(query.execute());
+		}
 	}
 
 	/*
@@ -832,39 +811,8 @@ public class DbManager implements IDbManager, IAdaptable {
 	 * java.lang.String, java.util.Collection)
 	 */
 	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<T> clazz, String field, Collection<String> ids) {
-		while (ids != null && db != null) {
-			if (ids.isEmpty())
-				break;
-			try {
-				if (ids.size() > MAXIDS) {
-					List<T> set = new ArrayList<T>(ids.size());
-					for (String id : ids) {
-						Query query = db.query();
-						query.constrain(clazz);
-						query.descend(field).constrain(id);
-						set.addAll(query.<T>execute());
-					}
-					dbErrorCounter = 0;
-					return set;
-				}
-				Query query = db.query();
-				query.constrain(clazz);
-				Constraint or = null;
-				for (String id : ids) {
-					Constraint constraint = query.descend(field).constrain(id);
-					or = or != null ? constraint.or(or) : constraint;
-				}
-				ObjectSet<T> set = query.execute();
-				dbErrorCounter = 0;
-				return set;
-			} catch (DatabaseClosedException e) {
-				break;
-			} catch (IllegalStateException e) {
-				reconnectToDb(e);
-			} catch (Db4oException e) {
-				reconnectToDb(e);
-			}
-		}
+		if (ids != null && db != null && !ids.isEmpty())
+			return obtainObjects(clazz, field, ids.toArray(new String[ids.size()]));
 		return new ArrayList<T>(0);
 	}
 
@@ -875,7 +823,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 
 	public List<AssetImpl> obtainAssetsForFile(URI uri) {
-		while (uri != null && db != null) {
+		while (uri != null && db != null)
 			try {
 				Query query = db.query();
 				query.constrain(AssetImpl.class);
@@ -899,7 +847,6 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (Db4oException e) {
 				reconnectToDb(e);
 			}
-		}
 		return EMPTYASSETS;
 	}
 
@@ -910,7 +857,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 
 	public List<Ghost_typeImpl> obtainGhostsForFile(URI uri) {
-		while (uri != null && db != null) {
+		while (uri != null && db != null)
 			try {
 				Query query = db.query();
 				query.constrain(Ghost_typeImpl.class);
@@ -934,7 +881,6 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (Db4oException e) {
 				reconnectToDb(e);
 			}
-		}
 		return EMPTYGHOSTS;
 	}
 
@@ -990,7 +936,7 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<T> clazz, boolean or,
 			Object... namesValuesRelations) {
-		while (db != null) {
+		while (db != null)
 			try {
 				Query query = db.query();
 				query.constrain(clazz);
@@ -1012,12 +958,9 @@ public class DbManager implements IDbManager, IAdaptable {
 				return set;
 			} catch (DatabaseClosedException e) {
 				break;
-			} catch (IllegalStateException e) {
-				reconnectToDb(e);
-			} catch (Db4oException e) {
+			} catch (IllegalStateException | Db4oException e) {
 				reconnectToDb(e);
 			}
-		}
 		return new ArrayList<T>();
 	}
 
@@ -1029,7 +972,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 
 	public List<LocationImpl> findLocation(final LocationImpl location) {
-		while (location != null && db != null) {
+		while (location != null && db != null)
 			try {
 				Query query = db.query();
 				query.constrain(LocationImpl.class);
@@ -1070,7 +1013,6 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (Db4oException e) {
 				reconnectToDb(e);
 			}
-		}
 		return EMPTYLOCATIONS;
 
 	}
@@ -1140,7 +1082,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	}
 
 	public <T extends Object> List<T> getTrash(Class<T> clazz, String opId) {
-		while (trashCan != null) {
+		while (trashCan != null)
 			try {
 				Query query = trashCan.query();
 				query.constrain(clazz);
@@ -1154,12 +1096,11 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (Db4oException e) {
 				reconnectTrashcanToDb(e);
 			}
-		}
 		return new ArrayList<T>();
 	}
 
 	public List<Trash> obtainTrashToDelete(boolean withFiles) {
-		while (trashCan != null) {
+		while (trashCan != null)
 			try {
 				ObjectSet<Trash> trash;
 				if (withFiles) {
@@ -1173,17 +1114,14 @@ public class DbManager implements IDbManager, IAdaptable {
 				return trash;
 			} catch (DatabaseClosedException e) {
 				break;
-			} catch (IllegalStateException e) {
-				reconnectTrashcanToDb(e);
-			} catch (Db4oException e) {
+			} catch (IllegalStateException | Db4oException e) {
 				reconnectTrashcanToDb(e);
 			}
-		}
 		return EMPTYTRASH;
 	}
 
 	public List<Trash> obtainTrash(boolean byName) {
-		while (trashCan != null) {
+		while (trashCan != null)
 			try {
 				Query query = trashCan.query();
 				query.constrain(Trash.class);
@@ -1196,17 +1134,14 @@ public class DbManager implements IDbManager, IAdaptable {
 				return trash;
 			} catch (DatabaseClosedException e) {
 				break;
-			} catch (IllegalStateException e) {
-				reconnectTrashcanToDb(e);
-			} catch (Db4oException e) {
+			} catch (IllegalStateException | Db4oException e) {
 				reconnectTrashcanToDb(e);
 			}
-		}
 		return EMPTYTRASH;
 	}
 
 	public List<Trash> obtainTrashForFile(URI uri) {
-		while (uri != null && trashCan != null) {
+		while (uri != null && trashCan != null)
 			try {
 				Query query = trashCan.query();
 				query.constrain(Trash.class);
@@ -1223,12 +1158,9 @@ public class DbManager implements IDbManager, IAdaptable {
 				return matching;
 			} catch (DatabaseClosedException e) {
 				break;
-			} catch (IllegalStateException e) {
-				reconnectTrashcanToDb(e);
-			} catch (Db4oException e) {
+			} catch (IllegalStateException | Db4oException e) {
 				reconnectTrashcanToDb(e);
 			}
-		}
 		return EMPTYTRASH;
 	}
 
@@ -1297,14 +1229,13 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 	public void close(int mode) {
 		if (mode == CatalogListener.NORMAL)
-			for (IDbListener listener : factory.getListeners()) {
+			for (IDbListener listener : factory.getListeners())
 				try {
 					if (!listener.databaseAboutToClose(this))
 						return;
 				} catch (Exception e) {
 					// ignore
 				}
-			}
 		else if (mode == CatalogListener.EMERGENCY)
 			emergency = true;
 		resetSystemCollectionCache();
@@ -1375,18 +1306,20 @@ public class DbManager implements IDbManager, IAdaptable {
 				int pathFrom = 0;
 				StringBuilder sb = new StringBuilder();
 				String protocol = ""; //$NON-NLS-1$
+				String pname = ":"; //$NON-NLS-1$
 				String device = ""; //$NON-NLS-1$
 				p = path.indexOf(':', pathFrom);
 				if (p >= pathFrom) {
 					sb.append(protocol = path.substring(pathFrom, p)).append(':');
+					pname = sb.toString();
 					pathFrom = p;
 				}
 				while (path.charAt(++pathFrom) == '/')
 					sb.append('/');
 				String prot = sb.toString();
 				if (!Constants.FILESCHEME.equals(protocol))
-					parentColl = createDirectoryCollection(protocol + ':', parentColl, directories,
-							QueryField.URI.getKey(), prot, QueryField.STARTSWITH, changeIndicator);
+					parentColl = createDirectoryCollection(pname, parentColl, directories, QueryField.URI.getKey(),
+							prot, QueryField.STARTSWITH, changeIndicator);
 				else if (win32) {
 					p = path.indexOf(':', pathFrom);
 					if (p >= pathFrom) {
@@ -1522,18 +1455,18 @@ public class DbManager implements IDbManager, IAdaptable {
 			AomList<SmartCollection> subSelections = collection.getSubSelection();
 			if (subSelections != null)
 				for (SmartCollection sub : subSelections)
-					deleteCollection(sub);
-			AomList<Criterion> criterions = collection.getCriterion();
-			if (criterions != null)
-				for (Criterion crit : criterions)
+					if (sub.getSmartCollection_subSelection_parent() == null
+							|| sub.getSmartCollection_subSelection_parent() == collection)
+						deleteCollection(sub);
+			AomList<Criterion> criteria = collection.getCriterion();
+			if (criteria != null)
+				for (Criterion crit : criteria)
 					delete(crit);
-			AomList<SortCriterion> sortCriterions = collection.getSortCriterion();
-			if (sortCriterions != null)
-				for (SortCriterion crit : sortCriterions)
+			AomList<SortCriterion> sortCriteria = collection.getSortCriterion();
+			if (sortCriteria != null)
+				for (SortCriterion crit : sortCriteria)
 					delete(crit);
-			PostProcessor postProcessor = collection.getPostProcessor();
-			if (postProcessor != null)
-				delete(postProcessor);
+			delete(collection.getPostProcessor());
 			delete(collection);
 		}
 	}
@@ -1693,9 +1626,8 @@ public class DbManager implements IDbManager, IAdaptable {
 						to.set(Calendar.HOUR_OF_DAY, 23);
 						to.set(Calendar.MINUTE, 59);
 						to.set(Calendar.SECOND, 59);
-						parentColl = createTimelineCollection(
-								Format.WEEK.get().format(from1.getTime()),
-								parentColl, timeLineGroup, ksb.toString(), from1, to, changeIndicator);
+						parentColl = createTimelineCollection(Format.WEEK.get().format(from1.getTime()), parentColl,
+								timeLineGroup, ksb.toString(), from1, to, changeIndicator);
 						if (!timeline.equals(Meta_type.timeline_week)) {
 							int day11 = cal.get(Calendar.DAY_OF_WEEK);
 							ksb.append('-').append(day11);
@@ -1715,8 +1647,7 @@ public class DbManager implements IDbManager, IAdaptable {
 						int month = cal.get(Calendar.MONTH);
 						GregorianCalendar from2 = new GregorianCalendar(year, month, 1);
 						ksb.append('-').append(month);
-						parentColl = createTimelineCollection(
-								Format.MONTH_FORMAT.get().format(from2.getTime()),
+						parentColl = createTimelineCollection(Format.MONTH_FORMAT.get().format(from2.getTime()),
 								parentColl, timeLineGroup, ksb.toString(), from2, new GregorianCalendar(year, month,
 										from2.getActualMaximum(Calendar.DAY_OF_MONTH), 23, 59, 59),
 								changeIndicator);
@@ -1770,14 +1701,13 @@ public class DbManager implements IDbManager, IAdaptable {
 	 * .cat.model.asset.Asset, java.lang.String)
 	 */
 	public boolean createLocationFolders(Asset asset, String locationOption) {
-		if (locationOption == null || locationOption.equals(Meta_type.locationFolders_no))
-			return false;
-		for (LocationCreatedImpl locationCreated : new ArrayList<LocationCreatedImpl>(
-				obtainStructForAsset(LocationCreatedImpl.class, asset.getStringId(), true))) {
-			LocationImpl loc = obtainById(LocationImpl.class, locationCreated.getLocation());
-			if (loc != null)
-				return createLocationFolders(loc, locationOption);
-		}
+		if (locationOption != null && !locationOption.equals(Meta_type.locationFolders_no))
+			for (LocationCreatedImpl locationCreated : new ArrayList<LocationCreatedImpl>(
+					obtainStructForAsset(LocationCreatedImpl.class, asset.getStringId(), true))) {
+				LocationImpl loc = obtainById(LocationImpl.class, locationCreated.getLocation());
+				if (loc != null)
+					return createLocationFolders(loc, locationOption);
+			}
 		return false;
 	}
 
@@ -2058,8 +1988,7 @@ public class DbManager implements IDbManager, IAdaptable {
 			}
 			int i = 0;
 			for (Class<?> clazz : typeMap.values()) {
-				ObjectSet<?> set = sourceContainer.query(clazz);
-				for (Object object : set) {
+				for (Object object : sourceContainer.query(clazz)) {
 					if (object instanceof IIdentifiableObject) {
 						Query query = targetContainer.query();
 						query.constrain(clazz);
@@ -2122,7 +2051,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	public void markSystemCollectionsForPurge(Asset asset) {
 		Meta meta = getMeta(true);
 		boolean cleaned = meta.getCleaned();
-		if (!cleaned || beginSafeTransactionWithReport()) {
+		if (!cleaned || beginSafeTransactionWithReport())
 			try {
 				boolean notEmpty = hasDirtyCollection();
 				boolean added = false;
@@ -2138,9 +2067,10 @@ public class DbManager implements IDbManager, IAdaptable {
 					sb.setLength(0);
 					if (uri.lastIndexOf(':', from) > p) {
 						String volume = asset.getVolume();
-						if (volume != null && !volume.isEmpty())
+						if (volume != null && !volume.isEmpty()) {
 							added |= addDirtyCollection(sb.append(VOLUMEKEY).append(volume).toString());
-						break;
+							sb.setLength(0);
+						}
 					}
 					added |= addDirtyCollection(sb.append(URIKEY).append(uri).toString());
 				}
@@ -2181,7 +2111,6 @@ public class DbManager implements IDbManager, IAdaptable {
 				if (cleaned)
 					endSafeTransaction();
 			}
-		}
 	}
 
 	public boolean markSystemCollectionsForPurge(Location loc) {
@@ -2226,16 +2155,14 @@ public class DbManager implements IDbManager, IAdaptable {
 		synchronized (dirtyCollections) {
 			// long time = System.currentTimeMillis();
 			if (!readOnly) {
-				if (all) {
-					List<SmartCollectionImpl> set = obtainObjects(SmartCollectionImpl.class);
-					for (SmartCollectionImpl sm : set)
+				if (all)
+					for (SmartCollectionImpl sm : obtainObjects(SmartCollectionImpl.class))
 						if (sm.getSystem()) {
 							String id = sm.getStringId();
 							if (id.startsWith(VOLUMEKEY) || id.startsWith(URIKEY) || id.startsWith(DATETIMEKEY)
 									|| id.startsWith(LOCATIONKEY) || id.startsWith(IMPORTKEY))
 								dirtyCollections.add(id);
 						}
-				}
 				if (hasDirtyCollection()) {
 					Group importGroup = getImportGroup();
 					List<Group> subgroups = importGroup.getSubgroup();
@@ -2246,7 +2173,7 @@ public class DbManager implements IDbManager, IAdaptable {
 					LinkedList<String> sorted = new LinkedList<String>(dirtyCollections);
 					Collections.sort(sorted, new Comparator<String>() {
 						public int compare(String o1, String o2) {
-							return o2.length() - o2.length();
+							return o2.length() - o1.length();
 						}
 					});
 					monitor.worked(1);
@@ -2460,8 +2387,6 @@ public class DbManager implements IDbManager, IAdaptable {
 					deleteMember(((SmartCollection) object).getSortCriterion());
 					deleteMember(((SmartCollection) object).getSubSelection());
 					resetSystemCollectionCache();
-					if (DIAGNOSE)
-						DbActivator.getDefault().logInfo("Deleted " + object); //$NON-NLS-1$
 				} else if (object instanceof SlideShow)
 					deleteMember(((SlideShow) object).getEntry());
 				else if (object instanceof Wall)
@@ -2469,6 +2394,8 @@ public class DbManager implements IDbManager, IAdaptable {
 				else if (object instanceof Storyboard)
 					deleteMember(((Storyboard) object).getExhibit());
 				db.delete(object);
+				if (DIAGNOSE)
+					DbActivator.getDefault().logInfo("Deleted " + object); //$NON-NLS-1$
 			} catch (Exception e) {
 				transactionFailed = true;
 			}
@@ -2495,13 +2422,12 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 
 	public void storeTrash(Object object) {
-		if (!trashFailed && getTrashCan() != null) {
+		if (!trashFailed)
 			try {
-				trashCan.store(object);
+				getTrashCan().store(object);
 			} catch (Exception e) {
 				trashFailed = true;
 			}
-		}
 	}
 
 	/*
@@ -2511,13 +2437,12 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 
 	public void deleteTrash(Object object) {
-		if (trashCan != null && !trashFailed) {
+		if (trashCan != null && !trashFailed)
 			try {
 				trashCan.delete(object);
 			} catch (Exception e) {
 				trashFailed = true;
 			}
-		}
 	}
 
 	/*
@@ -2527,7 +2452,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 
 	public void deleteAllTrash(Collection<? extends Object> t) {
-		if (trashCan != null) {
+		if (trashCan != null)
 			try {
 				for (Object o : t)
 					trashCan.delete(o);
@@ -2536,7 +2461,6 @@ public class DbManager implements IDbManager, IAdaptable {
 				trashCan.rollback();
 				trashFailed = true;
 			}
-		}
 	}
 
 	/*
@@ -2546,16 +2470,16 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 
 	public void commit() {
-		if (readOnly)
-			return;
-		if (transactionFailed)
-			rollbackError();
-		else
-			try {
-				db.commit();
-			} catch (Exception e) {
+		if (!readOnly) {
+			if (transactionFailed)
 				rollbackError();
-			}
+			else
+				try {
+					db.commit();
+				} catch (Exception e) {
+					rollbackError();
+				}
+		}
 	}
 
 	private void rollbackError() {
@@ -2571,14 +2495,13 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 
 	public void rollback() {
-		if (readOnly)
-			return;
-		try {
-			db.rollback();
-			transactionFailed = false;
-		} catch (Exception e) {
-			// do nothing
-		}
+		if (!readOnly)
+			try {
+				db.rollback();
+				transactionFailed = false;
+			} catch (Exception e) {
+				// do nothing
+			}
 	}
 
 	/*
@@ -2705,7 +2628,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	 */
 
 	public boolean safeTransaction(Runnable runnable) {
-		if (beginSafeTransactionWithReport()) {
+		if (beginSafeTransactionWithReport())
 			try {
 				runnable.run();
 				commit();
@@ -2716,7 +2639,6 @@ public class DbManager implements IDbManager, IAdaptable {
 			} finally {
 				endSafeTransaction();
 			}
-		}
 		return false;
 	}
 
@@ -2727,7 +2649,7 @@ public class DbManager implements IDbManager, IAdaptable {
 	 * java.lang.Object)
 	 */
 	public boolean safeTransaction(Object toBeDeleted, Object toBeStored) {
-		if (beginSafeTransactionWithReport()) {
+		if (beginSafeTransactionWithReport())
 			try {
 				if (toBeDeleted != null) {
 					if (toBeDeleted instanceof Collection<?>)
@@ -2755,7 +2677,6 @@ public class DbManager implements IDbManager, IAdaptable {
 			} finally {
 				endSafeTransaction();
 			}
-		}
 		return false;
 	}
 

@@ -117,6 +117,7 @@ public class Messages extends NLS {
 	public static String LabelConfigGroup_inherited;
 	public static String LabelConfigGroup_left;
 	public static String LabelConfigGroup_nothing;
+	public static String LabelConfigGroup_overlay;
 	public static String LabelConfigGroup_provide_template;
 	public static String LabelConfigGroup_right;
 	public static String LabelConfigGroup_show;

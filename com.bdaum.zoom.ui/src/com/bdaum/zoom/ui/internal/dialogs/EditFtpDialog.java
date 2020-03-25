@@ -28,12 +28,6 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -56,7 +50,7 @@ import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
-public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
+public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable, Listener {
 
 	private FtpAccount account;
 	private Text nameField;
@@ -212,7 +206,7 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 		}
 		hostField = createTextField(group1, Messages.EditFtpDialog_host, -1, style);
 		targetDirField = createTextField(group1, Messages.EditFtpDialog_target_dir, -1, style);
-		targetDirField.addVerifyListener(fileVerifyListener);
+		targetDirField.addListener(SWT.Verify, this);
 		if (!adhoc)
 			trackField = WidgetFactory.createCheckButton(group1, Messages.EditFtpDialog_track_exports,
 					new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
@@ -224,17 +218,11 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 		accountField = createTextField(group2, Messages.EditFtpDialog_account, 150, SWT.NONE);
 		anonymousButton = WidgetFactory.createCheckButton(group2, Messages.EditFtpDialog_anonymous,
 				new GridData(SWT.RIGHT, SWT.CENTER, false, false));
-		anonymousButton.addListener(selectionListener);
+		anonymousButton.addListener(SWT.Selection, this);
 		testFtpButton = new Button(group2, SWT.PUSH);
 		testFtpButton.setText(Messages.EditFtpDialog_test);
 		testFtpButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 3, 1));
-		testFtpButton.addSelectionListener(new SelectionAdapter() {
-
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				testFtp();
-			}
-		});
+		testFtpButton.addListener(SWT.Selection, this);
 	}
 
 	protected void testFtp() {
@@ -245,30 +233,27 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 			setErrorMessage(null);
 		} else
 			setErrorMessage(msg);
-
 	}
 
-	private ModifyListener modifyListener = new ModifyListener() {
-
-		public void modifyText(ModifyEvent e) {
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Modify:
 			updateButtons();
-		}
-	};
-
-	private VerifyListener fileVerifyListener = new VerifyListener() {
-
-		public void verifyText(VerifyEvent e) {
+			break;
+		case SWT.Selection:
+			if (e.widget == testFtpButton)
+				testFtp();
+			else if (e.widget == testUrlButton)
+				testUrl();
+			else
+				updateButtons();
+			break;
+		case SWT.Verify:
 			e.doit = "\"*:<>?\\|[]".indexOf(e.character) < 0; //$NON-NLS-1$
+			break;
 		}
-	};
-
-	private Listener selectionListener = new Listener() {
-
-		@Override
-		public void handleEvent(Event e) {
-			updateButtons();
-		}
-	};
+	}
 
 	private Text createTextField(Composite g, String text, int width, int style) {
 		Label label = new Label(g, SWT.NONE);
@@ -278,7 +263,7 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 			textField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		else
 			textField.setLayoutData(new GridData(width, -1));
-		textField.addModifyListener(modifyListener);
+		textField.addListener(SWT.Modify, this);
 		return textField;
 	}
 
@@ -286,12 +271,12 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 		comp.setLayout(new GridLayout(2, false));
 		passiveButton = WidgetFactory.createCheckButton(comp, Messages.EditFtpDialog_passive_mode,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		passiveButton.addListener(selectionListener);
+		passiveButton.addListener(SWT.Selection, this);
 		Label label = new Label(comp, SWT.NONE);
 		label.setText(Messages.EditFtpDialog_port);
 		portField = new Spinner(comp, SWT.BORDER);
 		portField.setMaximum(9999);
-		portField.addListener(SWT.Selection, selectionListener);
+		portField.addListener(SWT.Selection, this);
 		portField.setEnabled(!adhoc);
 	}
 
@@ -300,16 +285,11 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable {
 		CGroup group1 = UiUtilities.createGroup(comp, 2, Messages.EditFtpDialog_web_host);
 		webHostField = createTextField(group1, Messages.EditFtpDialog_host_web, -1, SWT.NONE);
 		prefixField = createTextField(group1, Messages.EditFtpDialog_prefix, -1, SWT.NONE);
-		prefixField.addVerifyListener(fileVerifyListener);
+		prefixField.addListener(SWT.Verify, this);
 		testUrlButton = new Button(group1, SWT.PUSH);
 		testUrlButton.setText(Messages.EditFtpDialog_test_url);
 		testUrlButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 2, 1));
-		testUrlButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				testUrl();
-			}
-		});
+		testUrlButton.addListener(SWT.Selection, this);
 
 		CGroup group2 = UiUtilities.createGroup(comp, 1, Messages.EditFtpDialog_notes);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);

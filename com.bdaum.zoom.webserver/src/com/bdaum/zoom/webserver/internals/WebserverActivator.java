@@ -86,7 +86,7 @@ public class WebserverActivator extends ZUiPlugin implements IPreferenceChangeLi
 
 	private int state = STOPPED;
 
-	private HTTPServer server;
+	private ZHTTPServer server;
 	private ListenerList<WebserverListener> listeners = new ListenerList<>();
 	private QueryField[] webNodes;
 	private final CaptionProcessor captionProcessor = new CaptionProcessor(Constants.TH_ALL);
@@ -182,7 +182,7 @@ public class WebserverActivator extends ZUiPlugin implements IPreferenceChangeLi
 							CLink link = new CLink(composite, SWT.NONE);
 							link.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
 							link.setText(Messages.WebserverActivator_configure_webserver);
-							link.addListener(new Listener() {
+							link.addListener(SWT.Selection, new Listener() {
 								@Override
 								public void handleEvent(Event event) {
 									close();
@@ -362,6 +362,10 @@ public class WebserverActivator extends ZUiPlugin implements IPreferenceChangeLi
 
 	public CaptionProcessor getCaptionProcessor() {
 		return captionProcessor;
+	}
+
+	public ZHTTPServer getServer() {
+		return server;
 	}
 
 }

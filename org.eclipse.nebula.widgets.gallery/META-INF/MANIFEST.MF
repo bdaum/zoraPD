@@ -7,7 +7,6 @@ Bundle-Vendor: %Bundle-Vendor.0
 Export-Package: org.eclipse.nebula.animation,
  org.eclipse.nebula.animation.effects,
  org.eclipse.nebula.animation.movement,
- org.eclipse.nebula.jface.galleryviewer,
  org.eclipse.nebula.widgets.gallery
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.eclipse.jface;bundle-version="3.7.0"

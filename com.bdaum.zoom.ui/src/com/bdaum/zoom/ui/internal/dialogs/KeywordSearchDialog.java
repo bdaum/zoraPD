@@ -200,7 +200,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 		findWithinGroup = new FindWithinGroup(composite);
 		if (Core.getCore().isNetworked()) {
 			findInNetworkGroup = new FindInNetworkGroup(composite);
-			findInNetworkGroup.addListener(new Listener() {
+			findInNetworkGroup.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
 					setKeywords();

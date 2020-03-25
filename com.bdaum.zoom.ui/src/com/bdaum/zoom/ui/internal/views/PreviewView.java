@@ -21,6 +21,8 @@
 package com.bdaum.zoom.ui.internal.views;
 
 import java.awt.geom.Rectangle2D;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -29,39 +31,28 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.resource.StringConverter;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Device;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
-import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
@@ -73,7 +64,6 @@ import org.eclipse.ui.PlatformUI;
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.BagChange;
 import com.bdaum.zoom.core.CatalogListener;
-import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.IAssetProvider;
 import com.bdaum.zoom.core.IVolumeManager;
 import com.bdaum.zoom.core.QueryField;
@@ -84,24 +74,19 @@ import com.bdaum.zoom.ui.IFrameListener;
 import com.bdaum.zoom.ui.IFrameProvider;
 import com.bdaum.zoom.ui.IZoomActionConstants;
 import com.bdaum.zoom.ui.Ui;
-import com.bdaum.zoom.ui.internal.TemplateProcessor;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
-import com.bdaum.zoom.ui.internal.dialogs.ConfigureCaptionDialog;
+import com.bdaum.zoom.ui.internal.dialogs.ColorFilterDialog;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
-public class PreviewView extends ImageView implements PaintListener, IFrameListener {
+public class PreviewView extends ImageView implements IFrameListener {
 
 	public static final String ID = "com.bdaum.zoom.ui.views.PreviewView"; //$NON-NLS-1$
 	private static final String CUE = "cue"; //$NON-NLS-1$
-	private static final String TEMPLATE = "template"; //$NON-NLS-1$
-	private static final String ALIGNMENT = "alignment"; //$NON-NLS-1$
-	private static final String SHOW = "show"; //$NON-NLS-1$
-	private static final String FONTSIZE = "fontsize"; //$NON-NLS-1$
 	private static final String BW = "bs"; //$NON-NLS-1$
-
-	private Canvas canvas;
+	private static final String HISTO = "histo"; //$NON-NLS-1$
+	protected Canvas canvas;
 	private Asset currentItem;
 	private Action bwToggleAction;
 	private Action cueToggleAction;
@@ -111,22 +96,15 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 	private Action setFilterAction;
 	protected boolean cue;
 	private Asset selectedItem;
-	private Label caption;
-	private String template;
-	private Action configureAction;
-	private int alignment;
 	private AssetSelection assetSelection = AssetSelection.EMPTY;
-	private Composite composite;
 	private Rectangle2D currentFrame = new Rectangle2D.Double(0d, 0d, 1d, 1d);
-	private final TemplateProcessor captionProcessor = new TemplateProcessor(Constants.TH_ALL);
-	private int show;
-	private int fontsize;
-	private int showLabelDflt;
-	private String labelTemplateDflt;
-	private int labelFontsizeDflt;
-	private int currentFontsize = -1;
-	private Font smallFont;
-	private int labelAlignmentDflt = 1;
+	private CaptionManager captionManager = new CaptionManager();
+	private boolean showHisto = true;
+	private HistogramManager histogramManager = new HistogramManager();
+	private Action showHistogramAction;
+	private Rectangle histoRegion;
+	private TimerTask task;
+	private Timer timer = new Timer();
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -136,18 +114,10 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 			cue = b != null && b;
 			b = memento.getBoolean(BW);
 			bw = b != null && b;
-			template = memento.getString(TEMPLATE);
-			if (template == null)
-				template = DEFAULTTEMPLATE;
-			Integer integer = memento.getInteger(SHOW);
-			show = integer != null ? integer
-					: template == null ? Constants.INHERIT_LABEL
-							: template.isEmpty() ? Constants.NO_LABEL : Constants.CUSTOM_LABEL;
-			integer = memento.getInteger(FONTSIZE);
-			fontsize = integer != null ? integer : 8;
-			integer = memento.getInteger(ALIGNMENT);
-			alignment = integer != null ? integer : SWT.LEFT;
+			b = memento.getBoolean(HISTO);
+			showHisto = b != null && b;
 		}
+		captionManager.init(memento);
 	}
 
 	@Override
@@ -155,50 +125,24 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 		super.saveState(memento);
 		memento.putBoolean(CUE, cue);
 		memento.putBoolean(BW, bw);
-		memento.putString(TEMPLATE, template);
-		memento.putInteger(ALIGNMENT, alignment);
-		memento.putInteger(SHOW, show);
-		memento.putInteger(FONTSIZE, fontsize);
-	}
-
-	protected void setPreferences() {
-		IPreferenceStore preferenceStore = applyPreferences();
-		preferenceStore.addPropertyChangeListener(new IPropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent event) {
-				String property = event.getProperty();
-				if (PreferenceConstants.SHOWLABEL.equals(property)
-						|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
-						|| PreferenceConstants.LABELALIGNMENT.equals(property)
-						|| PreferenceConstants.LABELFONTSIZE.equals(property)) {
-					applyPreferences();
-					updateCaption();
-				}
-			}
-		});
-	}
-
-	protected IPreferenceStore applyPreferences() {
-		final IPreferenceStore preferenceStore = UiActivator.getDefault().getPreferenceStore();
-		showLabelDflt = preferenceStore.getInt(PreferenceConstants.SHOWLABEL);
-		labelTemplateDflt = preferenceStore.getString(PreferenceConstants.THUMBNAILTEMPLATE);
-		labelFontsizeDflt = preferenceStore.getInt(PreferenceConstants.LABELFONTSIZE);
-		labelAlignmentDflt  = preferenceStore.getInt(PreferenceConstants.LABELALIGNMENT);
-		return preferenceStore;
+		memento.putBoolean(HISTO, showHisto);
+		captionManager.saveState(memento);
 	}
 
 	@Override
 	public void createPartControl(Composite parent) {
-		setPreferences();
 		filter = StringConverter.asRGB(Platform.getPreferencesService().getString(UiActivator.PLUGIN_ID,
 				PreferenceConstants.BWFILTER, null, null), new RGB(64, 128, 64));
-		composite = new Composite(parent, SWT.NONE);
+		Composite composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = 0;
 		composite.setLayout(layout);
 		canvas = new Canvas(composite, SWT.DOUBLE_BUFFERED);
+		captionManager.setTarget(canvas);
 		canvas.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(canvas, HelpContextIds.PREVIEW_VIEW);
-		canvas.addPaintListener(this);
+		canvas.addListener(SWT.Paint, this);
+		canvas.addListener(SWT.MouseUp, this);
 		canvas.redraw();
 		addKeyListener();
 		addExplanationListener(true);
@@ -211,6 +155,42 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 		installHoveringController();
 		Ui.getUi().getFrameManager().addFrameListener(this);
 		updateActions(true);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.type == SWT.Paint) {
+			paintControl(e);
+			return;
+		}
+		if (e.type == SWT.MouseUp && histoRegion != null && histoRegion.contains(e.x, e.y)) {
+			if (task != null) {
+				task.cancel();
+				task = null;
+			}
+			if (e.count == 1) {
+				task = new TimerTask() {
+					@Override
+					public void run() {
+						if (!canvas.isDisposed())
+							canvas.getDisplay().asyncExec(() -> {
+								try {
+									if (!canvas.isDisposed())
+										getSite().getPage().showView(HistogramView.ID);
+								} catch (PartInitException e) {
+									// should not happen
+								}
+							});
+					}
+				};
+				timer.schedule(task, 300);
+				e.doit = false;
+			}
+		}
+		if (e.doit)
+			captionManager.handleEvent(e);
+		if (e.doit)
+			super.handleEvent(e);
 	}
 
 	@Override
@@ -228,9 +208,14 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 
 		bwToggleAction = new Action(Messages.getString("PreviewView.as_grayscale"), IAction.AS_CHECK_BOX) { //$NON-NLS-1$
 			@Override
-			public void run() {
-				bw = !bw;
-				refresh();
+			public void runWithEvent(Event event) {
+				if ((event.stateMask & SWT.CTRL) != 0)
+					setFilterAction.run();
+				else {
+					bw = !bw;
+					refresh();
+				}
+				super.runWithEvent(event);
 			}
 		};
 		bwToggleAction.setImageDescriptor(Icons.bw.getDescriptor());
@@ -239,11 +224,11 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 		setFilterAction = new Action(Messages.getString("PreviewView.set_bw_filter")) { //$NON-NLS-1$
 			@Override
 			public void run() {
-				ColorDialog dialog = new ColorDialog(getSite().getShell());
+				ColorFilterDialog dialog = new ColorFilterDialog(getSite().getShell());
 				dialog.setRGB(filter);
 				dialog.setText(Messages.getString("PreviewView.set_bw_filter")); //$NON-NLS-1$
-				RGB rgb = dialog.open();
-				if (rgb != null) {
+				if (dialog.open() == ColorFilterDialog.OK) {
+					RGB rgb = dialog.getRgb();
 					if (rgb.red + rgb.green + rgb.blue == 0)
 						rgb.red = rgb.green = rgb.blue = 1;
 					BatchUtilities.putPreferences(InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID),
@@ -256,21 +241,16 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 		};
 		setFilterButtonColor();
 		setFilterAction.setToolTipText(Messages.getString("PreviewView.set_bw_filter_tooltip")); //$NON-NLS-1$
-
-		configureAction = new Action(Messages.getString("PreviewView.configure_caption")) { //$NON-NLS-1$
+		showHistogramAction = new Action(Messages.getString("PreviewView.histo"), IAction.AS_CHECK_BOX) { //$NON-NLS-1$
 			@Override
 			public void run() {
-				ConfigureCaptionDialog dialog = new ConfigureCaptionDialog(getSite().getShell(), show, template,
-						alignment, fontsize, currentItem);
-				if (dialog.open() == ConfigureCaptionDialog.OK) {
-					template = dialog.getTemplate();
-					alignment = dialog.getAlignment();
-					updateCaption();
-				}
+				showHisto = !showHisto;
+				refresh();
 			}
 		};
-		configureAction.setToolTipText(Messages.getString("PreviewView.configure_caption_tooltip")); //$NON-NLS-1$
-
+		showHistogramAction.setImageDescriptor(Icons.histo.getDescriptor());
+		showHistogramAction.setToolTipText(Messages.getString("PreviewView.histo_tooltip")); //$NON-NLS-1$
+		captionManager.makeActions();
 	}
 
 	private void setFilterButtonColor() {
@@ -309,8 +289,9 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 		manager.add(cueToggleAction);
 		manager.add(bwToggleAction);
 		manager.add(setFilterAction);
-		manager.add(viewImageAction);
+		manager.add(showHistogramAction);
 		manager.add(new Separator());
+		manager.add(viewImageAction);
 		manager.add(editAction);
 		manager.add(editWithAction);
 		manager.add(new Separator());
@@ -330,7 +311,7 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 		manager.add(refreshAction);
 		manager.add(deleteAction);
 		manager.add(new Separator());
-		manager.add(configureAction);
+		captionManager.fillMenu(manager);
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
@@ -350,15 +331,13 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 
 	@Override
 	protected void fillLocalToolBar(IToolBarManager manager) {
-		manager.add(playVoiceNoteAction);
-		manager.add(new Separator());
 		manager.add(cueToggleAction);
 		manager.add(bwToggleAction);
-		manager.add(setFilterAction);
-		manager.add(viewImageAction);
+		manager.add(showHistogramAction);
 		manager.add(new Separator());
+		manager.add(playVoiceNoteAction);
+		manager.add(viewImageAction);
 		manager.add(editAction);
-		manager.add(editWithAction);
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
@@ -379,6 +358,7 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 			bwToggleAction.setEnabled(enabled);
 			cueToggleAction.setEnabled(enabled);
 			setFilterAction.setEnabled(enabled);
+			showHistogramAction.setEnabled(enabled);
 			super.updateActions(force);
 		}
 	}
@@ -390,27 +370,29 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 		updateActions(false);
 	}
 
-	/**
-	 * Passing the focus request to the viewer's control.
-	 */
-
 	@Override
 	public void setFocus() {
 		if (canvas != null)
 			canvas.setFocus();
 	}
 
-	public void paintControl(PaintEvent e) {
+	public void paintControl(Event e) {
 		GC gc = e.gc;
 		Rectangle clientArea = canvas.getClientArea();
+		int width = clientArea.width;
+		int height = clientArea.height;
 		if (currentItem == null) {
 			gc.setBackground(canvas.getBackground());
 			gc.fillRectangle(clientArea);
+			String text = Messages.getString("PreviewView.nothing_selected"); //$NON-NLS-1$
+			gc.setForeground(canvas.getForeground());
+			Point tx = gc.textExtent(text);
+			gc.drawText(text, (width - tx.x) / 2, (height - tx.y) / 2, true);
 		} else {
 			Image image = bw ? getBwImage(currentItem, filter) : getImage(currentItem);
 			Rectangle bounds = image.getBounds();
-			double xscale = ((float) clientArea.width) / bounds.width;
-			double yscale = ((float) clientArea.height) / bounds.height;
+			double xscale = ((float) width) / bounds.width;
+			double yscale = ((float) height) / bounds.height;
 			double scale = Math.min(xscale, yscale);
 			int targetWidth = (int) (bounds.width * scale + 0.5d);
 			int targetHeight = (int) (bounds.height * scale + 0.5d);
@@ -419,8 +401,8 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 				gc.setAntialias(SWT.ON);
 				gc.setInterpolation(SWT.HIGH);
 			}
-			int offy = (clientArea.height - targetHeight) / 2;
-			int offx = (clientArea.width - targetWidth) / 2;
+			int offy = (height - targetHeight) / 2;
+			int offx = (width - targetWidth) / 2;
 			gc.drawImage(image, 0, 0, bounds.width, bounds.height, offx, offy, targetWidth, targetHeight);
 			if (currentFrame.getWidth() != 1d || currentFrame.getHeight() != 1d) {
 				gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_CYAN));
@@ -429,8 +411,24 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 						(int) (currentFrame.getY() * targetHeight + offy),
 						(int) (currentFrame.getWidth() * targetWidth), (int) (currentFrame.getHeight() * targetHeight));
 			}
+			if (showHisto) {
+				int ovh = captionManager.getOverlayHeight(gc);
+				int w3 = width * 2 / 7;
+				int h3 = height * 2 / 7;
+				int x = width - w3 - 10;
+				int y = (ovh > 0 ? offy + targetHeight - ovh : height) - h3 - 10;
+				gc.setAlpha(64);
+				gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
+				gc.fillRectangle(x, y, w3, h3);
+				gc.setAlpha(144);
+				gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WHITE));
+				gc.drawRectangle(x - 1, y - 1, w3 + 2, h3 + 2);
+				histogramManager.paint(gc, x, y, w3, h3, true, true, true, true, true, true);
+				histoRegion = new Rectangle(x, y, w3, h3);
+			} else
+				histoRegion = null;
+			captionManager.handleOverlay(gc, offx, offy, targetWidth, targetHeight, 144, 180);
 		}
-
 	}
 
 	private Image getBwImage(Asset asset, RGB filter) {
@@ -453,7 +451,7 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 		// do nothing
 	}
 
-	public Object findObject(MouseEvent e) {
+	public Object findObject(Event e) {
 		return findObject(e.x, e.y);
 	}
 
@@ -467,12 +465,9 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 
 	@Override
 	public void refresh() {
-		if (show == Constants.INHERIT_LABEL) {
-			show = showLabelDflt;
-			template = labelTemplateDflt;
-			fontsize = labelFontsizeDflt;
-			alignment = labelAlignmentDflt;
-		}
+		if (showHisto)
+			histogramManager.recalculate(currentItem == null ? null : getImage(currentItem), false);
+		captionManager.refresh();
 		disposeBwImage();
 		canvas.redraw();
 		updateActions(false);
@@ -522,50 +517,9 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 		boolean changed = previous != currentItem;
 		if (changed) {
 			currentFrame.setFrame(0d, 0d, 1d, 1d);
-			updateCaption();
+			captionManager.updateCaption(currentItem);
 		}
 		return changed;
-	}
-
-	protected void updateCaption() {
-		if (show == Constants.NO_LABEL || template == null || template.isEmpty()) {
-			if (caption != null) {
-				caption.dispose();
-				caption = null;
-			}
-		} else {
-			if (caption == null) {
-				caption = new Label(composite, SWT.NONE);
-				caption.setLayoutData(new GridData(SWT.FILL, SWT.END, true, false));
-				caption.addMouseListener(new MouseAdapter() {
-					@Override
-					public void mouseUp(MouseEvent e) {
-						configureAction.run();
-					}
-				});
-			}
-			caption.setText(currentItem == null ? "" //$NON-NLS-1$
-					: captionProcessor.processTemplate(show == Constants.CUSTOM_LABEL ? template : null, currentItem));
-			caption.setAlignment(alignment);
-			caption.setFont(show == Constants.CUSTOM_LABEL && fontsize != 0 ? getSmallFont(fontsize)
-					: JFaceResources.getDefaultFont());
-		}
-		composite.layout(true, true);
-	}
-
-	private Font getSmallFont(int labelFontsize) {
-		if (labelFontsize != currentFontsize) {
-			currentFontsize = labelFontsize;
-			if (smallFont != null) {
-				smallFont.dispose();
-				smallFont = null;
-			}
-		}
-		if (smallFont == null) {
-			FontData[] fd = JFaceResources.getDefaultFontDescriptor().getFontData();
-			smallFont = new Font(canvas.getDisplay(), fd[0].getName(), currentFontsize, fd[0].getStyle());
-		}
-		return smallFont;
 	}
 
 	@Override
@@ -600,10 +554,11 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 	}
 
 	private void asyncRefresh() {
-		getSite().getShell().getDisplay().asyncExec(() -> {
-			if (!canvas.isDisposed())
-				refresh();
-		});
+		if (!canvas.isDisposed())
+			getSite().getShell().getDisplay().asyncExec(() -> {
+				if (!canvas.isDisposed())
+					refresh();
+			});
 	}
 
 	@Override
@@ -626,13 +581,13 @@ public class PreviewView extends ImageView implements PaintListener, IFrameListe
 
 	@Override
 	public void frameChanged(IFrameProvider provider, String assetId, double x, double y, double w, double h) {
-		if (!canvas.isDisposed() && (currentFrame.getX() != x || currentFrame.getY() != y
-				|| currentFrame.getWidth() != w || currentFrame.getHeight() != h)) {
-			if (currentItem != null && (assetId == null || currentItem.getStringId().equals(assetId))) {
-				currentFrame.setFrame(x, y, w, h);
-				if (isVisible())
-					canvas.redraw();
-			}
+		if (!canvas.isDisposed()
+				&& (currentFrame.getX() != x || currentFrame.getY() != y || currentFrame.getWidth() != w
+						|| currentFrame.getHeight() != h)
+				&& currentItem != null && (assetId == null || currentItem.getStringId().equals(assetId))) {
+			currentFrame.setFrame(x, y, w, h);
+			if (isVisible())
+				canvas.redraw();
 		}
 	}
 

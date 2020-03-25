@@ -39,18 +39,8 @@ import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.HelpEvent;
-import org.eclipse.swt.events.HelpListener;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.MouseWheelListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -62,6 +52,8 @@ import org.eclipse.swt.graphics.Region;
 import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -92,13 +84,13 @@ import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiConstants;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.hover.HoverInfo;
 import com.bdaum.zoom.ui.internal.widgets.FadingShell;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class ImageViewer extends AbstractMediaViewer
-		implements HelpListener, UiConstants, IFrameProvider, ITransformProvider {
+public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFrameProvider, ITransformProvider {
 
 	private static final long USEPREVIEWTHRESHOLD = 4000000L;
 	private static final double MAXZOOM = 4d;
@@ -106,7 +98,7 @@ public class ImageViewer extends AbstractMediaViewer
 	private static final int PAGEINCREMENT = 100;
 	protected static final int HOTSPOTSIZE = 48;
 
-	private final class InertiaMousePanListener implements MouseListener, MouseMoveListener {
+	private final class InertiaMousePanListener implements Listener {
 		double xSpeed, ySpeed;
 		double lag = 0.7d;
 		double stop = 0.05d;
@@ -134,123 +126,128 @@ public class ImageViewer extends AbstractMediaViewer
 			xSpeed = ySpeed = 0d;
 		}
 
-		public void mouseDoubleClick(MouseEvent e) {
-			if (hotspot.contains(e.x, e.y)) {
-				fireStateEvent(IStateListener.SYNC);
-				fireTransformEvent();
-			} else if (highResVisible && e.button == 1) {
-				cancel();
-				mousePoint.x = e.x;
-				mousePoint.y = e.y;
-				resetView();
-			}
-		}
-
-		public void mouseDown(MouseEvent e) {
-			if (hotspot.contains(e.x, e.y))
-				fireStateEvent(IStateListener.SYNC);
-			else {
-				mouseButton = e.button;
-				if (e.count == 1 && highResVisible) {
-					mouseDown = true;
-					targetPnt.x = mousePoint.x = mousePnt.x = e.x;
-					targetPnt.y = mousePoint.y = mousePnt.y = e.y;
-					altClick = e.button == 3 && modMask == SWT.BUTTON3 || (e.stateMask & modMask) == modMask;
-					lastTime = ((long) e.time) & 0x00000000FFFFFFFF;
-					lastMouseX = e.x;
-					boolean enlarged = isEnlarged();
-					setCursorForObject(e, enlarged ? CURSOR_GRABBING : null, CURSOR_MMINUS, CURSOR_MPLUS, null);
-					if (!enlarged && e.button == 1) {
-						previousRatio = 1 / viewTransform.getScale();
-						fix(1, e.x, e.y);
-					}
-				}
-			}
-		}
-
-		public void mouseUp(MouseEvent e) {
-			if (!Double.isNaN(previousRatio)) {
-				fix(previousRatio, e.x, e.y);
-				previousRatio = Double.NaN;
-			}
-			mouseDown = false;
-			String cursor = isEnlarged() ? CURSOR_OPEN_HAND : null;
-			setCursorForObject(e, cursor, cursor, cursor, null);
-		}
-
-		public void mouseMove(final MouseEvent e) {
-			final double scale = viewTransform.getScale();
-			boolean enlarged = scale > wheelListener.getMinScale();
-			if (mouseDown) {
-				if (softness == 0) {
-					setCursorForObject(e, enlarged ? CURSOR_GRABBING : null, CURSOR_MMINUS, CURSOR_MPLUS, null);
-					double f = (altClick ? 0.4d / scale : 1d);
-					xSpeed = (e.x - mousePnt.x) * f;
-					ySpeed = (e.y - mousePnt.y) * f;
-					targetPnt.x = e.x;
-					targetPnt.y = e.y;
-					performMouseAction(e);
-					mousePnt.x = e.x;
-					mousePnt.y = e.y;
-					return;
-				}
-				long time = ((long) e.time) & 0x00000000FFFFFFFF;
-				long dt = time - lastTime;
-				if (dt > 0) {
-					double f = (altClick ? 40d / scale : 120d / Math.sqrt(scale)) / dt;
-					xSpeed = (xSpeed + (e.x - mousePnt.x) * f) / 2;
-					ySpeed = (ySpeed + (e.y - mousePnt.y) * f) / 2;
-				}
-				lastTime = time;
-				if (panTask == null && xSpeed != 0 && ySpeed != 0) {
-					targetPnt.x = e.x;
-					targetPnt.y = e.y;
-					panTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(() -> {
-						if (e.display.isDisposed() || topCanvas.isDisposed())
-							xSpeed = ySpeed = 0;
-						else {
-							e.display.syncExec(() -> {
-								if (!topCanvas.isDisposed())
-									performMouseAction(e);
-							});
-							xSpeed *= lag;
-							ySpeed *= lag;
-						}
-						if (Math.abs(xSpeed) < stop && Math.abs(ySpeed) < stop)
-							InertiaMousePanListener.this.cancel();
-					}, 0L, 60L, TimeUnit.MILLISECONDS);
-				}
-			}
-			if (hotspot.contains(e.x, e.y)) {
-				topCanvas.setCursor(e.display.getSystemCursor(SWT.CURSOR_HAND));
-				systemCursorSet = true;
-				return;
-			}
-			if (systemCursorSet) {
-				topCanvas.setCursor(UiActivator.getDefault().getCursor(e.display, currentCustomCursor));
-				systemCursorSet = false;
-			}
-			mousePnt.x = e.x;
-			mousePnt.y = e.y;
-			if (mouseDown) {
-				e.button = mouseButton;
-				String zoomCursor = (xSpeed < 0) ? CURSOR_MMINUS : CURSOR_MPLUS;
-				setCursorForObject(e, enlarged ? CURSOR_GRABBING : null, zoomCursor, zoomCursor, null);
-			} else {
-				String cursor = enlarged ? CURSOR_OPEN_HAND : null;
-				setCursorForObject(e, cursor, cursor, cursor, enlarged ? null : CURSOR_MPLUS);
-			}
-		}
-
-		private void performMouseAction(MouseEvent e) {
+		private void performMouseAction(Event e) {
 			if (altClick)
 				zoom(xSpeed, targetPnt.x, targetPnt.y);
 			else
 				pan(xSpeed, ySpeed);
 		}
+
+		@Override
+		public void handleEvent(Event e) {
+			switch (e.type) {
+			case SWT.MouseMove:
+				final double scale = viewTransform.getScale();
+				boolean enlarged = scale > wheelListener.getMinScale();
+				if (mouseDown) {
+					if (softness == 0) {
+						setCursorForObject(e, enlarged ? CURSOR_GRABBING : null, CURSOR_MMINUS, CURSOR_MPLUS, null);
+						double f = (altClick ? 0.4d / scale : 1d);
+						xSpeed = (e.x - mousePnt.x) * f;
+						ySpeed = (e.y - mousePnt.y) * f;
+						targetPnt.x = e.x;
+						targetPnt.y = e.y;
+						performMouseAction(e);
+						mousePnt.x = e.x;
+						mousePnt.y = e.y;
+						return;
+					}
+					long time = ((long) e.time) & 0x00000000FFFFFFFF;
+					long dt = time - lastTime;
+					if (dt > 0) {
+						double f = (altClick ? 40d / scale : 120d / Math.sqrt(scale)) / dt;
+						xSpeed = (xSpeed + (e.x - mousePnt.x) * f) / 2;
+						ySpeed = (ySpeed + (e.y - mousePnt.y) * f) / 2;
+					}
+					lastTime = time;
+					if (panTask == null && xSpeed != 0 && ySpeed != 0) {
+						targetPnt.x = e.x;
+						targetPnt.y = e.y;
+						panTask = UiActivator.getScheduledExecutorService().scheduleAtFixedRate(() -> {
+							if (e.display.isDisposed() || topCanvas.isDisposed())
+								xSpeed = ySpeed = 0;
+							else {
+								e.display.syncExec(() -> {
+									if (!topCanvas.isDisposed())
+										performMouseAction(e);
+								});
+								xSpeed *= lag;
+								ySpeed *= lag;
+							}
+							if (Math.abs(xSpeed) < stop && Math.abs(ySpeed) < stop)
+								InertiaMousePanListener.this.cancel();
+						}, 0L, 60L, TimeUnit.MILLISECONDS);
+					}
+				}
+				if (hotspot.contains(e.x, e.y)) {
+					topCanvas.setCursor(e.display.getSystemCursor(SWT.CURSOR_HAND));
+					systemCursorSet = true;
+					return;
+				}
+				if (systemCursorSet) {
+					topCanvas.setCursor(UiActivator.getDefault().getCursor(e.display, currentCustomCursor));
+					systemCursorSet = false;
+				}
+				mousePnt.x = e.x;
+				mousePnt.y = e.y;
+				if (mouseDown) {
+					e.button = mouseButton;
+					String zoomCursor = (xSpeed < 0) ? CURSOR_MMINUS : CURSOR_MPLUS;
+					setCursorForObject(e, enlarged ? CURSOR_GRABBING : null, zoomCursor, zoomCursor, null);
+				} else {
+					String cursor = enlarged ? CURSOR_OPEN_HAND : null;
+					setCursorForObject(e, cursor, cursor, cursor, enlarged ? null : CURSOR_MPLUS);
+				}
+				break;
+			case SWT.MouseUp:
+				if (!Double.isNaN(previousRatio)) {
+					fix(previousRatio, e.x, e.y);
+					previousRatio = Double.NaN;
+				}
+				mouseDown = false;
+				String cursor = isEnlarged() ? CURSOR_OPEN_HAND : null;
+				setCursorForObject(e, cursor, cursor, cursor, null);
+				break;
+			case SWT.MouseDown:
+				if (hotspot.contains(e.x, e.y))
+					fireStateEvent(IStateListener.SYNC);
+				else {
+					mouseButton = e.button;
+					if (e.count == 1 && highResVisible) {
+						mouseDown = true;
+						targetPnt.x = mousePoint.x = mousePnt.x = e.x;
+						targetPnt.y = mousePoint.y = mousePnt.y = e.y;
+						altClick = e.button == 3 && modMask == SWT.BUTTON3 || (e.stateMask & modMask) == modMask;
+						lastTime = ((long) e.time) & 0x00000000FFFFFFFF;
+						lastMouseX = e.x;
+						if (isEnlarged())
+							setCursorForObject(e, CURSOR_GRABBING, CURSOR_MMINUS, CURSOR_MPLUS, null);
+						else {
+							setCursorForObject(e, null, CURSOR_MMINUS, CURSOR_MPLUS, null);
+							if (e.button == 1) {
+								previousRatio = 1 / viewTransform.getScale();
+								fix(1, e.x, e.y);
+							}
+						}
+					}
+				}
+				break;
+			case SWT.MouseDoubleClick:
+				if (hotspot.contains(e.x, e.y)) {
+					fireStateEvent(IStateListener.SYNC);
+					fireTransformEvent();
+				} else if (highResVisible && e.button == 1) {
+					cancel();
+					mousePoint.x = e.x;
+					mousePoint.y = e.y;
+					resetView();
+				}
+				break;
+			}
+		}
 	}
 
-	public class HighResJob extends Job {
+	public class HighResJob extends Job implements Listener {
 
 		private File imageFile;
 		private boolean adv;
@@ -321,22 +318,12 @@ public class ImageViewer extends AbstractMediaViewer
 								display.syncExec(() -> {
 									Shell sh = topShell.getShell();
 									Rectangle bounds = sh.getBounds();
-									tooltip = new ToolTip(sh, SWT.NONE);
-									tooltip.setLocation(bounds.x + bounds.width / 3, bounds.y);
-									tooltip.setText(NLS.bind(Messages.getString("ImageViewer.downsampled"), //$NON-NLS-1$
-											superSamplingFactor));
-									tooltip.setMessage(Messages.getString("ImageViewer.click_for_fullres")); //$NON-NLS-1$
-									tooltip.addSelectionListener(new SelectionAdapter() {
-										@Override
-										public void widgetSelected(SelectionEvent e) {
-											highResVisible = false;
-											viewTransform = null;
-											tooltip.setVisible(false);
-											highResJob = new HighResJob(file, advanced, cms, false);
-											highResJob.schedule();
-										}
-									});
-									tooltip.setVisible(true);
+									tooltip = new ToolTip(sh, SWT.ICON_WARNING);
+									tooltip.addListener(SWT.Selection, this);
+									UiUtilities.showTooltip(tooltip, bounds.x + bounds.width / 3, bounds.y,
+											NLS.bind(Messages.getString("ImageViewer.downsampled"), //$NON-NLS-1$
+													superSamplingFactor),
+											Messages.getString("ImageViewer.click_for_fullres")); //$NON-NLS-1$
 								});
 								while (!display.isDisposed()) {
 									display.syncExec(() -> {
@@ -376,6 +363,16 @@ public class ImageViewer extends AbstractMediaViewer
 			} finally {
 				fileWatcher.stopIgnoring(opId);
 			}
+		}
+
+		@Override
+		public void handleEvent(Event event) {
+			highResVisible = false;
+			viewTransform = null;
+			if (!tooltip.isDisposed())
+				tooltip.setVisible(false);
+			highResJob = new HighResJob(file, advanced, cms, false);
+			highResJob.schedule();
 		}
 	}
 
@@ -517,7 +514,6 @@ public class ImageViewer extends AbstractMediaViewer
 	private Job transferJob;
 	private Image bwImage;
 	private boolean enlarge;
-	private boolean addNoise;
 	private double oldRatio = -1d;
 	private double oldScale;
 	private int oldKeyCode;
@@ -588,7 +584,6 @@ public class ImageViewer extends AbstractMediaViewer
 		preview = preferencesService.getBoolean(UiActivator.PLUGIN_ID, PreferenceConstants.PREVIEW, false, null);
 		int zoomKey = preferencesService.getInt(UiActivator.PLUGIN_ID, PreferenceConstants.ZOOMKEY, SWT.ALT, null);
 		enlarge = preferencesService.getBoolean(UiActivator.PLUGIN_ID, PreferenceConstants.ENLARGESMALL, false, null);
-		addNoise = preferencesService.getBoolean(UiActivator.PLUGIN_ID, PreferenceConstants.ADDNOISE, true, null);
 		switch (zoomKey) {
 		case PreferenceConstants.ZOOMALT:
 			modMask = SWT.ALT;
@@ -628,196 +623,31 @@ public class ImageViewer extends AbstractMediaViewer
 		controlShell.setText(Constants.APPNAME);
 		controlShell.setLayout(new FillLayout());
 		controlCanvas = new Canvas(controlShell, SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND);
-		controlCanvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent e) {
-				close();
-			}
-		});
-		bottomCanvas.addKeyListener(this);
-		previewCanvas.addKeyListener(this);
-		MouseMoveListener mouseMoveListener = new MouseMoveListener() {
-			public void mouseMove(MouseEvent e) {
-				Canvas canvas = (Canvas) e.widget;
-				Rectangle clientArea = canvas.getClientArea();
-				if (e.y < clientArea.y + 2 * HOTSPOTSIZE) {
-					if (e.x < clientArea.x + 2 * HOTSPOTSIZE && kind != RIGHT)
-						showCloseButton(canvas.toDisplay(clientArea.x, clientArea.y));
-					else if (e.x > clientArea.x + clientArea.width - 2 * HOTSPOTSIZE && kind != LEFT)
-						showCloseButton(canvas.toDisplay(clientArea.x + clientArea.width - HOTSPOTSIZE, clientArea.y));
-					else
-						controlShell.setVisible(false);
-				} else
-					controlShell.setVisible(false);
-				if (controlShell.getVisible())
-					controlShell.forceActive();
-			}
-
-			private void showCloseButton(Point pnt) {
-				controlShell.setLocation(pnt);
-				controlShell.setVisible(true);
-			}
-		};
-		topCanvas.addMouseMoveListener(mouseMoveListener);
-		bottomCanvas.addMouseMoveListener(mouseMoveListener);
-		previewCanvas.addMouseMoveListener(mouseMoveListener);
-		topCanvas.addKeyListener(this);
-		topCanvas.addHelpListener(this);
+		controlCanvas.addListener(SWT.MouseUp, this);
+		bottomCanvas.addListener(SWT.KeyDown, this);
+		bottomCanvas.addListener(SWT.KeyUp, this);
+		previewCanvas.addListener(SWT.KeyDown, this);
+		previewCanvas.addListener(SWT.KeyUp, this);
+		topCanvas.addListener(SWT.MouseMove, this);
+		bottomCanvas.addListener(SWT.MouseMove, this);
+		previewCanvas.addListener(SWT.MouseMove, this);
+		topCanvas.addListener(SWT.KeyDown, this);
+		topCanvas.addListener(SWT.KeyUp, this);
+		topCanvas.addListener(SWT.Help, this);
 		wheelListener = new InertiaMouseWheelListener();
 		wheelListener.setMinScale(1d);
 		wheelListener.setMaxScale(MAXZOOM);
 		topCanvas.addMouseWheelListener(wheelListener);
 		panListener = new InertiaMousePanListener();
-		topCanvas.addMouseListener(panListener);
-		topCanvas.addMouseMoveListener(panListener);
-		PaintListener listener = new PaintListener() {
-			public void paintControl(PaintEvent e) {
-				Canvas canvas = (Canvas) e.widget;
-				Shell shell = canvas.getShell();
-				Rectangle sbnds = canvas.getClientArea();
-				CssActivator.getDefault().setColors(shell);
-				GC gc = e.gc;
-				gc.setBackground(shell.getBackground());
-				gc.fillRectangle(sbnds);
-				if (!highResVisible) {
-					Image im = previewImage != null
-							? previewImage.getSwtImage(display, false, ZImage.UNCROPPED, SWT.DEFAULT, SWT.DEFAULT)
-							: bwmode != null ? getBwImage(asset, bwmode) : getImage(asset);
-					if (im != null) {
-						Rectangle ibnds = im.getBounds();
-						double factor = Math.min((double) sbnds.width / ibnds.width,
-								(double) sbnds.height / ibnds.height);
-						if (!enlarge) {
-							double factor2 = Math.min((double) sbnds.width / asset.getWidth(),
-									(double) sbnds.height / asset.getHeight());
-							if (factor2 > 1d)
-								factor /= factor2;
-						}
-						int w = (int) (ibnds.width * factor);
-						int h = (int) (ibnds.height * factor);
-						gc.drawImage(im, 0, 0, ibnds.width, ibnds.height, (sbnds.width - w) / 2, (sbnds.height - h) / 2,
-								w, h);
-					}
-					String volume = asset.getVolume();
-					String text;
-					if (file == null)
-						text = volume == null || volume.trim().isEmpty()
-								? Messages.getString("ImageViewer.highres_not_available") //$NON-NLS-1$
-								: NLS.bind(Messages.getString("ImageViewer.high_res_image_not_available"), //$NON-NLS-1$
-										volume);
-					else if (loadFailed != null)
-						text = loadFailed;
-					else
-						text = ((previewImage != null) ? Messages.getString("ImageViewer.loading_highres") : //$NON-NLS-1$
-						Messages.getString("ImageViewer.loading_thumbnail")) //$NON-NLS-1$
-								+ "\n\n" + getKeyboardHelp(false) + '\n'; //$NON-NLS-1$
-					if (tlayout == null) {
-						tlayout = new TextLayout(display);
-						tlayout.setAlignment(SWT.CENTER);
-						tlayout.setWidth(sbnds.width);
-						tlayout.setFont(JFaceResources.getFont(UiConstants.VIEWERFONT));
-					}
-					tlayout.setText(text);
-					Rectangle tbounds = tlayout.getBounds();
-					gc.setForeground(display.getSystemColor((file == null || loadFailed != null) ? SWT.COLOR_DARK_RED
-							: (previewImage != null) ? SWT.COLOR_DARK_CYAN : SWT.COLOR_DARK_GREEN));
-					int y = (sbnds.height - tbounds.height) / 2;
-					tlayout.draw(gc, 1, y + 1);
-					gc.setForeground(display.getSystemColor((file == null || loadFailed != null) ? SWT.COLOR_RED
-							: (previewImage != null) ? SWT.COLOR_CYAN : SWT.COLOR_GREEN));
-					tlayout.draw(gc, 0, y);
-				}
-			}
-		};
-		bottomCanvas.addPaintListener(listener);
-		previewCanvas.addPaintListener(listener);
-		topCanvas.addPaintListener(new PaintListener() {
-			public void paintControl(PaintEvent e) {
-				if (image != null) {
-					Rectangle sbounds = topCanvas.getClientArea();
-					Shell shell = topShell.getShell();
-					CssActivator.getDefault().setColors(shell);
-					GC gc = e.gc;
-					gc.setBackground(shell.getBackground());
-					gc.fillRectangle(sbounds);
-					int iwidth = ibounds.width;
-					int iheight = ibounds.height;
-					if (viewTransform == null) {
-						viewTransform = new PAffineTransform();
-						double zoomfactor = Math.min((double) sbounds.width / iwidth,
-								(double) sbounds.height / iheight);
-						if (!enlarge && zoomfactor > 1d)
-							zoomfactor = 1d;
-						wheelListener.setMinScale(zoomfactor);
-						viewTransform.scale(zoomfactor, zoomfactor);
-					}
-					rectSrc.setBounds(ibounds.x, ibounds.y, iwidth, iheight);
-					viewTransform.transform(rectSrc, rectDst);
-					int canvasWidth = Math.min((int) (rectDst.getWidth()), sbounds.width);
-					int canvasHeight = Math.min((int) (rectDst.getHeight()), sbounds.height);
-					canvasXoffset = Math.max(0, (sbounds.width - canvasWidth) / 2);
-					canvasYoffset = Math.max(0, (sbounds.height - canvasHeight) / 2);
-					rectSrc.setBounds(0, 0, canvasWidth, canvasHeight);
-					viewTransform.inverseTransform(rectSrc, rectDst);
-					int cropWidth = Math.min((int) (rectDst.getWidth()), iwidth);
-					int cropHeight = Math.min((int) (rectDst.getHeight()), iheight);
-					int cropXoffset = Math.max(0, Math.min(iwidth - cropWidth, (int) (rectDst.getX())));
-					int cropYoffset = Math.max(0, Math.min(iheight - cropHeight, (int) (rectDst.getY())));
-					if (advanced) {
-						gc.setAntialias(SWT.ON);
-						gc.setInterpolation(SWT.HIGH);
-					}
-					try {
-						image.draw(gc, cropXoffset, cropYoffset, cropWidth, cropHeight, canvasXoffset, canvasYoffset,
-								canvasWidth, canvasHeight, cropmode, sbounds.width, sbounds.height, true);
-						currentFrame.setFrame((double) cropXoffset / iwidth, (double) cropYoffset / iheight,
-								(double) cropWidth / iwidth, (double) cropHeight / iheight);
-					} catch (Exception e1) {
-						UiActivator.getDefault().logError(Messages.getString("ImageViewer.error_when_resizing"), //$NON-NLS-1$
-								e1);
-					}
-					gc.setBackground(topShell.getShell().getBackground());
-					if (canvasXoffset > 0)
-						gc.fillRectangle(0, 0, canvasXoffset, sbounds.height);
-					if (canvasXoffset + canvasWidth < sbounds.width)
-						gc.fillRectangle(canvasXoffset + canvasWidth, 0, sbounds.width - (canvasXoffset + canvasWidth),
-								sbounds.height);
-					if (canvasYoffset > 0)
-						gc.fillRectangle(0, 0, sbounds.width, canvasYoffset);
-					if (canvasYoffset + canvasHeight < sbounds.height)
-						gc.fillRectangle(0, canvasYoffset + canvasHeight, sbounds.width,
-								sbounds.height - (canvasYoffset + canvasHeight));
-					if (!transformListeners.isEmpty()) {
-						Image img = sync ? Icons.sync32.getImage() : Icons.sync32d.getImage();
-						Rectangle bounds = img.getBounds();
-						int x, y;
-						if (vertical) {
-							hotspot.width = bounds.width;
-							hotspot.height = bounds.height / 2;
-							hotspot.x = x = 0;
-							y = kind == LEFT ? sbounds.height - hotspot.height : -hotspot.height;
-							hotspot.y = kind == LEFT ? y : 0;
-						} else {
-							hotspot.width = bounds.width / 2;
-							hotspot.height = bounds.height;
-							x = kind == LEFT ? sbounds.width - hotspot.width : -hotspot.width;
-							hotspot.x = kind == LEFT ? x : 0;
-							hotspot.y = y = sbounds.height - 2 * bounds.height;
-						}
-						gc.setBackground(
-								display.getSystemColor(sync ? SWT.COLOR_GREEN : SWT.COLOR_WIDGET_NORMAL_SHADOW));
-						gc.fillOval(x - 2, y - 2, bounds.width + 4, bounds.height + 4);
-						gc.drawImage(img, x, y);
-					}
-				}
-			}
-		});
+		topCanvas.addListener(SWT.MouseDown, panListener);
+		topCanvas.addListener(SWT.MouseUp, panListener);
+		topCanvas.addListener(SWT.MouseDoubleClick, panListener);
+		topCanvas.addListener(SWT.MouseMove, panListener);
+		bottomCanvas.addListener(SWT.Paint, this);
+		previewCanvas.addListener(SWT.Paint, this);
+		topCanvas.addListener(SWT.Paint, this);
 		bottomCanvas.redraw();
-		controlCanvas.addPaintListener(new PaintListener() {
-			public void paintControl(PaintEvent e) {
-				e.gc.drawImage(Icons.closeButton.getImage(), 0, 0);
-			}
-		});
+		controlCanvas.addListener(SWT.Paint, this);
 		controlCanvas.redraw();
 		controlShell.setBounds(Constants.OSX ? mbounds.x : mbounds.x + mbounds.width - HOTSPOTSIZE, mbounds.y,
 				HOTSPOTSIZE, HOTSPOTSIZE);
@@ -826,6 +656,191 @@ public class ImageViewer extends AbstractMediaViewer
 		previewShell.layout();
 		topShell.layout();
 		Ui.getUi().getFrameManager().registerFrameProvider(this);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.MouseUp:
+			if (e.widget == controlCanvas)
+				close();
+			break;
+		case SWT.MouseMove:
+			mouseMove(e);
+			break;
+		case SWT.Help:
+			ToolTip toolTip = new ToolTip(topShell.getShell(), SWT.BALLOON | SWT.ICON_INFORMATION);
+			UiUtilities.showTooltip(toolTip, mbounds.x+10, mbounds.y+5, Messages.getString("ImageViewer.image_viewer"), //$NON-NLS-1$
+					getKeyboardHelp(true));
+			break;
+		case SWT.Paint:
+			if (e.widget == controlCanvas)
+				e.gc.drawImage(Icons.closeButton.getImage(), 0, 0);
+			else if (e.widget == topCanvas)
+				paintTop(e);
+			else
+				paintBottom(e);
+		}
+		super.handleEvent(e);
+	}
+
+	private void mouseMove(Event e) {
+		Canvas canvas = (Canvas) e.widget;
+		Rectangle clientArea = canvas.getClientArea();
+		if (e.y < clientArea.y + 2 * HOTSPOTSIZE) {
+			if (e.x < clientArea.x + 2 * HOTSPOTSIZE && kind != RIGHT)
+				showCloseButton(canvas.toDisplay(clientArea.x, clientArea.y));
+			else if (e.x > clientArea.x + clientArea.width - 2 * HOTSPOTSIZE && kind != LEFT)
+				showCloseButton(canvas.toDisplay(clientArea.x + clientArea.width - HOTSPOTSIZE, clientArea.y));
+			else
+				controlShell.setVisible(false);
+		} else
+			controlShell.setVisible(false);
+		if (controlShell.getVisible())
+			controlShell.forceActive();
+	}
+
+	private void showCloseButton(Point pnt) {
+		controlShell.setLocation(pnt);
+		controlShell.setVisible(true);
+	}
+
+	private void paintBottom(Event e) {
+		Canvas canvas = (Canvas) e.widget;
+		Shell shell = canvas.getShell();
+		Rectangle sbnds = canvas.getClientArea();
+		CssActivator.getDefault().setColors(shell);
+		GC gc = e.gc;
+		gc.setBackground(shell.getBackground());
+		gc.fillRectangle(sbnds);
+		if (!highResVisible) {
+			Image im = previewImage != null
+					? previewImage.getSwtImage(display, false, ZImage.UNCROPPED, SWT.DEFAULT, SWT.DEFAULT)
+					: bwmode != null ? getBwImage(asset, bwmode) : getImage(asset);
+			if (im != null) {
+				Rectangle ibnds = im.getBounds();
+				double factor = Math.min((double) sbnds.width / ibnds.width, (double) sbnds.height / ibnds.height);
+				if (!enlarge) {
+					double factor2 = Math.min((double) sbnds.width / asset.getWidth(),
+							(double) sbnds.height / asset.getHeight());
+					if (factor2 > 1d)
+						factor /= factor2;
+				}
+				int w = (int) (ibnds.width * factor);
+				int h = (int) (ibnds.height * factor);
+				gc.drawImage(im, 0, 0, ibnds.width, ibnds.height, (sbnds.width - w) / 2, (sbnds.height - h) / 2, w, h);
+			}
+			String volume = asset.getVolume();
+			String text;
+			if (file == null)
+				text = volume == null || volume.trim().isEmpty()
+						? Messages.getString("ImageViewer.highres_not_available") //$NON-NLS-1$
+						: NLS.bind(Messages.getString("ImageViewer.high_res_image_not_available"), //$NON-NLS-1$
+								volume);
+			else if (loadFailed != null)
+				text = loadFailed;
+			else
+				text = ((previewImage != null) ? Messages.getString("ImageViewer.loading_highres") : //$NON-NLS-1$
+						Messages.getString("ImageViewer.loading_thumbnail")) //$NON-NLS-1$
+						+ "\n\n" + getKeyboardHelp(false) + '\n'; //$NON-NLS-1$
+			if (tlayout == null) {
+				tlayout = new TextLayout(display);
+				tlayout.setAlignment(SWT.CENTER);
+				tlayout.setWidth(sbnds.width);
+				tlayout.setFont(JFaceResources.getFont(UiConstants.VIEWERFONT));
+			}
+			tlayout.setText(text);
+			Rectangle tbounds = tlayout.getBounds();
+			int y = (sbnds.height - tbounds.height) / 2;
+			gc.setBackground(display.getSystemColor(SWT.COLOR_BLACK));
+			gc.setFont(tlayout.getFont());
+			gc.setAlpha(64);
+			Point textExtent = gc.textExtent(text);
+			gc.fillRoundRectangle((tbounds.width - textExtent.x) / 2 - 10, y - 5, textExtent.x + 20, tbounds.height, 10,
+					10);
+			gc.setAlpha(255);
+			gc.setForeground(display.getSystemColor((file == null || loadFailed != null) ? SWT.COLOR_RED
+					: (previewImage != null) ? SWT.COLOR_CYAN : SWT.COLOR_GREEN));
+			tlayout.draw(gc, 0, y);
+		}
+	}
+
+	private void paintTop(Event e) {
+		if (image != null) {
+			Rectangle sbounds = topCanvas.getClientArea();
+			Shell shell = topShell.getShell();
+			CssActivator.getDefault().setColors(shell);
+			GC gc = e.gc;
+			gc.setBackground(shell.getBackground());
+			gc.fillRectangle(sbounds);
+			int iwidth = ibounds.width;
+			int iheight = ibounds.height;
+			if (viewTransform == null) {
+				viewTransform = new PAffineTransform();
+				double zoomfactor = Math.min((double) sbounds.width / iwidth, (double) sbounds.height / iheight);
+				if (!enlarge && zoomfactor > 1d)
+					zoomfactor = 1d;
+				wheelListener.setMinScale(zoomfactor);
+				viewTransform.scale(zoomfactor, zoomfactor);
+			}
+			rectSrc.setBounds(ibounds.x, ibounds.y, iwidth, iheight);
+			viewTransform.transform(rectSrc, rectDst);
+			int canvasWidth = Math.min((int) (rectDst.getWidth()), sbounds.width);
+			int canvasHeight = Math.min((int) (rectDst.getHeight()), sbounds.height);
+			canvasXoffset = Math.max(0, (sbounds.width - canvasWidth) / 2);
+			canvasYoffset = Math.max(0, (sbounds.height - canvasHeight) / 2);
+			rectSrc.setBounds(0, 0, canvasWidth, canvasHeight);
+			viewTransform.inverseTransform(rectSrc, rectDst);
+			int cropWidth = Math.min((int) (rectDst.getWidth()), iwidth);
+			int cropHeight = Math.min((int) (rectDst.getHeight()), iheight);
+			int cropXoffset = Math.max(0, Math.min(iwidth - cropWidth, (int) (rectDst.getX())));
+			int cropYoffset = Math.max(0, Math.min(iheight - cropHeight, (int) (rectDst.getY())));
+			if (advanced) {
+				gc.setAntialias(SWT.ON);
+				gc.setInterpolation(SWT.HIGH);
+			}
+			try {
+				image.draw(gc, cropXoffset, cropYoffset, cropWidth, cropHeight, canvasXoffset, canvasYoffset,
+						canvasWidth, canvasHeight, cropmode, sbounds.width, sbounds.height, true);
+				currentFrame.setFrame((double) cropXoffset / iwidth, (double) cropYoffset / iheight,
+						(double) cropWidth / iwidth, (double) cropHeight / iheight);
+			} catch (Exception e1) {
+				UiActivator.getDefault().logError(Messages.getString("ImageViewer.error_when_resizing"), //$NON-NLS-1$
+						e1);
+			}
+			gc.setBackground(topShell.getShell().getBackground());
+			if (canvasXoffset > 0)
+				gc.fillRectangle(0, 0, canvasXoffset, sbounds.height);
+			if (canvasXoffset + canvasWidth < sbounds.width)
+				gc.fillRectangle(canvasXoffset + canvasWidth, 0, sbounds.width - (canvasXoffset + canvasWidth),
+						sbounds.height);
+			if (canvasYoffset > 0)
+				gc.fillRectangle(0, 0, sbounds.width, canvasYoffset);
+			if (canvasYoffset + canvasHeight < sbounds.height)
+				gc.fillRectangle(0, canvasYoffset + canvasHeight, sbounds.width,
+						sbounds.height - (canvasYoffset + canvasHeight));
+			if (!transformListeners.isEmpty()) {
+				Image img = sync ? Icons.sync32.getImage() : Icons.sync32d.getImage();
+				Rectangle bounds = img.getBounds();
+				int x, y;
+				if (vertical) {
+					hotspot.width = bounds.width;
+					hotspot.height = bounds.height / 2;
+					hotspot.x = x = 0;
+					y = kind == LEFT ? sbounds.height - hotspot.height : -hotspot.height;
+					hotspot.y = kind == LEFT ? y : 0;
+				} else {
+					hotspot.width = bounds.width / 2;
+					hotspot.height = bounds.height;
+					x = kind == LEFT ? sbounds.width - hotspot.width : -hotspot.width;
+					hotspot.x = kind == LEFT ? x : 0;
+					hotspot.y = y = sbounds.height - 2 * bounds.height;
+				}
+				gc.setBackground(display.getSystemColor(sync ? SWT.COLOR_GREEN : SWT.COLOR_WIDGET_NORMAL_SHADOW));
+				gc.fillOval(x - 2, y - 2, bounds.width + 4, bounds.height + 4);
+				gc.drawImage(img, x, y);
+			}
+		}
 	}
 
 	private Image getBwImage(Asset asset, RGB filter) {
@@ -857,7 +872,6 @@ public class ImageViewer extends AbstractMediaViewer
 	 * @see com.bdaum.zoom.ui.views.IImageViewer#open(com.bdaum.zoom.cat.model.asset
 	 * .Asset)
 	 */
-
 	public void open(Asset[] assets) throws IOException {
 		asset = assets[0];
 		URI uri = Core.getCore().getVolumeManager().findExistingFile(asset, false);
@@ -937,7 +951,7 @@ public class ImageViewer extends AbstractMediaViewer
 		return bottomShell == null || bottomShell.isDisposed();
 	}
 
-	public void releaseKey(KeyEvent e) {
+	public void releaseKey(Event e) {
 		long time = e.time & 0xFFFFFFFFL;
 		if (oldKeyCode != e.keyCode || time - oldTime >= 100L) {
 			oldTime = time;
@@ -1146,7 +1160,7 @@ public class ImageViewer extends AbstractMediaViewer
 		}
 	}
 
-	private void setCursorForObject(MouseEvent e, String surface, String altLeft, String altRight, String dflt) {
+	private void setCursorForObject(Event e, String surface, String altLeft, String altRight, String dflt) {
 		int button = e.button;
 		if (button == 3 && modMask == SWT.BUTTON3 || button == 1 && (e.stateMask & modMask) == modMask) {
 			setCanvasCursor((e.x >= lastMouseX) ? altRight : altLeft);
@@ -1164,22 +1178,11 @@ public class ImageViewer extends AbstractMediaViewer
 		}
 	}
 
-	public void helpRequested(HelpEvent e) {
-		ToolTip toolTip = new ToolTip(topShell.getShell(), SWT.BALLOON);
-		toolTip.setAutoHide(true);
-		toolTip.setLocation(mbounds.x, mbounds.y);
-		toolTip.setText(Messages.getString("ImageViewer.image_viewer")); //$NON-NLS-1$
-		toolTip.setMessage(getKeyboardHelp(true));
-		toolTip.setVisible(true);
-	}
-
 	private void metadataRequested(Asset asset) {
-		ToolTip toolTip = new ToolTip(topShell.getShell(), SWT.BALLOON);
-		toolTip.setAutoHide(true);
-		toolTip.setLocation(mbounds.x + mbounds.width / 2, mbounds.y + mbounds.height / 2);
-		toolTip.setText(NLS.bind(Messages.getString("SlideShowPlayer.metadata"), asset.getName())); //$NON-NLS-1$
-		toolTip.setMessage(new HoverInfo(asset, (ImageRegion[]) null).getText());
-		toolTip.setVisible(true);
+		ToolTip toolTip = new ToolTip(topShell.getShell(), SWT.BALLOON | SWT.ICON_INFORMATION);
+		UiUtilities.showTooltip(toolTip, mbounds.x + mbounds.width / 2, mbounds.y + mbounds.height / 2,
+				NLS.bind(Messages.getString("SlideShowPlayer.metadata"), asset.getName()), //$NON-NLS-1$
+				new HoverInfo(asset, (ImageRegion[]) null).getText());
 	}
 
 	public String getName() {
@@ -1190,9 +1193,8 @@ public class ImageViewer extends AbstractMediaViewer
 		return "com.bdaum.zoom.image"; //$NON-NLS-1$
 	}
 
-	private Image getImage(Asset asset) {
-		Image im = Core.getCore().getImageCache().getImage(asset);
-		return (addNoise) ? ImageUtilities.applyNoise(im) : im;
+	private static Image getImage(Asset asset) {
+		return ImageUtilities.boxedblur(Core.getCore().getImageCache().getImage(asset), 3, 5);
 	}
 
 	private boolean isEnlarged() {

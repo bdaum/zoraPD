@@ -36,6 +36,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import com.bdaum.aoModeling.runtime.AomMap;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
@@ -74,6 +75,7 @@ import com.bdaum.zoom.core.internal.lucene.ILuceneService;
 import com.bdaum.zoom.core.internal.lucene.ParseException;
 import com.bdaum.zoom.core.internal.peer.IPeerService;
 import com.bdaum.zoom.fileMonitor.internal.filefilter.WildCardFilter;
+import com.bdaum.zoom.image.ImageConstants;
 import com.db4o.ObjectContainer;
 import com.db4o.ObjectSet;
 import com.db4o.ext.DatabaseClosedException;
@@ -479,7 +481,8 @@ public class CollectionProcessor implements ICollectionProcessor {
 
 	private List<Asset> select(SmartCollection scoll, boolean collSort, IAssetFilter[] assetFilters,
 			SortCriterion cSort, List<SortCriterion> postponedSorts, boolean testExist) {
-		// long timestamp = System.nanoTime();
+//		 long timestamp = System.nanoTime();
+		int processors = ImageConstants.NPROCESSORS;
 		boolean dynamic = false;
 		boolean isSorted = postponedSorts != null && scoll != null && collSort
 				&& (!scoll.getSortCriterion().isEmpty() || cSort != null);
@@ -505,10 +508,12 @@ public class CollectionProcessor implements ICollectionProcessor {
 					while (true) {
 						Constraint disjunction = null;
 						if (coll.getAlbum() && tempColl.getSubSelection().isEmpty()
-								&& coll.getAsset().size() > MAXALBUMASSETS)
+								&& coll.getAsset().size() > MAXALBUMASSETS * processors)
 							disjunction = query.descend("album").constrain(coll.getName()); //$NON-NLS-1$
-						else
-							for (Criterion crit : tempColl.getCriterion()) {
+						else {
+							int ccount = tempColl.getCriterion().size();
+							for (int ci = 0; ci < ccount; ci++) {
+								Criterion crit = tempColl.getCriterion(ci);
 								if (crit == null)
 									return EMPTY;
 								int relation = crit.getRelation();
@@ -603,9 +608,29 @@ public class CollectionProcessor implements ICollectionProcessor {
 											idSet = new HashSet<String>();
 									} else if (qfield == QueryField.IPTC_LOCATIONCREATED) {
 										dynamic = true;
-										List<LocationCreatedImpl> relations = obtainStructRelations(database,
-												LocationCreatedImpl.class, LocationImpl.class, "location", crit, //$NON-NLS-1$
-												value, qsubfield);
+										List<LocationCreatedImpl> relations;
+										if (ci == 0 && qsubfield != null) { // special case system location collections
+											List<Object> namesValuesRelations = new ArrayList<Object>(ccount * 3);
+											namesValuesRelations.add(subfield);
+											namesValuesRelations.add(value);
+											namesValuesRelations.add(relation);
+											for (int cj = 1; cj < ccount; cj++) {
+												Criterion critn = tempColl.getCriterion(cj);
+												if (critn == null || !critn.getField().equals(field)
+														|| critn.getSubfield() == null || !critn.getAnd())
+													break;
+												namesValuesRelations.add(critn.getSubfield());
+												namesValuesRelations.add(critn.getValue());
+												namesValuesRelations.add(critn.getRelation());
+												++ci;
+											}
+											relations = dbManager.obtainParentObjects(LocationCreatedImpl.class,
+													"location", dbManager.obtainObjects(LocationImpl.class, //$NON-NLS-1$
+															false, namesValuesRelations.toArray()));
+										} else
+											relations = obtainStructRelations(database, LocationCreatedImpl.class,
+													LocationImpl.class, "location", crit, //$NON-NLS-1$
+													value, qsubfield);
 										if (relations != null) {
 											if (idSet == null)
 												idSet = new HashSet<String>(relations.size() * 2);
@@ -671,10 +696,10 @@ public class CollectionProcessor implements ICollectionProcessor {
 											constraint = query.descend(field).constrain(null);
 											break;
 										}
-									} else {
+									} else
 										constraint = applyRelation(tempColl.getSystem() ? dbManager : null, field,
 												field, relation, value, query.descend(field).constrain(value), query);
-									} // end single criterion processing
+									// end single criterion processing
 								}
 								if (idSet != null) {
 									if (idSetOr != null) {
@@ -694,7 +719,8 @@ public class CollectionProcessor implements ICollectionProcessor {
 												: disjunction.or(constraint);
 									disjunction = constraint;
 								}
-							} // end criterion loop
+							}
+						} // end criterion loop
 						if (disjunction != null)
 							conjunction = conjunction != null ? conjunction.and(disjunction) : disjunction;
 						if (idSetOr != null) {
@@ -711,47 +737,29 @@ public class CollectionProcessor implements ICollectionProcessor {
 						tempColl = (SmartCollectionImpl) tempColl.getSmartCollection_subSelection_parent();
 						if (tempColl == null)
 							break;
-					} // End collection hierarchy loop
-					// if (assetFilters != null && (idSetAnd == null || conjunction != null ||
-					// idSetAnd.size() > MAXIDS)) {
-					// // we use filter constraints only when no retrieval by id or too many ids or
-					// // when there are constraints anyway (very slow)
-					// // Otherwise we filter after the query
-					// for (IAssetFilter assetFilter : assetFilters) {
-					// Constraint filterConstraint = assetFilter instanceof AssetFilter
-					// ? ((AssetFilter) assetFilter).getConstraint(dbManager, query)
-					// : null;
-					// if (filterConstraint != null)
-					// conjunction = conjunction == null ? filterConstraint
-					// : conjunction.and(filterConstraint);
-					// }
-					// assetFilters = null;
-					// }
+					}
 					if (idSetAnd != null) {
-						if (conjunction != null || idSetAnd.size() > MAXIDS)
+						if (conjunction != null || idSetAnd.size() > MAXIDS * processors)
 							query.constrain(new IdEvaluation(idSetAnd));
 						// AND with conjunction works, despite an explicit AND is impossible!
 						else {
 							query = null;
 							if (idSetAnd.isEmpty())
 								return testExist ? null : EMPTY;
-							List<Asset> assets = new ArrayList<Asset>(idSetAnd.size());
-							for (String id : idSetAnd) {
-								Query q = database.query();
-								q.constrain(AssetImpl.class);
-								q.descend(Constants.OID).constrain(id);
-								ObjectSet<AssetImpl> hits = q.<AssetImpl>execute();
-								if (assetFilters != null)
-									hl: for (AssetImpl asset : hits) {
-										for (IAssetFilter filter : assetFilters)
-											if (!filter.accept(asset))
-												continue hl;
-										assets.add(asset);
-									}
-								else
-									assets.addAll(hits);
+							final int count = idSetAnd.size();
+							final String[] ids = idSetAnd.toArray(new String[count]);
+							if (processors == 1 || count == 1) {
+								List<Asset> assets = new ArrayList<Asset>(count);
+								resolveIdSet(database, ids, 0, count, assets, assetFilters);
+								postponeSorts(isSorted, scoll, cSort, postponedSorts);
+								return assets;
 							}
+							final List<Asset> assets = Collections.synchronizedList(new ArrayList<Asset>(count));
+							final int inc = (count + processors - 1) / processors;
+							IntStream.range(0, processors).parallel().forEach(p -> resolveIdSet(database, ids, p * inc,
+									Math.min(count, (p + 1) * inc), assets, assetFilters));
 							postponeSorts(isSorted, scoll, cSort, postponedSorts);
+//							System.out.println(System.nanoTime() - timestamp);
 							return assets;
 						}
 					}
@@ -787,7 +795,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 					}
 				}
 			}
-			// System.out.println(System.nanoTime() - timestamp);
+//			 System.out.println(System.nanoTime() - timestamp);
 			ObjectSet<Asset> set = null;
 			try {
 				set = query.execute();
@@ -829,6 +837,25 @@ public class CollectionProcessor implements ICollectionProcessor {
 		} finally {
 			if (ticket != null)
 				peerService.discardTask(ticket);
+		}
+	}
+
+	private static void resolveIdSet(ObjectContainer database, String[] ids, int lower, int upper, List<Asset> assets,
+			IAssetFilter[] assetFilters) {
+		for (int i = lower; i < upper; i++) {
+			Query q = database.query();
+			q.constrain(AssetImpl.class);
+			q.descend(Constants.OID).constrain(ids[i]);
+			ObjectSet<AssetImpl> hits = q.<AssetImpl>execute();
+			if (assetFilters != null)
+				hl: for (AssetImpl asset : hits) {
+					for (IAssetFilter filter : assetFilters)
+						if (!filter.accept(asset))
+							continue hl;
+					assets.add(asset);
+				}
+			else
+				assets.addAll(hits);
 		}
 	}
 
@@ -1146,7 +1173,7 @@ public class CollectionProcessor implements ICollectionProcessor {
 		final boolean descending = crit.getDescending();
 		String subfield = crit.getSubfield();
 		if (subfield == null) {
-			Arrays.sort(assets, new Comparator<Asset>() {
+			Arrays.parallelSort(assets, new Comparator<Asset>() {
 				@SuppressWarnings("unchecked")
 				public int compare(Asset o1, Asset o2) {
 					Object v1 = qfield.obtainFieldValue(descending ? o2 : o1);
@@ -1218,14 +1245,13 @@ public class CollectionProcessor implements ICollectionProcessor {
 						for (String assedId : rel.getAsset())
 							assetMap.put(assedId, index);
 				}
-				Arrays.sort(assets, new Comparator<Asset>() {
-
+				Arrays.parallelSort(assets, new Comparator<Asset>() {
 					public int compare(Asset o1, Asset o2) {
 						Integer index1 = assetMap.get(o1.getStringId());
 						Integer index2 = assetMap.get(o2.getStringId());
-						int i1 = (index1 == null) ? Integer.MAX_VALUE : index1.intValue();
-						int i2 = (index2 == null) ? Integer.MAX_VALUE : index2.intValue();
-						return i1 - i2;
+						if (index1 == null)
+							return index2 == null ? 0 : 1;
+						return (index2 == null) ? -1 : index1 - index2;
 					}
 				});
 			} else if (qfield == QueryField.IPTC_CONTACT) {
@@ -1250,13 +1276,13 @@ public class CollectionProcessor implements ICollectionProcessor {
 						for (String assedId : rel.getAsset())
 							assetMap.put(assedId, index);
 				}
-				Arrays.sort(assets, new Comparator<Asset>() {
+				Arrays.parallelSort(assets, new Comparator<Asset>() {
 					public int compare(Asset o1, Asset o2) {
 						Integer index1 = assetMap.get(o1.getStringId());
 						Integer index2 = assetMap.get(o2.getStringId());
-						int i1 = (index1 == null) ? Integer.MAX_VALUE : index1.intValue();
-						int i2 = (index2 == null) ? Integer.MAX_VALUE : index2.intValue();
-						return i1 - i2;
+						if (index1 == null)
+							return index2 == null ? 0 : 1;
+						return (index2 == null) ? -1 : index1 - index2;
 					}
 				});
 			}
@@ -1299,11 +1325,10 @@ public class CollectionProcessor implements ICollectionProcessor {
 						i = 0;
 						if (wantedKeywords != null) {
 							String[] obtainedKeywords = asset.getKeyword();
-							if (obtainedKeywords != null && obtainedKeywords.length >= minNumberOfMatches) {
+							if (obtainedKeywords != null && obtainedKeywords.length >= minNumberOfMatches)
 								for (String okw : obtainedKeywords)
 									if (wantedKeywords.contains(okw))
 										++i;
-							}
 						} else
 							i = 1;
 						if (i >= minNumberOfMatches) {

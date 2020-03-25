@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.batch.internal.Daemon;
@@ -108,7 +109,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 		makeActions(getViewSite().getActionBars());
 		installListeners();
 		redrawCollection(null, null);
-		gallery.addSelectionListener(this);
+		gallery.addListener(SWT.Selection, this);
 		installInfrastructure(3000);
 	}
 
@@ -188,9 +189,9 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 	public void fillLocalToolBar(IToolBarManager manager) {
 		manager.add(scaleContributionItem);
 		manager.add(editAction);
-		manager.add(editWithAction);
 		manager.add(new Separator());
 		manager.add(closeAction);
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	@Override
@@ -309,8 +310,8 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 		return true;
 	}
 
-	public void handleEvent(final Event event) {
-		Runnable runnable = new Runnable() {
+	protected void onSetData(final Event event) {
+		BusyIndicator.showWhile(getSite().getShell().getDisplay(), new Runnable() {
 			public void run() {
 				final GalleryItem item = (GalleryItem) event.item;
 				GalleryItem parentItem = item.getParentItem();
@@ -359,8 +360,7 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 					}
 				}
 			}
-		};
-		BusyIndicator.showWhile(getSite().getShell().getDisplay(), runnable);
+		});
 	}
 
 	@Override
@@ -403,14 +403,14 @@ public class DuplicatesView extends AbstractLightboxView implements Listener, Pa
 	protected void setDefaultPartName() {
 		// do nothing
 	}
-	
+
 	@Override
 	protected QueryField[] getHoverNodes() {
 		QueryField[] hoverNodes = super.getHoverNodes();
 		for (QueryField qf : hoverNodes)
 			if (qf == QueryField.URI)
 				return hoverNodes;
-		QueryField[] newNodes = new QueryField[hoverNodes.length+1];
+		QueryField[] newNodes = new QueryField[hoverNodes.length + 1];
 		newNodes[0] = QueryField.URI;
 		System.arraycopy(hoverNodes, 0, newNodes, 1, hoverNodes.length);
 		return newNodes;

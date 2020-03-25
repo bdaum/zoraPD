@@ -35,7 +35,7 @@ import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
-public class QualityGroup {
+public class QualityGroup implements Listener {
 
 	protected static final String PDFQUALITY = "pdfQuality"; //$NON-NLS-1$
 
@@ -58,12 +58,7 @@ public class QualityGroup {
 			qualityField = new Combo(group, SWT.READ_ONLY);
 			qualityField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 			qualityField.setItems(new String[] { Messages.QualityGroup_screen, Messages.QualityGroup_printer });
-			qualityField.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event e) {
-					fireSelectionEvent(e);
-				}
-			});
+			qualityField.addListener(SWT.Selection, this);
 		}
 		Composite jpegGroup = new Composite(group, SWT.NONE);
 		jpegGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, resolution ? 2 : 4, 1));
@@ -73,8 +68,10 @@ public class QualityGroup {
 		compressionGroup = new CompressionGroup(jpegGroup, false);
 		sharpenGroup = new SharpeningGroup(group);
 	}
-
-	protected void fireSelectionEvent(Event e) {
+	
+	@Override
+	public void handleEvent(Event e) {
+		e.data = this;
 		for (Listener listener : selectionListeners)
 			listener.handleEvent(e);
 	}
@@ -110,16 +107,16 @@ public class QualityGroup {
 		}
 	}
 
-	public void addListener(Listener listener) {
+	public void addListener(int type, Listener listener) {
 		selectionListeners.add(listener);
-		compressionGroup.addListener(listener);
-		sharpenGroup.addListener(listener);
+		compressionGroup.addListener(type, listener);
+		sharpenGroup.addListener(type, listener);
 	}
 
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
 		selectionListeners.remove(listener);
-		compressionGroup.removeListener(listener);
-		sharpenGroup.removeListener(listener);
+		compressionGroup.removeListener(type, listener);
+		sharpenGroup.removeListener(type, listener);
 	}
 
 	/**

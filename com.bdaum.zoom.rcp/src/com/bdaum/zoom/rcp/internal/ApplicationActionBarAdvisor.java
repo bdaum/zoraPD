@@ -34,12 +34,12 @@ import org.eclipse.jface.action.StatusLineLayoutData;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPartListener;
@@ -85,7 +85,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor implements Ser
 		private Composite statusLine = null;
 
 		private String text = ""; //$NON-NLS-1$
-		private int widthHint = -1;
+		private double widthHint = -1;
 		private IAction handler;
 
 		/**
@@ -137,11 +137,11 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor implements Ser
 				gc.dispose();
 			}
 			StatusLineLayoutData data = new StatusLineLayoutData();
-			data.widthHint = widthHint;
+			data.widthHint = (int) widthHint;
 			label.setLayoutData(data);
-			label.addMouseListener(new MouseAdapter() {
+			label.addListener(SWT.MouseDown, new Listener() {
 				@Override
-				public void mouseDown(MouseEvent e) {
+				public void handleEvent(Event e) {
 					if (handler != null && !getText().isEmpty())
 						handler.run();
 				}

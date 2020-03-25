@@ -63,17 +63,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseMoveListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -160,7 +149,7 @@ import com.itextpdf.text.pdf.PdfPageEventHelper;
 import com.itextpdf.text.pdf.PdfWriter;
 
 @SuppressWarnings("restriction")
-public class ExhibitionEditDialog extends ZTitleAreaDialog {
+public class ExhibitionEditDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.exhibitionProperties"; //$NON-NLS-1$
 	private static final double DPI300 = 25.4d / 300d;
@@ -251,6 +240,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 	private QualityGroup qualityGroup;
 	private TreeViewer frameDetailViewer;
 	private RadioButtonGroup privacyGroup;
+	private Button keywordButton;
 
 	public static ExhibitionImpl open(final Shell shell, final GroupImpl group, final ExhibitionImpl gallery,
 			final String title, final boolean canUndo, final String errorMsg) {
@@ -313,11 +303,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		ImageData cursorData = UiActivator.getImageDescriptor("icons/cursors/rotCursor.bmp").getImageData(100); //$NON-NLS-1$
 		cursorData.transparentPixel = 1;
 		rotCursor = new Cursor(shell.getDisplay(), cursorData, cursorData.width / 2, cursorData.height / 2);
-		shell.addDisposeListener(new DisposeListener() {
-			public void widgetDisposed(DisposeEvent e) {
-				rotCursor.dispose();
-			}
-		});
+		shell.addListener(SWT.Dispose, this);
 		if (importGroup != null)
 			nameField.setFocus();
 	}
@@ -354,14 +340,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		}
 		createWebGroup(UiUtilities.createTabPage(tabFolder, Messages.ExhibitionEditDialog_web, null));
 		createOutputGroup(UiUtilities.createTabPage(tabFolder, Messages.ExhibitionEditDialog_output, null));
-		tabFolder.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				if (tabFolder.getSelection() == detailsTabItem)
-					updateDetailViewers(current);
-				updateButtons();
-			}
-		});
+		tabFolder.addListener(SWT.Selection, this);
 		tabFolder.setSimple(false);
 		tabFolder.setSelection(0);
 		fillValues(current, false);
@@ -387,16 +366,11 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		gd_keywordField.widthHint = 150;
 		gd_keywordField.heightHint = 70;
 		keywordField.setLayoutData(gd_keywordField);
-		Button keywordButton = new Button(parent, SWT.PUSH);
+		keywordButton = new Button(parent, SWT.PUSH);
 		keywordButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		keywordButton.setText(Messages.WebGalleryEditDialog_add_image_keywords);
 		keywordButton.setEnabled(hasImages());
-		keywordButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				addImageKeywords();
-			}
-		});
+		keywordButton.addListener(SWT.Selection, this);
 		// Sharpening
 		qualityGroup = new QualityGroup(parent, false);
 
@@ -427,7 +401,6 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		final GridData gd_weburlField = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
 		gd_weburlField.widthHint = 250;
 		weburlField.setLayoutData(gd_weburlField);
-
 	}
 
 	protected void addImageKeywords() {
@@ -459,7 +432,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 					}
 			}
 			String[] kws = keywords.toArray(new String[keywords.size()]);
-			Arrays.sort(kws, Utilities.KEYWORDCOMPARATOR);
+			Arrays.parallelSort(kws, Utilities.KEYWORDCOMPARATOR);
 			keywordField.setText(Core.toStringList(kws, "\n")); //$NON-NLS-1$
 		});
 	}
@@ -500,8 +473,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		comp.setLayout(new GridLayout(2, false));
 		showGridButton = WidgetFactory.createCheckButton(comp, Messages.ExhibitionEditDialog_show_grid,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		showCreditsButton.addListener(new Listener() {
-
+		showCreditsButton.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				updateButtons();
@@ -547,39 +519,25 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 					updateColorGroups();
 			}
 		};
-		viewingHeightField.addListener(listener);
+		viewingHeightField.addListener(SWT.Selection, listener);
 		CGroup frameGroup = CGroup.create(comp, 1, Messages.ExhibitionEditDialog_mat_and_fram);
 		new Label(frameGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_matWidth + captionUnitcmin());
 		matWidthField = new NumericControl(frameGroup, SWT.NONE);
 		matWidthField.setMaximum(unit == 'i' ? 400 : 1000);
 		matWidthField.setDigits(1);
-		matWidthField.addListener(listener);
+		matWidthField.addListener(SWT.Selection, listener);
 		matColorGroup = new WebColorGroup(frameGroup, Messages.ExhibitionEditDialog_matColor + captionUnitcmin());
 		new Label(frameGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_frameWidth);
 		frameWidthField = new NumericControl(frameGroup, SWT.NONE);
 		frameWidthField.setMaximum(unit == 'i' ? 40 : 100);
 		frameWidthField.setDigits(1);
-		frameWidthField.addListener(listener);
+		frameWidthField.addListener(SWT.Selection, listener);
 		frameColorGroup = new WebColorGroup(frameGroup, Messages.ExhibitionEditDialog_frameColor);
 		CGroup labelGroup = CGroup.create(comp, 1, Messages.ExhibitionEditDialog_label);
 		new Label(labelGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_label_font);
 		fontButton = new Button(labelGroup, SWT.PUSH);
 		fontButton.setText(Messages.ExhibitionEditDialog_font);
-		fontButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				FontDialog dialog = new FontDialog(getShell());
-				dialog.setText(Messages.ExhibitionEditDialog_label_font_title);
-				if (selectedFont != null)
-					dialog.setFontList(selectedFont.getFontData());
-				FontData fontdata = dialog.open();
-				if (fontdata != null) {
-					if (selectedFont != null)
-						selectedFont.dispose();
-					fontButton.setFont(selectedFont = new Font(e.display, fontdata));
-				}
-			}
-		});
+		fontButton.addListener(SWT.Selection, this);
 		new Label(labelGroup, SWT.NONE).setText(Messages.ExhibitionEditDialog_label_sequemce);
 		sequenceCombo = new Combo(labelGroup, SWT.READ_ONLY);
 		sequenceCombo.setItems(SEQUENCEITEMS);
@@ -644,7 +602,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 					updateItems(-1, -1, aspinner.getSelection() / 10d);
 			}
 		};
-		xspinner.addListener(listener);
+		xspinner.addListener(SWT.Selection, listener);
 		Label ylabel = new Label(detailGroup, SWT.NONE);
 		ylabel.setText(Messages.ExhibitionEditDialog_ground_ypos + captionUnitmft());
 		yspinner = new NumericControl(detailGroup, NumericControl.LOGARITHMIC);
@@ -652,7 +610,7 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		yspinner.setMaximum(unit == 'i' ? 1500000 : 500000);
 		yspinner.setIncrement(unit == 'i' ? 30 : 10);
 		yspinner.setDigits(2);
-		yspinner.addListener(listener);
+		yspinner.addListener(SWT.Selection, listener);
 		alabel = new Label(detailGroup, SWT.NONE);
 		alabel.setText(Messages.ExhibitionEditDialog_ground_angle);
 		aspinner = new NumericControl(detailGroup, SWT.NONE);
@@ -660,322 +618,18 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 		aspinner.setMaximum(3600);
 		aspinner.setIncrement(10);
 		aspinner.setDigits(1);
-		aspinner.addListener(listener);
+		aspinner.addListener(SWT.Selection, listener);
 
 		floorplan = new Canvas(comp, SWT.DOUBLE_BUFFERED);
 		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		data.widthHint = 400;
 		data.heightHint = 300;
 		floorplan.setLayoutData(data);
-		floorplan.addPaintListener(new PaintListener() {
-			public void paintControl(PaintEvent e) {
-				Rectangle area = floorplan.getClientArea();
-				GC gc = e.gc;
-				gc.setBackground(e.display.getSystemColor(SWT.COLOR_WHITE));
-				gc.fillRectangle(area);
-				int minx = Integer.MAX_VALUE;
-				int miny = Integer.MAX_VALUE;
-				int maxx = Integer.MIN_VALUE;
-				int maxy = Integer.MIN_VALUE;
-				int i = 0;
-				for (Wall wall : current.getWall()) {
-					double angle = wa[i];
-					int gx = wxs[i];
-					int gy = wys[i];
-					boolean match = false;
-					for (int j = 0; j < i; j++)
-						if (gx == wxs[j] && gy == wys[j] && angle == wa[j]) {
-							match = true;
-							break;
-						}
-					if (match) {
-						wxs[i] = gx = wx2s[i - 1];
-						wys[i] = gy = wy2s[i - 1];
-						double d = wa[i - 1];
-						if (d > 45 && d < 135)
-							angle = ((i / 2) % 2 == 0) ? d - 90 : d + 90;
-						else if (d > 135 && d < 225)
-							angle = d - 90;
-						else
-							angle = d + 90;
-						if (angle < 0)
-							angle += 360;
-						else if (angle >= 360)
-							angle -= 360;
-						wa[i] = angle;
-						updateFloorplanDetails();
-					}
-					int width = wall.getWidth();
-					double r = Math.toRadians(angle);
-					int gx2 = (int) (gx + Math.cos(r) * width + D05);
-					int gy2 = (int) (gy + Math.sin(r) * width + D05);
-					minx = Math.min(minx, Math.min(gx, gx2));
-					miny = Math.min(miny, Math.min(gy, gy2));
-					maxx = Math.max(maxx, Math.max(gx, gx2));
-					maxy = Math.max(maxy, Math.max(gy, gy2));
-					wx2s[i] = gx2;
-					wy2s[i] = gy2;
-					++i;
-				}
-				minx = Math.min(minx, startX);
-				miny = Math.min(miny, startY);
-				maxx = Math.max(maxx, startX);
-				maxy = Math.max(maxy, startY);
-				double w = maxx - minx;
-				double h = maxy - miny;
-				scale = Math.min(area.width / w, area.height / h) / 2d;
-				xoff = (int) (area.width / 4 - minx * scale);
-				yoff = (int) (area.height / 4 - miny * scale);
-				double d = -Math.floor(xoff / (D1000 * scale)) * D1000;
-				while (true) {
-					int x = xoff + (int) (d * scale + D05);
-					if (x > area.width)
-						break;
-					gc.setForeground(e.display.getSystemColor(d == 0d ? SWT.COLOR_BLUE : SWT.COLOR_GRAY));
-					gc.drawLine(x, 0, x, area.height);
-					d += D1000;
-				}
-				d = -Math.floor(yoff / (D1000 * scale)) * D1000;
-				while (true) {
-					int y = yoff + (int) (d * scale + D05);
-					gc.setForeground(e.display.getSystemColor(d == 0d ? SWT.COLOR_BLUE : SWT.COLOR_GRAY));
-					if (y > area.height)
-						break;
-					gc.drawLine(0, y, area.width, y);
-					d += D1000;
-				}
-				gc.setBackground(e.display.getSystemColor(SWT.COLOR_GRAY));
-				gc.fillRectangle(xoff - 3, yoff - 3, 6, 6);
-				gc.setLineWidth(2);
-				int doorWall = -1;
-				for (int j = 0; j < wxs.length; j++) {
-					gc.setForeground(e.display.getSystemColor(selectedItem == j ? SWT.COLOR_RED : SWT.COLOR_DARK_GRAY));
-					int x1 = xoff + (int) (wxs[j] * scale + D05);
-					int y1 = yoff + (int) (wys[j] * scale + D05);
-					int x2 = xoff + (int) (wx2s[j] * scale + D05);
-					int y2 = yoff + (int) (wy2s[j] * scale + D05);
-					gc.drawLine(x1, y1, x2, y2);
-					double aAngle = wa[j];
-					double r = Math.toRadians(aAngle);
-					double sin = Math.sin(r);
-					double cos = Math.cos(r);
-					if (startX >= Math.min(wxs[j], wx2s[j]) - 50 && startX <= Math.max(wxs[j], wx2s[j]) + 50
-							&& startY >= Math.min(wys[j], wy2s[j]) - 50 && startY <= Math.max(wys[j], wy2s[j]) + 50) {
-						if (Math.abs(cos) > 0.01d) {
-							if (Math.abs(wys[j] - startY + (startX - wxs[j]) * sin / cos) < 50)
-								doorWall = j;
-						} else
-							doorWall = j;
-					}
-					int xa = (int) ((x1 + x2) * D05 - sin * 5);
-					int ya = (int) ((y1 + y2) * D05 + cos * 5);
-					aAngle += 135;
-					r = Math.toRadians(aAngle);
-					int x3 = (int) (xa + 6 * Math.cos(r) + D05);
-					int y3 = (int) (ya + 6 * Math.sin(r) + D05);
-					gc.drawLine(xa, ya, x3, y3);
-					aAngle -= 270;
-					r = Math.toRadians(aAngle);
-					x3 = (int) (xa + 6 * Math.cos(r) + D05);
-					y3 = (int) (ya + 6 * Math.sin(r) + D05);
-					gc.drawLine(xa, ya, x3, y3);
-				}
-				if (doorWall >= 0) {
-					int lineStyle = gc.getLineStyle();
-					gc.setLineStyle(SWT.LINE_DASH);
-					double r = Math.toRadians(wa[doorWall]);
-					double sin = Math.sin(r);
-					double cos = Math.cos(r);
-					double dx = startX * scale - sin * 5;
-					double dy = startY * scale + cos * 5;
-					int dx1 = (int) (dx + DOORWIDTH / 2 * scale * cos + D05);
-					int dy1 = (int) (dy - DOORWIDTH / 2 * scale * sin + D05);
-					int dx2 = (int) (dx - (INFOWIDTH + DOORWIDTH / 2) * scale * cos + D05);
-					int dy2 = (int) (dy + (INFOWIDTH + DOORWIDTH / 2) * scale * sin + D05);
-					gc.drawLine(xoff + dx1, yoff + dy1, xoff + dx2, yoff + dy2);
-					gc.setLineStyle(lineStyle);
-				}
-				gc.setForeground(
-						e.display.getSystemColor(selectedItem == ENTRANCE ? SWT.COLOR_RED : SWT.COLOR_DARK_GREEN));
-				gc.drawOval(xoff + (int) (startX * scale + D05) - ENTRANCEDIAMETER / 2 - 1,
-						yoff + (int) (startY * scale + D05) - ENTRANCEDIAMETER / 2 - 1, ENTRANCEDIAMETER,
-						ENTRANCEDIAMETER);
-			}
-		});
-		floorplan.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				if (hotObject != NIL) {
-					dragStart = new Point(e.x, e.y);
-					draggedObject = hotObject;
-					dragHandle = hotIndex;
-					hotObject = NIL;
-				}
-			}
-
-			@Override
-			public void mouseUp(MouseEvent e) {
-				recentlyDraggedObject = draggedObject;
-				draggedObject = NIL;
-				Object sel = null;
-				int x = e.x;
-				int y = e.y;
-				int sx = xoff + (int) (startX * scale + D05);
-				int sy = yoff + (int) (startY * scale + D05);
-				if (Math.sqrt((sx - x) * (sx - x) + (sy - y) * (sy - y)) <= ENTRANCEDIAMETER / 2 + 1) {
-					sel = current;
-				} else {
-					int i = 0;
-					for (Wall wall : current.getWall()) {
-						int x1 = xoff + (int) (wxs[i] * scale + D05);
-						int y1 = yoff + (int) (wys[i] * scale + D05);
-						int x2 = xoff + (int) (wx2s[i] * scale + D05);
-						int y2 = yoff + (int) (wy2s[i] * scale + D05);
-						double d = Math.abs((x2 - x1) * (y1 - y) - (x1 - x) * (y2 - y1))
-								/ Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-						if (d < TOLERANCE && x <= Math.max(x1, x2) + TOLERANCE && x >= Math.min(x1, x2) - TOLERANCE
-								&& y <= Math.max(y1, y2) + TOLERANCE && y >= Math.min(y1, y2) - TOLERANCE) {
-							sel = wall;
-							break;
-						}
-						++i;
-					}
-				}
-				if (sel != null)
-					itemViewer.setSelection(new StructuredSelection(sel));
-			}
-		});
-		floorplan.addMouseMoveListener(new MouseMoveListener() {
-			public void mouseMove(MouseEvent e) {
-				if (draggedObject != NIL) {
-					int dx = e.x - dragStart.x;
-					int dy = e.y - dragStart.y;
-					int x = origin.x + (int) (dx / scale + D05);
-					int y = origin.y + (int) (dy / scale + D05);
-					if (draggedObject == ENTRANCE) {
-						startX = x;
-						startY = y;
-					} else if (draggedObject >= 0) {
-						if (dragHandle == 1) {
-							wxs[draggedObject] = x;
-							wys[draggedObject] = y;
-						} else {
-							double degrees = Math.toDegrees(Math.atan2(y - wys[draggedObject], x - wxs[draggedObject]));
-							if (degrees < 0)
-								degrees += 360;
-							wa[draggedObject] = degrees;
-						}
-					}
-					floorplan.redraw();
-					updateFloorplanDetails();
-					return;
-				}
-				hotObject = NIL;
-				hotIndex = -1;
-				Object sel = itemViewer.getStructuredSelection().getFirstElement();
-				int x = e.x;
-				int y = e.y;
-				int sx = xoff + (int) (startX * scale + D05);
-				int sy = yoff + (int) (startY * scale + D05);
-				if (sel == current
-						&& Math.sqrt((sx - x) * (sx - x) + (sy - y) * (sy - y)) <= ENTRANCEDIAMETER / 2 + 1) {
-					hotObject = ENTRANCE;
-					hotIndex = 1;
-					origin.x = startX;
-					origin.y = startY;
-				} else {
-					int i = 0;
-					for (Wall wall : current.getWall()) {
-						if (sel == wall) {
-							int x1 = xoff + (int) (wxs[i] * scale + D05);
-							int y1 = yoff + (int) (wys[i] * scale + D05);
-							int x2 = xoff + (int) (wx2s[i] * scale + D05);
-							int y2 = yoff + (int) (wy2s[i] * scale + D05);
-							if (Math.sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)) <= TOLERANCE) {
-								hotIndex = 1;
-								hotObject = i;
-								origin.x = wxs[i];
-								origin.y = wys[i];
-							} else if (Math.sqrt((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y)) <= TOLERANCE) {
-								hotIndex = 2;
-								hotObject = i;
-								origin.x = wx2s[i];
-								origin.y = wy2s[i];
-							}
-						}
-						++i;
-					}
-				}
-				if (hotObject == NIL)
-					floorplan.setCursor(getShell().getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
-				else if (hotIndex == 2)
-					floorplan.setCursor(rotCursor);
-				else
-					floorplan.setCursor(getShell().getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL));
-
-			}
-		});
-		floorplan.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (recentlyDraggedObject != NIL) {
-					int dx = 0;
-					int dy = 0;
-					switch (e.keyCode) {
-					case SWT.ARROW_LEFT:
-						dx = -10;
-						break;
-					case SWT.ARROW_RIGHT:
-						dx = 10;
-						break;
-					case SWT.ARROW_UP:
-						dy = -10;
-						break;
-					case SWT.ARROW_DOWN:
-						dy = 10;
-						break;
-					case SWT.HOME:
-						dx = -500;
-						break;
-					case SWT.END:
-						dx = 500;
-						break;
-					case SWT.PAGE_UP:
-						dy = -500;
-						break;
-					case SWT.PAGE_DOWN:
-						dy = 500;
-						break;
-					default:
-						return;
-					}
-					if (recentlyDraggedObject == ENTRANCE) {
-						startX += dx;
-						startY += dy;
-					} else if (recentlyDraggedObject >= 0) {
-						if (dragHandle == 1) {
-							wxs[recentlyDraggedObject] += dx;
-							wys[recentlyDraggedObject] += dy;
-						} else {
-							Wall wall = current.getWall(recentlyDraggedObject);
-							int gx = wxs[recentlyDraggedObject];
-							int gy = wys[recentlyDraggedObject];
-							int width = wall.getWidth();
-							double r = Math.toRadians(wa[recentlyDraggedObject]);
-							int gx2 = (int) (gx + Math.cos(r) * width + D05);
-							int gy2 = (int) (gy + Math.sin(r) * width + D05);
-							double degrees = Math.toDegrees(Math.atan2(gy2 + dy - gy, gx2 + dx - gx));
-							if (degrees < 0)
-								degrees += 360;
-							wa[recentlyDraggedObject] = degrees;
-						}
-					}
-					floorplan.redraw();
-					updateFloorplanDetails();
-					return;
-				}
-			}
-		});
+		floorplan.addListener(SWT.Paint, this);
+		floorplan.addListener(SWT.MouseDown, this);
+		floorplan.addListener(SWT.MouseUp, this);
+		floorplan.addListener(SWT.MouseMove, this);
+		floorplan.addListener(SWT.KeyDown, this);
 		updateFloorplanDetails();
 		itemViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -986,6 +640,349 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 
 		});
 		itemViewer.setSelection(new StructuredSelection(current));
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.MouseMove:
+			mouseMove(e);
+			break;
+		case SWT.KeyDown:
+			keyPressed(e);
+			break;
+		case SWT.MouseDown:
+			mouseDown(e);
+			break;
+		case SWT.MouseUp:
+			mouseUp(e);
+			break;
+		case SWT.Paint:
+			paintFloor(e);
+			break;
+		case SWT.Selection:
+			if (e.widget == tabFolder) {
+				if (tabFolder.getSelection() == detailsTabItem)
+					updateDetailViewers(current);
+				updateButtons();
+			} else if (e.widget == keywordButton)
+				addImageKeywords();
+			else if (e.widget == fontButton) {
+				FontDialog dialog = new FontDialog(getShell());
+				dialog.setText(Messages.ExhibitionEditDialog_label_font_title);
+				if (selectedFont != null)
+					dialog.setFontList(selectedFont.getFontData());
+				FontData fontdata = dialog.open();
+				if (fontdata != null) {
+					if (selectedFont != null)
+						selectedFont.dispose();
+					fontButton.setFont(selectedFont = new Font(e.display, fontdata));
+				}
+			}
+			break;
+		case SWT.Dispose:
+			rotCursor.dispose();
+			break;
+		}
+
+	}
+
+	private void mouseDown(Event e) {
+		if (hotObject != NIL) {
+			dragStart = new Point(e.x, e.y);
+			draggedObject = hotObject;
+			dragHandle = hotIndex;
+			hotObject = NIL;
+		}
+	}
+
+	private void mouseUp(Event e) {
+		recentlyDraggedObject = draggedObject;
+		draggedObject = NIL;
+		Object sel = null;
+		int x = e.x;
+		int y = e.y;
+		int sx = xoff + (int) (startX * scale + D05);
+		int sy = yoff + (int) (startY * scale + D05);
+		if (Math.sqrt((sx - x) * (sx - x) + (sy - y) * (sy - y)) <= ENTRANCEDIAMETER / 2 + 1) {
+			sel = current;
+		} else {
+			int i = 0;
+			for (Wall wall : current.getWall()) {
+				int x1 = xoff + (int) (wxs[i] * scale + D05);
+				int y1 = yoff + (int) (wys[i] * scale + D05);
+				int x2 = xoff + (int) (wx2s[i] * scale + D05);
+				int y2 = yoff + (int) (wy2s[i] * scale + D05);
+				double d = Math.abs((x2 - x1) * (y1 - y) - (x1 - x) * (y2 - y1))
+						/ Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+				if (d < TOLERANCE && x <= Math.max(x1, x2) + TOLERANCE && x >= Math.min(x1, x2) - TOLERANCE
+						&& y <= Math.max(y1, y2) + TOLERANCE && y >= Math.min(y1, y2) - TOLERANCE) {
+					sel = wall;
+					break;
+				}
+				++i;
+			}
+		}
+		if (sel != null)
+			itemViewer.setSelection(new StructuredSelection(sel));
+	}
+
+	private void keyPressed(Event e) {
+		if (recentlyDraggedObject != NIL) {
+			int dx = 0;
+			int dy = 0;
+			switch (e.keyCode) {
+			case SWT.ARROW_LEFT:
+				dx = -10;
+				break;
+			case SWT.ARROW_RIGHT:
+				dx = 10;
+				break;
+			case SWT.ARROW_UP:
+				dy = -10;
+				break;
+			case SWT.ARROW_DOWN:
+				dy = 10;
+				break;
+			case SWT.HOME:
+				dx = -500;
+				break;
+			case SWT.END:
+				dx = 500;
+				break;
+			case SWT.PAGE_UP:
+				dy = -500;
+				break;
+			case SWT.PAGE_DOWN:
+				dy = 500;
+				break;
+			default:
+				return;
+			}
+			if (recentlyDraggedObject == ENTRANCE) {
+				startX += dx;
+				startY += dy;
+			} else if (recentlyDraggedObject >= 0) {
+				if (dragHandle == 1) {
+					wxs[recentlyDraggedObject] += dx;
+					wys[recentlyDraggedObject] += dy;
+				} else {
+					Wall wall = current.getWall(recentlyDraggedObject);
+					int gx = wxs[recentlyDraggedObject];
+					int gy = wys[recentlyDraggedObject];
+					int width = wall.getWidth();
+					double r = Math.toRadians(wa[recentlyDraggedObject]);
+					int gx2 = (int) (gx + Math.cos(r) * width + D05);
+					int gy2 = (int) (gy + Math.sin(r) * width + D05);
+					double degrees = Math.toDegrees(Math.atan2(gy2 + dy - gy, gx2 + dx - gx));
+					if (degrees < 0)
+						degrees += 360;
+					wa[recentlyDraggedObject] = degrees;
+				}
+			}
+			floorplan.redraw();
+			updateFloorplanDetails();
+			return;
+		}
+	}
+
+	private void mouseMove(Event e) {
+		if (draggedObject != NIL) {
+			int dx = e.x - dragStart.x;
+			int dy = e.y - dragStart.y;
+			int x = origin.x + (int) (dx / scale + D05);
+			int y = origin.y + (int) (dy / scale + D05);
+			if (draggedObject == ENTRANCE) {
+				startX = x;
+				startY = y;
+			} else if (draggedObject >= 0) {
+				if (dragHandle == 1) {
+					wxs[draggedObject] = x;
+					wys[draggedObject] = y;
+				} else {
+					double degrees = Math.toDegrees(Math.atan2(y - wys[draggedObject], x - wxs[draggedObject]));
+					if (degrees < 0)
+						degrees += 360;
+					wa[draggedObject] = degrees;
+				}
+			}
+			floorplan.redraw();
+			updateFloorplanDetails();
+			return;
+		}
+		hotObject = NIL;
+		hotIndex = -1;
+		Object sel = itemViewer.getStructuredSelection().getFirstElement();
+		int x = e.x;
+		int y = e.y;
+		int sx = xoff + (int) (startX * scale + D05);
+		int sy = yoff + (int) (startY * scale + D05);
+		if (sel == current && Math.sqrt((sx - x) * (sx - x) + (sy - y) * (sy - y)) <= ENTRANCEDIAMETER / 2 + 1) {
+			hotObject = ENTRANCE;
+			hotIndex = 1;
+			origin.x = startX;
+			origin.y = startY;
+		} else {
+			int i = 0;
+			for (Wall wall : current.getWall()) {
+				if (sel == wall) {
+					int x1 = xoff + (int) (wxs[i] * scale + D05);
+					int y1 = yoff + (int) (wys[i] * scale + D05);
+					int x2 = xoff + (int) (wx2s[i] * scale + D05);
+					int y2 = yoff + (int) (wy2s[i] * scale + D05);
+					if (Math.sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)) <= TOLERANCE) {
+						hotIndex = 1;
+						hotObject = i;
+						origin.x = wxs[i];
+						origin.y = wys[i];
+					} else if (Math.sqrt((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y)) <= TOLERANCE) {
+						hotIndex = 2;
+						hotObject = i;
+						origin.x = wx2s[i];
+						origin.y = wy2s[i];
+					}
+				}
+				++i;
+			}
+		}
+		if (hotObject == NIL)
+			floorplan.setCursor(getShell().getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
+		else if (hotIndex == 2)
+			floorplan.setCursor(rotCursor);
+		else
+			floorplan.setCursor(getShell().getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL));
+	}
+
+	private void paintFloor(Event e) {
+		Rectangle area = floorplan.getClientArea();
+		GC gc = e.gc;
+		gc.setBackground(e.display.getSystemColor(SWT.COLOR_WHITE));
+		gc.fillRectangle(area);
+		int minx = Integer.MAX_VALUE;
+		int miny = Integer.MAX_VALUE;
+		int maxx = Integer.MIN_VALUE;
+		int maxy = Integer.MIN_VALUE;
+		int i = 0;
+		for (Wall wall : current.getWall()) {
+			double angle = wa[i];
+			int gx = wxs[i];
+			int gy = wys[i];
+			boolean match = false;
+			for (int j = 0; j < i; j++)
+				if (gx == wxs[j] && gy == wys[j] && angle == wa[j]) {
+					match = true;
+					break;
+				}
+			if (match) {
+				wxs[i] = gx = wx2s[i - 1];
+				wys[i] = gy = wy2s[i - 1];
+				double d = wa[i - 1];
+				if (d > 45 && d < 135)
+					angle = ((i / 2) % 2 == 0) ? d - 90 : d + 90;
+				else if (d > 135 && d < 225)
+					angle = d - 90;
+				else
+					angle = d + 90;
+				if (angle < 0)
+					angle += 360;
+				else if (angle >= 360)
+					angle -= 360;
+				wa[i] = angle;
+				updateFloorplanDetails();
+			}
+			int width = wall.getWidth();
+			double r = Math.toRadians(angle);
+			int gx2 = (int) (gx + Math.cos(r) * width + D05);
+			int gy2 = (int) (gy + Math.sin(r) * width + D05);
+			minx = Math.min(minx, Math.min(gx, gx2));
+			miny = Math.min(miny, Math.min(gy, gy2));
+			maxx = Math.max(maxx, Math.max(gx, gx2));
+			maxy = Math.max(maxy, Math.max(gy, gy2));
+			wx2s[i] = gx2;
+			wy2s[i] = gy2;
+			++i;
+		}
+		minx = Math.min(minx, startX);
+		miny = Math.min(miny, startY);
+		maxx = Math.max(maxx, startX);
+		maxy = Math.max(maxy, startY);
+		double w = maxx - minx;
+		double h = maxy - miny;
+		scale = Math.min(area.width / w, area.height / h) / 2d;
+		xoff = (int) (area.width / 4 - minx * scale);
+		yoff = (int) (area.height / 4 - miny * scale);
+		double d = -Math.floor(xoff / (D1000 * scale)) * D1000;
+		while (true) {
+			int x = xoff + (int) (d * scale + D05);
+			if (x > area.width)
+				break;
+			gc.setForeground(e.display.getSystemColor(d == 0d ? SWT.COLOR_BLUE : SWT.COLOR_GRAY));
+			gc.drawLine(x, 0, x, area.height);
+			d += D1000;
+		}
+		d = -Math.floor(yoff / (D1000 * scale)) * D1000;
+		while (true) {
+			int y = yoff + (int) (d * scale + D05);
+			gc.setForeground(e.display.getSystemColor(d == 0d ? SWT.COLOR_BLUE : SWT.COLOR_GRAY));
+			if (y > area.height)
+				break;
+			gc.drawLine(0, y, area.width, y);
+			d += D1000;
+		}
+		gc.setBackground(e.display.getSystemColor(SWT.COLOR_GRAY));
+		gc.fillRectangle(xoff - 3, yoff - 3, 6, 6);
+		gc.setLineWidth(2);
+		int doorWall = -1;
+		for (int j = 0; j < wxs.length; j++) {
+			gc.setForeground(e.display.getSystemColor(selectedItem == j ? SWT.COLOR_RED : SWT.COLOR_DARK_GRAY));
+			int x1 = xoff + (int) (wxs[j] * scale + D05);
+			int y1 = yoff + (int) (wys[j] * scale + D05);
+			int x2 = xoff + (int) (wx2s[j] * scale + D05);
+			int y2 = yoff + (int) (wy2s[j] * scale + D05);
+			gc.drawLine(x1, y1, x2, y2);
+			double aAngle = wa[j];
+			double r = Math.toRadians(aAngle);
+			double sin = Math.sin(r);
+			double cos = Math.cos(r);
+			if (startX >= Math.min(wxs[j], wx2s[j]) - 50 && startX <= Math.max(wxs[j], wx2s[j]) + 50
+					&& startY >= Math.min(wys[j], wy2s[j]) - 50 && startY <= Math.max(wys[j], wy2s[j]) + 50) {
+				if (Math.abs(cos) > 0.01d) {
+					if (Math.abs(wys[j] - startY + (startX - wxs[j]) * sin / cos) < 50)
+						doorWall = j;
+				} else
+					doorWall = j;
+			}
+			int xa = (int) ((x1 + x2) * D05 - sin * 5);
+			int ya = (int) ((y1 + y2) * D05 + cos * 5);
+			aAngle += 135;
+			r = Math.toRadians(aAngle);
+			int x3 = (int) (xa + 6 * Math.cos(r) + D05);
+			int y3 = (int) (ya + 6 * Math.sin(r) + D05);
+			gc.drawLine(xa, ya, x3, y3);
+			aAngle -= 270;
+			r = Math.toRadians(aAngle);
+			x3 = (int) (xa + 6 * Math.cos(r) + D05);
+			y3 = (int) (ya + 6 * Math.sin(r) + D05);
+			gc.drawLine(xa, ya, x3, y3);
+		}
+		if (doorWall >= 0) {
+			int lineStyle = gc.getLineStyle();
+			gc.setLineStyle(SWT.LINE_DASH);
+			double r = Math.toRadians(wa[doorWall]);
+			double sin = Math.sin(r);
+			double cos = Math.cos(r);
+			double dx = startX * scale - sin * 5;
+			double dy = startY * scale + cos * 5;
+			int dx1 = (int) (dx + DOORWIDTH / 2 * scale * cos + D05);
+			int dy1 = (int) (dy - DOORWIDTH / 2 * scale * sin + D05);
+			int dx2 = (int) (dx - (INFOWIDTH + DOORWIDTH / 2) * scale * cos + D05);
+			int dy2 = (int) (dy + (INFOWIDTH + DOORWIDTH / 2) * scale * sin + D05);
+			gc.drawLine(xoff + dx1, yoff + dy1, xoff + dx2, yoff + dy2);
+			gc.setLineStyle(lineStyle);
+		}
+		gc.setForeground(e.display.getSystemColor(selectedItem == ENTRANCE ? SWT.COLOR_RED : SWT.COLOR_DARK_GREEN));
+		gc.drawOval(xoff + (int) (startX * scale + D05) - ENTRANCEDIAMETER / 2 - 1,
+				yoff + (int) (startY * scale + D05) - ENTRANCEDIAMETER / 2 - 1, ENTRANCEDIAMETER, ENTRANCEDIAMETER);
 	}
 
 	private int getSelectionIndex() {
@@ -1994,7 +1991,8 @@ public class ExhibitionEditDialog extends ZTitleAreaDialog {
 			for (Asset asset : assets)
 				if (ExhibitionView.accepts(asset)) {
 					createExhibitFromAsset(show, newWall, pos, asset,
-							captionProcessor.computeImageCaption(asset, null, null, null, captionConfig.getLabelTemplate(), true),
+							captionProcessor.computeImageCaption(asset, null, null, null,
+									captionConfig.getLabelTemplate(), true),
 							Messages.ExhibitionEditDialog_inkjet_print);
 					pos += incr;
 				}

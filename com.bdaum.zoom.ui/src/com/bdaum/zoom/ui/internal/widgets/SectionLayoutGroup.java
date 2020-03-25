@@ -3,6 +3,7 @@ package com.bdaum.zoom.ui.internal.widgets;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -16,6 +17,7 @@ import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
+import com.bdaum.zoom.ui.internal.UiUtilities;
 
 @SuppressWarnings("restriction")
 public class SectionLayoutGroup implements Listener {
@@ -62,11 +64,8 @@ public class SectionLayoutGroup implements Listener {
 		if ((selection == Constants.SLIDE_MAP_LEFT || selection == Constants.SLIDE_MAP_RIGHT) && !hasGeoAssets()) {
 			thumbnailField.getDisplay().timerExec(400, () -> {
 				ToolTip tooltip = new ToolTip(thumbnailField.getShell(), SWT.BALLOON | SWT.ICON_INFORMATION);
-				tooltip.setText(Messages.SectionLayoutGroup_no_map);
-				tooltip.setMessage(Messages.SectionLayoutGroup_no_geotagged);
-				tooltip.setLocation(thumbnailField.toDisplay(thumbnailField.getLocation()));
-				tooltip.setAutoHide(true);
-				tooltip.setVisible(true);
+				Point loc = thumbnailField.toDisplay(thumbnailField.getLocation());
+				UiUtilities.showTooltip(tooltip, loc.x, loc.y, Messages.SectionLayoutGroup_no_map, Messages.SectionLayoutGroup_no_geotagged);
 			});
 		}
 	}

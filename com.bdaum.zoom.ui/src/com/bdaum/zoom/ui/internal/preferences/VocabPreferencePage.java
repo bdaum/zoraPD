@@ -19,16 +19,14 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IWorkbench;
 
 import com.bdaum.zoom.core.Constants;
@@ -46,7 +44,7 @@ import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 @SuppressWarnings("restriction")
 public class VocabPreferencePage extends AbstractPreferencePage {
 
-	public class VocabPage extends Composite {
+	public class VocabPage extends Composite  implements Listener {
 
 		private CheckedText textField;
 		private Button clearButton;
@@ -63,42 +61,42 @@ public class VocabPreferencePage extends AbstractPreferencePage {
 			GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 			layoutData.heightHint = 300;
 			textField.setLayoutData(layoutData);
-			textField.addModifyListener(new ModifyListener() {
-				@Override
-				public void modifyText(ModifyEvent e) {
-					updateTabButtons();
-				}
-			});
+			textField.addListener(SWT.Modify,this);
 			Composite buttonArea = new Composite(this, SWT.NONE);
 			buttonArea.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, false));
 			buttonArea.setLayout(new GridLayout());
 			clearButton = new Button(buttonArea, SWT.PUSH);
 			clearButton.setText(Messages.getString("VocabPreferencePage.clear")); //$NON-NLS-1$
-			clearButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					textField.setText(""); //$NON-NLS-1$
-				}
-			});
+			clearButton.addListener(SWT.Selection, this);
 			sortButton = new Button(buttonArea, SWT.PUSH);
 			sortButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 			sortButton.setText(Messages.getString("VocabPreferencePage.sort")); //$NON-NLS-1$
-			sortButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					Set<String> set = new HashSet<>(Core.fromStringList(textField.getText(), "\n")); //$NON-NLS-1$
-					String[] words = set.toArray(new String[set.size()]);
-					Arrays.sort(words, Utilities.KEYWORDCOMPARATOR);
-					textField.setText(Core.toStringList(words, "\n")); //$NON-NLS-1$
-				}
-			});
+			sortButton.addListener(SWT.Selection, this);
 			new Label(buttonArea, SWT.SEPARATOR | SWT.HORIZONTAL);
-
 			loadButton = new Button(buttonArea, SWT.PUSH);
 			loadButton.setText(Messages.getString("VocabPreferencePage.load")); //$NON-NLS-1$
-			loadButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
+			loadButton.addListener(SWT.Selection, this);
+			saveButton = new Button(buttonArea, SWT.PUSH);
+			saveButton.setText(Messages.getString("VocabPreferencePage.save")); //$NON-NLS-1$
+			saveButton.addListener(SWT.Selection, this);
+			updateTabButtons();
+		}
+
+		@Override
+		public void handleEvent(Event e) {
+			switch (e.type) {
+			case SWT.Modify:
+				updateTabButtons();
+				break;
+			case SWT.Selection:
+				if (e.widget == clearButton)
+					textField.setText(""); //$NON-NLS-1$
+				else if (e.widget == sortButton) {
+					Set<String> set = new HashSet<>(Core.fromStringList(textField.getText(), "\n")); //$NON-NLS-1$
+					String[] words = set.toArray(new String[set.size()]);
+					Arrays.parallelSort(words, Utilities.KEYWORDCOMPARATOR);
+					textField.setText(Core.toStringList(words, "\n")); //$NON-NLS-1$
+				} else if (e.widget == loadButton) {
 					boolean clear = false;
 					if (!textField.getText().isEmpty())
 						clear = AcousticMessageDialog.openQuestion(getShell(),
@@ -125,13 +123,7 @@ public class VocabPreferencePage extends AbstractPreferencePage {
 									NLS.bind(Messages.getString("VocabPreferencePage.error_loading"), filename), ex); //$NON-NLS-1$
 						}
 					}
-				}
-			});
-			saveButton = new Button(buttonArea, SWT.PUSH);
-			saveButton.setText(Messages.getString("VocabPreferencePage.save")); //$NON-NLS-1$
-			saveButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
+				} else if (e.widget == saveButton) {
 					FileDialog dialog = createFileDialog(SWT.SAVE);
 					dialog.setFileName("*" + Constants.VOCABFILEEXTENSION); //$NON-NLS-1$
 					dialog.setOverwrite(true);
@@ -150,9 +142,11 @@ public class VocabPreferencePage extends AbstractPreferencePage {
 									NLS.bind(Messages.getString("VocabPreferencePage.error_writing"), filename), ex); //$NON-NLS-1$
 						}
 				}
-			});
-			updateTabButtons();
+				break;
+			}
+			
 		}
+
 
 		protected FileDialog createFileDialog(int style) {
 			FileDialog dialog = new FileDialog(getShell(), style);

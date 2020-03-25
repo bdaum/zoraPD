@@ -238,7 +238,7 @@ public class ImportTargetPage extends ColoredWizardPage {
 		depthGroup = new RadioButtonGroup(targetComp, null, SWT.HORIZONTAL, Messages.ImportTargetPage_two_levels,
 				Messages.ImportTargetPage_three_levels);
 		depthGroup.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
-		depthGroup.addListener(new Listener() {
+		depthGroup.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				startPreviewJob();

@@ -136,7 +136,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 				Constants.WIN32 ? PreferenceConstants.ZOOMALT : PreferenceConstants.ZOOMSHIFT);
 		defaultNode.putInt(PreferenceConstants.WHEELSOFTNESS, 50);
 		defaultNode.putInt(PreferenceConstants.MAXIMPORTS, 99);
-		defaultNode.putBoolean(PreferenceConstants.ADDNOISE, true);
 		defaultNode.putInt(PreferenceConstants.MAXREGIONS, 12);
 		defaultNode.putBoolean(PreferenceConstants.FORCEDELETETRASH, true);
 		defaultNode.put(PreferenceConstants.AUTORULES,

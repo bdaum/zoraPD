@@ -100,8 +100,7 @@ public class Utilities {
 	/**
 	 * Clones a collection and removes the network attribute and the sort criteria
 	 *
-	 * @param scoll
-	 *            - source collection
+	 * @param scoll - source collection
 	 * @return - new collection
 	 */
 	public static SmartCollection localizeSmartCollection(SmartCollection scoll) {
@@ -127,12 +126,9 @@ public class Utilities {
 	/**
 	 * Add a new entry to a string array, if it does not already exist.
 	 *
-	 * @param s
-	 *            - new element
-	 * @param array
-	 *            - old array, maybe null
-	 * @param sort
-	 *            - true if resulting array is to be sorted
+	 * @param s     - new element
+	 * @param array - old array, maybe null
+	 * @param sort  - true if resulting array is to be sorted
 	 *
 	 * @return new array
 	 */
@@ -155,7 +151,7 @@ public class Utilities {
 			System.arraycopy(array, 0, newArray, 1, l);
 		else if (insert < l) {
 			System.arraycopy(array, 0, newArray, 0, insert);
-			System.arraycopy(array, 0, newArray, insert+1, l-insert);
+			System.arraycopy(array, 0, newArray, insert + 1, l - insert);
 		} else
 			System.arraycopy(array, 0, newArray, 0, l);
 		newArray[insert] = s;
@@ -165,10 +161,8 @@ public class Utilities {
 	/**
 	 * Removes an entry from a string array
 	 *
-	 * @param s
-	 *            - entry to remove
-	 * @param array
-	 *            - old array, maybe null
+	 * @param s     - entry to remove
+	 * @param array - old array, maybe null
 	 * @return - new array or null
 	 */
 	public static String[] removeFromStringArray(String s, String[] array) {
@@ -186,8 +180,7 @@ public class Utilities {
 	/**
 	 * Gets the plain description text of a webExhibit
 	 *
-	 * @param exhibit
-	 *            - exhibit
+	 * @param exhibit - exhibit
 	 * @return - plain description text
 	 */
 	public static String getPlainDescription(WebExhibitImpl exhibit) {
@@ -320,7 +313,7 @@ public class Utilities {
 
 	public static void saveKeywords(Collection<String> keywords, OutputStream out) {
 		String[] kws = keywords.toArray(new String[keywords.size()]);
-		Arrays.sort(kws, KEYWORDCOMPARATOR);
+		Arrays.parallelSort(kws, KEYWORDCOMPARATOR);
 		try (OutputStreamWriter writer = new OutputStreamWriter(out, "utf-8")) { //$NON-NLS-1$
 			try (BufferedWriter w = new BufferedWriter(writer)) {
 				for (String kw : kws) {
@@ -349,13 +342,13 @@ public class Utilities {
 		int p;
 		for (String tv : variables) {
 			int from = 0;
-			while ((p = sb.indexOf(tv, from)) < 0)
+			while ((p = sb.indexOf(tv, from)) >= 0)
 				from = p + replaceVariables(sb, p, tv, asset, collection, filename, cal, importNo, imageNo, sequenceNo,
 						cue, toFilename);
 		}
 		if (asset != null) {
 			int from = 0;
-			while ((p = sb.indexOf(Constants.TV_META, from)) < 0) {
+			while ((p = sb.indexOf(Constants.TV_META, from)) >= 0) {
 				int len = replaceMeta(sb, p, asset, false, toFilename, false);
 				from = p + (len < 0 ? Constants.TV_META.length() : len);
 			}
@@ -538,17 +531,19 @@ public class Utilities {
 	}
 
 	public static void collectImages(String[] fileNames, List<File> result) {
-		collectFilteredFiles(fileNames, result, CoreActivator.getDefault().getFilenameExtensionFilter());
+		collectFilteredFiles(fileNames, result, CoreActivator.getDefault().getFilenameExtensionFilter(), true);
 	}
 
-	public static void collectFilteredFiles(String[] fileNames, List<File> result, ObjectFilter filter) {
+	public static void collectFilteredFiles(String[] fileNames, List<File> result, ObjectFilter filter,
+			boolean filesOnly) {
 		if (fileNames != null)
 			for (String fileName : fileNames) {
 				File f = new File(fileName);
 				if (f.exists()) {
-					if (f.isDirectory())
-						collectFilteredFiles(f.listFiles(), result, filter);
-					else if (filter.accept(f))
+					if (f.isDirectory()) {
+						if (!filesOnly)
+							collectFilteredFiles(f.listFiles(), result, filter);
+					} else if (filter.accept(f))
 						result.add(f);
 				}
 			}
@@ -1021,7 +1016,7 @@ public class Utilities {
 	}
 
 	public static void sortForSimilarity(String[] array, final String ref) {
-		Arrays.sort(array, new Comparator<String>() {
+		Arrays.parallelSort(array, new Comparator<String>() {
 			public int compare(String o1, String o2) {
 				return LD(o1, ref) - LD(o2, ref);
 			}
@@ -1112,8 +1107,7 @@ public class Utilities {
 	/**
 	 * Encodes plain text into ASCII Javascript strings
 	 *
-	 * @param s
-	 *            - text to encode
+	 * @param s - text to encode
 	 * @return javascript string
 	 */
 	public static String encodeJavascript(String s) {

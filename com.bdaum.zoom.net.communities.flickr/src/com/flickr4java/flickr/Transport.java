@@ -1,13 +1,15 @@
-/*
- * Copyright (c) 2005 Aetrion LLC.
- */
+
 package com.flickr4java.flickr;
+
+import com.flickr4java.flickr.uploader.Payload;
+import com.flickr4java.flickr.uploader.UploadMetaData;
 
 import java.util.Map;
 
 /**
- * The abstract Transport class provides a common interface for transporting requests to the Flickr servers. Flickr offers several transport methods including
- * REST, SOAP and XML-RPC. Flickr4Java currently implements the REST transport and work is being done to include the SOAP transport.
+ * The abstract Transport class provides a common interface for transporting requests to the Flickr servers.
+ * Flickr offers several transport methods including REST, SOAP and XML-RPC.
+ * Flickr4Java currently implements the REST transport.
  * 
  * @author Matt Ray
  * @author Anthony Eden
@@ -15,8 +17,6 @@ import java.util.Map;
 public abstract class Transport {
 
     public static final String REST = "REST";
-
-    public static final String SOAP = "SOAP";
 
     protected static final String API_HOST = "api.flickr.com";
 
@@ -105,24 +105,22 @@ public abstract class Transport {
      * @return The Response object
      * @throws FlickrException
      */
-    public abstract Response post(String path, Map<String, Object> parameters, String apiKey, String sharedSecret, boolean multipart) throws FlickrException;
+    public abstract Response post(String path, Map<String, Object> parameters, String apiKey, String sharedSecret) throws FlickrException;
 
     /**
-     * Invoke an HTTP POST request on a remote host.
-     * 
+     * Invoke an HTTP POST multipart request on a remote host.
+     *
      * @param path
      *            The request path
      * @param parameters
      *            The parameters (List of Parameter objects)
+     * @param payload
      * @param apiKey
      * @param sharedSecret
      * @return The Response object
      * @throws FlickrException
      */
-    public Response post(String path, Map<String, Object> parameters, String apiKey, String sharedSecret) throws FlickrException {
-
-        return post(path, parameters, apiKey, sharedSecret, false);
-    }
+    public abstract Response postMultiPart(String path, UploadMetaData parameters, Payload payload, String apiKey, String sharedSecret) throws FlickrException;
 
     /**
      * Invoke a non OAuth HTTP GET request on a remote host.
@@ -136,7 +134,7 @@ public abstract class Transport {
      * @return The Response
      * @throws FlickrException
      */
-    public abstract Response getNonOAuth(String path, Map<String, String> parameters) throws FlickrException;
+    public abstract Response getNonOAuth(String path, Map<String, String> parameters) throws FlickrRuntimeException;
 
     public void setResponseClass(Class<?> responseClass) {
         if (responseClass == null) {

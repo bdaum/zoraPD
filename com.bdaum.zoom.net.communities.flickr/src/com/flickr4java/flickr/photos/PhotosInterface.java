@@ -1,28 +1,5 @@
-/*
- * Copyright (c) 2005 Aetrion LLC.
- */
+
 package com.flickr4java.flickr.photos;
-
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.imageio.ImageIO;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
 import com.flickr4java.flickr.FlickrException;
 import com.flickr4java.flickr.REST;
@@ -35,9 +12,30 @@ import com.flickr4java.flickr.util.IOUtilities;
 import com.flickr4java.flickr.util.StringUtilities;
 import com.flickr4java.flickr.util.XMLUtilities;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import javax.imageio.ImageIO;
+import javax.net.ssl.HttpsURLConnection;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * Interface for working with Flickr Photos.
- *
+ * 
  * @author Anthony Eden
  * @version $Id: PhotosInterface.java,v 1.51 2010/07/20 20:11:16 x-mago Exp $
  */
@@ -97,8 +95,6 @@ public class PhotosInterface {
 
     public static final String METHOD_GET_INTERESTINGNESS = "flickr.interestingness.getList";
 
-	private static final Object METHOD_FIND_BY_USERNAME = "flickr.people.findByUsername";
-
     private static final ThreadLocal<SimpleDateFormat> DATE_FORMATS = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected synchronized SimpleDateFormat initialValue() {
@@ -122,7 +118,7 @@ public class PhotosInterface {
 
     /**
      * Get the geo interface.
-     *
+     * 
      * @return Access class to the flickr.photos.geo methods.
      */
     public synchronized GeoInterface getGeoInterface() {
@@ -134,9 +130,9 @@ public class PhotosInterface {
 
     /**
      * Add tags to a photo.
-     *
+     * 
      * This method requires authentication with 'write' permission.
-     *
+     * 
      * @param photoId
      *            The photo ID
      * @param tags
@@ -158,9 +154,9 @@ public class PhotosInterface {
 
     /**
      * Delete a photo from flickr.
-     *
+     * 
      * This method requires authentication with 'delete' permission.
-     *
+     * 
      * @param photoId
      * @throws FlickrException
      */
@@ -181,18 +177,18 @@ public class PhotosInterface {
 
     /**
      * Returns all visble sets and pools the photo belongs to.
-     *
+     * 
      * This method does not require authentication.
-     *
+     * 
      * @param photoId
      *            The photo to return information for.
      * @return a list of {@link PhotoContext} objects
      * @throws FlickrException
      */
     public PhotoAllContext getAllContexts(String photoId) throws FlickrException {
-    	PhotoSetList<PhotoSet> setList = new PhotoSetList<PhotoSet>();
-    	PoolList<Pool> poolList = new PoolList<Pool>();
-    	PhotoAllContext allContext = new PhotoAllContext();
+        PhotoSetList<PhotoSet> setList = new PhotoSetList<PhotoSet>();
+        PoolList<Pool> poolList = new PoolList<Pool>();
+        PhotoAllContext allContext = new PhotoAllContext();
 
         Map<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("method", METHOD_GET_ALL_CONTEXTS);
@@ -205,34 +201,34 @@ public class PhotosInterface {
         }
         Collection<Element> photosElement = response.getPayloadCollection();
 
-    	for (Element setElement : photosElement) {
-    		if(setElement.getTagName().equals("set")){
-	            PhotoSet pset = new PhotoSet();
-	            pset.setTitle(setElement.getAttribute("title"));
-	            pset.setSecret(setElement.getAttribute("secret"));
-	            pset.setId(setElement.getAttribute("id"));
-	            pset.setFarm(setElement.getAttribute("farm"));
-	            pset.setPrimary(setElement.getAttribute("primary"));
-	            pset.setServer(setElement.getAttribute("server"));
-	            pset.setViewCount(Integer.parseInt(setElement.getAttribute("view_count")));
-	            pset.setCommentCount(Integer.parseInt(setElement.getAttribute("comment_count")));
-	            pset.setCountPhoto(Integer.parseInt(setElement.getAttribute("count_photo")));
-	            pset.setCountVideo(Integer.parseInt(setElement.getAttribute("count_video")));
-	            setList.add(pset);
-	            allContext.setPhotoSetList(setList);
-        	}else if(setElement.getTagName().equals("pool")){
-        		Pool pool = new Pool();
-        		pool.setTitle(setElement.getAttribute("title"));
-        		pool.setId(setElement.getAttribute("id"));
-        		pool.setUrl(setElement.getAttribute("url"));
-        		pool.setIconServer(setElement.getAttribute("iconserver"));
-        		pool.setIconFarm(setElement.getAttribute("iconfarm"));
-        		pool.setMemberCount(Integer.parseInt(setElement.getAttribute("members")));
-        		pool.setPoolCount(Integer.parseInt(setElement.getAttribute("pool_count")));
- 	            poolList.add(pool);
- 	            allContext.setPoolList(poolList);
-        	}
-    	}
+        for (Element setElement : photosElement) {
+            if (setElement.getTagName().equals("set")) {
+                PhotoSet pset = new PhotoSet();
+                pset.setTitle(setElement.getAttribute("title"));
+                pset.setSecret(setElement.getAttribute("secret"));
+                pset.setId(setElement.getAttribute("id"));
+                pset.setFarm(setElement.getAttribute("farm"));
+                pset.setPrimary(setElement.getAttribute("primary"));
+                pset.setServer(setElement.getAttribute("server"));
+                pset.setViewCount(Integer.parseInt(setElement.getAttribute("view_count")));
+                pset.setCommentCount(Integer.parseInt(setElement.getAttribute("comment_count")));
+                pset.setCountPhoto(Integer.parseInt(setElement.getAttribute("count_photo")));
+                pset.setCountVideo(Integer.parseInt(setElement.getAttribute("count_video")));
+                setList.add(pset);
+                allContext.setPhotoSetList(setList);
+            } else if (setElement.getTagName().equals("pool")) {
+                Pool pool = new Pool();
+                pool.setTitle(setElement.getAttribute("title"));
+                pool.setId(setElement.getAttribute("id"));
+                pool.setUrl(setElement.getAttribute("url"));
+                pool.setIconServer(setElement.getAttribute("iconserver"));
+                pool.setIconFarm(setElement.getAttribute("iconfarm"));
+                pool.setMemberCount(Integer.parseInt(setElement.getAttribute("members")));
+                pool.setPoolCount(Integer.parseInt(setElement.getAttribute("pool_count")));
+                poolList.add(pool);
+                allContext.setPoolList(poolList);
+            }
+        }
 
         return allContext;
 
@@ -240,9 +236,9 @@ public class PhotosInterface {
 
     /**
      * Get photos from the user's contacts.
-     *
+     * 
      * This method requires authentication with 'read' permission.
-     *
+     * 
      * @param count
      *            The number of photos to return
      * @param justFriends
@@ -292,9 +288,9 @@ public class PhotosInterface {
 
     /**
      * Get public photos from the user's contacts.
-     *
+     * 
      * This method does not require authentication.
-     *
+     * 
      * @see com.flickr4java.flickr.photos.Extras
      * @param userId
      *            The user ID
@@ -367,9 +363,9 @@ public class PhotosInterface {
 
     /**
      * Get the context for the specified photo.
-     *
+     * 
      * This method does not require authentication.
-     *
+     * 
      * @param photoId
      *            The photo ID
      * @return The PhotoContext
@@ -412,9 +408,9 @@ public class PhotosInterface {
 
     /**
      * Gets a collection of photo counts for the given date ranges for the calling user.
-     *
+     * 
      * This method requires authentication with 'read' permission.
-     *
+     * 
      * @param dates
      *            An array of dates, denoting the periods to return counts for. They should be specified smallest first.
      * @param takenDates
@@ -466,11 +462,11 @@ public class PhotosInterface {
 
     /**
      * Get the Exif data for the photo.
-     *
+     * 
      * The calling user must have permission to view the photo.
-     *
+     * 
      * This method does not require authentication.
-     *
+     * 
      * @param photoId
      *            The photo ID
      * @param secret
@@ -510,9 +506,9 @@ public class PhotosInterface {
 
     /**
      * Returns the list of people who have favorited a given photo.
-     *
+     * 
      * This method does not require authentication.
-     *
+     * 
      * @param photoId
      * @param perPage
      * @param page
@@ -554,11 +550,11 @@ public class PhotosInterface {
 
     /**
      * Get all info for the specified photo.
-     *
+     * 
      * The calling user must have permission to view the photo.
-     *
+     * 
      * This method does not require authentication.
-     *
+     * 
      * @param photoId
      *            The photo Id
      * @param secret
@@ -585,42 +581,10 @@ public class PhotosInterface {
     }
 
     /**
-     * Get the users NSID by username
-     *
-     * The calling user must have permission to view the photo.
-     *
-     * This method does not require authentication.
-     *
-     * @param username
-     *            The user name
-     * @param secret
-     *            The optional secret String
-     * @return the users NSID
-     * @throws FlickrException
-     */
-    public String findByUsername(String username, String secret) throws FlickrException {
-        Map<String, Object> parameters = new HashMap<String, Object>();
-        parameters.put("method", METHOD_FIND_BY_USERNAME);
-
-        parameters.put("username", username);
-        if (secret != null) {
-            parameters.put("secret", secret);
-        }
-
-        Response response = transport.get(transport.getPath(), parameters, apiKey, sharedSecret);
-        if (response.isError()) {
-            throw new FlickrException(response.getErrorCode(), response.getErrorMessage());
-        }
-        Element userElement = response.getPayload();
-        return userElement == null ? null : userElement.getAttribute("nsid");
-    }
-
-
-    /**
      * Return a collection of Photo objects not in part of any sets.
-     *
+     * 
      * This method requires authentication with 'read' permission.
-     *
+     * 
      * @param perPage
      *            The per page
      * @param page
@@ -668,9 +632,9 @@ public class PhotosInterface {
 
     /**
      * Get the permission information for the specified photo.
-     *
+     * 
      * This method requires authentication with 'read' permission.
-     *
+     * 
      * @param photoId
      *            The photo id
      * @return The Permissions object
@@ -699,9 +663,9 @@ public class PhotosInterface {
 
     /**
      * Get a collection of recent photos.
-     *
+     * 
      * This method does not require authentication.
-     *
+     * 
      * @see com.flickr4java.flickr.photos.Extras
      * @param extras
      *            Set of extra-fields
@@ -737,11 +701,11 @@ public class PhotosInterface {
 
     /**
      * Get the available sizes of a Photo.
-     *
+     * 
      * The calling user must have permission to view the photo.
-     *
+     * 
      * This method uses no authentication.
-     *
+     * 
      * @param photoId
      *            The photo ID
      * @return A collection of {@link Size}
@@ -753,11 +717,11 @@ public class PhotosInterface {
 
     /**
      * Get the available sizes of a Photo.
-     *
+     * 
      * The boolean toggle allows to (api-)sign the call.
-     *
+     * 
      * This way the calling user can retrieve sizes for <b>his own</b> private photos.
-     *
+     * 
      * @param photoId
      *            The photo ID
      * @param sign
@@ -766,7 +730,7 @@ public class PhotosInterface {
      * @throws FlickrException
      */
     public Collection<Size> getSizes(String photoId, boolean sign) throws FlickrException {
-    	SizeList<Size> sizes = new  SizeList<Size>();
+        SizeList<Size> sizes = new SizeList<Size>();
 
         Map<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("method", METHOD_GET_SIZES);
@@ -798,9 +762,9 @@ public class PhotosInterface {
 
     /**
      * Get the collection of untagged photos.
-     *
+     * 
      * This method requires authentication with 'read' permission.
-     *
+     * 
      * @param perPage
      * @param page
      * @return A Collection of Photos
@@ -828,9 +792,9 @@ public class PhotosInterface {
 
     /**
      * Returns a list of your geo-tagged photos.
-     *
+     * 
      * This method requires authentication with 'read' permission.
-     *
+     * 
      * @param minUploadDate
      *            Minimum upload date. Photos with an upload date greater than or equal to this value will be returned. Set to null to not specify a date.
      * @param maxUploadDate
@@ -849,7 +813,7 @@ public class PhotosInterface {
      *            <li>5 completely private photos</li>
      *            </ul>
      *            Set to 0 to not specify a privacy Filter.
-     *
+     * 
      * @see com.flickr4java.flickr.photos.Extras
      * @param sort
      *            The order in which to sort returned photos. Deafults to date-posted-desc. The possible values are: date-posted-asc, date-posted-desc,
@@ -908,9 +872,9 @@ public class PhotosInterface {
 
     /**
      * Returns a list of your photos which haven't been geo-tagged.
-     *
+     * 
      * This method requires authentication with 'read' permission.
-     *
+     * 
      * @param minUploadDate
      *            Minimum upload date. Photos with an upload date greater than or equal to this value will be returned. Set to null to not specify a date.
      * @param maxUploadDate
@@ -929,7 +893,7 @@ public class PhotosInterface {
      *            <li>5 completely private photos</li>
      *            </ul>
      *            Set to 0 to not specify a privacy Filter.
-     *
+     * 
      * @see com.flickr4java.flickr.photos.Extras
      * @param sort
      *            The order in which to sort returned photos. Deafults to date-posted-desc. The possible values are: date-posted-asc, date-posted-desc,
@@ -989,9 +953,9 @@ public class PhotosInterface {
     /**
      * Return a list of your photos that have been recently created or which have been recently modified. Recently modified may mean that the photo's metadata
      * (title, description, tags) may have been changed or a comment has been added (or just modified somehow :-)
-     *
+     * 
      * This method requires authentication with 'read' permission.
-     *
+     * 
      * @see com.flickr4java.flickr.photos.Extras
      * @param minDate
      *            Date indicating the date from which modifications should be compared. Must be given.
@@ -1032,9 +996,9 @@ public class PhotosInterface {
 
     /**
      * Remove a tag from a photo.
-     *
+     * 
      * This method requires authentication with 'write' permission.
-     *
+     * 
      * @param tagId
      *            The tag ID
      * @throws FlickrException
@@ -1053,7 +1017,7 @@ public class PhotosInterface {
 
     /**
      * Search for photos which match the given search parameters.
-     *
+     * 
      * @param params
      *            The search parameters
      * @param perPage
@@ -1098,7 +1062,7 @@ public class PhotosInterface {
 
     /**
      * Search for interesting photos using the Flickr Interestingness algorithm.
-     *
+     * 
      * @param params
      *            Any search parameters
      * @param perPage
@@ -1157,9 +1121,9 @@ public class PhotosInterface {
 
     /**
      * Set the content type of a photo.
-     *
+     * 
      * This method requires authentication with 'write' permission.
-     *
+     * 
      * @see com.flickr4java.flickr.Flickr#CONTENTTYPE_PHOTO
      * @see com.flickr4java.flickr.Flickr#CONTENTTYPE_SCREENSHOT
      * @see com.flickr4java.flickr.Flickr#CONTENTTYPE_OTHER
@@ -1184,9 +1148,9 @@ public class PhotosInterface {
 
     /**
      * Set the dates for the specified photo.
-     *
+     * 
      * This method requires authentication with 'write' permission.
-     *
+     * 
      * @param photoId
      *            The photo ID
      * @param datePosted
@@ -1223,9 +1187,9 @@ public class PhotosInterface {
 
     /**
      * Set the meta data for the photo.
-     *
+     * 
      * This method requires authentication with 'write' permission.
-     *
+     * 
      * @param photoId
      *            The photo ID
      * @param title
@@ -1250,9 +1214,9 @@ public class PhotosInterface {
 
     /**
      * Set the permissions for the photo.
-     *
+     * 
      * This method requires authentication with 'write' permission.
-     *
+     * 
      * @param photoId
      *            The photo ID
      * @param permissions
@@ -1279,9 +1243,9 @@ public class PhotosInterface {
     /**
      * Set the safety level (adultness) of a photo.
      * <p>
-     *
+     * 
      * This method requires authentication with 'write' permission.
-     *
+     * 
      * @param photoId
      *            The photo ID
      * @param safetyLevel
@@ -1315,9 +1279,9 @@ public class PhotosInterface {
 
     /**
      * Set the tags for a photo.
-     *
+     * 
      * This method requires authentication with 'write' permission.
-     *
+     * 
      * @param photoId
      *            The photo ID
      * @param tags
@@ -1339,7 +1303,7 @@ public class PhotosInterface {
 
     /**
      * Get the photo for the specified ID. Currently maps to the getInfo() method.
-     *
+     * 
      * @param id
      *            The ID
      * @return The Photo
@@ -1350,7 +1314,7 @@ public class PhotosInterface {
 
     /**
      * Get the photo for the specified ID with the given secret. Currently maps to the getInfo() method.
-     *
+     * 
      * @param id
      *            The ID
      * @param secret
@@ -1365,9 +1329,9 @@ public class PhotosInterface {
      * Request an image from the Flickr-servers.<br>
      * Callers must close the stream upon completion.
      * <p>
-     *
+     * 
      * At {@link Size} you can find constants for the available sizes.
-     *
+     * 
      * @param photo
      *            A photo-object
      * @param size
@@ -1403,22 +1367,20 @@ public class PhotosInterface {
             } else if (size == Size.MEDIUM_800) {
                 urlStr = photo.getMedium800Url();
             } else if (size == Size.VIDEO_ORIGINAL) {
-            	urlStr = photo.getVideoOriginalUrl();
+                urlStr = photo.getVideoOriginalUrl();
             } else if (size == Size.VIDEO_PLAYER) {
-            	urlStr = photo.getVideoPlayerUrl();
+                urlStr = photo.getVideoPlayerUrl();
             } else if (size == Size.SITE_MP4) {
-            	urlStr = photo.getSiteMP4Url();
-            }
-    		else if(size == Size.MOBILE_MP4) {
-    			urlStr = photo.getMobileMp4Url();
-    		}
-    		else if(size == Size.HD_MP4) {
-    			urlStr = photo.getHdMp4Url();
-    		} else {
+                urlStr = photo.getSiteMP4Url();
+            } else if (size == Size.MOBILE_MP4) {
+                urlStr = photo.getMobileMp4Url();
+            } else if (size == Size.HD_MP4) {
+                urlStr = photo.getHdMp4Url();
+            } else {
                 throw new FlickrException("0", "Unknown Photo-size");
             }
             URL url = new URL(urlStr);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
             if (transport instanceof REST) {
                 if (((REST) transport).isProxyAuth()) {
                     conn.setRequestProperty("Proxy-Authorization", "Basic " + ((REST) transport).getProxyCredentials());
@@ -1434,9 +1396,9 @@ public class PhotosInterface {
     /**
      * Request an image from the Flickr-servers.
      * <p>
-     *
+     * 
      * At {@link Size} you can find constants for the available sizes.
-     *
+     * 
      * @param photo
      *            A photo-object
      * @param size
@@ -1454,7 +1416,7 @@ public class PhotosInterface {
 
     /**
      * Download of an image by URL.
-     *
+     * 
      * @param urlStr
      *            The URL of a Photo
      * @return BufferedImage The The Image
@@ -1463,7 +1425,7 @@ public class PhotosInterface {
         InputStream in = null;
         try {
             URL url = new URL(urlStr);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
             if (transport instanceof REST) {
                 if (((REST) transport).isProxyAuth()) {
                     conn.setRequestProperty("Proxy-Authorization", "Basic " + ((REST) transport).getProxyCredentials());

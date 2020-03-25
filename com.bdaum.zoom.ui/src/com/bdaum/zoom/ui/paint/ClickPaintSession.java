@@ -11,15 +11,16 @@
  *******************************************************************************/
 package com.bdaum.zoom.ui.paint;
 
-import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Event;
 
 /**
  * The superclass for paint tools that use click-drag-release motions to draw
  * objects.
  */
 public abstract class ClickPaintSession extends BasicPaintSession {
-	
+
 	private Point anchor = new Point(-1, -1);
 
 	/**
@@ -39,62 +40,33 @@ public abstract class ClickPaintSession extends BasicPaintSession {
 		// do nothing
 	}
 
-	/**
-	 * Handles a mouseDown event.
-	 * 
-	 * @param event
-	 *            the mouse event detail information
-	 */
-
-	public void mouseDown(MouseEvent event) {
-		if (event.button != 1)
-			return;
-		anchor.x = event.x;
-		anchor.y = event.y;
-		beginSession();
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.MouseDown:
+			if (e.button == 1) {
+				anchor.x = e.x;
+				anchor.y = e.y;
+				beginSession();
+			}
+			break;
+		case SWT.MouseUp:
+			if (e.button != 1)
+				resetSession(); // abort if right or middle mouse button pressed
+			else {
+				endSession();
+				anchor.x = -1;
+				anchor.y = -1;
+			}
+			break;
+		case SWT.MouseMove:
+			getPaintSurface().setStatusCoord(getPaintSurface().getCurrentPosition());
+			break;
+		}
 	}
-	
+
 	public Point getAnchor() {
 		return anchor;
-	}
-
-	/**
-	 * Handles a mouseDoubleClick event.
-	 * 
-	 * @param event
-	 *            the mouse event detail information
-	 */
-
-	public void mouseDoubleClick(MouseEvent event) {
-		// do nothing
-	}
-
-	/**
-	 * Handles a mouseUp event.
-	 * 
-	 * @param event
-	 *            the mouse event detail information
-	 */
-
-	public void mouseUp(MouseEvent event) {
-		if (event.button != 1) {
-			resetSession(); // abort if right or middle mouse button pressed
-			return;
-		}
-		endSession();
-		anchor.x = -1;
-		anchor.y = -1;
-	}
-
-	/**
-	 * Handles a mouseMove event.
-	 * 
-	 * @param event
-	 *            the mouse event detail information
-	 */
-
-	public void mouseMove(MouseEvent event) {
-		getPaintSurface().setStatusCoord(getPaintSurface().getCurrentPosition());
 	}
 
 }

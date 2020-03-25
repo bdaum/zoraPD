@@ -22,8 +22,8 @@ package com.bdaum.zoom.ui.views;
 
 import java.io.IOException;
 
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
@@ -97,7 +97,7 @@ public interface IMediaViewer extends IKiosk {
 	 * Notifies of a key released
 	 * @param e - key event
 	 */
-	void releaseKey(KeyEvent e);
+	void releaseKey(Event e);
 	
 	/**
 	 * True if this viewer is not a valid internal viewer

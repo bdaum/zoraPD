@@ -46,7 +46,7 @@ import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.internal.widgets.FileEditor;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 
-public class SplitCatDialog extends ZTitleAreaDialog {
+public class SplitCatDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.splitCatDialog"; //$NON-NLS-1$
 	private String timeline;
@@ -104,12 +104,7 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 		fileEditor = new FileEditor(comp, SWT.SAVE | SWT.READ_ONLY, Messages.EditMetaDialog_file_name, true,
 				activator.getCatFileExtensions(), activator.getSupportedCatFileNames(), null,
 				'*' + Constants.CATALOGEXTENSION, true, getDialogSettings(UiActivator.getDefault(), SETTINGSID));
-		fileEditor.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateButtons();
-			}
-		});
+		fileEditor.addListener(SWT.Modify, this);
 		Composite header = new Composite(comp, SWT.NONE);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		header.setLayout(new GridLayout(2, false));
@@ -160,14 +155,21 @@ public class SplitCatDialog extends ZTitleAreaDialog {
 				new StructuredSelection(locationOption == null ? Meta_type.locationFolders_no : locationOption), true);
 		deleteButton = WidgetFactory.createCheckButton(header, Messages.SplitCatDialog_remove_extracted_entries,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
-		deleteButton.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				if (deleteButton.getSelection() && !AcousticMessageDialog.openQuestion(getShell(),
-						Messages.SplitCatDialog_delete_exported, Messages.SplitCatDialog_delete_exported_msg))
-					deleteButton.setSelection(false);
-			}
-		});
+		deleteButton.addListener(SWT.Selection, this);
+	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Modify:
+			updateButtons();
+			break;
+		case SWT.Selection:
+			if (deleteButton.getSelection() && !AcousticMessageDialog.openQuestion(getShell(),
+					Messages.SplitCatDialog_delete_exported, Messages.SplitCatDialog_delete_exported_msg))
+				deleteButton.setSelection(false);
+			break;
+		}
 	}
 
 	@Override

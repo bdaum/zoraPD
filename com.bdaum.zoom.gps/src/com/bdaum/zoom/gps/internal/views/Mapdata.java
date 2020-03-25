@@ -162,7 +162,7 @@ public class Mapdata {
 			return EMPTY;
 		String[] ids = new String[assetSelection.size()];
 		int i = 0;
-		for (Asset asset : assetSelection)
+		for (Asset asset : assetSelection.getAssets())
 			ids[i++] = asset.getStringId();
 		return ids;
 	}
@@ -335,7 +335,7 @@ public class Mapdata {
 		StringBuilder sb = new StringBuilder();
 		sb.append("[["); //$NON-NLS-1$
 		if (assetSelection != null)
-			for (Asset asset : assetSelection) {
+			for (Asset asset : assetSelection.getAssets()) {
 				if (sb.length() > 2)
 					sb.append(", "); //$NON-NLS-1$
 				sb.append('"').append(asset.getStringId()).append('"');
@@ -347,7 +347,7 @@ public class Mapdata {
 		StringBuilder sb = new StringBuilder();
 		sb.append("["); //$NON-NLS-1$
 		if (assetSelection != null)
-			for (Asset asset : assetSelection) {
+			for (Asset asset : assetSelection.getAssets()) {
 				if (sb.length() > 2)
 					sb.append(", "); //$NON-NLS-1$
 				sb.append('"').append(asset.getName()).append('"');

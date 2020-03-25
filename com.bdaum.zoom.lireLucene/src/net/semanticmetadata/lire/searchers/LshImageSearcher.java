@@ -41,20 +41,24 @@
 
 package net.semanticmetadata.lire.searchers;
 
-import net.semanticmetadata.lire.builders.DocumentBuilder;
-import net.semanticmetadata.lire.imageanalysis.features.GlobalFeature;
-import net.semanticmetadata.lire.indexers.hashing.LocalitySensitiveHashing;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.index.FieldInvertState;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.*;
-import org.apache.lucene.search.similarities.ClassicSimilarity;
-
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.TreeSet;
+
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.similarities.ClassicSimilarity;
+
+import net.semanticmetadata.lire.builders.DocumentBuilder;
+import net.semanticmetadata.lire.imageanalysis.features.GlobalFeature;
+import net.semanticmetadata.lire.indexers.hashing.LocalitySensitiveHashing;
 
 /**
  * This class allows for searching based on {@link net.semanticmetadata.lire.indexers.hashing.BitSampling}
@@ -177,15 +181,15 @@ public class LshImageSearcher extends AbstractImageSearcher {
                 return 1;
             }
 
-            @Override
-            public float coord(int overlap, int maxOverlap) {
-                return 1;
-            }
-
-            @Override
-            public float queryNorm(float sumOfSquaredWeights) {
-                return 1;
-            }
+//            @Override
+//            public float coord(int overlap, int maxOverlap) {
+//                return 1;
+//            }
+//
+//            @Override
+//            public float queryNorm(float sumOfSquaredWeights) {
+//                return 1;
+//            }
 
             @Override
             public float sloppyFreq(int distance) {
@@ -193,7 +197,7 @@ public class LshImageSearcher extends AbstractImageSearcher {
             }
 
             @Override
-            public float lengthNorm(FieldInvertState state) {
+            public float lengthNorm(int state) {
                 return 1;
             }
         });

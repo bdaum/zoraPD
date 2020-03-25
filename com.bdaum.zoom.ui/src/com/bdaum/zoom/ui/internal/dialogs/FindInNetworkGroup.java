@@ -99,16 +99,16 @@ public class FindInNetworkGroup {
 	 * @param listener
 	 * @see org.eclipse.swt.widgets.Button#addSelectionListener(org.eclipse.swt.events.SelectionListener)
 	 */
-	public void addListener(Listener listener) {
-		checkButton.addListener(listener);
+	public void addListener(int type, Listener listener) {
+		checkButton.addListener(type, listener);
 	}
 
 	/**
 	 * @param listener
 	 * @see org.eclipse.swt.widgets.Button#removeSelectionListener(org.eclipse.swt.events.SelectionListener)
 	 */
-	public void removeListener(Listener listener) {
-		checkButton.removeListener(listener);
+	public void removeListener(int type, Listener listener) {
+		checkButton.removeListener(type, listener);
 	}
 
 }

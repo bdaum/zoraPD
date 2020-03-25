@@ -288,24 +288,22 @@ public class ImageUtilities {
 						outdata[tx++] = originaldata[sx++];
 						outdata[tx++] = originaldata[sx];
 					}
-		} else {
-			if (scaleX < 0)
-				for (y = from; y < to; y++)
-					for (x = w - 1, tx = outBytesPerLine * y; x >= 0; x--) {
-						sx = originalBytesPerLine * x + 3 * y;
-						outdata[tx++] = originaldata[sx++];
-						outdata[tx++] = originaldata[sx++];
-						outdata[tx++] = originaldata[sx];
-					}
-			else
-				for (y = from; y < to; y++)
-					for (x = 0, tx = outBytesPerLine * y; x < w; x++) {
-						sx = originalBytesPerLine * x + 3 * y;
-						outdata[tx++] = originaldata[sx++];
-						outdata[tx++] = originaldata[sx++];
-						outdata[tx++] = originaldata[sx];
-					}
-		}
+		} else if (scaleX < 0)
+			for (y = from; y < to; y++)
+				for (x = w - 1, tx = outBytesPerLine * y; x >= 0; x--) {
+					sx = originalBytesPerLine * x + 3 * y;
+					outdata[tx++] = originaldata[sx++];
+					outdata[tx++] = originaldata[sx++];
+					outdata[tx++] = originaldata[sx];
+				}
+		else
+			for (y = from; y < to; y++)
+				for (x = 0, tx = outBytesPerLine * y; x < w; x++) {
+					sx = originalBytesPerLine * x + 3 * y;
+					outdata[tx++] = originaldata[sx++];
+					outdata[tx++] = originaldata[sx++];
+					outdata[tx++] = originaldata[sx];
+				}
 	}
 
 	/**
@@ -1825,39 +1823,117 @@ public class ImageUtilities {
 		}
 	}
 
-	public static Image applyNoise(Image im) {
-		if (randomNumbers == null)
-			randomNumbers = new Random();
-		ImageData data = im.getImageData();
+	public static Image boxedblur(Image im, int radius, int lighten) {
+		final ImageData data = im.getImageData();
+		final int h = data.height;
+		final int w = data.width;
+		if (h <= radius || w <= radius)
+			return im;
+		if (!data.palette.isDirect)
+			return im;
 		Device device = im.getDevice();
 		im.dispose();
-		int h = data.height;
+		final ImageData newdata = new ImageData(w, h, data.depth, data.palette);
 		if (ImageConstants.NPROCESSORS == 1)
-			applyNoise(0, h, data);
+			horizontalMotionBlur(data, 0, h, radius, newdata);
+		else
+			IntStream.range(0, ImageConstants.NPROCESSORS).parallel().forEach(p -> horizontalMotionBlur(data,
+					h * p / ImageConstants.NPROCESSORS, h * (p + 1) / ImageConstants.NPROCESSORS, radius, newdata));
+
+		if (ImageConstants.NPROCESSORS == 1)
+			verticalMotionBlur(newdata, 0, w, radius, data, lighten);
 		else
 			IntStream.range(0, ImageConstants.NPROCESSORS).parallel()
-					.forEach(p -> applyNoise(h * p / ImageConstants.NPROCESSORS,
-							h * (p + 1) / ImageConstants.NPROCESSORS, data));
+					.forEach(p -> verticalMotionBlur(newdata, w * p / ImageConstants.NPROCESSORS,
+							w * (p + 1) / ImageConstants.NPROCESSORS, radius, data, lighten));
 		return new Image(device, data);
 	}
 
-	private static void applyNoise(int from, int to, ImageData data) {
+	private static void verticalMotionBlur(ImageData data, int lower, int upper, int radius, ImageData newdata,
+			int lighten) {
+		int h = data.height;
+		int h1 = h - 1;
+		int radius1 = radius + 1;
+		int boxwidth = radius + radius1;
+		int l1 = lighten + (lighten > 0 ? -1 : 1);
+		int white = lighten < 0 ? 0 : 255 / lighten - 1;
+		int r, g, b, y1, tx, ty, blue, green, red;
 		byte[] datadata = data.data;
+		byte[] newdatadata = newdata.data;
 		int bytesPerLine = data.bytesPerLine;
-		int tx, j, y;
-		int red, green, blue;
-		int width = data.width;
-		for (y = from; y < to; y++) {
-			tx = bytesPerLine * y;
-			for (j = y % 2; j < width; j += 2) {
-				int n = (int) (randomNumbers.nextGaussian() * 12);
-				blue = (datadata[tx] & 0xff) + n;
-				datadata[tx++] = (byte) (blue < 0 ? 0 : blue > 255 ? 255 : blue);
-				green = (datadata[tx] & 0xff) + n;
-				datadata[tx++] = (byte) (green < 0 ? 0 : green > 255 ? 255 : green);
-				red = (datadata[tx] & 0xff) + n;
-				datadata[tx] = (byte) (red < 0 ? 0 : red > 255 ? 255 : red);
-				tx += 4;
+		int bytesPerPix = bytesPerLine / data.width;
+		for (int x = lower; x < upper; x++) {
+			tx = x * bytesPerPix;
+			b = (datadata[tx] & 0xff) * radius1;
+			g = (datadata[tx + 1] & 0xff) * radius1;
+			r = (datadata[tx + 2] & 0xff) * radius1;
+			for (int y = 1; y <= radius; y++) {
+				ty = y * bytesPerLine + tx;
+				b += datadata[ty] & 0xff;
+				g += datadata[++ty] & 0xff;
+				r += datadata[++ty] & 0xff;
+			}
+			for (int y = 0; y <= h1; y++) {
+				ty = y < radius ? tx : (y - radius) * bytesPerLine + tx;
+				b -= datadata[ty] & 0xff;
+				g -= datadata[++ty] & 0xff;
+				r -= datadata[++ty] & 0xff;
+				y1 = y + radius1;
+				ty = y1 > h1 ? h1 * bytesPerLine + tx : y1 * bytesPerLine + tx;
+				b += datadata[ty] & 0xff;
+				g += datadata[++ty] & 0xff;
+				r += datadata[++ty] & 0xff;
+				blue = b / boxwidth;
+				green = g / boxwidth;
+				red = r / boxwidth;
+				if (lighten != 0) {
+					blue = white + blue * l1 / lighten;
+					red = white + red * l1 / lighten;
+					green = white + green * l1 / lighten;
+				}
+				ty = y * bytesPerLine + tx;
+				newdatadata[ty] = (byte) blue;
+				newdatadata[++ty] = (byte) green;
+				newdatadata[++ty] = (byte) red;
+			}
+		}
+	}
+
+	private static void horizontalMotionBlur(ImageData data, int lower, int upper, int radius, ImageData newdata) {
+		int w = data.width;
+		int w1 = w - 1;
+		int radius1 = radius + 1;
+		int boxwidth = radius + radius1;
+		int r, g, b, x1, ty, tx;
+		byte[] datadata = data.data;
+		byte[] newdatadata = newdata.data;
+		int bytesPerLine = data.bytesPerLine;
+		int bytesPerPix = bytesPerLine / w;
+		for (int y = lower; y < upper; y++) {
+			ty = y * bytesPerLine;
+			b = (datadata[ty] & 0xff) * radius1;
+			g = (datadata[ty + 1] & 0xff) * radius1;
+			r = (datadata[ty + 2] & 0xff) * radius1;
+			for (int x = 1; x <= radius; x++) {
+				tx = x * bytesPerPix + ty;
+				b += datadata[tx] & 0xff;
+				g += datadata[++tx] & 0xff;
+				r += datadata[++tx] & 0xff;
+			}
+			for (int x = 0; x < w; x++) {
+				tx = x <= radius ? ty : (x - radius) * bytesPerPix + ty;
+				b -= datadata[tx] & 0xff;
+				g -= datadata[++tx] & 0xff;
+				r -= datadata[++tx] & 0xff;
+				x1 = x + radius1;
+				tx = (x1 > w1 ? w1 : x1) * bytesPerPix + ty;
+				b += datadata[tx] & 0xff;
+				g += datadata[++tx] & 0xff;
+				r += datadata[++tx] & 0xff;
+				tx = x * bytesPerPix + ty;
+				newdatadata[tx] = (byte) (b / boxwidth);
+				newdatadata[++tx] = (byte) (g / boxwidth);
+				newdatadata[++tx] = (byte) (r / boxwidth);
 			}
 		}
 	}
@@ -2196,10 +2272,9 @@ public class ImageUtilities {
 		double b = 1 + vignette.vignetteMidpoint * 7;
 		double mul = (1 - v) / Math.tanh(b);
 		final int[] lt = new int[vRadius + 1];
-		for (int i = 0; i <= vRadius; i++) {
-			float vign = i >= maxRadius ? 0f : (float) (v + mul * Math.tanh(b * (maxRadius - i) / maxRadius));
-			lt[i] = Math.round(vign * P16);
-		}
+		for (int i = 0; i <= vRadius; i++)
+			lt[i] = Math.round(
+					(i >= maxRadius ? 0f : (float) (v + mul * Math.tanh(b * (maxRadius - i) / maxRadius))) * P16);
 		if (ImageConstants.NPROCESSORS == 1)
 			applyVignette(0, h, r, w, hlow, wlow, whigh, lt, offX, offY);
 		else
@@ -2256,10 +2331,9 @@ public class ImageUtilities {
 		double b = 1 + vignette.vignetteMidpoint * 7;
 		double mul = (1 - v) / Math.tanh(b);
 		final int[] lt = new int[vRadius + 1];
-		for (int i = 0; i <= vRadius; i++) {
-			float vign = i >= maxRadius ? 0f : (float) (v + mul * Math.tanh(b * (maxRadius - i) / maxRadius));
-			lt[i] = Math.round(vign * P16);
-		}
+		for (int i = 0; i <= vRadius; i++)
+			lt[i] = Math.round(
+					(i >= maxRadius ? 0f : (float) (v + mul * Math.tanh(b * (maxRadius - i) / maxRadius))) * P16);
 		if (ImageConstants.NPROCESSORS == 1)
 			applyVignette(0, h, result, result.width, -h / 2, hhigh, wlow, whigh, lt, offX, offY);
 		else
@@ -2320,7 +2394,7 @@ public class ImageUtilities {
 		byte[] datadata = data.data;
 		int bytesPerLine = data.bytesPerLine;
 		int txx, sx, sx1, blue00, green00, red00, blue01, green01, red01, blue10, green10, red10, blue11, green11,
-				red11;
+				red11, red, green, blue;
 		double m00 = m[0][0];
 		double m01 = m[0][1];
 		double m02 = m[0][2];
@@ -2344,7 +2418,6 @@ public class ImageUtilities {
 		int whigh = w + wlow;
 		int h1 = h - 1;
 		int w1 = w - 1;
-		int red, green, blue;
 		double m32_f_m33 = m32 * f + m33;
 		double m02_f_m03 = m02 * f + m03;
 		double m12_f_m13 = m12 * f + m13;
@@ -2566,7 +2639,7 @@ public class ImageUtilities {
 		byte[] outdata = out.data;
 		int bytesPerLine = data.bytesPerLine;
 		int txx, sx, sx1, blue00, green00, red00, blue01, green01, red01, blue10, green10, red10, blue11, green11,
-				red11;
+				red11, red, green, blue;
 		RGB fillColor = transformation.fillColor;
 		int bgred = 0, bggreen = 0, bgblue = 0;
 		if (fillColor != null) {
@@ -2579,8 +2652,6 @@ public class ImageUtilities {
 		int whigh = w + wlow;
 		int h1 = h - 1;
 		int w1 = w - 1;
-		int red, green, blue;
-
 		double maxRadius = transformation.maxRadius;
 		// auxiliary variables for distortion correction
 		double distortion = transformation.distortion;
@@ -2846,10 +2917,8 @@ public class ImageUtilities {
 		for (y = from; y < to; y++)
 			for (x = 0, index = y, yoff = y * width; x < width; x++) {
 				lum = round;
-				for (col = -cols2; col <= cols2; col++) {
-					ix = x + col;
+				for (col = -cols2, ix = x - cols2; col <= cols2; col++, ix++)
 					lum += kernel[cols2 + col] * (in[yoff + (ix < 0 ? 0 : ix > w1 ? w1 : ix)] & 0xff);
-				}
 				out[index] = lum < 0 ? 0 : lum > maxvalue ? -1 : (byte) (lum >>> shift);
 				index += height;
 			}
@@ -2877,12 +2946,14 @@ public class ImageUtilities {
 		int index, yoff, lum, ix, y, x, col;
 		for (y = from; y < to; y++)
 			for (x = 0, index = y, yoff = y * width; x < width; x++) {
-				for (col = -cols2, lum = facr; col <= cols2; col++) {
-					ix = x + col;
+				for (col = -cols2, ix = x - cols2, lum = facr; col <= cols2; col++, ix++)
 					lum += kernel[cols2 + col] * (in[yoff + (ix < 0 ? 0 : ix > w1 ? w1 : ix)]);
+				if (lum < 0)
+					out[index] = 0;
+				else {
+					lum /= fac;
+					out[index] = lum > max ? max : (short) lum;
 				}
-				lum /= fac;
-				out[index] = lum < 0 ? 0 : lum > max ? max : (short) lum;
 				index += height;
 			}
 	}

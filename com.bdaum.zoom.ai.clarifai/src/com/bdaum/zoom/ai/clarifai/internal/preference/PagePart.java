@@ -33,8 +33,6 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -63,14 +61,13 @@ import com.bdaum.zoom.ui.widgets.NumericControl;
 import clarifai2.api.ClarifaiClient;
 
 @SuppressWarnings("restriction")
-public class PagePart extends AbstractPreferencePagePart implements ModifyListener {
+public class PagePart extends AbstractPreferencePagePart implements Listener {
 
-	private Text clientIdField;
-	private Text clientSecretField;
+	private Text apiKeyField;
 	private NumericControl conceptField;
 	private NumericControl confidenceField;
 	private ComboViewer modelCombo;
-	private Timer timer;
+	private Timer timer = new Timer();
 	private AiPreferencePage parentPage;
 	private CheckboxButton adultButton;
 	private CheckboxButton translateButton;
@@ -81,6 +78,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 	private CheckboxButton celebrityButton;
 	private String currentLanguage = "en"; //$NON-NLS-1$
 	private boolean updating;
+	private TimerTask task;
 
 	@SuppressWarnings("unused")
 	@Override
@@ -93,33 +91,17 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		new Label(composite, SWT.NONE).setText(Messages.PagePart_manage_clarifai_account);
 		new Label(composite, SWT.NONE);
 		CGroup eGroup = UiUtilities.createGroup(composite, 2, Messages.PagePart_credentials);
-		new Label(eGroup, SWT.NONE).setText(Messages.PagePart_client_id);
-		clientIdField = new Text(eGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
-		clientIdField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		new Label(eGroup, SWT.NONE).setText(Messages.PagePart_secret);
-		clientSecretField = new Text(eGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
-		clientSecretField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		clientIdField.addModifyListener(this);
-		clientSecretField.addModifyListener(this);
+		new Label(eGroup, SWT.NONE).setText(Messages.PagePart_apikey);
+		apiKeyField = new Text(eGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
+		apiKeyField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		apiKeyField.addListener(SWT.Modify, this);
 		new Label(eGroup, SWT.NONE).setText(Messages.PagePart_access_token);
 		statusField = new Label(eGroup, SWT.NONE);
 		statusField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		CLink link = new CLink(eGroup, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		link.setText(Messages.PagePart_visit_account_page);
-		link.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				String vlcDownload = System.getProperty("com.bdaum.zoom.clarifai"); //$NON-NLS-1$
-				try {
-					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));
-				} catch (PartInitException e1) {
-					// do nothing
-				} catch (MalformedURLException e1) {
-					// should never happen
-				}
-			}
-		});
+		link.addListener(SWT.Selection, this);
 		CGroup tGroup = CGroup.create(composite, 1, Messages.PagePart_limits);
 		new Label(tGroup, SWT.NONE).setText(Messages.PagePart_model);
 		modelCombo = new ComboViewer(tGroup, SWT.READ_ONLY);
@@ -184,19 +166,38 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1), Messages.PagePart_translate_tooltip);
 		return composite;
 	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			String vlcDownload = System.getProperty("com.bdaum.zoom.clarifai"); //$NON-NLS-1$
+			try {
+				PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(vlcDownload));
+			} catch (PartInitException e1) {
+				// do nothing
+			} catch (MalformedURLException e1) {
+				// should never happen
+			}
+			break;
+		case SWT.Modify:
+			if (enabled)
+				checkCredentials(parentPage);
+			break;
+		}
+	}
 
 	protected void verifyAccountCredenials(int time) {
 		disposeResources();
-		timer = new Timer();
-		timer.schedule(new TimerTask() {
+		task = new TimerTask() {
 			@Override
 			public void run() {
 				String msg;
 				boolean error;
 				ClarifaiClient client = ClarifaiActivator.getDefault().getClient();
 				if (client != null) {
-					error = !client.hasValidToken();
-					msg = error ? Messages.PagePart_access_failed : Messages.PagePart_verified;
+					error = false;
+					msg = Messages.PagePart_verified;
 				} else {
 					msg = Messages.PagePart_check_credentials;
 					error = true;
@@ -210,24 +211,23 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 						}
 					});
 			}
-		}, time);
+		};
+		timer.schedule(task, time);
 	}
 
 	private void disposeResources() {
-		if (timer != null) {
-			timer.cancel();
-			timer = null;
+		if (task != null) {
+			task.cancel();
+			task = null;
 		}
 		// ClarifaiActivator.getDefault().disposeClient();
 	}
 
 	@Override
 	public void fillValues() {
-		clientIdField.removeModifyListener(this);
-		clientSecretField.removeModifyListener(this);
+		apiKeyField.removeListener(SWT.Modify, this);
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		clientIdField.setText(preferenceStore.getString(PreferenceConstants.CLIENTID));
-		clientSecretField.setText(preferenceStore.getString(PreferenceConstants.CLIENTSECRET));
+		apiKeyField.setText(preferenceStore.getString(PreferenceConstants.APIKEY));
 		conceptField.setSelection(preferenceStore.getInt(PreferenceConstants.MAXCONCEPTS));
 		confidenceField.setSelection(preferenceStore.getInt(PreferenceConstants.MINCONFIDENCE));
 		aboveField.setSelection(preferenceStore.getInt(PreferenceConstants.MARKABOVE));
@@ -237,21 +237,19 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		celebrityButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.CELEBRITIES));
 		translateButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.TRANSLATE));
 		ClarifaiActivator activator = ClarifaiActivator.getDefault();
-		activator.setAccountCredentials(clientIdField.getText().trim(), clientSecretField.getText().trim());
+		activator.setAccountCredentials(apiKeyField.getText().trim());
 		verifyAccountCredenials(100);
 		modelCombo.setSelection(new StructuredSelection(ClarifaiActivator.getDefault().getTheme()));
 		currentLanguage = preferenceStore.getString(PreferenceConstants.LANGUAGE);
 		languageCombo.setSelection(new StructuredSelection(currentLanguage));
-		clientIdField.addModifyListener(this);
-		clientSecretField.addModifyListener(this);
+		apiKeyField.addListener(SWT.Modify, this);
 	}
 
 	@Override
 	public void setEnabled(boolean enabled) {
 		boolean wasEnabled = enabled;
 		super.setEnabled(enabled);
-		clientIdField.setEnabled(enabled);
-		clientSecretField.setEnabled(enabled);
+		apiKeyField.setEnabled(enabled);
 		conceptField.setEnabled(enabled);
 		confidenceField.setEnabled(enabled);
 		aboveField.setEnabled(enabled);
@@ -272,8 +270,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 	public void performOk() {
 		disposeResources();
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		preferenceStore.setValue(PreferenceConstants.CLIENTID, clientIdField.getText());
-		preferenceStore.setValue(PreferenceConstants.CLIENTSECRET, clientSecretField.getText());
+		preferenceStore.setValue(PreferenceConstants.APIKEY, apiKeyField.getText());
 		preferenceStore.setValue(PreferenceConstants.MAXCONCEPTS, conceptField.getSelection());
 		preferenceStore.setValue(PreferenceConstants.MINCONFIDENCE, confidenceField.getSelection());
 		preferenceStore.setValue(PreferenceConstants.MARKABOVE, aboveField.getSelection());
@@ -335,7 +332,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 	@Override
 	public String validate() {
 		if (parentPage.isEnabled()) {
-			if (clientIdField.getText().isEmpty() || clientSecretField.getText().isEmpty())
+			if (apiKeyField.getText().isEmpty())
 				return Messages.PagePart_both_must_be_set;
 		}
 		return super.validate();
@@ -344,16 +341,9 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 	protected void checkCredentials(AbstractPreferencePage parentPage) {
 		parentPage.validate();
 		if (validate() == null) {
-			ClarifaiActivator.getDefault().setAccountCredentials(clientIdField.getText().trim(),
-					clientSecretField.getText().trim());
+			ClarifaiActivator.getDefault().setAccountCredentials(apiKeyField.getText().trim());
 			verifyAccountCredenials(500);
 		}
-	}
-
-	@Override
-	public void modifyText(ModifyEvent e) {
-		if (enabled)
-			checkCredentials(parentPage);
 	}
 
 	@Override

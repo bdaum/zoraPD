@@ -1,21 +1,19 @@
-/*
- * Copyright (c) 2005 Aetrion LLC.
- */
-package com.flickr4java.flickr.groups;
 
-import org.apache.log4j.Logger;
+package com.flickr4java.flickr.groups;
 
 import com.flickr4java.flickr.util.BuddyIconable;
 import com.flickr4java.flickr.util.UrlUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class representing a Flickr Group.
- *
+ * 
  * @author Anthony Eden
  */
 public class Group implements BuddyIconable {
 
-    private static Logger _log = Logger.getLogger(Group.class);
+    private static Logger _log = LoggerFactory.getLogger(Group.class);
 
     private String id;
 
@@ -239,7 +237,7 @@ public class Group implements BuddyIconable {
     }
 
     /**
-     *
+     * 
      * @param photoCount
      */
     public void setPhotoCount(int photoCount) {
@@ -247,7 +245,7 @@ public class Group implements BuddyIconable {
     }
 
     /**
-     *
+     * 
      * @param photoCount
      */
     public void setPhotoCount(String photoCount) {
@@ -303,28 +301,34 @@ public class Group implements BuddyIconable {
         this.poolModerated = poolModerated;
     }
 
+    @Override
     public int getIconFarm() {
         return iconFarm;
     }
 
+    @Override
     public void setIconFarm(int iconFarm) {
         this.iconFarm = iconFarm;
     }
 
+    @Override
     public void setIconFarm(String iconFarm) {
         if (iconFarm != null) {
             setIconFarm(Integer.parseInt(iconFarm));
         }
     }
 
+    @Override
     public int getIconServer() {
         return iconServer;
     }
 
+    @Override
     public void setIconServer(int iconServer) {
         this.iconServer = iconServer;
     }
 
+    @Override
     public void setIconServer(String iconServer) {
         if (iconServer != null) {
             setIconServer(Integer.parseInt(iconServer));
@@ -335,11 +339,12 @@ public class Group implements BuddyIconable {
      * Construct the BuddyIconUrl.
      * <p>
      * If none available, return the <a href="http://www.flickr.com/images/buddyicon.jpg">default</a>, or an URL assembled from farm, iconserver and nsid.
-     *
+     * 
      * @see <a href="http://flickr.com/services/api/misc.buddyicons.html">Flickr Documentation</a>
      * @return The BuddyIconUrl
      * @deprecated use {@link #getSecureBuddyIconUrl() }
      */
+    @Override
     @Deprecated
     public String getBuddyIconUrl() {
         return UrlUtilities.createBuddyIconUrl(iconFarm, iconServer, id);
@@ -349,7 +354,7 @@ public class Group implements BuddyIconable {
      * Construct the BuddyIconUrl using {@code https} scheme.
      * <p>
      * If none available, return the <a href="https://www.flickr.com/images/buddyicon.jpg">default</a>, or an URL assembled from farm, iconserver and nsid.
-     *
+     * 
      * @see <a href="http://flickr.com/services/api/misc.buddyicons.html">Flickr Documentation</a>
      * @return The BuddyIconUrl
      */

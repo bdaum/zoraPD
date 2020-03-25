@@ -35,10 +35,12 @@ import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 import com.bdaum.zoom.common.CommonConstants;
 import com.bdaum.zoom.common.internal.FileLocator;
 import com.bdaum.zoom.image.IImportFilterFactory;
+import com.bdaum.zoom.image.IVideoService;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
 
@@ -268,6 +270,12 @@ public class ImageActivator extends Plugin {
 					logError(NLS.bind(Messages.ImageActivator_cannot_intantiate_imageio_provider,
 							conf.getAttribute("name")), e); //$NON-NLS-1$
 				}
+	}
+
+	public IVideoService getVideoService() {
+		BundleContext bundleContext = getBundle().getBundleContext();
+		ServiceReference<?> serviceReference = bundleContext.getServiceReference(IVideoService.class.getName());
+		return (serviceReference != null) ? (IVideoService) bundleContext.getService(serviceReference) : null;
 	}
 
 }

@@ -57,10 +57,6 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -102,7 +98,7 @@ import com.bdaum.zoom.ui.paint.DrawExample;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class VoiceNoteDialog extends ZResizableDialog implements IKiosk {
+public class VoiceNoteDialog extends ZResizableDialog implements IKiosk, Listener {
 
 	private static final String DRAWING_BOUNDS = "DrawingBounds"; //$NON-NLS-1$
 	private static final String VOICE_BOUNDS = "VoiceBounds"; //$NON-NLS-1$
@@ -318,22 +314,7 @@ public class VoiceNoteDialog extends ZResizableDialog implements IKiosk {
 				.setControl(createTextGroup(tabFolder));
 		UiUtilities.createTabItem(tabFolder, Messages.VoiceNoteDialog_drawing,
 				Messages.VoiceNoteDialog_create_overlayed_drawing).setControl(createDrawingGroup(tabFolder));
-		tabFolder.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				resizeDialog();
-				updateButtons();
-				if (tabFolder.getSelectionIndex() == DRAWING) {
-					try {
-						Job.getJobManager().join(VoiceNoteDialog.this, null);
-					} catch (OperationCanceledException | InterruptedException ex) {
-						// do nothing
-					}
-					paintExample.repaintSurface();
-				}
-			}
-
-		});
+		tabFolder.addListener(SWT.Selection, this);
 		try {
 			tabFolder.setSelection(settings.getInt(ACTIVETAB));
 		} catch (NumberFormatException e) {
@@ -416,21 +397,9 @@ public class VoiceNoteDialog extends ZResizableDialog implements IKiosk {
 		exportButton.setLayoutData(new GridData(SWT.CENTER, SWT.END, true, true));
 		exportButton.setToolTipText(Messages.VoiceNoteDialog_export_drawing);
 		exportButton.setImage(Icons.save.getImage());
-		exportButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				exportSvg();
-			}
-		});
-
+		exportButton.addListener(SWT.Selection, this);
 		paintExample.setDefaults();
-		paintExample.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				dirty = true;
-				updateButtons();
-			}
-		});
+		paintExample.addListener(SWT.Modify, this);
 		return composite;
 	}
 
@@ -454,39 +423,41 @@ public class VoiceNoteDialog extends ZResizableDialog implements IKiosk {
 						NLS.bind(Messages.VoiceNoteDialog_io_error_drawing, e));
 			}
 		}
-
 	}
 
 	private Control createTextGroup(CTabFolder tabFolder) {
 		Composite composite = new Composite(tabFolder, SWT.NONE);
 		composite.setLayout(new GridLayout());
 		note = new CheckedText(composite, SWT.MULTI | SWT.VERTICAL | SWT.WRAP);
-		note.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				dirty = true;
-				updateButtons();
-			}
-		});
+		note.addListener(SWT.Modify, this);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.heightHint = 120;
 		note.setLayoutData(layoutData);
 		return composite;
 	}
-
-	private Control createVoiceGroup(CTabFolder tabFolder) {
-		Composite composite = new Composite(tabFolder, SWT.NONE);
-		composite.setLayout(new GridLayout(2, false));
-		text = new Label(composite, SWT.READ_ONLY | SWT.BORDER);
-		text.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		text.setText(Messages.VoiceNoteDialog_ready);
-		Composite sidebar = new Composite(composite, SWT.NONE);
-		sidebar.setLayoutData(new GridData(SWT.END, SWT.FILL, false, true));
-		sidebar.setLayout(new GridLayout(1, false));
-		recordButton = createButton(sidebar, Icons.record.getImage(), Messages.VoiceNoteDialog_record_instant_note);
-		recordButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+	
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Modify:
+			dirty = true;
+			updateButtons();
+			break;
+		case SWT.Selection:
+			if (e.widget == tabFolder) {
+				resizeDialog();
+				updateButtons();
+				if (tabFolder.getSelectionIndex() == DRAWING) {
+					try {
+						Job.getJobManager().join(VoiceNoteDialog.this, null);
+					} catch (OperationCanceledException | InterruptedException ex) {
+						// do nothing
+					}
+					paintExample.repaintSurface();
+				}
+			} else if (e.widget == exportButton)
+				exportSvg();
+			else if (e.widget == recordButton) {
 				if (voiceFileUri != null && !AcousticMessageDialog.openQuestion(getShell(),
 						Messages.VoiceNoteDialog_add_voice_file, Messages.VoiceNoteDialog_overwrite_single))
 					return;
@@ -516,23 +487,12 @@ public class VoiceNoteDialog extends ZResizableDialog implements IKiosk {
 				};
 				recordJob.schedule(1000L);
 				updateButtons();
-			}
-		});
-
-		stopButton = createButton(sidebar, Icons.stop.getImage(), Messages.VoiceNoteDialog_stop_recording);
-		stopButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+			} else if (e.widget == stopButton) {
 				stopAudio();
 				remoteVoice = false;
 				updateButtons();
 				updateTextfield();
-			}
-		});
-		replayButton = createButton(sidebar, Icons.replay.getImage(), Messages.VoiceNoteDialog_replay_current);
-		replayButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+			} else if (e.widget == replayButton) {
 				try {
 					replaying = true;
 					updateButtons();
@@ -544,17 +504,34 @@ public class VoiceNoteDialog extends ZResizableDialog implements IKiosk {
 					// should not happen
 				}
 				updateButtons();
-			}
-		});
-		deleteButton = createButton(sidebar, Icons.trash16.getImage(), Messages.VoiceNoteDialog_delete_voicenote);
-		deleteButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+			} else if (e.widget == deleteButton) {
 				voiceFileUri = null;
 				dirty = true;
 				updateButtons();
 			}
-		});
+			break;
+		}
+	}
+
+
+	private Control createVoiceGroup(CTabFolder tabFolder) {
+		Composite composite = new Composite(tabFolder, SWT.NONE);
+		composite.setLayout(new GridLayout(2, false));
+		text = new Label(composite, SWT.READ_ONLY | SWT.BORDER);
+		text.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		text.setText(Messages.VoiceNoteDialog_ready);
+		Composite sidebar = new Composite(composite, SWT.NONE);
+		sidebar.setLayoutData(new GridData(SWT.END, SWT.FILL, false, true));
+		sidebar.setLayout(new GridLayout(1, false));
+		recordButton = createButton(sidebar, Icons.record.getImage(), Messages.VoiceNoteDialog_record_instant_note);
+		recordButton.addListener(SWT.Selection, this);
+
+		stopButton = createButton(sidebar, Icons.stop.getImage(), Messages.VoiceNoteDialog_stop_recording);
+		stopButton.addListener(SWT.Selection, this);
+		replayButton = createButton(sidebar, Icons.replay.getImage(), Messages.VoiceNoteDialog_replay_current);
+		replayButton.addListener(SWT.Selection, this);
+		deleteButton = createButton(sidebar, Icons.trash16.getImage(), Messages.VoiceNoteDialog_delete_voicenote);
+		deleteButton.addListener(SWT.Selection, this);
 		return composite;
 	}
 
@@ -832,5 +809,6 @@ public class VoiceNoteDialog extends ZResizableDialog implements IKiosk {
 	public void removeStateListener(IStateListener listener) {
 		// do nothing
 	}
+
 
 }

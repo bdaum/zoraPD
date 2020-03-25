@@ -514,8 +514,10 @@ public class LireActivator extends Plugin {
 	}
 
 	public Query parseQuery(String query) throws ParseException {
-		if (queryParser == null)
+		if (queryParser == null) {
 			queryParser = new QueryParser(FIELD_NAME_FULL_TEXT, getLuceneAnalyzer());
+			queryParser.setSplitOnWhitespace(true);
+		}
 		try {
 			return queryParser.parse(query);
 		} catch (org.apache.lucene.queryparser.classic.ParseException e) {

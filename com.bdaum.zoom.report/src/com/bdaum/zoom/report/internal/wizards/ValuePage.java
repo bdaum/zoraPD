@@ -144,7 +144,7 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 			setLayout(new GridLayout(1, false));
 			CheckboxButton essentialButton = WidgetFactory.createCheckButton(this, Messages.ValuePage_only_essential,
 					new GridData(SWT.END, SWT.CENTER, true, true));
-			essentialButton.addListener(new Listener() {
+			essentialButton.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
 					essential = essentialButton.getSelection();
@@ -322,7 +322,7 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 		GridData data = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
 		data.verticalIndent = 20;
 		dayTimeButtonGroup.setLayoutData(data);
-		dayTimeButtonGroup.addListener(this);
+		dayTimeButtonGroup.addListener(SWT.Selection, this);
 		dayTimeButtonGroup.setSelection(0);
 		timeComposite = new Composite(stack, SWT.NONE);
 		timeComposite.setLayout(new GridLayout(4, false));
@@ -349,7 +349,7 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 		timeButtonGroup = new RadioButtonGroup(timeComposite, Messages.ValuePage_interval, 2, Messages.ValuePage_by_year, Messages.ValuePage_by_quarter, Messages.ValuePage_by_month,
 				Messages.ValuePage_by_week, Messages.ValuePage_by_day);
 		timeButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 4, 1));
-		timeButtonGroup.addListener(this);
+		timeButtonGroup.addListener(SWT.Selection, this);
 		timeButtonGroup.setSelection(0);
 		numericComposite = new Composite(stack, SWT.NONE);
 		numericComposite.setLayout(new GridLayout(1, false));
@@ -370,7 +370,7 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 		rangeSlider = new RangeControl(rangeComp, SWT.BORDER);
 		rangeSlider.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1));
 		rangeSlider.setSelection(new Point(25, 75));
-		rangeSlider.addListener(this);
+		rangeSlider.addListener(SWT.Selection, this);
 		label = new Label(rangeComp, SWT.NONE);
 		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		label.setText(Messages.ValuePage_intervals);
@@ -379,7 +379,7 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 		intervalField.setMinimum(2);
 		intervalField.setMaximum(150);
 		intervalField.setSelection(50);
-		intervalField.addListener(this);
+		intervalField.addListener(SWT.Selection, this);
 		discreteComposite = new Composite(stack, SWT.NONE);
 		discreteComposite.setLayout(new GridLayout(1, false));
 		label = new Label(discreteComposite, SWT.NONE);
@@ -399,7 +399,7 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 		thresholdField.setIncrement(1);
 		thresholdField.setDigits(1);
 		thresholdField.setSelection(10);
-		thresholdField.addListener(this);
+		thresholdField.addListener(SWT.Selection, this);
 
 		hiddenLabel = new Label(discreteComposite, SWT.NONE);
 		hiddenLabel.setText(Messages.ValuePage_hidden);

@@ -10,12 +10,12 @@
  *******************************************************************************/
 package org.eclipse.nebula.widgets.gallery;
 
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Event;
 
 /**
  * <p>
@@ -144,7 +144,7 @@ public abstract class AbstractGalleryGroupRenderer {
 	 */
 	public abstract Rectangle getSize(GalleryItem item);
 
-	public abstract boolean mouseDown(GalleryItem group, MouseEvent e,
+	public abstract boolean mouseDown(GalleryItem group, Event e,
 			Point coords);
 
 	public Gallery getGallery() {

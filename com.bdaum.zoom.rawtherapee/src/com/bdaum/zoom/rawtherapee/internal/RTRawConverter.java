@@ -17,7 +17,6 @@ import com.bdaum.zoom.image.IFocalLengthProvider;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.recipe.Recipe;
 import com.bdaum.zoom.program.AbstractRawConverter;
-import com.bdaum.zoom.program.BatchConstants;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.program.IRawConverter;
 
@@ -45,8 +44,8 @@ public class RTRawConverter extends AbstractRawConverter {
 			return null;
 		List<String> parms = new ArrayList<String>();
 		parms.add(rt.getAbsolutePath());
-		if (BatchConstants.WIN32)
-			parms.add("-w"); //$NON-NLS-1$
+//		if (BatchConstants.WIN32)
+//			parms.add("-w"); //$NON-NLS-1$
 		parms.add("-o"); //$NON-NLS-1$
 		parms.add(outFile.getAbsolutePath());
 		if (options != null) {

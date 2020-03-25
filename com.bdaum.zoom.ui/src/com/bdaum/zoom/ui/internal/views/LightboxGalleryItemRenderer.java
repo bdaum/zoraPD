@@ -38,7 +38,6 @@ package com.bdaum.zoom.ui.internal.views;
  *******************************************************************************/
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import org.eclipse.nebula.widgets.gallery.AbstractGalleryItemRenderer;
 import org.eclipse.nebula.widgets.gallery.Gallery;
@@ -94,9 +93,9 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 	protected ArrayList<Color> dropShadowsColors = new ArrayList<Color>();
 
 	// Renderer parameters
-	private boolean dropShadows = false;
-
-	int dropShadowsSize = 0;
+//	private boolean dropShadows = false;
+//
+//	int dropShadowsSize = 0;
 
 	Color selectionForegroundColor;
 
@@ -163,7 +162,7 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 		white = display.getSystemColor(SWT.COLOR_WHITE);
 
 		// Create drop shadows colours
-		createColors();
+//bd		createColors();
 	}
 
 	/*
@@ -208,24 +207,27 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 			imageWidth = itemImageBounds.width;
 			imageHeight = itemImageBounds.height;
 
-			size = RendererHelper.getBestSize(imageWidth, imageHeight, width - 8 - 2 * this.dropShadowsSize,
-					useableHeight - 8 - 2 * this.dropShadowsSize);
+			size = RendererHelper.getBestSize(imageWidth, imageHeight, width - 8,
+					useableHeight - 8);
+
+//bd			size = RendererHelper.getBestSize(imageWidth, imageHeight, width - 8 - 2 * this.dropShadowsSize,
+//					useableHeight - 8 - 2 * this.dropShadowsSize);
 
 			xShift = RendererHelper.getShift(width, size.x);
 			yShift = RendererHelper.getShift(useableHeight, size.y);
 
-			if (dropShadows) {
-				Color c = null;
-				for (int i = this.dropShadowsSize - 1; i >= 0; i--) {
-					c = dropShadowsColors.get(i);
-					gc.setForeground(c);
-
-					gc.drawLine(x + width + i - xShift - 1, y + dropShadowsSize + yShift, x + width + i - xShift - 1,
-							y + useableHeight + i - yShift);
-					gc.drawLine(x + xShift + dropShadowsSize, y + useableHeight + i - yShift - 1,
-							x + width + i - xShift, y - 1 + useableHeight + i - yShift);
-				}
-			}
+//bd			if (dropShadows) {
+//				Color c = null;
+//				for (int i = this.dropShadowsSize - 1; i >= 0; i--) {
+//					c = dropShadowsColors.get(i);
+//					gc.setForeground(c);
+//
+//					gc.drawLine(x + width + i - xShift - 1, y + dropShadowsSize + yShift, x + width + i - xShift - 1,
+//							y + useableHeight + i - yShift);
+//					gc.drawLine(x + xShift + dropShadowsSize, y + useableHeight + i - yShift - 1,
+//							x + width + i - xShift, y - 1 + useableHeight + i - yShift);
+//				}
+//			}
 		}
 
 		// Draw background (rounded rectangles)
@@ -323,49 +325,48 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 		}
 	}
 
-	public void setDropShadowsSize(int dropShadowsSize) {
-		this.dropShadowsSize = dropShadowsSize;
-		freeDropShadowsColors();
-		createColors();
-		// TODO: force redraw
-
-	}
-
-	private void createColors() {
-		if (dropShadowsSize > 0) {
-			int step = 125 / dropShadowsSize;
-			// Create new colors
-			Display display = gallery.getDisplay();
-			for (int i = dropShadowsSize - 1; i >= 0; i--) {
-				int value = 255 - i * step;
-				dropShadowsColors.add(new Color(display, value, value, value));
-			}
-		}
-	}
-
-	private void freeDropShadowsColors() {
-		// Free colors :
-		{
-			Iterator<Color> i = this.dropShadowsColors.iterator();
-			while (i.hasNext()) {
-				Color c = i.next();
-				if (c != null)
-					c.dispose();
-			}
-		}
-	}
-
-	public boolean isDropShadows() {
-		return dropShadows;
-	}
-
-	public void setDropShadows(boolean dropShadows) {
-		this.dropShadows = dropShadows;
-	}
-
-	public int getDropShadowsSize() {
-		return dropShadowsSize;
-	}
+//bd	public void setDropShadowsSize(int dropShadowsSize) {
+//		this.dropShadowsSize = dropShadowsSize;
+//		freeDropShadowsColors();
+//		createColors();
+//		// TODO: force redraw
+//	}
+//
+//	private void createColors() {
+//		if (dropShadowsSize > 0) {
+//			int step = 125 / dropShadowsSize;
+//			// Create new colors
+//			Display display = gallery.getDisplay();
+//			for (int i = dropShadowsSize - 1; i >= 0; i--) {
+//				int value = 255 - i * step;
+//				dropShadowsColors.add(new Color(display, value, value, value));
+//			}
+//		}
+//	}
+//
+//	private void freeDropShadowsColors() {
+//		// Free colors :
+//		{
+//			Iterator<Color> i = this.dropShadowsColors.iterator();
+//			while (i.hasNext()) {
+//				Color c = i.next();
+//				if (c != null)
+//					c.dispose();
+//			}
+//		}
+//	}
+//
+//	public boolean isDropShadows() {
+//		return dropShadows;
+//	}
+//
+//	public void setDropShadows(boolean dropShadows) {
+//		this.dropShadows = dropShadows;
+//	}
+//
+//	public int getDropShadowsSize() {
+//		return dropShadowsSize;
+//	}
 
 	/**
 	 * Returns the font used for drawing item label or <tt>null</tt> if system font
@@ -393,7 +394,7 @@ public class LightboxGalleryItemRenderer extends AbstractGalleryItemRenderer {
 
 	@Override
 	public void dispose() {
-		freeDropShadowsColors();
+//bd		freeDropShadowsColors();
 	}
 
 	public Color getForegroundColor() {

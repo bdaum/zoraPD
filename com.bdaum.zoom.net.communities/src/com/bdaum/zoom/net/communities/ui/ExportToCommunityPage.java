@@ -58,7 +58,7 @@ import com.bdaum.zoom.ui.internal.wizards.ExportModeGroup;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
-public class ExportToCommunityPage extends AbstractExportToCommunityPage implements IAdaptable {
+public class ExportToCommunityPage extends AbstractExportToCommunityPage implements IAdaptable, Listener {
 
 	private CheckboxButton metaButton;
 	private boolean hasRawImaages = false;
@@ -125,23 +125,12 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 				multimedia ? ExportModeGroup.ORIGINALS
 						: ExportModeGroup.ALLFORMATS | ExportModeGroup.SIZING | (raw ? ExportModeGroup.RAWCROP : 0),
 				multimedia ? Messages.ExportToCommunityPage_media : Messages.ExportToCommunityPage_image);
-		exportModeGroup.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				updateControls();
-				checkImages();
-			}
-		});
+		exportModeGroup.addListener(SWT.Modify, this);
 		final CGroup metaGroup = UiUtilities.createGroup(parent, 1, Messages.ExportToCommunityPage_metadata);
 		if (!multimedia) {
 			metaButton = WidgetFactory.createCheckButton(metaGroup, Messages.ExportToCommunityPage_include_metadata,
 					null);
-			metaButton.addListener(new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					getWizard().getContainer().updateButtons();
-				}
-			});
+			metaButton.addListener(SWT.Selection, this);
 		}
 		descriptionButton = WidgetFactory.createCheckButton(metaGroup, Messages.ExportToCommunityPage_show_descriptions,
 				null);
@@ -154,6 +143,19 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 		setControl(composite);
 		setHelp(HelpContextIds.EXPORTCOMMUNITY_WIZARD);
 		super.createControl(parent);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			getWizard().getContainer().updateButtons();
+			break;
+		case SWT.Modify:
+			updateControls();
+			checkImages();
+			break;
+		}
 	}
 
 	@Override

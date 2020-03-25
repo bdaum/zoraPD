@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2005 Aetrion LLC.
- */
+
 package com.flickr4java.flickr.photos;
 
 import java.util.Arrays;
@@ -165,6 +163,7 @@ public class Size {
      * @see com.flickr4java.flickr.photos.PhotosInterface#getImageAsStream(Photo, int)
      */
     public static final int VIDEO_ORIGINAL = 14;
+
     /**
      * Video, the original for mobiles.
      * 
@@ -174,7 +173,7 @@ public class Size {
      * @see com.flickr4java.flickr.photos.PhotosInterface#getImageAsStream(Photo, int)
      */
     public static final int MOBILE_MP4 = 15;
-    
+
     public static final int HD_MP4 = 16;
 
     private int label;
@@ -213,7 +212,7 @@ public class Size {
         return label;
     }
 
-    private final List<String> lstSizes = Arrays.asList("Thumbnail", "Square", "Small", "Medium", "Large", "Original", "Square Large", "Small 320",
+    private final List<String> lstSizes = Arrays.asList("Thumbnail", "Square", "Small", "Medium", "Large", "Original", "Large Square", "Small 320",
             "Medium 640", "Medium 800", "Large 1600", "Large 2048", "Site MP4", "Video Player", "Video Original", "Mobile MP4", "HD MP4");
 
     /**
@@ -260,7 +259,7 @@ public class Size {
 
     public void setWidth(String width) {
 
-        if (width != null) {
+        if (!(width == null || "".equals(width))) { // checking both null and empty
             setWidth(Integer.parseInt(width));
         }
     }
@@ -277,7 +276,7 @@ public class Size {
 
     public void setHeight(String height) {
 
-        if (height != null) {
+        if (!(height == null || "".equals(height))) { // checking both null and empty
             setHeight(Integer.parseInt(height));
         }
     }

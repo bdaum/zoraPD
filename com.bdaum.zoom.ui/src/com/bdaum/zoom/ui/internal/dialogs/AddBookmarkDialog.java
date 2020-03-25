@@ -33,26 +33,25 @@ import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.views.BookmarkView;
 import com.bdaum.zoom.ui.widgets.CLink;
 
-public class AddBookmarkDialog extends ZInputDialog {
+public class AddBookmarkDialog extends ZInputDialog implements Listener {
 
 	public AddBookmarkDialog(Shell parentShell, String dialogTitle, String dialogMessage, String initialValue,
 			IInputValidator validator, boolean alwaysEnabled) {
 		super(parentShell, dialogTitle, dialogMessage, initialValue, validator, alwaysEnabled);
 	}
-	
+
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
 		CLink link = new CLink(area, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		link.setText(Messages.AddBookmarkDialog_show_bookmark_view);
-		link.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				UiUtilities.showView(BookmarkView.ID);
-			}
-		});
+		link.addListener(SWT.Selection, this);
 		return area;
 	}
 
+	@Override
+	public void handleEvent(Event event) {
+		UiUtilities.showView(BookmarkView.ID);
+	}
 }

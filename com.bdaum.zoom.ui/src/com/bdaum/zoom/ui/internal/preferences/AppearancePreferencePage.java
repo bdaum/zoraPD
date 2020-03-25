@@ -116,8 +116,6 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 			colorLabels[0] = "Windows"; //$NON-NLS-1$
 		else if (Platform.WS_GTK.equals(Platform.getWS()))
 			colorLabels[0] = "GTK"; //$NON-NLS-1$
-		else if (Platform.WS_MOTIF.equals(Platform.getWS()))
-			colorLabels[0] = "Motif"; //$NON-NLS-1$
 		else
 			colorLabels[0] = Messages.getString("AppearancePreferencePage.platform"); //$NON-NLS-1$
 		colorOptions[0] = PreferenceConstants.BACKGROUNDCOLOR_PLATFORM;
@@ -185,7 +183,7 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(1, false));
-		labelConfigGroup = new LabelConfigGroup(composite, false, true);
+		labelConfigGroup = new LabelConfigGroup(composite, false, true, false);
 		CGroup group = UiUtilities.createGroup(composite, 2, Messages.getString("AppearancePreferencePage.decoration")); // $NO //$NON-NLS-1$
 		new Label(group, SWT.NONE).setText(Messages.getString("AppearancePreferencePage.max_face_regions")); //$NON-NLS-1$
 		regionField = new Spinner(group, SWT.BORDER);
@@ -259,7 +257,7 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		labelConfigGroup.setSelection(preferenceStore.getInt(PreferenceConstants.SHOWLABEL),
 				preferenceStore.getString(PreferenceConstants.THUMBNAILTEMPLATE),
 				preferenceStore.getInt(PreferenceConstants.LABELFONTSIZE),
-				preferenceStore.getInt(PreferenceConstants.LABELALIGNMENT));
+				preferenceStore.getInt(PreferenceConstants.LABELALIGNMENT), false);
 		updateButtons();
 	}
 

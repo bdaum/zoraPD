@@ -32,7 +32,6 @@ import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.operations.CompoundOperation;
 import com.bdaum.zoom.operations.IProfiledOperation;
 import com.bdaum.zoom.operations.internal.AddAlbumOperation;
-import com.bdaum.zoom.operations.internal.AutoRatingOperation;
 import com.bdaum.zoom.operations.internal.ImportOperation;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -171,30 +170,30 @@ public class ImportFromDeviceWizard extends ZWizard implements IWorkbenchWizard,
 				compoundOperation.addOperation(op);
 				compoundOperation.addOperation(new AddAlbumOperation(collection, (ImportOperation) op));
 			}
-			String providerId;
-			String modelId;
-			boolean overwrite;
-			int maxRating;
-			if (lastPage instanceof ImportAddMetadataPage) {
-				ImportAddMetadataPage metadataPage = (ImportAddMetadataPage) lastPage;
-				providerId = metadataPage.getProviderId();
-				modelId = metadataPage.getModelId();
-				overwrite = metadataPage.getOverwrite();
-				maxRating = metadataPage.getMaxRating();
-			} else {
-				providerId = analogProps.providerId;
-				modelId = analogProps.modelId;
-				overwrite = analogProps.overwriteRating;
-				maxRating = analogProps.maxRating;
-			}
-			if (providerId != null) {
-				if (compoundOperation == null) {
-					compoundOperation = new CompoundOperation(op.getLabel());
-					compoundOperation.addOperation(op);
-				}
-				compoundOperation.addOperation(
-						new AutoRatingOperation((ImportOperation) op, providerId, modelId, overwrite, maxRating));
-			}
+//			String providerId;
+//			String modelId;
+//			boolean overwrite;
+//			int maxRating;
+//			if (lastPage instanceof ImportAddMetadataPage) {
+//				ImportAddMetadataPage metadataPage = (ImportAddMetadataPage) lastPage;
+//				providerId = metadataPage.getProviderId();
+//				modelId = metadataPage.getModelId();
+//				overwrite = metadataPage.getOverwrite();
+//				maxRating = metadataPage.getMaxRating();
+//			} else {
+//				providerId = analogProps.providerId;
+//				modelId = analogProps.modelId;s
+//				overwrite = analogProps.overwriteRating;
+//				maxRating = analogProps.maxRating;
+//			}
+//			if (providerId != null) {
+//				if (compoundOperation == null) {
+//					compoundOperation = new CompoundOperation(op.getLabel());
+//					compoundOperation.addOperation(op);
+//				}
+//				compoundOperation.addOperation(
+//						new AutoRatingOperation((ImportOperation) op, providerId, modelId, overwrite, maxRating));
+//			}
 			OperationJob.executeOperation(compoundOperation != null ? compoundOperation : op, this);
 		});
 		((WizardDialog) getContainer()).setErrorMessage(errorMessage);

@@ -26,11 +26,7 @@ import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.accessibility.AccessibleAdapter;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
@@ -151,10 +147,9 @@ public class PaintExample implements IAdaptable {
 		// item.setText(getResourceString(id + ".label"));
 		item.setToolTipText(getResourceString(id + ".tooltip")); //$NON-NLS-1$
 		item.setImage(tool.image);
-		item.addSelectionListener(new SelectionAdapter() {
-
+		item.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				tool.action.run();
 			}
 		});
@@ -255,7 +250,6 @@ public class PaintExample implements IAdaptable {
 		gridData.heightHint = 24;
 		paletteCanvas.setLayoutData(gridData);
 		paletteCanvas.addListener(SWT.MouseDown, new Listener() {
-
 			public void handleEvent(Event e) {
 				Rectangle bounds = paletteCanvas.getClientArea();
 				setForegroundColor(getColorAt(bounds, e.x, e.y));
@@ -311,9 +305,9 @@ public class PaintExample implements IAdaptable {
 		// airbrushRadiusScale.setLayoutData(new
 		// GridData(GridData.FILL_HORIZONTAL
 		// | GridData.VERTICAL_ALIGN_FILL));
-		airbrushRadiusScale.addSelectionListener(new SelectionAdapter() {
+		airbrushRadiusScale.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				setScaleToolTip(airbrushRadiusScale);
 				if (currentTool == Airbrush_tool)
 					toolSettings.airbrushRadius = airbrushRadiusScale.getSelection();
@@ -335,9 +329,9 @@ public class PaintExample implements IAdaptable {
 		data.widthHint = 90;
 		data.heightHint = 20;
 		opacityScale.setLayoutData(data);
-		opacityScale.addSelectionListener(new SelectionAdapter() {
+		opacityScale.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				setScaleToolTip(opacityScale);
 				if (currentTool == Airbrush_tool)
 					toolSettings.airbrushOpacity = opacityScale.getSelection();
@@ -361,9 +355,9 @@ public class PaintExample implements IAdaptable {
 		airbrushIntensityScale.setLayoutData(data);
 		// airbrushIntensityScale.setLayoutData(new GridData(
 		// GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_FILL));
-		airbrushIntensityScale.addSelectionListener(new SelectionAdapter() {
+		airbrushIntensityScale.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				setScaleToolTip(airbrushIntensityScale);
 				toolSettings.airbrushIntensity = airbrushIntensityScale.getSelection();
 				updateToolSettings();
@@ -373,9 +367,9 @@ public class PaintExample implements IAdaptable {
 	}
 
 	protected void addUndoKeyListener() {
-		paintCanvas.addKeyListener(new KeyAdapter() {
+		paintCanvas.addListener(SWT.KeyDown, new Listener() {
 			@Override
-			public void keyPressed(KeyEvent event) {
+			public void handleEvent(Event event) {
 				int modifiers = event.stateMask;
 				if ((modifiers & SWT.CTRL) != 0) {
 					int keyCode = event.keyCode;
@@ -422,10 +416,9 @@ public class PaintExample implements IAdaptable {
 		Button clearButton = new Button(toolbar, SWT.PUSH);
 		clearButton.setText(getResourceString("button.Clear.label")); //$NON-NLS-1$
 		clearButton.setToolTipText(getResourceString("button.Clear.tooltip")); //$NON-NLS-1$
-		clearButton.addSelectionListener(new SelectionAdapter() {
-
+		clearButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				Rectangle area = paintCanvas.getClientArea();
 				Color color = getToolSettings().commonForegroundColor;
 				SolidRectangleFigure rect = new SolidRectangleFigure(color, 0, 0, area.width, area.height);
@@ -436,10 +429,9 @@ public class PaintExample implements IAdaptable {
 		restoreButton = new Button(toolbar, SWT.PUSH);
 		restoreButton.setText(getResourceString("button.Restore.label")); //$NON-NLS-1$
 		restoreButton.setToolTipText(getResourceString("button.Restore.tooltip")); //$NON-NLS-1$
-		restoreButton.addSelectionListener(new SelectionAdapter() {
-
+		restoreButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				repaintSurface();
 			}
 		});
@@ -794,17 +786,19 @@ public class PaintExample implements IAdaptable {
 		return !vectorLayer.isEmpty();
 	}
 
-	public void addListener(Listener modifyListener) {
-		listeners.add(modifyListener);
+	public void addListener(int type, Listener modifyListener) {
+		if (type == SWT.Modify)
+			listeners.add(modifyListener);
 	}
 
-	public void removeMofifyListener(ModifyListener modifyListener) {
+	public void removeMofifyListener(int type, ModifyListener modifyListener) {
 		listeners.remove(modifyListener);
 	}
 
 	public void fireModify() {
 		Event e = new Event();
 		e.display = paintCanvas.getDisplay();
+		e.data = this;
 		e.widget = paintCanvas;
 		e.time = (int) System.currentTimeMillis();
 		e.type = SWT.Modify;

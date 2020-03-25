@@ -83,7 +83,6 @@ import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.AddBookmarkDialog;
-import com.bdaum.zoom.ui.internal.dialogs.AutomatedRatingDialog;
 import com.bdaum.zoom.ui.internal.dialogs.ColorCodeDialog;
 import com.bdaum.zoom.ui.internal.dialogs.PasteMetaDialog;
 import com.bdaum.zoom.ui.internal.dialogs.RatingDialog;
@@ -91,6 +90,7 @@ import com.bdaum.zoom.ui.internal.views.AbstractGalleryView;
 import com.bdaum.zoom.ui.internal.views.BasicView;
 import com.bdaum.zoom.ui.internal.views.BookmarkView;
 import com.bdaum.zoom.ui.internal.views.CatalogView;
+import com.bdaum.zoom.ui.internal.views.ImageView;
 import com.bdaum.zoom.ui.internal.views.LightboxView;
 import com.bdaum.zoom.ui.internal.views.SelectionActionClusterProvider;
 import com.bdaum.zoom.ui.internal.views.TableView;
@@ -340,14 +340,15 @@ public abstract class ZoomActionFactory {
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			IAction action = new Action(getLabel(), getImage()) {
-				@Override
-				public void run() {
+				public void runWithEvent(org.eclipse.swt.widgets.Event event) {
 					List<Asset> localAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
 					if (localAssets != null && !localAssets.isEmpty()) {
 						RatingDialog dialog = new RatingDialog(adaptable.getAdapter(Shell.class),
 								localAssets.get(0).getRating(), 0.7d, true, true);
 						dialog.create();
-						dialog.getShell().setLocation(adaptable.getAdapter(Control.class).toDisplay(0, 0));
+						ImageView iview = adaptable.getAdapter(ImageView.class);
+						dialog.getShell().setLocation(iview != null ? iview.getMouseDisplayPosition()
+								: adaptable.getAdapter(Control.class).toDisplay(event.x, event.y));
 						rate(localAssets, adaptable, dialog.open());
 					}
 				}
@@ -360,12 +361,15 @@ public abstract class ZoomActionFactory {
 	};
 
 	public static void rate(final List<Asset> assets, final IAdaptable adaptable, int rate) {
-		if (rate == RatingDialog.BYSERVICE) {
-			AutomatedRatingDialog dialog = new AutomatedRatingDialog(adaptable.getAdapter(Shell.class), assets);
-			dialog.create();
-			dialog.getShell().setLocation(adaptable.getAdapter(Control.class).toDisplay(20, 20));
-			dialog.open();
-		} else if (rate == RatingDialog.DELETE) {
+		// if (rate == RatingDialog.BYSERVICE) {
+		// AutomatedRatingDialog dialog = new
+		// AutomatedRatingDialog(adaptable.getAdapter(Shell.class), assets);
+		// dialog.create();
+		// dialog.getShell().setLocation(adaptable.getAdapter(Control.class).toDisplay(20,
+		// 20));
+		// dialog.open();
+		// } else
+		if (rate == RatingDialog.DELETE) {
 			DeleteAction action = new DeleteAction(DELETE.getLabel(), DELETE.getTooltip(), DELETE.getImage(),
 					new IAdaptable() {
 						@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -386,15 +390,16 @@ public abstract class ZoomActionFactory {
 		@Override
 		public IAction create(IActionBars bars, final IAdaptable adaptable) {
 			IAction action = new Action(getLabel(), getImage()) {
-
 				@Override
-				public void run() {
+				public void runWithEvent(org.eclipse.swt.widgets.Event event) {
 					List<Asset> localAssets = adaptable.getAdapter(AssetSelection.class).getLocalAssets();
 					if (localAssets != null && !localAssets.isEmpty()) {
 						ColorCodeDialog dialog = new ColorCodeDialog(adaptable.getAdapter(Shell.class),
 								localAssets.get(0).getColorCode());
 						dialog.create();
-						dialog.getShell().setLocation(adaptable.getAdapter(Control.class).toDisplay(0, 0));
+						ImageView iview = adaptable.getAdapter(ImageView.class);
+						dialog.getShell().setLocation(iview != null ? iview.getMouseDisplayPosition()
+								: adaptable.getAdapter(Control.class).toDisplay(event.x, event.y));
 						int code = dialog.open();
 						if (code >= Constants.COLOR_UNDEFINED)
 							OperationJob.executeOperation(new ColorCodeOperation(localAssets, code), adaptable);

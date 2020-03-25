@@ -35,7 +35,7 @@ public class EditImageAction extends EditWithAction {
 	}
 
 	protected void selectAndLaunchEditor(List<String> parms) {
-		if (lastEditor != null && lastEditor != MIXED) {
+		if (!shift && lastEditor != null && lastEditor != MIXED) {
 			EditorDescriptor editor = null;
 			if (lastEditor.startsWith(">")) { //$NON-NLS-1$
 				String pname = lastEditor.substring(1);
@@ -54,6 +54,6 @@ public class EditImageAction extends EditWithAction {
 	}
 
 	protected EditorDescriptor showDialog(final String ext) {
-		return defaultEditors.size() == 1 ? (EditorDescriptor) defaultEditors.toArray()[0] : super.showDialog(ext);
+		return !shift && defaultEditors.size() == 1 ? (EditorDescriptor) defaultEditors.toArray()[0] : super.showDialog(ext);
 	}
 }

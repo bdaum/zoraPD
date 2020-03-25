@@ -112,7 +112,7 @@ public class EditWallDialog extends ZTitleAreaDialog {
 		widthField.setIncrement(10);
 		widthField.setPageIncrement(100);
 		widthField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		widthField.addListener(listener);
+		widthField.addListener(SWT.Selection, listener);
 
 		new Label(parm, SWT.NONE).setText(Messages.EditWallDialog_height);
 		heightField = new NumericControl(parm, SWT.BORDER);
@@ -122,7 +122,7 @@ public class EditWallDialog extends ZTitleAreaDialog {
 		heightField.setIncrement(10);
 		heightField.setPageIncrement(100);
 		heightField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		heightField.addListener(listener);
+		heightField.addListener(SWT.Selection, listener);
 
 		selectColorGroup = new WebColorGroup(comp, Messages.EditWallDialog_wall_color);
 		initValues();

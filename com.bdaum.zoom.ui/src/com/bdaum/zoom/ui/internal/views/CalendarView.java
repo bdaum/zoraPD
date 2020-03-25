@@ -34,6 +34,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -41,12 +42,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseMoveListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
@@ -56,7 +51,9 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -84,12 +81,12 @@ import com.bdaum.zoom.ui.internal.hover.IGalleryHover;
 import com.bdaum.zoom.ui.internal.hover.IHoverInfo;
 
 @SuppressWarnings("restriction")
-public class CalendarView extends BasicView implements PaintListener, MouseListener, MouseMoveListener {
+public class CalendarView extends BasicView {
 
 	public class CalendarHover implements IGalleryHover {
 
 		@Override
-		public IHoverInfo getHoverInfo(IHoverSubject subject, MouseEvent event) {
+		public IHoverInfo getHoverInfo(IHoverSubject subject, Event event) {
 			if (event.widget instanceof Canvas) {
 				Rectangle clientArea = ((Canvas) event.widget).getClientArea();
 				if (event.x >= clientArea.x && event.x < clientArea.x + clientArea.width && event.y > clientArea.y
@@ -220,8 +217,9 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 	private Rectangle dayRect = new Rectangle(0, 0, 0, 0);
 	private Rectangle weekRect = new Rectangle(0, 0, 0, 0);
 	private int size, yoff, wxo, coff, pending = -1;
-	private Timer timer;
+	private Timer timer = new Timer();
 	private Point mouseDown;
+	private TimerTask task;
 
 	@Override
 	public ISelection getSelection() {
@@ -245,7 +243,7 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 
 	@Override
 	public void assetsChanged(IWorkbenchPart part, AssetSelection selectedAssets) {
-		for (Asset asset : selectedAssets) {
+		for (Asset asset : selectedAssets.getAssets()) {
 			Date dateCreated = asset.getDateCreated();
 			if (dateCreated != null) {
 				setCurrentCal(dateCreated);
@@ -320,7 +318,7 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 	@Override
 	public void createPartControl(Composite parent) {
 		canvas = new Canvas(parent, SWT.DOUBLE_BUFFERED);
-		canvas.addPaintListener(this);
+		canvas.addListener(SWT.Paint, this);
 		installListeners();
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(canvas, HelpContextIds.CALENDAR_VIEW);
 		makeActions();
@@ -340,16 +338,17 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 	}
 
 	@Override
-	public IGalleryHover getGalleryHover(MouseEvent event) {
+	public IGalleryHover getGalleryHover(Event event) {
 		return new CalendarHover();
 	}
 
 	@Override
 	protected void installListeners() {
 		super.installListeners();
-		canvas.addMouseListener(this);
-		canvas.addMouseMoveListener(this);
-		canvas.addKeyListener(this);
+		canvas.addListener(SWT.MouseDown, this);
+		canvas.addListener(SWT.MouseUp, this);
+		canvas.addListener(SWT.MouseMove, this);
+		canvas.addListener(SWT.KeyUp, this);
 		Ui.getUi().getNavigationHistory(getSite().getWorkbenchWindow()).addSelectionListener(this);
 	}
 
@@ -357,9 +356,10 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 	protected void uninstallListeners() {
 		super.uninstallListeners();
 		if (!canvas.isDisposed()) {
-			canvas.removeMouseListener(this);
-			canvas.removeMouseMoveListener(this);
-			canvas.removeKeyListener(this);
+			canvas.removeListener(SWT.MouseDown, this);
+			canvas.removeListener(SWT.MouseUp, this);
+			canvas.removeListener(SWT.MouseMove, this);
+			canvas.removeListener(SWT.KeyUp, this);
 		}
 		Ui.getUi().getNavigationHistory(getSite().getWorkbenchWindow()).removeSelectionListener(this);
 	}
@@ -370,11 +370,12 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 		fillLocalToolBar(bars.getToolBarManager());
 	}
 
-	private void fillLocalToolBar(IToolBarManager toolBarManager) {
-		toolBarManager.add(nextMonthAction);
-		toolBarManager.add(previousMonthAction);
-		toolBarManager.add(nextYearAction);
-		toolBarManager.add(previousYearAction);
+	private void fillLocalToolBar(IToolBarManager manager) {
+		manager.add(nextMonthAction);
+		manager.add(previousMonthAction);
+		manager.add(nextYearAction);
+		manager.add(previousYearAction);
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	private void fillLocalPullDown(IMenuManager menuManager) {
@@ -415,8 +416,7 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 		nextYearAction.setEnabled(workingCal.before(maxDate));
 	}
 
-	@Override
-	public void paintControl(PaintEvent e) {
+	private void paintControl(Event e) {
 		Rectangle clientArea = canvas.getClientArea();
 		int h = clientArea.height / 6;
 		int ww = h / 5;
@@ -517,30 +517,56 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 	}
 
 	@Override
-	public void mouseDoubleClick(MouseEvent e) {
-		// not used
-	}
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.MouseDown:
+			mouseDown = new Point(e.x, e.y);
+			break;
+		case SWT.MouseUp:
+			if (mouseDown != null) {
+				boolean gesture = processGesture(e.x - mouseDown.x, e.y - mouseDown.y);
+				mouseDown = null;
+				if (gesture)
+					return;
+			}
+			if (titleRect.contains(e.x, e.y))
+				showMonth();
+			else if (weekRect.contains(e.x, e.y))
+				showWeek(((e.y - yoff) / size));
+			else if (dayRect.contains(e.x, e.y))
+				showDay(((e.y - yoff) / size) * 7 + (e.x - wxo) / size - coff);
 
-	@Override
-	public void mouseDown(MouseEvent e) {
-		mouseDown = new Point(e.x, e.y);
-	}
-
-	@Override
-	public void mouseUp(MouseEvent e) {
-		if (mouseDown != null) {
-			boolean gesture = processGesture(e.x - mouseDown.x, e.y - mouseDown.y);
-			mouseDown = null;
-			if (gesture)
-				return;
+			break;
+		case SWT.MouseMove:
+			if (titleRect.contains(e.x, e.y)) {
+				for (int day = 0; day < daysInMonth; day++)
+					if (calendarAssets[day] != null) {
+						canvas.setCursor(e.display.getSystemCursor(SWT.CURSOR_HAND));
+						return;
+					}
+			} else if (dayRect.contains(e.x, e.y)) {
+				int day = ((e.y - yoff) / size) * 7 + (e.x - wxo) / size - coff;
+				if (day >= 0 && day < daysInMonth && calendarAssets[day] != null) {
+					canvas.setCursor(e.display.getSystemCursor(SWT.CURSOR_HAND));
+					return;
+				}
+			} else if (weekRect.contains(e.x, e.y)) {
+				int week = ((e.y - yoff) / size);
+				for (int i = 0; i < 7; i++) {
+					int day = week * 7 + i - coff;
+					if (day >= 0 && day < daysInMonth && calendarAssets[day] != null) {
+						canvas.setCursor(e.display.getSystemCursor(SWT.CURSOR_HAND));
+						return;
+					}
+				}
+			}
+			canvas.setCursor(e.display.getSystemCursor(SWT.CURSOR_ARROW));
+			break;
+		case SWT.Paint:
+			paintControl(e);
+			break;
 		}
-		if (titleRect.contains(e.x, e.y))
-			showMonth();
-		else if (weekRect.contains(e.x, e.y))
-			showWeek(((e.y - yoff) / size));
-		else if (dayRect.contains(e.x, e.y))
-			showDay(((e.y - yoff) / size) * 7 + (e.x - wxo) / size - coff);
-
+		super.handleEvent(e);
 	}
 
 	private boolean processGesture(int difx, int dify) {
@@ -632,7 +658,7 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 	}
 
 	@Override
-	public void keyReleased(KeyEvent e) {
+	protected void onKeyUp(Event e) {
 		switch (e.keyCode) {
 		case SWT.ARROW_RIGHT:
 			nextMonthAction.run();
@@ -675,8 +701,9 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 				if (pending < 0) {
 					if (c >= '1' && c <= '3') {
 						pending = c - '0';
-						timer = new Timer();
-						timer.schedule(new TimerTask() {
+						if (task != null)
+							task.cancel();
+						task = new TimerTask() {
 							@Override
 							public void run() {
 								if (!canvas.isDisposed())
@@ -686,7 +713,8 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 									});
 								timer = null;
 							}
-						}, 800L);
+						};
+						timer.schedule(task, 800L);
 					} else if (c != '0')
 						showDay(c - '0');
 				} else
@@ -722,33 +750,6 @@ public class CalendarView extends BasicView implements PaintListener, MouseListe
 			} catch (PartInitException e) {
 				// ignore
 			}
-	}
-
-	@Override
-	public void mouseMove(MouseEvent e) {
-		if (titleRect.contains(e.x, e.y)) {
-			for (int day = 0; day < daysInMonth; day++)
-				if (calendarAssets[day] != null) {
-					canvas.setCursor(e.display.getSystemCursor(SWT.CURSOR_HAND));
-					return;
-				}
-		} else if (dayRect.contains(e.x, e.y)) {
-			int day = ((e.y - yoff) / size) * 7 + (e.x - wxo) / size - coff;
-			if (day >= 0 && day < daysInMonth && calendarAssets[day] != null) {
-				canvas.setCursor(e.display.getSystemCursor(SWT.CURSOR_HAND));
-				return;
-			}
-		} else if (weekRect.contains(e.x, e.y)) {
-			int week = ((e.y - yoff) / size);
-			for (int i = 0; i < 7; i++) {
-				int day = week * 7 + i - coff;
-				if (day >= 0 && day < daysInMonth && calendarAssets[day] != null) {
-					canvas.setCursor(e.display.getSystemCursor(SWT.CURSOR_HAND));
-					return;
-				}
-			}
-		}
-		canvas.setCursor(e.display.getSystemCursor(SWT.CURSOR_ARROW));
 	}
 
 }

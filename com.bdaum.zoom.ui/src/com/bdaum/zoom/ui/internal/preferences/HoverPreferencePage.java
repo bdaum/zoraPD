@@ -56,13 +56,14 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.dialogs.PreferencesUtil;
 
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
-import com.bdaum.zoom.ui.internal.TemplateProcessor;
 import com.bdaum.zoom.ui.internal.FieldDescriptor;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
+import com.bdaum.zoom.ui.internal.TemplateProcessor;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.AddVariablesDialog;
@@ -73,6 +74,7 @@ import com.bdaum.zoom.ui.internal.views.ZColumnViewerToolTipSupport;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.widgets.CGroup;
+import com.bdaum.zoom.ui.widgets.CLink;
 
 public class HoverPreferencePage extends AbstractPreferencePage
 		implements IDoubleClickListener, Listener, ISelectionChangedListener {
@@ -363,6 +365,7 @@ public class HoverPreferencePage extends AbstractPreferencePage
 	private Spinner baseTimeField;
 	private Spinner charTimeField;
 	private Spinner delayTimeField;
+	private CLink clink;
 
 	public HoverPreferencePage() {
 		super();
@@ -420,7 +423,6 @@ public class HoverPreferencePage extends AbstractPreferencePage
 		charTimeField.setMinimum(1);
 		charTimeField.setIncrement(1);
 		charTimeField.setPageIncrement(1);
-
 		return comp;
 	}
 
@@ -506,6 +508,9 @@ public class HoverPreferencePage extends AbstractPreferencePage
 		resetButton = new Button(buttonArea, SWT.PUSH);
 		resetButton.setText(Messages.getString("HoverPreferencePage.reset")); //$NON-NLS-1$
 		resetButton.addListener(SWT.Selection, this);
+		clink = new CLink(comp, SWT.NONE);
+		clink.setText(Messages.getString("HoverPreferencePage.select_hover_metadata")); //$NON-NLS-1$
+		clink.addListener(SWT.Selection, this);
 		return comp;
 	}
 
@@ -569,7 +574,8 @@ public class HoverPreferencePage extends AbstractPreferencePage
 			else if (el instanceof Category)
 				for (HoverNode node : ((Category) el).getChildren())
 					resetNode(node);
-		}
+		} else if (event.widget == clink)
+			PreferencesUtil.createPreferenceDialogOn(getShell(), MetadataPreferencePage.ID, null, "hover"); //$NON-NLS-1$
 	}
 
 	private void resetNode(Object el) {

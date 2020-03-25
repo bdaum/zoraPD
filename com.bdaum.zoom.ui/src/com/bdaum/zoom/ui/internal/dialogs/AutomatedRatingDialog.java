@@ -172,8 +172,8 @@ public class AutomatedRatingDialog extends ZTitleAreaDialog {
 			String selectedModel = (String) modelViewer.getStructuredSelection().getFirstElement();
 			if (selectedModel == null)
 				selectedModel = settings.get(MODEL);
-			modelIds = aiService.getRatingModelIds(selectedProvider);
-			modelLabels = aiService.getRatingModelLabels(selectedProvider);
+//			modelIds = aiService.getRatingModelIds(selectedProvider);
+//			modelLabels = aiService.getRatingModelLabels(selectedProvider);
 			modelViewer.setInput(modelIds);
 			if (selectedModel != null)
 				modelViewer.setSelection(new StructuredSelection(selectedModel));

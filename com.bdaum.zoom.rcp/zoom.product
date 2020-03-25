@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="%appName" uid="com.bdaum.zoom.rcp.product" id="com.bdaum.zoom.rcp.product" application="com.bdaum.zoom.rcp.application" version="3.6.0" useFeatures="true" includeLaunchers="true">
+<product name="%appName" uid="com.bdaum.zoom.rcp.product" id="com.bdaum.zoom.rcp.product" application="com.bdaum.zoom.rcp.application" version="3.6.1" useFeatures="true" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/com.bdaum.zoom.rcp/about.gif"/>
@@ -13,17 +13,24 @@
    <configIni use="default">
       <linux>/com.bdaum.zoom.rcp/config.ini</linux>
       <macosx>/com.bdaum.zoom.rcp/config.ini</macosx>
-      <win32>config.ini</win32>
+      <win32>/com.bdaum.zoom.rcp/config.ini</win32>
    </configIni>
 
    <launcherArgs>
       <programArgsLin>--launcher.GTK_version
 2
       </programArgsLin>
+      <vmArgs>-client
+      </vmArgs>
+      <vmArgsLin>-Xshareclasses
+         <argsX86_64>-Xshareclasses</argsX86_64>
+      </vmArgsLin>
       <vmArgsMac>-XstartOnFirstThread
 -Djava.awt.headless=true
 -Dorg.eclipse.swt.internal.carbon.smallFonts
       </vmArgsMac>
+      <vmArgsWin>-Xshareclasses
+      </vmArgsWin>
    </launcherArgs>
 
    <windowImages i16="/com.bdaum.zoom.rcp/zora16.png" i32="/com.bdaum.zoom.rcp/zora32.png" i48="/com.bdaum.zoom.rcp/zora48.png" i64="/com.bdaum.zoom.rcp/zora64.png" i128="/com.bdaum.zoom.rcp/zora128.png" i256="/com.bdaum.zoom.rcp/zora256.png"/>
@@ -171,21 +178,21 @@
    </plugins>
 
    <features>
-      <feature id="com.bdaum.zora.FEATURE" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.linux_gtk_x86" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.linux_gtk_x64" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.macosx_cocoa_x64" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.win32_x86" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.win32_x64" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.advancedSearch" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.geo" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.peer" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.spell" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.ai" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.raw" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.report" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.video" version="3.6.0"/>
-      <feature id="com.bdaum.zora.FEATURE.webserver" version="3.6.0"/>
+      <feature id="com.bdaum.zora.FEATURE" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.linux_gtk_x86" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.linux_gtk_x64" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.macosx_cocoa_x64" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.win32_x86" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.win32_x64" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.advancedSearch" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.geo" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.peer" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.spell" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.ai" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.raw" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.report" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.video" version="3.6.1"/>
+      <feature id="com.bdaum.zora.FEATURE.webserver" version="3.6.1"/>
    </features>
 
    <configurations>

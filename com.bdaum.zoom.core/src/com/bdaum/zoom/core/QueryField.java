@@ -1664,7 +1664,7 @@ public class QueryField {
 			return "bcps"; //$NON-NLS-1$
 		}
 	};
-	public static final QueryField EXIF_FLASHEXPOSURECOMP = new QueryField(EXIF_FLASH, "0f", //$NON-NLS-1$
+	public static final QueryField EXIF_FLASHEXPOSURECOMP = new QueryField(EXIF_FLASH, "flashExposureComp", //$NON-NLS-1$
 			"FlashCompensation", //$NON-NLS-1$
 			NS_EXIF, "FlashExposureComp", //$NON-NLS-1$
 			Messages.QueryField_Flash_exposure_compensation, ACTION_QUERY,
@@ -4078,7 +4078,7 @@ public class QueryField {
 			}
 	}
 
-	public String getSetAccessor(String fname) {
+	public static String getSetAccessor(String fname) {
 		char[] chars = new char[fname.length() + 3];
 		fname.getChars(0, fname.length(), chars, 3);
 		chars[0] = 's';
@@ -4088,7 +4088,7 @@ public class QueryField {
 		return new String(chars);
 	}
 
-	public String getGetAccessor(String fname) {
+	public static String getGetAccessor(String fname) {
 		char[] chars = new char[fname.length() + 3];
 		fname.getChars(0, fname.length(), chars, 3);
 		chars[0] = 'g';

@@ -30,18 +30,17 @@ import org.eclipse.swt.widgets.Shell;
 import com.bdaum.zoom.gps.internal.GpsActivator;
 
 public class GeotagAction extends GeonameAction {
-	
+
 	public GeotagAction() {
 		setImageDescriptor(
 				GpsActivator.imageDescriptorFromPlugin(GpsActivator.PLUGIN_ID, "/icons/gps.gif")); //$NON-NLS-1$
 	}
 
-
 	@Override
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(true);
 	}
-	
+
 	@Override
 	public void run() {
 		final Shell shell = adaptable.getAdapter(Shell.class);

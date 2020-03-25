@@ -15,10 +15,6 @@ package org.eclipse.ui.internal.views.log;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -38,7 +34,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
-public class FilterDialog extends ZTrayDialog {
+public class FilterDialog extends ZTrayDialog implements Listener{
 
 	Button okButton;
 
@@ -107,34 +103,35 @@ public class FilterDialog extends ZTrayDialog {
 
 		limit =  WidgetFactory.createCheckButton(comp, Messages.LogView_FilterDialog_limitTo, new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
 		limit.setSelection(memento.getString(LogView.P_USE_LIMIT).equals("true")); //$NON-NLS-1$
-		limit.addListener(new Listener() {
-			public void handleEvent(Event event) {
-				limitText.setEnabled(((Button) event.widget).getSelection());
-			}
-		});
+		limit.addListener(SWT.Selection, this);
 		limitText = new Text(comp, SWT.BORDER);
-		limitText.addVerifyListener(new VerifyListener() {
-			public void verifyText(VerifyEvent e) {
-				if (Character.isLetter(e.character)) {
-					e.doit = false;
-				}
-			}
-		});
-		limitText.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				try {
-					if (okButton == null)
-						return;
-					Integer.parseInt(limitText.getText());
-					okButton.setEnabled(true);
-				} catch (NumberFormatException e1) {
-					okButton.setEnabled(false);
-				}
-			}
-		});
+		limitText.addListener(SWT.Verify, this);
+		limitText.addListener(SWT.Modify, this);
 		limitText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		limitText.setText(memento.getString(LogView.P_LOG_LIMIT));
 		limitText.setEnabled(limit.getSelection());
+	}
+	
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			limitText.setEnabled(((Button) e.widget).getSelection());
+			break;
+		case SWT.Verify:
+			if (Character.isLetter(e.character))
+				e.doit = false;
+			break;
+		case SWT.Modify:
+			try {
+				if (okButton == null)
+					return;
+				Integer.parseInt(limitText.getText());
+				okButton.setEnabled(true);
+			} catch (NumberFormatException e1) {
+				okButton.setEnabled(false);
+			}
+			break;
+		}
 	}
 
 	private void createSessionSection(Composite parent) {
@@ -150,11 +147,10 @@ public class FilterDialog extends ZTrayDialog {
 		layoutData.horizontalIndent = 20;
 		sessionButtonGroup.setLayoutData(layoutData);
 
-		if (memento.getString(LogView.P_SHOW_ALL_SESSIONS).equals("true")) { //$NON-NLS-1$
+		if (memento.getString(LogView.P_SHOW_ALL_SESSIONS).equals("true")) //$NON-NLS-1$
 			sessionButtonGroup.setSelection(0);
-		} else {
+		else
 			sessionButtonGroup.setSelection(1);
-		}
 	}
 
 	protected void createButtonsForButtonBar(Composite parent) {

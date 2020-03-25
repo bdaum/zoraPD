@@ -259,7 +259,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 			Composite findComp = new Composite(generalComp, SWT.NONE);
 			findComp.setLayout(new GridLayout());
 			findWithinGroup = new FindWithinGroup(findComp);
-			findWithinGroup.addListener(new Listener() {
+			findWithinGroup.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
 					collectionEditGroup.prepare(findWithinGroup.getParentCollection());
@@ -273,7 +273,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 			findInNetworkGroup = new FindInNetworkGroup(netComp);
 			if (current != null)
 				findInNetworkGroup.setSelection(current.getNetwork());
-			findInNetworkGroup.addListener(new Listener() {
+			findInNetworkGroup.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
 					collectionEditGroup.setNetworked(findInNetworkGroup.getSelection());
@@ -287,12 +287,12 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		Composite apperanceComp = new Composite(parent, SWT.NONE);
 		apperanceComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		apperanceComp.setLayout(new GridLayout(1, false));
-		labelConfigGroup = new LabelConfigGroup(apperanceComp, true, true);
-		labelConfigGroup.addListener(this);
+		labelConfigGroup = new LabelConfigGroup(apperanceComp, true, true, false);
+		labelConfigGroup.addListener(SWT.Modify, this);
 		if (current != null)
-			labelConfigGroup.setSelection(current.getShowLabel(), current.getLabelTemplate(), current.getFontSize(), current.getAlignment());
+			labelConfigGroup.setSelection(current.getShowLabel(), current.getLabelTemplate(), current.getFontSize(), current.getAlignment(), false);
 		else
-			labelConfigGroup.setSelection(Constants.TITLE_LABEL, "", 8, 1); //$NON-NLS-1$
+			labelConfigGroup.setSelection(Constants.TITLE_LABEL, "", 8, 1, false); //$NON-NLS-1$
 		return apperanceComp;
 	}
 
@@ -305,7 +305,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		critComp.setLayout(new GridLayout(1, false));
 
 		collectionEditGroup = new CollectionEditGroup(critComp, current, album, readonly, findInNetwork(), this);
-		collectionEditGroup.addListener(this);
+		collectionEditGroup.addListener(SWT.Modify, this);
 		return queryComp;
 	}
 

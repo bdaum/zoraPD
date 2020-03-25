@@ -26,8 +26,6 @@ import java.util.TimerTask;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -52,12 +50,12 @@ import com.bdaum.zoom.ui.widgets.NumericControl;
 import com.microsoft.projectoxford.vision.VisionServiceRestClient;
 
 @SuppressWarnings("restriction")
-public class PagePart extends AbstractPreferencePagePart implements ModifyListener {
+public class PagePart extends AbstractPreferencePagePart implements Listener {
 
 	private Text keyField;
 	private NumericControl conceptField;
 	private NumericControl confidenceField;
-	private Timer timer;
+	private Timer timer = new Timer();
 	private AiPreferencePage parentPage;
 	private CheckboxButton adultButton;
 	private CheckboxButton faceButton;
@@ -68,6 +66,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 	private CheckboxButton translateDescriptionButton;
 	private NumericControl aboveField;
 	private CheckboxButton knownButton;
+	private TimerTask task;
 
 	@SuppressWarnings("unused")
 	@Override
@@ -79,30 +78,18 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		((GridLayout) composite.getLayout()).verticalSpacing = 0;
 		new Label(composite, SWT.NONE).setText("Microsoft Computer Vision API"); //$NON-NLS-1$
 		new Label(composite, SWT.NONE);
-		CGroup eGroup =UiUtilities.createGroup(composite, 2, Messages.PagePart_account_credentials);
+		CGroup eGroup = UiUtilities.createGroup(composite, 2, Messages.PagePart_account_credentials);
 		new Label(eGroup, SWT.NONE).setText(Messages.PagePart_key1_or_key2);
 		keyField = new Text(eGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		keyField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		keyField.addModifyListener(this);
+		keyField.addListener(SWT.Modify, this);
 		new Label(eGroup, SWT.NONE).setText(Messages.PagePart_status);
 		statusField = new Label(eGroup, SWT.WRAP);
 		statusField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		CLink link = new CLink(eGroup, SWT.NONE);
 		link.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		link.setText(Messages.PagePart_visit_account);
-		link.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				String url = System.getProperty("com.bdaum.zoom.msVision"); //$NON-NLS-1$
-				try {
-					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(url));
-				} catch (PartInitException e1) {
-					// do nothing
-				} catch (MalformedURLException e1) {
-					// should never happen
-				}
-			}
-		});
+		link.addListener(SWT.Selection, this);
 		CGroup tGroup = UiUtilities.createGroup(composite, 2, Messages.PagePart_usage);
 		new Label(tGroup, SWT.NONE).setText(Messages.PagePart_max_proposals);
 		conceptField = new NumericControl(tGroup, SWT.BORDER);
@@ -133,12 +120,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 				Messages.PagePart_celebs_tooltip);
 		descriptionButton = WidgetFactory.createCheckButton(buttonArea1, Messages.PagePart_description, null,
 				Messages.PagePart_description_tooltip);
-		descriptionButton.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateButtons();
-			}
-		});
+		descriptionButton.addListener(SWT.Selection, this);
 		Label sep = new Label(tGroup, SWT.SEPARATOR | SWT.HORIZONTAL);
 		sep.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		Composite buttonArea2 = new Composite(tGroup, SWT.NONE);
@@ -151,11 +133,33 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		return composite;
 	}
 
-	protected void verifyAccountCredenials(int time) {
-		disposeTimer();
-		timer = new Timer();
-		timer.schedule(new TimerTask() {
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			if (e.widget == descriptionButton)
+				updateButtons();
+			else {
+				String url = System.getProperty("com.bdaum.zoom.msVision"); //$NON-NLS-1$
+				try {
+					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(url));
+				} catch (PartInitException e1) {
+					// do nothing
+				} catch (MalformedURLException e1) {
+					// should never happen
+				}
+			}
+			break;
+		case SWT.Modify:
+			if (enabled)
+				checkCredentials(parentPage);
+			break;
+		}
+	}
 
+	protected void verifyAccountCredenials(int time) {
+		disposeTimerTask();
+		task = new TimerTask() {
 			@Override
 			public void run() {
 				String msg;
@@ -179,19 +183,20 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 						}
 					});
 			}
-		}, time);
+		};
+		timer.schedule(task, time);
 	}
 
-	private void disposeTimer() {
-		if (timer != null) {
-			timer.cancel();
-			timer = null;
+	private void disposeTimerTask() {
+		if (task != null) {
+			task.cancel();
+			task = null;
 		}
 	}
 
 	@Override
 	public void fillValues() {
-		keyField.removeModifyListener(this);
+		keyField.removeListener(SWT.Modify, this);
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		keyField.setText(preferenceStore.getString(PreferenceConstants.KEY));
 		conceptField.setSelection(preferenceStore.getInt(PreferenceConstants.MAXCONCEPTS));
@@ -208,7 +213,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		MsVisionActivator activator = MsVisionActivator.getDefault();
 		activator.setAccountCredentials(keyField.getText().trim());
 		verifyAccountCredenials(100);
-		keyField.addModifyListener(this);
+		keyField.addListener(SWT.Modify, this);
 		updateButtons();
 	}
 
@@ -241,7 +246,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 
 	@Override
 	public void performOk() {
-		disposeTimer();
+		disposeTimerTask();
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		preferenceStore.setValue(PreferenceConstants.KEY, keyField.getText());
 		preferenceStore.setValue(PreferenceConstants.MAXCONCEPTS, conceptField.getSelection());
@@ -252,9 +257,12 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 		preferenceStore.setValue(PreferenceConstants.FACES, faceButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.CELEBRITIES, celebrityButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.DESCRIPTION, descriptionButton.getSelection());
-		preferenceStore.setValue(PreferenceConstants.TRANSLATE_CATEGORIES, translateCatButton.isEnabled() && translateCatButton.getSelection());
-		preferenceStore.setValue(PreferenceConstants.TRANSLATE_DESCRIPTION, translateDescriptionButton.isEnabled() && translateDescriptionButton.getSelection());
-		preferenceStore.setValue(PreferenceConstants.TRANSLATE_TAGS, translateTagButton.isEnabled() && translateTagButton.getSelection());
+		preferenceStore.setValue(PreferenceConstants.TRANSLATE_CATEGORIES,
+				translateCatButton.isEnabled() && translateCatButton.getSelection());
+		preferenceStore.setValue(PreferenceConstants.TRANSLATE_DESCRIPTION,
+				translateDescriptionButton.isEnabled() && translateDescriptionButton.getSelection());
+		preferenceStore.setValue(PreferenceConstants.TRANSLATE_TAGS,
+				translateTagButton.isEnabled() && translateTagButton.getSelection());
 	}
 
 	@Override
@@ -296,7 +304,7 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 
 	@Override
 	public void performCancel() {
-		disposeTimer();
+		disposeTimerTask();
 	}
 
 	protected void checkCredentials(AbstractPreferencePage parentPage) {
@@ -311,12 +319,6 @@ public class PagePart extends AbstractPreferencePagePart implements ModifyListen
 			MsVisionActivator.getDefault().setAccountCredentials(key);
 			verifyAccountCredenials(500);
 		}
-	}
-
-	@Override
-	public void modifyText(ModifyEvent e) {
-		if (enabled)
-			checkCredentials(parentPage);
 	}
 
 }

@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2005 Aetrion LLC.
- */
+
 package com.flickr4java.flickr.photosets;
 
 import com.flickr4java.flickr.Flickr;
@@ -15,8 +13,8 @@ import com.flickr4java.flickr.photos.PhotoList;
 import com.flickr4java.flickr.photos.PhotoUtils;
 import com.flickr4java.flickr.util.StringUtilities;
 import com.flickr4java.flickr.util.XMLUtilities;
-
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -35,7 +33,7 @@ import java.util.Set;
  */
 public class PhotosetsInterface {
 
-    private static Logger _log = Logger.getLogger(PhotosetsInterface.class);
+    private static Logger _log = LoggerFactory.getLogger(PhotosetsInterface.class);
 
     public static final String METHOD_ADD_PHOTO = "flickr.photosets.addPhoto";
 

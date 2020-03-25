@@ -112,10 +112,10 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 			composite.setLayout(new GridLayout(2, false));
 			new Label(composite, SWT.NONE).setText(Messages.TrackpointDialog_start);
 			startField = new DateInput(composite, SWT.DATE | SWT.TIME | SWT.MEDIUM);
-			startField.addListener(this);
+			startField.addListener(SWT.Selection, this);
 			new Label(composite, SWT.NONE).setText(Messages.TrackpointDialog_end);
 			endField = new DateInput(composite, SWT.DATE | SWT.TIME | SWT.MEDIUM);
-			endField.addListener(this);
+			endField.addListener(SWT.Selection, this);
 			return area;
 		}
 

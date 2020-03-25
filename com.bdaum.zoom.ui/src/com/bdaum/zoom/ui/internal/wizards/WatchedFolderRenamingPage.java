@@ -12,7 +12,7 @@ import com.bdaum.zoom.ui.internal.dialogs.RenamingTemplate;
 import com.bdaum.zoom.ui.internal.widgets.RenameGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
-public class WatchedFolderRenamingPage extends ColoredWizardPage {
+public class WatchedFolderRenamingPage extends ColoredWizardPage implements Listener {
 
 	private RenameGroup renameGroup;
 	private final WatchedFolderImpl watchedFolder;
@@ -37,18 +37,18 @@ public class WatchedFolderRenamingPage extends ColoredWizardPage {
 								Constants.TV_FILENAME + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
 						new RenamingTemplate(Messages.ImportRenamingPage_orig_filename, Constants.TV_FILENAME, true) },
 				Constants.TV_TRANSFER);
-		renameGroup.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				validatePage();
-			}
-		});
+		renameGroup.addListener(SWT.Modify, this);
 		setControl(renameGroup);
 		setHelp(HelpContextIds.IMPORT_NEW_STRUCTURE_WIZARD_RENAMING);
 		setTitle(getName());
 		setMessage(Messages.ImportRenamingPage_select_a_template);
 		super.createControl(parent);
 		fillValues();
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		validatePage();
 	}
 
 	private void fillValues() {

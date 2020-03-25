@@ -65,7 +65,6 @@ import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -82,6 +81,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IPartListener2;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.PlatformUI;
@@ -642,9 +642,10 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 		fillLocalToolBar(bars.getToolBarManager());
 	}
 
-	private void fillLocalToolBar(IToolBarManager toolBarManager) {
-		toolBarManager.add(gotoBookmarkAction);
-		toolBarManager.add(deleteAction);
+	private void fillLocalToolBar(IToolBarManager manager) {
+		manager.add(gotoBookmarkAction);
+		manager.add(deleteAction);
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	private void fillLocalPullDown(IMenuManager menuManager) {
@@ -749,7 +750,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 		return viewer.getControl();
 	}
 
-	public Object findObject(MouseEvent e) {
+	public Object findObject(Event e) {
 		return findObject(e.x, e.y);
 	}
 

@@ -44,9 +44,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Rectangle;
@@ -57,6 +55,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolItem;
@@ -64,6 +63,7 @@ import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchCommandConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.actions.ActionFactory;
@@ -255,7 +255,7 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 	}
 
 	@Override
-	public void keyReleased(KeyEvent e) {
+	protected void onKeyUp(Event e) {
 		switch (e.character) {
 		case '+':
 			if (scaleContributionItem != null)
@@ -266,7 +266,7 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 				scaleContributionItem.decrement();
 			return;
 		}
-		super.keyReleased(e);
+		super.onKeyUp(e);
 	}
 
 	@Override
@@ -320,11 +320,9 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 									parent.getName()) : Messages.getString("AbstractGalleryView.save_as_collection"), //$NON-NLS-1$
 							Messages.getString("AbstractGalleryView.collection_name"), currentCollection.getName(), //$NON-NLS-1$
 							new IInputValidator() {
-
 								public String isValid(String newText) {
-									if (newText != null && !newText.isEmpty())
-										return null;
-									return Messages.getString("AbstractGalleryView.please_specify_a_name"); //$NON-NLS-1$
+									return (newText != null && !newText.isEmpty()) ? null
+											: Messages.getString("AbstractGalleryView.please_specify_a_name"); //$NON-NLS-1$
 								}
 							}, false);
 					if (dialog.open() == Window.OK) {
@@ -429,20 +427,18 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 
 		selectColorCodeAction = new Action(Messages.getString("AbstractGalleryView.indepent_of_color_code"), //$NON-NLS-1$
 				Icons.dashed.getDescriptor()) {
-
 			@Override
 			public void runWithEvent(Event event) {
 				IColorCodeFilter oldFilter = null;
 				IAssetFilter[] filters = getNavigationHistory().getFilters();
 				int colorCode = QueryField.SELECTALL;
 				if (filters != null)
-					for (IAssetFilter filter : filters) {
+					for (IAssetFilter filter : filters)
 						if (filter instanceof IColorCodeFilter) {
 							oldFilter = ((IColorCodeFilter) filter);
 							colorCode = oldFilter.getColorCode();
 							break;
 						}
-					}
 				ColorCodeDialog dialog = new ColorCodeDialog(getSite().getShell(), colorCode);
 				dialog.create();
 				Widget widget = event.widget;
@@ -509,7 +505,6 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 
 		selectFileTypeAction = new Action(Messages.getString("AbstractGalleryView.select_file_type"), //$NON-NLS-1$
 				Icons.format.getDescriptor()) {
-
 			@Override
 			public void runWithEvent(Event event) {
 				int formats = ITypeFilter.ALLFORMATS;
@@ -723,11 +718,10 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 		manager.add(viewImageAction);
 		manager.add(new Separator());
 		manager.add(editAction);
-		manager.add(editWithAction);
 		manager.add(new Separator());
 		manager.add(addBookmarkAction);
 		manager.add(saveQueryAction);
-		manager.add(new Separator());
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	protected IActionBars contributeToActionBars() {
@@ -1028,10 +1022,10 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 	}
 
 	protected void addCueListener() {
-		getControl().addMouseMoveListener(new MouseMoveListener() {
+		getControl().addListener(SWT.MouseMove, new Listener() {
 			private Object cue;
 
-			public void mouseMove(MouseEvent e) {
+			public void handleEvent(Event e) {
 				Object ob = findObject(e.x, e.y);
 				if (ob != null) {
 					if (!ob.equals(cue))

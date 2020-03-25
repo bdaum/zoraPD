@@ -46,6 +46,7 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
@@ -101,7 +102,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	public class GalleryHover implements IGalleryHover {
 
 		@SuppressWarnings("unchecked")
-		public IHoverInfo getHoverInfo(IHoverSubject viewer, MouseEvent event) {
+		public IHoverInfo getHoverInfo(IHoverSubject viewer, Event event) {
 			String tooltip = viewer.getTooltip(event.x, event.y);
 			if (tooltip != null)
 				return new HoverInfo(tooltip);
@@ -156,6 +157,8 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	protected IAction addBookmarkAction;
 	protected IAction addToAlbumAction;
 	protected IAction categorizeAction;
+
+	private static final Point pnt = new Point(0, 0);
 	private IAction keyDefAction;
 	private IAction moveAction;
 	private IAction slideshowAction;
@@ -163,7 +166,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	private IAction pasteAction;
 	private boolean dragging;
 	private int ignoreTab;
-	
+
 	protected QueryField[] getHoverNodes() {
 		return UiActivator.getDefault().getHoverNodes();
 	}
@@ -235,15 +238,38 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 			});
 			getControl().setMenu(contextMenuMgr.createContextMenu(getControl()));
 			getSite().registerContextMenu(contextMenuMgr, this);
+			getControl().addListener(SWT.MouseDown, this);
 		}
 	}
 
 	protected void unhookContextMenu() {
 		if (contextMenuMgr != null) {
+			getControl().removeListener(SWT.MouseDown, this);
 			contextMenuMgr.removeAll();
 			contextMenuMgr.dispose();
 			contextMenuMgr = null;
 		}
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.type == SWT.MouseDown)
+			setMousePosition(e.x, e.y);
+		super.handleEvent(e);
+	}
+
+	public Point getMousePosition() {
+		return pnt;
+	}
+
+	public Point getMouseDisplayPosition() {
+		return getControl().toDisplay(pnt);
+	}
+
+	public Point setMousePosition(int x, int y) {
+		pnt.x = x;
+		pnt.y = y;
+		return pnt;
 	}
 
 	protected abstract void fillContextMenu(IMenuManager manager);
@@ -393,12 +419,11 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		registerMediaContributions();
 		super.registerCommands();
 	}
-	
+
 	protected void registerMediaContributions() {
-		for (IMediaUiExtension ext : UiActivator.getDefault().getUiMediaExtensions()) 
+		for (IMediaUiExtension ext : UiActivator.getDefault().getUiMediaExtensions())
 			ext.registerMediaContributions(this);
 	}
-
 
 	@Override
 	public void updateActions(boolean force) {
@@ -448,12 +473,11 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 			updateActions(count, localCount);
 		}
 	}
-	
+
 	protected void updateMediaContributions(int count, int localCount, AssetSelection assetSelection) {
-		for (IMediaUiExtension ext : UiActivator.getDefault().getUiMediaExtensions()) 
+		for (IMediaUiExtension ext : UiActivator.getDefault().getUiMediaExtensions())
 			ext.updateMediaContributions(this, count, localCount, assetSelection);
 	}
-
 
 	private boolean collectionSelected() {
 		CatalogView catView = (CatalogView) UiUtilities.findViewNoRestore(getSite().getPage(), CatalogView.ID);
@@ -484,7 +508,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 
 	public boolean hasGps() {
 		int n = 0;
-		for (Asset asset : getAssetSelection())
+		for (Asset asset : getAssetSelection().getAssets())
 			if (++n > THRESHHOLD || (!Double.isNaN(asset.getGPSLatitude()) && !Double.isNaN(asset.getGPSLongitude())))
 				return true;
 		return false;
@@ -495,17 +519,15 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		super.installListeners();
 		Core.getCore().addCatalogListener(this);
 	}
-	
+
 	@Override
 	protected void uninstallListeners() {
 		super.uninstallListeners();
 		Core.getCore().removeCatalogListener(this);
 	}
-	
-
 
 	@Override
-	public IGalleryHover getGalleryHover(MouseEvent event) {
+	public IGalleryHover getGalleryHover(Event event) {
 		return new GalleryHover();
 	}
 
@@ -524,8 +546,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	}
 
 	@Override
-	public void keyReleased(KeyEvent e) {
-		super.keyReleased(e);
+	protected void onKeyUp(Event e) {
 		switch (e.character) {
 		case SWT.TAB:
 			if (ignoreTab > 0) {
@@ -555,8 +576,9 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		case '5':
 			ZoomActionFactory.rate(getAssetSelection().getAssets(), this, e.character - '0');
 			return;
-		case '*':
-			ZoomActionFactory.rate(getAssetSelection().getAssets(), this, RatingDialog.BYSERVICE);
+		// case '*':
+		// ZoomActionFactory.rate(getAssetSelection().getAssets(), this,
+		// RatingDialog.BYSERVICE);
 		}
 	}
 
@@ -573,7 +595,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	}
 
 	protected void addMediaContributions(IMenuManager manager, String anchor) {
-		for (IMediaUiExtension ext : UiActivator.getDefault().getUiMediaExtensions()) 
+		for (IMediaUiExtension ext : UiActivator.getDefault().getUiMediaExtensions())
 			ext.addMediaContributions(manager, anchor, this);
 	}
 

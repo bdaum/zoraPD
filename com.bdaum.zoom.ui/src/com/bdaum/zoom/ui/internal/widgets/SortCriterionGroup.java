@@ -64,7 +64,7 @@ public class SortCriterionGroup extends AbstractCriterionGroup {
 			});
 		if (relationCombo != null) {
 			relationCombo.setVisibleItemCount(3);
-			relationCombo.addListener(SWT.Selection, selectionListener);
+			relationCombo.addListener(SWT.Selection, this);
 		}
 		// init
 		fillFieldCombo(crit);

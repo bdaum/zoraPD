@@ -41,8 +41,8 @@ import com.bdaum.zoom.core.internal.IMediaSupport;
  * A selection of asset instances
  *
  */
-@SuppressWarnings("restriction")
-public class AssetSelection extends StructuredSelection implements Iterable<Asset> {
+@SuppressWarnings({ "restriction" })
+public class AssetSelection extends StructuredSelection {
 
 	private static final Object[] DUMMY = new Object[] { AssetSelection.class };
 

@@ -57,7 +57,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.CLink;
 
-public class GroupDialog extends ZTitleAreaDialog {
+public class GroupDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String SETTINGSID = "groupDialog"; //$NON-NLS-1$
 	private static final String ACTIVETAB = "activeTab"; //$NON-NLS-1$
@@ -203,15 +203,11 @@ public class GroupDialog extends ZTitleAreaDialog {
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout());
 
-		labelConfigGroup = new LabelConfigGroup(composite, true, true);
-		labelConfigGroup.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				validate();
-			}
-		});
+		labelConfigGroup = new LabelConfigGroup(composite, true, true, false);
+		labelConfigGroup.addListener(SWT.Modify, this);
 		if (current != null)
-			labelConfigGroup.setSelection(current.getShowLabel(), current.getLabelTemplate(), current.getFontSize(), current.getAlignment());
+			labelConfigGroup.setSelection(current.getShowLabel(), current.getLabelTemplate(), current.getFontSize(),
+					current.getAlignment(), false);
 		return composite;
 	}
 
@@ -227,23 +223,11 @@ public class GroupDialog extends ZTitleAreaDialog {
 			layout.marginWidth = 0;
 			autoArea.setLayout(layout);
 			overwriteButton = WidgetFactory.createCheckButton(autoArea, Messages.GroupDialog_overwrite, null);
-			overwriteButton.addListener(new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					updateTable();
-					updateLink();
-				}
-			});
+			overwriteButton.addListener(SWT.Selection, this);
 			link = new CLink(autoArea, SWT.NONE);
 			link.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 			link.setText(Messages.GroupDialog_configure);
-			link.addListener(new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					PreferencesUtil.createPreferenceDialogOn(getShell(), AutoPreferencePage.ID, new String[0],
-							AutoPreferencePage.RULES).open();
-				}
-			});
+			link.addListener(SWT.Selection, this);
 			ruleComponent = new AutoRuleComponent(autoArea, SWT.SHORT, this);
 		} else if (isRating()) {
 			CGroup ratingArea = new CGroup(composite, SWT.NONE);
@@ -307,6 +291,23 @@ public class GroupDialog extends ZTitleAreaDialog {
 			yearSpinner.setIncrement(1);
 		}
 		return composite;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Modify:
+			validate();
+			break;
+		case SWT.Selection:
+			if (e.widget == overwriteButton) {
+				updateTable();
+				updateLink();
+			} else
+				PreferencesUtil.createPreferenceDialogOn(getShell(), AutoPreferencePage.ID, new String[0],
+						AutoPreferencePage.RULES).open();
+			break;
+		}
 	}
 
 	private Control createGeneralGroup(Composite parent) {

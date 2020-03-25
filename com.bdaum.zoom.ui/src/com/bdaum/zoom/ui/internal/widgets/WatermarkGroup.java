@@ -39,7 +39,7 @@ import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.core.Format;
 
-public class WatermarkGroup {
+public class WatermarkGroup implements Listener {
 	public static final String COPYRIGHT = "copyright"; //$NON-NLS-1$
 	public static final String WATERMARK = "watermark"; //$NON-NLS-1$
 
@@ -62,54 +62,52 @@ public class WatermarkGroup {
 		composite.setLayout(gridlayout);
 		createWatermarkButton = WidgetFactory.createCheckButton(composite, Messages.WatermarkGroup_create_watermark,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		createWatermarkButton.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateButtons();
-				if (copyrightField.getEnabled())
-					copyrightField.setFocus();
-				fireEvent(event);
-			}
-		});
+		createWatermarkButton.addListener(SWT.Selection, this);
 		copyrightField = new Text(composite, SWT.BORDER);
 		GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		data.widthHint = 150;
 		copyrightField.setLayoutData(data);
-		createWatermarkButton.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				fireEvent(event);
-			}
-		});
+		copyrightField.addListener(SWT.Modify, this);
 		fileButton = new Button(composite, SWT.PUSH);
 		fileButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		fileButton.setText(Messages.WatermarkGroup_select_file);
-		fileButton.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				FileDialog dialog = new FileDialog(composite.getShell());
-				dialog.setFilterExtensions(new String[] { "*.bmp;*.png" }); //$NON-NLS-1$
-				dialog.setFilterNames(new String[] { Messages.WatermarkGroup_watermark_files });
-				String path = dialog.open();
-				if (path != null) {
-					copyrightField.setText(path);
-					fireEvent(e);
-				}
-			}
-		});
+		fileButton.addListener(SWT.Selection, this);
 		updateButtons();
 	}
 
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == fileButton) {
+			FileDialog dialog = new FileDialog(fileButton.getShell());
+			dialog.setFilterExtensions(new String[] { "*.bmp;*.png" }); //$NON-NLS-1$
+			dialog.setFilterNames(new String[] { Messages.WatermarkGroup_watermark_files });
+			String path = dialog.open();
+			if (path != null) {
+				copyrightField.setText(path);
+				fireEvent(e);
+			}
+		} else if (e.widget == createWatermarkButton) {
+			updateButtons();
+			if (copyrightField.getEnabled())
+				copyrightField.setFocus();
+			fireEvent(e);
+		} else
+			fireEvent(e);
+	}
+
 	protected void fireEvent(Event event) {
+		event.type = SWT.Modify;
+		event.data = this;
 		for (Listener listener : listeners)
 			listener.handleEvent(event);
 	}
 
-	public void addListener(Listener listener) {
-		listeners.add(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Modify)
+			listeners.add(listener);
 	}
 
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
 		listeners.remove(listener);
 	}
 
@@ -127,7 +125,7 @@ public class WatermarkGroup {
 			String copyright = settings.get(COPYRIGHT);
 			if (copyright == null || copyright.trim().isEmpty()
 					|| copyright.trim().length() == 4 && testYear(copyright))
-				copyrightField.setText(Format.YEAR_FORMAT.get().format(new Date()) + " "); //$NON-NLS-1$ 
+				copyrightField.setText(Format.YEAR_FORMAT.get().format(new Date()) + " "); //$NON-NLS-1$
 			createWatermarkButton.setSelection(settings.getBoolean(WATERMARK));
 			if (copyright != null)
 				copyrightField.setText(copyright);

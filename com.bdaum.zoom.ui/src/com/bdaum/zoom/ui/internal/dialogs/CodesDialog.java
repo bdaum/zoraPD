@@ -49,7 +49,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.QueryField;
@@ -198,8 +200,8 @@ public class CodesDialog extends ZTitleAreaDialog {
 		composite.setLayout(new GridLayout(2, false));
 		filterField = new FilterField(composite);
 		filterField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		filterField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+		filterField.addListener(SWT.Modify, new Listener() {
+			public void handleEvent(Event e) {
 				updateViewers();
 			}
 		});

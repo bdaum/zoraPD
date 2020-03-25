@@ -20,7 +20,7 @@
 
 package com.bdaum.zoom.ui.internal.hover;
 
-import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.widgets.Event;
 
 import com.bdaum.zoom.ui.internal.views.IHoverSubject;
 
@@ -44,5 +44,5 @@ public interface IGalleryHover {
 	 *            the mouse event causing the hover
 	 * @return the hover popup display information
 	 */
-	IHoverInfo getHoverInfo(IHoverSubject subject, MouseEvent event);
+	IHoverInfo getHoverInfo(IHoverSubject subject, Event event);
 }

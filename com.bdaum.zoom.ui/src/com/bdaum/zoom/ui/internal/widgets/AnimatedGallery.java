@@ -50,10 +50,6 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseMoveListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
@@ -116,7 +112,7 @@ import com.bdaum.zoom.ui.internal.views.ImageRegion;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandler {
+public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandler, Listener {
 
 	private final class GalleryPBasicInputEventHandler extends PBasicInputEventHandler {
 		private final PSWTCanvas pcanvas;
@@ -749,8 +745,8 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 
 		private String computeCaption(Asset anAsset) {
 			return (anAsset != null && captionConfiguration.showLabel != Constants.NO_LABEL)
-					? captionProcessor.computeImageCaption(anAsset, scoreFormatter, null, null,
-							captionConfiguration.getLabelTemplate(), false)
+					? captionProcessor.computeImageCaption(
+							anAsset, scoreFormatter, null, null, captionConfiguration.getLabelTemplate(), false)
 					: ""; //$NON-NLS-1$
 		}
 
@@ -1094,12 +1090,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		canvas.getRoot().getDefaultInputManager().setKeyboardFocus(eventHandler);
 		canvas.addInputEventListener(eventHandler);
 		setEventHandlers();
-		canvas.addPaintListener(new PaintListener() {
-			public void paintControl(PaintEvent e) {
-				if (collection != null)
-					fillSlidebar(collection);
-			}
-		});
+		canvas.addListener(SWT.Paint, this);
 		titleVerifyListener = new VerifyListener() {
 			public void verifyText(VerifyEvent e) {
 				fireErrorEvent(e);
@@ -1107,13 +1098,19 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		};
 	}
 
+	@Override
+	public void handleEvent(Event e) {
+		if (collection != null)
+			fillSlidebar(collection);
+	}
+
 	private void setEventHandlers() {
 		PNode[] workArea = new PNode[] { slideBar };
 		canvas.removeInputEventListener(canvas.getPanEventHandler());
 		canvas.addInputEventListener(panHandler = new GalleryPanEventHandler(this, workArea, surfaceBounds.x,
 				surfaceBounds.y, surfaceBounds.width + surfaceBounds.x, surfaceBounds.height + surfaceBounds.y,
-				GalleryPanEventHandler.BOTH, InputEvent.ALT_MASK | InputEvent.BUTTON1_MASK, -3, PAN_SENSITIVITY, HACCEL,
-				VACCEL));
+				GalleryPanEventHandler.BOTH, InputEvent.ALT_DOWN_MASK | InputEvent.BUTTON1_DOWN_MASK, -3,
+				PAN_SENSITIVITY, HACCEL, VACCEL));
 		canvas.removeInputEventListener(canvas.getZoomEventHandler());
 		canvas.addInputEventListener(zoomHandler = new GalleryZoomEventHandler(this, workArea, -10));
 		canvas.addMouseWheelListener(wheelListener = new InertiaMouseWheelListener());
@@ -1562,7 +1559,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 				}
 			}
 			int cnt = 0;
-			for (Asset asset : assetSelection) {
+			for (Asset asset : assetSelection.getAssets()) {
 				if (!selectedSlides.contains(asset)) {
 					Integer i = galleryMap.get(asset);
 					int index = -1;
@@ -1688,24 +1685,16 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		canvas.setCursor(cursor);
 	}
 
-	public void addMouseListener(MouseListener listener) {
-		canvas.addMouseListener(listener);
-	}
-
-	public void addMouseMoveListener(MouseMoveListener listener) {
-		canvas.addMouseMoveListener(listener);
+	public void addListener(int type, Listener listener) {
+		canvas.addListener(type, listener);
 	}
 
 	public void addKeyListener(KeyListener listener) {
 		canvas.addKeyListener(listener);
 	}
 
-	public void removeMouseListener(MouseListener listener) {
-		canvas.removeMouseListener(listener);
-	}
-
-	public void removeMouseMoveListener(MouseMoveListener listener) {
-		canvas.removeMouseMoveListener(listener);
+	public void removeListener(int type, Listener listener) {
+		canvas.removeListener(type, listener);
 	}
 
 	public void removeKeyListener(KeyListener listener) {
@@ -1845,7 +1834,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		return foundRegion;
 	}
 
-	public ImageRegion[] findAllRegions(org.eclipse.swt.events.MouseEvent event) {
+	public ImageRegion[] findAllRegions(Event event) {
 		PGalleryRegion[] regions = getRegions(event.x, event.y, null);
 		ImageRegion[] imageRegions = new ImageRegion[regions.length];
 		for (int i = 0; i < regions.length; i++)

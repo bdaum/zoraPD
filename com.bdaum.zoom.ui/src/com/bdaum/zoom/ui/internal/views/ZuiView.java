@@ -34,9 +34,6 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -189,81 +186,85 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 		animatedGallery.setMaxScale(3d);
 		animatedGallery.setColumns(columns);
 		animatedGallery.addListener(this);
-		animatedGallery.addMouseListener(new MouseAdapter() {
+		Listener mouseListener = new Listener() {
 			@Override
-			public void mouseDown(MouseEvent e) {
-				if (e.button != 2 && ((e.stateMask & SWT.ALT) == 0) && cursorOverImage(e.x, e.y))
-					setCanvasCursor(null, SWT.CURSOR_ARROW);
-				else {
-					mouseDown = true;
-					lastMouseX = e.x;
-					mouseButton = e.button;
-					int zoomKey = Platform.getPreferencesService().getInt(UiActivator.PLUGIN_ID,
-							PreferenceConstants.ZOOMKEY, PreferenceConstants.ZOOMALT, null);
-					boolean zoomin = false;
-					if (mouseButton != 0) {
-						if (mouseButton == 2)
-							zoomin = zoomKey == PreferenceConstants.ZOOMRIGHT;
-						else if (mouseButton == 1) {
-							switch (zoomKey) {
-							case PreferenceConstants.ZOOMALT:
-								zoomin = (e.stateMask & SWT.ALT) != 0;
-								break;
-							case PreferenceConstants.ZOOMSHIFT:
-								zoomin = (e.stateMask & SWT.SHIFT) != 0;
-								break;
-							}
-						}
-						setCanvasCursor(zoomin ? CURSOR_MPLUS : CURSOR_GRABBING, -1);
-					}
-				}
-			}
-
-			@Override
-			public void mouseUp(MouseEvent e) {
-				mouseDown = false;
-				if (e.button != 2 && ((e.stateMask & SWT.ALT) == 0) && cursorOverImage(e.x, e.y))
-					setCanvasCursor(null, SWT.CURSOR_ARROW);
-				else
-					setCanvasCursor(CURSOR_OPEN_HAND, -1);
-			}
-		});
-		animatedGallery.addMouseMoveListener(new MouseMoveListener() {
-			public void mouseMove(MouseEvent e) {
-				if (mouseButton != 2 && ((e.stateMask & SWT.ALT) == 0) && cursorOverImage(e.x, e.y))
-					setCanvasCursor(null, SWT.CURSOR_ARROW);
-				else {
-					if (mouseDown) {
+			public void handleEvent(Event e) {
+				switch (e.type) {
+				case SWT.MouseDown:
+					if (e.button != 2 && ((e.stateMask & SWT.ALT) == 0) && cursorOverImage(e.x, e.y))
+						setCanvasCursor(null, SWT.CURSOR_ARROW);
+					else {
+						mouseDown = true;
+						lastMouseX = e.x;
+						mouseButton = e.button;
 						int zoomKey = Platform.getPreferencesService().getInt(UiActivator.PLUGIN_ID,
 								PreferenceConstants.ZOOMKEY, PreferenceConstants.ZOOMALT, null);
 						boolean zoomin = false;
-						if (mouseButton == 2)
-							zoomin = zoomKey == PreferenceConstants.ZOOMRIGHT;
-						else if (mouseButton == 1) {
-							int modMask = (zoomKey == PreferenceConstants.ZOOMALT) ? SWT.ALT : SWT.SHIFT;
-							zoomin = (e.stateMask & modMask) != modMask;
+						if (mouseButton != 0) {
+							if (mouseButton == 2)
+								zoomin = zoomKey == PreferenceConstants.ZOOMRIGHT;
+							else if (mouseButton == 1) {
+								switch (zoomKey) {
+								case PreferenceConstants.ZOOMALT:
+									zoomin = (e.stateMask & SWT.ALT) != 0;
+									break;
+								case PreferenceConstants.ZOOMSHIFT:
+									zoomin = (e.stateMask & SWT.SHIFT) != 0;
+									break;
+								}
+							}
+							setCanvasCursor(zoomin ? CURSOR_MPLUS : CURSOR_GRABBING, -1);
 						}
-						if (zoomin)
-							setCanvasCursor(CURSOR_GRABBING, -1);
-						else {
-							setCanvasCursor(e.x >= lastMouseX ? CURSOR_MPLUS : CURSOR_MMINUS, -1);
-							if (Math.abs(lastMouseX - e.x) > 3)
-								unhookContextMenu();
-							lastMouseX = e.x;
-						}
-					} else {
-						setCanvasCursor(CURSOR_OPEN_HAND, -1);
-						hookContextMenu();
 					}
+					break;
+
+				case SWT.MouseUp:
+					mouseDown = false;
+					if (e.button != 2 && ((e.stateMask & SWT.ALT) == 0) && cursorOverImage(e.x, e.y))
+						setCanvasCursor(null, SWT.CURSOR_ARROW);
+					else
+						setCanvasCursor(CURSOR_OPEN_HAND, -1);
+					break;
+				case SWT.MouseMove:
+					if (mouseButton != 2 && ((e.stateMask & SWT.ALT) == 0) && cursorOverImage(e.x, e.y))
+						setCanvasCursor(null, SWT.CURSOR_ARROW);
+					else {
+						if (mouseDown) {
+							int zoomKey = Platform.getPreferencesService().getInt(UiActivator.PLUGIN_ID,
+									PreferenceConstants.ZOOMKEY, PreferenceConstants.ZOOMALT, null);
+							boolean zoomin = false;
+							if (mouseButton == 2)
+								zoomin = zoomKey == PreferenceConstants.ZOOMRIGHT;
+							else if (mouseButton == 1) {
+								int modMask = (zoomKey == PreferenceConstants.ZOOMALT) ? SWT.ALT : SWT.SHIFT;
+								zoomin = (e.stateMask & modMask) != modMask;
+							}
+							if (zoomin)
+								setCanvasCursor(CURSOR_GRABBING, -1);
+							else {
+								setCanvasCursor(e.x >= lastMouseX ? CURSOR_MPLUS : CURSOR_MMINUS, -1);
+								if (Math.abs(lastMouseX - e.x) > 3)
+									unhookContextMenu();
+								lastMouseX = e.x;
+							}
+						} else {
+							setCanvasCursor(CURSOR_OPEN_HAND, -1);
+							hookContextMenu();
+						}
+					}
+					break;
 				}
 			}
-		});
+		};
+		animatedGallery.addListener(SWT.MouseDown, mouseListener);
+		animatedGallery.addListener(SWT.MouseUp, mouseListener);
+		animatedGallery.addListener(SWT.MouseMove, mouseListener);
 		addKeyListener();
 		addExplanationListener(false);
 		setFocus();
 		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(animatedGallery.getControl(), HelpContextIds.SLEEVES_VIEW);
-		// Drop-Unterstützung
+		// Drop support
 		addDragDropSupport();
 		// Hover
 		installHoveringController();
@@ -396,35 +397,37 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 	protected void addKeyListener() {
 		Control control = getControl();
 		if (control != null && !control.isDisposed())
-			control.addTraverseListener(this);
+			control.addListener(SWT.Traverse, this);
+	}
+	
+	@Override
+	protected void onKeyUp(Event event) {
+		switch (event.keyCode) {
+		case 13:
+			if ((event.stateMask & SWT.SHIFT) != 0)
+				editWithAction.run();
+			else
+				editAction.run();
+			break;
+		case SWT.TAB:
+			viewImageAction.runWithEvent(event);
+			break;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+			ZoomActionFactory.rate(animatedGallery.getSelection().getAssets(), this, event.keyCode - '0');
+			break;
+		case SWT.DEL:
+			ZoomActionFactory.rate(animatedGallery.getSelection().getAssets(), this, RatingDialog.DELETE);
+			break;
+		}
 	}
 
 	public void handleEvent(Event event) {
 		switch (event.type) {
-		case SWT.KeyUp:
-			switch (event.keyCode) {
-			case 13:
-				if ((event.stateMask & SWT.SHIFT) != 0)
-					editWithAction.run();
-				else
-					editAction.run();
-				break;
-			case SWT.TAB:
-				viewImageAction.runWithEvent(event);
-				break;
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-				ZoomActionFactory.rate(animatedGallery.getSelection().getAssets(), this, event.keyCode - '0');
-				break;
-			case SWT.DEL:
-				ZoomActionFactory.rate(animatedGallery.getSelection().getAssets(), this, RatingDialog.DELETE);
-				break;
-			}
-			break;
 		case SWT.MouseDoubleClick:
 			viewImageAction.runWithEvent(event);
 			break;
@@ -476,6 +479,8 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 		case SWT.Verify:
 			setStatusMessage(event.text, true);
 			break;
+		default:
+			super.handleEvent(event);
 		}
 	}
 
@@ -508,7 +513,7 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 	}
 
 	@Override
-	public Asset findObject(MouseEvent event) {
+	public Asset findObject(Event event) {
 		return findObject(event.x, event.y);
 	}
 
@@ -517,7 +522,7 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 	}
 
 	@Override
-	public ImageRegion[] findAllRegions(MouseEvent event) {
+	public ImageRegion[] findAllRegions(Event event) {
 		return animatedGallery.findAllRegions(event);
 	}
 
@@ -537,7 +542,7 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 	protected int getSelectionCount(boolean local) {
 		if (local) {
 			int i = 0;
-			for (Asset a : getAssetSelection())
+			for (Asset a : getAssetSelection().getAssets())
 				if (a.getFileState() != IVolumeManager.PEER && ++i >= 2)
 					return i;
 			return i;

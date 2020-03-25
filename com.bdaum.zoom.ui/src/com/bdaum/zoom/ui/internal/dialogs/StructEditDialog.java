@@ -117,7 +117,7 @@ public class StructEditDialog extends ZTitleAreaDialog implements IAdaptable {
 		}
 		radioGroup = new FlatGroup(composite, SWT.NONE, settings, HIERARCHICAL_STRUCT + qfield.getType());
 		radioGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, false));
-		radioGroup.addListener(new Listener() {
+		radioGroup.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				structComponent.update();

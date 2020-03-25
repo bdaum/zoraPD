@@ -60,7 +60,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class SendEmailPage extends ColoredWizardPage {
+public class SendEmailPage extends ColoredWizardPage implements Listener {
 
 	private List<Asset> assets;
 	private Label mailSizeLabel, imageSizeLabel;
@@ -94,11 +94,7 @@ public class SendEmailPage extends ColoredWizardPage {
 		if (size > 0) {
 			if (pdf) {
 				qualityGroup = new QualityGroup(composite, true);
-				qualityGroup.addListener(new Listener() {
-					public void handleEvent(Event event) {
-						computePdfSize();
-					}
-				});
+				qualityGroup.addListener(SWT.Selection, this);
 			} else {
 				boolean raw = Core.getCore().containsRawImage(assets, true);
 				exportModeGroup = new ExportModeGroup(composite,
@@ -112,13 +108,7 @@ public class SendEmailPage extends ColoredWizardPage {
 						updateScaling();
 					}
 				};
-				exportModeGroup.addListener(new Listener() {
-					@Override
-					public void handleEvent(Event e) {
-						updateControls();
-						checkImages();
-					}
-				});
+				exportModeGroup.addListener(SWT.Modify, this);
 			}
 			mailSizeLabel = new Label(composite, SWT.NONE);
 			data = new GridData(SWT.FILL, SWT.CENTER, true, false);
@@ -150,11 +140,7 @@ public class SendEmailPage extends ColoredWizardPage {
 		if (!multiMedia) {
 			if (!pdf && size > 0) {
 				metaButton = WidgetFactory.createCheckButton(metaGroup, Messages.SendEmailPage_include_metadata, null);
-				metaButton.addListener(new Listener() {
-					public void handleEvent(Event event) {
-						getWizard().getContainer().updateButtons();
-					}
-				});
+				metaButton.addListener(SWT.Selection, this);
 			}
 			watermarkGroup = new WatermarkGroup(metaGroup);
 			trackExportButton = WidgetFactory.createCheckButton(metaGroup, Messages.SendEmailPage_Track_exports,
@@ -178,6 +164,22 @@ public class SendEmailPage extends ColoredWizardPage {
 		}
 		setMessage(msg);
 		super.createControl(parent);
+	}
+
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			if (e.widget == metaButton)
+				getWizard().getContainer().updateButtons();
+			else
+				computePdfSize();
+			break;
+		case SWT.Modify:
+			updateControls();
+			checkImages();
+			break;
+		}
+		
 	}
 
 	private String checkImages() {

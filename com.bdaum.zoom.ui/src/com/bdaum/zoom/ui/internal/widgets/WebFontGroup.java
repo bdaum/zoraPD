@@ -23,10 +23,6 @@ package com.bdaum.zoom.ui.internal.widgets;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -37,7 +33,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.Font_type;
 import com.bdaum.zoom.cat.model.Font_typeImpl;
@@ -46,7 +45,7 @@ import com.bdaum.zoom.cat.model.Rgb_typeImpl;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.ui.internal.dialogs.WebFontDialog;
 
-public class WebFontGroup {
+public class WebFontGroup implements Listener {
 
 	private static final String FAMILY2 = "_family"; //$NON-NLS-1$
 	private static final String COLOR2 = "_color"; //$NON-NLS-1$
@@ -59,8 +58,11 @@ public class WebFontGroup {
 	private Label label;
 	private Button colorButton;
 	private Font_type fonttype;
+	private Image image;
+	private String text;
 
 	public WebFontGroup(final Composite parent, final String text) {
+		this.text = text;
 		label = new Label(parent, SWT.NONE);
 		label.setText(text);
 		Composite composite = new Composite(parent, SWT.NONE);
@@ -75,32 +77,24 @@ public class WebFontGroup {
 		gd_bgButton.heightHint = 28;
 		button.setLayoutData(gd_bgButton);
 		button.setText(Messages.WebFontGroup_select_font);
-		button.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				WebFontDialog dialog = new WebFontDialog(parent.getShell(), text, getFont());
-				if (dialog.open() == Window.OK)
-					setFont(dialog.getResult());
-			}
-
-		});
+		button.addListener(SWT.Selection, this);
 		colorButton = new Button(composite, SWT.PUSH | SWT.BORDER);
 		final GridData gd_colorLabeln = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
 		gd_colorLabeln.widthHint = 14;
 		gd_colorLabeln.heightHint = 28;
-		final Image image = new Image(parent.getShell().getDisplay(), 14, 28);
-		colorButton.setImage(image);
+		colorButton.setImage(image = new Image(parent.getShell().getDisplay(), 14, 28));
 		colorButton.setLayoutData(gd_colorLabeln);
-		colorButton.addDisposeListener(new DisposeListener() {
-			public void widgetDisposed(DisposeEvent e) {
-				image.dispose();
-			}
-		});
-		colorButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+		colorButton.addListener(SWT.Dispose, this);
+		colorButton.addListener(SWT.Selection, this);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			if (e.widget == colorButton) {
 				if (fonttype != null) {
-					ColorDialog dialog = new ColorDialog(parent.getShell());
+					ColorDialog dialog = new ColorDialog(((Control)e.widget).getShell());
 					dialog.setText(text);
 					Rgb_type color = fonttype.getColor();
 					if (color != null)
@@ -111,8 +105,16 @@ public class WebFontGroup {
 						fonttype.setColor(new Rgb_typeImpl(rgb.red, rgb.green, rgb.blue));
 					}
 				}
+			} else {
+				WebFontDialog dialog = new WebFontDialog(((Control)e.widget).getShell(), text, getFont());
+				if (dialog.open() == Window.OK)
+					setFont(dialog.getResult());
 			}
-		});
+			break;
+		case SWT.Dispose:
+			image.dispose();
+			break;
+		}
 	}
 
 	protected void paintButton(Button butt, Rgb_type rgb) {

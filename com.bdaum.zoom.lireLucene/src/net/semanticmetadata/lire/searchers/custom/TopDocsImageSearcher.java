@@ -38,23 +38,24 @@
  */
 package net.semanticmetadata.lire.searchers.custom;
 
-import net.semanticmetadata.lire.builders.DocumentBuilder;
-import net.semanticmetadata.lire.imageanalysis.features.GlobalFeature;
-import net.semanticmetadata.lire.searchers.ImageSearchHits;
-import net.semanticmetadata.lire.searchers.SimpleImageSearchHits;
-import net.semanticmetadata.lire.searchers.SimpleResult;
-import net.semanticmetadata.lire.utils.ImageUtils;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.util.Bits;
 
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import net.semanticmetadata.lire.builders.DocumentBuilder;
+import net.semanticmetadata.lire.imageanalysis.features.GlobalFeature;
+import net.semanticmetadata.lire.searchers.ImageSearchHits;
+import net.semanticmetadata.lire.searchers.SimpleImageSearchHits;
+import net.semanticmetadata.lire.searchers.SimpleResult;
+import net.semanticmetadata.lire.utils.ImageUtils;
 
 /**
  * This file is part of the Caliph and Emir project: http://www.SemanticMetadata.net
@@ -120,7 +121,7 @@ public class TopDocsImageSearcher {
         // Needed for check whether the document is deleted.
         Bits liveDocs = MultiFields.getLiveDocs(reader);
 
-        int docs = results.totalHits;
+        long docs = results.totalHits;
         for (int i = 0; i < docs; i++) {
             if (reader.hasDeletions() && !liveDocs.get(i)) continue; // if it is deleted, just ignore it.
 

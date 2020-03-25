@@ -11,14 +11,14 @@
 package com.bdaum.zoom.ui.paint;
 
 
-import org.eclipse.swt.events.*;
+import org.eclipse.swt.widgets.Listener;
 
 /**
  * Manages an interactive paint session.
  * Note that the coordinates received via the listener interfaces are virtualized to zero-origin
  * relative to the painting surface.
  */ 
-public interface PaintSession extends MouseListener, MouseMoveListener {
+public interface PaintSession extends Listener {
 	/**
 	 * Returns the paint surface associated with this paint session
 	 * 

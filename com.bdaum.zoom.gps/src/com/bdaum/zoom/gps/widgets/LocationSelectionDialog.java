@@ -37,10 +37,10 @@ import com.bdaum.zoom.ui.internal.widgets.ZDialog;
 @SuppressWarnings("restriction")
 public class LocationSelectionDialog extends ZDialog {
 
-	private final String[] items;
+	private final Object[] items;
 	protected String result;
 
-	public LocationSelectionDialog(Shell parent, String[] items) {
+	public LocationSelectionDialog(Shell parent, Object[] items) {
 		super(parent);
 		setShellStyle(SWT.NO_TRIM);
 		this.items = items;

@@ -97,7 +97,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErrorHandler {
+public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErrorHandler, Listener {
 
 	private static final Object[] EMPTY = new Object[0];
 	private static final String SETTINGSID = "editCommunitiesAccountDialog"; //$NON-NLS-1$
@@ -287,13 +287,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		CGroup group1 = UiUtilities.createGroup(parent, 2, Messages.EditCommunityAccountDialog_bandwidth);
 		limitedButton = WidgetFactory.createCheckButton(group1, Messages.EditCommunityAccountDialog_limit_bandwidth,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		limitedButton.addListener(new Listener() {
-			
-			@Override
-			public void handleEvent(Event event) {
-				bandwidthField.setEnabled(limitedButton.getSelection());
-			}
-		});
+		limitedButton.addListener(SWT.Selection, this);
 		bandwidthField = new NumericControl(group1, NumericControl.LOGARITHMIC);
 		bandwidthField.setMinimum(10);
 		bandwidthField.setMaximum(1000000);
@@ -311,6 +305,11 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 			usedAlbumsField = createTextField(restrictionGroup, Messages.EditCommunityAccountDialog_used_albums, 60,
 					SWT.READ_ONLY, 1);
 		}
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		bandwidthField.setEnabled(limitedButton.getSelection());
 	}
 
 	private Listener accessTypeSelectionListener = new Listener() {
@@ -379,7 +378,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		if (children.length > 0) {
 			CGroup group2 = UiUtilities.createGroup(parent, 1, Messages.EditCommunityAccountDialog_privacy);
 			accessButtonGroup = new RadioButtonGroup(group2, null, SWT.NONE);
-			accessButtonGroup.addListener(accessTypeSelectionListener);
+			accessButtonGroup.addListener(SWT.Selection, accessTypeSelectionListener);
 			int k = 0;
 			for (IConfigurationElement child : children) {
 				accessButtonGroup.addButton(child.getAttribute("label")); //$NON-NLS-1$
@@ -417,7 +416,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 							}
 						} else
 							dbutton.setSelection(accessDetails.contains(key2));
-						dbutton.addListener(accessDetailSelectionListener);
+						dbutton.addListener(SWT.Selection, accessDetailSelectionListener);
 						childButtons.add(dbutton);
 					}
 					accessButtonGroup.setData(k, "children", childButtons); //$NON-NLS-1$

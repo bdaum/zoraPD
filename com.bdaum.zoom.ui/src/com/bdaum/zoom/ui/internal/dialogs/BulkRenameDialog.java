@@ -37,7 +37,7 @@ import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.widgets.RenameGroup;
 
-public class BulkRenameDialog extends ZTitleAreaDialog {
+public class BulkRenameDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.bulkRenameProperties"; //$NON-NLS-1$ ;
 	private RenameGroup renameGroup;
@@ -87,13 +87,13 @@ public class BulkRenameDialog extends ZTitleAreaDialog {
 								Constants.TV_FILENAME + "-" + Constants.TV_IMAGE_NO5, true), //$NON-NLS-1$
 						new RenamingTemplate(Messages.BulkRenameDialog_orig_filename, Constants.TV_FILENAME, true) },
 				Constants.TV_RENAME);
-		renameGroup.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				validate();
-			}
-		});
+		renameGroup.addListener(SWT.Modify, this);
 		return area;
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		validate();
 	}
 
 	protected void validate() {

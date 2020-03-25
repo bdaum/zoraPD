@@ -23,70 +23,68 @@ import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.fileMonitor.internal.filefilter.WildCardFilter;
 
-public class FilterField {
+public class FilterField implements Listener {
 
 	private static final String EMPTY = "empty"; //$NON-NLS-1$
 	private static final String ENTER_FILTER_EXPRESSION = Messages.FilterField_enter_filter_expr;
 	private Text filterField;
 	private WildCardFilter filter;
-	private ListenerList<ModifyListener> listeners = new ListenerList<ModifyListener>();
+	private ListenerList<Listener> listeners = new ListenerList<>();
 
 	public FilterField(Composite parent) {
 		filterField = new Text(parent, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		filterField.setLayoutData(new GridData(300, SWT.DEFAULT));
 		filterField.setText(ENTER_FILTER_EXPRESSION);
-		filterField
-				.setToolTipText(Messages.FilterField_expressions_entered);
+		filterField.setToolTipText(Messages.FilterField_expressions_entered);
 		filterField.setData(EMPTY, Boolean.TRUE);
-		final ModifyListener modifyListener = new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				String s = filterField.getText();
-				if (s.isEmpty())
-					filterField.setData(EMPTY, Boolean.TRUE);
-				else
-					filterField.setData(EMPTY, null);
-				filter = new WildCardFilter(s + '*', null);
-				fireModifyText(e);
-			}
-		};
-		filterField.addModifyListener(modifyListener);
+		filterField.addListener(SWT.Modify, this);
 		filterField.addFocusListener(new FocusListener() {
 			public void focusLost(FocusEvent e) {
 				if (filterField.getData(EMPTY) != null) {
-					filterField.removeModifyListener(modifyListener);
+					filterField.removeListener(SWT.Modify, FilterField.this);
 					filterField.setText(ENTER_FILTER_EXPRESSION);
-					filterField.addModifyListener(modifyListener);
+					filterField.addListener(SWT.Modify, FilterField.this);
 				}
 			}
 
 			public void focusGained(FocusEvent e) {
 				if (filterField.getData(EMPTY) != null) {
-					filterField.removeModifyListener(modifyListener);
+					filterField.removeListener(SWT.Modify, FilterField.this);
 					filterField.setText(""); //$NON-NLS-1$
-					filterField.addModifyListener(modifyListener);
+					filterField.addListener(SWT.Modify, FilterField.this);
 				}
 			}
 		});
 	}
 
-	protected void fireModifyText(ModifyEvent e) {
-		for (ModifyListener l : listeners)
-			l.modifyText(e);
+	public void handleEvent(Event e) {
+		String s = filterField.getText();
+		filterField.setData(EMPTY, s.isEmpty() ? Boolean.TRUE : null);
+		filter = new WildCardFilter(s + '*', null);
+		fireModifyText(e);
 	}
 
-	public void addModifyListener(ModifyListener listener) {
-		listeners.add(listener);
+	protected void fireModifyText(Event e) {
+		e.type = SWT.Modify;
+		e.data = this;
+		for (Listener l : listeners)
+			l.handleEvent(e);
 	}
 
-	public void removeModifyListener(ModifyListener listener) {
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Modify)
+			listeners.add(listener);
+	}
+
+	public void removeListener(int type, Listener listener) {
 		listeners.remove(listener);
 	}
 

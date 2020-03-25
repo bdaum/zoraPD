@@ -21,42 +21,29 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.ui.widgets.Messages;
 
-public class FlatGroup extends Composite {
+public class FlatGroup extends RadioButtonGroup {
 
 	private final String field;
 	private final IDialogSettings settings;
-	private RadioButtonGroup modeButtonGroup;
 
 	public FlatGroup(Composite parent, int style, IDialogSettings settings, String field) {
-		super(parent, style);
+		super(parent, null, style & ~SWT.VERTICAL | SWT.HORIZONTAL, Messages.FlatGroup_flat,
+				Messages.FlatGroup_hierarchical);
 		this.settings = settings;
 		this.field = field;
-		setLayout(new FillLayout());
-		modeButtonGroup = new RadioButtonGroup(this, null, SWT.HORIZONTAL, Messages.FlatGroup_flat,
-				Messages.FlatGroup_hierarchical);
-		modeButtonGroup.setSelection(settings.getBoolean(field) ? 1 : 0);
-	}
-
-	public void addListener(Listener listener) {
-		modeButtonGroup.addListener(listener);
-	}
-
-	public void removeListener(Listener listener) {
-		modeButtonGroup.removeListener(listener);
+		setSelection(settings.getBoolean(field) ? 1 : 0);
 	}
 
 	public void saveSettings() {
-		settings.put(field, modeButtonGroup.getSelection() == 1);
+		settings.put(field, getSelection() == 1);
 	}
 
 	public boolean isFlat() {
-		return modeButtonGroup.getSelection() == 0;
+		return getSelection() == 0;
 	}
 
 }

@@ -127,12 +127,12 @@ public class CompressionGroup {
 		return sizeTab[getJpegQuality()];
 	}
 
-	public void addListener(Listener listener) {
-		numControl.addListener(listener);
+	public void addListener(int type, Listener listener) {
+		numControl.addListener(type, listener);
 	}
 
-	public void removeListener(Listener listener) {
-		numControl.addListener(listener);
+	public void removeListener(int type, Listener listener) {
+		numControl.addListener(type, listener);
 	}
 
 	public boolean getUseWebp() {

@@ -82,6 +82,7 @@ public class EditWithAction extends Action {
 	protected AssetSelection assetSelection;
 	private Set<String> visited;
 	private IVolumeManager volumeManager;
+	protected boolean shift;
 
 	public EditWithAction(String label, String tooltip, ImageDescriptor image, IAdaptable adaptable) {
 		super(label, image);
@@ -90,9 +91,10 @@ public class EditWithAction extends Action {
 		shell = adaptable.getAdapter(Shell.class);
 		volumeManager = Core.getCore().getVolumeManager();
 	}
-
+	
 	@Override
-	public void run() {
+	public void runWithEvent(Event event) {
+		shift = (event.stateMask & SWT.SHIFT) != 0;
 		assetSelection = adaptable.getAdapter(AssetSelection.class);
 		visited = new HashSet<String>(assetSelection.size() * 3 / 2);
 		try {
@@ -107,7 +109,7 @@ public class EditWithAction extends Action {
 	private void doRun() {
 		if (!assetSelection.isEmpty()) {
 			List<String> parms = new ArrayList<String>(assetSelection.size());
-			for (Asset asset : assetSelection) {
+			for (Asset asset : assetSelection.getAssets()) {
 				URI uri = asset.getFileState() == IVolumeManager.PEER ? null
 						: volumeManager.findExistingFile(asset, true);
 				if (uri != null)
@@ -131,7 +133,7 @@ public class EditWithAction extends Action {
 	}
 
 	private void exportMetaData() {
-		for (Asset asset : assetSelection)
+		for (Asset asset : assetSelection.getAssets())
 			if (asset.getFileState() != IVolumeManager.PEER && volumeManager.findExistingFile(asset, true) != null) {
 				ExportMetadataOperation op = new ExportMetadataOperation(Collections.singletonList(asset),
 						UiActivator.getDefault().getExportFilter(),
@@ -151,7 +153,7 @@ public class EditWithAction extends Action {
 		defaultEditors = null;
 		visited.clear();
 		List<Asset> errands = new ArrayList<Asset>(assetSelection.size());
-		for (Asset asset : assetSelection) {
+		for (Asset asset : assetSelection.getAssets()) {
 			URI uri = asset.getFileState() == IVolumeManager.PEER ? null : volumeManager.findExistingFile(asset, true);
 			if (uri != null) {
 				String ext = BatchUtilities.getTrueFileExtension(uri.toString());
@@ -251,7 +253,7 @@ public class EditWithAction extends Action {
 			protected void createClientContent(Composite comp) {
 				CLink link = new CLink(comp, SWT.NONE);
 				link.setText(Messages.EditWithAction_Configure_file_assos);
-				link.addListener(new Listener() {
+				link.addListener(SWT.Selection, new Listener() {
 					@Override
 					public void handleEvent(Event event) {
 						PreferencesUtil.createPreferenceDialogOn(getShell(), FileAssociationsPreferencePage.ID,

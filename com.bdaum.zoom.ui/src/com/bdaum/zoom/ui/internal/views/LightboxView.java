@@ -41,16 +41,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.TraverseEvent;
-import org.eclipse.swt.events.TraverseListener;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -113,7 +103,6 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	private CheckedText titleInput;
 
 	private boolean titleInputValid;
-	private SelectionAdapter closeTitleAreaListener;
 	protected IAction toggleCollapseAction;
 	private Font smallFont;
 	private int currentFontsize;
@@ -161,9 +150,14 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 			gallery.addControlListener(new ControlAdapter() {
 				@Override
 				public void controlResized(ControlEvent e) {
-					thumbsize = (orientation == SWT.H_SCROLL) ? gallery.getClientArea().height - TRIM
-							: gallery.getClientArea().width - TRIM;
-					fireSizeChanged();
+					gallery.removeControlListener(this);
+					try {
+						thumbsize = (orientation == SWT.H_SCROLL) ? gallery.getClientArea().height - TRIM
+								: gallery.getClientArea().width - TRIM;
+						fireSizeChanged();
+					} finally {
+						gallery.addControlListener(this);
+					}
 				}
 			});
 		setHelp(orientation);
@@ -182,7 +176,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 		// Actions
 		makeActions(getViewSite().getActionBars());
 		installListeners();
-		gallery.addSelectionListener(this);
+		gallery.addListener(SWT.Selection, this);
 		installInfrastructure(1000);
 		if (folding && !canBeCollapsed())
 			setUriSort();
@@ -252,11 +246,8 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 						}
 					}
 				if (!expand)
-					for (GalleryItem item : items) {
-						Asset asset = (Asset) item.getData(ASSET);
-						if (asset != null)
-							expandedSet.remove(asset);
-					}
+					for (GalleryItem item : items)
+						expandedSet.remove(item.getData(ASSET));
 				refresh();
 			}
 		};
@@ -475,7 +466,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 		return smallFont;
 	}
 
-	public void handleEvent(Event event) {
+	protected void onSetData(Event event) {
 		final GalleryItem item = (GalleryItem) event.item;
 		IAssetProvider assetProvider = getAssetProvider();
 		int count = assetProvider == null ? 0 : assetProvider.getAssetCount();
@@ -606,6 +597,7 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 			return width ? preferredResult : MINTHUMBSIZE + TRIM;
 		}
 	};
+	private Listener titleListener;
 
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -646,74 +638,67 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 			gc.dispose();
 			int w = Math.max(bounds.width, textExtent.x + 20);
 			titleInput.setBounds(bounds.x - (w - bounds.width) / 2, bounds.y - bw, w, bounds.height + 2 * bw);
-			titleInput.addTraverseListener(new TraverseListener() {
-				public void keyTraversed(TraverseEvent e) {
-					if (e.character == SWT.TAB) {
-						ignoreTab();
-						commitInput(asset, captionText);
-						Event event = new Event();
-						event.keyCode = (e.stateMask & SWT.SHIFT) != 0 ? SWT.ARROW_LEFT : SWT.ARROW_RIGHT;
-						event.type = SWT.KeyDown;
-						event.widget = gallery;
-						Display display = gallery.getDisplay();
-						display.post(event);
-						display.asyncExec(() -> {
-							if (!gallery.isDisposed()) {
-								GalleryItem[] sel = gallery.getSelection();
-								if (sel.length == 1) {
-									GalleryItem item1 = sel[0];
-									Hotspots hotSpots = (Hotspots) item1.getData(HOTSPOTS);
-									if (hotSpots != null && item1.getData(ASSET) != null) {
-										Rectangle titleArea = hotSpots.getTitleArea();
-										if (titleArea != null)
-											editTitleArea(item1, titleArea);
+			titleListener = new Listener() {
+				@Override
+				public void handleEvent(Event e) {
+					switch (e.type) {
+					case SWT.Traverse:
+						if (e.character == SWT.TAB) {
+							ignoreTab();
+							commitInput(asset, captionText);
+							Event event = new Event();
+							event.keyCode = (e.stateMask & SWT.SHIFT) != 0 ? SWT.ARROW_LEFT : SWT.ARROW_RIGHT;
+							event.type = SWT.KeyDown;
+							event.widget = gallery;
+							Display display = gallery.getDisplay();
+							display.post(event);
+							display.asyncExec(() -> {
+								if (!gallery.isDisposed()) {
+									GalleryItem[] sel = gallery.getSelection();
+									if (sel.length == 1) {
+										GalleryItem item1 = sel[0];
+										Hotspots hotSpots = (Hotspots) item1.getData(HOTSPOTS);
+										if (hotSpots != null && item1.getData(ASSET) != null) {
+											Rectangle titleArea = hotSpots.getTitleArea();
+											if (titleArea != null)
+												editTitleArea(item1, titleArea);
+										}
 									}
 								}
-							}
-						});
-						e.doit = false;
+							});
+							e.doit = false;
+						}
+						break;
+					case SWT.KeyDown:
+						if (e.keyCode == SWT.ESC)
+							cancelInput();
+						else if (e.character == SWT.CR)
+							commitInput(asset, captionText);
+						break;
+					case SWT.Selection:
+					case SWT.FocusOut:
+						commitInput(asset, captionText);
+						break;
+					case SWT.Verify:
+						String errorMessage = QueryField.NAME.isValid(
+								titleInput.getText().substring(0, e.start) + e.text + titleInput.getText().substring(e.end),
+								asset);
+						titleInputValid = errorMessage == null;
+						setStatusMessage(errorMessage, true);
+						titleInput.setForeground(titleInputValid ? foreground
+								: titleInput.getControl().getDisplay().getSystemColor(SWT.COLOR_RED));
+						break;
 					}
 				}
-			});
-			titleInput.addKeyListener(new KeyAdapter() {
-				@Override
-				public void keyPressed(KeyEvent e) {
-					if (e.keyCode == SWT.ESC)
-						cancelInput();
-					else if (e.character == SWT.CR)
-						commitInput(asset, captionText);
-				}
-			});
-			titleInput.addFocusListener(new FocusAdapter() {
-				@Override
-				public void focusLost(FocusEvent e) {
-					commitInput(asset, captionText);
-				}
-			});
-			closeTitleAreaListener = new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					commitInput(asset, captionText);
-				}
 			};
-			gallery.addSelectionListener(closeTitleAreaListener);
+			titleInput.addListener(SWT.Traverse, titleListener);
+			titleInput.addListener(SWT.KeyDown, titleListener);
+			titleInput.addListener(SWT.FocusOut, titleListener);
+			gallery.addListener(SWT.Selection, titleListener);
 			ScrollBar scrollBar = getScrollBar();
 			if (scrollBar != null)
-				scrollBar.addSelectionListener(closeTitleAreaListener);
-			titleInput.addVerifyListener(new VerifyListener() {
-				public void verifyText(VerifyEvent e) {
-					showError(QueryField.NAME.isValid(
-							titleInput.getText().substring(0, e.start) + e.text + titleInput.getText().substring(e.end),
-							asset));
-				}
-
-				private void showError(String msg) {
-					titleInputValid = msg == null;
-					setStatusMessage(msg, true);
-					titleInput.setForeground(titleInputValid ? foreground
-							: titleInput.getControl().getDisplay().getSystemColor(SWT.COLOR_RED));
-				}
-			});
+				scrollBar.addListener(SWT.Selection, titleListener);
+			titleInput.addListener(SWT.Verify, titleListener);
 			titleInput.setFocus();
 			titleInput.selectAll();
 		}
@@ -732,11 +717,11 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 	}
 
 	void cancelInput() {
-		if (closeTitleAreaListener != null && !gallery.isDisposed()) {
-			gallery.removeSelectionListener(closeTitleAreaListener);
+		if (titleListener != null && !gallery.isDisposed()) {
+			gallery.removeListener(SWT.Selection, titleListener);
 			ScrollBar scrollBar = getScrollBar();
 			if (scrollBar != null)
-				scrollBar.removeSelectionListener(closeTitleAreaListener);
+				scrollBar.removeListener(SWT.Selection, titleListener);
 		}
 		if (titleInput != null) {
 			titleInput.dispose();

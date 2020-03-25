@@ -79,6 +79,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
@@ -766,7 +767,7 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 				boolean cleared = false;
 				Set<IIdentifiableObject> toBeStored = new HashSet<>(selection.size() * 2);
 				CaptionConfiguration captionConfig = captionProcessor.computeCaptionConfiguration(selection.getContext());
-				for (Asset asset : selection) {
+				for (Asset asset : selection.getAssets()) {
 					if (!accepts(asset))
 						continue;
 					if (!cleared) {
@@ -1434,6 +1435,7 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 		manager.add(new Separator());
 		manager.add(generateAction);
 		manager.add(saveAction);
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	@Override

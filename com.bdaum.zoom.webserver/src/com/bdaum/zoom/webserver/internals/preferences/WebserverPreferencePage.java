@@ -49,12 +49,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -109,17 +103,10 @@ import io.nayuki.qrcodegen.QrCode;
 import io.nayuki.qrcodegen.QrSegment;
 
 @SuppressWarnings("restriction")
-public class WebserverPreferencePage extends AbstractPreferencePage implements WebserverListener {
+public class WebserverPreferencePage extends AbstractPreferencePage implements WebserverListener, Listener {
 	public static final String GENERAL = "general"; //$NON-NLS-1$
 	private static final String HTMLSELECTION = "htmlSelection"; //$NON-NLS-1$
 
-	private ModifyListener modifyListener = new ModifyListener() {
-		@Override
-		public void modifyText(ModifyEvent e) {
-			updateUrlFields();
-			validate();
-		}
-	};
 	private NumericControl portField, numberField;
 	private int oldPort;
 	private Text imagesPathField;
@@ -141,7 +128,8 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 	private Composite htmlcomp;
 	private StackLayout htmlstack;
 	private Composite uploadComp;
-	private Button addFolderButton, showLocButton, showDestButton, resetHtmlButton, resetCssButton, startButton, stopButton;
+	private Button addFolderButton, showLocButton, showDestButton, resetHtmlButton, resetCssButton, startButton,
+			stopButton;
 	private ITextListener textListener;
 	private TableViewer ipViewer;
 	private Label ipLabel;
@@ -209,7 +197,7 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		composite.setLayout(layout);
 		allowUploadsButton = WidgetFactory.createCheckButton(composite, Messages.WebserverPreferencePage_allow_uploads,
 				null);
-		allowUploadsButton.addListener(selectionListener);
+		allowUploadsButton.addListener(SWT.Selection, selectionListener);
 		uploadComp = new Composite(composite, SWT.NONE);
 		uploadComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		uploadComp.setLayout(new GridLayout());
@@ -296,61 +284,14 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		addFolderButton = new Button(buttonComp, SWT.PUSH);
 		addFolderButton.setText(Messages.WebserverPreferencePage_add);
 		addFolderButton.setToolTipText(Messages.WebserverPreferencePage_add_tooltip);
-		addFolderButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				WatchedFolder folder = new WatchedFolderImpl(null, null, 0L, false, null, true, null, false, 0, null, 2,
-						null, null, Constants.FILESOURCE_UNKNOWN, false);
-				WatchedFolderWizard wizard = new WatchedFolderWizard(false, false, false);
-				WizardDialog wizardDialog = new WizardDialog(getShell(), wizard);
-				wizard.init(null, new StructuredSelection(folder));
-				if (wizardDialog.open() == WizardDialog.OK) {
-					try {
-						if (folderBackup == null)
-							folderBackup = new ArrayList<WatchedFolder>(watchedFolders);
-						folder.setStringId(Utilities.computeWatchedFolderId(new File(new URI(folder.getUri())),
-								folder.getVolume()));
-						watchedFolders.add(folder);
-						watchedFolderViewer.setInput(watchedFolders);
-					} catch (URISyntaxException e1) {
-						// should never happend
-					}
-				}
-			}
-		});
+		addFolderButton.addListener(SWT.Selection, this);
 		new Label(buttonComp, SWT.SEPARATOR | SWT.HORIZONTAL);
 		showLocButton = new Button(buttonComp, SWT.PUSH);
 		showLocButton.setText(Messages.WebserverPreferencePage_show_folder);
-		showLocButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				WatchedFolder wf = (WatchedFolder) watchedFolderViewer.getStructuredSelection().getFirstElement();
-				if (wf != null) {
-					URI uri = Core.getCore().getVolumeManager().findFile(wf.getUri(), wf.getVolume());
-					if (uri != null) {
-						File file = new File(uri);
-						if (file.exists())
-							BatchUtilities.showInFolder(file, false);
-					}
-				}
-			}
-		});
+		showLocButton.addListener(SWT.Selection, this);
 		showDestButton = new Button(buttonComp, SWT.PUSH);
 		showDestButton.setText(Messages.WebserverPreferencePage_show_target);
-		showDestButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				WatchedFolder wf = (WatchedFolder) watchedFolderViewer.getStructuredSelection().getFirstElement();
-				if (wf != null) {
-					String targetDir = wf.getTargetDir();
-					if (targetDir != null) {
-						File file = new File(targetDir);
-						if (file.exists())
-							BatchUtilities.showInFolder(file, false);
-					}
-				}
-			}
-		});
+		showDestButton.addListener(SWT.Selection, this);
 		return composite;
 	}
 
@@ -375,13 +316,7 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		resetCssButton = new Button(composite, SWT.PUSH);
 		resetCssButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		resetCssButton.setText(Messages.WebserverPreferencePage_reset);
-		resetCssButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				cssViewer.setDocument(new Document(getPreferenceStore().getDefaultString(PreferenceConstants.CSS)));
-				updateButtons();
-			}
-		});
+		resetCssButton.addListener(SWT.Selection, this);
 		return composite;
 	}
 
@@ -401,6 +336,8 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 					return element + Messages.WebserverPreferencePage_oeverview_page;
 				if (element == PreferenceConstants.SLIDESHOW)
 					return element + Messages.WebserverPreferencePage_slideshow_page;
+				if (element == PreferenceConstants.VIDEO)
+					return element + Messages.WebserverPreferencePage_video_player;
 				if (element == PreferenceConstants.LOGIN)
 					return element + Messages.WebserverPreferencePage_login_page;
 				if (element == PreferenceConstants.UPLOADS)
@@ -437,16 +374,7 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		resetHtmlButton = new Button(composite, SWT.PUSH);
 		resetHtmlButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		resetHtmlButton.setText(Messages.WebserverPreferencePage_reset);
-		resetHtmlButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				String type = (String) sourceSelectViewer.getStructuredSelection().getFirstElement();
-				if (type != null) {
-					viewerMap.get(type).setDocument(new Document(getPreferenceStore().getDefaultString(type)));
-					updateButtons();
-				}
-			}
-		});
+		resetHtmlButton.addListener(SWT.Selection, this);
 		return composite;
 	}
 
@@ -474,12 +402,11 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 				NetworkInterface networkInterface = networkInterfaces.nextElement();
 				if (!networkInterface.isLoopback() && !networkInterface.isVirtual()) {
 					Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
-					while (inetAddresses.hasMoreElements()) {
+					while (inetAddresses.hasMoreElements())
 						if (inetAddresses.nextElement().getHostAddress().indexOf(':') < 0) {
 							interfaces.add(networkInterface);
 							break;
 						}
-					}
 				}
 			}
 		} catch (SocketException e) {
@@ -539,7 +466,6 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		});
 		ipViewer.setContentProvider(ArrayContentProvider.getInstance());
 		ipViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateUrlFields();
@@ -554,32 +480,114 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		layoutData.heightHint = layoutData.widthHint = 168;
 		layoutData.horizontalIndent = 10;
 		qrCanvas.setLayoutData(layoutData);
-		qrCanvas.addPaintListener(new PaintListener() {
-			@Override
-			public void paintControl(PaintEvent e) {
-				Rectangle clientArea = qrCanvas.getClientArea();
-				GC gc = e.gc;
-				gc.setBackground(e.display.getSystemColor(SWT.COLOR_WHITE));
-				gc.fillRectangle(clientArea);
-				String serverUrl = createServerUrl();
-				if (serverUrl != null) {
-					List<QrSegment> segs = QrSegment.makeSegments(serverUrl);
-					QrCode qr1 = QrCode.encodeSegments(segs, QrCode.Ecc.HIGH, 5, 5, 2, false);
-					int w = clientArea.width - 20;
-					int size = w / qr1.size;
-					int offset = w % qr1.size / 2 + 10;
-					gc.setBackground(e.display.getSystemColor(
-							WebserverActivator.getDefault().getState() == WebserverActivator.RUNNING ? SWT.COLOR_BLACK
-									: SWT.COLOR_GRAY));
-					for (int y = 0; y < qr1.size; y++)
-						for (int x = 0; x < qr1.size; x++)
-							if (qr1.getModule(x, y))
-								gc.fillRectangle(offset + x * size, offset + y * size, size, size);
-				}
-			}
-		});
+		qrCanvas.addListener(SWT.Paint, this);
 		if (!interfaces.isEmpty())
 			ipViewer.getTable().select(0);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Paint:
+			paintControl(e);
+			break;
+		case SWT.Selection:
+			if (e.widget == resetHtmlButton) {
+				String type = (String) sourceSelectViewer.getStructuredSelection().getFirstElement();
+				if (type != null) {
+					viewerMap.get(type).setDocument(new Document(getPreferenceStore().getDefaultString(type)));
+					updateButtons();
+				}
+			} else if (e.widget == resetCssButton) {
+				cssViewer.setDocument(new Document(getPreferenceStore().getDefaultString(PreferenceConstants.CSS)));
+				updateButtons();
+			} else if (e.widget == showDestButton) {
+				WatchedFolder wf = (WatchedFolder) watchedFolderViewer.getStructuredSelection().getFirstElement();
+				if (wf != null) {
+					String targetDir = wf.getTargetDir();
+					if (targetDir != null) {
+						File file = new File(targetDir);
+						if (file.exists())
+							BatchUtilities.showInFolder(file, false);
+					}
+				}
+			} else if (e.widget == showLocButton) {
+				WatchedFolder wf = (WatchedFolder) watchedFolderViewer.getStructuredSelection().getFirstElement();
+				if (wf != null) {
+					URI uri = Core.getCore().getVolumeManager().findFile(wf.getUri(), wf.getVolume());
+					if (uri != null) {
+						File file = new File(uri);
+						if (file.exists())
+							BatchUtilities.showInFolder(file, false);
+					}
+				}
+			} else if (e.widget == addFolderButton) {
+				WatchedFolder folder = new WatchedFolderImpl(null, null, 0L, false, null, true, null, false, 0, null, 2,
+						null, null, Constants.FILESOURCE_UNKNOWN, false);
+				WatchedFolderWizard wizard = new WatchedFolderWizard(false, false, false);
+				WizardDialog wizardDialog = new WizardDialog(getShell(), wizard);
+				wizard.init(null, new StructuredSelection(folder));
+				if (wizardDialog.open() == WizardDialog.OK)
+					try {
+						if (folderBackup == null)
+							folderBackup = new ArrayList<WatchedFolder>(watchedFolders);
+						folder.setStringId(Utilities.computeWatchedFolderId(new File(new URI(folder.getUri())),
+								folder.getVolume()));
+						watchedFolders.add(folder);
+						watchedFolderViewer.setInput(watchedFolders);
+					} catch (URISyntaxException e1) {
+						// should never happend
+					}
+			} else if (e.widget == startButton) {
+				startButton.setEnabled(false);
+				WebserverActivator.getDefault().startWebserver();
+			} else if (e.widget == stopButton) {
+				stopButton.setEnabled(false);
+				WebserverActivator.getDefault().stopWebserver();
+			} else if (e.widget == portField) {
+				updateUrlFields();
+				updateButtons();
+			} else if (e.widget == allField) {
+				boolean sel = allField.getSelection();
+				rawField.setSelection(sel);
+				dngField.setSelection(sel);
+				jpgField.setSelection(sel);
+				tifField.setSelection(sel);
+				validate();
+			} else if (e.widget == rawField || e.widget == dngField || e.widget == jpgField || e.widget == tifField) {
+				allField.setSelection(rawField.getSelection() && dngField.getSelection() && jpgField.getSelection()
+						&& tifField.getSelection());
+				validate();
+			}
+			break;
+		case SWT.Modify:
+			updateUrlFields();
+			validate();
+			break;
+		}
+
+	}
+
+	private void paintControl(Event e) {
+		Rectangle clientArea = qrCanvas.getClientArea();
+		GC gc = e.gc;
+		gc.setBackground(e.display.getSystemColor(SWT.COLOR_WHITE));
+		gc.fillRectangle(clientArea);
+		String serverUrl = createServerUrl();
+		if (serverUrl != null) {
+			List<QrSegment> segs = QrSegment.makeSegments(serverUrl);
+			QrCode qr1 = QrCode.encodeSegments(segs, QrCode.Ecc.HIGH, 5, 5, 2, false);
+			int w = clientArea.width - 20;
+			int size = w / qr1.size;
+			int offset = w % qr1.size / 2 + 10;
+			gc.setBackground(e.display.getSystemColor(
+					WebserverActivator.getDefault().getState() == WebserverActivator.RUNNING ? SWT.COLOR_BLACK
+							: SWT.COLOR_GRAY));
+			for (int y = 0; y < qr1.size; y++)
+				for (int x = 0; x < qr1.size; x++)
+					if (qr1.getModule(x, y))
+						gc.fillRectangle(offset + x * size, offset + y * size, size, size);
+		}
 	}
 
 	private String createServerUrl() {
@@ -628,16 +636,16 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		chapterComp.setLayout(layout);
 		imagesButton = WidgetFactory.createCheckButton(chapterComp, Messages.WebserverPreferencePage_images, null,
 				Messages.WebserverPreferencePage_images_tooltip);
-		imagesButton.addListener(selectionListener);
+		imagesButton.addListener(SWT.Selection, selectionListener);
 		exhibitionsButton = WidgetFactory.createCheckButton(chapterComp, Messages.WebserverPreferencePage_exhibitions,
 				null, Messages.WebserverPreferencePage_exhibitions_tooltip);
-		exhibitionsButton.addListener(selectionListener);
+		exhibitionsButton.addListener(SWT.Selection, selectionListener);
 		galleriesButton = WidgetFactory.createCheckButton(chapterComp, Messages.WebserverPreferencePage_galleries, null,
 				Messages.WebserverPreferencePage_galleries_tooltip);
-		galleriesButton.addListener(selectionListener);
+		galleriesButton.addListener(SWT.Selection, selectionListener);
 		slideshowsButton = WidgetFactory.createCheckButton(chapterComp, Messages.WebserverPreferencePage_slideshows,
 				null, Messages.WebserverPreferencePage_galleries_tooltip);
-		slideshowsButton.addListener(selectionListener);
+		slideshowsButton.addListener(SWT.Selection, selectionListener);
 
 		Label label = new Label(rightsGroup, SWT.NONE);
 		label.setText(Messages.WebserverPreferencePage_groups);
@@ -667,16 +675,16 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		actionsComp.setLayout(layout);
 		infoButton = WidgetFactory.createCheckButton(actionsComp, Messages.WebserverPreferencePage_metadata, null,
 				Messages.WebserverPreferencePage_metadata_tooltip);
-		infoButton.addListener(selectionListener);
+		infoButton.addListener(SWT.Selection, selectionListener);
 		fullButton = WidgetFactory.createCheckButton(actionsComp, Messages.WebserverPreferencePage_fullsize, null,
 				Messages.WebserverPreferencePage_fullsize_tooltip);
-		fullButton.addListener(selectionListener);
+		fullButton.addListener(SWT.Selection, selectionListener);
 		downloadButton = WidgetFactory.createCheckButton(actionsComp, Messages.WebserverPreferencePage_download, null,
 				Messages.WebserverPreferencePage_download_tooltip);
-		downloadButton.addListener(selectionListener);
+		downloadButton.addListener(SWT.Selection, selectionListener);
 		geoButton = WidgetFactory.createCheckButton(actionsComp, Messages.WebserverPreferencePage_geo, null,
 				Messages.WebserverPreferencePage_download_tooltip);
-		geoButton.addListener(selectionListener);
+		geoButton.addListener(SWT.Selection, selectionListener);
 		new Label(rightsGroup, SWT.NONE).setText(Messages.WebserverPreferencePage_privacy);
 		privacyButtonGroup = new RadioButtonGroup(rightsGroup, null, SWT.HORIZONTAL,
 				Messages.WebserverPreferencePage_public, Messages.WebserverPreferencePage_moderate,
@@ -703,49 +711,31 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		layout.marginHeight = layout.marginWidth = 0;
 		formatGroup.setLayout(layout);
 		allField = WidgetFactory.createCheckButton(formatGroup, Messages.WebserverPreferencePage_all_types, null);
-		allField.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				boolean sel = allField.getSelection();
-				rawField.setSelection(sel);
-				dngField.setSelection(sel);
-				jpgField.setSelection(sel);
-				tifField.setSelection(sel);
-				validate();
-			}
-		});
-		Listener listener = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				allField.setSelection(rawField.getSelection() && dngField.getSelection() && jpgField.getSelection()
-						&& tifField.getSelection());
-				validate();
-			}
-		};
+		allField.addListener(SWT.Selection, this);
 		rawField = WidgetFactory.createCheckButton(formatGroup, "RAW", null); //$NON-NLS-1$
-		rawField.addListener(listener);
+		rawField.addListener(SWT.Selection, this);
 		dngField = WidgetFactory.createCheckButton(formatGroup, "DNG", null); //$NON-NLS-1$
-		dngField.addListener(listener);
+		dngField.addListener(SWT.Selection, this);
 		jpgField = WidgetFactory.createCheckButton(formatGroup, "JPEG", null); //$NON-NLS-1$
-		jpgField.addListener(listener);
+		jpgField.addListener(SWT.Selection, this);
 		tifField = WidgetFactory.createCheckButton(formatGroup, "TIFF", null); //$NON-NLS-1$
-		tifField.addListener(listener);
+		tifField.addListener(SWT.Selection, this);
 		new Label(contentGroup, SWT.NONE).setText(Messages.WebserverPreferencePage_images_title);
 		imagesTitleField = new Text(contentGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		imagesTitleField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		imagesTitleField.addModifyListener(modifyListener);
+		imagesTitleField.addListener(SWT.Modify, this);
 		new Label(contentGroup, SWT.NONE).setText(Messages.WebserverPreferencePage_exhibitions_title);
 		exhibitionsTitleField = new Text(contentGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		exhibitionsTitleField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		exhibitionsTitleField.addModifyListener(modifyListener);
+		exhibitionsTitleField.addListener(SWT.Modify, this);
 		new Label(contentGroup, SWT.NONE).setText(Messages.WebserverPreferencePage_web_galleries_title);
 		galleriesTitleField = new Text(contentGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		galleriesTitleField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		galleriesTitleField.addModifyListener(modifyListener);
+		galleriesTitleField.addListener(SWT.Modify, this);
 		new Label(contentGroup, SWT.NONE).setText(Messages.WebserverPreferencePage_slideshows_title);
 		slideshowsTitleField = new Text(contentGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		slideshowsTitleField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		slideshowsTitleField.addModifyListener(modifyListener);
+		slideshowsTitleField.addListener(SWT.Modify, this);
 	}
 
 	protected void updateFields() {
@@ -789,33 +779,27 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		portField = new NumericControl(httpGroup, SWT.NONE);
 		portField.setMinimum(80);
 		portField.setMaximum(49150);
-		portField.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateUrlFields();
-				updateButtons();
-			}
-		});
+		portField.addListener(SWT.Selection, this);
 		new Label(httpGroup, SWT.NONE).setText(Messages.WebserverPreferencePage_startpage);
 		pageField = new Text(httpGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		pageField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		pageField.addModifyListener(modifyListener);
+		pageField.addListener(SWT.Modify, this);
 		new Label(httpGroup, SWT.NONE).setText(Messages.WebserverPreferencePage_images_path);
 		imagesPathField = new Text(httpGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		imagesPathField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		imagesPathField.addModifyListener(modifyListener);
+		imagesPathField.addListener(SWT.Modify, this);
 		new Label(httpGroup, SWT.NONE).setText(Messages.WebserverPreferencePage_exhibitions_path);
 		exhibitionsPathField = new Text(httpGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		exhibitionsPathField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		exhibitionsPathField.addModifyListener(modifyListener);
+		exhibitionsPathField.addListener(SWT.Modify, this);
 		new Label(httpGroup, SWT.NONE).setText(Messages.WebserverPreferencePage_web_galleries_path);
 		galleriesPathField = new Text(httpGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		galleriesPathField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		galleriesPathField.addModifyListener(modifyListener);
+		galleriesPathField.addListener(SWT.Modify, this);
 		new Label(httpGroup, SWT.NONE).setText(Messages.WebserverPreferencePage_slideshows_path);
 		slideshowsPathField = new Text(httpGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		slideshowsPathField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		slideshowsPathField.addModifyListener(modifyListener);
+		slideshowsPathField.addListener(SWT.Modify, this);
 	}
 
 	private void createStartGroup(Composite comp) {
@@ -833,24 +817,12 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		startButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		startButton.setText(Messages.WebserverPreferencePage_start);
 		startButton.setEnabled(WebserverActivator.getDefault().getState() == WebserverActivator.STOPPED);
-		startButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				startButton.setEnabled(false);
-				WebserverActivator.getDefault().startWebserver();
-			}
-		});
+		startButton.addListener(SWT.Selection, this);
 		stopButton = new Button(startGroup, SWT.PUSH);
 		stopButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
 		stopButton.setText(Messages.WebserverPreferencePage_stop);
 		stopButton.setEnabled(WebserverActivator.getDefault().getState() == WebserverActivator.RUNNING);
-		stopButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				stopButton.setEnabled(false);
-				WebserverActivator.getDefault().stopWebserver();
-			}
-		});
+		stopButton.addListener(SWT.Selection, this);
 	}
 
 	public void setPrivacySelection(int rating) {

@@ -109,6 +109,7 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 	private static final Object[] EMPTYOBJECTS = new Object[0];
 	public static final String ID = "com.bdaum.zoom.ui.MetadataPreferencePage"; //$NON-NLS-1$
 	private static final Object ESSENTIAL = "essential"; //$NON-NLS-1$
+	private static final Object HOVER = "hover"; //$NON-NLS-1$
 
 	private CheckboxTreeViewer essentialsViewer;
 	private CheckboxTreeViewer hoverViewer;
@@ -134,6 +135,9 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 	public void applyData(Object data) {
 		if (ESSENTIAL.equals(data)) {
 			tabFolder.setSelection(0);
+			fillValues();
+		} else if (HOVER.equals(data)) {
+			tabFolder.setSelection(1);
 			fillValues();
 		}
 	}

@@ -21,8 +21,6 @@ package com.bdaum.zoom.ai.clarifai.internal.preference;
 
 public class PreferenceConstants {
 
-	public static final String CLIENTID = "com.bdaum.zoom.ai.clarifai.clientId"; //$NON-NLS-1$
-	public static final String CLIENTSECRET = "com.bdaum.zoom.ai.clarifai.clientSecret"; //$NON-NLS-1$
 	public static final String MAXCONCEPTS = "com.bdaum.zoom.ai.clarifai.maxConcepts"; //$NON-NLS-1$
 	public static final String MINCONFIDENCE = "com.bdaum.zoom.ai.clarifai.minConfidence"; //$NON-NLS-1$
 	public static final String MARKABOVE = "com.bdaum.zoom.ai.clarifai.markAbove"; //$NON-NLS-1$
@@ -33,5 +31,6 @@ public class PreferenceConstants {
 	public static final String FACES =  "com.bdaum.zoom.ai.clarifai.faces"; //$NON-NLS-1$
 	public static final String CELEBRITIES =  "com.bdaum.zoom.ai.clarifai.celebrities"; //$NON-NLS-1$
 	public static final String LANGUAGE =  "com.bdaum.zoom.ai.clarifai.language"; //$NON-NLS-1$
+	public static final String APIKEY ="com.bdaum.zoom.ai.clarifai.apikey"; //$NON-NLS-1$
 
 }

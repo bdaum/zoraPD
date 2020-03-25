@@ -22,20 +22,15 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseMoveListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.forms.FormColors;
@@ -64,7 +59,7 @@ import com.bdaum.zoom.ui.internal.commands.AbstractCommandHandler;
 import com.bdaum.zoom.ui.internal.commands.CheckUpdateCommand;
 import com.bdaum.zoom.ui.internal.commands.EditMetaCommand;
 
-public class Intro extends IntroPart implements IHyperlinkListener, IExpansionListener, KeyListener {
+public class Intro extends IntroPart implements IHyperlinkListener, IExpansionListener, Listener {
 
 	private static final String FILE = "file:"; //$NON-NLS-1$
 	private static final String HTTP = "http:"; //$NON-NLS-1$
@@ -140,48 +135,11 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 		TableWrapData layoutData = new TableWrapData(TableWrapData.FILL_GRAB);
 		layoutData.heightHint = startImage.getBounds().height;
 		buttonCanvas.setLayoutData(layoutData);
-		buttonCanvas.addPaintListener(new PaintListener() {
-			public void paintControl(PaintEvent e) {
-				Rectangle area = buttonCanvas.getClientArea();
-				Rectangle ibounds = startImage.getBounds();
-				startButtonRect = new Rectangle((area.width - ibounds.width) / 2, (area.height - ibounds.height) / 2,
-						ibounds.width, ibounds.height);
-				e.gc.drawImage(startImage, startButtonRect.x, startButtonRect.y);
-				Rectangle ebounds = eclipseImage.getBounds();
-				Rectangle lbounds = luceneImage.getBounds();
-				eclipseImageRect = new Rectangle(
-						area.width / 2 - ibounds.width - (6 * ebounds.width + 4 * lbounds.width) / 10,
-						(area.height - ebounds.height) / 2, ebounds.width, ebounds.height);
-				e.gc.drawImage(eclipseImage, eclipseImageRect.x, eclipseImageRect.y);
-				luceneImageRect = new Rectangle(area.width / 2 + ibounds.width, (area.height - lbounds.height) / 2,
-						lbounds.width, lbounds.height);
-				e.gc.drawImage(luceneImage, luceneImageRect.x, luceneImageRect.y);
-			}
-		});
+		buttonCanvas.addListener(SWT.Paint, this);
 		buttonCanvas.redraw();
-		buttonCanvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent e) {
-				switch (testButton(e.x, e.y)) {
-				case START:
-					close();
-					break;
-				case ECLIPSE:
-					showUrl(ECLIPSE_URL);
-					break;
-				case LUCENE:
-					showUrl(LUCENE_URL);
-					break;
-				}
-			}
-		});
-		buttonCanvas.addMouseMoveListener(new MouseMoveListener() {
-			public void mouseMove(MouseEvent e) {
-				buttonCanvas.setCursor(
-						e.display.getSystemCursor(testButton(e.x, e.y) >= 0 ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW));
-			}
-		});
-		buttonCanvas.addKeyListener(this);
+		buttonCanvas.addListener(SWT.MouseUp, this);
+		buttonCanvas.addListener(SWT.MouseMove, this);
+		buttonCanvas.addListener(SWT.KeyUp, this);
 	}
 
 	int testButton(int x, int y) {
@@ -277,8 +235,8 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 		section.setClient(formText);
 		formText.addHyperlinkListener(this);
 		section.addExpansionListener(this);
-		formText.addKeyListener(this);
-		section.addKeyListener(this);
+		formText.addListener(SWT.KeyUp, this);
+		section.addListener(SWT.KeyUp, this);
 		sections.add(section);
 		return section;
 	}
@@ -435,13 +393,48 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 		super.dispose();
 	}
 
-	public void keyPressed(KeyEvent e) {
-		// do nothing
-	}
-
-	public void keyReleased(KeyEvent e) {
-		if (e.keyCode == SWT.ESC)
-			close();
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.KeyUp:
+			if (e.keyCode == SWT.ESC)
+				close();
+			break;
+		case SWT.MouseUp:
+			switch (testButton(e.x, e.y)) {
+			case START:
+				close();
+				break;
+			case ECLIPSE:
+				showUrl(ECLIPSE_URL);
+				break;
+			case LUCENE:
+				showUrl(LUCENE_URL);
+				break;
+			}
+			break;
+		case SWT.MouseMove:
+			buttonCanvas.setCursor(
+					e.display.getSystemCursor(testButton(e.x, e.y) >= 0 ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW));
+			break;
+		case SWT.Paint:
+			Rectangle area = buttonCanvas.getClientArea();
+			Rectangle ibounds = startImage.getBounds();
+			startButtonRect = new Rectangle((area.width - ibounds.width) / 2, (area.height - ibounds.height) / 2,
+					ibounds.width, ibounds.height);
+			e.gc.drawImage(startImage, startButtonRect.x, startButtonRect.y);
+			Rectangle ebounds = eclipseImage.getBounds();
+			Rectangle lbounds = luceneImage.getBounds();
+			eclipseImageRect = new Rectangle(
+					area.width / 2 - ibounds.width - (6 * ebounds.width + 4 * lbounds.width) / 10,
+					(area.height - ebounds.height) / 2, ebounds.width, ebounds.height);
+			e.gc.drawImage(eclipseImage, eclipseImageRect.x, eclipseImageRect.y);
+			luceneImageRect = new Rectangle(area.width / 2 + ibounds.width, (area.height - lbounds.height) / 2,
+					lbounds.width, lbounds.height);
+			e.gc.drawImage(luceneImage, luceneImageRect.x, luceneImageRect.y);
+			break;
+		}
+		
 	}
 
 }

@@ -2,19 +2,19 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.core;singleton:=true
-Bundle-Version: 3.6.0
+Bundle-Version: 3.6.1
 Bundle-Activator: com.bdaum.zoom.core.internal.CoreActivator
 Bundle-Vendor: %Bundle-Vendor.0
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.7.0";visibility:=reexport,
- org.eclipse.core.commands;bundle-version="3.6.0";visibility:=reexport,
- org.eclipse.ui;bundle-version="3.6.0";visibility:=reexport,
+ org.eclipse.core.commands;bundle-version="3.6.1";visibility:=reexport,
+ org.eclipse.ui;bundle-version="3.6.1";visibility:=reexport,
  xmp;bundle-version="5.1.0";visibility:=reexport,
- mediautil;bundle-version="3.6.0",
- com.bdaum.zoom.model;bundle-version="3.6.0";visibility:=reexport,
+ mediautil;bundle-version="3.6.1",
+ com.bdaum.zoom.model;bundle-version="3.6.1";visibility:=reexport,
  com.bdaum.jna;bundle-version="3.2.7";visibility:=reexport,
  com.bdaum.zoom.fileMonitor;bundle-version="0.9.4";visibility:=reexport,
- com.bdaum.zoom.logging;bundle-version="3.6.0",
- com.bdaum.zoom.mtp;bundle-version="3.6.0";visibility:=reexport
+ com.bdaum.zoom.logging;bundle-version="3.6.1",
+ com.bdaum.zoom.mtp;bundle-version="3.6.1";visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: com.bdaum.zoom.core,
  com.bdaum.zoom.core.db,

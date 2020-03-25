@@ -33,26 +33,17 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.TraverseListener;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.PlatformUI;
 
@@ -68,8 +59,7 @@ import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 import jdk.nashorn.tools.Shell;
 
-public class CheckedText extends Composite
-		implements ISpellCheckingTarget, PaintListener, IAugmentedTextField, IAdaptable {
+public class CheckedText extends Composite implements ISpellCheckingTarget, Listener, IAugmentedTextField, IAdaptable {
 	private static final int[] NOREDSEA = new int[0];
 	private StyledText control;
 	private int maxSuggestions = 10;
@@ -78,18 +68,18 @@ public class CheckedText extends Composite
 	private FocusListener focusListener;
 	private String hint = ""; //$NON-NLS-1$
 	protected boolean hintShown;
-	private ListenerList<ModifyListener> modifyListeners;
-	private ListenerList<VerifyListener> verifyListeners;
+	private ListenerList<Listener> modifyListeners;
+	private ListenerList<Listener> verifyListeners;
 	private IOperationHistory history;
 	private IUndoContext context;
 	private char lastChar;
 	private char previousChar;
 	private TextOperation currentOperation;
 	private long timeStamp;
-	private ModifyListener afterListener;
+	private Listener afterListener;
 	protected MenuDetectListener menuListener;
 	protected Menu previousMenu;
-	private VerifyListener beforeListener;
+	private Listener beforeListener;
 	protected boolean lastWasDel;
 	private int style;
 
@@ -105,60 +95,17 @@ public class CheckedText extends Composite
 		setLayout(new FillLayout());
 		installUndoSupport();
 		if (spellingOptions != ISpellCheckingService.NOSPELLING)
-			addModifyListener(new ModifyListener() {
-				public void modifyText(ModifyEvent e) {
-					if (!control.getText().isEmpty())
-						checkSpelling(true);
-				}
-			});
-		control.addPaintListener(this);
+			addListener(SWT.Modify, this);
+		control.addListener(SWT.Paint, this);
 		installMenu(style);
 	}
 
 	protected void installUndoSupport() {
-		addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent event) {
-				int modifiers = event.stateMask;
-				if ((modifiers & SWT.CTRL) != 0) {
-					int keyCode = event.keyCode;
-					switch (keyCode) {
-					case 'a':
-						selectAll();
-						break;
-					// c,v,x handled by StyledText
-					case 'z':
-						// Ctrl+Z
-						if ((style & SWT.READ_ONLY) == 0)
-							undo();
-						break;
-					case 'y':
-						// Ctrl+Y
-						if ((style & SWT.READ_ONLY) == 0)
-							redo();
-						break;
-					}
-					return;
-				}
-				switch (event.keyCode) {
-				case SWT.ESC:
-				case SWT.ARROW_LEFT:
-				case SWT.ARROW_RIGHT:
-				case SWT.ARROW_UP:
-				case SWT.ARROW_DOWN:
-				case SWT.HOME:
-				case SWT.END:
-				case SWT.PAGE_DOWN:
-				case SWT.PAGE_UP:
-					createUndoPoint();
-					break;
-				}
-			}
-		});
+		addListener(SWT.KeyDown, this);
 		if ((style & SWT.READ_ONLY) == 0) {
-			beforeListener = new VerifyListener() {
+			beforeListener = new Listener() {
 				@Override
-				public void verifyText(VerifyEvent e) {
+				public void handleEvent(Event e) {
 					String text = e.text;
 					if (text.length() == 0 || e.start != e.end) {
 						if (!lastWasDel) {
@@ -187,17 +134,17 @@ public class CheckedText extends Composite
 					}
 				}
 			};
-			addVerifyListener(beforeListener);
-			afterListener = new ModifyListener() {
+			addListener(SWT.Verify, beforeListener);
+			afterListener = new Listener() {
 				@Override
-				public void modifyText(ModifyEvent e) {
+				public void handleEvent(Event e) {
 					if (currentOperation != null) {
 						currentOperation.setReplacement(getText(), getSelection());
 						currentOperation.addToHistory(getHistory());
 					}
 				}
 			};
-			addModifyListener(afterListener);
+			addListener(SWT.Modify, afterListener);
 		}
 		addMouseListener(new MouseAdapter() {
 			@Override
@@ -254,28 +201,28 @@ public class CheckedText extends Composite
 	public void redo() {
 		if (history != null)
 			try {
-				removeVerifyListener(beforeListener);
-				removeModifyListener(afterListener);
+				removeListener(SWT.Verify, beforeListener);
+				removeListener(SWT.Modify, afterListener);
 				history.redo(context, null, this);
 			} catch (ExecutionException e) {
 				// should never happen
 			} finally {
-				addModifyListener(afterListener);
-				addVerifyListener(beforeListener);
+				addListener(SWT.Modify, afterListener);
+				addListener(SWT.Verify, beforeListener);
 			}
 	}
 
 	public void undo() {
 		if (history != null)
 			try {
-				removeVerifyListener(beforeListener);
-				removeModifyListener(afterListener);
+				removeListener(SWT.Verify, beforeListener);
+				removeListener(SWT.Modify, afterListener);
 				history.undo(context, null, this);
 			} catch (ExecutionException e) {
 				// should never happen
 			} finally {
-				addModifyListener(afterListener);
-				addVerifyListener(beforeListener);
+				addListener(SWT.Modify, afterListener);
+				addListener(SWT.Verify, beforeListener);
 			}
 	}
 
@@ -306,7 +253,7 @@ public class CheckedText extends Composite
 			lastChar = 0;
 		}
 	}
-	
+
 	@Override
 	public void setToolTipText(String text) {
 		control.setToolTipText(text);
@@ -341,7 +288,7 @@ public class CheckedText extends Composite
 			String text = control.getText();
 			if (text.isEmpty()) {
 				removeAllListeners();
-				control.setData(CSSProperties.ID, CSSProperties.HINT); 
+				control.setData(CSSProperties.ID, CSSProperties.HINT);
 				control.setText(hint);
 				CssActivator.getDefault().applyStyles(control, false);
 				hintShown = true;
@@ -361,20 +308,20 @@ public class CheckedText extends Composite
 
 	protected void addAllListeners() {
 		if (modifyListeners != null)
-			for (ModifyListener modifyListener : modifyListeners)
-				control.addModifyListener(modifyListener);
+			for (Listener modifyListener : modifyListeners)
+				control.addListener(SWT.Modify, modifyListener);
 		if (verifyListeners != null)
-			for (VerifyListener verifyListener : verifyListeners)
-				control.addVerifyListener(verifyListener);
+			for (Listener verifyListener : verifyListeners)
+				control.addListener(SWT.Verify, verifyListener);
 	}
 
 	protected void removeAllListeners() {
 		if (modifyListeners != null)
-			for (ModifyListener modifyListener : modifyListeners)
-				control.removeModifyListener(modifyListener);
+			for (Listener modifyListener : modifyListeners)
+				control.removeListener(SWT.Modify, modifyListener);
 		if (verifyListeners != null)
-			for (VerifyListener verifyListener : verifyListeners)
-				control.removeVerifyListener(verifyListener);
+			for (Listener verifyListener : verifyListeners)
+				control.removeListener(SWT.Verify, verifyListener);
 	}
 
 	public void checkSpelling(boolean cancelSpellchecking) {
@@ -396,28 +343,68 @@ public class CheckedText extends Composite
 
 	public void setText(String text) {
 		if (beforeListener != null)
-			removeVerifyListener(beforeListener);
+			removeListener(SWT.Verify, beforeListener);
 		if (afterListener != null)
-			removeModifyListener(afterListener);
+			removeListener(SWT.Modify, afterListener);
 		control.setText(text == null ? "" : text); //$NON-NLS-1$
 		if (beforeListener != null)
-			addVerifyListener(beforeListener);
+			addListener(SWT.Verify, beforeListener);
 		if (afterListener != null)
-			addModifyListener(afterListener);
+			addListener(SWT.Modify, afterListener);
 	}
-
-	public void addVerifyListener(VerifyListener listener) {
-		if (verifyListeners == null)
-			verifyListeners = new ListenerList<>();
-		verifyListeners.add(listener);
-		control.addVerifyListener(listener);
-	}
-
-	public void removeVerifyListener(VerifyListener listener) {
-		if (verifyListeners != null) {
-			verifyListeners.remove(listener);
-			control.removeVerifyListener(listener);
+	
+	public void addListener(int type, Listener listener) {
+		switch (type) {
+		case SWT.Verify:
+			if (verifyListeners == null)
+				verifyListeners = new ListenerList<>();
+			verifyListeners.add(listener);
+			control.addListener(SWT.Verify, listener);
+			break;
+		case SWT.Modify:
+			if (modifyListeners == null)
+				modifyListeners = new ListenerList<>();
+			modifyListeners.add(listener);
+			control.addListener(SWT.Modify, listener);
+			break;
+		case SWT.FocusIn:
+		case SWT.FocusOut:
+		case SWT.KeyDown:
+		case SWT.KeyUp:
+		case SWT.Traverse:
+		case SWT.MouseDoubleClick:
+		case SWT.MouseDown:
+		case SWT.MouseUp:
+			control.addListener(type, listener);
+			break;
 		}
+	}
+	
+	public void removeListener(int type, Listener listener) {
+		switch (type) {
+		case SWT.Verify:
+			if (verifyListeners != null) {
+				verifyListeners.remove(listener);
+				control.removeListener(SWT.Verify, listener);}
+			break;
+		case SWT.Modify:
+			if (modifyListeners != null) {
+				modifyListeners.remove(listener);
+				control.removeListener(SWT.Modify, listener);
+			}
+			break;
+		case SWT.FocusIn:
+		case SWT.FocusOut:
+		case SWT.KeyDown:
+		case SWT.KeyUp:
+		case SWT.Traverse:
+		case SWT.MouseDoubleClick:
+		case SWT.MouseDown:
+		case SWT.MouseUp:
+			control.removeListener(type, listener);
+			break;
+		}
+
 	}
 
 	@Override
@@ -434,31 +421,13 @@ public class CheckedText extends Composite
 		control.setEnabled(enabled);
 	}
 
-	/**
-	 * @param listener
-	 * @see org.eclipse.swt.widgets.Control#addMouseListener(org.eclipse.swt.events.MouseListener)
-	 */
-	@Override
-	public void addMouseListener(MouseListener listener) {
-		control.addMouseListener(listener);
-	}
-
-	/**
-	 * @param listener
-	 * @see org.eclipse.swt.widgets.Control#removeMouseListener(org.eclipse.swt.events.MouseListener)
-	 */
-	@Override
-	public void removeMouseListener(MouseListener listener) {
-		control.removeMouseListener(listener);
-	}
-
 	public void setSpellingOptions(int maxSuggestions, int spellingOptions) {
 		this.maxSuggestions = maxSuggestions;
 		if (this.spellingOptions != spellingOptions) {
 			if (spellingOptions == ISpellCheckingService.NOSPELLING)
-				control.removePaintListener(this);
+				control.removeListener(SWT.Paint, this);
 			else if (this.spellingOptions == ISpellCheckingService.NOSPELLING)
-				control.addPaintListener(this);
+				control.addListener(SWT.Paint, this);
 		}
 	}
 
@@ -472,7 +441,62 @@ public class CheckedText extends Composite
 		}
 	}
 
-	public void paintControl(PaintEvent e) {
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Paint:
+			paintControl(e);
+			break;
+
+		case SWT.Modify:
+			if (!control.getText().isEmpty())
+				checkSpelling(true);
+			break;
+		case SWT.KeyDown:
+			keyPressed(e);
+			break;
+		}
+
+	}
+
+	private void keyPressed(Event event) {
+		int modifiers = event.stateMask;
+		if ((modifiers & SWT.CTRL) != 0) {
+			int keyCode = event.keyCode;
+			switch (keyCode) {
+			case 'a':
+				selectAll();
+				break;
+			// c,v,x handled by StyledText
+			case 'z':
+				// Ctrl+Z
+				if ((style & SWT.READ_ONLY) == 0)
+					undo();
+				break;
+			case 'y':
+				// Ctrl+Y
+				if ((style & SWT.READ_ONLY) == 0)
+					redo();
+				break;
+			}
+			return;
+		}
+		switch (event.keyCode) {
+		case SWT.ESC:
+		case SWT.ARROW_LEFT:
+		case SWT.ARROW_RIGHT:
+		case SWT.ARROW_UP:
+		case SWT.ARROW_DOWN:
+		case SWT.HOME:
+		case SWT.END:
+		case SWT.PAGE_DOWN:
+		case SWT.PAGE_UP:
+			createUndoPoint();
+			break;
+		}
+	}
+
+	private void paintControl(Event e) {
 		if (control.isDisposed())
 			return;
 		if (incidents != null && incidents.length > 0) {
@@ -527,41 +551,6 @@ public class CheckedText extends Composite
 		return coordinates;
 	}
 
-	/**
-	 * @param listener
-	 * @see org.eclipse.swt.widgets.Control#addFocusListener(org.eclipse.swt.events.FocusListener)
-	 */
-	@Override
-	public void addFocusListener(FocusListener listener) {
-		control.addFocusListener(listener);
-	}
-
-	/**
-	 * @param listener
-	 * @see org.eclipse.swt.widgets.Control#addKeyListener(org.eclipse.swt.events.KeyListener)
-	 */
-	@Override
-	public void addKeyListener(KeyListener listener) {
-		control.addKeyListener(listener);
-	}
-
-	/**
-	 * @param listener
-	 * @see org.eclipse.swt.widgets.Control#removeFocusListener(org.eclipse.swt.events.FocusListener)
-	 */
-	@Override
-	public void removeFocusListener(FocusListener listener) {
-		control.removeFocusListener(listener);
-	}
-
-	/**
-	 * @param listener
-	 * @see org.eclipse.swt.widgets.Control#removeKeyListener(org.eclipse.swt.events.KeyListener)
-	 */
-	@Override
-	public void removeKeyListener(KeyListener listener) {
-		control.removeKeyListener(listener);
-	}
 
 	@Override
 	public void setFont(Font font) {
@@ -611,38 +600,6 @@ public class CheckedText extends Composite
 
 	public Point getSelection() {
 		return control.getSelection();
-	}
-
-	public void addModifyListener(ModifyListener listener) {
-		if (modifyListeners == null)
-			modifyListeners = new ListenerList<>();
-		modifyListeners.add(listener);
-		control.addModifyListener(listener);
-	}
-
-	public void removeModifyListener(ModifyListener listener) {
-		if (modifyListeners != null) {
-			modifyListeners.remove(listener);
-			control.removeModifyListener(listener);
-		}
-	}
-
-	/**
-	 * @param listener
-	 * @see org.eclipse.swt.widgets.Control#addTraverseListener(org.eclipse.swt.events.TraverseListener)
-	 */
-	@Override
-	public void addTraverseListener(TraverseListener listener) {
-		control.addTraverseListener(listener);
-	}
-
-	/**
-	 * @param listener
-	 * @see org.eclipse.swt.widgets.Control#removeTraverseListener(org.eclipse.swt.events.TraverseListener)
-	 */
-	@Override
-	public void removeTraverseListener(TraverseListener listener) {
-		control.removeTraverseListener(listener);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })

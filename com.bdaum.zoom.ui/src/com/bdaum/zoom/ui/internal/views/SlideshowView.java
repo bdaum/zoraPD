@@ -71,6 +71,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.piccolo2d.PNode;
@@ -766,7 +767,7 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 		@Override
 		public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 			SlideShowImpl show = null;
-			for (Asset asset : selection)
+			for (Asset asset : selection.getAssets())
 				if (accepts(asset)) {
 					show = getSlideShow();
 					break;
@@ -787,7 +788,7 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 				boolean cleared = false;
 				List<IIdentifiableObject> toBeStored = new ArrayList<>(selection.size() + 1);
 				CaptionConfiguration captionConfig = captionProcessor.computeCaptionConfiguration(selection.getContext());
-				for (Asset asset : selection) {
+				for (Asset asset : selection.getAssets()) {
 					if (!accepts(asset))
 						continue;
 					if (!cleared) {
@@ -1927,6 +1928,7 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 	protected void fillLocalToolBar(IToolBarManager manager) {
 		super.fillLocalToolBar(manager);
 		manager.add(playAction);
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	@Override

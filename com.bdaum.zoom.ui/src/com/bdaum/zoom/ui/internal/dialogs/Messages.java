@@ -214,6 +214,8 @@ public class Messages extends NLS {
 	public static String CollectionEditDialog_sort_group;
 	public static String CollectionEditDialog_specify_name;
 	public static String CollectionEditDialog_value;
+	public static String ColorFilterDialog_custom_color;
+	public static String ColorFilterDialog_filter_message;
 	public static String ComputeTimeshiftDialog_compute_time_diff;
 	public static String ConfigureCaptionDialog_configure_caption;
 	public static String ConfigureCaptionDialog_configure_caption_msg;
@@ -330,6 +332,7 @@ public class Messages extends NLS {
 	public static String EditMetaDialog_artworks;
 	public static String EditMetaDialog_artworks_tooltip;
 	public static String EditMetaDialog_automatically_add_imported_folders;
+	public static String EditMetaDialog_backup_disabled;
 	public static String EditMetaDialog_backup_file;
 	public static String EditMetaDialog_backup_tooltip;
 	public static String EditMetaDialog_better_use_x;
@@ -356,6 +359,8 @@ public class Messages extends NLS {
 	public static String EditMetaDialog_clean_up;
 	public static String EditMetaDialog_clean_up_msg;
 	public static String EditMetaDialog_clean_up_tooltip;
+	public static String EditMetaDialog_clone;
+	public static String EditMetaDialog_clone_tooltip;
 	public static String EditMetaDialog_closing_for_defrag;
 	public static String EditMetaDialog_collect;
 	public static String EditMetaDialog_collect_keyword_tooltip;
@@ -1180,6 +1185,7 @@ public class Messages extends NLS {
 	public static String RetargetDialog_retarget_scope;
 	public static String RetargetDialog_retarget_title;
 	public static String RetargetDialog_retarget_voicenote;
+	public static String RetargetDialog_scope;
 	public static String RetargetDialog_selected_image;
 	public static String TemplateEditDialog_add_metadata;
 	public static String TemplateEditDialog_add_var;

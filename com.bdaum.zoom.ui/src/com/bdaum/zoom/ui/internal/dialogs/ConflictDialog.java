@@ -172,13 +172,13 @@ public class ConflictDialog extends ZTitleAreaDialog {
 				updateButtons();
 			}
 		};
-		conflictButtonGroup.addListener(selectionListener);
+		conflictButtonGroup.addListener(SWT.Selection, selectionListener);
 		if (multi) {
 			new Label(conflictButtonGroup, SWT.SEPARATOR | SWT.HORIZONTAL)
 					.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
 			allButton = WidgetFactory.createCheckButton(conflictButtonGroup, Messages.ConflictDialog_apply_to_all,
 					new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-			allButton.addListener(selectionListener);
+			allButton.addListener(SWT.Selection, selectionListener);
 			GridData gridData = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
 			gridData.horizontalIndent = 15;
 			newerButton = WidgetFactory.createCheckButton(parent, Messages.ConflictDialog_only_newer_items, gridData);

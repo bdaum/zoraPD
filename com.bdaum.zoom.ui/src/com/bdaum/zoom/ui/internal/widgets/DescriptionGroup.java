@@ -34,7 +34,7 @@ public class DescriptionGroup {
 		formatGroup.setLayout(new GridLayout(2, false));
 		formatButtonGroup = new RadioButtonGroup(formatGroup, null, SWT.HORIZONTAL,
 				Messages.DescriptionGroup_plain_text, "HTML"); //$NON-NLS-1$
-		formatButtonGroup.addListener(new Listener() {
+		formatButtonGroup.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				updateDescriptionStack(parent);

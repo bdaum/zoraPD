@@ -23,14 +23,15 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import java.util.Arrays;
 
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.core.internal.Utilities;
 
 @SuppressWarnings("restriction")
-public class KeywordVerifyListener implements VerifyListener {
+public class KeywordVerifyListener implements Listener {
 
 	private int lastOrigLength = -1;
 	private String lastProposal;
@@ -51,18 +52,18 @@ public class KeywordVerifyListener implements VerifyListener {
 
 	public void setKeywords(String[] keywords) {
 		sortedKeywords = keywords;
-		Arrays.sort(keywords, Utilities.KEYWORDCOMPARATOR);
+		Arrays.parallelSort(keywords, Utilities.KEYWORDCOMPARATOR);
 	}
 
-	public void verifyText(VerifyEvent e) {
+	public void handleEvent(Event e) {
 		reveal = null;
 		String insert = e.text;
 		field = (StyledText) e.widget;
 		if (insert.indexOf("\n") >= 0 && lastProposal != null && lastProposal.length() >= e.start) { //$NON-NLS-1$
-			field.removeVerifyListener(this);
+			field.removeListener(SWT.Verify, this);
 			field.setText(lastProposal);
 			field.setSelection(lastProposal.length());
-			field.addVerifyListener(this);
+			field.addListener(SWT.Verify, this);
 			lastProposal = null;
 			e.doit = false;
 			return;
@@ -71,10 +72,10 @@ public class KeywordVerifyListener implements VerifyListener {
 			String text = field.getText();
 			text = (e.end == lastOrigLength) ? text.substring(0, e.start)
 					: text.substring(0, e.start) + text.substring(lastProposal.length());
-			field.removeVerifyListener(this);
+			field.removeListener(SWT.Verify, this);
 			field.setText(text);
 			field.setSelection(e.start);
-			field.addVerifyListener(this);
+			field.addListener(SWT.Verify, this);
 			lastProposal = null;
 			lastOrigLength = -1;
 			e.doit = false;
@@ -87,17 +88,17 @@ public class KeywordVerifyListener implements VerifyListener {
 		if (reveal != null && viewer != null)
 			viewer.reveal(reveal);
 		if (e.doit) {
-			field.removeVerifyListener(this);
+			field.removeListener(SWT.Verify, this);
 			StringBuilder sb = new StringBuilder(field.getText());
 			sb.replace(e.start, e.end, e.text);
 			field.setText(sb.toString());
 			field.setSelection(e.start + e.text.length());
-			field.addVerifyListener(this);
+			field.addListener(SWT.Verify, this);
 			e.doit = false;
 		}
 	}
 
-	private void computeProposal(VerifyEvent e) {
+	private void computeProposal(Event e) {
 		int start = e.start;
 		int end = e.end;
 		if (start != end) {
@@ -124,10 +125,10 @@ public class KeywordVerifyListener implements VerifyListener {
 				lastProposal = text.substring(0, kwstart) + keyword;
 				keyword = orig + keyword.toString().substring(orig.length());
 			}
-			field.removeVerifyListener(this);
+			field.removeListener(SWT.Verify, this);
 			field.setText(text.substring(0, kwstart) + keyword);
 			field.setSelection(start + insert.length());
-			field.addVerifyListener(this);
+			field.addListener(SWT.Verify, this);
 			lastOrigLength = orig.length();
 			e.doit = false;
 			return;

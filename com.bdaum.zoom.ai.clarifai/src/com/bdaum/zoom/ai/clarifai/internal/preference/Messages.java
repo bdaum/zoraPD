@@ -23,12 +23,11 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.ai.clarifai.internal.preference.messages"; //$NON-NLS-1$
-	public static String PagePart_access_failed;
 	public static String PagePart_access_token;
+	public static String PagePart_apikey;
 	public static String PagePart_both_must_be_set;
 	public static String PagePart_check_adult;
 	public static String PagePart_check_credentials;
-	public static String PagePart_client_id;
 	public static String PagePart_credentials;
 	public static String PagePart_detect_celebrities;
 	public static String PagePart_detect_celebrities_tooltip;
@@ -44,7 +43,6 @@ public class Messages extends NLS {
 	public static String PagePart_min_confidence;
 	public static String PagePart_model;
 	public static String PagePart_porno;
-	public static String PagePart_secret;
 	public static String PagePart_translate;
 	public static String PagePart_translate_tooltip;
 	public static String PagePart_verified;

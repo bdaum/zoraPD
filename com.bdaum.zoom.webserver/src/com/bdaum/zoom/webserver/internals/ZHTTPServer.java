@@ -1,8 +1,15 @@
 package com.bdaum.zoom.webserver.internals;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import org.eclipse.osgi.util.NLS;
 
@@ -57,6 +64,38 @@ public class ZHTTPServer extends HTTPServer {
 			content = WebserverActivator.getDefault().compilePage(page, substitutions);
 		}
 		resp.send(status, content);
+	}
+	
+	// from https://github.com/mesutpiskin/opencv-live-video-stream-over-http/blob/master/src/main/java/HttpStreamServer.java
+
+	public static void writeVideoHeader(OutputStream out, String boundary) throws IOException {
+		out.write(("HTTP/1.0 200 OK\r\n"  //$NON-NLS-1$
+				+ "Connection: keep-alive\r\n"  //$NON-NLS-1$
+				+ "Max-Age: 0\r\n"  //$NON-NLS-1$
+				+ "Expires: 0\r\n"  //$NON-NLS-1$
+				+ "Cache-Control: no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0\r\n" //$NON-NLS-1$
+				+ "Pragma: no-cache\r\n"  //$NON-NLS-1$
+				+ "Content-Type: multipart/x-mixed-replace;boundary=" + boundary + "\r\n" //$NON-NLS-1$ //$NON-NLS-2$ 
+				+ "\r\n"  //$NON-NLS-1$
+				+ "--" + boundary + "\r\n").getBytes()); //$NON-NLS-1$ //$NON-NLS-2$ 
+	}
+
+	public void pushImage(OutputStream out, BufferedImage img, String boundary) throws IOException {
+		if (img == null)
+			return;
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ImageIO.write(img, "jpg", baos); //$NON-NLS-1$
+			byte[] imageBytes = baos.toByteArray();
+			out.write(("Content-type: image/jpeg\r\n" + "Content-Length: " + imageBytes.length + "\r\n" + "\r\n") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+					.getBytes());
+			out.write(imageBytes);
+			out.write(("\r\n--" + boundary + "\r\n").getBytes()); //$NON-NLS-1$ //$NON-NLS-2$
+		} catch (Exception ex) {
+			ServerSocket serv = ZHTTPServer.this.serv;
+			Socket socket = serv.accept();
+			writeVideoHeader(socket.getOutputStream(), boundary);
+		}
 	}
 
 }

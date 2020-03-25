@@ -88,27 +88,24 @@ public class UpdateJob extends AbstractUpdateJob {
 			}
 		} else if (Platform.OS_LINUX.equals(os)) {
 			prefix = os + '.';
-			if (Platform.WS_GTK.equals(ws) || Platform.WS_MOTIF.equals(ws)) {
+			if (Platform.WS_GTK.equals(ws)) {
 				if (Platform.ARCH_X86_64.equals(osArch)) {
 					packages.add(prefix + ws + '.' + osArch);
 					packages.add(prefix + ws + '.' + Platform.ARCH_X86);
 				} else
 					packages.add(prefix + ws + '.' + osArch);
-			} else if (Platform.WS_MOTIF.equals(ws))
-				packages.add(prefix + ws + '.' + Platform.ARCH_X86);
+			} 
 		} else if (Platform.OS_MACOSX.equals(os)) {
 			prefix = os + '.';
-			if (Platform.WS_CARBON.equals(ws))
-				packages.add(prefix + ws + '.' + Platform.ARCH_X86);
-			else if (Platform.WS_COCOA.equals(ws)) {
+			if (Platform.WS_COCOA.equals(ws)) {
 				if (Platform.ARCH_X86_64.equals(osArch)) {
 					packages.add(prefix + ws + '.' + osArch);
 					packages.add(prefix + ws + '.' + Platform.ARCH_X86);
-					packages.add(prefix + Platform.WS_CARBON + '.' + osArch);
-					packages.add(prefix + Platform.WS_CARBON + '.' + Platform.ARCH_X86);
+					packages.add(prefix + Platform.WS_COCOA + '.' + osArch);
+					packages.add(prefix + Platform.WS_COCOA + '.' + Platform.ARCH_X86);
 				} else {
 					packages.add(prefix + ws + '.' + osArch);
-					packages.add(prefix + Platform.WS_CARBON + '.' + osArch);
+					packages.add(prefix + Platform.WS_COCOA + '.' + osArch);
 				}
 			}
 		}

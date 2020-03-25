@@ -238,7 +238,7 @@ public abstract class AbstractPreferencePage extends PreferencePage implements I
 		link.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
 		link.setText(IDialogConstants.HELP_LABEL);
 		link.setToolTipText(IDialogConstants.HELP_LABEL);
-		link.addListener(new Listener() {
+		link.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				helpPressed(parent);

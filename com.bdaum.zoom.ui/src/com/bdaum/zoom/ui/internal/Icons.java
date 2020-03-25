@@ -344,6 +344,7 @@ public class Icons {
 	public static final Icon month = new Icon("month.png"); //$NON-NLS-1$
 	public static final Icon sync32 = new Icon("sync32.gif"); //$NON-NLS-1$
 	public static final Icon sync32d = new Icon("sync32d.gif"); //$NON-NLS-1$
+	public static final Icon histo = new Icon("histo.png"); //$NON-NLS-1$
 
 	public static Icon toColorIcon(int code) {
 		switch (code) {

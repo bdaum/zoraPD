@@ -10,7 +10,7 @@ import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.css.CSSProperties;
 
-public class JpegMetaGroup extends Composite {
+public class JpegMetaGroup extends Composite implements Listener {
 
 	private CheckboxButton jpegButton;
 	private Label jpegRemark;
@@ -24,16 +24,16 @@ public class JpegMetaGroup extends Composite {
 		jpegRemark = new Label(parent, SWT.NONE);
 		jpegRemark.setText(Messages.JpegMetaGroup_xmp_warning);
 		jpegRemark.setData(CSSProperties.ID, CSSProperties.ERRORS);
-		jpegButton.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateLabel();
-			}
-		});
+		jpegButton.addListener(SWT.Selection, this);
 	}
 
 	private void updateLabel() {
 		jpegRemark.setVisible(jpegButton.getSelection());
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		updateLabel();
 	}
 
 	public void setSelection(boolean selected) {

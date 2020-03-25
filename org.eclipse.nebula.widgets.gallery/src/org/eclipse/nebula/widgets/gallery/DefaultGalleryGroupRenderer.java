@@ -15,7 +15,6 @@ import org.eclipse.nebula.animation.AnimationRunner;
 import org.eclipse.nebula.animation.movement.IMovement;
 import org.eclipse.nebula.animation.movement.LinearInOut;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
@@ -23,6 +22,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.Transform;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Item;
 
 /**
@@ -635,7 +635,7 @@ public class DefaultGalleryGroupRenderer extends AbstractGridGroupRenderer {
 	 * (org.eclipse.nebula.widgets.gallery.GalleryItem,
 	 * org.eclipse.swt.events.MouseEvent, org.eclipse.swt.graphics.Point)
 	 */
-	public boolean mouseDown(final GalleryItem group, MouseEvent e, Point coords) {
+	public boolean mouseDown(final GalleryItem group, Event e, Point coords) {
 
 		if (gallery.isVertical()) { // V_SCROLL
 			if (coords.y - group.y <= getGroupHeight(group)) {

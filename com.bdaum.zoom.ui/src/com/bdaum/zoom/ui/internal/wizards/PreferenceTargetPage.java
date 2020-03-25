@@ -11,7 +11,7 @@ import com.bdaum.zoom.program.BatchConstants;
 import com.bdaum.zoom.ui.internal.widgets.FileEditor;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
-public class PreferenceTargetPage extends ColoredWizardPage {
+public class PreferenceTargetPage extends ColoredWizardPage implements Listener {
 
 	private static final String PATH = "path"; //$NON-NLS-1$
 	private FileEditor fileEditor;
@@ -32,16 +32,16 @@ public class PreferenceTargetPage extends ColoredWizardPage {
 				new String[] { Messages.PreferenceTargetPage_user_preferences }, path,
 				path == null ? BatchConstants.APP_PREFERENCES : path, true, dialogSettings);
 		fileEditor.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
-		fileEditor.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				path = getTargetFile();
-				validatePage();
-			}
-		});
+		fileEditor.addListener(SWT.Modify, this);
 		setControl(composite);
 		validatePage();
 		super.createControl(parent);
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		path = getTargetFile();
+		validatePage();
 	}
 
 	public String getTargetFile() {

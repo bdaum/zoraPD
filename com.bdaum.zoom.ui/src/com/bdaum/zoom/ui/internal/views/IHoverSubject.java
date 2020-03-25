@@ -20,8 +20,8 @@
 
 package com.bdaum.zoom.ui.internal.views;
 
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 
 import com.bdaum.zoom.ui.internal.hover.IGalleryHover;
 
@@ -33,15 +33,15 @@ public interface IHoverSubject {
 
 	public abstract String getTooltip(int mx, int my);
 
-	public abstract Object findObject(MouseEvent event);
+	public abstract Object findObject(Event e);
 
 	/**
 	 * Find all regions under the mouse cursor
 	 * @param event - mouse event
 	 * @return - Array of region IDs
 	 */
-	public abstract ImageRegion[] findAllRegions(MouseEvent event);
+	public abstract ImageRegion[] findAllRegions(Event event);
 
-	public abstract IGalleryHover getGalleryHover(MouseEvent event);
+	public abstract IGalleryHover getGalleryHover(Event event);
 
 }

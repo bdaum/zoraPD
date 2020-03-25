@@ -22,7 +22,6 @@ package com.bdaum.zoom.ai.internal;
 import java.awt.image.BufferedImage;
 
 import com.bdaum.zoom.ai.internal.services.IAiServiceProvider;
-import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.internal.lire.AiAlgorithm;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
 
@@ -35,10 +34,10 @@ public abstract class AbstractAiServiceProvider implements IAiServiceProvider {
 	private String[] ratingModelLabels;
 	private AiAlgorithm[] features;
 
-	@Override
-	public int rate(Asset asset, String opId, int maxRating, String modelId) {
-		return -1;
-	}
+//	@Override
+//	public int rate(Asset asset, String opId, int maxRating, String modelId) {
+//		return -1;
+//	}
 
 	@Override
 	public void setId(String id) {

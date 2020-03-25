@@ -12,9 +12,11 @@
 package com.bdaum.zoom.ui.paint;
 
 
-import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 
 /**
  * The superclass for paint tools that draw continuously along the path
@@ -107,44 +109,26 @@ public abstract class ContinuousPaintSession extends BasicPaintSession {
 		render(points[0]);
 		prepareRetrigger();
 	}
-
-	/**
-	 * Handles a mouseDoubleClick event.
-	 * 
-	 * @param event the mouse event detail information
-	 */
 	
-	public final void mouseDoubleClick(MouseEvent event) {
-		// do nothing
-	}
-
-	/**
-	 * Handles a mouseUp event.
-	 * 
-	 * @param event the mouse event detail information
-	 */
-	
-	public final void mouseUp(MouseEvent event) {
-		if (event.button != 1) return;
-		if (! dragInProgress) return; // spurious event
-//		abortRetrigger();
-		mouseSegmentFinished(event);
-		endSession();
-		dragInProgress = false;
-	}
-	
-	/**
-	 * Handles a mouseMove event.
-	 * 
-	 * @param event the mouse event detail information
-	 */
-	
-	public final void mouseMove(MouseEvent event) {
-		final PaintSurface ps = getPaintSurface();
-		ps.setStatusCoord(ps.getCurrentPosition());
-		if (! dragInProgress) return;
-		mouseSegmentFinished(event);
-		prepareRetrigger();
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.MouseUp:
+			if (e.button != 1) return;
+			if (! dragInProgress) return; // spurious event
+//			abortRetrigger();
+			mouseSegmentFinished(e);
+			endSession();
+			dragInProgress = false;
+			break;
+		case SWT.MouseMove:
+			final PaintSurface ps = getPaintSurface();
+			ps.setStatusCoord(ps.getCurrentPosition());
+			if (! dragInProgress) return;
+			mouseSegmentFinished(e);
+			prepareRetrigger();
+			break;
+		}
 	}
 	
 	/**
@@ -152,7 +136,7 @@ public abstract class ContinuousPaintSession extends BasicPaintSession {
 	 * 
 	 * @param event the mouse event detail information
 	 */
-	private final void mouseSegmentFinished(MouseEvent event) {
+	private final void mouseSegmentFinished(Event event) {
 		if (points[0].x == -1) return; // spurious event
 		if (points[0].x != event.x || points[0].y != event.y) {
 			// draw new segment

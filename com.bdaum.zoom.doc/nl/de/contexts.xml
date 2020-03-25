@@ -462,10 +462,6 @@
     <description>Benutzerdefinierte Wortschätze pflegen</description>
     <topic href="html/reference/catPrefs.html" label="Wortschatz"/>
  </context>
- <context id="autoRating_dialog_context" title="Automatische Bildbewertung">
-    <description>Mehrere Bilder mit Hilfe von KI bewerten</description>
-    <topic href="html/reference/rating.html" label="Automatische Bildbewertung"/>
- </context>
  <context id="tethered_dialog_context" title="Kabelgebundenes Fotografieren">
     <description>Kabelgebundenes Fotografieren</description>
     <topic href="html/reference/tethered.html" label="Kabelgebundenes Fotografieren"/>
@@ -474,4 +470,9 @@
     <description>Hover-Einstellungen</description>
     <topic href="html/reference/hoverPrefs.html" label="Hover-Einstellungen"/>
  </context>
+ <context id="general_page_tuning_context" title="Datenbanktuning">
+     <description>Datenbanktuning</description>
+     <topic href="html/tasks/tuning.html" label="Datenbanktuning"/>
+ </context>
+ 
 </contexts>

@@ -23,10 +23,6 @@ package com.bdaum.zoom.ui.internal.widgets;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -36,6 +32,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 
@@ -43,12 +40,15 @@ import com.bdaum.zoom.cat.model.Rgb_type;
 import com.bdaum.zoom.cat.model.Rgb_typeImpl;
 import com.bdaum.zoom.ui.internal.UiConstants;
 
-public class WebColorGroup {
+public class WebColorGroup implements Listener {
 	private Button button;
 	private Rgb_type rgb;
 	private ListenerList<Listener> listeners = new ListenerList<>();
+	private String text;
+	private Image image;
 
 	public WebColorGroup(final Composite parent, final String text) {
+		this.text = text;
 		Label label = null;
 		if (text != null) {
 			label = new Label(parent, SWT.NONE);
@@ -60,25 +60,27 @@ public class WebColorGroup {
 		gd_bgButton.widthHint = 20;
 		gd_bgButton.heightHint = 20;
 		button.setLayoutData(gd_bgButton);
-		final Image image = new Image(parent.getShell().getDisplay(), 20, 20);
-		button.setImage(image);
-		button.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				ColorDialog dialog = new ColorDialog(parent.getShell());
-				dialog.setText(text);
-				if (rgb != null)
-					dialog.setRGB(new RGB(rgb.getR(), rgb.getG(), rgb.getB()));
-				RGB rgb1 = dialog.open();
-				if (rgb1 != null)
-					setRGB(new Rgb_typeImpl(rgb1.red, rgb1.green, rgb1.blue));
-			}
-		});
-		button.addDisposeListener(new DisposeListener() {
-			public void widgetDisposed(DisposeEvent e) {
-				image.dispose();
-			}
-		});
+		button.setImage(image = new Image(parent.getShell().getDisplay(), 20, 20));
+		button.addListener(SWT.Selection, this);
+		button.addListener(SWT.Dispose, this);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			ColorDialog dialog = new ColorDialog(((Control) e.widget).getShell());
+			dialog.setText(text);
+			if (rgb != null)
+				dialog.setRGB(new RGB(rgb.getR(), rgb.getG(), rgb.getB()));
+			RGB rgb1 = dialog.open();
+			if (rgb1 != null)
+				setRGB(new Rgb_typeImpl(rgb1.red, rgb1.green, rgb1.blue));
+			break;
+		case SWT.Dispose:
+			image.dispose();
+			break;
+		}
 	}
 
 	public Rgb_type setRGB(Rgb_type rgb) {
@@ -91,8 +93,12 @@ public class WebColorGroup {
 		c.dispose();
 		gc.dispose();
 		button.setImage(image);
+		Event e = new Event();
+		e.type = SWT.Modify;
+		e.widget = button;
+		e.data = this;
 		for (Listener listener : listeners)
-			listener.handleEvent(null);
+			listener.handleEvent(e);
 		return rgb;
 	}
 
@@ -138,11 +144,12 @@ public class WebColorGroup {
 	 * 
 	 * @param listener
 	 */
-	public void addListener(Listener listener) {
-		listeners.add(listener);
+	public void addListener(int type, Listener listener) {
+		if (type == SWT.Modify)
+			listeners.add(listener);
 	}
 
-	public void removeListener(Listener listener) {
+	public void removeListener(int type, Listener listener) {
 		listeners.remove(listener);
 	}
 

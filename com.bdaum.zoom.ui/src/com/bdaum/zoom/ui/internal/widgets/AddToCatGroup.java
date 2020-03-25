@@ -21,11 +21,12 @@
 package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 
-public class AddToCatGroup {
+public class AddToCatGroup implements Listener {
 
 	private static final String ADD_TO_CATALOG = "addToCatalog"; //$NON-NLS-1$
 	private static final String ADD_TO_WATCHED = "addToWatched"; //$NON-NLS-1$
@@ -37,25 +38,25 @@ public class AddToCatGroup {
 	public AddToCatGroup(Composite parent) {
 		addButton = WidgetFactory.createCheckButton(parent,
 				Messages.AddToCatGroup_add_exported_to_cat, null);
-		addButton.addListener(new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateButtons();
-			}
-		});
+		addButton.addListener(SWT.Selection, this);
 		watchButton = WidgetFactory.createCheckButton(parent,
 				Messages.AddToCatGroup_add_to_watched, null);
 		updateButtons();
 	}
 	
-	public void addListener(Listener listener) {
-		addButton.addListener(listener);
-		watchButton.addListener(listener);
+	@Override
+	public void handleEvent(Event event) {
+		updateButtons();
+	}
+	
+	public void addListener(int type, Listener listener) {
+		addButton.addListener(type, listener);
+		watchButton.addListener(type, listener);
 	}
 
-	public void removeListener(Listener listener) {
-		addButton.removeListener(listener);
-		watchButton.removeListener(listener);
+	public void removeListener(int type, Listener listener) {
+		addButton.removeListener(type, listener);
+		watchButton.removeListener(type, listener);
 	}
 
 

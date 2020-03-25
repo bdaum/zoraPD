@@ -22,11 +22,8 @@ package com.bdaum.zoom.ai.clarifai.internal.core;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -35,11 +32,9 @@ import java.util.StringTokenizer;
 import javax.imageio.ImageIO;
 
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;
 
 import com.bdaum.zoom.ai.clarifai.internal.ClarifaiActivator;
@@ -47,18 +42,9 @@ import com.bdaum.zoom.ai.clarifai.internal.preference.PreferenceConstants;
 import com.bdaum.zoom.ai.internal.AbstractAiServiceProvider;
 import com.bdaum.zoom.ai.internal.AiActivator;
 import com.bdaum.zoom.ai.internal.translator.TranslatorClient;
-import com.bdaum.zoom.batch.internal.IFileWatcher;
-import com.bdaum.zoom.cat.model.asset.Asset;
-import com.bdaum.zoom.core.Constants;
-import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.core.Ticketbox;
-import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.ai.Prediction;
 import com.bdaum.zoom.core.internal.ai.Prediction.Token;
 import com.bdaum.zoom.core.internal.lire.Algorithm;
-import com.bdaum.zoom.image.ImageConstants;
-import com.bdaum.zoom.image.ZImage;
-import com.bdaum.zoom.ui.internal.UiActivator;
 
 import clarifai2.api.ClarifaiClient;
 import clarifai2.api.ClarifaiResponse;
@@ -70,10 +56,9 @@ import clarifai2.dto.model.DefaultModels;
 import clarifai2.dto.model.Model;
 import clarifai2.dto.model.output.ClarifaiOutput;
 import clarifai2.dto.prediction.Concept;
+import clarifai2.dto.prediction.Detection;
 import clarifai2.dto.prediction.Embedding;
-import clarifai2.dto.prediction.FaceConcepts;
 import clarifai2.dto.prediction.FaceEmbedding;
-import clarifai2.dto.prediction.Focus;
 
 @SuppressWarnings("restriction")
 public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
@@ -84,7 +69,6 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 	private static final String WEDDING_ID = "c386b7a870114f4a87477c0824499348"; //$NON-NLS-1$
 	private static final String CELEBRITIES_ID = "e466caa0619f444ab97497640cefc4dc"; //$NON-NLS-1$
 	// Concepts
-	private static final String HIGH_QUALITY = "ai_b0de276c341f4e9582348f72f26b48fe"; //$NON-NLS-1$
 	private static final String SAFE_FOR_WORK = "sfw"; //$NON-NLS-1$
 
 	private static final float[] EMPTY = new float[0];
@@ -167,10 +151,10 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 							}
 							for (ClarifaiOutput<clarifai2.dto.prediction.Prediction> clarifaiOutput : response4.get())
 								for (clarifai2.dto.prediction.Prediction p : clarifaiOutput.data()) {
-									if (p instanceof FaceConcepts) {
-										FaceConcepts fc = (FaceConcepts) p;
+									if (p instanceof Detection) {
+										Detection fc = p.asDetection();
 										if (rects != null) {
-											Crop crop = fc.boundingBox();
+											Crop crop = fc.crop();
 											rects.add(new Rectangle((int) (crop.left() * width + 0.5f),
 													(int) (crop.top() * height + 0.5f),
 													(int) ((crop.right() - crop.left()) * width + 0.5f),
@@ -197,7 +181,7 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 								for (ClarifaiOutput<clarifai2.dto.prediction.Prediction> clarifaiOutput : (List<ClarifaiOutput<clarifai2.dto.prediction.Prediction>>) response3
 										.get())
 									for (clarifai2.dto.prediction.Prediction p : clarifaiOutput.data()) {
-										Crop crop = p.asFaceDetection().boundingBox();
+										Crop crop = p.asFaceEmbedding().crop();
 										rects.add(new Rectangle((int) (crop.left() * width + 0.5f),
 												(int) (crop.top() * height + 0.5f),
 												(int) ((crop.right() - crop.left()) * width + 0.5f),
@@ -217,73 +201,73 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 		return null;
 	}
 
-	@Override
-	public int rate(Asset asset, String opId, int maxRating, String modelId) {
-		ClarifaiClient client = ClarifaiActivator.getDefault().getClient();
-		if (client != null) {
-			Model<?> model = currentModel = client.getModelByID(modelId).executeSync().get();
-			URI uri = Core.getCore().getVolumeManager().findExistingFile(asset, false);
-			if (uri != null) {
-				String ext = Core.getFileExtension(uri.toString());
-				if (ImageConstants.isJpeg(ext)) {
-					if (Constants.FILESCHEME.equals(uri.getScheme()))
-						return rateImage(maxRating, model, ClarifaiImage.of(new File(uri)));
-					try {
-						return rateImage(maxRating, model, ClarifaiImage.of(uri.toURL()));
-					} catch (MalformedURLException e) {
-						return -1;
-					}
-				}
-				IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
-				MultiStatus status = new MultiStatus(ClarifaiActivator.PLUGIN_ID, 0,
-						Messages.ClarifaiServiceProvider_image_rating, null);
-				File file = null;
-				ZImage hzimage = null;
-				try (Ticketbox box = new Ticketbox()) {
-					try {
-						file = box.obtainFile(uri);
-					} catch (IOException e) {
-						status.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
-								NLS.bind(Messages.ClarifaiServiceProvider_download_failed, uri), e));
-					}
-					if (file != null) {
-						hzimage = CoreActivator.getDefault().getHighresImageLoader().loadImage(null, status, file,
-								asset.getRotation(), asset.getFocalLengthIn35MmFilm(), null, 1d, Double.MAX_VALUE, true,
-								ImageConstants.SRGB, null, null, null, fileWatcher, opId, null);
-						try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-							hzimage.saveToStream(null, true, ZImage.CROPPED, SWT.DEFAULT, SWT.DEFAULT, out,
-									SWT.IMAGE_JPEG, 75);
-							return rateImage(maxRating, model, ClarifaiImage.of(out.toByteArray()));
-						} catch (UnsupportedOperationException e) {
-							// ignore file
-						} catch (IOException e) {
-							status.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
-									NLS.bind(Messages.ClarifaiServiceProvider_loading_failed, uri), e));
-						}
-					}
-				} finally {
-					if (hzimage != null)
-						hzimage.dispose();
-					fileWatcher.stopIgnoring(opId);
-				}
-			}
-		}
-		return -1;
-	}
+//	@Override
+//	public int rate(Asset asset, String opId, int maxRating, String modelId) {
+//		ClarifaiClient client = ClarifaiActivator.getDefault().getClient();
+//		if (client != null) {
+//			Model<?> model = currentModel = client.getModelByID(modelId).executeSync().get();
+//			URI uri = Core.getCore().getVolumeManager().findExistingFile(asset, false);
+//			if (uri != null) {
+//				String ext = Core.getFileExtension(uri.toString());
+//				if (ImageConstants.isJpeg(ext)) {
+//					if (Constants.FILESCHEME.equals(uri.getScheme()))
+//						return rateImage(maxRating, model, ClarifaiImage.of(new File(uri)));
+//					try {
+//						return rateImage(maxRating, model, ClarifaiImage.of(uri.toURL()));
+//					} catch (MalformedURLException e) {
+//						return -1;
+//					}
+//				}
+//				IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
+//				MultiStatus status = new MultiStatus(ClarifaiActivator.PLUGIN_ID, 0,
+//						Messages.ClarifaiServiceProvider_image_rating, null);
+//				File file = null;
+//				ZImage hzimage = null;
+//				try (Ticketbox box = new Ticketbox()) {
+//					try {
+//						file = box.obtainFile(uri);
+//					} catch (IOException e) {
+//						status.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
+//								NLS.bind(Messages.ClarifaiServiceProvider_download_failed, uri), e));
+//					}
+//					if (file != null) {
+//						hzimage = CoreActivator.getDefault().getHighresImageLoader().loadImage(null, status, file,
+//								asset.getRotation(), asset.getFocalLengthIn35MmFilm(), null, 1d, Double.MAX_VALUE, true,
+//								ImageConstants.SRGB, null, null, null, fileWatcher, opId, null);
+//						try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+//							hzimage.saveToStream(null, true, ZImage.CROPPED, SWT.DEFAULT, SWT.DEFAULT, out,
+//									SWT.IMAGE_JPEG, 75);
+//							return rateImage(maxRating, model, ClarifaiImage.of(out.toByteArray()));
+//						} catch (UnsupportedOperationException e) {
+//							// ignore file
+//						} catch (IOException e) {
+//							status.add(new Status(IStatus.ERROR, UiActivator.PLUGIN_ID,
+//									NLS.bind(Messages.ClarifaiServiceProvider_loading_failed, uri), e));
+//						}
+//					}
+//				} finally {
+//					if (hzimage != null)
+//						hzimage.dispose();
+//					fileWatcher.stopIgnoring(opId);
+//				}
+//			}
+//		}
+//		return -1;
+//	}
 
-	@SuppressWarnings("unchecked")
-	protected int rateImage(int maxRating, Model<?> model, ClarifaiImage cImage) {
-		ClarifaiResponse<?> response = model.predict().withInputs(ClarifaiInput.forInputValue(cImage)).executeSync();
-		if (response.isSuccessful())
-			for (ClarifaiOutput<clarifai2.dto.prediction.Prediction> clarifaiOutput : (List<ClarifaiOutput<clarifai2.dto.prediction.Prediction>>) response
-					.get())
-				for (clarifai2.dto.prediction.Prediction prediction : clarifaiOutput.data())
-					if (prediction instanceof Focus)
-						return (int) (maxRating * ((Focus) prediction).value() + 0.5f);
-					else if (HIGH_QUALITY.equals(((Concept) prediction).id()))
-						return (int) (maxRating * ((Concept) prediction).value() + 0.5f);
-		return -1;
-	}
+//	@SuppressWarnings("unchecked")
+//	protected int rateImage(int maxRating, Model<?> model, ClarifaiImage cImage) {
+//		ClarifaiResponse<?> response = model.predict().withInputs(ClarifaiInput.forInputValue(cImage)).executeSync();
+//		if (response.isSuccessful())
+//			for (ClarifaiOutput<clarifai2.dto.prediction.Prediction> clarifaiOutput : (List<ClarifaiOutput<clarifai2.dto.prediction.Prediction>>) response
+//					.get())
+//				for (clarifai2.dto.prediction.Prediction prediction : clarifaiOutput.data())
+//					if (prediction.isBlur())
+//						return (int) (maxRating * prediction.asBlur().value() + 0.5f);
+//					else if (HIGH_QUALITY.equals(((Concept) prediction).id()))
+//						return (int) (maxRating * ((Concept) prediction).value() + 0.5f);
+//		return -1;
+//	}
 
 	protected Model<?> getModel(ClarifaiClient client, String modelId) {
 		if (currentModel == null || !modelId.equals(currentModel.id())) {

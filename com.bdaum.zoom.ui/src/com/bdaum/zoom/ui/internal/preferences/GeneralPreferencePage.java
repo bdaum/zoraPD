@@ -35,10 +35,14 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Monitor;
+import org.eclipse.ui.PlatformUI;
 
+import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
@@ -49,9 +53,10 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.widgets.CGroup;
+import com.bdaum.zoom.ui.widgets.CLink;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
-public class GeneralPreferencePage extends AbstractPreferencePage {
+public class GeneralPreferencePage extends AbstractPreferencePage implements Listener {
 
 	public static final String ID = "com.bdaum.zoom.ui.preferences.GeneralPreferencePage"; //$NON-NLS-1$
 	private NumericControl undoField;
@@ -61,13 +66,14 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 	private CheckboxButton previewButton;
 	private NumericControl inactivityField;
 	private ComboViewer updateViewer;
-	private CheckboxButton noiseButton;
 	private CheckboxButton noProgressButton;
 	private ComboViewer backupGenerationsField;
 	private CheckboxButton enlargeButton;
 	private RadioButtonGroup displayGroup;
 	private String customFile;
 	private NumericControl processorField;
+	private CheckboxButton nobackupButton;
+	private CheckboxButton accelerationButton;
 
 	@Override
 	protected void createPageContents(Composite composite) {
@@ -114,7 +120,8 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 							dialog.setFileName(file.getName());
 						}
 						dialog.setFilterExtensions(new String[] { "*.icc;*.icm" }); //$NON-NLS-1$
-						dialog.setFilterNames(new String[] { Messages.getString("GeneralPreferencePage.icc_profiles") }); //$NON-NLS-1$
+						dialog.setFilterNames(
+								new String[] { Messages.getString("GeneralPreferencePage.icc_profiles") }); //$NON-NLS-1$
 						customFile = dialog.open();
 					}
 				} catch (Exception e) {
@@ -138,6 +145,19 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 			processorField.setMaximum(ap);
 			new Label(progroup, SWT.NONE).setText(NLS.bind(Messages.getString("GeneralPreferencePage.of_n"), ap)); //$NON-NLS-1$
 		}
+		if (Constants.LINUX || Constants.WIN32) {
+			accelerationButton = WidgetFactory.createCheckButton(group,
+					Messages.getString("GeneralPreferencePage.acceleration"), //$NON-NLS-1$
+					new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		}
+		CLink clink = new CLink(group, SWT.NONE);
+		clink.setText(Messages.getString("GeneralPreferencePage.tuning_info")); //$NON-NLS-1$
+		clink.addListener(SWT.Selection, this);
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		PlatformUI.getWorkbench().getHelpSystem().displayHelp("com.bdaum.zoom.doc.general_page_tuning_context"); //$NON-NLS-1$
 	}
 
 	private void createViewerGroup(Composite composite) {
@@ -145,9 +165,6 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 				Messages.getString("GeneralPreferencePage.internal_viewers")); //$NON-NLS-1$
 		previewButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("GeneralPreferencePage.precede_with_preview"), //$NON-NLS-1$
-				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		noiseButton = WidgetFactory.createCheckButton(group,
-				Messages.getString("GeneralPreferencePage.hide_jpeg_artifacts"), //$NON-NLS-1$
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		enlargeButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("GeneralPreferencePage.enlarge_small_images"), new GridData( //$NON-NLS-1$
@@ -171,11 +188,17 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 	}
 
 	private void createBackupGroup(Composite composite) {
-		CGroup group = CGroup.create(composite, 1, Messages.getString("GeneralPreferencePage.backup_update")); //$NON-NLS-1$
+		CGroup group = new CGroup(composite, SWT.NONE);
+		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		group.setLayout(new GridLayout(3, false));
+		group.setText(Messages.getString("GeneralPreferencePage.backup_update")); //$NON-NLS-1$
+
 		new Label(group, SWT.NONE).setText(Messages.getString("GeneralPreferencePage.backup_interval")); //$NON-NLS-1$
 		backupField = new NumericControl(group, SWT.NONE);
 		backupField.setMinimum(1);
 		backupField.setMaximum(365);
+		nobackupButton = WidgetFactory.createCheckButton(group,
+				Messages.getString("GeneralPreferencePage.exclude_readonly"), null); //$NON-NLS-1$
 
 		final String[] options = new String[] { "1", "2", "3", "4", "5", "6", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 				"7", "8", "9", String.valueOf(Integer.MAX_VALUE) }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -184,9 +207,11 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 				Messages.getString("GeneralPreferencePage.unlimited") }; //$NON-NLS-1$
 		backupGenerationsField = createComboViewer(group,
 				Messages.getString("GeneralPreferencePage.max_backup_generations"), options, labels, false); //$NON-NLS-1$
+		backupGenerationsField.getControl().setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
 
 		new Label(group, SWT.NONE).setText(Messages.getString("GeneralPreferencePage.check_for_updates")); //$NON-NLS-1$
 		updateViewer = new ComboViewer(group);
+		updateViewer.getControl().setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
 		updateViewer.setContentProvider(ArrayContentProvider.getInstance());
 		updateViewer.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
@@ -220,6 +245,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		undoField.setSelection(preferenceStore.getInt(PreferenceConstants.UNDOLEVELS));
 		backupField.setSelection(preferenceStore.getInt(PreferenceConstants.BACKUPINTERVAL));
+		nobackupButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.NOBACKUP));
 		backupGenerationsField.setSelection(
 				new StructuredSelection(preferenceStore.getString(PreferenceConstants.BACKUPGENERATIONS)));
 		iccViewer.setSelection(new StructuredSelection(preferenceStore.getString(PreferenceConstants.COLORPROFILE)));
@@ -227,8 +253,9 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 			processorField.setSelection(preferenceStore.getInt(PreferenceConstants.NOPROCESSORS));
 		customFile = preferenceStore.getString(PreferenceConstants.CUSTOMPROFILE);
 		advancedButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ADVANCEDGRAPHICS));
+		if (accelerationButton != null)
+			accelerationButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ACCELERATION));
 		previewButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.PREVIEW));
-		noiseButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ADDNOISE));
 		enlargeButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ENLARGESMALL));
 		if (displayGroup != null) {
 			String s = preferenceStore.getString(PreferenceConstants.SECONDARYMONITOR);
@@ -247,6 +274,8 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 				preferenceStore.getDefaultInt(PreferenceConstants.UNDOLEVELS));
 		preferenceStore.setValue(PreferenceConstants.BACKUPINTERVAL,
 				preferenceStore.getDefaultInt(PreferenceConstants.BACKUPINTERVAL));
+		preferenceStore.setValue(PreferenceConstants.NOBACKUP,
+				preferenceStore.getDefaultBoolean(PreferenceConstants.NOBACKUP));
 		preferenceStore.setValue(PreferenceConstants.BACKUPGENERATIONS,
 				preferenceStore.getDefaultInt(PreferenceConstants.BACKUPGENERATIONS));
 		preferenceStore.setValue(PreferenceConstants.CUSTOMPROFILE,
@@ -255,12 +284,12 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 				preferenceStore.getDefaultInt(PreferenceConstants.COLORPROFILE));
 		preferenceStore.setValue(PreferenceConstants.ADVANCEDGRAPHICS,
 				preferenceStore.getDefaultBoolean(PreferenceConstants.ADVANCEDGRAPHICS));
+		preferenceStore.setValue(PreferenceConstants.ACCELERATION,
+				preferenceStore.getDefaultBoolean(PreferenceConstants.ACCELERATION));
 		preferenceStore.setValue(PreferenceConstants.NOPROCESSORS,
 				preferenceStore.getInt(PreferenceConstants.NOPROCESSORS));
 		preferenceStore.setValue(PreferenceConstants.PREVIEW,
 				preferenceStore.getDefaultBoolean(PreferenceConstants.PREVIEW));
-		preferenceStore.setValue(PreferenceConstants.ADDNOISE,
-				preferenceStore.getDefaultBoolean(PreferenceConstants.ADDNOISE));
 		preferenceStore.setValue(PreferenceConstants.ENLARGESMALL,
 				preferenceStore.getDefaultBoolean(PreferenceConstants.ENLARGESMALL));
 		preferenceStore.setValue(PreferenceConstants.SECONDARYMONITOR,
@@ -282,6 +311,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		preferenceStore.setValue(PreferenceConstants.UNDOLEVELS, undoField.getSelection());
 		preferenceStore.setValue(PreferenceConstants.BACKUPINTERVAL, backupField.getSelection());
+		preferenceStore.setValue(PreferenceConstants.NOBACKUP, nobackupButton.getSelection());
 		IStructuredSelection selection = backupGenerationsField.getStructuredSelection();
 		if (!selection.isEmpty())
 			preferenceStore.setValue(PreferenceConstants.BACKUPGENERATIONS,
@@ -296,8 +326,9 @@ public class GeneralPreferencePage extends AbstractPreferencePage {
 		if (processorField != null)
 			preferenceStore.setValue(PreferenceConstants.NOPROCESSORS, processorField.getSelection());
 		preferenceStore.setValue(PreferenceConstants.ADVANCEDGRAPHICS, advancedButton.getSelection());
+		if (accelerationButton != null)
+			preferenceStore.setValue(PreferenceConstants.ACCELERATION, accelerationButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.PREVIEW, previewButton.getSelection());
-		preferenceStore.setValue(PreferenceConstants.ADDNOISE, noiseButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.ENLARGESMALL, enlargeButton.getSelection());
 		if (displayGroup != null) {
 			int i = displayGroup.getSelection();

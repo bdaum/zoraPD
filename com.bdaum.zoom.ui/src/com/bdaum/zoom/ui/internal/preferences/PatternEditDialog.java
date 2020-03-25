@@ -85,7 +85,7 @@ public class PatternEditDialog extends ZDialog {
 			policyButtonGroup.setToolTipText(0, Messages.getString("PatternEditDialog.Pattern_rejects")); //$NON-NLS-1$
 			policyButtonGroup.setToolTipText(1, Messages.getString("PatternEditDialog.Pattern_accepts")); //$NON-NLS-1$
 			policyButtonGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-			policyButtonGroup.addListener(new Listener() {
+			policyButtonGroup.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
 					setAcceptOrReject(policyButtonGroup.getSelection() == 0);

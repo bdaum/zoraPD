@@ -116,7 +116,7 @@ public class ApplicationPreferencePage extends AbstractPreferencePage {
 				Messages.getString("ApplicationPreferencePage.with_prompt")); //$NON-NLS-1$
 		trashButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("ApplicationPreferencePage.delete_trashcan"), null); //$NON-NLS-1$
-		trayButtonGroup.addListener(new Listener() {
+		trayButtonGroup.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				updateButtons();

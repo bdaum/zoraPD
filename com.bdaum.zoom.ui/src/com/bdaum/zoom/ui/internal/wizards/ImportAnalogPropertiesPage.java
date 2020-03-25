@@ -13,10 +13,6 @@ import java.util.StringTokenizer;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -30,9 +26,7 @@ import org.eclipse.swt.widgets.Text;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.Format;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.Utilities;
-import com.bdaum.zoom.core.internal.ai.IAiService;
 import com.bdaum.zoom.core.internal.operations.AnalogProperties;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.dialogs.KeywordDialog;
@@ -44,7 +38,7 @@ import com.bdaum.zoom.ui.widgets.NumericControl;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class ImportAnalogPropertiesPage extends ColoredWizardPage {
+public class ImportAnalogPropertiesPage extends ColoredWizardPage implements Listener {
 
 	private static final String[] EMULSIONS = new String[] { "Agfacolor", "Agfa Optima", //$NON-NLS-1$ //$NON-NLS-2$
 			"Fuji Reala", "Fuji Superia", "Fuji Sensia", "Fuji Velvia", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -101,7 +95,7 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage {
 			23, // Messages.QueryField_half_plate,
 			15, // Messages.QueryField_full_plate,
 			100 };
-	private IAiService aiService;
+//	private IAiService aiService;
 	private IDialogSettings settings;
 	private Combo makeField;
 	private Combo modelField;
@@ -206,7 +200,7 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage {
 
 	public ImportAnalogPropertiesPage(String pageName) {
 		super(pageName);
-		aiService = CoreActivator.getDefault().getAiService();
+//		aiService = CoreActivator.getDefault().getAiService();
 	}
 
 	public AnalogProperties getResult() {
@@ -227,9 +221,96 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage {
 		right.setLayout(new GridLayout(1, false));
 		CGroup cameraGroup = CGroup.create(left, 1, Messages.ImportAnalogPropertiesPage_camera);
 		makeField = createCombo(cameraGroup, QueryField.EXIF_MAKE.getLabel(), 200, SWT.NONE, null);
-		SelectionAdapter cameraSelectionListener = new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+		makeField.addListener(SWT.Selection, this);
+		modelField = createCombo(cameraGroup, QueryField.EXIF_MODEL.getLabel(), 200, SWT.NONE, null);
+		modelField.addListener(SWT.Selection, this);
+		serialField = createCombo(cameraGroup, QueryField.EXIF_SERIAL.getLabel(), 200, SWT.NONE, null);
+		serialField.addListener(SWT.Selection, this);
+		CGroup mediumGroup = CGroup.create(right, 1, Messages.ImportAnalogPropertiesPage_medium);
+		typeField = createCombo(mediumGroup, QueryField.ANALOGTYPE.getLabel(), 100, SWT.READ_ONLY,
+				QueryField.ANALOGTYPE.getEnumLabels());
+		emulsionField = createCombo(mediumGroup, QueryField.EMULSION.getLabel(), 200, SWT.NONE, EMULSIONS);
+		formatField = createCombo(mediumGroup, QueryField.ANALOGFORMAT.getLabel(), 100, SWT.READ_ONLY,
+				QueryField.ANALOGFORMAT.getEnumLabels());
+		formatField.addListener(SWT.Selection, this);
+		isoField = createSpinner(mediumGroup, "ISO", 60, 10, 0, 50000, 0, true); //$NON-NLS-1$
+		notesField = createTextarea(mediumGroup, QueryField.ANALOGPROCESSING.getLabel(), 200, 40);
+		CGroup lensGroup = CGroup.create(left, 1, Messages.ImportAnalogPropertiesPage_lens);
+		lensField = createCombo(lensGroup, QueryField.EXIF_LENS.getLabel(), 200, SWT.NONE, null);
+		lensField.addListener(SWT.Selection, this);
+		lensserialField = createCombo(lensGroup, QueryField.EXIF_LENSSERIAL.getLabel(), 200, SWT.NONE, null);
+		lensserialField.addListener(SWT.Selection, this);
+		createLabel(lensGroup, QueryField.EXIF_FOCALLENGTH.getLabel());
+		Composite focalGroup = new Composite(lensGroup, SWT.NONE);
+		focalGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		GridLayout layout = new GridLayout(6, false);
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		focalGroup.setLayout(layout);
+		focalLengthField = createSpinner(focalGroup, null, 70, 10, 0, 100000, 1, true);
+		focalLengthField.addListener(SWT.Selection, this);
+		factorField = createSpinner(focalGroup, "x", 60, 10, 1, 1000, 2, false); //$NON-NLS-1$
+		factorField.addListener(SWT.Selection, this);
+		focalLength35Field = createSpinner(focalGroup, "=", 80, 1, 3, 10000, 0, true); //$NON-NLS-1$
+		focalLength35Field.addListener(SWT.Selection, this);
+		new Label(focalGroup, SWT.NONE).setText("@35mm"); //$NON-NLS-1$
+		CGroup exposureGroup = CGroup.create(right, 1, Messages.ImportAnalogPropertiesPage_exposure);
+		dateField = createDateInput(exposureGroup, QueryField.EXIF_DATETIMEORIGINAL.getLabel(),
+				SWT.DATE | SWT.DROP_DOWN);
+		timeField = createDateInput(exposureGroup, QueryField.IPTC_DATECREATED.getLabel(), SWT.TIME);
+		lightSourceField = createCombo(exposureGroup, QueryField.EXIF_LIGHTSOURCE.getLabel(), 200, SWT.READ_ONLY,
+				QueryField.EXIF_LIGHTSOURCE.getEnumLabels());
+		lvField = createText(exposureGroup, QueryField.EXIF_LV.getLabel(), 15);
+		lvField.addListener(SWT.Modify, this);
+		exposureTimeField = createText(exposureGroup, QueryField.EXIF_EXPOSURETIME.getLabel(), 25);
+		exposureTimeField.addListener(SWT.Modify, this);
+		fnumberTimeField = createText(exposureGroup, QueryField.EXIF_FNUMBER.getLabel(), 15);
+		fnumberTimeField.addListener(SWT.Modify, this);
+		CGroup iptcGroup = CGroup.create(left, 1, Messages.ImportAnalogPropertiesPage_rights);
+		artistField = createCombo(iptcGroup, QueryField.IPTC_BYLINE.getLabel(), 200, SWT.NONE, null);
+		copyrightField = createCombo(iptcGroup, QueryField.EXIF_COPYRIGHT.getLabel(), 200, SWT.NONE, null);
+		eventField = createCombo(iptcGroup, QueryField.IPTC_EVENT.getLabel(), 200, SWT.NONE, null);
+		createLabel(iptcGroup, QueryField.IPTC_KEYWORDS.getLabel());
+		keywordField = new Text(iptcGroup, SWT.READ_ONLY | SWT.BORDER | SWT.V_SCROLL);
+		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
+		layoutData.heightHint = 50;
+		keywordField.setLayoutData(layoutData);
+		keywordField.addListener(SWT.MouseUp, this);
+		createLabel(iptcGroup, QueryField.SAFETY.getLabel());
+		privacyGroup = new RadioButtonGroup(iptcGroup, null, SWT.HORIZONTAL, QueryField.SAFETY.getEnumLabels());
+//		if (aiService != null && aiService.isEnabled() && aiService.getRatingProviderIds().length > 0) {
+//			autoGroup = new AutoRatingGroup(right, aiService, settings);
+//			autoGroup.addListener(new Listener() {
+//				@Override
+//				public void handleEvent(Event event) {
+//					validatePage();
+//				}
+//			});
+//		}
+		setControl(composite);
+		setHelp(HelpContextIds.IMPORT_FROM_DEVICE_WIZARD_ANALOG);
+		setTitle(Messages.ImportAnalogPropertiesPage_analog_props);
+		setMessage(Messages.ImportAddMetadataPage_specify_metadata);
+		super.createControl(parent);
+		fillValues();
+	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.MouseUp:
+			openKeywordDialog();
+			break;
+		case SWT.Modify:
+			validatePage();
+			break;
+		case SWT.Selection:
+			if (e.widget == focalLength35Field) {
+				int fac = factorField.getSelection();
+				focalLengthField.setSelection((1000 * focalLength35Field.getSelection() + fac / 2) / fac);
+			} else if (e.widget == formatField)
+				setFactor();
+			else if (e.widget == makeField || e.widget == modelField || e.widget == serialField) {
 				int i = ((Combo) e.widget).getSelectionIndex();
 				if (i >= 0) {
 					makeField.select(i);
@@ -242,31 +323,7 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage {
 						// do nothing
 					}
 				}
-			}
-		};
-		makeField.addSelectionListener(cameraSelectionListener);
-		modelField = createCombo(cameraGroup, QueryField.EXIF_MODEL.getLabel(), 200, SWT.NONE, null);
-		modelField.addSelectionListener(cameraSelectionListener);
-		serialField = createCombo(cameraGroup, QueryField.EXIF_SERIAL.getLabel(), 200, SWT.NONE, null);
-		serialField.addSelectionListener(cameraSelectionListener);
-		CGroup mediumGroup = CGroup.create(right, 1, Messages.ImportAnalogPropertiesPage_medium);
-		typeField = createCombo(mediumGroup, QueryField.ANALOGTYPE.getLabel(), 100, SWT.READ_ONLY,
-				QueryField.ANALOGTYPE.getEnumLabels());
-		emulsionField = createCombo(mediumGroup, QueryField.EMULSION.getLabel(), 200, SWT.NONE, EMULSIONS);
-		formatField = createCombo(mediumGroup, QueryField.ANALOGFORMAT.getLabel(), 100, SWT.READ_ONLY,
-				QueryField.ANALOGFORMAT.getEnumLabels());
-		formatField.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				setFactor();
-			}
-		});
-		isoField = createSpinner(mediumGroup, "ISO", 60, 10, 0, 50000, 0, true); //$NON-NLS-1$
-		notesField = createTextarea(mediumGroup, QueryField.ANALOGPROCESSING.getLabel(), 200, 40);
-		CGroup lensGroup = CGroup.create(left, 1, Messages.ImportAnalogPropertiesPage_lens);
-		SelectionAdapter lensSelectionListener = new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+			} else if (e.widget == lensField || e.widget == lensserialField) {
 				int i = ((Combo) e.widget).getSelectionIndex();
 				if (i >= 0) {
 					lensField.select(i);
@@ -279,81 +336,10 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage {
 					}
 				}
 			}
-		};
-		lensField = createCombo(lensGroup, QueryField.EXIF_LENS.getLabel(), 200, SWT.NONE, null);
-		lensField.addSelectionListener(lensSelectionListener);
-		lensserialField = createCombo(lensGroup, QueryField.EXIF_LENSSERIAL.getLabel(), 200, SWT.NONE, null);
-		lensserialField.addSelectionListener(lensSelectionListener);
-		createLabel(lensGroup, QueryField.EXIF_FOCALLENGTH.getLabel());
-		Composite focalGroup = new Composite(lensGroup, SWT.NONE);
-		focalGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		GridLayout layout = new GridLayout(6, false);
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		focalGroup.setLayout(layout);
-		focalLengthField = createSpinner(focalGroup, null, 70, 10, 0, 100000, 1, true);
-		Listener listener = new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				if (e.type == SWT.Modify)
-					validatePage();
-				else if (e.widget == focalLength35Field) {
-					int fac = factorField.getSelection();
-					focalLengthField.setSelection((1000 * focalLength35Field.getSelection() + fac / 2) / fac);
-				} else
-					setF35();
-			}
-		};
-		focalLengthField.addListener(listener);
-		factorField = createSpinner(focalGroup, "x", 60, 10, 1, 1000, 2, false); //$NON-NLS-1$
-		factorField.addListener(listener);
-		focalLength35Field = createSpinner(focalGroup, "=", 80, 1, 3, 10000, 0, true); //$NON-NLS-1$
-		focalLength35Field.addListener(listener);
-		new Label(focalGroup, SWT.NONE).setText("@35mm"); //$NON-NLS-1$
-		CGroup exposureGroup = CGroup.create(right, 1, Messages.ImportAnalogPropertiesPage_exposure);
-		dateField = createDateInput(exposureGroup, QueryField.EXIF_DATETIMEORIGINAL.getLabel(),
-				SWT.DATE | SWT.DROP_DOWN);
-		timeField = createDateInput(exposureGroup, QueryField.IPTC_DATECREATED.getLabel(), SWT.TIME);
-		lightSourceField = createCombo(exposureGroup, QueryField.EXIF_LIGHTSOURCE.getLabel(), 200, SWT.READ_ONLY,
-				QueryField.EXIF_LIGHTSOURCE.getEnumLabels());
-		lvField = createText(exposureGroup, QueryField.EXIF_LV.getLabel(), 15);
-		lvField.addListener(SWT.Modify, listener);
-		exposureTimeField = createText(exposureGroup, QueryField.EXIF_EXPOSURETIME.getLabel(), 25);
-		exposureTimeField.addListener(SWT.Modify, listener);
-		fnumberTimeField = createText(exposureGroup, QueryField.EXIF_FNUMBER.getLabel(), 15);
-		fnumberTimeField.addListener(SWT.Modify, listener);
-		CGroup iptcGroup = CGroup.create(left, 1, Messages.ImportAnalogPropertiesPage_rights);
-		artistField = createCombo(iptcGroup, QueryField.IPTC_BYLINE.getLabel(), 200, SWT.NONE, null);
-		copyrightField = createCombo(iptcGroup, QueryField.EXIF_COPYRIGHT.getLabel(), 200, SWT.NONE, null);
-		eventField = createCombo(iptcGroup, QueryField.IPTC_EVENT.getLabel(), 200, SWT.NONE, null);
-		createLabel(iptcGroup, QueryField.IPTC_KEYWORDS.getLabel());
-		keywordField = new Text(iptcGroup, SWT.READ_ONLY | SWT.BORDER | SWT.V_SCROLL);
-		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
-		layoutData.heightHint = 50;
-		keywordField.setLayoutData(layoutData);
-		keywordField.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent e) {
-				openKeywordDialog();
-			}
-		});
-		createLabel(iptcGroup, QueryField.SAFETY.getLabel());
-		privacyGroup = new RadioButtonGroup(iptcGroup, null, SWT.HORIZONTAL, QueryField.SAFETY.getEnumLabels());
-		if (aiService != null && aiService.isEnabled() && aiService.getRatingProviderIds().length > 0) {
-			autoGroup = new AutoRatingGroup(right, aiService, settings);
-			autoGroup.addListener(new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					validatePage();
-				}
-			});
+			else
+				setF35();
+			break;
 		}
-		setControl(composite);
-		setHelp(HelpContextIds.IMPORT_FROM_DEVICE_WIZARD_ANALOG);
-		setTitle(Messages.ImportAnalogPropertiesPage_analog_props);
-		setMessage(Messages.ImportAddMetadataPage_specify_metadata);
-		super.createControl(parent);
-		fillValues();
 	}
 
 	private void openKeywordDialog() {
@@ -361,7 +347,7 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage {
 		KeywordDialog dialog = new KeywordDialog(getShell(), Messages.ImportFromDeviceWizard_Add_keywords_for_import,
 				currentKeywords, selectableKeywords, null);
 		if (dialog.open() == Dialog.OK) {
-			Arrays.sort(currentKeywords = dialog.getResult().getDisplay(), Utilities.KEYWORDCOMPARATOR);
+			Arrays.parallelSort(currentKeywords = dialog.getResult().getDisplay(), Utilities.KEYWORDCOMPARATOR);
 			keywordField.setText(Core.toStringList(currentKeywords, "\n")); //$NON-NLS-1$
 		}
 	}

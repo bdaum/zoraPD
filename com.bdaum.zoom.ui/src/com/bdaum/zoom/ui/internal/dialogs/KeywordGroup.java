@@ -46,8 +46,6 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -105,7 +103,7 @@ public class KeywordGroup implements IAdaptable {
 
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 			dispose();
-			Arrays.sort(applieds = appliedKeywords.toArray(new String[appliedKeywords.size()]),
+			Arrays.parallelSort(applieds = appliedKeywords.toArray(new String[appliedKeywords.size()]),
 					UiUtilities.stringComparator);
 			isFlat = radioGroup.isFlat();
 		}
@@ -173,7 +171,7 @@ public class KeywordGroup implements IAdaptable {
 
 		protected String[] getAvailables() {
 			if (availables == null)
-				Arrays.sort(availables = filterKeywords(availableKeywords), UiUtilities.stringComparator);
+				Arrays.parallelSort(availables = filterKeywords(availableKeywords), UiUtilities.stringComparator);
 			return availables;
 		}
 	}
@@ -260,7 +258,7 @@ public class KeywordGroup implements IAdaptable {
 		keywordsGroup.setLayout(new GridLayout(3, false));
 		radioGroup = new FlatGroup(keywordsGroup, SWT.NONE, settings, "hierarchicalKeywords"); //$NON-NLS-1$
 		radioGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
-		radioGroup.addListener(new Listener() {
+		radioGroup.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				updateKeywordViewer(((IStructuredSelection) viewer.getSelection()).getFirstElement());
@@ -271,8 +269,8 @@ public class KeywordGroup implements IAdaptable {
 		GridData layoutData = new GridData(SWT.BEGINNING, SWT.CENTER, true, false, tags ? 3 : 2, 1);
 		layoutData.widthHint = 300;
 		filterField.setLayoutData(layoutData);
-		filterField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+		filterField.addListener(SWT.Modify, new Listener() {
+			public void handleEvent(Event e) {
 				viewer.setInput(viewer.getInput());
 				viewer.expandAll();
 			}
@@ -280,7 +278,7 @@ public class KeywordGroup implements IAdaptable {
 		if (!tags) {
 			final CheckboxButton excludeButton = WidgetFactory.createCheckButton(keywordsGroup,
 					Messages.KeywordGroup_exclude_geographic, new GridData(SWT.END, SWT.CENTER, true, false));
-			excludeButton.addListener(new Listener() {
+			excludeButton.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
 					excludeGeographic = excludeButton.getSelection();
@@ -392,16 +390,16 @@ public class KeywordGroup implements IAdaptable {
 								sb.append(token);
 							}
 						}
-						newKeywordField.removeVerifyListener(keywordVerifyListener);
+						newKeywordField.removeListener(SWT.Verify, keywordVerifyListener);
 						newKeywordField.setText(sb.toString());
-						newKeywordField.addVerifyListener(keywordVerifyListener);
+						newKeywordField.addListener(SWT.Verify, keywordVerifyListener);
 						updateVocabLabel();
 					}
 				}
 			});
-			newKeywordField.addModifyListener(new ModifyListener() {
+			newKeywordField.addListener(SWT.Modify, new Listener() {
 				@Override
-				public void modifyText(ModifyEvent e) {
+				public void handleEvent(Event e) {
 					updateVocabLabel();
 				}
 			});
@@ -442,7 +440,7 @@ public class KeywordGroup implements IAdaptable {
 					sb.append(kw);
 				}
 		newKeywordField.setText(sb.toString());
-		newKeywordField.addVerifyListener(keywordVerifyListener);
+		newKeywordField.addListener(SWT.Verify, keywordVerifyListener);
 		newKeywordField.setFocus();
 	}
 
@@ -525,7 +523,7 @@ public class KeywordGroup implements IAdaptable {
 				recentKeywords.remove(0);
 		}
 		String[] display = newKeywords.toArray(new String[newKeywords.size()]);
-		Arrays.sort(display, Utilities.KEYWORDCOMPARATOR);
+		Arrays.parallelSort(display, Utilities.KEYWORDCOMPARATOR);
 
 		List<String> oldKeywords = selectedKeywords == null ? new ArrayList<String>(0)
 				: Arrays.asList(selectedKeywords);
@@ -572,9 +570,9 @@ public class KeywordGroup implements IAdaptable {
 				if (!text.isEmpty())
 					text += '\n';
 				text += kw;
-				newKeywordField.removeVerifyListener(keywordVerifyListener);
+				newKeywordField.removeListener(SWT.Verify, keywordVerifyListener);
 				newKeywordField.setText(text);
-				newKeywordField.addVerifyListener(keywordVerifyListener);
+				newKeywordField.addListener(SWT.Verify, keywordVerifyListener);
 			}
 		}
 

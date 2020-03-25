@@ -1,156 +1,326 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en-us"><head><title>Catalog Properties</title>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
-<h2>Catalog Properties</h2>The <span style="font-style: italic;">Catalog Properties</span> can be reached via menu function <acronym>Catalog&gt;Properties...</acronym> or via the key shortcut <abbr>Alt+Enter</abbr>. They contain all non-image related data of a catalog. Other configurations can be made under <acronym>Window&gt;Preferences...<sup>*</sup></acronym> but they affect all catalogs. <br><br>The header data of the <span style="font-style: italic;">Catalog Properties</span> include:<br><ul style="font-weight: normal;"><li><span style="font-weight: bold;">File name.</span> File name and path of the&nbsp;catalog.<br>Optionally, you can write protect the catalog.</li>
-  <li><span style="font-weight: bold;">Language</span>. Here you can select an installed dictionary for <a href="spell.html">spell checking</a><br>
-  </li>
-<li><span style="font-weight: bold;">Creation date.</span> Date and time when the&nbsp;catalog was created.</li><li><span style="font-weight: bold;">Last import.</span> Date and time when the last import was performed.</li><li><span style="font-weight: bold;">Sequence no</span>. The number of imported images since catalog creation.</li>
-  <li><span style="font-weight: bold;">Catalog theme</span>. The general catalog theme such as General, Food, Wedding, or Travel. This has influence on the initial set of categories.<br>
-  </li>
-<li><span style="font-weight: bold;">Yearly sequence no</span>. The number of imported images in the current calendar year.</li><li><span style="font-weight: bold;">Backup File.</span> File name and path of the back-up file. This entry can be modified. The back-up interval can be set by clicking <acronym>Configure Interval</acronym>.&nbsp;<br>The backup path may contain the variable <code>{catalogLocation}</code>. This will be replaced by the path of the folder containing the current catalog.<br>If the file name includes the variable <code>{date}</code>, each back-up will go into a different file. Otherwise, a new back-up will overwrite a previous back-up.&nbsp;</li></ul>The rest of the data is ordered into groups which can be reached via the tabs of the tabbed notebook or by using the <abbr>Next</abbr> and <abbr>Previous</abbr> buttons.
-<ul style="font-weight: bold;">
-<li><a name="general"></a>General</li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Owner information.</span> The owner of the catalog - usually the person who created it.</li><li><span style="font-weight: bold;">Description.</span> A short description of the catalog.</li><li><span style="font-weight: bold;">Automatically create a timeline.</span>
-If you have not already organized your images in a folder structure
-representing a time line: this a great possibility to order your images
-by date. During the import of images the necessary collections for
-organizing a time line will be created automatically. You may organize
-the timeline in years, months, or days or switch off timeline creation.
-If you later change your mind you can recreate or remove the timeline
-by pressing the button <abbr>Create now/Remove now</abbr>.</li><li><span style="font-weight: bold;">Automatically create location collections.</span>
-This option will organize all geo-named images into appropriately named
-collections. You can organize your locations by country, by
-province/state, or by city, or switch off location collection creation
-altogether.&nbsp;If you later change your mind you can recreate or
-remove the location folders
-by pressing the button <abbr>Create now/Remove now</abbr>.&nbsp;<br>Because large location collections can be slow, the option is switched off by default.<br><span style="font-weight: bold;">Note: </span>The location where the images was created (not the location shown) is used for this function.</li>
-    
-<li><span style="font-weight: bold;">User field label 1 </span>and<span style="font-weight: bold;"> 2</span>. There are two fields in the catalogs meta data for user defined purposes. Here you can label those fields appropriately.</li></ul><li><a name="thumbnails"></a>Thumbnails</li><ul style="font-weight: normal;"><li><span style="font-weight: normal;"><span style="font-weight: bold;">Resolution.</span>
-Select the thumbnail resolution that suits you best. Large thumbnails
-look better in the preview but will slow down operation and increase catalog size.&nbsp;</span><span style="font-weight: normal;"></span></li><li><span style="font-weight: normal;"><span style="font-weight: bold;">Derive thumbnails from preview images.</span>
-Check this option if you want to utilize the preview images embedded in
-RAW files for thumbnail creation. Otherwise, the RAW file is
-converted (using DCRAW) to obtain the catalog thumbnails. This may take
-longer but will provide a better consistency between
-thumbnail and highres image because developing recipes from some raw converters are applied.</span></li><li><span style="font-weight: normal;"><span style="font-weight: bold;">Sharpen during import.</span>
-Select a degree for sharpening thumbnails during import. Sharpening can
-improve the appearance of the thumbnails in the catalog. After changing
-this setting you may want to refresh&nbsp; existing thumbnails.</span></li>
-    <li><span style="font-weight: normal;"><span style="font-weight: bold;">Use WebP instead of JPeG compression</span>.
-By using the WebP compression method you can save about 20 percent
-catalog space. The disadvantage, however, is that WebP compressed
-thumbnails deteriorate during rotation.<br>
-</span></li>
-
-    <li><span style="font-weight: normal;"><span style="font-weight: bold;">Compression quality</span>.
-Choose between 1 for low visual quality and small storage size and 100
-for best visual quality and large storage size. The default value of 75
-combines good compression with virtually no visible artifacts.<br>
-</span></li>
-</ul><li><a name="categories"></a>Categories</li><ul style="font-weight: normal;"><li><span style="font-weight: normal;">Images can be associated to categories. A hierarchy of available categories can be created and maintained here. This&nbsp;</span><span style="font-weight: normal;">hierarchy</span><span style="font-weight: normal;"> can be exported to a file with the <abbr>Save ...</abbr> button. Category files can be imported with the <abbr>Load ...</abbr> button. To create a new category, use the <abbr>Add...</abbr> button, to create a sub-category, use the <abbr>Refine...</abbr> button.&nbsp;</span><span style="font-weight: normal;">To remove&nbsp;</span><span style="font-weight: normal;">categories</span><span style="font-weight: normal;">, press the <abbr>Remove...</abbr> button. </span></li></ul>
-  <li><a name="keywords"></a>Keywords<span style="font-weight: normal;"></span><span style="font-weight: normal;"></span></li>
-  <ul>
-    <li><span style="font-weight: normal;">Image meta data can contain an unlimited number of <a href="../concepts/keywords.html">keywords</a>. These keywords are collected during the import process. (Click</span><span style="font-weight: normal;"> <acronym>Configure keyword filter</acronym> for not importing unwanted keywords</span>) <span style="font-weight: normal;">On the left hand side of the page you can manage the keywords contained in the catalog.</span></li>
-  </ul>
-  <ul>
-    <ul>
-      <li><span style="font-weight: normal;">New keywords can be added to this collection by pressing the <abbr>Add...</abbr> button. To correct spelling errors in an existing keyword press the <abbr>Edit...</abbr>
-button. All catalog entries containing that keyword will be updated. To
-replace keywords by one or several other keywords click the <abbr>Replace...</abbr> button. To remove keywords, press the <abbr>Remove...</abbr> button. <br></span></li>
-      <li><span style="font-weight: normal;">The <abbr>Collect...</abbr>
-button collects keywords from images that are not in the list, for
-example keywords that were previously deleted or keywords that were
-filtered by a previously active keyword filter. The <span style="font-style: italic;">Collect</span>-dialog also shows unused keywords.</span><span style="font-weight: normal;"></span></li>
-      <li><span style="font-weight: normal;">The keywords </span><span style="font-weight: normal;">can be exported to a file with the <abbr>Save ...</abbr> button. </span><span style="font-weight: normal;">Keyword</span><span style="font-weight: normal;"> files can be imported with the <abbr>Load ...</abbr> button. The <abbr>Show images</abbr> button shows all images containing the selected keyword.</span></li>
-      <li style="font-weight: normal;">Add person names to keywords. Mark this option if you want to add person names to the IPTC keywords.</li>
-      <li style="font-weight: normal;">Exclude geographical keywords. This will exclude from the list all keywords found in location
-records (see <a href="#locations">Locations</a>).</li>
-    </ul>
-    <li style="font-weight: normal;">On the right hand side you can define <a href="../concepts/keywords.html"><span style="font-style: italic;">Controlled Vocabularies</span></a>. When such vocabularies are defined, all keywords that are not contained in a vocabulary are marked with a warning icon.</li>
-    <ul>
-      <li style="font-weight: normal;">Click <abbr>Add...</abbr><span style="font-weight: bold;"> </span>to add a vocabulary to the list. It is possible to use keyword files exported with <abbr>Save</abbr> (see above) as vocabulary.<br>
-</li>
-      <li style="font-weight: normal;">Click <abbr>View...</abbr> to view the content of the selected vocabularies. If more than one vocabulary is selected, the combined content is shown.<br>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=windows-1252">
+    <title>Catalog Properties</title>
+    <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css">
+  </head>
+  <body>
+    <h2>Catalog Properties</h2>
+    The <span style="font-style: italic;">Catalog Properties</span> can be
+    reached via menu function <acronym>Catalog&gt;Properties...</acronym> or
+    via the key shortcut <abbr>Alt+Enter</abbr>. They contain all non-image
+    related data of a catalog. Other configurations can be made under <acronym>Window&gt;Preferences...<sup>*</sup></acronym>
+    but they affect all catalogs. <br>
+    <br>
+    The header data of the <span style="font-style: italic;">Catalog Properties</span>
+    include:<br>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">File name.</span> File name and path
+        of the&nbsp;catalog.<br>
+        Optionally, you can write protect the catalog.</li>
+      <li><span style="font-weight: bold;">Language</span>. Here you can select
+        an installed dictionary for <a href="spell.html">spell checking</a><br>
       </li>
-      <li style="font-weight: normal;">Click <abbr>Remove</abbr> to remove the selected vocabularies from the list.</li>
-      <li style="font-weight: normal;">Click <abbr>Enforce...</abbr> to
-remove any keywords that are not contained in a vocabulary from the
-catalog. Keywords that match a vocabulary synonym are replaced by the
-synonyms owner.<br>
+      <li><span style="font-weight: bold;">Creation date.</span> Date and time
+        when the&nbsp;catalog was created.</li>
+      <li><span style="font-weight: bold;">Last import.</span> Date and time
+        when the last import was performed.</li>
+      <li><span style="font-weight: bold;">Sequence no</span>. The number of
+        imported images since catalog creation.</li>
+      <li><span style="font-weight: bold;">Catalog theme</span>. The general
+        catalog theme such as General, Food, Wedding, or Travel. This has
+        influence on the initial set of categories.<br>
       </li>
+      <li><span style="font-weight: bold;">Yearly sequence no</span>. The number
+        of imported images in the current calendar year.</li>
+      <li><span style="font-weight: bold;">Backup File.</span> File name and
+        path of the back-up file. This entry can be modified. The back-up
+        interval can be set by clicking <acronym>Options</acronym>.&nbsp;<br>
+        The backup path may contain the variable <code>{catalogLocation}</code>.
+        This will be replaced by the path of the folder containing the current
+        catalog.<br>
+        If the file name includes the variable <code>{date}</code>, each
+        back-up will go into a different file. Otherwise, a new back-up will
+        overwrite a previous back-up.&nbsp;</li>
     </ul>
-  </ul>
-</ul>
-<ul style="font-weight: bold;"><li style="font-weight: bold;"><span style="font-weight: normal;"><a name="indexing"></a><span style="font-weight: bold;">Indexing</span> (optional)<span style="font-weight: bold;"><br>
-    </span></span></li>
-  <ul style="font-weight: normal;">
-    <li>Here you can configure the indexing process. On the left side you may select or deselect <a href="SearchSimilarPref.html">algorithms</a> for <span style="font-weight: bold;">content based similarity search</span>. The number of selected
-algorithms will determine the size of the index and the speed of
-indexing. Note, that only the selected algorithms will later be available for searching.<br>
-Algorithms marked with&nbsp;<img src="../images/neural.png" alt="neural" style="width: 16px; height: 16px;"> are AI algorithms and require an account with a service provider (<acronym>User Preferences&gt;AI-Services</acronym>).<br>
-</li>
-    <li>On the right side select all the <span style="font-weight: bold;">text fields</span>
-evaluated for building the text index. Selecting the right fields will
-help you to get rid of "noise" result images when you search for text
-expressions.</li>
-    <li>Note that the above choices only affect <span style="font-weight: bold;">future imports</span>. However, you may want to re-index the whole catalog via <acronym>Catalog&gt;Maintenance&gt;Refresh index</acronym>.</li>
-    <li>If you are not interested in similarity search and free text search, you can <span style="font-weight: bold;">switch off indexing</span> altogether. This can make sense on low performance platforms.<br>
-    </li>
-  </ul>
-<li><a name="locations"></a>Locations</li><ul style="font-weight: normal;"><li><span style="font-weight: normal;">Locations are used in IPTC data to describe the location where an image was taken (<span style="font-style: italic;">Location created</span>) and what the image shows (<span style="font-style: italic;">Location shown</span>).
-Here, the collection of all locations is presented. You can add new
-locations, edit locations, and remove locations. You can also show all
-images of a selected location or display a location in the <span style="font-style: italic;">Map view</span>.</span></li></ul><li><a name="artwork"></a>Artwork/Objects</li><ul style="font-weight: normal;"><li><span style="font-weight: normal;">Artwork/Object entries are used in IPTC data to describe artwork or copyrighted objects depicted in images.
-Here, the collection of all </span><span style="font-weight: normal;">artwork/object entries</span><span style="font-weight: normal;"> is presented. You can add new artworks or objects, edit&nbsp; or remove artworks and objects.&nbsp;</span><span style="font-weight: normal;">You can also show all images depicting a selected artwork. </span></li></ul><li><a name="contacts"></a>Contacts</li><ul style="font-weight: normal;"><li><span style="font-weight: normal;">Contacts entries are used in IPTC data to provide detail information for contacting the creator or owner of the image.
-Here, the collection of all </span><span style="font-weight: normal;">contacts entries</span><span style="font-weight: normal;"> is presented.&nbsp;</span><span style="font-weight: normal;">You can add new&nbsp;</span><span style="font-weight: normal;">contacts</span><span style="font-weight: normal;">, edit&nbsp; or remove&nbsp;</span><span style="font-weight: normal;">contacts</span><span style="font-weight: normal;">.&nbsp;</span><span style="font-weight: normal;">You can also show all images containing a selected&nbsp;</span><span style="font-weight: normal;">contact</span><span style="font-weight: normal;">.</span><span style="font-weight: normal;">&nbsp;</span></li></ul><li><a name="statistics"></a>Statistics</li><ul style="font-weight: normal;"><li><span style="font-weight: normal;">The
-statistics page shows statistic data about the catalog such as used and
-free space, number of collections and images, etc. It offers an option
-to defragment the catalog. This can improve performance considerably.<br>
-</span></li></ul><li><span style="font-weight: bold;"><a name="watchedFolders"></a>Watched folders</span></li><ul style="font-weight: normal;"><li><span style="font-weight: normal;">Here
-you can add folders to the list of watched folders. When new images are
-added to such a
-folder, the images are imported automatically into the catalog.
-Depending on the type of the watched folder the images are either
-transferred to a target folder or are process in situ.&nbsp;</span><span style="font-weight: normal;"></span></li><li><span style="font-weight: normal;">The <span style="font-weight: bold;">latency</span>
-setting specifies a delay between the actual file change and the
-triggered import process. Such a delay is necessary to avoid duplicate
-imports caused by incremental file updates. If you experience frequent
-messages such as "File ... has already been imported" increase the
-latency time.</span></li>
-    <li><span style="font-weight: normal;">You may also pause folder watching by setting the <span style="font-weight: bold;">paused</span> check box. <br>
-</span></li>
-
-<li><span style="font-weight: normal;">Check <var>Automatically add imported folders to the list of watched folders</var> for automatic maintenance of the list of watched folders. This option will not apply to <acronym>File&gt;Import...&gt;From&nbsp;Device...</acronym><span style="font-style: italic;"> </span>or to the&nbsp;<span style="font-style: italic;"></span></span><acronym><span style="font-weight: normal;">File&gt;Import...&gt;I</span></acronym><span style="font-weight: normal;"><acronym>nto new Folder Structure...</acronym>.</span></li>
-    <li><span style="font-weight: bold;">Show background imports.</span>
-If this option is set, import collections will be created, too, for
-images silently imported in the background such as images from watched folders.</li>
-</ul></ul><br>
-
-
-
-<hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa Photo Director&gt;Preferences&gt;...</acronym><br>
-<br>
-
-<br>
-<p> </p>
-</body></html>
+    The rest of the data is ordered into groups which can be reached via the
+    tabs of the tabbed notebook or by using the <abbr>Next</abbr> and <abbr>Previous</abbr>
+    buttons.
+    <ul style="font-weight: bold;">
+      <li><a name="general"></a>General</li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: bold;">Owner information.</span> The owner
+          of the catalog - usually the person who created it.</li>
+        <li><span style="font-weight: bold;">Description.</span> A short
+          description of the catalog.</li>
+        <li><span style="font-weight: bold;">Automatically create a timeline.</span>
+          If you have not already organized your images in a folder structure
+          representing a time line: this a great possibility to order your
+          images
+          by date. During the import of images the necessary collections for
+          organizing a time line will be created automatically. You may organize
+          the timeline in years, months, or days or switch off timeline
+          creation.
+          If you later change your mind you can recreate or remove the timeline
+          by pressing the button <abbr>Create now/Remove now</abbr>.</li>
+        <li><span style="font-weight: bold;">Automatically create location
+            collections.</span>
+          This option will organize all geo-named images into appropriately
+          named
+          collections. You can organize your locations by country, by
+          province/state, or by city, or switch off location collection creation
+          altogether.&nbsp;If you later change your mind you can recreate or
+          remove the location folders
+          by pressing the button <abbr>Create now/Remove now</abbr>.&nbsp;<br>
+          Because large location collections can be slow, the option is switched
+          off by default.<br>
+          <span style="font-weight: bold;">Note: </span>The location where the
+          images was created (not the location shown) is used for this function.</li>
+        <li><span style="font-weight: bold;">User field label 1 </span>and<span
+            style="font-weight: bold;"> 2</span>. There are two fields in the
+          catalogs meta data for user defined purposes. Here you can label those
+          fields appropriately.</li>
+      </ul>
+      <li><a name="thumbnails"></a>Thumbnails</li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: normal;"><span style="font-weight: bold;">Resolution.</span>
+            Select the thumbnail resolution that suits you best. Large
+            thumbnails
+            look better in the preview but will slow down operation and increase
+            catalog size.&nbsp;</span><span style="font-weight: normal;"></span></li>
+        <li><span style="font-weight: normal;"><span style="font-weight: bold;">Derive
+              thumbnails from preview images.</span>
+            Check this option if you want to utilize the preview images embedded
+            in
+            RAW files for thumbnail creation. Otherwise, the RAW file is
+            converted (using DCRAW) to obtain the catalog thumbnails. This may
+            take
+            longer but will provide a better consistency between
+            thumbnail and highres image because developing recipes from some raw
+            converters are applied.</span></li>
+        <li><span style="font-weight: normal;"><span style="font-weight: bold;">Sharpen
+              during import.</span>
+            Select a degree for sharpening thumbnails during import. Sharpening
+            can
+            improve the appearance of the thumbnails in the catalog. After
+            changing
+            this setting you may want to refresh&nbsp; existing thumbnails.</span></li>
+        <li><span style="font-weight: normal;"><span style="font-weight: bold;">Use
+              WebP instead of JPeG compression</span>.
+            By using the WebP compression method you can save about 20 percent
+            catalog space. The disadvantage, however, is that WebP compressed
+            thumbnails deteriorate during rotation.<br>
+          </span></li>
+        <li><span style="font-weight: normal;"><span style="font-weight: bold;">Compression
+              quality</span>.
+            Choose between 1 for low visual quality and small storage size and
+            100
+            for best visual quality and large storage size. The default value of
+            75
+            combines good compression with virtually no visible artifacts.<br>
+          </span></li>
+      </ul>
+      <li><a name="categories"></a>Categories</li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: normal;">Images can be associated to
+            categories. A hierarchy of available categories can be created and
+            maintained here. This&nbsp;</span><span style="font-weight: normal;">hierarchy</span><span
+            style="font-weight: normal;"> can be exported to a file with the <abbr>Save
+              ...</abbr> button. Category files can be imported with the <abbr>Load
+              ...</abbr> button. To create a new category, use the <abbr>Add...</abbr>
+            button, to create a sub-category, use the <abbr>Refine...</abbr>
+            button.&nbsp;</span><span style="font-weight: normal;">To
+            remove&nbsp;</span><span style="font-weight: normal;">categories</span><span
+            style="font-weight: normal;">, press the <abbr>Remove...</abbr>
+            button. </span></li>
+      </ul>
+      <li><a name="keywords"></a>Keywords<span style="font-weight: normal;"></span><span
+          style="font-weight: normal;"></span></li>
+      <ul>
+        <li><span style="font-weight: normal;">Image meta data can contain an
+            unlimited number of <a href="../concepts/keywords.html">keywords</a>.
+            These keywords are collected during the import process. (Click</span><span
+            style="font-weight: normal;"> <acronym>Configure keyword filter</acronym>
+            for not importing unwanted keywords</span>) <span style="font-weight: normal;">On
+            the left hand side of the page you can manage the keywords contained
+            in the catalog.</span></li>
+      </ul>
+      <ul>
+        <ul>
+          <li><span style="font-weight: normal;">New keywords can be added to
+              this collection by pressing the <abbr>Add...</abbr> button. To
+              correct spelling errors in an existing keyword press the <abbr>Edit...</abbr>
+              button. All catalog entries containing that keyword will be
+              updated. To
+              replace keywords by one or several other keywords click the <abbr>Replace...</abbr>
+              button. To remove keywords, press the <abbr>Remove...</abbr>
+              button. <br>
+            </span></li>
+          <li><span style="font-weight: normal;">The <abbr>Collect...</abbr>
+              button collects keywords from images that are not in the list, for
+              example keywords that were previously deleted or keywords that
+              were
+              filtered by a previously active keyword filter. The <span style="font-style: italic;">Collect</span>-dialog
+              also shows unused keywords.</span><span style="font-weight: normal;"></span></li>
+          <li><span style="font-weight: normal;">The keywords </span><span style="font-weight: normal;">can
+              be exported to a file with the <abbr>Save ...</abbr> button. </span><span
+              style="font-weight: normal;">Keyword</span><span style="font-weight: normal;">
+              files can be imported with the <abbr>Load ...</abbr> button. The
+              <abbr>Show images</abbr> button shows all images containing the
+              selected keyword.</span></li>
+          <li style="font-weight: normal;">Add person names to keywords. Mark
+            this option if you want to add person names to the IPTC keywords.</li>
+          <li style="font-weight: normal;">Exclude geographical keywords. This
+            will exclude from the list all keywords found in location
+            records (see <a href="#locations">Locations</a>).</li>
+        </ul>
+        <li style="font-weight: normal;">On the right hand side you can define <a
+            href="../concepts/keywords.html"><span style="font-style: italic;">Controlled
+              Vocabularies</span></a>. When such vocabularies are defined, all
+          keywords that are not contained in a vocabulary are marked with a
+          warning icon.</li>
+        <ul>
+          <li style="font-weight: normal;">Click <abbr>Add...</abbr><span style="font-weight: bold;">
+            </span>to add a vocabulary to the list. It is possible to use
+            keyword files exported with <abbr>Save</abbr> (see above) as
+            vocabulary.<br>
+          </li>
+          <li style="font-weight: normal;">Click <abbr>View...</abbr> to view
+            the content of the selected vocabularies. If more than one
+            vocabulary is selected, the combined content is shown.<br>
+          </li>
+          <li style="font-weight: normal;">Click <abbr>Remove</abbr> to remove
+            the selected vocabularies from the list.</li>
+          <li style="font-weight: normal;">Click <abbr>Enforce...</abbr> to
+            remove any keywords that are not contained in a vocabulary from the
+            catalog. Keywords that match a vocabulary synonym are replaced by
+            the
+            synonyms owner.<br>
+          </li>
+        </ul>
+      </ul>
+    </ul>
+    <ul style="font-weight: bold;">
+      <li style="font-weight: bold;"><span style="font-weight: normal;"><a name="indexing"></a><span
+            style="font-weight: bold;">Indexing</span> (optional)<span style="font-weight: bold;"><br>
+          </span></span></li>
+      <ul style="font-weight: normal;">
+        <li>Here you can configure the indexing process. On the left side you
+          may select or deselect <a href="SearchSimilarPref.html">algorithms</a>
+          for <span style="font-weight: bold;">content based similarity search</span>.
+          The number of selected
+          algorithms will determine the size of the index and the speed of
+          indexing. Note, that only the selected algorithms will later be
+          available for searching.<br>
+          Algorithms marked with&nbsp;<img src="../images/neural.png" alt="neural"
+            style="width: 16px; height: 16px;"> are AI algorithms and require an
+          account with a service provider (<acronym>User
+            Preferences&gt;AI-Services</acronym>).<br>
+        </li>
+        <li>On the right side select all the <span style="font-weight: bold;">text
+            fields</span>
+          evaluated for building the text index. Selecting the right fields will
+          help you to get rid of "noise" result images when you search for text
+          expressions.</li>
+        <li>Note that the above choices only affect <span style="font-weight: bold;">future
+            imports</span>. However, you may want to re-index the whole catalog
+          via <acronym>Catalog&gt;Maintenance&gt;Refresh index</acronym>.</li>
+        <li>If you are not interested in similarity search and free text search,
+          you can <span style="font-weight: bold;">switch off indexing</span>
+          altogether. This can make sense on low performance platforms.<br>
+        </li>
+      </ul>
+      <li><a name="locations"></a>Locations</li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: normal;">Locations are used in IPTC data
+            to describe the location where an image was taken (<span style="font-style: italic;">Location
+              created</span>) and what the image shows (<span style="font-style: italic;">Location
+              shown</span>).
+            Here, the collection of all locations is presented. You can add new
+            locations, edit locations, and remove locations. You can also show
+            all
+            images of a selected location or display a location in the <span style="font-style: italic;">Map
+              view</span>.</span></li>
+      </ul>
+      <li><a name="artwork"></a>Artwork/Objects</li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: normal;">Artwork/Object entries are used
+            in IPTC data to describe artwork or copyrighted objects depicted in
+            images.
+            Here, the collection of all </span><span style="font-weight: normal;">artwork/object
+            entries</span><span style="font-weight: normal;"> is presented. You
+            can add new artworks or objects, edit&nbsp; or remove artworks and
+            objects.&nbsp;</span><span style="font-weight: normal;">You can also
+            show all images depicting a selected artwork. </span></li>
+      </ul>
+      <li><a name="contacts"></a>Contacts</li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: normal;">Contacts entries are used in IPTC
+            data to provide detail information for contacting the creator or
+            owner of the image.
+            Here, the collection of all </span><span style="font-weight: normal;">contacts
+            entries</span><span style="font-weight: normal;"> is
+            presented.&nbsp;</span><span style="font-weight: normal;">You can
+            add new&nbsp;</span><span style="font-weight: normal;">contacts</span><span
+            style="font-weight: normal;">, edit&nbsp; or remove&nbsp;</span><span
+            style="font-weight: normal;">contacts</span><span style="font-weight: normal;">.&nbsp;</span><span
+            style="font-weight: normal;">You can also show all images containing
+            a selected&nbsp;</span><span style="font-weight: normal;">contact</span><span
+            style="font-weight: normal;">.</span><span style="font-weight: normal;">&nbsp;</span></li>
+      </ul>
+      <li><a name="statistics"></a>Statistics</li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: normal;">The
+            statistics page shows statistic data about the catalog such as used
+            and
+            free space, number of collections and images, etc. It offers an
+            option
+            to defragment the catalog. This can improve performance
+            considerably.<br>
+          </span></li>
+      </ul>
+      <li><span style="font-weight: bold;"><a name="watchedFolders"></a>Watched
+          folders</span></li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: normal;">Here
+            you can add folders to the list of watched folders. When new images
+            are
+            added to such a
+            folder, the images are imported automatically into the catalog.
+            Depending on the type of the watched folder the images are either
+            transferred to a target folder or are process in situ.&nbsp;</span><span
+            style="font-weight: normal;"></span></li>
+        <li><span style="font-weight: normal;">The <span style="font-weight: bold;">latency</span>
+            setting specifies a delay between the actual file change and the
+            triggered import process. Such a delay is necessary to avoid
+            duplicate
+            imports caused by incremental file updates. If you experience
+            frequent
+            messages such as "File ... has already been imported" increase the
+            latency time.</span></li>
+        <li><span style="font-weight: normal;">You may also pause folder
+            watching by setting the <span style="font-weight: bold;">paused</span>
+            check box. <br>
+          </span></li>
+        <li><span style="font-weight: normal;">Check <var>Automatically add
+              imported folders to the list of watched folders</var> for
+            automatic maintenance of the list of watched folders. This option
+            will not apply to <acronym>File&gt;Import...&gt;From&nbsp;Device...</acronym><span
+              style="font-style: italic;"> </span>or to the&nbsp;<span style="font-style: italic;"></span></span><acronym><span
+              style="font-weight: normal;">File&gt;Import...&gt;I</span></acronym><span
+            style="font-weight: normal;"><acronym>nto new Folder Structure...</acronym>.</span></li>
+        <li><span style="font-weight: bold;">Show background imports.</span>
+          If this option is set, import collections will be created, too, for
+          images silently imported in the background such as images from watched
+          folders.</li>
+      </ul>
+    </ul>
+    <br>
+    <hr style="width: 100%; height: 2px;"><sup>*)</sup> On Mac use <acronym>ZoRa
+      Photo Director&gt;Preferences&gt;...</acronym><br>
+    <br>
+    <br>
+    <p> </p>
+  </body>
+</html>

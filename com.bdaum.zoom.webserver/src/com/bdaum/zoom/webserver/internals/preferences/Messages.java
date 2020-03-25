@@ -128,6 +128,7 @@ public class Messages extends NLS {
 	public static String WebserverPreferencePage_uploads;
 	public static String WebserverPreferencePage_user_help;
 	public static String WebserverPreferencePage_userdef;
+	public static String WebserverPreferencePage_video_player;
 	public static String WebserverPreferencePage_volume;
 	public static String WebserverPreferencePage_web_galleries_exhibitions_clash;
 	public static String WebserverPreferencePage_web_galleries_path;

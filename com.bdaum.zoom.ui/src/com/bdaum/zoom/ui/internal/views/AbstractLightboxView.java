@@ -39,14 +39,10 @@ import org.eclipse.nebula.widgets.gallery.Gallery;
 import org.eclipse.nebula.widgets.gallery.GalleryItem;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
@@ -83,7 +79,7 @@ import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
 public abstract class AbstractLightboxView extends AbstractGalleryView
-		implements SelectionListener, IExtendedColorModel2, IPropertyChangeListener {
+		implements Listener, IExtendedColorModel2, IPropertyChangeListener {
 
 	public static class DecoJob extends Job {
 		public static final Object ID = "ThumbDeco"; //$NON-NLS-1$
@@ -121,7 +117,6 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 	protected static final int COLORSPOT = 17;
 	protected static final Integer R90 = 90;
 	protected static final Integer R270 = 270;
-	private static final Point pnt = new Point(0, 0);
 	private static final int RATING_NO = 0;
 	private static final int RATING_SIZE = 1;
 	private static final int RATING_COUNT = 2;
@@ -510,7 +505,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 	protected abstract void setItemText(final GalleryItem item, Asset asset, Integer cardinality);
 
 	protected void setAlignment() {
-		itemRenderer.setAlignment(captionConfiguration.labelAlignment );
+		itemRenderer.setAlignment(captionConfiguration.labelAlignment);
 	}
 
 	protected void addGalleryPaintListener() {
@@ -546,115 +541,16 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 		if (e == null)
 			focussedItem = null;
 		else {
-			pnt.x = e.x;
-			pnt.y = e.y;
-			focussedItem = gallery.getItem(pnt);
+			focussedItem = gallery.getItem(setMousePosition(e.x, e.y));
 		}
 	}
 
 	protected void hookDoubleClickAction(Control control) {
-		control.addListener(SWT.MouseDoubleClick, new Listener() {
-			public void handleEvent(Event event) {
-				pnt.x = event.x;
-				pnt.y = event.y;
-				GalleryItem item = gallery.getItem(pnt);
-				if (item != null) {
-					Hotspots hotSpots = (Hotspots) item.getData(HOTSPOTS);
-					if (!hotSpots.isHotspot(event.x, event.y)) {
-						event.data = item.getData(ASSET);
-						viewImageAction.runWithEvent(event);
-					}
-				}
-			}
-		});
+		control.addListener(SWT.MouseDoubleClick, this);
 	}
 
 	protected void addMouseListener() {
-		gallery.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent e) {
-				if (e.button == 1) {
-					GalleryItem[] items = gallery.getSelection();
-					for (GalleryItem item : items) {
-						Asset asset = (Asset) item.getData(ASSET);
-						if (asset != null) {
-							ImageRegion foundRegion = findBestFaceRegion(item, e.x, e.y, false);
-							if (foundRegion != null) {
-								editRegionName(foundRegion);
-								break;
-							}
-							Hotspots hotSpots = (Hotspots) item.getData(HOTSPOTS);
-							if (hotSpots != null) {
-								if (hotSpots.isRotate270(e.x, e.y)) {
-									rotate(asset, 270);
-									item.setData(ROT, R270);
-									gallery.redraw(item);
-									break;
-								}
-								if (hotSpots.isRotate90(e.x, e.y)) {
-									rotate(asset, 90);
-									item.setData(ROT, R90);
-									gallery.redraw(item);
-									break;
-								}
-								if (hotSpots.isRating(e.x, e.y)) {
-									RatingDialog dialog = new RatingDialog(getSite().getShell(), asset.getRating(),
-											0.5d, true, true);
-									dialog.create();
-									dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
-									ZoomActionFactory.rate(Collections.singletonList(asset), AbstractLightboxView.this,
-											dialog.open());
-									break;
-								}
-								if (hotSpots.isDoneMark(e.x, e.y)) {
-									StatusDialog dialog = new StatusDialog(getSite().getShell(), asset.getStatus());
-									dialog.create();
-									dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
-									setStatus(asset, dialog.open());
-									break;
-								}
-								if (hotSpots.isColorSpot(e.x, e.y)) {
-									ColorCodeDialog dialog = new ColorCodeDialog(getSite().getShell(),
-											asset.getColorCode());
-									dialog.create();
-									dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
-									int code = dialog.open();
-									if (code >= Constants.COLOR_UNDEFINED)
-										colorCode(asset, code);
-									break;
-								}
-								if (hotSpots.isLocationPin(e.x, e.y)) {
-									showLocation(asset, (e.stateMask & SWT.SHIFT) == SWT.SHIFT);
-									break;
-								}
-								if (hotSpots.isVoicenotes(e.x, e.y)) {
-									if (AssetEnsemble.hasVoiceNote(asset))
-										UiActivator.getDefault().playVoicenote(asset);
-									else {
-										String voiceFileURI = asset.getVoiceFileURI();
-										if (voiceFileURI != null && !voiceFileURI.isEmpty())
-											addVoiceNoteAction.run();
-									}
-									break;
-								}
-								if (hotSpots.isExpandCollapse(e.x, e.y)) {
-									if (item.getData(CARD) != null)
-										expandedSet.add(asset);
-									else
-										expandedSet.remove(asset);
-									redrawCollection(null, null);
-									break;
-								}
-								if (hotSpots.isTitleArea(e.x, e.y)) {
-									editTitleArea(item, hotSpots.getTitleArea());
-									break;
-								}
-							}
-						}
-					}
-				}
-			}
-		});
+		gallery.addListener(SWT.MouseUp, this);
 	}
 
 	protected abstract void editTitleArea(GalleryItem item, Rectangle bounds);
@@ -669,9 +565,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 
 	@Override
 	public String getTooltip(int mx, int my) {
-		pnt.x = mx;
-		pnt.y = my;
-		GalleryItem item = gallery.getItem(pnt);
+		GalleryItem item = gallery.getItem(setMousePosition(mx, my));
 		if (item == null)
 			return null;
 		Hotspots hotspots = (Hotspots) item.getData(HOTSPOTS);
@@ -679,14 +573,12 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 	}
 
 	@Override
-	public Object findObject(MouseEvent e) {
+	public Object findObject(Event e) {
 		return findObject(e.x, e.y);
 	}
 
 	public Object findObject(int x, int y) {
-		pnt.x = x;
-		pnt.y = y;
-		GalleryItem item = gallery.getItem(pnt);
+		GalleryItem item = gallery.getItem(setMousePosition(x, y));
 		handleMouseOver(item);
 		if (item == null)
 			return null;
@@ -697,9 +589,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 			List<Asset> assets = new ArrayList<Asset>(c);
 			if (asset != null)
 				assets.add(asset);
-			Gallery parent = item.getParent();
-			int index = parent.indexOf(item);
-			int assetIndex = foldingIndex[index];
+			int assetIndex = foldingIndex[item.getParent().indexOf(item)];
 			IAssetProvider assetProvider = getAssetProvider();
 			for (int i = 1; i < c; i++) {
 				Asset nextAsset = assetProvider.getAsset(assetIndex + i);
@@ -723,10 +613,8 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 	}
 
 	@Override
-	public ImageRegion[] findAllRegions(MouseEvent event) {
-		pnt.x = event.x;
-		pnt.y = event.y;
-		GalleryItem item = gallery.getItem(pnt);
+	public ImageRegion[] findAllRegions(Event event) {
+		GalleryItem item = gallery.getItem(setMousePosition(event.x, event.y));
 		if (item != null) {
 			ImageRegion[] regions = (ImageRegion[]) item.getData(REGIONS);
 			if (regions != null)
@@ -737,9 +625,7 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 
 	@Override
 	public ImageRegion findBestFaceRegion(int x, int y, boolean all) {
-		pnt.x = x;
-		pnt.y = y;
-		GalleryItem item = gallery.getItem(pnt);
+		GalleryItem item = gallery.getItem(setMousePosition(x, y));
 		if (item != null)
 			return findBestFaceRegion(item, x, y, all);
 		return null;
@@ -800,28 +686,130 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 		gallery.setFocus();
 	}
 
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
+	public void handleEvent(Event event) {
+		switch (event.type) {
+		case SWT.Selection:
+			onSelection(event);
+			break;
+		case SWT.SetData:
+			onSetData(event);
+			break;
+		case SWT.MouseUp:
+			onMouseUp(event);
+			break;
+		case SWT.MouseDoubleClick:
+			GalleryItem item = gallery.getItem(getMousePosition());
+			if (item != null) {
+				Hotspots hotSpots = (Hotspots) item.getData(HOTSPOTS);
+				if (!hotSpots.isHotspot(event.x, event.y)) {
+					event.data = item.getData(ASSET);
+					viewImageAction.runWithEvent(event);
+				}
+			}
+			break;
+		}
 	}
 
-	public void widgetSelected(SelectionEvent e) {
+	protected void onMouseUp(Event e) {
+		if (e.button == 1) {
+			GalleryItem[] items = gallery.getSelection();
+			for (GalleryItem item : items) {
+				Asset asset = (Asset) item.getData(ASSET);
+				if (asset != null) {
+					ImageRegion foundRegion = findBestFaceRegion(item, e.x, e.y, false);
+					if (foundRegion != null) {
+						editRegionName(foundRegion);
+						break;
+					}
+					Hotspots hotSpots = (Hotspots) item.getData(HOTSPOTS);
+					if (hotSpots != null) {
+						if (hotSpots.isRotate270(e.x, e.y)) {
+							rotate(asset, 270);
+							item.setData(ROT, R270);
+							gallery.redraw(item);
+							break;
+						}
+						if (hotSpots.isRotate90(e.x, e.y)) {
+							rotate(asset, 90);
+							item.setData(ROT, R90);
+							gallery.redraw(item);
+							break;
+						}
+						if (hotSpots.isRating(e.x, e.y)) {
+							RatingDialog dialog = new RatingDialog(getSite().getShell(), asset.getRating(), 0.5d, true,
+									true);
+							dialog.create();
+							dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
+							ZoomActionFactory.rate(Collections.singletonList(asset), AbstractLightboxView.this,
+									dialog.open());
+							break;
+						}
+						if (hotSpots.isDoneMark(e.x, e.y)) {
+							StatusDialog dialog = new StatusDialog(getSite().getShell(), asset.getStatus());
+							dialog.create();
+							dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
+							setStatus(asset, dialog.open());
+							break;
+						}
+						if (hotSpots.isColorSpot(e.x, e.y)) {
+							ColorCodeDialog dialog = new ColorCodeDialog(getSite().getShell(), asset.getColorCode());
+							dialog.create();
+							dialog.getShell().setLocation(gallery.toDisplay(e.x, e.y));
+							int code = dialog.open();
+							if (code >= Constants.COLOR_UNDEFINED)
+								colorCode(asset, code);
+							break;
+						}
+						if (hotSpots.isLocationPin(e.x, e.y)) {
+							showLocation(asset, (e.stateMask & SWT.SHIFT) == SWT.SHIFT);
+							break;
+						}
+						if (hotSpots.isVoicenotes(e.x, e.y)) {
+							if (AssetEnsemble.hasVoiceNote(asset))
+								UiActivator.getDefault().playVoicenote(asset);
+							else {
+								String voiceFileURI = asset.getVoiceFileURI();
+								if (voiceFileURI != null && !voiceFileURI.isEmpty())
+									addVoiceNoteAction.run();
+							}
+							break;
+						}
+						if (hotSpots.isExpandCollapse(e.x, e.y)) {
+							if (item.getData(CARD) != null)
+								expandedSet.add(asset);
+							else
+								expandedSet.remove(asset);
+							redrawCollection(null, null);
+							break;
+						}
+						if (hotSpots.isTitleArea(e.x, e.y)) {
+							editTitleArea(item, hotSpots.getTitleArea());
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	protected abstract void onSetData(Event event);
+
+	protected void onSelection(Event event) {
 		if (refreshing <= 0) {
 			stopAudio();
 			selection = doGetAssetSelection();
 			fireSelection();
 		}
 	}
-	
+
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
 		String property = event.getProperty();
-		if (PreferenceConstants.SHOWLABEL.equals(property)
-				|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
+		if (PreferenceConstants.SHOWLABEL.equals(property) || PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
 				|| PreferenceConstants.LABELFONTSIZE.equals(property)
 				|| PreferenceConstants.LABELALIGNMENT.equals(property)
 				|| PreferenceConstants.SHOWROTATEBUTTONS.equals(property)
-				|| PreferenceConstants.SHOWCOLORCODE.equals(property)
-				|| PreferenceConstants.SHOWRATING.equals(property)
+				|| PreferenceConstants.SHOWCOLORCODE.equals(property) || PreferenceConstants.SHOWRATING.equals(property)
 				|| PreferenceConstants.SHOWLOCATION.equals(property)
 				|| PreferenceConstants.SHOWDONEMARK.equals(property)
 				|| PreferenceConstants.SHOWVOICENOTE.equals(property)

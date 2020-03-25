@@ -19,6 +19,9 @@
  */
 package com.bdaum.zoom.video.internal;
 
+import static org.bytedeco.javacpp.avutil.AV_LOG_PANIC;
+import static org.bytedeco.javacpp.avutil.av_log_set_level;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -650,6 +653,7 @@ public class VideoSupport extends AbstractMediaSupport {
 
 	public static ZImage decodeAndCaptureFrames(File file, int twidth, int raster, int frameNo, double[] frameCountBox,
 			IProgressMonitor aMonitor) throws IOException, UnsupportedOperationException {
+		av_log_set_level(AV_LOG_PANIC);
 		try (FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(file)) {
 			Java2DFrameConverter converter = new Java2DFrameConverter();
 			grabber.start();
@@ -670,12 +674,9 @@ public class VideoSupport extends AbstractMediaSupport {
 			}
 			grabber.setFrameNumber(frameNo);
 			Frame frame = grabber.grabImage();
-			ZImage image = frame != null ? new ZImage(converter.getBufferedImage(frame), file.getAbsolutePath()) : null;
-			grabber.stop();
-			grabber.release();
-			return image;
+			return frame != null ? new ZImage(converter.getBufferedImage(frame), file.getAbsolutePath()) : null;
 		} catch (Exception e) {
-			if (frameNo > 0 && e.getMessage().indexOf("_seek_") >= 0) //$NON-NLS-1$
+			if (frameNo > 0 && e.getMessage().contains("_seek_")) //$NON-NLS-1$
 				throw new UnsupportedOperationException(e.getMessage());
 			throw new IOException(NLS.bind(Messages.VideoSupport_taking_snapshot_failed, file), e);
 		}
@@ -917,7 +918,7 @@ public class VideoSupport extends AbstractMediaSupport {
 			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		String key = qfield.getKey();
 		if (handles(key)) {
-			Video.class.getMethod(qfield.getSetAccessor(key.substring(VIDEOROLE.length())), qfield.getJavaType())
+			Video.class.getMethod(QueryField.getSetAccessor(key.substring(VIDEOROLE.length())), qfield.getJavaType())
 					.invoke(getVx(asset, true), value);
 			return true;
 		}
@@ -928,7 +929,7 @@ public class VideoSupport extends AbstractMediaSupport {
 			InvocationTargetException, NoSuchMethodException, SecurityException {
 		String key = qfield.getKey();
 		if (handles(key)) {
-			Video.class.getMethod(qfield.getSetAccessor(key.substring(VIDEOROLE.length())), qfield.getJavaType())
+			Video.class.getMethod(QueryField.getSetAccessor(key.substring(VIDEOROLE.length())), qfield.getJavaType())
 					.invoke(getVx(asset, true), new Object[] { null });
 			return true;
 		}
@@ -962,7 +963,7 @@ public class VideoSupport extends AbstractMediaSupport {
 	 */
 	public Object getFieldValue(QueryField qfield, MediaExtension ext) throws IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		return Video.class.getMethod(qfield.getGetAccessor(qfield.getKey().substring(VIDEOROLE.length())), NOPARMS)
+		return Video.class.getMethod(QueryField.getGetAccessor(qfield.getKey().substring(VIDEOROLE.length())), NOPARMS)
 				.invoke(ext, NOARGS);
 	}
 

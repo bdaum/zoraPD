@@ -369,7 +369,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 
 			@Override
 			public void assetsModified(BagChange<Asset> changes, final QueryField node) {
-				for (Asset asset : getNavigationHistory().getSelectedAssets()) {
+				for (Asset asset : getNavigationHistory().getSelectedAssets().getAssets()) {
 					if (changes == null || changes.hasChanged(asset)) {
 						Shell shell = getSite().getShell();
 						if (!shell.isDisposed())
@@ -839,7 +839,12 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 		sc.addControlListener(new ControlAdapter() {
 			@Override
 			public void controlResized(ControlEvent e) {
-				sc.setMinSize(innerComp.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+				sc.removeControlListener(this);
+				try {
+					sc.setMinSize(innerComp.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+				} finally {
+					sc.addControlListener(this);
+				}
 			}
 		});
 		innerComp.setLayout(new FormLayout());
@@ -875,7 +880,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			dateField.setData(UiConstants.LABEL, label);
 			layoutData.widthHint = widthHint;
 			dateField.setLayoutData(layoutData);
-			dateField.addListener(new Listener() {
+			dateField.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
 					if (!updateSet.contains(qfield))
@@ -1110,8 +1115,8 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			if ((style & SWT.MULTI) != 0)
 				layoutData.heightHint = 50;
 			checkedTextField.setLayoutData(layoutData);
-			checkedTextField.addModifyListener(new ModifyListener() {
-				public void modifyText(ModifyEvent e) {
+			checkedTextField.addListener(SWT.Modify, new Listener() {
+				public void handleEvent(Event e) {
 					if (!updateSet.contains(qfield)) {
 						String text = checkedTextField.getText();
 						if (!QueryField.VALUE_MIXED.equals(text)) {

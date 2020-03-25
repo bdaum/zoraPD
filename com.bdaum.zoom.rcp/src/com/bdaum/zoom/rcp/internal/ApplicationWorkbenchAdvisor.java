@@ -379,10 +379,11 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 		}
 		OperationJob.addOperationJobListener(new JobChangeAdapter() {
 			private int imports;
-			private Timer importTimer;
+			private Timer importTimer = new Timer();
 			private boolean blinkState;
 			private Runnable blinkRunnable;
 			private Runnable doneRunnable;
+			private TimerTask task;
 
 			@Override
 			public void running(IJobChangeEvent event) {
@@ -403,13 +404,15 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 										}
 									}
 								};
-							importTimer = new Timer();
-							importTimer.schedule(new TimerTask() {
+							if (task != null)
+								task.cancel();
+							task = new TimerTask() {
 								@Override
 								public void run() {
 									trayItem.getDisplay().asyncExec(blinkRunnable);
 								}
-							}, 50L, 400L);
+							};
+							importTimer.schedule(task, 50L, 400L);
 						}
 					}
 					++imports;

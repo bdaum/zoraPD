@@ -42,16 +42,15 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
@@ -72,7 +71,7 @@ import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.internal.widgets.FilterField;
 import com.bdaum.zoom.ui.internal.widgets.FlatGroup;
 
-public class StructComponent implements DisposeListener {
+public class StructComponent implements Listener {
 
 	public class FillJob extends Job {
 
@@ -112,9 +111,9 @@ public class StructComponent implements DisposeListener {
 				control.getDisplay().asyncExec(() -> {
 					if (!control.isDisposed()) {
 						viewer.setInput(objects);
-						String expansions = settings.get(FLATEXPANSION+type);
+						String expansions = settings.get(FLATEXPANSION + type);
 						if (expansions != null) {
-							Character[] chapters = new Character[expansions.length()];
+							Object[] chapters = new Object[expansions.length()];
 							for (int i = 0; i < chapters.length; i++)
 								chapters[i] = expansions.charAt(i);
 							viewer.setExpandedElements(chapters);
@@ -212,7 +211,7 @@ public class StructComponent implements DisposeListener {
 		this.value = value;
 		this.type = type;
 		this.settings = settings;
-		comp.addDisposeListener(this);
+		comp.addListener(SWT.Dispose, this);
 		this.structOverlayMap = structOverlayMap;
 		this.radioGroup = radioGroup;
 		Composite headerGroup = new Composite(comp, SWT.NONE);
@@ -227,8 +226,8 @@ public class StructComponent implements DisposeListener {
 			new Label(comp, SWT.NONE);
 		final FilterField filterField = new FilterField(headerGroup);
 		filterField.setLayoutData(new GridData(300, SWT.DEFAULT));
-		filterField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
+		filterField.addListener(SWT.Modify, new Listener() {
+			public void handleEvent(Event e) {
 				update();
 			}
 		});
@@ -272,7 +271,7 @@ public class StructComponent implements DisposeListener {
 		viewer.getControl().setLayoutData(layoutData);
 		viewer.getTree().setLinesVisible(linesVisible);
 	}
-	
+
 	public void fillValues() {
 		new FillJob(dbManager, type, value).schedule();
 	}
@@ -396,16 +395,18 @@ public class StructComponent implements DisposeListener {
 	}
 
 	protected void update() {
-		ISelection selection = viewer.getSelection();
-		if (isFlat())
-			viewer.setInput(objects);
-		else {
-			Object[] expandedElements = viewer.getExpandedElements();
-			viewer.setInput(objects);
-			viewer.setExpandedElements(expandedElements);
-		}
-		viewer.setSelection(selection, true);
-		expandCollapseGroup.setVisible(!isFlat());
+		BusyIndicator.showWhile(viewer.getControl().getDisplay(), () -> {
+			ISelection selection = viewer.getSelection();
+			if (isFlat())
+				viewer.setInput(objects);
+			else {
+				Object[] expandedElements = viewer.getExpandedElements();
+				viewer.setInput(objects);
+				viewer.setExpandedElements(expandedElements);
+			}
+			viewer.setSelection(selection, true);
+			expandCollapseGroup.setVisible(!isFlat());
+		});
 	}
 
 	public void remove(IdentifiableObject element) {
@@ -436,7 +437,7 @@ public class StructComponent implements DisposeListener {
 		return shownObjects;
 	}
 
-	public void widgetDisposed(DisposeEvent e) {
+	public void handleEvent(Event e) {
 		Job.getJobManager().cancel(this);
 	}
 
@@ -448,7 +449,7 @@ public class StructComponent implements DisposeListener {
 		if (!isFlat()) {
 			StringBuilder sb = new StringBuilder();
 			for (Object obj : viewer.getExpandedElements())
-				sb.append(obj.toString());
+				sb.append(obj);
 			settings.put(FLATEXPANSION + type, sb.toString());
 		}
 	}
