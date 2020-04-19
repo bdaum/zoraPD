@@ -161,19 +161,22 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 		CommonUtilities.setHoverTiming(dt, bt, ct);
 		String customProfile = preferencesService.getString(UI_NAMESPACE, PreferenceConstants.CUSTOMPROFILE, null,
 				null);
-		ImageActivator.getDefault().resetCustomProfile(customProfile);
+		ImageActivator imageActivator = ImageActivator.getDefault();
+		imageActivator.resetCustomProfile(customProfile);
+		imageActivator.setAdvancedGraphics(preferencesService.getBoolean(UiActivator.PLUGIN_ID,
+				PreferenceConstants.ADVANCEDGRAPHICS, false, null));
 		if (ImageConstants.AVAILABLE_PROCESSORS > 1)
 			ImageConstants.setNoProcessors(
 					preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.NOPROCESSORS, 2, null));
 		setTheme(preferencesService.getString(UI_NAMESPACE, PreferenceConstants.BACKGROUNDCOLOR,
 				PreferenceConstants.BACKGROUNDCOLOR_DARKGREY, null));
-		final CoreActivator activator = CoreActivator.getDefault();
-		activator.setBackupInterval(
+		final CoreActivator coreActivator = CoreActivator.getDefault();
+		coreActivator.setBackupInterval(
 				preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.BACKUPINTERVAL, 7, null));
-		activator.setNoBackup(preferencesService.getBoolean(UI_NAMESPACE, PreferenceConstants.NOBACKUP, false, null));
-		activator.setBackupGenerations(preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.BACKUPGENERATIONS,
+		coreActivator.setNoBackup(preferencesService.getBoolean(UI_NAMESPACE, PreferenceConstants.NOBACKUP, false, null));
+		coreActivator.setBackupGenerations(preferencesService.getInt(UI_NAMESPACE, PreferenceConstants.BACKUPGENERATIONS,
 				Integer.MAX_VALUE, null));
-		activator.setNoProgress(
+		coreActivator.setNoProgress(
 				preferencesService.getBoolean(UI_NAMESPACE, PreferenceConstants.NOPROGRESS, false, null));
 		final IDbFactory dbFactory = CoreActivator.getDefault().getDbFactory();
 		dbFactory.setTolerances(
@@ -248,7 +251,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 							dbFactory.setDimUnit(
 									preferencesService.getString(UI_NAMESPACE, PreferenceConstants.DIMUNIT, "c", null)); //$NON-NLS-1$
 						else if (key == PreferenceConstants.NOPROGRESS)
-							activator.setNoProgress(preferencesService.getBoolean(UI_NAMESPACE,
+							coreActivator.setNoProgress(preferencesService.getBoolean(UI_NAMESPACE,
 									PreferenceConstants.NOPROGRESS, false, null));
 						else if (key == PreferenceConstants.UNDOLEVELS)
 							configureUndoLevels(window, preferencesService);
@@ -259,15 +262,15 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 						else if (key == PreferenceConstants.RECIPEDETECTORS
 								|| key == PreferenceConstants.PROCESSRECIPES) {
 							configureRecipeDetectors(preferencesService);
-							activator.getFileWatchManager().updateWatchedMetaFolders();
+							coreActivator.getFileWatchManager().updateWatchedMetaFolders();
 						} else if (key == PreferenceConstants.BACKUPINTERVAL)
-							activator.setBackupInterval(preferencesService.getInt(UI_NAMESPACE,
+							coreActivator.setBackupInterval(preferencesService.getInt(UI_NAMESPACE,
 									PreferenceConstants.BACKUPINTERVAL, 7, null));
 						else if (key == PreferenceConstants.NOBACKUP)
-							activator.setNoBackup(preferencesService.getBoolean(UI_NAMESPACE,
+							coreActivator.setNoBackup(preferencesService.getBoolean(UI_NAMESPACE,
 									PreferenceConstants.NOBACKUP, false, null));
 						else if (key == PreferenceConstants.BACKUPGENERATIONS)
-							activator.setBackupGenerations(preferencesService.getInt(UI_NAMESPACE,
+							coreActivator.setBackupGenerations(preferencesService.getInt(UI_NAMESPACE,
 									PreferenceConstants.BACKUPGENERATIONS, Integer.MAX_VALUE, null));
 						else if (key == PreferenceConstants.TRAY_MODE) {
 							boolean trayMode = PreferenceConstants.TRAY_TRAY.equals(event.getNewValue());
@@ -276,6 +279,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 								configureWithRestart(preferencesService);
 						} else if (key == PreferenceConstants.ACCELERATION)
 							configureWithRestart(preferencesService);
+						else if (key == PreferenceConstants.ADVANCEDGRAPHICS)
+							imageActivator.setAdvancedGraphics(preferencesService.getBoolean(UiActivator.PLUGIN_ID,
+									PreferenceConstants.ADVANCEDGRAPHICS, false, null));
 					}
 
 					private void configureWithRestart(final IPreferencesService preferencesService) {

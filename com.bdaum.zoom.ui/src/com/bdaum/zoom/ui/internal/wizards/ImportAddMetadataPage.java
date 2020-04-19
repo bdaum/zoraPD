@@ -26,10 +26,8 @@ import com.bdaum.zoom.cat.model.meta.LastDeviceImport;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.ImportFromDeviceData;
 import com.bdaum.zoom.core.internal.Utilities;
-import com.bdaum.zoom.core.internal.ai.IAiService;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.UiUtilities;
@@ -62,7 +60,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 	private final boolean media;
 	private String presetAuthor;
 	private RadioButtonGroup privacyGroup;
-	private IAiService aiService;
+//	private IAiService aiService;
 	private IDialogSettings dialogSettings;
 	private SmartCollectionImpl collection;
 	private CheckboxButton albumButton;
@@ -78,7 +76,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 		this.media = media;
 		this.collection = collection;
 		this.newStruct = newStruct;
-		aiService = CoreActivator.getDefault().getAiService();
+//		aiService = CoreActivator.getDefault().getAiService();
 	}
 
 	@SuppressWarnings("unused")
@@ -191,8 +189,8 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 
 		setTitle(Messages.ImportAddMetadataPage_add_metadata);
 		setMessage(Messages.ImportAddMetadataPage_specify_metadata);
-		super.createControl(parent);
 		fillValues();
+		super.createControl(parent);
 	}
 
 	@Override
@@ -269,10 +267,8 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 	}
 
 	@Override
-	protected void validatePage() {
-		String errorMessage = autoGroup != null ? autoGroup.validate() : null;
-		setErrorMessage(errorMessage);
-		setPageComplete(errorMessage == null);
+	protected String validate() {
+		return autoGroup != null ? autoGroup.validate() : null;
 	}
 
 	public void performFinish(ImportFromDeviceData importData) {

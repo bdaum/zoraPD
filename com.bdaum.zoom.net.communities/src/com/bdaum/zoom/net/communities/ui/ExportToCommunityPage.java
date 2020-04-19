@@ -175,12 +175,11 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 	}
 
 	@Override
-	protected void validatePage() {
+	protected String validate() {
 		String message = assets.isEmpty() ? Messages.ExportToCommunityPage_no_images_selected : checkAccount();
 		if (message == null && watermarkGroup != null)
 			message = watermarkGroup.validate();
-		setErrorMessage(message);
-		setPageComplete(message == null);
+		return message;
 	}
 
 	private void checkImages() {

@@ -215,27 +215,18 @@ public class SourcePage extends ColoredWizardPage implements Listener {
 	}
 
 	@Override
-	protected void validatePage() {
+	protected String validate() {
 		if (sourceButtonGroup.getSelection() == 1) {
 			Object firstElement = ((IStructuredSelection) collViewer.getSelection()).getFirstElement();
-			if (firstElement == null) {
-				setErrorMessage(Messages.SourcePage_please_select);
-				setPageComplete(false);
-			} else if (!(firstElement instanceof SmartCollection)) {
-				setErrorMessage(Messages.SourcePage_not_a_group);
-				setPageComplete(false);
-			} else {
-				report.setSource(((SmartCollection) firstElement).getStringId());
-				report.setSkipOrphans(skipOrphansButton.getSelection());
-				setErrorMessage(null);
-				setPageComplete(true);
-			}
-		} else {
+			if (firstElement == null)
+				return (Messages.SourcePage_please_select);
+			if (!(firstElement instanceof SmartCollection))
+				return (Messages.SourcePage_not_a_group);
+			report.setSource(((SmartCollection) firstElement).getStringId());
+		} else
 			report.setSource(null);
-			report.setSkipOrphans(skipOrphansButton.getSelection());
-			setErrorMessage(null);
-			setPageComplete(true);
-		}
+		report.setSkipOrphans(skipOrphansButton.getSelection());
+		return null;
 	}
 
 	@Override

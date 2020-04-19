@@ -75,8 +75,8 @@ public class TransferPage extends ColoredWizardPage {
 		setHelp(HelpContextIds.WATCHED_FOLDER_METADATA);
 		setTitle(getName());
 		setMessage(Messages.TransferPage_transfer_page_msg);
-		super.createControl(parent);
 		fillValues();
+		super.createControl(parent);
 	}
 
 	private static Combo createHistoryCombo(Composite parent, String lab, IDialogSettings settings, String key) {
@@ -118,8 +118,8 @@ public class TransferPage extends ColoredWizardPage {
 	}
 
 	@Override
-	protected void validatePage() {
-		// do nothing
+	protected String validate() {
+		return null;
 	}
 
 	public void performFinish() {

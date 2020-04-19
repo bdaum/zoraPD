@@ -56,8 +56,8 @@ public class ExportPage extends ColoredWizardPage implements Listener {
 		String[] filterNames = new String[] { NLS.bind(Messages.ExportPage_x_files, type.toUpperCase(), type),
 				Messages.ExportPage_all_files };
 		String fileName = "*." + type; //$NON-NLS-1$
-		fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY, Messages.ExportPage_target_file, true, filterExtensions,
-				filterNames, path, fileName, true, dialogSettings);
+		fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY, Messages.ExportPage_target_file, true,
+				filterExtensions, filterNames, path, fileName, true, dialogSettings);
 		fileEditor.addListener(SWT.Modify, this);
 		new Label(composite, SWT.NONE).setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 		setControl(composite);
@@ -67,7 +67,7 @@ public class ExportPage extends ColoredWizardPage implements Listener {
 		fillValues();
 		super.createControl(parent);
 	}
-	
+
 	@Override
 	public void handleEvent(Event event) {
 		path = fileEditor.getFilterPath();
@@ -79,21 +79,15 @@ public class ExportPage extends ColoredWizardPage implements Listener {
 	}
 
 	@Override
-	protected void validatePage() {
-		boolean valid = true;
+	protected String validate() {
 		String targetFile = getTargetFile();
-		if (assets.isEmpty()) {
-			setErrorMessage(Messages.ExportPage_no_geocoded_image);
-			valid = false;
-		} else if (targetFile.isEmpty()) {
-			setErrorMessage(Messages.ExportPage_file_name_empty);
-			valid = false;
-		} else if (targetFile.indexOf('*') >= 0 || targetFile.indexOf('?') >= 0) {
-			setErrorMessage(Messages.ExportPage_specify_target_file);
-			valid = false;
-		} else
-			setErrorMessage(null);
-		setPageComplete(valid);
+		if (assets.isEmpty())
+			return Messages.ExportPage_no_geocoded_image;
+		if (targetFile.isEmpty())
+			return Messages.ExportPage_file_name_empty;
+		if (targetFile.indexOf('*') >= 0 || targetFile.indexOf('?') >= 0)
+			return Messages.ExportPage_specify_target_file;
+		return null;
 	}
 
 	public String getTargetFile() {

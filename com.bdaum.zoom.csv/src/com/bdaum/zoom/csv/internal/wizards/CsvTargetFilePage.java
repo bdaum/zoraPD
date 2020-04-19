@@ -59,21 +59,17 @@ public class CsvTargetFilePage extends ColoredWizardPage implements Listener {
 		path = dialogSettings.get(CSVPATH);
 		Composite composite = createComposite(parent, 3);
 		String[] filterExtensions = new String[] { "*.csv;*.CSV", "*.*" }; //$NON-NLS-1$ //$NON-NLS-2$
-		String[] filterNames = new String[] {
-				Messages.CsvTargetFilePage_comma_separated_values,
+		String[] filterNames = new String[] { Messages.CsvTargetFilePage_comma_separated_values,
 				Messages.CsvTargetFilePage_all_files };
 		String fileName = "*.csv"; //$NON-NLS-1$
 
-		fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY,
-				Messages.CsvTargetFilePage_target_file, true, filterExtensions,
-				filterNames, path, fileName, true, dialogSettings);
+		fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY, Messages.CsvTargetFilePage_target_file, true,
+				filterExtensions, filterNames, path, fileName, true, dialogSettings);
 		fileEditor.addListener(SWT.Modify, this);
-		firstLineButton = WidgetFactory.createCheckButton(composite,
-				Messages.CsvTargetFilePage_first_line, new GridData(SWT.BEGINNING,
-						SWT.CENTER, false, false, 3, 1));
+		firstLineButton = WidgetFactory.createCheckButton(composite, Messages.CsvTargetFilePage_first_line,
+				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 		firstLineButton.setSelection(!dialogSettings.getBoolean(NOFIRSTLINE));
-		new Label(composite, SWT.NONE).setLayoutData(new GridData(
-				SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
+		new Label(composite, SWT.NONE).setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 		setControl(composite);
 		setHelp(HelpContextIds.CSV_WIZARD);
 		setTitle(Messages.CsvTargetFilePage_output_file);
@@ -81,7 +77,7 @@ public class CsvTargetFilePage extends ColoredWizardPage implements Listener {
 		fillValues();
 		super.createControl(parent);
 	}
-	
+
 	@Override
 	public void handleEvent(Event event) {
 		path = fileEditor.getFilterPath();
@@ -93,21 +89,15 @@ public class CsvTargetFilePage extends ColoredWizardPage implements Listener {
 	}
 
 	@Override
-	protected void validatePage() {
-		boolean valid = true;
+	protected String validate() {
 		String targetFile = getTargetFile();
-		if (assets.isEmpty()) {
-			setErrorMessage(Messages.CsvTargetFilePage_no_image_selected);
-			valid = false;
-		} else if (targetFile.isEmpty()) {
-			setErrorMessage(Messages.CsvTargetFilePage_file_name_empty);
-			valid = false;
-		} else if (targetFile.indexOf('*') >= 0 || targetFile.indexOf('?') >= 0) {
-			setErrorMessage(Messages.CsvTargetFilePage_specify_target_file);
-			valid = false;
-		} else
-			setErrorMessage(null);
-		setPageComplete(valid);
+		if (assets.isEmpty())
+			return Messages.CsvTargetFilePage_no_image_selected;
+		if (targetFile.isEmpty())
+			return Messages.CsvTargetFilePage_file_name_empty;
+		if (targetFile.indexOf('*') >= 0 || targetFile.indexOf('?') >= 0)
+			return Messages.CsvTargetFilePage_specify_target_file;
+		return null;
 	}
 
 	public String getTargetFile() {

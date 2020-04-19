@@ -121,20 +121,13 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 	}
 
 	@Override
-	protected void validatePage() {
-		if (folderField.getText().isEmpty()) {
-			setErrorMessage(Messages.WatchedFolderSelectionPage_specify_path);
-			setPageComplete(false);
-		} else {
-			File file = new File(folderField.getText());
-			if (!file.exists()) {
-				setErrorMessage(Messages.WatchedFolderSelectionPage_folder_does_not_exist);
-				setPageComplete(false);
-			} else {
-				setErrorMessage(null);
-				setPageComplete(true);
-			}
-		}
+	protected String validate() {
+		if (folderField.getText().isEmpty())
+			return Messages.WatchedFolderSelectionPage_specify_path;
+		File file = new File(folderField.getText());
+		if (!file.exists())
+			return Messages.WatchedFolderSelectionPage_folder_does_not_exist;
+		return null;
 	}
 
 	public void performFinish() {

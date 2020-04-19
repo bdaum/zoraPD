@@ -130,12 +130,10 @@ public class ModePage extends ColoredWizardPage implements Listener {
 	}
 
 	@Override
-	protected void validatePage() {
-		String errorMessage = null;
+	protected String validate() {
 		if ((mode & ReportWizard.ALLVALUES) == 0)
-			errorMessage = Messages.ModePage_at_east_one;
-		setErrorMessage(errorMessage);
-		setPageComplete(errorMessage == null);
+			return Messages.ModePage_at_east_one;
+		return null;
 	}
 
 	@Override

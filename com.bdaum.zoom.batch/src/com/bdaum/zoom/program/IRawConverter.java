@@ -67,6 +67,14 @@ public interface IRawConverter extends IConverter, IRecipeProvider {
 	 * @param id
 	 */
 	void setId(String id);
+	
+	/**
+	 * Set secondary id of converter
+	 *
+	 * @param id
+	 */
+	void setSecondaryId(int id);
+
 
 	/**
 	 * Retrieve id of converter
@@ -74,6 +82,13 @@ public interface IRawConverter extends IConverter, IRecipeProvider {
 	 * @return id
 	 */
 	String getId();
+
+	/**
+	 * Retrieve secondary id of converter
+	 *
+	 * @return id
+	 */
+	int getSecondaryId();
 
 	/**
 	 * Set name of converter
@@ -220,5 +235,10 @@ public interface IRawConverter extends IConverter, IRecipeProvider {
 	 * @return true if there is a valid executable
 	 */
 	boolean isValid();
+
+	/**
+	 * Releases the raw converter
+	 */
+	void unget();
 
 }

@@ -158,12 +158,10 @@ public class CreatePDFPage extends ColoredWizardPage {
 	}
 
 	@Override
-	protected void validatePage() {
-		String errorMessage = null;
+	protected String validate() {
 		if (assets.isEmpty())
-			errorMessage = Messages.PDFTargetFilePage_no_image_selected;
-		setErrorMessage(errorMessage);
-		setPageComplete(errorMessage == null);
+			return Messages.PDFTargetFilePage_no_image_selected;
+		return null;
 	}
 
 }

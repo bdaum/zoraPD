@@ -106,7 +106,7 @@ public class PDFTargetFilePage extends ColoredWizardPage implements Listener {
 		fillValues();
 		super.createControl(parent);
 	}
-	
+
 	public void handleEvent(Event event) {
 		path = fileEditor.getFilterPath();
 		validatePage();
@@ -127,20 +127,18 @@ public class PDFTargetFilePage extends ColoredWizardPage implements Listener {
 	}
 
 	@Override
-	protected void validatePage() {
-		String errorMessage = null;
+	protected String validate() {
 		String targetFile = getTargetFile();
 		if (assets.isEmpty())
-			errorMessage = Messages.PDFTargetFilePage_no_image_selected;
-		else if (fileEditor != null) {
+			return Messages.PDFTargetFilePage_no_image_selected;
+		if (fileEditor != null) {
 			if (targetFile.isEmpty())
-				errorMessage = Messages.PDFTargetFilePage_file_name_empty;
-			else if (targetFile.indexOf('*') >= 0 || targetFile.indexOf('?') >= 0)
-				errorMessage = Messages.PDFTargetFilePage_please_specify_target_file;
+				return Messages.PDFTargetFilePage_file_name_empty;
+			if (targetFile.indexOf('*') >= 0 || targetFile.indexOf('?') >= 0)
+				return Messages.PDFTargetFilePage_please_specify_target_file;
 		} else
-			errorMessage = outputTargetGroup.validate();
-		setErrorMessage(errorMessage);
-		setPageComplete(errorMessage == null);
+			return outputTargetGroup.validate();
+		return null;
 	}
 
 	public String getTargetFile() {

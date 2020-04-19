@@ -137,6 +137,7 @@ public interface PreferenceConstants {
 	String NOPROGRESS = "com.bdaum.zoom.noProgress"; //$NON-NLS-1$
 	String ADVANCEDGRAPHICS = "com.bdaum.zoom.advancedGraphics"; //$NON-NLS-1$
 	String ACCELERATION = "com.bdaum.zoom.acceleration"; //$NON-NLS-1$
+	String ALWAYSHIGHRES = "com.bdaum.zoom.alwaysHighRes"; //$NON-NLS-1$
 	String COLORPROFILE = "com.bdaum.zoom.colorProfile"; //$NON-NLS-1$
 	String CUSTOMPROFILE = "com.bdaum.zoom.customProfile"; //$NON-NLS-1$
 	String BWFILTER = "com.bdaum.zoom.bwFilter"; //$NON-NLS-1$

@@ -2,19 +2,19 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name.0
 Bundle-SymbolicName: com.bdaum.zoom.ui; singleton:=true
-Bundle-Version: 3.6.1
+Bundle-Version: 3.6.2
 Bundle-Activator: com.bdaum.zoom.ui.internal.UiActivator
 Bundle-Vendor: %Bundle-Vendor.bdaum
 Require-Bundle: org.eclipse.nebula.widgets.gallery;bundle-version="0.5.2";visibility:=reexport,
  piccolo3;bundle-version="3.0.0",
- com.bdaum.zoom.net.core;bundle-version="3.6.1",
+ com.bdaum.zoom.net.core;bundle-version="3.6.2",
  org.eclipse.jface.text;bundle-version="3.7.1";visibility:=reexport,
  com.bdaum.iText;bundle-version="2.1.7",
  net.sf.paperclips;bundle-version="1.0.4",
- com.bdaum.zoom.operations;bundle-version="3.6.1";visibility:=reexport,
- com.bdaum.zoom.vr;bundle-version="3.6.1",
- com.bdaum.zoom.zest.cloudio;bundle-version="3.6.1",
- com.bdaum.zoom.css;bundle-version="3.6.1";visibility:=reexport
+ com.bdaum.zoom.operations;bundle-version="3.6.2";visibility:=reexport,
+ com.bdaum.zoom.vr;bundle-version="3.6.2",
+ com.bdaum.zoom.zest.cloudio;bundle-version="3.6.2",
+ com.bdaum.zoom.css;bundle-version="3.6.2";visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: com.bdaum.zoom.ui,

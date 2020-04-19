@@ -347,9 +347,9 @@ public class FilterPage extends ColoredWizardPage {
 		setHelp(HelpContextIds.WATCHED_FOLDER_FILTER);
 		setTitle(getName());
 		setMessage(Messages.FilterPage_filter_page_msg);
-		super.createControl(parent);
 		fillValues();
 		updateButtons();
+		super.createControl(parent);
 	}
 
 	private TableViewerColumn createColumn(String lab, int w) {
@@ -366,8 +366,8 @@ public class FilterPage extends ColoredWizardPage {
 	}
 
 	@Override
-	protected void validatePage() {
-		// do nothing
+	protected String validate() {
+		return null;
 	}
 
 	public void performFinish() {

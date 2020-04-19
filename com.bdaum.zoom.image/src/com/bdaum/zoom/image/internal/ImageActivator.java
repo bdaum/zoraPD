@@ -57,6 +57,8 @@ public class ImageActivator extends Plugin {
 	private String customProfile;
 	private File tempFolder;
 
+	private boolean advancedGraphics;
+
 	/*
 	 * (non-Javadoc)
 	 *
@@ -135,12 +137,32 @@ public class ImageActivator extends Plugin {
 	public ColorConvertOp computeColorConvertOp(ICC_Profile sourceProfile, int cms) {
 		if (cms == ImageConstants.NOCMS)
 			return null;
-		if (sourceProfile == null || sourceProfile == getIccProfile(ImageConstants.SRGB))
+		if (sourceProfile == null || isEqual(sourceProfile, getIccProfile(ImageConstants.SRGB)))
 			return cms == ImageConstants.SRGB ? null : getCOLORCONVERTOP_SRGB2ICC(cms);
 		ICC_ProfileRGB outputProfile = getIccProfile(cms);
-		return (sourceProfile != outputProfile) ? new ColorConvertOp(new ICC_Profile[] { sourceProfile, outputProfile },
-				new RenderingHints(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY))
+		return !isEqual(sourceProfile, outputProfile)
+				? new ColorConvertOp(new ICC_Profile[] { sourceProfile, outputProfile }, getColorRenderingHints())
 				: null;
+	}
+
+	private RenderingHints getColorRenderingHints() {
+		return new RenderingHints(RenderingHints.KEY_COLOR_RENDERING,
+				advancedGraphics ? RenderingHints.VALUE_COLOR_RENDER_QUALITY : RenderingHints.VALUE_COLOR_RENDER_SPEED);
+	}
+
+	private static boolean isEqual(ICC_Profile p1, ICC_Profile p2) {
+		if (p1 == p2)
+			return true;
+		if (p1 == null || p2 == null)
+			return false;
+		byte[] data1 = p1.getData();
+		byte[] data2 = p2.getData();
+		if (data1.length != data2.length)
+			return false;
+		for (int i = 0; i < data2.length; i++)
+			if (data1[i] != data2[i])
+				return false;
+		return true;
 	}
 
 	public UnsharpMask computeSharpenOp(int degree) {
@@ -159,7 +181,7 @@ public class ImageActivator extends Plugin {
 		if (COLORCONVERTOP_SRGB2ICC[profile] == null)
 			COLORCONVERTOP_SRGB2ICC[profile] = new ColorConvertOp(
 					new ICC_Profile[] { getIccProfile(ImageConstants.SRGB), getIccProfile(profile) },
-					new RenderingHints(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY));
+					getColorRenderingHints());
 		return COLORCONVERTOP_SRGB2ICC[profile];
 	}
 
@@ -169,7 +191,7 @@ public class ImageActivator extends Plugin {
 		if (COLORCONVERTOP_ICC2SRGB[profile] == null)
 			COLORCONVERTOP_ICC2SRGB[profile] = new ColorConvertOp(
 					new ICC_Profile[] { getIccProfile(profile), getIccProfile(ImageConstants.SRGB) },
-					new RenderingHints(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY));
+					getColorRenderingHints());
 		return COLORCONVERTOP_ICC2SRGB[profile];
 	}
 
@@ -276,6 +298,10 @@ public class ImageActivator extends Plugin {
 		BundleContext bundleContext = getBundle().getBundleContext();
 		ServiceReference<?> serviceReference = bundleContext.getServiceReference(IVideoService.class.getName());
 		return (serviceReference != null) ? (IVideoService) bundleContext.getService(serviceReference) : null;
+	}
+
+	public void setAdvancedGraphics(boolean advancedGraphics) {
+		this.advancedGraphics = advancedGraphics;
 	}
 
 }

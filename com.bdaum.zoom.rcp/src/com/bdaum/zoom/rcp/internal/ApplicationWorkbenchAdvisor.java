@@ -248,7 +248,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 			return dialog.getResult();
 		}
 
-		public IRawConverter showRawDialog(IAdaptable adaptable) {
+		public IRawConverter showRawDialog(IAdaptable adaptable) { 
 			if (question(Constants.APPLICATION_NAME,
 					Messages.getString("ApplicationWorkbenchAdvisor.no_raw_converter"), adaptable)) { //$NON-NLS-1$
 				final Shell shell = getShell(adaptable);

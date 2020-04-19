@@ -404,19 +404,17 @@ public class SendEmailPage extends ColoredWizardPage implements Listener {
 	}
 
 	@Override
-	protected void validatePage() {
+	protected String validate() {
 		int n = 0;
 		int privacy = privacyGroup.getSelection();
 		for (Asset a : assets)
 			if (a.getSafety() <= privacy)
 				++n;
-		String errorMessage = null;
 		if (n == 0)
-			errorMessage = Messages.no_images_pass_privacy0;
-		else if (watermarkGroup != null)
-			errorMessage = watermarkGroup.validate();
-		setErrorMessage(errorMessage);
-		setPageComplete(errorMessage == null);
+			return Messages.no_images_pass_privacy0;
+		if (watermarkGroup != null)
+			return watermarkGroup.validate();
+		return null;
 	}
 
 	@Override

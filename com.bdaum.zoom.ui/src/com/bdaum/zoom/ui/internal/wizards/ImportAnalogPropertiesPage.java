@@ -291,8 +291,8 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage implements Lis
 		setHelp(HelpContextIds.IMPORT_FROM_DEVICE_WIZARD_ANALOG);
 		setTitle(Messages.ImportAnalogPropertiesPage_analog_props);
 		setMessage(Messages.ImportAddMetadataPage_specify_metadata);
-		super.createControl(parent);
 		fillValues();
+		super.createControl(parent);
 	}
 	
 	@Override
@@ -474,7 +474,7 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage implements Lis
 		validatePage();
 	}
 
-	protected void validatePage() {
+	protected String validate() {
 		String errorMessage = null;
 		String fn = fnumberTimeField.getText().trim();
 		if (!fn.isEmpty())
@@ -501,8 +501,7 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage implements Lis
 			}
 		if (errorMessage == null && autoGroup != null)
 			errorMessage = autoGroup.validate();
-		setErrorMessage(errorMessage);
-		setPageComplete(errorMessage == null);
+		return errorMessage;
 	}
 
 	private void fillCombo(Combo combo, String key) {

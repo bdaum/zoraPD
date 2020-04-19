@@ -71,9 +71,8 @@ public class WatchedFolderTargetPage extends ColoredWizardPage {
 		setHelp(HelpContextIds.IMPORT_NEW_STRUCTURE_WIZARD_TARGET_SELECTION);
 		setTitle(getName());
 		setMessage(Messages.ImportTargetPage_select_the_target_folder);
-		super.createControl(parent);
 		fillValues();
-		validatePage();
+		super.createControl(parent);
 	}
 
 	private void fillValues() {
@@ -84,20 +83,13 @@ public class WatchedFolderTargetPage extends ColoredWizardPage {
 	}
 
 	@Override
-	protected void validatePage() {
+	protected String validate() {
 		String target = targetDirField.getText();
-		if (target.isEmpty()) {
-			setErrorMessage(Messages.ImportFromDeviceWizard_specify_output_dir);
-			setPageComplete(false);
-		} else {
-			if (!new File(target).exists()) {
-				setErrorMessage(Messages.ImportFromDeviceWizard_target_dir_does_not_exist);
-				setPageComplete(false);
-			} else {
-				setErrorMessage(null);
-				setPageComplete(true);
-			}
-		}
+		if (target.isEmpty())
+			return Messages.ImportFromDeviceWizard_specify_output_dir;
+		if (!new File(target).exists())
+			return Messages.ImportFromDeviceWizard_target_dir_does_not_exist;
+		return null;
 	}
 
 	public void performFinish() {

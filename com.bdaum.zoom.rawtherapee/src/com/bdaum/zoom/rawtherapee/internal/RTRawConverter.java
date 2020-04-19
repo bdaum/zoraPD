@@ -110,7 +110,7 @@ public class RTRawConverter extends AbstractRawConverter {
 				try {
 					String result = BatchUtilities.executeCommand(LOCATERAWTHERAPEE, null,
 							Messages.RTRawConverter_locate_rawtherapee, IStatus.OK, IStatus.WARNING, -1, 1000L,
-							"UTF-8"); //$NON-NLS-1$
+							"UTF-8", null); //$NON-NLS-1$
 					if (result != null) {
 						StringTokenizer st = new StringTokenizer(result, "\n"); //$NON-NLS-1$
 						while (st.hasMoreTokens()) {

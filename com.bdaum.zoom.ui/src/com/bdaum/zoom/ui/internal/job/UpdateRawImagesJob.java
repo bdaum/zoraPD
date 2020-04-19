@@ -53,6 +53,7 @@ public class UpdateRawImagesJob extends SynchronizeCatJob {
 				return Status.CANCEL_STATUS;
 			monitor.worked(1);
 		}
+		currentRawConverter.unget();
 		monitor.done();
 		if (!outdatedFiles.isEmpty())
 			new ChangeProcessor(null, outdatedFiles, null, null, System.currentTimeMillis(), null, Constants.CRITICAL,

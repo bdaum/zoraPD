@@ -21,7 +21,7 @@
 package com.bdaum.zoom.ui.internal.preferences;
 
 import java.io.File;
-import java.util.Map;
+import java.util.List;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.core.runtime.preferences.DefaultScope;
@@ -121,8 +121,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		defaultNode.putInt(PreferenceConstants.UNDOLEVELS, 9);
 		defaultNode.putDouble(PreferenceConstants.AUDIOSAMPLINGRATE, PreferenceConstants.AUDIO22KHZ);
 		defaultNode.putInt(PreferenceConstants.AUDIOBITDEPTH, PreferenceConstants.AUDIO8BIT);
-		Map<String, IRawConverter> rawConverters = BatchActivator.getDefault().getRawConverters();
-		for (IRawConverter rc : rawConverters.values()) {
+		List<IRawConverter> rawConverters = BatchActivator.getDefault().getRawConverters();
+		for (IRawConverter rc : rawConverters) {
 			for (IRawConverter.RawProperty prop : rc.getProperties())
 				if (prop.dflt != null)
 					defaultNode.put(prop.id, prop.dflt);

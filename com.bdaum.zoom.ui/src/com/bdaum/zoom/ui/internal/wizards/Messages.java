@@ -106,6 +106,7 @@ public class Messages extends NLS {
 	public static String ImportFileSelectionPage_import_from_device;
 	public static String ImportFileSelectionPage_import_preparation;
 	public static String ImportFileSelectionPage_internal_error;
+	public static String ImportFileSelectionPage_internal_error_scanning;
 	public static String ImportFileSelectionPage_io_error_while_scanning;
 	public static String ImportFileSelectionPage_jpeg_if_raw;
 	public static String ImportFileSelectionPage_last_import;
@@ -147,6 +148,7 @@ public class Messages extends NLS {
 	public static String ImportFromDeviceWizard_file_ren;
 	public static String ImportFromDeviceWizard_file_sel;
 	public static String ImportFromDeviceWizard_import_analog;
+	public static String ImportFromDeviceWizard_internal_errort_creating_wizard;
 	public static String ImportFromDeviceWizard_io_error_scanning;
 	public static String ImportFromDeviceWizard_meta;
 	public static String ImportFromDeviceWizard_modification_dates;
@@ -164,6 +166,7 @@ public class Messages extends NLS {
 	public static String ImportRenamingPage_date_filename;
 	public static String ImportRenamingPage_filename_seq;
 	public static String ImportRenamingPage_orig_filename;
+	public static String ImportRenamingPage_owner_year_seq;
 	public static String ImportRenamingPage_user_year_seq;
 
 	public static String ImportTargetPage_by_year_week;

@@ -425,6 +425,8 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 				}
 			}
 		}
+		if (rc != null)
+			rc.unget();
 	}
 
 	@Override
@@ -548,8 +550,10 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 	 * Add a new resource type to the collection shown in the top of the page. This
 	 * is typically called after the extension dialog is shown to the user.
 	 *
-	 * @param newName      the new name
-	 * @param newExtension the new extension
+	 * @param newName
+	 *            the new name
+	 * @param newExtension
+	 *            the new extension
 	 */
 	public void addResourceType(String[] newExtensions, int replace) {
 		// Either a file name or extension must be provided

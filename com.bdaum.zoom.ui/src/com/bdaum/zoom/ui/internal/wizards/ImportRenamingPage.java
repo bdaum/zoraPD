@@ -55,6 +55,8 @@ public class ImportRenamingPage extends ColoredWizardPage implements IFileProvid
 								+ Constants.TV_FILENAME, true),
 						new RenamingTemplate(Messages.ImportRenamingPage_user_year_seq,
 								Constants.TV_USER + Constants.TV_YYYY + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
+						new RenamingTemplate(Messages.ImportRenamingPage_owner_year_seq,
+								Constants.TV_OWNER + Constants.TV_YYYY + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$
 						new RenamingTemplate(Messages.ImportRenamingPage_cue_year_seq,
 								Constants.TV_CUE + "_" + Constants.TV_YYYY + "-" + Constants.TV_SEQUENCE_NO5, true), //$NON-NLS-1$ //$NON-NLS-2$
 						new RenamingTemplate(Messages.ImportRenamingPage_filename_seq,
@@ -67,8 +69,8 @@ public class ImportRenamingPage extends ColoredWizardPage implements IFileProvid
 				: HelpContextIds.IMPORT_NEW_STRUCTURE_WIZARD_RENAMING);
 		setTitle(Messages.ImportRenamingPage_image_file_renaming);
 		setMessage(Messages.ImportRenamingPage_select_a_template);
-		super.createControl(parent);
 		fillValues();
+		super.createControl(parent);
 	}
 	
 	@Override
@@ -89,10 +91,8 @@ public class ImportRenamingPage extends ColoredWizardPage implements IFileProvid
 	}
 
 	@Override
-	protected void validatePage() {
-		String errorMsg = renameGroup.validate();
-		setPageComplete(errorMsg == null);
-		setErrorMessage(errorMsg);
+	protected String validate() {
+		return renameGroup.validate();
 	}
 
 	public void performFinish(ImportFromDeviceData importData) {

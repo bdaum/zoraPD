@@ -2,10 +2,10 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.cat.foreign;singleton:=true
-Bundle-Version: 3.6.1
+Bundle-Version: 3.6.2
 Bundle-Activator: com.bdaum.zoom.cat.foreign.internal.CatActivator
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.6.1";visibility:=reexport,
+Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.6.2";visibility:=reexport,
  org.eclipse.help
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

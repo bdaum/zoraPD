@@ -15,6 +15,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.bdaum.zoom.batch.internal.BatchActivator;
+
 public abstract class AbstractRawConverter implements IRawConverter {
 
 	private String id;
@@ -27,9 +29,14 @@ public abstract class AbstractRawConverter implements IRawConverter {
 	private String path;
 	protected File rawFile;
 	private String usesRecipes = ""; //$NON-NLS-1$
+	private int secondaryId;
 
 	public void setId(String id) {
 		this.id = id;
+	}
+	
+	public void setSecondaryId(int id) {
+		this.secondaryId = id;
 	}
 
 	public void setName(String name) {
@@ -55,6 +62,11 @@ public abstract class AbstractRawConverter implements IRawConverter {
 	public String getId() {
 		return id;
 	}
+	
+	public int getSecondaryId() {
+		return secondaryId;
+	}
+
 
 	public String getName() {
 		return name;
@@ -107,6 +119,11 @@ public abstract class AbstractRawConverter implements IRawConverter {
 	public boolean isValid() {
 		String p = getPath();
 		return p != null && !p.isEmpty() && new File(p).exists();
+	}
+	
+	@Override
+	public void unget() {
+		BatchActivator.getDefault().ungetRawConverter(this);
 	}
 
 }

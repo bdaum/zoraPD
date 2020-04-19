@@ -350,11 +350,13 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 								field);
 				}
 				boolean networkPossible = !current.getSystem() && !current.getAlbum() && !UiUtilities.isImport(current);
-				String title;
+				String title ;
 				if (current.getGroup_rootCollection_parent() == null) {
 					SmartCollection parent = current.getSmartCollection_subSelection_parent();
-					parent.getName();
-					title = NLS.bind(Messages.getString("CatalogView.edit_subselection"), parent.getName()); //$NON-NLS-1$
+					if (parent != null)
+						title = NLS.bind(Messages.getString("CatalogView.edit_subselection"), parent.getName()); //$NON-NLS-1$
+					else
+						title = Messages.getString("AbstractCatalogView.edit_subcollektion"); //$NON-NLS-1$
 				} else
 					title = current.getAlbum() ? Messages.getString("CatalogView.edit_album") //$NON-NLS-1$
 							: Messages.getString("CatalogView.edit_collection"); //$NON-NLS-1$

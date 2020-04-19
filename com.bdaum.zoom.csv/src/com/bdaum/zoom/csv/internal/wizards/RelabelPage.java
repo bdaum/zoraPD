@@ -55,10 +55,9 @@ public class RelabelPage extends ColoredWizardPage {
 		Composite comp = new Composite(parent, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new GridLayout(2, false));
-		viewer = new TableViewer(comp, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL
-				| SWT.BORDER);
+		viewer = new TableViewer(comp, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
 		Table table = viewer.getTable();
-		table.setLayoutData(new GridData(605,400));
+		table.setLayoutData(new GridData(605, 400));
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
 		TableViewerColumn col1 = new TableViewerColumn(viewer, SWT.NONE);
@@ -78,8 +77,7 @@ public class RelabelPage extends ColoredWizardPage {
 			@Override
 			protected void setValue(Object element, Object value) {
 				if (element instanceof String) {
-					if (value instanceof String
-							&& !((String) value).isEmpty()) {
+					if (value instanceof String && !((String) value).isEmpty()) {
 						relabelMap.put((String) element, (String) value);
 					} else
 						relabelMap.remove(element);
@@ -117,8 +115,7 @@ public class RelabelPage extends ColoredWizardPage {
 					String token = st.nextToken();
 					int p = token.indexOf('=');
 					if (p > 0)
-						relabelMap.put(token.substring(0, p),
-								token.substring(p + 1));
+						relabelMap.put(token.substring(0, p), token.substring(p + 1));
 				}
 			}
 		}
@@ -142,8 +139,8 @@ public class RelabelPage extends ColoredWizardPage {
 	}
 
 	@Override
-	protected void validatePage() {
-		// do nothing
+	protected String validate() {
+		return null;
 	}
 
 	@Override

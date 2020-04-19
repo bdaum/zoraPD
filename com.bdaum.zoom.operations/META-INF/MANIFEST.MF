@@ -2,9 +2,9 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.operations;singleton:=true
-Bundle-Version: 3.6.1
+Bundle-Version: 3.6.2
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: com.bdaum.zoom.core;bundle-version="3.6.1";visibility:=reexport
+Require-Bundle: com.bdaum.zoom.core;bundle-version="3.6.2";visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: com.bdaum.zoom.operations.internal;x-internal:=true,
  com.bdaum.zoom.operations.internal.dup;x-internal:=true,

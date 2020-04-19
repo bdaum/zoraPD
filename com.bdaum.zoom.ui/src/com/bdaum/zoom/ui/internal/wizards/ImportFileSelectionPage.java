@@ -405,7 +405,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 	private boolean byFilename = false;
 	private Boolean presetDuplicates;
 	private Boolean presetRemoveMedia;
-	private Integer presetSkipPolicy;
+	private int presetSkipPolicy = 0;
 	private String presetFormats;
 
 	public ImportFileSelectionPage(String pageName, boolean media, boolean eject) {
@@ -570,18 +570,17 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 				: HelpContextIds.IMPORT_NEW_STRUCTURE_WIZARD_FILE_SELECTION);
 		setTitle(Messages.ImportFileSelectionPage_file_selection);
 		setMessage(Messages.ImportFileSelectionPage_select_the_image_files);
-		super.createControl(parent);
 		try {
 			fillValues();
-			validatePage();
-		} catch (InvocationTargetException e1) {
-			UiActivator.getDefault().logError(Messages.ImportFileSelectionPage_internal_error, e1);
 		} catch (InterruptedException e1) {
 			if (e1.getMessage() != null && !e1.getMessage().isEmpty())
 				parent.getDisplay().syncExec(() -> AcousticMessageDialog.openError(getShell(),
 						Messages.ImportFileSelectionPage_import_from_device, e1.getMessage()));
 			((WizardDialog) getWizard().getContainer()).close();
+		} catch (Exception e1) {
+			UiActivator.getDefault().logError(Messages.ImportFileSelectionPage_internal_error, e1);
 		}
+		super.createControl(parent);
 	}
 
 	protected void editMedia(Meta meta, String key, boolean all) {
@@ -881,7 +880,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 			try {
 				skipCombo.select(presetSkipPolicy = dialogSettings.getInt(SKIPPOLICY));
 			} catch (NumberFormatException e) {
-				// do nothing
+				skipCombo.select(0);
 			}
 		if (skipFormatsField != null) {
 			String[] formats = dialogSettings.getArray(SKIPPEDFORMATS);
@@ -903,15 +902,19 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 			Boolean rr = current.getRemoveMedia();
 			if (rr != null && removeMediaButton != null && removeMediaButton.getSelection() == presetRemoveMedia)
 				removeMediaButton.setSelection(presetRemoveMedia = rr);
-			Integer sp = current.getSkipPolicy();
-			if (sp != null && skipCombo != null && skipCombo.getSelectionIndex() == presetSkipPolicy)
-				skipCombo.select(presetSkipPolicy = sp);
-			String[] sf = current.getSkippedFormats();
-			if (sf != null && skipFormatsField != null) {
-				String formats = Core.toStringList(sf, ";"); //$NON-NLS-1$
-				if (skipFormatsField.getText().equals(presetFormats)) {
-					skipFormatsField.setText(presetFormats = formats);
-					skippedFormats = new HashSet<String>(Arrays.asList(sf));
+			if (skipCombo != null) {
+				Integer sp = current.getSkipPolicy();
+				if (sp != null && skipCombo.getSelectionIndex() == presetSkipPolicy)
+					skipCombo.select(presetSkipPolicy = sp);
+			}
+			if (skipFormatsField != null) {
+				String[] sf = current.getSkippedFormats();
+				if (sf != null) {
+					String formats = Core.toStringList(sf, ";"); //$NON-NLS-1$
+					if (skipFormatsField.getText().equals(presetFormats)) {
+						skipFormatsField.setText(presetFormats = formats);
+						skippedFormats = new HashSet<String>(Arrays.asList(sf));
+					}
 				}
 			}
 		}
@@ -975,6 +978,8 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 					monitor.done();
 				} catch (IOException e) {
 					throw new InterruptedException(Messages.ImportFileSelectionPage_io_error_while_scanning);
+				} catch (Exception e) {
+					throw new InterruptedException(Messages.ImportFileSelectionPage_internal_error_scanning);
 				} finally {
 					ImportFileSelectionPage.this.monitor = null;
 				}
@@ -1142,21 +1147,14 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 	}
 
 	@Override
-	protected void validatePage() {
+	protected String validate() {
 		Object[] checkedElements = importViewer.getCheckedElements();
-		if (checkedElements.length == 0) {
-			setErrorMessage(Messages.ImportFromDeviceWizard_please_select_files);
-			setPageComplete(false);
-		} else {
-			for (Object importNode : checkedElements)
-				if (((ImportNode) importNode).count > 0) {
-					setErrorMessage(null);
-					setPageComplete(true);
-					return;
-				}
-			setErrorMessage(Messages.ImportFileSelectionPage_no_images_to_import);
-			setPageComplete(false);
-		}
+		if (checkedElements.length == 0)
+			return Messages.ImportFromDeviceWizard_please_select_files;
+		for (Object importNode : checkedElements)
+			if (((ImportNode) importNode).count > 0)
+				return null;
+		return Messages.ImportFileSelectionPage_no_images_to_import;
 	}
 
 	public String performFinish(ImportFromDeviceData importData) {

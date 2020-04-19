@@ -44,10 +44,8 @@ import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-import com.bdaum.zoom.batch.internal.BatchActivator;
 import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.core.internal.CoreActivator;
-import com.bdaum.zoom.image.IRecipeProvider;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.image.internal.ImageActivator;
@@ -604,15 +602,15 @@ public class Core {
 		}
 		return null;
 	}
-
+//TODO 
 	/**
 	 * Returns a IRecipeProvider instance
 	 *
 	 * @return recipe provider implementation
 	 */
-	public static IRecipeProvider getRecipeProvider() {
-		return BatchActivator.getDefault().getCurrentRawConverter(false);
-	}
+//	public static IRecipeProvider getRecipeProvider() {
+//		return BatchActivator.getDefault().getCurrentRawConverter(false);
+//	}
 
 	/**
 	 * Waits until the requested cancel of the given job families was performed

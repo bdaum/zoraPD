@@ -495,13 +495,15 @@ public class SlideShowPlayer extends AbstractKiosk implements Listener {
 								if (isRawOrDng) {
 									IRawConverter currentRawConverter = BatchActivator.getDefault()
 											.getCurrentRawConverter(false);
-									if (currentRawConverter != null)
+									if (currentRawConverter != null) {
 										recipe = currentRawConverter.getRecipe(file.toURI().toString(), false,
 												new IFocalLengthProvider() {
 													public double get35mm() {
 														return request.getAsset().getFocalLengthIn35MmFilm();
 													}
 												}, null, null);
+										currentRawConverter.unget();
+									}
 								}
 								if (monitor.isCanceled())
 									break;
@@ -2833,7 +2835,7 @@ public class SlideShowPlayer extends AbstractKiosk implements Listener {
 			sb.append("\n\n").append(description); //$NON-NLS-1$
 		sb.append("\n\n").append(NLS.bind(Messages.getString("SlideShowPlayer.n_slides"), total)); //$NON-NLS-1$ //$NON-NLS-2$
 		if (firstSlide < 0)
-			sb.append('\n').append(Messages.getString("SlideShowPlayer.all_images_are_offline")); //$NON-NLS-1$
+			sb.append('\n').append(position > 0 ? Messages.getString("SlideShowPlayer.all_images_are_offline") : Messages.getString("SlideShowPlayer.all_images_offline")); //$NON-NLS-1$ //$NON-NLS-2$
 		else {
 			if (offline > 0) {
 				sb.append('\n');

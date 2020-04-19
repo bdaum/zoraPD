@@ -85,10 +85,12 @@ public class HighresImageLoader {
 		private final Options options;
 		private long lastModified;
 		private final String rawConverterId;
+		private final int secondaryId;
 
-		public ImageKey(File original, Options options, String rawConverterId) {
+		public ImageKey(File original, Options options, String rawConverterId, int secondaryId) {
 			this.options = options;
 			this.rawConverterId = rawConverterId;
+			this.secondaryId = secondaryId;
 			lastModified = BatchUtilities.getImageFileModificationTimestamp(this.original = original);
 		}
 
@@ -96,13 +98,13 @@ public class HighresImageLoader {
 		public boolean equals(Object obj) {
 			if (obj instanceof ImageKey)
 				return ((ImageKey) obj).original.equals(original) && ((ImageKey) obj).options.equals(options)
-						&& ((ImageKey) obj).rawConverterId.equals(rawConverterId);
+						&& ((ImageKey) obj).rawConverterId.equals(rawConverterId) && ((ImageKey) obj).secondaryId == secondaryId;
 			return false;
 		}
 
 		@Override
 		public int hashCode() {
-			return (original.hashCode() * 31 + options.hashCode()) * 31 + rawConverterId.hashCode();
+			return ((original.hashCode() * 31 + options.hashCode()) * 31 + rawConverterId.hashCode()) * 31 + secondaryId;
 		}
 
 		public boolean isOutdated(ImageEntry entry) {
@@ -173,97 +175,105 @@ public class HighresImageLoader {
 			final double flen35mm, Rectangle bounds, double scalingFactor, double maxFactor, boolean advanced, int cms,
 			RGB bw, UnsharpMask umask, Recipe recipe, IFileWatcher fileWatcher, String opId, LoaderListener listener)
 			throws UnsupportedOperationException {
-		total = 1000;
-		worked = 0;
-		if (monitor != null)
-			monitor.beginTask(Messages.HighresImageLoader_Loading_image, total);
-		if (bw != null)
-			cms = ImageConstants.NOCMS;
-		Recipe rawRecipe = null;
-		String name = file.getName();
-		int p = name.lastIndexOf('.');
-		String uriString = file.toURI().toString();
-		String extension = (p >= 0) ? name.substring(p + 1).toLowerCase() : ImageUtilities.detectImageFormat(uriString);
-		if (!ImageConstants.getAllFormats().contains(extension))
-			throw new UnsupportedOperationException(
-					NLS.bind(Messages.HighresImageLoader_image_format_not_supported, file));
-		File workfile = file;
-		boolean isRawOrDng = ImageConstants.isRaw(name, true);
-		profile(null);
-		if (isRawOrDng) {
-			BatchActivator activator = BatchActivator.getDefault();
-			IRawConverter rawConverter = activator.getCurrentRawConverter(false);
-			if (rawConverter == null || !rawConverter.isValid()) {
-				if (!activator.isRawQuestionAsked()) {
-					rawConverter = Core.getCore().getDbFactory().getErrorHandler().showRawDialog(null);
-					activator.setRawQuestionAsked(true);
-				}
+		IRawConverter rawConverter = null;
+		try {
+			total = 1000;
+			worked = 0;
+			if (monitor != null)
+				monitor.beginTask(Messages.HighresImageLoader_Loading_image, total);
+			if (bw != null)
+				cms = ImageConstants.NOCMS;
+			Recipe rawRecipe = null;
+			String name = file.getName();
+			int p = name.lastIndexOf('.');
+			String uriString = file.toURI().toString();
+			String extension = (p >= 0) ? name.substring(p + 1).toLowerCase()
+					: ImageUtilities.detectImageFormat(uriString);
+			if (!ImageConstants.getAllFormats().contains(extension))
+				throw new UnsupportedOperationException(
+						NLS.bind(Messages.HighresImageLoader_image_format_not_supported, file));
+			File workfile = file;
+			boolean isRawOrDng = ImageConstants.isRaw(name, true);
+			profile(null);
+			if (isRawOrDng) {
+				BatchActivator activator = BatchActivator.getDefault();
+				rawConverter = activator.getCurrentRawConverter(false);
 				if (rawConverter == null || !rawConverter.isValid()) {
-					addErrorStatus(status, Messages.HighresImageLoader_no_raw_converter, null);
-					return null;
-				}
-			}
-			if (rawConverter.isDetectors()) {
-				rawRecipe = recipe != null ? recipe
-						: rawConverter.getRecipe(uriString, false, new IFocalLengthProvider() {
-							public double get35mm() {
-								return flen35mm;
-							}
-						}, null, null);
-				if (rawRecipe == Recipe.NULL)
-					rawRecipe = null;
-			}
-			Options options = new Options();
-			int factor = rawConverter.deriveOptions(rawRecipe, options,
-					bounds != null || scalingFactor >= 0.5d || scalingFactor == 0
-							|| (rawRecipe != null && rawRecipe.getCropping() != null) ? IRawConverter.HIGH
-									: IRawConverter.MEDIUM);
-			scalingFactor *= factor;
-			if (rawRecipe != null) {
-				rawRecipe.setScaling(scalingFactor > 0 ? (float) scalingFactor : 1f);
-				rawRecipe.setSampleFactor(factor);
-			}
-			// if (cms == ImageConstants.ARGB) // better to work in the camera color space,
-			// not all raw converts support color conversion
-			// options.put(IConverter.ADOBE_RGB, Boolean.TRUE);
-			workfile = null;
-			ImageKey key = new ImageKey(file, options, rawConverter.getId());
-			ImageEntry entry = imageDirectory.get(key);
-			if (entry != null) {
-				if (key.isOutdated(entry))
-					imageDirectory.remove(key);
-				else
-					workfile = entry.getConverted();
-			}
-			if (workfile == null) {
-				try {
-					workfile = activator.convertFile(file, rawConverter.getId(), rawConverter.getPath(), options, true,
-							fileWatcher, opId, null);
-					if (workfile == null) {
-						addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_DCRAWconversion_failed, file),
-								null);
+					if (!activator.isRawQuestionAsked()) {
+						rawConverter = Core.getCore().getDbFactory().getErrorHandler().showRawDialog(null);
+						activator.setRawQuestionAsked(true);
+					}
+					if (rawConverter == null || !rawConverter.isValid()) {
+						addErrorStatus(status, Messages.HighresImageLoader_no_raw_converter, null);
 						return null;
 					}
-					imageDirectory.put(key, new ImageEntry(workfile));
-					if (reportProgress(monitor, Messages.HighresImageLoader_DCRAW_conversion, listener))
-						return null;
-				} catch (ConversionException e) {
-					addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_DCRAWconversion_failed, file), e);
-					return null;
 				}
+				if (rawConverter.isDetectors()) {
+					rawRecipe = recipe != null ? recipe
+							: rawConverter.getRecipe(uriString, false, new IFocalLengthProvider() {
+								public double get35mm() {
+									return flen35mm;
+								}
+							}, null, null);
+					if (rawRecipe == Recipe.NULL)
+						rawRecipe = null;
+				}
+				Options options = new Options();
+				int factor = rawConverter.deriveOptions(rawRecipe, options,
+						bounds != null || scalingFactor >= 0.5d || scalingFactor == 0
+								|| (rawRecipe != null && rawRecipe.getCropping() != null) ? IRawConverter.HIGH
+										: IRawConverter.MEDIUM);
+				scalingFactor *= factor;
+				if (rawRecipe != null) {
+					rawRecipe.setScaling(scalingFactor > 0 ? (float) scalingFactor : 1f);
+					rawRecipe.setSampleFactor(factor);
+				}
+				// if (cms == ImageConstants.ARGB) // better to work in the camera color space,
+				// not all raw converts support color conversion
+				// options.put(IConverter.ADOBE_RGB, Boolean.TRUE);
+				workfile = null;
+				ImageKey key = new ImageKey(file, options, rawConverter.getId(), rawConverter.getSecondaryId());
+				ImageEntry entry = imageDirectory.get(key);
+				if (entry != null) {
+					if (key.isOutdated(entry))
+						imageDirectory.remove(key);
+					else
+						workfile = entry.getConverted();
+				}
+				if (workfile == null) {
+					try {
+						workfile = activator.convertFile(file, rawConverter.getId(), rawConverter.getPath(), options,
+								true, fileWatcher, opId, monitor);
+						if (workfile == null) {
+							addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_DCRAWconversion_failed, file),
+									null);
+							return null;
+						}
+						imageDirectory.put(key, new ImageEntry(workfile));
+						if (reportProgress(monitor, Messages.HighresImageLoader_DCRAW_conversion, listener))
+							return null;
+					} catch (ConversionException e) {
+						addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_DCRAWconversion_failed, file), e);
+						return null;
+					}
+				}
+				extension = "tif"; //$NON-NLS-1$
 			}
-			extension = "tif"; //$NON-NLS-1$
-		}
-		ColorConvertOp cop = cms != ImageConstants.NOCMS ? computeColorConvertOp(workfile, cms) : null;
-		try {
-			return ZImage.loadImage(workfile, extension, rotation, bounds, scalingFactor, maxFactor, advanced, bw,
-					umask, cop, rawRecipe);
-		} catch (OutOfMemoryError e) {
-			addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_Not_enough_memory_to_open, file), e);
-			return null;
-		} catch (Exception e) {
-			addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_error_loading_image, file), e);
-			return null;
+			ColorConvertOp cop = cms != ImageConstants.NOCMS ? computeColorConvertOp(workfile, cms) : null;
+			try {
+				return ZImage.loadImage(workfile, extension, rotation, bounds, scalingFactor, maxFactor, advanced, bw,
+						umask, cop, rawRecipe);
+			} catch (OutOfMemoryError e) {
+				addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_Not_enough_memory_to_open, file), e);
+				return null;
+			} catch (Exception e) {
+				addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_error_loading_image, file), e);
+				return null;
+			}
+		} finally {
+			CoreActivator.getDefault().ungetHighresImageLoader(this);
+			if (rawConverter != null)
+				rawConverter.unget();
 		}
 	}
 

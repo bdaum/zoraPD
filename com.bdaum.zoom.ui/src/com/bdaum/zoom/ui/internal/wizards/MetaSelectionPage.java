@@ -196,8 +196,8 @@ public class MetaSelectionPage extends ColoredWizardPage {
 	}
 
 	@Override
-	protected void validatePage() {
-		// do nothing
+	protected String validate() {
+		return null;
 	}
 
 	public boolean isJpegSet() {

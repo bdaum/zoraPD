@@ -184,7 +184,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 
 	private File showfile;
 
-	private HighresImageLoader highresImageLoader;
+	private List<HighresImageLoader> highresImageLoaders = new ArrayList<HighresImageLoader>(4);
 
 	private ServiceReference<IGeoService> geoServiceRef;
 
@@ -1238,6 +1238,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 				IRawConverter currentRawConverter = BatchActivator.getDefault().getCurrentRawConverter(false);
 				if (currentRawConverter != null) {
 					long timestamp = currentRawConverter.getLastRecipeModification(uri.toString(), 0L, null);
+					currentRawConverter.unget();
 					if (timestamp > 0)
 						recipeModified = timestamp;
 				}
@@ -1259,11 +1260,15 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 	}
 
 	public HighresImageLoader getHighresImageLoader() {
-		if (highresImageLoader == null)
-			highresImageLoader = new HighresImageLoader();
-		return highresImageLoader;
+		if (highresImageLoaders.isEmpty())
+			return new HighresImageLoader();
+		return highresImageLoaders.remove(highresImageLoaders.size()-1);
 	}
-
+	
+	public void ungetHighresImageLoader(HighresImageLoader loacder) {
+		highresImageLoaders.add(loacder);
+	}
+	
 	public IGeoService getGeoService() {
 		BundleContext bundleContext = getBundle().getBundleContext();
 		geoServiceRef = bundleContext.getServiceReference(IGeoService.class);

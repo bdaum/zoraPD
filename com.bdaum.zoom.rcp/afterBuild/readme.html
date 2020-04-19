@@ -26,7 +26,7 @@ body { font-family: arial, helvetica, geneva; font-size: 10pt; clip: rect( ); ma
         </tr>
         <tr>
           <td>
-            <p>March 23, 2020</p>
+            <p>April 17, 2020</p>
             <br>
             <h1 style="color: red;"><a class="mozTocH1" name="mozTocId462522"></a>ZoRa
               Photo Director</h1>
@@ -36,18 +36,15 @@ User
               <sub>Ra = <span style="font-weight: bold;">Ra</span>w file
                 support</sub></div>
             <h1><a class="mozTocH2 mozTocH1" name="mozTocId943067"></a>Contents</h1>
-            <br>
-            <a href="#mozTocId943067"></a>
-            <ol>
-              <br>
+            <ol id="mozToc">
               <!--mozToc h1 1 h2 2 h3 3 h4 4 h5 5 h6 6-->
               <li>
-                <ul>
+                <ol>
                   <li><a href="#mozTocId180886">Description</a></li>
                   <li><a href="#mozTocId725139">Features</a></li>
                   <li><a href="#mozTocId31540">Requirements</a></li>
                   <li><a href="#mozTocId493872">Installation</a>
-                    <ul>
+                    <ol>
                       <li><a href="#mozTocId264756">Installation under Windows</a></li>
                       <li><a href="#mozTocId688416">Installation under Linux</a></li>
                       <li><a href="#mozTocId697531">Installation under Mac OSX</a></li>
@@ -57,15 +54,16 @@ User
                           Windows</a></li>
                       <li><a href="#mozTocId983009">De-installation under Linux
                           and Mac OSX</a></li>
-                    </ul>
+                    </ol>
                   </li>
                   <li><a href="#mozTocId767897">Known problems</a></li>
                   <li><a href="#mozTocId82845">License</a></li>
                   <li><a href="#mozTocId731789">Copyright</a></li>
                   <li><a href="#mozTocId902534">Source code</a></li>
                   <li><a href="#mozTocId961538">Change log</a>
-                    <ul>
-                      <li><a href="#mozTocId310863">Version 3.6.1</a></li>
+                    <ol>
+                      <li><a href="#mozTocId27969">Version 3.6.2</a></li>
+                      <li><a href="#mozTocId344817">Version 3.6.1</a></li>
                       <li><a href="#mozTocId213416">Version 3.6.0</a></li>
                       <li><a href="#mozTocId781810">Version 3.5.1</a></li>
                       <li><a href="#mozTocId445631">Version 3.5.0</a></li>
@@ -77,10 +75,12 @@ User
                       <li><a href="#mozTocId514211">Version 3.1.0</a></li>
                       <li><a href="#mozTocId527756">Version 3.0.1</a></li>
                       <li><a href="#mozTocId527756">Version 3.0.0</a></li>
-                    </ul>
+                    </ol>
                   </li>
-                </ul>
+                </ol>
               </li>
+            </ol>
+            <ol>
             </ol>
             <span style="text-decoration: underline;"></span>
             <ol>
@@ -274,10 +274,24 @@ directory}/Uninstaller/
             <br>
             <h2><a class="mozTocH2" name="mozTocId961538"></a>Change log</h2>
             <br>
+            <h3>Version 3.6.2</h3>
+            <strong style="color: red;"><b>Last 32-bit version for Windows.<br>
+              </b></strong>
+            <ul>
+              <li>Fixed a bug in the Import from device wizard.</li>
+              <li>Fixed a bug when renaming images during import</li>
+              <li>Modified the Skip duplicates option in adhoc slideshows so
+                that images with matching ORIGINAL filenames are skipped</li>
+              <li>Added an option to show images in the internal viewer using
+                the highest resolution always</li>
+              <li>Fixed a bug when displaying two raw images in the internal
+                image viewer simultaneously</li>
+              <li>Fixed a bug when invoking the properties of collections</li>
+              <li>Fixed a bug when converting CMYK images to RGB</li>
+            </ul>
             <h3>Version 3.6.1</h3>
             <p><strong style="color: red;"></strong><strong style="color: red;"><b>
-                  32-bit support has been dropped for Linux. Last 32-bit version
-                  for Windows. <br>
+                  32-bit support has been dropped for Linux. <br>
                 </b></strong></p>
             <ul>
               <li>Faster retrieval of albums and locations on multiprocessor
@@ -847,7 +861,6 @@ directory}/Uninstaller/
                     support for controlled vocabularies<br>
                   </span></span></li>
             </ul>
-            <h3><a class="mozTocH3" name="mozTocId342068"></a></h3>
             <br>
           </td>
         </tr>

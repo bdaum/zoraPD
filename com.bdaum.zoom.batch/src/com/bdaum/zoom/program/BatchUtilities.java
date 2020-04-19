@@ -141,8 +141,11 @@ public class BatchUtilities {
 
 		if (ImageConstants.isRaw(uri, true)) {
 			IRawConverter currentRawConverter = BatchActivator.getDefault().getCurrentRawConverter(false);
-			if (currentRawConverter != null)
-				return currentRawConverter.getLastRecipeModification(uri, ts, null);
+			if (currentRawConverter != null) {
+				long lastRecipeModification = currentRawConverter.getLastRecipeModification(uri, ts, null);
+				currentRawConverter.unget();
+				return lastRecipeModification;
+			}
 		}
 		return ts;
 	}
@@ -418,7 +421,7 @@ public class BatchUtilities {
 					BatchUtilities.executeCommand(new String[] { BatchConstants.OSX ? "open" : "xdg-open", //$NON-NLS-1$ //$NON-NLS-2$
 							select ? file.getParentFile().getAbsolutePath() : file.getAbsolutePath() }, null,
 							Messages.getString("BatchUtilities.run_script"), IStatus.OK, IStatus.ERROR, 0, 1000L, //$NON-NLS-1$
-							"UTF-8"); //$NON-NLS-1$
+							"UTF-8", null); //$NON-NLS-1$
 			} catch (IOException e1) {
 				BatchActivator.getDefault().logError(Messages.getString("BatchUtilities.io_error_showFile"), //$NON-NLS-1$
 						e1);
@@ -499,7 +502,8 @@ public class BatchUtilities {
 	 * @throws ExecutionException
 	 */
 	public static String executeCommand(String[] parms, File workingDir, String label, int logLevel, int errorLevel,
-			int errorHandling, long timeout, String charsetName) throws IOException, ExecutionException {
+			int errorHandling, long timeout, String charsetName, IProgressMonitor monitor)
+			throws IOException, ExecutionException {
 		StreamCapture inputGrabber = null;
 		StreamCapture errorGrabber = null;
 		try {
@@ -511,6 +515,17 @@ public class BatchUtilities {
 			errorGrabber.start();
 			inputGrabber.start();
 			try {
+				if (monitor != null) {
+					while (process.isAlive()) {
+						if (monitor.isCanceled()) {
+							process.destroyForcibly();
+							inputGrabber.abort();
+							errorGrabber.abort();
+							return null;
+						}
+						Thread.sleep(50L);
+					}
+				}
 				int ret = process.waitFor();
 				if (ret == 0) {
 					inputGrabber.join(timeout);
@@ -593,6 +608,8 @@ public class BatchUtilities {
 	}
 
 	public static File makeUniqueFile(File subFolder, String filename, String ext) {
+		if (!ext.isEmpty() && ext.charAt(0) != '.')
+			ext = '.' + ext;
 		filename = toValidFilename(filename);
 		int tara = subFolder.getAbsolutePath().length() + 1 + filename.length() + ext.length();
 		File target;

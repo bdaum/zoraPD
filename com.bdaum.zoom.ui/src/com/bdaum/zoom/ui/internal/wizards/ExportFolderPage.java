@@ -123,7 +123,6 @@ public class ExportFolderPage extends ColoredWizardPage implements Listener {
 		}
 		setMessage(msg);
 		super.createControl(parent);
-		validatePage();
 	}
 
 	@Override
@@ -177,7 +176,7 @@ public class ExportFolderPage extends ColoredWizardPage implements Listener {
 	}
 
 	@Override
-	protected void validatePage() {
+	protected String validate() {
 		String msg = null;
 		if (assets.isEmpty())
 			msg = Messages.ExportFolderPage_nothing_to_export;
@@ -191,8 +190,7 @@ public class ExportFolderPage extends ColoredWizardPage implements Listener {
 		}
 		if (msg == null && watermarkGroup != null)
 			msg = watermarkGroup.validate();
-		setErrorMessage(msg);
-		setPageComplete(msg == null);
+		return msg;
 	}
 
 	private void checkImages() {

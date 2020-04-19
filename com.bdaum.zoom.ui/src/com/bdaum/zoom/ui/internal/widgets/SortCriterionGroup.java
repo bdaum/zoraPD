@@ -68,7 +68,11 @@ public class SortCriterionGroup extends AbstractCriterionGroup {
 		}
 		// init
 		fillFieldCombo(crit);
-		signalModification(null);
+		Event e = new Event();
+		e.widget = parent;
+		e.time = (int) System.currentTimeMillis();
+		e.display = parent.getDisplay();
+		signalModification(e);
 	}
 
 	private void fillFieldCombo(SortCriterion crit) {

@@ -259,30 +259,19 @@ public class FtpDirPage extends ColoredWizardPage {
 	}
 
 	@Override
-	protected void validatePage() {
-		if (ftp == null) {
-			setErrorMessage(Messages.FtpDirPage_no_connection);
-			setPageComplete(false);
-			return;
-		}
+	protected String validate() {
+		if (ftp == null)
+			return Messages.FtpDirPage_no_connection;
 		Object[] checkedElements = viewer.getCheckedElements();
-		if (checkedElements.length == 0) {
-			setErrorMessage(Messages.FtpDirPage_nothing_selected);
-			setPageComplete(false);
-			return;
-		}
-		for (Object object : checkedElements) {
+		if (checkedElements.length == 0)
+			return Messages.FtpDirPage_nothing_selected;
+		for (Object object : checkedElements)
 			if (object instanceof FTPFile) {
 				FTPFile file = (FTPFile) object;
-				if (file.isFile() && filter.accept(file.getName())) {
-					setErrorMessage(null);
-					setPageComplete(true);
-					return;
-				}
+				if (file.isFile() && filter.accept(file.getName()))
+					return null;
 			}
-		}
-		setErrorMessage(Messages.FtpDirPage_no_image_is_selected);
-		setPageComplete(false);
+		return Messages.FtpDirPage_no_image_is_selected;
 	}
 
 	@Override

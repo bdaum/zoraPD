@@ -1163,7 +1163,7 @@ public class ImageUtilities {
 		for (y = from; y < to; y++) {
 			tx = bytesPerLine * y;
 			bufferedImage.getRGB(0, y, w, 1, scanLine, 0, w);
-			for (int i : scanLine) {
+			for (int i = 0; i < w; i++) {
 				pix = scanLine[i];
 				datadata[tx++] = (byte) pix;
 				datadata[tx++] = (byte) (pix >> 8);

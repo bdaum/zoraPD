@@ -61,7 +61,7 @@ public class ImportConfiguration {
 	public final IRelationDetector[] relationDetectors;
 	public final List<AutoRule> rules;
 	public final IAdaptable info;
-	public IRawConverter rawConverter;
+	public String rawConverterId;
 	public boolean silent;
 
 	public ImportConfiguration(IAdaptable info, String timeline,
@@ -106,7 +106,8 @@ public class ImportConfiguration {
 		this.showImported = showImported;
 		this.relationDetectors = relationDetectors;
 		this.rules = rules;
-		this.rawConverter = BatchActivator.getDefault().getCurrentRawConverter(false);
+		IRawConverter rc = BatchActivator.getDefault().getCurrentRawConverter(false);
+		this.rawConverterId = rc == null ? null : rc.getId(); 
 	}
 
 	public int getExifFastMode() {

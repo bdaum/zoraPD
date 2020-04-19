@@ -100,7 +100,7 @@ public class RtActivator extends Plugin {
 				String result = null;
 				try {
 					result = BatchUtilities.executeCommand(LOCATERAWTHERAPEE, null, Messages.RtActivator_locate_rt,
-							IStatus.OK, IStatus.WARNING, -1, 1000L, "UTF-8"); //$NON-NLS-1$
+							IStatus.OK, IStatus.WARNING, -1, 1000L, "UTF-8", null); //$NON-NLS-1$
 				} catch (IOException e) {
 					// nothing found
 				}

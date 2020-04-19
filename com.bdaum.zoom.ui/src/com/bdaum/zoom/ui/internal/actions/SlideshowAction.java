@@ -159,10 +159,13 @@ public class SlideshowAction extends Action {
 				String tit = asset.getTitle();
 				if (tit == null || tit.isEmpty()) {
 					if (show.getSkipDublettes()) {
-						String name = asset.getName();
-						if (done.contains(name))
+						String originalFileName = asset.getOriginalFileName();
+						int p = originalFileName.lastIndexOf('.');
+						if (p > 0)
+							originalFileName = originalFileName.substring(0, p);
+						if (done.contains(originalFileName))
 							continue;
-						done.add(name);
+						done.add(originalFileName);
 					}
 					tit = fileName;
 				}

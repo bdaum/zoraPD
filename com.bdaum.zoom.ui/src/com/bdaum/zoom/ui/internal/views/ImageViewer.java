@@ -253,14 +253,14 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 		private boolean adv;
 		private int cms1;
 		private boolean firstCall;
-		private ToolTip tooltip;
 
 		public HighResJob(File imageFile, boolean advanced, int cms, boolean subSampling) {
 			super("ImageLoading"); //$NON-NLS-1$
 			this.imageFile = imageFile;
 			this.adv = advanced;
 			this.cms1 = cms;
-			this.firstCall = subSampling;
+			this.firstCall = subSampling
+					&& !UiActivator.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.ALWAYSHIGHRES);
 			setSystem(true);
 			setPriority(Job.INTERACTIVE);
 		}
@@ -282,7 +282,7 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 					final MultiStatus status1 = status;
 					if (!firstCall) {
 						for (int i = 0; i < 16; i++) {
-							if (topShell.isDisposed())
+							if (topShell == null || topShell.isDisposed())
 								break;
 							display.syncExec(() -> {
 								topShell.setAlpha(Math.max(0, topShell.getAlpha() - 16));
@@ -293,13 +293,17 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 								// do nothing
 							}
 						}
-						image.dispose();
-						image = null;
+						if (image != null) {
+							image.dispose();
+							image = null;
+						}
 					}
-					image = CoreActivator.getDefault().getHighresImageLoader().loadImage(null, status1, imageFile,
+					image = CoreActivator.getDefault().getHighresImageLoader().loadImage(monitor, status1, imageFile,
 							asset.getRotation(), asset.getFocalLengthIn35MmFilm(), null, firstCall ? 1d : 0d, 1d, adv,
 							cms1, bwmode, null, cropmode == ZImage.ORIGINAL ? Recipe.NULL : null, fileWatcher, opId,
 							null);
+					if (monitor.isCanceled())
+						return Status.CANCEL_STATUS;
 					if (image != null) {
 						display.syncExec(() -> {
 							if (!topCanvas.isDisposed()) {
@@ -307,20 +311,25 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 								image.develop(monitor, display, cropmode, area.width, area.height, ZImage.SWTIMAGE);
 							}
 						});
+						if (monitor.isCanceled())
+							return Status.CANCEL_STATUS;
 						int superSamplingFactor = image.getSuperSamplingFactor();
 						ibounds = image.getBounds();
 						secondCallPossible = firstCall && superSamplingFactor > 1;
 						final FadingShell formerShell = (previewShown) ? previewShell : bottomShell;
 						fadein(status1, monitor, topShell, topCanvas, formerShell, !secondCallPossible);
 						highResVisible = true;
+						if (monitor.isCanceled())
+							return Status.CANCEL_STATUS;
 						if (secondCallPossible) {
 							if (status1.isOK()) {
 								display.syncExec(() -> {
 									Shell sh = topShell.getShell();
 									Rectangle bounds = sh.getBounds();
-									tooltip = new ToolTip(sh, SWT.ICON_WARNING);
-									tooltip.addListener(SWT.Selection, this);
-									UiUtilities.showTooltip(tooltip, bounds.x + bounds.width / 3, bounds.y,
+									if (highresTooltip == null)
+										highresTooltip = new ToolTip(sh, SWT.ICON_WARNING);
+									highresTooltip.addListener(SWT.Selection, this);
+									UiUtilities.showTooltip(highresTooltip, bounds.x + bounds.width / 3, bounds.y,
 											NLS.bind(Messages.getString("ImageViewer.downsampled"), //$NON-NLS-1$
 													superSamplingFactor),
 											Messages.getString("ImageViewer.click_for_fullres")); //$NON-NLS-1$
@@ -329,7 +338,7 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 									display.syncExec(() -> {
 										if (formerShell.isDisposed())
 											monitor.setCanceled(true);
-										else if (!tooltip.isVisible() && highResVisible) {
+										else if (!highresTooltip.isVisible() && highResVisible) {
 											formerShell.close();
 											monitor.setCanceled(true);
 										}
@@ -343,12 +352,11 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 									}
 								}
 							}
-						} else {
+						} else
 							display.syncExec(() -> {
 								if (!formerShell.isDisposed())
 									formerShell.close();
 							});
-						}
 					}
 				} catch (UnsupportedOperationException e) {
 					loadFailed = e.getMessage();
@@ -369,11 +377,12 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 		public void handleEvent(Event event) {
 			highResVisible = false;
 			viewTransform = null;
-			if (!tooltip.isDisposed())
-				tooltip.setVisible(false);
+			if (!highresTooltip.isDisposed())
+				highresTooltip.setVisible(false);
 			highResJob = new HighResJob(file, advanced, cms, false);
 			highResJob.schedule();
 		}
+
 	}
 
 	public class PreviewJob extends Job {
@@ -481,28 +490,28 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 
 	public String loadFailed;
 	private static final double EPSILON = 0.005d;
-	private ZImage image;
-	private Rectangle ibounds;
+	ZImage image;
+	Rectangle ibounds;
 	private ZImage previewImage;
-	private PAffineTransform viewTransform;
-	private FadingShell bottomShell;
-	private FadingShell previewShell;
-	private FadingShell topShell;
-	private Canvas bottomCanvas;
-	private File file;
+	PAffineTransform viewTransform;
+	FadingShell bottomShell;
+	FadingShell previewShell;
+	FadingShell topShell;
+	Canvas bottomCanvas;
+	File file;
 	private TextLayout tlayout;
-	private HighResJob highResJob;
-	private Canvas topCanvas;
+	HighResJob highResJob;
+	Canvas topCanvas;
 	private InertiaMouseWheelListener wheelListener;
 	private java.awt.Rectangle rectSrc = new java.awt.Rectangle();
 	private java.awt.Rectangle rectDst = new java.awt.Rectangle();
 	private Point mousePoint = new Point(0, 0);
-	private boolean advanced;
-	private int cms;
-	private Canvas previewCanvas;
+	boolean advanced;
+	int cms;
+	Canvas previewCanvas;
 	private PreviewJob previewJob;
-	private boolean highResVisible = false;
-	private boolean previewShown = false;
+	boolean highResVisible = false;
+	boolean previewShown = false;
 	private boolean preview;
 	private InertiaMousePanListener panListener;
 	private int lastMouseX;
@@ -527,8 +536,9 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 	private boolean vertical;
 	protected Rectangle hotspot = new Rectangle(0, 0, 0, 0);
 	protected boolean systemCursorSet = false;
+	protected ToolTip highresTooltip, syncTooltip, helpTooltip, metaTootip;
 
-	private void fadein(MultiStatus status, IProgressMonitor monitor, final FadingShell shell, final Canvas canvas,
+	void fadein(MultiStatus status, IProgressMonitor monitor, final FadingShell shell, final Canvas canvas,
 			final FadingShell formerShell, boolean closeFormer) {
 		if (monitor.isCanceled()) {
 			status.add(Status.CANCEL_STATUS);
@@ -629,6 +639,7 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 		previewCanvas.addListener(SWT.KeyDown, this);
 		previewCanvas.addListener(SWT.KeyUp, this);
 		topCanvas.addListener(SWT.MouseMove, this);
+		topCanvas.addListener(SWT.MouseHover, this);
 		bottomCanvas.addListener(SWT.MouseMove, this);
 		previewCanvas.addListener(SWT.MouseMove, this);
 		topCanvas.addListener(SWT.KeyDown, this);
@@ -668,9 +679,24 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 		case SWT.MouseMove:
 			mouseMove(e);
 			break;
+		case SWT.MouseHover:
+			if (e.widget instanceof Canvas) {
+				if (hotspot.contains(e.x, e.y)) {
+					Canvas canvas = (Canvas) e.widget;
+					if (syncTooltip == null)
+						syncTooltip = new ToolTip(canvas.getShell(), SWT.BALLOON);
+					syncTooltip.setMessage(Messages.getString("ImageViewer.sync")); //$NON-NLS-1$
+					Point pnt = canvas.toDisplay(e.x, e.y);
+					syncTooltip.setLocation(pnt);
+					syncTooltip.setVisible(true);
+				}
+			}
+			break;
 		case SWT.Help:
-			ToolTip toolTip = new ToolTip(topShell.getShell(), SWT.BALLOON | SWT.ICON_INFORMATION);
-			UiUtilities.showTooltip(toolTip, mbounds.x+10, mbounds.y+5, Messages.getString("ImageViewer.image_viewer"), //$NON-NLS-1$
+			if (helpTooltip == null)
+				helpTooltip = new ToolTip(topShell.getShell(), SWT.BALLOON | SWT.ICON_INFORMATION);
+			UiUtilities.showTooltip(helpTooltip, mbounds.x + 10, mbounds.y + 5,
+					Messages.getString("ImageViewer.image_viewer"), //$NON-NLS-1$
 					getKeyboardHelp(true));
 			break;
 		case SWT.Paint:
@@ -740,9 +766,10 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 			else if (loadFailed != null)
 				text = loadFailed;
 			else
-				text = ((previewImage != null) ? Messages.getString("ImageViewer.loading_highres") : //$NON-NLS-1$
-						Messages.getString("ImageViewer.loading_thumbnail")) //$NON-NLS-1$
-						+ "\n\n" + getKeyboardHelp(false) + '\n'; //$NON-NLS-1$
+				text = new StringBuilder()
+						.append((previewImage != null ? Messages.getString("ImageViewer.loading_highres") //$NON-NLS-1$
+								: Messages.getString("ImageViewer.loading_thumbnail"))) //$NON-NLS-1$
+						.append('\n').append('\n').append(getKeyboardHelp(false)).append('\n').toString();
 			if (tlayout == null) {
 				tlayout = new TextLayout(display);
 				tlayout.setAlignment(SWT.CENTER);
@@ -1179,8 +1206,9 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 	}
 
 	private void metadataRequested(Asset asset) {
-		ToolTip toolTip = new ToolTip(topShell.getShell(), SWT.BALLOON | SWT.ICON_INFORMATION);
-		UiUtilities.showTooltip(toolTip, mbounds.x + mbounds.width / 2, mbounds.y + mbounds.height / 2,
+		if (metaTootip == null)
+			metaTootip = new ToolTip(topShell.getShell(), SWT.BALLOON | SWT.ICON_INFORMATION);
+		UiUtilities.showTooltip(metaTootip, mbounds.x + mbounds.width / 2, mbounds.y + mbounds.height / 2,
 				NLS.bind(Messages.getString("SlideShowPlayer.metadata"), asset.getName()), //$NON-NLS-1$
 				new HoverInfo(asset, (ImageRegion[]) null).getText());
 	}

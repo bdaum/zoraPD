@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE.win32_x86"
       label="Win32_x86 Feature"
-      version="3.6.1"
+      version="3.6.2"
       provider-name="bdaum industrial communications"
       os="win32"
       ws="win32"

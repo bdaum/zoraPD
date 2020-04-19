@@ -444,12 +444,11 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 			@Override
 			public String getText(Object element) {
 				Enumeration<InetAddress> inetAddresses = ((NetworkInterface) element).getInetAddresses();
-				if (inetAddresses.hasMoreElements())
-					while (inetAddresses.hasMoreElements()) {
-						String hostAddress = inetAddresses.nextElement().getHostAddress();
-						if (hostAddress.indexOf(':') < 0)
-							return hostAddress;
-					}
+				while (inetAddresses.hasMoreElements()) {
+					String hostAddress = inetAddresses.nextElement().getHostAddress();
+					if (hostAddress.indexOf(':') < 0)
+						return hostAddress;
+				}
 				return super.getText(element);
 			}
 		});

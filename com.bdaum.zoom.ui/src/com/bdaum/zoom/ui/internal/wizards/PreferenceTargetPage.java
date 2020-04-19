@@ -34,10 +34,9 @@ public class PreferenceTargetPage extends ColoredWizardPage implements Listener 
 		fileEditor.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		fileEditor.addListener(SWT.Modify, this);
 		setControl(composite);
-		validatePage();
 		super.createControl(parent);
 	}
-	
+
 	@Override
 	public void handleEvent(Event event) {
 		path = getTargetFile();
@@ -49,12 +48,10 @@ public class PreferenceTargetPage extends ColoredWizardPage implements Listener 
 	}
 
 	@Override
-	protected void validatePage() {
-		String errorMessage = null;
+	protected String validate() {
 		if (path == null || path.isEmpty() || (path.indexOf('/') < 0 && path.indexOf('\\') < 0))
-			errorMessage = Messages.PreferenceTargetPage_specify_target_file;
-		setErrorMessage(errorMessage);
-		setPageComplete(errorMessage == null);
+			return Messages.PreferenceTargetPage_specify_target_file;
+		return null;
 	}
 
 	public String getPath() {

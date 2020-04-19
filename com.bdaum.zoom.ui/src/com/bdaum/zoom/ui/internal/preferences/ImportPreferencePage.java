@@ -147,10 +147,12 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 	private CheckboxButton faceDataButton;
 	private RadioButtonGroup deviceGroup;
 	private RadioButtonGroup tetheredGroup;
+	private List<IRawConverter> rawConverters;
 
 	public ImportPreferencePage() {
 		setDescription(Messages.getString("ImportPreferencePage.control_how_images_are_imported")); //$NON-NLS-1$
 		dialogSettings = UiActivator.getDefault().getDialogSettings(SETTINGSID);
+		rawConverters = BatchActivator.getDefault().getRawConverters();
 	}
 
 	@Override
@@ -228,14 +230,14 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void doFillValues() {
-		BatchActivator batch = BatchActivator.getDefault();
-		IRawConverter rc = batch.getCurrentRawConverter(false);
+		IRawConverter rc = BatchActivator.getDefault().getCurrentRawConverter(false);
 		previousRawConverter = rc;
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		Map<String, IRawConverter> rawConverters = batch.getRawConverters();
-		if (rc != null)
+		if (rc != null) {
 			rcViewer.setSelection(new StructuredSelection(rc));
-		for (IRawConverter c : rawConverters.values()) {
+			rc.unget();
+		}
+		for (IRawConverter c : rawConverters) {
 			FileEditor fileEditor = basicsFileEditors.get(c.getId());
 			if (fileEditor != null) {
 				String path = preferenceStore.getString(c.getPathId());
@@ -437,8 +439,7 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 				return super.getText(element);
 			}
 		});
-		Map<String, IRawConverter> rawConverters = BatchActivator.getDefault().getRawConverters();
-		rcViewer.setInput(rawConverters.values());
+		rcViewer.setInput(rawConverters);
 		rcViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateRawOptions();
@@ -450,7 +451,7 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 		basicsLayout = new StackLayout();
 		basicsGroup.setLayout(basicsLayout);
 		basicsGroup.setText(Messages.getString("ImportPreferencePage.converter")); //$NON-NLS-1$
-		for (IRawConverter rc : rawConverters.values()) {
+		for (IRawConverter rc : rawConverters) {
 			String exec = rc.getExecutable();
 			if (!IRawConverter.NONE.equals(exec)) {
 				Composite basicsComp = new Composite(basicsGroup, SWT.NONE);
@@ -473,7 +474,7 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 		optionsLayout = new StackLayout();
 		optionsGroup.setLayout(optionsLayout);
 		optionsGroup.setText(Messages.getString("ImportPreferencePage.options2")); //$NON-NLS-1$
-		for (IRawConverter rc : rawConverters.values()) {
+		for (IRawConverter rc : rawConverters) {
 			final IRawConverter rawConverter = rc;
 			List<RawProperty> props = rawConverter.getProperties();
 			if (!props.isEmpty()) {
@@ -765,8 +766,7 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 	@Override
 	public void doPerformDefaults() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		Map<String, IRawConverter> rawConverters = BatchActivator.getDefault().getRawConverters();
-		for (IRawConverter rc : rawConverters.values()) {
+		for (IRawConverter rc : rawConverters) {
 			String path = rc.getPathId();
 			String dflt = preferenceStore.getDefaultString(path);
 			preferenceStore.setValue(path, dflt);
@@ -814,9 +814,8 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		IRawConverter c = (IRawConverter) rcViewer.getStructuredSelection().getFirstElement();
 		if (c != null)
-			BatchActivator.getDefault().setCurrentRawConverter(c);
-		Map<String, IRawConverter> rawConverters = BatchActivator.getDefault().getRawConverters();
-		for (IRawConverter rc : rawConverters.values()) {
+			BatchActivator.getDefault().setCurrentRawConverterId(c.getId());
+		for (IRawConverter rc : rawConverters) {
 			FileEditor fileEditor = basicsFileEditors.get(rc.getId());
 			if (fileEditor != null) {
 				String text = fileEditor.getText();

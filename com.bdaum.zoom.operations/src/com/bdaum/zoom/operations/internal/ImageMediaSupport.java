@@ -99,550 +99,561 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 	public int importFile(StorageObject object, String extension, ImportState importState, IProgressMonitor aMonitor,
 			URI remote) throws Exception {
 		this.importState = importState;
-		IRawConverter rc = importState.getConfiguration().rawConverter;
-		twidth = importState.computeThumbnailWidth();
-		int work = IMediaSupport.IMPORTWORKSTEPS;
-		boolean relationDone = false;
-		final List<Object> toBeStored = new ArrayList<Object>();
-		final List<Object> toBeDeleted = new ArrayList<Object>();
-		final List<Object> trashed = new ArrayList<Object>();
-		List<Asset> deletedAssets = new ArrayList<Asset>();
-		byte[] oldThumbnail = null;
-		byte[] oldDngThumbnail = null;
-		StorageObject originalFile = null;
-		String oldId = null;
-		String oldDngId = null;
-		int icnt = 0;
-		String originalFileName = object.getName();
-		StorageObject parent = object.getParentObject();
-		while (parent != null) {
-			String name = parent.getName();
-			if ("DCIM".equals(name)) //$NON-NLS-1$
-				break;
-			originalFileName = name + '/' + originalFileName;
-			parent = parent.getParentObject();
-		}
-		long lastMod = object.lastModified();
-
-		Map<String, String> overlayMap = importState.overlayMap;
-		overlayMap.put(QueryField.EXIF_ORIGINALFILENAME.getExifToolKey(), originalFileName);
-		overlayMap.put(QueryField.FILESIZE.getExifToolKey(), String.valueOf(object.size()));
-		Date lastModified = new Date(lastMod);
-		overlayMap.put(QueryField.EXIF_DATETIME.getExifToolKey(), Format.DATE_TIME_ZONED_FORMAT.get().format(lastModified));
-		CoreActivator coreActivator = CoreActivator.getDefault();
-		IDbManager dbManager = coreActivator.getDbManager();
-		URI uri = object.toURI();
-		String uriAsString = uri.toString();
-		if (!importState.isMedia() && !importState.fromTransferFolder() && rc != null)
-			lastModified = new Date(
-					lastMod = rc.getLastRecipeModification(uriAsString, lastMod, importState.recipeDetectorIds));
-		boolean isDng = ImageConstants.isDng(uriAsString);
-		boolean isRaw = ImageConstants.isRaw(uriAsString, false);
-		boolean isJpeg = ImageConstants.isJpeg(extension);
-		File[] files = null;
-		if (importState.transferNeeded()) {
-			int skipPolicy = importState.getSkipPolicy();
-			if (skipPolicy == Constants.SKIP_JPEG && isJpeg || skipPolicy == Constants.SKIP_RAW && (isDng || isRaw))
-				return 0;
-			files = importState.transferFile(originalFile = object, aMonitor);
-			if (files == null || !files[0].exists())
-				return 0;
-			if (importState.skipDuplicates(files[0], originalFileName, lastModified)) {
-				for (File f : files)
-					f.delete();
-				return 0;
-			}
-			uriAsString = files[0].toURI().toString();
-		} else if (object.isLocal())
-			files = new File[] { (File) object.getNativeObject() };
-		else
-			return 0;
-		ImportConfiguration configuration = importState.getConfiguration();
-		boolean importRaw = configuration.rawOptions.equals(Constants.RAWIMPORT_ONLYRAW)
-				|| configuration.rawOptions.equals(Constants.RAWIMPORT_BOTH);
-		if (isRaw && importRaw) {
-			RawType rawType = ImageConstants.getRawFormatMap().get(extension);
-			if (rawType.isUnsupportedBy(rc.getName())) {
-				importState.addErrorOnce(NLS.bind(Messages.getString("ImageMediaSupport.not_supported_by"), //$NON-NLS-1$
-						rawType.toString(), rc.getName()), null);
-				return 0;
-			}
-		}
-		boolean importDng = !configuration.rawOptions.equals(Constants.RAWIMPORT_ONLYRAW);
-		boolean importDngEmbeddedRaw = configuration.rawOptions.equals(Constants.RAWIMPORT_DNGEMBEDDEDRAW);
-		boolean fromImportFilter = false;
-		if (isDng || isRaw)
-			importState.fileSource = Constants.FILESOURCE_DIGITAL_CAMERA;
-		else
-			fromImportFilter = ImageActivator.getDefault().getImportFilters().get(extension) != null;
-		File convert = null;
-		File dngFolder = null;
-		StorageObject exifObject = null;
+		String id = importState.getConfiguration().rawConverterId;
+		IRawConverter rc = BatchActivator.getDefault().getRawConverter(id, true, true);
 		try {
-			AssetEnsemble ensemble = null;
-			AssetEnsemble dngEnsemble = null;
-			List<AssetEnsemble> existing = null;
-			List<AssetEnsemble> existingDng = null;
-			if (importRaw || !isRaw)
-				existing = AssetEnsemble.getAllAssets(dbManager, remote != null ? remote : files[0].toURI(),
-						importState);
-			String dngUriAsString = null;
-			URI dngURI = null;
-			if (importDng && isRaw) {
-				dngUriAsString = Core.removeExtensionFromUri(uriAsString) + ".dng"; //$NON-NLS-1$
-				try {
-					int p = uriAsString.lastIndexOf('/');
-					StringBuilder sb = new StringBuilder().append(uriAsString, 0, p + 1);
-					File targetFolder = importState.transferNeeded() ? null : new File(new URI(sb.toString()));
-					if (targetFolder != null && !targetFolder.canWrite()) {
-						importState.operation.addError(
-								NLS.bind(Messages.getString("ImageMediaSupport.dng_read_only"), targetFolder.getName()), //$NON-NLS-1$
-								null);
-						importDng = false;
-						configuration.rawOptions = Constants.RAWIMPORT_ONLYRAW;
-					} else if (configuration.dngFolder != null && !configuration.dngFolder.isEmpty()) {
-						dngFolder = new File(new URI(sb.append(configuration.dngFolder).toString()));
-						dngFolder.mkdir();
-						dngUriAsString = sb.append(dngUriAsString, p, dngUriAsString.length()).toString();
-					}
-					dngURI = new URI(dngUriAsString);
-					existingDng = AssetEnsemble.getAllAssets(dbManager, dngURI, importState);
-				} catch (URISyntaxException e) {
-					importState.operation.addError(
-							NLS.bind(Messages.getString("ImageMediaSupport.Bad_DNG_URI"), dngUriAsString), //$NON-NLS-1$
-							e);
+			twidth = importState.computeThumbnailWidth();
+			int work = IMediaSupport.IMPORTWORKSTEPS;
+			boolean relationDone = false;
+			final List<Object> toBeStored = new ArrayList<Object>();
+			final List<Object> toBeDeleted = new ArrayList<Object>();
+			final List<Object> trashed = new ArrayList<Object>();
+			List<Asset> deletedAssets = new ArrayList<Asset>();
+			byte[] oldThumbnail = null;
+			byte[] oldDngThumbnail = null;
+			StorageObject originalFile = null;
+			String oldId = null;
+			String oldDngId = null;
+			int icnt = 0;
+			String originalFileName = object.getName();
+			StorageObject parent = object.getParentObject();
+			while (parent != null) {
+				String name = parent.getName();
+				if ("DCIM".equals(name)) //$NON-NLS-1$
+					break;
+				originalFileName = name + '/' + originalFileName;
+				parent = parent.getParentObject();
+			}
+			long lastMod = object.lastModified();
+
+			Map<String, String> overlayMap = importState.overlayMap;
+			overlayMap.put(QueryField.EXIF_ORIGINALFILENAME.getExifToolKey(), originalFileName);
+			overlayMap.put(QueryField.FILESIZE.getExifToolKey(), String.valueOf(object.size()));
+			Date lastModified = new Date(lastMod);
+			overlayMap.put(QueryField.EXIF_DATETIME.getExifToolKey(),
+					Format.DATE_TIME_ZONED_FORMAT.get().format(lastModified));
+			CoreActivator coreActivator = CoreActivator.getDefault();
+			IDbManager dbManager = coreActivator.getDbManager();
+			URI uri = object.toURI();
+			String uriAsString = uri.toString();
+			if (!importState.isMedia() && !importState.fromTransferFolder() && rc != null)
+				lastModified = new Date(
+						lastMod = rc.getLastRecipeModification(uriAsString, lastMod, importState.recipeDetectorIds));
+			boolean isDng = ImageConstants.isDng(uriAsString);
+			boolean isRaw = ImageConstants.isRaw(uriAsString, false);
+			boolean isJpeg = ImageConstants.isJpeg(extension);
+			File[] files = null;
+			if (importState.transferNeeded()) {
+				int skipPolicy = importState.getSkipPolicy();
+				if (skipPolicy == Constants.SKIP_JPEG && isJpeg || skipPolicy == Constants.SKIP_RAW && (isDng || isRaw))
+					return 0;
+				files = importState.transferFile(originalFile = object, aMonitor);
+				if (files == null || !files[0].exists())
+					return 0;
+				if (importState.skipDuplicates(files[0], originalFileName, lastModified)) {
+					for (File f : files)
+						f.delete();
+					return 0;
+				}
+				uriAsString = files[0].toURI().toString();
+			} else if (object.isLocal())
+				files = new File[] { (File) object.getNativeObject() };
+			else
+				return 0;
+			ImportConfiguration configuration = importState.getConfiguration();
+			boolean importRaw = configuration.rawOptions.equals(Constants.RAWIMPORT_ONLYRAW)
+					|| configuration.rawOptions.equals(Constants.RAWIMPORT_BOTH);
+			if (isRaw && importRaw) {
+				RawType rawType = ImageConstants.getRawFormatMap().get(extension);
+				if (rawType.isUnsupportedBy(rc.getName())) {
+					importState.addErrorOnce(NLS.bind(Messages.getString("ImageMediaSupport.not_supported_by"), //$NON-NLS-1$
+							rawType.toString(), rc.getName()), null);
+					return 0;
 				}
 			}
-			Meta meta = importState.meta;
-			Asset asset = null;
-			if (!importState.transferNeeded()) {
-				if (existing != null && !existing.isEmpty()) {
-					asset = existing.get(0).getAsset();
-					oldId = asset.getStringId();
-					oldThumbnail = importState.useOldThumbnail(asset.getJpegThumbnail());
+			boolean importDng = !configuration.rawOptions.equals(Constants.RAWIMPORT_ONLYRAW);
+			boolean importDngEmbeddedRaw = configuration.rawOptions.equals(Constants.RAWIMPORT_DNGEMBEDDEDRAW);
+			boolean fromImportFilter = false;
+			if (isDng || isRaw)
+				importState.fileSource = Constants.FILESOURCE_DIGITAL_CAMERA;
+			else
+				fromImportFilter = ImageActivator.getDefault().getImportFilters().get(extension) != null;
+			File convert = null;
+			File dngFolder = null;
+			StorageObject exifObject = null;
+			try {
+				AssetEnsemble ensemble = null;
+				AssetEnsemble dngEnsemble = null;
+				List<AssetEnsemble> existing = null;
+				List<AssetEnsemble> existingDng = null;
+				if (importRaw || !isRaw)
+					existing = AssetEnsemble.getAllAssets(dbManager, remote != null ? remote : files[0].toURI(),
+							importState);
+				String dngUriAsString = null;
+				URI dngURI = null;
+				if (importDng && isRaw) {
+					dngUriAsString = Core.removeExtensionFromUri(uriAsString) + ".dng"; //$NON-NLS-1$
+					try {
+						int p = uriAsString.lastIndexOf('/');
+						StringBuilder sb = new StringBuilder().append(uriAsString, 0, p + 1);
+						File targetFolder = importState.transferNeeded() ? null : new File(new URI(sb.toString()));
+						if (targetFolder != null && !targetFolder.canWrite()) {
+							importState.operation.addError(
+									NLS.bind(Messages.getString("ImageMediaSupport.dng_read_only"), //$NON-NLS-1$
+											targetFolder.getName()), null);
+							importDng = false;
+							configuration.rawOptions = Constants.RAWIMPORT_ONLYRAW;
+						} else if (configuration.dngFolder != null && !configuration.dngFolder.isEmpty()) {
+							dngFolder = new File(new URI(sb.append(configuration.dngFolder).toString()));
+							dngFolder.mkdir();
+							dngUriAsString = sb.append(dngUriAsString, p, dngUriAsString.length()).toString();
+						}
+						dngURI = new URI(dngUriAsString);
+						existingDng = AssetEnsemble.getAllAssets(dbManager, dngURI, importState);
+					} catch (URISyntaxException e) {
+						importState.operation.addError(
+								NLS.bind(Messages.getString("ImageMediaSupport.Bad_DNG_URI"), dngUriAsString), //$NON-NLS-1$
+								e);
+					}
 				}
-				if (existingDng != null && !existingDng.isEmpty()) {
-					asset = existingDng.get(0).getAsset();
-					oldDngId = asset.getStringId();
-					oldDngThumbnail = importState.useOldThumbnail(asset.getJpegThumbnail());
-				}
-				if (asset != null) { // conflict detected
-					if (configuration.conflictPolicy == ImportState.IGNOREALL)
-						return 0;
-					if (configuration.isSynchronize || (oldId == null && oldDngId != null && importState.isSilent()
-							&& importDng && importRaw)) {
-						ensemble = (existing != null && !existing.isEmpty()) ? existing.remove(0) : null;
-						dngEnsemble = (existingDng != null && !existingDng.isEmpty()) ? existingDng.remove(0) : null;
-						importState.reimport = true;
-						importState.canUndo = false;
-					} else
-						switch (importState.promptForOverride(files[0], asset)) {
-						case ImportState.CANCEL:
-							aMonitor.setCanceled(true);
+				Meta meta = importState.meta;
+				Asset asset = null;
+				if (!importState.transferNeeded()) {
+					if (existing != null && !existing.isEmpty()) {
+						asset = existing.get(0).getAsset();
+						oldId = asset.getStringId();
+						oldThumbnail = importState.useOldThumbnail(asset.getJpegThumbnail());
+					}
+					if (existingDng != null && !existingDng.isEmpty()) {
+						asset = existingDng.get(0).getAsset();
+						oldDngId = asset.getStringId();
+						oldDngThumbnail = importState.useOldThumbnail(asset.getJpegThumbnail());
+					}
+					if (asset != null) { // conflict detected
+						if (configuration.conflictPolicy == ImportState.IGNOREALL)
 							return 0;
-						case ImportState.OVERWRITENEWER:
-							if (!isOutDated(existing, lastMod))
-								return 0;
-							//$FALL-THROUGH$
-						case ImportState.OVERWRITE:
-							AssetEnsemble.deleteAll(existing, deletedAssets, toBeDeleted, toBeStored);
-							AssetEnsemble.deleteAll(existingDng, deletedAssets, toBeDeleted, toBeStored);
-							break;
-						case ImportState.SYNCNEWER:
-							if (!isOutDated(existing, lastMod))
-								return 0;
-							//$FALL-THROUGH$
-						case ImportState.SYNC:
+						if (configuration.isSynchronize || (oldId == null && oldDngId != null && importState.isSilent()
+								&& importDng && importRaw)) {
 							ensemble = (existing != null && !existing.isEmpty()) ? existing.remove(0) : null;
 							dngEnsemble = (existingDng != null && !existingDng.isEmpty()) ? existingDng.remove(0)
 									: null;
 							importState.reimport = true;
 							importState.canUndo = false;
-							break;
-						default:
-							return 0;
-						}
-				}
-			}
-			if (importRaw || !isRaw) {
-				List<Ghost_typeImpl> ghosts = dbManager.obtainGhostsForFile(remote != null ? remote : files[0].toURI());
-				importState.allDeletedGhosts.addAll(ghosts);
-				toBeDeleted.addAll(ghosts);
-				if (ensemble == null)
-					ensemble = new AssetEnsemble(dbManager, importState, oldId);
-			}
-			asset = importState.resetEnsemble(ensemble, remote != null ? remote : files[0].toURI(), files[0],
-					lastModified, originalFileName, importState.importDate);
-			if (files.length > 1)
-				AssetEnsemble.insertVoiceNote(asset, asset.getVolume(), "."); //$NON-NLS-1$
-			Asset dngAsset = null;
-			ZImage dngImage = null;
-			aMonitor.worked(1);
-			--work;
-			// Convert to DNG
-			if (isRaw && importDng) {
-				if (dngEnsemble == null)
-					dngEnsemble = new AssetEnsemble(dbManager, importState, oldDngId);
-				dngAsset = importState.resetEnsemble(dngEnsemble, dngURI, files[0], importState.importDate,
-						originalFileName, importState.importDate);
-				String dngLocation = configuration.dngLocator.getDngLocation();
-				File locat = (dngLocation == null || dngLocation.isEmpty()) ? null : new File(dngLocation);
-				if (locat == null || !locat.exists()) {
-					locat = Core.getCore().getDbFactory().getErrorHandler().showDngDialog(locat, importState.info);
-					if (locat != null && !locat.getName().isEmpty()) {
-						IPreferenceUpdater locator = importState.info.getAdapter(IPreferenceUpdater.class);
-						if (locator != null)
-							locator.setDngLocation(locat);
+						} else
+							switch (importState.promptForOverride(files[0], asset)) {
+							case ImportState.CANCEL:
+								aMonitor.setCanceled(true);
+								return 0;
+							case ImportState.OVERWRITENEWER:
+								if (!isOutDated(existing, lastMod))
+									return 0;
+								//$FALL-THROUGH$
+							case ImportState.OVERWRITE:
+								AssetEnsemble.deleteAll(existing, deletedAssets, toBeDeleted, toBeStored);
+								AssetEnsemble.deleteAll(existingDng, deletedAssets, toBeDeleted, toBeStored);
+								break;
+							case ImportState.SYNCNEWER:
+								if (!isOutDated(existing, lastMod))
+									return 0;
+								//$FALL-THROUGH$
+							case ImportState.SYNC:
+								ensemble = (existing != null && !existing.isEmpty()) ? existing.remove(0) : null;
+								dngEnsemble = (existingDng != null && !existingDng.isEmpty()) ? existingDng.remove(0)
+										: null;
+								importState.reimport = true;
+								importState.canUndo = false;
+								break;
+							default:
+								return 0;
+							}
 					}
 				}
-				if (locat == null) {
-					aMonitor.setCanceled(true);
-					return 0;
+				if (importRaw || !isRaw) {
+					List<Ghost_typeImpl> ghosts = dbManager
+							.obtainGhostsForFile(remote != null ? remote : files[0].toURI());
+					importState.allDeletedGhosts.addAll(ghosts);
+					toBeDeleted.addAll(ghosts);
+					if (ensemble == null)
+						ensemble = new AssetEnsemble(dbManager, importState, oldId);
 				}
-				if (!locat.getName().isEmpty()) {
-					Options options = new Options();
-					options.put("uncompressed", //$NON-NLS-1$
-							configuration.dngUncompressed);
-					options.put("linear", configuration.dngLinear); //$NON-NLS-1$
-					options.put("embedded", importDngEmbeddedRaw); //$NON-NLS-1$
-					options.put("highres", (!meta.getThumbnailResolution() //$NON-NLS-1$
-							.equals(Meta_type.thumbnailResolution_low)));
-					if (dngFolder != null)
-						options.put("outputFolder", dngFolder //$NON-NLS-1$
-								.getAbsolutePath());
-					File dngFile = null;
-					try {
-						dngFile = BatchActivator.getDefault().convertFile(files[0], "dng", //$NON-NLS-1$
-								configuration.dngLocator.getDngLocation(), options, false,
-								coreActivator.getFileWatchManager(), importState.operation.getOpId(), aMonitor);
-					} catch (ConversionException e) {
-						importState.operation
-								.addError(NLS.bind(Messages.getString("ImageMediaSupport.DNG_conversion_failed"), //$NON-NLS-1$
-										files[0]), e);
-					}
-					if (dngFile != null) {
-						if (files.length > 1 && dngFolder != null) {
-							String name = files[1].getName();
-							int p = name.lastIndexOf('.');
-							File target = new File(
-									Core.removeExtensionFromUri(dngFile.getAbsolutePath()) + name.substring(p));
-							CoreActivator.getDefault().getFileWatchManager().ignore(target,
-									importState.operation.getOpId());
-							BatchUtilities.copyFile(files[1], target, null);
-							AssetEnsemble.insertVoiceNote(dngAsset, dngAsset.getVolume(), "."); //$NON-NLS-1$
+				asset = importState.resetEnsemble(ensemble, remote != null ? remote : files[0].toURI(), files[0],
+						lastModified, originalFileName, importState.importDate);
+				if (files.length > 1)
+					AssetEnsemble.insertVoiceNote(asset, asset.getVolume(), "."); //$NON-NLS-1$
+				Asset dngAsset = null;
+				ZImage dngImage = null;
+				aMonitor.worked(1);
+				--work;
+				// Convert to DNG
+				if (isRaw && importDng) {
+					if (dngEnsemble == null)
+						dngEnsemble = new AssetEnsemble(dbManager, importState, oldDngId);
+					dngAsset = importState.resetEnsemble(dngEnsemble, dngURI, files[0], importState.importDate,
+							originalFileName, importState.importDate);
+					String dngLocation = configuration.dngLocator.getDngLocation();
+					File locat = (dngLocation == null || dngLocation.isEmpty()) ? null : new File(dngLocation);
+					if (locat == null || !locat.exists()) {
+						locat = Core.getCore().getDbFactory().getErrorHandler().showDngDialog(locat, importState.info);
+						if (locat != null && !locat.getName().isEmpty()) {
+							IPreferenceUpdater locator = importState.info.getAdapter(IPreferenceUpdater.class);
+							if (locator != null)
+								locator.setDngLocation(locat);
 						}
-						List<Ghost_typeImpl> ghosts = dbManager.obtainGhostsForFile(dngURI);
-						importState.allDeletedGhosts.addAll(ghosts);
-						toBeDeleted.addAll(ghosts);
-						Date dngLastmod = new Date(dngFile.lastModified());
-						dngAsset.setLastModification(dngLastmod);
-						long dngsize = dngFile.length();
-						dngAsset.setFileSize(dngsize);
-						String oldFileSize = overlayMap.get(QueryField.FILESIZE.getExifToolKey());
-						String oldLastmod = overlayMap.get(QueryField.EXIF_DATETIME.getExifToolKey());
-						overlayMap.put(QueryField.FILESIZE.getExifToolKey(), String.valueOf(dngsize));
-						overlayMap.put(QueryField.EXIF_DATETIME.getExifToolKey(),
-								Format.DATE_TIME_ZONED_FORMAT.get().format(dngLastmod));
-						IExifLoader etool = importState.getExifTool(dngFile,
-								importState.getConfiguration().getExifFastMode());
-						Recipe dngRecipe = null;
-						if (oldDngThumbnail == null) {
-							if (meta.getThumbnailFromPreview())
-								dngImage = loadPreviewImage(etool, meta, dngAsset);
-							if (dngImage == null) {
-								dngRecipe = rc == null ? null
-										: rc.getRecipe(dngUriAsString, false, etool, overlayMap,
-												importState.recipeDetectorIds);
+					}
+					if (locat == null) {
+						aMonitor.setCanceled(true);
+						return 0;
+					}
+					if (!locat.getName().isEmpty()) {
+						Options options = new Options();
+						options.put("uncompressed", //$NON-NLS-1$
+								configuration.dngUncompressed);
+						options.put("linear", configuration.dngLinear); //$NON-NLS-1$
+						options.put("embedded", importDngEmbeddedRaw); //$NON-NLS-1$
+						options.put("highres", (!meta.getThumbnailResolution() //$NON-NLS-1$
+								.equals(Meta_type.thumbnailResolution_low)));
+						if (dngFolder != null)
+							options.put("outputFolder", dngFolder //$NON-NLS-1$
+									.getAbsolutePath());
+						File dngFile = null;
+						try {
+							dngFile = BatchActivator.getDefault().convertFile(files[0], "dng", //$NON-NLS-1$
+									configuration.dngLocator.getDngLocation(), options, false,
+									coreActivator.getFileWatchManager(), importState.operation.getOpId(), aMonitor);
+						} catch (ConversionException e) {
+							importState.operation
+									.addError(NLS.bind(Messages.getString("ImageMediaSupport.DNG_conversion_failed"), //$NON-NLS-1$
+											files[0]), e);
+						}
+						if (dngFile != null) {
+							if (files.length > 1 && dngFolder != null) {
+								String name = files[1].getName();
+								int p = name.lastIndexOf('.');
+								File target = new File(
+										Core.removeExtensionFromUri(dngFile.getAbsolutePath()) + name.substring(p));
+								CoreActivator.getDefault().getFileWatchManager().ignore(target,
+										importState.operation.getOpId());
+								BatchUtilities.copyFile(files[1], target, null);
+								AssetEnsemble.insertVoiceNote(dngAsset, dngAsset.getVolume(), "."); //$NON-NLS-1$
+							}
+							List<Ghost_typeImpl> ghosts = dbManager.obtainGhostsForFile(dngURI);
+							importState.allDeletedGhosts.addAll(ghosts);
+							toBeDeleted.addAll(ghosts);
+							Date dngLastmod = new Date(dngFile.lastModified());
+							dngAsset.setLastModification(dngLastmod);
+							long dngsize = dngFile.length();
+							dngAsset.setFileSize(dngsize);
+							String oldFileSize = overlayMap.get(QueryField.FILESIZE.getExifToolKey());
+							String oldLastmod = overlayMap.get(QueryField.EXIF_DATETIME.getExifToolKey());
+							overlayMap.put(QueryField.FILESIZE.getExifToolKey(), String.valueOf(dngsize));
+							overlayMap.put(QueryField.EXIF_DATETIME.getExifToolKey(),
+									Format.DATE_TIME_ZONED_FORMAT.get().format(dngLastmod));
+							IExifLoader etool = importState.getExifTool(dngFile,
+									importState.getConfiguration().getExifFastMode());
+							Recipe dngRecipe = null;
+							if (oldDngThumbnail == null) {
+								if (meta.getThumbnailFromPreview())
+									dngImage = loadPreviewImage(etool, meta, dngAsset);
+								if (dngImage == null) {
+									dngRecipe = rc == null ? null
+											: rc.getRecipe(dngUriAsString, false, etool, overlayMap,
+													importState.recipeDetectorIds);
+									try {
+										convert = rawConvert(dngFile, dngRecipe, aMonitor);
+										if (convert != null)
+											dngImage = ZImage.loadThumbnail(convert, null, twidth);
+										else {
+											importState.reportError(NLS.bind(
+													Messages.getString("ImageMediaSupport.DCRAW_conversion_DNG_failed"), //$NON-NLS-1$
+													files[0]), null);
+											dngAsset = null;
+										}
+									} catch (ConversionException e) {
+										importState.reportError(NLS.bind(
+												Messages.getString("ImageMediaSupport.DCRAW_conversion_DNG_failed"), //$NON-NLS-1$
+												files[0]), e);
+									}
+								}
+							}
+							if ((dngImage != null || oldDngThumbnail != null) && dngAsset != null) {
+								if (createImageEntry(dngFile, dngFile.toURI(), "dng", true, dngEnsemble, //$NON-NLS-1$
+										dngImage, oldDngThumbnail, etool, dngRecipe, importState.importDate, toBeStored,
+										toBeDeleted, aMonitor)) {
+									setRawFormat(dngAsset, null);
+									AssetEnsemble.deleteAll(existingDng, deletedAssets, toBeDeleted, toBeStored);
+									dngEnsemble.removeFromTrash(trashed);
+									dngEnsemble.store(toBeDeleted, toBeStored);
+									icnt++;
+								}
+							}
+							overlayMap.put(QueryField.FILESIZE.getExifToolKey(), oldFileSize);
+							overlayMap.put(QueryField.EXIF_DATETIME.getExifToolKey(), oldLastmod);
+						} else
+							dngAsset = null;
+					} else
+						configuration.rawOptions = Constants.RAWIMPORT_ONLYRAW;
+				}
+				aMonitor.worked(1);
+				--work;
+				// Read Image
+				String imageURI = remote != null ? remote.toString() : uriAsString;
+				if (asset != null) {
+					ZImage image = null;
+					IExifLoader etool = null;
+					if (fromImportFilter)
+						etool = new ExifToolSubstitute(files[0]);
+					else {
+						exifObject = new StorageObject(files[0]);
+						if (importState.isMedia() && originalFile != null) {
+							String originalUri = (remote != null ? remote : originalFile.toURI()).toString();
+							if (isRaw || isDng) {
+								StorageObject jpegFile = remote != null ? null : findJpegSibling(originalFile);
+								if (jpegFile != null && importState.getSkipPolicy() == Constants.SKIP_JPEG_IF_RAW)
+									importState.skipFile = jpegFile;
+								String prefix = importState.getExifTransferPrefix();
+								if (prefix != null) {
+									int q = originalUri.lastIndexOf('/');
+									String name = (q < 0) ? originalUri : originalUri.substring(q + 1);
+									if (jpegFile != null && name.startsWith(prefix))
+										exifObject = jpegFile;
+								}
+							} else if (isJpeg) {
+								StorageObject rawFile = remote != null ? null : findRawSibling(originalFile);
+								if (rawFile != null && importState.getSkipPolicy() == Constants.SKIP_RAW_IF_JPEG)
+									importState.skipFile = rawFile;
+							}
+						}
+						File exifFile = exifObject.resolve();
+						if (exifFile != null)
+							etool = importState.getExifTool(exifFile, importState.getConfiguration().getExifFastMode());
+					}
+					Recipe rawRecipe = null;
+					if (isDng) {
+						if (oldThumbnail == null) {
+							if (etool != null && meta.getThumbnailFromPreview())
+								image = loadPreviewImage(etool, meta, asset);
+							if (image == null)
 								try {
-									convert = rawConvert(dngFile, dngRecipe, aMonitor);
+									rawRecipe = rc == null ? null
+											: rc.getRecipe(uriAsString, false, etool, overlayMap,
+													importState.recipeDetectorIds);
+									convert = rawConvert(files[0], rawRecipe, aMonitor);
 									if (convert != null)
-										dngImage = ZImage.loadThumbnail(convert, null, twidth);
+										image = ZImage.loadThumbnail(convert, null, twidth);
 									else {
 										importState.reportError(NLS.bind(
 												Messages.getString("ImageMediaSupport.DCRAW_conversion_DNG_failed"), //$NON-NLS-1$
 												files[0]), null);
-										dngAsset = null;
+										asset = null;
 									}
 								} catch (ConversionException e) {
 									importState.reportError(NLS.bind(
 											Messages.getString("ImageMediaSupport.DCRAW_conversion_DNG_failed"), //$NON-NLS-1$
 											files[0]), e);
 								}
+						}
+						setRawFormat(asset, null);
+					} else if (isRaw) {
+						rawRecipe = rc == null ? null
+								: rc.getRecipe(uriAsString, false, etool, overlayMap, importState.recipeDetectorIds);
+						if ((dngImage != null || oldDngThumbnail != null) && dngEnsemble != null && dngAsset != null
+								&& ensemble != null && rawRecipe == null) {
+							dngEnsemble.transferTo(ensemble);
+							image = dngImage;
+							oldThumbnail = oldDngThumbnail;
+							asset.setUri(imageURI);
+							asset.setFileSize(files[0].length());
+							asset.setDateTime(Format.DATE_TIME_ZONED_FORMAT.get()
+									.parse(overlayMap.get(QueryField.EXIF_DATETIME.getExifToolKey())));
+							ExifTool tool = importState.getExifTool(files[0],
+									importState.getConfiguration().getExifFastMode());
+							String software = tool.getMetadata().get(QueryField.EXIF_SOFTWARE.getExifToolKey());
+							if (software != null)
+								asset.setSoftware(software);
+							if (Constants.STATE_CONVERTED == asset.getStatus())
+								asset.setStatus(Constants.STATE_RAW);
+							setRawFormat(asset, extension);
+							AssetEnsemble.deleteAll(existing, deletedAssets, toBeDeleted, toBeStored);
+							ensemble.store(toBeDeleted, toBeStored);
+							StringBuilder sb = new StringBuilder();
+							sb.append(configuration.dngUncompressed ? "uncompressed" //$NON-NLS-1$
+									: "compressed") //$NON-NLS-1$
+									.append(configuration.dngLinear ? ", linear" //$NON-NLS-1$
+											: ", logarithmic"); //$NON-NLS-1$
+							if (importDngEmbeddedRaw)
+								sb.append(", embedded RAW file"); //$NON-NLS-1$
+							if (!configuration.isSynchronize || configuration.isResetImage)
+								updateOrCreateDerivedByRelation(asset.getStringId(), imageURI, dngAsset.getStringId(),
+										dngUriAsString, sb.toString(), false, null, dngAsset.getLastModification(),
+										dngAsset.getSoftware(), "Adobe DNG Converter", toBeStored, toBeDeleted); //$NON-NLS-1$
+							relationDone = true;
+							asset = null;
+						} else {
+							if (oldThumbnail == null) {
+								if (meta.getThumbnailFromPreview())
+									image = loadPreviewImage(etool, meta, asset);
+								if (image == null)
+									try {
+										convert = rawConvert(files[0], rawRecipe, aMonitor);
+										if (convert != null)
+											image = ZImage.loadThumbnail(convert, null, twidth);
+										else {
+											importState.reportError(NLS.bind(
+													Messages.getString("ImageMediaSupport.DCRAW_conversion_failed"), //$NON-NLS-1$
+													files[0]), null);
+											asset = null;
+										}
+									} catch (ConversionException e) {
+										importState.reportError(NLS.bind(
+												Messages.getString("ImageMediaSupport.dcraw_conversion_failed_because"), //$NON-NLS-1$
+												files[0], e), e);
+									}
 							}
 						}
-						if ((dngImage != null || oldDngThumbnail != null) && dngAsset != null) {
-							if (createImageEntry(dngFile, dngFile.toURI(), "dng", true, dngEnsemble, //$NON-NLS-1$
-									dngImage, oldDngThumbnail, etool, dngRecipe, importState.importDate, toBeStored,
-									toBeDeleted, aMonitor)) {
-								setRawFormat(dngAsset, null);
-								AssetEnsemble.deleteAll(existingDng, deletedAssets, toBeDeleted, toBeStored);
-								dngEnsemble.removeFromTrash(trashed);
-								dngEnsemble.store(toBeDeleted, toBeStored);
-								icnt++;
-							}
-						}
-						overlayMap.put(QueryField.FILESIZE.getExifToolKey(), oldFileSize);
-						overlayMap.put(QueryField.EXIF_DATETIME.getExifToolKey(), oldLastmod);
-					} else
-						dngAsset = null;
-				} else
-					configuration.rawOptions = Constants.RAWIMPORT_ONLYRAW;
-			}
-			aMonitor.worked(1);
-			--work;
-			// Read Image
-			String imageURI = remote != null ? remote.toString() : uriAsString;
-			if (asset != null) {
-				ZImage image = null;
-				IExifLoader etool = null;
-				if (fromImportFilter)
-					etool = new ExifToolSubstitute(files[0]);
-				else {
-					exifObject = new StorageObject(files[0]);
-					if (importState.isMedia() && originalFile != null) {
-						String originalUri = (remote != null ? remote : originalFile.toURI()).toString();
-						if (isRaw || isDng) {
-							StorageObject jpegFile = remote != null ? null : findJpegSibling(originalFile);
-							if (jpegFile != null && importState.getSkipPolicy() == Constants.SKIP_JPEG_IF_RAW)
-								importState.skipFile = jpegFile;
-							String prefix = importState.getExifTransferPrefix();
-							if (prefix != null) {
-								int q = originalUri.lastIndexOf('/');
-								String name = (q < 0) ? originalUri : originalUri.substring(q + 1);
-								if (jpegFile != null && name.startsWith(prefix))
-									exifObject = jpegFile;
-							}
-						} else if (isJpeg) {
-							StorageObject rawFile = remote != null ? null : findRawSibling(originalFile);
-							if (rawFile != null && importState.getSkipPolicy() == Constants.SKIP_RAW_IF_JPEG)
-								importState.skipFile = rawFile;
-						}
-					}
-					File exifFile = exifObject.resolve();
-					if (exifFile != null)
-						etool = importState.getExifTool(exifFile, importState.getConfiguration().getExifFastMode());
-				}
-				Recipe rawRecipe = null;
-				if (isDng) {
-					if (oldThumbnail == null) {
-						if (etool != null && meta.getThumbnailFromPreview())
-							image = loadPreviewImage(etool, meta, asset);
-						if (image == null)
-							try {
-								rawRecipe = rc == null ? null
-										: rc.getRecipe(uriAsString, false, etool, overlayMap,
-												importState.recipeDetectorIds);
-								convert = rawConvert(files[0], rawRecipe, aMonitor);
-								if (convert != null)
-									image = ZImage.loadThumbnail(convert, null, twidth);
-								else {
-									importState.reportError(NLS.bind(
-											Messages.getString("ImageMediaSupport.DCRAW_conversion_DNG_failed"), //$NON-NLS-1$
-											files[0]), null);
-									asset = null;
-								}
-							} catch (ConversionException e) {
-								importState.reportError(
-										NLS.bind(Messages.getString("ImageMediaSupport.DCRAW_conversion_DNG_failed"), //$NON-NLS-1$
-												files[0]),
-										e);
-							}
-					}
-					setRawFormat(asset, null);
-				} else if (isRaw) {
-					rawRecipe = rc == null ? null
-							: rc.getRecipe(uriAsString, false, etool, overlayMap, importState.recipeDetectorIds);
-					if ((dngImage != null || oldDngThumbnail != null) && dngEnsemble != null && dngAsset != null
-							&& ensemble != null && rawRecipe == null) {
-						dngEnsemble.transferTo(ensemble);
-						image = dngImage;
-						oldThumbnail = oldDngThumbnail;
-						asset.setUri(imageURI);
-						asset.setFileSize(files[0].length());
-						asset.setDateTime(
-								Format.DATE_TIME_ZONED_FORMAT.get().parse(overlayMap.get(QueryField.EXIF_DATETIME.getExifToolKey())));
-						ExifTool tool = importState.getExifTool(files[0],
-								importState.getConfiguration().getExifFastMode());
-						String software = tool.getMetadata().get(QueryField.EXIF_SOFTWARE.getExifToolKey());
-						if (software != null)
-							asset.setSoftware(software);
-						if (Constants.STATE_CONVERTED == asset.getStatus())
-							asset.setStatus(Constants.STATE_RAW);
 						setRawFormat(asset, extension);
-						AssetEnsemble.deleteAll(existing, deletedAssets, toBeDeleted, toBeStored);
-						ensemble.store(toBeDeleted, toBeStored);
-						StringBuilder sb = new StringBuilder();
-						sb.append(configuration.dngUncompressed ? "uncompressed" //$NON-NLS-1$
-								: "compressed") //$NON-NLS-1$
-								.append(configuration.dngLinear ? ", linear" //$NON-NLS-1$
-										: ", logarithmic"); //$NON-NLS-1$
-						if (importDngEmbeddedRaw)
-							sb.append(", embedded RAW file"); //$NON-NLS-1$
-						if (!configuration.isSynchronize || configuration.isResetImage)
-							updateOrCreateDerivedByRelation(asset.getStringId(), imageURI, dngAsset.getStringId(),
-									dngUriAsString, sb.toString(), false, null, dngAsset.getLastModification(),
-									dngAsset.getSoftware(), "Adobe DNG Converter", toBeStored, toBeDeleted); //$NON-NLS-1$
-						relationDone = true;
-						asset = null;
 					} else {
 						if (oldThumbnail == null) {
-							if (meta.getThumbnailFromPreview())
-								image = loadPreviewImage(etool, meta, asset);
-							if (image == null)
+							if (fromImportFilter)
+								image = ((ExifToolSubstitute) etool).loadThumbnail(twidth, twidth / 4 * 3,
+										importState.thumbnailRaster, 0f);
+							else
 								try {
-									convert = rawConvert(files[0], rawRecipe, aMonitor);
-									if (convert != null)
-										image = ZImage.loadThumbnail(convert, null, twidth);
-									else {
-										importState.reportError(NLS.bind(
-												Messages.getString("ImageMediaSupport.DCRAW_conversion_failed"), //$NON-NLS-1$
-												files[0]), null);
-										asset = null;
-									}
-								} catch (ConversionException e) {
-									importState.reportError(NLS.bind(
-											Messages.getString("ImageMediaSupport.dcraw_conversion_failed_because"), //$NON-NLS-1$
-											files[0], e), e);
+									image = ZImage.loadThumbnail(files[0], extension, twidth);
+								} catch (OutOfMemoryError e) {
+									throw e;
+								} catch (NoClassDefFoundError e) {
+									importState.reportError(
+											NLS.bind(Messages.getString("ImageMediaSupport.codec_not_found"), //$NON-NLS-1$
+													files[0], Constants.APPLICATION_NAME),
+											e);
+									return 0;
+								} catch (Exception e) {
+									if (e instanceof IndexOutOfBoundsException
+											|| e.getCause() instanceof ArrayIndexOutOfBoundsException)
+										importState.reportError(
+												NLS.bind(Messages.getString("ImageMediaSupport.error_when_reading_swt"), //$NON-NLS-1$
+														files[0]),
+												e);
+									else
+										importState.reportError(
+												NLS.bind(Messages.getString("ImageMediaSupport.error_reading"), //$NON-NLS-1$
+														files[0]), e);
+									return 0;
 								}
 						}
 					}
-					setRawFormat(asset, extension);
-				} else {
-					if (oldThumbnail == null) {
-						if (fromImportFilter)
-							image = ((ExifToolSubstitute) etool).loadThumbnail(twidth, twidth / 4 * 3,
-									importState.thumbnailRaster, 0f);
-						else
-							try {
-								image = ZImage.loadThumbnail(files[0], extension, twidth);
-							} catch (OutOfMemoryError e) {
-								throw e;
-							} catch (NoClassDefFoundError e) {
-								importState
-										.reportError(NLS.bind(Messages.getString("ImageMediaSupport.codec_not_found"), //$NON-NLS-1$
-												files[0], Constants.APPLICATION_NAME), e);
-								return 0;
-							} catch (Exception e) {
-								if (e instanceof IndexOutOfBoundsException
-										|| e.getCause() instanceof ArrayIndexOutOfBoundsException)
-									importState.reportError(
-											NLS.bind(Messages.getString("ImageMediaSupport.error_when_reading_swt"), //$NON-NLS-1$
-													files[0]),
-											e);
-								else
-									importState.reportError(
-											NLS.bind(Messages.getString("ImageMediaSupport.error_reading"), files[0]), //$NON-NLS-1$
-											e);
-								return 0;
-							}
-					}
-				}
-				aMonitor.worked(1);
-				--work;
-				if (asset != null && ensemble != null) {
-					if (createImageEntry(files[0], uri, extension, convert != null, ensemble, image, oldThumbnail,
-							etool, rawRecipe, importState.importDate, toBeStored, toBeDeleted, aMonitor)) {
-						if (isRaw)
-							setRawFormat(asset, extension);
-						else if (isDng)
-							setRawFormat(asset, null);
-						AssetEnsemble.deleteAll(existing, deletedAssets, toBeDeleted, toBeStored);
-						ensemble.removeFromTrash(trashed);
-						ensemble.store(toBeDeleted, toBeStored);
-						icnt++;
-					}
-				}
-				aMonitor.worked(1);
-				--work;
-			}
-			if (asset != null || dngAsset != null) {
-				meta.setLastSequenceNo(meta.getLastSequenceNo() + 1);
-				meta.setLastYearSequenceNo(meta.getLastYearSequenceNo() + 1);
-				toBeStored.add(meta);
-			}
-			if (asset != null) {
-				if (!relationDone) {
-					boolean detected = false;
-					for (IRelationDetector detector : configuration.relationDetectors) {
-						URI targetUri = detector.detectRelation(imageURI, isDng, isRaw, ensemble, toBeDeleted,
-								toBeStored);
-						if (targetUri != null) {
-							Iterator<AssetImpl> it = dbManager.obtainAssetsForFile(targetUri).iterator();
-							if (it.hasNext()) {
-								AssetImpl orig = it.next();
-								updateOrCreateDerivedByRelation(orig.getStringId(), orig.getUri(), asset.getStringId(),
-										asset.getUri(), null, false, null, asset.getLastModification(),
-										asset.getSoftware(), null, toBeStored, toBeDeleted);
-								propagateXmp(orig, asset, ensemble, toBeDeleted, toBeStored);
-							} else
-								updateOrCreateDerivedByRelation(targetUri.toString(), targetUri.toString(),
-										asset.toString(), asset.getUri(), detector.getName(), false, null,
-										asset.getLastModification(), asset.getSoftware(), null, toBeStored,
-										toBeDeleted);
-							detected = true;
-							break;
+					aMonitor.worked(1);
+					--work;
+					if (asset != null && ensemble != null) {
+						if (createImageEntry(files[0], uri, extension, convert != null, ensemble, image, oldThumbnail,
+								etool, rawRecipe, importState.importDate, toBeStored, toBeDeleted, aMonitor)) {
+							if (isRaw)
+								setRawFormat(asset, extension);
+							else if (isDng)
+								setRawFormat(asset, null);
+							AssetEnsemble.deleteAll(existing, deletedAssets, toBeDeleted, toBeStored);
+							ensemble.removeFromTrash(trashed);
+							ensemble.store(toBeDeleted, toBeStored);
+							icnt++;
 						}
 					}
-					if (!configuration.deriveRelations.equals(Constants.DERIVE_NO))
-						detected = detectAndCreateDerivateByName(imageURI, isDng, isRaw, asset, ensemble, toBeDeleted,
-								toBeStored);
-					if (!detected && configuration.autoDerive)
-						detectAndCreateDerivateByProfile(isDng, isRaw, asset, ensemble, toBeDeleted, toBeStored);
+					aMonitor.worked(1);
+					--work;
 				}
-				String assetId = asset.getStringId();
-				List<DerivedByImpl> set = dbManager.obtainObjects(DerivedByImpl.class, "derivative", imageURI, //$NON-NLS-1$
-						QueryField.EQUALS);
-				for (DerivedByImpl rel : set)
-					if (!toBeDeleted.contains(rel)) {
-						toBeDeleted.add(rel);
-						importState.allDeletedRelations.add(rel);
-						Date date = rel.getDate();
-						String tool = rel.getTool();
-						toBeStored.add(new DerivedByImpl(rel.getRecipe(), rel.getParameterFile(),
-								tool == null ? asset.getSoftware() : tool,
-								date.getTime() == 0 ? asset.getLastModification() : date, assetId, rel.getOriginal()));
+				if (asset != null || dngAsset != null) {
+					meta.setLastSequenceNo(meta.getLastSequenceNo() + 1);
+					meta.setLastYearSequenceNo(meta.getLastYearSequenceNo() + 1);
+					toBeStored.add(meta);
+				}
+				if (asset != null) {
+					if (!relationDone) {
+						boolean detected = false;
+						for (IRelationDetector detector : configuration.relationDetectors) {
+							URI targetUri = detector.detectRelation(imageURI, isDng, isRaw, ensemble, toBeDeleted,
+									toBeStored);
+							if (targetUri != null) {
+								Iterator<AssetImpl> it = dbManager.obtainAssetsForFile(targetUri).iterator();
+								if (it.hasNext()) {
+									AssetImpl orig = it.next();
+									updateOrCreateDerivedByRelation(orig.getStringId(), orig.getUri(),
+											asset.getStringId(), asset.getUri(), null, false, null,
+											asset.getLastModification(), asset.getSoftware(), null, toBeStored,
+											toBeDeleted);
+									propagateXmp(orig, asset, ensemble, toBeDeleted, toBeStored);
+								} else
+									updateOrCreateDerivedByRelation(targetUri.toString(), targetUri.toString(),
+											asset.toString(), asset.getUri(), detector.getName(), false, null,
+											asset.getLastModification(), asset.getSoftware(), null, toBeStored,
+											toBeDeleted);
+								detected = true;
+								break;
+							}
+						}
+						if (!configuration.deriveRelations.equals(Constants.DERIVE_NO))
+							detected = detectAndCreateDerivateByName(imageURI, isDng, isRaw, asset, ensemble,
+									toBeDeleted, toBeStored);
+						if (!detected && configuration.autoDerive)
+							detectAndCreateDerivateByProfile(isDng, isRaw, asset, ensemble, toBeDeleted, toBeStored);
 					}
-				set = dbManager.obtainObjects(DerivedByImpl.class, "original", imageURI, QueryField.EQUALS); //$NON-NLS-1$
-				for (DerivedByImpl rel : set)
-					if (toBeDeleted.contains(rel)) {
-						toBeDeleted.add(rel);
-						importState.allDeletedRelations.add(rel);
-						toBeStored.add(new DerivedByImpl(rel.getRecipe(), rel.getParameterFile(), rel.getTool(),
-								rel.getDate(), rel.getDerivative(), assetId));
-					}
-			}
+					String assetId = asset.getStringId();
+					List<DerivedByImpl> set = dbManager.obtainObjects(DerivedByImpl.class, "derivative", imageURI, //$NON-NLS-1$
+							QueryField.EQUALS);
+					for (DerivedByImpl rel : set)
+						if (!toBeDeleted.contains(rel)) {
+							toBeDeleted.add(rel);
+							importState.allDeletedRelations.add(rel);
+							Date date = rel.getDate();
+							String tool = rel.getTool();
+							toBeStored.add(new DerivedByImpl(rel.getRecipe(), rel.getParameterFile(),
+									tool == null ? asset.getSoftware() : tool,
+									date.getTime() == 0 ? asset.getLastModification() : date, assetId,
+									rel.getOriginal()));
+						}
+					set = dbManager.obtainObjects(DerivedByImpl.class, "original", imageURI, QueryField.EQUALS); //$NON-NLS-1$
+					for (DerivedByImpl rel : set)
+						if (toBeDeleted.contains(rel)) {
+							toBeDeleted.add(rel);
+							importState.allDeletedRelations.add(rel);
+							toBeStored.add(new DerivedByImpl(rel.getRecipe(), rel.getParameterFile(), rel.getTool(),
+									rel.getDate(), rel.getDerivative(), assetId));
+						}
+				}
 
-			List<Asset> assetsToIndex = new ArrayList<Asset>();
-			if (asset != null)
-				assetsToIndex.add(asset);
-			if (dngAsset != null)
-				assetsToIndex.add(dngAsset);
-			importState.storeIntoCatalog(assetsToIndex, deletedAssets, toBeDeleted, toBeStored, trashed,
-					importState.importNo);
-			if (configuration.rules != null)
-				OperationJob.executeSlaveOperation(new AutoRuleOperation(configuration.rules, assetsToIndex, null),
-						configuration.info, configuration.silent);
-			--work;
-			boolean changed = importState.operation.updateFolderHierarchies(asset, true, configuration.timeline,
-					configuration.locations, false)
-					|| importState.operation.updateFolderHierarchies(dngAsset, true, configuration.timeline,
-							configuration.locations, false);
-			removeFromTransferfolder(importState, originalFile, files);
-			return (changed) ? -icnt : icnt;
-		} catch (ImportException e) {
-			return 0;
+				List<Asset> assetsToIndex = new ArrayList<Asset>();
+				if (asset != null)
+					assetsToIndex.add(asset);
+				if (dngAsset != null)
+					assetsToIndex.add(dngAsset);
+				importState.storeIntoCatalog(assetsToIndex, deletedAssets, toBeDeleted, toBeStored, trashed,
+						importState.importNo);
+				if (configuration.rules != null)
+					OperationJob.executeSlaveOperation(new AutoRuleOperation(configuration.rules, assetsToIndex, null),
+							configuration.info, configuration.silent);
+				--work;
+				boolean changed = importState.operation.updateFolderHierarchies(asset, true, configuration.timeline,
+						configuration.locations, false)
+						|| importState.operation.updateFolderHierarchies(dngAsset, true, configuration.timeline,
+								configuration.locations, false);
+				removeFromTransferfolder(importState, originalFile, files);
+				return (changed) ? -icnt : icnt;
+			} catch (ImportException e) {
+				return 0;
+			} finally {
+				if (convert != null)
+					convert.delete();
+				if (exifObject != null)
+					exifObject.dispose();
+				if (importState.transferNeeded() && isRaw
+						&& (configuration.rawOptions.equals(Constants.RAWIMPORT_DNGEMBEDDEDRAW)
+								|| configuration.rawOptions.equals(Constants.RAWIMPORT_ONLYDNG)))
+					// When importing from camera, the transmitted raw file can be
+					// deleted if only the converted DNG file is wanted
+					files[0].delete();
+				aMonitor.worked(work);
+			}
 		} finally {
-			if (convert != null)
-				convert.delete();
-			if (exifObject != null)
-				exifObject.dispose();
-			if (importState.transferNeeded() && isRaw
-					&& (configuration.rawOptions.equals(Constants.RAWIMPORT_DNGEMBEDDEDRAW)
-							|| configuration.rawOptions.equals(Constants.RAWIMPORT_ONLYDNG)))
-				// When importing from camera, the transmitted raw file can be
-				// deleted if only the converted DNG file is wanted
-				files[0].delete();
-			aMonitor.worked(work);
+			if (rc != null)
+				rc.unget();
 		}
 	}
 
@@ -680,7 +691,8 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 	}
 
 	private File rawConvert(File dngFile, Recipe recipe, IProgressMonitor monitor) throws ConversionException {
-		IRawConverter rawConverter = importState.getConfiguration().rawConverter;
+		String rawConverterId = importState.getConfiguration().rawConverterId;
+		IRawConverter rawConverter = BatchActivator.getDefault().getRawConverter(rawConverterId, true, true);
 		if (rawConverter == null || !rawConverter.isValid()) {
 			BatchActivator activator = BatchActivator.getDefault();
 			if (!activator.isRawQuestionAsked()) {
@@ -691,14 +703,17 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 				importState.operation.addError(Messages.getString("ImageMediaSupport.no_raw_convert"), null); //$NON-NLS-1$
 				return null;
 			}
-			importState.getConfiguration().rawConverter = rawConverter;
+			importState.getConfiguration().rawConverterId = rawConverter.getId();
 		}
 		Options options = new Options();
 		int sampleFactor = rawConverter.deriveOptions(recipe, options, IRawConverter.THUMB);
 		if (recipe != null && recipe != Recipe.NULL)
 			recipe.setSampleFactor(sampleFactor);
-		return BatchActivator.getDefault().convertFile(dngFile, rawConverter.getId(), rawConverter.getPath(), options,
-				true, CoreActivator.getDefault().getFileWatchManager(), importState.operation.getOpId(), monitor);
+		File file = BatchActivator.getDefault().convertFile(dngFile, rawConverter.getId(), rawConverter.getPath(),
+				options, true, CoreActivator.getDefault().getFileWatchManager(), importState.operation.getOpId(),
+				monitor);
+		rawConverter.unget();
+		return file;
 	}
 
 	private static void setRawFormat(Asset asset, String ext) {

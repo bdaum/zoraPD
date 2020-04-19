@@ -42,10 +42,10 @@ public class WatchedFolderRenamingPage extends ColoredWizardPage implements List
 		setHelp(HelpContextIds.IMPORT_NEW_STRUCTURE_WIZARD_RENAMING);
 		setTitle(getName());
 		setMessage(Messages.ImportRenamingPage_select_a_template);
-		super.createControl(parent);
 		fillValues();
+		super.createControl(parent);
 	}
-	
+
 	@Override
 	public void handleEvent(Event event) {
 		validatePage();
@@ -58,10 +58,8 @@ public class WatchedFolderRenamingPage extends ColoredWizardPage implements List
 	}
 
 	@Override
-	protected void validatePage() {
-		String errorMsg = renameGroup.validate();
-		setPageComplete(errorMsg == null);
-		setErrorMessage(errorMsg);
+	protected String validate() {
+		return renameGroup.validate();
 	}
 
 	public void performFinish() {

@@ -509,7 +509,8 @@ public class Utilities {
 	}
 
 	public static String leadingZeros(int v, int digits) {
-		StringBuilder sb = new StringBuilder(v);
+		StringBuilder sb = new StringBuilder();
+		sb.append(v);
 		while (sb.length() < digits)
 			sb.insert(0, "0"); //$NON-NLS-1$
 		return sb.toString();

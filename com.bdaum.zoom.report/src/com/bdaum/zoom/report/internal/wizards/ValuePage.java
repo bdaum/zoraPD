@@ -318,7 +318,8 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		label.setFont(JFaceResources.getBannerFont());
 		label.setText(Messages.ValuePage_time_of_day);
-		dayTimeButtonGroup = new RadioButtonGroup(daytimeComposite, Messages.ValuePage_intervals, SWT.NONE, Messages.ValuePage_hours, Messages.ValuePage_fifteen_min);
+		dayTimeButtonGroup = new RadioButtonGroup(daytimeComposite, Messages.ValuePage_intervals, SWT.NONE,
+				Messages.ValuePage_hours, Messages.ValuePage_fifteen_min);
 		GridData data = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
 		data.verticalIndent = 20;
 		dayTimeButtonGroup.setLayoutData(data);
@@ -346,7 +347,8 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 		GregorianCalendar cal = new GregorianCalendar();
 		timeToField.setDate(cal.get(GregorianCalendar.YEAR), cal.get(GregorianCalendar.MONTH) + 1,
 				cal.get(GregorianCalendar.DAY_OF_MONTH));
-		timeButtonGroup = new RadioButtonGroup(timeComposite, Messages.ValuePage_interval, 2, Messages.ValuePage_by_year, Messages.ValuePage_by_quarter, Messages.ValuePage_by_month,
+		timeButtonGroup = new RadioButtonGroup(timeComposite, Messages.ValuePage_interval, 2,
+				Messages.ValuePage_by_year, Messages.ValuePage_by_quarter, Messages.ValuePage_by_month,
 				Messages.ValuePage_by_week, Messages.ValuePage_by_day);
 		timeButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 4, 1));
 		timeButtonGroup.addListener(SWT.Selection, this);
@@ -485,7 +487,8 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 				float maxValue = qfield.getMaxValue();
 				if (!Float.isNaN(maxValue)) {
 					boolean log = (qfield.getAutoPolicy() & QueryField.AUTO_LOG) != 0 || Float.isInfinite(maxValue);
-					rangeLabel.setText(NLS.bind(log ? Messages.ValuePage_logar : Messages.ValuePage_linear, qfield.getLabel()));
+					rangeLabel.setText(
+							NLS.bind(log ? Messages.ValuePage_logar : Messages.ValuePage_linear, qfield.getLabel()));
 					rangeSlider.setLogarithmic(log);
 					int intMaxVlaue = Float.isFinite(maxValue) ? (int) maxValue : 1000000;
 					int type = qfield.getType();
@@ -552,20 +555,18 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 	}
 
 	@Override
-	protected void validatePage() {
-		String errorMessage = null;
+	protected String validate() {
 		if (stackLayout.topControl == numericComposite)
-			errorMessage = numericViewer.checkSelection();
-		else if (stackLayout.topControl == discreteComposite)
-			errorMessage = discreteViewer.checkSelection();
-		setErrorMessage(errorMessage);
-		setPageComplete(errorMessage == null);
+			return numericViewer.checkSelection();
+		if (stackLayout.topControl == discreteComposite)
+			return discreteViewer.checkSelection();
+		return null;
 	}
 
 	@Override
 	public void setVisible(boolean visible) {
 		if (visible) {
-			report = ((ReportWizard)getWizard()).getReport();
+			report = ((ReportWizard) getWizard()).getReport();
 			mode = report.getMode();
 			if ((mode & ReportWizard.DAYTIME) != 0) {
 				stackLayout.topControl = daytimeComposite;

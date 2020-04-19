@@ -160,10 +160,8 @@ public class PresentationPage extends ColoredWizardPage implements Listener {
 	}
 
 	@Override
-	protected void validatePage() {
-		boolean valid = chartButtonGroup.getSelection() >= 0;
-		setErrorMessage(valid ? null : Messages.PresentationPage_select_type);
-		setPageComplete(valid);
+	protected String validate() {
+		return chartButtonGroup.getSelection() >= 0 ? null : Messages.PresentationPage_select_type;
 	}
 
 	@Override

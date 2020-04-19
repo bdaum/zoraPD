@@ -61,8 +61,7 @@ public class UrlPreviewPage extends ColoredWizardPage {
 
 	public UrlPreviewPage() {
 		super("URL-Preview"); //$NON-NLS-1$
-		filter = new FileNameExtensionFilter(
-				ImageConstants.getSupportedImageFileExtensionsGroups(true), true);
+		filter = new FileNameExtensionFilter(ImageConstants.getSupportedImageFileExtensionsGroups(true), true);
 	}
 
 	@Override
@@ -90,8 +89,7 @@ public class UrlPreviewPage extends ColoredWizardPage {
 		urlLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		backButton = new Button(comp, SWT.PUSH);
 		backButton.setImage(Icons.backwards.getImage());
-		backButton
-				.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
+		backButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
 		backButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -100,8 +98,7 @@ public class UrlPreviewPage extends ColoredWizardPage {
 		});
 		forwardButton = new Button(comp, SWT.PUSH);
 		forwardButton.setImage(Icons.forwards.getImage());
-		forwardButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false,
-				false));
+		forwardButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
 		forwardButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -152,24 +149,16 @@ public class UrlPreviewPage extends ColoredWizardPage {
 	}
 
 	@Override
-	protected void validatePage() {
+	protected String validate() {
 		backButton.setEnabled(browser.isBackEnabled());
 		forwardButton.setEnabled(browser.isForwardEnabled());
-		String fileName;
 		try {
-			if (url != null) {
-				fileName = Core.getFileName(url.toURI(), true);
-				if (filter.accept(fileName)) {
-					setErrorMessage(null);
-					setPageComplete(true);
-					return;
-				}
-			}
+			if (url != null && filter.accept(Core.getFileName(url.toURI(), true)))
+				return null;
 		} catch (URISyntaxException e) {
 			// fall through
 		}
-		setErrorMessage(Messages.UrlPreviewPage_does_not_point_to_image);
-		setPageComplete(false);
+		return Messages.UrlPreviewPage_does_not_point_to_image;
 	}
 
 	public URI[] getURIs() {

@@ -15,6 +15,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
 import java.awt.image.ShortLookupTable;
 import java.awt.image.VolatileImage;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -798,7 +799,8 @@ public class ZImage {
 				} else
 					convertToBuffered();
 				try {
-					colorConvertOp.filter(bufferedImage, bufferedImage);
+					WritableRaster r = bufferedImage.getRaster();
+					colorConvertOp.filter(r, r); //TODO still to slow
 				} catch (Exception e) {
 					// can't convert color profile
 				}

@@ -57,8 +57,8 @@ public class ReportPage extends ColoredWizardPage {
 	}
 
 	@Override
-	protected void validatePage() {
-		// nothing to do
+	protected String validate() {
+		return null;
 	}
 
 	public boolean finish() {

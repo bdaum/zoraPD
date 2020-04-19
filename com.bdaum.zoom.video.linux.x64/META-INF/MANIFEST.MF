@@ -4,7 +4,7 @@ Bundle-Name: Video fragment for Linux 64
 Bundle-SymbolicName: com.bdaum.zoom.video.linux.x64
 Bundle-Version: 1.4.4
 Bundle-Vendor: bdaum industrial communications
-Fragment-Host: com.bdaum.zoom.video;bundle-version="3.6.1"
+Fragment-Host: com.bdaum.zoom.video;bundle-version="3.6.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Eclipse-PlatformFilter: (&(osgi.os=linux)(osgi.arch=x86_64))
 Bundle-ClassPath: ffmpeg-linux-x86_64.jar,

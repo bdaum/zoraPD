@@ -57,7 +57,7 @@ public class Mailer extends AbstractMailer {
 		String[] parms = new String[] { "xdg-email", mailto.toString() }; //$NON-NLS-1$
 		try {
 			BatchActivator.executeCommand(parms, null, label, IStatus.OK,
-					IStatus.WARNING, 3000L, "UTF-8"); //$NON-NLS-1$
+					IStatus.WARNING, 3000L, "UTF-8", null); //$NON-NLS-1$
 			return true;
 		} catch (Throwable e) {
 			return false;

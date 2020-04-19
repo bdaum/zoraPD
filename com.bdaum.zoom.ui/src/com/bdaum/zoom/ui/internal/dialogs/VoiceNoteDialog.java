@@ -136,13 +136,15 @@ public class VoiceNoteDialog extends ZResizableDialog implements IKiosk, Listene
 					boolean isRawOrDng = ImageConstants.isRaw(file.getName(), true);
 					if (isRawOrDng) {
 						IRawConverter currentRawConverter = BatchActivator.getDefault().getCurrentRawConverter(false);
-						if (currentRawConverter != null)
+						if (currentRawConverter != null) {
 							recipe = currentRawConverter.getRecipe(file.toURI().toString(), false,
 									new IFocalLengthProvider() {
 										public double get35mm() {
 											return asset.getFocalLengthIn35MmFilm();
 										}
 									}, null, null);
+							currentRawConverter.unget();
+						}
 					}
 					if (monitor.isCanceled())
 						return Status.CANCEL_STATUS;

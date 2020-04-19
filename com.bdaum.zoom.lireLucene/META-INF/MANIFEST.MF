@@ -5,12 +5,12 @@ Bundle-SymbolicName: com.bdaum.zoom.lireLucene;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-Activator: com.bdaum.zoom.lal.internal.LireActivator
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.6.1",
+Require-Bundle: com.bdaum.zoom.ui;bundle-version="3.6.2",
  org.eclipse.help;bundle-version="3.7.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
- lib/commons-math3-3.6.1.jar,
+ lib/commons-math3-3.6.2.jar,
  lib/JOpenSurf.jar,
  lib/opencv-2411.jar,
  lib/commons-io-2.5.jar,

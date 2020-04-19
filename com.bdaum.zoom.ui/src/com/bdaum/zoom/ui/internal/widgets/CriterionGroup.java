@@ -486,7 +486,11 @@ public class CriterionGroup extends AbstractCriterionGroup {
 				}
 			});
 		fillFieldCombo(crit);
-		signalModification(null);
+		Event e = new Event();
+		e.widget = parent;
+		e.time = (int) System.currentTimeMillis();
+		e.display = parent.getDisplay();
+		signalModification(e);
 	}
 
 	private void updateStacks(boolean enumeration, String[] valueProposals, boolean range, FieldDescriptor fd,

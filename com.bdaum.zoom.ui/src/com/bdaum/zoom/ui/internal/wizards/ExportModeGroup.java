@@ -165,11 +165,14 @@ public class ExportModeGroup implements Listener {
 			}
 		}
 		IRawConverter currentRawConverter = BatchActivator.getDefault().getCurrentRawConverter(false);
-		if (((style & RAWCROP) != 0) && currentRawConverter != null && currentRawConverter.isDetectors()) {
-			cropButtonGroup = new RadioButtonGroup(modeGroup, Messages.ExportModeGroup_raw_image_cropping,
-					SWT.HORIZONTAL, Messages.ExportModeGroup_uncropped, Messages.ExportModeGroup_cropmask,
-					Messages.ExportModeGroup_cropped);
-			cropButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		if (currentRawConverter != null) {
+			if (((style & RAWCROP) != 0) && currentRawConverter.isDetectors()) {
+				cropButtonGroup = new RadioButtonGroup(modeGroup, Messages.ExportModeGroup_raw_image_cropping,
+						SWT.HORIZONTAL, Messages.ExportModeGroup_uncropped, Messages.ExportModeGroup_cropmask,
+						Messages.ExportModeGroup_cropped);
+				cropButtonGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+			}
+			currentRawConverter.unget();
 		}
 		if (style != ORIGINALS) {
 			qualityGroup = new QualityGroup(parent, false);

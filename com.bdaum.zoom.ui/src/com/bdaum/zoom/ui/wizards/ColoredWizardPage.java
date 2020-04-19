@@ -125,7 +125,17 @@ public abstract class ColoredWizardPage extends WizardPage implements
 	/**
 	 * Validates the page
 	 */
-	protected abstract void validatePage();
+	protected void validatePage() {
+		String errorMsg = validate();
+		setPageComplete(errorMsg == null);
+		setErrorMessage(errorMsg);
+	}
+	
+	/**
+	 * Validates the page
+	 */
+	protected abstract String validate();
+
 
 	/**
 	 * Creates a composite formatted with a GridLayout with the specified number

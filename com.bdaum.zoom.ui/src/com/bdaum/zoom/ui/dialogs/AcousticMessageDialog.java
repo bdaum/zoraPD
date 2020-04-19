@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.db.IValidator;
@@ -52,6 +53,7 @@ public class AcousticMessageDialog extends MessageDialog {
 	private Timer timer = new Timer();
 	private int y = -1;
 	private TimerTask task;
+	private Control messageField;
 
 	/**
 	 * Convenience method to open a simple confirm (OK/Cancel) dialog.
@@ -81,8 +83,8 @@ public class AcousticMessageDialog extends MessageDialog {
 	 *            the message
 	 */
 	public static void openError(Shell parent, String title, String message) {
-		new AcousticMessageDialog(parent, title, null,
-				message, ERROR, new String[] { IDialogConstants.OK_LABEL }, 0).open();
+		new AcousticMessageDialog(parent, title, null, message, ERROR, new String[] { IDialogConstants.OK_LABEL }, 0)
+				.open();
 	}
 
 	/**
@@ -112,8 +114,8 @@ public class AcousticMessageDialog extends MessageDialog {
 	 *            when the validator is executed and returns true the dialog closes
 	 */
 	public static void openInformation(Shell parent, String title, String message, IValidator validator) {
-		AcousticMessageDialog dialog = new AcousticMessageDialog(parent, title, null,
-				message, INFORMATION, new String[] { IDialogConstants.OK_LABEL }, 0);
+		AcousticMessageDialog dialog = new AcousticMessageDialog(parent, title, null, message, INFORMATION,
+				new String[] { IDialogConstants.OK_LABEL }, 0);
 		dialog.setValidator(validator);
 		dialog.open();
 	}
@@ -131,8 +133,8 @@ public class AcousticMessageDialog extends MessageDialog {
 	 *         <code>false</code> otherwise
 	 */
 	public static boolean openQuestion(Shell parent, String title, String message) {
-		return new AcousticMessageDialog(parent, title, null, 
-				message, QUESTION, new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL }, 0).open() == 0;
+		return new AcousticMessageDialog(parent, title, null, message, QUESTION,
+				new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL }, 0).open() == 0;
 	}
 
 	/**
@@ -146,8 +148,8 @@ public class AcousticMessageDialog extends MessageDialog {
 	 *            the message
 	 */
 	public static void openWarning(Shell parent, String title, String message) {
-		new AcousticMessageDialog(parent, title, null,
-				message, WARNING, new String[] { IDialogConstants.OK_LABEL }, 0).open();
+		new AcousticMessageDialog(parent, title, null, message, WARNING, new String[] { IDialogConstants.OK_LABEL }, 0)
+				.open();
 	}
 
 	/**
@@ -215,8 +217,8 @@ public class AcousticMessageDialog extends MessageDialog {
 		shell.setText(Constants.APPLICATION_NAME);
 		if (!Constants.OSX) {
 			Rectangle rootBounds = getRootShell(shell).getBounds();
-			int oHeight = (messageLabel != null) ? messageLabel.getBounds().height : 0;
-			int mHeight = (messageLabel != null) ? messageLabel.computeSize(rootBounds.width, SWT.DEFAULT, true).y : 0;
+			int oHeight = (messageField != null) ? messageField.getBounds().height : 0;
+			int mHeight = (messageField != null) ? messageField.computeSize(rootBounds.width, SWT.DEFAULT, true).y : 0;
 			shell.setBounds(rootBounds.x, y >= 0 ? y : bounds.y, rootBounds.width, bounds.height + mHeight - oHeight);
 		} else if (y >= 0)
 			shell.setLocation(bounds.x, y);
@@ -274,13 +276,28 @@ public class AcousticMessageDialog extends MessageDialog {
 			GridLayout layout = new GridLayout();
 			layout.marginWidth = 15;
 			composite.setLayout(layout);
-			messageLabel = new Label(composite, getMessageLabelStyle());
-			messageLabel.setFont(JFaceResources.getFont(UiConstants.MESSAGEFONT));
-			messageLabel.setAlignment(message.indexOf('\t') >= 0 ? SWT.LEFT : SWT.CENTER);
-			messageLabel.setText(message);
-			messageLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
+			GridData layoutData = new GridData(SWT.CENTER, SWT.CENTER, true, true);
+			if (exceeds(message, 3)) {
+				messageField = new Text(composite,
+						SWT.BORDER | SWT.MULTI | SWT.READ_ONLY | SWT.LEAD | SWT.H_SCROLL | SWT.V_SCROLL);
+				((Text) messageField).setText(message);
+				layoutData.heightHint = 200;
+			} else {
+				messageField = new Label(composite, getMessageLabelStyle());
+				((Label) messageField).setAlignment(message.indexOf('\t') >= 0 ? SWT.LEFT : SWT.CENTER);
+				((Label) messageField).setText(message);
+			}
+			messageField.setLayoutData(layoutData);
+			messageField.setFont(JFaceResources.getFont(UiConstants.MESSAGEFONT));
 		}
 		return parent;
+	}
+
+	private static boolean exceeds(String message, int lines) {
+		for (int i = 0, n = 1; i < message.length(); i++)
+			if (message.charAt(i) == '\n' && ++n > lines)
+				return true;
+		return false;
 	}
 
 	private void setValidator(IValidator validator) {

@@ -74,6 +74,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage implements Lis
 	private NumericControl processorField;
 	private CheckboxButton nobackupButton;
 	private CheckboxButton accelerationButton;
+	private CheckboxButton highResButton;
 
 	@Override
 	protected void createPageContents(Composite composite) {
@@ -169,6 +170,9 @@ public class GeneralPreferencePage extends AbstractPreferencePage implements Lis
 		enlargeButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("GeneralPreferencePage.enlarge_small_images"), new GridData( //$NON-NLS-1$
 						SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		highResButton = WidgetFactory.createCheckButton(group,
+				Messages.getString("GeneralPreferencePage.always_highres"), new GridData(  //$NON-NLS-1$
+						SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		Monitor[] monitors = composite.getDisplay().getMonitors();
 		if (monitors.length > 1) {
 			Rectangle r = composite.getShell().getBounds();
@@ -257,6 +261,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage implements Lis
 			accelerationButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ACCELERATION));
 		previewButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.PREVIEW));
 		enlargeButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ENLARGESMALL));
+		highResButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ALWAYSHIGHRES));
 		if (displayGroup != null) {
 			String s = preferenceStore.getString(PreferenceConstants.SECONDARYMONITOR);
 			displayGroup
@@ -292,6 +297,8 @@ public class GeneralPreferencePage extends AbstractPreferencePage implements Lis
 				preferenceStore.getDefaultBoolean(PreferenceConstants.PREVIEW));
 		preferenceStore.setValue(PreferenceConstants.ENLARGESMALL,
 				preferenceStore.getDefaultBoolean(PreferenceConstants.ENLARGESMALL));
+		preferenceStore.setValue(PreferenceConstants.ALWAYSHIGHRES,
+				preferenceStore.getDefaultBoolean(PreferenceConstants.ALWAYSHIGHRES));
 		preferenceStore.setValue(PreferenceConstants.SECONDARYMONITOR,
 				preferenceStore.getDefaultString(PreferenceConstants.SECONDARYMONITOR));
 		preferenceStore.setValue(PreferenceConstants.INACTIVITYINTERVAL,
@@ -330,6 +337,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage implements Lis
 			preferenceStore.setValue(PreferenceConstants.ACCELERATION, accelerationButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.PREVIEW, previewButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.ENLARGESMALL, enlargeButton.getSelection());
+		preferenceStore.setValue(PreferenceConstants.ALWAYSHIGHRES, highResButton.getSelection());
 		if (displayGroup != null) {
 			int i = displayGroup.getSelection();
 			preferenceStore.setValue(PreferenceConstants.SECONDARYMONITOR,

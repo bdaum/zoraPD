@@ -89,22 +89,16 @@ public class RemoteImportPage extends ColoredWizardPage {
 
 	@SuppressWarnings("unused")
 	@Override
-	protected void validatePage() {
+	protected String validate() {
 		String url = combo.getText();
-		if (url.isEmpty()) {
-			setErrorMessage(Messages.RemoteImportPage_url_must_not_be_empty);
-			setPageComplete(false);
-			return;
-		}
+		if (url.isEmpty())
+			return Messages.RemoteImportPage_url_must_not_be_empty;
 		try {
 			new URL(url);
 		} catch (MalformedURLException e) {
-			setErrorMessage(Messages.RemoteImportPage_invalid_url);
-			setPageComplete(false);
-			return;
+			return Messages.RemoteImportPage_invalid_url;
 		}
-		setErrorMessage(null);
-		setPageComplete(true);
+		return null;
 	}
 
 	public URL getUrl() {

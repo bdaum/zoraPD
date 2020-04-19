@@ -87,30 +87,18 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 	}
 
 	@Override
-	protected void validatePage() {
+	protected String validate() {
 		String fn = fileEditor.getText();
-		if (fn.isEmpty()) {
-			setErrorMessage(Messages.MergeCatPage_please_select_cat);
-			setPageComplete(false);
-			return;
-		}
+		if (fn.isEmpty())
+			return Messages.MergeCatPage_please_select_cat;
 		File file = new File(fn);
-		if (!file.exists()) {
-			setErrorMessage(Messages.MergeCatPage_specified_cat_does_not_exist);
-			setPageComplete(false);
-			return;
-		}
+		if (!file.exists())
+			return Messages.MergeCatPage_specified_cat_does_not_exist;
 		IDbManager dbManager = Core.getCore().getDbManager();
-		if (dbManager == null) {
-			setErrorMessage(Messages.MergeCatPage_current_cat_is_not_open);
-			setPageComplete(false);
-			return;
-		}
-		if (file.equals(dbManager.getFile())) {
-			setErrorMessage(Messages.MergeCatPage_you_cannot_merge_cat_into_itself);
-			setPageComplete(false);
-			return;
-		}
+		if (dbManager == null)
+			return Messages.MergeCatPage_current_cat_is_not_open;
+		if (file.equals(dbManager.getFile()))
+			return Messages.MergeCatPage_you_cannot_merge_cat_into_itself;
 		try {
 			externalDb.close(CatalogListener.NORMAL);
 			externalDb = CoreActivator.NULLDBMANAGER;
@@ -194,17 +182,11 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 			if (exception != null)
 				throw new IOException(exception);
 		} catch (Exception e1) {
-			setErrorMessage(Messages.MergeCatPage_cat_cannot_be_opened + e1);
-			setPageComplete(false);
-			return;
+			return Messages.MergeCatPage_cat_cannot_be_opened + e1;
 		}
-		if (externalDb.getMeta(true).getVersion() < dbManager.getMeta(true).getVersion()) {
-			setErrorMessage(NLS.bind(Messages.MergeCatPage_outdated_version, fn, Constants.APPLICATION_NAME));
-			setPageComplete(false);
-			return;
-		}
-		setErrorMessage(null);
-		setPageComplete(true);
+		if (externalDb.getMeta(true).getVersion() < dbManager.getMeta(true).getVersion())
+			return NLS.bind(Messages.MergeCatPage_outdated_version, fn, Constants.APPLICATION_NAME);
+		return null;
 	}
 
 	private void createHeaderGroup(Composite comp) {

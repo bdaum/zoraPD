@@ -84,25 +84,26 @@ public class ImportFromDeviceWizard extends ZWizard implements IWorkbenchWizard,
 
 	@Override
 	public void addPages() {
-		ImageDescriptor imageDescriptor = media ? Icons.importDevice.getDescriptor()
-				: Icons.importNewStructure.getDescriptor();
-		if (newStruct) {
-			if (folders != null) {
-				fileSelectionPage = new ImportFileSelectionPage(Messages.ImportFromDeviceWizard_file_sel, media, eject);
-				fileSelectionPage.setImageDescriptor(imageDescriptor);
-				addPage(fileSelectionPage);
+		try {
+			ImageDescriptor imageDescriptor = media ? Icons.importDevice.getDescriptor()
+					: Icons.importNewStructure.getDescriptor();
+			if (newStruct) {
+				if (folders != null) {
+					addPage(fileSelectionPage = new ImportFileSelectionPage(Messages.ImportFromDeviceWizard_file_sel, media, eject));
+					fileSelectionPage.setImageDescriptor(imageDescriptor);
+				}
+				addPage(targetPage = new ImportTargetPage(Messages.ImportFromDeviceWizard_target_sel, media));
+				targetPage.setImageDescriptor(imageDescriptor);
+				addPage(renamingPage = new ImportRenamingPage(Messages.ImportFromDeviceWizard_file_ren, media));
+				renamingPage.setImageDescriptor(imageDescriptor);
 			}
-			targetPage = new ImportTargetPage(Messages.ImportFromDeviceWizard_target_sel, media);
-			targetPage.setImageDescriptor(imageDescriptor);
-			addPage(targetPage);
-			renamingPage = new ImportRenamingPage(Messages.ImportFromDeviceWizard_file_ren, media);
-			renamingPage.setImageDescriptor(imageDescriptor);
-			addPage(renamingPage);
+			lastPage = analog ? new ImportAnalogPropertiesPage(Messages.ImportFromDeviceWizard_analog_props)
+					: new ImportAddMetadataPage(Messages.ImportFromDeviceWizard_meta, media, collection, newStruct);
+			lastPage.setImageDescriptor(imageDescriptor);
+			addPage(lastPage);
+		} catch (Exception e) {
+			UiActivator.getDefault().logError(Messages.ImportFromDeviceWizard_internal_errort_creating_wizard, e);
 		}
-		lastPage = analog ? new ImportAnalogPropertiesPage(Messages.ImportFromDeviceWizard_analog_props)
-				: new ImportAddMetadataPage(Messages.ImportFromDeviceWizard_meta, media, collection, newStruct);
-		lastPage.setImageDescriptor(imageDescriptor);
-		addPage(lastPage);
 	}
 
 	protected boolean needsAdvancedOptions() {
