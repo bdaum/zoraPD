@@ -241,4 +241,10 @@ public interface IRawConverter extends IConverter, IRecipeProvider {
 	 */
 	void unget();
 
+	/**
+	 * Returns the output color profile or -1 if not supported
+	 * @return output color profile
+	 */
+	int getOutputProfile();
+
 }

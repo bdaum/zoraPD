@@ -53,7 +53,11 @@
       <ul style="font-weight: normal;">
         <li><span style="font-weight: bold;">Output ICC-profile.</span> Switch
           to <samp>Disable CMS</samp> to speed up the display of images and
-          thumbnails<br>
+          thumbnails. In particular, conversion between different color profiles
+          is very slow (e.g. from Adobe RGB (camera) to sRGB (screen). In such
+          cases - and when viewing RAW images - you may want to switch to the
+          DCRAW raw converter, because DCRAW can perform color profile
+          conversions during the raw conversion in one step.<br>
         </li>
       </ul>
       <ul style="font-weight: normal;">

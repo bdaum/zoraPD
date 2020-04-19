@@ -141,4 +141,9 @@ public class DtRawConverter extends AbstractRawConverter {
 		return 0L;
 	}
 
+	@Override
+	public int getOutputProfile() {
+		return -1;
+	}
+
 }

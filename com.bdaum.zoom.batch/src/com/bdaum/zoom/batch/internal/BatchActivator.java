@@ -138,7 +138,6 @@ public class BatchActivator extends Plugin {
 		getLog().log(new Status(IStatus.WARNING, PLUGIN_ID, message, e));
 	}
 
-	@SuppressWarnings("finally")
 	public File convertFile(File file, String converter, String location, Options options, boolean useTempFile,
 			IFileWatcher filewatcher, String opId, IProgressMonitor monitor) throws ConversionException {
 		BundleContext bundleContext = getBundle().getBundleContext();
@@ -153,81 +152,89 @@ public class BatchActivator extends Plugin {
 				IConverter c = (IConverter) bundleContext.getService(reference);
 				if (c == null)
 					throw new ConversionException(NLS.bind(Messages.BatchActivator_not_instantiated, converter));
-				c.setConverterLocation(location);
-				File out = c.setInput(file, options);
-				if (out == null)
-					return null;
-				File backup = null;
-				if (useTempFile) {
-					if (out.exists())
-						try {
-							BatchUtilities.moveFile(out,
-									backup = ImageActivator.getDefault().createTempFile("Convert", null), monitor); //$NON-NLS-1$
-						} catch (DiskFullException e) {
-							throw new ConversionException(NLS.bind(Messages.BatchActivator_No_file_conversion, file),
-									e);
-						}
-				} else
-					out.delete();
-				if (monitor != null && monitor.isCanceled())
-					return null;
-				String[] parms = c.getParms(options);
-				String data = null;
-				File temp = null;
-				ConversionException cex = null;
-				try {
-					if (parms == null)
-						throw new ConversionException(Messages.BatchActivator_no_dcraw_module_installed);
-					synchronized (currentRawConverters) {
-						if (filewatcher != null)
-							filewatcher.ignore(out, opId);
-						data = executeCommand(parms, c.getInputDirectory(), converter, IStatus.INFO, IStatus.INFO,
-								180000L, null, monitor);
-					}
-					if (monitor != null && monitor.isCanceled())
-						return null;
-					BatchUtilities.yield();
-					if (useTempFile && out.exists())
-						BatchUtilities.moveFile(out, temp = ImageActivator.getDefault().createTempFile("Convert", null), //$NON-NLS-1$
-								monitor);
-				} catch (ConversionException e) {
-					cex = e;
-				} finally {
-					if (useTempFile) {
-						try {
-							if (filewatcher != null)
-								filewatcher.ignore(out, opId);
-							BatchUtilities.moveFile(backup, out, monitor);
-						} catch (DiskFullException e) {
-							throw new ConversionException(NLS.bind(Messages.BatchActivator_No_file_conversion, file),
-									e);
-						}
-						if (cex != null)
-							throw cex;
-						if (data == null)
-							return null;
-						if (temp != null && temp.exists())
-							return temp;
-					} else {
-						if (cex != null)
-							throw cex;
-						if (data == null)
-							return null;
-						if (out.exists())
-							return out;
-					}
-					throw new ConversionException(NLS.bind(Messages.BatchActivator_No_file_conversion, file));
-				}
+				return convertFile(file, c, converter, location, options, useTempFile, filewatcher, opId, monitor);
 			}
 		} catch (InvalidSyntaxException e) {
 			// should never happen
-		} catch (IOException e) {
-			throw new ConversionException(NLS.bind(Messages.BatchActivator_IOerror_converting, file), e);
 		} finally {
 			if (reference != null)
 				bundleContext.ungetService(reference);
 		}
 		return null;
+	}
+
+	@SuppressWarnings("finally")
+	public File convertFile(File file, IConverter converter, String converterId, String location, Options options,
+			boolean useTempFile, IFileWatcher filewatcher, String opId, IProgressMonitor monitor)
+			throws ConversionException {
+		try {
+			converter.setConverterLocation(location);
+			File out = converter.setInput(file, options);
+			if (out == null)
+				return null;
+			File backup = null;
+			if (useTempFile) {
+				if (out.exists())
+					try {
+						BatchUtilities.moveFile(out,
+								backup = ImageActivator.getDefault().createTempFile("Convert", null), monitor); //$NON-NLS-1$
+					} catch (DiskFullException e) {
+						throw new ConversionException(NLS.bind(Messages.BatchActivator_No_file_conversion, file), e);
+					}
+			} else
+				out.delete();
+			if (monitor != null && monitor.isCanceled())
+				return null;
+			String[] parms = converter.getParms(options);
+			String data = null;
+			File temp = null;
+			ConversionException cex = null;
+			try {
+				if (parms == null)
+					throw new ConversionException(Messages.BatchActivator_no_dcraw_module_installed);
+				synchronized (currentRawConverters) {
+					if (filewatcher != null)
+						filewatcher.ignore(out, opId);
+					data = executeCommand(parms, converter.getInputDirectory(), converterId, IStatus.INFO, IStatus.INFO,
+							180000L, null, monitor);
+				}
+				if (monitor != null && monitor.isCanceled())
+					return null;
+				BatchUtilities.yield();
+				if (useTempFile && out.exists())
+					BatchUtilities.moveFile(out, temp = ImageActivator.getDefault().createTempFile("Convert", null), //$NON-NLS-1$
+							monitor);
+			} catch (ConversionException e) {
+				cex = e;
+			} finally {
+				if (useTempFile) {
+					try {
+						if (filewatcher != null)
+							filewatcher.ignore(out, opId);
+						BatchUtilities.moveFile(backup, out, monitor);
+					} catch (DiskFullException e) {
+						throw new ConversionException(NLS.bind(Messages.BatchActivator_No_file_conversion, file), e);
+					}
+					if (cex != null)
+						throw cex;
+					if (data == null)
+						return null;
+					if (temp != null && temp.exists())
+						return temp;
+				} else {
+					if (cex != null)
+						throw cex;
+					if (data == null)
+						return null;
+					if (out.exists())
+						return out;
+				}
+				throw new ConversionException(NLS.bind(Messages.BatchActivator_No_file_conversion, file));
+			}
+		} catch (IOException e) {
+			throw new ConversionException(NLS.bind(Messages.BatchActivator_IOerror_converting, file), e);
+		}
+
 	}
 
 	public static String executeCommand(String[] parms, File dir, String label, int logLevel, int errorLevel,
@@ -438,12 +445,7 @@ public class BatchActivator extends Plugin {
 	 */
 	public synchronized IRawConverter getCurrentRawConverter(boolean force) {
 		IPreferencesService preferencesService = Platform.getPreferencesService();
-		if (force)
-			currentRawConverters.clear();
-		if (force || currentRawConverterId == null)
-			currentRawConverterId = preferencesService.getString(PLUGIN_ID, PreferenceConstants.RAWCONVERTER, null,
-					null);
-		IRawConverter rc = getRawConverter(currentRawConverterId, true, true);
+		IRawConverter rc = getRawConverter(getCurrentRawConverterId(force), true, true);
 		if (rc != null) {
 			String path = preferencesService.getString(PLUGIN_ID, rc.getPathId(), null, null);
 			if (path != null)
@@ -452,6 +454,16 @@ public class BatchActivator extends Plugin {
 				prop.value = preferencesService.getString(PLUGIN_ID, prop.id, null, null);
 		}
 		return rc;
+	}
+
+	public String getCurrentRawConverterId(boolean force) {
+		IPreferencesService preferencesService = Platform.getPreferencesService();
+		if (force)
+			currentRawConverters.clear();
+		if (force || currentRawConverterId == null)
+			currentRawConverterId = preferencesService.getString(PLUGIN_ID, PreferenceConstants.RAWCONVERTER, null,
+					null);
+		return currentRawConverterId;
 	}
 
 	public void setCurrentRawConverterId(String id) {

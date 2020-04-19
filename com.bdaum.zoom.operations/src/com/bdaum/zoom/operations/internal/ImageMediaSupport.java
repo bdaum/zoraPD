@@ -709,7 +709,7 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 		int sampleFactor = rawConverter.deriveOptions(recipe, options, IRawConverter.THUMB);
 		if (recipe != null && recipe != Recipe.NULL)
 			recipe.setSampleFactor(sampleFactor);
-		File file = BatchActivator.getDefault().convertFile(dngFile, rawConverter.getId(), rawConverter.getPath(),
+		File file = BatchActivator.getDefault().convertFile(dngFile, rawConverter, rawConverter.getId(), rawConverter.getPath(),
 				options, true, CoreActivator.getDefault().getFileWatchManager(), importState.operation.getOpId(),
 				monitor);
 		rawConverter.unget();

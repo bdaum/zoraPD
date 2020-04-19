@@ -56,6 +56,7 @@ public class RawConverter extends AbstractRawConverter {
 
 	private File dcraw;
 	private boolean external = false;
+	private int outputProfile = -1;
 
 	public RawConverter() {
 		setConverterLocation(null);
@@ -149,8 +150,22 @@ public class RawConverter extends AbstractRawConverter {
 				parms.add(nf.format(wf[2]));
 				parms.add(nf.format(wf[wf.length < 4 ? 1 : 3]));
 			}
-//			parms.add("-o"); //$NON-NLS-1$
-//			parms.add(getOption(options, ADOBE_RGB) ? "2" : "1"); //$NON-NLS-1$ //$NON-NLS-2$
+			Integer iccProfile = (Integer) options.get(COLORPROFILE);
+			int op = 0;
+			if (iccProfile != null) {
+				switch (iccProfile) {
+				case ImageConstants.SRGB:
+					op = 1;
+					outputProfile = iccProfile;
+					break;
+				case ImageConstants.ARGB:
+					op = 2;
+					outputProfile = iccProfile;
+					break;
+				}
+			}
+			parms.add("-o"); //$NON-NLS-1$
+			parms.add(String.valueOf(op));
 		}
 		parms.add("-T"); //$NON-NLS-1$
 		parms.add(rawFile.getName());
@@ -300,6 +315,11 @@ public class RawConverter extends AbstractRawConverter {
 	@Override
 	public boolean isValid() {
 		return dcraw != null ? true : super.isValid();
+	}
+
+	@Override
+	public int getOutputProfile() {
+		return outputProfile;
 	}
 
 }

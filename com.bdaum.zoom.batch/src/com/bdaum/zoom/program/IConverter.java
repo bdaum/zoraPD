@@ -24,11 +24,11 @@ public interface IConverter {
 
 	static final String CONVERTER = "converter"; //$NON-NLS-1$´
 	//Options
-//	static final String ADOBE_RGB = "AdobeRGB"; //$NON-NLS-1$
 	static final String EXPOSURE = "exposure"; //$NON-NLS-1$
 	static final String GAMMA= "gamma"; //$NON-NLS-1$
 	static final String DENOISE = "denoise"; //$NON-NLS-1$
 	static final String ABBERATION = "abberation"; //$NON-NLS-1$
+	static final String COLORPROFILE = "profile"; //$NON-NLS-1$
 
 	/**
 	 * Sets the location of the converter executable

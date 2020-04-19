@@ -230,13 +230,16 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void doFillValues() {
-		IRawConverter rc = BatchActivator.getDefault().getCurrentRawConverter(false);
-		previousRawConverter = rc;
+		String rcid = BatchActivator.getDefault().getCurrentRawConverterId(false);
+		IRawConverter rc = null;
+		if (rcid != null && rawConverters != null)
+			for (IRawConverter r : rawConverters)
+				if (r.getId().equals(rcid)) {
+					previousRawConverter = r;
+					rcViewer.setSelection(new StructuredSelection(r));
+					break;
+				}
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		if (rc != null) {
-			rcViewer.setSelection(new StructuredSelection(rc));
-			rc.unget();
-		}
 		for (IRawConverter c : rawConverters) {
 			FileEditor fileEditor = basicsFileEditors.get(c.getId());
 			if (fileEditor != null) {

@@ -11,6 +11,7 @@
 
 package com.bdaum.zoom.core.internal;
 
+import java.awt.color.ICC_Profile;
 import java.awt.image.ColorConvertOp;
 import java.io.File;
 import java.util.Hashtable;
@@ -41,6 +42,7 @@ import com.bdaum.zoom.image.recipe.Recipe;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.program.BatchConstants;
 import com.bdaum.zoom.program.BatchUtilities;
+import com.bdaum.zoom.program.IConverter;
 import com.bdaum.zoom.program.IRawConverter;
 
 @SuppressWarnings("restriction")
@@ -98,13 +100,15 @@ public class HighresImageLoader {
 		public boolean equals(Object obj) {
 			if (obj instanceof ImageKey)
 				return ((ImageKey) obj).original.equals(original) && ((ImageKey) obj).options.equals(options)
-						&& ((ImageKey) obj).rawConverterId.equals(rawConverterId) && ((ImageKey) obj).secondaryId == secondaryId;
+						&& ((ImageKey) obj).rawConverterId.equals(rawConverterId)
+						&& ((ImageKey) obj).secondaryId == secondaryId;
 			return false;
 		}
 
 		@Override
 		public int hashCode() {
-			return ((original.hashCode() * 31 + options.hashCode()) * 31 + rawConverterId.hashCode()) * 31 + secondaryId;
+			return ((original.hashCode() * 31 + options.hashCode()) * 31 + rawConverterId.hashCode()) * 31
+					+ secondaryId;
 		}
 
 		public boolean isOutdated(ImageEntry entry) {
@@ -228,9 +232,7 @@ public class HighresImageLoader {
 					rawRecipe.setScaling(scalingFactor > 0 ? (float) scalingFactor : 1f);
 					rawRecipe.setSampleFactor(factor);
 				}
-				// if (cms == ImageConstants.ARGB) // better to work in the camera color space,
-				// not all raw converts support color conversion
-				// options.put(IConverter.ADOBE_RGB, Boolean.TRUE);
+				options.put(IConverter.COLORPROFILE, cms);
 				workfile = null;
 				ImageKey key = new ImageKey(file, options, rawConverter.getId(), rawConverter.getSecondaryId());
 				ImageEntry entry = imageDirectory.get(key);
@@ -242,8 +244,8 @@ public class HighresImageLoader {
 				}
 				if (workfile == null) {
 					try {
-						workfile = activator.convertFile(file, rawConverter.getId(), rawConverter.getPath(), options,
-								true, fileWatcher, opId, monitor);
+						workfile = activator.convertFile(file, rawConverter, rawConverter.getId(),
+								rawConverter.getPath(), options, true, fileWatcher, opId, monitor);
 						if (workfile == null) {
 							addErrorStatus(status, NLS.bind(Messages.HighresImageLoader_DCRAWconversion_failed, file),
 									null);
@@ -259,7 +261,20 @@ public class HighresImageLoader {
 				}
 				extension = "tif"; //$NON-NLS-1$
 			}
-			ColorConvertOp cop = cms != ImageConstants.NOCMS ? computeColorConvertOp(workfile, cms) : null;
+			ColorConvertOp cop = null;
+			if (cms != ImageConstants.NOCMS) {
+				ICC_Profile iccProfile = null;
+				int outputProfile = rawConverter == null ? -1 : rawConverter.getOutputProfile();
+				if (outputProfile > 0)
+					if (outputProfile != cms)
+						iccProfile = ImageActivator.getDefault().getIccProfile(outputProfile);
+					else
+						try (ExifTool exifTool = new ExifTool(workfile, true)) {
+							iccProfile = exifTool.getICCProfile();
+						}
+				if (iccProfile != null)
+					cop = ImageActivator.getDefault().computeColorConvertOp(iccProfile, cms);
+			}
 			try {
 				return ZImage.loadImage(workfile, extension, rotation, bounds, scalingFactor, maxFactor, advanced, bw,
 						umask, cop, rawRecipe);
@@ -274,12 +289,6 @@ public class HighresImageLoader {
 			CoreActivator.getDefault().ungetHighresImageLoader(this);
 			if (rawConverter != null)
 				rawConverter.unget();
-		}
-	}
-
-	private static ColorConvertOp computeColorConvertOp(File workfile, int cms) {
-		try (ExifTool exifTool = new ExifTool(workfile, true)) {
-			return ImageActivator.getDefault().computeColorConvertOp(exifTool.getICCProfile(), cms);
 		}
 	}
 

@@ -190,5 +190,12 @@ public class RTRawConverter extends AbstractRawConverter {
 		}
 		return path;
 	}
+	
+
+	@Override
+	public int getOutputProfile() {
+		return -1;
+	}
+
 
 }
